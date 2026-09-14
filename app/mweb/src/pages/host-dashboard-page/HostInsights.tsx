@@ -69,7 +69,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
 
   return (
     <Stack data-testid="host-insights-section" spacing={1.5}>
-      <SectionHeader title="Host Insights" />
+      <SectionHeader testId="host-insights-section-header" title="Host Insights" />
       <Stack direction="row" spacing={1.5}>
         <StatCard label={t('mweb.common.totalPods')} value={String(totalPods)} size="lg" />
         <StatCard label={t('mweb.common.hostEarnings')} value={`${currency}${hostEarning.toFixed(2)}`} />

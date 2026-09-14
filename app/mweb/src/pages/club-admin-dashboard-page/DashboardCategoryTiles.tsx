@@ -69,7 +69,7 @@ export default function DashboardCategoryTiles({ categories, loading }: Readonly
 
   return (
     <Stack data-testid="dashboard-category-tiles" spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.yourCategories')} />
+      <SectionHeader testId="dashboard-category-tiles-header" title={t('clubAdmin.dashboard.yourCategories')} />
       <Card>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>{body}</CardContent>
       </Card>

@@ -29,6 +29,8 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
   return (
     <Stack data-testid={sectionTestId} spacing={1.5} sx={{ minWidth: 0 }}>
       <SectionHeader
+        testId={`${sectionTestId}-header`}
+        actionTestId={`${sectionTestId}-see-all`}
         title={club.club_name}
         actionLabel={t('mweb.home.seeAll')}
         onAction={() => navigate(clubUrl(club.club_id))}

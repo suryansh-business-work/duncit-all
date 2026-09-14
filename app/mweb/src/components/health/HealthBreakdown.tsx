@@ -70,7 +70,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
       </Card>
 
       <Stack spacing={1.5}>
-        <SectionHeader title="Admin remarks" />
+        <SectionHeader testId="health-breakdown-header" title="Admin remarks" />
         {score.adjustments.length === 0 ? (
           <Card data-testid="health-no-remarks" sx={{ p: 2 }}>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>

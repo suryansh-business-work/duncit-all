@@ -78,7 +78,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
     <Box data-testid="pod-shop" sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ minWidth: 0 }}>
-          <SectionHeader title={t('mweb.shop.title')} />
+          <SectionHeader testId="pod-shop-header" title={t('mweb.shop.title')} />
         </Box>
         <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: 'action.hover', color: 'text.primary' }} />
       </Stack>

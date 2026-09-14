@@ -87,7 +87,7 @@ export default function DashboardClubBreakdown({ clubs, currencySymbol, loading 
 
   return (
     <Stack data-testid="dashboard-club-breakdown" spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.perClubBreakdown')} />
+      <SectionHeader testId="dashboard-club-breakdown-header" title={t('clubAdmin.dashboard.perClubBreakdown')} />
       <Card>
         <CardContent sx={{ px: 2, py: 1, '&:last-child': { pb: 1 } }}>{body}</CardContent>
       </Card>

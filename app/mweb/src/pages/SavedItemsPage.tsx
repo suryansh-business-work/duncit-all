@@ -36,7 +36,7 @@ export default function SavedItemsPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="saved-screen">
-      <PageHeader title={t('mweb.saved.savedItems')} onBack={() => navigate(-1)} />
+      <PageHeader testId="saved-header" title={t('mweb.saved.savedItems')} onBack={() => navigate(-1)} />
 
       <SavedItemsToolbar
         search={searchText}

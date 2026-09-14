@@ -36,7 +36,7 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
 
   return (
     <Box data-testid="place-charges-field">
-      <SectionHeader title={t('mweb.createPod.placeCharges')} />
+      <SectionHeader testId="place-charges-field-header" title={t('mweb.createPod.placeCharges')} />
       {helperText && (
         <Typography
           variant="caption"

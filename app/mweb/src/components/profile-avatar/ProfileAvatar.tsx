@@ -88,6 +88,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
       />
 
       <ConfirmDialog
+        testId="remove-photo-confirm"
         open={a.removeOpen}
         title={t('mweb.common.removePhoto2')}
         message={t('mweb.common.yourProfilePictureWillBeRemoved')}
@@ -106,6 +107,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
       ) : null}
 
       <ConfirmDialog
+        testId="delete-story-confirm"
         open={deleteId !== null}
         title={t('mweb.common.deleteStory')}
         message={t('mweb.common.thisStoryWillBeRemovedFor')}

@@ -31,7 +31,7 @@ export default function IdeasList({
   const { t } = useTranslation();
   const ideasContent =
     ideas.length === 0 ? (
-      <EmptyState icon={<LightbulbOutlinedIcon />} title={t('mweb.podIdeas.noIdeasYetBeTheFirst')} />
+      <EmptyState testId="pod-ideas-empty" icon={<LightbulbOutlinedIcon />} title={t('mweb.podIdeas.noIdeasYetBeTheFirst')} />
     ) : (
       <Stack spacing={1.5} data-testid="ideas-list">
         {ideas.map((idea: any) => (
@@ -52,7 +52,7 @@ export default function IdeasList({
     <>
       {myIdeas.length > 0 && (
         <Box sx={{ mb: 3 }} data-testid="ideas-list-mine">
-          <SectionHeader title="Your submissions" />
+          <SectionHeader testId="ideas-list-mine-header" title="Your submissions" />
           <Stack spacing={1.5} sx={{ mt: 1.25 }}>
             {myIdeas.map((idea: any) => (
               <IdeaCard

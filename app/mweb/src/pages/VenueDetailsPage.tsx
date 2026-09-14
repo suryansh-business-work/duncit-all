@@ -117,8 +117,9 @@ export default function VenueDetailsPage() {
   if (error || !venue) {
     return (
       <Stack spacing={2} sx={{ py: 2 }} data-testid="venue-details-missing">
-        <PageHeader title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
+        <PageHeader testId="venue-details-header" title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
         <EmptyState
+          testId="venue-details-empty"
           icon={<StorefrontIcon />}
           title="This venue link may be unavailable or the venue may not be approved yet."
         />
@@ -140,7 +141,7 @@ export default function VenueDetailsPage() {
 
   return (
     <Stack spacing={2.5} sx={{ pb: 4 }} data-testid="venue-details-screen">
-      <PageHeader title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
+      <PageHeader testId="venue-details-header" title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
 
       {images[0] ? (
         <ButtonBase

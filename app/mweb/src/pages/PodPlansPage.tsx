@@ -52,7 +52,7 @@ export default function PodPlansPage() {
   return (
     <Container maxWidth="sm" sx={{ py: 2 }} data-testid="pod-plans-screen">
       <Box sx={{ mb: 2.5 }}>
-        <PageHeader title={t('mweb.podPlans.podPlans')} onBack={() => navigate(-1)} />
+        <PageHeader testId="pod-plans-header" title={t('mweb.podPlans.podPlans')} onBack={() => navigate(-1)} />
       </Box>
 
       {loading && (

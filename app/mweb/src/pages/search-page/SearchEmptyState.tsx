@@ -67,7 +67,7 @@ export default function SearchEmptyState({
 
   return (
     <Stack data-testid="search-empty-state" spacing={1.5}>
-      <EmptyState icon={<SearchOffIcon />} title={heading} />
+      <EmptyState testId="search-empty-state-message" icon={<SearchOffIcon />} title={heading} />
 
       <CtaBlock
         testId="search-empty-state-share-idea"

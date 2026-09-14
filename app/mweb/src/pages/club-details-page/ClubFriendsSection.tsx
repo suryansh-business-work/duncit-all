@@ -47,7 +47,13 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
 
   return (
     <Box data-testid="club-friends" sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title="Friends Here" actionLabel="View all" onAction={() => setOpen(true)} />
+      <SectionHeader
+        testId="club-friends-header"
+        actionTestId="club-friends-view-all"
+        title="Friends Here"
+        actionLabel="View all"
+        onAction={() => setOpen(true)}
+      />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1.5 }}>
         <AvatarGroup max={5} sx={{ '& .MuiAvatar-root': { width: 36, height: 36 } }}>
           {friends.map((f) => (

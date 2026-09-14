@@ -60,14 +60,19 @@ export default function ContactValueStep({
   const busyLabel = needsCode ? labels.sending : labels.savingNumber;
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="contact-value-step" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {copy.changeHint}
         </Typography>
         {isPhoneChannel(channel) ? (
           <Stack direction="row" spacing={1}>
-            <CountryCodeField control={control} name="extension" label={t('mweb.common.code')} />
+            <CountryCodeField
+              control={control}
+              name="extension"
+              label={t('mweb.common.code')}
+              testId="contact-change-code"
+            />
             <RhfTextField
               control={control}
               name="number"
@@ -86,7 +91,7 @@ export default function ContactValueStep({
             slotProps={{ inputLabel: { shrink: true } }}
           />
         )}
-        <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
+        <DuncitButton data-testid="contact-change-send" type="submit" variant="contained" disabled={busy || !isValid}>
           {busy ? busyLabel : idleLabel}
         </DuncitButton>
       </Stack>

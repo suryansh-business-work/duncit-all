@@ -72,7 +72,7 @@ export default function MembershipPage() {
       data-testid="membership-page"
       sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}
     >
-      <PageHeader title={t('mweb.membership.title')} />
+      <PageHeader testId="membership-header" title={t('mweb.membership.title')} />
 
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
         <Typography component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>

@@ -133,9 +133,9 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
       </Alert>
     );
   } else if (pods.length === 0) {
-    body = <EmptyState icon={<EventBusyOutlinedIcon />} title={emptyText} />;
+    body = <EmptyState testId="pod-list-page-empty" icon={<EventBusyOutlinedIcon />} title={emptyText} />;
   } else if (filteredPods.length === 0) {
-    body = <EmptyState icon={<SearchOffIcon />} title={t('mweb.home.noSearchResults')} />;
+    body = <EmptyState testId="pod-list-page-no-results" icon={<SearchOffIcon />} title={t('mweb.home.noSearchResults')} />;
   } else {
     body = (
       <VirtualPodRows
@@ -151,7 +151,7 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
 
   return (
     <Stack data-testid="pod-list-page" spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%' }}>
-      <PageHeader title={title} onBack={() => navigate(-1)} />
+      <PageHeader testId="pod-list-page-header" title={title} onBack={() => navigate(-1)} />
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>

@@ -58,7 +58,7 @@ export default function PodMapSection({ pod, location, venue, onJoinMeeting }: R
 
   return (
     <Stack data-testid="pod-schedule" spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title={t('mweb.podDetails.timeAndVenue')} />
+      <SectionHeader testId="pod-schedule-header" title={t('mweb.podDetails.timeAndVenue')} />
       <PodMetaRow testId="pod-schedule-time" icon={<EventIcon />}>
         <Typography variant="body2" sx={valueSx}>
           {formatStart(pod.pod_date_time)}

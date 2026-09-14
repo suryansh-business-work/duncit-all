@@ -36,7 +36,7 @@ interface Props {
 
 export default function VenueList({ venues, meId, statusFor, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!venues.length) {
-    return <EmptyState icon={<StorefrontOutlinedIcon />} title="No approved venues yet." />;
+    return <EmptyState testId="venues-empty" icon={<StorefrontOutlinedIcon />} title="No approved venues yet." />;
   }
 
   return (

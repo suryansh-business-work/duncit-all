@@ -82,7 +82,7 @@ export default function CoinHistoryList({ transactions }: Readonly<Props>) {
 
   return (
     <Stack data-testid="coin-history-list" spacing={1.25}>
-      <SectionHeader title={t('mweb.coin.historyTitle')} />
+      <SectionHeader testId="coin-history-list-header" title={t('mweb.coin.historyTitle')} />
       <Card sx={{ px: 2, py: 0.5 }}>
         {transactions.length === 0 ? (
           <Typography data-testid="coin-history-empty" variant="body2" sx={{ color: 'text.secondary', py: 1.5 }}>

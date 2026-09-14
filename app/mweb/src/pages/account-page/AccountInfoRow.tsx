@@ -9,8 +9,9 @@ export interface AccountInfoRowProps {
 }
 
 export default function AccountInfoRow({ icon, label, value }: Readonly<AccountInfoRowProps>) {
+  const testId = `account-info-row-${label}`;
   return (
-    <Stack direction="row" spacing={2} sx={{ alignItems: 'center', px: 2, py: 1.5 }}>
+    <Stack data-testid={testId} direction="row" spacing={2} sx={{ alignItems: 'center', px: 2, py: 1.5 }}>
       <IconDisc>{icon}</IconDisc>
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>

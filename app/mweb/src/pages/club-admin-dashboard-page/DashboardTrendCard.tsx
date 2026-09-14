@@ -38,7 +38,7 @@ export default function DashboardTrendCard({ trend }: Readonly<Props>) {
 
   return (
     <Stack data-testid="dashboard-trend-card" spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.monthlyTrend')} />
+      <SectionHeader testId="dashboard-trend-card-header" title={t('clubAdmin.dashboard.monthlyTrend')} />
       <Card>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack spacing={1.5}>

@@ -146,7 +146,7 @@ export default function StudioPodsSection({
     <Card data-testid={sectionId}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <SectionHeader title={title} />
+          <SectionHeader testId={`${sectionId}-header`} title={title} />
 
           {/* Hidden while the first load runs: a strip reading "Total 0 /
               None scheduled" under a spinner states something false. Native

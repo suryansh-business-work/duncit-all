@@ -167,7 +167,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
             height: '100%',
             px: 3
           }}>
-          <EmptyState icon={<ExploreOutlinedIcon />} title={t('mweb.explore.noPodsMatchTheseFilters')} />
+          <EmptyState testId="explore-empty-state" icon={<ExploreOutlinedIcon />} title={t('mweb.explore.noPodsMatchTheseFilters')} />
         </Stack>
       ) : (
         <ExploreReels

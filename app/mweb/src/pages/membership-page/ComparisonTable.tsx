@@ -69,7 +69,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.25} data-testid="membership-comparison">
-      <SectionHeader title={t('mweb.membership.compareTitle')} />
+      <SectionHeader testId="membership-comparison-header" title={t('mweb.membership.compareTitle')} />
 
       <Box sx={{ ...SURFACE_SX, overflowX: 'auto' }}>
         <Table size="small" sx={{ minWidth: 560 }}>

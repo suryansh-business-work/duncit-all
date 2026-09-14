@@ -89,7 +89,7 @@ export default function PaymentDetailsCard({
   return (
     <Card data-testid="payment-details-card" sx={{ flex: 1 }}>
       <CardContent sx={{ p: 2 }}>
-        <SectionHeader title={t('mweb.checkout.paymentDetails')} />
+        <SectionHeader testId="payment-details-header" title={t('mweb.checkout.paymentDetails')} />
         <Stack spacing={2} sx={{ mt: 2 }}>
           <CheckoutFields
             control={control}

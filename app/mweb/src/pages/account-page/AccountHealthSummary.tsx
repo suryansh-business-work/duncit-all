@@ -28,7 +28,7 @@ export default function AccountHealthSummary({ health, onOpen }: Readonly<Props>
   const adjustment = health.delta_sum === 0 ? '' : ` · Admin adjustment: ${delta}`;
 
   return (
-    <Card>
+    <Card data-testid="account-health">
       <CardActionArea onClick={onOpen} sx={{ p: 2 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <HealthMeter

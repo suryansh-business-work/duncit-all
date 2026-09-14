@@ -29,7 +29,7 @@ export default function GiftCardClaimPage() {
 
   return (
     <Stack data-testid="gift-card-claim-screen" spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
-      <PageHeader title={t('mweb.giftCards.title')} />
+      <PageHeader testId="gift-card-claim-header" title={t('mweb.giftCards.title')} />
       {loading && !card && (
         <Stack
           data-testid="gift-card-claim-loading"

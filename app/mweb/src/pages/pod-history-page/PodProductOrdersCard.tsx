@@ -42,7 +42,7 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
     <Card data-testid="pod-product-orders-card">
       <CardContent>
         <Box sx={{ mb: 1.5 }}>
-          <SectionHeader title={t('mweb.podHistory.productsAndTracking')} />
+          <SectionHeader testId="pod-product-orders-header" title={t('mweb.podHistory.productsAndTracking')} />
         </Box>
         {error && (
           <Alert severity="warning" data-testid="po-tracking-error" sx={{ mb: 1 }}>

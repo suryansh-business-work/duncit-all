@@ -16,7 +16,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
   if (faqs.length === 0) return null;
   return (
     <Stack data-testid="frequently-asked" spacing={1.5}>
-      <SectionHeader title={t('mweb.supportHub.frequentlyAsked')} />
+      <SectionHeader testId="frequently-asked-header" title={t('mweb.supportHub.frequentlyAsked')} />
       <Box
         sx={{
           mx: { xs: -1.25, sm: -2 },

@@ -30,7 +30,7 @@ export default function PodIdeasHeader({ search, setSearch, onShare }: Readonly<
   );
   return (
     <Stack spacing={2} data-testid="pod-ideas-header" sx={{ mb: 2.5 }}>
-      <PageHeader title={t('mweb.podIdeas.podIdeas')} onBack={() => navigate(-1)} right={shareButton} />
+      <PageHeader testId="pod-ideas-title" title={t('mweb.podIdeas.podIdeas')} onBack={() => navigate(-1)} right={shareButton} />
       <SearchPillField
         placeholder={t('mweb.podIdeas.searchIdeas')}
         value={search}

@@ -41,7 +41,7 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
   };
 
   return (
-    <Card>
+    <Card data-testid="privacy-card">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" spacing={2} sx={{
           alignItems: "center"
@@ -63,6 +63,7 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
             <CircularProgress size={22} />
           ) : (
             <Switch
+              data-testid="privacy-switch"
               checked={isPrivate}
               onChange={(event) => {
                 onToggle(event.target.checked).catch(() => undefined);

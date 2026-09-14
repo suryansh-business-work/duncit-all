@@ -32,7 +32,7 @@ interface Props {
 
 export default function HostList({ hosts, meId, statusFor, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!hosts.length) {
-    return <EmptyState icon={<PersonOutlineIcon />} title="No approved hosts yet — be the first to apply!" />;
+    return <EmptyState testId="hosts-empty" icon={<PersonOutlineIcon />} title="No approved hosts yet — be the first to apply!" />;
   }
 
   return (

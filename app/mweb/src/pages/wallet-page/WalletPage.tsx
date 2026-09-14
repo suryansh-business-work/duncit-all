@@ -47,7 +47,7 @@ export default function WalletPage() {
 
   return (
     <Stack data-testid="wallet-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
-      <PageHeader title={t('mweb.common.wallet')} />
+      <PageHeader testId="wallet-page-header" title={t('mweb.common.wallet')} />
 
       {error && <Alert severity="error" data-testid="wallet-page-error">{error.message}</Alert>}
 

@@ -174,6 +174,7 @@ export default function HomeStatusRail({
       />
       <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
       <ConfirmDialog
+        testId="status-delete-confirm"
         open={pendingDelete !== null}
         title={t('mweb.common.deleteStory')}
         message="This story will be removed for everyone. This can't be undone."

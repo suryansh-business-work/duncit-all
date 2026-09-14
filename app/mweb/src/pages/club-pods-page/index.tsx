@@ -104,6 +104,7 @@ export default function ClubPodsPage() {
       <ClubPodActivityDialog pod={activityPod} onClose={() => setActivityPod(null)} />
 
       <ConfirmDialog
+        testId="club-pods-delete-confirm"
         open={!!del.target}
         title={t('clubAdmin.pods.deletePodConfirmTitle')}
         message={t('clubAdmin.pods.deletePodConfirmBody', {

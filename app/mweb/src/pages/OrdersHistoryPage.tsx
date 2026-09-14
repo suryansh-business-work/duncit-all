@@ -31,9 +31,9 @@ export default function OrdersHistoryPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }} data-testid="orders-history-screen">
-      <PageHeader title={t('mweb.ordersHistory.myProductOrders')} />
+      <PageHeader testId="orders-history-header" title={t('mweb.ordersHistory.myProductOrders')} />
       {orders.length === 0 ? (
-        <EmptyState icon={<LocalShippingOutlinedIcon />} title="No product orders yet" />
+        <EmptyState testId="orders-empty" icon={<LocalShippingOutlinedIcon />} title="No product orders yet" />
       ) : (
         orders.map((order) => (
           <Card key={order.id} sx={{ p: 2 }} data-testid={`orders-history-order-${order.id}`}>

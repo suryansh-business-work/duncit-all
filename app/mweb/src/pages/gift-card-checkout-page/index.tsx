@@ -73,6 +73,7 @@ export default function GiftCardCheckoutPage() {
     <Box data-testid="gift-card-checkout-screen" sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <PageHeader
+          testId="gift-card-checkout-header"
           title={t('mweb.giftCards.checkoutTitle')}
           onBack={() => navigate(-1)}
           right={<GatewayChip finance={payment.finance} />}

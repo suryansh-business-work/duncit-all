@@ -77,7 +77,7 @@ export default function SomethingForYouRail() {
 
   return (
     <Stack data-testid="something-for-you-rail" spacing={1.5}>
-      <SectionHeader title={t('mweb.home.somethingForYou')} />
+      <SectionHeader testId="something-for-you-rail-header" title={t('mweb.home.somethingForYou')} />
 
       {/* Bleeds to the screen edge so the last card is visibly cut off — the
           only honest signal that a row scrolls when there is no scrollbar. */}

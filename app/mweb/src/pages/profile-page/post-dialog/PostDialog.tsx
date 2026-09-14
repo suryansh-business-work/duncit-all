@@ -171,6 +171,7 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
         )}
       </DialogContent>
       <ConfirmDialog
+        testId="post-dialog-delete-confirm"
         open={confirmPostOpen}
         title={t('mweb.profile.deleteThisPost')}
         message={t('mweb.profile.thisWillPermanentlyRemoveThePost')}

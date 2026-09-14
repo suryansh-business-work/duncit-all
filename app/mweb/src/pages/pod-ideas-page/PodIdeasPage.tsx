@@ -234,6 +234,7 @@ export default function PodIdeasPage() {
         message={toast ?? ''}
       />
       <ConfirmDialog
+        testId="idea-delete-confirm"
         open={!!confirmDeleteId}
         title={t('mweb.podIdeas.deleteThisIdea')}
         message={t('mweb.podIdeas.thisWillPermanentlyRemoveTheIdea')}

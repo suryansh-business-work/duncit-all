@@ -46,7 +46,7 @@ export default function SearchResultsSection({
   if (results.length === 0) return null;
   return (
     <Stack data-testid="search-results-section" component="section" spacing={1.5}>
-      <SectionHeader title={heading} />
+      <SectionHeader testId="search-results-section-header" title={heading} />
       {results.map((result) => (
         <SearchClubCard
           key={result.club.id}

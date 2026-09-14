@@ -129,7 +129,7 @@ export default function ClubsPage({
   const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
   const clubsBody =
     clubs.length === 0 ? (
-      <EmptyState icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
+      <EmptyState testId="clubs-list-empty" icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
     ) : (
       <ClubsGrid
         clubs={clubs}
@@ -174,6 +174,7 @@ export default function ClubsPage({
       />
       {locationHasNoClubs ? (
         <EmptyState
+          testId="clubs-location-empty"
           icon={<LocationOffOutlinedIcon />}
           title="No Clubs operating at the selected location,"
           actionLabel="Reset Location"

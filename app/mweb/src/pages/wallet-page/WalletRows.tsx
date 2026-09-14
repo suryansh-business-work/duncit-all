@@ -42,7 +42,7 @@ export function WalletSection({
 }: Readonly<{ title: string; emptyText: string; testId?: string; children: ReactNode[] }>) {
   return (
     <Stack spacing={1.25} data-testid={testId}>
-      <SectionHeader title={title} />
+      <SectionHeader testId={testId ? `${testId}-header` : undefined} title={title} />
       <Card sx={{ px: 2, py: 0.5 }}>
         {children.length === 0 ? (
           <Typography variant="body2" sx={{ color: 'text.secondary', py: 1.5 }} data-testid={testId ? `${testId}-empty` : undefined}>

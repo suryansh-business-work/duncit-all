@@ -27,7 +27,7 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
 
   return (
     <Box data-testid="club-hosts" sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title={titleText} />
+      <SectionHeader testId="club-hosts-header" title={titleText} />
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pt: 1.5, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
           <Stack

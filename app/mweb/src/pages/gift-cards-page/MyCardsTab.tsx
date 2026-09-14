@@ -42,14 +42,14 @@ export default function MyCardsTab() {
     <Stack data-testid="gift-cards-my-cards-tab" spacing={2}>
       {error && <Alert data-testid="gift-cards-error" severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {!error && owned.length === 0 && gifted.length === 0 && (
-        <EmptyState icon={<CardGiftcardOutlinedIcon />} title={t('mweb.giftCards.myCardsEmpty')} />
+        <EmptyState testId="gift-cards-empty" icon={<CardGiftcardOutlinedIcon />} title={t('mweb.giftCards.myCardsEmpty')} />
       )}
       {owned.map((card) => (
         <MyCardTile key={card.id} card={card} currencySymbol={currencySymbol} senderName={senderName} />
       ))}
       {gifted.length > 0 && (
         <>
-          <SectionHeader title={t('mweb.giftCards.giftedHeading')} />
+          <SectionHeader testId="gift-cards-gifted-header" title={t('mweb.giftCards.giftedHeading')} />
           {gifted.map((card) => (
             <MyCardTile
               key={card.id}

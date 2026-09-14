@@ -128,6 +128,7 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       )}
       {!loading && !error && venues.length === 0 && (
         <EmptyState
+          testId="venues-empty"
           icon={<StorefrontOutlinedIcon />}
           title="No venues found here yet — try another search or category."
         />

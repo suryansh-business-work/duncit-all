@@ -219,7 +219,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
       <Card data-testid="ph-actions-card">
         <CardContent>
           <Box sx={{ mb: 1.5 }}>
-            <SectionHeader title={t('mweb.podHistory.actions')} />
+            <SectionHeader testId="ph-actions-header" title={t('mweb.podHistory.actions')} />
           </Box>
           <PodHistoryActions
             item={item}
@@ -262,7 +262,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
       <Card data-testid="ph-timeline-card">
         <CardContent>
           <Box sx={{ mb: 1.5 }}>
-            <SectionHeader title={t('mweb.podHistory.timeline')} />
+            <SectionHeader testId="ph-timeline-header" title={t('mweb.podHistory.timeline')} />
           </Box>
           <PodHistoryTimeline item={item} />
         </CardContent>

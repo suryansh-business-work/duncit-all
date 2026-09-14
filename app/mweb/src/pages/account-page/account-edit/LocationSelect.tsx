@@ -4,6 +4,7 @@ import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
 import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { testIdProps } from '../../../utils/testIdProps';
 
 interface Props {
   control: Control<AccountEditValues>;
@@ -44,11 +45,12 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
   );
 
   return (
-    <Stack spacing={1.5}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+    <Stack data-testid="location-select" spacing={1.5}>
+      <Typography data-testid="location-select-title" variant="subtitle2" sx={{ fontWeight: 600 }}>
         Location
       </Typography>
       <Autocomplete
+        data-testid="location-country"
         options={countryNames}
         value={country || null}
         onChange={(_event, next) => {
@@ -56,21 +58,42 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
           write('state', '');
           write('city', '');
         }}
-        renderInput={(params) => <TextField {...params} label={t('mweb.common.country')} />}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={t('mweb.common.country')}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-country-input') },
+            }}
+          />
+        )}
       />
       <Autocomplete
+        data-testid="location-state"
         options={stateNames}
         value={state || null}
         disabled={!country}
         onChange={(_event, next) => write('state', next ?? '')}
-        renderInput={(params) => <TextField {...params} label={t('mweb.common.state')} />}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={t('mweb.common.state')}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-state-input') },
+            }}
+          />
+        )}
       />
       <TextField
+        data-testid="location-city"
         label={t('mweb.common.city')}
         value={city}
         onChange={(event) => write('city', event.target.value)}
         placeholder={t('mweb.account.enterYourCity')}
         helperText={t('mweb.account.yourCityUsedToSurfacePods')}
+        slotProps={{ htmlInput: testIdProps('location-city-input') }}
       />
     </Stack>
   );

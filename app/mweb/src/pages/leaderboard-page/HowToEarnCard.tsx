@@ -42,7 +42,7 @@ export default function HowToEarnCard({ config }: Readonly<Props>) {
     <Card data-testid="leaderboard-how-to-earn">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <SectionHeader title={t('mweb.leaderboard.howToTitle')} />
+          <SectionHeader testId="leaderboard-how-to-earn-header" title={t('mweb.leaderboard.howToTitle')} />
           {active.map((category) => (
             <Stack
               key={category}

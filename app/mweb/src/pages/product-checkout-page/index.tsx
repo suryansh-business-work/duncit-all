@@ -87,6 +87,7 @@ export default function ProductCheckoutPage() {
   if (lines.length === 0) {
     return (
       <EmptyState
+        testId="product-checkout-empty"
         icon={<ShoppingBagOutlinedIcon />}
         title={t('mweb.checkout.nothingToCheckout')}
         actionLabel={t('mweb.checkout.backToCart')}
@@ -100,6 +101,7 @@ export default function ProductCheckoutPage() {
     <Box data-testid="product-checkout-page" sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <PageHeader
+          testId="product-checkout-page-header"
           title={t('mweb.checkout.productTitle')}
           onBack={() => navigate(-1)}
           right={<GatewayChip finance={session.finance} />}

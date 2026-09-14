@@ -187,6 +187,7 @@ export default function NotificationsScreen({
         </Box>
       </Stack>
       <ConfirmDialog
+        testId="notif-toggle-confirm"
         open={pendingToggle !== null}
         title={pendingToggle ? 'Enable notifications?' : 'Disable notifications?'}
         message={

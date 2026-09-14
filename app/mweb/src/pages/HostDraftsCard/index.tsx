@@ -67,6 +67,7 @@ export default function HostDraftsCard() {
         </RowGroup>
       ) : null}
       <ConfirmDialog
+        testId="draft-delete"
         open={!!target}
         title={t('mweb.common.deleteDraft')}
         message={t('mweb.common.thisInProgressPodWillBe')}

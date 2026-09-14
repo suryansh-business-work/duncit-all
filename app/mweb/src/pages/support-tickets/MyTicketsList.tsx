@@ -98,7 +98,7 @@ export default function MyTicketsList() {
 
   return (
     <Stack data-testid="my-tickets-list" spacing={1}>
-      <SectionHeader title="Your tickets" />
+      <SectionHeader testId="my-tickets-header" title="Your tickets" />
       <DuncitTabs
         {...tabs}
         variant="scrollable"

@@ -62,7 +62,7 @@ export default function YourClubsSection() {
 
   return (
     <Stack data-testid="your-clubs-section" spacing={1.5}>
-      <SectionHeader title={t('mweb.clubStudio.yourClubs')} />
+      <SectionHeader testId="your-clubs-section-header" title={t('mweb.clubStudio.yourClubs')} />
       <Card>
         <ClubsBody clubs={clubs} loading={loading && !data} error={error} />
       </Card>

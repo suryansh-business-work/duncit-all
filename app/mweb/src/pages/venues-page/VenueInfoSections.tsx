@@ -14,7 +14,7 @@ export function VenueChipsSection({ title, items }: Readonly<{ title: string; it
   const sectionId = `venue-chips-section-${title.toLowerCase().replace(/\s+/g, '-')}`;
   return (
     <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }} data-testid={sectionId}>
-      <SectionHeader title={title} />
+      <SectionHeader testId={`${sectionId}-header`} title={title} />
       <Stack direction="row" spacing={1} useFlexGap sx={{
         flexWrap: "wrap"
       }}>
@@ -37,7 +37,7 @@ interface LocationProps {
 export function VenueLocationCard({ title, venueName, parts, lat, lng }: Readonly<LocationProps>) {
   return (
     <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }} data-testid="venue-location-card">
-      <SectionHeader title={title} />
+      <SectionHeader testId="venue-location-card-header" title={title} />
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
           sx={{

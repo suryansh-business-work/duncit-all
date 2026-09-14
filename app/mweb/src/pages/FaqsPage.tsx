@@ -139,9 +139,11 @@ export default function FaqsPage() {
           <Alert severity="info" data-testid="faqs-no-match">{t('mweb.faqsPage.noFaqsMatchYourSearch')}</Alert>
         )}
 
-        {filteredGroups.map((g) => (
-          <Stack key={g.super_category?.id ?? 'GENERIC'} spacing={1.5}>
-            <SectionHeader title={g.super_category?.name ?? 'General'} />
+        {filteredGroups.map((g) => {
+          const groupId = g.super_category?.id ?? 'GENERIC';
+          return (
+          <Stack key={groupId} spacing={1.5}>
+            <SectionHeader testId={`faqs-group-${groupId}-header`} title={g.super_category?.name ?? 'General'} />
             <Stack spacing={1}>
               {g.faqs.map((f: any) => (
                 <Accordion
@@ -174,7 +176,8 @@ export default function FaqsPage() {
               ))}
             </Stack>
           </Stack>
-        ))}
+          );
+        })}
       </Stack>
     </SupportShell>
   );

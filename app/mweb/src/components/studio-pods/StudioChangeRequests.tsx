@@ -25,7 +25,7 @@ export default function StudioChangeRequests({ role }: Readonly<{ role: PodChang
     <Card data-testid={`studio-change-requests-${role}`}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
-          <SectionHeader title={t('changeRequest.sectionTitle')} />
+          <SectionHeader testId={`studio-change-requests-${role}-header`} title={t('changeRequest.sectionTitle')} />
           <ChangeRequestBoard role={role} hideHeader onChanged={notifySuccess} />
         </Stack>
       </CardContent>

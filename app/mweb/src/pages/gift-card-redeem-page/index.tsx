@@ -33,7 +33,7 @@ export default function GiftCardRedeemPage() {
 
   return (
     <Stack data-testid="gift-card-redeem-screen" spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
-      <PageHeader title={t('mweb.giftCards.redeemTitle')} />
+      <PageHeader testId="gift-card-redeem-header" title={t('mweb.giftCards.redeemTitle')} />
       <Card sx={{ p: 2 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
           <TextField

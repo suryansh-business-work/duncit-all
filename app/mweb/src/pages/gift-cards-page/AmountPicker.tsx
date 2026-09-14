@@ -29,7 +29,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
 
   return (
     <Card data-testid="gift-card-amount-picker" sx={{ p: 2 }}>
-      <SectionHeader title={t('mweb.giftCards.amountHeading')} />
+      <SectionHeader testId="gift-card-amount-picker-header" title={t('mweb.giftCards.amountHeading')} />
       <Stack
         direction="row"
         spacing={1}

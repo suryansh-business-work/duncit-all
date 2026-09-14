@@ -40,7 +40,7 @@ export default function ThemePicker({
 
   return (
     <Card data-testid="theme-picker" sx={{ p: 2 }}>
-      <SectionHeader title={t('mweb.giftCards.themeHeading')} />
+      <SectionHeader testId="theme-picker-header" title={t('mweb.giftCards.themeHeading')} />
       <Stack
         direction="row"
         spacing={1}

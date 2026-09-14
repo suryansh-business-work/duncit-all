@@ -58,7 +58,7 @@ export default function SupportHubPage() {
         <StartConversation />
 
         <Stack spacing={1.5}>
-          <SectionHeader title={t('mweb.supportHub.moreWaysToReachUs')} />
+          <SectionHeader testId="support-more-ways-header" title={t('mweb.supportHub.moreWaysToReachUs')} />
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
             {MORE_WAYS.map((section) => (
               <SupportSectionCard key={section.key} section={section} />

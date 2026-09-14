@@ -166,6 +166,7 @@ export default function PodCommentsSheet({
         </Alert>
       )}
       <ConfirmDialog
+        testId="comment-delete"
         open={!!deleteId}
         title={t('mweb.podDetails.deleteCommentTitle')}
         message={t('mweb.podDetails.deleteCommentBody')}

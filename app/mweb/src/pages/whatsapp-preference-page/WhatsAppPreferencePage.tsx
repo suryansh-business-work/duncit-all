@@ -115,6 +115,7 @@ export default function WhatsAppPreferencePage() {
       />
 
       <ConfirmDialog
+        testId="whatsapp-preference-confirm"
         open={confirmOpen}
         title={t('whatsappPreference.turnAllOffTitle')}
         message={t('whatsappPreference.turnAllOffMessage')}

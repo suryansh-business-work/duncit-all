@@ -149,6 +149,7 @@ export default function TicketDetailPage() {
       <TicketComposer locked={isResolved} busy={replying} onSend={send} />
 
       <ConfirmDialog
+        testId="ticket-details-resolve-confirm"
         open={confirmOpen}
         title={t('mweb.common.markAsResolved')}
         message={t('mweb.common.areYouSureYourIssueHas')}

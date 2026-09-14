@@ -28,6 +28,8 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
   return (
     <Stack data-testid="previous-pods-rail" spacing={1.5}>
       <SectionHeader
+        testId="previous-pods-rail-header"
+        actionTestId="previous-pods-see-all"
         title={t('mweb.home.previousPodsTitle')}
         actionLabel={t('mweb.home.seeAll')}
         onAction={() => navigate('/previous-pods')}

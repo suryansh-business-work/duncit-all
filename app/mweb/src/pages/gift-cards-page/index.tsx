@@ -29,7 +29,7 @@ export default function GiftCardsPage() {
       spacing={2.5}
       sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}
     >
-      <PageHeader title={t('mweb.giftCards.title')} />
+      <PageHeader testId="gift-cards-header" title={t('mweb.giftCards.title')} />
       <DuncitTabs {...tabs} variant="fullWidth" sx={SEGMENTED_TABS_SX} />
       {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
     </Stack>

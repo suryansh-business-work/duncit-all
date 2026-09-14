@@ -35,8 +35,8 @@ export default function GiftRecipientFields({
     : t('mweb.giftCards.recipientEmailHint');
 
   return (
-    <Card sx={{ p: 2 }}>
-      <SectionHeader title={t('mweb.giftCards.forHeading')} />
+    <Card data-testid="gift-recipient-fields" sx={{ p: 2 }}>
+      <SectionHeader testId="gift-recipient-fields-header" title={t('mweb.giftCards.forHeading')} />
       <ToggleButtonGroup
         exclusive
         fullWidth

@@ -19,7 +19,7 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
   if (groups.length === 0) return null;
   return (
     <Stack data-testid="support-topics" spacing={1.5}>
-      <SectionHeader title={t('mweb.supportHub.topics')} />
+      <SectionHeader testId="support-topics-header" title={t('mweb.supportHub.topics')} />
       <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
         <List disablePadding>
           {groups.map((group, index) => {

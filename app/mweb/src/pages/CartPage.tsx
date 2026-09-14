@@ -39,8 +39,9 @@ export default function CartPage() {
   if (groups.length === 0) {
     return (
       <Stack spacing={2} sx={{ py: 0.5 }} data-testid="cart-screen">
-        <PageHeader title={t('mweb.cart.title')} />
+        <PageHeader testId="cart-header" title={t('mweb.cart.title')} />
         <EmptyState
+          testId="cart-empty"
           icon={<ShoppingCartOutlinedIcon />}
           title={t('mweb.cart.empty')}
           actionLabel={t('mweb.cart.exploreShop')}
@@ -52,7 +53,7 @@ export default function CartPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }} data-testid="cart-screen">
-      <PageHeader title={t('mweb.cart.title')} />
+      <PageHeader testId="cart-header" title={t('mweb.cart.title')} />
       {groups.map(([podId, group]) => (
         <CartPodGroup
           key={podId}

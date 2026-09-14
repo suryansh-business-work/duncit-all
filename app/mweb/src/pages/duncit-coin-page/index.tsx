@@ -22,7 +22,7 @@ export default function DuncitCoinPage() {
 
   return (
     <Stack data-testid="duncit-coin-page" spacing={2.5} sx={{ py: 0.5 }}>
-      <PageHeader title={t('mweb.coin.title')} />
+      <PageHeader testId="duncit-coin-header" title={t('mweb.coin.title')} />
 
       {error && <Alert data-testid="coin-error" severity="error">{t('mweb.coin.loadError')}</Alert>}
 

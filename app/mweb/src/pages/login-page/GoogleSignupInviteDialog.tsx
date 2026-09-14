@@ -46,8 +46,8 @@ export default function GoogleSignupInviteDialog({
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} onClose={onDismiss} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>
+    <Dialog data-testid="google-signup-invite" open={open} onClose={onDismiss} fullWidth maxWidth="xs">
+      <DialogTitle data-testid="google-signup-invite-title" sx={{ fontSize: 17, fontWeight: 600 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <PersonAddRoundedIcon fontSize="small" sx={{ color: 'secondary.main' }} />
           <span>{t('mweb.login.googleNotFoundTitle')}</span>
@@ -64,10 +64,16 @@ export default function GoogleSignupInviteDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
-        <DuncitButton variant="outlined" color="inherit" onClick={onDismiss} sx={{ flex: 1 }}>
+        <DuncitButton
+          data-testid="google-signup-dismiss"
+          variant="outlined"
+          color="inherit"
+          onClick={onDismiss}
+          sx={{ flex: 1 }}
+        >
           {t('mweb.login.googleNotFoundDismiss')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onAccept} sx={{ flex: 1.4 }}>
+        <DuncitButton data-testid="google-signup-accept" variant="contained" onClick={onAccept} sx={{ flex: 1.4 }}>
           {t('mweb.login.googleNotFoundAction')}
         </DuncitButton>
       </DialogActions>

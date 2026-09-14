@@ -77,7 +77,7 @@ export default function VenueManagePage() {
       <StudioChangeRequests role="VENUE" />
 
       <Stack spacing={1.5}>
-        <SectionHeader title="Pods at your venue" />
+        <SectionHeader testId="venue-manage-pods-header" title="Pods at your venue" />
         <Card>
           <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <SimpleBarChart
@@ -91,7 +91,7 @@ export default function VenueManagePage() {
       {health && venue?.id && <VenueHealthCard health={health} venueId={venue.id} />}
 
       <Stack spacing={1.5}>
-        <SectionHeader title="Your application" />
+        <SectionHeader testId="venue-manage-application-header" title="Your application" />
         <Card>
           <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <UserVenuePanel venueId={venue?.id ?? null} />
@@ -102,7 +102,7 @@ export default function VenueManagePage() {
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <SectionHeader title={t('mweb.venueManagePage.yourVenues')} />
+            <SectionHeader testId="venue-manage-venues-header" title={t('mweb.venueManagePage.yourVenues')} />
           </Stack>
           <Chip
             size="small"

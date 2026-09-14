@@ -37,7 +37,7 @@ export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }
     );
   }
   if (!pods.length) {
-    return <EmptyState icon={<BookmarkBorderIcon />} title={t('mweb.saved.noSavedPodsYetTapThe')} />;
+    return <EmptyState testId="saved-items-body-empty" icon={<BookmarkBorderIcon />} title={t('mweb.saved.noSavedPodsYetTapThe')} />;
   }
   return (
     <Stack data-testid="saved-items-body-list" spacing={1.5}>

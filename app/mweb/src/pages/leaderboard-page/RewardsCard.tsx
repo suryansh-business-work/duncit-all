@@ -85,7 +85,7 @@ export default function RewardsCard({ config, category }: Readonly<Props>) {
             <IconDisc>
               <CardGiftcardIcon />
             </IconDisc>
-            <SectionHeader title={t('mweb.leaderboard.rewardsTitle')} />
+            <SectionHeader testId="leaderboard-rewards-header" title={t('mweb.leaderboard.rewardsTitle')} />
           </Stack>
           {rewards.length === 0 ? (
             <Typography variant="body2" data-testid="leaderboard-rewards-empty" sx={{

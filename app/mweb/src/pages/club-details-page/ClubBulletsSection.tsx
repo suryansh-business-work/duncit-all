@@ -15,7 +15,7 @@ export default function ClubBulletsSection({ title, items }: Readonly<Props>) {
 
   return (
     <Box data-testid="club-bullets" sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title={title} />
+      <SectionHeader testId="club-bullets-header" title={title} />
       <List dense disablePadding sx={{ mt: 1 }}>
         {bullets.map((item) => (
           <ListItem key={item} disableGutters sx={{ alignItems: 'flex-start', py: 0.5 }}>

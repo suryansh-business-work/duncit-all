@@ -18,7 +18,7 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
 
   return (
     <Stack data-testid="club-faqs" spacing={1}>
-      <SectionHeader title="FAQs" />
+      <SectionHeader testId="club-faqs-header" title="FAQs" />
       {faqs.map((faq) => (
         <Accordion key={faq.question} data-testid={`club-faq-${faq.question}`} disableGutters sx={{ overflow: 'hidden' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 2 }}>

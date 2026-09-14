@@ -163,6 +163,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
       />
 
       <ConfirmDialog
+        testId="mail-preference-confirm"
         open={confirmOpen}
         title={t('mailPreference.unsubscribeAllTitle')}
         message={t('mailPreference.unsubscribeAllMessage')}

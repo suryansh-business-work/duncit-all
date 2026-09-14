@@ -30,6 +30,8 @@ export default function ProfileBadgesStrip() {
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Box sx={{ mb: 1.5 }}>
           <SectionHeader
+            testId="profile-badges-strip-header"
+            actionTestId="profile-badges-strip-view-all"
             title={t('mweb.profile.badges')}
             actionLabel={t('mweb.badges.viewAll')}
             onAction={() => navigate('/badges')}

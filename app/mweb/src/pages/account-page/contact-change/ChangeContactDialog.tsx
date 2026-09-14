@@ -86,11 +86,11 @@ export default function ChangeContactDialog({
   };
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>{copy.changeTitle}</DialogTitle>
+    <Dialog data-testid="change-contact-sheet" open onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle data-testid="change-contact-dialog-title">{copy.changeTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          {state.error && <Alert severity="error">{state.error}</Alert>}
+          {state.error && <Alert data-testid="contact-change-error" severity="error">{state.error}</Alert>}
           {state.step === 'ENTER' ? (
             <ContactValueStep
               channel={active}
@@ -113,7 +113,7 @@ export default function ChangeContactDialog({
             />
           )}
           {needsCode && (
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography data-testid="change-contact-hint" variant="caption" sx={{ color: 'text.secondary' }}>
               {labels.whyOtp}
             </Typography>
           )}

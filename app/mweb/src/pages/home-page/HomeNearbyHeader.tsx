@@ -7,6 +7,8 @@ export default function HomeNearbyHeader({ onOpen }: Readonly<{ onOpen: () => vo
   const { t } = useTranslation();
   return (
     <SectionHeader
+      testId="happening-nearby-header"
+      actionTestId="happening-nearby-see-all"
       title={t('mweb.home.happeningNearbyTitle')}
       actionLabel={t('mweb.home.seeAll')}
       onAction={onOpen}

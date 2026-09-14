@@ -48,7 +48,7 @@ export default function VenueEarningsPage() {
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <SectionHeader title="Payout history" />
+            <SectionHeader testId="venue-earnings-page-payout-header" title="Payout history" />
           </Stack>
           <Chip size="small" label={payouts.length} sx={{ height: 24, minHeight: 24 }} data-testid="venue-earnings-page-payout-count" />
         </Stack>

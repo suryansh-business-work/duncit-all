@@ -15,7 +15,7 @@ interface Props {
 export default function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
     <Stack data-testid="category-actions" component="section" spacing={1.5}>
-      <SectionHeader title="Discover Experiences by Interest" />
+      <SectionHeader testId="category-actions-header" title="Discover Experiences by Interest" />
       {categories.length === 0 ? (
         <Typography data-testid="category-actions-empty" variant="body2" sx={{
           color: "text.secondary"

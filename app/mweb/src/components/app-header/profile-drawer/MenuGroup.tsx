@@ -15,11 +15,12 @@ export default function MenuGroup({
   children,
 }: Readonly<{ title?: string; testId?: string; children: ReactNode }>) {
   const rows = Children.toArray(children).filter(isValidElement);
+  const sectionTestId = testId ? `${testId}-header` : undefined;
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
       {title ? (
         <Box sx={{ mb: 1 }}>
-          <SectionHeader title={title} />
+          <SectionHeader title={title} testId={sectionTestId} />
         </Box>
       ) : null}
       <Box data-testid={testId} sx={{ ...SURFACE_SX, overflow: 'hidden' }}>

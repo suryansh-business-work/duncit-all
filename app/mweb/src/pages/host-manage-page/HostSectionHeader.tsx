@@ -20,7 +20,7 @@ export default function HostSectionHeader({ title, count, children, testId }: Re
   return (
     <Stack data-testid={testId} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <SectionHeader title={title} />
+        <SectionHeader testId={testId ? `${testId}-header` : undefined} title={title} />
       </Box>
       {count === undefined ? null : (
         <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem', fontWeight: 600 }}>

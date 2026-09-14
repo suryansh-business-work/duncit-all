@@ -138,7 +138,7 @@ export default function HostsVenuesPage() {
 
   return (
     <Stack spacing={2.5} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }} data-testid="hosts-venues-screen">
-      <PageHeader title={t('mweb.hostsVenues.hostsAndVenues')} onBack={() => navigate(-1)} />
+      <PageHeader testId="hosts-venues-header" title={t('mweb.hostsVenues.hostsAndVenues')} onBack={() => navigate(-1)} />
 
       <HostsVenuesIntroCard />
 

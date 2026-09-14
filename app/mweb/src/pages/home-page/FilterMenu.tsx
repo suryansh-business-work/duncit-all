@@ -129,6 +129,7 @@ export default function FilterMenu(props: Readonly<Props>) {
       </Tooltip>
 
       <ResponsiveDialog
+        testId="home-filter-sheet"
         open={open}
         onClose={() => setOpen(false)}
         title={t('mweb.common.filters')}

@@ -141,7 +141,7 @@ export function NotificationsScreen({
               data={visible}
               keyExtractor={(item) => item.id}
               renderItem={({ item, index }) => (
-                <GroupedRow index={index} count={visible.length}>
+                <GroupedRow testID={`grouped-row-${item.id}`} index={index} count={visible.length}>
                   <NotificationRow
                     item={item}
                     busy={busyId === item.id || markAllBusy}

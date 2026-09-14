@@ -54,7 +54,7 @@ export default function BadgeDetailsSheet({
       : null;
 
   return (
-    <ResponsiveDialog open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
+    <ResponsiveDialog testId="badge-details-dialog" open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
       <Stack data-testid="badge-details-sheet" spacing={2} sx={{ pb: 1 }}>
         <Stack direction="row" spacing={2} sx={{
           alignItems: "center"

@@ -38,6 +38,7 @@ export default function HostInsightsFilterSheet({
 
   return (
     <ResponsiveDialog
+      testId="insights-filter-sheet"
       open={open}
       onClose={onClose}
       title={

@@ -104,6 +104,7 @@ export default function LocationDialog({
 
   return (
     <ResponsiveDialog
+      testId="location-dialog"
       open={open}
       onClose={onClose}
       title={title}

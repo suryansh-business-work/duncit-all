@@ -12,6 +12,8 @@ interface Props {
   height?: number | { xs?: number; sm?: number; md?: number; lg?: number };
   poster?: string;
   showToggles?: boolean;
+  /** The slide's own id; the video and its toggles hang off it. */
+  testId?: string;
 }
 
 /**
@@ -23,6 +25,7 @@ export default function VideoMedia({
   height = { xs: 220, md: 360 },
   poster,
   showToggles = true,
+  testId = 'video-media',
 }: Readonly<Props>) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const [muted, setMuted] = useState(true);
@@ -48,10 +51,10 @@ export default function VideoMedia({
   };
 
   return (
-    <Box data-testid="video-media" sx={{ position: 'relative', width: '100%', bgcolor: 'black' }}>
+    <Box data-testid={testId} sx={{ position: 'relative', width: '100%', bgcolor: 'black' }}>
       <Box
         component="video"
-        data-testid="video-media-video"
+        data-testid={`${testId}-video`}
         ref={ref}
         src={videoSourceUrl(src)}
         poster={poster}
@@ -80,7 +83,7 @@ export default function VideoMedia({
           }}
         >
           <DuncitIconButton
-            data-testid="video-media-play-toggle"
+            data-testid={`${testId}-play-toggle`}
             size="small"
             onClick={togglePlay}
             aria-label={playing ? 'Pause video' : 'Play video'}
@@ -93,7 +96,7 @@ export default function VideoMedia({
             {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </DuncitIconButton>
           <DuncitIconButton
-            data-testid="video-media-mute-toggle"
+            data-testid={`${testId}-mute-toggle`}
             size="small"
             onClick={toggleMute}
             aria-label={muted ? 'Unmute video' : 'Mute video'}

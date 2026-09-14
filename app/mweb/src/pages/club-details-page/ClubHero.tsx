@@ -140,6 +140,7 @@ export default function ClubHero({
               key={m.url}
               src={m.url}
               height={{ xs: 280, md: 460 }}
+              testId={`detail-hero-video-${i}`}
             />
           ) : (
             <Box

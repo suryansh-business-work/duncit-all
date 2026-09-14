@@ -158,9 +158,7 @@ export default function PodHero({
         >
           {media.map((m, i) =>
             isVideoMedia(m) ? (
-              // VideoMedia (components/media/VideoMedia, not in this batch) does not
-              // forward a data-testid prop to its root element.
-              <VideoMedia key={m.url} src={m.url} height={HERO_HEIGHT} />
+              <VideoMedia key={m.url} src={m.url} height={HERO_HEIGHT} testId={`detail-hero-video-${i}`} />
             ) : (
               <Box
                 key={m.url}

@@ -129,11 +129,13 @@ export default function SearchResults({
       ) : null}
 
       <SearchResultsSection
+        testId="search-happening-soon"
         heading={t('mweb.search.exploreExperiencesHappeningSoon')}
         results={sortClubResults(happening, sort)}
         {...sectionProps}
       />
       <SearchResultsSection
+        testId="search-more-clubs"
         heading={t('mweb.search.moreClubsWorthExploring')}
         results={sortClubResults(moreClubs, sort)}
         {...sectionProps}

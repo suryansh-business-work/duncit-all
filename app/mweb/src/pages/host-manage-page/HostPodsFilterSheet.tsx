@@ -64,6 +64,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
 
   return (
     <ResponsiveDialog
+      testId="host-pods-filter-sheet"
       open={open}
       onClose={onClose}
       title={

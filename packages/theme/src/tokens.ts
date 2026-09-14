@@ -22,22 +22,29 @@ export const tokens = {
     900: '#111827',
   },
 
-  // Status / secondary colours shared by every portal.
+  // Status / secondary colours shared by every portal — the LIGHT-mode values.
+  // Each clears WCAG AA 4.5:1 as text on paper, bg and soft, and under white
+  // text as a fill (`node scripts/verify-contrast.mjs`). `accent` is decorative.
   semantic: {
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
-    secondary: '#8b5cf6',
+    success: '#137333',
+    warning: '#a14e06',
+    error: '#c62828',
+    info: '#1d4ed8',
+    secondary: '#7c3aed',
     accent: '#06b6d4',
   },
 
-  // Light-mode surfaces.
+  // Light-mode surfaces, plus the text and field outline that sit on them.
   surface: {
     bg: '#f8fafc',
     paper: '#ffffff',
     soft: '#f1f5f9',
+    // Hairline dividers and card edges — decorative, not a field boundary.
     border: '#e5e7eb',
+    // Secondary text: 4.5:1 on paper, bg and soft.
+    muted: '#606774',
+    // A form field's outline: 3:1 against paper and bg (WCAG 1.4.11).
+    inputBorder: '#878e9a',
   },
 
   // Dark-mode counterparts.
@@ -47,8 +54,19 @@ export const tokens = {
     bg: '#0b1220',
     surface: '#111a2e',
     border: 'rgba(255,255,255,0.10)',
+    inputBorder: '#737b88',
     gradientFrom: '#100d18',
     gradientTo: '#08070b',
+    // Lighter status colours: 4.5:1 as text on bg and surface, and under
+    // `neutral[900]` text as a fill.
+    semantic: {
+      success: '#4ade80',
+      warning: '#fbbf24',
+      error: '#f87171',
+      info: '#60a5fa',
+      secondary: '#a78bfa',
+      accent: '#22d3ee',
+    },
   },
 
   // Corner radii (px).
@@ -87,8 +105,10 @@ export const tokens = {
     weight: { regular: 400, medium: 600, semibold: 700, bold: 800 },
   },
 
-  // Brand accent used when a portal doesn't pass its own (Duncit red).
-  defaultAccent: { light: '#ff9e9e', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' },
+  // Brand accent used when a portal doesn't pass its own: the Duncit CTA red,
+  // which white text clears at 4.81:1, with hover/pressed steps that only get
+  // darker. Any accent is still made AA-safe by `buildThemeCtx`.
+  defaultAccent: { light: '#ff9e9e', main: '#d92d2d', hover: '#c62226', active: '#b42323' },
 } as const;
 
 export type Tokens = typeof tokens;

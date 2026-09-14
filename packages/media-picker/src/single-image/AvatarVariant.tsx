@@ -52,6 +52,8 @@ export default function AvatarVariant({
         {value ? (
           <Avatar
             src={value}
+            // Decorative: the field's label sits beside it and names the image.
+            alt=""
             variant={shape === 'circle' ? 'circular' : 'rounded'}
             sx={{
               width: 72,

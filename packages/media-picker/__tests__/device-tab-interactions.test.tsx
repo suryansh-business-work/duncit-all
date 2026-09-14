@@ -101,6 +101,21 @@ describe('DeviceUploadTab', () => {
     expect(click).toHaveBeenCalledTimes(2);
   });
 
+  it('opens the hidden input from the drop zone by keyboard, on Enter or Space only', () => {
+    const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
+    const empty = tab();
+    const zone = empty.getByTestId('media-device-dropzone');
+    expect(zone).toHaveAttribute('role', 'button');
+    expect(zone).toHaveAttribute('tabindex', '0');
+
+    fireEvent.keyDown(zone, { key: 'Enter' });
+    fireEvent.keyDown(zone, { key: ' ' });
+    expect(click).toHaveBeenCalledTimes(2);
+
+    fireEvent.keyDown(zone, { key: 'Tab' });
+    expect(click).toHaveBeenCalledTimes(2);
+  });
+
   it('still offers the crop step before the admin settings arrive, on an empty preset list', () => {
     class LoadedImage {
       onload: (() => void) | null = null;

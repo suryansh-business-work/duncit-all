@@ -308,7 +308,7 @@ describe('Pexels card source fallbacks', () => {
       <PexelsPhotoCard photo={photo} picked={false} importing={false} anyImporting={false} onPick={onPick} />,
     );
 
-    fireEvent.click(screen.getByRole('listitem'));
+    fireEvent.click(screen.getByRole('option', { name: /A badminton court/ }));
 
     expect(onPick).toHaveBeenCalledWith(photo);
   });

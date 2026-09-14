@@ -88,6 +88,9 @@ export function ForceUpdateGate() {
   return (
     <YStack
       testID="force-update-gate"
+      // It blocks the whole app, so VoiceOver must not reach the app under it
+      // either. iOS-only prop; Android has no per-view equivalent.
+      accessibilityViewIsModal
       position="absolute"
       top={0}
       left={0}
@@ -113,6 +116,7 @@ export function ForceUpdateGate() {
       </YStack>
       <Text
         testID="force-update-title"
+        role="heading"
         fontSize={24}
         fontWeight="600"
         color={tokens.ink}

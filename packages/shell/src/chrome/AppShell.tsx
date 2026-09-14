@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Box } from '@mui/material';
 import { Loader } from '@duncit/ui';
@@ -14,10 +14,12 @@ import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppShellNav } from './AppShellNav';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
+import { useRouteFocus } from './useRouteFocus';
 import type { ShellUser } from './user-display';
 import { Taskbar, WorkspaceProvider } from '../workspace';
 
-const MAIN_ID = 'app-main';
+/** The skip link's target — the page region every console's layout names. */
+const MAIN_ID = 'main-content';
 
 /** The slice of a portal's `appConfig` the chrome needs — pass appConfig directly. */
 export interface AppShellPortalConfig {
@@ -90,6 +92,8 @@ export function AppShell({
   const closeChat = useCallback(() => setChatOpen(false), []);
   const toggleChat = useCallback(() => setChatOpen((current) => !current), []);
   const features = usePortalAppFeatures(config.key);
+  const mainRef = useRef<HTMLElement>(null);
+  useRouteFocus(mainRef);
   // Read ONCE. `roles` is nullable on the session and not on the chat panel's
   // prop, and narrowing it twice would be a second branch saying the same thing
   // — one nobody can reach, because `showChat` below already implies a
@@ -135,6 +139,7 @@ export function AppShell({
           <Box
             component="a"
             href={`#${MAIN_ID}`}
+            data-testid="app-shell-skip-link"
             sx={{
               position: 'absolute',
               left: -9999,
@@ -190,6 +195,9 @@ export function AppShell({
                   <Box
                     component="main"
                     id={MAIN_ID}
+                    ref={mainRef}
+                    tabIndex={-1}
+                    data-testid="app-shell-main"
                     sx={{
                       flex: 1,
                       minWidth: 0,

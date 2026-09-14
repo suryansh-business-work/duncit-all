@@ -53,6 +53,7 @@ export function AgentLauncher() {
         onClose={close}
         slotProps={{
           paper: {
+            'aria-label': t('shell.agent.title'),
             sx: {
               width: { xs: '100%', sm: 420 },
               // Or the composer — the last row of the column — is behind the
@@ -74,9 +75,9 @@ export function AgentLauncher() {
             borderBottom: 1,
             borderColor: 'divider'
           }}>
-          <AutoAwesomeIcon fontSize="small" color="primary" />
+          <AutoAwesomeIcon fontSize="small" color="primary" aria-hidden />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" sx={{
+            <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 700
             }}>
               {t('shell.agent.title')}
@@ -88,7 +89,12 @@ export function AgentLauncher() {
             </Typography>
           </Box>
           <Tooltip title={t('shell.agent.restart')}>
-            <DuncitIconButton size="small" onClick={() => restartRef.current?.()}>
+            <DuncitIconButton
+              size="small"
+              onClick={() => restartRef.current?.()}
+              aria-label={t('shell.agent.restart')}
+              data-testid="shell-agent-restart"
+            >
               <RestartAltIcon fontSize="small" />
             </DuncitIconButton>
           </Tooltip>

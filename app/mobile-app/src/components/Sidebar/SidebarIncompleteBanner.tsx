@@ -36,6 +36,9 @@ export function SidebarIncompleteBanner({
           testID="profile-completion-cta"
           role="button"
           aria-label={t('mweb.sidebar.completeYourProfile')}
+          tabIndex={0}
+          // 36 drawn, 44 touchable.
+          hitSlop={4}
           onPress={onComplete}
           height={36}
           alignItems="center"

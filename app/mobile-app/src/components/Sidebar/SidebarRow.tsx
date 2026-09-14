@@ -22,6 +22,9 @@ export interface SidebarRowProps {
   /** The muted chevron that says "this opens somewhere". */
   chevron?: boolean;
   tone?: RowTone;
+  /** For a row that opens and closes a section under it (Policies): whether
+   * that section is open. Omit for an ordinary row. */
+  expanded?: boolean;
 }
 
 /**
@@ -40,16 +43,24 @@ export function SidebarRow({
   trailing,
   chevron = true,
   tone = 'default',
+  expanded,
 }: Readonly<SidebarRowProps>) {
   const { color: ink, muted, danger } = useThemeColors();
   const isDanger = tone === 'danger';
   const iconColor = isDanger ? danger : ink;
   const labelColor = isDanger ? '$danger' : '$color';
+  // A pressable row is ONE screen-reader element named by its label, so the
+  // badge ("Coming soon") or the active studio under it rides as the hint
+  // rather than being lost inside the group.
+  const detail = badge ?? secondary;
   return (
     <XStack
       testID={testID}
       role={onPress ? 'button' : undefined}
       aria-label={onPress ? label : undefined}
+      accessibilityHint={onPress ? detail : undefined}
+      aria-expanded={expanded}
+      tabIndex={onPress ? 0 : undefined}
       onPress={onPress}
       alignItems="center"
       gap={12}

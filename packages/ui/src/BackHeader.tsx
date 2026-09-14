@@ -145,6 +145,7 @@ export function BackHeader({
         <Eyebrow eyebrow={eyebrow} eyebrowWeight={eyebrowWeight} />
         <Typography
           variant={titleVariant}
+          component="h1"
           noWrap={titleNoWrap}
           data-testid="back-header-title"
           sx={[{

@@ -31,6 +31,9 @@ export function SidebarDuncitCoinCard({
         testID="sidebar-duncit-coin"
         role="button"
         aria-label={t('mweb.coin.title')}
+        // One element on native, so the balance it shows rides as the hint.
+        accessibilityHint={pending ? undefined : String(balance?.balance ?? 0)}
+        tabIndex={0}
         onPress={() => onNavigate(COIN_TILE.route)}
         flexDirection="row"
         alignItems="center"

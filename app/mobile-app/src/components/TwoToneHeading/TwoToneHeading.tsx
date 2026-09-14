@@ -31,7 +31,10 @@ export function TwoToneHeading({
   return (
     <Text
       testID={testID}
-      accessibilityRole="header"
+      // One Text with the muted half nested inside, so both halves read as a
+      // single heading. `role` rather than `accessibilityRole` so Native Web
+      // gets the heading too.
+      role="heading"
       fontSize={fontSize}
       lineHeight={Math.round(fontSize * 1.2)}
       fontWeight="600"

@@ -2,7 +2,10 @@ import { alpha } from '@mui/material/styles';
 import type { Components, Theme } from '@mui/material/styles';
 import type { ThemeCtx } from '../types';
 
-/** Button + IconButton. Primary states come from the portal accent. */
+/**
+ * Button + IconButton. Primary states come from the portal accent: a contained
+ * button paints the AA fill under white, an outlined one the AA text colour.
+ */
 export const button = (c: ThemeCtx): Components<Theme>['MuiButton'] => ({
   defaultProps: { disableElevation: true },
   styleOverrides: {
@@ -28,7 +31,7 @@ export const button = (c: ThemeCtx): Components<Theme>['MuiButton'] => ({
     {
       props: { variant: 'contained', color: 'primary' },
       style: {
-        backgroundColor: c.primary,
+        backgroundColor: c.primaryFill,
         color: c.white,
         '&:hover': { backgroundColor: c.primaryHover },
         '&:active': { backgroundColor: c.primaryActive },

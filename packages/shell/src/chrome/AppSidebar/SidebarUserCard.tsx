@@ -15,7 +15,12 @@ export function SidebarUserCard({ user, fallbackName, collapsed = false }: Reado
   const email = accountEmail(user);
   const name = accountName(user, fallbackName);
   const avatar = (
-    <Avatar src={user.profile_photo || undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
+    <Avatar
+      src={user.profile_photo || undefined}
+      alt={name}
+      data-testid="shell-sidebar-user-avatar"
+      sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}
+    >
       {initials(user, fallbackName)}
     </Avatar>
   );

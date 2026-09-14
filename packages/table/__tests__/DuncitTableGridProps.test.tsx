@@ -71,7 +71,7 @@ describe('DuncitTable empty-state overlay', () => {
     );
     await screen.findByTestId('ag-grid-stub');
     expect(captured.overlayNoRowsTemplate).toBe(
-      '<span>Tom &amp; &quot;Jerry&quot; &lt;b&gt;&#39;s&lt;/b&gt;</span>',
+      '<span role="status">Tom &amp; &quot;Jerry&quot; &lt;b&gt;&#39;s&lt;/b&gt;</span>',
     );
   });
 
@@ -85,7 +85,7 @@ describe('DuncitTable empty-state overlay', () => {
       />,
     );
     await screen.findByTestId('ag-grid-stub');
-    expect(captured.overlayNoRowsTemplate).toBe('<span>No rows to display</span>');
+    expect(captured.overlayNoRowsTemplate).toBe('<span role="status">No rows to display</span>');
   });
 });
 

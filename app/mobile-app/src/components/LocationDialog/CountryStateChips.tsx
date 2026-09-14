@@ -35,9 +35,14 @@ function Chip({
   return (
     <XStack
       testID={testID}
-      role="button"
+      // One pick out of many: a radio with a checked state. `aria-pressed`
+      // never reached a native screen reader.
+      role="radio"
       aria-label={label}
-      aria-pressed={active}
+      aria-checked={active}
+      tabIndex={0}
+      // 36 drawn, 44 touchable.
+      hitSlop={4}
       onPress={onPress}
       alignItems="center"
       gap={6}
@@ -81,7 +86,13 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
       <YStack gap={8}>
         <SectionLabel>COUNTRY</SectionLabel>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <XStack gap={8} paddingRight={8}>
+          <XStack
+            testID="country-options"
+            role="radiogroup"
+            aria-label={t('mweb.common.country')}
+            gap={8}
+            paddingRight={8}
+          >
             {tree.map((c) => (
               <Chip
                 key={c.country}
@@ -124,7 +135,13 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
             />
           </XStack>
         ) : null}
-        <XStack flexWrap="wrap" gap={8}>
+        <XStack
+          testID="state-options"
+          role="radiogroup"
+          aria-label={t('mweb.common.state')}
+          flexWrap="wrap"
+          gap={8}
+        >
           {states.map((s) => (
             <Chip
               key={s.state}

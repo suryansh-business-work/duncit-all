@@ -89,6 +89,13 @@ jobs:
       - name: Package manifest matches the package.json files on disk
         run: node scripts/generate-package-manifest.mjs --check
 
+      # WCAG 2.2 AA 1.4.3 / 1.4.11: every theme colour token used for text or a
+      # UI boundary clears its contrast ratio against the surface it sits on.
+      # Blocking — a token that drops below AA repaints every screen at once.
+      # See docs/accessibility.md for the token decisions it holds us to.
+      - name: Contrast tokens
+        run: node scripts/verify-contrast.mjs
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each
@@ -116,6 +123,49 @@ jobs:
 
       - name: Install
         run: pnpm install --frozen-lockfile
+
+      # WCAG 2.2 AA lint over mWeb, every portal and every web package —
+      # REPORT ONLY (docs/accessibility.md). Every rule is a warning and the
+      # script passes no --max-warnings, and the step is continue-on-error on
+      # top, so it can never turn this job red. It sits straight after Install
+      # so a red suite below does not skip the report. The per-rule and
+      # per-surface counts land on the run summary page.
+      - name: Accessibility lint (report only)
+        continue-on-error: true
+        run: |
+          status=0
+          pnpm lint:a11y --format json --output-file "$RUNNER_TEMP/a11y.json" || status=$?
+          node -e '
+            const path = require("node:path");
+            const results = require(process.argv[1]);
+            const byRule = new Map();
+            const bySurface = new Map();
+            let total = 0;
+            for (const file of results) {
+              const surface = path.relative(process.cwd(), file.filePath).split(path.sep).slice(0, 2).join("/");
+              for (const message of file.messages) {
+                const rule = message.ruleId ?? "(parse error)";
+                byRule.set(rule, (byRule.get(rule) ?? 0) + 1);
+                bySurface.set(surface, (bySurface.get(surface) ?? 0) + 1);
+                total += 1;
+              }
+            }
+            const table = (title, counts) => [
+              `| ${title} | Count |`,
+              "| --- | ---: |",
+              ...[...counts].sort((a, b) => b[1] - a[1]).map(([name, count]) => `| ${name} | ${count} |`),
+            ];
+            console.log([
+              "### Accessibility lint (report only) — web",
+              "",
+              `${total} finding(s) across ${results.length} file(s). Warnings only; this step never fails the build.`,
+              "",
+              ...table("Rule", byRule),
+              "",
+              ...table("Surface", bySurface),
+            ].join("\n"));
+          ' "$RUNNER_TEMP/a11y.json" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "$status"
 
       # No --no-bail and no continue-on-error: a package that misses its own
       # declared threshold must fail the build, which is the whole point.

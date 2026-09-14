@@ -33,6 +33,8 @@ export function HeaderLeading({ minimal, studio, onOpenSwitch, onOpenLocation }:
           testID="header-studio-badge"
           role="button"
           aria-label={t('mweb.common.switchRole')}
+          tabIndex={0}
+          hitSlop={2}
           onPress={onOpenSwitch}
           alignItems="center"
           gap={6}

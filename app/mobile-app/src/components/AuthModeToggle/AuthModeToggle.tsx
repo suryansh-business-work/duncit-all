@@ -38,8 +38,13 @@ function ModeSegment({
       testID={testID}
       onPress={onPress}
       pressStyle={PRESS_STYLE.control}
-      accessibilityRole="button"
+      // `role` + `aria-pressed` are what Native Web reads (the MUI twin's exact
+      // pair); React Native ignores `aria-pressed`, so the native screen
+      // reader gets the same fact from `accessibilityState`.
+      role="button"
+      aria-pressed={active}
       accessibilityState={{ selected: active }}
+      tabIndex={0}
       aria-label={hint}
       alignItems="center"
       justifyContent="center"

@@ -11,6 +11,11 @@ describe('PageHeader', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
+  it('is the page h1 whatever variant it is drawn at', () => {
+    render(<PageHeader title="Pods" titleVariant="h6" />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Pods' })).toHaveClass('MuiTypography-h6');
+  });
+
   it('renders the subtitle when provided', () => {
     render(<PageHeader title="Users" subtitle="All the people" />);
     expect(screen.getByText('All the people')).toHaveClass('MuiTypography-body2');

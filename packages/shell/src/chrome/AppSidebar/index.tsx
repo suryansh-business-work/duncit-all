@@ -68,7 +68,13 @@ export function AppSidebar({
         )}
         {onToggleCollapse && (
           <Tooltip title={toggleLabel} placement="right">
-            <DuncitIconButton size="small" onClick={onToggleCollapse}>
+            <DuncitIconButton
+              size="small"
+              onClick={onToggleCollapse}
+              aria-label={toggleLabel}
+              aria-expanded={!collapsed}
+              data-testid="shell-sidebar-collapse-toggle"
+            >
               {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
             </DuncitIconButton>
           </Tooltip>

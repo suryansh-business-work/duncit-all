@@ -33,6 +33,9 @@ export function SidebarProfileIdentity({
         testID="sidebar-identity"
         role="button"
         aria-label={t('mweb.common.openYourProfile')}
+        // One element on native, so whose profile it is rides as the hint.
+        accessibilityHint={me?.full_name ?? undefined}
+        tabIndex={0}
         onPress={onPress}
         flexDirection="row"
         alignItems="center"

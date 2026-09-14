@@ -118,7 +118,7 @@ export default function PexelsVideosTab({
     videos.length === 0 ? (
       <Alert severity="info">{t('media.pexels.noVideos')}</Alert>
     ) : (
-      <ImageList cols={3} gap={8} rowHeight={160}>
+      <ImageList cols={3} gap={8} rowHeight={160} role="listbox" aria-label={t('media.picker.pexelsVideos')}>
         {videos.map((v: any) => (
           <PexelsVideoCard
             key={v.id}
@@ -155,6 +155,7 @@ export default function PexelsVideosTab({
             if (e.key === 'Enter') runPexelsVideos(vquery, 1, false).catch(console.error);
           }}
           slotProps={{
+            htmlInput: { 'aria-label': t('media.pexels.searchVideos'), 'data-testid': 'pexels-video-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">

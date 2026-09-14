@@ -14,6 +14,9 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const MEDIA_BUNDLE: NestedCatalogue = {
   media: {
+    a11y: {
+      close: 'Close',
+    },
     picker: {
       title: 'Select an image',
       fromDevice: 'Upload from device',

@@ -100,3 +100,31 @@ describe('NavNode group', () => {
     expect(screen.getByRole('link', { name: 'Deep' })).toHaveClass('Mui-selected');
   });
 });
+
+describe('NavNode accessibility', () => {
+  it('announces only the winning child as the current page', () => {
+    const prefixed: AppNavItem = {
+      label: 'Leads',
+      children: [
+        { label: 'All leads', to: '/host-leads' },
+        { label: 'Services', to: '/host-leads/services' },
+      ],
+    };
+    render(
+      <MemoryRouter initialEntries={['/host-leads/services']}>
+        <NavNode item={prefixed} pathname="/host-leads/services" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('link', { name: 'Services' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'All leads' })).toHaveAttribute('aria-current', 'false');
+  });
+
+  it('exposes a group toggle as expanded or collapsed', async () => {
+    const u = userEvent.setup();
+    renderNode({ item: group, pathname: '/other' });
+    const toggle = screen.getByTestId('shell-nav-group');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await u.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  });
+});

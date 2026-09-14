@@ -22,7 +22,9 @@ export interface PageHeaderProps {
 export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titleWeight = 800, sx }: Readonly<PageHeaderProps>) {
   const block = (
     <Box>
-      <Typography variant={titleVariant} data-testid="page-header-title" sx={{ fontWeight: titleWeight }}>
+      {/* The page's one h1 whatever size it is drawn at: the variant is how it
+          looks, the element is what a screen reader navigates by (WCAG 1.3.1). */}
+      <Typography variant={titleVariant} component="h1" data-testid="page-header-title" sx={{ fontWeight: titleWeight }}>
         {title}
       </Typography>
       {subtitle != null && (

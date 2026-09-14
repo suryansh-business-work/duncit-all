@@ -1,5 +1,6 @@
 import type { MutableRefObject, ChangeEvent } from 'react';
 import { useTranslation } from './i18n/useTranslation';
+import { activateOnKey } from './activateOnKey';
 import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -149,7 +150,11 @@ export default function DeviceUploadTab({
       )}
       {!previewUrl && (
         <Box
+          role="button"
+          tabIndex={0}
+          data-testid="media-device-dropzone"
           onClick={() => fileInputRef.current?.click()}
+          onKeyDown={activateOnKey(() => fileInputRef.current?.click())}
           sx={{
             border: 2,
             borderStyle: 'dashed',

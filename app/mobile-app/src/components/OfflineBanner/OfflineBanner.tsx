@@ -17,6 +17,10 @@ export function OfflineBanner() {
     <SafeAreaView edges={['top']} style={{ backgroundColor: semantic.error }}>
       <XStack
         testID="offline-banner"
+        // Appears away from wherever focus is, so it announces itself:
+        // `alert` on web, an assertive live region on Android.
+        role="alert"
+        aria-live="assertive"
         alignItems="center"
         justifyContent="center"
         gap={8}

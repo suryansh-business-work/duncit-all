@@ -4,6 +4,7 @@ import { AppImage } from '@/components/AppImage';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 import { AuthLogo } from '@/components/AuthLogo';
+import { useLoadingRegion } from '@/components/Skeleton/useLoadingRegion';
 import { useBranding } from '@/hooks/useBranding';
 
 const SPLASH_MS = 1600;
@@ -47,6 +48,9 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
   const isVideo = splashUrl !== '' && (branding?.mobile_splash_type ?? 'IMAGE') === 'VIDEO';
   const displayMs = isVideo ? VIDEO_SPLASH_MS : SPLASH_MS;
   const logoSize = Math.min(Math.round(Math.min(width, height) * LOGO_RATIO), LOGO_MAX);
+  // The boot splash covers every screen for a beat; a screen reader hears
+  // "Loading…" rather than silence or the half-mounted screen underneath.
+  const region = useLoadingRegion();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,7 +63,7 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
   if (!visible) return null;
 
   return (
-    <View testID="splash-overlay" style={styles.fill} pointerEvents="none">
+    <View testID="splash-overlay" style={styles.fill} pointerEvents="none" {...region}>
       {isVideo ? <SplashVideo url={splashUrl} /> : null}
       {!isVideo && splashUrl ? (
         <AppImage

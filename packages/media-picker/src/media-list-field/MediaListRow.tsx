@@ -81,7 +81,7 @@ export default function MediaListRow({
           {url}
         </Typography>
         <Typography variant="caption" sx={{
-          color: "text.disabled"
+          color: "text.secondary"
         }}>
           #{index + 1}
         </Typography>
@@ -93,7 +93,14 @@ export default function MediaListRow({
       </Tooltip>
       <Tooltip title={t('media.list.moveUp')}>
         <span>
-          <DuncitIconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
+          {/* The tooltip names the span it wraps, not this button — name it too. */}
+          <DuncitIconButton
+            size="small"
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+            aria-label={t('media.list.moveUp')}
+            data-testid="media-list-move-up"
+          >
             <ArrowUpwardIcon fontSize="small" />
           </DuncitIconButton>
         </span>
@@ -104,6 +111,8 @@ export default function MediaListRow({
             size="small"
             disabled={index === total - 1}
             onClick={() => onMove(1)}
+            aria-label={t('media.list.moveDown')}
+            data-testid="media-list-move-down"
           >
             <ArrowDownwardIcon fontSize="small" />
           </DuncitIconButton>

@@ -1,6 +1,7 @@
 import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
+import { activateOnKey } from './activateOnKey';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface Props {
@@ -20,8 +21,18 @@ export default function PexelsPhotoCard({
   onPick,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const pick = () => {
+    if (!anyImporting) onPick(photo);
+  };
   return (
+    // An option of the tab's listbox, so the keyboard can reach and pick it and
+    // a screen reader hears whether it is already in the tray.
     <ImageListItem
+      role="option"
+      aria-selected={Boolean(picked)}
+      aria-disabled={anyImporting}
+      tabIndex={0}
+      data-testid="media-pexels-photo"
       sx={{
         cursor: 'pointer',
         borderRadius: 1,
@@ -32,8 +43,10 @@ export default function PexelsPhotoCard({
         outlineColor: 'primary.main',
         outlineOffset: '-3px',
         '&:hover img': { transform: 'scale(1.04)' },
+        '&:focus-visible': { outline: '3px solid', outlineColor: 'text.primary' },
       }}
-      onClick={() => !anyImporting && onPick(photo)}
+      onClick={pick}
+      onKeyDown={activateOnKey(pick)}
     >
       <img
         src={photo.src_medium}

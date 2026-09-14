@@ -20,19 +20,19 @@ export type TabParamList = {
 
 export interface TabConfig {
   name: keyof TabParamList;
-  label: string;
-  /** Localization key for the visible label (mweb.nav.*, shared with mWeb). */
+  /** Localization key for the label — visible AND the tab's accessible name
+   * (mweb.nav.*, shared with mWeb). */
   labelKey: string;
   icon: IconName;
 }
 
 /** Route → label/icon config, shared by the tab navigator and the custom tab bar. */
 export const TAB_CONFIG: TabConfig[] = [
-  { name: 'HomeTab', label: 'Home', labelKey: 'mweb.nav.home', icon: 'home' },
-  { name: 'Explore', label: 'Explore', labelKey: 'mweb.nav.explore', icon: 'explore' },
-  { name: 'Clubs', label: 'Clubs', labelKey: 'mweb.nav.clubs', icon: 'groups' },
-  { name: 'Venues', label: 'Venues', labelKey: 'mweb.nav.venues', icon: 'store' },
-  { name: 'Cart', label: 'Cart', labelKey: 'mweb.nav.cart', icon: 'shopping-cart' },
+  { name: 'HomeTab', labelKey: 'mweb.nav.home', icon: 'home' },
+  { name: 'Explore', labelKey: 'mweb.nav.explore', icon: 'explore' },
+  { name: 'Clubs', labelKey: 'mweb.nav.clubs', icon: 'groups' },
+  { name: 'Venues', labelKey: 'mweb.nav.venues', icon: 'store' },
+  { name: 'Cart', labelKey: 'mweb.nav.cart', icon: 'shopping-cart' },
 ];
 
 const TAB_ROUTE_NAMES: ReadonlySet<string> = new Set(TAB_CONFIG.map((tab) => tab.name));

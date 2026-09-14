@@ -13,6 +13,14 @@ export type ColorScale = {
   900: string;
 };
 
+/**
+ * Mode-less status colours, for a component that does not know its colour mode.
+ * Each value is 4.5:1 as text on a white card and under white text as a fill, and
+ * 3:1 as an icon or graphic on every light AND dark ground. It cannot also be
+ * 4.5:1 text on the page ground or in dark mode — for status TEXT read
+ * `light`/`dark` (or the theme: MUI `palette.success`, Tamagui `$success`).
+ * `secondary` and `accent` are decorative hues, not text colours.
+ */
 export interface SemanticColors {
   success: string;
   warning: string;
@@ -29,19 +37,41 @@ export interface SurfaceColors {
   border: string;
 }
 
+/**
+ * One colour mode. Every text/fill pair here clears WCAG 2.2 AA — checked by
+ * `node scripts/verify-contrast.mjs`, which fails CI when a value regresses.
+ */
 export interface ModeColors {
   bg: string;
   surface: string;
   soft: string;
   ink: string;
+  /** Secondary text — at least 4.5:1 on `bg`, `surface` and `soft`. */
   muted: string;
+  /** Hairline dividers and card edges. Decorative — NOT a field boundary. */
   border: string;
+  /** A form field's outline — at least 3:1 against `bg`, `surface` and `soft` (WCAG 1.4.11). */
+  inputBorder: string;
+  /** Call-to-action FILL, always under `onPrimary` text. Not for red text on a page. */
   primary: string;
+  /** Darker than `primary`; `onPrimary` still clears 4.5:1. */
   primaryHover: string;
+  /** Darker than `primaryHover`; `onPrimary` still clears 4.5:1. */
   primaryActive: string;
   onPrimary: string;
-  /** Brand coral — logo mark, active tab, badges. CTAs use `primary` (green). */
+  /** Red TEXT — links, "See all", active tab, focus ring. At least 4.5:1 on every ground of its mode. */
   accent: string;
+  /** Text on an `accent` fill (a dark ink in dark mode, where `accent` is light). */
+  onAccent: string;
+  /** The exact brand red — decoration only (logo, illustrations, large display type). Never body text or a text fill. */
+  brand: string;
+  /** Status colours for this mode, each readable as text on every ground and under `onSemantic`. */
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+  /** Text on a filled status colour. */
+  onSemantic: string;
 }
 
 export interface GradientPair {

@@ -1,4 +1,5 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { semantic } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
@@ -23,6 +24,10 @@ interface State {
  */
 function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
   const { t } = useTranslation();
+  const message = t('mweb.errorBoundary.somethingWentWrong');
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(message);
+  }, [message]);
   return (
     <YStack
       testID="error-boundary-fallback"
@@ -43,8 +48,17 @@ function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
       >
         <MaterialIcons name="error-outline" size={44} color={semantic.error} />
       </YStack>
-      <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
-        {t('mweb.errorBoundary.somethingWentWrong')}
+      {/* It replaces whatever screen was open without moving focus, so it
+          speaks up: an alert on web, an announcement on native (WCAG 4.1.3). */}
+      <Text
+        testID="error-boundary-title"
+        role="alert"
+        fontSize={20}
+        fontWeight="600"
+        color="$color"
+        textAlign="center"
+      >
+        {message}
       </Text>
       <DuncitButton
         testID="error-boundary-retry"

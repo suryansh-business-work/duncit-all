@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { useTranslation } from './i18n';
 
 export type ConfirmColor = 'primary' | 'error' | 'warning' | 'success' | 'inherit';
@@ -69,12 +69,25 @@ export function ConfirmDialog({
   const confirmContent = showBusyLabel ? busyLabel : (confirmLabel ?? t('shell.common.confirm'));
   const startIcon =
     isBusy && busyLabel == null ? <CircularProgress size={16} /> : undefined;
+  // MUI names the dialog from DialogTitle; the body is its description, so a
+  // screen reader hears what is being confirmed, not just the question.
+  const messageId = useId();
+  const describedBy = message == null ? undefined : messageId;
+  // A destructive confirmation opens on the SAFE action (WCAG 3.3.4): an Enter
+  // pressed on arrival cancels rather than deletes.
+  const cancelFirst = color === 'error';
 
   return (
-    <Dialog open={open} onClose={isBusy ? undefined : close} fullWidth maxWidth="xs">
+    <Dialog
+      open={open}
+      onClose={isBusy ? undefined : close}
+      fullWidth
+      maxWidth="xs"
+      aria-describedby={describedBy}
+    >
       <DialogTitle sx={titleSx}>{title}</DialogTitle>
       {message != null && (
-        <DialogContent>
+        <DialogContent id={messageId}>
           {typeof message === 'string' ? (
             <DialogContentText>{message}</DialogContentText>
           ) : (
@@ -83,7 +96,12 @@ export function ConfirmDialog({
         </DialogContent>
       )}
       <DialogActions>
-        <DuncitButton onClick={close} disabled={isBusy}>
+        <DuncitButton
+          onClick={close}
+          disabled={isBusy}
+          autoFocus={cancelFirst}
+          data-testid="confirm-dialog-cancel"
+        >
           {cancelLabel ?? t('shell.common.cancel')}
         </DuncitButton>
         <DuncitButton
@@ -92,6 +110,7 @@ export function ConfirmDialog({
           startIcon={startIcon}
           onClick={onConfirm}
           disabled={isBusy}
+          data-testid="confirm-dialog-confirm"
         >
           {confirmContent}
         </DuncitButton>

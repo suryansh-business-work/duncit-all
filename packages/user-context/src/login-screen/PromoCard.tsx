@@ -60,7 +60,7 @@ export default function PromoCard({ title, text, brandName, t = sessionT }: Read
         {rest.length > 0 && (
           <>
             <br />
-            <Box component="span" sx={{ color: 'text.disabled' }}>
+            <Box component="span" sx={{ color: 'text.secondary' }}>
               {rest.join(' ')}
             </Box>
           </>

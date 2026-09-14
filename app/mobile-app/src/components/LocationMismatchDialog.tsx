@@ -82,6 +82,7 @@ export function LocationMismatchDialog({
         testID="location-mismatch-switch"
         role="button"
         aria-label={switchLabel}
+        tabIndex={0}
         onPress={switchLocation}
         height={52}
         paddingHorizontal={20}
@@ -99,6 +100,7 @@ export function LocationMismatchDialog({
         testID="location-mismatch-keep"
         role="button"
         aria-label={keepLabel}
+        tabIndex={0}
         onPress={keepLocation}
         height={52}
         paddingHorizontal={20}

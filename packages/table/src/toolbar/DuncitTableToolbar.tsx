@@ -140,6 +140,9 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
             size="small"
             startIcon={<FilterListIcon />}
             disabled={loading}
+            aria-haspopup="dialog"
+            aria-expanded={Boolean(filterAnchor)}
+            data-testid="table-toolbar-filters"
             onClick={(event) => setFilterAnchor(event.currentTarget)}
           >
             {t('shell.table.filters')}
@@ -163,6 +166,8 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         <DuncitIconButton
           size="small"
           aria-label={t('shell.table.columns')}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(columnAnchor)}
           disabled={loading}
           onClick={(event) => setColumnAnchor(event.currentTarget)}
         >

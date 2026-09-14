@@ -60,7 +60,13 @@ export default function UrlAdornmentVariant({
               <InputAdornment position="start">
                 <Tooltip title={t('media.picker.fromDevice')}>
                   <span>
-                    <DuncitIconButton size="small" onClick={openPicker} disabled={disabled || busy}>
+                    <DuncitIconButton
+                      size="small"
+                      onClick={openPicker}
+                      disabled={disabled || busy}
+                      aria-label={t('media.picker.fromDevice')}
+                      data-testid="media-url-from-device"
+                    >
                       {busy ? <CircularProgress size={18} /> : <ImageIcon fontSize="small" />}
                     </DuncitIconButton>
                   </span>

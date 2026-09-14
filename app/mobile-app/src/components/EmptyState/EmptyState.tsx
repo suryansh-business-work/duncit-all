@@ -50,7 +50,16 @@ export function EmptyState({
       >
         <MaterialIcons name={icon} size={36} color={muted} />
       </YStack>
-      <Text fontSize={16} fontWeight="600" color="$color" textAlign="center">
+      {/* An empty list is the answer to a load — `status` lets web screen
+          readers hear it arrive without moving focus (WCAG 4.1.3). */}
+      <Text
+        testID={`${testID}-title`}
+        role="status"
+        fontSize={16}
+        fontWeight="600"
+        color="$color"
+        textAlign="center"
+      >
         {title}
       </Text>
       {actionLabel && onAction ? (

@@ -90,7 +90,8 @@ export function HeaderSearch({
           inputRef={inputRef}
           slotProps={{
             ...params.slotProps,
-
+            // A placeholder vanishes on the first keystroke and is no label.
+            htmlInput: { ...params.slotProps.htmlInput, 'aria-label': label, 'data-testid': 'shell-header-search' },
             input: {
               ...params.slotProps.input,
               startAdornment: (

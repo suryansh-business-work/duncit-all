@@ -80,6 +80,18 @@ describe('buttonSpec — tones', () => {
       '$success'
     );
   });
+
+  it('labels a solid status fill with its own on-colour, never the primary one', () => {
+    expect(buttonSpec({ variant: 'solid', tone: 'danger', size: 'md' }).color).toBe('$onDanger');
+    expect(buttonSpec({ variant: 'solid', tone: 'success', size: 'md' }).color).toBe('$onSuccess');
+  });
+
+  it('writes a primary label as red TEXT ($accent), not in the CTA fill colour', () => {
+    const spec = buttonSpec({ variant: 'outline', tone: 'primary', size: 'md' });
+    expect(spec.color).toBe('$accent');
+    expect(spec.borderColor).toBe('$accent');
+    expect(buttonSpec({ variant: 'ghost', tone: 'primary', size: 'md' }).color).toBe('$accent');
+  });
 });
 
 describe('buttonSpec — states', () => {

@@ -1,4 +1,3 @@
-import { alpha } from '@mui/material/styles';
 import type { Components, Theme } from '@mui/material/styles';
 import type { ThemeCtx } from '../types';
 
@@ -16,7 +15,7 @@ export const select = (): Components<Theme>['MuiSelect'] => ({
  * carries a clear red `Label *` marker (parity with the mobile app + mWeb).
  */
 export const formLabel = (c: ThemeCtx): Components<Theme>['MuiFormLabel'] => ({
-  styleOverrides: { asterisk: { color: c.t.semantic.error } },
+  styleOverrides: { asterisk: { color: c.semantic.error } },
 });
 
 export const formHelperText = (c: ThemeCtx): Components<Theme>['MuiFormHelperText'] => ({
@@ -25,13 +24,17 @@ export const formHelperText = (c: ThemeCtx): Components<Theme>['MuiFormHelperTex
   },
 });
 
+/**
+ * The field outline is `inputBorder` (3:1, WCAG 1.4.11) rather than the hairline
+ * divider colour, and hover strengthens it to ink instead of fading it.
+ */
 export const outlinedInput = (c: ThemeCtx): Components<Theme>['MuiOutlinedInput'] => ({
   styleOverrides: {
     root: {
       borderRadius: c.t.radius.sm,
       backgroundColor: c.surface,
-      '& fieldset': { borderColor: c.border },
-      '&:hover fieldset': { borderColor: alpha(c.ink, 0.3) },
+      '& fieldset': { borderColor: c.inputBorder },
+      '&:hover fieldset': { borderColor: c.ink },
       '&.Mui-focused fieldset': { borderColor: c.primary, borderWidth: 1.5 },
     },
   },

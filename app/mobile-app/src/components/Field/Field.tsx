@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
@@ -40,11 +41,23 @@ export function Field({
   gap = 8,
   labelAction,
 }: Readonly<FieldProps>) {
+  // A native screen reader never hears text that appears away from its focus,
+  // so a new validation message is spoken as it lands (WCAG 4.1.3). On web the
+  // `alert` role below does the same job and this call is a no-op.
+  useEffect(() => {
+    if (error) AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
+
   let helper: ReactNode = null;
   if (error) {
     helper = (
       <Reveal>
-        <Text fontSize={12} color="$danger" testID={testID ? `${testID}-error` : undefined}>
+        <Text
+          role="alert"
+          fontSize={12}
+          color="$danger"
+          testID={testID ? `${testID}-error` : undefined}
+        >
           {error}
         </Text>
       </Reveal>

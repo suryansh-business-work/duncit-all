@@ -1,7 +1,9 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Box, Container } from '@mui/material';
 import RouteScroll from './app/RouteScroll';
+import SkipLink from './app/SkipLink';
+import { useRouteFocus } from './app/useRouteFocus';
 import RouteMeta from './app/RouteMeta';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
@@ -18,7 +20,7 @@ import DeletionNoticeDialog from './components/DeletionNoticeDialog';
 import AppRoutes from './app/AppRoutes';
 import RouteFallback from './app/RouteFallback';
 import { AppLocationProvider } from './app/AppLocationContext';
-import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
+import { APP_SHELL_MAX_WIDTH, MAIN_CONTENT_ID } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
@@ -64,6 +66,9 @@ export default function App() {
     return () => globalThis.clearTimeout(timer);
   }, [splashOpen]);
 
+  const mainRef = useRef<HTMLElement>(null);
+  useRouteFocus(mainRef);
+
   const { faviconUrl } = useBrandingAssets();
   useDynamicFavicon(faviconUrl);
 
@@ -91,6 +96,7 @@ export default function App() {
         bgcolor: 'transparent',
       } : undefined}
     >
+      <SkipLink />
       {splashOpen && <SplashScreen />}
       <OfflineBanner />
       {showAppHeader && (
@@ -142,6 +148,10 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
         <Box
           key={`${location.pathname}-${superCategory}-${locationId}-${zoneName}`}
+          component="main"
+          id={MAIN_CONTENT_ID}
+          ref={mainRef}
+          tabIndex={-1}
           sx={{
             flex: 1,
             minHeight: 0,

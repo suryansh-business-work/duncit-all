@@ -117,30 +117,36 @@ export default function ChatSearchPanel({
           size="small"
           label={t('shell.chat.search.anyone')}
           color={sender === 'ANY' ? 'primary' : 'default'}
+          // The filters in force are a state, not only a colour (WCAG 1.4.1 / 4.1.2).
+          aria-pressed={sender === 'ANY'}
           onClick={() => setSender('ANY')}
         />
         <Chip
           size="small"
           label={t('shell.chat.search.fromYou')}
           color={sender === 'ME' ? 'primary' : 'default'}
+          aria-pressed={sender === 'ME'}
           onClick={() => setSender('ME')}
         />
         <Chip
           size="small"
           label={t('shell.chat.search.fromPerson', { vars: { name: peerName } })}
           color={sender === 'PEER' ? 'primary' : 'default'}
+          aria-pressed={sender === 'PEER'}
           onClick={() => setSender('PEER')}
         />
         <Chip
           size="small"
           label={t('shell.chat.search.files')}
           color={onlyFiles ? 'primary' : 'default'}
+          aria-pressed={onlyFiles}
           onClick={() => setOnlyFiles((value) => !value)}
         />
         <Chip
           size="small"
           label={t('shell.chat.search.links')}
           color={onlyLinks ? 'primary' : 'default'}
+          aria-pressed={onlyLinks}
           onClick={() => setOnlyLinks((value) => !value)}
         />
       </Stack>

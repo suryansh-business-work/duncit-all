@@ -53,6 +53,8 @@ function RailItem({ item, pathname, onNavigate, onOpenMenu }: Readonly<RailItemP
         <ListItemButton
           selected={groupActive(pathname, item)}
           onClick={(event) => onOpenMenu(event.currentTarget, item)}
+          aria-haspopup="true"
+          data-testid="shell-nav-rail-group"
           sx={railItemSx}
         >
           <ListItemIcon>
@@ -69,6 +71,7 @@ function RailItem({ item, pathname, onNavigate, onOpenMenu }: Readonly<RailItemP
         to={item.to ?? '#'}
         selected={matches(pathname, item.to)}
         onClick={onNavigate}
+        data-testid="shell-nav-rail-leaf"
         sx={railItemSx}
       >
         <ListItemIcon>

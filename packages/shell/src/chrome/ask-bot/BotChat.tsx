@@ -127,6 +127,7 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t('shell.askBot.placeholder')}
           slotProps={{
+            htmlInput: { 'aria-label': t('shell.askBot.placeholder'), 'data-testid': 'ask-bot-composer' },
             input: {
               endAdornment: (
                 <InputAdornment position="end">

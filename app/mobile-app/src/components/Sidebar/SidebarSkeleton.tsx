@@ -1,6 +1,6 @@
 import { XStack, YStack } from 'tamagui';
 
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, useLoadingRegion } from '@/components/Skeleton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 
 /** Rows a placeholder Manage-Account group stands in for. */
@@ -63,8 +63,9 @@ function ListSkeleton() {
  * avatar sitting at 0% profile completion.
  */
 export function SidebarSkeleton() {
+  const region = useLoadingRegion();
   return (
-    <YStack testID="sidebar-skeleton">
+    <YStack testID="sidebar-skeleton" {...region}>
       <YStack paddingHorizontal={16} paddingBottom={12}>
         <SurfaceCard flexDirection="row" alignItems="center" gap={14}>
           <Skeleton width={52} height={52} radius={26} />

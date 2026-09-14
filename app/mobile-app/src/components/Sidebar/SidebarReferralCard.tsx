@@ -19,6 +19,7 @@ export function SidebarReferralCard({
         testID="sidebar-referral"
         role="button"
         aria-label={REFERRAL_TILE.label}
+        tabIndex={0}
         onPress={() => onNavigate(REFERRAL_TILE.route)}
         flexDirection="row"
         alignItems="center"

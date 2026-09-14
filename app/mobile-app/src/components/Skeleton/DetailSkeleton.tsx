@@ -1,11 +1,13 @@
 import { XStack, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton/Skeleton';
+import { useLoadingRegion } from '@/components/Skeleton/useLoadingRegion';
 
 /** Loading placeholder for the pod/club details screens (hero + lines + blocks). */
 export function DetailSkeleton({ testID = 'detail-skeleton' }: Readonly<{ testID?: string }>) {
+  const region = useLoadingRegion();
   return (
-    <YStack flex={1} testID={testID}>
+    <YStack flex={1} testID={testID} {...region}>
       <Skeleton width="100%" height={300} radius={0} />
       <YStack padding={16} gap={12}>
         <Skeleton width="70%" height={24} />

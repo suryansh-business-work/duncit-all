@@ -44,6 +44,7 @@ export function ConfirmFooter({
         role="button"
         aria-label={cancelLabel}
         aria-disabled={busy}
+        tabIndex={0}
         onPress={busy ? undefined : onCancel}
         flex={1}
         height={PILL_HEIGHT}
@@ -64,6 +65,8 @@ export function ConfirmFooter({
         role="button"
         aria-label={confirmLabel}
         aria-disabled={busy}
+        aria-busy={busy}
+        tabIndex={0}
         onPress={busy ? undefined : onConfirm}
         flex={1}
         height={PILL_HEIGHT}

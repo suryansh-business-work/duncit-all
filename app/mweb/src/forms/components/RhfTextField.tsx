@@ -49,7 +49,7 @@ export default function RhfTextField<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => {
+      render={({ field: { ref, ...field }, fieldState }) => {
         const hasError = !!fieldState.error || !!errorText;
         // Native twin's ids (FormTextField + Field): the box is `field-<name>`,
         // the line under it `<name>-error` or `<name>-hint`.
@@ -59,6 +59,9 @@ export default function RhfTextField<T extends FieldValues>({
             data-testid={name}
             {...rest}
             {...field}
+            // The <input>, not the root <div>: a failed submit focuses the first
+            // invalid field through this ref, and a div cannot take focus.
+            inputRef={ref}
             onChange={(event) =>
               field.onChange(digitsOnly ? toDigits(event.target.value) : event.target.value)
             }

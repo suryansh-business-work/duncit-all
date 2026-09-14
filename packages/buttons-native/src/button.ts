@@ -62,6 +62,12 @@ export const BUTTON_SIZES: Readonly<Record<ButtonSize, Readonly<ButtonSizeSpec>>
  * `tamagui.config.ts` already resolves them from `@duncit/auth-tokens`, which
  * is the same file mWeb's MUI palette is built from. A colour written here
  * would be a third copy of the brand red.
+ *
+ * `accent` is the tone as TEXT (outline/soft/ghost labels, the outline border)
+ * and `onFill` is the text on a solid fill. They are separate keys because the
+ * CTA fill red is not a readable text red on the page (4.32:1 on the light
+ * ground, 3.96:1 on the dark one), and the dark-mode status colours are light,
+ * so a solid danger/success button carries dark ink there, not white.
  */
 interface ToneTokens {
   fill: string;
@@ -76,7 +82,7 @@ const TONES: Readonly<Record<ButtonTone, Readonly<ToneTokens>>> = Object.freeze(
     fill: '$primary',
     fillPress: '$primaryPress',
     onFill: '$onPrimary',
-    accent: '$primary',
+    accent: '$accent',
     soft: '$primarySoft',
   }),
   neutral: Object.freeze({
@@ -89,14 +95,14 @@ const TONES: Readonly<Record<ButtonTone, Readonly<ToneTokens>>> = Object.freeze(
   danger: Object.freeze({
     fill: '$danger',
     fillPress: '$dangerPress',
-    onFill: '$onPrimary',
+    onFill: '$onDanger',
     accent: '$danger',
     soft: '$dangerSoft',
   }),
   success: Object.freeze({
     fill: '$success',
     fillPress: '$successPress',
-    onFill: '$onPrimary',
+    onFill: '$onSuccess',
     accent: '$success',
     soft: '$successSoft',
   }),

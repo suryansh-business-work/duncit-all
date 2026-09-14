@@ -49,6 +49,9 @@ export function ToggleRow({
       <Switch
         testID={`${testID}-switch`}
         aria-label={label}
+        // The caption under the label is what the switch changes — read it
+        // with the switch rather than as a stray line after it.
+        accessibilityHint={hint}
         value={value}
         disabled={disabled}
         onValueChange={onChange}

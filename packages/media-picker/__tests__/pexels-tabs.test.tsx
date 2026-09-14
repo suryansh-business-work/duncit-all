@@ -286,6 +286,37 @@ describe('PexelsPhotoCard', () => {
     expect(onPick).not.toHaveBeenCalled();
   });
 
+  it('is a keyboard-reachable option that Enter or Space picks, and says whether it is in the tray', () => {
+    const onPick = vi.fn();
+    const subject = photo('p-1');
+    const { container } = wrap(
+      <PexelsPhotoCard photo={subject} picked importing={false} anyImporting={false} onPick={onPick} />
+    );
+    const card = container.querySelector('li') as HTMLElement;
+
+    expect(card).toHaveAttribute('role', 'option');
+    expect(card).toHaveAttribute('aria-selected', 'true');
+    expect(card).toHaveAttribute('tabindex', '0');
+
+    fireEvent.keyDown(card, { key: 'Enter' });
+    fireEvent.keyDown(card, { key: ' ' });
+    fireEvent.keyDown(card, { key: 'ArrowRight' });
+
+    expect(onPick).toHaveBeenCalledTimes(2);
+  });
+
+  it('picks a video from the keyboard too, but not while an import is in flight', () => {
+    const onPick = vi.fn();
+    const clip = video('v-1');
+    const idle = wrap(<PexelsVideoCard video={clip} importing={false} anyImporting={false} onPick={onPick} />);
+    fireEvent.keyDown(idle.container.querySelector('li') as HTMLElement, { key: 'Enter' });
+    expect(onPick).toHaveBeenCalledTimes(1);
+
+    const busy = wrap(<PexelsVideoCard video={clip} importing={false} anyImporting onPick={onPick} />);
+    fireEvent.keyDown(busy.container.querySelector('li') as HTMLElement, { key: 'Enter' });
+    expect(onPick).toHaveBeenCalledTimes(1);
+  });
+
   it('reports the whole photo when picked, because the import needs its URL', () => {
     const onPick = vi.fn();
     const subject = photo('p-1');

@@ -2,6 +2,7 @@ import { Box, CircularProgress, ImageListItem, ImageListItemBar, Typography } fr
 import { alpha } from '@mui/material/styles';
 import { useTranslation } from './i18n/useTranslation';
 import { pickBestVideoFile } from './utils';
+import { activateOnKey } from './activateOnKey';
 
 interface Props {
   video: any;
@@ -18,16 +19,27 @@ export default function PexelsVideoCard({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const best = pickBestVideoFile(video);
+  const pick = () => {
+    if (!anyImporting) onPick(video);
+  };
   return (
+    // An option of the tab's listbox, reachable and pickable from the keyboard.
     <ImageListItem
+      role="option"
+      aria-selected={false}
+      aria-disabled={anyImporting}
+      tabIndex={0}
+      data-testid="media-pexels-video"
       sx={{
         cursor: 'pointer',
         borderRadius: 1,
         overflow: 'hidden',
         opacity: anyImporting && !importing ? 0.5 : 1,
         position: 'relative',
+        '&:focus-visible': { outline: '3px solid', outlineColor: 'primary.main', outlineOffset: '-3px' },
       }}
-      onClick={() => !anyImporting && onPick(video)}
+      onClick={pick}
+      onKeyDown={activateOnKey(pick)}
     >
       {best?.link ? (
         <video

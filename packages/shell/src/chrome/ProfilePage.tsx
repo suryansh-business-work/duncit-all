@@ -115,6 +115,7 @@ export function ProfilePage() {
         }}>
           <Avatar
             src={user?.profile_photo || undefined}
+            alt=""
             sx={{ width: 72, height: 72, bgcolor: 'primary.main', fontSize: 28, fontWeight: 800 }}
           >
             {initials(user, 'U')}

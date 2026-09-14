@@ -18,40 +18,43 @@ interface Props {
  * in colour when they read it. A failed send says so and can be retried rather
  * than sitting on a clock forever, which is the state that makes people send
  * the same thing twice.
+ *
+ * Each tick is an image with a name: an SvgIcon is `aria-hidden` by default,
+ * which left the delivery state to the colour and the shape alone (WCAG 1.1.1).
  */
 export default function MessageStatus({ message }: Readonly<Props>) {
   const { t } = useTranslation();
   if (message.failed) {
     return (
       <Tooltip title={t('shell.chat.status.retry')}>
-        <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} aria-label={t('shell.chat.status.failed')} />
+        <ErrorOutlineIcon role="img" aria-hidden={false} sx={{ fontSize: 14, color: 'error.main' }} aria-label={t('shell.chat.status.failed')} />
       </Tooltip>
     );
   }
   if (message.pending) {
     return (
       <Tooltip title={t('shell.chat.status.sending')}>
-        <ScheduleIcon sx={{ fontSize: 14, opacity: 0.7 }} aria-label={t('shell.chat.status.sending')} />
+        <ScheduleIcon role="img" aria-hidden={false} sx={{ fontSize: 14, opacity: 0.7 }} aria-label={t('shell.chat.status.sending')} />
       </Tooltip>
     );
   }
   if (message.read_at) {
     return (
       <Tooltip title={t('shell.chat.status.read')}>
-        <DoneAllIcon sx={{ fontSize: 14, color: 'info.main' }} aria-label={t('shell.chat.status.read')} />
+        <DoneAllIcon role="img" aria-hidden={false} sx={{ fontSize: 14, color: 'info.main' }} aria-label={t('shell.chat.status.read')} />
       </Tooltip>
     );
   }
   if (message.delivered_at) {
     return (
       <Tooltip title={t('shell.chat.status.delivered')}>
-        <DoneAllIcon sx={{ fontSize: 14, opacity: 0.75 }} aria-label={t('shell.chat.status.delivered')} />
+        <DoneAllIcon role="img" aria-hidden={false} sx={{ fontSize: 14, opacity: 0.75 }} aria-label={t('shell.chat.status.delivered')} />
       </Tooltip>
     );
   }
   return (
     <Tooltip title={t('shell.chat.status.sent')}>
-      <CheckIcon sx={{ fontSize: 14, opacity: 0.75 }} aria-label={t('shell.chat.status.sent')} />
+      <CheckIcon role="img" aria-hidden={false} sx={{ fontSize: 14, opacity: 0.75 }} aria-label={t('shell.chat.status.sent')} />
     </Tooltip>
   );
 }

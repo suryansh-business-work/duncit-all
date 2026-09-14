@@ -19,7 +19,10 @@ import TablePagination from '@mui/material/TablePagination';
 import { useTheme } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import type {
+  CellKeyDownEvent,
+  FullWidthCellKeyDownEvent,
   GetRowIdParams,
+  GridReadyEvent,
   RowClassParams,
   RowClickedEvent,
   RowSelectionOptions,
@@ -202,6 +205,13 @@ interface DuncitTableProps<T> {
    * fire the effect below on every render.
    */
   onQueryChange?: (snapshot: TableQuerySnapshot) => void;
+  /**
+   * The grid's accessible name (WCAG 1.3.1 / 4.1.2), e.g. the page's heading —
+   * "Pods", "Payout requests". A screen reader announces it on entering the
+   * grid; without it every table on a page is just "grid". Applied when the
+   * grid is ready.
+   */
+  ariaLabel?: string;
 }
 
 /** Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only. */
@@ -223,6 +233,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     externalFilters,
     selection,
     onQueryChange,
+    ariaLabel,
   } = props;
   const { t } = useTranslation();
   const table = useTableQuery({
@@ -371,6 +382,29 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     [onRowClick],
   );
 
+  /**
+   * The keyboard door to the same handler (WCAG 2.1.1). A row click is a mouse
+   * gesture only, so with `onRowClick` wired the cells take focus and Enter on
+   * one opens its row — unless focus sits on a control inside the cell, which
+   * handles its own Enter, exactly as ROW_CLICK_IGNORE filters a click.
+   */
+  const handleCellKeyDown = useCallback(
+    (event: CellKeyDownEvent<T> | FullWidthCellKeyDownEvent<T>) => {
+      const key = event.event;
+      if (!onRowClick || !event.data || !(key instanceof KeyboardEvent) || key.key !== 'Enter') return;
+      if (key.target instanceof Element && key.target.closest(ROW_CLICK_IGNORE)) return;
+      onRowClick(event.data);
+    },
+    [onRowClick],
+  );
+
+  const handleGridReady = useCallback(
+    (event: GridReadyEvent<T>) => {
+      if (ariaLabel) event.api.setGridAriaProperty('label', ariaLabel);
+    },
+    [ariaLabel],
+  );
+
   const agGetRowId = useCallback((params: GetRowIdParams<T>) => getRowId(params.data), [getRowId]);
   const agGetRowStyle = useCallback(
     (params: RowClassParams<T>) => (getRowStyle && params.data ? getRowStyle(params.data) : undefined),
@@ -382,7 +416,9 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   }, [tableId]);
 
   const noRowsTemplate = useMemo(
-    () => `<span>${escapeHtml(emptyText ?? t('shell.table.empty'))}</span>`,
+    // A custom template is one AG Grid does not announce itself, so the text
+    // carries its own polite live region (WCAG 4.1.3).
+    () => `<span role="status">${escapeHtml(emptyText ?? t('shell.table.empty'))}</span>`,
     [emptyText, t],
   );
   const gridOpacity = table.loading ? LOADING_DIM_OPACITY : 1;
@@ -430,6 +466,8 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
         </Alert>
       ) : (
         <Box
+          aria-busy={table.loading}
+          data-testid="duncit-table-grid"
           sx={{
             opacity: gridOpacity,
             pointerEvents: gridPointerEvents,
@@ -447,11 +485,15 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             rowSelection={selection ? MULTI_ROW_SELECTION : undefined}
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}
-            suppressCellFocus
+            // Cells only take focus where there is something to do with it:
+            // opening the row. A read-only grid stays out of the tab order.
+            suppressCellFocus={!onRowClick}
             enableBrowserTooltips
             overlayNoRowsTemplate={noRowsTemplate}
+            onGridReady={handleGridReady}
             onSortChanged={handleSortChanged}
             onRowClicked={handleRowClicked}
+            onCellKeyDown={handleCellKeyDown}
             onSelectionChanged={handleSelectionChanged}
           />
         </Box>

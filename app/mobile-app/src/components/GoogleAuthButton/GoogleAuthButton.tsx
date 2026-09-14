@@ -89,6 +89,10 @@ export function GoogleAuthButton({
       testID="google-auth-button"
       role="button"
       aria-disabled={isDisabled}
+      aria-busy={busy}
+      // One screen-reader element named by its visible words (native), and a
+      // tab stop (web).
+      tabIndex={0}
       disabled={isDisabled}
       onPress={() => {
         if (isDisabled) return;

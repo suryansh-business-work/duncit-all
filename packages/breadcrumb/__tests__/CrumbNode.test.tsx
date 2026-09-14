@@ -30,6 +30,7 @@ describe('CrumbNode', () => {
     const node = screen.getByText('Detail');
     expect(node.closest('a')).toBeNull();
     expect(node).toHaveStyle({ fontWeight: '700' });
+    expect(node).toHaveAttribute('aria-current', 'page');
   });
 
   it('renders a non-navigable, non-last first crumb as secondary text with the home icon', () => {
@@ -39,6 +40,7 @@ describe('CrumbNode', () => {
     const node = screen.getByText('Solo');
     expect(node.closest('a')).toBeNull();
     expect(node).toHaveStyle({ fontWeight: '500' });
+    expect(node).not.toHaveAttribute('aria-current');
     expect(container.querySelector('svg[data-testid="HomeIcon"]')).toBeInTheDocument();
   });
 });

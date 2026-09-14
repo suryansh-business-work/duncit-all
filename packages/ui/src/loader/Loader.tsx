@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
+import { alpha, type SxProps, type Theme } from '@mui/material/styles';
 import { useTranslation } from '../i18n/useTranslation';
 import { mergeSx } from '../mergeSx';
 
@@ -49,9 +49,10 @@ const LAYOUT: Record<LoaderVariant, SxProps<Theme>> = {
     justifyContent: 'center',
     gap: 1.5,
     // Tinted from the theme's own paper rather than a fixed white/black, so the
-    // scrim reads the same in light and dark instead of inverting.
-    bgcolor: (theme) => theme.palette.background.paper,
-    opacity: 0.72,
+    // scrim reads the same in light and dark instead of inverting. The alpha is
+    // on the BACKGROUND, not on the Stack: an `opacity` there faded the label
+    // too, taking secondary text under the 4.5:1 contrast floor (WCAG 1.4.3).
+    bgcolor: (theme) => alpha(theme.palette.background.paper, 0.72),
     zIndex: 1,
   },
 };

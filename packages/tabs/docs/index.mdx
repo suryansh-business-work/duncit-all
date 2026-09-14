@@ -27,6 +27,8 @@ exports:
   - 'DuncitTabsProps'
   - 'UseTabParamOptions'
   - 'TabValue'
+  - 'tabPanelProps'
+  - 'tabIds'
 ---
 
 ## Why this exists
@@ -82,6 +84,33 @@ There is no third mode. Every layout prop MUI's `<Tabs>` takes — `variant`, `s
 `allowScrollButtonsMobile`, `textColor`, `TabIndicatorProps`, `sx`, `aria-label` — passes
 straight through, and each item carries its own `icon`, `iconPosition`, `disabled`, `sx` and
 `testId`.
+
+## Wiring a tab to its panel
+
+A strip that reveals a region should tell assistive technology which region each tab controls.
+Give the strip an `idPrefix` and spread `tabPanelProps` onto the panel with the same prefix:
+
+```tsx
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
+
+const tabs = useTabParam<PodTab>({ items: POD_TABS, fallback: 'upcoming' });
+
+<DuncitTabs {...tabs} idPrefix="pods" aria-label="Pod views" />
+<Box {...tabPanelProps('pods', tabs.value)}>
+  <PodList rows={rows} />
+</Box>
+// tab:   id="pods-tab-upcoming"   aria-controls="pods-panel-upcoming"
+// panel: id="pods-panel-upcoming" role="tabpanel" aria-labelledby="pods-tab-upcoming"
+```
+
+| Export | Signature | What it returns |
+| --- | --- | --- |
+| `idPrefix` (prop) | `string` (optional) | Omit it for a strip that reveals no panel of its own (a filter bar); the tabs then carry no `id` / `aria-controls`. |
+| `tabPanelProps` | `(idPrefix: string, value: TabValue)` | `{ role: 'tabpanel', id, 'aria-labelledby' }` for the panel. |
+| `tabIds` | `(idPrefix: string, value: TabValue)` | `{ tabId, panelId }` — the two ids both sides derive. |
+
+Always give the strip an `aria-label` (or `aria-labelledby` a visible heading): a tablist is a
+widget, and it needs a name of its own.
 
 ## What the hook does that a `useState` + effect pair gets wrong
 

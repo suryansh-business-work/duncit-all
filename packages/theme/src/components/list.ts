@@ -12,7 +12,7 @@ export const listItemButton = (c: ThemeCtx): Components<Theme>['MuiListItemButto
       borderRadius: c.t.radius.sm,
       '&:hover': { backgroundColor: alpha(c.primary, 0.08) },
       '&.Mui-selected': {
-        backgroundColor: c.primary,
+        backgroundColor: c.primaryFill,
         color: c.white,
         '&:hover': { backgroundColor: c.primaryHover, color: c.white },
         '& .MuiListItemIcon-root': { color: 'inherit' },

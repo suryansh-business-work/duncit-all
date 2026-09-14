@@ -70,6 +70,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
           size="small"
           sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
           slotProps={{
+            htmlInput: { 'aria-label': t('session.portals.search'), 'data-testid': 'other-portals-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">
@@ -85,6 +86,7 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
             size="small"
             color={category === 'All' ? 'primary' : 'default'}
             variant={category === 'All' ? 'filled' : 'outlined'}
+            aria-pressed={category === 'All'}
             onClick={() => setCategory('All')}
             sx={{ fontWeight: 700 }}
           />
@@ -95,6 +97,8 @@ export default function OtherPortalsDialog({ open, onClose, t = sessionT }: Read
               size="small"
               color={category === option.key ? 'primary' : 'default'}
               variant={category === option.key ? 'filled' : 'outlined'}
+              // The filter in force is conveyed by state, not by colour alone (WCAG 1.4.1).
+              aria-pressed={category === option.key}
               onClick={() => setCategory(option.key)}
               sx={{ fontWeight: 700 }}
             />

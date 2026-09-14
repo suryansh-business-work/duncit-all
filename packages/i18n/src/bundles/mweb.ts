@@ -3,6 +3,12 @@ import type { NestedCatalogue } from '../catalogue';
 /** Copy shared by mWeb and the native app — one namespace, one source. */
 export const MWEB_BUNDLE: NestedCatalogue = {
   mweb: {
+    a11y: {
+      loading: 'Loading…',
+      requiredLabel: '{label}, required',
+      imageOf: 'Image {current} of {total}',
+      skipToContent: 'Skip to main content',
+    },
     common: {
       language: 'Language',
       languageHint: 'Choose the language for the app.',

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { Dialog, DialogTitle, Stack, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
@@ -28,6 +28,8 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
   const copyOf = useBotCopy();
   const [botKey, setBotKey] = useState<string | null>(null);
   const restartRef = useRef<(() => void) | null>(null);
+  const titleId = useId();
+  const barId = useId();
   const registerRestart = useCallback((restart: () => void) => {
     restartRef.current = restart;
   }, []);
@@ -41,10 +43,12 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" slotProps={{
+    // Named by the heading alone: the title bar also holds Back, Restart and
+    // Close, and a dialog called "Back Ask Bot Restart Close" names nothing.
+    <Dialog open={open} onClose={close} fullWidth maxWidth="sm" aria-labelledby={titleId} slotProps={{
       paper: { sx: PAPER_SX }
     }}>
-      <DialogTitle component="div" sx={{ pb: 1 }}>
+      <DialogTitle component="div" id={barId} sx={{ pb: 1 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
@@ -55,7 +59,7 @@ export function AskBotDialog({ open, onClose }: Readonly<Props>) {
               </DuncitIconButton>
             </Tooltip>
           )}
-          <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
+          <Typography variant="h6" component="h2" id={titleId} sx={{ flex: 1, minWidth: 0 }} noWrap>
             {copy ? copy.name : t('shell.askBot.title')}
           </Typography>
           {inChat && (

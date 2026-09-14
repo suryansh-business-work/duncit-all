@@ -74,7 +74,7 @@ export default function CallHeader({
           }),
         }}
       >
-        <Avatar src={peerPhoto || undefined} sx={{ width: 32, height: 32 }}>
+        <Avatar src={peerPhoto || undefined} alt="" sx={{ width: 32, height: 32 }}>
           {initials(peerName)}
         </Avatar>
       </Box>

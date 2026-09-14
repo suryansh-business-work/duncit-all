@@ -10,9 +10,10 @@ describe('@duncit/auth-tokens', () => {
     expect(tokens).toBeDefined();
     expect(brand[500]).toBe('#ff5757');
     expect(neutral[900]).toBe('#111827');
-    expect(semantic.error).toBe('#ef4444');
+    expect(semantic.error).toBe('#dc2626');
     expect(surface.paper).toBe('#ffffff');
-    expect(light.primary).toBe('#f82c2e');
+    expect(light.primary).toBe('#d92d2d');
+    expect(light.brand).toBe('#f82c2e');
     expect(dark.bg).toBe('#0e1012');
   });
 

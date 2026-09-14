@@ -20,9 +20,14 @@ export function StepProgressBar({ steps, current, label }: Readonly<Props>) {
     <XStack
       testID="step-progress-bar"
       gap={6}
-      accessibilityRole="progressbar"
-      accessibilityLabel={label}
-      accessibilityValue={{ min: 1, max: steps.length, now: current }}
+      // The web-standard spellings: React Native maps each to its native
+      // accessibility prop, and Tamagui's web build forwards them to the DOM —
+      // the `accessibility*` props reached neither a web screen reader.
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={1}
+      aria-valuemax={steps.length}
+      aria-valuenow={current}
     >
       {steps.map((id, index) => (
         <YStack

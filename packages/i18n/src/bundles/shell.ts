@@ -9,6 +9,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
   },
   shell: {
+    a11y: {
+      agentMessage: 'Message the Agent',
+    },
     /**
      * The action words every console repeats — Cancel, Save, Delete and the
      * "…ing" line each one shows while it waits.

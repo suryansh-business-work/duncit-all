@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -28,11 +30,23 @@ export function LocationSheetHeader({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color, primary } = useThemeColors();
+  // Native screen readers do not read the `alert` role aloud on arrival.
+  useEffect(() => {
+    if (error) AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
 
   return (
     <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
       <XStack alignItems="center" justifyContent="space-between" gap={12}>
-        <Text flex={1} fontSize={20} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text
+          testID="location-title"
+          role="heading"
+          flex={1}
+          fontSize={20}
+          fontWeight="600"
+          color="$color"
+          numberOfLines={1}
+        >
           {title}
         </Text>
         <HeaderRoundButton testID="location-close" label={t('mweb.common.close')} onPress={onClose}>
@@ -43,6 +57,8 @@ export function LocationSheetHeader({
         testID="location-gps"
         role="button"
         aria-label={t('mweb.location.useMyLocation')}
+        aria-busy={busy}
+        tabIndex={0}
         onPress={onDetect}
         alignItems="center"
         justifyContent="center"
@@ -61,13 +77,14 @@ export function LocationSheetHeader({
           {busy ? 'Locating…' : 'Use my location'}
         </Text>
       </XStack>
+      {/* Both land after an async GPS read, away from focus (WCAG 4.1.3). */}
       {detected ? (
-        <Text fontSize={12} color="$muted">
+        <Text testID="location-detected" role="status" fontSize={12} color="$muted">
           Detected: {detected}
         </Text>
       ) : null}
       {error ? (
-        <Text testID="location-error" fontSize={12} color="$danger">
+        <Text testID="location-error" role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

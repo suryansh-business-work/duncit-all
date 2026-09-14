@@ -38,6 +38,7 @@ export default function PexelsSearchBar({
           if (event.key === 'Enter') onSearch();
         }}
         slotProps={{
+          htmlInput: { 'aria-label': placeholder, 'data-testid': 'pexels-search' },
           input: {
             startAdornment: (
               <InputAdornment position="start">

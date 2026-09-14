@@ -38,6 +38,8 @@ export function PlaceholderScreen({
             testID="placeholder-back"
             role="button"
             aria-label={t('mweb.common.goBack')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={goBack}
             width={40}
             height={40}
@@ -51,7 +53,15 @@ export function PlaceholderScreen({
           >
             <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
+          <Text
+            testID="placeholder-title"
+            role="heading"
+            flex={1}
+            fontSize={17}
+            fontWeight="600"
+            color="$color"
+            numberOfLines={1}
+          >
             {title}
           </Text>
         </XStack>

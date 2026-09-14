@@ -76,6 +76,11 @@ describe('BackHeader', () => {
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
   });
 
+  it('renders the title as the page h1', () => {
+    render(withRouter(<BackHeader title="DUN-POD-4821" />));
+    expect(screen.getByRole('heading', { level: 1, name: 'DUN-POD-4821' })).toBeInTheDocument();
+  });
+
   it('spreads an array titleSx into the title styles', () => {
     render(withRouter(<BackHeader title="Detail" titleSx={[{ letterSpacing: '2px' }]} />));
     expect(screen.getByText('Detail')).toHaveStyle({ letterSpacing: '2px' });

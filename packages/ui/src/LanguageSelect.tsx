@@ -77,7 +77,8 @@ export function LanguageSelect({
     >
       {options.map((option) => (
         <MenuItem key={option.code} value={option.code} data-testid={`locale-option-${option.code}`}>
-          {option.label}
+          {/* Each name in its own language, so a screen reader pronounces it (WCAG 3.1.2). */}
+          <span lang={option.code}>{option.label}</span>
           {option.english_label ? ` · ${option.english_label}` : ''}
         </MenuItem>
       ))}

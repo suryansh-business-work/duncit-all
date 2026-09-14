@@ -34,7 +34,14 @@ export function DialogHeader({ title, subtitle, closeLabel, testID, onClose }: R
       paddingBottom={8}
     >
       <YStack flex={1} gap={4} paddingTop={onClose ? 6 : 0}>
-        <Text fontSize={18} lineHeight={23} fontWeight="600" color="$color">
+        <Text
+          testID={`${testID}-title`}
+          role="heading"
+          fontSize={18}
+          lineHeight={23}
+          fontWeight="600"
+          color="$color"
+        >
           {title}
         </Text>
         {subtitle ? (
@@ -48,6 +55,9 @@ export function DialogHeader({ title, subtitle, closeLabel, testID, onClose }: R
           testID={`${testID}-close`}
           role="button"
           aria-label={closeLabel}
+          tabIndex={0}
+          // 36 drawn, 44 touchable.
+          hitSlop={4}
           onPress={onClose}
           width={36}
           height={36}

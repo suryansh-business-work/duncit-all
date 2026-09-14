@@ -98,6 +98,9 @@ export function DuncitDialog({
         <YStack
           flex={1}
           testID={testID}
+          // iOS's two-finger scrub is the screen-reader Back — it closes the
+          // dialog exactly as the Android back button (`onRequestClose`) does.
+          onAccessibilityEscape={onClose}
           justifyContent={sheet ? 'flex-end' : 'center'}
           alignItems={sheet ? 'stretch' : 'center'}
           // Lifts the whole stack clear of the keyboard.
@@ -108,6 +111,11 @@ export function DuncitDialog({
             testID={`${testID}-backdrop`}
             role="button"
             aria-label={closeLabel}
+            // The scrim is a touch target, not a control: TalkBack would
+            // otherwise stop on a full-screen "Close" — one that does nothing
+            // when the backdrop is not dismissible. The ✕, the footer and
+            // Back/escape are the screen-reader ways out.
+            importantForAccessibility="no"
             onPress={dismissOnBackdrop ? onClose : undefined}
             position="absolute"
             top={0}

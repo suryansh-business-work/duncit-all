@@ -1,12 +1,32 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 import { brand, neutral, semantic, light, dark, radii } from '@duncit/auth-tokens';
-import { withPress } from '@duncit/buttons';
+import { focusVisibleGlobalCss, reducedMotionGlobalCss, withPress } from '@duncit/buttons';
 
 // Design-system tokens now come from the shared @duncit/auth-tokens package so
 // the mobile app (NativeWind) and mWeb (MUI) draw from one source. Re-exported
 // here under the same shape used across the app — no visual change.
 export const tokens = { brand, neutral, semantic };
+
+/**
+ * Two palette entries beyond MUI's own — the same names `@duncit/theme` gives
+ * the portals, so a package rendered on both can use them:
+ * - `accent` — red TEXT: links, "See all", active tab, focus ring. 4.5:1 on every
+ *   ground of the mode. `sx={{ color: 'accent.main' }}`.
+ * - `brand` — the exact brand red #F82C2E, for decoration only (logo,
+ *   illustration, large display type). Never body text, never a fill under text.
+ * `primary.main` stays the call-to-action FILL, always under `primary.contrastText`.
+ */
+declare module '@mui/material/styles' {
+  interface Palette {
+    accent: { main: string; contrastText: string };
+    brand: { main: string };
+  }
+  interface PaletteOptions {
+    accent?: { main: string; contrastText: string };
+    brand?: { main: string };
+  }
+}
 
 // The single source of white used across contrastText/chip/button colours below
 // — `light.surface` is `@duncit/auth-tokens`' canonical white, so this stays in
@@ -26,7 +46,7 @@ export const RADIUS = {
   input: 14, // OutlinedInput/Alert/ToggleButton/Menu/ListItemButton
   tooltip: radii.md, // 10
   pill: radii.pill, // 999 — Button/IconButton/Chip/LinearProgress
-  hairline: radii.sm, // 8 — scrollbar thumb + focus ring
+  hairline: radii.sm, // 8 — scrollbar thumb
 } as const;
 const SCROLLBAR_SIZE = 8;
 
@@ -56,7 +76,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
   const PRIMARY_ACTIVE = m.primaryActive;
   const ON_PRIMARY = m.onPrimary;
   const ACCENT = m.accent;
+  const ON_ACCENT = m.onAccent;
   const SOFT = m.soft;
+  // A form field's outline — 3:1 against every ground (WCAG 1.4.11). BORDER
+  // stays the decorative hairline for dividers and card edges.
+  const INPUT_BORDER = m.inputBorder;
   // Calm, flat page: the warm off-white (or near-black) ground IS the design —
   // cards read by contrast against it, not by a glow behind them.
   const APP_BG = 'none';
@@ -75,11 +99,15 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       dark: PRIMARY_ACTIVE,
       contrastText: ON_PRIMARY,
     },
-    secondary: { main: ACCENT, contrastText: WHITE },
-    success: { main: tokens.semantic.success },
-    warning: { main: tokens.semantic.warning },
-    error: { main: tokens.semantic.error },
-    info: { main: tokens.semantic.info },
+    secondary: { main: ACCENT, contrastText: ON_ACCENT },
+    // Mode-aware status colours: readable as text on every ground, and under
+    // `onSemantic` as a fill (dark ink in dark mode, where they are light).
+    success: { main: m.success, contrastText: m.onSemantic },
+    warning: { main: m.warning, contrastText: m.onSemantic },
+    error: { main: m.error, contrastText: m.onSemantic },
+    info: { main: m.info, contrastText: m.onSemantic },
+    accent: { main: ACCENT, contrastText: ON_ACCENT },
+    brand: { main: m.brand },
     background: { default: BG, paper: SURFACE },
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
@@ -145,13 +173,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             borderRadius: RADIUS.hairline,
           },
           '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
-          // Accessibility: visible focus ring for keyboard users.
-          'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible':
-            {
-              outline: `2px solid ${PRIMARY}`,
-              outlineOffset: 2,
-              borderRadius: RADIUS.hairline,
-            },
+          // Accessibility: a visible 2px focus ring for keyboard users, in the
+          // red TEXT colour (4.5:1 on every ground of both modes), and
+          // prefers-reduced-motion honoured once for the whole page.
+          ...focusVisibleGlobalCss(ACCENT),
+          ...reducedMotionGlobalCss,
           // Touch target minimum (WCAG 2.5.5 / iOS HIG).
           '@media (pointer: coarse)': {
             'button, a[role="button"], [role="button"]': {
@@ -213,14 +239,15 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             props: { variant: 'outlined', color: 'primary' },
             style: {
               borderColor: PRIMARY,
-              color: PRIMARY,
+              // A label is text: the AA red, not the CTA fill (4.32:1 on the page).
+              color: ACCENT,
               '&:hover': { borderColor: PRIMARY_HOVER, backgroundColor: alpha(PRIMARY, 0.06) },
             },
           },
           {
             props: { variant: 'text', color: 'primary' },
             style: {
-              color: PRIMARY,
+              color: ACCENT,
               '&:hover': { backgroundColor: alpha(PRIMARY, 0.06) },
             },
           },
@@ -251,7 +278,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: RADIUS.pill,
-            '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
+            '&.Mui-focusVisible': { outline: `2px solid ${ACCENT}` },
           },
         },
       },
@@ -261,7 +288,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: ON_PRIMARY } },
           {
             props: { variant: 'filled', color: 'secondary' },
-            style: { backgroundColor: ACCENT, color: WHITE },
+            style: { backgroundColor: ACCENT, color: ON_ACCENT },
           },
           { props: { variant: 'filled', color: 'default' }, style: { backgroundColor: SOFT } },
         ],
@@ -302,7 +329,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       MuiFormLabel: {
         // The `required` asterisk is rendered red so every required field carries a
         // clear `Label *` marker on the label (matches the mobile app's red `*`).
-        styleOverrides: { asterisk: { color: tokens.semantic.error } },
+        styleOverrides: {
+          asterisk: { color: m.error },
+          // A focused label is text on the field: the AA red, not the CTA fill.
+          root: { '&.Mui-focused:not(.Mui-error)': { color: ACCENT } },
+        },
       },
       MuiFormHelperText: {
         styleOverrides: {
@@ -320,8 +351,8 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           root: {
             borderRadius: RADIUS.input,
             backgroundColor: SURFACE,
-            '& fieldset': { borderColor: BORDER },
-            '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
+            '& fieldset': { borderColor: INPUT_BORDER },
+            '&:hover fieldset': { borderColor: INK },
             '&.Mui-focused fieldset': { borderColor: PRIMARY, borderWidth: 1.5 },
           },
           // MUI's medium is 16.5px each side (~55px tall); 15px lands on ~52.
@@ -468,13 +499,22 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
       MuiTab: {
         styleOverrides: {
-          root: { textTransform: 'none', fontWeight: 600, minHeight: 44 },
+          // The active tab's label is text — the AA red, not the CTA fill.
+          root: { textTransform: 'none', fontWeight: 600, minHeight: 44, '&.Mui-selected': { color: ACCENT } },
         },
       },
       MuiTabs: {
         styleOverrides: {
-          indicator: { backgroundColor: PRIMARY, height: 3, borderRadius: 3 },
+          indicator: { backgroundColor: ACCENT, height: 3, borderRadius: 3 },
         },
+      },
+      // `color="primary"` on text means red TEXT, so it renders in the AA accent
+      // (the CTA fill #d92d2d reads 4.32:1 on the page ground, 3.59:1 on a dark card).
+      MuiLink: {
+        variants: [{ props: { color: 'primary' }, style: { color: ACCENT } }],
+      },
+      MuiTypography: {
+        variants: [{ props: { color: 'primary' }, style: { color: ACCENT } }],
       },
       MuiLinearProgress: {
         styleOverrides: {
@@ -493,7 +533,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         },
       },
     },
-    { ink: INK, accent: PRIMARY }
+    // `accent` is the focus-ring colour: the AA red text value, so the ring
+    // clears 4.5:1 on every ground (the CTA fill only reaches 3.16:1 on a dark card).
+    { ink: INK, accent: ACCENT }
   ),
   });
 };

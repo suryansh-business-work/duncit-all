@@ -148,7 +148,7 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
               aria-checked={selected.has(club.id)}
               data-testid="assign-clubs-option"
             >
-              <Checkbox edge="start" size="small" checked={selected.has(club.id)} tabIndex={-1} disableRipple />
+              <Checkbox edge="start" size="small" checked={selected.has(club.id)} tabIndex={-1} disableRipple slotProps={{ input: { 'aria-hidden': true } }} />
               {/* A club they run from outside their category says so rather
                   than sitting in the list looking like a match. */}
               <ListItemText

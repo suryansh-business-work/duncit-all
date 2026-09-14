@@ -112,7 +112,7 @@ export default function GiftCardSettingsCard() {
             mb: 2
           }}>
           <TuneIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 700
           }}>
             {t('finance.giftCards.settingsTitle')}

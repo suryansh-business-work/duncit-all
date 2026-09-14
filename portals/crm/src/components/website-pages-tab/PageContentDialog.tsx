@@ -23,7 +23,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
   return (
     <Dialog open={!!page} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 0.5 }}>
-        <Typography variant="subtitle1" noWrap sx={{
+        <Typography component="span" variant="subtitle1" noWrap sx={{
           fontWeight: 800
         }}>
           {page?.title || 'Page content'}

@@ -104,7 +104,7 @@ export default function PayoutCyclesPage() {
       <Stack spacing={2}>
         <Card variant="outlined">
           <CardContent>
-            <Typography variant="subtitle1" gutterBottom sx={{
+            <Typography component="h2" variant="subtitle1" gutterBottom sx={{
               fontWeight: 700
             }}>
               Disbursement schedule

@@ -77,7 +77,9 @@ export function ExploreActionButton({
           pressStyle={PRESS_STYLE.inline}
           testID={onLabelPress ? `${testID}-count` : undefined}
           {...countA11y}
-          hitSlop={8}
+          // No reach upward: the disc sits 3px above, and a tap on it must stay
+          // the disc's own action.
+          hitSlop={{ top: 3, bottom: 8, left: 8, right: 8 }}
           onPress={onLabelPress}
           fontSize={11}
           fontWeight="600"

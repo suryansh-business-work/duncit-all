@@ -19,6 +19,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { useLoadingRegion } from '@/components/Skeleton';
 
+/** 16px thumbs reach 44pt tall; sideways only as far as the count between
+ * them allows, so a tap there can never land on the other vote. */
+const VOTE_HIT_SLOP = { top: 14, bottom: 14, left: 6, right: 6 } as const;
+const STAR_HIT_SLOP = { top: 8, bottom: 8, left: 1, right: 1 } as const;
+
 interface Review {
   id: string;
   user_name: string;
@@ -62,7 +67,7 @@ function Stars({
     );
   }
   return (
-    <XStack gap={2} role="radiogroup">
+    <XStack gap={2} role="radiogroup" aria-label={t('mweb.shop.rating')}>
       {[1, 2, 3, 4, 5].map((n) => (
         <YStack
           pressStyle={PRESS_STYLE.surface}
@@ -72,7 +77,9 @@ function Stars({
           aria-checked={n === value}
           aria-label={t('mweb.a11y.rateStars', { vars: { stars: n } })}
           tabIndex={0}
-          hitSlop={8}
+          // Stars sit 2px apart: the extra reach is vertical, so a tap on a
+          // star never counts as its neighbour.
+          hitSlop={STAR_HIT_SLOP}
           onPress={() => onChange(n)}
         >
           <MaterialIcons name={n <= value ? 'star' : 'star-border'} size={size} color={warning} />
@@ -209,7 +216,7 @@ function ReviewCard({
           aria-pressed={upvoted}
           accessibilityState={{ selected: upvoted }}
           tabIndex={0}
-          hitSlop={14}
+          hitSlop={VOTE_HIT_SLOP}
           onPress={() => onVote(review.id, 1, review.my_vote)}
         >
           <MaterialIcons name="thumb-up" size={16} color={upvoted ? accent : muted} />
@@ -225,7 +232,7 @@ function ReviewCard({
           aria-pressed={downvoted}
           accessibilityState={{ selected: downvoted }}
           tabIndex={0}
-          hitSlop={14}
+          hitSlop={VOTE_HIT_SLOP}
           onPress={() => onVote(review.id, -1, review.my_vote)}
         >
           <MaterialIcons name="thumb-down" size={16} color={downvoted ? danger : muted} />

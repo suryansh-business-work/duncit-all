@@ -61,7 +61,7 @@ export default function MultiPodAccordion({
           sx={{ width: '100%', alignItems: { md: 'center' }, flexWrap: 'wrap', pr: 1 }}
         >
           <Box sx={{ flex: 1, minWidth: 140 }}>
-            <Typography variant="subtitle1" noWrap sx={{ fontWeight: 800 }}>
+            <Typography component="span" variant="subtitle1" noWrap sx={{ fontWeight: 800 }}>
               {row.name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>

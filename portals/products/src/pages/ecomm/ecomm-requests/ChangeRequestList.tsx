@@ -60,7 +60,7 @@ export default function ChangeRequestList({ kind }: Readonly<{ kind: 'BRAND' | '
               justifyContent: "space-between",
               alignItems: "center"
             }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+            <Typography component="p" variant="subtitle2" sx={{ fontWeight: 800 }}>
               {request.title}
             </Typography>
             <Chip size="small" label={request.status} color={STATUS_COLOR[request.status] ?? 'default'} />

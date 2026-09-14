@@ -89,7 +89,7 @@ export default function InventoryDeleteDialog({
   const linkedPodsSummary =
     linkedPods.length > 0 ? (
       <Alert severity="warning">
-        <Typography variant="subtitle2" gutterBottom>
+        <Typography component="p" variant="subtitle2" gutterBottom>
           Linked to {linkedPods.length} pod{linkedPods.length === 1 ? '' : 's'}
         </Typography>
         <List dense disablePadding sx={{ maxHeight: 180, overflowY: 'auto' }}>

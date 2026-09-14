@@ -99,7 +99,7 @@ export default function DeliveryAvailabilitySection() {
         </>
       )}
       <Grid size={12}>
-        <Typography variant="subtitle2" sx={{
+        <Typography component="h3" variant="subtitle2" sx={{
           fontWeight: 700
         }}>
           Shipping dimensions

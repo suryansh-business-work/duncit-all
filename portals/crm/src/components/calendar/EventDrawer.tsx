@@ -53,7 +53,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
               borderBottom: 1,
               borderColor: 'divider'
             }}>
-            <Typography
+            <Typography component="p"
               variant="subtitle1"
               sx={{
                 fontWeight: 800,

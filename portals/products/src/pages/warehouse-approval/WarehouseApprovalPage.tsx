@@ -111,7 +111,7 @@ export default function WarehouseApprovalPage() {
                   <Stack direction="row" spacing={1} sx={{
                     alignItems: "center"
                   }}>
-                    <Typography variant="subtitle1" noWrap sx={{
+                    <Typography component="h2" variant="subtitle1" noWrap sx={{
                       fontWeight: 900
                     }}>
                       {row.title}

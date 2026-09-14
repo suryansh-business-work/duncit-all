@@ -21,7 +21,7 @@ export default function PlacementCopyFields({
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant="subtitle2">{t('marketing.adsSettings.rateCardWording')}</Typography>
+        <Typography component="h2" variant="subtitle2">{t('marketing.adsSettings.rateCardWording')}</Typography>
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>

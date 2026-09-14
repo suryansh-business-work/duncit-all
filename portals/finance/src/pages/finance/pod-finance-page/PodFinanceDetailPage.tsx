@@ -67,7 +67,7 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
       }}>
         <Card variant="outlined" sx={{ borderRadius: 3, flex: 2, width: '100%' }}>
           <CardContent>
-            <Typography
+            <Typography component="h2"
               variant="subtitle1"
               sx={{
                 fontWeight: 700,

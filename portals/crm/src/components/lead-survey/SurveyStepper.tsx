@@ -71,7 +71,7 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
         </Stepper>
       )}
       <Stack spacing={1.75}>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 800
         }}>{active.title}</Typography>
         {active.help && <Typography variant="body2" sx={{

@@ -79,7 +79,7 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
           touchAction: 'none'
         }}>
         {icon}
-        <Typography
+        <Typography component="h2"
           variant="subtitle2"
           noWrap
           sx={{

@@ -43,7 +43,7 @@ export default function ImagesField({ images, coverUrl, onChange }: Readonly<Ima
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Typography variant="subtitle2">{t('products.media.productImages')}</Typography>
+        <Typography component="h2" variant="subtitle2">{t('products.media.productImages')}</Typography>
         <DuncitButton
           size="small"
           startIcon={<AddPhotoAlternateIcon />}

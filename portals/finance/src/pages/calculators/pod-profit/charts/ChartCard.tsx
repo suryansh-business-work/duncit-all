@@ -31,7 +31,7 @@ export default function ChartCard({
     <Card sx={{ flex: 1, minWidth: 0 }}>
       <CardContent>
         <Stack spacing={0.25} sx={{ mb: 1 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+          <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
           {hint ? (

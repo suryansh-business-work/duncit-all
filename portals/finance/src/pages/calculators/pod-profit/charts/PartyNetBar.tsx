@@ -46,6 +46,8 @@ export default function PartyNetBar({ venue, host, duncit, expenses }: Readonly<
       hasData={hasData}
     >
       <Bar
+        role="img"
+        aria-label={t('finance.calculators.chartNetByParty')}
         data={{
           labels: parties.map((party) => party.label),
           datasets: [

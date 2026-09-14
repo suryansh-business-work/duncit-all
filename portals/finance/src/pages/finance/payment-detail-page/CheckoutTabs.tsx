@@ -53,7 +53,7 @@ export default function CheckoutTabs({
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           {t('finance.payment.artifactsTitle')}

@@ -127,7 +127,7 @@ export default function CalendarSection() {
               <DuncitIconButton size="small" aria-label={t('crm.a11y.nextPeriod')} data-testid="crm-calendar-next" onClick={() => step(1)}><ChevronRightIcon /></DuncitIconButton>
             </Stack>
           )}
-          <Typography
+          <Typography component="p"
             variant="subtitle1"
             role="status"
             sx={{

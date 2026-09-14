@@ -37,7 +37,7 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
           mb: 0.75
         }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap sx={{
+          <Typography component="p" variant="subtitle2" noWrap sx={{
             fontWeight: 700
           }}>
             {contact.name || (index === 0 ? 'Primary contact' : `Contact ${index + 1}`)}

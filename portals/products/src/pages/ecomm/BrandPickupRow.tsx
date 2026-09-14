@@ -55,7 +55,7 @@ export default function BrandPickupRow({
                 alignItems: "center",
                 mb: 0.5
               }}>
-              <Typography variant="subtitle2" noWrap sx={{
+              <Typography component="p" variant="subtitle2" noWrap sx={{
                 fontWeight: 700
               }}>
                 {location.nickname}

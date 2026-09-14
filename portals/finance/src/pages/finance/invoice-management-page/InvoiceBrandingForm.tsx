@@ -18,7 +18,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
     <Stack spacing={2}>
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom sx={{
+          <Typography component="h2" variant="subtitle1" gutterBottom sx={{
             fontWeight: 700
           }}>
             Business identity
@@ -63,7 +63,7 @@ export default function InvoiceBrandingForm({ value, onChange, emailError }: Rea
 
       <Card variant="outlined">
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom sx={{
+          <Typography component="h2" variant="subtitle1" gutterBottom sx={{
             fontWeight: 700
           }}>
             Invoice document

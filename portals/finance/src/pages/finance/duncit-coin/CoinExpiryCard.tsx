@@ -17,7 +17,7 @@ export default function CoinExpiryCard({ control }: Readonly<Props>) {
     <Card variant="outlined">
       <CardContent>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 700 }}>
             {t('finance.duncitCoin.coinExpiryTitle')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

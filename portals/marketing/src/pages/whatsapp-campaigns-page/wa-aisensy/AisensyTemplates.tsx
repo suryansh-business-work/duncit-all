@@ -111,7 +111,7 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
         alignItems: "flex-start"
       }}>
         <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 800
           }}>
             {t('marketingWhatsapp.title')}

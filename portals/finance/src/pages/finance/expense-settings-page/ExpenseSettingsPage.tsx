@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { PageHeader } from '@duncit/ui';
 import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 import { parseApiError } from '@duncit/utils';
 import ExpenseOptionTable from './ExpenseOptionTable';
@@ -99,8 +99,9 @@ export default function ExpenseSettingsPage() {
         )}
 
         <Box>
-          <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+          <DuncitTabs {...tabs} idPrefix="expense-settings" variant="scrollable" allowScrollButtonsMobile />
           <Divider sx={{ mb: 2 }} />
+          <Box {...tabPanelProps('expense-settings', tabs.value)}>
           <Alert severity="info" sx={{ mb: 2 }}>
             {t('finance.expenseConfig.disableRatherThanDelete')}
           </Alert>
@@ -115,6 +116,7 @@ export default function ExpenseSettingsPage() {
               {t('finance.expenseConfig.addOption')}
             </DuncitButton>
           </Stack>
+          </Box>
         </Box>
       </Stack>
 

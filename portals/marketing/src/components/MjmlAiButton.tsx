@@ -75,7 +75,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         slotProps={{ paper: { role: 'dialog', 'aria-label': t('marketing.mjmlAiButton.createUpdateMjmlWithAi'), sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h2" variant="subtitle2" sx={{
             fontWeight: 700
           }}>{t('marketing.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
           <TextField

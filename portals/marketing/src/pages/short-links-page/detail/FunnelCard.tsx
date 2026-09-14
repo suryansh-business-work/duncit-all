@@ -29,7 +29,7 @@ export default function FunnelCard({ funnel }: Readonly<Props>) {
             mb: 2
           }}>
           <Box>
-            <Typography variant="subtitle2" sx={{
+            <Typography component="h2" variant="subtitle2" sx={{
               fontWeight: 700
             }}>
               Click to checkout

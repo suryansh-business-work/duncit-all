@@ -15,7 +15,7 @@ export default function TopLinksCard({ links, onOpen }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle2"
           sx={{
             fontWeight: 700,
@@ -41,7 +41,10 @@ export default function TopLinksCard({ links, onOpen }: Readonly<Props>) {
               data-testid="top-link"
               onClick={() => onOpen(link)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') onOpen(link);
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onOpen(link);
+                }
               }}
               sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
             >

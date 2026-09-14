@@ -29,7 +29,7 @@ export default function EmojiPopover({
           <ButtonBase
             key={e}
             data-testid={`emoji-${e}`}
-            aria-label={`${t('mweb.chat.emoji')} ${e}`}
+            aria-label={`${e} ${t('mweb.chat.emoji')}`}
             sx={{ px: 0.5, minWidth: 32, minHeight: 32, borderRadius: '8px', font: 'inherit' }}
             onClick={() => onSelect(e)}
           >

@@ -15,7 +15,7 @@ function InfoCard({ title, children }: Readonly<{ title: string; children: React
   return (
     <Card variant="outlined" sx={{ flex: 1, minWidth: 260, width: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle1"
           sx={{
             fontWeight: 700,

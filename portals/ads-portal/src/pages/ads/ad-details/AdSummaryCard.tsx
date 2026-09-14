@@ -31,7 +31,7 @@ export default function AdSummaryCard({ ad }: Readonly<{ ad: AdRequestDetail }>)
   return (
     <Card>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle1"
           sx={{
             fontWeight: 700,

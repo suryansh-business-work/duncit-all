@@ -109,7 +109,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
                   }}>
                     {t.icon}
                     <Box>
-                      <Typography variant="subtitle2" sx={{
+                      <Typography component="span" variant="subtitle2" sx={{
                         fontWeight: 700
                       }}>{t.label}</Typography>
                       <Typography variant="caption" sx={{

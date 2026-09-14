@@ -37,7 +37,7 @@ export function Row({ label, value, emphasis = 'default', detail }: Readonly<Row
           }}>{detail}</Typography>
         ) : null}
       </Box>
-      <Typography
+      <Typography component="p"
         variant="subtitle1"
         color={COLORS[emphasis]}
         sx={{

@@ -29,7 +29,7 @@ function DetailRow({ icon, value, tint, href }: Readonly<DetailRowProps>) {
     <XStack
       alignItems="flex-start"
       gap={8}
-      tabIndex={0}
+      tabIndex={href ? 0 : undefined}
       role={href ? 'button' : undefined}
       aria-label={href ? value : undefined}
       onPress={open}

@@ -116,7 +116,7 @@ export default function InvoiceManagementPage() {
             <InvoiceBrandingForm value={form} onChange={onChange} emailError={emailError} />
             <Card variant="outlined">
               <CardContent>
-                <Typography variant="subtitle1" gutterBottom sx={{
+                <Typography component="h2" variant="subtitle1" gutterBottom sx={{
                   fontWeight: 700
                 }}>
                   Payment processing

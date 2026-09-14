@@ -39,7 +39,8 @@ export default function PublicSurveyPage() {
   };
 
   const shell = (children: ReactNode) => (
-    <Box sx={{ maxWidth: 720, mx: 'auto', p: { xs: 1.5, sm: 2 }, minHeight: '100dvh', display: 'grid', alignContent: 'center' }}>
+    // This route renders outside the portal shell, so it supplies its own main landmark (1.3.1).
+    <Box component="main" sx={{ maxWidth: 720, mx: 'auto', p: { xs: 1.5, sm: 2 }, minHeight: '100dvh', display: 'grid', alignContent: 'center' }}>
       <Box
         component="img"
         src={logoUrl}
@@ -56,6 +57,7 @@ export default function PublicSurveyPage() {
   if (done || payload?.already_filled) {
     return shell(
       <Stack
+        role="status"
         spacing={1.5}
         sx={{
           alignItems: "center",

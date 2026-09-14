@@ -12,7 +12,7 @@ interface Props {
 export default function SectionBlock({ title, children }: Readonly<Props>) {
   return (
     <Box>
-      <Typography
+      <Typography component="h3"
         variant="subtitle2"
         sx={{
           fontWeight: 700,

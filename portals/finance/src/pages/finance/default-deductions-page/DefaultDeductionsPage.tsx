@@ -38,7 +38,7 @@ function DeductionCard({ title, subtitle, children }: Readonly<SectionProps>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           {title}

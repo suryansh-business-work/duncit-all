@@ -43,7 +43,7 @@ export function StarPicker({
   const { warning } = useThemeColors();
   const { t } = useTranslation();
   return (
-    <XStack gap={4} role="radiogroup">
+    <XStack gap={4} role="radiogroup" aria-label={t('mweb.clubDetails.rateThisClub')}>
       {STARS.map((s) => (
         <TouchableOpacity
           key={s}

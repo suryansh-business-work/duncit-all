@@ -41,7 +41,8 @@ export function AspectRatingRow({ aspect, label, value, onChange, starLabel }: R
             aria-checked={star === value}
             tabIndex={0}
             aria-label={starLabel(star)}
-            hitSlop={8}
+            // 2px between stars: reach up and down, never into the next star.
+            hitSlop={{ top: 8, bottom: 8, left: 1, right: 1 }}
             onPress={() => onChange(star)}
             pressStyle={PRESS_STYLE.row}
             padding={2}

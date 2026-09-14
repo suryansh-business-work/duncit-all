@@ -96,7 +96,7 @@ export default function WaLogs({
   return (
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           {t('marketingWhatsapp.logs.title')}

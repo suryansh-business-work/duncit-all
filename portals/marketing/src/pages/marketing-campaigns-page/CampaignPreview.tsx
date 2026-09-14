@@ -21,7 +21,7 @@ export default function CampaignPreview({ html, errors, loading, subject }: Read
             justifyContent: "space-between"
           }}>
           <Box>
-            <Typography variant="subtitle1" sx={{
+            <Typography component="h2" variant="subtitle1" sx={{
               fontWeight: 700
             }}>{t('marketing.marketingCampaigns.livePreview')}</Typography>
             <Typography variant="caption" sx={{

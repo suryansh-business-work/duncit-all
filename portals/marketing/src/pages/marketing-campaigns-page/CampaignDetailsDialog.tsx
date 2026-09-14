@@ -60,7 +60,7 @@ export default function CampaignDetailsDialog({
         <Stack direction="row" spacing={1.5} sx={{
           alignItems: "center"
         }}>
-          <Typography component="h2"
+          <Typography component="span"
             variant="h6"
             sx={{
               fontWeight: 700,
@@ -102,7 +102,7 @@ export default function CampaignDetailsDialog({
             />
             <CampaignEngagement campaign={campaign} formatDateTime={formatDateTime} />
             <Box>
-              <Typography
+              <Typography component="h3"
                 variant="subtitle2"
                 sx={{
                   fontWeight: 700,

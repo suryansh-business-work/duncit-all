@@ -267,8 +267,8 @@ export default function HomeStatusViewer({
   );
 
   return (
-    <Dialog data-testid="home-status-viewer" open={!!item} fullScreen onClose={onClose} aria-label={item.label} slotProps={{
-      paper: { sx: { bgcolor: '#08070b' } }
+    <Dialog data-testid="home-status-viewer" open={!!item} fullScreen onClose={onClose} slotProps={{
+      paper: { 'aria-label': item.label, sx: { bgcolor: '#08070b' } }
     }}>
       <Box
         onPointerDown={(event) => {

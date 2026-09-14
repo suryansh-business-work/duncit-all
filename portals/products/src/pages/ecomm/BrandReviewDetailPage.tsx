@@ -92,7 +92,7 @@ export default function BrandReviewDetailPage() {
 
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography
+              <Typography component="h2"
                 variant="subtitle1"
                 sx={{
                   fontWeight: 700,

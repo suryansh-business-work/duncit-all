@@ -37,7 +37,7 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
                 alignItems: "center",
                 flexWrap: "wrap"
               }}>
-              <Typography variant="subtitle2" sx={{
+              <Typography component="p" variant="subtitle2" sx={{
                 fontWeight: 800
               }}>{matched.full_name || 'Duncit user'}</Typography>
               <MatchedUserChip matched={matched} />

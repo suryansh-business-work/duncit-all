@@ -50,6 +50,8 @@ export default function MoneySplitDonut({ gst, venue, host, duncit }: Readonly<P
       hasData={hasData}
     >
       <Doughnut
+        role="img"
+        aria-label={t('finance.calculators.chartMoneySplit')}
         data={{
           labels: slices.map((slice) => slice.label),
           datasets: [

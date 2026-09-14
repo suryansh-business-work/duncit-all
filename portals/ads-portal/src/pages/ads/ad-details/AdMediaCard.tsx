@@ -25,7 +25,7 @@ export default function AdMediaCard({ ad }: Readonly<{ ad: AdRequestDetail }>) {
             justifyContent: "space-between",
             mb: 1.5
           }}>
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 700
           }}>
             {t('adRequest.media.label')}

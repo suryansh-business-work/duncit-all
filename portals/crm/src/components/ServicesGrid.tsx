@@ -53,7 +53,7 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
                 flexWrap: "wrap",
                 mb: 0.5
               }}>
-              <Typography variant="subtitle2" noWrap sx={{
+              <Typography component="p" variant="subtitle2" noWrap sx={{
                 fontWeight: 700
               }}>
                 {name}

@@ -80,7 +80,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
 
         {mode === 'info' ? (
           <>
-            <Typography variant="subtitle2" sx={{
+            <Typography component="h3" variant="subtitle2" sx={{
               color: "text.secondary"
             }}>
               What is this?
@@ -88,7 +88,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {metric.definition}
             </Typography>
-            <Typography
+            <Typography component="h3"
               variant="subtitle2"
               sx={{
                 color: "text.secondary",
@@ -102,7 +102,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
           </>
         ) : (
           <>
-            <Typography variant="subtitle2" sx={{
+            <Typography component="h3" variant="subtitle2" sx={{
               color: "text.secondary"
             }}>
               Formula

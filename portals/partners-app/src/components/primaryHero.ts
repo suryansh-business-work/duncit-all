@@ -14,5 +14,8 @@ import { darken, type Theme } from '@mui/material/styles';
  * Text on it stays at full white: an opacity below 1 on the accent drops the
  * lighter end of the gradient under 4.5:1.
  */
-export const primaryHeroBackground = (theme: Theme): string =>
-  `linear-gradient(135deg, ${darken(theme.palette.primary.dark, 0.3)} 0%, ${theme.palette.primary.dark} 100%)`;
+export function primaryHeroBackground(theme: Theme): string {
+  const { dark } = theme.palette.primary;
+  const stops = [`${darken(dark, 0.3)} 0%`, `${dark} 100%`];
+  return `linear-gradient(135deg, ${stops.join(', ')})`;
+}

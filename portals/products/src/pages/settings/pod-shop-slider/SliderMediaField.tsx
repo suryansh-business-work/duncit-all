@@ -60,7 +60,7 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Typography variant="subtitle2">{t('products.settings.sliderMedia')}</Typography>
+        <Typography component="h2" variant="subtitle2">{t('products.settings.sliderMedia')}</Typography>
         <DuncitButton
           size="small"
           startIcon={<AddPhotoAlternateIcon />}

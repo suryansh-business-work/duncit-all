@@ -16,6 +16,10 @@ import { PostViewerBody } from './PostViewerBody';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+/** Share, Delete and Close sit edge to edge: the touch area grows up and down
+ * only, so a tap on one can never land on its neighbour (Delete included). */
+const HEADER_HIT_SLOP = { top: 4, bottom: 4 } as const;
+
 interface Props {
   postId: string;
   meId?: string;
@@ -97,7 +101,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     role="button"
                     aria-label={t('mweb.profile.sharePost')}
                     tabIndex={0}
-                    hitSlop={4}
+                    hitSlop={HEADER_HIT_SLOP}
                     onPress={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
                     width={36}
                     height={36}
@@ -115,7 +119,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     aria-label={t('mweb.profile.deletePost')}
                     aria-disabled={deleting}
                     tabIndex={0}
-                    hitSlop={4}
+                    hitSlop={HEADER_HIT_SLOP}
                     onPress={removePost}
                     width={36}
                     height={36}
@@ -131,7 +135,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   role="button"
                   aria-label={t('mweb.common.close')}
                   tabIndex={0}
-                  hitSlop={4}
+                  hitSlop={HEADER_HIT_SLOP}
                   onPress={onClose}
                   width={36}
                   height={36}

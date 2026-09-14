@@ -37,7 +37,7 @@ export function ManualLogComposer(props: Readonly<Props>) {
           alignItems: "center",
           mb: 1.5
         }}>
-        <Typography
+        <Typography component="h3"
           variant="subtitle2"
           sx={{
             fontWeight: 700,

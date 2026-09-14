@@ -123,7 +123,7 @@ export default function VenueLeadDetailPage() {
                     mb: 1.25
                   }}>
                   <StickyNote2Icon color="primary" />
-                  <Typography variant="subtitle1" sx={{
+                  <Typography component="h2" variant="subtitle1" sx={{
                     fontWeight: 800
                   }}>
                     Lead tracking
@@ -263,8 +263,13 @@ export default function VenueLeadDetailPage() {
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') navigate(`/host-leads/${h.id}/view`);
+                    // A role=button answers Space as well as Enter (2.1.1).
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/host-leads/${h.id}/view`);
+                    }
                   }}
+                  data-testid="venue-lead-linked-host"
                 >
                   <Stack
                     direction="row"
@@ -275,7 +280,7 @@ export default function VenueLeadDetailPage() {
                       flexWrap: "wrap",
                       mb: 0.5
                     }}>
-                    <Typography variant="subtitle2" sx={{
+                    <Typography component="p" variant="subtitle2" sx={{
                       fontWeight: 700
                     }}>
                       {h.host_name}

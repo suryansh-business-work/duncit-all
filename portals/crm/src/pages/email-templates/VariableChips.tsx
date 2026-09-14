@@ -45,7 +45,7 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
 
   return (
     <Stack spacing={0.5}>
-      {title && <Typography variant="subtitle2">{title}</Typography>}
+      {title && <Typography component="h3" variant="subtitle2">{title}</Typography>}
       <Stack direction="row" spacing={0.5} useFlexGap sx={{
         flexWrap: "wrap"
       }}>

@@ -38,7 +38,7 @@ export default function MjmlEditorPane({ value, onChange, onValidate, templateId
           borderColor: 'divider'
         }}>
         <CodeIcon fontSize="small" />
-        <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.mjmlSource')}</Typography>
+        <Typography component="h2" variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.mjmlSource')}</Typography>
         <Tooltip title={t('crm.emailTemplates.formatAndTidy')}>
           <DuncitIconButton size="small" onClick={() => onChange(formatMjml(value))}><FormatAlignLeftIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>

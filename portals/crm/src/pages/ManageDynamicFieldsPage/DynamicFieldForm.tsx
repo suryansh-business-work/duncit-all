@@ -32,7 +32,7 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
   const set = (patch: Partial<DraftState>) => onChange({ ...draft, ...patch });
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
-      <Typography
+      <Typography component="h2"
         variant="subtitle2"
         sx={{
           fontWeight: 700,

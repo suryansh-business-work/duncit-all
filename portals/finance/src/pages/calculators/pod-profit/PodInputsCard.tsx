@@ -23,7 +23,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             mb: 1.5
           }}>
           <ReceiptLongIcon color="primary" />
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 800
           }}>{t('finance.calculators.podPricing')}</Typography>
         </Stack>

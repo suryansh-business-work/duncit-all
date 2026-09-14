@@ -149,7 +149,7 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
             Shipping: {symbol}
             {order.shipping_charge}
           </Typography>
-          <Typography variant="subtitle1" sx={{
+          <Typography component="p" variant="subtitle1" sx={{
             fontWeight: 800
           }}>
             Total: {symbol}

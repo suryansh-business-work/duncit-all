@@ -26,7 +26,7 @@ export default function CampaignMjmlEditor({ value, error, helperText, onChange,
           alignItems: { sm: 'center' },
           justifyContent: "space-between"
         }}>
-        <Typography variant="subtitle2" sx={{
+        <Typography component="h2" variant="subtitle2" sx={{
           fontWeight: 700
         }}>{t('marketing.marketingCampaigns.mjmlBody')}</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{

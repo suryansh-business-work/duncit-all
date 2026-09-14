@@ -125,7 +125,7 @@ export default function BoardViewer() {
             onChange={(_, next: LeaderboardPeriod | null) => {
               if (next) setPeriod(next);
             }}
-            aria-label={t('challenge.a11y.period')}
+            aria-label={t('admin.leaderboard.rewardPeriod')}
             data-testid="leaderboard-period"
           >
             {PERIODS.map((value) => (

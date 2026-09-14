@@ -78,7 +78,7 @@ export default function ManualLogsTab({
           }}>
           <EventNoteIcon color="primary" />
           <Box>
-            <Typography variant="subtitle1" sx={{
+            <Typography component="h2" variant="subtitle1" sx={{
               fontWeight: 800
             }}>
               Manual logs

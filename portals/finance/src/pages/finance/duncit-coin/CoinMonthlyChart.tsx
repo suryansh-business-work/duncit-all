@@ -77,7 +77,7 @@ export default function CoinMonthlyChart({ buckets, loading }: Readonly<Props>) 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>
           Month by month distribution
         </Typography>
         <Typography variant="caption" sx={{

@@ -115,7 +115,7 @@ export default function HostLeadDetailPage() {
                     mb: 1.25
                   }}>
                   <StickyNote2Icon color="primary" />
-                  <Typography variant="subtitle1" sx={{
+                  <Typography component="h2" variant="subtitle1" sx={{
                     fontWeight: 800
                   }}>
                     Lead tracking

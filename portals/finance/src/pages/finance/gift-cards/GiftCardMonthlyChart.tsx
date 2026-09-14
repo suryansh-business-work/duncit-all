@@ -89,11 +89,11 @@ export default function GiftCardMonthlyChart({ buckets, loading }: Readonly<Prop
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 900 }}>
           {t('finance.giftCards.monthlyTitle')}
         </Typography>
         <Box sx={{ height: 300, mt: 2 }}>
-          {hasData ? <Bar data={data} options={options} /> : fallback}
+          {hasData ? <Bar data={data} options={options} role="img" aria-label={t('finance.giftCards.monthlyTitle')} /> : fallback}
         </Box>
       </CardContent>
     </Card>

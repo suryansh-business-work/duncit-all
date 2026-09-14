@@ -113,7 +113,8 @@ export default function WhatsAppBrowser() {
         onChange={(e) => setSearchInput(e.target.value)}
         sx={{ mb: 1 }}
         slotProps={{
-          input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }
+          input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> },
+          htmlInput: { 'aria-label': t('shell.table.search') },
         }}
       />
 

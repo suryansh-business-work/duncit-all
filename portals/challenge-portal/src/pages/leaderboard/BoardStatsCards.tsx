@@ -20,7 +20,7 @@ interface StatCardProps {
 function StatCard({ stat, t }: Readonly<StatCardProps>) {
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle1" gutterBottom sx={{
+      <Typography component="h2" variant="subtitle1" gutterBottom sx={{
         fontWeight: 700
       }}>
         {t(CATEGORY_LABEL_KEYS[stat.category])}

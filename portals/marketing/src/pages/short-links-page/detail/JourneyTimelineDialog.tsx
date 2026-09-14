@@ -76,7 +76,7 @@ export default function JourneyTimelineDialog({
 
           {payments.length > 0 && (
             <Box>
-              <Typography
+              <Typography component="h3"
                 variant="subtitle2"
                 sx={{
                   fontWeight: 700,
@@ -108,7 +108,7 @@ export default function JourneyTimelineDialog({
           )}
 
           <Box>
-            <Typography
+            <Typography component="h3"
               variant="subtitle2"
               sx={{
                 fontWeight: 700,

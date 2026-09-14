@@ -31,6 +31,9 @@ exports:
   - 'subscribeUserChanged'
   - 'SESSION_REVOKED_EVENT'
   - 'subscribeSessionRevoked'
+  - 'ACCOUNT_DELETION_REVOKE_REASON'
+  - 'holdSessionRevoked'
+  - 'releaseSessionRevoked'
   - 'SURFACE_HEADER'
   - 'APP_HEADER'
 ---
@@ -201,3 +204,33 @@ signed out everywhere" is only true of the device somebody is holding.
 The frame is checked against `selfUserId` for the same reason `user:changed` is,
 and the stakes are higher: one socket is shared with whatever else the app does
 next, and a misrouted revocation would sign the wrong person out.
+
+### Holding off a revocation this surface caused
+
+Filing a deletion request is itself what revokes the sessions, and the frame can
+beat the mutation's own answer back — signing the member out before the screen
+that filed it can show the date and the reference. That screen holds the reason
+for the length of the request, and releases it when the request fails or the
+member presses Sign out:
+
+```ts
+import {
+  ACCOUNT_DELETION_REVOKE_REASON,
+  holdSessionRevoked,
+  releaseSessionRevoked,
+} from '@duncit/user-core';
+
+holdSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+try {
+  await submitDeletionRequest();
+} catch (error) {
+  releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+  throw error;
+}
+// …later, from the "request received" dialog's Sign out:
+releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+```
+
+The hold lives in this JavaScript runtime only, so every other tab and device
+still signs out the moment the frame arrives. It decides nothing about the
+session — the token is already refused — only when this screen stops showing.

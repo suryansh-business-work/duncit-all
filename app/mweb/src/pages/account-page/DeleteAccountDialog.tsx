@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import {
+  ACCOUNT_DELETION_REVOKE_REASON,
+  holdSessionRevoked,
+  releaseSessionRevoked,
+} from '@duncit/user-core';
+import {
   Alert,
   Dialog,
   DialogContent,
@@ -47,12 +52,17 @@ export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Read
   };
 
   const handleSubmit = async (values: DeleteAccountValues) => {
+    // Filing ends every session, and the socket can say so before this answer
+    // lands — so this tab holds that frame off until the member signs out from
+    // the "request received" dialog. Other tabs and devices sign out at once.
+    holdSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
     try {
       const { data } = await submitRequest({
         variables: { input: { otp: values.otp, reason: values.reason, surface: 'MWEB' } },
       });
       onSubmitted(data.submitAccountDeletionRequest);
     } catch (e) {
+      releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
       throw new Error(parseApiError(e));
     }
   };

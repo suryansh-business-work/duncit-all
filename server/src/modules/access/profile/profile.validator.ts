@@ -20,9 +20,11 @@ export const postalAddressSchema = yup.object({
 
 export const updateMyProfileSchema = yup.object({
   first_name: yup.string().min(1).max(60).optional(),
-  last_name: yup.string().min(1).max(60).optional(),
+  // A surname is optional: '' clears it (the service stores a blank as null).
+  last_name: yup.string().max(60).optional(),
   bio: yup.string().max(500).optional(),
-  profile_photo: yup.string().url().optional(),
+  // null is "Remove photo" — the service writes it through as a cleared field.
+  profile_photo: yup.string().url().nullable().optional(),
   profile_links: yup.array().of(profileLinkSchema).max(5).optional(),
   // Location + DOB are accepted by the GraphQL input and mapped in the service;
   // they must be declared here or `validate({ stripUnknown: true })` drops them.

@@ -2,6 +2,7 @@ import type { Translate } from '@/i18n/fallback';
 import { useCallback, useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { ACCOUNT_DELETION_REVOKE_REASON, releaseSessionRevoked } from '@duncit/user-core';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
@@ -113,6 +114,9 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
 
   const signOut = () => {
     setSubmitted(null);
+    // The member has seen the date and the reference: end the hold the submit
+    // took on the revoke frame, then sign out.
+    releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
     logout().catch((e) => setError(errMsg(e, t)));
   };
 

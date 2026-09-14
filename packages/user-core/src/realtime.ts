@@ -104,6 +104,32 @@ export interface SessionRevokedFrame {
   reason: string;
 }
 
+/** The reason the server revokes with when the account's owner files its deletion. */
+export const ACCOUNT_DELETION_REVOKE_REASON = 'ACCOUNT_DELETION_REQUESTED';
+
+/** Revocation reasons THIS surface is holding off, because it caused them itself. */
+const heldRevocations = new Set<string>();
+
+/**
+ * Keep this surface on screen through a revocation it is about to cause.
+ *
+ * Filing a deletion request ends every session at once, and the frame saying so
+ * can arrive before the mutation's own answer — so the screen that filed it
+ * would be signed out before it could show the date and the reference it just
+ * got. Holding the reason drops that frame here, and only here: every other tab
+ * and device still signs out immediately. Nothing about the session is decided
+ * by this — the token is already refused server-side — so the hold is purely
+ * presentation, and the member's own "Sign out" ends it.
+ */
+export function holdSessionRevoked(reason: string): void {
+  heldRevocations.add(reason);
+}
+
+/** Stop holding a reason: the request failed, or the member has signed out. */
+export function releaseSessionRevoked(reason: string): void {
+  heldRevocations.delete(reason);
+}
+
 /**
  * Sign out the moment the server says this account's sessions have ended.
  *
@@ -128,7 +154,9 @@ export function subscribeSessionRevoked(
     if (!raw || typeof raw !== 'object') return;
     const frame = raw as Partial<SessionRevokedFrame>;
     if (!selfUserId || String(frame.user_id ?? '') !== selfUserId) return;
-    onRevoked(String(frame.reason ?? ''));
+    const reason = String(frame.reason ?? '');
+    if (heldRevocations.has(reason)) return;
+    onRevoked(reason);
   };
   socket.on(SESSION_REVOKED_EVENT, handler);
   return () => {

@@ -23,9 +23,12 @@ export {
 export { APP_HEADER, SURFACE_HEADER, clientIdentityHeaders } from './surface';
 export type { ClientSurface, ClientSurfaceName } from './surface';
 export {
+  ACCOUNT_DELETION_REVOKE_REASON,
   SESSION_REVOKED_EVENT,
   USER_CHANGED_EVENT,
+  holdSessionRevoked,
   parseUserChangedFrame,
+  releaseSessionRevoked,
   subscribeSessionRevoked,
   subscribeUserChanged,
 } from './realtime';

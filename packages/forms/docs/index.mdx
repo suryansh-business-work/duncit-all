@@ -38,6 +38,8 @@ exports:
   - 'makeCurrentPasswordSchema'
   - 'makeNewPasswordSchema'
   - 'makeDeleteAccountSchema'
+  - 'makeProfileBioSchema'
+  - 'PROFILE_BIO_MAX_LENGTH'
   - 'makeContactValueSchema'
   - 'makeContactOtpSchema'
   - 'makeAddressSchema'
@@ -422,6 +424,7 @@ directly.
 | `makeCurrentPasswordSchema` | change step 1 | proves the current password to request a code |
 | `makeNewPasswordSchema` | change step 2 | same rules as reset, reached from inside the account |
 | `makeDeleteAccountSchema` | deletion request | code + a ≤1000-char reason a human reads |
+| `makeProfileBioSchema` | a profile's bio | trimmed, ≤ `PROFILE_BIO_MAX_LENGTH` (500, the server's `updateMyProfile` ceiling) — mWeb Edit profile, mWeb /profile and native Edit profile; the hint reads the same constant |
 | `makeContactValueSchema` | email/phone/WhatsApp change | built PER CHANNEL — see below |
 | `makeContactOtpSchema` | the code proving it | six digits, nothing else |
 | `makeAddressSchema` | one saved address | recipient name, number and postal code from @duncit/regex |

@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  ACCOUNT_DELETION_REVOKE_REASON,
   SESSION_REVOKED_EVENT,
   USER_CHANGED_EVENT,
+  holdSessionRevoked,
   parseUserChangedFrame,
+  releaseSessionRevoked,
   subscribeSessionRevoked,
   subscribeUserChanged,
   type SocketLike,
@@ -169,6 +172,24 @@ describe('subscribeSessionRevoked', () => {
     emit({ user_id: 7 });
 
     expect(onRevoked).toHaveBeenCalledWith('');
+  });
+
+  it('keeps the surface that filed the deletion on screen until it releases the hold', () => {
+    const { socket, emit } = makeSocket();
+    const onRevoked = vi.fn();
+
+    subscribeSessionRevoked(socket, SELF, onRevoked);
+    holdSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+    emit({ user_id: SELF, reason: 'ACCOUNT_DELETION_REQUESTED' });
+    emit({ user_id: SELF, reason: 'SOMETHING_ELSE' });
+
+    expect(onRevoked).toHaveBeenCalledTimes(1);
+    expect(onRevoked).toHaveBeenCalledWith('SOMETHING_ELSE');
+
+    releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+    emit({ user_id: SELF, reason: 'ACCOUNT_DELETION_REQUESTED' });
+
+    expect(onRevoked).toHaveBeenLastCalledWith('ACCOUNT_DELETION_REQUESTED');
   });
 
   it('unsubscribes the same handler it registered', () => {

@@ -1,4 +1,5 @@
 import {
+  ACCOUNT_DELETION_REVOKE_REASON,
   APP_HEADER,
   SURFACE_HEADER,
   accountEmail,
@@ -6,9 +7,11 @@ import {
   can,
   canAny,
   hasAppAccess,
+  holdSessionRevoked,
   initials,
   normalizeMe,
   parseUserChangedFrame,
+  releaseSessionRevoked,
   subscribeSessionRevoked,
   subscribeUserChanged,
   type ClientSurface,
@@ -28,6 +31,8 @@ interface RealtimeMock {
   self_user_id: string;
   user_changed: Record<string, unknown>;
   session_revoked: Record<string, unknown>;
+  /** True on the screen that filed the deletion — it holds the frame off. */
+  filed_here: boolean;
 }
 
 /** What one client declares about itself on every request. */
@@ -105,7 +110,7 @@ export default defineDemos('user-core', [
     id: 'realtime',
     title: 'Two frames, one room, one identity check',
     note:
-      "Change self_user_id so it no longer matches either frame and BOTH go quiet — the patch is dropped and the sign-out never fires. That check is the whole safety of a socket that is shared with everything else the app does: one frame is a display bug misrouted, the other signs the wrong person out. Add a key the server does not allow to move (try 'user_id' or 'is_admin') and watch it get filtered out of the patch.",
+      "Change self_user_id so it no longer matches either frame and BOTH go quiet — the patch is dropped and the sign-out never fires. That check is the whole safety of a socket that is shared with everything else the app does: one frame is a display bug misrouted, the other signs the wrong person out. Add a key the server does not allow to move (try 'user_id' or 'is_admin') and watch it get filtered out of the patch. Set filed_here to true and the sign-out goes quiet too — that is the screen that filed the deletion holding the frame off so it can still show the date, while every other tab and device signs out.",
     mock: {
       self_user_id: '66f1c0a4e2b9a41d7c3f8a12',
       user_changed: {
@@ -116,6 +121,7 @@ export default defineDemos('user-core', [
         user_id: '66f1c0a4e2b9a41d7c3f8a12',
         reason: 'ACCOUNT_DELETION_REQUESTED',
       },
+      filed_here: false,
     },
     compute: (mock) => {
       const patch = parseUserChangedFrame(mock.user_changed, mock.self_user_id);
@@ -128,11 +134,14 @@ export default defineDemos('user-core', [
       offChanged();
 
       const revocations: string[] = [];
+      // The screen that filed the deletion holds the frame off until Sign out.
+      if (mock.filed_here) holdSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
       const revoked = replaySocket({ 'session:revoked': mock.session_revoked });
       const offRevoked = subscribeSessionRevoked(revoked.socket, mock.self_user_id, (reason) =>
         revocations.push(reason)
       );
       offRevoked();
+      releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
 
       return {
         'parseUserChangedFrame(...)': patch ?? 'null — wrong user, or nothing patchable left',

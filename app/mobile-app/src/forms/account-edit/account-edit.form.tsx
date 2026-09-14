@@ -8,6 +8,7 @@ import {
   type ContactSnapshot,
   type UsernameStatus,
 } from '@duncit/utils';
+import { PROFILE_BIO_MAX_LENGTH } from '@duncit/forms/schemas';
 
 import { FormTextField } from '@/components/FormTextField';
 import { AddressFields } from '@/forms/components/AddressFields';
@@ -153,7 +154,7 @@ export function AccountEditForm({
         control={control}
         name="bio"
         label={t('mweb.common.bio')}
-        hint="Up to 280 characters"
+        hint={t('mweb.accountEdit.bioHint', { vars: { max: PROFILE_BIO_MAX_LENGTH } })}
         multiline
         numberOfLines={3}
       />

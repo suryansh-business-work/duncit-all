@@ -99,10 +99,16 @@ export const apolloClient = new ApolloClient({
       // count, refund estimate and attempt counter went missing until the
       // network answered again. Merge the two selections instead.
       PodMembershipState: { keyFields: false },
+      // The coin balance carries no id either. USER_INFO reads it for the menu,
+      // the Duncit Coin page reads it with the expiry fields added, and a
+      // replace would strip those from one another — sending USER_INFO's
+      // cache-first readers back to the network. Merged for the same reason.
+      CoinBalance: { keyFields: false },
       Query: {
         fields: {
           branding: { merge: true },
           podMembershipState: { merge: true },
+          myCoinBalance: { merge: true },
         },
       },
     },

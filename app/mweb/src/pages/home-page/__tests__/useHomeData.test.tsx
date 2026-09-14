@@ -3,7 +3,8 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
-import { HEADER_ME, HEADER_STATIC, HOME_REFRESH_EVENT } from '../../../components/app-header/queries';
+import { HEADER_STATIC, HOME_REFRESH_EVENT } from '../../../components/app-header/queries';
+import { USER_INFO } from '../../../user-info/queries';
 import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS } from '../queries';
 import { useHomeData } from '../useHomeData';
 
@@ -179,7 +180,7 @@ const headerPair = (showAll: boolean) => [
     },
   },
   {
-    request: { query: HEADER_ME },
+    request: { query: USER_INFO },
     result: { data: { me: { user_id: 'me1', roles: ['HOST'], following_user_ids: ['u2'] } } },
   },
 ];

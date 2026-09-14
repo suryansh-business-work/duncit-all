@@ -1,55 +1,17 @@
 import { gql } from '@/generated/graphql';
 
 /**
- * Current user for the account drawer — the same `me` fields mWeb's header
- * reads (name, email, photo, roles) so the mobile sidebar shows identical
- * identity + role chips. Typed via codegen (rule 13).
+ * Everything the signed-in app knows about its account, in ONE request: the
+ * complete profile (the drawer identity, the Account screen record, the
+ * checkout gate), the coin balance and the drawer's policy links.
+ *
+ * It is asked from the network when that can have moved on this phone —
+ * sign-in, sign-up, app launch, pull-to-refresh and a profile save — and
+ * seeds the coin and policy stores, so opening the menu asks for nothing. The
+ * mWeb twin is USER_INFO in app/mweb/src/user-info/queries.ts (rule 27).
  */
-export const MobileMeDocument = gql(`
-  query MobileMe {
-    me {
-      user_id
-      username
-      first_name
-      last_name
-      full_name
-      email
-      phone_number
-      phone_extension
-      profile_photo
-      bio
-      roles
-      locale
-      timezone
-      country
-      city
-      state
-      zone
-      assigned_city
-      assigned_zones
-      selected_location_id
-      is_email_verified
-      is_phone_verified
-      # Checkout refuses an account with no billing address, and this document
-      # is already loaded app-wide — so the gate costs no extra request.
-      address {
-        line1
-      }
-      onboarding_survey_completed
-      created_at
-      updated_at
-      saved_pod_ids
-    }
-  }
-`);
-
-/**
- * Full profile-settings record — the same `me` fields mWeb's AccountPage reads
- * (contact, location, dob, status, plus the whatsapp fields the edit form needs).
- * Powers the mobile Account (Profile Settings) screen.
- */
-export const MobileAccountDocument = gql(`
-  query MobileAccount {
+export const MobileUserInfoDocument = gql(`
+  query MobileUserInfo {
     me {
       user_id
       username
@@ -63,9 +25,24 @@ export const MobileAccountDocument = gql(`
       whatsapp_extension
       profile_photo
       bio
+      dob
+      roles
+      status
+      locale
+      timezone
+      country
       city
       state
-      country
+      zone
+      assigned_city
+      assigned_zones
+      selected_location_id
+      is_email_verified
+      is_phone_verified
+      onboarding_survey_completed
+      profile_visibility
+      created_at
+      updated_at
       address {
         line1
         line2
@@ -75,11 +52,19 @@ export const MobileAccountDocument = gql(`
         pincode
         country
       }
-      dob
-      roles
-      status
-      profile_visibility
-      created_at
+      saved_pod_ids
+    }
+    myCoinBalance {
+      balance
+      lifetime_earned
+      earn_pct
+      shop_earn_pct
+      pod_feedback_coins
+    }
+    publicPolicies {
+      id
+      slug
+      title
     }
   }
 `);

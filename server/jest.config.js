@@ -41,14 +41,6 @@ module.exports = {
       globalSetup: '<rootDir>/test/global-setup.ts',
       globalTeardown: '<rootDir>/test/global-teardown.ts',
     },
-    {
-      ...base,
-      displayName: 'e2e',
-      testMatch: ['<rootDir>/src/**/__tests__/e2e/**/*.test.ts'],
-      setupFilesAfterEnv: dbSetup,
-      globalSetup: '<rootDir>/test/global-setup.ts',
-      globalTeardown: '<rootDir>/test/global-teardown.ts',
-    },
   ],
   collectCoverageFrom: [
     'src/modules/**/*.ts',

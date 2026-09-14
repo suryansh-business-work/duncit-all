@@ -6,12 +6,11 @@ import AppHeader from '../AppHeader';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { CartProvider, type CartLine } from '../../cart/CartContext';
 import {
-  HEADER_ME,
   HEADER_STATIC,
-  PUBLIC_POLICIES,
   SET_MY_SELECTED_LOCATION,
   OPEN_LOCATION_PICKER_EVENT,
 } from '../queries';
+import { USER_INFO } from '../../../user-info/queries';
 
 // ---- context mocks ---------------------------------------------------------
 const mockLogout = vi.fn();
@@ -140,11 +139,11 @@ const headerData = {
 /** The header reads two queries; one fixture answers both halves. */
 const headerMocks = ({ me, ...rest }: any = headerData) => [
   { request: { query: HEADER_STATIC }, result: { data: rest } },
-  { request: { query: HEADER_ME }, result: { data: { me } } },
+  { request: { query: USER_INFO }, result: { data: { me } } },
 ];
 
 const policiesMock = {
-  request: { query: PUBLIC_POLICIES },
+  request: { query: USER_INFO },
   result: { data: { publicPolicies: [{ id: 'p1', slug: 'privacy', title: 'Privacy' }] } },
 };
 

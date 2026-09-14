@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Remove what the live e2e suite created.
+ * Remove the live e2e run account.
  *
- * The live mWeb leg signs up, applies to host, publishes a pod, raises a
- * ticket and shares an idea — all on a real server. This asks that server to
- * delete every one of them: the accounts whose address carries the run's
- * stamp, and every record the sign-in account named with the run's marker.
- * Runs after Cypress whether the suite passed or failed; a failed run leaves
- * the MOST behind.
+ * A live leg signs up the run account and lives its whole life on a real
+ * server. This asks that server to delete it outright — every account whose
+ * address carries the run's stamp, with everything pointing at it, and its
+ * one-time codes — so the address and the phone are free for the next signup.
+ * The suite also purges between surfaces; this runs after Cypress whether the
+ * suite passed or failed, because a failed run leaves the account behind.
  *
  * It talks to the APP server — the one the bundle under test pointed at —
  * which is not always the one the run reports to. A nightly run records itself
@@ -19,7 +19,7 @@
  *   E2E_APP_GRAPHQL_URL   the server the suite created its data on (required).
  *   DUNCIT_RELEASE_TOKEN  a SUPER_ADMIN / TECH_MANAGER JWT for THAT server, OR
  *   DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD
- *   E2E_STAMP / E2E_EMAIL / E2E_SIGNUP_EMAIL   the run identity, as the leg
+ *   E2E_STAMP / E2E_SIGNUP_EMAIL   the run identity, as the leg
  *                         fetched it. Absent means no identity was configured,
  *                         so nothing was created and there is nothing to do.
  *
@@ -44,8 +44,7 @@ try {
   if (!url) throw new Error('E2E_APP_GRAPHQL_URL is required — which server did the suite create its data on?');
   const stamp = env('E2E_STAMP');
   const signup = env('E2E_SIGNUP_EMAIL');
-  const login = env('E2E_EMAIL');
-  if (!stamp || !signup || !login) {
+  if (!stamp || !signup) {
     console.log('· no run identity was configured, so the suite created nothing — nothing to purge');
     process.exit(0);
   }
@@ -54,7 +53,7 @@ try {
   if (!token) throw new Error(MISSING_CREDENTIALS);
   const data = await gql(
     PURGE_MUTATION,
-    { input: { stamp, login_email: login, signup_email: signup } },
+    { input: { stamp, signup_email: signup } },
     token
   );
   const report = data.purgeE2eRunData;

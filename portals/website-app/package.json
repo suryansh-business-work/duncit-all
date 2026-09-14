@@ -12,16 +12,13 @@
     "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "build": "tsc -b && vite build",
-    "build:e2e": "tsc -b && vite build --mode e2e",
     "preview": "vite preview",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
-    "test:e2e:open": "cypress open --config-file __tests__/e2e/cypress.config.ts",
     "test:forms": "vitest run",
     "test:forms:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
+    "e2e": "node ../../scripts/e2e-no-surface.mjs website-app"
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",

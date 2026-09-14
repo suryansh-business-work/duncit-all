@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
 import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import { HEADER_ME } from '../../components/app-header/queries';
+import { useUserInfo } from '../../user-info/useUserInfo';
 import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
 import MyTicketsList from '../support-tickets/MyTicketsList';
@@ -29,8 +29,7 @@ export default function SupportTicketsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
-  const me = headerData?.me;
+  const { me } = useUserInfo();
 
   const initialValues = {
     name: me?.full_name || me?.first_name || '',

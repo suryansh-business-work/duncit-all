@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
 
 import {
-  MobileAccountDocument,
   MobileAccountHealthDocument,
   MobileUpdateProfileDocument,
   MobileUpdateProfileVisibilityDocument,
@@ -10,39 +9,42 @@ import {
 import { MobileSetUsernameDocument } from '@/graphql/username';
 import { ProfileVisibility } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useMeStore } from '@/stores/me.store';
+import { useMeStore, type MeData } from '@/stores/me.store';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
-export type AccountData = ResultOf<typeof MobileAccountDocument>;
-export type AccountMe = NonNullable<AccountData['me']>;
+export type AccountMe = NonNullable<MeData['me']>;
 export type AccountHealth = ResultOf<typeof MobileAccountHealthDocument>['myAccountHealth'];
 export type UpdateProfileInput = VariablesOf<typeof MobileUpdateProfileDocument>['input'];
 
 /**
- * Profile-settings data + mutations — RN twin of mWeb's AccountPage hooks. Loads
- * the full `me` record and account health, and exposes profile updates that
- * refresh both this screen and the shared `me` store (so the header avatar syncs).
+ * Profile-settings data + mutations — RN twin of mWeb's AccountPage hooks. The
+ * full profile record is the user info already in the `me` store, so only the
+ * account health is read here. Every profile update re-reads the user info —
+ * the one moment it is asked for again — so the header avatar and the drawer
+ * follow the edit.
  */
 export function useAccount() {
-  const [me, setMe] = useState<AccountMe | null>(null);
+  const me = useMeStore((s) => s.data?.me ?? null);
+  const meLoading = useMeStore((s) => s.isLoading);
+  const meError = useMeStore((s) => s.error);
   const [health, setHealth] = useState<AccountHealth | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<unknown>();
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState<unknown>();
+  const isLoading = (meLoading && !me) || healthLoading;
+  const error = meError ?? healthError;
 
   const load = useCallback(async () => {
-    const [account, healthResult] = await Promise.all([
-      graphqlRequest(MobileAccountDocument, undefined, { auth: true }),
-      graphqlRequest(MobileAccountHealthDocument, undefined, { auth: true }),
-    ]);
-    setMe(account.me ?? null);
+    const healthResult = await graphqlRequest(MobileAccountHealthDocument, undefined, {
+      auth: true,
+    });
     setHealth(healthResult.myAccountHealth ?? null);
   }, []);
 
   useEffect(() => {
     let active = true;
     load()
-      .catch((err) => active && setError(err))
-      .finally(() => active && setIsLoading(false));
+      .catch((err) => active && setHealthError(err))
+      .finally(() => active && setHealthLoading(false));
     return () => {
       active = false;
     };

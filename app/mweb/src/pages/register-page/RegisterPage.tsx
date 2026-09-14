@@ -119,6 +119,7 @@ export default function RegisterPage() {
                 email={flow.pendingEmail}
                 creating={flow.creating}
                 onVerified={flow.createAccount}
+                refusal={flow.error}
               />
             )}
 

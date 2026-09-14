@@ -208,8 +208,7 @@ async function start(token) {
   console.log(`✓ ${run.run_no} claimed on ${run.ref}`);
   console.log(`  suites: ${chosen.length > 0 ? chosen.join(', ') : 'all'}`);
   if (credentials) {
-    console.log(`  sign in as:  ${credentials.login_email}`);
-    console.log(`  sign up as:  ${credentials.signup_email}`);
+    console.log(`  run account: ${credentials.signup_email}`);
   } else {
     console.log('  no identity configured — Tech > E2E Tests > Settings');
   }

@@ -135,3 +135,28 @@ export async function dispatchWorkflow(
   const body = (await res.json().catch(() => ({}))) as { message?: string };
   throw dispatchFailure(res.status, String(body.message ?? 'no reason given'), ref, workflowFile);
 }
+
+/**
+ * Ask GitHub to cancel a workflow run. Resolves when GitHub accepted the request
+ * (202) or the run had already finished (409); throws on anything else.
+ *
+ * The last resort behind a stop button: a runner that is still reporting reads
+ * its stop flag and winds down by itself, so this is only for one that has gone
+ * quiet and would otherwise keep sending load nobody can see.
+ */
+export async function cancelWorkflowRun(cfg: GithubRepoConfig, runId: string): Promise<void> {
+  const res = await fetch(`${GITHUB_API}/repos/${cfg.owner}/${cfg.repo}/actions/runs/${encodeURIComponent(runId)}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${cfg.token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (res.status === 202 || res.status === 409) return;
+  const body = (await res.json().catch(() => ({}))) as { message?: string };
+  throw new GraphQLError(`GitHub refused to cancel run ${runId} (HTTP ${res.status}): ${String(body.message ?? 'no reason given')}`, {
+    extensions: { code: 'BAD_GATEWAY', github_status: res.status },
+  });
+}

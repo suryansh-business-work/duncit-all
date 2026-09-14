@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
-  MobileAccountDocument,
+  MobileUserInfoDocument,
   MobileAccountHealthDocument,
   MobileUpdateProfileDocument,
   MobileUpdateProfileVisibilityDocument,
@@ -26,7 +26,7 @@ function routeRequest(doc: unknown) {
   if (doc === MobileUpdateProfileDocument)
     return Promise.resolve({ updateMyProfile: { user_id: 'u1' } });
   if (doc === MobileAccountHealthDocument) return Promise.resolve(health);
-  if (doc === MobileAccountDocument) return Promise.resolve(account);
+  if (doc === MobileUserInfoDocument) return Promise.resolve(account);
   return Promise.resolve({});
 }
 
@@ -53,7 +53,7 @@ describe('useAccount', () => {
   it('coalesces a missing account record and health to null', async () => {
     mockRequest.mockReset().mockImplementation((doc: unknown) => {
       if (doc === MobileAccountHealthDocument) return Promise.resolve({ myAccountHealth: null });
-      if (doc === MobileAccountDocument) return Promise.resolve({ me: null });
+      if (doc === MobileUserInfoDocument) return Promise.resolve({ me: null });
       return Promise.resolve({});
     });
     const { result } = renderHook(() => useAccount());
@@ -82,7 +82,7 @@ describe('useAccount', () => {
     await act(async () => {
       await result.current.refresh();
     });
-    expect(mockRequest).toHaveBeenCalledWith(MobileAccountDocument, undefined, { auth: true });
+    expect(mockRequest).toHaveBeenCalledWith(MobileUserInfoDocument, undefined, { auth: true });
     expect(mockRefetchMe).toHaveBeenCalled();
   });
 

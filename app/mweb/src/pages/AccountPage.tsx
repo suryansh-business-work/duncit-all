@@ -1,4 +1,3 @@
-import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -22,46 +21,14 @@ import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
 import CommPreferenceEntryCard from './account-page/comm-preference';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
-
-const ME = gql`
-  query MeProfile {
-    me {
-      user_id
-      username
-      first_name
-      last_name
-      full_name
-      email
-      phone_number
-      phone_extension
-      whatsapp_number
-      whatsapp_extension
-      profile_photo
-      bio
-      city
-      state
-      country
-      address {
-        line1
-        line2
-        landmark
-        city
-        state
-        pincode
-        country
-      }
-      dob
-      roles
-      profile_visibility
-      created_at
-    }
-  }
-`;
+import { useUserInfo } from '../user-info/useUserInfo';
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const { logout: ctxLogout } = useUserData();
-  const { data, loading, error, refetch } = useQuery<any>(ME, { fetchPolicy: 'cache-and-network' });
+  // The profile comes from USER_INFO in the cache; every save below re-reads
+  // it through the provider, which is the one moment it is asked for again.
+  const { logout: ctxLogout, refetch, error } = useUserData();
+  const { me, loading } = useUserInfo();
   const { data: healthData } = useQuery<{ myAccountHealth: HealthScore }>(MY_ACCOUNT_HEALTH, {
     fetchPolicy: 'cache-and-network',
   });
@@ -75,7 +42,7 @@ export default function AccountPage() {
 
   // Only a first load with nothing cached shows the spinner — `loading` alone is
   // also true on a cached revisit and on every refetch (see PodDetailsPage).
-  if (loading && !data) {
+  if (loading) {
     return (
       <Stack
         sx={{
@@ -86,11 +53,10 @@ export default function AccountPage() {
       </Stack>
     );
   }
-  if (error || !data?.me) {
+  if (!me) {
     return <Alert severity="error">{error?.message ?? 'Unable to load profile'}</Alert>;
   }
 
-  const me = data.me;
   // One order on both apps (rule 27): who you are, your details, how the
   // account is doing, then the settings, with the danger corner last.
   return (

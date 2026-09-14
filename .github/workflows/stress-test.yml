@@ -1,0 +1,108 @@
+name: Stress Test
+
+# The load behind Tech > Stress Testing. Dispatched by the server when someone
+# starts a run in the portal — never on push, never on a schedule: a stress run
+# against production is a decision a person makes, with a typed confirmation.
+#
+# Why GitHub runners and not the VPS: production and staging share ONE box, so
+# load generated there would steal the very CPU the run is trying to measure.
+# From here the traffic arrives the way real traffic does — over the internet,
+# through nginx.
+#
+# Each shard claims its slice of the run, walks the journeys on the shared
+# schedule, and reports every five seconds to the server under test, which
+# records the time series, draws it live, and enforces the guardrails. The
+# server's answer to a report is what stops a shard early.
+on:
+  workflow_dispatch:
+    inputs:
+      dispatch_id:
+        description: Set by the Tech portal to claim the run it already created.
+        type: string
+        required: true
+      report_url:
+        description: GraphQL endpoint of the server under test (it records the run too).
+        type: string
+        required: true
+      runners:
+        description: How many parallel shards. The portal caps this.
+        type: string
+        default: '1'
+      timeout_minutes:
+        description: Each shard's ceiling — the planned duration plus setup.
+        type: string
+        default: '40'
+
+# One stress run per environment at a time. Never cancel a run in progress: a
+# killed runner leaves its row live until the server's silence timeout.
+concurrency:
+  group: stress-${{ inputs.report_url }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan the shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      shards: ${{ steps.shards.outputs.list }}
+    steps:
+      # Through env, not interpolated into the command: a dispatch input pasted
+      # into `run:` is a shell-injection seam.
+      - name: List the shards
+        id: shards
+        env:
+          RUNNERS: ${{ inputs.runners }}
+        run: |
+          count=$(( RUNNERS > 0 && RUNNERS <= 20 ? RUNNERS : 1 ))
+          echo "list=$(seq -s, 0 $((count - 1)) | sed 's/^/[/; s/$/]/')" >> "$GITHUB_OUTPUT"
+
+  shard:
+    name: Shard ${{ matrix.shard }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url }}
+      # Each server signs its own tokens, so a production JWT is not valid on
+      # staging — the same selection the E2E workflow makes.
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      SHARD: ${{ matrix.shard }}
+      RUN_ID: ${{ github.run_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Preinstalled on GitHub's ubuntu image; the browser bots drive it over CDP.
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      # Only the two script folders — a stress runner installs nothing. Leaving
+      # the root package.json out also keeps setup-node from going looking for
+      # pnpm (its `packageManager` field), which nothing here needs.
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: |
+            scripts/stress
+            scripts/lib
+          sparse-checkout-cone-mode: false
+
+      # 24 for the built-in WebSocket the browser bots speak CDP over.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # Thousands of concurrent sockets from one process need more than the
+      # runner's default descriptor limit, raised in the same shell that runs it.
+      - name: Run the shard
+        run: |
+          ulimit -n 65535 || true
+          node scripts/stress/run-shard.mjs

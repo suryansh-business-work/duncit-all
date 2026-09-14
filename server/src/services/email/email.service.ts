@@ -13,6 +13,7 @@ import { mailPreferenceService } from '@modules/content/mailPreference/mailPrefe
 import { mailPreferenceUrl } from '@modules/content/mailPreference/mailPreference.token';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
+import { E2E_HELD_REASON, holdRunAccountCode } from '@modules/platform/e2eRun/e2eRun.codes';
 import { joinUrl } from '@utils/url';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
@@ -315,6 +316,13 @@ export async function sendEmail(opts: {
   // The cheapest failures first, so a message with nobody to send to never
   // reaches a renderer or a provider — and is still on the record.
   if (!opts.to?.trim()) return notSent('No recipient address', 'FAILED');
+
+  // A code addressed to the e2e run account is recorded for the suite instead
+  // of mailed (e2eRun.codes). Before the mute on purpose: the suite needs the
+  // code whether or not the rest of the run's mail is held.
+  if (await holdRunAccountCode({ template: opts.template, email: opts.to, code: opts.vars?.otp })) {
+    return notSent(E2E_HELD_REASON, 'SKIPPED');
+  }
 
   // Held for an E2E run. Above the opt-out gate rather than below it because
   // this decision is about the PLATFORM, not the recipient: while it is on,

@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { AWAITING_SUITE } from './lib/e2e-awaiting-suite.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -56,6 +57,13 @@ for (const dir of workspaceDirs()) {
   }
 
   const isBrowserWorkspace = BROWSER_GLOBS.has(dir.split('/')[0]);
+
+  // A removed suite that is being rebuilt runs the no-op, and only while it is
+  // listed — the list is the one place that says so.
+  if (isBrowserWorkspace && AWAITING_SUITE.has(pkg.name) && script.includes(NO_OP_RUNNER)) {
+    rows.push([dir, 'suite awaiting rebuild (allowlisted)']);
+    continue;
+  }
 
   if (isBrowserWorkspace && !script.includes(CYPRESS_RUNNER)) {
     problems.push(

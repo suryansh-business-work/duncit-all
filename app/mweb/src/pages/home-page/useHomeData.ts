@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { splitPodsByPhase } from '@duncit/utils';
-import { HEADER_ME, HEADER_STATIC, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
+import { HEADER_STATIC, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
+import { useUserInfo } from '../../user-info/useUserInfo';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
 
@@ -95,11 +96,8 @@ export function useHomeData({
   sortBy,
 }: UseHomeDataParams) {
   const headerStatic = useQuery<any>(HEADER_STATIC, { fetchPolicy: 'cache-first' });
-  const headerMe = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
-  const headerData = useMemo(
-    () => ({ ...headerStatic.data, ...headerMe.data }),
-    [headerStatic.data, headerMe.data],
-  );
+  const { me } = useUserInfo();
+  const headerData = useMemo(() => ({ ...headerStatic.data, me }), [headerStatic.data, me]);
   // The header picks the city on its first answer, and that pick re-keys the
   // whole page (App.tsx). Asking before it ran the live feed once with NO
   // location — every active pod in every city, the heaviest read there is — only

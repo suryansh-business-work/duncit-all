@@ -1,7 +1,7 @@
 # Duncit Mobile
 
 Production-ready React Native app built with **Expo SDK 52**, **TypeScript**, **Expo Router**,
-**NativeWind**, **TanStack Query**, **React Hook Form + Zod**, and a full Jest / Detox / CI pipeline.
+**NativeWind**, **TanStack Query**, **React Hook Form + Zod**, and a full Jest / CI pipeline.
 
 > This package is **standalone** (npm-based) and intentionally **not** part of the root
 > `pnpm-workspace.yaml`. Metro/React Native do not work well with pnpm's symlinked
@@ -39,7 +39,6 @@ src/
 ├── constants/      # config sourced from env vars
 ├── utils/          # error helpers, test utils
 └── assets/         # icons / splash / notification assets
-e2e/                # Detox specs + config
 scripts/            # Slack upload utility
 .github/workflows/  # mobile.yml CI/CD
 ```
@@ -56,7 +55,6 @@ scripts/            # Slack upload utility
 | `npm run format`                     | Prettier                        |
 | `npm run typecheck`                  | `tsc --noEmit`                  |
 | `npm run test` / `test:coverage`     | Jest unit tests (90% threshold) |
-| `npm run e2e:build` / `e2e:test`     | Detox build + run               |
 | `npm run build:android:apk` / `:aab` | EAS Android builds              |
 | `npm run build:ios`                  | EAS iOS build                   |
 | `npm run upload:slack`               | Upload an artefact to Slack     |
@@ -70,8 +68,7 @@ coordinates, loading, API response, and errors are all rendered on the home scre
 
 ## CI/CD
 
-`.github/workflows/mobile.yml` runs: **quality** (lint → typecheck → coverage) → **e2e** (Detox on
-an Android emulator, non-blocking) → **android** (APK + AAB → Slack) → **ios** (EAS cloud build →
+`.github/workflows/mobile.yml` runs: **quality** (lint → typecheck → coverage) → **android** (APK + AAB → Slack) → **ios** (EAS cloud build →
 download IPA → Slack).
 
 > **Monorepo note:** GitHub Actions only reads workflows from the repository root

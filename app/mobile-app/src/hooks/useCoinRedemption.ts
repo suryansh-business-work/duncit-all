@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { clampPayable, maxRedeemableCoins } from '@duncit/utils';
 
-import { useCoinBalance } from '@/hooks/useCoins';
+import { useFreshCoinBalance } from '@/hooks/useCoins';
 
 /** What the gold redeem field renders and what the pay handler bills. */
 export interface CoinRedemption {
@@ -26,7 +26,7 @@ export interface CoinRedemption {
  * bill discounts the products subtotal and adds delivery on top.
  */
 export function useCoinRedemption(payableAfterCoupon: number): CoinRedemption {
-  const { balance } = useCoinBalance();
+  const balance = useFreshCoinBalance();
   const [coinsApplied, setCoinsApplied] = useState(0);
   const coinBalance = balance?.balance ?? 0;
   const max = maxRedeemableCoins(coinBalance, payableAfterCoupon);

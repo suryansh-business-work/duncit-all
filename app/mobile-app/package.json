@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.79.71",
+  "version": "1.79.79",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@12.0.2",
@@ -24,14 +24,10 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "typecheck": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && tsc --noEmit && tsc --noEmit -p __tests__/e2e/tsconfig.json && tsc --noEmit -p e2e/tsconfig.json",
+    "typecheck": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "e2e:build": "detox build --configuration android.emu.debug",
-    "e2e:test": "detox test --configuration android.emu.debug",
-    "test:e2e:web": "cypress run --config-file __tests__/e2e/cypress.config.ts",
-    "test:e2e:web:open": "cypress open --config-file __tests__/e2e/cypress.config.ts",
     "build:android:apk": "pnpm dlx eas-cli build --platform android --profile preview --non-interactive",
     "build:android:aab": "pnpm dlx eas-cli build --platform android --profile production --non-interactive",
     "build:ios": "pnpm dlx eas-cli build --platform ios --profile production",
@@ -45,7 +41,7 @@
     "upload:slack": "node scripts/upload-slack.js",
     "ci": "npm run test:coverage && npm run typecheck && npm run lint",
     "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons",
-    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
+    "e2e": "node ../../scripts/e2e-no-surface.mjs duncit-mobile"
   },
   "dependencies": {
     "@duncit/ai-monitoring": "file:../../packages/ai-monitoring",
@@ -141,7 +137,6 @@
     "babel-preset-expo": "~57.0.9",
     "cross-env": "^10.1.0",
     "cypress": "^15.21.1",
-    "detox": "^20.51.4",
     "eslint": "^8.57.1",
     "eslint-config-expo": "~57.0.2",
     "eslint-config-prettier": "^10.1.8",

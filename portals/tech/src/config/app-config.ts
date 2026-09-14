@@ -121,6 +121,18 @@ export const appConfig = {
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/e2e/settings', icon: 'settings' },
       ],
     },
+    {
+      // Beside E2E Tests: both drive a GitHub workflow at the platform, one to
+      // check it behaves, the other to find out how much it can take. The live
+      // pulse on Runs (who is on, how hard the server is working) is worth
+      // reading whether or not a run is going.
+      label: 'Stress Testing', labelKey: 'shell.nav.stressTesting',
+      icon: 'timeline',
+      children: [
+        { label: 'Runs', labelKey: 'shell.nav.runs', to: '/stress-testing/runs', icon: 'article' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/stress-testing/settings', icon: 'tune' },
+      ],
+    },
     { label: 'Package Documentation', labelKey: 'shell.nav.packageDocumentation', to: '/package-docs', icon: 'menuBook' },
     // Beside the docs, because both answer a question about the same manifests:
     // what a package exports, and how far behind what it depends on is.

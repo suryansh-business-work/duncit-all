@@ -118,6 +118,7 @@ export function SignupScreen() {
           email={flow.pendingEmail}
           creating={flow.creating}
           onVerified={flow.createAccount}
+          refusal={flow.error}
         />
       ) : null}
       {showForm ? (

@@ -1,4 +1,4 @@
-import { Link, Stack } from '@mui/material';
+import { Alert, Link, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { buildOtpLoginLabels, recoveryDestination } from '@duncit/utils';
 import RecoveryChannelStep from '../../components/password-recovery/RecoveryChannelStep';
@@ -19,7 +19,7 @@ interface Props {
 export default function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildOtpLoginLabels(t);
-  const { state, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = otp;
+  const { state, error, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = otp;
   const onCode = state.step === 'CODE';
 
   return (
@@ -54,6 +54,12 @@ export default function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
             otp.sendCode(draft).catch(() => undefined);
           }}
         />
+      )}
+
+      {error && (
+        <Alert severity="error" data-testid="otp-login-error">
+          {error}
+        </Alert>
       )}
 
       <Stack sx={{ alignItems: 'center' }}>

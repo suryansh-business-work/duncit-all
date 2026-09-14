@@ -65,7 +65,8 @@ const ME_QUERY = gql`
 /** Your Pods — the host's hosted-pods list + drafts (the dashboard overview now
  * lives on its own page). B2-#5. */
 export default function HostManagePage() {
-  const meQ = useQuery<any>(ME_QUERY, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const meQ = useQuery<any>(ME_QUERY, { fetchPolicy: 'cache-first' });
   const userId = meQ.data?.me?.user_id;
   const isHost = (meQ.data?.me?.roles ?? []).includes('HOST');
   const { data, loading, error, refetch } = useQuery<any>(HOST_PODS, {

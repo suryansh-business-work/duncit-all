@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
-import { HEADER_ME } from '../../components/app-header/queries';
+import { useUserInfo } from '../../user-info/useUserInfo';
 import EmptyState from '../../components/EmptyState';
 import SectionHeader from '../../components/SectionHeader';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
@@ -17,11 +17,11 @@ export default function MyCardsTab() {
     fetchPolicy: 'cache-and-network',
   });
   const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
-  // Already cached by the header — the share message needs the holder's name.
-  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
+  // Already cached by the session load — the share message needs the holder's name.
+  const { me } = useUserInfo();
 
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
-  const senderName = headerData?.me?.full_name ?? '';
+  const senderName = me?.full_name ?? '';
   const owned = data?.myGiftCards?.owned ?? [];
   const gifted = data?.myGiftCards?.gifted ?? [];
 

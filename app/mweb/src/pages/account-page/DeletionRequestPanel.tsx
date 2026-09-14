@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useUserData } from '@duncit/user-context';
+import { ACCOUNT_DELETION_REVOKE_REASON, releaseSessionRevoked } from '@duncit/user-core';
 import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForeverOutlined';
 import ChevronRightIcon from '@mui/icons-material/ChevronRightRounded';
@@ -74,6 +75,13 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
   const onSubmitted = (request: PendingRequest) => {
     setOtpOpen(false);
     setSubmitted(request);
+  };
+
+  // The member has seen the date and the reference: end the hold the submit
+  // took on the revoke frame, then sign out.
+  const signOut = () => {
+    releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
+    logout();
   };
 
   if (pending) {
@@ -180,7 +188,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         open={!!submitted}
         code={submitted?.request_id ?? ''}
         deletesOn={submitted?.scheduled_delete_at ?? ''}
-        onSignOut={logout}
+        onSignOut={signOut}
       />
     </Stack>
   );

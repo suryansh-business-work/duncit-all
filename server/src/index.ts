@@ -25,6 +25,8 @@ import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin'
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
+import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
+import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
@@ -438,6 +440,13 @@ async function bootstrap() {
   // this is the only thing that starts a scheduled run.
   startE2eRunScheduler();
 
+  // The live pulse (requests/s, real users online, event-loop lag) the Tech
+  // portal reads, and the five-second sampler that records a stress run's time
+  // series and enforces its guardrails (Tech > Stress Testing). The sampler is
+  // a single indexed query while no run is live.
+  startServerPulse();
+  startStressTestSampler();
+
   // Account deletions: a one-minute tick that carries out requests whose grace
   // period has run out (Admin Panel > Settings > Account deletion; off until an
   // operator turns it on), plus the safety-net refresh of the seal map above.
@@ -487,6 +496,10 @@ async function bootstrap() {
   // Mounted before every route, including /graphql — read `trust proxy` above
   // first: req.ip is only the real client because of it.
   app.use(requestIdentityMiddleware);
+
+  // Count every request into the live pulse (Tech > Stress Testing). After the
+  // identity store, so "real users online" is read off the verified caller.
+  app.use(serverPulseMiddleware);
 
   // Rate limiting for every NON-GraphQL route (uploads, webhooks, the public
   // API, the feeds). /graphql is governed by rateLimitPlugin instead, which is

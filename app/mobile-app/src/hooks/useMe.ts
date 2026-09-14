@@ -1,20 +1,29 @@
 import { useEffect, useMemo } from 'react';
 
+import { useAuthStore } from '@/stores/auth.store';
 import { useMeStore } from '@/stores/me.store';
 import { useRolesStore } from '@/stores/roles.store';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
-/** Current signed-in user for the account drawer (auth required). */
+/**
+ * Current signed-in user, read from the user-info store.
+ *
+ * `useUserInfoSession` loads it when the session starts; a mount here only
+ * joins that request or reads the answer, so the header, the feed and the
+ * drawer never ask again. Signed out there is nothing to ask for. A pull to
+ * refresh re-reads it — one request however many readers the screen has.
+ */
 export function useMe() {
   const data = useMeStore((s) => s.data);
   const isLoading = useMeStore((s) => s.isLoading);
   const error = useMeStore((s) => s.error);
   const fetch = useMeStore((s) => s.fetch);
   const refetch = useMeStore((s) => s.refetch);
+  const signedIn = useAuthStore((s) => !!s.token);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    if (signedIn) fetch();
+  }, [fetch, signedIn]);
 
   useRefreshRegistration(refetch);
 

@@ -21,6 +21,8 @@ interface Props {
   creating: boolean;
   /** The proof of the number, on its way to the door that creates the account. */
   onVerified: (whatsappToken: string) => void;
+  /** Why the account the proof was spent on was refused — shown here, the only step left. */
+  refusal?: string | null;
 }
 
 const otpInput = { inputMode: 'numeric' as const, maxLength: 6 };
@@ -40,6 +42,7 @@ export default function VerifyWhatsappStep({
   email,
   creating,
   onVerified,
+  refusal,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
@@ -107,6 +110,8 @@ export default function VerifyWhatsappStep({
   let buttonLabel = labels.verify;
   if (proving) buttonLabel = labels.verifying;
   else if (creating) buttonLabel = labels.creating;
+  // The step's own code errors first; otherwise the refusal of the account itself.
+  const shownError = error ?? refusal;
 
   return (
     <form noValidate onSubmit={submit}>
@@ -125,7 +130,11 @@ export default function VerifyWhatsappStep({
           size="small"
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />
-        {error && <Alert severity="error">{error}</Alert>}
+        {shownError && (
+          <Alert severity="error" data-testid="signup-verify-error">
+            {shownError}
+          </Alert>
+        )}
         <DuncitButton
           type="submit"
           variant="contained"

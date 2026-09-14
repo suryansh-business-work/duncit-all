@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
 import SupportTicketsPage from '../SupportTicketsPage';
-import { HEADER_ME } from '../../../components/app-header/queries';
+import { USER_INFO } from '../../../user-info/queries';
 import { CREATE_TICKET, MY_TICKETS } from '../../support-tickets/queries';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 
@@ -15,7 +15,7 @@ vi.mock('react-router', async (importOriginal) => {
 });
 
 const headerMock = {
-  request: { query: HEADER_ME },
+  request: { query: USER_INFO },
   result: {
     data: {
       branding: {

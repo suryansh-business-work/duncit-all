@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
@@ -12,7 +12,7 @@ import { useBranding } from '@/hooks/useBranding';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
+import { useAutoPodCounts } from '@/hooks/useAutoPodCounts';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
@@ -55,17 +55,12 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
   const showSearch = !minimal && isUserStudio && !home;
   const showGreeting = minimal || (isUserStudio && home);
   const openLocation = () => setLocationOpen(true);
-  const autoPodCounts = useAutoPodCountsStore((s) => s.data);
-  const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
-
-  // Primed on mount and re-read when the dialog opens, so the switch itself
-  // never waits on the network to decide where to land.
-  useEffect(() => {
-    fetchAutoPodCounts().catch(() => undefined);
-  }, [fetchAutoPodCounts]);
+  // Read once for a partner and re-read when the dialog opens, so the switch
+  // itself never waits on the network to decide where to land.
+  const autoPods = useAutoPodCounts(roles);
 
   const openSwitch = () => {
-    fetchAutoPodCounts(true).catch(() => undefined);
+    autoPods.reload();
     setSwitchOpen(true);
   };
 
@@ -131,7 +126,7 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
           setSwitchOpen(false);
           // Jump straight to the selected role's dashboard (B3-2) — or to its
           // Auto Pod queue when offers are waiting on that role.
-          navigation.navigate(studioSwitchRoute(next, autoPodCounts));
+          navigation.navigate(studioSwitchRoute(next, autoPods.counts));
         }}
       />
       {minimal ? null : (

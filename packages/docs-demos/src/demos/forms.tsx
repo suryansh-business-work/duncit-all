@@ -14,6 +14,8 @@ import {
   makeAddressSchema,
   makeContactValueSchema,
   makeDeleteAccountSchema,
+  makeProfileBioSchema,
+  PROFILE_BIO_MAX_LENGTH,
   makeLoginSchema,
   makePasswordPairSchema,
   makeSignupSchema,
@@ -58,6 +60,8 @@ interface SchemaMock {
   /** The recipient on a saved address — name and number, as typed. */
   recipient_name: string;
   recipient_phone: string;
+  /** A profile bio, as typed into Edit profile. */
+  bio: string;
 }
 
 interface FieldMock {
@@ -131,6 +135,7 @@ export default defineDemos('forms', [
       whatsappIsMobile: true,
       recipient_name: 'Ravi Kumar',
       recipient_phone: '+91 98450 12345',
+      bio: 'Weekend trail runner in Bengaluru — hosting DUN-POD-4821 on Saturdays.',
     },
     compute: (mock) => {
       // Messages are keys here so the demo shows WHICH sentence fires without
@@ -199,6 +204,10 @@ export default defineDemos('forms', [
         ),
         'Delete account': say(
           makeDeleteAccountSchema(t).safeParse({ otp: mock.otp, reason: mock.reason }),
+        ),
+        // One bio ceiling for every editor — the server's.
+        [`Profile bio (max ${PROFILE_BIO_MAX_LENGTH})`]: say(
+          makeProfileBioSchema(t).safeParse(mock.bio),
         ),
         // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
         'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),

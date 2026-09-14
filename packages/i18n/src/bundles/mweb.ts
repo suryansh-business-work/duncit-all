@@ -3135,6 +3135,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       closeAria: 'Close potential earnings',
     },
     accountEdit: {
+      // The bio's limit is the server's, from @duncit/forms' PROFILE_BIO_MAX_LENGTH,
+      // so mWeb and native hint and refuse at the same length (rule 27).
+      bioHint: 'Up to {max} characters',
       discardChanges: 'Discard changes',
       enterCity: 'Enter city',
       nextMonth: 'Next month',
@@ -3146,6 +3149,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // signup runs, so a profile edit cannot save a name signup would have
       // rejected. mWeb and native render these identically (rule 27).
       validation: {
+        bioTooLong: 'Bio must be {max} characters or fewer',
         firstNamePattern: 'First name can use letters, spaces, apostrophes and periods only',
         lastNamePattern: 'Last name can use letters, spaces, apostrophes and periods only',
       },

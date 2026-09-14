@@ -1,6 +1,11 @@
 import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
+import {
+  ACCOUNT_DELETION_REVOKE_REASON,
+  holdSessionRevoked,
+  releaseSessionRevoked,
+} from '@duncit/user-core';
 
 import { DeleteAccountForm, type DeleteAccountValues } from '@/forms/delete-account';
 import {
@@ -55,6 +60,10 @@ export function DeleteAccountDialog({
   const handleSubmit = async (values: DeleteAccountValues) => {
     setSubmitting(true);
     setError(null);
+    // Filing ends every session, and the socket can say so before this answer
+    // lands — so this install holds that frame off until the member signs out
+    // from the "request received" dialog. Other devices sign out at once.
+    holdSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
     try {
       const data = await graphqlRequest(
         MobileSubmitAccountDeletionRequestDocument,
@@ -69,6 +78,7 @@ export function DeleteAccountDialog({
       );
       onSubmitted(data.submitAccountDeletionRequest);
     } catch (e) {
+      releaseSessionRevoked(ACCOUNT_DELETION_REVOKE_REASON);
       setError(errMsg(e, t));
     } finally {
       setSubmitting(false);

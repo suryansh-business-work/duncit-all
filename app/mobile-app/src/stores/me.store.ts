@@ -1,26 +1,48 @@
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { MobileMeDocument } from '@/graphql/account';
+import { MobileUserInfoDocument } from '@/graphql/account';
 import { graphqlRequest } from '@/services/graphql.client';
 import { endRejectedSession } from '@/services/session-guard';
+import { errorCode } from '@/utils/errors';
+import { useCoinBalanceStore } from './coin.store';
+import { usePublicPoliciesStore } from './policies.store';
 import { createQueryStore } from './create-query-store';
 
-export type MeData = ResultOf<typeof MobileMeDocument>;
+export type MeData = Pick<ResultOf<typeof MobileUserInfoDocument>, 'me'>;
 
 /**
- * The signed-in user (name, email, photo, roles) for the account drawer.
+ * The signed-in user — loaded through the ONE user-info request, which also
+ * carries the coin balance and the drawer's policy links. Those two are handed
+ * to their own stores here, so the sidebar card, the checkout and the policies
+ * list all start from this answer instead of each asking again.
  *
- * A null `me` is not an empty result, it is a REFUSED one: this query is only
- * ever asked with a token attached, and a transport failure throws rather than
- * answering null. So the answer is signed out — because the account was deleted,
- * blocked, or sealed by a deletion request filed on another device — and the
+ * A refused session ends here. A null `me` is not an empty result, it is a
+ * REFUSED one: this query is only ever asked with a token attached, and a
+ * transport failure throws rather than answering null. The balance beside it
+ * answers UNAUTHENTICATED for the same refusal, and being non-null it takes the
+ * whole payload with it — so that code means signed out too. Either way the
  * phone acts on it instead of rendering a signed-in shell over it. The twin of
- * mWeb's `loadUser` guard in `main.tsx` (rule 27).
+ * mWeb's `loadUserInfo` (rule 27).
  */
 export const useMeStore = createQueryStore<MeData>(async () => {
-  const data = await graphqlRequest(MobileMeDocument, undefined, { auth: true });
-  if (!data?.me) endRejectedSession();
-  return data;
+  try {
+    const { me, myCoinBalance, publicPolicies } = await graphqlRequest(
+      MobileUserInfoDocument,
+      undefined,
+      { auth: true },
+    );
+    if (!me) {
+      endRejectedSession();
+      return { me: null };
+    }
+    useCoinBalanceStore.setState({ data: { myCoinBalance }, error: undefined });
+    usePublicPoliciesStore.setState({ data: { publicPolicies }, error: undefined });
+    return { me };
+  } catch (error) {
+    if (errorCode(error) !== 'UNAUTHENTICATED') throw error;
+    endRejectedSession();
+    return { me: null };
+  }
 });
 
 /**

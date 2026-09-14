@@ -1,15 +1,7 @@
 import { gql } from '@apollo/client';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
-
-const FOLLOWED_CLUBS = gql`
-  query FollowedClubIds {
-    me {
-      user_id
-      following_club_ids
-    }
-  }
-`;
+import { useUserInfo } from '../user-info/useUserInfo';
 
 const FOLLOW_CLUB = gql`
   mutation FollowClub($club_id: ID!) {
@@ -29,17 +21,9 @@ const UNFOLLOW_CLUB = gql`
   }
 `;
 
-interface FollowedClubIdsData {
-  me?: {
-    user_id: string;
-    following_club_ids: string[];
-  } | null;
-}
-
 export function useFollowedClubs() {
-  const { data, loading } = useQuery<FollowedClubIdsData>(FOLLOWED_CLUBS, {
-    fetchPolicy: 'cache-and-network',
-  });
+  // The followed clubs ride in USER_INFO, already in the cache.
+  const { me, loading } = useUserInfo();
   // Both mutations answer with the viewer's User (user_id + following_club_ids),
   // which Apollo writes straight onto the same cache entry `me` points at — so
   // the button flips on the mutation's own answer. An awaited refetch of `me`
@@ -47,7 +31,7 @@ export function useFollowedClubs() {
   const [followClub, followState] = useMutation<any>(FOLLOW_CLUB);
   const [unfollowClub, unfollowState] = useMutation<any>(UNFOLLOW_CLUB);
 
-  const ids = useMemo(() => data?.me?.following_club_ids ?? [], [data?.me?.following_club_ids]);
+  const ids = useMemo(() => me?.following_club_ids ?? [], [me?.following_club_ids]);
 
   const isFollowing = useCallback((clubId: string) => ids.includes(clubId), [ids]);
 

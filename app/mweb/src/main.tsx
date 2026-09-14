@@ -11,7 +11,6 @@ import { io } from 'socket.io-client';
 import {
   UserProvider,
   PortalModeGate,
-  buildSessionMeQuery,
   configureSessionSocket,
   type PortalModeGateProps,
 } from '@duncit/user-context';
@@ -19,7 +18,8 @@ import { useTranslation } from './i18n/useTranslation';
 import { getSocketUrl } from './lib/socket-url';
 import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
-import { endRejectedSession, requireAuthForShortLinkLanding } from './lib/session-guard';
+import { requireAuthForShortLinkLanding } from './lib/session-guard';
+import { loadUserInfo } from './user-info/load';
 import { installAttributionLinkDecorator } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
@@ -63,23 +63,7 @@ document.addEventListener(
   true // capture phase — fires before React synthetic events
 );
 
-// The shared session selection (@duncit/user-core) plus the one field only mWeb
-// reads. This list used to be hand-maintained here and silently omitted
-// `locale`, so a language chosen on the phone never followed the account back
-// into mWeb.
-const ME_QUERY = buildSessionMeQuery('MwebSessionMe', ['following_user_ids']);
-
 const isAuthed = () => !!localStorage.getItem('token');
-
-const loadUser = async () => {
-  const { data } = await apolloClient.query<any>({ query: ME_QUERY, fetchPolicy: 'network-only' });
-  const me = data?.me ?? null;
-  // The provider only asks with a token attached, so a null answer is the
-  // server refusing it — a deleted, blocked or no-longer-verifiable session
-  // that would otherwise go on rendering the signed-in shell off the cache.
-  if (!me) endRejectedSession();
-  return me;
-};
 
 // Real-time: a profile change made in a portal or on the phone lands in this
 // tab without a refetch. The factory is what keeps `@duncit/user-context` free
@@ -174,7 +158,7 @@ function mount() {
     <React.StrictMode>
       <ErrorBoundary>
         <ApolloProvider client={apolloClient}>
-          <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
+          <UserProvider isAuthed={isAuthed} loadUser={loadUserInfo} storageKey="mweb_user">
             <AppLocaleProvider fallback={MWEB_FALLBACK_FLAT}>
             <ColorModeProvider>
               <StudioModeProvider>

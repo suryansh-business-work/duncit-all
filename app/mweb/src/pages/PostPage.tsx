@@ -20,7 +20,8 @@ const ME_ID = gql`
 export default function PostPage() {
   const { postId = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery<any>(ME_ID, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const { data, loading, error } = useQuery<any>(ME_ID, { fetchPolicy: 'cache-first' });
 
   const goBack = () => navigate(-1);
 

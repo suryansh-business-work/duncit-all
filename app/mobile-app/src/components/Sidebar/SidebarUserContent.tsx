@@ -20,8 +20,8 @@ import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSectio
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card, the Manage
  * Account list and — once switched into a partner mode — that role's own menu,
- * ending in Withdrawal. Identity comes from `me` (useMe); completion from the
- * fuller `account` record (useAccount). */
+ * ending in Withdrawal. Identity and completion both come from the user info
+ * record (useMe). */
 export function SidebarUserContent({
   me,
   account,

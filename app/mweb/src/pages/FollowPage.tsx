@@ -30,7 +30,8 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
   const tabs = useTabParam<FollowingFeedSource>({ items: sourceTabs(t), fallback: 'CLUBS' });
   const tab = tabs.value;
   const [openPostId, setOpenPostId] = useState<string | null>(null);
-  const meQuery = useQuery<any>(FOLLOW_ME, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const meQuery = useQuery<any>(FOLLOW_ME, { fetchPolicy: 'cache-first' });
   const clubsQuery = useQuery<FeedClubsData>(FEED_CLUBS, {
     skip: tab !== 'CLUBS',
     fetchPolicy: 'cache-and-network',

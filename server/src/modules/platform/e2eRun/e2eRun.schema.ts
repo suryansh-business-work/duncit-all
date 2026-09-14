@@ -331,10 +331,20 @@ export const e2eRunTypeDefs = gql`
   """
   type E2eRunCredentials {
     stamp: String!
+    "The run account's address. The same address as signup_email: one account per run."
     login_email: String!
     signup_email: String!
     password: String!
     phone: String!
+  }
+
+  "A one-time code held for the e2e run account instead of being sent."
+  type E2eOneTimeCode {
+    code: String!
+    "LOGIN, PASSWORD_RESET, WHATSAPP_SIGNUP, WHATSAPP_CHANGE, EMAIL_VERIFICATION, PASSWORD_CHANGE, ACCOUNT_DELETION or PORTAL_LOGIN."
+    purpose: String!
+    issued_at: String!
+    expires_at: String!
   }
 
   "What a workflow gets when it claims its run."
@@ -467,13 +477,15 @@ export const e2eRunTypeDefs = gql`
   has to happen where the data is.
   """
   input PurgeE2eRunDataInput {
-    "The run's ddMMyyyyHHmm stamp — the marker every record it created carries."
+    "The run's ddMMyyyyHHmm stamp."
     stamp: String!
-    "The account the suite signed IN as. Its stamped records are removed, the account stays."
-    login_email: String!
+    "Ignored. The run account is signup_email; kept so an older runner's call still parses."
+    login_email: String
     """
-    The account the suite signed UP as. Every account whose address carries
-    this one's stamp is removed outright, with everything that points at it.
+    The run account. Every account whose address carries this one's stamp is
+    removed outright, with everything that points at it, together with its
+    one-time codes — which is what frees the address and the phone for the
+    next signup.
     """
     signup_email: String!
   }
@@ -484,9 +496,9 @@ export const e2eRunTypeDefs = gql`
   }
 
   type E2ePurgeReport {
-    "How many accounts were removed — the signup identity and any it derived."
+    "How many accounts were removed — the run account and any address it derived."
     accounts_deleted: Int!
-    "Per collection, how many stamped records the sign-in account left behind were removed."
+    "Per collection, what else was removed: one-time codes and the run's uploads."
     records: [E2ePurgedCollection!]!
   }
 
@@ -528,6 +540,21 @@ export const e2eRunTypeDefs = gql`
     "The suites a run can be asked for."
     e2eSuiteCatalogue: [E2eSuite!]!
     e2eTriggerConfig: E2eTriggerConfig!
+    """
+    The newest one-time code held for the e2e run account, or null when none
+    has been issued yet. Tech/Super admin only, refused unless "one-time codes
+    for the run account" is on and the address or number is a run account's.
+    Pass email for a mailed code or phone for a WhatsApp one.
+    """
+    e2eOneTimeCode(purpose: String!, email: String, phone: String): E2eOneTimeCode
+    """
+    The x-duncit-e2e header value for a run stamp on THIS server, so a live
+    run's many sign-ins are not refused by the sign-in rate limit. Asked of the
+    server under test, not the one the run reports to: each server signs its
+    own keys. Tech/Super admin only; refused unless "one-time codes for the run
+    account" is on.
+    """
+    e2eTrafficKey(stamp: String!): String!
   }
 
   extend type Mutation {

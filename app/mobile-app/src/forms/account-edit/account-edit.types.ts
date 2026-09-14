@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { PERSON_NAME, PINCODE } from '@duncit/regex';
 import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
+import { makeProfileBioSchema } from '@duncit/forms/schemas';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -88,7 +89,7 @@ export const makeAccountEditSchema = (
         (value) => value === '' || PERSON_NAME.test(value),
         t('mweb.accountEdit.validation.lastNamePattern'),
       ),
-    bio: z.string().trim().max(280, 'Keep it under 280 characters'),
+    bio: makeProfileBioSchema(t),
     dob: makeDob(minAge, initialDob, datePlaceholder),
     country: z.string().trim().max(80, 'Too long'),
     state: z.string().trim().max(80, 'Too long'),

@@ -9,8 +9,9 @@ import type { E2eSettingsValues } from './e2e-settings.types';
  *
  * They are deliberately separate, because only one of them is about secrecy:
  * holding the traffic stops a nightly sweep mailing real people and burning
- * WhatsApp credit, while returning the codes is what lets a test finish a
- * signup at all — and is the one that would hand an attacker a login code.
+ * WhatsApp credit, while keeping the run account's codes readable is what lets
+ * a test finish a signup at all — and is the one that makes a server an e2e
+ * target.
  *
  * The warning shows only while something is on. A standing warning beside a
  * switch that is off is noise, and noise is what stops the real one being read.
@@ -43,14 +44,14 @@ export default function OverrideFields({
           <SwitchRow
             checked={field.value}
             onChange={field.onChange}
-            label={t('tech.e2e.otpBypass')}
-            hint={t('tech.e2e.otpBypassHint')}
+            label={t('tech.e2e.runAccountCodes')}
+            hint={t('tech.e2e.runAccountCodesHint')}
           />
         )}
       />
       {bypass && (
         <Alert severity="error" variant="outlined">
-          {t('tech.e2e.otpBypassWarning')}
+          {t('tech.e2e.runAccountCodesWarning')}
         </Alert>
       )}
       {muted && !bypass && (

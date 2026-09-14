@@ -29,6 +29,7 @@ import {
   reportJourneyForCurrentRoute,
 } from '@/services/short-link-attribution';
 import { navigationRef } from '@/navigation/navigationRef';
+import { useUserInfoSession } from '@/hooks/useUserInfoSession';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAppVersionStore } from '@/stores/app-version.store';
@@ -95,6 +96,8 @@ export default function App() {
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
   const loadAppVersion = useAppVersionStore((s) => s.fetch);
+  // The account, its coin balance and the drawer policies: one request per session.
+  useUserInfoSession();
   const { data: brandingData } = useBranding();
   // Admin-picked Google Font (Branding → Fonts → Mobile App): once loaded, the
   // Tamagui config is rebuilt around it so every Text/heading re-themes.

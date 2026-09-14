@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import MenuPanel from '../../components/app-header/profile-drawer/MenuPanel';
-import { HEADER_ME, PUBLIC_POLICIES } from '../../components/app-header/queries';
+import { useUserInfo } from '../../user-info/useUserInfo';
 
 /**
  * The account menu as a real page (/menu) — it used to be a full-viewport
@@ -15,18 +14,10 @@ export default function MenuPage() {
   const navigate = useNavigate();
   const { logout } = useUserData();
   const [policiesOpen, setPoliciesOpen] = useState(false);
-  // Both are already in the cache from the header — cache-and-network keeps the
-  // menu fresh after a profile edit without blocking the first paint.
-  const { data, loading } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-and-network' });
-  const { data: policiesData, loading: policiesLoading } = useQuery<any>(PUBLIC_POLICIES, {
-    fetchPolicy: 'cache-first',
-  });
-
-  // Nothing cached at all — the panel skeletons its body. On a warm cache the
-  // answer is already there, so the read still happening shows as the thin bar
-  // instead of flashing a skeleton over content that is already correct.
-  const pending = loading && !data;
-  const refreshing = !pending && (loading || policiesLoading);
+  // The account, its balance and the policy links all came in with the session
+  // load (USER_INFO), so opening the menu asks the server for nothing. A
+  // profile save re-reads USER_INFO, which is what keeps this current.
+  const { me, policies, loading } = useUserInfo();
 
   const close = () => {
     // A deep-linked /menu has nothing to go back to — land on Home instead of
@@ -46,11 +37,10 @@ export default function MenuPage() {
   return (
     <MenuPanel
       onClose={close}
-      loading={pending}
-      refreshing={refreshing}
-      policiesLoading={policiesLoading}
-      me={data?.me}
-      publicPolicies={policiesData?.publicPolicies ?? []}
+      loading={loading}
+      policiesLoading={loading}
+      me={me}
+      publicPolicies={policies}
       policiesOpen={policiesOpen}
       setPoliciesOpen={setPoliciesOpen}
       onLogout={logout}

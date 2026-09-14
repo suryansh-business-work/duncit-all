@@ -54,31 +54,6 @@ export const HEADER_STATIC = gql`
   }
 `;
 
-/** The signed-in account the header, Home and the menu read. */
-export const HEADER_ME = gql`
-  query AppHeaderMe {
-    me {
-      user_id
-      full_name
-      first_name
-      last_name
-      email
-      is_email_verified
-      profile_photo
-      bio
-      dob
-      city
-      state
-      country
-      phone_number
-      whatsapp_number
-      selected_location_id
-      roles
-      following_user_ids
-    }
-  }
-`;
-
 export const MY_NOTIFS = gql`
   query MyNotifications {
     myNotifications(limit: 30) {
@@ -112,16 +87,6 @@ export const MARK_READ = gql`
 export const MARK_ALL = gql`
   mutation MarkAllRead {
     markAllNotificationsRead
-  }
-`;
-
-export const PUBLIC_POLICIES = gql`
-  query PublicPoliciesNav {
-    publicPolicies {
-      id
-      slug
-      title
-    }
   }
 `;
 

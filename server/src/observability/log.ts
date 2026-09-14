@@ -90,7 +90,7 @@ const DEVICE_OSES = new Set<DeviceOS>(['ios', 'android', 'web']);
 const ENVIRONMENTS = new Set<Environment>(['localhost', 'staging', 'production']);
 
 /** The server's own deployment environment, from APP_ENV / NODE_ENV. */
-const SERVER_ENV: Environment = (() => {
+export const SERVER_ENV: Environment = (() => {
   const e = (process.env.APP_ENV || process.env.NODE_ENV || '').toLowerCase();
   if (e.includes('staging')) return 'staging';
   if (e === 'development' || e === 'test' || e === 'local' || e === '') return 'localhost';

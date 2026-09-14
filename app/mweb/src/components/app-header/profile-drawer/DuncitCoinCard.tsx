@@ -1,12 +1,11 @@
-import { useQuery } from '@apollo/client/react';
 import { Box, Skeleton, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { COIN_TILE } from './profileSections';
-import { MY_COIN_BALANCE } from '../../../pages/duncit-coin-page/queries';
 import { SURFACE_SX } from '../../../theme';
 import { COIN_GOLD_TINT, coinGold } from '../../../theme/coinGold';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { useUserInfo } from '../../../user-info/useUserInfo';
 
 /** The full-width Duncit Coin featured card (the coin's own gold, kept) — the
  * consumer's coin balance and the way into the ledger. User mode only. */
@@ -14,12 +13,13 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
   const { t } = useTranslation();
   const theme = useTheme();
   const gold = coinGold(theme.palette.mode);
-  const { data, loading } = useQuery<any>(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
+  // Read from USER_INFO, not asked for: the balance is re-read after the
+  // actions that move it (refreshCoinBalance), never on opening the menu.
   // A balance of 0 is a real answer, so it must not be what the card shows
   // while the query is still deciding — it would tick up a beat later.
-  const pending = loading && !data;
-  const balance = data?.myCoinBalance?.balance ?? 0;
-  const earnPct = data?.myCoinBalance?.earn_pct ?? 0;
+  const { coinBalance, loading: pending } = useUserInfo();
+  const balance = coinBalance?.balance ?? 0;
+  const earnPct = coinBalance?.earn_pct ?? 0;
 
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>

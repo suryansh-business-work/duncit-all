@@ -34,6 +34,9 @@ import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
+import StressRunsPage from './pages/stress-testing/runs';
+import StressRunDetailPage from './pages/stress-testing/run-detail';
+import StressSettingsPage from './pages/stress-testing/settings';
 import MailAutomationPage from './pages/mail-automation';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
@@ -121,6 +124,13 @@ export default function App() {
         <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
         <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
         <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />
+        {/* Load against THIS environment from GitHub runners, watched live: the
+            server under test records the time series and enforces the guardrails. */}
+        <Route path="/stress-testing" element={<Navigate to="/stress-testing/runs" replace />} />
+        <Route path="/stress-testing/runs" element={authed(<StressRunsPage />)} />
+        {/* One run at its own address — live while it runs, the record afterwards. */}
+        <Route path="/stress-testing/runs/:runId" element={authed(<StressRunDetailPage />)} />
+        <Route path="/stress-testing/settings" element={authed(<StressSettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

@@ -17,6 +17,7 @@ import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
 import GoogleSignupInviteDialog from './GoogleSignupInviteDialog';
 import LoginCard, { type LoginStep } from './LoginCard';
 import { useOtpLogin } from './useOtpLogin';
+import { useStartSession } from '../../user-info/useStartSession';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -51,17 +52,16 @@ export default function LoginPage() {
   // trip — Google id tokens stay valid for an hour, far longer than this step.
   const [consent, setConsent] = useState<{ idToken: string; email: string } | null>(null);
   const [consentError, setConsentError] = useState<string | null>(null);
+  const { start: startSession, starting } = useStartSession();
 
-  const finishLogin = (token: string, user: any) => {
-    localStorage.setItem('token', token);
+  const finishLogin = async (token: string, user: any) => {
+    await startSession(token);
     const params = new URLSearchParams(location.search);
     const stateFrom = (location.state as { from?: RedirectLocation } | null)?.from;
     const redirect =
       getSafeRedirectPath(params.get('redirect')) ||
       getSafeRedirectPath(stateFrom ? redirectPathFromLocation(stateFrom) : '');
-    navigate(postAuthPath(user?.onboarding_survey_completed !== false, redirect), {
-      replace: true,
-    });
+    navigate(postAuthPath(user?.onboarding_survey_completed !== false, redirect), { replace: true });
   };
 
   // Continue with OTP shares the same landing: a correct code hands its token
@@ -89,7 +89,7 @@ export default function LoginPage() {
             };
       const res = await loginMutation({ variables: { input } });
       const token = res.data?.login?.token;
-      if (token) finishLogin(token, res.data?.login?.user);
+      if (token) await finishLogin(token, res.data?.login?.user);
     } catch (e) {
       throw new Error(parseApiError(e));
     }
@@ -102,7 +102,7 @@ export default function LoginPage() {
     try {
       const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
       const token = res.data?.loginWithGoogle?.token;
-      if (token) finishLogin(token, res.data?.loginWithGoogle?.user);
+      if (token) await finishLogin(token, res.data?.loginWithGoogle?.user);
     } catch (e: any) {
       const code = e.graphQLErrors?.[0]?.extensions?.code;
       if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
@@ -148,7 +148,7 @@ export default function LoginPage() {
       const token = res.data?.linkGoogleAccount?.token;
       if (token) {
         setConsent(null);
-        finishLogin(token, res.data?.linkGoogleAccount?.user);
+        await finishLogin(token, res.data?.linkGoogleAccount?.user);
       }
     } catch (e) {
       // Kept open with the reason: closing would look like the grant worked.
@@ -170,10 +170,10 @@ export default function LoginPage() {
         otp={otp}
         step={step}
         onStep={setStep}
-        loading={loading}
+        loading={loading || starting}
         errorMessage={error ? parseApiError(error) : null}
         onSubmit={handleSubmit}
-        gLoading={gLoading}
+        gLoading={gLoading || starting}
         gError={gError}
         onGoogleCredential={handleGoogle}
       />

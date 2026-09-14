@@ -45,7 +45,8 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
     variables: { kind },
     fetchPolicy: 'network-only',
   });
-  const { data: meData } = useQuery<any>(MEETING_ME, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const { data: meData } = useQuery<any>(MEETING_ME, { fetchPolicy: 'cache-first' });
   const [slot, setSlot] = useState('');
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');

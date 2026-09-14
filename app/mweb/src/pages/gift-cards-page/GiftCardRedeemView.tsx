@@ -9,6 +9,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
 import GiftCardVisual from './GiftCardVisual';
 import { REDEEM_GIFT_CARD, type GiftCard, type GiftCardRedeemResult } from './queries';
+import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
 
 interface GiftCardRedeemViewProps {
   card: GiftCard;
@@ -37,7 +38,10 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { formatDate } = useDateFormat();
-  const [doRedeem, { loading }] = useMutation<{ redeemGiftCard: GiftCardRedeemResult }>(REDEEM_GIFT_CARD);
+  // The card turns into coins, so the cached balance (menu, checkout) is re-read.
+  const [doRedeem, { loading }] = useMutation<{ redeemGiftCard: GiftCardRedeemResult }>(REDEEM_GIFT_CARD, {
+    refetchQueries: [{ query: MY_COIN_BALANCE }],
+  });
   const [result, setResult] = useState<GiftCardRedeemResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 

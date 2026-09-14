@@ -22,6 +22,8 @@ interface Props {
   creating: boolean;
   /** The proof of the number, on its way to the door that creates the account. */
   onVerified: (whatsappToken: string) => void;
+  /** Why the account the proof was spent on was refused — shown here, the only step left. */
+  refusal?: string | null;
 }
 
 /**
@@ -40,6 +42,7 @@ export function VerifyWhatsappStep({
   email,
   creating,
   onVerified,
+  refusal,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
@@ -107,6 +110,8 @@ export function VerifyWhatsappStep({
   let buttonLabel = labels.verify;
   if (proving) buttonLabel = labels.verifying;
   else if (creating) buttonLabel = labels.creating;
+  // The step's own code errors first; otherwise the refusal of the account itself.
+  const shownError = error ?? refusal;
 
   return (
     <YStack gap={16}>
@@ -128,9 +133,9 @@ export function VerifyWhatsappStep({
         maxLength={6}
         required
       />
-      {error ? (
+      {shownError ? (
         <Text fontSize={14} color="$danger" testID="signup-verify-error">
-          {error}
+          {shownError}
         </Text>
       ) : null}
       <PrimaryButton

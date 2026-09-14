@@ -228,9 +228,10 @@ describe('DetailsDialog / deleting a comment', () => {
     await waitFor(() => expect(deleteButton).toBeEnabled());
 
     fireEvent.click(deleteButton);
-    // A delete that started would have flipped the button to its busy state on the spot.
+    // A delete that started would have flipped the label to "Deleting…" on the spot. The
+    // handler is async, so DuncitButton may still flash its own press spinner — let it settle.
     expect(deleteButton).toHaveTextContent('Delete');
-    expect(deleteButton).toBeEnabled();
+    await waitFor(() => expect(deleteButton).toBeEnabled());
 
     // The mock link answers requests in the order they were sent, so once this
     // later approval has landed, a delete sent by the click above would have too.

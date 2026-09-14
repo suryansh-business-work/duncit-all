@@ -83,17 +83,23 @@ describe('HolidaysField', () => {
     expect(addButton()).toBeDisabled();
   });
 
-  it('ignores a half-typed date', async () => {
+  it('ignores a typed date that does not exist', async () => {
     // A mouse-and-keyboard admin gets the desktop field, whose parts can be typed.
     vi.spyOn(globalThis, 'matchMedia').mockImplementation(desktopPointer);
     const user = userEvent.setup();
     const { form } = renderHolidays([]);
 
+    // A half-typed field publishes nothing, so Add stays off until every part is filled.
     await user.click(screen.getByRole('spinbutton', { name: 'Day' }));
-    await user.keyboard('1');
+    await user.keyboard('31');
+    expect(addButton()).toBeDisabled();
+    await user.click(screen.getByRole('spinbutton', { name: 'Month' }));
+    await user.keyboard('02');
+    await user.click(screen.getByRole('spinbutton', { name: 'Year' }));
+    await user.keyboard('2026');
 
-    // The picker holds something, so Add is offered — but it is not a day yet.
-    expect(addButton()).toBeEnabled();
+    // Every part is filled, so Add is offered — but 31 February is not a day.
+    await waitFor(() => expect(addButton()).toBeEnabled());
     await user.click(addButton());
 
     expect(form().getValues('settings.holidays')).toEqual([]);

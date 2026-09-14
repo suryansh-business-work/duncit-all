@@ -3,11 +3,11 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, CircularProgress, Link, Stack } from '@mui/material';
-import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import LocationOffOutlinedIcon from '@mui/icons-material/LocationOffOutlined';
 import EmptyState from '../components/EmptyState';
 import SearchPillField from './pod-list/SearchPillField';
-import ClubsGrid from './clubs-page/ClubsGrid';
+import ClubsGroupedBody from './clubs-page/ClubsGroupedBody';
+import { useOpenCityParam } from './clubs-page/useOpenCityParam';
 import ClubCategoryChips from './clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
@@ -22,6 +22,8 @@ export const ALL_CLUBS = gql`
     locations {
       id
       location_name
+      city
+      location_image
     }
     clubs(filter: { is_active: true, location_id: $locationId, locality: $locality }) {
       id
@@ -30,6 +32,8 @@ export const ALL_CLUBS = gql`
       club_description
       category_id
       super_category_id
+      location_id
+      locality
       club_feature_images_and_videos {
         url
         type
@@ -59,6 +63,8 @@ export default function ClubsPage({
     fetchPolicy: 'cache-and-network',
   });
   const navigate = useNavigate();
+  // The city opened from the city cards; the header's own location wins over it.
+  const [openCityId, setOpenCityId] = useOpenCityParam();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const { all, buttons, matchesCategory } = useSearchCategories();
@@ -127,16 +133,17 @@ export default function ClubsPage({
   // A location is applied but no club operates in that locality (vs. a search
   // that matched nothing) — drives the "No Clubs operating…" + Reset CTA.
   const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
-  const clubsBody =
-    clubs.length === 0 ? (
-      <EmptyState testId="clubs-list-empty" icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
-    ) : (
-      <ClubsGrid
-        clubs={clubs}
-        podCounts={podCounts}
-        onOpen={(club) => club.club_id && navigate(`/club/${club.club_id}`)}
-      />
-    );
+  const clubsBody = (
+    <ClubsGroupedBody
+      clubs={clubs}
+      locations={data?.locations ?? []}
+      podCounts={podCounts}
+      activeCityId={locationId || openCityId}
+      onBack={!locationId && openCityId ? () => setOpenCityId('') : undefined}
+      onOpenCity={setOpenCityId}
+      onOpenClub={(club) => club.club_id && navigate(`/club/${club.club_id}`)}
+    />
+  );
 
   return (
     <Stack

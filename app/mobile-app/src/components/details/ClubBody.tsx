@@ -12,6 +12,7 @@ import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
 import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { FollowPillButton } from '@/components/FollowPillButton';
+import { LocalityChip } from '@/components/LocalityChip';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
@@ -136,6 +137,7 @@ export function ClubBody({
             wrapper, so it is restated here or the block sits flush mid-tour. */}
         <TourAnchor tour="club" anchor="club-header" style={{ gap: 6 }}>
           <TwoToneHeading lead={club.club_name} />
+          <LocalityChip locality={club.locality} testID="club-summary-header-locality" />
           <CategoryBreadcrumb crumbs={categoryCrumbs} />
           {club.club_description ? (
             <Text fontSize={14} color="$muted" lineHeight={20} paddingTop={4}>

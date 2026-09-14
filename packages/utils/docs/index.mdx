@@ -289,6 +289,13 @@ exports:
   - 'locationLabel'
   - 'LocationMismatch'
   - 'LocationPick'
+  - 'clubCityName'
+  - 'groupClubsByCity'
+  - 'groupClubsByLocality'
+  - 'ClubCityGroup'
+  - 'ClubCityLocation'
+  - 'ClubLocalityGroup'
+  - 'GroupableClub'
   - 'namedCompanionEntries'
   - 'needsOtp'
   - 'canScanTickets'
@@ -2177,3 +2184,36 @@ are what the switch selects, so the header lands on the pod's own area, not just
 The MUI dialog is mWeb's `LocationMismatchDialog`; the Tamagui one is the native app's. Each
 surface's `useLocationMismatch` hook resolves the two ids to names against its own location
 list and hands this result to its dialog — rule 40's twin clause: one rule, two views.
+
+## Clubs grouped by city, then by locality
+
+`club-grouping.ts` decides how the Clubs tab groups its list. With no header location the tab
+shows one card per city; opening a city (or picking one in the header) lists that city's
+clubs under a heading per locality. mWeb's `ClubsGroupedBody` and the native `clubs-feed`
+render it; which club lands in which group is decided here.
+
+```ts
+const locations = [
+  { id: 'loc-pune', location_name: 'Pune', city: 'Pune', location_image: '' },
+  { id: 'loc-blr', location_name: 'Bengaluru', city: 'Bengaluru', location_image: '' },
+];
+const clubs = [
+  { club_name: 'Smashers United', location_id: 'loc-pune', locality: 'Kothrud' },
+  { club_name: 'Sunday Striders', location_id: 'loc-pune', locality: '' },
+  { club_name: 'Indiranagar Runners', location_id: 'loc-blr', locality: 'Indiranagar' },
+];
+
+groupClubsByCity(clubs, locations);
+// [{ locationId: 'loc-blr', city: 'Bengaluru', image: '', clubs: [Indiranagar Runners] },
+//  { locationId: 'loc-pune', city: 'Pune', image: '', clubs: [Smashers United, Sunday Striders] }]
+
+groupClubsByLocality(clubs.filter((club) => club.location_id === 'loc-pune'));
+// [{ locality: 'Kothrud', clubs: [Smashers United] }, { locality: '', clubs: [Sunday Striders] }]
+
+clubCityName({ id: 'loc-pune', location_name: 'Pune West', city: '' }); // 'Pune West'
+```
+
+Cities and localities sort A→Z; the clubs inside a group keep the order they arrived in, so a
+list that was already searched and sorted stays that way. A city with no clubs gets no card,
+and a club whose `location_id` is not among the locations is left out of the city cards. The
+no-area group (`locality: ''`) always comes last — each app labels it "Other areas".

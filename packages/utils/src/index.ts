@@ -884,6 +884,15 @@ export {
   type LocationPick,
 } from './location-mismatch';
 export {
+  clubCityName,
+  groupClubsByCity,
+  groupClubsByLocality,
+  type ClubCityGroup,
+  type ClubCityLocation,
+  type ClubLocalityGroup,
+  type GroupableClub,
+} from './club-grouping';
+export {
   E2E_ONE_TIME_CODE_QUERY,
   E2E_PURGE_MUTATION,
   E2E_TRAFFIC_HEADER,

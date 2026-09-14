@@ -3284,6 +3284,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         one: '{count} pod',
         other: '{count} pods',
       },
+      // City cards and the locality sections inside one (mWeb ClubsPage, native ClubsScreen).
+      clubCount: {
+        one: '{count} club',
+        other: '{count} clubs',
+      },
+      allCities: 'All cities',
+      otherAreas: 'Other areas',
     },
     details: {
       addToSelection: 'Add to selection',

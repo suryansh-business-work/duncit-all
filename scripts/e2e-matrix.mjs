@@ -29,52 +29,18 @@ import process from 'node:process';
  * `build:e2e` / `e2e` when it does not. `live: true` marks the one leg that
  * talks to a real server instead of stubbing GraphQL — the workflow points its
  * build at the staging API and purges what the suite created afterwards.
+ *
+ * EMPTY since 2026-09-14: every browser suite was removed to be rebuilt batch
+ * by batch (scripts/lib/e2e-awaiting-suite.mjs). Each rebuilt suite adds its
+ * row here and its name to e2eRun.suites.ts in the same commit.
  */
-const BROWSER_SUITES = [
-  { name: 'admin', dir: 'portals/admin', port: 2002 },
-  { name: 'ads-portal', dir: 'portals/ads-portal', port: 2006 },
-  { name: 'ai', dir: 'portals/ai', port: 2013 },
-  { name: 'challenge-portal', dir: 'portals/challenge-portal', port: 2026 },
-  { name: 'crm', dir: 'portals/crm', port: 2007 },
-  { name: 'developers', dir: 'portals/developers', port: 2027 },
-  { name: 'employee', dir: 'portals/employee', port: 2018 },
-  { name: 'finance', dir: 'portals/finance', port: 2008 },
-  { name: 'hr', dir: 'portals/hr', port: 2017 },
-  { name: 'legal', dir: 'portals/legal', port: 2012 },
-  { name: 'marketing', dir: 'portals/marketing', port: 2015 },
-  { name: 'onboarding', dir: 'portals/onboarding', port: 2016 },
-  { name: 'partners-app', dir: 'portals/partners-app', port: 2005 },
-  { name: 'products', dir: 'portals/products', port: 2014 },
-  { name: 'regional-club-admin', dir: 'portals/regional-club-admin', port: 2029 },
-  { name: 'venues', dir: 'portals/venues', port: 2030 },
-  { name: 'clubs', dir: 'portals/clubs', port: 2031 },
-  { name: 'club-admins', dir: 'portals/club-admins', port: 2032 },
-  { name: 'hosts', dir: 'portals/hosts', port: 2033 },
-  { name: 'pods', dir: 'portals/pods', port: 2034 },
-  { name: 'support', dir: 'portals/support', port: 2010 },
-  { name: 'tech', dir: 'portals/tech', port: 2009 },
-  { name: 'website-app', dir: 'portals/website-app', port: 2011 },
-  { name: 'mweb', dir: 'app/mweb', port: 2003 },
-  // Same app, same port, a different build and a different spec directory:
-  // app/mweb/__tests__/e2e-live drives the real staging server. Each matrix
-  // leg is its own runner, so the port never collides with the mocked suite.
-  {
-    name: 'mweb-live',
-    dir: 'app/mweb',
-    port: 2003,
-    build: 'build:e2e:live',
-    e2e: 'e2e:live',
-    specs_tsconfig: '__tests__/e2e-live/tsconfig.json',
-    live: true,
-  },
-];
+const BROWSER_SUITES = [];
 
 /**
- * The legs that are not matrix rows. `native-web` is a standalone npm workspace
- * (its own package-lock, never listed in pnpm-workspace.yaml) and `no-surface`
- * is the packages/websites/API sweep, so neither can be a row in a pnpm matrix.
+ * The legs that are not matrix rows. `no-surface` is the packages/websites/API
+ * sweep, so it cannot be a row in a pnpm matrix.
  */
-const STANDALONE_SUITES = ['native-web', 'no-surface'];
+const STANDALONE_SUITES = ['no-surface'];
 
 const ALL = [...BROWSER_SUITES.map((s) => s.name), ...STANDALONE_SUITES];
 

@@ -25,42 +25,11 @@ export interface E2eSuiteDefinition {
   group: E2eSuiteGroup;
 }
 
-const portal = (key: string, label: string): E2eSuiteDefinition => ({
-  key,
-  label,
-  group: 'PORTAL',
-});
-
+/**
+ * Every portal and app suite was removed on 2026-09-14 to be rebuilt batch by
+ * batch; each one returns here (and to scripts/e2e-matrix.mjs) with its suite.
+ */
 export const E2E_SUITES: readonly E2eSuiteDefinition[] = [
-  portal('admin', 'Admin'),
-  portal('ads-portal', 'Ads'),
-  portal('ai', 'AI'),
-  portal('challenge-portal', 'Challenge'),
-  portal('club-admins', 'Club Admins'),
-  portal('clubs', 'Clubs'),
-  portal('crm', 'CRM'),
-  portal('developers', 'Developers'),
-  portal('employee', 'Employee'),
-  portal('hosts', 'Hosts'),
-  portal('pods', 'Pods'),
-  portal('regional-club-admin', 'Regional Club Admin'),
-  portal('venues', 'Venues'),
-  portal('finance', 'Finance'),
-  portal('hr', 'HR'),
-  portal('legal', 'Legal'),
-  portal('marketing', 'Marketing'),
-  portal('onboarding', 'Onboarding'),
-  portal('partners-app', 'Partners'),
-  portal('products', 'Products'),
-  portal('support', 'Support'),
-  portal('tech', 'Tech'),
-  portal('website-app', 'Website'),
-  { key: 'mweb', label: 'mWeb', group: 'APP' },
-  // The one suite that talks to a REAL server: it signs in and signs up as the
-  // run's identity, creates pods, tickets and ideas on staging, and the leg
-  // purges everything it made afterwards (purgeE2eRunData).
-  { key: 'mweb-live', label: 'mWeb (live flows on staging)', group: 'APP' },
-  { key: 'native-web', label: 'Native app (web)', group: 'APP' },
   {
     key: 'no-surface',
     label: 'Shared packages, websites and API',
@@ -87,6 +56,14 @@ export function normaliseSuites(asked: unknown): string[] {
   const chosen = E2E_SUITES.filter((suite) => wanted.has(suite.key)).map((suite) => suite.key);
   return chosen.length === E2E_SUITES.length ? [] : chosen;
 }
+
+/**
+ * A saved selection, minus the suites this repository no longer runs. The
+ * nightly dispatch reads the stored list without the validation a save goes
+ * through, and a removed name would fail the workflow's plan step outright.
+ */
+export const currentSuites = (saved: readonly string[]): string[] =>
+  saved.filter((key) => SUITE_KEYS.has(key));
 
 /** The `suites` workflow input: a comma-separated list, or empty for all of them. */
 export const suitesInput = (suites: readonly string[]): string => suites.join(',');

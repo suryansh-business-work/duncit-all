@@ -37,7 +37,7 @@ import {
   type IE2eScenarioVideo,
   type IE2eSuiteResult,
 } from './e2eRun.model';
-import { E2E_SUITES, normaliseSuites, suitesInput } from './e2eRun.suites';
+import { E2E_SUITES, currentSuites, normaliseSuites, suitesInput } from './e2eRun.suites';
 import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
 import { forgetMuteCache } from './e2eRun.mute';
 
@@ -1013,7 +1013,7 @@ export const e2eRunService = {
       { $set: { last_run_at: now } }
     ).exec();
     const run = await dispatchRun({
-      suites: doc.suites ?? [],
+      suites: currentSuites(doc.suites ?? []),
       ref: doc.ref,
       trigger_source: 'SCHEDULE',
       triggered_by: 'schedule',

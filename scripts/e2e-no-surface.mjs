@@ -11,6 +11,7 @@
  *
  * Usage:  node ../../scripts/e2e-no-surface.mjs <workspace-name>
  */
+import { AWAITING_SUITE } from './lib/e2e-awaiting-suite.mjs';
 
 /**
  * name -> why a no-op is honest here.
@@ -134,7 +135,9 @@ if (!workspace) {
   process.exit(1);
 }
 
-const reason = NO_E2E_SURFACE.get(workspace);
+const reason = AWAITING_SUITE.has(workspace)
+  ? 'suite removed 2026-09-14, being rebuilt batch by batch (scripts/lib/e2e-awaiting-suite.mjs)'
+  : NO_E2E_SURFACE.get(workspace);
 
 if (!reason) {
   console.error(

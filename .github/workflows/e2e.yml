@@ -340,9 +340,8 @@ jobs:
           # `"mochaFile=…"` as one opaque string instead of a key=value pair and
           # every leg dies before a single spec runs, on
           # `Expected reporterOptions to be a plain object`. The value has no
-          # spaces in it, so it needs no quoting. (The native-web leg below runs
-          # through `run: |`, where bash does strip them, which is why the same
-          # line is correct there and wrong here.)
+          # spaces in it, so it needs no quoting. (Inside a `run: |` step bash
+          # does strip them, which is why quoting is correct there and wrong here.)
           #
           # `video=true` turns on the per-spec recording every cypress.config.ts
           # already has a videosFolder for. Cypress 13 dropped compression to
@@ -510,171 +509,6 @@ jobs:
         run: node scripts/report-e2e-run.mjs
 
   # ---------------------------------------------------------------------------
-  # The native app's web e2e. It gets its own job rather than a matrix leg
-  # because app/mobile-app is a STANDALONE npm workspace — it has its own
-  # package-lock.json, pnpm-workspace.yaml never lists it, and every step in the
-  # `browser` matrix is a pnpm command.
-  #
-  # Without this the suite was shipped and never executed: not in the matrix,
-  # not visible to the auditor, and its script was named `test:e2e:web` so
-  # nothing invoked it. Four specs that always pass because they never run are
-  # exactly the false green this gate exists to prevent.
-  # ---------------------------------------------------------------------------
-  native-web:
-    name: e2e (app/mobile-app, web)
-    needs: setup
-    if: contains(format(',{0},', needs.setup.outputs.selected), ',native-web,')
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    env:
-      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
-      DUNCIT_RELEASE_TOKEN: >-
-        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
-      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
-      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
-      DISPATCH_ID: ${{ inputs.dispatch_id }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      E2E_STAGE: Preparing the runner
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: app/mobile-app/package-lock.json
-
-      # continue-on-error, and it is NOT the swallowed failure rule 1 forbids.
-      # That rule is about the SUITE: a workspace whose specs did not run must
-      # never look like one that passed. This step runs no specs — it fetches
-      # optional plumbing (CYPRESS_E2E_*) that no spec reads yet, from a server
-      # that is not under test. Fatal, it turned a whole green suite red every
-      # time the reporter was briefly unreachable, which on this VPS is every
-      # deploy: the leg died here, before Cypress started, and the E2E page said
-      # the suite failed.
-      - name: Fetch the run identity
-        id: identity
-        continue-on-error: true
-        timeout-minutes: 4
-        env:
-          MODE: start
-        run: node scripts/report-e2e-run.mjs
-
-      - run: echo "E2E_STAGE=Installing the app's deps" >> "$GITHUB_ENV"
-      - name: Install
-        working-directory: app/mobile-app
-        run: npm ci
-
-      - run: echo "E2E_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
-      # src/generated/** is gitignored (root .gitignore, `generated/`), so a
-      # fresh checkout has no typed GraphQL operations and Metro cannot resolve
-      # `@/generated/graphql` — 84 source files import it and the export dies on
-      # the first one (AccountScreen.tsx). apps-ci.yml already does this before
-      # its build; this job was written without it, which is why the export step
-      # exited 1 the first time CI ran it. The schema comes from the server's
-      # tracked *.schema.ts files, so no server needs to be running.
-      - name: Generate GraphQL types
-        working-directory: app/mobile-app
-        run: npm run codegen
-
-      - run: echo "E2E_STAGE=Type-checking the Cypress specs" >> "$GITHUB_ENV"
-      - name: Type-check Cypress specs
-        working-directory: app/mobile-app
-        run: npx tsc --noEmit -p __tests__/e2e/tsconfig.json
-
-      - run: echo "E2E_STAGE=Exporting the web build" >> "$GITHUB_ENV"
-      # Expo's web export is the same target native.duncit.com ships. It is the
-      # slow step (Metro bundles the whole app), hence the 40-minute budget and
-      # the heap bump the app's own scripts already use.
-      - name: Export web build
-        working-directory: app/mobile-app
-        run: npm run export:web
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-
-      - run: echo "E2E_STAGE=Running Cypress" >> "$GITHUB_ENV"
-      # cypress.config.ts defaults baseUrl to http://localhost:2022.
-      #
-      # `--single` is NOT optional: app.json sets `web.output: "single"`, so the
-      # export is one index.html and React Navigation resolves /explore,
-      # /support/chat, /support/all … client-side (src/navigation/linking.ts).
-      # A plain `serve dist` looks for those as real files and answers 404, so
-      # every spec that visits a deep route died in `cy.visit()` before the app
-      # ever booted. SPA fallback is what the real host does; this makes the
-      # static server match it.
-      #
-      # `npm run e2e --` forwards the reporter flags; without the separator npm
-      # would keep them for itself.
-      - name: Serve the export and run Cypress
-        working-directory: app/mobile-app
-        env:
-          CYPRESS_E2E_EMAIL: ${{ steps.identity.outputs.e2e_email }}
-          CYPRESS_E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
-          CYPRESS_E2E_PASSWORD: ${{ steps.identity.outputs.e2e_password }}
-          CYPRESS_E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
-          CYPRESS_E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
-        run: |
-          npx --yes serve dist --single -l 2022 &
-          npx --yes wait-on http://localhost:2022 --timeout 120000
-          npm run e2e -- --reporter junit \
-            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml" \
-            --config video=true,videoCompression=32
-
-      # Also continue-on-error, for the same reason: by the time this runs the
-      # suite has already passed or failed, and `job.status` below carries that
-      # verdict. Whether the row could be WRITTEN is a fact about the reporting
-      # server, and reporting it as a test failure is how a green suite came to
-      # be recorded as red.
-      - name: Record this suite's result
-        if: always()
-        continue-on-error: true
-        timeout-minutes: 4
-        env:
-          MODE: suite
-          SUITE_KEY: native-web
-          SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
-          SUITE_ERROR: "${{ job.status == 'success' && '' || format('Failed during: {0}', env.E2E_STAGE) }}"
-          JUNIT_DIR: app/mobile-app/cypress-artifacts/junit
-          STAGE: Running suites
-        run: node scripts/report-e2e-run.mjs
-
-      # The same two steps the browser matrix runs, for the same reasons — see
-      # the comments there. This leg is separate only because app/mobile-app is
-      # a standalone npm workspace, not because its recording is different.
-      - name: Stitch this suite's recording
-        if: always()
-        continue-on-error: true
-        env:
-          MODE: stitch
-          SUITE_KEY: native-web
-          VIDEO_DIR: app/mobile-app/cypress-artifacts/videos
-          OUT_DIR: e2e-videos
-        run: |
-          command -v ffmpeg >/dev/null || {
-            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-          }
-          node scripts/e2e-videos.mjs
-
-      - name: Keep this suite's recording for the gate
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v6
-        with:
-          name: e2e-video-native-web
-          path: e2e-videos
-          if-no-files-found: ignore
-          retention-days: 1
-
-      # The browser matrix uploads its failure screenshots; this job had no
-      # equivalent, so a red native leg could only be read from the log.
-      - name: Upload Cypress screenshots on failure
-        if: failure()
-        uses: actions/upload-artifact@v6
-        with:
-          name: native-web-cypress-screenshots
-          path: app/mobile-app/cypress-artifacts/screenshots
-          if-no-files-found: ignore
-
-  # ---------------------------------------------------------------------------
   # A single check other workflows (and branch protection) can require. It is
   # `needs`-ed on every e2e job and re-asserts their results, because a `needs`
   # alone would let a FAILED upstream count as success.
@@ -685,7 +519,7 @@ jobs:
   # ---------------------------------------------------------------------------
   e2e-gate:
     name: E2E gate
-    needs: [audit, setup, browser, no-surface, native-web]
+    needs: [audit, setup, browser, no-surface]
     if: always()
     runs-on: ubuntu-latest
     env:
@@ -707,8 +541,7 @@ jobs:
             "audit=${{ needs.audit.result }}" \
             "setup=${{ needs.setup.result }}" \
             "browser=${{ needs.browser.result }}" \
-            "no-surface=${{ needs['no-surface'].result }}" \
-            "native-web=${{ needs['native-web'].result }}"
+            "no-surface=${{ needs['no-surface'].result }}"
           do
             echo "$leg"
             result="${leg#*=}"

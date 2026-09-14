@@ -33,6 +33,7 @@ export default function AccountEditActions({ loading, canDiscard, canSave, onDis
         variant="contained"
         size="large"
         disabled={loading || !canSave}
+        data-testid="account-edit-submit"
         sx={{ flex: 1, px: 1.5 }}
       >
         {loading ? 'Saving…' : 'Save'}

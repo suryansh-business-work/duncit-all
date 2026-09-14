@@ -1,10 +1,12 @@
 /// <reference types="cypress" />
 import {
-  NO_ACCOUNT,
+  expectNoAccount,
   expectNoTestCode,
-  PASSWORD_REFUSED,
+  expectPasswordRefused,
+  fill,
   openPasswordStep,
   openSignedOut,
+  pressSendCode,
   sendAndReadCode,
   sendCode,
   sessionUser,
@@ -21,23 +23,20 @@ import { runAccount } from '../support/run-account';
  * code per 30 seconds, so a scenario that reloaded would be refused a code.
  */
 
-const emailBox = () => cy.get('input[name="email"]');
-const newPasswordBox = () => cy.get('input[name="new_password"]');
-const confirmBox = () => cy.get('input[name="confirm_password"]');
-const savePassword = () => cy.contains('button', 'Save password');
-const pressSendCode = () => {
-  cy.contains('button', 'Send code').should('be.enabled').click();
-};
+const screen = () => cy.byTestId('forgot-password-screen');
+const recoveryError = () => cy.byTestId('recovery-error');
+const sendButton = () => cy.byTestId('recovery-send-code');
+const savePassword = () => cy.byTestId('recovery-save-password');
 
 function typeNewPassword(password: string, confirmation = password): void {
-  newPasswordBox().clear().type(password, { log: false });
-  confirmBox().clear().type(confirmation, { log: false });
+  fill('field-new_password', password, { log: false });
+  fill('field-confirm_password', confirmation, { log: false });
 }
 
 function verifyResetCode(code: string): void {
-  cy.get('input[name="otp"]').clear().type(code);
+  fill('field-otp', code);
   sendCode('VerifyPasswordResetCode', () => {
-    cy.contains('button', 'Verify code').should('be.enabled').click();
+    cy.byTestId('recovery-verify-code').should('contain.text', 'Verify code').and('be.enabled').click();
   });
 }
 
@@ -55,54 +54,53 @@ describe('03 Forgot password', { testIsolation: false }, () => {
     });
     openSignedOut('/login');
     openPasswordStep();
-    cy.contains('a', 'Forgot password?').click();
+    cy.byTestId('go-forgot-password').should('have.text', 'Forgot password?').click();
     cy.location('pathname').should('eq', '/forgot-password');
-    cy.contains('h1', 'Forgot password?').should('be.visible');
-    emailBox().type('riya@');
-    cy.contains('button', 'Send code').should('be.disabled');
-    emailBox().clear().type(`nobody-${account.stamp}@example.invalid`);
-    cy.contains('button', 'Send code').should('be.enabled');
+    screen().should('contain.text', 'Forgot password?');
+    cy.byTestId('field-email').type('riya@');
+    sendButton().should('be.disabled');
+    fill('field-email', `nobody-${account.stamp}@example.invalid`);
+    sendButton().should('be.enabled');
   });
 
   it('FP-02 an unknown address is told there is no account, with Create Account', () => {
     sendCode('RequestPasswordResetCode', pressSendCode);
-    cy.contains(NO_ACCOUNT).should('be.visible');
-    cy.contains('a', 'Create Account').should('have.attr', 'href', '/register');
+    expectNoAccount();
   });
 
   it('FP-03 Send code moves to Enter your code, with no test code', () => {
-    emailBox().clear().type(account.email);
+    fill('field-email', account.email);
     sendAndReadCode('PASSWORD_RESET', emailTarget, 'RequestPasswordResetCode', pressSendCode).then((code) => {
       resetCode = code;
       codeSentAt = Date.now();
     });
-    cy.contains('h1', 'Enter your code').should('be.visible');
-    expectNoTestCode();
+    screen().should('contain.text', 'Enter your code');
+    expectNoTestCode('recovery-test-code');
   });
 
   it('FP-04 a wrong code is refused with the attempts left', () => {
     verifyResetCode(wrongCode(resetCode));
-    cy.contains('[role="alert"]', 'Incorrect code — 4 attempts left').should('be.visible');
+    recoveryError().should('contain.text', 'Incorrect code — 4 attempts left');
   });
 
   it('FP-05 Back, then Send code inside 30 seconds, is refused', () => {
-    cy.contains('button', /^Back$/).click();
-    emailBox().should('have.value', account.email);
+    cy.byTestId('recovery-back').should('contain.text', 'Back').click();
+    cy.byTestId('field-email').should('have.value', account.email);
     sendCode('RequestPasswordResetCode', pressSendCode);
-    cy.contains('[role="alert"]', /^Wait \d+s before asking for another code$/).should('be.visible');
+    recoveryError().invoke('text').should('match', /^Wait \d+s before asking for another code$/);
   });
 
   it('FP-06 the code opens Create a new password, which will not save a short or mismatched pair', () => {
     // A real clock: the server will not send another code until 30 s after the last.
     waitOutResendCooldown(codeSentAt);
     sendAndReadCode('PASSWORD_RESET', emailTarget, 'RequestPasswordResetCode', pressSendCode).then(verifyResetCode);
-    cy.contains('h1', 'Create a new password').should('be.visible');
+    screen().should('contain.text', 'Create a new password');
     savePassword().should('be.disabled');
     typeNewPassword('short');
-    cy.contains('Min 8 characters').should('be.visible');
+    cy.byTestId('new_password-error').should('have.text', 'Min 8 characters');
     savePassword().should('be.disabled');
     typeNewPassword(account.password('RECOVERED'), account.password('CHANGED'));
-    cy.contains('Passwords do not match').should('be.visible');
+    cy.byTestId('confirm_password-error').should('have.text', 'Passwords do not match');
     savePassword().should('be.disabled');
   });
 
@@ -111,7 +109,7 @@ describe('03 Forgot password', { testIsolation: false }, () => {
     sendCode('CompletePasswordReset', () => {
       savePassword().should('be.enabled').click();
     });
-    cy.contains('[role="alert"]', 'Choose a password you have not used on this account before').should('be.visible');
+    recoveryError().should('contain.text', 'Choose a password you have not used on this account before');
   });
 
   it('FP-08 the RECOVERED password is saved', () => {
@@ -119,16 +117,15 @@ describe('03 Forgot password', { testIsolation: false }, () => {
     sendCode('CompletePasswordReset', () => {
       savePassword().should('be.enabled').click();
     });
-    cy.get('[data-testid="recovery-success"]').should('contain.text', 'Password changed successfully');
-    cy.contains('a', 'Continue to Login').should('have.attr', 'href', '/login');
+    cy.byTestId('recovery-success').should('contain.text', 'Password changed successfully');
+    cy.byTestId('recovery-go-login').should('contain.text', 'Continue to Login').and('have.attr', 'href', '/login');
   });
 
   it('FP-09 the old password is refused and the RECOVERED one signs in', () => {
-    cy.contains('a', 'Continue to Login').click();
+    cy.byTestId('recovery-go-login').click();
     cy.location('pathname').should('eq', '/login');
     signInWithPassword(account.email, account.password('SIGNUP'));
-    cy.contains(PASSWORD_REFUSED).should('be.visible');
-    cy.location('pathname').should('eq', '/login');
+    expectPasswordRefused();
     signInWithPassword(account.email, account.password('RECOVERED'));
     cy.location('pathname').should('eq', '/');
   });

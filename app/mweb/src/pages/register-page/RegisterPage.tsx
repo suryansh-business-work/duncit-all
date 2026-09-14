@@ -104,7 +104,7 @@ export default function RegisterPage() {
   return (
     <AuthBackground>
       <AuthScreenFrame>
-        <Stack spacing={3}>
+        <Stack spacing={3} data-testid="signup-screen">
           <AuthHeading title={t('mweb.signup.title')} accent={t('mweb.signup.titleAccent')} />
 
           <Stack spacing={2}>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
@@ -32,14 +33,43 @@ const logsMock = (entries: PodAuditLog[], podId = 'pod-1'): MockedResponse => ({
   result: { data: { podAuditLogs: entries.map((e) => ({ __typename: 'PodAuditLog', ...e })) } },
 });
 
+const SUNDAY_POD = { id: 'pod-1', pod_title: 'Sunday board games' };
+
+/** Starts with no pod selected, the way a page renders the dialog before a row is picked. */
+function PodPicker() {
+  const [pod, setPod] = useState<typeof SUNDAY_POD | null>(null);
+  return (
+    <>
+      <button type="button" onClick={() => setPod(SUNDAY_POD)}>
+        Open activity
+      </button>
+      <PodActivityDialog pod={pod} onClose={onClose} />
+    </>
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('PodActivityDialog', () => {
-  it('renders nothing and skips the query when there is no pod', () => {
-    renderWithProviders(<PodActivityDialog pod={null} onClose={onClose} />);
+  it('renders nothing and skips the query when there is no pod', async () => {
+    // Apollo's mock link checks a response's variables the moment a request is
+    // sent, so a query from the pod-less render would reach this matcher before
+    // the pod's own query does.
+    const matchVariables = vi.fn(() => true);
+    const catchAll: MockedResponse = {
+      request: { query: POD_AUDIT_LOGS, variables: matchVariables },
+      result: { data: { podAuditLogs: [{ __typename: 'PodAuditLog', ...entry() }] } },
+    };
+    renderWithProviders(<PodPicker />, { mocks: [catchAll] });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open activity' }));
+
+    expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
+    expect(matchVariables).toHaveBeenCalledTimes(1);
+    expect(matchVariables).toHaveBeenCalledWith({ pod_doc_id: 'pod-1' });
   });
 
   it('shows a spinner before the log resolves', () => {
@@ -83,6 +113,8 @@ describe('PodActivityDialog', () => {
     );
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
     expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getByText('Created')).toBeInTheDocument();
+    expect(screen.getByText('LOW')).toBeInTheDocument();
     expect(screen.getByText('title: — → Sunday board games')).toBeInTheDocument();
     expect(screen.getByText('venue: Third Wave Coffee, Indiranagar → —')).toBeInTheDocument();
     expect(screen.getByText('Created via the host app')).toBeInTheDocument();
@@ -100,7 +132,9 @@ describe('PodActivityDialog', () => {
         ],
       },
     );
-    expect(await screen.findAllByText('System')).not.toHaveLength(0);
+    // Both the actor line (fallback) and the source chip read "System".
+    expect(await screen.findAllByText('System')).toHaveLength(2);
+    expect(screen.queryByText(/→/)).not.toBeInTheDocument();
     expect(screen.queryByText(/^AI:/)).not.toBeInTheDocument();
     expect(screen.queryByText('Created via the host app')).not.toBeInTheDocument();
   });

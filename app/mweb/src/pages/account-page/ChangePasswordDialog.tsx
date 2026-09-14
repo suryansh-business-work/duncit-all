@@ -76,7 +76,7 @@ function RequestStep({
       >
         {t('mweb.account.sendCode')}
       </DuncitButton>
-      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert data-testid="create-password-error" severity="error">{errorMessage}</Alert>}
     </Stack>
   );
 }
@@ -152,7 +152,7 @@ export default function ChangePasswordDialog({
     : t('mweb.account.createPassword');
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="xs">
+    <Dialog data-testid="change-password-dialog" open={open} onClose={close} fullWidth maxWidth="xs">
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
         {step === 1 ? (
@@ -165,11 +165,12 @@ export default function ChangePasswordDialog({
           />
         ) : (
           <Stack spacing={1.5}>
-            {info && <Alert severity="success">{info}</Alert>}
+            {info && <Alert data-testid="change-password-info" severity="success">{info}</Alert>}
             <NewPasswordForm loading={changing} onSubmit={handleChange} />
             <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
               {t('mweb.account.didntGetIt')}{' '}
               <Link
+                data-testid="change-password-resend"
                 component="button"
                 type="button"
                 onClick={handleResend}

@@ -144,18 +144,29 @@ describe('PodIdeasPage / deleting', () => {
   it('Cancel backs out, and a Delete click while the dialog fades out deletes nothing', async () => {
     const deleteResult = vi.fn(() => ({ data: { deletePodIdea: true } }));
     renderPage(
-      [{ request: { query: DELETE_IDEA, variables: () => true }, result: deleteResult }],
+      [
+        { request: { query: DELETE_IDEA, variables: () => true }, result: deleteResult },
+        setStatusMock('APPROVED', statusOk('APPROVED')),
+      ],
       (ui) => <ThemeProvider theme={slowExitTheme}>{ui}</ThemeProvider>,
     );
 
     const dialog = await openDeleteDialog();
     const deleteButton = within(dialog).getByRole('button', { name: 'Delete' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('dialog', { name: 'Delete idea?' })).toBeInTheDocument();
+
     fireEvent.click(deleteButton);
-    await act(() => new Promise((resolve) => setTimeout(resolve, 60)));
+    // A delete that went ahead (or failed) would have raised a toast by now.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // The mock link answers requests in the order they were sent, so once this
+    // later approval has landed, a delete sent by the click above would have too.
+    fireEvent.click(screen.getByRole('button', { name: 'Approve', hidden: true }));
+    expect(await screen.findByText('Marked approved')).toBeInTheDocument();
 
     expect(deleteResult).not.toHaveBeenCalled();
     expect(screen.queryByText('Deleted')).not.toBeInTheDocument();
-    expect(fetchRows).toHaveBeenCalledTimes(1);
+    expect(fetchRows).toHaveBeenCalledTimes(2);
   });
 });

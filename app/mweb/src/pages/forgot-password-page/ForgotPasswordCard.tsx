@@ -46,6 +46,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
           />
           <CheckCircleRoundedIcon sx={{ fontSize: 64, color: 'success.main' }} />
           <DuncitButton
+            data-testid="recovery-go-login"
             component={RouterLink}
             to="/login"
             variant="contained"
@@ -66,7 +67,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
 
   return (
     <AuthScreenFrame center>
-      <Stack spacing={3}>
+      <Stack spacing={3} data-testid="forgot-password-screen">
         <AuthHeading title={heading.title} accent={heading.accent} />
 
         <Stack spacing={2}>
@@ -114,11 +115,12 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
             />
           )}
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="recovery-error" severity="error">{error}</Alert>}
 
           <Stack spacing={1} sx={{ alignItems: 'center' }}>
             {canGoBack && (
               <Link
+                data-testid="recovery-back"
                 component="button"
                 type="button"
                 onClick={recovery.goBack}
@@ -132,7 +134,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
             )}
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {labels.rememberedIt}{' '}
-              <Link component={RouterLink} to="/login" underline="hover">
+              <Link component={RouterLink} to="/login" underline="hover" data-testid="recovery-back-login">
                 {labels.backToLogin}
               </Link>
             </Typography>

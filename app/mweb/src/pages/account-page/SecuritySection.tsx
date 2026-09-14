@@ -41,7 +41,7 @@ export default function SecuritySection() {
   };
 
   return (
-    <Card>
+    <Card data-testid="security-section">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
           <Stack
@@ -95,7 +95,7 @@ export default function SecuritySection() {
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" variant="filled" onClose={() => setToast(null)}>
+        <Alert data-testid="security-toast" severity="success" variant="filled" onClose={() => setToast(null)}>
           {toast}
         </Alert>
       </Snackbar>

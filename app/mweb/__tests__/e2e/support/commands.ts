@@ -45,10 +45,15 @@ declare global {
       clearAuth(): Chainable<void>;
       /** `cy.visit` with the splash skipped and the current token applied. */
       visitApp(path: string): Chainable<AUTWindow>;
-      /** The form control associated with a `<label>` (label-first field lookup). */
-      fieldByLabel(label: string | RegExp): Chainable<JQuery<HTMLElement>>;
       /** Alias the next request carrying this operation so `cy.wait('@Name')` waits for the real answer. */
       interceptOperation(name: string, alias?: string): Chainable<void>;
+      /** An element by its `data-testid` — the only way the specs select anything on the page. */
+      byTestId(testId: string, options?: Partial<Cypress.Timeoutable & Cypress.Loggable>): Chainable<JQuery<HTMLElement>>;
+      /**
+       * Every element whose `data-testid` starts with `prefix` (and ends with `suffix`), in page
+       * order — for rows keyed by an id the spec cannot know (`chip-<categoryId>`).
+       */
+      byTestIdPrefix(prefix: string, suffix?: string): Chainable<JQuery<HTMLElement>>;
     }
   }
 }
@@ -168,19 +173,22 @@ Cypress.Commands.add('visitApp', (path: string) => {
   });
 });
 
-Cypress.Commands.add('fieldByLabel', (label: string | RegExp) =>
-  cy.contains('label', label).then(($label) => {
-    const id = $label.attr('for');
-    // MUI ids come from React's useId (`:r1:`) — never usable as a CSS #id.
-    expect(id, `label "${String(label)}" is bound to a control`).to.be.a('string').and.not.be.empty;
-    return cy.get(`[id="${id}"]`);
-  }),
-);
-
 Cypress.Commands.add('interceptOperation', (name: string, alias?: string) => {
   cy.intercept({ method: 'POST', url: graphqlUrl() }, (req) => {
     if ((req.body as { operationName?: string } | undefined)?.operationName === name) req.alias = alias ?? name;
   });
+});
+
+Cypress.Commands.add(
+  'byTestId',
+  (testId: string, options?: Partial<Cypress.Timeoutable & Cypress.Loggable>) =>
+    cy.get(`[data-testid="${testId}"]`, options),
+);
+
+Cypress.Commands.add('byTestIdPrefix', (prefix: string, suffix = '') => {
+  // `$=""` matches nothing in CSS, so the suffix clause only exists when there is one.
+  const ends = suffix ? `[data-testid$="${suffix}"]` : '';
+  return cy.get(`[data-testid^="${prefix}"]${ends}`);
 });
 
 export {};

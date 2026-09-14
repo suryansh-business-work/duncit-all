@@ -46,13 +46,13 @@ function BulletList({ items }: Readonly<{ items: string[] }>) {
 export default function ClubContentSections({ club }: Readonly<{ club: ClubDetail }>) {
   const { t } = useTranslation();
   const blocks: BulletBlock[] = [
-    { title: t('admin.clubs.whoWeAre'), items: club.who_we_are ?? [] },
-    { title: t('admin.clubs.whatWeDo'), items: club.what_we_do ?? [] },
-    { title: t('admin.clubs.perks'), items: club.perks ?? [] },
-    { title: t('admin.clubs.values'), items: club.values ?? [] },
+    { title: t('admin.clubs.whoWeAre'), items: club.who_we_are },
+    { title: t('admin.clubs.whatWeDo'), items: club.what_we_do },
+    { title: t('admin.clubs.perks'), items: club.perks },
+    { title: t('admin.clubs.values'), items: club.values },
   ].filter((block) => block.items.length > 0);
 
-  const faqs = club.faqs ?? [];
+  const faqs = club.faqs;
   if (blocks.length === 0 && faqs.length === 0) return null;
 
   return (

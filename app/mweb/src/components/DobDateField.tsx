@@ -70,6 +70,7 @@ export default function DobDateField<T extends FieldValues>({
                 slotProps: {
                   inputLabel: { shrink: true },
                   htmlInput: { ...testIdProps('field-dob-input') },
+                  formHelperText: testIdProps(fieldState.error ? 'dob-error' : 'dob-hint'),
                 },
                 error: !!fieldState.error,
                 helperText:

@@ -21,7 +21,7 @@ export default function ClubOverviewTab({
   podCount,
 }: Readonly<{ club: ClubDetail; podCount: number }>) {
   const { t } = useTranslation();
-  const admins = club.club_admins ?? [];
+  const admins = club.club_admins;
   const adminPath = useClubAdminPath(club.id, admins);
 
   return (
@@ -38,13 +38,13 @@ export default function ClubOverviewTab({
         <MediaGallery
           title={t('admin.clubs.coverMedia')}
           icon={<PhotoLibraryIcon color="primary" />}
-          items={club.club_feature_images_and_videos ?? []}
+          items={club.club_feature_images_and_videos}
           emptyText={t('admin.clubs.noCoverMedia')}
         />
         <MediaGallery
           title={t('admin.clubs.moments')}
           icon={<AutoAwesomeIcon color="primary" />}
-          items={club.club_moments ?? []}
+          items={club.club_moments}
           emptyText={t('admin.clubs.noMoments')}
         />
         <ClubContentSections club={club} />

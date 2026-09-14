@@ -87,7 +87,7 @@ vi.mock('@duncit/pod-form', () => ({
   ),
 }));
 
-vi.mock('../../../../components/MediaPickerDialog', () => ({
+vi.mock('@duncit/media-picker', () => ({
   default: (props: {
     open: boolean;
     title: string;
@@ -314,7 +314,7 @@ describe('AdminAutoPodEditorPage / query guard', () => {
       result: { data: { autoPod: null } },
     };
     renderPage('/auto-pods/ap1/edit', [mock]);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(screen.queryByTestId('pod-editor-page')).not.toBeInTheDocument();
   });
 

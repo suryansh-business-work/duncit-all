@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import type { DuncitColumn } from '@duncit/table';
-import ClubsTable from '../../../src/clubs/list/ClubsTable';
+import ClubsTable, { hasNoClubAdmin } from '../../../src/clubs/list/ClubsTable';
 import type { ClubRow } from '../../../src/clubs/list/queries';
 
 const captured = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
@@ -141,16 +142,45 @@ describe('ClubsTable', () => {
   });
 
   describe('club column', () => {
-    it('renders the club name and id, and the valueGetter matches the name', () => {
+    const clubColumn = () => {
       render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
       const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
       const clubCol = columns.find((c) => c.field === 'club_name');
       if (!clubCol?.cellRenderer || !clubCol.valueGetter) throw new Error('club column missing renderer/getter');
-      const row = makeRow();
-      render(<>{clubCol.cellRenderer(row)}</>);
+      return { cellRenderer: clubCol.cellRenderer, valueGetter: clubCol.valueGetter };
+    };
+
+    it('renders the club name and id, and the valueGetter matches the name, for a club with an admin', () => {
+      const { cellRenderer, valueGetter } = clubColumn();
+      const row = makeRow({ admin_user_ids: ['66d2d3e4f5a6b7c8d9e0f1a2'] });
+      render(<>{cellRenderer(row)}</>);
       expect(screen.getByText('Chess Club')).toBeInTheDocument();
       expect(screen.getByText('CLB-1')).toBeInTheDocument();
-      expect(clubCol.valueGetter(row)).toBe('Chess Club');
+      expect(screen.queryByTestId('ErrorOutlineOutlinedIcon')).not.toBeInTheDocument();
+      expect(valueGetter(row)).toBe('Chess Club');
+    });
+
+    it.each([
+      ['no admin list at all', undefined],
+      ['an empty admin list', [] as string[]],
+    ])('flags a club with %s in red, explaining what to do, and keys the value on the flag', (_label, adminIds) => {
+      const { cellRenderer, valueGetter } = clubColumn();
+      const row = makeRow({ admin_user_ids: adminIds });
+      render(<>{cellRenderer(row)}</>);
+      expect(screen.getByText('Chess Club')).toBeInTheDocument();
+      expect(screen.getByText('No club admin assigned')).toBeInTheDocument();
+      expect(screen.queryByText('CLB-1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('ErrorOutlineOutlinedIcon')).toBeInTheDocument();
+      expect(screen.getByLabelText(/This club has nobody to run it/)).toBeInTheDocument();
+      expect(valueGetter(row)).toBe('Chess Club · no club admin');
+    });
+  });
+
+  describe('hasNoClubAdmin', () => {
+    it('is true only when the club has no admin ids', () => {
+      expect(hasNoClubAdmin(makeRow({ admin_user_ids: null }))).toBe(true);
+      expect(hasNoClubAdmin(makeRow({ admin_user_ids: [] }))).toBe(true);
+      expect(hasNoClubAdmin(makeRow({ admin_user_ids: ['66d2d3e4f5a6b7c8d9e0f1a2'] }))).toBe(false);
     });
   });
 
@@ -207,6 +237,17 @@ describe('ClubsTable', () => {
     });
   });
 
+  describe('verified column', () => {
+    it('reads Yes for a verified club and No otherwise', () => {
+      render(<ClubsTable {...baseProps} onEdit={vi.fn()} onRemove={vi.fn()} onView={vi.fn()} />);
+      const columns = captured.props?.columns as DuncitColumn<ClubRow>[];
+      const col = columns.find((c) => c.field === 'is_verified');
+      if (!col?.valueGetter) throw new Error('verified column missing a valueGetter');
+      expect(col.valueGetter(makeRow({ is_verified: true }))).toBe('Yes');
+      expect(col.valueGetter(makeRow({ is_verified: false }))).toBe('No');
+    });
+  });
+
   describe('actions column', () => {
     it('wires the View Pods link plus edit/delete callbacks to the real row', () => {
       const onEdit = vi.fn();
@@ -217,8 +258,9 @@ describe('ClubsTable', () => {
       if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');
 
       const row = makeRow({ id: 'row-7' });
-      const { container } = render(<>{actionsCol.cellRenderer(row)}</>);
-      expect(container.querySelector('a[href="/pods?club_id=row-7"]')).toBeInTheDocument();
+      // The View Pods action is a router link, so it needs a router above it.
+      const { container } = render(<MemoryRouter>{actionsCol.cellRenderer(row)}</MemoryRouter>);
+      expect(container.querySelector('a[href="/clubs/row-7?selectedtab=pods"]')).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
       fireEvent.click(screen.getByRole('button', { name: 'Delete' }));

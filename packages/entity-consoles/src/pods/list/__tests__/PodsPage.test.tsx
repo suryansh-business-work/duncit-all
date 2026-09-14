@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, useLocation } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
-import { renderWithProviders } from '../../../../__tests__/testkit';
+import { flush, renderWithProviders } from '../../../../__tests__/testkit';
 import { COMPLETE_POD_SETTLEMENT, DELETE } from '../queries';
 import { buildCompleteInput } from '../complete-pod-dialog';
 import PodsPage from '../PodsPage';
@@ -89,6 +89,7 @@ vi.mock('../PodsTable', () => ({
     onQuickEdit: (p: unknown) => void;
     onDelete: (p: unknown) => void;
     onComplete: (p: unknown) => void;
+    onMonitor: (p: unknown) => void;
     onView: (p: unknown) => void;
   }) => {
     props.refetchRef.current = harness.tableRefetch;
@@ -112,6 +113,9 @@ vi.mock('../PodsTable', () => ({
         </button>
         <button type="button" onClick={() => props.onComplete(harness.pod)}>
           row-complete
+        </button>
+        <button type="button" onClick={() => props.onMonitor(harness.pod)}>
+          row-monitor
         </button>
       </div>
     );
@@ -177,15 +181,31 @@ vi.mock('../QuickEditPodDialog', () => ({
   ),
 }));
 
-vi.mock('../../../components/MediaPickerDialog', () => ({
-  default: (props: { open: boolean; title: string; accept: string; onPicked: (u: string) => void }) => (
-    <div data-testid="media-picker" data-open={String(props.open)} data-title={props.title} data-accept={props.accept}>
-      <button type="button" onClick={() => props.onPicked('https://cdn.test/picked.jpg')}>
-        picker-pick
-      </button>
-    </div>
-  ),
-}));
+// PodsPage renders the picker from `@duncit/media-picker`. The rest of that
+// module stays real: the complete-pod dialog (kept real via importOriginal
+// above) imports `MediaListField` from it at load time.
+vi.mock('@duncit/media-picker', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  return {
+    ...actual,
+    default: (props: {
+      open: boolean;
+      title: string;
+      accept: string;
+      onClose: () => void;
+      onPicked: (u: string) => void;
+    }) => (
+      <div data-testid="media-picker" data-open={String(props.open)} data-title={props.title} data-accept={props.accept}>
+        <button type="button" onClick={() => props.onPicked('https://cdn.test/picked.jpg')}>
+          picker-pick
+        </button>
+        <button type="button" onClick={props.onClose}>
+          picker-close
+        </button>
+      </div>
+    ),
+  };
+});
 
 function LocationProbe() {
   const location = useLocation();
@@ -291,6 +311,20 @@ describe('PodsPage / club filter', () => {
     expect(screen.getByTestId('search').textContent).toBe('');
   });
 
+  it('asks the server for one lifecycle stage and reloads when the status select changes', async () => {
+    renderPage('/pods');
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Upcoming'));
+    await waitFor(() =>
+      expect(
+        (harness.fetchCalls.at(-1)?.options as { extraVariables?: { lifecycle?: string | null } })
+          .extraVariables?.lifecycle,
+      ).toBe('UPCOMING'),
+    );
+    expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Upcoming');
+    await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
+  });
+
   it('reloads the grid when the club filter changes', async () => {
     renderPage('/pods');
     expect(harness.tableRefetch).not.toHaveBeenCalled();
@@ -327,6 +361,38 @@ describe('PodsPage / row actions', () => {
     renderPage();
     expect(screen.getByTestId('lookups')).toHaveTextContent('Club<club1>|Venue<venue1>|Loc<loc1>');
   });
+
+  it('carries the club filter into the new-pod route', () => {
+    renderPage('/pods?club_id=club2');
+    fireEvent.click(screen.getByRole('button', { name: /new pod/i }));
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/new');
+    expect(screen.getByTestId('search')).toHaveTextContent('?club_id=club2');
+  });
+
+  it('carries the club filter into the edit route', () => {
+    renderPage('/pods?club_id=club2');
+    fireEvent.click(screen.getByText('row-edit'));
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/doc1/edit');
+    expect(screen.getByTestId('search')).toHaveTextContent('?club_id=club2');
+  });
+
+  it('redirects a legacy ?edit= bookmark to the pod edit page', () => {
+    renderPage('/pods?edit=doc9');
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/pods/doc9/edit');
+    expect(screen.queryByTestId('pods-table')).not.toBeInTheDocument();
+  });
+});
+
+describe('PodsPage / AI monitoring trail', () => {
+  it("opens the pod's activity dialog from the row and closes it again", async () => {
+    renderPageWithMocks([]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('row-monitor'));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Hackathon Night');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
 });
 
 describe('PodsPage / delete a pod', () => {
@@ -359,6 +425,22 @@ describe('PodsPage / delete a pod', () => {
 
     expect(await screen.findByText('Deleted')).toBeInTheDocument();
     await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
+  });
+
+  it('reports the server error and keeps the grid as it was when the delete fails', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: DELETE, variables: { id: 'doc1' } },
+        error: new Error('Pod has confirmed bookings'),
+      },
+    ];
+    renderPageWithMocks(mocks);
+    fireEvent.click(screen.getByText('row-delete'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByText('Pod has confirmed bookings')).toBeInTheDocument();
+    expect(screen.queryByText('Deleted')).not.toBeInTheDocument();
+    expect(harness.tableRefetch).not.toHaveBeenCalled();
   });
 });
 
@@ -419,6 +501,13 @@ describe('PodsPage / media picker', () => {
     renderPage();
     fireEvent.click(screen.getByText('picker-pick'));
     expect(harness.settlePicker).toHaveBeenCalledWith('https://cdn.test/picked.jpg');
+  });
+
+  it('settles the bridge promise with nothing when the picker is dismissed', () => {
+    harness.pickerOpen = true;
+    renderPage();
+    fireEvent.click(screen.getByText('picker-close'));
+    expect(harness.settlePicker).toHaveBeenCalledWith(null);
   });
 });
 
@@ -482,6 +571,44 @@ describe('PodsPage / complete a pod', () => {
     await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalled());
 
     fireEvent.click(screen.getByText('summary-close'));
+    expect(screen.getByTestId('release-summary')).toHaveAttribute('data-open', 'false');
+  });
+
+  it('ignores a submit when no pod was opened for completion', async () => {
+    let requested = false;
+    const mocks: MockedResponse[] = [
+      {
+        request: {
+          query: COMPLETE_POD_SETTLEMENT,
+          variables: () => {
+            requested = true;
+            return true;
+          },
+        },
+        result: { data: { completePodSettlement: null } },
+      },
+    ];
+    renderPageWithMocks(mocks);
+    fireEvent.click(screen.getByText('complete-submit'));
+    await flush();
+
+    expect(requested).toBe(false);
+    expect(screen.queryByText('Pod completion submitted for approval')).not.toBeInTheDocument();
+  });
+
+  it('toasts without a release summary when the server returns no settlement result', async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: COMPLETE_POD_SETTLEMENT, variables: () => true },
+        result: { data: { completePodSettlement: null } },
+      },
+    ];
+    renderPageWithMocks(mocks);
+    fireEvent.click(screen.getByText('row-complete'));
+    fireEvent.click(screen.getByText('complete-submit'));
+
+    expect(await screen.findByText('Pod completion submitted for approval')).toBeInTheDocument();
+    expect(screen.getByTestId('complete-dialog')).toHaveAttribute('data-open', 'false');
     expect(screen.getByTestId('release-summary')).toHaveAttribute('data-open', 'false');
   });
 

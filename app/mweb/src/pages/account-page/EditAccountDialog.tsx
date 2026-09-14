@@ -93,7 +93,7 @@ export default function EditAccountDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={guard.requestClose} fullWidth maxWidth="sm">
+      <Dialog data-testid="edit-account-dialog" open={open} onClose={guard.requestClose} fullWidth maxWidth="sm">
         <DialogTitle>{t('mweb.account.editProfile')}</DialogTitle>
         <DialogContent dividers>
           <AccountEditForm
@@ -111,7 +111,7 @@ export default function EditAccountDialog({
           />
         </DialogContent>
       </Dialog>
-      <Dialog open={guard.confirmOpen} onClose={guard.cancelDiscard} data-testid="discard-confirm">
+      <Dialog open={guard.confirmOpen} onClose={guard.cancelDiscard} data-testid="edit-account-discard-confirm">
         <DialogTitle>{t('mweb.account.discardUnsavedChanges')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -119,10 +119,10 @@ export default function EditAccountDialog({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={guard.cancelDiscard} data-testid="discard-cancel">
+          <DuncitButton onClick={guard.cancelDiscard} data-testid="edit-account-discard-confirm-cancel">
             Keep editing
           </DuncitButton>
-          <DuncitButton onClick={guard.confirmDiscard} color="error" data-testid="discard-confirm-yes">
+          <DuncitButton onClick={guard.confirmDiscard} color="error" data-testid="edit-account-discard-confirm-confirm">
             Discard
           </DuncitButton>
         </DialogActions>

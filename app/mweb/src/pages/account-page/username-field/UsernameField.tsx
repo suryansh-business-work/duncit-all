@@ -12,6 +12,7 @@ import {
 import { useUsernameCheck } from './useUsernameCheck';
 import type { AccountEditValues } from '../account-edit/account-edit.types';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { testIdProps } from '../../../utils/testIdProps';
 
 interface Props {
   /** react-hook-form control from Edit profile's `useForm`. */
@@ -57,6 +58,7 @@ export default function UsernameField({ control, current, onStatusChange }: Read
   return (
     <Stack spacing={0.5}>
       <TextField
+        data-testid="username"
         {...field}
         value={field.value ?? ''}
         onChange={(event) => field.onChange(normalizeUsername(event.target.value))}
@@ -68,7 +70,8 @@ export default function UsernameField({ control, current, onStatusChange }: Read
         helperText={statusLine || labels.hint}
         slotProps={{
           inputLabel: { shrink: true },
-          htmlInput: { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false },
+          htmlInput: { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false, ...testIdProps('field-username') },
+          formHelperText: testIdProps(errored ? 'username-error' : 'username-hint'),
           input: {
             startAdornment: (
               <InputAdornment position="start">

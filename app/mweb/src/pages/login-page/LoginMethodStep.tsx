@@ -94,7 +94,7 @@ export default function LoginMethodStep({
       <Stack spacing={1.5} sx={{ alignItems: 'center', pt: 1 }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.login.newHere')}{' '}
-          <Link component={RouterLink} to="/register" underline="hover">
+          <Link component={RouterLink} to="/register" underline="hover" data-testid="go-signup">
             {t('mweb.login.createOne')}
           </Link>
         </Typography>

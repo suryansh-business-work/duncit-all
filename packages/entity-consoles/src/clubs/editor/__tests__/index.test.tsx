@@ -75,7 +75,7 @@ vi.mock('@duncit/club-form', async (importOriginal) => {
   };
 });
 
-vi.mock('../../../../components/MediaPickerDialog', () => ({
+vi.mock('@duncit/media-picker', () => ({
   default: (props: {
     open: boolean;
     title: string;
@@ -94,7 +94,7 @@ vi.mock('../../../../components/MediaPickerDialog', () => ({
   ),
 }));
 
-vi.mock('../../../../components/AiFillButton', () => ({
+vi.mock('../../../shared/AiFillButton', () => ({
   default: (props: { entity: string; onFill: (data: Record<string, unknown>) => void | Promise<void> }) => (
     <button type="button" onClick={() => props.onFill({ club_name: 'AI Named Club' })}>
       ai-fill-{props.entity}
@@ -279,7 +279,8 @@ describe('AdminClubEditorPage / submit pipeline (create)', () => {
       fireEvent.click(screen.getByText('editor-submit-publish'));
     });
 
-    expect(await screen.findByTestId('error')).toHaveTextContent('Duplicate club id');
+    // The error slot is always mounted (empty), so wait for its TEXT, not the node.
+    await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Duplicate club id'));
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
     expect(screen.getByTestId('club-editor-page')).toBeInTheDocument();
   });
@@ -293,7 +294,9 @@ describe('AdminClubEditorPage / query guard', () => {
       result: { data: { club: null } },
     };
     renderPage('/clubs/c1/edit', [mock]);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // The shared Loader announces itself as a live status region; the spinner
+    // inside it is aria-hidden.
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(screen.queryByTestId('club-editor-page')).not.toBeInTheDocument();
   });
 
@@ -382,7 +385,7 @@ describe('AdminClubEditorPage / editing an existing club', () => {
       fireEvent.click(screen.getByText('editor-submit-publish'));
     });
 
-    expect(await screen.findByTestId('error')).toHaveTextContent('Club still has pods');
+    await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Club still has pods'));
     expect(screen.getByTestId('club-editor-page')).toBeInTheDocument();
   });
 });

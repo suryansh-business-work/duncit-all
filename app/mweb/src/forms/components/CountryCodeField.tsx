@@ -74,7 +74,7 @@ export default function CountryCodeField<T extends FieldValues>({
               helperText={fieldState.error?.message ?? ' '}
               slotProps={{
                 ...params.slotProps,
-                htmlInput: { ...params.slotProps?.htmlInput, 'data-testid': testId ? `${testId}-input` : undefined },
+                htmlInput: { ...params.slotProps?.htmlInput, 'data-testid': testId ? `${testId}-trigger` : undefined },
               }}
             />
           )}

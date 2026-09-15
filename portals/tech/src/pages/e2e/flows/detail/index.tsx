@@ -35,6 +35,10 @@ export default function E2eFlowDetailPage() {
   const [editingFlow, setEditingFlow] = useState(false);
   const [subFlowDialog, setSubFlowDialog] = useState<SubFlowDialogState>(null);
   const flow = data?.e2eFlow ?? null;
+  // Read the open sub flow from the live flow, so a review saved inside the
+  // dialog shows there at once instead of the row as it was when clicked.
+  const openSubFlowId = subFlowDialog?.subFlow?.id;
+  const liveSubFlow = flow?.sub_flows.find((sub) => sub.id === openSubFlowId) ?? null;
 
   const openSubFlow = useCallback((row: E2eSubFlow) => setSubFlowDialog({ subFlow: row }), []);
 
@@ -112,7 +116,7 @@ export default function E2eFlowDetailPage() {
       {flow && subFlowDialog && (
         <SubFlowDialog
           flowId={flow.id}
-          subFlow={subFlowDialog.subFlow}
+          subFlow={liveSubFlow}
           onClose={() => setSubFlowDialog(null)}
         />
       )}

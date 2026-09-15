@@ -382,6 +382,12 @@ async function bootstrap() {
     const { badgeService } = await import('@modules/engagement/badge/badge.service');
     await badgeService.seedDefaults();
   });
+  // Tech > E2E Tests > Flows: every journey the codebase ships. Additive only,
+  // so a flow or sub flow a tech admin has edited survives every redeploy.
+  await safeSeed('e2eFlows', async () => {
+    const { seedE2eFlowCatalogue } = await import('@modules/platform/e2eFlow/e2eFlow.seed');
+    await seedE2eFlowCatalogue();
+  });
   // Status-page incidents: seed minimum historical data so the 90-day chart
   // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).
   await safeSeed('statusIncidents', async () => {

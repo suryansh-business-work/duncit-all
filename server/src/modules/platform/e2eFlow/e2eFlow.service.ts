@@ -6,8 +6,10 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { E2eFlowModel, type IE2eFlow, type IE2eSubFlow } from './e2eFlow.model';
 import {
   e2eFlowSchema,
+  e2eReviewSchema,
   e2eSubFlowSchema,
   type E2eFlowInput,
+  type E2eReviewInput,
   type E2eSubFlowInput,
 } from './e2eFlow.validator';
 
@@ -16,7 +18,11 @@ const FLOW_TABLE_CONFIG: TableEntityConfig = {
   // flow that holds User Login.
   searchFields: ['name', 'description', 'sub_flows.name'],
   sortFields: { name: 'name', created_at: 'created_at', updated_at: 'updated_at' },
-  filterFields: { updated_at: { type: 'date' } },
+  filterFields: {
+    name: { type: 'string' },
+    created_at: { type: 'date' },
+    updated_at: { type: 'date' },
+  },
   defaultSort: { updated_at: -1 },
 };
 
@@ -27,6 +33,9 @@ const pubSubFlow = (sub: IE2eSubFlow) => ({
   name: sub.name,
   description: sub.description ?? '',
   steps: (sub.steps ?? []).map((step) => ({ action: step.action, expected: step.expected ?? '' })),
+  review_status: sub.review_status ?? 'NOT_REVIEWED',
+  reviewed_by: sub.reviewed_by ?? '',
+  reviewed_at: iso(sub.reviewed_at),
 });
 
 const pub = (doc: IE2eFlow) => ({
@@ -35,6 +44,8 @@ const pub = (doc: IE2eFlow) => ({
   description: doc.description ?? '',
   sub_flows: (doc.sub_flows ?? []).map(pubSubFlow),
   sub_flow_count: doc.sub_flows?.length ?? 0,
+  looks_good_count: (doc.sub_flows ?? []).filter((sub) => sub.review_status === 'LOOKS_GOOD')
+    .length,
   created_by: doc.created_by ?? '',
   created_at: iso(doc.created_at),
   updated_at: iso(doc.updated_at),
@@ -114,6 +125,25 @@ export const e2eFlowService = {
       { new: true }
     );
     if (!doc) notFound('Sub flow');
+    return pub(doc);
+  },
+
+  async reviewSubFlow(flowId: string, subFlowId: string, status: unknown, reviewedBy: string) {
+    requireIds(flowId, subFlowId);
+    const { status: review } = await validate<E2eReviewInput>(e2eReviewSchema, { status });
+    const doc = await E2eFlowModel.findOneAndUpdate(
+      { _id: flowId, 'sub_flows._id': subFlowId },
+      {
+        $set: {
+          'sub_flows.$.review_status': review,
+          'sub_flows.$.reviewed_by': reviewedBy,
+          'sub_flows.$.reviewed_at': new Date(),
+        },
+      },
+      { new: true }
+    );
+    if (!doc) notFound('Sub flow');
+    logs.server.info('e2eFlow', 'reviewSubFlow', { flow: doc.name, status: review });
     return pub(doc);
   },
 

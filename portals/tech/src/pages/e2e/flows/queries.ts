@@ -5,11 +5,17 @@ export interface E2eFlowStep {
   expected: string;
 }
 
+/** A tech admin's verdict on a sub flow; only LOOKS_GOOD ones are ready for e2e. */
+export type E2eReviewStatus = 'NOT_REVIEWED' | 'NEEDS_REVIEW' | 'LOOKS_GOOD';
+
 export interface E2eSubFlow {
   id: string;
   name: string;
   description: string;
   steps: E2eFlowStep[];
+  review_status: E2eReviewStatus;
+  reviewed_by: string;
+  reviewed_at: string | null;
 }
 
 export interface E2eFlowRow {
@@ -17,6 +23,7 @@ export interface E2eFlowRow {
   name: string;
   description: string;
   sub_flow_count: number;
+  looks_good_count: number;
   created_by: string;
   created_at: string | null;
   updated_at: string | null;
@@ -31,6 +38,7 @@ const ROW_FIELDS = `
   name
   description
   sub_flow_count
+  looks_good_count
   created_by
   created_at
   updated_at
@@ -48,6 +56,9 @@ const FLOW_FIELDS = `
       action
       expected
     }
+    review_status
+    reviewed_by
+    reviewed_at
   }
 `;
 
@@ -113,6 +124,14 @@ export const UPDATE_E2E_SUB_FLOW = gql`
 export const DELETE_E2E_SUB_FLOW = gql`
   mutation DeleteE2eSubFlow($flow_id: ID!, $sub_flow_id: ID!) {
     deleteE2eSubFlow(flow_id: $flow_id, sub_flow_id: $sub_flow_id) {
+      ${FLOW_FIELDS}
+    }
+  }
+`;
+
+export const REVIEW_E2E_SUB_FLOW = gql`
+  mutation ReviewE2eSubFlow($flow_id: ID!, $sub_flow_id: ID!, $status: E2eReviewStatus!) {
+    reviewE2eSubFlow(flow_id: $flow_id, sub_flow_id: $sub_flow_id, status: $status) {
       ${FLOW_FIELDS}
     }
   }

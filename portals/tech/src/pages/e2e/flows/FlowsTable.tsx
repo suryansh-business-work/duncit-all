@@ -45,6 +45,15 @@ export default function FlowsTable({
         sortable: false,
         valueGetter: (row) => String(row.sub_flow_count),
       },
+      {
+        // How much of the flow is reviewed and ready for e2e — counted per row
+        // at read time, like the sub flow count.
+        field: 'looks_good_count',
+        headerName: t('tech.e2eFlows.colLooksGood'),
+        width: 130,
+        sortable: false,
+        valueGetter: (row) => `${row.looks_good_count} / ${row.sub_flow_count}`,
+      },
       dateColumn<E2eFlowRow>({
         field: 'updated_at',
         headerName: t('shell.common.updated'),

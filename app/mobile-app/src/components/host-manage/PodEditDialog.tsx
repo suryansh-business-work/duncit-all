@@ -79,7 +79,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           <YStack
             flex={1}
             alignItems="center"

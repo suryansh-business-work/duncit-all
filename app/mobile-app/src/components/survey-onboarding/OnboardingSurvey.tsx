@@ -140,7 +140,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
         {(flow.phase === 'survey' || flow.phase === 'meeting') && (
           <CategorySummaryBanner labels={flow.labels} onChange={flow.goToCategory} />
         )}
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           {flow.phase === 'category' && (
             <CategoryPhase
               busy={flow.busy}

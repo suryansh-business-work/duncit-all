@@ -39,8 +39,9 @@ export function PodFeedbackPrompt() {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   // The prompt is a floating scrim outside every screen scaffold, so nothing
-  // above it lifts the comment box clear of the keyboard.
-  const keyboardInset = useKeyboardInset();
+  // above it lifts the comment box clear of the keyboard — and nothing reserves
+  // the bottom inset under it, hence flush.
+  const keyboardInset = useKeyboardInset(true);
 
   useEffect(() => {
     let on = true;

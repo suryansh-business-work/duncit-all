@@ -5,6 +5,13 @@ import { keyboardLift } from '@duncit/dialogs-native';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 
 /**
+ * The lift itself now lives in `@duncit/dialogs-native`, where it is covered
+ * directly rather than only through this hook. Re-exported so the existing call
+ * sites and tests keep their import path.
+ */
+export { keyboardLift };
+
+/**
  * How far bottom-anchored content must lift so the on-screen keyboard does not
  * cover it — `0` whenever the keyboard is closed.
  *
@@ -15,21 +22,22 @@ import { useBottomInset } from '@/hooks/useBottomNavSpace';
  * measures against the un-resized window there and lands the input either
  * behind the keyboard or a nav-bar's worth too high.
  *
- * The reported keyboard frame is measured from the very bottom of the screen,
- * so it already spans the navigation-bar strip that a safe-area inset also
- * covers. Subtracting {@link useBottomInset} keeps that strip from being
- * counted twice (which is what leaves a visible gap under the keyboard), and
- * `Math.max` keeps the result sane on a device whose inset exceeds a small
- * floating keyboard.
+ * The two platforms report the keyboard differently. iOS's frame runs to the
+ * very bottom of the screen, so it already spans the home-indicator strip.
+ * Android's does NOT: React Native reports `ime - systemBars` (ReactRootView
+ * `checkForKeyboardEvents`), i.e. the keyboard WITHOUT the navigation bar under
+ * it. The bar is added back here so {@link keyboardLift} always receives the
+ * distance from the screen's bottom edge — skipping that is what left every
+ * Android input a nav bar's height (48dp on the 3-button bar) behind the
+ * keyboard.
+ *
+ * @param flush `true` when the lifted view reaches the screen's bottom edge
+ *   with no bottom safe-area under it (a tab screen, a centred modal card, a
+ *   full-screen scrim). By default the caller sits inside a `SafeAreaView` (or
+ *   equivalent padding) that already reserved the bottom inset, and that strip
+ *   is subtracted so it is not counted twice.
  */
-/**
- * The lift itself now lives in `@duncit/dialogs-native`, where it is covered
- * directly rather than only through this hook. Re-exported so the existing call
- * sites and tests keep their import path.
- */
-export { keyboardLift };
-
-export function useKeyboardInset(): number {
+export function useKeyboardInset(flush = false): number {
   const bottomInset = useBottomInset();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -49,5 +57,7 @@ export function useKeyboardInset(): number {
     };
   }, []);
 
-  return keyboardLift(keyboardHeight, bottomInset);
+  const addsNavBar = keyboardHeight > 0 && Platform.OS === 'android';
+  const frame = addsNavBar ? keyboardHeight + bottomInset : keyboardHeight;
+  return keyboardLift(frame, flush ? 0 : bottomInset);
 }

@@ -127,7 +127,7 @@ export function DobDateField<T extends FieldValues>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <ModalThemeScope>
-          <KeyboardScreen>
+          <KeyboardScreen flush>
             <YStack
               flex={1}
               alignItems="center"

@@ -454,6 +454,7 @@ export {
 } from './comm-preference';
 export {
   CONTACT_CHANNELS,
+  CONTACT_NUMBER_FIELDS,
   applyContactDraft,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
@@ -462,6 +463,7 @@ export {
   contactDraftIsUnchanged,
   contactDraftValue,
   contactSubmitAction,
+  contactValueStepView,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -475,12 +477,13 @@ export {
   type ContactSnapshot,
   type ContactSubmitAction,
   type ContactTranslate,
+  type ContactValueStepInput,
+  type ContactValueStepView,
 } from './contact-change';
 export {
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
   PASSWORD_RECOVERY_STEPS,
-  CONTACT_NUMBER_FIELDS,
   buildOtpLoginLabels,
   buildPasswordRecoveryLabels,
   codeSendVerdict,
@@ -489,7 +492,6 @@ export {
   previousRecoveryStep,
   recoveryAfterComplete,
   recoveryAfterSend,
-  contactValueStepView,
   recoveryAfterVerify,
   recoveryBack,
   recoveryDestination,
@@ -503,8 +505,6 @@ export {
   type PasswordRecoveryHeading,
   type PasswordRecoveryLookup,
   type PasswordRecoveryChannelLabels,
-  type ContactValueStepInput,
-  type ContactValueStepView,
   type PasswordRecoveryLabels,
   type PasswordRecoveryState,
   type PasswordRecoveryStep,

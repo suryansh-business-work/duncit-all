@@ -3363,8 +3363,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     faqsPage: {
       helpful: 'Helpful',
+      markedHelpful: 'You found this helpful',
       noFaqsMatchYourSearch: 'No FAQs match your search.',
       notReally: 'Not really',
+      stillNeedHelp: 'Still need help?',
+      stillNeedHelpBody:
+        'Our support team is here to assist you with any questions or concerns. Start a chat with us for further assistance.',
     },
     feedback: {
       couldNotSendFeedbackPleaseTry: 'Could not send feedback. Please try again.',

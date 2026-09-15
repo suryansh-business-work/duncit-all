@@ -7,6 +7,8 @@ import { Accordion } from '@/components/details/Accordion';
 import { SectionHeader } from '@/components/SectionHeader';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
+import { FaqFeedback } from '@/components/support/FaqFeedback';
+import { StillNeedHelpDialog } from '@/components/support/StillNeedHelpDialog';
 import { useFaqs, type FaqGroup } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -40,6 +42,10 @@ export function FaqsScreen() {
   const { muted } = useThemeColors();
   const [openId, setOpenId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [helpfulIds, setHelpfulIds] = useState<string[]>([]);
+  const [stillNeedHelp, setStillNeedHelp] = useState(false);
+  const toggleHelpful = (id: string) =>
+    setHelpfulIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   const total = groups.reduce((n, g) => n + g.faqs.length, 0);
   const toggleFaq = (id: string) => setOpenId((cur) => (cur === id ? null : id));
   const filteredGroups = useMemo(() => filterFaqGroups(groups, search), [groups, search]);
@@ -121,6 +127,12 @@ export function FaqsScreen() {
                     <Text fontSize={14} color="$muted" lineHeight={20}>
                       {faq.answer}
                     </Text>
+                    <FaqFeedback
+                      faqId={faq.id}
+                      helpful={helpfulIds.includes(faq.id)}
+                      onToggleHelpful={toggleHelpful}
+                      onNotHelpful={() => setStillNeedHelp(true)}
+                    />
                   </Accordion>
                 ))}
               </YStack>
@@ -128,6 +140,7 @@ export function FaqsScreen() {
           ))}
         </RefreshScrollView>
       )}
+      <StillNeedHelpDialog open={stillNeedHelp} onClose={() => setStillNeedHelp(false)} />
     </StackScreen>
   );
 }

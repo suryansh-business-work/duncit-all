@@ -91,7 +91,6 @@ describe('VenuesScreen', () => {
     route();
     renderWithProviders(<VenuesScreen />);
     expect(await screen.findByTestId('venue-card-v1')).toBeOnTheScreen();
-    expect(screen.getByText('Venues in Pune')).toBeOnTheScreen();
     // Inactive categories are filtered from the chip rail.
     expect(screen.getByTestId('venues-cat-sup1')).toBeOnTheScreen();
     expect(screen.queryByTestId('venues-cat-sup0')).toBeNull();
@@ -190,8 +189,7 @@ describe('VenuesScreen', () => {
       });
     });
     const { unmount } = renderWithProviders(<VenuesScreen />);
-    // No selected city → no "Venues in …" header, and no location arg sent.
-    expect(screen.queryByText(/Venues in/)).toBeNull();
+    // No selected city → no location arg sent.
     expect(venuesCalls()[0][1]).toMatchObject({ location_id: null });
     unmount();
     // Responses landing after unmount must not update state (no act warnings).

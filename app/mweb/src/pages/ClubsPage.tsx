@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, CircularProgress, Link, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import LocationOffOutlinedIcon from '@mui/icons-material/LocationOffOutlined';
 import EmptyState from '../components/EmptyState';
 import SearchPillField from './pod-list/SearchPillField';
@@ -63,8 +63,9 @@ export default function ClubsPage({
     fetchPolicy: 'cache-and-network',
   });
   const navigate = useNavigate();
-  // The city opened from the city cards; the header's own location wins over it.
-  const [openCityId, setOpenCityId] = useOpenCityParam();
+  // The city opened from the city cards; the header's own location wins over it,
+  // and changing the header location closes it.
+  const [openCityId, setOpenCityId] = useOpenCityParam(locationId ?? '');
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const { all, buttons, matchesCategory } = useSearchCategories();
@@ -86,14 +87,6 @@ export default function ClubsPage({
   useEffect(() => {
     setCategoryId('');
   }, [superCategorySlug]);
-  const selectedLocationName = useMemo(
-    () => (data?.locations ?? []).find((l: any) => l.id === locationId)?.location_name ?? '',
-    [data, locationId],
-  );
-  const locationNoteLabel = zoneName
-    ? `${selectedLocationName} · ${zoneName}`
-    : selectedLocationName;
-
   const podCounts = useMemo(() => {
     const m = new Map<string, number>();
     (data?.pods ?? []).forEach((p: any) =>
@@ -159,21 +152,6 @@ export default function ClubsPage({
       {/* No visible title: the coral Clubs tab already names the page, as on the
           native Clubs tab (rule 27). The h1 is for screen readers only. */}
       <Typography component="h1" data-testid="clubs-page-title" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{t('mweb.nav.clubs')}</Typography>
-      {locationId && selectedLocationName && (
-        <Alert severity="info" data-testid="clubs-location-notice" sx={{ py: 0.25, alignItems: 'center' }}>
-          Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
-          <Link
-            component="button"
-            type="button"
-            underline="always"
-            data-testid="clubs-change-location"
-            sx={{ fontWeight: 600, verticalAlign: 'baseline' }}
-            onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
-          >
-            Change your location here
-          </Link>
-        </Alert>
-      )}
       <SearchPillField placeholder={t('mweb.common.searchClubs')} value={q} onChange={setQ} />
       <ClubCategoryChips
         categories={categoryOptions}

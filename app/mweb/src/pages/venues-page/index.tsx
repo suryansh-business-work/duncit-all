@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
-import VenuesLocationBar from './VenuesLocationBar';
 import SearchPillField from '../pod-list/SearchPillField';
 import AdCard from '../../components/ads/AdCard';
 import EmptyState from '../../components/EmptyState';
@@ -41,18 +40,6 @@ const SUPER_CATEGORIES = gql`
   }
 `;
 
-/** Names the selected location so the bar can say which city these venues are
- * from. Same root field and fields the header already fetched, so cache-first
- * resolves it without a second network call. */
-const VENUES_LOCATIONS = gql`
-  query VenuesLocationNames {
-    locations {
-      id
-      location_name
-    }
-  }
-`;
-
 const SEARCH_DEBOUNCE_MS = 400;
 
 interface Props {
@@ -60,10 +47,9 @@ interface Props {
   superCategorySlug?: string;
 }
 
-/** Venues discovery — venues in the selected location with a server-side
- * debounced search, filtered by the header's Super-category tiles, and a
- * location bar that opens the header's picker to change city. Native twin:
- * VenuesScreen. */
+/** Venues discovery — venues in the header's selected location with a
+ * server-side debounced search, filtered by the header's Super-category tiles.
+ * Location is changed only from the header. Native twin: VenuesScreen. */
 export default function VenuesPage({ locationId, superCategorySlug }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -95,10 +81,6 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
   });
   const { ads } = useActiveAds('VENUE_LIST');
   const venues: ExploreVenue[] = data?.publicVenues ?? [];
-  const { data: locData } = useQuery<any>(VENUES_LOCATIONS, { fetchPolicy: 'cache-first' });
-  const cityLabel = (locData?.locations ?? []).find(
-    (l: { id: string }) => l.id === locationId,
-  )?.location_name;
 
   return (
     <Stack
@@ -109,7 +91,6 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       {/* No visible title: the coral Venues tab already names the page, as on the
           native Venues tab (rule 27). The h1 is for screen readers only. */}
       <Typography component="h1" data-testid="venues-page-title" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{t('mweb.nav.venues')}</Typography>
-      <VenuesLocationBar cityLabel={cityLabel} />
       <SearchPillField
         placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
         value={searchInput}

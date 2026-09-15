@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { YStack } from 'tamagui';
 
 import { clubCityName } from '@duncit/utils';
@@ -7,7 +7,6 @@ import { Reveal } from '@/animations/Reveal';
 import { FeedList } from '@/components/FeedList';
 import { ClubsFeedRow } from '@/components/home/ClubsFeedRow';
 import { ClubsLocationEmpty } from '@/components/home/ClubsLocationEmpty';
-import { ClubsLocationNote } from '@/components/home/ClubsLocationNote';
 import { ClubsSearchFilter } from '@/components/home/ClubsSearchFilter';
 import { cityCardsFeed, localitySectionsFeed } from '@/components/home/clubs-feed';
 import { EmptyState } from '@/components/EmptyState';
@@ -31,8 +30,12 @@ export function ClubsScreen() {
   const { selectedId: selectedLocationId, zoneName, locations } = useLocations();
   const { selectedSuperId } = useSuperCategories();
   const { openClub } = useDetailNav();
-  // The city card opened from the city list; the header's own city wins over it.
+  // The city card opened from the city list; the header's own city wins over it,
+  // and changing the header location closes it.
   const [openCityId, setOpenCityId] = useState('');
+  useEffect(() => {
+    setOpenCityId('');
+  }, [selectedLocationId]);
   const activeCityId = selectedLocationId || openCityId;
 
   // Live pods per club — the muted count on each card (mWeb twin: ClubsPage).
@@ -76,7 +79,6 @@ export function ClubsScreen() {
 
   return (
     <TabScreen testID="clubs-screen">
-      <ClubsLocationNote />
       <ClubsSearchFilter
         query={query}
         onQueryChange={setQuery}

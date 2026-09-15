@@ -7,6 +7,13 @@ export interface IE2eFlowStep {
 }
 
 /**
+ * A tech admin's verdict on a sub flow's steps. Only LOOKS_GOOD journeys are
+ * ready to be turned into e2e tests; NEEDS_REVIEW sends one back for another look.
+ */
+export const E2E_REVIEW_STATUSES = ['NOT_REVIEWED', 'NEEDS_REVIEW', 'LOOKS_GOOD'] as const;
+export type E2eReviewStatus = (typeof E2E_REVIEW_STATUSES)[number];
+
+/**
  * A journey inside a flow, e.g. "User Login" inside "User Authentication".
  * Embedded: a sub flow has no life outside its flow, and the flow page always
  * reads every one of them together.
@@ -16,6 +23,9 @@ export interface IE2eSubFlow {
   name: string;
   description: string;
   steps: IE2eFlowStep[];
+  review_status: E2eReviewStatus;
+  reviewed_by: string;
+  reviewed_at: Date | null;
 }
 
 /** A main flow the Tech team documents for the e2e suite, e.g. "User Authentication". */
@@ -40,6 +50,9 @@ const subFlowSchema = new Schema<IE2eSubFlow>({
   name: { type: String, required: true, trim: true },
   description: { type: String, default: '', trim: true },
   steps: { type: [stepSchema], default: [] },
+  review_status: { type: String, enum: E2E_REVIEW_STATUSES, default: 'NOT_REVIEWED' },
+  reviewed_by: { type: String, default: '' },
+  reviewed_at: { type: Date, default: null },
 });
 
 const e2eFlowSchema = new Schema<IE2eFlow>(

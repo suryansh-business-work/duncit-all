@@ -51,8 +51,10 @@ export {
   isGrievanceFieldRequired,
   isGrievanceOpen,
   grievanceFieldLabelKey,
+  grievanceDraftFromUser,
   grievanceSupportTicketOptions,
   type GrievanceDraft,
+  type GrievanceUserSource,
   type GrievanceEscalationStep,
   type GrievanceField,
   type GrievanceStatus,
@@ -452,6 +454,7 @@ export {
 } from './comm-preference';
 export {
   CONTACT_CHANNELS,
+  CONTACT_NUMBER_FIELDS,
   applyContactDraft,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
@@ -460,6 +463,7 @@ export {
   contactDraftIsUnchanged,
   contactDraftValue,
   contactSubmitAction,
+  contactValueStepView,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -473,6 +477,8 @@ export {
   type ContactSnapshot,
   type ContactSubmitAction,
   type ContactTranslate,
+  type ContactValueStepInput,
+  type ContactValueStepView,
 } from './contact-change';
 export {
   PASSWORD_RECOVERY_CHANNELS,

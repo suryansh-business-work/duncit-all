@@ -127,6 +127,8 @@ export const appBuildTypeDefs = gql`
     platform: AppBuildPlatform!
     status: AppBuildStatus!
     version: String!
+    "The store identifier this build shipped under (iOS bundleIdentifier / Android package)."
+    bundle_id: String!
     """
     Everything this build produced: an APK and an AAB on Android, an IPA on iOS.
     Empty on a FAILED build. Rows written before builds shipped two artifacts
@@ -285,6 +287,7 @@ export const appBuildTypeDefs = gql`
     "Defaults to SUCCESS. FAILED rows carry no artifact."
     status: AppBuildStatus
     version: String!
+    bundle_id: String
     """
     The dispatch this run is fulfilling, when the portal started it. Claims the
     QUEUED row the portal already wrote instead of creating a second one, and

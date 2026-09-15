@@ -1,9 +1,11 @@
 import { logs } from '@observability/log';
 import {
+  INVALID_NUMBER_REASON,
   isAisensyConfigured,
   otpCampaign,
   sendCampaign,
 } from '@modules/platform/aisensy/aisensy.gateway';
+import { isWhatsappDestination } from '@utils/phone';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { sendLoginOtpEmail, sendPasswordResetOtpEmail } from '@services/email/email.service';
@@ -73,6 +75,18 @@ async function deliverWhatsApp(input: Readonly<OtpDeliveryInput>): Promise<IOtpD
   const campaign_name = await otpCampaign();
   const destination = destinationOf(input);
   const startedAt = Date.now();
+  // Refused here rather than by AiSensy: its `Invalid Number (HTTP 400)` costs a
+  // round trip and tells the person nothing about what to correct.
+  if (!isWhatsappDestination(destination)) {
+    await recordManualSend({
+      key: WA_OTP_EVENT_KEY,
+      campaign: campaign_name,
+      destination,
+      reason: INVALID_NUMBER_REASON,
+      duration_ms: 0,
+    });
+    return failed('WHATSAPP', INVALID_NUMBER_REASON);
+  }
   try {
     const submitted_message_id = await sendCampaign({
       campaign_name,

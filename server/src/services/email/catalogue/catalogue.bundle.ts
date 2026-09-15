@@ -51,6 +51,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.orderNo': 'Order',
   'email.field.notes': 'Notes',
   'email.field.campaign': 'Placement',
+  'email.field.resolution': 'Our response',
 
   // --- Shared callout captions --------------------------------------------
   'email.label.pod': 'Pod',
@@ -68,6 +69,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.label.order': 'Order',
   'email.label.giftCard': 'Gift card',
   'email.label.signIn': 'Sign-in',
+  'email.label.grievance': 'Grievance',
 
   // --- Shared buttons ------------------------------------------------------
   'email.cta.viewPod': 'View the pod',
@@ -108,6 +110,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.footer.ads': "You're receiving this because you advertise on Duncit.",
   'email.footer.security':
     "You're receiving this because it affects the security of your Duncit account. Security notices cannot be switched off.",
+  'email.footer.grievance': "You're receiving this because you raised a grievance with Duncit.",
 
   // --- Shared closing sentences --------------------------------------------
   'email.help.refundTiming':
@@ -373,6 +376,17 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.supportFeedback.title': 'How did we do?',
   'email.supportFeedback.body':
     'Your ticket is closed. Tell us how the support itself went — it is the only way we find out where we are slow.',
+
+  // --- Grievance: each status Legal moves it to --------------------------------
+  'email.grievanceInReview.title': 'Your grievance is in review',
+  'email.grievanceInReview.body':
+    'Our Grievance Officer has picked up your grievance and is looking into it now. We will write again as soon as there is an outcome.',
+  'email.grievanceResolved.title': 'Your grievance is resolved',
+  'email.grievanceResolved.body':
+    'Our Grievance Officer has resolved your grievance. What we did about it is below.',
+  'email.grievanceRejected.title': 'About your grievance',
+  'email.grievanceRejected.body':
+    'Our Grievance Officer has reviewed your grievance and closed it without action. The reason is below.',
 
   // --- Security ----------------------------------------------------------------
   'email.recentAccountLogin.title': 'A new sign-in to your account',

@@ -1,7 +1,13 @@
 import { logs } from '@observability/log';
 import { destinationFor } from '@modules/crm/marketing/waCampaign.recipients';
 import { getWaPricing, ratePerMessage } from '@modules/crm/marketing/waPricing.model';
-import { isMediaMissing, sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
+import {
+  INVALID_NUMBER_REASON,
+  isCampaignMissing,
+  isMediaMissing,
+  sendCampaign,
+} from '@modules/platform/aisensy/aisensy.gateway';
+import { isWhatsappDestination } from '@utils/phone';
 import {
   isProjectApiConfigured,
   listCampaigns,
@@ -81,6 +87,8 @@ const failed = (reason: string): WaSendOutcome => ({ status: 'FAILED', reason, m
 
 const digits = (v: unknown) => String(v ?? '').replaceAll(/\D/g, '');
 const text = (v: unknown) => String(v ?? '').trim();
+/** AiSensy records a name against every send and rejects an empty one. */
+const contactName = (input: WaSendInput) => text(input.name) || 'there';
 
 interface Switches {
   on: boolean;
@@ -306,6 +314,9 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
   const switches = await switchesFor(event.key);
   if (!switches.on) return record(event, input, destination, skip(switches.reason));
   if (!destination) return record(event, input, '', skip('No WhatsApp number'));
+  if (!isWhatsappDestination(destination)) {
+    return record(event, input, destination, skip(INVALID_NUMBER_REASON));
+  }
 
   if (!(await waPreferenceAllows(destination, event.category))) {
     return record(event, input, destination, skip('Recipient switched this off'));
@@ -375,6 +386,8 @@ const noDefaultSet = (kind: string) =>
   `This campaign needs a header ${kind} and no default is set — add one under Marketing > WhatsApp > Settings`;
 const headerOfItsOwn = (format: string) =>
   `This campaign needs its own header ${format.toLowerCase()} — set media on this scenario under Marketing > WhatsApp > Automation`;
+const campaignNotCreated = (campaign: string) =>
+  `No AiSensy campaign named "${campaign}" — provision it under Marketing > WhatsApp > Automation`;
 
 /**
  * Remember the header kind AiSensy has just proved this template carries, by
@@ -437,8 +450,14 @@ function recoveryFor(
 }
 
 /** What the Logs console shows for a failure. */
-function failureReason(error: unknown, carried: SendMedia, headerFormat: string): string {
+function failureReason(
+  error: unknown,
+  carried: SendMedia,
+  headerFormat: string,
+  campaign: string
+): string {
   const raw = error instanceof Error ? error.message : 'AiSensy rejected the message';
+  if (isCampaignMissing(error)) return campaignNotCreated(campaign);
   if (carried || !isMediaMissing(error)) return raw;
   const format = headerFormat.trim().toUpperCase();
   const kind = defaultKindFor(format || 'IMAGE');
@@ -468,7 +487,7 @@ async function postOnce(
     const message_id = await sendCampaign({
       campaign_name: event.campaign,
       destination,
-      user_name: text(input.name) || 'there',
+      user_name: contactName(input),
       template_params: params,
       media: media ?? undefined,
     });
@@ -512,11 +531,13 @@ async function postWithMediaRecovery(
   if (!first.error) return { ...first, reason: '' };
 
   const recovery = recoveryFor(first.error, resolved, input.assets, defaults);
-  if (!recovery) return { ...first, reason: failureReason(first.error, resolved.media, header) };
+  if (!recovery) {
+    return { ...first, reason: failureReason(first.error, resolved.media, header, event.campaign) };
+  }
 
   const second = await postOnce(event, input, destination, params, recovery.media);
   if (second.error) {
-    return { ...second, reason: failureReason(second.error, recovery.media, header) };
+    return { ...second, reason: failureReason(second.error, recovery.media, header, event.campaign) };
   }
 
   // Only now: the retry going through is the proof that this is the header kind
@@ -555,6 +576,7 @@ async function dispatch(
     entity_id: text(input.entityId),
     recipient_user_id: input.user?._id ?? null,
     destination,
+    user_name: contactName(input),
     status: 'SENDING' as const,
     params,
     template_category: switches.category,

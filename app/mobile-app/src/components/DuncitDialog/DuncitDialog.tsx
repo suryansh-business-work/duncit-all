@@ -73,7 +73,9 @@ export function DuncitDialog({
 }: Readonly<DuncitDialogProps>) {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const keyboardInset = useKeyboardInset();
+  // Flush: the modal window reaches the screen's bottom edge, and the footer
+  // drops its own bottom inset while the keyboard is up.
+  const keyboardInset = useKeyboardInset(true);
 
   const metrics = dialogMetrics({
     variant,

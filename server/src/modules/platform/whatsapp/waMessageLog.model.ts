@@ -30,6 +30,8 @@ export interface IWaMessageLog {
   entity_id: string;
   recipient_user_id: Types.ObjectId | null;
   destination: string;
+  /** The name AiSensy filed the contact under — what a retry sends it again with. */
+  user_name: string;
   status: WaMessageStatus;
   /** Why it was skipped or how it failed. Empty on a clean send. */
   reason: string;
@@ -73,6 +75,7 @@ const waMessageLogSchema = new Schema<IWaMessageLog>(
     entity_id: { type: String, default: '' },
     recipient_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     destination: { type: String, default: '' },
+    user_name: { type: String, default: '' },
     status: { type: String, enum: WA_MESSAGE_STATUSES, required: true, index: true },
     reason: { type: String, default: '' },
     params: { type: [String], default: [] },

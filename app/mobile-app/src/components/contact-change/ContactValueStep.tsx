@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
-  contactChangeNeedsOtp,
+  CONTACT_NUMBER_FIELDS,
+  contactValueStepView,
   isPhoneChannel,
   type ContactChangeLabels,
   type ContactChannel,
@@ -17,6 +18,7 @@ import {
   makeContactValueSchema,
   type ContactValueValues,
 } from '@/forms/contact-change/contact-change.types';
+import { useSignupPhoneCheck } from '@/hooks/useSignupContactCheck';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -69,11 +71,12 @@ export function ContactValueStep({
     return () => sub.unsubscribe();
   }, [watch, onEdit]);
 
+  // Asked as the number is typed, so a number another account already holds is
+  // a warning beside the box and a shut button — not a refusal after the press.
+  // The EMAIL box leaves `number` blank, which never leaves the device.
+  const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS);
+  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus });
   const submit = handleSubmit(onSend);
-  // The contact number is stored straight, so its button may not promise a code.
-  const needsCode = contactChangeNeedsOtp(channel);
-  const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
-  const busyLabel = needsCode ? labels.sending : labels.savingNumber;
 
   return (
     <YStack gap={12}>
@@ -95,6 +98,8 @@ export function ContactValueStep({
               control={control}
               name="number"
               label={copy.fieldLabel}
+              hint={view.numberLines.hint}
+              errorText={view.numberLines.error}
               keyboardType="phone-pad"
               autoComplete="tel-national"
               textContentType="telephoneNumber"
@@ -118,9 +123,9 @@ export function ContactValueStep({
       )}
       <PrimaryButton
         testID="contact-change-send"
-        label={busy ? busyLabel : idleLabel}
+        label={view.buttonLabel}
         loading={busy}
-        disabled={busy || blocked || !isValid}
+        disabled={view.disabled}
         onPress={submit}
       />
     </YStack>

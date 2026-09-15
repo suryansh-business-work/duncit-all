@@ -346,6 +346,36 @@ async function listAll(
   return rows;
 }
 
+const PLACEHOLDER = /\{\{\d+\}\}/;
+
+/**
+ * The sample as AiSensy checks it: the body word for word, with each `{{n}}`
+ * replaced by `[its example]`. A finished sentence is refused with "Sample
+ * message doesn't match with template format".
+ *
+ * The scenario drafts and the Templates form both carry the finished sentence,
+ * which reads naturally — so each example is read back out of it by walking
+ * the body's fixed text through the sample in order. An example already in
+ * brackets is kept as it is. Null when the sample does not follow the body.
+ */
+export function bracketedSample(body: string, sample: string): string | null {
+  const [head, ...rest] = body.split(PLACEHOLDER);
+  if (!sample.startsWith(head)) return null;
+  let cursor = head.length;
+  let out = head;
+  for (const [index, literal] of rest.entries()) {
+    const last = index === rest.length - 1;
+    const end = last ? sample.length - literal.length : sample.indexOf(literal, cursor);
+    if (end < cursor || (last && !sample.endsWith(literal))) return null;
+    const value = sample.slice(cursor, end);
+    if (!value.trim()) return null;
+    const wrapped = value.startsWith('[') && value.endsWith(']') ? value : `[${value}]`;
+    out += wrapped + literal;
+    cursor = end + literal.length;
+  }
+  return out;
+}
+
 /**
  * Submit a new WhatsApp template for approval.
  *
@@ -368,6 +398,13 @@ export async function createTemplate(input: {
   headerText?: string;
   footerText?: string;
 }): Promise<{ name: string; status: string; reason: string }> {
+  const sample = bracketedSample(input.body, input.sample);
+  if (sample === null) {
+    throw new GraphQLError(
+      'The sample must be the body word for word, with each {{n}} replaced by an example value',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
   const payload: Record<string, unknown> = {
     // AiSensy's own grouping label; it is required and not shown to recipients.
     label: input.name,
@@ -376,7 +413,7 @@ export async function createTemplate(input: {
     language: input.language,
     type: input.type,
     text: input.body,
-    sample_text: input.sample,
+    sample_text: sample,
   };
   if (input.headerText) {
     payload.header_text = input.headerText;

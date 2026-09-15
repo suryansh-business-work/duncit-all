@@ -76,7 +76,7 @@ export function HostApplyScreen() {
           </Text>
         </XStack>
 
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           {flow.phase === 'category' && (
             <CategoryPhase
               busy={flow.busy}

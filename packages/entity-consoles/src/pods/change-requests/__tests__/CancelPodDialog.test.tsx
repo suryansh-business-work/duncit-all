@@ -95,16 +95,21 @@ describe('CancelPodDialog', () => {
   });
 
   it('locks the dialog while the cancel is in flight', async () => {
-    const { onClose, onCancelled } = renderDialog([cancelMock({ data: { cancelPodForChange: cancelledRow } }, 40)]);
+    // The in-flight window must outlast a slow CI render: at 40 ms the response
+    // could land while waitFor was still flushing, re-enabling the buttons
+    // before the next assertion read them.
+    const { onClose, onCancelled } = renderDialog([cancelMock({ data: { cancelPodForChange: cancelledRow } }, 600)]);
     fireEvent.change(reasonField(), { target: { value: REASON } });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel pod and refund' }));
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled());
-    expect(screen.getByRole('button', { name: 'Cancel pod and refund' })).toBeDisabled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancel pod and refund' })).toBeDisabled();
+    });
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
     expect(onClose).not.toHaveBeenCalled();
 
-    await waitFor(() => expect(onCancelled).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onCancelled).toHaveBeenCalledTimes(1), { timeout: 3000 });
   });
 
   it('shows the server error and stays open when the cancel fails', async () => {

@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Text } from 'tamagui';
-import { grievanceSupportTicketOptions, type SubmittedGrievance } from '@duncit/utils';
+import {
+  grievanceDraftFromUser,
+  grievanceSupportTicketOptions,
+  type SubmittedGrievance,
+} from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { StackScreen } from '@/components/StackScreen';
@@ -13,6 +17,7 @@ import { submitGrievance, useGrievanceOfficer } from '@/hooks/useGrievance';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useUnifiedTickets } from '@/hooks/useUnifiedTickets';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useMeStore } from '@/stores/me.store';
 
 /**
  * Raise a grievance — the RN twin of mWeb's /support/grievance page.
@@ -39,6 +44,8 @@ export function GrievanceScreen() {
   // Built by the shared helper so the option this app stores and the one mWeb
   // stores are the same string (rule 40).
   const tickets = useMemo(() => grievanceSupportTicketOptions(rows), [rows]);
+  const me = useMeStore((s) => s.data?.me);
+  const prefill = useMemo(() => (me ? grievanceDraftFromUser(me) : undefined), [me]);
 
   const onSubmit = async (values: GrievanceValues) => {
     setSubmitting(true);
@@ -86,6 +93,7 @@ export function GrievanceScreen() {
               errorMessage={error}
               tickets={tickets}
               ticketsLoading={ticketsLoading}
+              prefill={prefill}
               onSubmit={onSubmit}
             />
           </>

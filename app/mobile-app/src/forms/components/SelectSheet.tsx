@@ -96,7 +96,7 @@ export function SelectSheet({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <ModalThemeScope>
-          <KeyboardScreen>
+          <KeyboardScreen flush>
             <YStack
               flex={1}
               alignItems="center"

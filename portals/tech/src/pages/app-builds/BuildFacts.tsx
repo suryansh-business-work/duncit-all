@@ -40,6 +40,7 @@ export default function BuildFacts({ build }: Readonly<{ build: AppBuildRow }>) 
   return (
     <Stack spacing={1}>
       <Fact label={t('tech.appBuilds.colVersion')} value={build.version || '—'} />
+      <Fact label={t('tech.appBuilds.colBundleId')} value={build.bundle_id || '—'} />
       <Fact
         label={t('tech.appBuilds.colWhen')}
         value={build.created_at ? formatDateTime(build.created_at) : '—'}

@@ -44,7 +44,7 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       empty: 'No Callback Requests Found',
       colId: 'ID',
       colUser: 'User',
-      colPod: 'Pod',
+      colDescription: 'Description',
       colRequested: 'Requested',
       statusPending: 'Pending',
       statusContacted: 'Contacted',

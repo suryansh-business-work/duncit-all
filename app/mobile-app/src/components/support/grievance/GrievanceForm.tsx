@@ -17,6 +17,8 @@ interface Props {
   /** The user's own support tickets — what this grievance can escalate. */
   tickets: GrievanceSupportTicketOption[];
   ticketsLoading?: boolean;
+  /** The signed-in account's contact details, once loaded. */
+  prefill?: GrievanceValues;
   onSubmit: (values: GrievanceValues) => void;
 }
 
@@ -35,6 +37,7 @@ export function GrievanceForm({
   errorMessage,
   tickets,
   ticketsLoading,
+  prefill,
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -44,6 +47,9 @@ export function GrievanceForm({
 
   const { control, handleSubmit } = useForm<GrievanceValues, any, GrievanceValues>({
     defaultValues: grievanceDefaults,
+    // Applied when the account arrives; anything already typed is kept.
+    values: prefill,
+    resetOptions: { keepDirtyValues: true },
     resolver: formResolver<GrievanceValues>(schema),
     mode: 'onTouched',
   });

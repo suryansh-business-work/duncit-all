@@ -63,6 +63,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
+import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -382,6 +383,12 @@ async function bootstrap() {
     const { badgeService } = await import('@modules/engagement/badge/badge.service');
     await badgeService.seedDefaults();
   });
+  // Tech > E2E Tests > Flows: every journey the codebase ships. Additive only,
+  // so a flow or sub flow a tech admin has edited survives every redeploy.
+  await safeSeed('e2eFlows', async () => {
+    const { seedE2eFlowCatalogue } = await import('@modules/platform/e2eFlow/e2eFlow.seed');
+    await seedE2eFlowCatalogue();
+  });
   // Status-page incidents: seed minimum historical data so the 90-day chart
   // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).
   await safeSeed('statusIncidents', async () => {
@@ -664,6 +671,10 @@ async function bootstrap() {
   // Deliberately open: no login and no key. It publishes the platform's own
   // prompts, code ones included 2014 see prompt.router.ts for what that costs.
   app.use('/ai-prompts', buildAiPromptFeedRouter());
+
+  // Every portal table's "GET API": /table-api/<tableQueryName>, authorised by the
+  // caller's personal token and run through Apollo as them. See tableApi.router.ts.
+  app.use('/table-api', buildTableApiRouter({ apollo, typeDefs, resolvers }));
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

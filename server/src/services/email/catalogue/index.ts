@@ -6,6 +6,7 @@ import { ONBOARDING_EMAILS } from './catalogue.onboarding';
 import { CLUB_ADMIN_EMAILS, ECOMM_EMAILS, HOST_EMAILS, VENUE_EMAILS } from './catalogue.partners';
 import { COMMERCE_EMAILS, SECURITY_EMAILS, SUPPORT_EMAILS } from './catalogue.support';
 import { RECEIPT_EMAILS } from './catalogue.receipts';
+import { GRIEVANCE_EMAILS } from './catalogue.grievance';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -31,6 +32,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...SECURITY_EMAILS,
   ...COMMERCE_EMAILS,
   ...RECEIPT_EMAILS,
+  ...GRIEVANCE_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

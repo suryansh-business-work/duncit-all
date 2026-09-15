@@ -1,3 +1,4 @@
+import type { GraphQLContext } from '@context';
 import { whatsappAuthService, type SignupContactInput } from './auth-whatsapp.service';
 
 interface OtpArgs {
@@ -9,8 +10,10 @@ interface OtpArgs {
 
 export const whatsappResolvers = {
   Query: {
-    signupContactAvailability: (_p: unknown, args: SignupContactInput) =>
-      whatsappAuthService.contactAvailability(args),
+    // A signed-in caller is asking from the profile's contact change: their own
+    // account is never "another account".
+    signupContactAvailability: (_p: unknown, args: SignupContactInput, ctx: GraphQLContext) =>
+      whatsappAuthService.contactAvailability(args, ctx.user?.id),
   },
   Mutation: {
     requestSignupWhatsAppOtp: (_p: unknown, args: Omit<OtpArgs, 'otp'>) =>

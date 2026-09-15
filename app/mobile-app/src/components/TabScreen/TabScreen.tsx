@@ -24,7 +24,7 @@ export function TabScreen({ testID, children }: Readonly<{ testID: string; child
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <AppHeader home={route.name === HOME_TAB} />
         <SuperCategoryTabs />
-        <KeyboardScreen>{children}</KeyboardScreen>
+        <KeyboardScreen flush>{children}</KeyboardScreen>
       </SafeAreaView>
     </YStack>
   );

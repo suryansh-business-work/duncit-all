@@ -96,7 +96,7 @@ export function humanFetchMessage(service: string, err: unknown): string | null 
  * ECONNRESET, socket errors and read timeouts, any of which can strike after the
  * body went out, where a retry would mean doing the thing twice.
  */
-const NEVER_DELIVERED_CODES = ['UND_ERR_CONNECT_TIMEOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'];
+export const NEVER_DELIVERED_CODES = ['UND_ERR_CONNECT_TIMEOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN'];
 
 /** One extra attempt. A third adds latency to an outage without curing it. */
 const MAX_ATTEMPTS = 2;

@@ -39,6 +39,10 @@ export const whatsappTypeDefs = gql`
     to join with? Public, because there is no account yet. A hint for the form,
     not the gate — requestSignupWhatsAppOtp and register refuse a taken contact
     again, because two people can be typing the same one at once.
+
+    When a session IS present — the profile's contact change asks the same
+    question — the caller's own account is left out, so re-typing a number you
+    already hold is never reported as taken.
     """
     signupContactAvailability(
       email: String

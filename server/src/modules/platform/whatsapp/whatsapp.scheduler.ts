@@ -46,6 +46,7 @@ import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { trimTrailingSlash } from '@utils/url';
 import { podImageAssets } from './whatsapp.assets';
+import { retryUnreachedMessages } from './whatsapp.retry';
 import type { StoredMedia } from '@utils/media';
 import { appDate, appTime } from '@utils/app-time';
 
@@ -546,6 +547,9 @@ export async function runWhatsappSweeps(): Promise<void> {
   await remindVenuesOfPendingSlots(now, cutoff, clocks);
   await noticeReplacementNotFound(now, cutoff, mwebUrl);
   await requestPodFeedback(now, cutoff, mwebUrl, clocks);
+  // Last: while AiSensy is unreachable this costs a connect timeout, and the
+  // sweeps above must not wait behind it.
+  await retryUnreachedMessages();
 }
 
 /**

@@ -87,7 +87,7 @@ export function WithdrawDialog({
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           <YStack
             flex={1}
             alignItems="center"

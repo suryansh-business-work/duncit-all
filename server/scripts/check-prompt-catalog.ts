@@ -55,6 +55,7 @@ const SHIPPED_KEYS = [
   'generate.rich_text.user',
   'localization.auto_translate',
   'localization.auto_translate.user',
+  'moderation.callback_reason',
   'moderation.meeting_reason',
   'moderation.pod',
   'moderation.pod.user',

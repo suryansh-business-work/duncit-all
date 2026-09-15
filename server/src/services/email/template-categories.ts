@@ -105,7 +105,14 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   service: [],
 
   // A legal record: something they raised, or something they agreed to.
-  legal: ['grievance-received', 'policy-acceptance', 'policy-updated'],
+  legal: [
+    'grievance-received',
+    'grievance-in-review',
+    'grievance-resolved',
+    'grievance-rejected',
+    'policy-acceptance',
+    'policy-updated',
+  ],
 };
 
 /**

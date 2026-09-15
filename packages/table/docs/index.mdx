@@ -68,7 +68,7 @@ server's sort, or `clientTableFetch`'s); a header arrow changes the query and re
 
 The progress bar is not the only thing that says "loading". Every control the table owns goes
 `disabled` for the length of the fetch — the search box and its clear button, the Filters
-button and the filter chips, columns, density, CSV, refresh, the pager — and the grid itself
+button and the filter chips, columns, density, download, GET API, refresh, the pager — and the grid itself
 stops taking clicks, so a header sort or a row click cannot land on rows that belong to the
 query being replaced. `toolbarActions` goes with them: the page's own "+ Create" sits inside a
 `disabled` fieldset, which switches off every control in it and takes them out of the tab order
@@ -570,6 +570,39 @@ just the `query` method, which a real `ApolloClient` satisfies as-is. Default fe
 If your server query takes legacy flat arguments instead of `TableQueryInput` (the support
 portal lists), pass `buildVariables` to replace `tableQueryToGql` wholesale rather than
 reshaping the state.
+
+## Download and GET API
+
+Every table's toolbar carries a **Download** menu just left of refresh:
+
+| Option | What it saves |
+| --- | --- |
+| Current page as CSV / JSON | The rows on screen — no refetch. |
+| All rows as CSV / JSON | Every row matching the current search, sort and filters (pinned `externalFilters` included), fetched through `fetchRows` 100 at a time. |
+
+CSV holds the visible columns, headed and read exactly as the grid reads them (`valueGetter`
+first), with a UTF-8 BOM for spreadsheets and a leading `'` on any text cell a spreadsheet would
+run as a formula. JSON holds the rows as the server returned them, minus Apollo's `__typename`.
+Files are named `<tableId>-page-<n>.<ext>` and `<tableId>-all.<ext>`.
+
+A table built with `makeApolloTableFetch` / `useApolloTableFetch` also gets a **GET API**
+button. It opens a dialog with a ready-to-copy URL for the same rows:
+
+```text
+GET https://server.duncit.com/table-api/podsTable?token=dtt_…&page=1&page_size=25&search=yoga&sort_by=start_at&sort_dir=desc&filters=[…]
+```
+
+- The path is the query's `resultKey`; the table's variables become query parameters —
+  `TableQueryInput` spread into `page`, `page_size`, `search`, `sort_by`, `sort_dir` and
+  `filters` (JSON), anything else (`extraVariables`, `buildVariables`) under its own name.
+- The response is `{ table, page, page_size, total, total_pages, next_page_url,
+  previous_page_url, rows }` — follow `next_page_url` to walk every page.
+- `token` is the viewer's personal token from `useTableApiAccess` (`@duncit/app-settings`),
+  generated in **Tech → Table API → Settings**. The server runs the same `<name>Table`
+  resolver as that person, so the URL returns only what they can already see. Scripts can
+  send it as the `x-table-api-token` header instead.
+- A table fed by `clientTableFetch` or a hand-written `fetchRows` has no server table query,
+  so it shows Download but no GET API button.
 
 ## Column helpers — use them instead of re-deriving cells
 

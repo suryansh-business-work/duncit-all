@@ -37,6 +37,7 @@ import { useTranslation } from './i18n';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
+import { TableDataActions } from './toolbar/TableDataActions';
 import type {
   DuncitColumn,
   TableFetch,
@@ -425,10 +426,6 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     [getRowStyle]
   );
 
-  const handleExportCsv = useCallback(() => {
-    gridRef.current?.api?.exportDataAsCsv({ fileName: `${tableId}.csv` });
-  }, [tableId]);
-
   const noRowsTemplate = useMemo(
     // A custom template is one AG Grid does not announce itself, so the text
     // carries its own polite live region (WCAG 4.1.3).
@@ -459,7 +456,18 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           resetColumns={prefs.resetColumns}
           density={prefs.density}
           toggleDensity={prefs.toggleDensity}
-          onExportCsv={handleExportCsv}
+          dataActions={
+            <TableDataActions
+              tableId={tableId}
+              columns={columns}
+              hiddenOverrides={prefs.hiddenOverrides}
+              fetchRows={fetchRows}
+              query={appliedQuery}
+              rows={table.rows}
+              total={total}
+              loading={table.loading}
+            />
+          }
           onRefresh={refetch}
           loading={table.loading}
         />

@@ -59,12 +59,13 @@ const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
     valueGetter: (req) => req.contact_phone || '—',
   },
   {
-    field: 'pod',
-    headerName: t('support.callbacks.colPod'),
+    field: 'reason',
+    headerName: t('support.callbacks.colDescription'),
+    // Not in the server's sort allowlist; the toolbar search covers it.
     sortable: false,
     flex: 1,
-    minWidth: 180,
-    valueGetter: (req) => req.pod?.title ?? '—',
+    minWidth: 220,
+    valueGetter: (req) => req.reason || '—',
   },
   {
     field: 'status',

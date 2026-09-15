@@ -48,6 +48,19 @@ export const e2eFlowResolvers = {
       requireRole(ctx, E2E_MANAGE);
       return e2eFlowService.updateSubFlow(args.flow_id, args.sub_flow_id, args.input);
     },
+    reviewE2eSubFlow: (
+      _p: unknown,
+      args: SubFlowArgs & { status: unknown },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, E2E_MANAGE);
+      return e2eFlowService.reviewSubFlow(
+        args.flow_id,
+        args.sub_flow_id,
+        args.status,
+        user.email ?? user.id
+      );
+    },
     deleteE2eSubFlow: (_p: unknown, args: SubFlowArgs, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return e2eFlowService.deleteSubFlow(args.flow_id, args.sub_flow_id);

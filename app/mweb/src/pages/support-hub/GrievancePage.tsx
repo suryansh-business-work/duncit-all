@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   GRIEVANCE_OFFICER_SDL,
   SUBMIT_GRIEVANCE_SDL,
+  grievanceDraftFromUser,
   grievanceSupportTicketOptions,
   type PublicGrievanceOfficer,
   type SubmittedGrievance,
@@ -15,6 +16,7 @@ import GrievanceOfficerCard from './GrievanceOfficerCard';
 import { MY_UNIFIED_SUPPORT_TICKETS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import { SURFACE_SX } from '../../theme';
+import { useUserInfo } from '../../user-info/useUserInfo';
 import GrievanceForm, { GrievanceEscalationNotice, type GrievanceValues } from '../../forms/grievance';
 
 const SUBMIT_GRIEVANCE = gql(SUBMIT_GRIEVANCE_SDL);
@@ -55,6 +57,8 @@ export default function GrievancePage() {
     () => grievanceSupportTicketOptions(ticketData?.myUnifiedSupportTickets ?? []),
     [ticketData]
   );
+  const { me } = useUserInfo();
+  const prefill = useMemo(() => (me ? grievanceDraftFromUser(me) : undefined), [me]);
 
   const onSubmit = async (values: GrievanceValues) => {
     const res = await submit({ variables: { input: { ...values, source: 'APP' } } });
@@ -90,6 +94,7 @@ export default function GrievancePage() {
                 loading={loading}
                 tickets={tickets}
                 ticketsLoading={ticketsLoading}
+                prefill={prefill}
                 onSubmit={onSubmit}
               />
             </Paper>

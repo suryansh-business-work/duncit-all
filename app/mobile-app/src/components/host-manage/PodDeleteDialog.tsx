@@ -100,7 +100,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
   return (
     <Modal visible={!!podId} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           <YStack
             flex={1}
             alignItems="center"

@@ -1,6 +1,14 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { TicketModel, type ITicket, type TicketStatus, type TicketCategory, type TicketPriority } from './ticket.model';
+import {
+  TicketModel,
+  type ITicket,
+  type ITicketMessage,
+  type TicketAuthorRole,
+  type TicketStatus,
+  type TicketCategory,
+  type TicketPriority,
+} from './ticket.model';
 import { isEmailAddress } from '@utils/email';
 import { UserModel } from '@modules/access/user/user.model';
 import {
@@ -164,6 +172,31 @@ async function mailTicketRaiser(template: string, doc: ITicket, subject: string)
   }
 }
 
+/** Whether `id` is the account that raised the ticket. */
+function isRaiser(doc: ITicket, id: unknown) {
+  return doc.user_id != null && String(doc.user_id) === String(id);
+}
+
+/**
+ * Whether the actor speaks for support on THIS ticket. A support account that
+ * raised the ticket itself is the user in that conversation — its replies sit
+ * on the user's side, re-open rather than park the ticket, and stamp the
+ * user's read receipt.
+ */
+function actsAsAgent(doc: ITicket, actorId: string, isAgent: boolean) {
+  return isAgent && !isRaiser(doc, actorId);
+}
+
+/**
+ * The side a message sits on. Replies the raiser wrote before `actsAsAgent`
+ * decided the role on write were stored as AGENT, so the raiser's own messages
+ * are read back as USER.
+ */
+function authorRoleOf(doc: ITicket, m: ITicketMessage): TicketAuthorRole {
+  if (m.author_role === 'AGENT' && isRaiser(doc, m.author_id)) return 'USER';
+  return m.author_role;
+}
+
 async function toPub(doc: ITicket) {
   const [user, assignee, authors] = await Promise.all([
     doc.user_id ? buildActor(doc.user_id) : null,
@@ -205,7 +238,7 @@ async function toPub(doc: ITicket) {
     messages: doc.messages.map((m) => ({
       id: String(m._id),
       author_id: String(m.author_id),
-      author_role: m.author_role,
+      author_role: authorRoleOf(doc, m),
       // Resolved from the account, not stored. A website ticket has no account
       // behind it — `author_id` is a placeholder minted so the message can say
       // who wrote it — so the guest's own name stands in, exactly as it does
@@ -354,8 +387,9 @@ export const ticketService = {
     const doc = await TicketModel.findById(input.ticket_id);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     assertCanReply(doc, actorId, isAgent);
+    const asAgent = actsAsAgent(doc!, actorId, isAgent);
 
-    const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
+    const meta = await actorMeta(actorId, asAgent ? 'AGENT' : 'USER');
     doc!.messages.push({
       ...meta.author,
       body_html: input.body_html || '',
@@ -363,7 +397,7 @@ export const ticketService = {
       attachments: input.attachments ?? [],
     } as any);
     doc!.last_message_at = new Date();
-    if (isAgent) {
+    if (asAgent) {
       applyAgentReplyStatus(doc);
     } else {
       applyUserReplyStatus(doc);
@@ -371,7 +405,7 @@ export const ticketService = {
     await doc.save();
 
     // The reply above is already saved; the mail send records its own outcome.
-    if (isAgent && doc!.source === 'EMAIL') {
+    if (asAgent && doc!.source === 'EMAIL') {
       await emailAgentReply(doc, actorId, bodyText);
     }
 
@@ -394,14 +428,15 @@ export const ticketService = {
       fail('FORBIDDEN', 'Cannot read another user’s ticket');
     }
     const now = new Date();
-    if (isAgent) doc!.agent_last_read_at = now;
+    const asAgent = actsAsAgent(doc!, actorId, isAgent);
+    if (asAgent) doc!.agent_last_read_at = now;
     else doc!.user_last_read_at = now;
     await doc.save();
     const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     // Only an agent opening the thread is news to the person who raised it.
-    if (isAgent) await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc);
+    if (asAgent) await notifyTicketRaiser('SUPPORT_TICKET_UPDATED', doc);
     return pub;
   },
 
@@ -452,7 +487,7 @@ export const ticketService = {
       fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
     }
     // Log the reopen (with reason) into the thread for history.
-    const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
+    const meta = await actorMeta(actorId, actsAsAgent(doc!, actorId, isAgent) ? 'AGENT' : 'USER');
     const trimmed = (reason || '').trim();
     doc!.messages.push({
       ...meta.author,
@@ -538,8 +573,9 @@ export const ticketService = {
     const authors = await userDisplayMap(doc!.messages.map((m) => String(m.author_id)));
     const lines = doc!.messages.map((m) => {
       let who: string;
-      if (m.author_role === 'USER') who = userName || 'You';
-      else if (m.author_role === 'SYSTEM') who = 'System';
+      const role = authorRoleOf(doc!, m);
+      if (role === 'USER') who = userName || 'You';
+      else if (role === 'SYSTEM') who = 'System';
       else who = displayFrom(authors, m.author_id).name || 'Support';
       const body =
         m.body_text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');

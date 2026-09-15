@@ -47,6 +47,7 @@ import GraphqlQueryMutationPage from './pages/graphql-monitor/query-mutation';
 import GraphqlFieldsPage from './pages/graphql-monitor/fields';
 import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
+import TableApiSettingsPage from './pages/table-api-settings';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -103,6 +104,9 @@ export default function App() {
         <Route path="/graphql-monitor/fields" element={authed(<GraphqlFieldsPage />)} />
         <Route path="/graphql-monitor/errors" element={authed(<GraphqlErrorsPage />)} />
         <Route path="/graphql-monitor/settings" element={authed(<GraphqlMonitorSettingsPage />)} />
+        {/* Each person's token for every portal table's GET API. */}
+        <Route path="/table-api" element={<Navigate to="/table-api/settings" replace />} />
+        <Route path="/table-api/settings" element={authed(<TableApiSettingsPage />)} />
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />

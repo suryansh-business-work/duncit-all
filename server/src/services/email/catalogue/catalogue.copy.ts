@@ -49,6 +49,7 @@ export const FIELD = {
   orderNo: 'email.field.orderNo',
   notes: 'email.field.notes',
   campaign: 'email.field.campaign',
+  resolution: 'email.field.resolution',
 } as const;
 
 /** The tinted callout's caption — what the strip beneath the heading names. */
@@ -68,6 +69,7 @@ export const LABEL = {
   order: 'email.label.order',
   giftCard: 'email.label.giftCard',
   signIn: 'email.label.signIn',
+  grievance: 'email.label.grievance',
 } as const;
 
 /** Button captions. One per action, never one per template. */
@@ -115,6 +117,7 @@ export const FOOTER = {
   autoPod: '{{t:email.footer.autoPod}}',
   ads: '{{t:email.footer.ads}}',
   security: '{{t:email.footer.security}}',
+  grievance: '{{t:email.footer.grievance}}',
 } as const;
 
 /** Closing sentences reused across several templates. */

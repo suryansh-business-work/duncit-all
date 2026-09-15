@@ -1,7 +1,9 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
+import { isWhatsappDestination } from '@utils/phone';
 import {
   defaultCampaign,
+  INVALID_NUMBER_REASON,
   isAisensyConfigured,
   sendCampaign,
   type CampaignButton,
@@ -9,9 +11,6 @@ import {
 } from './aisensy.gateway';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
-
-/** Country code + number, digits only — the shape AiSensy expects (919582998897). */
-const DESTINATION_RE = /^\d{6,15}$/;
 
 const trimmed = (v: unknown): string => String(v ?? '').trim();
 
@@ -47,8 +46,8 @@ export const aisensyService = {
     const campaign_name = trimmed(input.campaign_name) || (await defaultCampaign());
     if (!campaign_name) throw badInput('Campaign name is required');
     const destination = trimmed(input.destination).replace(/^\+/, '');
-    if (!DESTINATION_RE.test(destination)) {
-      throw badInput('Destination must be the country code + number, digits only (e.g. 919582998897)');
+    if (!isWhatsappDestination(destination)) {
+      throw badInput(`${INVALID_NUMBER_REASON} — enter the country code + number, digits only (e.g. 919582998897)`);
     }
     const user_name = trimmed(input.user_name);
     if (!user_name) throw badInput('User name is required');

@@ -51,7 +51,7 @@ export function RescheduleDialog({
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           <YStack
             flex={1}
             alignItems="center"

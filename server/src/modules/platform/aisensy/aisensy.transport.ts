@@ -19,6 +19,9 @@ const BACKOFF_MS = 300;
 const MAX_BACKOFF_MS = 4000;
 const TIMEOUT_MS = 15_000;
 
+/** How every "every attempt threw" failure opens — `whatsapp.retry` matches on it. */
+export const UNREACHABLE_PREFIX = 'Could not reach AiSensy';
+
 /** Fields never written to a log line. AiSensy carries its key in the BODY. */
 const SECRET_KEYS = new Set(['apikey', 'api_key', 'authorization', 'token', 'password']);
 
@@ -130,7 +133,7 @@ export async function postJson(url: string, body: Record<string, unknown>): Prom
   // records as the reason, so it says which failure and how many times, not
   // the bare "fetch failed" Node hands over.
   throw new Error(
-    `Could not reach AiSensy after ${ATTEMPTS} attempt(s): ${describeFetchError(lastError)}`,
+    `${UNREACHABLE_PREFIX} after ${ATTEMPTS} attempt(s): ${describeFetchError(lastError)}`,
     { cause: lastError }
   );
 }

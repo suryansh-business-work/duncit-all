@@ -164,7 +164,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={close}>
       <ModalThemeScope>
-        <KeyboardScreen>
+        <KeyboardScreen flush>
           <YStack
             flex={1}
             alignItems="center"

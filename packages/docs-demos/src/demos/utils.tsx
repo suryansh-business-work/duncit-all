@@ -61,7 +61,9 @@ import {
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
+  buildContactChangeLabels,
   contactChangeNeedsOtp,
+  contactValueStepView,
   contactDetailsComplete,
   contactEntriesFromPhoneBook,
   contactDraftFrom,
@@ -129,6 +131,7 @@ import {
   type BadgeCondition,
   type CommChannelState,
   type ContactChannel,
+  type SignupContactStatus,
   type ContactSnapshot,
   type PasswordRecoveryChannel,
   type SignupStep,
@@ -230,6 +233,8 @@ interface ContactChangeMock {
   channel: ContactChannel;
   draftExtension: string;
   draftNumber: string;
+  /** The as-you-type answer for the draft number. */
+  numberStatus: SignupContactStatus;
 }
 
 interface SignupStepMock {
@@ -979,7 +984,9 @@ export default defineDemos('utils', [
       'typed, the other two are proved first. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
-      'contact details are required before the profile form will save.',
+      'contact details are required before the profile form will save. Set `numberStatus` ' +
+      'to AVAILABLE and `Button disabled` flips to false: TAKEN or CHECKING keep it shut, ' +
+      'with the refusal under the box.',
     mock: {
       email: 'ravi@duncit.com',
       phone_extension: '+91',
@@ -989,6 +996,7 @@ export default defineDemos('utils', [
       channel: 'PHONE',
       draftExtension: '+91',
       draftNumber: '9845099999',
+      numberStatus: 'TAKEN',
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1004,6 +1012,12 @@ export default defineDemos('utils', [
         number: mock.draftNumber,
       };
       const nothingYet = '(nothing yet)';
+      const view = contactValueStepView(mock.channel, buildContactChangeLabels((key) => key), {
+        busy: false,
+        blocked: false,
+        isValid: true,
+        numberStatus: mock.numberStatus,
+      });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,
         'Phone row': currentContactValue(account, 'PHONE') || nothingYet,
@@ -1013,6 +1027,9 @@ export default defineDemos('utils', [
         'Is a change': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
         'Sends a code': String(contactChangeNeedsOtp(mock.channel)),
         'Edit profile can save': String(contactDetailsComplete(account)),
+        Button: view.buttonLabel,
+        'Button disabled': String(view.disabled),
+        'Under the box': view.numberLines.error ?? view.numberLines.hint,
       };
     },
   }),

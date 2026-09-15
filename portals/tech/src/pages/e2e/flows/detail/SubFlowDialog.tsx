@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client/react';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import FlowFormDialog from '../FlowFormDialog';
+import SubFlowReview from './SubFlowReview';
 import {
   E2eSubFlowForm,
   E2E_SUB_FLOW_FORM_ID,
@@ -53,6 +54,7 @@ export default function SubFlowDialog({ flowId, subFlow, onClose }: Readonly<Pro
       onClose={onClose}
       maxWidth="md"
     >
+      {subFlow && <SubFlowReview flowId={flowId} subFlow={subFlow} />}
       <E2eSubFlowForm initial={subFlow ? toSubFlowValues(subFlow) : undefined} onSubmit={submit} />
     </FlowFormDialog>
   );

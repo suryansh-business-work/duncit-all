@@ -51,6 +51,7 @@ export interface AppBuildRow {
   platform: AppBuildPlatform;
   status: AppBuildStatus;
   version: string;
+  bundle_id: string;
   artifacts: AppBuildArtifact[];
   build_name: string;
   artifact_url: string;
@@ -110,6 +111,7 @@ export const APP_BUILDS_TABLE = gql`
         platform
         status
         version
+        bundle_id
         artifacts {
           kind
           name

@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { sendGrievanceAcknowledgement } from './grievance.email';
+import { sendGrievanceAcknowledgement, sendGrievanceStatusUpdate } from './grievance.email';
 import {
   GRIEVANCE_SOURCES,
   GRIEVANCE_STATUSES,
@@ -240,6 +240,7 @@ export const grievanceService = {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid grievance id');
     const doc = await GrievanceTicketModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Grievance not found');
+    const previousStatus = doc!.status;
     if (input.status !== undefined) {
       if (!GRIEVANCE_STATUSES.includes(input.status)) {
         fail('BAD_USER_INPUT', 'Unknown grievance status');
@@ -251,7 +252,23 @@ export const grievanceService = {
     if (input.resolution !== undefined) doc!.resolution = String(input.resolution).slice(0, 5000);
     doc!.handled_by = new Types.ObjectId(userId);
     await doc!.save();
-    return toPub(doc);
+
+    // Only a real move mails: saving a note on an unchanged status is an
+    // officer editing their record, not news for the complainant. Best-effort
+    // for the same reason as the acknowledgement — the status is saved.
+    const pub = toPub(doc);
+    if (pub.status !== previousStatus) {
+      try {
+        await sendGrievanceStatusUpdate(pub);
+      } catch (error) {
+        logs.server.warn('grievance', 'updateStatus', {
+          error,
+          msg: 'grievance status email failed',
+          grievance_no: pub.grievance_no,
+        });
+      }
+    }
+    return pub;
   },
 
   /** The published Grievance Officer. Readable by anyone — that is the point of it. */

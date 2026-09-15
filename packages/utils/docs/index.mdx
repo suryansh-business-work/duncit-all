@@ -96,6 +96,7 @@ exports:
   - 'isGrievanceFieldRequired'
   - 'isGrievanceOpen'
   - 'grievanceFieldLabelKey'
+  - 'grievanceDraftFromUser'
   - 'SUBMIT_GRIEVANCE_SDL'
   - 'GRIEVANCE_OFFICER_SDL'
   - 'podMediaPath'
@@ -148,6 +149,8 @@ exports:
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
   - 'contactSubmitAction'
+  - 'contactValueStepView'
+  - 'CONTACT_NUMBER_FIELDS'
   - 'applyContactDraft'
   - 'emptyContactDraft'
   - 'buildContactChangeLabels'
@@ -1306,6 +1309,21 @@ isGrievanceOpen('RECEIVED');   // true  — still owed an answer
 isGrievanceOpen('RESOLVED');   // false
 ```
 
+A signed-in person's form opens with their contact details filled in from `me`, so mWeb
+and native seed it the same way:
+
+```ts
+grievanceDraftFromUser({
+  full_name: 'Aarav Sharma',
+  email: 'aarav@duncit.com',
+  phone_extension: '+91',
+  phone_number: '9876543210',
+  address: { line1: '12 MG Road', city: 'Bengaluru', pincode: '560001' },
+});
+// { name: 'Aarav Sharma', email: 'aarav@duncit.com', phone: '+91 9876543210',
+//   address: '12 MG Road, Bengaluru, 560001', support_ticket_ref: '', subject: '', description: '' }
+```
+
 ## No live preview
 
 Framework-free by contract — there is no component to mount, so the page shows real
@@ -1812,6 +1830,24 @@ contactSubmitAction(account, 'EMAIL', { email: 'ravi@duncit.in', extension: '', 
 
 applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
 // { …account, phone_extension: '+91', phone_number: '9845099999' }
+```
+
+The new number is checked as it is typed. Each dialog runs signup's `useSignupPhoneCheck` on
+`CONTACT_NUMBER_FIELDS` — the server leaves the signed-in account out, so its own number is never
+"taken" — and hands the status to `contactValueStepView`, which decides the button and the lines
+under the box once for both surfaces. A number another account holds, or one still being checked,
+keeps Send code / Save number shut:
+
+```ts
+const labels = buildContactChangeLabels(t);
+contactValueStepView('WHATSAPP', labels, {
+  busy: false,
+  blocked: false,
+  isValid: true,
+  numberStatus: 'TAKEN',
+});
+// { buttonLabel: 'Send code', disabled: true,
+//   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
 ```
 
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the

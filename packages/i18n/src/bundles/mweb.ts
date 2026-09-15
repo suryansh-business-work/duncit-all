@@ -3277,6 +3277,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       startHostingPodsAndBringPeople: 'Start hosting pods and bring people together.',
     },
     callback: {
+      // Under the reason box: a typed reason is screened by AI on submit.
+      aiMonitoring: 'AI Monitoring',
       callbackRequestedWeWillReachYou: 'Callback requested. We will reach you shortly.',
       callNow: 'Call now',
       requestCallback: 'Request callback',
@@ -3714,6 +3716,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       editValue: 'Change this',
       cancel: 'Cancel',
       unchanged: 'That is what your account already has.',
+      // The new number is checked as it is typed; a number another account
+      // already holds keeps Send code / Save number shut.
+      checkingNumber: 'Checking availability…',
+      numberTaken: 'This number already exists on another account. Use a different number.',
       // Shown only while no SMS or WhatsApp transport is wired, which is when
       // the server hands the code back rather than sending it anywhere.
       testCode: 'Test code: {code}',

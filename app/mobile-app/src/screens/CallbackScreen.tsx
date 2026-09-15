@@ -65,7 +65,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
 export function CallbackScreen() {
   const { t } = useTranslation();
   const { loadSupportTarget, requestCallback } = useBouncer();
-  const { accent } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const [target, setTarget] = useState<SupportTarget>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -123,6 +123,13 @@ export function CallbackScreen() {
               borderColor="$borderColor"
               borderRadius={14}
             />
+            {/* The typed reason is screened by AI Monitoring on submit. */}
+            <XStack testID="callback-reason-ai-monitoring" alignItems="center" gap={4}>
+              <MaterialIcons name="auto-awesome" size={12} color={muted} />
+              <Text fontSize={11.5} color="$muted">
+                {t('mweb.callback.aiMonitoring')}
+              </Text>
+            </XStack>
           </Field>
           {error ? (
             <SupportAlert

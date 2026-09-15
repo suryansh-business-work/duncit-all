@@ -16,8 +16,26 @@ const ACTIVE_STEP = 0.2;
 
 const HEX = /^#(?:[\da-f]{3}|[\da-f]{6})$/i;
 // The same colour strings the server accepts: #rgb(a), #rrggbb(aa), rgb() or rgba().
-const CSS_COLOR =
-  /^(?:#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\))$/i;
+// Split into small patterns because the single alternation was over Sonar's
+// regex-complexity limit.
+const CSS_HEX = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
+const RGB_OPEN = /^rgba?\(/i;
+const RGB_CHANNEL = /^\d{1,3}$/;
+const RGB_ALPHA = /^(?:0|1|0?\.\d+)$/;
+
+/** Three channels and an optional alpha inside `rgb(…)` / `rgba(…)`, spaces allowed around each. */
+function isRgbColor(value: string): boolean {
+  const open = RGB_OPEN.exec(value);
+  if (!open || !value.endsWith(')')) return false;
+  const parts = value.slice(open[0].length, -1).split(',').map((part) => part.trim());
+  return (
+    (parts.length === 3 || parts.length === 4) &&
+    parts.slice(0, 3).every((channel) => RGB_CHANNEL.test(channel)) &&
+    parts.slice(3).every((alpha) => RGB_ALPHA.test(alpha))
+  );
+}
+
+const isCssColor = (value: string) => CSS_HEX.test(value) || isRgbColor(value);
 
 interface TokenSpec {
   /** Localization key of the "what it colours" hint. */
@@ -71,7 +89,7 @@ export const toThemeTokensInput = (stored: Partial<ThemeTokenValues> | null | un
   Object.fromEntries(TOKEN_KEYS.map((key) => [key, stored?.[key] ?? ''])) as ThemeTokenValues;
 
 /** Blank or a colour the server will accept. */
-export const isTokenValueValid = (value: string): boolean => !value.trim() || CSS_COLOR.test(value.trim());
+export const isTokenValueValid = (value: string): boolean => !value.trim() || isCssColor(value.trim());
 
 /** The value the apps will paint: the admin's, else the bundled one. */
 export const effectiveToken = (values: ThemeTokenValues, local: ModeColors, key: TokenKey): string =>

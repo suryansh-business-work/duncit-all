@@ -40,9 +40,26 @@ export const THEME_TOKEN_SOURCES = new Set(["LOCAL", "SERVER"]);
 export const DEFAULT_THEME_TOKEN_SOURCE = "LOCAL";
 
 // #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(r,g,b) or rgba(r,g,b,a) — what both
-// MUI and React Native accept as a colour string.
-const COLOR =
-  /^(?:#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(?:,\s*(?:0|1|0?\.\d+)\s*)?\))$/i;
+// MUI and React Native accept as a colour string. Split into small patterns
+// because the single alternation was over Sonar's regex-complexity limit.
+const HEX_COLOR = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
+const RGB_OPEN = /^rgba?\(/i;
+const RGB_CHANNEL = /^\d{1,3}$/;
+const RGB_ALPHA = /^(?:0|1|0?\.\d+)$/;
+
+/** Three channels and an optional alpha inside `rgb(…)` / `rgba(…)`, spaces allowed around each. */
+function isRgbColor(value: string): boolean {
+  const open = RGB_OPEN.exec(value);
+  if (!open || !value.endsWith(")")) return false;
+  const parts = value.slice(open[0].length, -1).split(",").map((part) => part.trim());
+  return (
+    (parts.length === 3 || parts.length === 4) &&
+    parts.slice(0, 3).every((channel) => RGB_CHANNEL.test(channel)) &&
+    parts.slice(3).every((alpha) => RGB_ALPHA.test(alpha))
+  );
+}
+
+const isColor = (value: string) => HEX_COLOR.test(value) || isRgbColor(value);
 
 /** Every key present, blank where unset — the shape the `branding` query answers. */
 export const themeTokensToPub = (stored?: Partial<ThemeTokens> | null): ThemeTokens =>
@@ -56,7 +73,7 @@ export function normalizeThemeTokens(input: ThemeTokensInput | null | undefined,
   const tokens = themeTokensToPub(null);
   for (const key of THEME_TOKEN_KEYS) {
     const value = (input?.[key] ?? "").trim();
-    if (value && !COLOR.test(value)) {
+    if (value && !isColor(value)) {
       throw new GraphQLError(`Theme token ${mode}.${key} is not a valid colour: "${value}"`, {
         extensions: { code: "BAD_USER_INPUT" },
       });

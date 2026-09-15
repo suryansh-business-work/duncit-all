@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.79.121",
+  "version": "1.79.122",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",

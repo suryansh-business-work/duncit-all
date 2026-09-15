@@ -260,6 +260,60 @@ describe('makePodSchema', () => {
   });
 });
 
+describe('makePodSchema - multi-ticket discount', () => {
+  const paid = (over: Partial<PodFormValues> = {}) =>
+    validValues({
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 499,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [
+        { min_tickets: 2, discount_pct: 10 },
+        { min_tickets: 4, discount_pct: 20 },
+      ],
+      ...over,
+    });
+
+  const issuesFor = (values: PodFormValues, maxPct?: number) => {
+    const res = makePodSchema(makeConfig(), fallbackT, maxPct).safeParse(values);
+    expect(res.success).toBe(false);
+    if (res.success) return {};
+    return Object.fromEntries(res.error.issues.map((i) => [i.path.join('.'), i.message]));
+  };
+
+  it('accepts ascending tiers on a priced pod', () => {
+    expect(makePodSchema(makeConfig(), fallbackT).safeParse(paid()).success).toBe(true);
+  });
+
+  it('holds every tier to the admin max, defaulting to 50% outside the React tree', () => {
+    expect(issuesFor(paid({ ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 60 }] }))).toEqual({
+      'ticket_discount_tiers.0.discount_pct': 'Discount can’t be more than 50%',
+    });
+    expect(issuesFor(paid(), 15)).toEqual({
+      'ticket_discount_tiers.1.discount_pct': 'Discount can’t be more than 15%',
+    });
+  });
+
+  // 12 spots sell 11 tickets — the host's own seat is free.
+  it('caps the tickets a tier asks for at the seats the pod can sell', () => {
+    expect(issuesFor(paid({ ticket_discount_tiers: [{ min_tickets: 12, discount_pct: 10 }] }))).toEqual({
+      'ticket_discount_tiers.0.min_tickets': 'Tickets can’t be more than 11',
+    });
+  });
+
+  it('pins a switched-on discount with no tiers on the list itself', () => {
+    expect(issuesFor(paid({ ticket_discount_tiers: [] }))).toEqual({
+      ticket_discount_tiers: 'Add at least one discount tier',
+    });
+  });
+
+  it('ignores the tiers of a free pod, which never carries a discount', () => {
+    const res = makePodSchema(makeConfig(), fallbackT).safeParse(
+      paid({ pod_type: 'NATIVE_FREE', pod_amount: 0, ticket_discount_tiers: [] }),
+    );
+    expect(res.success).toBe(true);
+  });
+});
+
 describe('makePodSchema - venue and date guards', () => {
   it('requires a club on an ordinary pod', () => {
     const paths = errorPaths(makeConfig(), validValues({ club_id: '' }));

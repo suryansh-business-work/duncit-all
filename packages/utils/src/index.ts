@@ -259,6 +259,11 @@ export {
   type TicketDiscountLimits,
   type TicketDiscountTranslate,
 } from './pod-ticket-discount-copy';
+export type {
+  TicketDiscountFieldErrors,
+  TicketDiscountFieldProps,
+  TicketDiscountTierErrors,
+} from './pod-ticket-discount-field';
 export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,

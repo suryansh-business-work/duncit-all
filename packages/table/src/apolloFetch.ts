@@ -1,5 +1,6 @@
 import { useMemo, type DependencyList } from 'react';
 import { tableQueryToGql } from './gql';
+import { registerTableApiSource } from './tableApi/source';
 import type { TableFetch, TableFilterValue, TablePage, TableQueryState } from './types';
 
 /**
@@ -65,19 +66,24 @@ export function makeApolloTableFetch<Row>(
     mapRow,
     fetchPolicy = 'network-only',
   } = options;
-  return async (q: TableQueryState): Promise<TablePage<Row>> => {
+  const variablesOf = (q: TableQueryState): Record<string, unknown> => {
     let state = mapQuery ? mapQuery(q) : q;
     if (extraFilters?.length) {
       state = { ...state, filters: [...state.filters, ...extraFilters] };
     }
     const base = buildVariables ? buildVariables(state) : tableQueryToGql(state);
-    const variables = extraVariables ? { ...base, ...extraVariables } : base;
+    return extraVariables ? { ...base, ...extraVariables } : base;
+  };
+  const fetchRows = async (q: TableQueryState): Promise<TablePage<Row>> => {
+    const variables = variablesOf(q);
     // No type argument: this is the structural client above, not ApolloClient.
     const { data } = await client.query({ query, variables, fetchPolicy });
     const payload = (data as Record<string, { rows: unknown[]; total: number }>)[resultKey];
     const rows = mapRow ? payload.rows.map(mapRow) : (payload.rows as Row[]);
     return { rows, total: payload.total };
   };
+  // The same variables, handed to the table's GET API dialog.
+  return registerTableApiSource(fetchRows, { resultKey, variablesOf });
 }
 
 /**

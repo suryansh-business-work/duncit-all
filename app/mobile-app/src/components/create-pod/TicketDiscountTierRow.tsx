@@ -1,16 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-import type { TicketDiscountLabels, TicketDiscountTier } from '@duncit/utils';
+import type {
+  TicketDiscountLabels,
+  TicketDiscountTier,
+  TicketDiscountTierErrors,
+} from '@duncit/utils';
 
 import { FIELD_HEIGHT, FIELD_RADIUS, Field } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
-/** The field messages one tier row shows, already translated by the form. */
-export interface TicketDiscountTierRowErrors {
-  min_tickets?: string;
-  discount_pct?: string;
-}
+/** The field messages one tier row shows, already translated by the form (shared with the MUI twin). */
+export type TicketDiscountTierRowErrors = TicketDiscountTierErrors;
 
 export type TicketDiscountTierRowProps = Readonly<{
   index: number;

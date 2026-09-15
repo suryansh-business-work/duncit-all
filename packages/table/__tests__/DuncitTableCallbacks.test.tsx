@@ -218,7 +218,7 @@ describe('DuncitTable CSV export', () => {
     await waitFor(() => expect(onQueryChange).toHaveBeenCalledWith({ query: expect.any(Object), total: 1 }));
   });
 
-  it('the Export CSV toolbar button exports with the tableId filename', async () => {
+  it('the Download menu sits in the toolbar', async () => {
     const { fireEvent } = await import('@testing-library/react');
     render(
       <DuncitTable<Person>
@@ -229,8 +229,9 @@ describe('DuncitTable CSV export', () => {
       />,
     );
     await screen.findByTestId('ag-grid-stub');
-    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
-    await waitFor(() => expect(mockExport).toHaveBeenCalledWith({ fileName: 'csv-table.csv' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+    expect(screen.getByRole('menuitem', { name: 'Current page as CSV' })).toBeInTheDocument();
   });
 });
 

@@ -63,6 +63,7 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { buildTelemetryFeedRouter } from '@modules/platform/telemetry/telemetry.router';
 import { buildAiPromptFeedRouter } from '@modules/ai/prompt/prompt.router';
+import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -670,6 +671,10 @@ async function bootstrap() {
   // Deliberately open: no login and no key. It publishes the platform's own
   // prompts, code ones included 2014 see prompt.router.ts for what that costs.
   app.use('/ai-prompts', buildAiPromptFeedRouter());
+
+  // Every portal table's "GET API": /table-api/<tableQueryName>, authorised by the
+  // caller's personal token and run through Apollo as them. See tableApi.router.ts.
+  app.use('/table-api', buildTableApiRouter({ apollo, typeDefs, resolvers }));
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

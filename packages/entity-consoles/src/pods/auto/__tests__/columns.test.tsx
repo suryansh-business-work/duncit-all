@@ -57,6 +57,12 @@ const columnBy = (field: string, deps: Partial<AutoPodColumnDeps> = {}) => {
   return col;
 };
 
+/** A column's filter contract under the typed-column API: its type, plus the options an enum carries. */
+const filterOf = (field: string) => {
+  const col = columnBy(field);
+  return 'options' in col ? { type: col.type, options: col.options } : { type: col.type };
+};
+
 const valueOf = (field: string, row: AutoPodTableRow, deps: Partial<AutoPodColumnDeps> = {}) =>
   columnBy(field, deps).valueGetter?.(row);
 
@@ -86,8 +92,8 @@ describe('getAutoPodColumns / column set', () => {
   });
 
   it('offers the six stages, in enrolment order, as the stage filter options', () => {
-    expect(columnBy('stage').filter).toEqual({
-      type: 'select',
+    expect(filterOf('stage')).toEqual({
+      type: 'enum',
       options: [
         { value: 'OPEN', label: STAGE_LABEL_KEY.OPEN },
         { value: 'CLAIMING', label: STAGE_LABEL_KEY.CLAIMING },
@@ -100,9 +106,9 @@ describe('getAutoPodColumns / column set', () => {
   });
 
   it('filters the dependency column by which role is still pending — several at once', () => {
-    expect(columnBy('pending').filter).toEqual({
-      type: 'select',
-      multiple: true,
+    // An enum column filters on one OR MORE of its options, so "several at once" is the type itself.
+    expect(filterOf('pending')).toEqual({
+      type: 'enum',
       options: [
         { value: 'VENUE', label: 'admin.autoPods.pendingVenue' },
         { value: 'HOST', label: 'admin.autoPods.pendingHost' },
@@ -112,9 +118,9 @@ describe('getAutoPodColumns / column set', () => {
   });
 
   it('makes only the dates and the status server-filterable, and drops sortability off derived columns', () => {
-    expect(columnBy('created_at').filter).toEqual({ type: 'date' });
-    expect(columnBy('updated_at').filter).toEqual({ type: 'date' });
-    expect(columnBy('is_active').filter).toEqual({ type: 'boolean' });
+    expect(filterOf('created_at')).toEqual({ type: 'date' });
+    expect(filterOf('updated_at')).toEqual({ type: 'date' });
+    expect(filterOf('is_active')).toEqual({ type: 'boolean' });
     expect(columnBy('category_path').sortable).toBe(false);
     expect(columnBy('pending').sortable).toBe(false);
     expect(columnBy('actions').sortable).toBe(false);

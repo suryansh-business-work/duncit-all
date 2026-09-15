@@ -108,7 +108,7 @@ export function hydrateTicketDiscount(
   values: Readonly<{ ticket_discount_enabled?: unknown; ticket_discount_tiers?: unknown }>,
 ): TicketDiscountValues {
   const stored: unknown = values.ticket_discount_tiers;
-  const tiers: ReadonlyArray<Partial<TicketDiscountTier> | null> = Array.isArray(stored)
+  const tiers: readonly (Partial<TicketDiscountTier> | null)[] = Array.isArray(stored)
     ? stored
     : [];
   return {

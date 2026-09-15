@@ -5,13 +5,11 @@ import {
   TICKET_DISCOUNT_MIN_TICKETS,
   type TicketDiscountLabels,
   type TicketDiscountTier,
+  type TicketDiscountTierErrors,
 } from '@duncit/utils';
 
-/** The field messages one tier row shows, already translated by the form. */
-export interface TicketDiscountTierRowErrors {
-  min_tickets?: string;
-  discount_pct?: string;
-}
+/** The field messages one tier row shows, already translated by the form (shared with the native twin). */
+export type TicketDiscountTierRowErrors = TicketDiscountTierErrors;
 
 export type TicketDiscountTierRowProps = Readonly<{
   index: number;

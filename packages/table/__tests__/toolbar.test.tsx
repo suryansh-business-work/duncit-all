@@ -22,7 +22,7 @@ function renderToolbar(overrides: Partial<Parameters<typeof DuncitTableToolbar<R
     resetColumns: vi.fn(),
     density: 'standard' as const,
     toggleDensity: vi.fn(),
-    onExportCsv: vi.fn(),
+    dataActions: <button type="button">Data actions</button>,
     onRefresh: vi.fn(),
     ...overrides,
   };
@@ -49,7 +49,7 @@ describe('DuncitTableToolbar', () => {
         resetColumns={vi.fn()}
         density="standard"
         toggleDensity={vi.fn()}
-        onExportCsv={vi.fn()}
+        dataActions={null}
         onRefresh={vi.fn()}
       />,
     );
@@ -94,18 +94,16 @@ describe('DuncitTableToolbar', () => {
     expect(screen.getByRole('button', { name: 'Standard density' })).toBeInTheDocument();
   });
 
-  it('density, export, refresh and clear-search controls fire their callbacks', () => {
+  it('density, refresh and clear-search controls fire their callbacks, beside the data actions slot', () => {
     const toggleDensity = vi.fn();
-    const onExportCsv = vi.fn();
     const onRefresh = vi.fn();
     const setSearchInput = vi.fn();
-    renderToolbar({ searchInput: 'abc', toggleDensity, onExportCsv, onRefresh, setSearchInput });
+    renderToolbar({ searchInput: 'abc', toggleDensity, onRefresh, setSearchInput });
+    expect(screen.getByRole('button', { name: 'Data actions' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Compact density' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
     expect(toggleDensity).toHaveBeenCalledTimes(1);
-    expect(onExportCsv).toHaveBeenCalledTimes(1);
     expect(onRefresh).toHaveBeenCalledTimes(1);
     expect(setSearchInput).toHaveBeenCalledWith('');
   });

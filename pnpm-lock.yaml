@@ -2764,6 +2764,12 @@ importers:
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@mui/icons-material':
         specifier: ^9.4.0

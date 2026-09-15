@@ -178,40 +178,6 @@ describe('DuncitTable refetchRef handoff', () => {
   });
 });
 
-describe('DuncitTable CSV export guard', () => {
-  it('does nothing when the grid api is not ready yet', async () => {
-    gridHandle.current = undefined;
-    render(
-      <DuncitTable<Person>
-        tableId="csv-not-ready"
-        columns={columns}
-        fetchRows={makeFetch()}
-        getRowId={(row) => row.id}
-      />,
-    );
-    await screen.findByTestId('ag-grid-stub');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
-    expect(mockExport).not.toHaveBeenCalled();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('exports once the api is attached', async () => {
-    render(
-      <DuncitTable<Person>
-        tableId="csv-ready"
-        columns={columns}
-        fetchRows={makeFetch()}
-        getRowId={(row) => row.id}
-      />,
-    );
-    await screen.findByTestId('ag-grid-stub');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
-    expect(mockExport).toHaveBeenCalledWith({ fileName: 'csv-ready.csv' });
-  });
-});
-
 describe('DuncitTable updateRowRef handoff', () => {
   it('publishes updateRow on mount and releases it on unmount', async () => {
     const updateRowRef: { current: ((row: Person) => void) | null } = { current: null };

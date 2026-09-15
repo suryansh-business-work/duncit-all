@@ -6,33 +6,13 @@ import {
   TICKET_DISCOUNT_MAX_TIERS,
   nextTicketDiscountTier,
   ticketDiscountRows,
-  type TicketDiscountLabels,
+  type TicketDiscountFieldProps,
   type TicketDiscountTier,
 } from '@duncit/utils';
-import { TicketDiscountTierRow, type TicketDiscountTierRowErrors } from './TicketDiscountTierRow';
+import { TicketDiscountTierRow } from './TicketDiscountTierRow';
 
-/** Messages the form resolved: `list` for the whole ladder, `rows[i]` for one tier's fields. */
-export interface TicketDiscountFieldErrors {
-  list?: string;
-  rows?: ReadonlyArray<TicketDiscountTierRowErrors | undefined>;
-}
-
-export type TicketDiscountFieldProps = Readonly<{
-  enabled: boolean;
-  tiers: readonly TicketDiscountTier[];
-  onEnabledChange: (enabled: boolean) => void;
-  onTiersChange: (tiers: TicketDiscountTier[]) => void;
-  /** `publicAppSettings.ticket_discount_max_pct`. */
-  maxPct: number;
-  /** `ticketDiscountMaxTickets(no_of_spots)` from `@duncit/utils`. */
-  maxTickets: number;
-  labels: TicketDiscountLabels;
-  /** The pod's ticket price; with `formatPrice` it adds a per-ticket caption to each tier. */
-  unitPrice?: number;
-  formatPrice?: (amount: number) => string;
-  errors?: TicketDiscountFieldErrors;
-  disabled?: boolean;
-}>;
+// The props contract is shared with the native twin, so it lives in @duncit/utils.
+export type { TicketDiscountFieldErrors, TicketDiscountFieldProps } from '@duncit/utils';
 
 /**
  * One stable React key per tier row — never the array index (S6479).

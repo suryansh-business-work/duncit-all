@@ -6,41 +6,17 @@ import {
   TICKET_DISCOUNT_MAX_TIERS,
   nextTicketDiscountTier,
   ticketDiscountRows,
-  type TicketDiscountLabels,
+  type TicketDiscountFieldProps,
   type TicketDiscountTier,
 } from '@duncit/utils';
 
 import { SectionHeader } from '@/components/SectionHeader';
 import { ToggleRow } from '@/components/ToggleRow';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { TicketDiscountTierRow, type TicketDiscountTierRowErrors } from './TicketDiscountTierRow';
+import { TicketDiscountTierRow } from './TicketDiscountTierRow';
 
-/** Messages the form resolved: `list` for the whole ladder, `rows[i]` for one tier's fields. */
-export interface TicketDiscountFieldErrors {
-  list?: string;
-  rows?: ReadonlyArray<TicketDiscountTierRowErrors | undefined>;
-}
-
-export type TicketDiscountFieldProps = Readonly<{
-  enabled: boolean;
-  tiers: readonly TicketDiscountTier[];
-  onEnabledChange: (enabled: boolean) => void;
-  onTiersChange: (tiers: TicketDiscountTier[]) => void;
-  /** `publicAppSettings.ticket_discount_max_pct`. */
-  maxPct: number;
-  /**
-   * `ticketDiscountMaxTickets(no_of_spots)`. Kept for prop parity with the MUI
-   * field, where it is the input's `max`; an RN number pad has no such bound,
-   * so the form's Zod refine is what reports a row above it.
-   */
-  maxTickets: number;
-  labels: TicketDiscountLabels;
-  /** The pod's ticket price; with `formatPrice` it adds a per-ticket caption to each tier. */
-  unitPrice?: number;
-  formatPrice?: (amount: number) => string;
-  errors?: TicketDiscountFieldErrors;
-  disabled?: boolean;
-}>;
+// The props contract is shared with the MUI twin, so it lives in @duncit/utils.
+export type { TicketDiscountFieldErrors, TicketDiscountFieldProps } from '@duncit/utils';
 
 /** Each tier's formatted price per ticket, by row; empty when there is no price to format. */
 function perTicketPrices(

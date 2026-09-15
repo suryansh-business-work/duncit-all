@@ -39,7 +39,7 @@ export function PodBookBar({
   const priceValue = isFree ? t('mweb.podDetails.free') : `₹${ticket.net}`;
   const discountNote =
     ticket.pct > 0 && !isFree
-      ?t('mweb.podDetails.ticketDiscountApplied', { vars: { pct: ticket.pct, count: seats } })
+      ? t('mweb.podDetails.ticketDiscountApplied', { vars: { pct: ticket.pct, count: seats } })
       : null;
   return (
     <>

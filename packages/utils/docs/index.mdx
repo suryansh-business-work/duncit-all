@@ -96,6 +96,7 @@ exports:
   - 'isGrievanceFieldRequired'
   - 'isGrievanceOpen'
   - 'grievanceFieldLabelKey'
+  - 'grievanceDraftFromUser'
   - 'SUBMIT_GRIEVANCE_SDL'
   - 'GRIEVANCE_OFFICER_SDL'
   - 'podMediaPath'
@@ -1304,6 +1305,21 @@ three accept.
 ```ts
 isGrievanceOpen('RECEIVED');   // true  — still owed an answer
 isGrievanceOpen('RESOLVED');   // false
+```
+
+A signed-in person's form opens with their contact details filled in from `me`, so mWeb
+and native seed it the same way:
+
+```ts
+grievanceDraftFromUser({
+  full_name: 'Aarav Sharma',
+  email: 'aarav@duncit.com',
+  phone_extension: '+91',
+  phone_number: '9876543210',
+  address: { line1: '12 MG Road', city: 'Bengaluru', pincode: '560001' },
+});
+// { name: 'Aarav Sharma', email: 'aarav@duncit.com', phone: '+91 9876543210',
+//   address: '12 MG Road, Bengaluru, 560001', support_ticket_ref: '', subject: '', description: '' }
 ```
 
 ## No live preview

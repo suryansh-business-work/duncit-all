@@ -13,6 +13,8 @@
  * `@duncit/regex`, which already owns them.
  */
 
+import { formatPhoneLine } from './contact-change';
+
 /** A field on the grievance form, in the order every surface renders them. */
 export type GrievanceField =
   | 'support_ticket_ref'
@@ -93,6 +95,48 @@ export const EMPTY_GRIEVANCE_DRAFT: GrievanceDraft = {
   subject: '',
   description: '',
 };
+
+/** The parts of the signed-in account a grievance form can open with. */
+export interface GrievanceUserSource {
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone_extension?: string | null;
+  phone_number?: string | null;
+  address?: {
+    line1?: string | null;
+    line2?: string | null;
+    landmark?: string | null;
+    city?: string | null;
+    state?: string | null;
+    pincode?: string | null;
+    country?: string | null;
+  } | null;
+}
+
+/**
+ * The draft a signed-in person's grievance form opens with: their name, email,
+ * phone and address already filled in from the account, the complaint left
+ * blank. mWeb and native both seed from this so the two forms open identically.
+ */
+export function grievanceDraftFromUser(user: Readonly<GrievanceUserSource>): GrievanceDraft {
+  const name =
+    user.full_name?.trim() ||
+    [user.first_name, user.last_name].map((part) => part?.trim()).filter(Boolean).join(' ');
+  const { line1, line2, landmark, city, state, pincode, country } = user.address ?? {};
+  const address = [line1, line2, landmark, city, state, pincode, country]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(', ');
+  return {
+    ...EMPTY_GRIEVANCE_DRAFT,
+    name,
+    email: user.email ?? '',
+    phone: formatPhoneLine(user.phone_extension, user.phone_number),
+    address,
+  };
+}
 
 /**
  * Where a grievance is in its redressal — the same four states the server

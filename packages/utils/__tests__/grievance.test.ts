@@ -5,6 +5,7 @@ import {
   GRIEVANCE_MAX_LENGTH,
   GRIEVANCE_OPTIONAL_FIELDS,
   GRIEVANCE_STATUSES,
+  grievanceDraftFromUser,
   grievanceFieldLabelKey,
   grievanceSupportTicketOptions,
   isGrievanceFieldRequired,
@@ -182,5 +183,43 @@ describe('grievanceSupportTicketOptions', () => {
 
   it('offers nothing to a user with no support history', () => {
     expect(grievanceSupportTicketOptions([])).toEqual([]);
+  });
+});
+
+describe('grievanceDraftFromUser', () => {
+  it('opens with the account contact details and leaves the complaint blank', () => {
+    const draft = grievanceDraftFromUser({
+      full_name: '  Aarav Sharma ',
+      email: 'aarav@duncit.com',
+      phone_extension: '+91',
+      phone_number: '9876543210',
+      address: {
+        line1: '12 MG Road',
+        line2: null,
+        landmark: ' ',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        pincode: '560001',
+        country: 'India',
+      },
+    });
+
+    expect(draft).toEqual({
+      ...EMPTY_GRIEVANCE_DRAFT,
+      name: 'Aarav Sharma',
+      email: 'aarav@duncit.com',
+      phone: '+91 9876543210',
+      address: '12 MG Road, Bengaluru, Karnataka, 560001, India',
+    });
+  });
+
+  it('builds the name from its parts when the account has no full name', () => {
+    expect(grievanceDraftFromUser({ full_name: '', first_name: 'Aarav', last_name: null }).name).toBe(
+      'Aarav'
+    );
+  });
+
+  it('opens empty for an account with nothing on it', () => {
+    expect(grievanceDraftFromUser({})).toEqual(EMPTY_GRIEVANCE_DRAFT);
   });
 });

@@ -83,6 +83,9 @@ export interface IAppBuild extends Document {
   status: AppBuildStatus;
   /** app.json expo.version at the commit the build was made from. */
   version: string;
+  /** The store identifier this build shipped under — app.json's
+   * ios.bundleIdentifier on iOS, android.package on Android. */
+  bundle_id: string;
   /**
    * Everything this build produced. Empty on rows written before builds shipped
    * more than one file — `pub()` synthesises those from the singular fields
@@ -223,6 +226,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     // Empty until the runner reads app.json: a build queued from the portal is
     // a real row before anything has checked out the branch it will build.
     version: { type: String, default: '', trim: true, index: true },
+    bundle_id: { type: String, default: '', trim: true },
     artifacts: { type: [appBuildArtifactSchema], default: [] },
     build_name: { type: String, default: '' },
     artifact_url: { type: String, default: '' },

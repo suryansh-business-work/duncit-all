@@ -314,6 +314,18 @@ function readVersion() {
   }
 }
 
+/** The identifier the store lists this build under — `ios.bundleIdentifier`
+ * on iOS, `android.package` on Android. */
+function readBundleId(platform) {
+  try {
+    const appJson = path.join('app', 'mobile-app', 'app.json');
+    const { expo } = JSON.parse(fs.readFileSync(appJson, 'utf8'));
+    return platform === 'IOS' ? expo.ios.bundleIdentifier : expo.android.package;
+  } catch {
+    return '';
+  }
+}
+
 function durationSeconds() {
   const started = Number.parseInt(process.env.BUILD_STARTED_AT || '', 10);
   if (Number.isNaN(started)) return null;
@@ -360,6 +372,7 @@ async function reportProgress(platform, token) {
       ...reportIdentity(platform),
       status: 'RUNNING',
       version: readVersion(),
+      bundle_id: readBundleId(platform),
       stage,
       duration_seconds: durationSeconds(),
     },
@@ -429,6 +442,7 @@ try {
     ...reportIdentity(platform),
     status,
     version: readVersion(),
+    bundle_id: readBundleId(platform),
     // The stage is the answer on a RUNNING report and part of the reason on a
     // FAILED one, where failureMessage() already names it. A finished build is
     // not in a stage, and the server clears it.

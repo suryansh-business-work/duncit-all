@@ -10495,6 +10495,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "tech.appBuilds.ciTokenOnce": "Shown once — it is not stored here. Add it under Settings → Secrets and variables → Actions on the repo. Lost it? Generate another; both keep working.",
   "tech.appBuilds.close": "Close",
   "tech.appBuilds.colBranch": "Branch",
+  "tech.appBuilds.colBundleId": "Bundle ID",
   "tech.appBuilds.colChanges": "Changes",
   "tech.appBuilds.colCommit": "Commit",
   "tech.appBuilds.colDuration": "Took",

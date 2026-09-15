@@ -2068,6 +2068,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       colWhen: 'When',
       colStatus: 'Status',
       colVersion: 'Version',
+      colBundleId: 'Bundle ID',
       colFile: 'File',
       colCommit: 'Commit',
       colChanges: 'Changes',

@@ -150,6 +150,7 @@ const pub = (doc: IAppBuild) => ({
   platform: doc.platform,
   status: doc.status,
   version: doc.version,
+  bundle_id: doc.bundle_id ?? '',
   artifacts: artifactsOf(doc).map((a) => ({
     kind: a.kind,
     name: a.name,
@@ -523,6 +524,7 @@ async function upsertBuild(
     platform: input.platform,
     status,
     version,
+    bundle_id: optionalStr(input.bundle_id),
     stage: liveStage,
     ...nextStages(existing, stage),
     // Who asked for this build and what they asked for is known at DISPATCH and

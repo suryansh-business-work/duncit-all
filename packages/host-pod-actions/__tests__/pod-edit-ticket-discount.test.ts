@@ -186,17 +186,20 @@ describe('ticketDiscountFieldErrors', () => {
     });
   });
 
+  // Both columns, on different rows: a message lands under the field it is
+  // about, never on the row's other input.
   it('reads the list message and each row message from the resolver tree', () => {
     const error = {
       type: 'custom',
       message: 't:mweb.ticketDiscount.errorTooManyTiers',
+      0: { min_tickets: { message: 't:mweb.ticketDiscount.errorTicketsMax' } },
       1: { discount_pct: { message: 't:mweb.ticketDiscount.errorPctMax' } },
     } as unknown as FieldError;
 
     expect(ticketDiscountFieldErrors(error, 2)).toEqual({
       list: 't:mweb.ticketDiscount.errorTooManyTiers',
       rows: [
-        { min_tickets: undefined, discount_pct: undefined },
+        { min_tickets: 't:mweb.ticketDiscount.errorTicketsMax', discount_pct: undefined },
         { min_tickets: undefined, discount_pct: 't:mweb.ticketDiscount.errorPctMax' },
       ],
     });

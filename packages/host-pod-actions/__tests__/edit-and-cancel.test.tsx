@@ -332,6 +332,21 @@ describe('PodEditDialog', () => {
       expect(props.onSaved).not.toHaveBeenCalled();
     });
 
+    // The other column of the same row: a tier asking for more tickets than the
+    // pod can sell is refused under the TICKETS field, not the discount one.
+    it('refuses a tier asking for more tickets than the pod has to sell', async () => {
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, saveMock()], paidPod);
+      await settle();
+      await settle();
+
+      fireEvent.change(screen.getByTestId('ticket-discount-tier-min-0'), { target: { value: '9' } });
+      await save();
+
+      expect(screen.getByText(labels.ticketDiscount.errors.TICKETS_MAX(limits))).toBeInTheDocument();
+      expect(screen.queryByText(labels.ticketDiscount.errors.PCT_MAX(limits))).not.toBeInTheDocument();
+      expect(props.onSaved).not.toHaveBeenCalled();
+    });
+
     it('asks for a tier when the host empties a discount left switched on', async () => {
       const { props } = dialog([limitsMock(), settingsMock, cleanCheck, saveMock()], paidPod);
       await settle();

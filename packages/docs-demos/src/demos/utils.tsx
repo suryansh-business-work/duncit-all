@@ -131,6 +131,7 @@ import {
   type BadgeCondition,
   type CommChannelState,
   type ContactChannel,
+  type SignupContactStatus,
   type ContactSnapshot,
   type PasswordRecoveryChannel,
   type SignupStep,
@@ -142,7 +143,6 @@ import {
   type PodFeedbackScores,
   type PodParticipationFields,
   type PodPhaseFields,
-  type SignupContactStatus,
   type UsernameRejection,
   type VenueCancelPodResult,
   type VenueOwnerStats,
@@ -233,6 +233,8 @@ interface ContactChangeMock {
   channel: ContactChannel;
   draftExtension: string;
   draftNumber: string;
+  /** The as-you-type answer for the draft number. */
+  numberStatus: SignupContactStatus;
 }
 
 interface SignupStepMock {
@@ -244,8 +246,6 @@ interface SignupFlowMock {
   door: 'EMAIL' | 'GOOGLE';
   /** The number row both signup forms spell the same way, plus the date of
    * birth the Google door's step asks beside it. */
-  /** The as-you-type answer for the draft number. */
-  numberStatus: SignupContactStatus;
   values: SignupGoogleDetails;
 }
 
@@ -996,6 +996,7 @@ export default defineDemos('utils', [
       channel: 'PHONE',
       draftExtension: '+91',
       draftNumber: '9845099999',
+      numberStatus: 'TAKEN',
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1011,6 +1012,12 @@ export default defineDemos('utils', [
         number: mock.draftNumber,
       };
       const nothingYet = '(nothing yet)';
+      const view = contactValueStepView(mock.channel, buildContactChangeLabels((key) => key), {
+        busy: false,
+        blocked: false,
+        isValid: true,
+        numberStatus: mock.numberStatus,
+      });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,
         'Phone row': currentContactValue(account, 'PHONE') || nothingYet,
@@ -1020,6 +1027,9 @@ export default defineDemos('utils', [
         'Is a change': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
         'Sends a code': String(contactChangeNeedsOtp(mock.channel)),
         'Edit profile can save': String(contactDetailsComplete(account)),
+        Button: view.buttonLabel,
+        'Button disabled': String(view.disabled),
+        'Under the box': view.numberLines.error ?? view.numberLines.hint,
       };
     },
   }),
@@ -1066,7 +1076,6 @@ export default defineDemos('utils', [
       values: {
         phoneExtension: '+91',
         phoneNumber: '9845012345',
-      numberStatus: 'TAKEN',
         whatsappIsMobile: true,
         dob: '1998-04-23',
       },
@@ -1082,12 +1091,6 @@ export default defineDemos('utils', [
           type: 'GOOGLE_ACCEPTED',
           credential: { idToken: 'google-id-token', policyIds: ['terms', 'privacy'] },
         });
-      const view = contactValueStepView(mock.channel, buildContactChangeLabels((key) => key), {
-        busy: false,
-        blocked: false,
-        isValid: true,
-        numberStatus: mock.numberStatus,
-      });
       } else {
         state = signupFlowReducer<Form>(state, { type: 'FORM_FILLED', values: form });
       }
@@ -1097,9 +1100,6 @@ export default defineDemos('utils', [
       }
       return {
         'Opens on': opened,
-        Button: view.buttonLabel,
-        'Button disabled': String(view.disabled),
-        'Under the box': view.numberLines.error ?? view.numberLines.hint,
         'After the door answers': state.step,
         'Needed a number step': String(askedForNumber),
         'Code goes to': state.verifying

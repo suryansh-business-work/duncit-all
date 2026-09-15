@@ -66,11 +66,20 @@ describe('ColumnHeader sort', () => {
     expect(screen.getByTestId('table-filter-pod_title')).toBeInTheDocument();
   });
 
+  // Every shipped order starts with a direction, so the header's `?? 'asc'`
+  // guard is only reached by an order that opens on "unsorted". Held for the
+  // whole render rather than one call, so a re-render cannot slip past it.
   it('previews ascending when a sort order starts unsorted', () => {
     const created: DuncitColumn<Pod> = { field: 'created_at', headerName: 'Created', type: 'date' };
-    vi.mocked(sortingOrderOf).mockReturnValueOnce([null, 'asc', 'desc']);
-    renderHeader(created);
-    expect(screen.getByRole('button', { name: 'Created' })).toHaveClass('MuiTableSortLabel-directionAsc');
+    const order = vi.mocked(sortingOrderOf);
+    const real = order.getMockImplementation();
+    order.mockImplementation(() => [null, 'asc', 'desc']);
+    try {
+      renderHeader(created);
+      expect(screen.getByRole('button', { name: 'Created' })).toHaveClass('MuiTableSortLabel-directionAsc');
+    } finally {
+      if (real) order.mockImplementation(real);
+    }
   });
 });
 

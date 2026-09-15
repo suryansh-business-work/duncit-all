@@ -61,7 +61,9 @@ import {
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
+  buildContactChangeLabels,
   contactChangeNeedsOtp,
+  contactValueStepView,
   contactDetailsComplete,
   contactEntriesFromPhoneBook,
   contactDraftFrom,
@@ -140,6 +142,7 @@ import {
   type PodFeedbackScores,
   type PodParticipationFields,
   type PodPhaseFields,
+  type SignupContactStatus,
   type UsernameRejection,
   type VenueCancelPodResult,
   type VenueOwnerStats,
@@ -241,6 +244,8 @@ interface SignupFlowMock {
   door: 'EMAIL' | 'GOOGLE';
   /** The number row both signup forms spell the same way, plus the date of
    * birth the Google door's step asks beside it. */
+  /** The as-you-type answer for the draft number. */
+  numberStatus: SignupContactStatus;
   values: SignupGoogleDetails;
 }
 
@@ -979,7 +984,9 @@ export default defineDemos('utils', [
       'typed, the other two are proved first. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
-      'contact details are required before the profile form will save.',
+      'contact details are required before the profile form will save. Set `numberStatus` ' +
+      'to AVAILABLE and `Button disabled` flips to false: TAKEN or CHECKING keep it shut, ' +
+      'with the refusal under the box.',
     mock: {
       email: 'ravi@duncit.com',
       phone_extension: '+91',
@@ -1059,6 +1066,7 @@ export default defineDemos('utils', [
       values: {
         phoneExtension: '+91',
         phoneNumber: '9845012345',
+      numberStatus: 'TAKEN',
         whatsappIsMobile: true,
         dob: '1998-04-23',
       },
@@ -1074,6 +1082,12 @@ export default defineDemos('utils', [
           type: 'GOOGLE_ACCEPTED',
           credential: { idToken: 'google-id-token', policyIds: ['terms', 'privacy'] },
         });
+      const view = contactValueStepView(mock.channel, buildContactChangeLabels((key) => key), {
+        busy: false,
+        blocked: false,
+        isValid: true,
+        numberStatus: mock.numberStatus,
+      });
       } else {
         state = signupFlowReducer<Form>(state, { type: 'FORM_FILLED', values: form });
       }
@@ -1083,6 +1097,9 @@ export default defineDemos('utils', [
       }
       return {
         'Opens on': opened,
+        Button: view.buttonLabel,
+        'Button disabled': String(view.disabled),
+        'Under the box': view.numberLines.error ?? view.numberLines.hint,
         'After the door answers': state.step,
         'Needed a number step': String(askedForNumber),
         'Code goes to': state.verifying

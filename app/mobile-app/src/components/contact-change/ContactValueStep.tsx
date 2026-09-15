@@ -3,10 +3,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
-  contactChangeNeedsOtp,
+  CONTACT_NUMBER_FIELDS,
+  contactValueStepView,
   isPhoneChannel,
-  signupContactBlocksContinue,
-  signupContactLines,
   type ContactChangeLabels,
   type ContactChannel,
   type ContactDraft,
@@ -75,15 +74,9 @@ export function ContactValueStep({
   // Asked as the number is typed, so a number another account already holds is
   // a warning beside the box and a shut button — not a refusal after the press.
   // The EMAIL box leaves `number` blank, which never leaves the device.
-  const numberStatus = useSignupPhoneCheck(control, { extension: 'extension', number: 'number' });
-  const numberLines = signupContactLines(numberStatus, labels.numberCopy);
-
+  const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS);
+  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus });
   const submit = handleSubmit(onSend);
-  // The contact number is stored straight, so its button may not promise a code.
-  const needsCode = contactChangeNeedsOtp(channel);
-  const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
-  const busyLabel = needsCode ? labels.sending : labels.savingNumber;
-  const disabled = busy || blocked || !isValid || signupContactBlocksContinue(numberStatus);
 
   return (
     <YStack gap={12}>
@@ -105,8 +98,8 @@ export function ContactValueStep({
               control={control}
               name="number"
               label={copy.fieldLabel}
-              hint={numberLines.hint}
-              errorText={numberLines.error}
+              hint={view.numberLines.hint}
+              errorText={view.numberLines.error}
               keyboardType="phone-pad"
               autoComplete="tel-national"
               textContentType="telephoneNumber"
@@ -130,9 +123,9 @@ export function ContactValueStep({
       )}
       <PrimaryButton
         testID="contact-change-send"
-        label={busy ? busyLabel : idleLabel}
+        label={view.buttonLabel}
         loading={busy}
-        disabled={disabled}
+        disabled={view.disabled}
         onPress={submit}
       />
     </YStack>

@@ -12,7 +12,13 @@
  * 10: React Hook Form + Zod), and the patterns it validates against live in
  * @duncit/regex, which this zero-dependency package cannot import.
  */
-import type { SignupContactCopy } from './signup-contact';
+import {
+  signupContactBlocksContinue,
+  signupContactLines,
+  type SignupContactCopy,
+  type SignupContactLines,
+  type SignupContactStatus,
+} from './signup-contact';
 
 /** The three contact details an account can change about itself. */
 export const CONTACT_CHANNELS = ['EMAIL', 'PHONE', 'WHATSAPP'] as const;
@@ -186,6 +192,55 @@ export function contactSubmitAction(
 ): ContactSubmitAction {
   if (contactDraftIsUnchanged(snapshot, channel, draft)) return 'UNCHANGED';
   return contactChangeNeedsOtp(channel) ? 'SEND_CODE' : 'SAVE';
+}
+
+/** Where the number box's two fields live in step one's form (a `ContactDraft`). */
+export const CONTACT_NUMBER_FIELDS = { extension: 'extension', number: 'number' } as const;
+
+/** What step one's form knows at the moment it draws its button. */
+export interface ContactValueStepInput {
+  /** The send or save is in flight. */
+  busy: boolean;
+  /** A refusal of the typed value is showing — resending it would only repeat it. */
+  blocked: boolean;
+  /** The form's own validation passes. */
+  isValid: boolean;
+  /** The as-you-type check of the new number (IDLE on the email channel). */
+  numberStatus: SignupContactStatus;
+}
+
+export interface ContactValueStepView {
+  buttonLabel: string;
+  disabled: boolean;
+  /** The helper and error lines under the number box. */
+  numberLines: SignupContactLines;
+}
+
+/**
+ * Step one's button and the lines under its number box, decided once for the
+ * dialog and its native twin (rule 40).
+ *
+ * The contact number is stored straight, so its button may not promise a code.
+ * A number another account already holds — or one whose check is still in
+ * flight — keeps the button shut, with the refusal written under the box.
+ */
+export function contactValueStepView(
+  channel: ContactChannel,
+  labels: Readonly<ContactChangeLabels>,
+  input: Readonly<ContactValueStepInput>,
+): ContactValueStepView {
+  const needsCode = contactChangeNeedsOtp(channel);
+  const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
+  const busyLabel = needsCode ? labels.sending : labels.savingNumber;
+  return {
+    buttonLabel: input.busy ? busyLabel : idleLabel,
+    disabled:
+      input.busy ||
+      input.blocked ||
+      !input.isValid ||
+      signupContactBlocksContinue(input.numberStatus),
+    numberLines: signupContactLines(input.numberStatus, labels.numberCopy),
+  };
 }
 
 /** The translator each surface hands in — same shape as the attendance copy. */

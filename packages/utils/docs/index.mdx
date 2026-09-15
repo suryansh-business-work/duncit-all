@@ -171,6 +171,8 @@ exports:
   - 'stepSubmitsAccount'
   - 'canLeaveSignupStep'
   - 'buildSignupStepperLabels'
+  - 'contactValueStepView'
+  - 'CONTACT_NUMBER_FIELDS'
   - 'initialSignupFlowState'
   - 'signupFlowReducer'
   - 'signupNumberOf'
@@ -1901,6 +1903,24 @@ components stay separate and thin (rule 40).
 
 Google is the same four steps with the first three answered for it, so it lands straight on
 VERIFY — where it has to ask for the WhatsApp number and the date of birth before it can ask
+The new number is checked as it is typed. Each dialog runs signup's `useSignupPhoneCheck` on
+`CONTACT_NUMBER_FIELDS` — the server leaves the signed-in account out, so its own number is never
+"taken" — and hands the status to `contactValueStepView`, which decides the button and the lines
+under the box once for both surfaces. A number another account holds, or one still being checked,
+keeps Send code / Save number shut:
+
+```ts
+const labels = buildContactChangeLabels(t);
+contactValueStepView('WHATSAPP', labels, {
+  busy: false,
+  blocked: false,
+  isValid: true,
+  numberStatus: 'TAKEN',
+});
+// { buttonLabel: 'Send code', disabled: true,
+//   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
+```
+
 for the code, because a Google credential carries neither. `detailsTitle` / `detailsSubtitle`
 are that half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's,
 rendered from the same builder so neither door words it differently.

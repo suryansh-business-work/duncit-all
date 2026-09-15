@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Alert, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import {
   buildContactChangeLabels,
@@ -23,6 +23,8 @@ interface Props {
   /** Called with the value that was just proved and stored. */
   onSaved: (channel: ContactChannel, draft: ContactDraft) => void;
 }
+
+const stopSubmitBubbling = (e: FormEvent) => e.stopPropagation();
 
 /**
  * Changing one contact detail.
@@ -52,7 +54,7 @@ export default function ChangeContactDialog({
     if (active && draft) onSaved(active, draft);
     onClose();
   });
-  const { reset } = change;
+  const { reset, clearError } = change;
 
   // A dialog opened for a second channel must not inherit the first one's
   // half-finished code.
@@ -86,7 +88,18 @@ export default function ChangeContactDialog({
   };
 
   return (
-    <Dialog data-testid="change-contact-sheet" open onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      data-testid="change-contact-sheet"
+      open
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      // This dialog is opened from inside Edit profile's <form>. The portal moves
+      // it in the DOM, but React still bubbles `submit` up the component tree —
+      // so without this, "Send code" also submitted Edit profile, which saved and
+      // closed it behind the refusal.
+      onSubmit={stopSubmitBubbling}
+    >
       <DialogTitle data-testid="change-contact-dialog-title">{copy.changeTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
@@ -100,7 +113,9 @@ export default function ChangeContactDialog({
               // throw away the number they came back to correct.
               defaultValues={draft ?? contactDraftFrom(snapshot, active)}
               busy={state.sending}
+              blocked={!!state.error}
               onSend={handleSend}
+              onEdit={clearError}
             />
           ) : (
             <ContactOtpStep

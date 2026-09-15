@@ -91,7 +91,8 @@ describe('DetailsDialog / idea content', () => {
     expect(within(dialog).getByText('PENDING')).toBeInTheDocument();
     expect(within(dialog).getByText('asha rao')).toBeInTheDocument();
     expect(within(dialog).getByText(/^asha@duncit\.com · /)).toBeInTheDocument();
-    expect(within(dialog).getByRole('img')).toHaveAttribute('src', 'https://ik.imagekit.io/duncit/asha.jpg');
+    // The avatar is decorative (alt=""), so it has no img role — the author's name sits beside it.
+    expect(dialog.querySelector('img')).toHaveAttribute('src', 'https://ik.imagekit.io/duncit/asha.jpg');
     expect(within(dialog).getByText('Catan and Codenames at the cafe')).toBeInTheDocument();
     expect(within(dialog).getByText('12 likes')).toBeInTheDocument();
     expect(within(dialog).getByText('1 comments')).toBeInTheDocument();
@@ -103,7 +104,7 @@ describe('DetailsDialog / idea content', () => {
   it('uppercases the author initial when there is no photo to show', async () => {
     renderDialog([detailsMock(makeIdea({ author: { ...makeIdea().author, profile_photo: null }, comments: [] }))]);
     expect(await screen.findByText('A')).toBeInTheDocument();
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(document.body.querySelector('img')).toBeNull();
   });
 
   it('falls back to "Member", a "U" initial and no email when the idea has no author', async () => {

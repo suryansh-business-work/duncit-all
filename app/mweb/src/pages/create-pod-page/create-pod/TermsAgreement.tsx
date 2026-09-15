@@ -1,12 +1,15 @@
 import { Controller } from 'react-hook-form';
 import { Box, Checkbox, FormControlLabel, FormHelperText, Link, Typography } from '@mui/material';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { useBrandingAssets } from '../../../hooks/useBrandingAssets';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Client-side publish gate — the host must accept the Organizer Terms before
- * the last step's "Create Pod" action validates. */
+ * the last step's "Create Pod" action validates. The terms link is the admin
+ * Branding Terms page, the same one the sign-in screens link to. */
 export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
   const { t } = useTranslation();
+  const { termsUrl } = useBrandingAssets();
   return (
     <Controller
       control={form.control}
@@ -30,7 +33,7 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
                 color: "text.secondary"
               }}>
                 {t('mweb.createPod.termsLeadIn')}{' '}
-                <Link data-testid="terms-link" href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
+                <Link data-testid="terms-link" href={termsUrl} target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
                   {t('mweb.createPod.termsLink')}
                 </Link>{' '}
                 {t('mweb.createPod.termsTail')}

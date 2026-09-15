@@ -1,8 +1,7 @@
 import { Linking } from 'react-native';
 import { Text } from 'tamagui';
-import { auth } from '@duncit/auth-tokens';
 
-import { useBranding } from '@/hooks/useBranding';
+import { useLegalUrls } from '@/hooks/useLegalUrls';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -14,9 +13,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  */
 export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   const { t } = useTranslation();
-  const branding = useBranding().data?.branding;
-  const termsUrl = branding?.terms_url || auth.legal.termsUrl;
-  const privacyUrl = branding?.privacy_url || auth.legal.privacyUrl;
+  const { termsUrl, privacyUrl } = useLegalUrls();
   // The lead-in arrives already translated because it names the action of the
   // screen it sits on ("By signing in," / "By signing up,").
   const lead = prefix ?? t('mweb.auth.legalContinue');

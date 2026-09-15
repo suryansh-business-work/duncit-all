@@ -4,22 +4,26 @@
 // A page per published policy is generated at build time from the Legal
 // portal's list, so each policy is a real, linkable, indexable URL rather than
 // a query string on a single page. The TEXT is still loaded live, so a legal
-// edit is on the site immediately without a redeploy — only a brand-new policy
-// needs one to get its page.
+// edit is on the site immediately without a redeploy. A policy published after
+// the build is answered with the reader page (see lib/policy-page.ts), so it is
+// live the moment Legal activates it too.
 import PageLayout from '../../layouts/PageLayout.astro';
 import { fetchPolicies } from '../../lib/site-data';
 import { getTranslator } from '../../lib/i18n';
+import { POLICY_READER_SLUG } from '../../lib/policy-page';
 
 export async function getStaticPaths() {
   const policies = await fetchPolicies();
-  return policies.map((policy) => ({
-    params: { slug: policy.slug },
-    props: { title: policy.title },
-  }));
+  return [
+    ...policies.map((policy) => ({
+      params: { slug: policy.slug },
+      props: { title: policy.title },
+    })),
+    { params: { slug: POLICY_READER_SLUG }, props: { title: undefined } },
+  ];
 }
 
 const { t } = await getTranslator();
-const { slug } = Astro.params;
 const { title } = Astro.props;
 ---
 
@@ -31,7 +35,7 @@ const { title } = Astro.props;
   heroImage="https://images.pexels.com/photos/7654588/pexels-photo-7654588.jpeg?auto=compress&cs=tinysrgb&w=1600"
 >
   <div id="policyBody"
-    data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })} data-policy-slug={slug}>
+    data-copy={JSON.stringify({ notFound: t('website.main.policyDetail.notFound'), empty: t('website.main.policyDetail.empty'), error: t('website.main.policyDetail.error') })}>
     <div class="not-prose space-y-3" aria-hidden="true">
       <div class="skeleton h-8 w-2/3"></div>
       <div class="skeleton h-4"></div>
@@ -49,12 +53,14 @@ const { title } = Astro.props;
 
 <script>
   import { urlConfigs } from '../../config/url-configs';
+  import { POLICY_PAGE_PATTERN } from '../../lib/policy-page';
 
   const body = document.getElementById('policyBody');
   // Handed over by the markup — a module script cannot read Astro frontmatter.
   const COPY = JSON.parse(body?.dataset.copy ?? '{}');
-  // The slug comes from the page itself now, not from the query string.
-  const slug = body?.dataset.policySlug ?? '';
+  // Read from the address, not baked into the page: the reader page serves
+  // every policy published after the build, under that policy's own path.
+  const slug = POLICY_PAGE_PATTERN.exec(window.location.pathname)?.[1] ?? '';
 
   async function load() {
     if (!body) return;

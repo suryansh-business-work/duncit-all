@@ -200,8 +200,10 @@ async function sendAcceptanceReceipt(
   name: string,
   policies: IPolicy[]
 ): Promise<void> {
-  const { appUrl } = await getUrlConfigs();
-  const base = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
+  // The website's policy hub: public, so it opens signed out, and mWeb has no
+  // /policies list page of its own to land on.
+  const { websiteUrl } = await getUrlConfigs();
+  const base = websiteUrl.endsWith('/') ? websiteUrl.slice(0, -1) : websiteUrl;
   await sendPolicyAcceptanceEmail({
     to,
     name,

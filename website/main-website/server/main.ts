@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { injectSiteMeta } from '@duncit/brand/site-meta';
 import { SHORT_CODE_PATTERN, trimSlashes } from '../src/lib/short-link';
-import { blogPostMeta } from './page-meta';
+import { POLICY_PAGE_PATTERN, POLICY_READER_PATH, policyPagePath } from '../src/lib/policy-page';
+import { blogPostMeta, fetchLivePolicy, policyMeta } from './page-meta';
 import { acceptsGzip, resolveDistFile, sendFile } from './static-files';
 
 const PORT = Number.parseInt(process.env.PORT ?? '8080', 10);
@@ -75,6 +76,55 @@ function handlePolicyAlias(res: ServerResponse, path: string, search: string): b
   if (path !== '/policy') return false;
   const slug = new URLSearchParams(search).get('slug');
   redirect(res, 301, slug ? `/policy/${encodeURIComponent(slug)}` : '/policies');
+  return true;
+}
+
+/**
+ * /policy/<slug>, answered against the LIVE policy rather than the build.
+ *
+ * The build only knows the policies that existed when it ran, so on its own a
+ * policy published afterwards 404s until the next deploy, a retired one keeps
+ * serving a page that says "not found" with a 200, and a renamed one leaves
+ * every link already sent out pointing nowhere. Here each of those gets the
+ * real answer: the reader page, a 404, and a redirect to the new slug.
+ *
+ * An unreachable API degrades to the built page (or the reader), whose script
+ * loads the text itself — the site keeps serving policies with the API slow.
+ */
+async function handlePolicyPage(
+  req: IncomingMessage,
+  res: ServerResponse,
+  path: string
+): Promise<boolean> {
+  if (`/${trimSlashes(path)}` === POLICY_READER_PATH) {
+    notFound(req, res);
+    return true;
+  }
+  const slug = POLICY_PAGE_PATTERN.exec(path)?.[1];
+  if (!slug) return false;
+
+  const live = await fetchLivePolicy(slug);
+  const policy = live?.policyBySlug;
+  if (live && !policy?.is_active) {
+    notFound(req, res);
+    return true;
+  }
+  if (policy && policy.slug !== slug) {
+    // 302, not 301: a slug can be renamed again, and a browser keeps a 301 for good.
+    redirect(res, 302, policyPagePath(policy.slug));
+    return true;
+  }
+
+  const filePath =
+    resolveDistFile(DIST_DIR, path) ?? resolveDistFile(DIST_DIR, POLICY_READER_PATH);
+  if (!filePath) {
+    notFound(req, res);
+    return true;
+  }
+  const html = readFileSync(filePath, 'utf8');
+  const pageUrl = `${SITE_URL}${policyPagePath(slug)}`;
+  const block = policy ? await policyMeta(policy, pageUrl, builtDescription(html)) : null;
+  sendHtml(req, res, block ? injectSiteMeta(html, block) : html);
   return true;
 }
 
@@ -141,6 +191,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (handleShortLink(req, res, path, url.search)) return;
   if (handlePolicyAlias(res, path, url.search)) return;
+  if (await handlePolicyPage(req, res, path)) return;
 
   const filePath = resolveDistFile(DIST_DIR, path);
   if (!filePath) {

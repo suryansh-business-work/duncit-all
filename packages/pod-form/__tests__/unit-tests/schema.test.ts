@@ -300,6 +300,18 @@ describe('makePodSchema - multi-ticket discount', () => {
     });
   });
 
+  // A pod whose spots are not set has no capacity to read a cap off, so a tier
+  // is held to the 10 tickets one booking may ever ask for.
+  it('caps the tickets a tier asks for at 10 on a pod with no spot limit', () => {
+    const unlimited = (min_tickets: number) =>
+      paid({ no_of_spots: 0, ticket_discount_tiers: [{ min_tickets, discount_pct: 10 }] });
+
+    expect(issuesFor(unlimited(11))).toEqual({
+      'ticket_discount_tiers.0.min_tickets': 'Tickets can’t be more than 10',
+    });
+    expect(makePodSchema(makeConfig(), fallbackT).safeParse(unlimited(10)).success).toBe(true);
+  });
+
   it('pins a switched-on discount with no tiers on the list itself', () => {
     expect(issuesFor(paid({ ticket_discount_tiers: [] }))).toEqual({
       ticket_discount_tiers: 'Add at least one discount tier',

@@ -102,6 +102,19 @@ describe('TicketDiscountSection', () => {
     expect(screen.queryByTestId('ticket-discount-list-error')).not.toBeInTheDocument();
   });
 
+  // The other column of the same row: a tickets message belongs under the
+  // tickets box, never under the discount one.
+  it('puts a tickets message under the tickets box', async () => {
+    const message = 'Tickets can’t be more than 7';
+    const ref = renderSection(discounted);
+    await act(async () => {
+      ref.current?.setError('ticket_discount_tiers.0.min_tickets', { type: 'custom', message });
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+    expect(screen.queryByTestId('ticket-discount-list-error')).not.toBeInTheDocument();
+  });
+
   // RHF nests a list-level message under `root` once the array also has cell errors.
   it('reads a list-level message that RHF filed under the array root', async () => {
     const ref = renderSection(discounted);

@@ -1,5 +1,6 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import type { Ticket, TicketActor, TicketMessage } from '@duncit/gql-types';
+import type { TableFilterValue } from '@duncit/table';
 import {
   CREATE_TICKET,
   EMAIL_TICKET_TRANSCRIPT,
@@ -169,12 +170,13 @@ const TICKET_LIST_VARS = {
 
 export const ticketsListMock = (
   tickets: TicketMock[],
-  over: { status?: string | null; search?: string | null; priority_first?: string } = {},
+  over: { filters?: TableFilterValue[]; search?: string | null; priority_first?: string } = {},
 ): MockedResponse => ({
   request: {
     query: TICKETS,
     variables: {
-      status: over.status ?? null,
+      // Column filters travel as-is (supportListVars); the server allowlist answers them.
+      filters: over.filters ?? [],
       search: over.search ?? null,
       priority_first: over.priority_first ?? 'HIGH',
       ...TICKET_LIST_VARS,

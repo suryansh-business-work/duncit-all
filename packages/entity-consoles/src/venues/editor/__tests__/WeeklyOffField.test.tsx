@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { DefaultValues } from 'react-hook-form';
 import WeeklyOffField from '../fields/WeeklyOffField';
 import { blankVenueValues, type VenueFormValues } from '../types';
 import { renderForm } from './harness';
@@ -8,8 +9,11 @@ import { renderForm } from './harness';
 /**
  * Weekly closures as 0..6 (Sun..Sat) — the shape the slot generator reads —
  * shown by the same weekday names the availability calendar prints.
+ *
+ * Typed as form DEFAULTS, which may leave the list out: a venue saved before
+ * weekly closures existed loads with none.
  */
-const withOffDays = (weekly_off_days: number[] | undefined): VenueFormValues => ({
+const withOffDays = (weekly_off_days: number[] | undefined): DefaultValues<VenueFormValues> => ({
   ...blankVenueValues,
   settings: { ...blankVenueValues.settings, weekly_off_days },
 });

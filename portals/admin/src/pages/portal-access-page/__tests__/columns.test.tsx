@@ -74,9 +74,10 @@ describe('getPortalAccessColumns / column set', () => {
     expect(columnBy('reviewed_at').type).toBe('date');
   });
 
-  it('marks the portal and actions columns unsortable', () => {
-    expect(columnBy('portal').sortable).toBe(false);
-    expect(columnBy('actions').sortable).toBe(false);
+  it('sorts and filters the portal as text, and types the actions column so it never sorts or filters', () => {
+    expect(columnBy('portal')).toMatchObject({ type: 'text' });
+    expect(columnBy('portal').sortable).toBeUndefined();
+    expect(columnBy('actions').type).toBe('actions');
   });
 });
 

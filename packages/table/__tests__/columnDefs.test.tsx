@@ -1,15 +1,22 @@
 import type React from 'react';
-import type { ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import type {
+  ICellRendererParams,
+  ITooltipParams,
+  SuppressHeaderKeyboardEventParams,
+  ValueGetterParams,
+} from 'ag-grid-community';
 import { describe, expect, it } from 'vitest';
+import { actionsColumn } from '../src/cells';
 import { buildColDefs, isColumnHidden, TRUNCATE_CELL_CLASS } from '../src/columnDefs';
+import { ColumnHeader } from '../src/header/ColumnHeader';
 import { fallbackT } from '../src/i18n';
 import type { DuncitColumn } from '../src/types';
 
 type Row = { id: string; name: string; score: number };
 
 const columns: DuncitColumn<Row>[] = [
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 120 },
-  { field: 'score', headerName: 'Score', width: 90, sortable: false, hide: true },
+  { field: 'name', headerName: 'Name', type: 'text', flex: 1, minWidth: 120 },
+  { field: 'score', headerName: 'Score', type: 'number', width: 90, sortable: false, hide: true },
 ];
 
 describe('isColumnHidden', () => {
@@ -22,8 +29,8 @@ describe('isColumnHidden', () => {
 });
 
 describe('buildColDefs', () => {
-  it('maps fields, sizing, sortable default and hidden overrides', () => {
-    const defs = buildColDefs(columns, { score: false }, null, 'asc');
+  it('maps fields, sizing, sortable and hidden overrides', () => {
+    const defs = buildColDefs(columns, { score: false }, null, 'asc', fallbackT);
     expect(defs[0]).toMatchObject({
       colId: 'name',
       headerName: 'Name',
@@ -36,18 +43,59 @@ describe('buildColDefs', () => {
     expect(defs[1]).toMatchObject({ colId: 'score', sortable: false, hide: false, width: 90 });
   });
 
+  it('never lets an actions column sort, and walks a number column largest first', () => {
+    const defs = buildColDefs(
+      [...columns, actionsColumn<Row>({ onEdit: () => undefined })],
+      {},
+      null,
+      'asc',
+      fallbackT,
+    );
+    expect(defs[0].sortingOrder).toEqual(['asc', 'desc', null]);
+    expect(defs[1].sortingOrder).toEqual(['desc', 'asc', null]);
+    expect(defs[2].sortable).toBe(false);
+  });
+
+  it('draws every header with ColumnHeader, handed the column it belongs to', () => {
+    const defs = buildColDefs(columns, {}, null, 'asc', fallbackT);
+    expect(defs[0].headerComponent).toBe(ColumnHeader);
+    expect(defs[0].headerComponentParams).toEqual({ duncitColumn: columns[0] });
+  });
+
+  it('leaves keys on the header’s own sort and filter buttons to those buttons', () => {
+    const [def] = buildColDefs(columns, {}, null, 'asc', fallbackT);
+    const suppress = def.suppressHeaderKeyboardEvent as (params: SuppressHeaderKeyboardEventParams<Row>) => boolean;
+    const keyOn = (target: unknown) =>
+      suppress({ event: { target } } as unknown as SuppressHeaderKeyboardEventParams<Row>);
+
+    const cell = document.createElement('div');
+    cell.className = 'ag-header-cell';
+    const filterButton = document.createElement('button');
+    cell.append(filterButton);
+
+    expect(keyOn(filterButton)).toBe(true);
+    expect(keyOn(cell)).toBe(false);
+    expect(keyOn(null)).toBe(false);
+  });
+
   it('controlled sort lands on the right column only', () => {
-    const defs = buildColDefs(columns, {}, 'score', 'desc');
+    const defs = buildColDefs(columns, {}, 'score', 'desc', fallbackT);
     expect(defs[0].sort).toBeNull();
     expect(defs[1].sort).toBe('desc');
   });
 
+  it('keeps the fetched order: the grid’s own comparator calls every pair equal', () => {
+    const [def] = buildColDefs(columns, {}, 'name', 'asc', fallbackT);
+    const compare = def.comparator as (a: unknown, b: unknown) => number;
+    expect(compare('9 Sep 2026', '10 Sep 2026')).toBe(0);
+  });
+
   it('valueGetter falls back to the field, uses the custom fn when given', () => {
     const withGetter: DuncitColumn<Row>[] = [
-      { field: 'name', headerName: 'Name' },
-      { field: 'score', headerName: 'Score', valueGetter: (row) => row.score * 2 },
+      { field: 'name', headerName: 'Name', type: 'text' },
+      { field: 'score', headerName: 'Score', type: 'number', valueGetter: (row) => row.score * 2 },
     ];
-    const defs = buildColDefs(withGetter, {}, null, 'asc');
+    const defs = buildColDefs(withGetter, {}, null, 'asc', fallbackT);
     const row: Row = { id: '1', name: 'Alice', score: 3 };
     const getterOf = (i: number) => defs[i].valueGetter as (p: ValueGetterParams<Row>) => unknown;
     expect(getterOf(0)({ data: row } as ValueGetterParams<Row>)).toBe('Alice');
@@ -57,10 +105,10 @@ describe('buildColDefs', () => {
 
   it('wraps cellRenderer to receive the row; absent renderer stays undefined', () => {
     const withRenderer: DuncitColumn<Row>[] = [
-      { field: 'name', headerName: 'Name', cellRenderer: (row) => <b>{row.name}</b> },
-      { field: 'score', headerName: 'Score' },
+      { field: 'name', headerName: 'Name', type: 'text', cellRenderer: (row) => <b>{row.name}</b> },
+      { field: 'score', headerName: 'Score', type: 'number' },
     ];
-    const defs = buildColDefs(withRenderer, {}, null, 'asc');
+    const defs = buildColDefs(withRenderer, {}, null, 'asc', fallbackT);
     const renderer = defs[0].cellRenderer as (p: ICellRendererParams<Row>) => React.ReactNode;
     const row: Row = { id: '1', name: 'Alice', score: 3 };
     expect(renderer({ data: row } as ICellRendererParams<Row>)).toEqual(<b>Alice</b>);
@@ -70,10 +118,10 @@ describe('buildColDefs', () => {
 
   it('truncates + tooltips only plain-text cells; renderers keep their own layout', () => {
     const mixed: DuncitColumn<Row>[] = [
-      { field: 'name', headerName: 'Name' },
-      { field: 'score', headerName: 'Score', cellRenderer: (row) => <b>{row.score}</b> },
+      { field: 'name', headerName: 'Name', type: 'text' },
+      { field: 'score', headerName: 'Score', type: 'number', cellRenderer: (row) => <b>{row.score}</b> },
     ];
-    const defs = buildColDefs(mixed, {}, null, 'asc');
+    const defs = buildColDefs(mixed, {}, null, 'asc', fallbackT);
     // Plain-text column: truncation class + a stringified tooltip.
     expect(defs[0].cellClass).toBe(TRUNCATE_CELL_CLASS);
     const tooltipOf = (i: number) =>
@@ -88,10 +136,10 @@ describe('buildColDefs', () => {
 
   it('tooltip reads a custom valueGetter, stringifies numbers, and drops non-primitives', () => {
     const cols: DuncitColumn<Row>[] = [
-      { field: 'score', headerName: 'Score', valueGetter: (row) => row.score },
-      { field: 'meta', headerName: 'Meta', valueGetter: () => ({ nested: true }) },
+      { field: 'score', headerName: 'Score', type: 'number', valueGetter: (row) => row.score },
+      { field: 'meta', headerName: 'Meta', type: 'text', valueGetter: () => ({ nested: true }) },
     ];
-    const defs = buildColDefs(cols, {}, null, 'asc');
+    const defs = buildColDefs(cols, {}, null, 'asc', fallbackT);
     const tooltipOf = (i: number) =>
       defs[i].tooltipValueGetter as (p: ITooltipParams<Row>) => string | undefined;
     const row: Row = { id: '1', name: 'Alice', score: 42 };
@@ -105,8 +153,8 @@ describe('buildColDefs', () => {
 describe('columnHeader through buildColDefs', () => {
   it('resolves headerKey through t and falls back to the field when nothing names the column', () => {
     const cols: DuncitColumn<Row>[] = [
-      { field: 'name', headerKey: 'shell.common.created' },
-      { field: 'score' },
+      { field: 'name', headerKey: 'shell.common.created', type: 'date' },
+      { field: 'score', type: 'number' },
     ];
     const defs = buildColDefs(cols, {}, null, 'asc', fallbackT);
     expect(defs[0].headerName).toBe('Created');
@@ -115,8 +163,8 @@ describe('columnHeader through buildColDefs', () => {
 
   it('declares renderer cells never-equal so a row update always repaints them', () => {
     const cols: DuncitColumn<Row>[] = [
-      { field: 'name', headerName: 'Name' },
-      { field: 'score', headerName: 'Score', cellRenderer: (row) => <b>{row.score}</b> },
+      { field: 'name', headerName: 'Name', type: 'text' },
+      { field: 'score', headerName: 'Score', type: 'number', cellRenderer: (row) => <b>{row.score}</b> },
     ];
     const defs = buildColDefs(cols, {}, null, 'asc', fallbackT);
     // A plain-text cell IS its value, so AG Grid's `===` gate stays.

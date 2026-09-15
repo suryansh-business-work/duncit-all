@@ -53,7 +53,7 @@ describe('buildAgTheme', () => {
   it('derives AG theme params from the live MUI theme', async () => {
     const { buildAgTheme } = await import('../src/theme');
     const dark = createTheme({ palette: { mode: 'dark' } });
-    const result = buildAgTheme(dark) as unknown as { params: Record<string, unknown> };
+    const result = buildAgTheme(dark, 'standard') as unknown as { params: Record<string, unknown> };
     expect(result.params).toMatchObject({
       accentColor: dark.palette.primary.main,
       backgroundColor: dark.palette.background.paper,

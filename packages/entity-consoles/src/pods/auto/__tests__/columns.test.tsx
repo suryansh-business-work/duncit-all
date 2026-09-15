@@ -117,14 +117,16 @@ describe('getAutoPodColumns / column set', () => {
     });
   });
 
-  it('makes only the dates and the status server-filterable, and drops sortability off derived columns', () => {
+  it('filters the id, the dates and the status by type, and drops sort and filter off derived columns', () => {
+    expect(filterOf('auto_pod_no')).toEqual({ type: 'text' });
     expect(filterOf('created_at')).toEqual({ type: 'date' });
     expect(filterOf('updated_at')).toEqual({ type: 'date' });
     expect(filterOf('is_active')).toEqual({ type: 'boolean' });
     expect(columnBy('category_path').sortable).toBe(false);
+    expect(columnBy('category_path').filterable).toBe(false);
     expect(columnBy('pending').sortable).toBe(false);
-    expect(columnBy('actions').sortable).toBe(false);
-    expect(columnBy('auto_pod_no').filter).toBeUndefined();
+    // An actions column is never sorted or filtered, by its type alone.
+    expect(filterOf('actions')).toEqual({ type: 'actions' });
   });
 });
 

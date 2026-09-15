@@ -9,6 +9,7 @@ import {
   formatDateCell,
   EM_DASH,
 } from '../src/cells';
+import { isColumnFilterable, isColumnSortable } from '../src/columnTypes';
 
 type Row = { id: string; name: string; is_active: boolean; created_at: string | null };
 
@@ -32,8 +33,9 @@ describe('dateColumn', () => {
       headerKey: 'shell.common.created',
       hide: true,
       width: 130,
-      filter: { type: 'date' },
+      type: 'date',
     });
+    expect(isColumnFilterable(col)).toBe(true);
     expect(col.valueGetter?.(activeRow)).toBe('03 Feb 2026');
     expect(col.valueGetter?.(inactiveRow)).toBe(EM_DASH);
   });
@@ -47,7 +49,8 @@ describe('dateColumn', () => {
       getDate: (row) => row.created_at,
       formatDate: (date) => date.getUTCFullYear().toString(),
     });
-    expect(col.filter).toBeUndefined();
+    expect(col.type).toBe('date');
+    expect(isColumnFilterable(col)).toBe(false);
     expect(col.hide).toBe(false);
     expect(col.valueGetter?.(activeRow)).toBe('2026');
   });
@@ -60,8 +63,9 @@ describe('activeChipColumn', () => {
       field: 'is_active',
       headerKey: 'shell.common.status',
       width: 110,
-      filter: { type: 'boolean' },
+      type: 'boolean',
     });
+    expect(isColumnFilterable(col)).toBe(true);
     expect(col.valueGetter?.(activeRow)).toBe('Active');
     expect(col.valueGetter?.(inactiveRow)).toBe('Inactive');
 
@@ -90,7 +94,8 @@ describe('activeChipColumn', () => {
 
   it('omits the boolean filter when filterable is false', () => {
     const col = activeChipColumn<Row>({ filterable: false });
-    expect(col.filter).toBeUndefined();
+    expect(col.type).toBe('boolean');
+    expect(isColumnFilterable(col)).toBe(false);
   });
 });
 
@@ -99,7 +104,10 @@ describe('actionsColumn', () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
     const col = actionsColumn<Row>({ onEdit, onDelete });
-    expect(col).toMatchObject({ field: 'actions', headerKey: 'shell.common.actions', width: 110, sortable: false });
+    expect(col).toMatchObject({ field: 'actions', headerKey: 'shell.common.actions', width: 110, type: 'actions' });
+    // An actions column is never sorted or filtered, by its type alone.
+    expect(isColumnSortable(col)).toBe(false);
+    expect(isColumnFilterable(col)).toBe(false);
 
     render(<>{col.cellRenderer?.(activeRow)}</>);
     await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -142,8 +150,9 @@ describe('entityIdColumn', () => {
       field: 'contract_no',
       headerName: 'Contract ID',
       width: 150,
-      filter: { type: 'text' },
+      type: 'text',
     });
+    expect(isColumnFilterable(col)).toBe(true);
     expect(col.valueGetter?.(numbered)).toBe('CTR-000042');
 
     const { container } = render(<>{col.cellRenderer?.(numbered)}</>);
@@ -167,7 +176,7 @@ describe('entityIdColumn', () => {
       minWidth: 90,
       getId: (row) => row.owner,
     });
-    expect(col.filter).toBeUndefined();
+    expect(isColumnFilterable(col)).toBe(false);
     expect(col.minWidth).toBe(90);
     expect(col.valueGetter?.(numbered)).toBe('Alpha');
   });

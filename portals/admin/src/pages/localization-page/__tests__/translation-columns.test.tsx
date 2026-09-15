@@ -60,14 +60,18 @@ describe('getTranslationColumns / column set', () => {
     });
   });
 
-  it('marks the fixed columns sortable and the locale columns not sortable', () => {
+  it('sorts and filters every column by its type, the per-locale values included', () => {
     const locales = [makeLocale({ code: 'en-IN' })];
     const cols = getTranslationColumns({ locales, formatDateTime, t });
-    expect(cols.find((c) => c.field === 'key')?.sortable).toBe(true);
-    expect(cols.find((c) => c.field === 'surface')?.sortable).toBe(true);
-    expect(cols.find((c) => c.field === 'page')?.sortable).toBe(true);
-    expect(cols.find((c) => c.field === 'updated_at')?.sortable).toBe(true);
-    expect(cols.find((c) => c.field === 'value_en-IN')?.sortable).toBe(false);
+    const kindOf = (field: string) => {
+      const col = cols.find((c) => c.field === field);
+      return [col?.type, col?.sortable ?? true, col?.filterable ?? true];
+    };
+    expect(kindOf('key')).toEqual(['text', true, true]);
+    expect(kindOf('surface')).toEqual(['text', true, true]);
+    expect(kindOf('page')).toEqual(['text', true, true]);
+    expect(kindOf('value_en-IN')).toEqual(['text', true, true]);
+    expect(kindOf('updated_at')).toEqual(['date', true, true]);
   });
 
   it('labels a locale column with its label, falling back to its code when the label is blank', () => {

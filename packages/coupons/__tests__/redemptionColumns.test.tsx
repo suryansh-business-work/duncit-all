@@ -87,8 +87,8 @@ describe('getRedemptionColumns', () => {
 
     expect(screen.getByText('REFUNDED')).toBeInTheDocument();
     expect(valueOf('status', redemption())).toBe('SUCCESS');
-    expect(column('status').filter).toEqual({
-      type: 'select',
+    expect(column('status')).toMatchObject({
+      type: 'enum',
       options: [
         { value: 'SUCCESS', label: 'Paid' },
         { value: 'REFUNDED', label: 'Refunded' },

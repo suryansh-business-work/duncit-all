@@ -3,6 +3,7 @@ import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import SosListPage from '../../src/pages/sos/SosListPage';
 import { renderWithProviders } from '../testkit';
+import { applyEnumColumnFilter } from '../table-filter';
 import { makeBouncerActor, makeBouncerPod, makeSosAlert, sosAlertsMock } from '../mocks/sos.mock';
 
 const sockMock = vi.hoisted(() => ({ events: {} as Record<string, () => void> }));
@@ -58,16 +59,16 @@ describe('SosListPage', () => {
     await waitFor(() => expect(screen.getByText('SOS DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status (Active sends ACTIVE) from the filter popover', async () => {
+  it('filters by status (Active sends ACTIVE) from the Status column header', async () => {
     renderWithProviders(<SosListPage />, {
-      mocks: [sosAlertsMock([alert]), sosAlertsMock([], { status: 'ACTIVE' })],
+      mocks: [
+        sosAlertsMock([alert]),
+        sosAlertsMock([], { filters: [{ field: 'status', op: 'in', values: ['ACTIVE'] }] }),
+      ],
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
-    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Active' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    await applyEnumColumnFilter('status', 'Status', 'Active');
 
     await waitFor(() => expect(screen.getByText(/no sos alerts found/i)).toBeInTheDocument());
     expect(screen.queryByText('Riya')).not.toBeInTheDocument();

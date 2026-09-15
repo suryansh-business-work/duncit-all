@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { isColumnFilterable, isColumnSortable } from '@duncit/table';
 import { changeLogColumns } from '../../../src/shared/change-logs/columns';
 import type { EntityChangeLogRow } from '../../../src/shared/change-logs/queries';
 
@@ -132,9 +133,13 @@ describe('changeLogColumns', () => {
     expect(screen.getByText('66f1a2b3c4d5e6f708192a3b')).toBeInTheDocument();
   });
 
-  it('leaves the two value columns unsortable — the server indexes neither', () => {
-    expect(find(false, 'old_value').sortable).toBe(false);
-    expect(find(false, 'new_value').sortable).toBe(false);
+  it('sorts and filters the two value columns as text — the server allowlists both', () => {
+    for (const field of ['old_value', 'new_value']) {
+      const column = find(false, field);
+      expect(column.type).toBe('text');
+      expect(isColumnSortable(column)).toBe(true);
+      expect(isColumnFilterable(column)).toBe(true);
+    }
   });
 
   it('dates the row through the admin-configured format', () => {

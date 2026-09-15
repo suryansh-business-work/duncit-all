@@ -1,5 +1,6 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import type { BouncerActor, BouncerCallbackRequest, BouncerPodInfo } from '@duncit/gql-types';
+import type { TableFilterValue } from '@duncit/table';
 import {
   BOUNCER_CALLBACK_REQUEST,
   BOUNCER_CALLBACK_REQUESTS,
@@ -78,11 +79,11 @@ const CB_LIST_VARS = { page: 1, page_size: 25, sort_by: 'created_at', sort_dir: 
 
 export const callbackRequestsMock = (
   items: CallbackRequestMock[],
-  over: { status?: string | null; search?: string | null } = {},
+  over: { filters?: TableFilterValue[]; search?: string | null } = {},
 ): MockedResponse => ({
   request: {
     query: BOUNCER_CALLBACK_REQUESTS,
-    variables: { status: over.status ?? null, search: over.search ?? null, ...CB_LIST_VARS },
+    variables: { filters: over.filters ?? [], search: over.search ?? null, ...CB_LIST_VARS },
   },
   result: {
     data: {

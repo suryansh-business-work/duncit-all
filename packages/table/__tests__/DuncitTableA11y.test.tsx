@@ -27,7 +27,7 @@ import type { DuncitColumn, TablePage, TableQueryState } from '../src/types';
 
 type Pod = { id: string; name: string };
 
-const columns: DuncitColumn<Pod>[] = [{ field: 'name', headerName: 'Name' }];
+const columns: DuncitColumn<Pod>[] = [{ field: 'name', headerName: 'Name', type: 'text' }];
 const ROW: Pod = { id: 'DUN-POD-4821', name: 'Sunday badminton' };
 
 function makeFetch() {

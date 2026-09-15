@@ -14,7 +14,7 @@ const people: Person[] = Array.from({ length: 30 }, (_, i) => ({
   name: `Person ${i + 1}`,
 }));
 
-const columns: DuncitColumn<Person>[] = [{ field: 'name', headerName: 'Name' }];
+const columns: DuncitColumn<Person>[] = [{ field: 'name', headerName: 'Name', type: 'text' }];
 
 function makeFetch() {
   return vi.fn(async (q: TableQueryState): Promise<TablePage<Person>> => {

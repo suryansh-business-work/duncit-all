@@ -3,6 +3,7 @@ import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import CallbacksListPage from '../../src/pages/callbacks/CallbacksListPage';
 import { renderWithProviders } from '../testkit';
+import { applyEnumColumnFilter } from '../table-filter';
 import {
   callbackRequestsMock,
   makeCallbackActor,
@@ -60,16 +61,16 @@ describe('CallbacksListPage', () => {
     await waitFor(() => expect(screen.getByText('CALLBACK DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status (Resolved sends CLOSED) from the filter popover', async () => {
+  it('filters by status (Resolved sends CLOSED) from the Status column header', async () => {
     renderWithProviders(<CallbacksListPage />, {
-      mocks: [callbackRequestsMock([req]), callbackRequestsMock([], { status: 'CLOSED' })],
+      mocks: [
+        callbackRequestsMock([req]),
+        callbackRequestsMock([], { filters: [{ field: 'status', op: 'in', values: ['CLOSED'] }] }),
+      ],
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
-    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Resolved' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    await applyEnumColumnFilter('status', 'Status', 'Resolved');
 
     await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
     expect(screen.queryByText('Aman')).not.toBeInTheDocument();

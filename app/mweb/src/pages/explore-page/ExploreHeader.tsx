@@ -1,4 +1,4 @@
-import { Badge, Stack, Typography } from '@mui/material';
+import { Badge, Stack } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
@@ -10,7 +10,6 @@ interface ExploreHeaderProps {
   filters: ExploreFilters;
   setFilters: (filters: ExploreFilters) => void;
   activeCount: number;
-  resultCount: number;
   onOpenFilters: () => void;
   onRefresh: () => void;
 }
@@ -31,7 +30,6 @@ const HEADER_BTN_SX = (theme: Theme) => ({
 
 export default function ExploreHeader({
   activeCount,
-  resultCount,
   onOpenFilters,
   onRefresh,
 }: Readonly<ExploreHeaderProps>) {
@@ -43,25 +41,6 @@ export default function ExploreHeader({
       spacing={1}
       sx={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 3, alignItems: 'center' }}
     >
-      {/* The live count is the only line the header keeps — the tab bar
-          already says this is Explore. */}
-      <Typography
-        data-testid="explore-live-count"
-        role="status"
-        sx={(theme) => ({
-          px: 1.5,
-          py: 0.75,
-          borderRadius: 999,
-          bgcolor: scrim(theme),
-          backdropFilter: 'blur(8px)',
-          color: 'common.white',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          lineHeight: 1.2,
-        })}
-      >
-        {`${resultCount} live`}
-      </Typography>
       <Stack direction="row" spacing={1} sx={{ flex: 1, justifyContent: 'flex-end' }}>
         <DuncitIconButton data-testid="explore-refresh" onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
           <RefreshRoundedIcon fontSize="small" />

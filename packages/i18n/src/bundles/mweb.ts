@@ -1099,9 +1099,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewImage: 'View image',
       // The overview card.
       hostedBy: 'Hosted by {names}',
-      // mWeb only — posting a status from the pod is a host affordance the
-      // native pod screen does not carry.
+      // Both twins — posting a status (a photo or clip added to the pod's
+      // gallery) is shown only to the pod's own hosts, never to anyone else.
       addStatus: 'Add status',
+      addStatusOnlyYou: 'Only visible to you',
+      addStatusInfoLabel: 'About adding a status',
+      addStatusInfoBody:
+        "Only this pod's host can see this option. Photos and videos you add appear in the pod's gallery for everyone who opens the pod.",
+      addStatusUploading: 'Adding status…',
+      addStatusFailed: 'Could not add status.',
+      addStatusPhotoAccess: 'Photo access is needed to add a status.',
       free: 'Free',
       virtual: 'Virtual',
       physical: 'Physical',

@@ -380,7 +380,12 @@ export function PodDetailsScreen() {
           />
         </DetailHero>
         <Reveal index={0}>
-          <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
+          <PodInfo
+            pod={pod}
+            categoryCrumbs={categoryCrumbs}
+            isHost={isPodHost}
+            onStatusAdded={refetch}
+          />
         </Reveal>
         <Reveal index={1}>
           <PodSchedule

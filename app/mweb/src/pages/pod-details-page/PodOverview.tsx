@@ -5,8 +5,7 @@ import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import CategoryIcon from '@mui/icons-material/CategoryOutlined';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { DuncitButton } from '@duncit/buttons';
+import HostStatusAction from './HostStatusAction';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import PodMetaRow from '../../components/pod-details/PodMetaRow';
@@ -93,17 +92,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
             </Typography>
           )}
         </Box>
-        {isHost && (
-          <DuncitButton
-            size="small"
-            startIcon={<AddPhotoAlternateIcon />}
-            onClick={onAddStatus}
-            data-testid="pod-overview-add-status"
-            sx={{ flexShrink: 0, minHeight: 36, bgcolor: 'background.paper', color: 'text.primary', '&:hover': { bgcolor: 'background.paper' } }}
-          >
-            {t('mweb.podDetails.addStatus')}
-          </DuncitButton>
-        )}
+        {isHost && <HostStatusAction onAddStatus={onAddStatus} />}
       </Stack>
       {categoryCrumbs.length > 0 && (
         <PodMetaRow icon={<CategoryIcon />}>

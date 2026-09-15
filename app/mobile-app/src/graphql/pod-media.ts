@@ -57,6 +57,16 @@ export const AddPodPartyMediaDocument = gql(`
   }
 `);
 
+/** A host's status: one photo or clip added to the pod's own gallery. The
+ * server lets only the pod's hosts write it — mWeb's ADD_POD_STATUS. */
+export const AddPodStatusDocument = gql(`
+  mutation MobileAddPodStatus($podId: ID!, $media: PodMediaInput!) {
+    addPodStatus(pod_doc_id: $podId, media: $media) {
+      id
+    }
+  }
+`);
+
 export const RemovePodPartyMediaDocument = gql(`
   mutation MobileRemovePodPartyMedia($pod_doc_id: ID!, $url: String!) {
     removePodPartyMedia(pod_doc_id: $pod_doc_id, url: $url) {

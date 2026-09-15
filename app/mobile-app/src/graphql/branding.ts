@@ -21,6 +21,8 @@ export const BrandingDocument = gql(`
       login_background_image_url
       login_background_video_enabled
       login_background_video_url
+      terms_url
+      privacy_url
       mobile_font_family
       home_all_vibe_icon_url
       home_all_vibe_icon_layout {

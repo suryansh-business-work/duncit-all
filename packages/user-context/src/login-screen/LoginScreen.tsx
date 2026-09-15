@@ -11,8 +11,8 @@ import OtherPortalsDialog from './OtherPortalsDialog';
 import { sessionT } from '../i18n';
 import type { LoginScreenProps } from './login.types';
 
-const DEFAULT_PRIVACY = 'https://duncit.com/privacy-policy';
-const DEFAULT_TERMS = 'https://duncit.com/terms-of-use';
+const DEFAULT_PRIVACY = 'https://duncit.com/policy/privacy-policy';
+const DEFAULT_TERMS = 'https://duncit.com/policy/terms-and-conditions';
 const DEFAULT_CONTACT = 'admin@duncit.com';
 
 export default function LoginScreen({

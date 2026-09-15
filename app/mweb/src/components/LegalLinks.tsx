@@ -1,11 +1,10 @@
 import { Stack, Link, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
-
-const TERMS_URL = 'https://duncit.com/terms';
-const PRIVACY_URL = 'https://duncit.com/privacy/policy';
+import { useBrandingAssets } from '../hooks/useBrandingAssets';
 
 export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   const { t } = useTranslation();
+  const { termsUrl, privacyUrl } = useBrandingAssets();
   // The lead-in is passed in already translated because it names the action of
   // the screen it sits on ("By signing in," / "By signing up,").
   const lead = prefix ?? t('mweb.auth.legalContinue');
@@ -22,11 +21,11 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
         lineHeight: 1.5
       }}>
       {lead} {t('mweb.auth.legalAgree')}{' '}
-      <Link data-testid="legal-links-terms" href={TERMS_URL} target="_blank" rel="noopener" underline="hover">
+      <Link data-testid="legal-links-terms" href={termsUrl} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.terms')}
       </Link>{' '}
       {t('mweb.auth.legalAnd')}{' '}
-      <Link data-testid="legal-links-privacy" href={PRIVACY_URL} target="_blank" rel="noopener" underline="hover">
+      <Link data-testid="legal-links-privacy" href={privacyUrl} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.privacy')}
       </Link>.
           </Typography>
@@ -35,6 +34,7 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
 
 export function LegalLinkRow() {
   const { t } = useTranslation();
+  const { termsUrl, privacyUrl } = useBrandingAssets();
 
   return (
     <Stack
@@ -48,7 +48,7 @@ export function LegalLinkRow() {
       }}>
       <Link
         data-testid="legal-link-row-terms"
-        href={TERMS_URL}
+        href={termsUrl}
         target="_blank"
         rel="noopener"
         underline="hover"
@@ -58,7 +58,7 @@ export function LegalLinkRow() {
       </Link>
       <Link
         data-testid="legal-link-row-privacy"
-        href={PRIVACY_URL}
+        href={privacyUrl}
         target="_blank"
         rel="noopener"
         underline="hover"

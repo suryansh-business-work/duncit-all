@@ -76,7 +76,7 @@ export default function PortalLoginPage({
   const [error, setError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
   const { mode, toggle } = useColorMode();
-  const { logoUrl, onLogoError } = useBranding();
+  const { logoUrl, onLogoError, termsUrl, privacyUrl } = useBranding();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -161,6 +161,8 @@ export default function PortalLoginPage({
     bgImage: appConfig.loginImage,
     logoUrl,
     onLogoError,
+    termsUrl,
+    privacyUrl,
     ...configOverrides,
   };
 

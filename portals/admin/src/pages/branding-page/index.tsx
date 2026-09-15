@@ -8,6 +8,7 @@ import BrandingAccordion from './BrandingAccordion';
 import IdentitySection from './IdentitySection';
 import { ThemeTokensSection, toThemeTokensInput } from './theme-tokens';
 import LoginBackgroundSection from './LoginBackgroundSection';
+import LegalLinksSection from './LegalLinksSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
 import FontsSection from './FontsSection';
@@ -127,6 +128,13 @@ export default function BrandingPage() {
           subtitle={t('admin.branding.loginBackgroundSubtitle')}
         >
           <LoginBackgroundSection form={form} setForm={setForm} />
+        </BrandingAccordion>
+
+        <BrandingAccordion
+          title={t('admin.branding.legalLinks')}
+          subtitle={t('admin.branding.legalLinksHint')}
+        >
+          <LegalLinksSection form={form} setForm={setForm} />
         </BrandingAccordion>
 
         <BrandingAccordion

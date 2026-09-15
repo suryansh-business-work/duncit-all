@@ -2371,8 +2371,12 @@ export type Branding = {
   portals_splash_type: Scalars['String']['output'];
   portals_splash_url: Scalars['String']['output'];
   primary_color: Scalars['String']['output'];
+  /** Privacy Policy page the sign-in / sign-up screens link to (never blank). */
+  privacy_url: Scalars['String']['output'];
   support_email: Scalars['String']['output'];
   support_phone: Scalars['String']['output'];
+  /** Terms & Conditions page the sign-in / sign-up screens link to (never blank). */
+  terms_url: Scalars['String']['output'];
   /** Where mWeb and the native app read their colour tokens from. */
   theme_token_source: ThemeTokenSource;
   /** Dark-mode colour tokens; a blank token keeps the app's bundled value. */
@@ -23431,8 +23435,10 @@ export type UpdateBrandingInput = {
   portals_splash_type?: InputMaybe<Scalars['String']['input']>;
   portals_splash_url?: InputMaybe<Scalars['String']['input']>;
   primary_color?: InputMaybe<Scalars['String']['input']>;
+  privacy_url?: InputMaybe<Scalars['String']['input']>;
   support_email?: InputMaybe<Scalars['String']['input']>;
   support_phone?: InputMaybe<Scalars['String']['input']>;
+  terms_url?: InputMaybe<Scalars['String']['input']>;
   theme_token_source?: InputMaybe<ThemeTokenSource>;
   theme_tokens_dark?: InputMaybe<ThemeModeTokensInput>;
   theme_tokens_light?: InputMaybe<ThemeModeTokensInput>;

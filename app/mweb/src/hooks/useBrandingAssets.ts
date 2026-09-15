@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
+import { auth } from '@duncit/auth-tokens';
 
 const BRANDING_ASSETS = gql`
   query BrandingAssets {
@@ -15,6 +16,8 @@ const BRANDING_ASSETS = gql`
       login_background_image_url
       login_background_video_enabled
       login_background_video_url
+      terms_url
+      privacy_url
     }
   }
 `;
@@ -43,5 +46,9 @@ export function useBrandingAssets() {
     */
     loginBackgroundVideoUrl: b?.login_background_video_enabled ? b?.login_background_video_url || '' : '',
     loginBackgroundImageUrl: b?.login_background_image_enabled ? b?.login_background_image_url || '' : '',
+    // Admin-managed legal pages; the shared auth tokens carry the same defaults
+    // so the sign-in links work before this query answers.
+    termsUrl: b?.terms_url || auth.legal.termsUrl,
+    privacyUrl: b?.privacy_url || auth.legal.privacyUrl,
   };
 }

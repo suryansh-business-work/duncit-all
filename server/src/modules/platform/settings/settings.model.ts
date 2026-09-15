@@ -256,6 +256,10 @@ export interface IBranding extends Document {
   // Empty string = not live yet; the sites render a "coming soon" state.
   android_app_url: string;
   ios_app_url: string;
+  // The legal pages the sign-in / sign-up screens (mWeb, native, portals) link
+  // to. Admin-managed so a moved policy page never needs a release.
+  terms_url: string;
+  privacy_url: string;
   // Icon for the synthetic "All" tab in the home "What's your vibe" tabber
   // (mWeb + mobile). Admin-managed from the Category catalogue; empty string
   // falls back to the bundled apps/grid icon on each client.
@@ -383,6 +387,9 @@ const themeTokensSchema = new Schema<ThemeTokens>(
   { _id: false },
 );
 
+export const DEFAULT_TERMS_URL = "https://duncit.com/policy/terms-and-conditions";
+export const DEFAULT_PRIVACY_URL = "https://duncit.com/policy/privacy-policy";
+
 const brandingSchema = new Schema<IBranding>(
   {
     singleton_key: {
@@ -428,6 +435,8 @@ const brandingSchema = new Schema<IBranding>(
     website_favicon_url: { type: String, default: "" },
     android_app_url: { type: String, default: "" },
     ios_app_url: { type: String, default: "" },
+    terms_url: { type: String, default: DEFAULT_TERMS_URL },
+    privacy_url: { type: String, default: DEFAULT_PRIVACY_URL },
     home_all_vibe_icon_url: { type: String, default: "" },
     home_all_vibe_icon_layout: { type: homeAllVibeIconLayoutSchema, default: null },
     home_show_all_vibe_categories: { type: Boolean, default: false },

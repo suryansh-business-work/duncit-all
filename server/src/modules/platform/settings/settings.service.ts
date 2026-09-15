@@ -3,6 +3,8 @@ import {
   AppSettingsModel,
   FeatureFlagModel,
   BrandingModel,
+  DEFAULT_PRIVACY_URL,
+  DEFAULT_TERMS_URL,
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
 import {
@@ -282,6 +284,8 @@ const BRANDING_FIELDS = [
   "website_favicon_url",
   "android_app_url",
   "ios_app_url",
+  "terms_url",
+  "privacy_url",
   "home_all_vibe_icon_url",
   "home_vibe_heading",
   "home_vibe_subheading",
@@ -342,6 +346,14 @@ const themeTokenUpdate = (input: {
   return update;
 };
 
+/** A legal-page link must be an absolute web address; blank resets it to the default. */
+const assertLegalUrl = (label: string, value?: string | null) => {
+  if (!value || /^https?:\/\/\S+$/i.test(value)) return;
+  throw new GraphQLError(`${label} must start with https:// (or http://)`, {
+    extensions: { code: "BAD_USER_INPUT" },
+  });
+};
+
 const brandingToPub = (doc: any) => ({
   app_name: doc.app_name ?? "Duncit",
   logo_url: doc.logo_url ?? "",
@@ -375,6 +387,9 @@ const brandingToPub = (doc: any) => ({
   website_favicon_url: doc.website_favicon_url ?? "",
   android_app_url: doc.android_app_url ?? "",
   ios_app_url: doc.ios_app_url ?? "",
+  // Blank means "not set", never "no link" — the auth screens always need one.
+  terms_url: doc.terms_url || DEFAULT_TERMS_URL,
+  privacy_url: doc.privacy_url || DEFAULT_PRIVACY_URL,
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_all_vibe_icon_layout: vibeIconLayoutToPub(doc.home_all_vibe_icon_layout),
   home_show_all_vibe_categories: !!doc.home_show_all_vibe_categories,
@@ -1043,6 +1058,8 @@ export const settingsService = {
     for (const k of BRANDING_FIELDS) {
       if (input[k] !== undefined) update[k] = input[k];
     }
+    assertLegalUrl("Terms & Conditions URL", input.terms_url);
+    assertLegalUrl("Privacy Policy URL", input.privacy_url);
     // The "All" tab icon layout is an object, not a plain string field — normalise
     // it (default position, clamp size) before storing; null clears it.
     if (input.home_all_vibe_icon_layout !== undefined) {

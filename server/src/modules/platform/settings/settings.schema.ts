@@ -365,6 +365,10 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String!
     android_app_url: String!
     ios_app_url: String!
+    "Terms & Conditions page the sign-in / sign-up screens link to (never blank)."
+    terms_url: String!
+    "Privacy Policy page the sign-in / sign-up screens link to (never blank)."
+    privacy_url: String!
     home_all_vibe_icon_url: String!
     "Icon placement + size for the home All tab (null means the default TOP 40x40 look)."
     home_all_vibe_icon_layout: CategoryIconLayout
@@ -438,6 +442,8 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String
     android_app_url: String
     ios_app_url: String
+    terms_url: String
+    privacy_url: String
     home_all_vibe_icon_url: String
     home_all_vibe_icon_layout: CategoryIconLayoutInput
     home_show_all_vibe_categories: Boolean

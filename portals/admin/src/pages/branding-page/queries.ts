@@ -55,6 +55,8 @@ export const BRANDING_FIELDS = `
   website_favicon_url
   android_app_url
   ios_app_url
+  terms_url
+  privacy_url
   app_min_supported_version
   home_all_vibe_icon_url
   home_all_vibe_icon_layout {
@@ -171,6 +173,8 @@ export interface BrandingFormState {
   website_favicon_url: string;
   android_app_url: string;
   ios_app_url: string;
+  terms_url: string;
+  privacy_url: string;
   app_min_supported_version: string;
   home_all_vibe_icon_url: string;
   home_all_vibe_icon_layout: { position: string; width: number; height: number } | null;
@@ -212,6 +216,8 @@ export const emptyBrandingForm: BrandingFormState = {
   website_favicon_url: '',
   android_app_url: '',
   ios_app_url: '',
+  terms_url: '',
+  privacy_url: '',
   app_min_supported_version: '',
   home_all_vibe_icon_url: '',
   home_all_vibe_icon_layout: null,

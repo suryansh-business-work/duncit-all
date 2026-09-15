@@ -593,6 +593,12 @@ changeRequests: {
       footerLogoHint: 'Transparent PNG/SVG, ~320×96px — shown in the site footer on dark ink.',
       androidUrl: 'Android app URL (Google Play)',
       iosUrl: 'iOS app URL (App Store)',
+      legalLinks: 'Legal links (sign-in screens)',
+      legalLinksHint:
+        'Terms & Conditions and Privacy Policy pages linked from sign-in and sign-up on mWeb, the app and every portal.',
+      termsUrl: 'Terms & Conditions URL',
+      privacyUrl: 'Privacy Policy URL',
+      legalUrlHint: 'Full https:// address. Leave empty to use the default duncit.com page.',
       minVersion: 'Minimum supported app version',
       minVersionPlaceholder: 'e.g. 1.50.0',
       fonts: 'Fonts',

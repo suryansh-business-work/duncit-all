@@ -34,6 +34,8 @@ import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
+import E2eFlowsPage from './pages/e2e/flows';
+import E2eFlowDetailPage from './pages/e2e/flows/detail';
 import StressRunsPage from './pages/stress-testing/runs';
 import StressRunDetailPage from './pages/stress-testing/run-detail';
 import StressSettingsPage from './pages/stress-testing/settings';
@@ -141,6 +143,8 @@ export default function App() {
             schedule below is the only thing that starts a scheduled run. */}
         <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
         <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
+        <Route path="/e2e/flows" element={authed(<E2eFlowsPage />)} />
+        <Route path="/e2e/flows/:flowId" element={authed(<E2eFlowDetailPage />)} />
         <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />
         {/* Load against THIS environment from GitHub runners, watched live: the
             server under test records the time series and enforces the guardrails. */}

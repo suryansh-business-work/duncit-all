@@ -396,6 +396,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       docker: 'Docker',
       documents: 'Documents',
       e2eTests: 'E2E Tests',
+      flows: 'Flows',
       duncitCoin: 'Duncit Coin',
       duncitExpenses: 'Duncit Expenses',
       duncitProducts: 'Duncit Products',

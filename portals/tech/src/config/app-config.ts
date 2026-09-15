@@ -132,6 +132,7 @@ export const appConfig = {
       icon: 'rule',
       children: [
         { label: 'Runs', labelKey: 'shell.nav.runs', to: '/e2e/runs', icon: 'article' },
+        { label: 'Flows', labelKey: 'shell.nav.flows', to: '/e2e/flows', icon: 'hub' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/e2e/settings', icon: 'settings' },
       ],
     },

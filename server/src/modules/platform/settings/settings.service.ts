@@ -3,6 +3,8 @@ import {
   AppSettingsModel,
   FeatureFlagModel,
   BrandingModel,
+  DEFAULT_PRIVACY_URL,
+  DEFAULT_TERMS_URL,
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
 import {
@@ -14,6 +16,12 @@ import { DEFAULT_REOPEN_ZONE } from "@modules/support/reopenWindow";
 import { setAppTimeSettings } from "@utils/app-time";
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, MAX_ACCOUNT_AGE_YEARS } from "@utils/age";
 import { invalidateFeatureFlagCache } from "./featureFlag.gate";
+import {
+  DEFAULT_THEME_TOKEN_SOURCE,
+  normalizeThemeTokens,
+  themeTokensToPub,
+  type ThemeTokensInput,
+} from "./theme-tokens";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
 const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
@@ -276,6 +284,8 @@ const BRANDING_FIELDS = [
   "website_favicon_url",
   "android_app_url",
   "ios_app_url",
+  "terms_url",
+  "privacy_url",
   "home_all_vibe_icon_url",
   "home_vibe_heading",
   "home_vibe_subheading",
@@ -315,6 +325,35 @@ const vibeIconLayoutToPub = (
   layout?: { position: string; width: number; height: number } | null,
 ) => (layout ? { position: layout.position, width: layout.width, height: layout.height } : null);
 
+/**
+ * The theme-token part of a branding update: the source (GraphQL's enum already
+ * limits it to LOCAL/SERVER) and each mode's tokens, validated as colours.
+ * A mode left out of the input is left as stored.
+ */
+const themeTokenUpdate = (input: {
+  theme_token_source?: string;
+  theme_tokens_light?: ThemeTokensInput | null;
+  theme_tokens_dark?: ThemeTokensInput | null;
+}) => {
+  const update: Record<string, unknown> = {};
+  if (input.theme_token_source !== undefined) update.theme_token_source = input.theme_token_source;
+  if (input.theme_tokens_light !== undefined) {
+    update.theme_tokens_light = normalizeThemeTokens(input.theme_tokens_light, "light");
+  }
+  if (input.theme_tokens_dark !== undefined) {
+    update.theme_tokens_dark = normalizeThemeTokens(input.theme_tokens_dark, "dark");
+  }
+  return update;
+};
+
+/** A legal-page link must be an absolute web address; blank resets it to the default. */
+const assertLegalUrl = (label: string, value?: string | null) => {
+  if (!value || /^https?:\/\/\S+$/i.test(value)) return;
+  throw new GraphQLError(`${label} must start with https:// (or http://)`, {
+    extensions: { code: "BAD_USER_INPUT" },
+  });
+};
+
 const brandingToPub = (doc: any) => ({
   app_name: doc.app_name ?? "Duncit",
   logo_url: doc.logo_url ?? "",
@@ -348,6 +387,9 @@ const brandingToPub = (doc: any) => ({
   website_favicon_url: doc.website_favicon_url ?? "",
   android_app_url: doc.android_app_url ?? "",
   ios_app_url: doc.ios_app_url ?? "",
+  // Blank means "not set", never "no link" — the auth screens always need one.
+  terms_url: doc.terms_url || DEFAULT_TERMS_URL,
+  privacy_url: doc.privacy_url || DEFAULT_PRIVACY_URL,
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_all_vibe_icon_layout: vibeIconLayoutToPub(doc.home_all_vibe_icon_layout),
   home_show_all_vibe_categories: !!doc.home_show_all_vibe_categories,
@@ -356,6 +398,9 @@ const brandingToPub = (doc: any) => ({
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
   app_min_supported_version: doc.app_min_supported_version ?? "",
+  theme_token_source: doc.theme_token_source ?? DEFAULT_THEME_TOKEN_SOURCE,
+  theme_tokens_light: themeTokensToPub(doc.theme_tokens_light),
+  theme_tokens_dark: themeTokensToPub(doc.theme_tokens_dark),
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
     url: m.url,
     type: m.type ?? "IMAGE",
@@ -1004,12 +1049,17 @@ export const settingsService = {
       home_show_all_vibe_categories?: boolean;
       login_background_image_enabled?: boolean;
       login_background_video_enabled?: boolean;
+      theme_token_source?: string;
+      theme_tokens_light?: ThemeTokensInput | null;
+      theme_tokens_dark?: ThemeTokensInput | null;
     },
   ) {
     const update: any = {};
     for (const k of BRANDING_FIELDS) {
       if (input[k] !== undefined) update[k] = input[k];
     }
+    assertLegalUrl("Terms & Conditions URL", input.terms_url);
+    assertLegalUrl("Privacy Policy URL", input.privacy_url);
     // The "All" tab icon layout is an object, not a plain string field — normalise
     // it (default position, clamp size) before storing; null clears it.
     if (input.home_all_vibe_icon_layout !== undefined) {
@@ -1027,6 +1077,7 @@ export const settingsService = {
     if (input.login_background_video_enabled !== undefined) {
       update.login_background_video_enabled = !!input.login_background_video_enabled;
     }
+    Object.assign(update, themeTokenUpdate(input));
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },
       { $set: update },

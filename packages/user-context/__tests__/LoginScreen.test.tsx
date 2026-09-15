@@ -75,11 +75,11 @@ describe('LoginScreen', () => {
     expect(screen.getByTestId('DarkModeIcon')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute(
       'href',
-      'https://duncit.com/privacy-policy'
+      'https://duncit.com/policy/privacy-policy'
     );
     expect(screen.getByRole('link', { name: 'Terms of Use' })).toHaveAttribute(
       'href',
-      'https://duncit.com/terms-of-use'
+      'https://duncit.com/policy/terms-and-conditions'
     );
     expect(screen.getByRole('link', { name: 'admin@duncit.com' })).toHaveAttribute(
       'href',

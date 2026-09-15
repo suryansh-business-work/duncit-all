@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { DuncitButton } from '@duncit/buttons';
+import { ScrollRail } from '@duncit/ui';
 import { coverImageUrl } from '@duncit/utils';
 import { useNavigate } from 'react-router';
 import MomentTile from '../moments/MomentTile';
@@ -90,12 +91,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
         </DuncitButton>
       </Stack>
       {moments.length > 0 && (
-        <Stack
-          data-testid="pod-club-moments"
-          direction="row"
-          spacing={1}
-          sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}
-        >
+        <ScrollRail testId="pod-club-moments" gap={1}>
           {moments.slice(0, 12).map((m: any, i: number) => (
             <Box key={m.url} data-testid={`pod-club-moment-${m.url}`} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
               <MomentTile
@@ -108,7 +104,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
               />
             </Box>
           ))}
-        </Stack>
+        </ScrollRail>
       )}
       <MomentLightbox
         moments={moments}

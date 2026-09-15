@@ -24,7 +24,9 @@ const evictIfFull = (): void => {
   if (oldest !== undefined) cache.delete(oldest);
 };
 
-async function request<T>(query: string): Promise<T | null> {
+type Variables = Record<string, unknown>;
+
+async function request<T>(query: string, variables?: Variables): Promise<T | null> {
   if (!GRAPHQL_URL) return null;
   const controller = new AbortController();
   const timer = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -32,7 +34,7 @@ async function request<T>(query: string): Promise<T | null> {
     const response = await globalThis.fetch(GRAPHQL_URL, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, variables }),
       signal: controller.signal,
     });
     if (!response.ok) return null;
@@ -48,11 +50,16 @@ async function request<T>(query: string): Promise<T | null> {
 
 /** Null answers are cached too — a deleted post would otherwise re-query on
  * every crawler retry. */
-export async function cachedGql<T>(query: string, ttlMs: number): Promise<T | null> {
-  const hit = cache.get(query);
+export async function cachedGql<T>(
+  query: string,
+  ttlMs: number,
+  variables?: Variables
+): Promise<T | null> {
+  const key = variables ? `${query}${JSON.stringify(variables)}` : query;
+  const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) return hit.value as T | null;
-  const value = await request<T>(query);
+  const value = await request<T>(query, variables);
   evictIfFull();
-  cache.set(query, { value, expires: Date.now() + ttlMs });
+  cache.set(key, { value, expires: Date.now() + ttlMs });
   return value;
 }

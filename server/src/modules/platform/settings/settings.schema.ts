@@ -273,6 +273,61 @@ export const settingsTypeDefs = gql`
     cta_url: String
   }
 
+  "LOCAL = the apps' bundled @duncit/auth-tokens; SERVER = Branding's theme tokens laid over them."
+  enum ThemeTokenSource {
+    LOCAL
+    SERVER
+  }
+
+  """
+  One colour mode of the app theme, key for key the same as @duncit/auth-tokens'
+  ModeColors. Values are CSS colour strings (#hex or rgb/rgba); blank keeps the
+  bundled value.
+  """
+  type ThemeModeTokens {
+    bg: String!
+    surface: String!
+    soft: String!
+    ink: String!
+    muted: String!
+    border: String!
+    inputBorder: String!
+    primary: String!
+    primaryHover: String!
+    primaryActive: String!
+    onPrimary: String!
+    accent: String!
+    onAccent: String!
+    brand: String!
+    success: String!
+    warning: String!
+    error: String!
+    info: String!
+    onSemantic: String!
+  }
+
+  input ThemeModeTokensInput {
+    bg: String
+    surface: String
+    soft: String
+    ink: String
+    muted: String
+    border: String
+    inputBorder: String
+    primary: String
+    primaryHover: String
+    primaryActive: String
+    onPrimary: String
+    accent: String
+    onAccent: String
+    brand: String
+    success: String
+    warning: String
+    error: String
+    info: String
+    onSemantic: String
+  }
+
   type Branding {
     app_name: String!
     logo_url: String!
@@ -310,6 +365,10 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String!
     android_app_url: String!
     ios_app_url: String!
+    "Terms & Conditions page the sign-in / sign-up screens link to (never blank)."
+    terms_url: String!
+    "Privacy Policy page the sign-in / sign-up screens link to (never blank)."
+    privacy_url: String!
     home_all_vibe_icon_url: String!
     "Icon placement + size for the home All tab (null means the default TOP 40x40 look)."
     home_all_vibe_icon_layout: CategoryIconLayout
@@ -327,6 +386,12 @@ export const settingsTypeDefs = gql`
     means nothing is blocked.
     """
     app_min_supported_version: String!
+    "Where mWeb and the native app read their colour tokens from."
+    theme_token_source: ThemeTokenSource!
+    "Light-mode colour tokens; a blank token keeps the app's bundled value."
+    theme_tokens_light: ThemeModeTokens!
+    "Dark-mode colour tokens; a blank token keeps the app's bundled value."
+    theme_tokens_dark: ThemeModeTokens!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
     pod_shop_slider: [PodShopSliderMedia!]!
     "Festive icon windows; the app clock picks which one is active."
@@ -377,6 +442,8 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String
     android_app_url: String
     ios_app_url: String
+    terms_url: String
+    privacy_url: String
     home_all_vibe_icon_url: String
     home_all_vibe_icon_layout: CategoryIconLayoutInput
     home_show_all_vibe_categories: Boolean
@@ -385,6 +452,9 @@ export const settingsTypeDefs = gql`
     home_header_tagline: String
     app_latest_version: String
     app_min_supported_version: String
+    theme_token_source: ThemeTokenSource
+    theme_tokens_light: ThemeModeTokensInput
+    theme_tokens_dark: ThemeModeTokensInput
   }
 
   extend type Query {

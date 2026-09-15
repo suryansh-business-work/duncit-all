@@ -175,7 +175,9 @@ import {
   groupClubsByCity,
   groupClubsByLocality,
   type ClubCityLocation,
+  resolveThemeTokens,
 } from '@duncit/utils';
+import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
 import { defineDemo, defineDemos } from '../types';
 
@@ -421,7 +423,36 @@ interface ClubGroupingMock {
   openCityId: string;
 }
 
+/** Admin → Branding → Theme tokens, as the `branding` query answers it. */
+interface ThemeTokensMock {
+  theme_token_source: 'LOCAL' | 'SERVER';
+  theme_tokens_light: { primary: string; primaryHover: string; accent: string };
+  theme_tokens_dark: { primary: string; accent: string };
+}
+
 export default defineDemos('utils', [
+  defineDemo<ThemeTokensMock>({
+    id: 'theme-tokens',
+    title: 'Where mWeb and the app take their colours from',
+    note:
+      "Flip theme_token_source to 'SERVER' and the admin's primary replaces the bundled #d92d2d. Blank a value and that token goes back to the bundled one — the admin only overrides what they change. On LOCAL the admin's values are ignored, and the very same palette objects come back, so no theme is rebuilt.",
+    mock: {
+      theme_token_source: 'LOCAL',
+      theme_tokens_light: { primary: '#1d4ed8', primaryHover: '#1a46c2', accent: '' },
+      theme_tokens_dark: { primary: '#1d4ed8', accent: '#60a5fa' },
+    },
+    compute: (mock) => {
+      const local = { light, dark };
+      const palettes = resolveThemeTokens(local, mock);
+      return {
+        'Light primary / hover': `${palettes.light.primary} / ${palettes.light.primaryHover}`,
+        'Light accent (blank → bundled)': palettes.light.accent,
+        'Dark primary / accent': `${palettes.dark.primary} / ${palettes.dark.accent}`,
+        'Bundled palettes returned untouched': palettes === local,
+      };
+    },
+  }),
+
   defineDemo<ClubGroupingMock>({
     id: 'club-grouping',
     title: 'The Clubs tab, grouped by city and then by locality',

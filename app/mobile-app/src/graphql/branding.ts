@@ -21,6 +21,8 @@ export const BrandingDocument = gql(`
       login_background_image_url
       login_background_video_enabled
       login_background_video_url
+      terms_url
+      privacy_url
       mobile_font_family
       home_all_vibe_icon_url
       home_all_vibe_icon_layout {
@@ -32,6 +34,49 @@ export const BrandingDocument = gql(`
       home_vibe_heading
       home_vibe_subheading
       home_header_tagline
+      theme_token_source
+      theme_tokens_light {
+        bg
+        surface
+        soft
+        ink
+        muted
+        border
+        inputBorder
+        primary
+        primaryHover
+        primaryActive
+        onPrimary
+        accent
+        onAccent
+        brand
+        success
+        warning
+        error
+        info
+        onSemantic
+      }
+      theme_tokens_dark {
+        bg
+        surface
+        soft
+        ink
+        muted
+        border
+        inputBorder
+        primary
+        primaryHover
+        primaryActive
+        onPrimary
+        accent
+        onAccent
+        brand
+        success
+        warning
+        error
+        info
+        onSemantic
+      }
       occasional_icons {
         slug
         label

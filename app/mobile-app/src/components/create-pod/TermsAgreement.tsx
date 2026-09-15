@@ -3,18 +3,19 @@ import { Linking, type AccessibilityActionEvent } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useLegalUrls } from '@/hooks/useLegalUrls';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-const TERMS_URL = 'https://duncit.com/policies/terms-of-service';
-
 /** Client-side publish gate — the host must accept the Organizer Terms before
- * the last step's "Create Pod" action validates. Mobile twin of mWeb's. */
+ * the last step's "Create Pod" action validates. Mobile twin of mWeb's; the
+ * terms link is the admin Branding Terms page. */
 export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
   const { color, primary } = useThemeColors();
   const { t } = useTranslation();
+  const { termsUrl } = useLegalUrls();
   return (
     <Controller
       control={form.control}
@@ -37,7 +38,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
             ]}
             onAccessibilityAction={(event: AccessibilityActionEvent) => {
               if (event.nativeEvent.actionName === 'openTerms') {
-                Linking.openURL(TERMS_URL).catch(() => undefined);
+                Linking.openURL(termsUrl).catch(() => undefined);
                 return;
               }
               field.onChange(!field.value);
@@ -61,7 +62,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
                 role="link"
                 color="$accent"
                 fontWeight="600"
-                onPress={() => Linking.openURL(TERMS_URL)}
+                onPress={() => Linking.openURL(termsUrl)}
               >
                 {t('mweb.createPod.termsLink')}
               </Text>{' '}

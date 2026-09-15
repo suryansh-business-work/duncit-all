@@ -1,4 +1,32 @@
 import { gql } from '@apollo/client';
+import {
+  emptyThemeTokens,
+  type ThemeTokenSourceValue,
+  type ThemeTokenValues,
+} from './theme-tokens/tokenRows';
+
+/** One mode of the app theme tokens — the 19 keys of @duncit/auth-tokens' ModeColors. */
+const THEME_TOKEN_FIELDS = `
+  bg
+  surface
+  soft
+  ink
+  muted
+  border
+  inputBorder
+  primary
+  primaryHover
+  primaryActive
+  onPrimary
+  accent
+  onAccent
+  brand
+  success
+  warning
+  error
+  info
+  onSemantic
+`;
 
 export const BRANDING_FIELDS = `
   app_name
@@ -27,6 +55,8 @@ export const BRANDING_FIELDS = `
   website_favicon_url
   android_app_url
   ios_app_url
+  terms_url
+  privacy_url
   app_min_supported_version
   home_all_vibe_icon_url
   home_all_vibe_icon_layout {
@@ -41,6 +71,13 @@ export const BRANDING_FIELDS = `
   mobile_font_family
   mweb_font_family
   portals_font_family
+  theme_token_source
+  theme_tokens_light {
+    ${THEME_TOKEN_FIELDS}
+  }
+  theme_tokens_dark {
+    ${THEME_TOKEN_FIELDS}
+  }
   updated_at
 `;
 
@@ -136,6 +173,8 @@ export interface BrandingFormState {
   website_favicon_url: string;
   android_app_url: string;
   ios_app_url: string;
+  terms_url: string;
+  privacy_url: string;
   app_min_supported_version: string;
   home_all_vibe_icon_url: string;
   home_all_vibe_icon_layout: { position: string; width: number; height: number } | null;
@@ -143,6 +182,9 @@ export interface BrandingFormState {
   mobile_font_family: string;
   mweb_font_family: string;
   portals_font_family: string;
+  theme_token_source: ThemeTokenSourceValue;
+  theme_tokens_light: ThemeTokenValues;
+  theme_tokens_dark: ThemeTokenValues;
 }
 
 export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
@@ -174,6 +216,8 @@ export const emptyBrandingForm: BrandingFormState = {
   website_favicon_url: '',
   android_app_url: '',
   ios_app_url: '',
+  terms_url: '',
+  privacy_url: '',
   app_min_supported_version: '',
   home_all_vibe_icon_url: '',
   home_all_vibe_icon_layout: null,
@@ -181,6 +225,9 @@ export const emptyBrandingForm: BrandingFormState = {
   mobile_font_family: '',
   mweb_font_family: '',
   portals_font_family: '',
+  theme_token_source: 'LOCAL',
+  theme_tokens_light: emptyThemeTokens(),
+  theme_tokens_dark: emptyThemeTokens(),
 };
 
 /**

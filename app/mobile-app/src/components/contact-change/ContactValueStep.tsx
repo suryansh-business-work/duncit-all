@@ -1,4 +1,5 @@
 import { formResolver } from '../../utils/form-resolver';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
@@ -23,8 +24,12 @@ interface Props {
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
   busy: boolean;
+  /** A refusal of the typed value is showing — resending it would only repeat it. */
+  blocked: boolean;
   /** May be async: the contact number is stored by this very submit. */
   onSend: (draft: ContactDraft) => void | Promise<void>;
+  /** Told on every edit, so a refusal about the old value can be dropped. */
+  onEdit: () => void;
 }
 
 /**
@@ -42,19 +47,27 @@ export function ContactValueStep({
   labels,
   defaultValues,
   busy,
+  blocked,
   onSend,
+  onEdit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const copy = labels.channel(channel);
   const {
     control,
     handleSubmit,
+    watch,
     formState: { isValid },
   } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues,
     resolver: formResolver<ContactValueValues>(makeContactValueSchema(channel)),
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    const sub = watch(onEdit);
+    return () => sub.unsubscribe();
+  }, [watch, onEdit]);
 
   const submit = handleSubmit(onSend);
   // The contact number is stored straight, so its button may not promise a code.
@@ -107,7 +120,7 @@ export function ContactValueStep({
         testID="contact-change-send"
         label={busy ? busyLabel : idleLabel}
         loading={busy}
-        disabled={busy || !isValid}
+        disabled={busy || blocked || !isValid}
         onPress={submit}
       />
     </YStack>

@@ -1,6 +1,6 @@
 import { Alert, Chip, Paper, Stack, TextField, ThemeProvider } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { createDuncitTheme, tokens } from '@duncit/theme';
+import { contrastRatio, createDuncitTheme, mix, textOn, tokens } from '@duncit/theme';
 import { defineDemo, defineDemos } from '../types';
 
 /** Exactly the four accent values a portal hands the factory. */
@@ -51,7 +51,10 @@ export default defineDemos('theme', [
         </Paper>
       </ThemeProvider>
     ),
-    compute: () => ({
+    compute: (mock) => ({
+      'White on accent_main': `${contrastRatio(mock.accent_main, tokens.common.white).toFixed(2)}:1`,
+      'Text that reads on accent_main': textOn(mock.accent_main, tokens.neutral[900]),
+      'accent_main one step darker': mix(mock.accent_main, tokens.common.black, 0.1),
       'Default accent': tokens.defaultAccent,
       'Radii': tokens.radius,
       'Semantic colours': tokens.semantic,

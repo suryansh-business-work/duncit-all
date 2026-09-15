@@ -43,3 +43,5 @@ export type { PodFinanceWaterfall, WaterfallLine, WaterfallTranslate } from './f
 export { fallbackT } from './i18n/useTranslation';
 export { SpotsStepper, buildSpotsLabels, mwebSpotsLabels, shellSpotsLabels } from './spots';
 export type { SpotsStepperLabels, SpotsStepperProps, SpotsTranslate } from './spots';
+export { ScrollRail } from './ScrollRail';
+export type { ScrollRailProps } from './ScrollRail';

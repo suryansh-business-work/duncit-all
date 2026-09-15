@@ -1,9 +1,10 @@
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
 
 import { Reveal } from '@/animations/Reveal';
 import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -46,12 +47,7 @@ export function ClubSection({
           actionAriaLabel={club.club_name}
         />
       </YStack>
-      <ScrollView
-        testID={`${sectionTestID}-pods`}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
-      >
+      <ScrollRail testID={`${sectionTestID}-pods`} gap={12} paddingHorizontal={16}>
         {pods.map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
             <PodCard
@@ -66,7 +62,7 @@ export function ClubSection({
             />
           </Reveal>
         ))}
-      </ScrollView>
+      </ScrollRail>
     </YStack>
   );
 }

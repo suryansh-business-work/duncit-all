@@ -24,8 +24,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { podHistoryGate, refundLabel } from '@/utils/pod-history';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
-
-const GENERAL_TERMS_URL = 'https://duncit.com/terms';
+import { useLegalUrls } from '@/hooks/useLegalUrls';
 
 /** Pod History details — status, actions (pod details, backout, refund, invoice,
  * support), terms links and timeline. RN twin of mWeb's PodHistoryDetailsPage. */
@@ -34,6 +33,7 @@ export function PodHistoryDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
   const { t } = useTranslation();
+  const { termsUrl } = useLegalUrls();
   const route = useRoute<RouteProp<RootStackParamList, 'PodHistoryDetails'>>();
   const membershipId = route.params?.membershipId ?? '';
   const { items, isLoading, error, refetch } = usePodHistory();
@@ -163,7 +163,7 @@ export function PodHistoryDetailsScreen() {
             })
           }
           onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
-          onGeneralTerms={() => Linking.openURL(GENERAL_TERMS_URL)}
+          onGeneralTerms={() => Linking.openURL(termsUrl)}
         />
       </RefreshScrollView>
     );

@@ -1,35 +1,20 @@
 import { create } from 'zustand';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import {
-  CreatePostDocument,
-  RecordStoryViewDocument,
-  StatusFeedDocument,
-  UploadImageDocument,
-} from '@/graphql/status';
+import { CreatePostDocument, RecordStoryViewDocument, StatusFeedDocument } from '@/graphql/status';
 import { DeletePostDocument } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
-import { uploadToImagekitDirect } from '@/services/imagekit-upload';
-import { compressUploadedVideo, type VideoTrim } from '@/services/video-compression';
+import { uploadStatusMedia, type StatusMediaAsset } from '@/services/status-media-upload';
 
 export type StatusFeed = ResultOf<typeof StatusFeedDocument>;
 
-export interface StatusUploadAsset {
-  base64?: string | null;
-  /** Picker URI — videos stream from it directly (no base64). */
-  uri?: string | null;
-  fileName?: string | null;
-  mimeType?: string | null;
-  mediaType?: 'IMAGE' | 'VIDEO';
+export interface StatusUploadAsset extends StatusMediaAsset {
   /** STORY (default, 24h ephemeral) vs POST (permanent profile post). The
    * profile "Add Post" flow sets POST; the story rail/avatar ring keep STORY. */
   kind?: 'STORY' | 'POST';
   /** Attach the story to a club — set by the club page's "Add story" tile.
    * The server requires the author to follow (or administer) that club. */
   clubId?: string | null;
-  /** Trim window (seconds) the server cuts during the FFmpeg pass — set when a
-   * picked video runs past the 15s story cap. */
-  trim?: VideoTrim | null;
 }
 
 interface StatusState {
@@ -69,44 +54,9 @@ export const useStatusStore = create<StatusState>((set, get) => ({
   publish: async (asset) => {
     const isVideo = asset.mediaType === 'VIDEO';
     const kind = asset.kind ?? 'STORY';
-    const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
-    const fileName = asset.fileName ?? `story-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
     set({ progress: isVideo ? 2 : 10 });
     try {
-      let url: string;
-      if (isVideo) {
-        if (!asset.uri) throw new Error('No media selected.');
-        // Videos stream from their URI with REAL byte progress (2–55), then the
-        // server-side FFmpeg pass fills 55–70 — the old base64 path silently
-        // sent corrupt bytes (the picker returns no base64 for videos).
-        const rawUrl = await uploadToImagekitDirect(
-          { uri: asset.uri, name: fileName, type: mimeType },
-          '/posts',
-          (pct) => set({ progress: 2 + Math.round(pct * 0.53) }),
-        );
-        url = await compressUploadedVideo(
-          rawUrl,
-          '/posts',
-          (pct) => set({ progress: 55 + Math.round(pct * 0.15) }),
-          asset.trim ?? null,
-        );
-      } else {
-        if (!asset.base64) throw new Error('No media selected.');
-        // Images go through the server so the admin Upload Settings apply
-        // (sharp compression + AI image monitoring).
-        const uploaded = await graphqlRequest(
-          UploadImageDocument,
-          {
-            fileBase64: `data:${mimeType};base64,${asset.base64}`,
-            fileName,
-            mimeType,
-            folder: '/posts',
-            surface: 'MOBILE',
-          },
-          { auth: true },
-        );
-        url = uploaded.uploadImageToImagekit.url;
-      }
+      const url = await uploadStatusMedia(asset, '/posts', (progress) => set({ progress }));
       set({ progress: 70 });
       await graphqlRequest(
         CreatePostDocument,

@@ -17,7 +17,6 @@ const SEARCH_DEBOUNCE_MS = 400;
  * above the list are never a control that does nothing. */
 export function useVenuesExplore() {
   const locationId = useLocationStore((s) => s.selectedId);
-  const cityLabel = useLocationStore((s) => s.cityLabel);
   const { selectedSuperId } = useSuperCategories();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -65,7 +64,6 @@ export function useVenuesExplore() {
 
   return {
     venues,
-    cityLabel,
     searchInput,
     setSearchInput,
     isLoading,

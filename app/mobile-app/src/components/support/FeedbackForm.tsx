@@ -142,6 +142,8 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
           onChange={setMediaText}
           label={t('mweb.common.screenshotsOptional')}
           folder="/feedback"
+          deviceOnly
+          pickerTitle={t('mweb.common.addScreenshots')}
         />
       ) : null}
 

@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
+import { toGenderValue, toPetOwnerValue } from '@duncit/utils';
 import {
   Alert,
   Card,
@@ -97,6 +98,8 @@ export default function AccountPage() {
           first_name: me.first_name || '',
           last_name: me.last_name || '',
           bio: me.bio || '',
+          gender: toGenderValue(me.gender),
+          pet_owner: toPetOwnerValue(me.is_pet_owner),
           dob: toDobInput(me.dob),
           city: me.city || '',
           state: me.state || '',

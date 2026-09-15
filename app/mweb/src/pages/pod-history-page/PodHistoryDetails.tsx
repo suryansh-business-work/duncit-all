@@ -14,6 +14,7 @@ import RuleIcon from '@mui/icons-material/Rule';
 import { DuncitButton } from '@duncit/buttons';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
+import { useBrandingAssets } from '../../hooks/useBrandingAssets';
 import { parseApiError } from '../../utils/parseApiError';
 import { podUrl } from '../../utils/seoUrls';
 import { useDateFormat } from '../../utils/dateFormat';
@@ -83,6 +84,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   const { formatDateTime } = useDateFormat();
   const { t } = useTranslation();
   const { format, backoutDeductionPct } = usePricing();
+  const { termsUrl } = useBrandingAssets();
   const [loadInvoice, invoiceState] = useLazyQuery<any>(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
   const [loadTicketForPod] = useLazyQuery<any>(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
   const [loadTicketPdf, ticketState] = useLazyQuery<any>(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
@@ -281,7 +283,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
           {t('mweb.podHistory.backoutTerms')}
         </DuncitButton>
         <DuncitButton
-          href="https://duncit.com/terms"
+          href={termsUrl}
           target="_blank"
           rel="noopener"
           size="small"

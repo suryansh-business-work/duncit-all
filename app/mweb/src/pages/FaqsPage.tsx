@@ -18,6 +18,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from '../i18n/useTranslation';
 import SupportShell from './support-hub/SupportShell';
+import FaqFeedback from './support-hub/FaqFeedback';
+import StillNeedHelpDialog from './support-hub/StillNeedHelpDialog';
 import SectionHeader from '../components/SectionHeader';
 
 /** A filter chip: surface pill at rest, the green primary pill when chosen. */
@@ -54,6 +56,10 @@ export default function FaqsPage() {
   const [params] = useSearchParams();
   const [activeSuper, setActiveSuper] = useState<string>(params.get('cat') ?? 'ALL');
   const [search, setSearch] = useState('');
+  const [helpfulIds, setHelpfulIds] = useState<string[]>([]);
+  const [stillNeedHelp, setStillNeedHelp] = useState(false);
+  const toggleHelpful = (id: string) =>
+    setHelpfulIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   const groups: any[] = data?.publicFaqGroups ?? [];
 
@@ -172,10 +178,12 @@ export default function FaqsPage() {
                       }}>
                       {f.answer}
                     </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                      <Chip data-testid={`faq-${f.id}-helpful`} label={t('mweb.faqsPage.helpful')} />
-                      <Chip data-testid={`faq-${f.id}-not-helpful`} label={t('mweb.faqsPage.notReally')} />
-                    </Stack>
+                    <FaqFeedback
+                      faqId={f.id}
+                      helpful={helpfulIds.includes(f.id)}
+                      onToggleHelpful={toggleHelpful}
+                      onNotHelpful={() => setStillNeedHelp(true)}
+                    />
                   </AccordionDetails>
                 </Accordion>
               ))}
@@ -184,6 +192,7 @@ export default function FaqsPage() {
           );
         })}
       </Stack>
+      <StillNeedHelpDialog open={stillNeedHelp} onClose={() => setStillNeedHelp(false)} />
     </SupportShell>
   );
 }

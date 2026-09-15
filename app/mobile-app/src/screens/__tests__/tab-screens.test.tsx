@@ -12,7 +12,6 @@ import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
-jest.mock('@/components/home/ClubsLocationNote', () => ({ ClubsLocationNote: () => null }));
 jest.mock('@/components/LocationDialog', () => ({ LocationDialog: () => null }));
 jest.mock('@/hooks/useHomeFeed');
 jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));

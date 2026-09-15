@@ -13,6 +13,8 @@ const BRANDING_SUMMARY = gql`
       portals_logo_url
       primary_color
       support_email
+      terms_url
+      privacy_url
     }
   }
 `;
@@ -22,6 +24,9 @@ export interface BrandingSummary {
   appName: string;
   primaryColor?: string;
   supportEmail?: string;
+  /** Admin Branding → Legal links; undefined until the query answers. */
+  termsUrl?: string;
+  privacyUrl?: string;
   loading: boolean;
   /** True while `logoUrl` is the bundled copy rather than the admin's URL. */
   isFallbackLogo: boolean;
@@ -54,6 +59,8 @@ export function useBranding(): BrandingSummary {
     appName: b?.app_name || 'Duncit',
     primaryColor: b?.primary_color,
     supportEmail: b?.support_email,
+    termsUrl: b?.terms_url,
+    privacyUrl: b?.privacy_url,
     loading: loading && !b,
     isFallbackLogo: isFallback,
     onLogoError: () => setFailed(true),

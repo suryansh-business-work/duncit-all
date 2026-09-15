@@ -45,6 +45,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       accountHealth: 'Account Health',
       addAComment: 'Add a comment…',
       addressLine1: 'Address line 1',
+      addScreenshots: 'Add screenshots',
       addStory: 'Add story',
       all: 'All',
       allAreas: 'All areas',
@@ -1098,9 +1099,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewImage: 'View image',
       // The overview card.
       hostedBy: 'Hosted by {names}',
-      // mWeb only — posting a status from the pod is a host affordance the
-      // native pod screen does not carry.
+      // Both twins — posting a status (a photo or clip added to the pod's
+      // gallery) is shown only to the pod's own hosts, never to anyone else.
       addStatus: 'Add status',
+      addStatusOnlyYou: 'Only visible to you',
+      addStatusInfoLabel: 'About adding a status',
+      addStatusInfoBody:
+        "Only this pod's host can see this option. Photos and videos you add appear in the pod's gallery for everyone who opens the pod.",
+      addStatusUploading: 'Adding status…',
+      addStatusFailed: 'Could not add status.',
+      addStatusPhotoAccess: 'Photo access is needed to add a status.',
       free: 'Free',
       virtual: 'Virtual',
       physical: 'Physical',
@@ -2224,6 +2232,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       selectedCount: '{count} of {max}',
       firstIsCover: 'The first one is the cover.',
       pickUpTo: 'Pick up to {max} — from your phone, from Pexels, or both.',
+      pickUpToFromPhone: 'Pick up to {max} from your phone.',
       searchPhotos: 'Search photos',
       searchPexels: 'Search Pexels',
       noPhotos: 'No photos matched. Try a different word.',
@@ -3174,6 +3183,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       bioHint: 'Up to {max} characters',
       discardChanges: 'Discard changes',
       enterCity: 'Enter city',
+      // Gender and Pet Owner single-selects; options from @duncit/utils (rule 27).
+      gender: {
+        label: 'Gender',
+        placeholder: 'Select gender',
+        male: 'Male',
+        female: 'Female',
+        other: 'Other',
+      },
+      petOwner: {
+        label: 'Pet Owner',
+        placeholder: 'Select an option',
+        yes: 'Yes',
+        no: 'No',
+      },
       nextMonth: 'Next month',
       previousMonth: 'Previous month',
       selectCountry: 'Select country',
@@ -3361,8 +3384,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     faqsPage: {
       helpful: 'Helpful',
+      markedHelpful: 'You found this helpful',
       noFaqsMatchYourSearch: 'No FAQs match your search.',
       notReally: 'Not really',
+      stillNeedHelp: 'Still need help?',
+      stillNeedHelpBody:
+        'Our support team is here to assist you with any questions or concerns. Start a chat with us for further assistance.',
     },
     feedback: {
       couldNotSendFeedbackPleaseTry: 'Could not send feedback. Please try again.',

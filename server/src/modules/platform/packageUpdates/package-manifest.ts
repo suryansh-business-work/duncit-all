@@ -1785,6 +1785,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@apollo/client", range: "^4.2.12", kind: "dependencies" },
       { name: "@duncit/ai-monitoring", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/auth-tokens", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },

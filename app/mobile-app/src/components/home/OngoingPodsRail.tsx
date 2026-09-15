@@ -1,8 +1,9 @@
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { Reveal } from '@/animations/Reveal';
 import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -32,17 +33,13 @@ export function OngoingPodsRail({ pods, onOpenPod }: Readonly<Props>) {
       <YStack paddingHorizontal={16}>
         <SectionHeader title={t('mweb.home.ongoingPodsTitle')} />
       </YStack>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
-      >
+      <ScrollRail testID="ongoing-pods-rail-scroll" gap={12} paddingHorizontal={16}>
         {pods.map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
             <PodCard pod={pod} width={POD_CARD_RAIL_WIDTH} onPress={() => onOpenPod(pod)} />
           </Reveal>
         ))}
-      </ScrollView>
+      </ScrollRail>
     </YStack>
   );
 }

@@ -37,6 +37,8 @@ interface Props {
    * a stock tab is not merely discouraged but wrong.
    */
   deviceOnly?: boolean;
+  /** The sheet's heading — a field that is not pod media names itself. */
+  title?: string;
 }
 
 /**
@@ -62,6 +64,7 @@ export function CoverPickerDialog({
   onDone,
   onClose,
   deviceOnly = false,
+  title,
 }: Readonly<Props>) {
   const { color, muted, primary, onPrimary } = useThemeColors();
   const { t } = useTranslation();
@@ -114,7 +117,7 @@ export function CoverPickerDialog({
                     fontWeight="600"
                     color="$color"
                   >
-                    {t('mweb.createPod.addPodMedia')}
+                    {title ?? t('mweb.createPod.addPodMedia')}
                   </Text>
                   <XStack
                     pressStyle={PRESS_STYLE.control}
@@ -168,7 +171,7 @@ export function CoverPickerDialog({
                   ))}
                 </XStack>
 
-                <SelectionTray urls={tray} max={max} onRemove={onRemove} />
+                <SelectionTray urls={tray} max={max} onRemove={onRemove} deviceOnly={deviceOnly} />
 
                 {error ? (
                   <Text

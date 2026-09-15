@@ -64,6 +64,7 @@ export const appConfig = {
       children: [
         { label: 'Overview', labelKey: 'shell.nav.overview', to: '/graphql-monitor/overview', icon: 'dashboard' },
         { label: 'Operations', labelKey: 'shell.nav.operations', to: '/graphql-monitor/operations', icon: 'operations' },
+        { label: 'Query & Mutation', labelKey: 'shell.nav.graphqlQueryMutation', to: '/graphql-monitor/query-mutation', icon: 'code' },
         { label: 'Fields', labelKey: 'shell.nav.fields', to: '/graphql-monitor/fields', icon: 'accountTree' },
         { label: 'Errors', labelKey: 'shell.nav.errors', to: '/graphql-monitor/errors', icon: 'bug' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/graphql-monitor/settings', icon: 'tune' },
@@ -131,6 +132,7 @@ export const appConfig = {
       icon: 'rule',
       children: [
         { label: 'Runs', labelKey: 'shell.nav.runs', to: '/e2e/runs', icon: 'article' },
+        { label: 'Flows', labelKey: 'shell.nav.flows', to: '/e2e/flows', icon: 'hub' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/e2e/settings', icon: 'settings' },
       ],
     },

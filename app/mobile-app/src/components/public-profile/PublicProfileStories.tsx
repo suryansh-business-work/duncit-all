@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, XStack } from 'tamagui';
+import { XStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { ScrollRail } from '@/components/ScrollRail';
 import { StatusViewer } from '@/components/status/StatusViewer';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { PublicProfileStory } from '@/hooks/usePublicProfile';
@@ -54,11 +55,7 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
 
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
-      >
+      <ScrollRail testID="public-profile-stories" gap={12} paddingHorizontal={4}>
         {group.slides.map((slide, index) => (
           <XStack
             pressStyle={PRESS_STYLE.surface}
@@ -79,7 +76,7 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
             />
           </XStack>
         ))}
-      </ScrollView>
+      </ScrollRail>
 
       <StatusViewer
         status={openIndex === null ? null : group}

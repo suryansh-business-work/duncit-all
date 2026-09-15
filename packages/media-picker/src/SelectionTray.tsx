@@ -8,6 +8,8 @@ interface Props {
   urls: string[];
   max: number;
   onRemove: (url: string) => void;
+  /** No Pexels tabs are offered, so the hint must not mention them. */
+  deviceOnly: boolean;
 }
 
 /**
@@ -16,8 +18,11 @@ interface Props {
  * Numbered, because the first image is the cover — a grid that only ticks the
  * chosen ones leaves "which one is the cover?" unanswered.
  */
-export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
+export default function SelectionTray({ urls, max, onRemove, deviceOnly }: Readonly<Props>) {
   const { t } = useTranslation();
+  const emptyHint = deviceOnly
+    ? t('media.picker.pickUpToDevice', { vars: { max } })
+    : t('media.picker.pickUpToAny', { vars: { max } });
   return (
     <Box sx={{ mb: 2 }}>
       <Stack
@@ -43,7 +48,7 @@ export default function SelectionTray({ urls, max, onRemove }: Readonly<Props>) 
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
-          Pick up to {max} — from your device, from Pexels, or both.
+          {emptyHint}
         </Typography>
       ) : (
         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>

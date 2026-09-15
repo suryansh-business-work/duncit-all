@@ -7,7 +7,7 @@ import { AdCard } from '@/components/ads/AdCard';
 import { EmptyState } from '@/components/EmptyState';
 import { SearchPill } from '@/components/pod-list/SearchPill';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
-import { VenueCard, VenuesLocationBar } from '@/components/hosts-venues';
+import { VenueCard } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useVenuesExplore } from '@/hooks/useVenuesExplore';
@@ -16,14 +16,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
 
-/** Venues discovery — venues in the selected location with a server-side
- * debounced search, filtered by the header's Super-category tiles (the app-wide
- * filter every other tab reads). mWeb twin: /venues (VenuesPage). */
+/** Venues discovery — venues in the header's selected location with a
+ * server-side debounced search, filtered by the header's Super-category tiles
+ * (the app-wide filter every other tab reads). Location is changed only from the
+ * header. mWeb twin: /venues (VenuesPage). */
 export function VenuesScreen() {
   const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { venues, cityLabel, searchInput, setSearchInput, isLoading, error } = useVenuesExplore();
+  const { venues, searchInput, setSearchInput, isLoading, error } = useVenuesExplore();
   // A sponsored banner every 4 venues (server returns [] when none are booked).
   const { ads } = useActiveAds('VENUE_LIST');
   const bottomSpace = useBottomNavSpace();
@@ -34,7 +35,6 @@ export function VenuesScreen() {
         {/* A tab, not a pushed screen, since the bar carries Venues now — so the
             last venue has to clear the floating bar itself. */}
         <YStack gap={12} padding={16} paddingBottom={bottomSpace}>
-          <VenuesLocationBar cityLabel={cityLabel} />
           <XStack>
             <SearchPill
               testID="venues-search"

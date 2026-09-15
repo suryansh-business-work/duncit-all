@@ -12,6 +12,20 @@ import { cachedGql } from './graphql-client';
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
+/** Short, because a policy Legal has just activated must not 404 for long. */
+const POLICY_TTL = 15 * 1000;
+
+const POLICY_QUERY = /* GraphQL */ `
+  query SiteServerPolicy($slug: String!) {
+    policyBySlug(slug: $slug) {
+      slug
+      title
+      content
+      is_active
+    }
+  }
+`;
+
 const BLOG_QUERY = /* GraphQL */ `
   query SiteServerBlog {
     publicWebsiteContent(type: BLOG) {
@@ -43,6 +57,18 @@ interface BlogResult {
 
 interface BrandingResult {
   branding: { app_name: string; website_header_logo_url: string | null };
+}
+
+export interface LivePolicy {
+  /** The policy's CURRENT slug — differs from the one asked for once it was renamed. */
+  slug: string;
+  title: string;
+  content: string | null;
+  is_active: boolean;
+}
+
+export interface PolicyResult {
+  policyBySlug: LivePolicy | null;
 }
 
 const MAX_DESCRIPTION = 300;
@@ -82,5 +108,30 @@ export async function blogPostMeta(
     imageUrl: post.image_url ?? branding?.branding?.website_header_logo_url ?? null,
     largeImage: !!post.image_url,
     type: 'article',
+  });
+}
+
+/**
+ * The live policy behind a /policy/<slug> address. Null means the API could
+ * not be asked; a result whose `policyBySlug` is null means there is no such
+ * policy.
+ */
+export function fetchLivePolicy(slug: string): Promise<PolicyResult | null> {
+  return cachedGql<PolicyResult>(POLICY_QUERY, POLICY_TTL, { slug });
+}
+
+/** The meta block for one policy page, from its live title and wording. */
+export async function policyMeta(
+  policy: LivePolicy,
+  pageUrl: string,
+  fallbackDescription: string
+): Promise<string> {
+  const branding = await cachedGql<BrandingResult>(BRANDING_QUERY, FIVE_MINUTES);
+  return buildSiteMetaTags({
+    title: policy.title,
+    description: plainText(policy.content) ?? fallbackDescription,
+    url: pageUrl,
+    siteName: branding?.branding?.app_name ?? 'Duncit',
+    imageUrl: branding?.branding?.website_header_logo_url ?? null,
   });
 }

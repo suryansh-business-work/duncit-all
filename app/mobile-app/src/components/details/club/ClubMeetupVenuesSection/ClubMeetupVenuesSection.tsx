@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import * as Location from 'expo-location';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import { MapEmbed } from '@/components/MapEmbed';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDistance, haversineKm } from '@/utils/distance';
@@ -98,11 +99,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
           </XStack>
         )}
       </XStack>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12 }}
-      >
+      <ScrollRail testID="club-venues-scroll" gap={12}>
         {venues.map((venue) => (
           <VenueCard
             key={venue.id}
@@ -112,7 +109,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
             onOpen={() => onOpenVenue(venue.id)}
           />
         ))}
-      </ScrollView>
+      </ScrollRail>
       <Text fontSize={13} color="$muted" testID="club-venue-address">
         {parts.join(', ')}
       </Text>

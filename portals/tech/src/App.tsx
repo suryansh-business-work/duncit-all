@@ -34,6 +34,8 @@ import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
+import E2eFlowsPage from './pages/e2e/flows';
+import E2eFlowDetailPage from './pages/e2e/flows/detail';
 import StressRunsPage from './pages/stress-testing/runs';
 import StressRunDetailPage from './pages/stress-testing/run-detail';
 import StressSettingsPage from './pages/stress-testing/settings';
@@ -41,6 +43,7 @@ import MailAutomationPage from './pages/mail-automation';
 import GraphqlMonitorOverviewPage from './pages/graphql-monitor/overview';
 import GraphqlOperationsPage from './pages/graphql-monitor/operations';
 import GraphqlOperationDetailPage from './pages/graphql-monitor/operation-detail';
+import GraphqlQueryMutationPage from './pages/graphql-monitor/query-mutation';
 import GraphqlFieldsPage from './pages/graphql-monitor/fields';
 import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
@@ -96,6 +99,7 @@ export default function App() {
         <Route path="/graphql-monitor/operations" element={authed(<GraphqlOperationsPage />)} />
         {/* One operation at its own address — reloadable, bookmarkable, pasteable. */}
         <Route path="/graphql-monitor/operations/:operationId" element={authed(<GraphqlOperationDetailPage />)} />
+        <Route path="/graphql-monitor/query-mutation" element={authed(<GraphqlQueryMutationPage />)} />
         <Route path="/graphql-monitor/fields" element={authed(<GraphqlFieldsPage />)} />
         <Route path="/graphql-monitor/errors" element={authed(<GraphqlErrorsPage />)} />
         <Route path="/graphql-monitor/settings" element={authed(<GraphqlMonitorSettingsPage />)} />
@@ -139,6 +143,8 @@ export default function App() {
             schedule below is the only thing that starts a scheduled run. */}
         <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
         <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
+        <Route path="/e2e/flows" element={authed(<E2eFlowsPage />)} />
+        <Route path="/e2e/flows/:flowId" element={authed(<E2eFlowDetailPage />)} />
         <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />
         {/* Load against THIS environment from GitHub runners, watched live: the
             server under test records the time series and enforces the guardrails. */}

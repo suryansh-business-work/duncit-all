@@ -2,10 +2,11 @@ import type { ReactNode } from 'react';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import { PodCard } from '@/components/home/PodCard';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { SearchClubResult } from '@/hooks/useSearch';
@@ -38,19 +39,17 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
   let body: ReactNode = null;
   if (pods.length > 0) {
     body = (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap={12} paddingVertical={2}>
-          {pods.map((pod) => (
-            <PodCard
-              key={pod.id}
-              pod={pod}
-              width={260}
-              showPlace={false}
-              onPress={() => onOpenPod(pod)}
-            />
-          ))}
-        </XStack>
-      </ScrollView>
+      <ScrollRail testID={`search-club-${club.club_id}-pods`} gap={12} paddingVertical={2}>
+        {pods.map((pod) => (
+          <PodCard
+            key={pod.id}
+            pod={pod}
+            width={260}
+            showPlace={false}
+            onPress={() => onOpenPod(pod)}
+          />
+        ))}
+      </ScrollRail>
     );
   } else if (club.club_description) {
     body = (

@@ -45,23 +45,9 @@ const SUPER_CATEGORIES = gql`
   }
 `;
 
-const VENUES_LOCATIONS = gql`
-  query VenuesLocationNames {
-    locations {
-      id
-      location_name
-    }
-  }
-`;
-
 const catMock = (categories: unknown[]) => ({
   request: { query: SUPER_CATEGORIES },
   result: { data: { categories } },
-});
-
-const locMock = (locations: unknown[]) => ({
-  request: { query: VENUES_LOCATIONS },
-  result: { data: { locations } },
 });
 
 const adMock = (ads: unknown[]) => ({
@@ -91,7 +77,7 @@ afterEach(() => {
 });
 
 describe('VenuesPage', () => {
-  it('renders the city label, categories and venue cards, and interleaves an ad', async () => {
+  it('renders categories and venue cards, and interleaves an ad', async () => {
     const categories = [
       { id: 'c1', name: 'Food', is_active: true },
       { id: 'c2', name: 'Hidden', is_active: false },
@@ -101,13 +87,11 @@ describe('VenuesPage', () => {
         catMock(categories),
         adMock([{ id: 'ad-1', ad_type: 'IMAGE', media_url: 'x', redirect_url: null, ad_title: 'Buy', position: 'VENUE_LIST' }]),
         venuesMock(baseVars, fiveVenues),
-        locMock([{ id: 'loc-1', location_name: 'Pune' }]),
       ],
       <VenuesPage locationId="loc-1" />,
     );
 
     expect(await screen.findByText('Venue 1')).toBeInTheDocument();
-    expect(await screen.findByText('Venues in Pune')).toBeInTheDocument();
     // active category shown, inactive filtered out
     expect(await screen.findByText('Food')).toBeInTheDocument();
     expect(screen.getByText('All')).toBeInTheDocument();

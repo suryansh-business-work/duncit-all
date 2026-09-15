@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { PodHostStatus } from '@/components/details/PodHostStatus';
 import { PodMetaRow } from '@/components/details/PodMetaRow';
 import { TourAnchor } from '@/tours/TourAnchor';
 import type { PodDetail } from '@/hooks/useDetails';
@@ -79,7 +80,15 @@ function Stat({
 export function PodInfo({
   pod,
   categoryCrumbs,
-}: Readonly<{ pod: PodDetail; categoryCrumbs: readonly string[] }>) {
+  isHost = false,
+  onStatusAdded,
+}: Readonly<{
+  pod: PodDetail;
+  categoryCrumbs: readonly string[];
+  /** The viewer is one of this pod's hosts — only they get "Add status". */
+  isHost?: boolean;
+  onStatusAdded?: () => Promise<void>;
+}>) {
   const { t } = useTranslation();
   const { color, danger, warning, info } = useThemeColors();
   const host = pod.host_names.join(', ');
@@ -93,23 +102,26 @@ export function PodInfo({
 
   return (
     <YStack testID="pod-info" paddingHorizontal={16} paddingTop={20} gap={12}>
-      <YStack gap={4}>
-        <Text
-          role="heading"
-          testID="pod-info-title"
-          fontSize={24}
-          lineHeight={29}
-          fontWeight="600"
-          color="$color"
-        >
-          {pod.pod_title}
-        </Text>
-        {host ? (
-          <Text testID="pod-info-host" fontSize={14} color="$muted" numberOfLines={1}>
-            {t('mweb.podDetails.hostedBy', { vars: { names: host } })}
+      <XStack gap={12} justifyContent="space-between" alignItems="flex-start">
+        <YStack gap={4} flex={1} minWidth={0}>
+          <Text
+            role="heading"
+            testID="pod-info-title"
+            fontSize={24}
+            lineHeight={29}
+            fontWeight="600"
+            color="$color"
+          >
+            {pod.pod_title}
           </Text>
-        ) : null}
-      </YStack>
+          {host ? (
+            <Text testID="pod-info-host" fontSize={14} color="$muted" numberOfLines={1}>
+              {t('mweb.podDetails.hostedBy', { vars: { names: host } })}
+            </Text>
+          ) : null}
+        </YStack>
+        {isHost && onStatusAdded ? <PodHostStatus podId={pod.id} onAdded={onStatusAdded} /> : null}
+      </XStack>
       {categoryCrumbs.length > 0 ? (
         <PodMetaRow icon="category">
           <CategoryBreadcrumb crumbs={categoryCrumbs} />

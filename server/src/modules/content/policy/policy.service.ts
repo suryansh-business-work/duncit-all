@@ -261,10 +261,23 @@ export const policyService = {
     return doc ? toPub(doc) : null;
   },
 
+  /**
+   * The policy an address names — by its current slug, or by a slug it has
+   * since been renamed from.
+   *
+   * A slug edit in Legal would otherwise break every link already out in the
+   * world: a sent email, a website build, an app link. Each snapshot keeps the
+   * slug it was written under, so the old address still resolves. The current
+   * slug is asked first, so a policy that takes over a retired slug owns it.
+   */
   async getBySlug(slug: string) {
     const normalised = normaliseSlug(slug);
     if (!normalised) return null;
-    const doc = await PolicyModel.findOne({ slug: normalised });
+    const doc =
+      (await PolicyModel.findOne({ slug: normalised })) ??
+      (await PolicyModel.findOne({ 'versions.slug': normalised }, null, {
+        sort: { updated_at: -1 },
+      }));
     return doc ? toPub(doc) : null;
   },
 

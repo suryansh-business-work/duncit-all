@@ -3,6 +3,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { Box, Card, CardActionArea, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { ScrollRail } from '@duncit/ui';
 import { Link as RouterLink } from 'react-router';
 import VenueMapPreview from '../../components/VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
@@ -69,7 +70,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           </DuncitButton>
         )}
       </Stack>
-      <Stack direction="row" spacing={1.5} sx={{ overflowX: 'auto', pb: 1 }}>
+      <ScrollRail testId="club-venues-scroll" gap={1.5}>
         {venues.map((venue) => {
           const distance = venueDistance(venue);
           return (
@@ -107,7 +108,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
             </Card>
           );
         })}
-      </Stack>
+      </ScrollRail>
       <Typography
         data-testid="club-venue-address"
         variant="body2"

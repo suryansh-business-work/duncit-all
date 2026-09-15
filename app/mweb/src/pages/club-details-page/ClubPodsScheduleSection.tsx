@@ -1,5 +1,6 @@
-import { Box, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import { ScrollRail } from '@duncit/ui';
 import { clubPodPhase, type ClubPodPhase } from '../../utils/clubPodPhase';
 import EmptyState from '../../components/EmptyState';
 import SectionHeader from '../../components/SectionHeader';
@@ -23,11 +24,11 @@ function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title:
   return (
     <Stack data-testid={`club-pods-schedule-rail-${title}`} spacing={1.25}>
       <SectionHeader testId={`club-pods-schedule-rail-${title}-header`} title={title} />
-      <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+      <ScrollRail testId={`club-pods-schedule-rail-${title}-scroll`} gap={1.5}>
         {pods.map((pod) => (
           <ClubPodRailCard key={pod.id} pod={pod} priceFormat={priceFormat} onOpen={onOpen} />
         ))}
-      </Box>
+      </ScrollRail>
     </Stack>
   );
 }

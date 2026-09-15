@@ -138,7 +138,7 @@
   "app/mobile-app/src/screens/VenueHealthScreen.tsx": 1,
   "app/mobile-app/src/screens/VenueManageScreen.tsx": 2,
   "app/mobile-app/src/screens/VenuesScreen.tsx": 2,
-  "app/mobile-app/src/stores/status.store.ts": 3,
+  "app/mobile-app/src/services/status-media-upload.ts": 3,
   "app/mobile-app/src/utils/product-checkout-input.ts": 1,
   "app/mobile-app/src/utils/product-specs.ts": 4,
   "app/mobile-app/src/utils/venue-approval.ts": 2,

@@ -37,8 +37,9 @@ import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { useCartStore } from '@/stores/cart.store';
-import config, { createBrandConfig } from './tamagui.config';
+import config, { LOCAL_PALETTES, createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
+import { resolveThemeTokens } from '@duncit/utils';
 import { config as appConfig } from '@/constants/config';
 
 // Base navigator background = the app ground, so there's no white
@@ -102,10 +103,14 @@ export default function App() {
   // Admin-picked Google Font (Branding → Fonts → Mobile App): once loaded, the
   // Tamagui config is rebuilt around it so every Text/heading re-themes.
   const brandFont = useBrandFont();
-  const tamaguiConfig = useMemo(
-    () => (brandFont ? createBrandConfig(brandFont) : config),
-    [brandFont],
-  );
+  // Branding → Theme tokens: the bundled palettes (same reference) unless the
+  // admin switched the source to Server. Native twin of mWeb's useThemeTokens.
+  const branding = brandingData?.branding;
+  const palettes = useMemo(() => resolveThemeTokens(LOCAL_PALETTES, branding), [branding]);
+  const tamaguiConfig = useMemo(() => {
+    const isBundled = !brandFont && palettes === LOCAL_PALETTES;
+    return isBundled ? config : createBrandConfig(brandFont, palettes);
+  }, [brandFont, palettes]);
 
   // Web build: swap the favicon to the admin-configured one once branding loads.
   useEffect(() => {

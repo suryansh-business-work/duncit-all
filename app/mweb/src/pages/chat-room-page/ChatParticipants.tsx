@@ -1,5 +1,6 @@
-import { Avatar, Badge, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Badge, Box, Chip, Tooltip, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import { ScrollRail } from '@duncit/ui';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface ChatPerson {
@@ -68,14 +69,10 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
         }}>
         {count} {count === 1 ? 'participant' : 'participants'}
       </Typography>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{ mt: 0.75, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}
-      >
+      <ScrollRail testId="chat-participants-scroll" gap={1} sx={{ mt: 0.75 }}>
         {hosts.map((host) => personChip(host, true))}
         {participants.map((person) => personChip(person, false))}
-      </Stack>
+      </ScrollRail>
     </Box>
   );
 }

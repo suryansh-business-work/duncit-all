@@ -1,6 +1,6 @@
 import { Pressable } from 'react-native';
 import * as Linking from 'expo-linking';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import {
   clampSomethingForYouTitle,
   resolveSomethingForYouTarget,
@@ -9,6 +9,7 @@ import {
 } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -70,16 +71,11 @@ export function SomethingForYouRail({ onOpen }: Readonly<Props>) {
 
       {/* The last card is deliberately cut off by the screen edge — with no
           scrollbar it is the only signal that the row moves. */}
-      <ScrollView
-        testID="something-for-you-rail-list"
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-      >
+      <ScrollRail testID="something-for-you-rail-list" gap={12} paddingHorizontal={16}>
         {items.map((item) => (
           <SomethingForYouTile key={item.id} item={item} onOpen={onOpen} />
         ))}
-      </ScrollView>
+      </ScrollRail>
     </YStack>
   );
 }

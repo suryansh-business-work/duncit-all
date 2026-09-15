@@ -24,6 +24,12 @@ exports:
   - 'runAddress'
   - 'runMarker'
   - 'runPassword'
+  - 'applyTokenOverrides'
+  - 'resolveThemeTokens'
+  - 'ThemePalettes'
+  - 'ThemeTokenOverrides'
+  - 'ThemeTokenSettings'
+  - 'ThemeTokenSource'
   - 'buildOrderTimeline'
   - 'statusLabel'
   - 'fulfilmentLabel'
@@ -190,6 +196,12 @@ exports:
   - 'USERNAME_CHECK_DEBOUNCE_MS'
   - 'profileUrl'
   - 'buildUsernameLabels'
+  - 'GENDERS'
+  - 'PET_OWNER_CHOICES'
+  - 'toGenderValue'
+  - 'toPetOwnerValue'
+  - 'fromPetOwnerValue'
+  - 'buildProfileDemographicsLabels'
   - 'BADGE_CONDITIONS'
   - 'BADGE_GOAL_KEY'
   - 'BADGE_WINDOWS'
@@ -1665,6 +1677,25 @@ labels.status('AVAILABLE', 'ravi-plays');    // '@ravi-plays is available.'
 labels.copyLink;                             // the button beside it
 ```
 
+### Gender and Pet Owner
+
+Two single-selects on **Edit profile**, identical on mWeb and native. `GENDERS` restates
+the server's GraphQL `Gender` enum. Pet Owner is stored as a boolean but picked as Yes / No,
+so the form holds `'YES' | 'NO' | ''` and maps at the edges. An unanswered field maps to
+`undefined`, which the mutation omits, so a save never clears an answer.
+
+```ts
+toGenderValue('FEMALE');   // 'FEMALE'
+toGenderValue(null);       // ''
+toPetOwnerValue(false);    // 'NO'
+fromPetOwnerValue('YES');  // true
+fromPetOwnerValue('');     // undefined — left out of UpdateMyProfileInput
+
+const labels = buildProfileDemographicsLabels(t);
+labels.genderOptions;      // [{ value: 'MALE', label: 'Male' }, …]
+labels.petOwnerOptions;    // [{ value: 'YES', label: 'Yes' }, { value: 'NO', label: 'No' }]
+```
+
 ### Communication preferences
 
 One row in Profile Settings opens a hub listing Email / WhatsApp / SMS; each of those opens
@@ -2220,3 +2251,45 @@ Cities and localities sort A→Z; the clubs inside a group keep the order they a
 list that was already searched and sorted stays that way. A city with no clubs gets no card,
 and a club whose `location_id` is not among the locations is left out of the city cards. The
 no-area group (`locality: ''`) always comes last — each app labels it "Other areas".
+
+## Theme tokens — bundled, or the admin's
+
+`theme-tokens.ts` decides which light and dark palettes mWeb and the native app theme with.
+Admin → Branding → Theme tokens has a switch: **Local** (the default) keeps the bundled
+`@duncit/auth-tokens` palettes exactly as shipped; **Server** lays the admin's per-mode values
+over them. A blank admin value keeps the bundled one, so an admin only fills in what they
+change. mWeb's `useThemeTokens` feeds the result to `buildTheme`; native `App.tsx` feeds it to
+`createBrandConfig`.
+
+```ts
+import { dark, light } from '@duncit/auth-tokens';
+import { applyTokenOverrides, resolveThemeTokens } from '@duncit/utils';
+
+const local = { light, dark };
+
+resolveThemeTokens(local, {
+  theme_token_source: 'SERVER',
+  theme_tokens_light: { primary: '#1d4ed8', accent: '' },
+  theme_tokens_dark: { primary: '#1d4ed8' },
+});
+// { light: { ...light, primary: '#1d4ed8' },   ← blank accent keeps '#c62226'
+//   dark:  { ...dark,  primary: '#1d4ed8' } }
+
+resolveThemeTokens(local, { theme_token_source: 'LOCAL', theme_tokens_light: { primary: '#1d4ed8' } });
+// local — the same object, so a memoised theme is not rebuilt
+
+applyTokenOverrides(light, { primary: '  #1d4ed8 ', muted: '   ' });
+// { ...light, primary: '#1d4ed8' } — trimmed; a whitespace-only value counts as blank
+```
+
+It is generic over the palette shape and imports nothing, so the package stays dependency-free:
+the caller passes its own `{ light, dark }`.
+
+| Export | Signature |
+| --- | --- |
+| `resolveThemeTokens` | `<T>(local: ThemePalettes<T>, settings?: ThemeTokenSettings<T> \| null) => ThemePalettes<T>` |
+| `applyTokenOverrides` | `<T>(local: T, overrides?: ThemeTokenOverrides<T> \| null) => T` |
+| `ThemeTokenSource` | `'LOCAL' \| 'SERVER'` |
+| `ThemePalettes<T>` | `{ light: T; dark: T }` |
+| `ThemeTokenOverrides<T>` | `{ [K in keyof T]?: string \| null }` |
+| `ThemeTokenSettings<T>` | `{ theme_token_source?, theme_tokens_light?, theme_tokens_dark? }` — the `branding` query's fields |

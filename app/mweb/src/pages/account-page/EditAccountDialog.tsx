@@ -26,6 +26,8 @@ const UPDATE_PROFILE = gql`
       first_name
       last_name
       bio
+      gender
+      is_pet_owner
       city
       state
       country

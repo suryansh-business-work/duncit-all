@@ -153,12 +153,16 @@ export const supportChatService = {
   },
 
   async getMine(userId: string) {
-    // The latest thread regardless of status, so a user can re-open a chat they
-    // previously resolved (Bug 12) rather than always starting a fresh one.
+    // The latest thread, so a user can resume an open chat or re-open one they
+    // previously resolved (Bug 12) — but only while its reopen window still
+    // stands. A closed chat past that window is not resurfaced; the caller
+    // starts a fresh conversation instead.
     const doc = await SupportChatSessionModel.findOne({
       user_id: new Types.ObjectId(userId),
     }).sort({ last_message_at: -1 });
-    return doc ? sessionPub(doc) : null;
+    if (!doc) return null;
+    if (doc.status === 'CLOSED' && reopenExpired(doc.resolved_at)) return null;
+    return sessionPub(doc);
   },
 
   async start(userId: string, text?: string) {

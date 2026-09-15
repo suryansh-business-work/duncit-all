@@ -94,7 +94,7 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
       v('name', 'The account holder’s first name.', 'Aarav'),
       v('policy_title', 'The policy that changed.', 'Privacy Policy'),
       v('summary', 'Legal’s own note on what changed. May be blank.', 'We now name our analytics processors.'),
-      v('policy_url', 'Where to read the new version.', 'https://duncit.com/legal/privacy-policy'),
+      v('policy_url', 'Where to read the new version.', 'https://duncit.com/policy/privacy-policy'),
       v('updated_at', 'When it was published, already formatted.', '23 Aug 2026'),
     ],
   }),

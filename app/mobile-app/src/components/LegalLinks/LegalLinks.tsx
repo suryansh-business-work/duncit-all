@@ -1,17 +1,19 @@
 import { Linking } from 'react-native';
 import { Text } from 'tamagui';
-import { auth } from '@duncit/auth-tokens';
 
+import { useLegalUrls } from '@/hooks/useLegalUrls';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Terms & Privacy footer, mirroring mWeb's <LegalLinks/> — the links are green
- * 600 like every other auth link there. URLs come from the shared auth tokens
- * so both apps point at the same legal pages.
+ * 600 like every other auth link there. URLs come from the admin Branding
+ * setting; the shared auth tokens carry the same defaults so the links work
+ * before that query answers.
  */
 export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   const { t } = useTranslation();
+  const { termsUrl, privacyUrl } = useLegalUrls();
   // The lead-in arrives already translated because it names the action of the
   // screen it sits on ("By signing in," / "By signing up,").
   const lead = prefix ?? t('mweb.auth.legalContinue');
@@ -27,7 +29,7 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
         role="link"
         color="$primary"
         fontWeight="600"
-        onPress={() => Linking.openURL(auth.legal.termsUrl)}
+        onPress={() => Linking.openURL(termsUrl)}
       >
         {t('mweb.auth.terms')}
       </Text>{' '}
@@ -38,7 +40,7 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
         role="link"
         color="$primary"
         fontWeight="600"
-        onPress={() => Linking.openURL(auth.legal.privacyUrl)}
+        onPress={() => Linking.openURL(privacyUrl)}
       >
         {t('mweb.auth.privacy')}
       </Text>

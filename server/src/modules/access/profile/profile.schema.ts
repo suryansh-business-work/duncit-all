@@ -5,6 +5,8 @@ export const profileTypeDefs = gql`
     first_name: String
     last_name: String
     bio: String
+    gender: Gender
+    is_pet_owner: Boolean
     profile_photo: String
     profile_links: [ProfileLinkInput!]
     city: String

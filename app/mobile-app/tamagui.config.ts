@@ -1,8 +1,9 @@
 import { defaultConfig } from '@tamagui/config/v4';
 import { Platform } from 'react-native';
 import { createTamagui } from 'tamagui';
-import { dark, light, typography } from '@duncit/auth-tokens';
+import { dark, light, typography, type ModeColors } from '@duncit/auth-tokens';
 import { pressThemeKeys } from '@duncit/buttons-native';
+import type { ThemePalettes } from '@duncit/utils';
 
 /**
  * Brand themes layered on top of Tamagui's default config. We keep the default
@@ -18,7 +19,7 @@ import { pressThemeKeys } from '@duncit/buttons-native';
 // one. Derived in @duncit/buttons-native so the alpha maths is the same one
 // mWeb's MUI theme runs, rather than a hand-typed rgba() per screen. Per mode,
 // because the status colours are lighter in dark mode.
-const pressKeysFor = (m: typeof light) =>
+const pressKeysFor = (m: ModeColors) =>
   pressThemeKeys({
     primary: m.primary,
     primaryActive: m.primaryActive,
@@ -26,79 +27,48 @@ const pressKeysFor = (m: typeof light) =>
     success: m.success,
   });
 
-const brandLight = {
-  background: light.bg,
-  backgroundHover: light.soft,
-  backgroundPress: light.soft,
-  backgroundFocus: light.soft,
-  color: light.ink,
-  colorHover: light.ink,
-  colorPress: light.ink,
-  colorFocus: light.ink,
-  borderColor: light.border,
-  borderColorHover: light.border,
-  placeholderColor: light.muted,
+/** One mode's brand theme keys. `cardBorder` differs by mode, not by palette. */
+const brandTheme = (m: ModeColors, cardBorder: string) => ({
+  background: m.bg,
+  backgroundHover: m.soft,
+  backgroundPress: m.soft,
+  backgroundFocus: m.soft,
+  color: m.ink,
+  colorHover: m.ink,
+  colorPress: m.ink,
+  colorFocus: m.ink,
+  borderColor: m.border,
+  borderColorHover: m.border,
+  placeholderColor: m.muted,
   // A form field's outline — 3:1 against every ground (WCAG 1.4.11).
   // `borderColor` stays the decorative hairline.
-  inputBorder: light.inputBorder,
-  surface: light.surface,
-  // Light cards sit borderless on the off-white ground; dark cards keep the
-  // hairline (same rule as mWeb's --duncit-card-border).
-  cardBorder: 'transparent',
-  soft: light.soft,
-  muted: light.muted,
+  inputBorder: m.inputBorder,
+  surface: m.surface,
+  cardBorder,
+  soft: m.soft,
+  muted: m.muted,
   // Red TEXT — links, "See all", active tab, outline/ghost button labels.
-  accent: light.accent,
-  onAccent: light.onAccent,
+  accent: m.accent,
+  onAccent: m.onAccent,
   // The exact brand red, for decoration only (logo, illustration, large display type).
-  brand: light.brand,
+  brand: m.brand,
   // Call-to-action FILL, always under `onPrimary`.
-  primary: light.primary,
-  primaryHover: light.primaryHover,
-  primaryPress: light.primaryActive,
-  onPrimary: light.onPrimary,
-  danger: light.error,
-  success: light.success,
-  warning: light.warning,
-  info: light.info,
+  primary: m.primary,
+  primaryHover: m.primaryHover,
+  primaryPress: m.primaryActive,
+  onPrimary: m.onPrimary,
+  danger: m.error,
+  success: m.success,
+  warning: m.warning,
+  info: m.info,
   // Text on a filled danger/success colour (dark ink in dark mode).
-  onDanger: light.onSemantic,
-  onSuccess: light.onSemantic,
-  ...pressKeysFor(light),
-};
+  onDanger: m.onSemantic,
+  onSuccess: m.onSemantic,
+  ...pressKeysFor(m),
+});
 
-const brandDark: typeof brandLight = {
-  background: dark.bg,
-  backgroundHover: dark.soft,
-  backgroundPress: dark.soft,
-  backgroundFocus: dark.soft,
-  color: dark.ink,
-  colorHover: dark.ink,
-  colorPress: dark.ink,
-  colorFocus: dark.ink,
-  borderColor: dark.border,
-  borderColorHover: dark.border,
-  placeholderColor: dark.muted,
-  inputBorder: dark.inputBorder,
-  surface: dark.surface,
-  cardBorder: dark.border,
-  soft: dark.soft,
-  muted: dark.muted,
-  accent: dark.accent,
-  onAccent: dark.onAccent,
-  brand: dark.brand,
-  primary: dark.primary,
-  primaryHover: dark.primaryHover,
-  primaryPress: dark.primaryActive,
-  onPrimary: dark.onPrimary,
-  danger: dark.error,
-  success: dark.success,
-  warning: dark.warning,
-  info: dark.info,
-  onDanger: dark.onSemantic,
-  onSuccess: dark.onSemantic,
-  ...pressKeysFor(dark),
-};
+/** The bundled palettes — what the app themes with unless Branding → Theme tokens is Server. */
+export const LOCAL_PALETTES: ThemePalettes<ModeColors> = { light, dark };
 
 // Brand typeface. On web we use the SAME Quicksand stack mWeb loads via Google
 // Fonts (see web-fonts.web.ts) so type matches across surfaces; native keeps
@@ -107,8 +77,12 @@ const brandDark: typeof brandLight = {
 const brandFamily = Platform.OS === 'web' ? typography.fontFamily : defaultConfig.fonts.body.family;
 
 /** Builds the Tamagui config, optionally around a runtime-loaded font family
- * (the admin Branding → Fonts pick, registered via expo-font). */
-export function createBrandConfig(customFamily?: string) {
+ * (the admin Branding → Fonts pick, registered via expo-font) and the admin's
+ * theme tokens (Branding → Theme tokens, resolved over the bundled palettes). */
+export function createBrandConfig(
+  customFamily?: string,
+  palettes: ThemePalettes<ModeColors> = LOCAL_PALETTES,
+) {
   const family = customFamily || brandFamily;
   const fonts = {
     ...defaultConfig.fonts,
@@ -128,8 +102,10 @@ export function createBrandConfig(customFamily?: string) {
     },
     themes: {
       ...defaultConfig.themes,
-      light: { ...defaultConfig.themes.light, ...brandLight },
-      dark: { ...defaultConfig.themes.dark, ...brandDark },
+      // Light cards sit borderless on the off-white ground; dark cards keep the
+      // hairline (same rule as mWeb's --duncit-card-border).
+      light: { ...defaultConfig.themes.light, ...brandTheme(palettes.light, 'transparent') },
+      dark: { ...defaultConfig.themes.dark, ...brandTheme(palettes.dark, palettes.dark.border) },
     },
   });
 }

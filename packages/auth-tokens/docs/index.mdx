@@ -155,7 +155,7 @@ auth
 //     mediaOpacity: 0.9,
 //     edgeStop: 0.26,
 //   },
-//   legal: { termsUrl: 'https://duncit.com/terms', privacyUrl: 'https://duncit.com/privacy/policy' },
+//   legal: { termsUrl: 'https://duncit.com/policy/terms-and-conditions', privacyUrl: 'https://duncit.com/policy/privacy-policy' },
 // }
 ```
 
@@ -310,9 +310,10 @@ is the authoritative import check there.
 
 `auth` carries the login-screen visuals: `accent`, a three-colour `avatars` tuple,
 `avatarRing`, `bgGradient` / `cardGradient` (each with a `light` and `dark` three-stop tuple),
-and `legal.termsUrl` / `legal.privacyUrl`. `app/mobile-app/src/components/LegalLinks` opens
-those URLs directly. They are configuration, not business data — a legal URL change belongs in
-`tokens.json`, not hardcoded next to a `Linking.openURL` call.
+and `legal.termsUrl` / `legal.privacyUrl`. These are the bundled DEFAULTS only: the live links
+are the admin Branding setting's `terms_url` / `privacy_url` (Admin → Branding → Legal links),
+which mWeb's and the native app's `LegalLinks` read first. The tokens cover the moment before
+that query answers, so keep them equal to the server's defaults.
 
 Note the gradients are typed as fixed-length triples (`[string, string, string]`). Adding a
 fourth stop is a type change, not a data change.

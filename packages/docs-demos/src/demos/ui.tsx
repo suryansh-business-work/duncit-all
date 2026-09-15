@@ -11,6 +11,7 @@ import {
   LoadingOverlay,
   PageHeader,
   PodSeatsCell,
+  ScrollRail,
   SpotsStepper,
   StatCard,
   StatusChip,
@@ -84,6 +85,10 @@ function SpotsDemo({ mock }: Readonly<{ mock: SpotsMock }>) {
       boundsHint={boundsHint}
     />
   );
+}
+
+interface RailMock {
+  pods: { pod_id: string; title: string; price: number }[];
 }
 
 interface LoaderMock {
@@ -226,6 +231,31 @@ export default defineDemos('ui', [
     mock: { seats_taken: 10, bookings: 3, no_of_spots: 10 },
     render: (mock) => (
       <PodSeatsCell seats={mock.seats_taken} bookings={mock.bookings} total={mock.no_of_spots} />
+    ),
+  }),
+
+  defineDemo<RailMock>({
+    id: 'scroll-rail',
+    title: 'ScrollRail — a club page "Previous" rail with left/right arrows',
+    note: 'The arrows appear only when the row overflows, and each one fades at its own edge. Delete pods from the mock until they all fit and both arrows disappear.',
+    mock: {
+      pods: [
+        { pod_id: 'DUN-POD-4821', title: 'Sunday Pickleball, HSR Layout', price: 199 },
+        { pod_id: 'DUN-POD-4790', title: 'Board Game Night', price: 249 },
+        { pod_id: 'DUN-POD-4756', title: 'The Duncit House Party', price: 500 },
+        { pod_id: 'DUN-POD-4702', title: 'Sunrise Trek, Nandi Hills', price: 350 },
+        { pod_id: 'DUN-POD-4688', title: 'Pottery Workshop', price: 799 },
+      ],
+    },
+    render: (mock) => (
+      <ScrollRail testId="demo-scroll-rail" gap={1.5}>
+        {mock.pods.map((pod) => (
+          <Paper key={pod.pod_id} variant="outlined" sx={{ width: 180, p: 1.5, borderRadius: 2 }}>
+            <InfoRow label={pod.pod_id} value={pod.title} />
+            <InfoRow variant="split" label="Price" value={formatMoney(pod.price)} />
+          </Paper>
+        ))}
+      </ScrollRail>
     ),
   }),
 

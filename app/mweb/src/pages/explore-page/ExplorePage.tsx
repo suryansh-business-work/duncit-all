@@ -157,7 +157,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
         '& .slick-slide > div': { height: '100%' },
       }}
     >
-      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
+      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
       {pods.length === 0 ? (
         <Stack
           data-testid="explore-empty"

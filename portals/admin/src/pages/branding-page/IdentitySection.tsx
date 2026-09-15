@@ -2,6 +2,7 @@ import { Avatar, Box, Divider, Stack, TextField, Typography } from '@mui/materia
 import MediaPickerField from '../../components/MediaPickerField';
 import ColorField from '../../components/ColorField';
 import type { BrandingFormState } from './queries';
+import { primaryTokens } from './theme-tokens';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -13,6 +14,17 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
   const { t } = useTranslation();
   const update = <K extends keyof BrandingFormState>(k: K, v: BrandingFormState[K]) =>
     setForm({ ...form, [k]: v });
+  // The brand primary is also the app's call-to-action colour: it writes the
+  // primary steps of BOTH theme-token tables, where each mode can be fine-tuned.
+  const updatePrimary = (color: string) => {
+    const steps = primaryTokens(color);
+    setForm({
+      ...form,
+      primary_color: color,
+      theme_tokens_light: { ...form.theme_tokens_light, ...steps },
+      theme_tokens_dark: { ...form.theme_tokens_dark, ...steps },
+    });
+  };
 
   return (
     <Stack spacing={3}>
@@ -76,7 +88,8 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         <ColorField
           label={t('admin.branding.primaryColor')}
           value={form.primary_color}
-          onChange={(v) => update('primary_color', v)}
+          onChange={updatePrimary}
+          helperText={t('admin.branding.primaryColorHint')}
         />
         <TextField
           label={t('admin.branding.supportEmail')}

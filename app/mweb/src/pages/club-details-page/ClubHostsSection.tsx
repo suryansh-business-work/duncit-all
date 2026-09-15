@@ -1,5 +1,6 @@
-import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
+import { ScrollRail } from '@duncit/ui';
 import SectionHeader from '../../components/SectionHeader';
 import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -28,7 +29,7 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
   return (
     <Box data-testid="club-hosts" sx={{ ...SURFACE_SX, p: 2 }}>
       <SectionHeader testId="club-hosts-header" title={titleText} />
-      <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pt: 1.5, '&::-webkit-scrollbar': { display: 'none' } }}>
+      <ScrollRail testId="club-hosts-scroll" gap={2} sx={{ pt: 1.5 }}>
         {hosts.map((host) => (
           <ButtonBase
             key={host.id}
@@ -52,7 +53,7 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
             </Typography>
           </ButtonBase>
         ))}
-      </Stack>
+      </ScrollRail>
     </Box>
   );
 }

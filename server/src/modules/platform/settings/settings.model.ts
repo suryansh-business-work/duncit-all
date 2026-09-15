@@ -1,4 +1,10 @@
 import { Schema, model, type Document } from "mongoose";
+import {
+  DEFAULT_THEME_TOKEN_SOURCE,
+  THEME_TOKEN_KEYS,
+  THEME_TOKEN_SOURCES,
+  type ThemeTokens,
+} from "./theme-tokens";
 
 export interface IAppSettings extends Document {
   singleton_key: string;
@@ -250,6 +256,10 @@ export interface IBranding extends Document {
   // Empty string = not live yet; the sites render a "coming soon" state.
   android_app_url: string;
   ios_app_url: string;
+  // The legal pages the sign-in / sign-up screens (mWeb, native, portals) link
+  // to. Admin-managed so a moved policy page never needs a release.
+  terms_url: string;
+  privacy_url: string;
   // Icon for the synthetic "All" tab in the home "What's your vibe" tabber
   // (mWeb + mobile). Admin-managed from the Category catalogue; empty string
   // falls back to the bundled apps/grid icon on each client.
@@ -278,6 +288,12 @@ export interface IBranding extends Document {
   // it could lock users out of a build the store has not published yet. This is
   // raised by hand once a release is actually live. Blank = nobody is blocked.
   app_min_supported_version: string;
+  // Where mWeb + the native app read their colour tokens from (Branding →
+  // Theme tokens): LOCAL = bundled @duncit/auth-tokens, SERVER = the per-mode
+  // values below laid over them. A blank token keeps the bundled value.
+  theme_token_source: string;
+  theme_tokens_light: ThemeTokens;
+  theme_tokens_dark: ThemeTokens;
   // Global Pod Shop top slider (image/video), admin-managed from the products
   // portal. Shown above the platform-wide Pod Shop grid on mobile + mWeb.
   pod_shop_slider: {
@@ -366,6 +382,14 @@ const homeAllVibeIconLayoutSchema = new Schema<{
   { _id: false },
 );
 
+const themeTokensSchema = new Schema<ThemeTokens>(
+  Object.fromEntries(THEME_TOKEN_KEYS.map((key) => [key, { type: String, default: "" }])),
+  { _id: false },
+);
+
+export const DEFAULT_TERMS_URL = "https://duncit.com/policy/terms-and-conditions";
+export const DEFAULT_PRIVACY_URL = "https://duncit.com/policy/privacy-policy";
+
 const brandingSchema = new Schema<IBranding>(
   {
     singleton_key: {
@@ -411,6 +435,8 @@ const brandingSchema = new Schema<IBranding>(
     website_favicon_url: { type: String, default: "" },
     android_app_url: { type: String, default: "" },
     ios_app_url: { type: String, default: "" },
+    terms_url: { type: String, default: DEFAULT_TERMS_URL },
+    privacy_url: { type: String, default: DEFAULT_PRIVACY_URL },
     home_all_vibe_icon_url: { type: String, default: "" },
     home_all_vibe_icon_layout: { type: homeAllVibeIconLayoutSchema, default: null },
     home_show_all_vibe_categories: { type: Boolean, default: false },
@@ -419,6 +445,13 @@ const brandingSchema = new Schema<IBranding>(
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
     app_min_supported_version: { type: String, default: "" },
+    theme_token_source: {
+      type: String,
+      enum: [...THEME_TOKEN_SOURCES],
+      default: DEFAULT_THEME_TOKEN_SOURCE,
+    },
+    theme_tokens_light: { type: themeTokensSchema, default: () => ({}) },
+    theme_tokens_dark: { type: themeTokensSchema, default: () => ({}) },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },
     occasional_icons: { type: [occasionalIconSchema], default: [] },
   },

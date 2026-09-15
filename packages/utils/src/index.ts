@@ -529,6 +529,21 @@ export {
   type UsernameTranslate,
 } from './username';
 export {
+  GENDERS,
+  PET_OWNER_CHOICES,
+  buildProfileDemographicsLabels,
+  fromPetOwnerValue,
+  toGenderValue,
+  toPetOwnerValue,
+  type DemographicOption,
+  type DemographicsTranslate,
+  type Gender,
+  type GenderValue,
+  type PetOwnerChoice,
+  type PetOwnerValue,
+  type ProfileDemographicsLabels,
+} from './profile-demographics';
+export {
   STUDIO_OPTIONS,
   availableModes,
   resolveMode,
@@ -906,3 +921,11 @@ export {
   type E2eStaffRole,
   type RunPasswordStage,
 } from './e2e-run';
+export {
+  applyTokenOverrides,
+  resolveThemeTokens,
+  type ThemePalettes,
+  type ThemeTokenOverrides,
+  type ThemeTokenSettings,
+  type ThemeTokenSource,
+} from './theme-tokens';

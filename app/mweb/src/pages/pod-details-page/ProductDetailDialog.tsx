@@ -19,6 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
+import { ScrollRail } from '@duncit/ui';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import BrandDetailDialog from './BrandDetailDialog';
 import ProductQuantityBar from './ProductQuantityBar';
@@ -190,7 +191,7 @@ export default function ProductDetailDialog({
     body = (
       <Stack spacing={1.5}>
         {images.length > 0 && (
-          <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
+          <ScrollRail testId="product-detail-images" gap={1}>
             {images.map((url, imageIndex) => (
               <ButtonBase
                 key={url}
@@ -207,7 +208,7 @@ export default function ProductDetailDialog({
                 />
               </ButtonBase>
             ))}
-          </Stack>
+          </ScrollRail>
         )}
         <Typography variant="h6" component="h3" data-testid="product-detail-name" sx={{ fontWeight: 600 }}>
           {product.product_name}

@@ -152,24 +152,6 @@ describe('ClubsPage', () => {
     expect(await screen.findByText('boom')).toBeInTheDocument();
   });
 
-  it('shows the location note with zone and dispatches the picker event via the link', async () => {
-    const dispatchSpy = vi.spyOn(globalThis, 'dispatchEvent');
-    setup(
-      [
-        allClubsMock({ locationId: 'loc-1', locality: 'Baner' }, [club('1')]),
-        catMock,
-        adMock(),
-      ],
-      <ClubsPage locationId="loc-1" zoneName="Baner" />,
-    );
-    expect(await screen.findByText('Pune · Baner')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Change your location here'));
-    expect(
-      dispatchSpy.mock.calls.some(([e]) => (e as CustomEvent).type === OPEN_LOCATION_PICKER_EVENT),
-    ).toBe(true);
-    dispatchSpy.mockRestore();
-  });
-
   it('shows the no-clubs-at-location state and resets on button tap', async () => {
     const dispatchSpy = vi.spyOn(globalThis, 'dispatchEvent');
     setup(

@@ -3164,6 +3164,9 @@ importers:
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../../packages/app-settings
+      '@duncit/auth-tokens':
+        specifier: workspace:*
+        version: link:../../packages/auth-tokens
       '@duncit/auto-pods':
         specifier: workspace:*
         version: link:../../packages/auto-pods

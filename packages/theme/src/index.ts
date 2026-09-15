@@ -8,6 +8,7 @@
 export { tokens, type Tokens } from './tokens';
 export type { AccentColors, ColorMode, ThemeCtx } from './types';
 export { buildThemeCtx } from './context';
+export { AA_TEXT, contrastRatio, mix, textOn } from './contrast';
 export { createDuncitTheme, buildTheme } from './createDuncitTheme';
 export { buildComponents, type ComponentExtend } from './components';
 export { DuncitThemeProvider, useColorMode } from './DuncitThemeProvider';

@@ -3,6 +3,7 @@ import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { coverImageUrl } from '@duncit/utils';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import PeopleAltIcon from '@mui/icons-material/PeopleAltOutlined';
+import { ScrollRail } from '@duncit/ui';
 import PodCard from '../home-page/PodCard';
 import FollowButton from '../../components/FollowButton';
 import { SURFACE_SX } from '../../theme';
@@ -121,18 +122,7 @@ export default function SearchClubCard({
       </Stack>
 
       {pods.length > 0 ? (
-        <Box
-          data-testid={`search-club-card-${club.id}-pods`}
-          sx={{
-            display: 'flex',
-            gap: 1.5,
-            overflowX: 'auto',
-            pb: 0.5,
-            scrollSnapType: 'x mandatory',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
+        <ScrollRail testId={`search-club-card-${club.id}-pods`} gap={1.5} sx={{ scrollSnapType: 'x mandatory' }}>
           {pods.map((pod) => (
             <PodCard
               key={pod.id}
@@ -140,7 +130,7 @@ export default function SearchClubCard({
               onOpen={() => onOpenPod(pod.club_slug, pod.pod_id)}
             />
           ))}
-        </Box>
+        </ScrollRail>
       ) : (
         club.club_description && (
           <Typography

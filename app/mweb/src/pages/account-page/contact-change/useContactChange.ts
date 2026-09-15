@@ -60,6 +60,13 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [],
   );
 
+  /** Drops a refusal once the value it was about is edited. A no-op while none
+   * is shown, so it can run on every keystroke without re-rendering. */
+  const clearError = useCallback(
+    () => setState((p) => (p.error ? { ...p, error: null } : p)),
+    [],
+  );
+
   /** Back to the value box, with the code already sent forgotten. */
   const editValue = useCallback(
     () => setState((p) => ({ ...p, step: 'ENTER', testCode: null, error: null })),
@@ -136,5 +143,5 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel, confirmEmail, confirmPhone, onSaved],
   );
 
-  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError };
+  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError, clearError };
 }

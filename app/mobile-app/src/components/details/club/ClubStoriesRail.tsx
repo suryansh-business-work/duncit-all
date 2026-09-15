@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { isStoryLive, parseApiError } from '@duncit/utils';
 
 import { ConfirmSheet } from '@/components/DuncitDialog';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import { StatusTile } from '@/components/status/StatusTile';
@@ -120,11 +121,7 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
           {railError}
         </Text>
       ) : null}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12 }}
-      >
+      <ScrollRail testID="club-stories-scroll" gap={12}>
         {canPost ? (
           <StatusTile
             testID="club-story-add"
@@ -149,7 +146,7 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
             onPress={() => openAt(index)}
           />
         ))}
-      </ScrollView>
+      </ScrollRail>
       <StatusViewer
         status={openGroup}
         startIndex={openAtIndex ?? 0}

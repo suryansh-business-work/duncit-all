@@ -183,7 +183,12 @@ export default function MediaPickerDialog({
         )}
 
         {multi && (
-          <SelectionTray urls={selection.urls} max={max} onRemove={selection.remove} />
+          <SelectionTray
+            urls={selection.urls}
+            max={max}
+            onRemove={selection.remove}
+            deviceOnly={deviceOnly}
+          />
         )}
 
         <Box sx={{ display: tab === 'device' ? 'block' : 'none', minHeight: PANEL_MIN_HEIGHT }}>

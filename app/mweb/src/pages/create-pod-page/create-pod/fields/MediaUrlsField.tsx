@@ -41,6 +41,8 @@ interface Props {
    * a real photograph of something that happened (a pod's own media).
    */
   deviceOnly?: boolean;
+  /** The picker dialog's heading — a field that is not pod media names itself. */
+  pickerTitle?: string;
 }
 
 /** Pod media — a dashed upload dropzone (empty state) that opens the shared
@@ -57,6 +59,7 @@ export default function MediaUrlsField({
   subCategoryName,
   maxImages,
   deviceOnly = false,
+  pickerTitle,
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const { t } = useTranslation();
@@ -166,7 +169,7 @@ export default function MediaUrlsField({
         onClose={() => setPickerOpen(false)}
         folder={folder}
         surface="MWEB"
-        title={t('mweb.createPod.addPodMedia')}
+        title={pickerTitle ?? t('mweb.createPod.addPodMedia')}
         // The cover is a wide banner, and a pod is a group activity — so the
         // search opens on landscape photos of people doing this category.
         seedQuery={coverSearchTerm(subCategoryName)}

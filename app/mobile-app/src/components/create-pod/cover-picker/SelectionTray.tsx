@@ -9,6 +9,8 @@ interface Props {
   urls: string[];
   max: number;
   onRemove: (url: string) => void;
+  /** No Pexels tab is offered, so the hint must not mention it. */
+  deviceOnly?: boolean;
 }
 
 /**
@@ -18,8 +20,9 @@ interface Props {
  * Numbered, because the first image is the cover: a strip that only shows which
  * ones were chosen leaves "which one shows on the card?" unanswered.
  */
-export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
+export function SelectionTray({ urls, max, onRemove, deviceOnly = false }: Readonly<Props>) {
   const { t } = useTranslation();
+  const emptyHintKey = deviceOnly ? 'mweb.createPod.pickUpToFromPhone' : 'mweb.createPod.pickUpTo';
   return (
     <YStack gap={6} testID="cover-selection-tray">
       <XStack alignItems="center" gap={8}>
@@ -44,7 +47,7 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
       </XStack>
       {urls.length === 0 ? (
         <Text fontSize={11.5} color="$muted">
-          {t('mweb.createPod.pickUpTo', { vars: { max } })}
+          {t(emptyHintKey, { vars: { max } })}
         </Text>
       ) : (
         <XStack gap={8} flexWrap="wrap">

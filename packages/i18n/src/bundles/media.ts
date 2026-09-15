@@ -25,6 +25,7 @@ export const MEDIA_BUNDLE: NestedCatalogue = {
       uploading: 'Uploading…',
       useThis: 'Use this image',
       useTheseCount: 'Use these {count}',
+      pickUpToDevice: 'Pick up to {max} from your device.',
       remove: 'Remove',
       removeImage: 'Remove image',
       removeAttachment: 'Remove attachment',

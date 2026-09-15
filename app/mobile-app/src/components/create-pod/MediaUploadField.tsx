@@ -56,6 +56,8 @@ interface Props {
    * because the cover is capped would take a feature away.
    */
   maxImages?: number;
+  /** The picker sheet's heading — a field that is not pod media names itself. */
+  pickerTitle?: string;
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
@@ -70,6 +72,7 @@ export function MediaUploadField({
   subCategoryName,
   maxImages,
   deviceOnly = false,
+  pickerTitle,
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
@@ -210,6 +213,7 @@ export function MediaUploadField({
       */}
       <CoverPickerDialog
         deviceOnly={deviceOnly}
+        title={pickerTitle}
         open={pickerOpen && !upload.pending}
         seed={coverSearchTerm(subCategoryName)}
         max={slotsLeft}

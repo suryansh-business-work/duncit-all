@@ -132,6 +132,8 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                 required={false}
                 folder="/feedback"
                 maxImages={config.max_media}
+                deviceOnly
+                pickerTitle={t('mweb.common.addScreenshots')}
               />
             )}
           />

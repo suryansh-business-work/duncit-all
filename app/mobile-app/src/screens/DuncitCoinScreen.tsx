@@ -1,6 +1,7 @@
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { CoinBalanceCard, CoinHistoryList } from '@/components/duncit-coin';
 import { useCoinLedger } from '@/hooks/useCoins';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
@@ -15,13 +16,14 @@ export function DuncitCoinScreen() {
   const { balance, transactions, isLoading, error } = useCoinLedger();
   const { currency } = usePublicFinance();
   const pending = isLoading && !balance;
+  const loadingRegion = useLoadingRegion();
 
   return (
     <StackScreen title={t('mweb.coin.title')} testID="duncit-coin-screen">
       <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={20} padding={16} paddingBottom={48}>
           {error ? (
-            <Text testID="coin-error" fontSize={13} color="$danger">
+            <Text testID="coin-error" role="alert" fontSize={13} color="$danger">
               {t('mweb.coin.loadError')}
             </Text>
           ) : null}
@@ -30,7 +32,7 @@ export function DuncitCoinScreen() {
 
           {pending ? (
             <YStack alignItems="center" paddingVertical={24}>
-              <Spinner testID="coin-loading" color="$primary" />
+              <Spinner testID="coin-loading" color="$primary" {...loadingRegion} />
             </YStack>
           ) : (
             <CoinHistoryList transactions={transactions} />

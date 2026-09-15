@@ -76,6 +76,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
                     </Text>
                     <XStack
                       testID={`hashtag-remove-${tag}`}
+                      tabIndex={0}
                       role="button"
                       aria-label={t('mweb.createPod.removeTag', { vars: { tag } })}
                       onPress={() => removeTag(tag)}

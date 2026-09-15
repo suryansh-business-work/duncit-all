@@ -80,9 +80,16 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-edit-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="pod-edit-dialog"
+            onAccessibilityEscape={dismiss}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}
@@ -106,7 +113,14 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   sit here) is unshrinkable — RN defaults flexShrink to 0 — so it
                   sizes to its full content, leaves the ScrollView unbounded, and
                   spills the upload box and the buttons outside the card. */}
-              <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={10}>
+              <Text
+                testID="pod-edit-title"
+                role="heading"
+                fontSize={17}
+                fontWeight="600"
+                color="$color"
+                paddingBottom={10}
+              >
                 Edit pod
               </Text>
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -157,7 +171,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                     title={t('mweb.hostPodEdit.contentCheck')}
                   />
                   {error ? (
-                    <Text testID="pod-edit-error" fontSize={12.5} color="$danger">
+                    <Text role="alert" testID="pod-edit-error" fontSize={12.5} color="$danger">
                       {error}
                     </Text>
                   ) : null}
@@ -166,6 +180,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               <XStack gap={12} paddingTop={12}>
                 <XStack
                   testID="pod-edit-cancel"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.cancel')}
                   aria-disabled={busy}
@@ -186,6 +201,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                 </XStack>
                 <XStack
                   testID="pod-edit-save"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.hostManage.saveChanges')}
                   aria-disabled={busy}

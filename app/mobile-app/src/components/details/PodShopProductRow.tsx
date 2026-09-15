@@ -6,10 +6,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { PodDetail } from '@/hooks/useDetails';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type Product = PodDetail['product_requests'][number];
+
+/** The spoken name of each icon-only stepper button. */
+const STEP_LABEL_KEY = { add: 'podProduct.increaseQty', remove: 'podProduct.decreaseQty' } as const;
 
 /** A round +/- stepper button; disabled state greys out and drops the handler. */
 export function StepButton({
@@ -25,11 +29,15 @@ export function StepButton({
   disabled?: boolean;
   onPress: () => void;
 }>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
+      aria-label={t(STEP_LABEL_KEY[icon])}
       aria-disabled={disabled}
+      hitSlop={7}
       onPress={disabled ? undefined : onPress}
       alignItems="center"
       justifyContent="center"
@@ -86,7 +94,9 @@ function AddToCartButton({
     <XStack
       testID={`pod-shop-add-${productId}`}
       role="button"
+      tabIndex={0}
       aria-label={`Add ${productName} to cart`}
+      hitSlop={6}
       onPress={onAdd}
       gap={6}
       alignItems="center"
@@ -223,7 +233,9 @@ export function PodShopProductRow({
       <XStack
         testID={`pod-shop-info-${product.product_id}`}
         role="button"
+        tabIndex={0}
         aria-label={`View ${product.product_name} details`}
+        hitSlop={7}
         onPress={() => onInfo(product.product_id)}
         width={30}
         height={30}

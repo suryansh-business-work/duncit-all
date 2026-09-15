@@ -34,7 +34,7 @@ export default function ClubAdminPodMonitoringPage() {
         }}>
         <MonitorHeartIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 700
           }}>{t('clubAdmin.monitoring.title')}</Typography>
           <Typography variant="body2" sx={{

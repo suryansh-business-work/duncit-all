@@ -2,6 +2,7 @@ import { ScrollView, XStack, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton/Skeleton';
 import { SkeletonCard } from '@/components/Skeleton/SkeletonCard';
+import { useLoadingRegion } from '@/components/Skeleton/useLoadingRegion';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 
 /** Loading placeholder for the home feed (status rail · chips · featured · club). */
@@ -10,9 +11,10 @@ export function HomeSkeleton() {
   // the floating bottom nav overlays the scroll on top of the Android
   // navigation bar, and a 3-button bar needs more room than a gesture pill.
   const bottomSpace = useBottomNavSpace();
+  const region = useLoadingRegion();
   return (
     <ScrollView showsVerticalScrollIndicator={false} testID="home-skeleton">
-      <YStack gap={20} paddingTop={12} paddingBottom={bottomSpace}>
+      <YStack gap={20} paddingTop={12} paddingBottom={bottomSpace} {...region}>
         <XStack gap={12} paddingHorizontal={16}>
           {Array.from({ length: 6 }, (_, i) => `status-${i}`).map((key) => (
             <YStack key={key} gap={6} alignItems="center">

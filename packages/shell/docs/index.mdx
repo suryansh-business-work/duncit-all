@@ -391,6 +391,20 @@ migrating whenever one is touched.
 404s must reach it with the `failed` flag from an `onError` handler, because a URL that fails at
 request time is never empty (rule 39).
 
+### Accessibility the chrome gives every console
+
+- **Skip link and landmarks.** The first Tab stop is "Skip to main content", targeting
+  `<main id="main-content" tabIndex={-1}>`. The header is an `AppBar` (`<header>`), the sidebar a
+  labelled `<nav>`, the taskbar a labelled `<footer>`. A page must not render a `<main>` of its own.
+- **Focus follows the route.** When the pathname changes, focus moves to `<main>` (without
+  scrolling), so the next Tab starts at the top of the page that opened. A `?selectedtab=` change
+  is the same page and leaves focus where it was.
+- **The sidebar says where you are.** The one winning leaf carries `aria-current="page"` (a
+  prefix sibling such as `/host-leads` is `aria-current="false"` on `/host-leads/services`), and a
+  group toggle carries `aria-expanded`.
+- **Searches are labelled**, not just placeheld — the header search, the menu search, the apps
+  drawer and the Agent's composer all have an accessible name.
+
 ### The sidebar minimises to an icon rail
 
 `AppSidebar` renders one of two menus. Full width it is the search box, expand-all and the nav

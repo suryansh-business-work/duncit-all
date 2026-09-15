@@ -42,6 +42,7 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           slotProps={{
+            htmlInput: { 'aria-label': t('shell.chrome.searchMenu'), 'data-testid': 'shell-nav-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">

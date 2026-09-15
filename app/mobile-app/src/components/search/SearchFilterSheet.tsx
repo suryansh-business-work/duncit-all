@@ -45,6 +45,7 @@ export function SearchFilterSheet({
     <XStack
       testID="search-filter-apply"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.common.applyFilters')}
       onPress={onClose}
       flex={1}
@@ -67,7 +68,7 @@ export function SearchFilterSheet({
       onClose={onClose}
       testID="search-filter-sheet"
       title={t('mweb.search.filterByCategory')}
-      closeLabel="Close"
+      closeLabel={t('mweb.common.close')}
       footer={footer}
     >
       <YStack>

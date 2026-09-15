@@ -18,13 +18,13 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 function LastTested({ entry }: Readonly<{ entry: EnvEntry }>) {
   const { t } = useTranslation();
   if (entry.last_test_ok == null || !entry.last_tested_at) {
-    return <Tooltip title={t('tech.environment.notTestedYet')}><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
+    return <Tooltip title={t('tech.environment.notTestedYet')}><RemoveIcon fontSize="small" color="action" role="img" aria-hidden={false} /></Tooltip>;
   }
   const when = formatDateTime(entry.last_tested_at);
   return entry.last_test_ok ? (
-    <Tooltip title={`Passed · ${when}`}><CheckCircleIcon fontSize="small" color="success" /></Tooltip>
+    <Tooltip title={`Passed · ${when}`}><CheckCircleIcon fontSize="small" color="success" role="img" aria-hidden={false} /></Tooltip>
   ) : (
-    <Tooltip title={`Failed · ${when}`}><CancelIcon fontSize="small" color="error" /></Tooltip>
+    <Tooltip title={`Failed · ${when}`}><CancelIcon fontSize="small" color="error" role="img" aria-hidden={false} /></Tooltip>
   );
 }
 
@@ -93,7 +93,7 @@ export default function EnvEntriesTable({
       }}>
         <Tooltip title={t('tech.environment.testConnection')}><DuncitIconButton size="small" onClick={() => onTest(e)}><ScienceIcon fontSize="small" /></DuncitIconButton></Tooltip>
         <Tooltip title={t('shell.common.edit')}><DuncitIconButton size="small" onClick={() => onEdit(e)}><EditIcon fontSize="small" /></DuncitIconButton></Tooltip>
-        <Tooltip title={t('tech.environment.setDefault')}><DuncitIconButton size="small" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</DuncitIconButton></Tooltip>
+        <Tooltip title={t('tech.environment.setDefault')}><DuncitIconButton size="small" aria-pressed={e.is_default} data-testid="env-entry-set-default" onClick={() => onSetDefault(e)}>{e.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}</DuncitIconButton></Tooltip>
         <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" onClick={() => onDelete(e)}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
       </Stack>
     );
@@ -133,6 +133,7 @@ export default function EnvEntriesTable({
 
   return (
     <DuncitTable<EnvEntry>
+      ariaLabel={t('shell.nav.environmentVariables')}
       tableId="tech-env-entries"
       columns={columns}
       fetchRows={fetchRows}

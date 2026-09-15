@@ -108,6 +108,18 @@ The colours are token names on purpose. The app's `tamagui.config.ts` resolves
 them from `@duncit/auth-tokens` — the same file mWeb's MUI palette is built from
 — so a colour written in this package would be a third copy of the brand red.
 
+The names follow the WCAG AA roles in `@duncit/auth-tokens`:
+
+| Tone | Solid fill / label | Outline, soft and ghost label |
+| --- | --- | --- |
+| `primary` | `$primary` / `$onPrimary` | `$accent` — the red for text; the CTA fill red reads only 4.32:1 on the light page |
+| `danger` | `$danger` / `$onDanger` | `$danger` |
+| `success` | `$success` / `$onSuccess` | `$success` |
+| `neutral` | `$surface` / `$color` | `$color` |
+
+`$onDanger` and `$onSuccess` are white in light mode and a dark ink in dark mode, where the
+status colours are lightened to stay readable as text.
+
 `disabled` and `loading` are separate inputs and stay separate all the way
 through: a loading button keeps its colour because it is still the thing you
 just pressed; only a disabled one recedes to `DISABLED_OPACITY`.

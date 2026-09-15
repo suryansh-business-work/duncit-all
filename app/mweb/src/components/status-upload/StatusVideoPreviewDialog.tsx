@@ -73,11 +73,12 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
     onConfirm(needsTrim ? { start, duration: MAX_STORY_VIDEO_SECONDS } : null);
 
   return (
-    <Dialog data-testid="story-video-sheet" open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
+    <Dialog data-testid="story-video-sheet" open={!!file} onClose={onCancel} fullWidth maxWidth="xs" aria-labelledby="story-video-title">
+      <DialogTitle id="story-video-title" sx={{ fontWeight: 600 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               data-testid="story-video-preview"
               component="video"

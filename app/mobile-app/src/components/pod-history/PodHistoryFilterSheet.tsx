@@ -60,6 +60,7 @@ export function PodHistoryFilterSheet({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.podHistory.closeFilters')}
             onPress={onClose}
             position="absolute"
@@ -77,14 +78,16 @@ export function PodHistoryFilterSheet({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="700" color="$color">
+                <Text role="heading" fontSize={17} fontWeight="700" color="$color">
                   {t('mweb.podHistory.filterByCategory')}
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="pod-history-filter-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.close')}
+                  hitSlop={6}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -126,6 +129,7 @@ export function PodHistoryFilterSheet({
                 <XStack
                   testID="pod-history-filter-reset"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.resetFilters')}
                   onPress={onReset}
                   flex={1}
@@ -145,6 +149,7 @@ export function PodHistoryFilterSheet({
                 <XStack
                   testID="pod-history-filter-done"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.applyFilters')}
                   onPress={onClose}
                   flex={1}

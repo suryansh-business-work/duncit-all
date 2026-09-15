@@ -101,7 +101,7 @@ export default function ProductOrderDetailPage() {
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>
           {order.order_no}
@@ -152,7 +152,7 @@ export default function ProductOrderDetailPage() {
             />
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>
-                <Typography
+                <Typography component="h2"
                   variant="subtitle1"
                   sx={{
                     fontWeight: 700,

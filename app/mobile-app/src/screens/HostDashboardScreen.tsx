@@ -61,6 +61,7 @@ function QuickAction({
   return (
     <XStack
       testID={`host-action-${label.replace(/\s+/g, '-').toLowerCase()}`}
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}
@@ -149,8 +150,10 @@ export function HostDashboardScreen() {
         {health ? (
           <XStack
             testID="host-health"
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.hostDashboard.viewProfileHealth')}
+            accessibilityHint={String(health.total_score)}
             onPress={() => navigation.navigate('AccountHealth')}
             alignItems="center"
             gap={12}

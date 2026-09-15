@@ -1,11 +1,12 @@
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { Box, CardActionArea, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { formatDistanceToNow } from 'date-fns';
 import { MY_TICKETS, type TicketListItem, type TicketStatus } from './queries';
 import SectionHeader from '../../components/SectionHeader';
 import { SURFACE_SX } from '../../theme';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
   OPEN: 'primary',
@@ -30,6 +31,7 @@ function ticketNo(id: string): string {
 }
 
 export default function MyTicketsList() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, loading } = useQuery<{ myTickets: TicketListItem[] }>(MY_TICKETS, {
     fetchPolicy: 'cache-and-network',
@@ -37,7 +39,7 @@ export default function MyTicketsList() {
   const all = data?.myTickets ?? [];
 
   const countFor = (f: Filter): number =>
-    f === 'ALL' ? all.length : all.filter((t) => t.status === f).length;
+    f === 'ALL' ? all.length : all.filter((ticket) => ticket.status === f).length;
 
   const tabs = useTabParam<Filter>({
     items: FILTERS.map((f) => ({
@@ -49,7 +51,7 @@ export default function MyTicketsList() {
     fallback: 'ALL',
   });
   const filter = tabs.value;
-  const items = filter === 'ALL' ? all : all.filter((t) => t.status === filter);
+  const items = filter === 'ALL' ? all : all.filter((ticket) => ticket.status === filter);
 
   const emptyOrList =
     items.length === 0 ? (
@@ -64,12 +66,12 @@ export default function MyTicketsList() {
       </Typography>
     ) : (
       <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
-        {items.map((t, index) => (
-          <Box
-            key={t.id}
-            data-testid={`my-ticket-${t.id}`}
-            onClick={() => navigate(`/tickets/${t.id}`)}
-            sx={{ px: 2, py: 1.75, cursor: 'pointer', borderTop: index === 0 ? 0 : 1, borderColor: 'divider' }}
+        {items.map((ticket, index) => (
+          <CardActionArea
+            key={ticket.id}
+            data-testid={`my-ticket-${ticket.id}`}
+            onClick={() => navigate(`/tickets/${ticket.id}`)}
+            sx={{ px: 2, py: 1.75, borderRadius: 0, borderTop: index === 0 ? 0 : 1, borderColor: 'divider' }}
           >
             <Stack
               direction="row"
@@ -80,18 +82,18 @@ export default function MyTicketsList() {
               }}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
-                  {t.subject}
+                  {ticket.subject}
                 </Typography>
                 <Typography variant="caption" sx={{
                   color: "text.secondary"
                 }}>
-                  {ticketNo(t.id)} · {t.category} ·{' '}
-                  {formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}
+                  {ticketNo(ticket.id)} · {ticket.category} ·{' '}
+                  {formatDistanceToNow(new Date(ticket.last_message_at), { addSuffix: true })}
                 </Typography>
               </Box>
-              <Chip size="small" color={STATUS_COLOR[t.status]} label={LABEL[t.status]} />
+              <Chip size="small" color={STATUS_COLOR[ticket.status]} label={LABEL[ticket.status]} />
             </Stack>
-          </Box>
+          </CardActionArea>
         ))}
       </Paper>
     );
@@ -108,7 +110,7 @@ export default function MyTicketsList() {
 
       {loading && all.length === 0 ? (
         <Box data-testid="my-tickets-loading" sx={{ p: 3, textAlign: 'center' }}>
-          <CircularProgress size={22} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
         </Box>
       ) : (
         emptyOrList

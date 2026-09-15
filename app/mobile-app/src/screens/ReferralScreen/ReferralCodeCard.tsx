@@ -71,6 +71,7 @@ export function ReferralCodeCard({ referral, onShare, onCopyCode, onCopyLink }: 
             testID="referral-copy-code"
             role="button"
             aria-label={t('mweb.referral.copyCode')}
+            tabIndex={0}
             onPress={onCopyCode}
             width={44}
             height={44}

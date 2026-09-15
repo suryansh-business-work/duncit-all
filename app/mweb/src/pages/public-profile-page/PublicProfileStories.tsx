@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Avatar, Stack } from '@mui/material';
 import HomeStatusViewer from '../home-page/HomeStatusViewer';
+import { useTranslation } from '../../i18n/useTranslation';
 import { buildStoryViewerItem } from '../home-page/storyViewerItem';
 
 export interface ProfileStory {
@@ -27,6 +28,7 @@ interface Props {
  * button and no progress bar at all.
  */
 export default function PublicProfileStories({ name, photo, stories }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   // The rail and the viewer read the same oldest → newest slides, so the ring
   // that was tapped is the slide that opens.
@@ -45,9 +47,17 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
             key={slide.id}
             data-testid={`public-profile-stories-item-${slide.id}`}
             src={slide.mediaUrl ?? undefined}
+            alt=""
             role="button"
-            aria-label={`Open status ${index + 1}`}
+            tabIndex={0}
+            aria-label={t('mweb.a11y.openStatusNumber', { vars: { number: index + 1 } })}
             onClick={() => setOpenIndex(index)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setOpenIndex(index);
+              }
+            }}
             sx={{
               width: 64,
               height: 64,

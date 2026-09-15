@@ -66,6 +66,7 @@ export default function FlagEditDialog({
             alignItems: "center"
           }}>
             <Switch
+              slotProps={{ input: { 'aria-label': t('tech.featureFlags.enabled'), 'data-testid': 'flag-edit-enabled' } as Record<string, string> }}
               checked={editing.enabled}
               onChange={(_, v) => setEditing((p) => ({ ...p, enabled: v }))}
             />

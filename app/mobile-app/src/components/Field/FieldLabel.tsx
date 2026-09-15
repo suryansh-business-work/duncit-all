@@ -1,5 +1,7 @@
 import { Text } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 export interface RequiredMarkProps {
   /** When true a red `*` is rendered; nothing otherwise. */
   required?: boolean;
@@ -40,8 +42,13 @@ export interface FieldLabelProps {
  * label, never on the input.
  */
 export function FieldLabel({ label, required, testID }: Readonly<FieldLabelProps>) {
+  const { t } = useTranslation();
+  // A screen reader reads the red `*` as "star"; a required label says so in
+  // words instead (WCAG 3.3.2). An optional one keeps its own text as its name.
+  const requiredName = required ? t('mweb.a11y.requiredLabel', { vars: { label } }) : undefined;
   return (
     <Text
+      aria-label={requiredName}
       fontSize={13}
       fontWeight="600"
       color="$color"

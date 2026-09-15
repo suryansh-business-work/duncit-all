@@ -102,6 +102,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
               sx={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 1.5, display: 'block' }}
             />
           ) : (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               component="video"
               src={url}
@@ -135,6 +136,7 @@ export default function MessageAttachment({ message }: Readonly<Props>) {
               sx={{ maxWidth: '92vw', maxHeight: '88vh', objectFit: 'contain' }}
             />
           ) : (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               component="video"
               src={url}

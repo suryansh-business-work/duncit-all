@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Box, Chip, Drawer, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
@@ -25,12 +26,18 @@ interface Props {
  */
 export default function MonitoringLogDrawer({ row, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   return (
-    <Drawer anchor="right" open={row !== null} onClose={onClose}>
+    <Drawer
+      anchor="right"
+      open={row !== null}
+      onClose={onClose}
+      slotProps={{ paper: { 'aria-labelledby': titleId } }}
+    >
       <Box sx={{ width: { xs: '100vw', sm: 460 }, p: 2.5 }}>
         {row && (
           <Stack spacing={2}>
-            <Typography variant="h6" sx={{
+            <Typography variant="h6" component="h2" id={titleId} sx={{
               fontWeight: 700
             }}>
               {row.file_name || 'Uploaded image'}

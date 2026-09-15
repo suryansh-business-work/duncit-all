@@ -17,7 +17,8 @@
  */
 import { setTimeout as sleep } from 'node:timers/promises';
 import { createCiClient, describeError, MISSING_CREDENTIALS } from '../lib/ci-report.mjs';
-import { resolveJourneys } from './journeys.mjs';
+import { resolveJourneys, walkable } from './journeys.mjs';
+import { loadSeeds } from './seeds.mjs';
 import { createMetrics } from './metrics.mjs';
 import { startHttpBots } from './http-bots.mjs';
 import { startBrowserBots } from './browser-bots.mjs';
@@ -96,10 +97,21 @@ async function drive(claim, client, token, metrics) {
     serverUrl: claim.target_graphql_url.replace(/\/graphql$/, ''),
     thinkTimeMs: profile.think_time_ms,
     journeys: resolveJourneys(profile.journeys),
+    abort: new AbortController(),
     metrics,
     stopped: () => Boolean(stopReason) || planAt(profile, startedAtMs, users).done,
     noteError: errors.note,
   };
+
+  // Before the first bot: the detail journeys walk real records, and a journey
+  // whose pool is empty would only ever send requests for ids that do not exist.
+  if (ctx.journeys.some((journey) => journey.pool)) await loadSeeds(ctx);
+  const { ready, empty } = walkable(ctx.journeys);
+  for (const journey of empty) {
+    events.push({ level: 'WARN', message: `Skipping the ${journey.name} journey — this environment has no ${journey.needs} to open.` });
+  }
+  if (ready.length === 0) throw new Error('None of the chosen journeys has anything to walk in this environment.');
+  ctx.journeys = ready;
 
   const http = startHttpBots(ctx, () => planAt(profile, startedAtMs, users).target);
   let browsers = NO_BROWSERS;
@@ -129,6 +141,7 @@ async function drive(claim, client, token, metrics) {
       silentSince = null;
       if (answer.stop) {
         stopReason = answer.reason || 'The server asked this run to stop.';
+        ctx.abort.abort();
         console.log(`Stopping: ${stopReason}`);
       }
     } catch (err) {

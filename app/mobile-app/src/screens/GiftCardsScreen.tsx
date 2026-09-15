@@ -6,6 +6,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 import { GiftCardBuySection, MyGiftCardsList } from '@/components/gift-cards';
 import { GiftCardSegmented, type SegmentOption } from '@/components/gift-cards/GiftCardSegmented';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { useFinanceCurrency, useGiftCards } from '@/hooks/useGiftCards';
 import { useMe } from '@/hooks/useMe';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -37,6 +38,7 @@ export function GiftCardsScreen() {
   const { data: meData } = useMe();
   const senderName = meData?.me?.full_name ?? '';
   const [tab, setTab] = useState<TabKey>('buy');
+  const loadingRegion = useLoadingRegion();
 
   // Re-read the cards every time the tab is opened, so a purchase made in this
   // session shows without a cold restart.
@@ -67,14 +69,14 @@ export function GiftCardsScreen() {
     );
   } else if (hasError) {
     body = (
-      <Text testID="gift-cards-buy-error" fontSize={13} color="$danger">
+      <Text testID="gift-cards-buy-error" role="alert" fontSize={13} color="$danger">
         {t('mweb.giftCards.loadError')}
       </Text>
     );
   } else if (isLoading || !settings) {
     body = (
       <YStack alignItems="center" paddingVertical={32}>
-        <Spinner testID="gift-cards-buy-loading" size="large" color="$primary" />
+        <Spinner testID="gift-cards-buy-loading" size="large" color="$primary" {...loadingRegion} />
       </YStack>
     );
   } else {

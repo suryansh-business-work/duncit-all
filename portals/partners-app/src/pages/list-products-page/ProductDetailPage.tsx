@@ -14,6 +14,7 @@ import {
   canManageProductListings,
 } from './productAccess';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 export default function ProductDetailPage() {
   const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function ProductDetailPage() {
           alignItems: "center",
           py: 5
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -54,8 +55,8 @@ export default function ProductDetailPage() {
         sx={{
           p: 2.5,
           borderRadius: 2,
-          color: 'primary.contrastText',
-          background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+          color: 'common.white',
+          background: primaryHeroBackground,
         }}
       >
         <Stack
@@ -77,10 +78,10 @@ export default function ProductDetailPage() {
               {t('partners.venueAvailabilityPage.back')}
             </DuncitButton>
             <Box>
-              <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>
+              <Typography variant="overline" sx={{ fontWeight: 900 }}>
                 Product details
               </Typography>
-              <Typography variant="h4" sx={{
+              <Typography variant="h4" component="h1" sx={{
                 fontWeight: 950
               }}>
                 {product?.product_name || 'Product listing'}
@@ -93,7 +94,7 @@ export default function ProductDetailPage() {
               startIcon={<EditIcon />}
               variant="contained"
               color="inherit"
-              sx={{ color: 'primary.main', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+              sx={{ color: 'primary.dark', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
             >
               {t('shell.common.edit')}
             </DuncitButton>

@@ -24,20 +24,20 @@ export default function MessageTicks({ state }: Readonly<{ state: TickState }>) 
   const { t } = useTranslation();
   if (state === 'pending') {
     return (
-      <Box component="span" aria-label={t('support.chat.sending')} title={t('support.chat.sending')}>
+      <Box component="span" role="img" aria-label={t('support.chat.sending')} title={t('support.chat.sending')}>
         <ScheduleIcon sx={{ ...ICON_SX, opacity: 0.7 }} />
       </Box>
     );
   }
   if (state === 'seen') {
     return (
-      <Box component="span" aria-label={t('support.chat.seen')} title={t('support.chat.seen')}>
-        <DoneAllIcon sx={{ ...ICON_SX, color: '#34b7f1' }} />
+      <Box component="span" role="img" aria-label={t('support.chat.seen')} title={t('support.chat.seen')}>
+        <DoneAllIcon sx={ICON_SX} />
       </Box>
     );
   }
   return (
-    <Box component="span" aria-label={t('support.chat.delivered')} title={t('support.chat.delivered')}>
+    <Box component="span" role="img" aria-label={t('support.chat.delivered')} title={t('support.chat.delivered')}>
       <DoneIcon sx={{ ...ICON_SX, opacity: 0.7 }} />
     </Box>
   );

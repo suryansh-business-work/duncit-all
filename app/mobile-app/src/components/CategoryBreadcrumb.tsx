@@ -17,6 +17,9 @@ export function CategoryBreadcrumb({ crumbs }: Readonly<Props>) {
   return (
     <Text
       testID="category-breadcrumb"
+      // Read as the names alone — a screen reader otherwise spells out each
+      // "›" separator as punctuation between them.
+      aria-label={crumbs.join(', ')}
       fontSize={13}
       fontWeight="500"
       color="$muted"

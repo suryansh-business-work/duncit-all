@@ -77,4 +77,21 @@ describe('ConfirmDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onCancel).toHaveBeenCalled();
   });
+
+  it('names the dialog from its title and describes it with the message', () => {
+    render(<ConfirmDialog open title="Delete pod?" message="DUN-POD-4821 is removed" onConfirm={vi.fn()} onClose={vi.fn()} />);
+    const dialog = screen.getByRole('dialog', { name: 'Delete pod?' });
+    expect(dialog).toHaveAccessibleDescription('DUN-POD-4821 is removed');
+  });
+
+  it('carries no description when there is no message', () => {
+    render(<ConfirmDialog open title="Delete pod?" onConfirm={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByRole('dialog', { name: 'Delete pod?' })).not.toHaveAttribute('aria-describedby');
+  });
+
+  it('opens a destructive confirmation on the safe action', () => {
+    render(<ConfirmDialog open title="Delete pod?" destructive onConfirm={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByTestId('confirm-dialog-cancel')).toHaveFocus();
+    expect(screen.getByTestId('confirm-dialog-confirm')).not.toHaveFocus();
+  });
 });

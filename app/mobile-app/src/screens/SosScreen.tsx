@@ -25,6 +25,7 @@ function SosSendButton({
     <XStack
       testID="sos-send"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.sos.sendSos')}
       aria-disabled={disabled}
       onPress={disabled ? undefined : onSend}
@@ -134,12 +135,12 @@ export function SosScreen() {
                 placeholderTextColor="$muted"
                 maxLength={500}
                 backgroundColor="$surface"
-                borderColor="$borderColor"
+                borderColor="$inputBorder"
                 borderRadius={14}
               />
             </Field>
             {error ? (
-              <Text testID="sos-error" fontSize={13} color="$danger">
+              <Text role="alert" testID="sos-error" fontSize={13} color="$danger">
                 {error}
               </Text>
             ) : null}

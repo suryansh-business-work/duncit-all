@@ -53,8 +53,8 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
   );
 
   return (
-    <Dialog data-testid="status-crop-dialog" open={!!file} onClose={onCancel} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+    <Dialog data-testid="status-crop-dialog" open={!!file} onClose={onCancel} fullWidth maxWidth="sm" aria-labelledby="status-crop-title">
+      <DialogTitle id="status-crop-title" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         Crop status image
         <AiMonitoringChip />
       </DialogTitle>

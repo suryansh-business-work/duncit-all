@@ -23,7 +23,7 @@ export function LeadDetailCard({ title, subtitle, icon, action, children }: Read
           }}>
           {icon}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{
+            <Typography component="h2" variant="subtitle1" sx={{
               fontWeight: 800
             }}>{title}</Typography>
             {subtitle && <Typography variant="caption" sx={{

@@ -1,6 +1,7 @@
 import { Text, XStack } from 'tamagui';
 
 import { CHAT_EMOJIS } from '@/constants/chat';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface EmojiBarProps {
@@ -11,6 +12,7 @@ interface EmojiBarProps {
 /** Horizontal quick-emoji strip — used both to insert into the composer and to
  * react to a message (RN twin of mWeb's EmojiPopover). */
 export function EmojiBar({ onSelect, testID = 'emoji-bar' }: Readonly<EmojiBarProps>) {
+  const { t } = useTranslation();
   return (
     <XStack
       testID={testID}
@@ -27,7 +29,9 @@ export function EmojiBar({ onSelect, testID = 'emoji-bar' }: Readonly<EmojiBarPr
           key={emoji}
           testID={`emoji-${emoji}`}
           role="button"
-          aria-label={`Emoji ${emoji}`}
+          tabIndex={0}
+          hitSlop={4}
+          aria-label={`${t('mweb.chat.emoji')} ${emoji}`}
           onPress={() => onSelect(emoji)}
           fontSize={24}
           padding={6}

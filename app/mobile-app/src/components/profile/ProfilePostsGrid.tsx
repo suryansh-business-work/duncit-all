@@ -23,6 +23,9 @@ function AddPostButton({
       role="button"
       aria-label={t('mweb.profile.addPost')}
       aria-disabled={uploading}
+      aria-busy={uploading}
+      tabIndex={0}
+      hitSlop={4}
       onPress={uploading ? undefined : onAddPost}
       alignItems="center"
       gap={5}
@@ -65,7 +68,7 @@ export function ProfilePostsGrid({
   return (
     <YStack paddingHorizontal={16} gap={12} paddingBottom={24}>
       <XStack alignItems="center" justifyContent="space-between">
-        <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={17} fontWeight="600" color="$color">
           Posts
         </Text>
         {onAddPost ? (
@@ -93,6 +96,7 @@ export function ProfilePostsGrid({
               role="button"
               aria-label={t('mweb.profile.addYourFirstPost')}
               aria-disabled={uploading}
+              tabIndex={0}
               onPress={uploading ? undefined : onAddPost}
               alignItems="center"
               gap={6}
@@ -117,6 +121,7 @@ export function ProfilePostsGrid({
               testID={`post-${post.id}`}
               role="button"
               aria-label={t('mweb.common.openPost')}
+              tabIndex={0}
               onPress={() => setActive(post)}
               width={size}
               height={size}

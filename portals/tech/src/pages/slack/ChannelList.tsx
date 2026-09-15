@@ -35,6 +35,8 @@ function ChannelRow({
   return (
     <ListItemButton
       selected={selected}
+      aria-current={selected}
+      data-testid="slack-channel-row"
       onClick={() => onSelect(channel)}
       sx={{ borderRadius: 2, mb: 0.5, alignItems: 'flex-start' }}
     >
@@ -97,8 +99,8 @@ export default function ChannelList({ channels, selectedId, onSelect }: Readonly
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('tech.slack.searchChannels')}
-          aria-label={t('tech.slack.searchChannels')}
           slotProps={{
+            htmlInput: { 'aria-label': t('tech.slack.searchChannels'), 'data-testid': 'slack-channel-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">

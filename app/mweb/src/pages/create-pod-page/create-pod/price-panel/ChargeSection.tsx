@@ -98,7 +98,7 @@ export function ChargeSection({
           aria-expanded={info}
           aria-label={t('earnings.statement.whyThisCharge')}
           data-testid={`${testId}-info`}
-          sx={{ color: info ? 'primary.main' : 'text.secondary' }}
+          sx={{ color: info ? 'accent.main' : 'text.secondary' }}
         >
           <InfoOutlinedIcon fontSize="small" />
         </IconButton>

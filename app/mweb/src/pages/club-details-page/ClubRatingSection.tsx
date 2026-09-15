@@ -71,7 +71,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Typography variant="h6" sx={{
+        <Typography variant="h6" component="h2" sx={{
           fontWeight: 600, fontSize: '1.0625rem'
         }}>
           Ratings & Reviews
@@ -95,7 +95,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             alignItems: "center",
             mb: 1.5
           }}>
-          <Typography variant="h4" sx={{
+          <Typography variant="h4" component="p" sx={{
             fontWeight: 600
           }}>{rating.toFixed(1)}</Typography>
           <Box>
@@ -122,7 +122,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             <Box key={r.id} data-testid={`club-rating-review-${r.id}`}>
               <ListItem alignItems="flex-start" disablePadding sx={{ mb: 1 }}>
                 <ListItemAvatar sx={{ minWidth: 44 }}>
-                  <Avatar src={r.user_photo} sx={{ width: 36, height: 36 }}>
+                  <Avatar alt="" src={r.user_photo} sx={{ width: 36, height: 36 }}>
                     {r.user_name?.[0]}
                   </Avatar>
                 </ListItemAvatar>

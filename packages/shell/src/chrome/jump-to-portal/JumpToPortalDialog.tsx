@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Accordion,
@@ -42,6 +42,8 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
   const [requestAccess] = useMutation<any>(REQUEST_PORTAL_ACCESS);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const headingId = useId();
+  const titleRowId = useId();
 
   const portals: PortalAccessEntry[] = useMemo(() => data?.myPortalAccess ?? [], [data]);
   const accessible = useMemo(() => portals.filter((p) => p.has_access), [portals]);
@@ -61,9 +63,10 @@ export function JumpToPortalDialog({ open, onClose }: Readonly<Props>) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>
-        {t('shell.jumpToPortal.title')}
+    // Named by the title text alone — the title row also holds the subtitle and Close.
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" aria-labelledby={headingId}>
+      <DialogTitle id={titleRowId} sx={{ pr: 6 }}>
+        <span id={headingId}>{t('shell.jumpToPortal.title')}</span>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

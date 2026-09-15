@@ -53,6 +53,8 @@ export function StackScreen({
             testID={`${testID}-back`}
             role="button"
             aria-label={t('mweb.common.goBack')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={goBack}
             width={40}
             height={40}
@@ -66,7 +68,11 @@ export function StackScreen({
           >
             <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
+          {/* The screen's name — a heading, so a screen reader can jump to it
+              and knows which page it has landed on. */}
           <Text
+            testID={`${testID}-title`}
+            role="heading"
             flex={1}
             fontSize={17}
             fontWeight="600"

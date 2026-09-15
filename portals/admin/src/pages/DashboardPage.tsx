@@ -77,7 +77,7 @@ export default function DashboardPage() {
             justifyContent: "space-between"
           }}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
               {t('admin.hub.dashboard')}
             </Typography>
             <Typography variant="body2" sx={{

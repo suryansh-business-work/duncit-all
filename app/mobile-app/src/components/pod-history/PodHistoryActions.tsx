@@ -39,6 +39,7 @@ function ActionButton({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={label}
       aria-disabled={disabled}
       onPress={() => {

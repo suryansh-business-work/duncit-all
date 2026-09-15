@@ -14,13 +14,14 @@ export function SelectOptionRow({
   testID,
   onPress,
 }: Readonly<{ option: SelectOption; active: boolean; testID: string; onPress: () => void }>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   return (
     <XStack
       testID={testID}
-      role="button"
+      role="radio"
       aria-label={option.label}
-      aria-pressed={active}
+      aria-checked={active}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       gap={10}
@@ -38,7 +39,7 @@ export function SelectOptionRow({
         flex={1}
         fontSize={15}
         fontWeight={active ? '600' : '500'}
-        color={active ? '$primary' : '$color'}
+        color={active ? '$accent' : '$color'}
       >
         {option.label}
       </Text>
@@ -47,7 +48,7 @@ export function SelectOptionRow({
           {option.hint}
         </Text>
       ) : null}
-      {active ? <MaterialIcons name="check" size={18} color={primary} /> : null}
+      {active ? <MaterialIcons name="check" size={18} color={accent} /> : null}
     </XStack>
   );
 }

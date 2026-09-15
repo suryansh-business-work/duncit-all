@@ -27,7 +27,12 @@ export function YourClubsSection({ state, onOpenPods, onEdit }: Readonly<Props>)
       <SurfaceCard padding={0} overflow="hidden">
         {state.isLoading ? (
           <YStack padding={20} alignItems="center">
-            <Spinner testID="club-studio-clubs-loading" color="$primary" />
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="club-studio-clubs-loading"
+              color="$primary"
+            />
           </YStack>
         ) : null}
         {state.hasError ? (

@@ -76,7 +76,7 @@ export default function ConversationHeader({
         <ArrowBackIcon fontSize="small" />
       </DuncitIconButton>
       <PresenceDot status={status}>
-        <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
+        <Avatar src={peer.photo || undefined} alt="" sx={{ width: 30, height: 30 }} />
       </PresenceDot>
       {/* The only part that may shrink. `noWrap` alone was not enough: with the
           buttons free to shrink too, flexbox took the width out of THEM, and a

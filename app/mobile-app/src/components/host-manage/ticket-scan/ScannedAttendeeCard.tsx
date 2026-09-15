@@ -29,13 +29,14 @@ function DetailRow({ icon, value, tint, href }: Readonly<DetailRowProps>) {
     <XStack
       alignItems="flex-start"
       gap={8}
+      tabIndex={href ? 0 : undefined}
       role={href ? 'button' : undefined}
       aria-label={href ? value : undefined}
       onPress={open}
       pressStyle={href ? { opacity: 0.7 } : undefined}
     >
       <MaterialIcons name={icon} size={16} color={tint} />
-      <Text flex={1} fontSize={13} color={href ? '$primary' : '$color'}>
+      <Text flex={1} fontSize={13} color={href ? '$accent' : '$color'}>
         {value}
       </Text>
     </XStack>
@@ -186,6 +187,7 @@ export function ScannedAttendeeCard({
 
       <XStack
         testID="scanned-attendee-profile"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.hostManage.viewProfile')}
         onPress={onOpenProfile}
@@ -199,7 +201,7 @@ export function ScannedAttendeeCard({
         pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="open-in-new" size={16} color={primary} />
-        <Text fontSize={14} fontWeight="600" color="$primary">
+        <Text fontSize={14} fontWeight="600" color="$accent">
           View profile
         </Text>
       </XStack>

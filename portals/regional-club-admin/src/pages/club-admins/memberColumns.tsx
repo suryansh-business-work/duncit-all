@@ -74,7 +74,11 @@ export function memberColumns(
     },
     actionsColumn<RegionMember>({
       onDelete: onRemove,
-      delete: { title: t('partners.regional.removeFromRegion') },
+      delete: {
+        title: t('partners.regional.removeFromRegion'),
+        ariaLabel: (row) =>
+          t('partners.regional.a11y.removeMember', { vars: { name: row.name || row.email } }),
+      },
     }),
   ];
 }

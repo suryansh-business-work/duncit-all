@@ -32,12 +32,16 @@ export function PodSaveButton({
       role="button"
       aria-label={label}
       aria-pressed={saved}
+      accessibilityState={{ selected: saved, busy: saving }}
+      tabIndex={0}
+      hitSlop={4}
       // Ignored while in flight so a double tap cannot un-save what the first
       // tap is still saving.
       onPress={saving ? undefined : onPress}
       position="absolute"
-      top={6}
-      right={6}
+      // Over the image corner: the card's 8px padding plus the 6px inset.
+      top={14}
+      right={14}
       width={36}
       height={36}
       borderRadius={18}

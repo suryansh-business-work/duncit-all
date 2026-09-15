@@ -33,6 +33,8 @@ function IconDisc({ name }: Readonly<{ name: RowIcon }>) {
       alignItems="center"
       justifyContent="center"
       backgroundColor="$soft"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
       <MaterialIcons name={name} size={20} color={muted} />
     </YStack>
@@ -136,7 +138,8 @@ export function WithdrawalRow({
         borderRadius={999}
         backgroundColor={STATUS_BG[w.status] ?? '$muted'}
       >
-        <Text fontSize={11} fontWeight="600" color="$onPrimary">
+        {/* onSemantic ink: the text colour every semantic fill takes in this mode. */}
+        <Text fontSize={11} fontWeight="600" color="$onSuccess">
           {w.status}
         </Text>
       </XStack>

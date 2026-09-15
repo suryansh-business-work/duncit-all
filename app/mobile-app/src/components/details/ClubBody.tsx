@@ -62,6 +62,7 @@ function ClubSocialLinks({ club }: Readonly<{ club: ClubDetail }>) {
           key={link.key}
           testID={`club-chat-${link.key}`}
           role="button"
+          tabIndex={0}
           aria-label={`Open ${link.label} on WhatsApp`}
           onPress={() => Linking.openURL(link.href)}
           alignItems="center"

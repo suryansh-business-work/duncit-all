@@ -85,7 +85,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   if (error) return <Alert severity="error" data-testid="chats-error">{error.message}</Alert>;
@@ -111,10 +111,10 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'chats-search-input' },
+            htmlInput: { 'aria-label': t('mweb.chats.searchChats'), 'data-testid': 'chats-search-input' },
           }}
         />
-        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
+        <Stack data-testid="chat-pod-filter" direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
           {POD_FILTERS.map(([value, labelKey]) => {
             const selected = filter === value;
             return (
@@ -125,6 +125,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                 label={t(labelKey)}
                 color={selected ? 'primary' : 'default'}
                 onClick={() => setFilter(value)}
+                aria-pressed={selected}
                 sx={{ height: 36, px: 0.75, flexShrink: 0, ...(selected ? {} : { bgcolor: 'background.paper' }) }}
               />
             );
@@ -132,7 +133,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         </Stack>
         {filter === 'ALL' && rooms.length > 0 && <ActivePodsStrip rooms={rooms} />}
         {visibleRooms.length === 0 ? (
-          <Alert severity="info" data-testid="chats-empty">{emptyMessage}</Alert>
+          <Alert severity="info" role="status" data-testid="chats-empty">{emptyMessage}</Alert>
         ) : (
           <ChatRoomList rooms={visibleRooms} />
         )}

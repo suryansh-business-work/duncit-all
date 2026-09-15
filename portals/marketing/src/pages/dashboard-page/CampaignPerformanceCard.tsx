@@ -31,18 +31,22 @@ export default function CampaignPerformanceCard({
             alignItems: "baseline",
             mb: 1.5
           }}>
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h2" variant="subtitle2" sx={{
             fontWeight: 700
           }}>
             Recent campaigns
           </Typography>
           <Typography
             variant="caption"
+            component="span"
             role="button"
             tabIndex={0}
             onClick={onOpen}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') onOpen();
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpen();
+              }
             }}
             sx={{
               color: "primary.main",

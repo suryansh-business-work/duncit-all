@@ -25,6 +25,7 @@ const renderUser = (u: UserRow) => (
       minWidth: 0
     }}>
     <Avatar
+      alt=""
       src={u.profile_photo || undefined}
       sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13, fontWeight: 700 }}
     >
@@ -133,7 +134,9 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
           size="small"
           sx={{
             justifyContent: 'flex-start',
-            color: meta.color,
+            // The provider colour stays on the icon and outline; the label is ink so it
+            // reads at 4.5:1 in light and dark mode (WCAG 1.4.3).
+            color: 'text.primary',
             borderColor: alpha(meta.color, 0.35),
             bgcolor: alpha(meta.color, 0.08),
             '& .MuiChip-icon': { color: meta.color },

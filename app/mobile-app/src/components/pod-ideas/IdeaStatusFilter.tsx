@@ -41,8 +41,10 @@ export function IdeaStatusFilter({ value, onChange }: Readonly<Props>) {
               key={option.value}
               testID={`idea-status-${option.value}`}
               role="button"
+              tabIndex={0}
               aria-label={option.label}
               aria-pressed={selected}
+              accessibilityState={{ selected }}
               onPress={() => onChange(option.value)}
               paddingHorizontal={12}
               height={36}

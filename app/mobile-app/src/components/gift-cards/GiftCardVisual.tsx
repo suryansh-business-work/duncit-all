@@ -99,6 +99,8 @@ export function GiftCardVisual({
         testID="gift-card-flip"
         role="button"
         aria-label={t('mweb.giftCards.flipCard')}
+        tabIndex={0}
+        hitSlop={6}
         onPress={flip}
         position="absolute"
         right={10}

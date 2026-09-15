@@ -3,6 +3,7 @@ import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/mate
 import { MY_CALLBACK_REQUESTS, type CallbackHistoryItem } from './queries';
 import { formatDateTime } from '../../utils/dateFormat';
 import { SURFACE_SX } from '../../theme';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const STATUS_COLOR: Record<CallbackHistoryItem['status'], 'warning' | 'primary' | 'default'> = {
   PENDING: 'warning',
@@ -18,6 +19,7 @@ function durationLabel(seconds: number | null): string | null {
 }
 
 export default function CallbackHistory() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ myCallbackRequests: CallbackHistoryItem[] }>(
     MY_CALLBACK_REQUESTS,
     { fetchPolicy: 'cache-and-network' }
@@ -27,7 +29,7 @@ export default function CallbackHistory() {
   if (loading && items.length === 0) {
     return (
       <Box data-testid="callback-history-loading" sx={{ p: 2, textAlign: 'center' }}>
-        <CircularProgress size={20} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={20} />
       </Box>
     );
   }

@@ -1,4 +1,4 @@
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 import { STORY_RING_GRADIENT } from '../home-page/HomeStatusTile';
@@ -23,6 +23,17 @@ interface Props {
   onOpen: (index: number) => void;
 }
 
+/** One story tile: a ring over its caption, stacked, as one keyboard-reachable button. */
+const TILE_SX = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 0.5,
+  alignItems: 'center',
+  width: 66,
+  flex: '0 0 auto',
+  borderRadius: '12px',
+} as const;
+
 /** The rail's tiles — the admin-only "Add" tile and one ring per live story. */
 export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -31,26 +42,19 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
   return (
     <>
       {canPost && (
-        <Stack
+        <ButtonBase
           data-testid="club-story-add"
-          spacing={0.5}
-          role="button"
           aria-label={t('mweb.clubDetails.addAStoryToThisClub')}
           onClick={() => openClubPicker(clubId)}
-          sx={{
-            alignItems: "center",
-            cursor: 'pointer',
-            width: 66,
-            flex: '0 0 auto'
-          }}>
+          sx={TILE_SX}>
           <Avatar
             sx={{
               width: 58,
               height: 58,
               bgcolor: 'action.hover',
-              color: 'primary.main',
+              color: 'accent.main',
               border: '2px dashed',
-              borderColor: 'primary.main',
+              borderColor: 'accent.main',
             }}
           >
             <AddIcon />
@@ -58,22 +62,15 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
             Add
           </Typography>
-        </Stack>
+        </ButtonBase>
       )}
       {stories.map((story, index) => (
-        <Stack
+        <ButtonBase
           key={story.id}
           data-testid={`club-story-${story.id}`}
-          spacing={0.5}
-          role="button"
           aria-label={`Story by ${story.author?.full_name ?? 'member'}`}
           onClick={() => onOpen(index)}
-          sx={{
-            alignItems: "center",
-            cursor: 'pointer',
-            width: 66,
-            flex: '0 0 auto'
-          }}>
+          sx={TILE_SX}>
           <Box
             sx={{
               p: 0.35,
@@ -84,7 +81,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
               placeItems: 'center',
             }}
           >
-            <Avatar
+            <Avatar alt=""
               src={story.image_url}
               sx={{ width: 58, height: 58, border: '2px solid', borderColor: 'background.paper' }}
             />
@@ -92,7 +89,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
           <Typography variant="caption" sx={{ fontWeight: 600 }} noWrap>
             {story.author?.full_name?.split(' ')[0] ?? 'Member'}
           </Typography>
-        </Stack>
+        </ButtonBase>
       ))}
     </>
   );

@@ -1,8 +1,8 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Request } from 'express';
 import { GraphQLError } from 'graphql';
 import { e2eOverrides } from './e2eRun.mute';
 import { stampTime } from './e2eRun.identity';
+import { e2eSignature, isE2eSignature } from './e2eRun.signature';
 
 /**
  * Which requests belong to a live e2e run.
@@ -22,8 +22,7 @@ export const E2E_TRAFFIC_HEADER = 'x-duncit-e2e';
 /** Longer than the slowest full run, short enough that an old key is dead. */
 const KEY_LIFETIME_MS = 6 * 60 * 60 * 1000;
 
-const sign = (stamp: string): string =>
-  createHmac('sha256', process.env.JWT_SECRET || 'dev-secret').update(`e2e-traffic:${stamp}`).digest('hex');
+const TRAFFIC_LABEL = 'e2e-traffic';
 
 /** The header value a run with this stamp sends, handed out only to an e2e target. */
 export async function trafficKeyForRun(stamp: string): Promise<string> {
@@ -39,7 +38,7 @@ export async function trafficKeyForRun(stamp: string): Promise<string> {
       { extensions: { code: 'FORBIDDEN' } }
     );
   }
-  return `${value}.${sign(value)}`;
+  return `${value}.${e2eSignature(TRAFFIC_LABEL, value)}`;
 }
 
 function validKey(value: string, now: number): boolean {
@@ -48,9 +47,7 @@ function validKey(value: string, now: number): boolean {
   if (!at || !mac) return false;
   const age = now - at.getTime();
   if (age < -KEY_LIFETIME_MS || age > KEY_LIFETIME_MS) return false;
-  const expected = Buffer.from(sign(stamp));
-  const given = Buffer.from(mac);
-  return given.length === expected.length && timingSafeEqual(given, expected);
+  return isE2eSignature(TRAFFIC_LABEL, stamp, mac);
 }
 
 export async function isE2eTraffic(req: Request): Promise<boolean> {

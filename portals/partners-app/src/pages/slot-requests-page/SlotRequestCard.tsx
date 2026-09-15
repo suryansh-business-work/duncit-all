@@ -47,7 +47,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           alignItems: "flex-start"
         }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" noWrap sx={{
+            <Typography variant="subtitle1" component="h2" noWrap sx={{
               fontWeight: 800
             }}>{request.pod_title}</Typography>
             <Typography

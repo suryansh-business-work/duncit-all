@@ -1,6 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import {
+  isE2eGoogleCredential,
+  verifyE2eGoogleCredential,
+} from '@modules/platform/e2eRun/e2eRun.google';
 
 interface GoogleTokenInfo {
   email: string;
@@ -99,6 +103,9 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenI
       extensions: { code: 'NOT_CONFIGURED' },
     });
   }
+  // The e2e run account's stand-in for Google's popup; refused unless this
+  // server is an e2e target (see e2eRun.google.ts).
+  if (isE2eGoogleCredential(idToken)) return verifyE2eGoogleCredential(idToken, expectedClientId);
 
   const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
   const res = await fetchGoogleTokenInfo(url);

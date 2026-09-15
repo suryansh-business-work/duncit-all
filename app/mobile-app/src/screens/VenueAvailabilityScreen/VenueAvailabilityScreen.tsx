@@ -98,12 +98,19 @@ export function VenueAvailabilityScreen() {
     <StackScreen title={t('mweb.venueAvailabilityPage.title')} testID="venue-availability-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={20} padding={16} paddingBottom={48}>
-          {isLoading ? <Spinner testID="venue-availability-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="venue-availability-loading"
+              color="$primary"
+            />
+          ) : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
           {/* A failed load says so — an owner with venues must never be told
               they have none because the request did not come back. */}
           {loadError ? (
-            <Text testID="venue-availability-error" fontSize={13} color="$danger">
+            <Text role="alert" testID="venue-availability-error" fontSize={13} color="$danger">
               {loadError}
             </Text>
           ) : null}

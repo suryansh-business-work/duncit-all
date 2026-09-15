@@ -6,6 +6,10 @@ import { DuncitButton } from '@duncit/buttons';
 import { StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ServerInfoDetails from './ServerInfoDetails';
+import ServerHistoryPanel from './history';
+import ContainerUsage from './history/ContainerUsage';
+import ServerAdviceCard from './advice';
+import LivePulse from '../stress-testing/components/LivePulse';
 import { formatBytes, formatUptime } from './format';
 import { SERVER_INFO, apiHost, type ServerInfo } from './queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -26,6 +30,17 @@ function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: st
   );
 }
 
+/** A full-width card that sizes itself to its content. */
+const panel = (id: string, y: number, content: DashboardWidget['content']): DashboardWidget => ({
+  id,
+  bare: true,
+  fitContent: true,
+  defaultLayout: { x: 0, y, w: 12, h: 6 },
+  minW: 4,
+  minH: 3,
+  content,
+});
+
 function buildWidgets(info: ServerInfo, t: Translate): DashboardWidget[] {
   const tile = (id: string, x: number, content: DashboardWidget['content']): DashboardWidget => ({
     id,
@@ -41,44 +56,50 @@ function buildWidgets(info: ServerInfo, t: Translate): DashboardWidget[] {
       <ServerStatCard
         label={t('tech.server.cpuUsage')}
         value={`${info.cpu.usagePercent}%`}
-        sub={`${info.cpu.cores} cores`}
+        sub={t('tech.server.coresCount', { vars: { count: info.cpu.cores } })}
         percent={info.cpu.usagePercent}
       />
     )),
     tile('memory', 3, (
       <ServerStatCard
-        label="MEMORY"
+        label={t('tech.server.memoryTile')}
         value={formatBytes(info.memory.usedBytes)}
-        sub={`/ ${formatBytes(info.memory.totalBytes)}`}
+        sub={t('tech.server.ofTotal', { vars: { total: formatBytes(info.memory.totalBytes) } })}
         percent={info.memory.usagePercent}
       />
     )),
     tile('disk', 6, (
       <ServerStatCard
-        label="DISK"
+        label={t('tech.server.diskTile')}
         value={formatBytes(info.disk.usedBytes)}
-        sub={`/ ${formatBytes(info.disk.totalBytes)}`}
+        sub={t('tech.server.ofTotal', { vars: { total: formatBytes(info.disk.totalBytes) } })}
         percent={info.disk.usagePercent}
       />
     )),
     tile('uptime', 9, (
       <ServerStatCard
-        label="UPTIME"
+        label={t('tech.server.uptimeTile')}
         value={formatUptime(info.os.kernelUptimeSeconds)}
         sub={info.os.distro}
       />
     )),
+    // Widgets added after someone saved a layout land at the bottom of their
+    // grid (see @duncit/dashboard), so the ids below must never be renamed.
+    panel('pulse', 2, <LivePulse />),
+    panel('history', 8, <ServerHistoryPanel />),
+    panel('advice', 14, <ServerAdviceCard />),
     {
       id: 'details',
       bare: true,
       // Two columns of natural-height panels that stack to one below md — the
       // h8 default only fits the two-column shape by coincidence.
       fitContent: true,
-      defaultLayout: { x: 0, y: 2, w: 12, h: 8 },
+      defaultLayout: { x: 0, y: 20, w: 12, h: 8 },
       minW: 4,
       minH: 4,
       content: <ServerInfoDetails info={info} />,
     },
+    panel('containers', 28, <ContainerUsage />),
   ];
 }
 
@@ -96,15 +117,15 @@ export default function ServerInfoPage() {
     }}>
       <DnsIcon color="primary" />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 800
         }}>
-          Server · Info
+          {t('tech.server.infoTitle')}
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Live metrics for the host running the API — CPU, memory, storage, uptime, SSH and SSL.
+          {t('tech.server.infoSubtitle')}
         </Typography>
       </Box>
       <DuncitButton
@@ -114,7 +135,7 @@ export default function ServerInfoPage() {
         onClick={() => refetch()}
         disabled={loading}
       >
-        Refresh
+        {t('tech.server.refresh')}
       </DuncitButton>
     </Stack>
   );
@@ -123,7 +144,9 @@ export default function ServerInfoPage() {
     return (
       <Stack spacing={2.5}>
         {header}
-        {error && <Alert severity="error">Could not load server info: {error.message}</Alert>}
+        {error && (
+          <Alert severity="error">{t('tech.server.loadError', { vars: { message: error.message } })}</Alert>
+        )}
         {loading && (
           <Stack
             sx={{

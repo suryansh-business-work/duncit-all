@@ -136,7 +136,7 @@ export default function WaCampaignDetailDialog({
             />
 
             <Stack spacing={0.5}>
-              <Typography variant="subtitle2" sx={{
+              <Typography component="h2" variant="subtitle2" sx={{
                 fontWeight: 900
               }}>
                 Recipients

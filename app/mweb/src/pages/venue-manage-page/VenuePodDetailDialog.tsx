@@ -40,12 +40,12 @@ function AttendeeList({ ids, profiles, loading }: Readonly<AttendeesProps>) {
       </Typography>
     );
   }
-  if (loading && profiles.length === 0) return <CircularProgress size={20} />;
+  if (loading && profiles.length === 0) return <CircularProgress aria-label={t('mweb.a11y.loading')} size={20} />;
   return (
     <Stack spacing={1}>
       {profiles.map((person) => (
         <Stack key={person.user_id} direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
-          <Avatar src={person.profile_photo ?? undefined} sx={{ width: 30, height: 30 }}>
+          <Avatar src={person.profile_photo ?? undefined} alt="" sx={{ width: 30, height: 30 }}>
             {(person.full_name?.[0] ?? '?').toUpperCase()}
           </Avatar>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>

@@ -6,6 +6,7 @@ import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatPerson } from '@/hooks/useChat';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PersonProps {
   person: ChatPerson;
@@ -16,13 +17,16 @@ interface PersonProps {
 /** One tappable avatar + name; hosts get a badge. Hoisted so it isn't redefined
  * per render (Sonar S6478). */
 function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
+  const hostWord = t('mweb.podDetails.host');
   const initial = (person.full_name?.[0] ?? 'U').toUpperCase();
   return (
     <YStack
       testID={`chat-person-${person.user_id}`}
       role="button"
-      aria-label={person.full_name}
+      tabIndex={0}
+      aria-label={isHost ? `${person.full_name}, ${hostWord}` : person.full_name}
       onPress={onPress}
       width={64}
       alignItems="center"
@@ -57,11 +61,11 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
           paddingHorizontal={6}
           paddingVertical={1}
           borderRadius={999}
-          backgroundColor="$accent"
+          backgroundColor="$primary"
         >
           <MaterialIcons name="star" size={9} color={onPrimary} />
           <Text fontSize={9} fontWeight="600" color={onPrimary}>
-            Host
+            {hostWord}
           </Text>
         </XStack>
       ) : null}

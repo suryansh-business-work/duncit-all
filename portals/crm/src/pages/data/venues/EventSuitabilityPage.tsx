@@ -13,7 +13,7 @@ export default function EventSuitabilityPage() {
       }}>
         <CelebrationIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('shell.nav.eventSuitabilityManagement')}</Typography>
           <Typography variant="body2" sx={{

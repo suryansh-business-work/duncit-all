@@ -36,7 +36,7 @@ function EmptyState() {
             textAlign: 'center'
           }}>
           <CampaignOutlinedIcon color="primary" sx={{ fontSize: 48 }} />
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h3" variant="subtitle1" sx={{
             fontWeight: 700
           }}>
             No ads yet
@@ -74,7 +74,7 @@ function RecentSection() {
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           Recent requests
@@ -100,7 +100,7 @@ function OverviewBody({ stats }: Readonly<{ stats: AdsDashboardStats }>) {
           flexWrap: "wrap",
           gap: 1
         }}>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           Ads overview

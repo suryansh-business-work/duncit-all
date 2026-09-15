@@ -67,6 +67,7 @@ export default function BugDetailPage() {
       {bug ? <Chip size="small" label={bug.status} color={statusColor(bug.status)} /> : null}
       <Typography
         variant="h6"
+        component="h1"
         sx={{
           fontWeight: 700,
           wordBreak: 'break-word',
@@ -93,6 +94,8 @@ export default function BugDetailPage() {
                 <DuncitButton
                   key={opt.value}
                   variant={opt.value === bug.status ? 'contained' : 'outlined'}
+                  aria-pressed={opt.value === bug.status}
+                  data-testid="bug-detail-mark-status"
                   disabled={busy || opt.value === bug.status}
                   onClick={() => changeStatus(opt.value)}
                 >

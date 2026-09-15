@@ -91,7 +91,7 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <Avatar src={person.photo || undefined} sx={{ width: 44, height: 44 }}>
+            <Avatar src={person.photo || undefined} alt="" sx={{ width: 44, height: 44 }}>
               {initials(person.name)}
             </Avatar>
             <Stack sx={{ minWidth: 0 }}>

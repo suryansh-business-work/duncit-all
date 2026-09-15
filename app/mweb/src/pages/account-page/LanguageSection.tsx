@@ -67,7 +67,7 @@ export default function LanguageSection() {
               }}>
               {t('mweb.account.preferences')}
             </Typography>
-            {saving && <CircularProgress size={16} data-testid="language-saving" />}
+            {saving && <CircularProgress size={16} data-testid="language-saving" aria-label={t('mweb.a11y.loading')} />}
           </Stack>
           <LanguageSelect
             value={locale}

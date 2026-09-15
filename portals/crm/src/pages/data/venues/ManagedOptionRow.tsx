@@ -31,19 +31,38 @@ export default function ManagedOptionRow({ row, busy, disableActions, onToggleAc
         </Stack>
       </TableCell>
       <TableCell>
-        <Switch checked={row.is_active} onChange={onToggleActive} disabled={busy} />
+        <Switch
+          checked={row.is_active}
+          onChange={onToggleActive}
+          disabled={busy}
+          slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('crm.common.active'), name: row.name } }) } }}
+          data-testid="crm-managed-option-active"
+        />
       </TableCell>
       <TableCell align="right">
         <Tooltip title={t('shell.common.edit')}>
           <span>
-            <DuncitIconButton size="small" onClick={onEdit} disabled={disableActions}>
+            <DuncitIconButton
+              size="small"
+              aria-label={t('shell.a11y.editNamed', { vars: { name: row.name } })}
+              data-testid="crm-managed-option-edit"
+              onClick={onEdit}
+              disabled={disableActions}
+            >
               <EditIcon fontSize="small" />
             </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={t('shell.common.delete')}>
           <span>
-            <DuncitIconButton size="small" color="error" onClick={onDelete} disabled={disableActions}>
+            <DuncitIconButton
+              size="small"
+              color="error"
+              aria-label={t('shell.a11y.deleteNamed', { vars: { name: row.name } })}
+              data-testid="crm-managed-option-delete"
+              onClick={onDelete}
+              disabled={disableActions}
+            >
               <DeleteIcon fontSize="small" />
             </DuncitIconButton>
           </span>

@@ -25,6 +25,11 @@ describe('VerificationCardShell', () => {
     expect(screen.getByText('Not Verified')).toBeInTheDocument();
   });
 
+  it('titles the card as a heading so a screen reader can jump between rows', () => {
+    render(<VerificationCardShell item={row()} />);
+    expect(screen.getByRole('heading', { level: 3, name: 'Identity' })).toBeInTheDocument();
+  });
+
   it('reads a settled row as verified', () => {
     render(<VerificationCardShell item={row({ type: 'EMAIL', status: 'VERIFIED_BY_APP' })} />);
     expect(screen.getByText('Email')).toBeInTheDocument();

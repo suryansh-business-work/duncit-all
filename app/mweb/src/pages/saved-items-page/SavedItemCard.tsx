@@ -30,6 +30,7 @@ export default function SavedItemCard({ pod, onOpen }: Readonly<Props>) {
             <CardMedia
               component={isVideo ? 'video' : 'img'}
               image={isVideo ? undefined : media.url}
+              alt=""
               src={isVideo ? videoSourceUrl(media.url) : undefined}
               sx={{ ...MEDIA_SX, objectFit: 'cover' }}
             />

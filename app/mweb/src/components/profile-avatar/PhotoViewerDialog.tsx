@@ -20,7 +20,8 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
       maxWidth="sm"
       fullWidth
       slotProps={{
-        paper: { sx: { bgcolor: '#08070b' } }
+        // The name goes on the role="dialog" paper; on <Dialog> it lands on the unnamed root.
+        paper: { 'aria-label': t('mweb.profileAvatar.profilePhoto'), sx: { bgcolor: '#08070b' } }
       }}
     >
       <Box sx={{ position: 'relative' }}>

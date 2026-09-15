@@ -21,6 +21,7 @@ export function LocationSheetFooter({ applyLabel, canApply, onCancel, onApply }:
         testID="location-cancel"
         role="button"
         aria-label={t('mweb.common.cancel')}
+        tabIndex={0}
         onPress={onCancel}
         flex={1}
         height={52}
@@ -40,6 +41,9 @@ export function LocationSheetFooter({ applyLabel, canApply, onCancel, onApply }:
         role="button"
         aria-label={t('mweb.location.applyLocation')}
         aria-disabled={!canApply}
+        // The pick being applied ("Apply · Koramangala") is read after the name.
+        accessibilityHint={applyLabel}
+        tabIndex={0}
         onPress={onApply}
         flex={2}
         height={52}

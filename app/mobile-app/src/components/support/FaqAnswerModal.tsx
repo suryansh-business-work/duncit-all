@@ -29,6 +29,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.support.closeFaq')}
             onPress={onClose}
             position="absolute"
@@ -48,14 +49,16 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
               {faq ? (
                 <ScrollView contentContainerStyle={{ padding: 20 }}>
                   <XStack alignItems="flex-start" justifyContent="space-between" gap={12}>
-                    <Text flex={1} fontSize={18} fontWeight="600" color="$color">
+                    <Text role="heading" flex={1} fontSize={18} fontWeight="600" color="$color">
                       {faq.question}
                     </Text>
                     <XStack
                       pressStyle={PRESS_STYLE.surface}
                       testID="support-faq-modal-close"
                       role="button"
+                      tabIndex={0}
                       aria-label={t('mweb.common.close')}
+                      hitSlop={2}
                       onPress={onClose}
                       width={40}
                       height={40}
@@ -83,6 +86,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                     <XStack
                       testID="support-faq-modal-chat"
                       role="button"
+                      tabIndex={0}
                       aria-label={t('mweb.common.startAConversation')}
                       onPress={onStartChat}
                       alignItems="center"

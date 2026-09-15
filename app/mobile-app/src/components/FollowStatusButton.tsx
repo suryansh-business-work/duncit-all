@@ -11,7 +11,6 @@ type IconName = ComponentProps<typeof MaterialIcons>['name'];
 /** Visual tokens per follow state, resolved once so the render stays a flat,
  * low-complexity pass (no token ternary per JSX prop). */
 type FollowView = Readonly<{
-  aria: string;
   background: string;
   icon: IconName;
   iconColor: string;
@@ -24,7 +23,6 @@ type FollowView = Readonly<{
 function followView(status: FollowStatus, onPrimary: string, ink: string): FollowView {
   if (status === 'FOLLOWING') {
     return {
-      aria: 'Unfollow user',
       background: '$soft',
       icon: 'how-to-reg',
       iconColor: ink,
@@ -33,7 +31,6 @@ function followView(status: FollowStatus, onPrimary: string, ink: string): Follo
   }
   if (status === 'REQUESTED') {
     return {
-      aria: 'Withdraw follow request',
       background: '$soft',
       icon: 'hourglass-top',
       iconColor: ink,
@@ -41,7 +38,6 @@ function followView(status: FollowStatus, onPrimary: string, ink: string): Follo
     };
   }
   return {
-    aria: 'Follow user',
     background: '$primary',
     icon: 'person-add-alt',
     iconColor: onPrimary,
@@ -75,8 +71,11 @@ export function FollowStatusButton({
     <XStack
       testID={testID}
       role="button"
-      aria-label={view.aria}
+      // The words on the pill (WCAG 2.5.3) — what mWeb's FollowButton is named.
+      aria-label={label}
       aria-disabled={busy}
+      aria-busy={busy}
+      tabIndex={0}
       onPress={busy ? undefined : onPress}
       alignSelf="center"
       alignItems="center"

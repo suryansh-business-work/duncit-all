@@ -42,8 +42,19 @@ interface Props {
  * inside a soft pill track — RN twin of mWeb's SimpleBarChart. */
 export function SimpleBarChart({ data, height = 120, testID = 'bar-chart' }: Readonly<Props>) {
   const max = Math.max(1, ...data.map((d) => d.value));
+  // Bars are shapes; the chart is announced as one image whose name is the
+  // series itself ("Jun 3, Jul 0"), so no reading depends on seeing it (1.1.1).
+  const summary = data.map((d) => [d.label, d.value].join(' ')).join(', ');
   return (
-    <XStack testID={testID} gap={10} alignItems="flex-end" height={height} paddingTop={8}>
+    <XStack
+      testID={testID}
+      role="img"
+      aria-label={summary}
+      gap={10}
+      alignItems="flex-end"
+      height={height}
+      paddingTop={8}
+    >
       {data.map((d) => (
         <YStack key={d.label} flex={1} height="100%" alignItems="center" gap={4}>
           {/* The track fills this flex slot, so the value/label rows can never

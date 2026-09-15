@@ -119,6 +119,10 @@ export function FormTextField<T extends FieldValues>({
           secureTextEntry={masked}
           type={maskType}
           aria-label={label}
+          // Web reads these off the host <input>; native hears "required" from
+          // the FieldLabel and the error through Field's announcement.
+          aria-required={required}
+          aria-invalid={hasError}
           // Tamagui's <Input> recomputes `editable` as `!disabled && !readOnly`
           // *after* spreading incoming props, so a passed `editable` never
           // reaches the host TextInput. Translate it to the prop it honours.
@@ -130,6 +134,7 @@ export function FormTextField<T extends FieldValues>({
             testID={`toggle-${name}`}
             role="button"
             aria-label={toggleLabel}
+            tabIndex={0}
             onPress={() => setVisible((v) => !v)}
             position="absolute"
             right={4}

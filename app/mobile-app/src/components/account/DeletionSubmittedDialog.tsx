@@ -38,6 +38,7 @@ export function DeletionSubmittedDialog({
       testID="deletion-sign-out"
       role="button"
       aria-label={t('mweb.account.deletion.signOutNow')}
+      tabIndex={0}
       onPress={onSignOut}
       height={52}
       alignItems="center"

@@ -12,6 +12,8 @@ interface RowProps {
   onToggle: (id: string, next: boolean) => void;
   onRead: (policy: SignupPolicy) => void;
   readLabel: string;
+  /** The visible label plus the policy it opens, so repeated rows are told apart. */
+  readAriaLabel: string;
 }
 
 /*
@@ -19,7 +21,7 @@ interface RowProps {
   redefined on every render of its parent remounts each row, and a remounting
   checkbox loses focus the moment it is ticked.
 */
-function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<RowProps>) {
+function PolicyRow({ policy, accepted, onToggle, onRead, readLabel, readAriaLabel }: Readonly<RowProps>) {
   return (
     <Stack
       data-testid={`policy-row-${policy.slug}`}
@@ -46,6 +48,7 @@ function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<R
         data-testid={`policy-read-${policy.slug}`}
         size="small"
         onClick={() => onRead(policy)}
+        aria-label={readAriaLabel}
         startIcon={<DescriptionOutlinedIcon fontSize="small" />}
       >
         {readLabel}
@@ -81,13 +84,14 @@ export default function PolicyAcceptanceList({
     return (
       <Stack
         data-testid="policy-acceptance-loading"
+        role="status"
         direction="row"
         spacing={1.25}
         sx={{
           alignItems: "center",
           py: 2
         }}>
-        <CircularProgress size={18} />
+        <CircularProgress size={18} aria-hidden />
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -108,6 +112,9 @@ export default function PolicyAcceptanceList({
             onToggle={onToggle}
             onRead={setReading}
             readLabel={t('policyAcceptance.readAction')}
+            readAriaLabel={t('mweb.a11y.actionFor', {
+              vars: { action: t('policyAcceptance.readAction'), name: policy.title },
+            })}
           />
         ))}
       </Stack>

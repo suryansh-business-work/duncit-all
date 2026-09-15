@@ -88,7 +88,7 @@ export default function EventTicketsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 900
         }}>
           Event Tickets

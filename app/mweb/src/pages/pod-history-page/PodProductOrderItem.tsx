@@ -62,7 +62,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
               alignItems: "center"
             }}
           >
-            <Avatar src={li.image_url || undefined} variant="rounded" sx={{ width: 34, height: 34, bgcolor: 'action.hover' }} />
+            <Avatar alt="" src={li.image_url || undefined} variant="rounded" sx={{ width: 34, height: 34, bgcolor: 'action.hover' }} />
             <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap>
               {li.name}
               {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}

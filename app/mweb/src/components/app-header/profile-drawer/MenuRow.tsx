@@ -18,6 +18,8 @@ interface Props {
   chevron?: boolean;
   tone?: RowTone;
   testId?: string;
+  /** Set on a row that opens a section below it (Policies): announces open/closed. */
+  expanded?: boolean;
 }
 
 const ROW_SX = {
@@ -47,11 +49,13 @@ export default function MenuRow({
   chevron = true,
   tone = 'default',
   testId,
+  expanded,
 }: Readonly<Props>) {
   const ink = tone === 'danger' ? 'error.main' : 'text.primary';
   const content = (
     <>
       <Box
+        aria-hidden
         sx={{
           width: 36,
           height: 36,
@@ -97,6 +101,7 @@ export default function MenuRow({
     <ButtonBase
       data-testid={testId}
       onClick={onClick}
+      aria-expanded={expanded}
       sx={{ ...ROW_SX, '&:hover': { bgcolor: 'action.hover' } }}
     >
       {content}

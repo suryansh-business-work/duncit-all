@@ -37,6 +37,7 @@ export function NavRow({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       aria-disabled={disabled}

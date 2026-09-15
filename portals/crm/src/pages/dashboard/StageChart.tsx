@@ -80,7 +80,7 @@ export default function StageChart({ data, title }: Readonly<Props>) {
     <Card>
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 700 }}>
             {titleText}
           </Typography>
           <Typography variant="caption" sx={{
@@ -104,7 +104,7 @@ export default function StageChart({ data, title }: Readonly<Props>) {
               </Typography>
             </Stack>
           ) : (
-            <Bar data={chartData} options={options} />
+            <Bar data={chartData} options={options} role="img" aria-label={titleText} />
           )}
         </div>
       </CardContent>

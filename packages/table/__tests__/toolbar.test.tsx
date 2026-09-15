@@ -109,4 +109,13 @@ describe('DuncitTableToolbar', () => {
     expect(onRefresh).toHaveBeenCalledTimes(1);
     expect(setSearchInput).toHaveBeenCalledWith('');
   });
+
+  it('the search input carries the table-toolbar-search test id and types into setSearchInput', () => {
+    const setSearchInput = vi.fn();
+    renderToolbar({ setSearchInput, searchPlaceholder: 'Search subject' });
+    const search = screen.getByTestId('table-toolbar-search');
+    expect(search).toHaveAttribute('aria-label', 'Search subject');
+    fireEvent.change(search, { target: { value: 'DUN-TKT' } });
+    expect(setSearchInput).toHaveBeenCalledWith('DUN-TKT');
+  });
 });

@@ -24,7 +24,7 @@ export function SearchSortSheet({ open, value, onClose, onSelect }: Readonly<Pro
       onClose={onClose}
       testID="search-sort"
       title={t('mweb.search.sortResults')}
-      closeLabel="Close"
+      closeLabel={t('mweb.common.close')}
     >
       <OptionChipRow
         layout="column"

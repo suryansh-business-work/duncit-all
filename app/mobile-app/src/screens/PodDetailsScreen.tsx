@@ -367,11 +367,17 @@ export function PodDetailsScreen() {
           <HeroButton
             testID="pod-save"
             icon={saveIcon}
+            label={saved ? t('mweb.podDetails.saved') : t('mweb.podDetails.save')}
             active={saved}
             loading={savePending}
             onPress={toggleSave}
           />
-          <HeroButton testID="pod-share" icon="share" onPress={actions.onShare} />
+          <HeroButton
+            testID="pod-share"
+            icon="share"
+            label={t('mweb.podDetails.share')}
+            onPress={actions.onShare}
+          />
         </DetailHero>
         <Reveal index={0}>
           <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
@@ -438,10 +444,11 @@ export function PodDetailsScreen() {
         <XStack
           pressStyle={PRESS_STYLE.surface}
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.common.goBack')}
           onPress={goBack}
         >
-          <Text color="$primary" fontWeight="700">
+          <Text color="$accent" fontWeight="700">
             {t('mweb.common.goBack')}
           </Text>
         </XStack>
@@ -461,6 +468,7 @@ export function PodDetailsScreen() {
       {actions.joinError ? (
         <Text
           testID="pod-join-error"
+          role="alert"
           fontSize={12.5}
           color="$danger"
           textAlign="center"

@@ -1,6 +1,7 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -25,6 +26,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   // this renders (first paint no longer waits for it), and reading it here is
   // what re-renders the button when it does.
   const { clientId } = useGoogleOAuth();
+  const { t } = useTranslation();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -57,7 +59,11 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   }
 
   return (
-    <Stack data-testid="google-auth-button" sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+    <Stack
+      data-testid="google-auth-button"
+      aria-busy={loading ? true : undefined}
+      sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}
+    >
       <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) onCredential(response.credential);
@@ -83,7 +89,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
             borderRadius: '999px',
           }}
         >
-          <CircularProgress size={20} />
+          <CircularProgress size={20} aria-label={t('mweb.a11y.loading')} />
         </Box>
       )}
     </Stack>

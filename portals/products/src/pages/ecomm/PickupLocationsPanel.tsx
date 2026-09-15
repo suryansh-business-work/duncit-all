@@ -97,7 +97,7 @@ export default function PickupLocationsPanel({
           justifyContent: "space-between",
           alignItems: "center"
         }}>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           {heading}

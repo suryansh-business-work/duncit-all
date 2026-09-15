@@ -218,8 +218,12 @@ describe('buildPodsColumns / cell renderers', () => {
   });
 
   it('shows the image cover when the first media item is an image', () => {
-    renderCell('cover', makePod({ pod_images_and_videos: [{ url: 'https://cdn.test/a.jpg', type: 'IMAGE' }] }));
-    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://cdn.test/a.jpg');
+    const { container } = renderCell(
+      'cover',
+      makePod({ pod_images_and_videos: [{ url: 'https://cdn.test/a.jpg', type: 'IMAGE' }] }),
+    );
+    // The cover is decorative (alt=""), so it has no img role — the title cell names the pod.
+    expect(container.querySelector('img')).toHaveAttribute('src', 'https://cdn.test/a.jpg');
   });
 
   it('falls back to the first letter of the title when there is no media', () => {

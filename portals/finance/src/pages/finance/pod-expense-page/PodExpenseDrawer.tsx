@@ -129,7 +129,8 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
       open={!!seedPod}
       onClose={onClose}
       slotProps={{
-        paper: { sx: { width: { xs: '100%', sm: 560, lg: 760 }, p: 2.5 } }
+        // Named by the pod it belongs to, which is also the header's h2 (4.1.2).
+        paper: { role: 'dialog', 'aria-modal': true, 'aria-label': pod?.pod_title, sx: { width: { xs: '100%', sm: 560, lg: 760 }, p: 2.5 } }
       }}
     >
       {pod && podDocId && (

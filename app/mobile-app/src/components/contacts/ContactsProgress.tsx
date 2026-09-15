@@ -22,6 +22,9 @@ export function ContactsProgress({ label, percent, testID }: Readonly<BarProps>)
       <YStack
         role="progressbar"
         aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
         height={6}
         borderRadius={999}
         overflow="hidden"
@@ -46,12 +49,19 @@ export function ContactsLoadProgress({
   const status = contactLoadStatus(pages);
   if (status === 'IDLE') return null;
   if (status === 'REFRESHING') {
-    return <Spinner testID="contacts-list-refreshing" color="$primary" />;
+    return (
+      <Spinner
+        testID="contacts-list-refreshing"
+        role="progressbar"
+        aria-label={t('mweb.contacts.syncing')}
+        color="$primary"
+      />
+    );
   }
   if (status === 'FAILED') {
     return (
       <XStack testID="contacts-load-failed" alignItems="center" gap={8}>
-        <Text flex={1} fontSize={12.5} color="$danger">
+        <Text flex={1} role="alert" fontSize={12.5} color="$danger">
           {t('mweb.contacts.loadMoreFailed')}
         </Text>
         <DuncitButton

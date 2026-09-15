@@ -95,6 +95,8 @@ function CropPresetChips({ options, selectedKey, suggestedKey, onSelect }: Reado
             // platforms. accessibilityState is RN's own channel for selection and
             // keeps the button semantics intact.
             accessibilityState={{ selected }}
+            aria-pressed={selected}
+            tabIndex={0}
             onPress={() => onSelect(preset.key)}
             paddingHorizontal={14}
             paddingVertical={9}
@@ -248,7 +250,12 @@ export function MediaCropDialog({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onCancel}>
       <ModalThemeScope>
-        <YStack flex={1} backgroundColor="rgba(0,0,0,0.92)" testID="media-crop-dialog">
+        <YStack
+          flex={1}
+          backgroundColor="rgba(0,0,0,0.92)"
+          testID="media-crop-dialog"
+          onAccessibilityEscape={uploading ? undefined : onCancel}
+        >
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <CropHeader isImage={isImage} uploading={uploading} onCancel={onCancel} />
 
@@ -329,13 +336,15 @@ function CropHeader({
   const { t } = useTranslation();
   return (
     <XStack alignItems="center" justifyContent="space-between" padding={16}>
-      <Text color="#ffffff" fontSize={17} fontWeight="600">
+      <Text testID="crop-title" role="heading" color="#ffffff" fontSize={17} fontWeight="600">
         {isImage ? 'Crop & upload' : 'Upload video'}
       </Text>
       <XStack
         pressStyle={PRESS_STYLE.surface}
         testID="crop-close"
         role="button"
+        tabIndex={0}
+        hitSlop={2}
         aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
         width={40}
@@ -372,6 +381,7 @@ function CropActions({
       <XStack
         testID="crop-cancel"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
         flex={1}
@@ -391,6 +401,7 @@ function CropActions({
       <XStack
         testID="crop-confirm"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.mediaCrop.upload')}
         aria-disabled={uploading}
         onPress={uploading ? undefined : onConfirm}
@@ -427,6 +438,7 @@ function ZoomButton({ icon, label, testID, onPress }: Readonly<ZoomButtonProps>)
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={label}
       onPress={onPress}
       width={48}

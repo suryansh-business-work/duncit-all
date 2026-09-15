@@ -34,7 +34,7 @@ export default function PagedListBody({
   if (loading && count === 0) {
     return (
       <Stack data-testid="paged-list-body-loading" sx={{ alignItems: 'center', py: 4 }}>
-        <CircularProgress size={24} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={24} />
       </Stack>
     );
   }

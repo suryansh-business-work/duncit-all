@@ -36,7 +36,7 @@ function DetailRow({ icon, value, href }: Readonly<RowProps>) {
     }}>
       <Box sx={{ color: 'text.secondary', display: 'flex', pt: 0.25 }}>{icon}</Box>
       {href ? (
-        <Box component="a" href={href} sx={{ color: 'primary.main', textDecoration: 'none' }}>
+        <Box component="a" href={href} sx={{ color: 'accent.main', textDecoration: 'none' }}>
           {text}
         </Box>
       ) : (
@@ -90,7 +90,7 @@ export default function ScannedAttendeeCard({
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Avatar src={attendee.profile_photo || undefined} sx={{ width: 64, height: 64 }}>
+        <Avatar src={attendee.profile_photo || undefined} alt="" sx={{ width: 64, height: 64 }}>
           {attendee.full_name.slice(0, 1).toUpperCase()}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>

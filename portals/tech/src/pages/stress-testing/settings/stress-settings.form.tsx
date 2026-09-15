@@ -69,6 +69,7 @@ export default function StressSettingsForm({ settings, saving, onSubmit }: Reado
     { name: 'abort_error_rate_pct', label: t('tech.stress.sAbortErrorRate'), hint: t('tech.stress.sAbortErrorRateHint') },
     { name: 'abort_p95_ms', label: t('tech.stress.sAbortP95'), hint: t('tech.stress.sAbortP95Hint') },
     { name: 'abort_host_cpu_pct', label: t('tech.stress.sAbortCpu'), hint: t('tech.stress.sAbortCpuHint') },
+    { name: 'abort_host_memory_pct', label: t('tech.stress.sAbortMemory'), hint: t('tech.stress.sAbortMemoryHint') },
     { name: 'abort_breach_samples', label: t('tech.stress.sBreachSamples'), hint: t('tech.stress.sBreachSamplesHint') },
   ];
   const retention: FieldSpec[] = [

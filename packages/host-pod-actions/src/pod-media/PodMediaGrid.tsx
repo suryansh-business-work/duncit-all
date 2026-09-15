@@ -41,6 +41,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
         <Stack key={item.url} spacing={0.5} data-testid={`pod-media-item-${item.url}`}>
           <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', bgcolor: 'action.hover' }}>
             {item.type === 'VIDEO' ? (
+              // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
               <Box
                 component="video"
                 src={item.url}

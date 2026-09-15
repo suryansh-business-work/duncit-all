@@ -86,9 +86,10 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
   return (
     <XStack
       testID={`product-card-${product.id}`}
-      role="button"
+      tabIndex={0}
+      role="checkbox"
       aria-label={product.product_name}
-      aria-pressed={selected}
+      aria-checked={selected}
       aria-disabled={disabled}
       onPress={handlePress}
       gap={12}
@@ -115,7 +116,7 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
           </Text>
         ) : null}
         <XStack alignItems="center" justifyContent="space-between" gap={8} marginTop={2}>
-          <Text fontSize={14} fontWeight="700" color="$primary">
+          <Text fontSize={14} fontWeight="700" color="$accent">
             {t('podProduct.perUnit', { vars: { cost: `₹${product.unit_cost}` } })}
           </Text>
           <Text fontSize={12} color="$muted">

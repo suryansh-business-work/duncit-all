@@ -32,7 +32,7 @@ export default function ReferralSettingsCard({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           Reward &amp; message
@@ -54,7 +54,7 @@ export default function ReferralSettingsCard({
               }}>
               COINS PER REFERRAL
             </Typography>
-            <Typography variant="h6" sx={{
+            <Typography component="p" variant="h6" sx={{
               fontWeight: 700
             }}>
               {coinsPerReferral}

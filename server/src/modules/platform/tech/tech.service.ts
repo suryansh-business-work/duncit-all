@@ -56,6 +56,7 @@ export interface TechBytesInfo {
 }
 export interface TechDiskInfo extends TechBytesInfo {
   path: string;
+  inodeUsagePercent: number;
 }
 export interface TechNetworkInterface {
   name: string;
@@ -78,6 +79,7 @@ export interface TechServerInfo {
   os: TechOsInfo;
   cpu: TechCpuInfo;
   memory: TechBytesInfo;
+  swap: TechBytesInfo;
   disk: TechDiskInfo;
   network: TechNetworkInterface[];
   sshPort: number;
@@ -161,7 +163,21 @@ export function buildMemory(): TechBytesInfo {
   return { totalBytes: total, freeBytes: free, usedBytes: used, usagePercent: pct(used, total) };
 }
 
-async function buildDisk(): Promise<TechDiskInfo> {
+/** Swap from /proc/meminfo (Linux). Zeros where the file is absent — there is no swap to report. */
+export async function buildSwap(): Promise<TechBytesInfo> {
+  try {
+    const text = await readFile('/proc/meminfo', 'utf8');
+    const bytesOf = (name: string) => Number(new RegExp(String.raw`^${name}:\s+(\d+)`, 'm').exec(text)?.[1] ?? 0) * 1024;
+    const total = bytesOf('SwapTotal');
+    const free = bytesOf('SwapFree');
+    const used = total - free;
+    return { totalBytes: total, freeBytes: free, usedBytes: used, usagePercent: pct(used, total) };
+  } catch {
+    return { totalBytes: 0, freeBytes: 0, usedBytes: 0, usagePercent: 0 };
+  }
+}
+
+export async function buildDisk(): Promise<TechDiskInfo> {
   const path = os.platform() === 'win32' ? `${process.cwd().split(/[\\/]/)[0]}\\` : '/';
   try {
     const s = await statfs(path);
@@ -174,9 +190,10 @@ async function buildDisk(): Promise<TechDiskInfo> {
       freeBytes: free,
       usedBytes: used,
       usagePercent: pct(used, total),
+      inodeUsagePercent: pct(s.files - s.ffree, s.files),
     };
   } catch {
-    return { path, totalBytes: 0, freeBytes: 0, usedBytes: 0, usagePercent: 0 };
+    return { path, totalBytes: 0, freeBytes: 0, usedBytes: 0, usagePercent: 0, inodeUsagePercent: 0 };
   }
 }
 
@@ -363,8 +380,9 @@ interface RawContainer {
 export const techService = {
   async serverInfo(sslHost?: string): Promise<TechServerInfo> {
     const usagePercent = await cpuUsagePercent();
-    const [disk, sshPort, ssl] = await Promise.all([
+    const [disk, swap, sshPort, ssl] = await Promise.all([
       buildDisk(),
+      buildSwap(),
       detectSshPort(),
       buildSsl(sslHost),
     ]);
@@ -372,6 +390,7 @@ export const techService = {
       os: buildOs(),
       cpu: buildCpu(usagePercent),
       memory: buildMemory(),
+      swap,
       disk,
       network: buildNetwork(),
       sshPort,

@@ -27,10 +27,15 @@ export default function RhfTextField<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => (
+      // The ref goes to the <input>, not the TextField's root <div>: on a failed
+      // submit react-hook-form focuses the first invalid field through it, and a
+      // div cannot take focus (WCAG 3.3.1). MUI wires aria-invalid and links the
+      // helper text through aria-describedby from `error`/`helperText`.
+      render={({ field: { ref, ...field }, fieldState }) => (
         <TextField
           {...rest}
           {...field}
+          inputRef={ref}
           value={field.value ?? ''}
           fullWidth={rest.fullWidth ?? true}
           error={!!fieldState.error}

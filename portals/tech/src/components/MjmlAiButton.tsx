@@ -56,12 +56,26 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     <>
       {iconOnly ? (
         <Tooltip title={t('tech.mjmlAiButton.createUpdateWithAi')}>
-          <DuncitIconButton size="small" color="secondary" onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <DuncitIconButton
+            size="small"
+            color="secondary"
+            aria-expanded={open}
+            data-testid="mjml-ai-open"
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+          >
             <AutoAwesomeIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
       ) : (
-        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(event) => setAnchorEl(event.currentTarget)}>
+        <DuncitButton
+          size="small"
+          variant="outlined"
+          color="secondary"
+          startIcon={<AutoAwesomeIcon />}
+          aria-expanded={open}
+          data-testid="mjml-ai-open"
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+        >
           {label || 'Create/Update with AI'}
         </DuncitButton>
       )}
@@ -78,6 +92,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
             fontWeight: 700
           }}>{t('tech.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the popover the user just opened (WCAG 2.4.3)
             autoFocus
             label={t('tech.mjmlAiButton.instruction')}
             placeholder={t('tech.mjmlAiButton.makeThisADiwaliCampaignWith')}

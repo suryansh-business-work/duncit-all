@@ -69,52 +69,76 @@ export function PodCard({
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
 
+  const priceText = podPriceLabel(pod, t);
+  // One spoken name for the whole card, title first (2.5.3) — the twin of mWeb.
+  const cardLabel = [pod.pod_title, podDateLabel(pod), priceText, spotsText].join(', ');
+
+  // The save button is a SIBLING of the pressable card, laid over the image
+  // corner: an accessible parent hides a nested button from VoiceOver.
   return (
-    <PressScale
-      testID={`pod-card-${pod.pod_id}`}
-      accessibilityLabel={pod.pod_title}
-      onPress={onPress}
-    >
-      <SurfaceCard width={width} height={CARD_HEIGHT} padding={8} overflow="hidden">
-        <YStack flex={1} borderRadius={18} overflow="hidden" backgroundColor="$soft">
-          {image ? (
-            <AppImage source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          ) : (
-            <YStack flex={1} alignItems="center" justifyContent="center">
-              <MaterialIcons name="event" size={40} color={muted} />
-            </YStack>
-          )}
-          <ImagePill top={8} maxWidth={width - 76}>
-            <MaterialIcons name="event" size={14} color={muted} />
-            <Text fontSize={11.5} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
-              {podDateLabel(pod)}
-            </Text>
-          </ImagePill>
-          {categoryLabel ? (
-            <ImagePill maxWidth={width - 32}>
-              <Text fontSize={11} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
-                {categoryLabel}
+    <YStack position="relative">
+      <PressScale
+        testID={`pod-card-${pod.pod_id}`}
+        accessibilityLabel={cardLabel}
+        onPress={onPress}
+      >
+        <SurfaceCard width={width} height={CARD_HEIGHT} padding={8} overflow="hidden">
+          <YStack flex={1} borderRadius={18} overflow="hidden" backgroundColor="$soft">
+            {image ? (
+              <AppImage
+                source={{ uri: image }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+              />
+            ) : (
+              <YStack flex={1} alignItems="center" justifyContent="center">
+                <MaterialIcons name="event" size={40} color={muted} />
+              </YStack>
+            )}
+            <ImagePill top={8} maxWidth={width - 76}>
+              <MaterialIcons name="event" size={14} color={muted} />
+              <Text
+                fontSize={11.5}
+                fontWeight="600"
+                color="$color"
+                numberOfLines={1}
+                flexShrink={1}
+              >
+                {podDateLabel(pod)}
               </Text>
             </ImagePill>
-          ) : null}
-          {onToggleSave ? (
-            <PodSaveButton
-              podId={pod.pod_id}
-              saved={saved}
-              saving={saving}
-              label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
-              onPress={onToggleSave}
-            />
-          ) : null}
-        </YStack>
-        <PodCardInfo
-          title={pod.pod_title}
-          price={podPriceLabel(pod, t)}
-          joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
-          spotsText={spotsText}
-          subText={place}
+            {categoryLabel ? (
+              <ImagePill maxWidth={width - 32}>
+                <Text
+                  fontSize={11}
+                  fontWeight="600"
+                  color="$color"
+                  numberOfLines={1}
+                  flexShrink={1}
+                >
+                  {categoryLabel}
+                </Text>
+              </ImagePill>
+            ) : null}
+          </YStack>
+          <PodCardInfo
+            title={pod.pod_title}
+            price={priceText}
+            joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
+            spotsText={spotsText}
+            subText={place}
+          />
+        </SurfaceCard>
+      </PressScale>
+      {onToggleSave ? (
+        <PodSaveButton
+          podId={pod.pod_id}
+          saved={saved}
+          saving={saving}
+          label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
+          onPress={onToggleSave}
         />
-      </SurfaceCard>
-    </PressScale>
+      ) : null}
+    </YStack>
   );
 }

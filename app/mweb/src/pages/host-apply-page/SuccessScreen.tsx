@@ -9,6 +9,7 @@ export default function SuccessScreen() {
   return (
     <Stack
       data-testid="host-request-success"
+      role="status"
       spacing={2.5}
       sx={{
         alignItems: "center",
@@ -28,7 +29,7 @@ export default function SuccessScreen() {
       >
         <CheckCircleRoundedIcon sx={{ fontSize: 40 }} />
       </Box>
-      <Typography variant="h6" sx={{
+      <Typography data-testid="host-request-success-title" variant="h6" component="h1" sx={{
         fontWeight: 600
       }}>
         Your Request Has Been Submitted

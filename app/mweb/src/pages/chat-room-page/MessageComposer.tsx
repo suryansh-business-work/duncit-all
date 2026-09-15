@@ -66,6 +66,7 @@ export default function MessageComposer({
               <InputAdornment position="end">
                 <DuncitIconButton
                   size="small"
+                  aria-label={t('mweb.chat.emoji')}
                   data-testid="chat-emoji-toggle"
                   onClick={(e) => onOpenEmoji(e.currentTarget)}
                 >
@@ -74,7 +75,7 @@ export default function MessageComposer({
               </InputAdornment>
             ),
           },
-          htmlInput: { 'data-testid': 'chat-input' },
+          htmlInput: { 'aria-label': t('mweb.common.typeAMessage'), 'data-testid': 'chat-input' },
         }}
       />
       <DuncitRoundButton

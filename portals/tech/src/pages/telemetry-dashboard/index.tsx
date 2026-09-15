@@ -147,7 +147,7 @@ export default function TelemetryDashboardPage() {
         alignItems: { xs: 'flex-start', sm: 'center' }
       }}>
       <Box>
-        <Typography variant="h5">{t('tech.telemetryDashboard.telemetryDashboard')}</Typography>
+        <Typography variant="h5" component="h1">{t('tech.telemetryDashboard.telemetryDashboard')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

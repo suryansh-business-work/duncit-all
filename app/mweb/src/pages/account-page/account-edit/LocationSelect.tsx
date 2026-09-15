@@ -55,7 +55,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
 
   return (
     <Stack data-testid="location-select" spacing={1.5}>
-      <Typography data-testid="location-select-title" variant="subtitle2" sx={{ fontWeight: 600 }}>
+      <Typography data-testid="location-select-title" variant="subtitle2" component="h3" sx={{ fontWeight: 600 }}>
         Location
       </Typography>
       <Autocomplete
@@ -74,7 +74,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
             label={t('mweb.common.country')}
             slotProps={{
               ...params.slotProps,
-              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-country-trigger') },
+              htmlInput: { ...params.slotProps?.htmlInput, autoComplete: 'country-name', ...testIdProps('location-country-trigger') },
             }}
           />
         )}
@@ -92,7 +92,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
             label={t('mweb.common.state')}
             slotProps={{
               ...params.slotProps,
-              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-state-trigger') },
+              htmlInput: { ...params.slotProps?.htmlInput, autoComplete: 'address-level1', ...testIdProps('location-state-trigger') },
             }}
           />
         )}
@@ -104,7 +104,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
         onChange={(event) => write('city', event.target.value)}
         placeholder={t('mweb.account.enterYourCity')}
         helperText={t('mweb.account.yourCityUsedToSurfacePods')}
-        slotProps={{ htmlInput: testIdProps('location-city') }}
+        slotProps={{ htmlInput: { autoComplete: 'address-level2', ...testIdProps('location-city') } }}
       />
     </Stack>
   );

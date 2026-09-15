@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import AdMedia from './AdMedia';
+import { sponsoredLabel } from './adClick';
 import type { PublicAd } from './useActiveAds';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -20,10 +21,13 @@ export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: 
       data-testid="ad-tile"
       role="button"
       tabIndex={0}
-      aria-label={ad.ad_title ? `Sponsored: ${ad.ad_title}` : 'Sponsored ad'}
+      aria-label={sponsoredLabel(t, ad)}
       onClick={onOpen}
       onKeyDown={(event: KeyboardEvent) => {
-        if (event.key === 'Enter' || event.key === ' ') onOpen();
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
       }}
       spacing={0.6}
       sx={{

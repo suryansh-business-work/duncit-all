@@ -28,7 +28,7 @@ export function getTranslationColumns({
       if (!text) {
         return (
           <Typography variant="caption" sx={{
-            color: "text.disabled"
+            color: "text.secondary"
           }}>— not translated
                       </Typography>
         );

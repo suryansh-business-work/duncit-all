@@ -115,7 +115,7 @@ export default function HostLeadDetailPage() {
                     mb: 1.25
                   }}>
                   <StickyNote2Icon color="primary" />
-                  <Typography variant="subtitle1" sx={{
+                  <Typography component="h2" variant="subtitle1" sx={{
                     fontWeight: 800
                   }}>
                     Lead tracking
@@ -273,13 +273,13 @@ export default function HostLeadDetailPage() {
               flexWrap: "wrap"
             }}>
             {lead.profile_photo_url && (
-              <Avatar
+              <Avatar alt=""
                 src={lead.profile_photo_url}
                 sx={{ width: 56, height: 56, bgcolor: 'action.hover' }}
               />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
+              <Typography component="h1"
                 variant="h5"
                 sx={{
                   fontWeight: 800,

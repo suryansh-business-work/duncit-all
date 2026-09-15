@@ -13,11 +13,13 @@ interface BadgeProps {
   inverted: boolean;
 }
 
-/** "A3" — how many slots of one status sit on the day. Hidden at zero. */
+/** "A3" — how many slots of one status sit on the day. Hidden at zero.
+ * The ink over a status fill is onSemantic (`$onDanger`): white in light mode,
+ * dark in dark mode, where the status hues are light (WCAG 1.4.3). */
 function CountBadge({ count, mark, tone, inverted }: Readonly<BadgeProps>) {
   if (count <= 0) return null;
-  const fill = inverted ? '$onPrimary' : tone;
-  const ink = inverted ? tone : '$onPrimary';
+  const fill = inverted ? '$onDanger' : tone;
+  const ink = inverted ? tone : '$onDanger';
   return (
     <XStack paddingHorizontal={4} borderRadius={999} backgroundColor={fill}>
       <Text fontSize={9} fontWeight="700" color={ink}>
@@ -111,9 +113,10 @@ export function AvailabilityDayCell({
   return (
     <YStack
       testID={`availability-day-${dayKey}`}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={dayKey}
-      aria-pressed={selected}
+      aria-checked={selected}
       aria-disabled={paint.disabled}
       onPress={paint.disabled ? undefined : () => onPress(dayKey)}
       flex={1}

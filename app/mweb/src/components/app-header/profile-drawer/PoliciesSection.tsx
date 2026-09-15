@@ -46,6 +46,8 @@ export default function PoliciesSection({
   return (
     <Box>
       <MenuRow
+        testId="sidebar-policies-toggle"
+        expanded={policiesOpen}
         icon={<DescriptionIcon />}
         label={t('mweb.common.policies')}
         onClick={() => setPoliciesOpen((v) => !v)}
@@ -57,6 +59,7 @@ export default function PoliciesSection({
           <Fragment key={p.id}>
             <Divider sx={{ ml: 8, mr: 2 }} />
             <ButtonBase
+              data-testid={`sidebar-policy-${p.slug}`}
               onClick={() => navigate(`/policies/${p.slug}`, { replace: true })}
               sx={{
                 width: '100%',
@@ -70,7 +73,7 @@ export default function PoliciesSection({
                 '&:hover': { bgcolor: 'action.hover' },
               }}
             >
-              <ArticleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              <ArticleIcon aria-hidden sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Typography sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>
                 {p.title}
               </Typography>

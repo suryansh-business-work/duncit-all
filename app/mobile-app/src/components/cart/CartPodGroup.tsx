@@ -49,7 +49,9 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
       <XStack
         testID={`cart-minus-${cartLineKey(line)}`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
+        hitSlop={6}
         onPress={() => onSetQuantity(line, line.quantity - 1)}
         width={32}
         height={32}
@@ -67,8 +69,10 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
       <XStack
         testID={`cart-plus-${cartLineKey(line)}`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
         aria-disabled={atMax}
+        hitSlop={6}
         onPress={atMax ? undefined : () => onSetQuantity(line, line.quantity + 1)}
         width={32}
         height={32}
@@ -121,7 +125,9 @@ function CartLineRow({ line, divided, onSetQuantity, onRemove }: Readonly<LinePr
       <XStack
         testID={`cart-remove-${cartLineKey(line)}`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.cart.removeItem', { vars: { name: line.product_name } })}
+        hitSlop={4}
         onPress={() => onRemove(line)}
         width={36}
         height={36}

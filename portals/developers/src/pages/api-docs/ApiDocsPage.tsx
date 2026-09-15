@@ -28,7 +28,7 @@ export default function ApiDocsPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 900
         }}>
           {t('developers.apiDocs.title')}

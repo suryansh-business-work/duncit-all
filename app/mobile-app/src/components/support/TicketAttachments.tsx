@@ -43,6 +43,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
           pressStyle={PRESS_STYLE.control}
           testID="ticket-attach-add"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.support.addFiles')}
           aria-disabled={disabled}
           onPress={disabled ? undefined : () => void add()}
@@ -70,7 +71,9 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
                 pressStyle={PRESS_STYLE.surface}
                 testID={`ticket-attach-remove-${i}`}
                 role="button"
+                tabIndex={0}
                 aria-label={t('mweb.common.removeAttachment')}
+                hitSlop={11}
                 onPress={() => onChange(attachments.filter((_, j) => j !== i))}
                 position="absolute"
                 top={-6}

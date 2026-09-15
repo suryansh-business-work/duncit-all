@@ -44,6 +44,7 @@ export default function AttachmentPreview({
         <Avatar
           variant="rounded"
           src={url}
+          alt={info.name}
           sx={{ width: size, height: size, '& img': { objectFit: 'cover' } }}
         />
         {removeButton}

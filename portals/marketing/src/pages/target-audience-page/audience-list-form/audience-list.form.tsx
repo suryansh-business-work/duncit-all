@@ -49,7 +49,7 @@ export default function AudienceListForm({
         noValidate
       >
         <Stack spacing={0.25}>
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 800
           }}>
             Name this list

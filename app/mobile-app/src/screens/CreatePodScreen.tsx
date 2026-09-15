@@ -46,7 +46,12 @@ export function CreatePodScreen() {
     <StackScreen title={t('mweb.createPod.title')} testID="create-pod-screen">
       {isLoading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="create-pod-loading" color="$primary" />
+          <Spinner
+            role="progressbar"
+            aria-label={t('mweb.a11y.loading')}
+            testID="create-pod-loading"
+            color="$primary"
+          />
         </YStack>
       ) : null}
       {!isLoading && !isHost ? (

@@ -100,6 +100,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     <SurfaceCard padding={0} overflow="hidden">
       <XStack
         testID="optional-reel"
+        tabIndex={0}
         role="button"
         aria-label={podReel}
         aria-expanded={open}

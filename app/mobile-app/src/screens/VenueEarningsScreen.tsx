@@ -56,7 +56,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
           borderRadius={999}
           backgroundColor={STATUS_TONE[payout.status] ?? '$muted'}
         >
-          <Text fontSize={11} fontWeight="600" color="$onPrimary">
+          <Text fontSize={11} fontWeight="600" color="$onDanger">
             {payout.status}
           </Text>
         </XStack>
@@ -91,7 +91,14 @@ export function VenueEarningsScreen() {
     <StackScreen header title={t('mweb.venueEarnings.earnings')} testID="venue-earnings-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={24} padding={16} paddingBottom={48}>
-          {isLoading ? <Spinner testID="venue-earnings-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="venue-earnings-loading"
+              color="$primary"
+            />
+          ) : null}
           {summary ? <EarningsSummaryTiles summary={summary} /> : null}
           <YStack gap={12}>
             <SectionHeader title="Payout history" />

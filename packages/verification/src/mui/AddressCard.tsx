@@ -17,6 +17,16 @@ import { useTranslation } from './i18n';
 import { SUBMIT_ADDRESS_VERIFICATION } from './queries';
 import VerificationCardShell from './VerificationCardShell';
 
+/** What each box is, told to the browser's autofill (WCAG 1.3.5). */
+const AUTOCOMPLETE: Readonly<Record<keyof AddressValues, string>> = {
+  line1: 'address-line1',
+  line2: 'address-line2',
+  city: 'address-level2',
+  state: 'address-level1',
+  pincode: 'postal-code',
+  country: 'country-name',
+};
+
 interface Props {
   item: Verification;
   onChanged: () => void;
@@ -46,6 +56,7 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
         placeholder={t(meta.placeholderKey)}
         value={form[meta.name]}
         onChange={set(meta.name)}
+        autoComplete={AUTOCOMPLETE[meta.name]}
         fullWidth
         data-testid={`verification-address-${meta.name}`}
         slotProps={{ htmlInput: inputTestId }}

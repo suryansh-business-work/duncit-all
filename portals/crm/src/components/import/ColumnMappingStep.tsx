@@ -40,6 +40,7 @@ export default function ColumnMappingStep({ fields, headers, mapping, onChange }
                 value={mapping[f.field] ?? IGNORE}
                 onChange={(e) => set(f.field, e.target.value)}
                 error={f.required && !mapping[f.field]}
+                slotProps={{ htmlInput: { 'aria-label': f.label, 'aria-required': f.required } }}
               >
                 <MenuItem value={IGNORE}><em>— Ignore —</em></MenuItem>
                 {headers.map((h) => <MenuItem key={h} value={h}>{h}</MenuItem>)}

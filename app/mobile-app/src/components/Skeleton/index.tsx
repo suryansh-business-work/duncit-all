@@ -3,3 +3,4 @@ export { SkeletonCard } from './SkeletonCard';
 export { ListSkeleton } from './ListSkeleton';
 export { HomeSkeleton } from './HomeSkeleton';
 export { DetailSkeleton } from './DetailSkeleton';
+export { useLoadingRegion, type LoadingRegionProps } from './useLoadingRegion';

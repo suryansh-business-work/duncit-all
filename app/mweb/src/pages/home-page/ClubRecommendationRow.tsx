@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Avatar, Box, Card, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Card, Stack, Typography } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { DuncitButton } from '@duncit/buttons';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
@@ -48,30 +48,34 @@ export default function ClubRecommendationRow({
   const joined = isFollowing(club.id);
 
   return (
-    <Card
-      data-testid="club-recommendation"
-      onClick={() => navigate(clubUrl(club.club_id ?? club.id))}
-      sx={{ p: 1.5, cursor: 'pointer' }}
-    >
+    <Card data-testid="club-recommendation" sx={{ p: 1.5 }}>
+      {/* The club link and Join sit side by side: a button nested in a
+          clickable card is unreachable from the keyboard (2.1.1 / 4.1.2). */}
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-        <Avatar src={image} alt={club.club_name} sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary' }}>
-          {club.club_name?.[0]?.toUpperCase()}
-        </Avatar>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0 }}>
-            <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
-              {club.club_name}
-            </Typography>
-            {club.is_verified && (
-              <VerifiedIcon sx={{ fontSize: 15, color: 'secondary.main', flex: '0 0 auto' }} />
+        <ButtonBase
+          data-testid="club-recommendation-open"
+          onClick={() => navigate(clubUrl(club.club_id ?? club.id))}
+          sx={{ flex: 1, minWidth: 0, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left', borderRadius: '12px' }}
+        >
+          <Avatar src={image} alt="" sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary' }}>
+            {club.club_name?.[0]?.toUpperCase()}
+          </Avatar>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0 }}>
+              <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
+                {club.club_name}
+              </Typography>
+              {club.is_verified && (
+                <VerifiedIcon titleAccess={t('mweb.explore.verifiedClub')} sx={{ fontSize: 15, color: 'secondary.main', flex: '0 0 auto' }} />
+              )}
+            </Stack>
+            {meta && (
+              <Typography noWrap sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
+                {meta}
+              </Typography>
             )}
-          </Stack>
-          {meta && (
-            <Typography noWrap sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
-              {meta}
-            </Typography>
-          )}
-        </Box>
+          </Box>
+        </ButtonBase>
         <DuncitButton
           data-testid="club-recommendation-join"
           variant="contained"

@@ -54,7 +54,7 @@ export function SupportHelpCenter() {
         </YStack>
 
         {error ? (
-          <Text testID="support-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="support-error" fontSize={13} color="$danger">
             We couldn&apos;t load help topics right now.
           </Text>
         ) : null}

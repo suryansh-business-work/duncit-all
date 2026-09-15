@@ -8,11 +8,13 @@ import { MobileVenuePodsDocument } from '@/graphql/hosts-venues';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { ClubPod } from '@/hooks/useDetails';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
  * Happening soon / Upcoming / Previous rails as the club page. mWeb twin:
  * venues-page/VenuePodsSection. */
 export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
+  const loadingRegion = useLoadingRegion();
   const { openPod } = useDetailNav();
   const [pods, setPods] = useState<ClubPod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +33,9 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
   return (
     <YStack gap={10} testID="venue-pods-section">
       <SectionHeader title="Pods at this venue" />
-      {isLoading ? <Spinner testID="venue-pods-loading" color="$primary" /> : null}
+      {isLoading ? (
+        <Spinner {...loadingRegion} testID="venue-pods-loading" color="$primary" />
+      ) : null}
       {!isLoading && pods.length === 0 ? (
         <EmptyState
           testID="venue-no-pods"

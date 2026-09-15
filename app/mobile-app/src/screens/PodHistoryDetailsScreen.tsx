@@ -23,12 +23,14 @@ import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { podHistoryGate, refundLabel } from '@/utils/pod-history';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 const GENERAL_TERMS_URL = 'https://duncit.com/terms';
 
 /** Pod History details — status, actions (pod details, backout, refund, invoice,
  * support), terms links and timeline. RN twin of mWeb's PodHistoryDetailsPage. */
 export function PodHistoryDetailsScreen() {
+  const loadingRegion = useLoadingRegion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod } = useDetailNav();
   const { t } = useTranslation();
@@ -116,12 +118,12 @@ export function PodHistoryDetailsScreen() {
   if (isLoading && items.length === 0) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="pod-history-details-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="pod-history-details-loading" color="$primary" />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="pod-history-details-error" padding={24} color="$danger">
+      <Text role="alert" testID="pod-history-details-error" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );

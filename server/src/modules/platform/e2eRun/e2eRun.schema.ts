@@ -495,6 +495,15 @@ export const e2eRunTypeDefs = gql`
     deleted: Int!
   }
 
+  input GrantE2eRunAccountRolesInput {
+    "The run's ddMMyyyyHHmm stamp."
+    stamp: String!
+    "The run account; must carry the stamp."
+    email: String!
+    "Portal roles to add: SUPPORT_MANAGER, LEGAL_MANAGER, ALL_PODS_ACCESS."
+    roles: [String!]!
+  }
+
   type E2ePurgeReport {
     "How many accounts were removed — the run account and any address it derived."
     accounts_deleted: Int!
@@ -555,6 +564,14 @@ export const e2eRunTypeDefs = gql`
     account" is on.
     """
     e2eTrafficKey(stamp: String!): String!
+    """
+    A credential the Google sign-in mutations accept in place of Google's own,
+    for an e2e run account address only, so a live run can test everything
+    after Google's popup. Signed by THIS server, dead after six hours.
+    Tech/Super admin only; refused unless "one-time codes for the run account"
+    is on.
+    """
+    e2eGoogleCredential(email: String!, given_name: String!, family_name: String!): String!
   }
 
   extend type Mutation {
@@ -613,6 +630,15 @@ export const e2eRunTypeDefs = gql`
     passed or failed — a failed run leaves the most data behind.
     """
     purgeE2eRunData(input: PurgeE2eRunDataInput!): E2ePurgeReport!
+    """
+    Add portal roles to this run's account, so the suite can follow what the
+    member filed into the Support, Legal and Pods portals without a stored
+    staff password. Answers with the account's roles. Tech/Super admin only;
+    refused unless "one-time codes for the run account" is on, for any address
+    without the run's stamp, and for any role but a portal's sign-in role. The
+    purge deletes the account, roles and all.
+    """
+    grantE2eRunAccountRoles(input: GrantE2eRunAccountRolesInput!): [String!]!
     updateE2eRunSettings(input: UpdateE2eRunSettingsInput!): E2eRunSettings!
     "Delete a run. Tech/Super admin only."
     deleteE2eRun(id: ID!): Boolean!

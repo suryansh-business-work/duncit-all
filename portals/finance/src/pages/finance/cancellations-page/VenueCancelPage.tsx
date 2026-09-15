@@ -41,7 +41,7 @@ export default function VenueCancelPage() {
         }}>
         <StorefrontIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Venue Cancel

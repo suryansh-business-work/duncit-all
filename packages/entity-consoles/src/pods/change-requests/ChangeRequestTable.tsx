@@ -47,6 +47,7 @@ export default function ChangeRequestTable({
 
   return (
     <DuncitTable<PodChangeRow>
+      ariaLabel={t('admin.changeRequests.title')}
       tableId={TABLE_ID[role]}
       columns={columns}
       fetchRows={fetchRows}

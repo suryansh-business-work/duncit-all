@@ -32,7 +32,7 @@ export default function VerificationPage() {
   if (loading && !data) {
     return (
       <Stack sx={{ alignItems: 'center', py: 8 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -45,7 +45,7 @@ export default function VerificationPage() {
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <VerifiedUserIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 700, lineHeight: 1 }}>
             {t('verification.title')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>

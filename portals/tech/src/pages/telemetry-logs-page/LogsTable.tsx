@@ -194,6 +194,7 @@ export default function LogsTable({
 
   return (
     <DuncitTable<TelemetryLogRow>
+      ariaLabel={t('tech.telemetryLogs.telemetryLogs')}
       tableId={`tech-telemetry-logs-${level}`}
       columns={columns}
       fetchRows={fetchRows}

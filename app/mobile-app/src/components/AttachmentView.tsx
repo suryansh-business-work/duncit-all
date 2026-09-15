@@ -17,6 +17,7 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       testID={`support-attach-${info.url}`}
       role="button"
       aria-label={`Open ${info.name}`}
+      tabIndex={0}
       onPress={() => Linking.openURL(info.url)}
       alignItems="center"
       gap={8}
@@ -58,6 +59,8 @@ export function AttachmentView({ urls, size = 180 }: Readonly<Props>) {
           return (
             <AppImage
               key={url}
+              testID={`support-attach-image-${url}`}
+              accessibilityLabel={info.name}
               source={{ uri: url }}
               style={{ width: size, height: size, borderRadius: 12 }}
               resizeMode="cover"

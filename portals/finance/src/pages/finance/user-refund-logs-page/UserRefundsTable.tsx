@@ -164,6 +164,7 @@ export default function UserRefundsTable({ fetchRows, refetchRef, onOpen }: Read
 
   return (
     <DuncitTable<UserRefundRow>
+      ariaLabel={t('finance.refundLogs.title')}
       tableId="finance-user-refunds"
       columns={columns}
       fetchRows={fetchRows}

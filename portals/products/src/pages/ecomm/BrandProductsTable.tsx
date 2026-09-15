@@ -14,7 +14,7 @@ interface Props {
 const getRowId = (p: BrandProductRow) => p.id;
 
 const renderCover = (p: BrandProductRow) => (
-  <Avatar src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+  <Avatar alt="" src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
     {p.product_name?.[0]?.toUpperCase() ?? '?'}
   </Avatar>
 );

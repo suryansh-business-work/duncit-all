@@ -159,6 +159,7 @@ export const stressTestService = {
       abort_error_rate_pct: intIn(input.abort_error_rate_pct, 1, 100, 'Error-rate guardrail must be between 1 and 100%.'),
       abort_p95_ms: intIn(input.abort_p95_ms, 100, 120_000, 'Latency guardrail must be between 100 and 120000 ms.'),
       abort_host_cpu_pct: intIn(input.abort_host_cpu_pct, 10, 100, 'CPU guardrail must be between 10 and 100%.'),
+      abort_host_memory_pct: intIn(input.abort_host_memory_pct, 10, 100, 'Memory guardrail must be between 10 and 100%.'),
       abort_breach_samples: intIn(input.abort_breach_samples, 1, 60, 'Breach count must be between 1 and 60.'),
       sample_retention_days: intIn(input.sample_retention_days, 1, 365, 'Retention must be between 1 and 365 days.'),
     };

@@ -34,7 +34,7 @@ export default function PodMonitoringPage() {
         }}>
         <MonitorHeartIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 700
           }}>{t('admin.podMonitoring.title')}</Typography>
           <Typography variant="body2" sx={{

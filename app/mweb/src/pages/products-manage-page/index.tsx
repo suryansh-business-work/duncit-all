@@ -59,7 +59,7 @@ export default function ProductsManagePage() {
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress size={22} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
         </Stack>
       )}
       {error && (
@@ -80,7 +80,7 @@ export default function ProductsManagePage() {
                   color: "text.secondary",
                   fontWeight: 600
                 }}>{item.label}</Typography>
-              <Typography variant="h6" sx={{ mt: 0.25, fontWeight: 700 }} noWrap>{item.value}</Typography>
+              <Typography variant="h6" component="p" sx={{ mt: 0.25, fontWeight: 700 }} noWrap>{item.value}</Typography>
             </CardContent>
           </Card>
         ))}
@@ -88,7 +88,7 @@ export default function ProductsManagePage() {
 
       <Card data-testid="products-manage-page-stock-card">
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography variant="subtitle1" sx={{ fontSize: '1rem' }}>
+          <Typography data-testid="products-manage-page-stock-title" variant="subtitle1" component="h2" sx={{ fontSize: '1rem' }}>
             Stock by product
           </Typography>
           {stockChart.length === 0 ? (

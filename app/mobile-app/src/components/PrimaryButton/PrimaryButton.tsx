@@ -6,6 +6,10 @@ export interface PrimaryButtonProps {
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  /** Screen-reader name when `label` alone is ambiguous; must start with `label`. */
+  accessibilityLabel?: string;
+  /** What a press does, when the result is not obvious. */
+  accessibilityHint?: string;
 }
 
 /**
@@ -23,11 +27,15 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
   testID,
+  accessibilityLabel,
+  accessibilityHint,
 }: Readonly<PrimaryButtonProps>) {
   return (
     <DuncitButton
       testID={testID ?? 'primary-button'}
       label={label}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       onPress={onPress}
       size="lg"
       fullWidth

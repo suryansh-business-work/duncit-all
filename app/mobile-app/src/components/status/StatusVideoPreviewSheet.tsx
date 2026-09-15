@@ -48,6 +48,8 @@ function StepButton({ testID, icon, disabled, onPress }: Readonly<StepButtonProp
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={2}
       aria-label={icon === 'chevron-left' ? 'Earlier start' : 'Later start'}
       aria-disabled={disabled}
       onPress={disabled ? undefined : onPress}
@@ -104,6 +106,7 @@ function PreviewBody({
       <XStack
         testID="story-video-cancel"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.cancel')}
         onPress={onCancel}
         flex={1}
@@ -121,6 +124,7 @@ function PreviewBody({
       <XStack
         testID="story-video-post"
         role="button"
+        tabIndex={0}
         aria-label={needsTrim ? 'Trim and post' : 'Post story'}
         onPress={confirm}
         flex={1}

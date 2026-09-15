@@ -122,7 +122,7 @@ export function OrderSummary({
           backgroundColor="$primarySoft"
         >
           <MaterialIcons name="groups" size={15} color={primary} />
-          <Text fontSize={12.5} fontWeight="600" color="$primary">
+          <Text fontSize={12.5} fontWeight="600" color="$accent">
             {seatsText}
           </Text>
         </XStack>
@@ -174,6 +174,7 @@ export function OrderSummary({
                 <XStack
                   testID="venue-charges-info"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.checkout.venueChargesAbout')}
                   onPress={() => setVenueInfoOpen(true)}
                   pressStyle={PRESS_STYLE.inline}

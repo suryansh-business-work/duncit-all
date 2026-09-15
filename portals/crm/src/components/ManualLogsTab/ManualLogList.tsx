@@ -47,7 +47,7 @@ export function ManualLogList({ groups }: Readonly<Props>) {
                       mb: 0.75
                     }}>
                     {activity.summary ? (
-                      <Typography variant="subtitle2" sx={{
+                      <Typography component="p" variant="subtitle2" sx={{
                         fontWeight: 700
                       }}>
                         {activity.summary}

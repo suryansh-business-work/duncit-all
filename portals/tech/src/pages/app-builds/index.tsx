@@ -118,7 +118,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
           mb: 2
         }}>
         <Stack>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 700
           }}>
             {title}

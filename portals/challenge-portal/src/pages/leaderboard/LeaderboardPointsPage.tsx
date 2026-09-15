@@ -24,7 +24,7 @@ export default function LeaderboardPointsPage() {
       }}>
         <ReceiptLongIcon color="primary" />
         <Stack>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             {t('admin.leaderboard.ledgerTitle')}

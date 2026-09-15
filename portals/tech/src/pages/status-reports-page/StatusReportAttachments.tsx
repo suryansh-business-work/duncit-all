@@ -54,6 +54,7 @@ export default function StatusReportAttachments({
                 target="_blank"
                 rel="noopener noreferrer"
                 title={t('tech.statusReports.openScreenshot')}
+                aria-label={t('tech.statusReports.openScreenshot')}
               >
                 <Box
                   component="img"

@@ -51,6 +51,7 @@ export default function BulletListField({ name, label, helperText, error, requir
                 fullWidth
                 size="small"
                 placeholder={`Point ${index + 1}`}
+                slotProps={{ htmlInput: { 'aria-label': `${label} ${index + 1}` } }}
               />
             )}
           />

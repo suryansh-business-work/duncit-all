@@ -16,7 +16,7 @@ export default function PackageDocHeader({ doc }: Readonly<{ doc: PackageDoc }>)
   return (
     <Stack spacing={1.5}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h2" sx={{
           fontWeight: 700
         }}>
           {doc.name}

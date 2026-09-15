@@ -11,6 +11,9 @@ export interface AppImageProps {
    * so a recycled row never flashes the outgoing image. */
   recyclingKey?: string;
   testID?: string;
+  /** What the image shows, localised. Omit ONLY for decoration (an avatar next
+   * to the person's name, a backdrop) — an unnamed image is hidden from screen
+   * readers. */
   accessibilityLabel?: string;
   /** The remote image could not be loaded — how a caller switches to its
    * bundled fallback icon (rule 39). A URL that 404s never arrives empty, so
@@ -44,7 +47,14 @@ export function AppImage({
   return (
     <Image
       testID={testID}
-      accessibilityLabel={accessibilityLabel}
+      // Named images are content: one screen-reader element with the image
+      // role. Unnamed ones are decoration — skipped on native, and `alt=""` on
+      // web (expo-image writes the label as the <img> alt) so a web screen
+      // reader does not read out the file URL (WCAG 1.1.1).
+      accessible={Boolean(accessibilityLabel)}
+      accessibilityRole="image"
+      importantForAccessibility={accessibilityLabel ? 'auto' : 'no'}
+      accessibilityLabel={accessibilityLabel ?? ''}
       source={source}
       style={style}
       contentFit={resizeMode}

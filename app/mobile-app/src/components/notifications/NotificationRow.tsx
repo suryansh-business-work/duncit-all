@@ -4,6 +4,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { followRequestRowState } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { UserNotification } from '@/hooks/useNotifications';
 import { formatRelative } from '@/utils/date-format';
 import { notificationIconName } from '@/utils/notification-icon';
@@ -27,6 +28,7 @@ export function NotificationRow({
   /** Re-read the inbox once an inline action changes something. */
   onAnswered?: () => void;
 }>) {
+  const { t } = useTranslation();
   const { accent, muted } = useThemeColors();
   const unread = !item.read_at;
   const notification = item.notification;
@@ -45,75 +47,89 @@ export function NotificationRow({
     followBackStatus: notification.follow_back_status,
     actorId: notification.action_actor_id,
   });
-  const showChevron = !busy && !!notification.link_url && rowState === 'HIDDEN';
+  const hasActions = rowState !== 'HIDDEN';
+  const showChevron = !busy && !!notification.link_url && !hasActions;
+  // One spoken name for the whole row (title, preview, time, unread), so the
+  // row is a single focus stop rather than five.
+  const unreadWord = unread ? `, ${t('mweb.a11y.unread')}` : '';
+  const rowLabel = `${notification.title}, ${notification.body}, ${formatRelative(item.created_at)}${unreadWord}`;
 
+  // The follow-request buttons sit BESIDE the pressable row, not inside it: an
+  // accessible parent hides its children from VoiceOver (4.1.2).
   return (
-    <XStack
-      testID={`notification-${item.id}`}
-      role="button"
-      aria-busy={busy}
-      onPress={busy ? undefined : onPress}
-      opacity={busy ? 0.6 : 1}
-      gap={12}
-      paddingHorizontal={16}
-      paddingVertical={14}
-      alignItems="flex-start"
-      pressStyle={PRESS_STYLE.row}
-    >
-      <YStack
-        width={40}
-        height={40}
-        borderRadius={20}
-        overflow="hidden"
-        backgroundColor="$soft"
-        alignItems="center"
-        justifyContent="center"
+    <YStack opacity={busy ? 0.6 : 1}>
+      <XStack
+        testID={`notification-${item.id}`}
+        role="button"
+        aria-label={rowLabel}
+        aria-busy={busy}
+        tabIndex={0}
+        onPress={busy ? undefined : onPress}
+        gap={12}
+        paddingHorizontal={16}
+        paddingVertical={14}
+        alignItems="flex-start"
+        pressStyle={PRESS_STYLE.row}
       >
-        {notification.image_url ? (
-          <AppImage
-            source={{ uri: notification.image_url }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        ) : (
-          <MaterialIcons name={fallbackIcon} size={20} color={accent} />
-        )}
-      </YStack>
-      <YStack flex={1} gap={2}>
-        <XStack alignItems="center" gap={6}>
-          <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={2}>
-            {notification.title}
-          </Text>
-          <Text fontSize={12} color="$muted">
-            {formatRelative(item.created_at)}
-          </Text>
-          {unread ? (
-            <YStack
-              testID={`notification-new-${item.id}`}
-              width={8}
-              height={8}
-              borderRadius={4}
-              backgroundColor="$accent"
+        <YStack
+          width={40}
+          height={40}
+          borderRadius={20}
+          overflow="hidden"
+          backgroundColor="$soft"
+          alignItems="center"
+          justifyContent="center"
+        >
+          {notification.image_url ? (
+            <AppImage
+              source={{ uri: notification.image_url }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
             />
-          ) : null}
-        </XStack>
-        <XStack alignItems="center" gap={8}>
-          <Text flex={1} fontSize={13} color="$muted" numberOfLines={2}>
-            {notification.body}
-          </Text>
-          {busy ? <Spinner size="small" color={muted} /> : null}
-          {showChevron ? <MaterialIcons name="chevron-right" size={20} color={muted} /> : null}
-        </XStack>
-        <FollowRequestActions
-          actionType={notification.action_type}
-          requestId={notification.action_ref_id}
-          status={notification.action_status}
-          actorId={notification.action_actor_id}
-          followBackStatus={notification.follow_back_status}
-          unreadRow={unread}
-          onAnswered={() => onAnswered?.()}
-        />
-      </YStack>
-    </XStack>
+          ) : (
+            <MaterialIcons name={fallbackIcon} size={20} color={accent} />
+          )}
+        </YStack>
+        <YStack flex={1} gap={2}>
+          <XStack alignItems="center" gap={6}>
+            <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={2}>
+              {notification.title}
+            </Text>
+            <Text fontSize={12} color="$muted">
+              {formatRelative(item.created_at)}
+            </Text>
+            {unread ? (
+              <YStack
+                testID={`notification-new-${item.id}`}
+                width={8}
+                height={8}
+                borderRadius={4}
+                backgroundColor="$accent"
+              />
+            ) : null}
+          </XStack>
+          <XStack alignItems="center" gap={8}>
+            <Text flex={1} fontSize={13} color="$muted" numberOfLines={2}>
+              {notification.body}
+            </Text>
+            {busy ? <Spinner size="small" color={muted} /> : null}
+            {showChevron ? <MaterialIcons name="chevron-right" size={20} color={muted} /> : null}
+          </XStack>
+        </YStack>
+      </XStack>
+      {hasActions ? (
+        <YStack paddingLeft={68} paddingRight={16} marginTop={-14} paddingBottom={14}>
+          <FollowRequestActions
+            actionType={notification.action_type}
+            requestId={notification.action_ref_id}
+            status={notification.action_status}
+            actorId={notification.action_actor_id}
+            followBackStatus={notification.follow_back_status}
+            unreadRow={unread}
+            onAnswered={() => onAnswered?.()}
+          />
+        </YStack>
+      ) : null}
+    </YStack>
   );
 }

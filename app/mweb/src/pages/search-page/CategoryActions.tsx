@@ -39,6 +39,7 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
               sx={{ ...SURFACE_SX, flexDirection: 'column', gap: 1, p: 2, minWidth: 0 }}
             >
               <Box
+                aria-hidden
                 sx={{
                   width: 44,
                   height: 44,

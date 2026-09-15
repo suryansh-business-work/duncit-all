@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import { SurfaceCard } from '@/components/SurfaceCard';
@@ -82,20 +81,27 @@ export function PodInfo({
   categoryCrumbs,
 }: Readonly<{ pod: PodDetail; categoryCrumbs: readonly string[] }>) {
   const { t } = useTranslation();
-  const { color, danger, warning } = useThemeColors();
+  const { color, danger, warning, info } = useThemeColors();
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const attendees = podSeatsTaken(pod);
   const hasSpots = pod.no_of_spots > 0;
   const remaining = hasSpots ? Math.max(pod.no_of_spots - attendees, 0) : 0;
   const time = podTimeChip(pod.pod_date_time, t);
-  const tone: Record<TimeTone, string> = { error: danger, warning, info: semantic.info };
+  const tone: Record<TimeTone, string> = { error: danger, warning, info };
   const timeTone = time ? tone[time.tone] : color;
 
   return (
     <YStack testID="pod-info" paddingHorizontal={16} paddingTop={20} gap={12}>
       <YStack gap={4}>
-        <Text testID="pod-info-title" fontSize={24} lineHeight={29} fontWeight="600" color="$color">
+        <Text
+          role="heading"
+          testID="pod-info-title"
+          fontSize={24}
+          lineHeight={29}
+          fontWeight="600"
+          color="$color"
+        >
           {pod.pod_title}
         </Text>
         {host ? (
@@ -117,7 +123,7 @@ export function PodInfo({
             testID="pod-info-price-chip"
             label={podPriceLabel(pod, t)}
             fill="$primarySoft"
-            fg="$primary"
+            fg="$accent"
           />
           <Chip
             testID="pod-info-mode-chip"

@@ -126,7 +126,7 @@ export default function PaymentLogsPage() {
           mb: 3
         }}>
         <ReceiptLongIcon color="primary" />
-        <Typography
+        <Typography component="h1"
           variant="h5"
           sx={{
             fontWeight: 700,

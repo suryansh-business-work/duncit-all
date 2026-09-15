@@ -82,7 +82,7 @@ export function LeaderboardRewards({
     <SurfaceCard testID="leaderboard-rewards" marginHorizontal={16} gap={12}>
       <XStack alignItems="center" gap={12}>
         <IconDisc icon="card-giftcard" />
-        <Text accessibilityRole="header" flex={1} fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" flex={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.leaderboard.rewardsTitle')}
         </Text>
       </XStack>

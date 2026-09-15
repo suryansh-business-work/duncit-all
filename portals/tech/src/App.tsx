@@ -38,6 +38,12 @@ import StressRunsPage from './pages/stress-testing/runs';
 import StressRunDetailPage from './pages/stress-testing/run-detail';
 import StressSettingsPage from './pages/stress-testing/settings';
 import MailAutomationPage from './pages/mail-automation';
+import GraphqlMonitorOverviewPage from './pages/graphql-monitor/overview';
+import GraphqlOperationsPage from './pages/graphql-monitor/operations';
+import GraphqlOperationDetailPage from './pages/graphql-monitor/operation-detail';
+import GraphqlFieldsPage from './pages/graphql-monitor/fields';
+import GraphqlErrorsPage from './pages/graphql-monitor/errors';
+import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -83,6 +89,16 @@ export default function App() {
           path="/telemetry-logs-settings"
           element={<Navigate to="/telemetry/logs-settings" replace />}
         />
+        {/* What every GraphQL operation costs — the numbers Apollo GraphOS
+            reports, measured on this server and kept in its own database. */}
+        <Route path="/graphql-monitor" element={<Navigate to="/graphql-monitor/overview" replace />} />
+        <Route path="/graphql-monitor/overview" element={authed(<GraphqlMonitorOverviewPage />)} />
+        <Route path="/graphql-monitor/operations" element={authed(<GraphqlOperationsPage />)} />
+        {/* One operation at its own address — reloadable, bookmarkable, pasteable. */}
+        <Route path="/graphql-monitor/operations/:operationId" element={authed(<GraphqlOperationDetailPage />)} />
+        <Route path="/graphql-monitor/fields" element={authed(<GraphqlFieldsPage />)} />
+        <Route path="/graphql-monitor/errors" element={authed(<GraphqlErrorsPage />)} />
+        <Route path="/graphql-monitor/settings" element={authed(<GraphqlMonitorSettingsPage />)} />
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />

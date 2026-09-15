@@ -1,4 +1,4 @@
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, ButtonBase, Stack, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '../../i18n/useTranslation';
 import MessageActions from '../MessageActions';
 import MessageStatus from '../MessageStatus';
@@ -64,12 +64,20 @@ export default function BubbleFooter({
         </Typography>
       </Tooltip>
 
-      {mine && showTools && (
-        <Box
-          component="span"
-          onClick={message.failed ? onRetry : undefined}
-          sx={{ display: 'inline-flex', cursor: message.failed ? 'pointer' : 'default' }}
+      {/* A failed send is a real button — reachable and pressable from the
+          keyboard — rather than a clickable span (WCAG 2.1.1 / 4.1.2). */}
+      {mine && showTools && message.failed && (
+        <ButtonBase
+          onClick={onRetry}
+          aria-label={t('shell.chat.status.retry')}
+          data-testid="staff-chat-retry"
+          sx={{ borderRadius: '50%', '&.Mui-focusVisible': { outline: '2px solid', outlineColor: 'primary.main' } }}
         >
+          <MessageStatus message={message} />
+        </ButtonBase>
+      )}
+      {mine && showTools && !message.failed && (
+        <Box component="span" sx={{ display: 'inline-flex' }}>
           <MessageStatus message={message} />
         </Box>
       )}

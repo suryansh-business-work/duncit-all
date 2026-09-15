@@ -82,7 +82,7 @@ export default function DashboardPage() {
           }}>
             <DashboardIcon color="primary" />
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              <Typography component="h1" variant="h6" sx={{ fontWeight: 800 }}>
                 CRM Dashboard
               </Typography>
               <Typography variant="caption" sx={{

@@ -34,6 +34,7 @@ function PickButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       aria-disabled={busy}
@@ -53,7 +54,7 @@ function PickButton({
       ) : (
         <MaterialIcons name={icon} size={16} color={primary} />
       )}
-      <Text fontSize={14} fontWeight="600" color="$primary">
+      <Text fontSize={14} fontWeight="600" color="$accent">
         {label}
       </Text>
     </XStack>
@@ -85,7 +86,7 @@ export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: R
         </XStack>
       )}
       {docError ? (
-        <Text testID="verification-doc-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="verification-doc-error" fontSize={12} color="$danger">
           {docError}
         </Text>
       ) : null}

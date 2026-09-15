@@ -63,7 +63,7 @@ export default function ContactsAllowCard({
           <IconDisc>
             <ContactPhoneIcon />
           </IconDisc>
-          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{t('mweb.contacts.allowTitle')}</Typography>
+          <Typography component="h2" data-testid="contacts-allow-title" sx={{ fontSize: 16, fontWeight: 600 }}>{t('mweb.contacts.allowTitle')}</Typography>
         </Stack>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.contacts.allowBody')}
@@ -101,7 +101,7 @@ export default function ContactsAllowCard({
         ) : (
           <Alert severity="info">{t('mweb.contacts.pickerUnavailable')}</Alert>
         )}
-        {failureText && <Alert severity="error">{failureText}</Alert>}
+        {failureText && <Alert data-testid="contacts-sync-error" severity="error">{failureText}</Alert>}
       </Stack>
     </Card>
   );

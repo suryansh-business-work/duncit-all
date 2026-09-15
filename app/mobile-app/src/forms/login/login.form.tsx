@@ -39,6 +39,7 @@ function ChannelToggle({ channel, onChannel }: Readonly<ToggleProps>) {
 
   return (
     <XStack
+      role="tablist"
       gap={4}
       padding={4}
       borderRadius={999}
@@ -52,8 +53,10 @@ function ChannelToggle({ channel, onChannel }: Readonly<ToggleProps>) {
           <XStack
             key={value}
             testID={`login-channel-${value}`}
-            role="button"
+            role="tab"
             aria-label={nameOf(value)}
+            aria-selected={active}
+            tabIndex={0}
             onPress={() => onChannel(value)}
             pressStyle={PRESS_STYLE.inline}
             flex={1}
@@ -98,6 +101,8 @@ function LoginIdentityFields({
             label={t('mweb.passwordRecovery.phoneField')}
             placeholder={t('mweb.passwordRecovery.phonePlaceholder')}
             keyboardType="phone-pad"
+            autoComplete="tel-national"
+            textContentType="telephoneNumber"
             digitsOnly
             maxLength={15}
             required
@@ -153,7 +158,7 @@ function LoginFields({
       />
 
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="login-error">
+        <Text fontSize={14} color="$danger" testID="login-error" role="alert" aria-live="polite">
           {errorMessage}
         </Text>
       ) : null}

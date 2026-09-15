@@ -110,7 +110,7 @@ export default function ProductCard({ product, selected, added, onSelect, t }: R
               gap: 1
             }}>
             <Typography variant="subtitle2" sx={{
-              color: "primary.main"
+              color: "accent.main"
             }}>
               {t('podProduct.perUnit', { vars: { cost: formatMoney(product.unit_cost) } })}
             </Typography>

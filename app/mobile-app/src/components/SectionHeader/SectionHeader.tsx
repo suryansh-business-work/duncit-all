@@ -28,8 +28,11 @@ export function SectionHeader({
 }: Readonly<Props>) {
   return (
     <XStack testID={testID} alignItems="center" justifyContent="space-between" gap={8}>
+      {/* `role`, not `accessibilityRole`: Tamagui's web build forwards the
+          RN-only prop to the DOM untouched, so Native Web lost the heading. */}
       <Text
-        accessibilityRole="header"
+        testID={testID ? `${testID}-title` : undefined}
+        role="heading"
         flexShrink={1}
         fontSize={17}
         fontWeight="600"
@@ -41,7 +44,7 @@ export function SectionHeader({
       {actionLabel && onAction ? (
         <Text
           testID={actionTestID}
-          accessibilityRole="button"
+          role="button"
           aria-label={actionAriaLabel}
           onPress={onAction}
           pressStyle={PRESS_STYLE.inline}

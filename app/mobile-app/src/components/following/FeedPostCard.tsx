@@ -37,6 +37,7 @@ export function FeedPostCard({
       <XStack
         testID={`feed-author-${post.id}`}
         role="button"
+        tabIndex={0}
         aria-label={`Open ${name}`}
         onPress={onOpenAuthor}
         alignItems="center"
@@ -72,7 +73,13 @@ export function FeedPostCard({
 
       {post.image_url ? (
         <YStack marginHorizontal={12} borderRadius={18} overflow="hidden" backgroundColor="$soft">
-          <AppImage source={{ uri: post.image_url }} style={MEDIA_STYLE} resizeMode="cover" />
+          <AppImage
+            testID={`feed-media-${post.id}`}
+            source={{ uri: post.image_url }}
+            style={MEDIA_STYLE}
+            resizeMode="cover"
+            accessibilityLabel={post.caption || undefined}
+          />
         </YStack>
       ) : null}
 
@@ -86,7 +93,9 @@ export function FeedPostCard({
           <XStack
             testID={`feed-like-${post.id}`}
             role="button"
-            aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
+            tabIndex={0}
+            hitSlop={10}
+            aria-label={post.liked_by_me ? t('mweb.a11y.unlike') : t('mweb.explore.like')}
             onPress={onToggleLike}
             alignItems="center"
             gap={5}
@@ -104,6 +113,8 @@ export function FeedPostCard({
           <XStack
             testID={`feed-comment-${post.id}`}
             role="button"
+            tabIndex={0}
+            hitSlop={10}
             aria-label={t('mweb.common.comments')}
             onPress={onOpenComments}
             alignItems="center"

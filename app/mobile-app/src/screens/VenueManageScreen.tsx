@@ -46,7 +46,14 @@ export function VenueManageScreen() {
     <StackScreen header title={t('mweb.venueManage.venueStudio')} testID="venue-manage-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={24} padding={16} paddingBottom={48}>
-          {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="venue-dashboard-loading"
+              color="$primary"
+            />
+          ) : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
           <XStack gap={10}>
             <StatTile label={t('mweb.venueManagePage.listed')} value={venues.length} size="lg" />

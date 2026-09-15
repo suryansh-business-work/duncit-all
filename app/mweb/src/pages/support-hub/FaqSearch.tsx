@@ -76,7 +76,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
       {active && (
         <Paper sx={{ ...SURFACE_SX, mt: 1, overflow: 'hidden' }}>
           {loading && (
-            <Stack data-testid="support-search-loading" sx={{ p: 1 }} spacing={1}>
+            <Stack data-testid="support-search-loading" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')} sx={{ p: 1 }} spacing={1}>
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} variant="rounded" height={40} />
               ))}

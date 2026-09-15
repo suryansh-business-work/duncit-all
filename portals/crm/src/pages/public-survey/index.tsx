@@ -39,7 +39,8 @@ export default function PublicSurveyPage() {
   };
 
   const shell = (children: ReactNode) => (
-    <Box sx={{ maxWidth: 720, mx: 'auto', p: { xs: 1.5, sm: 2 }, minHeight: '100dvh', display: 'grid', alignContent: 'center' }}>
+    // This route renders outside the portal shell, so it supplies its own main landmark (1.3.1).
+    <Box component="main" sx={{ maxWidth: 720, mx: 'auto', p: { xs: 1.5, sm: 2 }, minHeight: '100dvh', display: 'grid', alignContent: 'center' }}>
       <Box
         component="img"
         src={logoUrl}
@@ -56,6 +57,7 @@ export default function PublicSurveyPage() {
   if (done || payload?.already_filled) {
     return shell(
       <Stack
+        role="status"
         spacing={1.5}
         sx={{
           alignItems: "center",
@@ -63,7 +65,7 @@ export default function PublicSurveyPage() {
           textAlign: 'center'
         }}>
         <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
-        <Typography variant="h6" sx={{
+        <Typography component="h1" variant="h6" sx={{
           fontWeight: 900
         }}>{done ? 'Thank you!' : 'Already submitted'}</Typography>
         <Typography variant="body2" sx={{
@@ -78,7 +80,7 @@ export default function PublicSurveyPage() {
   return shell(
     <>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant="h6" sx={{
+        <Typography component="h1" variant="h6" sx={{
           fontWeight: 950
         }}>{survey.title || 'Quick survey'}</Typography>
         <Typography variant="body2" sx={{

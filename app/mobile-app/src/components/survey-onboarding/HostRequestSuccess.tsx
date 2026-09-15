@@ -39,7 +39,7 @@ export function HostRequestSuccess() {
           >
             <MaterialIcons name="check-circle" size={36} color={accent} />
           </YStack>
-          <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
+          <Text role="heading" textAlign="center" fontSize={24} fontWeight="600" color="$color">
             Your Request Has Been Submitted
           </Text>
           <Text textAlign="center" fontSize={14} color="$muted">
@@ -51,6 +51,7 @@ export function HostRequestSuccess() {
             testID="host-request-done"
             role="button"
             aria-label={t('mweb.surveyOnboarding.okay')}
+            tabIndex={0}
             onPress={onDone}
             alignSelf="stretch"
             height={52}

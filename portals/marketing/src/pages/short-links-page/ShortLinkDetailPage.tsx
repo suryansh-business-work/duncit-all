@@ -153,7 +153,7 @@ export default function ShortLinkDetailPage() {
           {funnel.data && <FunnelCard funnel={funnel.data.shortLinkFunnel} />}
 
           <Box>
-            <Typography
+            <Typography component="h2"
               variant="subtitle1"
               sx={{
                 fontWeight: 700,
@@ -182,7 +182,7 @@ export default function ShortLinkDetailPage() {
           </Box>
 
           <Box>
-            <Typography
+            <Typography component="h2"
               variant="subtitle1"
               sx={{
                 fontWeight: 700,

@@ -3,6 +3,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import {
   MembershipComparison,
   MembershipNotifyCard,
@@ -31,6 +32,7 @@ export function MembershipScreen() {
   const [pricing, setPricing] = useState<PricingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const loadingRegion = useLoadingRegion();
 
   useEffect(() => {
     let active = true;
@@ -49,13 +51,24 @@ export function MembershipScreen() {
   let body;
   if (hasError) {
     body = (
-      <Text testID="membership-error" paddingHorizontal={16} fontSize={13} color="$danger">
+      <Text
+        testID="membership-error"
+        role="alert"
+        paddingHorizontal={16}
+        fontSize={13}
+        color="$danger"
+      >
         {t('mweb.membership.loadError')}
       </Text>
     );
   } else if (isLoading && !pricing) {
     body = (
-      <YStack alignItems="center" paddingVertical={32} testID="membership-loading">
+      <YStack
+        alignItems="center"
+        paddingVertical={32}
+        testID="membership-loading"
+        {...loadingRegion}
+      >
         <Spinner size="large" />
       </YStack>
     );
@@ -79,7 +92,7 @@ export function MembershipScreen() {
       <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={20} paddingVertical={12}>
           <XStack paddingHorizontal={16} alignItems="center" gap={8} flexWrap="wrap">
-            <Text fontSize={17} fontWeight="600" color="$color">
+            <Text role="heading" fontSize={17} fontWeight="600" color="$color">
               {t('mweb.membership.heading')}
             </Text>
             {/* The calm "Coming soon" pill: green text on the tonal green fill. */}
@@ -90,7 +103,7 @@ export function MembershipScreen() {
               borderRadius={999}
               backgroundColor="$primarySoft"
             >
-              <Text fontSize={12} fontWeight="600" color="$primary">
+              <Text fontSize={12} fontWeight="600" color="$accent">
                 {t('mweb.membership.comingSoon')}
               </Text>
             </XStack>

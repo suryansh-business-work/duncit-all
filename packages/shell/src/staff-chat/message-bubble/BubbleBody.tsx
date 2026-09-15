@@ -47,6 +47,7 @@ export default function BubbleBody({
           size="small"
           fullWidth
           multiline
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the inline editor the user just opened (WCAG 2.4.3)
           autoFocus
           value={draft}
           onChange={(event) => onDraft(event.target.value)}

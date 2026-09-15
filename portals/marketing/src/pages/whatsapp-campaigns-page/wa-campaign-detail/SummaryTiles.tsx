@@ -14,7 +14,7 @@ function Tile({ label, value, hint, color }: Readonly<TileProps>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 132 }}>
       <CardContent sx={{ py: 1.5 }}>
-        <Typography variant="h5" color={color} sx={{
+        <Typography component="p" variant="h5" color={color} sx={{
           fontWeight: 900
         }}>
           {value.toLocaleString()}

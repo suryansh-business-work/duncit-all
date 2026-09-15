@@ -20,7 +20,7 @@ function ClubsBody({ clubs, loading, error }: Readonly<BodyProps>) {
   if (loading) {
     return (
       <Stack data-testid="your-clubs-section-loading" sx={{ alignItems: 'center', py: 3 }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Stack>
     );
   }

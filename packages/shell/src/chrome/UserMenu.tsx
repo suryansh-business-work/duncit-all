@@ -39,6 +39,8 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
           onClick={(e) => setAnchorEl(e.currentTarget)}
           aria-label={t('shell.chrome.accountMenu')}
           aria-haspopup="menu"
+          aria-expanded={Boolean(anchorEl)}
+          data-testid="shell-user-menu-button"
           sx={{ gap: 1, px: 0.5, py: 0.25, borderRadius: 1 }}
         >
           <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'right', minWidth: 0, maxWidth: 200 }}>
@@ -65,7 +67,12 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
               </Typography>
             )}
           </Box>
-          <Avatar src={user?.profile_photo || undefined} sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 12 }}>
+          <Avatar
+            src={user?.profile_photo || undefined}
+            alt=""
+            aria-hidden
+            sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 12 }}
+          >
             {initials(user, fallbackName)}
           </Avatar>
         </ButtonBase>

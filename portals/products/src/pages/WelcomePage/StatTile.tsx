@@ -31,7 +31,7 @@ export default function StatTile({
             {label}
           </Typography>
         </Stack>
-        <Typography variant="h4" sx={{ fontWeight: 800, color }}>
+        <Typography component="p" variant="h4" sx={{ fontWeight: 800, color }}>
           {value}
         </Typography>
         {hint && (

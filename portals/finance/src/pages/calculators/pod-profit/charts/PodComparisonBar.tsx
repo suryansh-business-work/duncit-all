@@ -64,6 +64,8 @@ export default function PodComparisonBar({ rows }: Readonly<Props>) {
       height={300}
     >
       <Bar
+        role="img"
+        aria-label={t('finance.calculators.chartPodComparison')}
         data={{
           labels: rows.map((row) => row.name),
           datasets: bands.map((band) => ({

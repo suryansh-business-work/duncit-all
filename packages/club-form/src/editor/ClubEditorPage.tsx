@@ -77,7 +77,7 @@ export default function ClubEditorPage({
                 }}>
                 {eyebrow}
               </Typography>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h1" sx={{
                 fontWeight: 950
               }}>
                 {heading ?? defaultHeading}

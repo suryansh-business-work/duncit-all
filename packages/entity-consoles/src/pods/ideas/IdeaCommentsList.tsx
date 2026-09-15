@@ -31,7 +31,7 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
           <Stack key={c.id} direction="row" spacing={1.5} sx={{
             alignItems: "flex-start"
           }}>
-            <Avatar sx={{ width: 32, height: 32 }}>
+            <Avatar sx={{ width: 32, height: 32 }} aria-hidden>
               {(c.author?.full_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1 }}>
@@ -53,7 +53,13 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
                 {c.text}
               </Typography>
             </Box>
-            <DuncitIconButton size="small" color="error" onClick={() => onDelete(c.id)}>
+            <DuncitIconButton
+              size="small"
+              color="error"
+              aria-label={t('shell.common.delete')}
+              data-testid="idea-comment-delete"
+              onClick={() => onDelete(c.id)}
+            >
               <DeleteIcon fontSize="small" />
             </DuncitIconButton>
           </Stack>

@@ -44,6 +44,7 @@ function AttachmentPreview({ url, onRemove, testId }: Readonly<PreviewProps & { 
         <Avatar
           variant="rounded"
           src={url}
+          alt={info.name}
           sx={{ width: 72, height: 72, '& img': { objectFit: 'cover' } }}
         />
         {removeButton}
@@ -126,7 +127,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
         <DuncitButton
           data-testid="ticket-attach-add"
           size="small"
-          startIcon={uploading ? <CircularProgress size={16} /> : <AttachFileIcon />}
+          startIcon={uploading ? <CircularProgress size={16} aria-hidden /> : <AttachFileIcon />}
           disabled={uploading || attachments.length >= 5}
           onClick={() => fileRef.current?.click()}
           sx={{ minHeight: 40 }}
@@ -145,6 +146,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
       {error && (
         <Chip
           data-testid="ticket-attach-error"
+          role="alert"
           size="small"
           color="error"
           label={error}

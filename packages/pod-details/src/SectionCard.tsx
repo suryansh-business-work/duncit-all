@@ -78,6 +78,7 @@ export default function SectionCard({
         </Box>
         <Typography
           variant="subtitle1"
+          component="h2"
           noWrap
           sx={{
             fontWeight: 900,

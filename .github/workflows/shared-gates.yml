@@ -89,6 +89,13 @@ jobs:
       - name: Package manifest matches the package.json files on disk
         run: node scripts/generate-package-manifest.mjs --check
 
+      # WCAG 2.2 AA 1.4.3 / 1.4.11: every theme colour token used for text or a
+      # UI boundary clears its contrast ratio against the surface it sits on.
+      # Blocking — a token that drops below AA repaints every screen at once.
+      # See docs/accessibility.md for the token decisions it holds us to.
+      - name: Contrast tokens
+        run: node scripts/verify-contrast.mjs
+
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no
   # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each

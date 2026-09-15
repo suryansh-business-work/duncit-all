@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import {
   Box,
   Drawer,
@@ -54,6 +54,7 @@ export function AppsDrawer({
   const [search, setSearch] = useState('');
   const [openTool, setOpenTool] = useState<string | null>(null);
   const shellTools = useShellTools();
+  const titleId = useId();
 
   const tools = useMemo(() => {
     const platform = chatEnabled
@@ -75,7 +76,11 @@ export function AppsDrawer({
         open={open}
         onClose={close}
         slotProps={{
-          paper: { sx: { width: { xs: '100%', sm: 380 }, height: ABOVE_TASKBAR_HEIGHT } }
+          paper: {
+            // A temporary Drawer's paper is already `role="dialog"`; this names it.
+            'aria-labelledby': titleId,
+            sx: { width: { xs: '100%', sm: 380 }, height: ABOVE_TASKBAR_HEIGHT },
+          },
         }}
       >
         <Stack
@@ -86,7 +91,7 @@ export function AppsDrawer({
             pt: 2,
             pb: 1
           }}>
-          <Typography variant="h6" sx={{ flex: 1 }}>
+          <Typography variant="h6" component="h2" id={titleId} sx={{ flex: 1 }}>
             {t('shell.appsDrawer.title')}
           </Typography>
           <DuncitIconButton onClick={close} aria-label={t('shell.appsDrawer.close')}>
@@ -98,11 +103,13 @@ export function AppsDrawer({
           <TextField
             fullWidth
             size="small"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the drawer the user just opened (WCAG 2.4.3)
             autoFocus
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t('shell.appsDrawer.search')}
             slotProps={{
+              htmlInput: { 'aria-label': t('shell.appsDrawer.search'), 'data-testid': 'shell-apps-drawer-search' },
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
@@ -118,6 +125,7 @@ export function AppsDrawer({
           {shown.map((tool) => (
             <ListItemButton
               key={tool.key}
+              data-testid={`shell-apps-drawer-tool-${tool.key}`}
               onClick={() => {
                 // Chat is docked into the layout rather than opened here, so
                 // that one is handed up; everything else opens over the page.

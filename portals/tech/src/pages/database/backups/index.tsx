@@ -39,7 +39,7 @@ export default function DbBackupsPage() {
         }}>
         <BackupIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>
             {t('tech.dbBackup.title')}

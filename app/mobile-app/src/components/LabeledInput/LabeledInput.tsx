@@ -57,6 +57,9 @@ export function LabeledInput({
         readOnly={disabled}
         opacity={disabled ? 0.5 : 1}
         aria-label={label}
+        aria-required={required}
+        aria-invalid={Boolean(error)}
+        aria-disabled={disabled}
         {...inputProps}
       />
     </Field>

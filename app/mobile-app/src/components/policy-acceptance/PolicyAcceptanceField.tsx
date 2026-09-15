@@ -29,7 +29,7 @@ export function PolicyAcceptanceField({
   errorMessage,
 }: Readonly<PolicyAcceptanceFieldProps>) {
   const { t } = useTranslation();
-  const { primary, color } = useThemeColors();
+  const { accent, color } = useThemeColors();
   const { policies, loaded, refetch } = useSignupPolicies();
   const [open, setOpen] = useState(false);
 
@@ -49,6 +49,7 @@ export function PolicyAcceptanceField({
         role="checkbox"
         aria-label={t('policyAcceptance.checkboxLabel')}
         aria-checked={accepted}
+        tabIndex={0}
         onPress={openSheet}
         gap={10}
         alignItems="flex-start"
@@ -57,14 +58,14 @@ export function PolicyAcceptanceField({
         <MaterialIcons
           name={accepted ? 'check-box' : 'check-box-outline-blank'}
           size={22}
-          color={accepted ? primary : color}
+          color={accepted ? accent : color}
         />
         <Text flex={1} fontSize={13} color="$muted">
           {t('policyAcceptance.checkboxLabel')}
         </Text>
       </XStack>
       {errorMessage ? (
-        <Text testID="acceptedPolicyIds-error" fontSize={12} color="$danger">
+        <Text testID="acceptedPolicyIds-error" role="alert" fontSize={12} color="$danger">
           {errorMessage}
         </Text>
       ) : null}

@@ -33,7 +33,7 @@ export default function MyCardsTab() {
           alignItems: "center",
           py: 4
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

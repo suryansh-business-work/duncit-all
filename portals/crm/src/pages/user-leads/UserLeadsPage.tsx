@@ -96,7 +96,7 @@ export default function UserLeadsPage() {
           mb: 2
         }}>
         <PersonSearchIcon color="primary" />
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{t('shell.nav.whatsappLeads')}</Typography>
       </Stack>

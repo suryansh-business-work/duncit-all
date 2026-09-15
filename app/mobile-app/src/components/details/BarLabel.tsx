@@ -90,6 +90,7 @@ export function BarCta({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={ariaLabel ?? label}
       aria-disabled={disabled}
       onPress={disabled ? undefined : onPress}

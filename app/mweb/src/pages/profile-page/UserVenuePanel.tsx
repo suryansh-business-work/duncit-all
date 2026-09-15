@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router';
 import { formatDate } from '../../utils/dateFormat';
 import IconDisc from '../account-page/IconDisc';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const MY_VENUE = gql`
   query ProfileMyVenue($venue_id: ID) {
@@ -30,13 +31,14 @@ const MY_VENUE = gql`
  * application still in flight, else the newest venue.
  */
 export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: string | null }>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<any>(MY_VENUE, {
     variables: { venue_id: venueId },
     fetchPolicy: 'cache-and-network',
   });
   const venue = data?.myVenue;
 
-  if (loading && !data) return <CircularProgress data-testid="user-venue-panel-loading" size={22} />;
+  if (loading && !data) return <CircularProgress data-testid="user-venue-panel-loading" size={22} aria-label={t('mweb.a11y.loading')} />;
   if (error) {
     return (
       <Alert data-testid="user-venue-panel-error" severity="error">
@@ -84,7 +86,7 @@ export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: 
           return (
             <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'action.hover', mb: 0.6 }} />
-              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 11, fontWeight: 600 }} noWrap>
+              <Typography variant="caption" color={done ? 'accent.main' : 'text.secondary'} sx={{ fontSize: 11, fontWeight: 600 }} noWrap>
                 {label}
               </Typography>
             </Box>

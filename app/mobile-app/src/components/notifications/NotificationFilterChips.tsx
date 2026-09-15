@@ -31,6 +31,8 @@ export function NotificationFilterChips({ chips, value, onChange }: Readonly<Pro
             role="button"
             aria-label={chip.label}
             aria-pressed={active}
+            accessibilityState={{ selected: active }}
+            tabIndex={0}
             onPress={() => onChange(chip.key)}
             alignItems="center"
             height={36}

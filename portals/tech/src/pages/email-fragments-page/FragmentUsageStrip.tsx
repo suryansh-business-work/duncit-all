@@ -51,7 +51,7 @@ export default function FragmentUsageStrip({ fragmentKey, templates }: Readonly<
 
   return (
     <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-      <Tooltip title={t('tech.emailFragments.showEveryTemplateUsingThis')}>
+      <Tooltip title={t('tech.emailFragments.showEveryTemplateUsingThis')} describeChild>
         <Chip
           size="small"
           clickable

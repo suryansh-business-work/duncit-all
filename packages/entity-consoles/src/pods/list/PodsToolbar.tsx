@@ -33,7 +33,7 @@ export default function PodsToolbar({
           alignItems: "center"
         }}>
           <EventIcon color="primary" />
-          <Typography variant="h5">Pods</Typography>
+          <Typography variant="h5" component="h1">Pods</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"

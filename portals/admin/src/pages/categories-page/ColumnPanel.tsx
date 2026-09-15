@@ -21,6 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
+import { useTranslation } from '@duncit/shell';
 import { CATEGORIES, CatItem, Level } from './queries';
 import { isImageIconValue, renderIconByName } from '../../components/IconPickerField';
 
@@ -47,6 +48,7 @@ export default function ColumnPanel({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const enabled = level === 'SUPER' || !!parentId;
   const { data, loading, error } = useQuery<any>(CATEGORIES, {
     variables: { filter: { level, parent_id: parentId ?? null } },
@@ -102,6 +104,8 @@ export default function ColumnPanel({
               <ListItemButton
                 key={it.id}
                 selected={selectedId === it.id}
+                aria-current={selectedId === it.id}
+                data-testid="category-column-row"
                 onClick={() => onSelect(it)}
               >
                 <Avatar
@@ -113,6 +117,7 @@ export default function ColumnPanel({
                     fontSize: 16,
                   }}
                   src={avatarSrc}
+                  alt=""
                 >
                   {materialIcon || textIcon || it.name[0]}
                 </Avatar>
@@ -144,6 +149,8 @@ export default function ColumnPanel({
                 <Stack direction="row">
                   <DuncitIconButton
                     size="small"
+                    aria-label={t('shell.a11y.editNamed', { vars: { name: it.name } })}
+                    data-testid="category-column-edit"
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit(it);
@@ -153,6 +160,8 @@ export default function ColumnPanel({
                   </DuncitIconButton>
                   <DuncitIconButton
                     size="small"
+                    aria-label={t('shell.a11y.deleteNamed', { vars: { name: it.name } })}
+                    data-testid="category-column-delete"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(it);
@@ -180,6 +189,7 @@ export default function ColumnPanel({
     );
   }
 
+  const createTitle = enabled ? `New ${title}` : 'Select a parent first';
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ pb: 1 }}>
@@ -190,7 +200,7 @@ export default function ColumnPanel({
             justifyContent: "space-between"
           }}>
           <Box>
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
               fontWeight: 600
             }}>
               {title}
@@ -203,9 +213,15 @@ export default function ColumnPanel({
               </Typography>
             )}
           </Box>
-          <Tooltip title={enabled ? `New ${title}` : 'Select a parent first'}>
+          <Tooltip title={createTitle}>
             <span>
-              <DuncitIconButton color="primary" onClick={onCreate} disabled={!enabled}>
+              <DuncitIconButton
+                color="primary"
+                aria-label={createTitle}
+                data-testid="category-column-create"
+                onClick={onCreate}
+                disabled={!enabled}
+              >
                 <AddIcon />
               </DuncitIconButton>
             </span>

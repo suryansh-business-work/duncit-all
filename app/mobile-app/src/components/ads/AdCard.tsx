@@ -44,6 +44,7 @@ function AdTile({
       testID={testID}
       role={onPress ? 'button' : undefined}
       aria-label={ad.ad_title}
+      tabIndex={onPress ? 0 : undefined}
       onPress={onPress}
       width={70}
       alignItems="center"
@@ -97,6 +98,7 @@ export function AdCard({
       testID={id}
       role={onPress ? 'button' : undefined}
       aria-label={ad.ad_title}
+      tabIndex={onPress ? 0 : undefined}
       onPress={onPress}
       height={variant === 'card' ? CARD_HEIGHT : BANNER_HEIGHT}
       borderRadius={24}

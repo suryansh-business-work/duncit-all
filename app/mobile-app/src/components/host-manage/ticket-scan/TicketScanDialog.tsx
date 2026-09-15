@@ -165,9 +165,16 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={close}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="ticket-scan-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="ticket-scan-dialog"
+            onAccessibilityEscape={close}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={close}
@@ -187,7 +194,13 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
               padding={18}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text
+                  testID="ticket-scan-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
                   Scan attendee tickets
                 </Text>
                 <Text
@@ -202,7 +215,14 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
 
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={12} paddingBottom={6}>
-                    {busy ? <Spinner testID="ticket-scan-busy" color="$primary" /> : null}
+                    {busy ? (
+                      <Spinner
+                        role="progressbar"
+                        aria-label={t('mweb.a11y.loading')}
+                        testID="ticket-scan-busy"
+                        color="$primary"
+                      />
+                    ) : null}
 
                     {!result && !busy ? (
                       <ScannerFrame
@@ -213,7 +233,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     ) : null}
 
                     {error ? (
-                      <Text testID="ticket-scan-error" fontSize={13} color="$danger">
+                      <Text role="alert" testID="ticket-scan-error" fontSize={13} color="$danger">
                         {error}
                       </Text>
                     ) : null}
@@ -276,6 +296,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                 <XStack gap={12} paddingTop={12}>
                   <XStack
                     testID="ticket-scan-close"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.common.close')}
                     onPress={close}
@@ -295,6 +316,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                   {result ? (
                     <XStack
                       testID="ticket-scan-next"
+                      tabIndex={0}
                       role="button"
                       aria-label={t('mweb.hostManage.scanNext')}
                       onPress={() => {

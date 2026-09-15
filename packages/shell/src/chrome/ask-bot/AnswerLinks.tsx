@@ -54,6 +54,8 @@ function LinkRow({ link }: Readonly<RowProps>) {
       href={link.url}
       target="_blank"
       rel="noreferrer"
+      // The same words the two lines inside read out, spelled out on the link.
+      aria-label={`${link.label} ${caption}`}
       variant="outlined"
       size="small"
       endIcon={<OpenInNewIcon />}

@@ -13,6 +13,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 type Brand = NonNullable<ResultOf<typeof PublicEcommBrandDocument>['publicEcommBrand']>;
 
@@ -23,6 +24,7 @@ export function BrandDetailSheet({
   brandId,
   onClose,
 }: Readonly<{ brandId: string | null; onClose: () => void }>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -73,7 +75,13 @@ export function BrandDetailSheet({
             )}
           </YStack>
           <YStack flex={1}>
-            <Text testID="brand-detail-name" fontSize={18} fontWeight="700" color="$color">
+            <Text
+              role="heading"
+              testID="brand-detail-name"
+              fontSize={18}
+              fontWeight="700"
+              color="$color"
+            >
               {brand.brand_name}
             </Text>
             {brand.tagline ? (
@@ -110,6 +118,7 @@ export function BrandDetailSheet({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.details.closeBrand')}
             onPress={onClose}
             position="absolute"
@@ -127,14 +136,16 @@ export function BrandDetailSheet({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="700" color="$color">
+                <Text role="heading" fontSize={17} fontWeight="700" color="$color">
                   Brand
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="brand-detail-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.common.close')}
+                  hitSlop={6}
                   onPress={onClose}
                   width={32}
                   height={32}
@@ -149,7 +160,7 @@ export function BrandDetailSheet({
 
               {isLoading ? (
                 <YStack padding={32} alignItems="center">
-                  <Spinner testID="brand-detail-loading" color="$primary" />
+                  <Spinner {...loadingRegion} testID="brand-detail-loading" color="$primary" />
                 </YStack>
               ) : (
                 brandBody

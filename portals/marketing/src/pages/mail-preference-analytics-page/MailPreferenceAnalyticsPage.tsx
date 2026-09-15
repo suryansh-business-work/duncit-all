@@ -132,6 +132,7 @@ export default function MailPreferenceAnalyticsPage() {
       minH: 4,
       content: (
         <DuncitTable<MailPreferenceLogRow>
+          ariaLabel={t('mailPreference.analytics.logTitle')}
           tableId="marketing-mail-preference-logs"
           columns={columns}
           fetchRows={fetchRows}
@@ -153,7 +154,7 @@ export default function MailPreferenceAnalyticsPage() {
             alignItems: "flex-start"
           }}>
             <Stack spacing={0.25} sx={{ flex: 1 }}>
-              <Typography variant="h5" sx={{
+              <Typography component="h1" variant="h5" sx={{
                 fontWeight: 700
               }}>
                 {t('mailPreference.analytics.title')}

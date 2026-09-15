@@ -36,7 +36,13 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
 
   return (
     <SurfaceCard testID="create-pod-venue-contact" gap={10}>
-      <Text fontSize={16} fontWeight="600" color="$color">
+      <Text
+        testID="create-pod-venue-contact-title"
+        role="heading"
+        fontSize={16}
+        fontWeight="600"
+        color="$color"
+      >
         {venue.venue_name}
       </Text>
       {address ? (
@@ -48,26 +54,28 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
         {venue.owner_phone ? (
           <XStack
             testID="venue-call"
+            tabIndex={0}
             role="button"
             aria-label={callVenue}
             onPress={() => Linking.openURL(`tel:${venue.owner_phone}`)}
             {...ACTION_PILL}
           >
             <MaterialIcons name="phone" size={16} color={primary} />
-            <Text fontSize={13} fontWeight="600" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$accent">
               {callVenue}
             </Text>
           </XStack>
         ) : null}
         <XStack
           testID="venue-directions"
+          tabIndex={0}
           role="button"
           aria-label={getDirections}
           onPress={() => Linking.openURL(directions)}
           {...ACTION_PILL}
         >
           <MaterialIcons name="directions" size={16} color={primary} />
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {getDirections}
           </Text>
         </XStack>

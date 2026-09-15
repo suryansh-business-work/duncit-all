@@ -24,6 +24,8 @@ exports:
   - 'pressColorsOf'
   - 'pressFor'
   - 'restStatesCss'
+  - 'focusVisibleGlobalCss'
+  - 'reducedMotionGlobalCss'
   - 'mergeCss'
   - 'mergeSlot'
   - 'PRESS'
@@ -187,6 +189,36 @@ Slots it covers: `MuiButton` (per variant), `MuiIconButton`, `MuiToggleButton`,
   disabled are deliberately not the same thing: collapsing them (which is what
   `disabled={loading}` does, and what most call sites did) makes a form look like
   it rejected the submit.
+
+## Page-wide focus and reduced motion
+
+Two blocks for a theme's `MuiCssBaseline`, spread by both mWeb's `buildTheme` and
+`@duncit/theme`, so the rules are written once for all 18 surfaces:
+
+```ts
+import { focusVisibleGlobalCss, reducedMotionGlobalCss } from '@duncit/buttons';
+
+MuiCssBaseline: {
+  styleOverrides: {
+    ...focusVisibleGlobalCss(ACCENT), // '#c62226' in mWeb light, '#ff4d4f' in dark
+    ...reducedMotionGlobalCss,
+  },
+},
+```
+
+- **`focusVisibleGlobalCss(color)`** — a 2px solid ring at a 2px offset on every
+  `a`, `button`, `summary`, `select`, ARIA widget role (`button`, `link`, `tab`,
+  `menuitem`, `checkbox`, `radio`, `switch`), anything with a non-negative
+  `tabindex`, and every MUI `ButtonBase` carrying `Mui-focusVisible` — which is how
+  checkboxes, radios and switches, absent from the `withPress` slot table, get the
+  ring too. `tabindex="-1"` targets (a dialog paper, `<main id="main-content">`)
+  are skipped because a keyboard never tabs to them. The offset puts the ring on
+  the page ground, so pass a colour that clears **3:1 against that ground** (WCAG
+  1.4.11); both themes pass their AA text accent, which clears 4.5:1. No
+  `border-radius` is set — an outline follows the element's own corners.
+- **`reducedMotionGlobalCss`** — under `prefers-reduced-motion: reduce`, every
+  transition and animation collapses to 0.01ms. Elements inside
+  `role="progressbar"` are excluded: a frozen spinner reads as a hung page.
 
 ## `pressCss(intent, colors, options)`
 

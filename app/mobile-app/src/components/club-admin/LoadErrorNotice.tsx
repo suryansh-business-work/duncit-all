@@ -14,7 +14,7 @@ export function LoadErrorNotice({ testID, onRetry }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack gap={10}>
-      <Text testID={testID} fontSize={13} color="$danger">
+      <Text role="alert" testID={testID} fontSize={13} color="$danger">
         {t('mweb.studioPods.error')}
       </Text>
       <XStack>

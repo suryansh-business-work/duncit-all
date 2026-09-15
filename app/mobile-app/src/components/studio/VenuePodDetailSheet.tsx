@@ -118,7 +118,9 @@ export function VenuePodDetailSheet({ pod, currencySymbol, onClose }: Readonly<P
           <Text fontSize={15} fontWeight="600" color="$color" paddingTop={8}>
             {t('mweb.venuePods.attendees')}
           </Text>
-          {isLoading ? <Spinner color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />
+          ) : null}
           {pod.pod_attendees.length === 0 ? (
             <Text testID="venue-pod-detail-no-attendees" fontSize={12.5} color="$muted">
               {t('mweb.venuePods.noAttendees')}

@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { AccessibilityInfo, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { YStack } from 'tamagui';
 import { auth } from '@duncit/auth-tokens';
+import { logs } from '@duncit/logs';
 
 /** Muted looping background video (admin-managed Branding URL). */
 function BackdropVideo({ url }: Readonly<{ url: string }>) {
@@ -15,11 +16,33 @@ function BackdropVideo({ url }: Readonly<{ url: string }>) {
   // The setup-time play() can be swallowed before the remote source finishes
   // loading, so re-assert it once the player reports ready — the same thing
   // every other remote-video surface in the app has to do for the same reason.
+  //
+  // An endless background loop is motion nobody can pause (WCAG 2.2.2), so a
+  // device set to Reduce Motion holds it still on its frame instead — and
+  // follows the setting if it is switched while the screen is open.
   useEffect(() => {
+    let mounted = true;
+    let reduceMotion = false;
+    const applyMotion = (enabled: boolean) => {
+      if (!mounted) return;
+      reduceMotion = enabled;
+      if (enabled) player.pause();
+      else player.play();
+    };
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(applyMotion)
+      .catch((error: unknown) =>
+        logs.mobileApp.error('BrandBackdrop', 'isReduceMotionEnabled', { error }),
+      );
+    const motion = AccessibilityInfo.addEventListener('reduceMotionChanged', applyMotion);
     const sub = player.addListener('statusChange', ({ status }) => {
-      if (status === 'readyToPlay') player.play();
+      if (status === 'readyToPlay' && !reduceMotion) player.play();
     });
-    return () => sub.remove();
+    return () => {
+      mounted = false;
+      motion.remove();
+      sub.remove();
+    };
   }, [player]);
   return (
     <VideoView
@@ -78,6 +101,7 @@ export function BrandBackdrop({
             source={{ uri: imageUrl }}
             style={StyleSheet.absoluteFill}
             resizeMode="cover"
+            accessibilityIgnoresInvertColors
           />
         )}
       </YStack>

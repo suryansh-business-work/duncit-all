@@ -24,6 +24,7 @@ function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
     <XStack
       testID="public-profile-edit"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.publicProfile.editMyProfile')}
       onPress={onPress}
       height={44}
@@ -71,12 +72,17 @@ export function PublicProfileScreen() {
   if (isLoading && !user) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="public-profile-loading" color="$primary" />
+        <Spinner
+          testID="public-profile-loading"
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          color="$primary"
+        />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="public-profile-error" padding={24} color="$danger">
+      <Text testID="public-profile-error" role="alert" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );

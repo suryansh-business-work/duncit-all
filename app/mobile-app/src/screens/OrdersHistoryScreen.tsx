@@ -11,6 +11,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][number];
 
@@ -18,6 +19,7 @@ type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][numb
  * all pods (newest first), each in its own card with full fulfilment tracking.
  * RN twin of mWeb's OrdersHistoryPage. */
 export function OrdersHistoryScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,12 +40,12 @@ export function OrdersHistoryScreen() {
   if (isLoading) {
     body = (
       <YStack alignItems="center" paddingVertical={48} testID="orders-loading">
-        <Spinner size="large" />
+        <Spinner {...loadingRegion} size="large" />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="orders-error" padding={24} color="$danger">
+      <Text role="alert" testID="orders-error" padding={24} color="$danger">
         {error}
       </Text>
     );

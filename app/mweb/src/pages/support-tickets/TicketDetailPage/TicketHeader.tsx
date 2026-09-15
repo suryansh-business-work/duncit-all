@@ -67,6 +67,8 @@ export default function TicketHeader({
         data-testid="ticket-header-menu-button"
         aria-label={t('mweb.supportTickets.ticketOptions')}
         disabled={!status}
+        aria-haspopup="menu"
+        aria-expanded={!!anchor}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={ROUND_SX}
       >

@@ -34,7 +34,7 @@ export default function WelcomePage() {
                 mb: 1.5
               }}>
               <WavingHandIcon color="primary" />
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h2" sx={{
                 fontWeight: 700
               }}>
                 {t('ai.welcome.greeting', { vars: { name } })}

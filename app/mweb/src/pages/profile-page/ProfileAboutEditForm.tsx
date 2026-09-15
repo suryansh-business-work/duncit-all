@@ -89,6 +89,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
                     data-testid={`profile-about-edit-form-link-url-${item.id}`}
                     fullWidth
                     label="URL"
+                    autoComplete="url"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     slotProps={{

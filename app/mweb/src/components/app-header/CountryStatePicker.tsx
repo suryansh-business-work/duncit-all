@@ -64,6 +64,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
                 key={c.country}
                 data-testid={`country-state-picker-country-${c.country}`}
                 onClick={() => onCountry(c.country)}
+                aria-pressed={c.country === activeCountry?.country}
                 avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '4px' }} /> : undefined}
                 label={c.country}
                 sx={chipSx(c.country === activeCountry?.country)}
@@ -92,7 +93,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
                   </InputAdornment>
                 ),
               },
-              htmlInput: { 'data-testid': 'country-state-picker-state-search-input' },
+              htmlInput: { 'aria-label': t('mweb.common.searchState'), 'data-testid': 'country-state-picker-state-search-input' },
             }}
           />
         )}
@@ -102,6 +103,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
               key={s.state}
               data-testid={`country-state-picker-state-${s.state}`}
               onClick={() => onState(s.state)}
+              aria-pressed={s.state === state}
               label={s.state}
               size="small"
               sx={chipSx(s.state === state)}

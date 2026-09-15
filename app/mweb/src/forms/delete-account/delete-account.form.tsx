@@ -46,6 +46,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           name="otp"
           label={t('mweb.account.deletion.otpLabel')}
           required
+          autoComplete="one-time-code"
           hint={t('mweb.account.deletion.otpHint')}
           placeholder={t('mweb.account.deletion.otpPlaceholder')}
           digitsOnly

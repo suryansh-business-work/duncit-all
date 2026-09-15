@@ -12,19 +12,19 @@ export const alert = (c: ThemeCtx): Components<Theme>['MuiAlert'] => ({
   variants: [
     {
       props: { variant: 'standard', severity: 'info' },
-      style: { backgroundColor: alpha(c.t.semantic.info, 0.1), color: c.ink },
+      style: { backgroundColor: alpha(c.semantic.info, 0.1), color: c.ink },
     },
     {
       props: { variant: 'standard', severity: 'success' },
-      style: { backgroundColor: alpha(c.t.semantic.success, 0.12), color: c.ink },
+      style: { backgroundColor: alpha(c.semantic.success, 0.12), color: c.ink },
     },
     {
       props: { variant: 'standard', severity: 'warning' },
-      style: { backgroundColor: alpha(c.t.semantic.warning, 0.14), color: c.ink },
+      style: { backgroundColor: alpha(c.semantic.warning, 0.14), color: c.ink },
     },
     {
       props: { variant: 'standard', severity: 'error' },
-      style: { backgroundColor: alpha(c.t.semantic.error, 0.12), color: c.ink },
+      style: { backgroundColor: alpha(c.semantic.error, 0.12), color: c.ink },
     },
   ],
 });

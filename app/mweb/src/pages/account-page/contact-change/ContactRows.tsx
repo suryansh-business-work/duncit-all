@@ -7,6 +7,7 @@ import {
   type ContactChannel,
   type ContactSnapshot,
 } from '@duncit/utils';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface RowProps {
   channel: ContactChannel;
@@ -28,7 +29,9 @@ interface RowProps {
  * is rather than greyed out like an optional blank.
  */
 function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
+  const { t } = useTranslation();
   const copy = labels.channel(channel);
+  const action = value ? labels.changeAction : labels.addAction;
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
@@ -52,9 +55,10 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
         color="inherit"
         onClick={() => onChange(channel)}
         data-testid={`contact-change-${channel}`}
+        aria-label={t('mweb.a11y.actionFor', { vars: { action, name: copy.name } })}
         sx={{ bgcolor: 'action.hover', minHeight: 36, px: 2 }}
       >
-        {value ? labels.changeAction : labels.addAction}
+        {action}
       </DuncitButton>
     </Stack>
   );

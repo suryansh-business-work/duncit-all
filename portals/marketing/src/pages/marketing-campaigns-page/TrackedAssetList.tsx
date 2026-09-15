@@ -25,7 +25,7 @@ export default function TrackedAssetList({
 }: Readonly<Props>) {
   return (
     <Box>
-      <Typography
+      <Typography component="h2"
         variant="subtitle2"
         sx={{
           fontWeight: 700,

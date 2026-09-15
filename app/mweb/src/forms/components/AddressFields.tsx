@@ -48,16 +48,18 @@ export default function AddressFields<T extends FieldValues>({
   const labelProps = shrinkLabels ? { shrink: true } : undefined;
   return (
     <Stack data-testid="address-fields" spacing={1.5}>
-      <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
-      <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
-      <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+      {/* autoComplete names each part's purpose, so autofill and assistive tech
+          can fill a postal address in one step (WCAG 1.3.5). */}
+      <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} autoComplete="address-line1" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+      <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} autoComplete="address-line2" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+      <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} autoComplete="address-line3" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.city} label={t('mweb.address.city')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
-        <RhfTextField control={control} name={names.state} label={t('mweb.address.state')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+        <RhfTextField control={control} name={names.city} label={t('mweb.address.city')} required={required} autoComplete="address-level2" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+        <RhfTextField control={control} name={names.state} label={t('mweb.address.state')} required={required} autoComplete="address-level1" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.pincode} label={t('mweb.address.pincode')} required={required} hint={pincodeHint} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps, htmlInput: PINCODE_INPUT }}  />
-        <RhfTextField control={control} name={names.country} label={t('mweb.address.country')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
+        <RhfTextField control={control} name={names.pincode} label={t('mweb.address.pincode')} required={required} autoComplete="postal-code" hint={pincodeHint} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps, htmlInput: PINCODE_INPUT }}  />
+        <RhfTextField control={control} name={names.country} label={t('mweb.address.country')} autoComplete="country-name" size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       </Stack>
     </Stack>
   );

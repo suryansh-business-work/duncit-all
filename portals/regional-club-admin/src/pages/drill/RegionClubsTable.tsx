@@ -90,6 +90,7 @@ export default function RegionClubsTable({ clubAdminId, onOpenClub }: Readonly<P
   return (
     <DuncitTable<RegionClub>
       tableId="regional-club-admin-clubs"
+      ariaLabel={t('partners.regional.clubs')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

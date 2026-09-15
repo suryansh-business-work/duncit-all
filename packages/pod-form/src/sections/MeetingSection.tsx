@@ -113,7 +113,7 @@ export default function MeetingSection() {
                           size="small"
                           onClick={handleAutoGenerate}
                           disabled={generating}
-                          startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
+                          startIcon={generating ? <CircularProgress size={14} aria-hidden /> : <AutoFixHighIcon fontSize="small" />}
                         >
                           {generating ? 'Generating…' : 'Generate'}
                         </DuncitButton>

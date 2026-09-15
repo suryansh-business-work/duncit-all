@@ -84,11 +84,12 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" sx={{
+        <Typography variant="subtitle2" component="h2" sx={{
           fontWeight: 900
         }}>{t('clubAdmin.dashboard.perClubBreakdown')}</Typography>
         <DuncitTable<ClubAdminClubRow>
           tableId="partners-app-club-admin-clubs"
+          ariaLabel={t('clubAdmin.dashboard.perClubBreakdown')}
           columns={columns}
           fetchRows={fetchRows}
           getRowId={getClubRowId}

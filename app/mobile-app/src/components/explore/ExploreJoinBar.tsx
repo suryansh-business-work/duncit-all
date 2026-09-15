@@ -65,6 +65,8 @@ export function ExploreJoinBar({ podId, expired, subtitle, bottom, onGo }: Reado
           <XStack
             testID={`reel-go-${podId}`}
             role="button"
+            tabIndex={0}
+            hitSlop={2}
             aria-label={t('mweb.common.openPod')}
             onPress={onGo}
             alignItems="center"

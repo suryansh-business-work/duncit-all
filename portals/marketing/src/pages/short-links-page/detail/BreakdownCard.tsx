@@ -15,7 +15,7 @@ export default function BreakdownCard({ title, rows, emptyText }: Readonly<Props
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle2"
           sx={{
             fontWeight: 700,

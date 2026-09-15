@@ -7,6 +7,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useReportProblemConfig } from '@/hooks/useReportProblemConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface FeedbackValues {
   category: string;
@@ -40,6 +41,7 @@ function FieldLabel({ children }: Readonly<{ children: string }>) {
  * of the form rather than an afterthought.
  */
 export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Props>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const { config, loading } = useReportProblemConfig();
   const [category, setCategory] = useState('');
@@ -77,7 +79,12 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
       <YStack gap={6}>
         <FieldLabel>{t('mweb.common.category')}</FieldLabel>
         {loading && config.categories.length === 0 ? (
-          <Spinner testID="feedback-cats-loading" size="small" color="$primary" />
+          <Spinner
+            {...loadingRegion}
+            testID="feedback-cats-loading"
+            size="small"
+            color="$primary"
+          />
         ) : (
           <XStack gap={8} flexWrap="wrap">
             {config.categories.map((option) => {
@@ -87,8 +94,10 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
                   key={option.key || option.label}
                   testID={`feedback-cat-${option.label}`}
                   role="button"
+                  tabIndex={0}
                   aria-label={option.label}
                   aria-pressed={selected}
+                  accessibilityState={{ selected }}
                   onPress={() => setCategory(option.label)}
                   height={36}
                   alignItems="center"
@@ -119,7 +128,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
           multiline
           numberOfLines={4}
           backgroundColor="$surface"
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
           borderRadius={14}
         />
         <Text fontSize={11} color="$muted">
@@ -137,7 +146,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
       ) : null}
 
       {error || errorMessage ? (
-        <Text testID="feedback-error" color="$danger" fontSize={12}>
+        <Text role="alert" testID="feedback-error" color="$danger" fontSize={12}>
           {error || errorMessage}
         </Text>
       ) : null}

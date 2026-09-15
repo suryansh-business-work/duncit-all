@@ -27,6 +27,7 @@ export function SeeAllCard({ count, width = 200, height = 240, onPress, testID }
     <SurfaceCard
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.home.seeAll')}
       onPress={onPress}
       width={width}

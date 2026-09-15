@@ -77,6 +77,7 @@ export default function ServicesOfferedTable({
 
   return (
     <DuncitTable<CrmServiceOfferedRow>
+      ariaLabel={t('shell.nav.servicesOffered')}
       tableId="crm-services-offered"
       columns={columns}
       fetchRows={fetchRows}

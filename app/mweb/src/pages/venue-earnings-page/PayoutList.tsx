@@ -72,6 +72,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
           <DuncitIconButton
             size="small"
             aria-label={t('mweb.venueEarnings.showPayoutBreakdown')}
+            aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
             data-testid={`${rowTestId}-expand`}

@@ -69,7 +69,7 @@ export default function KpiCard({ metric, onInfo, onSettings }: Readonly<Props>)
           </Stack>
         </Stack>
 
-        <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+        <Typography component="p" variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
           {formatMetricValue(metric.value, metric.unit)}
         </Typography>
 

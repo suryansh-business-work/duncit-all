@@ -105,7 +105,7 @@ export function HostEarningsFields({
         aria-label={labels.earningsAddPrice}
       />
       {priceInvalid ? (
-        <Text testID="auto-pod-earnings-price-error" fontSize={13} color="$danger">
+        <Text role="alert" testID="auto-pod-earnings-price-error" fontSize={13} color="$danger">
           {labels.earningsPricePositive}
         </Text>
       ) : null}

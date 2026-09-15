@@ -104,7 +104,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE, testId }: Readon
         fullWidth
         data-testid="image-preview-dialog"
         slotProps={{
-          paper: { sx: { bgcolor: 'common.black' } }
+          paper: { 'aria-label': label, sx: { bgcolor: 'common.black' } }
         }}
       >
         <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center', p: 1 }}>

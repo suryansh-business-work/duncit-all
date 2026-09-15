@@ -11,7 +11,7 @@ function PlanCard({ plan, accent }: Readonly<{ plan: MembershipPlanShape; accent
   return (
     <SurfaceCard testID={`membership-plan-${plan.key}`} width={232} gap={6}>
       <XStack alignItems="center" gap={6} flexWrap="wrap">
-        <Text fontSize={14} fontWeight="600" color={accent}>
+        <Text role="heading" fontSize={14} fontWeight="600" color={accent}>
           {plan.name}
         </Text>
         {plan.badge_label ? (
@@ -79,7 +79,7 @@ export function MembershipPlanCards({
         contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
       >
         {plans.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} accent={plan.accent_color || '$primary'} />
+          <PlanCard key={plan.id} plan={plan} accent={plan.accent_color || '$accent'} />
         ))}
       </ScrollView>
       <Text paddingHorizontal={16} fontSize={12} color="$muted">

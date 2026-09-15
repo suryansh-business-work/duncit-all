@@ -1,5 +1,5 @@
 import { Controller } from 'react-hook-form';
-import { Linking } from 'react-native';
+import { Linking, type AccessibilityActionEvent } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -23,9 +23,25 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
         <YStack gap={4}>
           <XStack
             testID="create-pod-terms"
+            tabIndex={0}
             role="checkbox"
             aria-label={t('mweb.createPod.termsAria')}
             aria-checked={field.value}
+            // The focusable checkbox row hides the terms link nested in its
+            // sentence from VoiceOver, so the link rides on the row as a named
+            // custom action; `activate` keeps a double-tap toggling the box
+            // rather than tapping whatever sits at the row's centre (4.1.2).
+            accessibilityActions={[
+              { name: 'activate' },
+              { name: 'openTerms', label: t('mweb.createPod.termsLink') },
+            ]}
+            onAccessibilityAction={(event: AccessibilityActionEvent) => {
+              if (event.nativeEvent.actionName === 'openTerms') {
+                Linking.openURL(TERMS_URL).catch(() => undefined);
+                return;
+              }
+              field.onChange(!field.value);
+            }}
             onPress={() => field.onChange(!field.value)}
             gap={10}
             alignItems="flex-start"
@@ -41,7 +57,9 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
               <Text
                 pressStyle={PRESS_STYLE.inline}
                 testID="terms-link"
-                color="$primary"
+                hitSlop={12}
+                role="link"
+                color="$accent"
                 fontWeight="600"
                 onPress={() => Linking.openURL(TERMS_URL)}
               >
@@ -51,7 +69,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
             </Text>
           </XStack>
           {fieldState.error ? (
-            <Text testID="agreed_to_terms-error" fontSize={12} color="$danger">
+            <Text testID="agreed_to_terms-error" role="alert" fontSize={12} color="$danger">
               {fieldState.error.message}
             </Text>
           ) : null}

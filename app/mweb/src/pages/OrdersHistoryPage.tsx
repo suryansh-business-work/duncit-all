@@ -24,7 +24,7 @@ export default function OrdersHistoryPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   if (error) return <Alert severity="error" data-testid="orders-error">{error.message}</Alert>;

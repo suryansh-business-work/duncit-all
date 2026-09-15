@@ -114,7 +114,7 @@ export default function SearchResults({
 
       {loading && isEmpty ? (
         <Box data-testid="search-results-loading" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} />
         </Box>
       ) : null}
 

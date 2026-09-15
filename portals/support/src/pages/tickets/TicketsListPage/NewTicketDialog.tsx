@@ -59,6 +59,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
       <DialogTitle>{t('support.tickets.create')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
           <TextField label={t('support.tickets.subject')} value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required />
           <TextField
             select

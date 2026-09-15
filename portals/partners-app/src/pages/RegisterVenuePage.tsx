@@ -9,10 +9,15 @@ import {
 } from './register-venue-page/register-venue';
 import { MY_VENUE, REGISTRATION_CONFIG } from './register-venue-page/queries';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../components/primaryHero';
+import { tokens } from '../theme';
 
+/** Fills that keep the chip's white label at 4.5:1 on the accent banner in both
+ * modes: the light-mode success green (the dark-mode one is a pale text
+ * colour), and a black scrim rather than a white one. */
 const statusChipColor = (status: string) => {
-  if (status === 'APPROVED') return 'success.main';
-  return 'rgba(255,255,255,0.2)';
+  if (status === 'APPROVED') return tokens.semantic.success;
+  return 'rgba(0,0,0,0.28)';
 };
 
 function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: string }>) {
@@ -79,7 +84,7 @@ export default function RegisterVenuePage() {
           alignItems: "center",
           py: 6
         }}>
-        <CircularProgress size={28} />
+        <CircularProgress size={28} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -90,21 +95,21 @@ export default function RegisterVenuePage() {
         sx={{
           p: 2.5,
           borderRadius: 2,
-          color: 'primary.contrastText',
-          background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+          color: 'common.white',
+          background: primaryHeroBackground,
         }}
       >
         <Stack direction="row" spacing={1.25} sx={{
           alignItems: "flex-start"
         }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="overline" sx={{ opacity: 0.8, letterSpacing: 0.4, lineHeight: 1, fontWeight: 800 }}>
+            <Typography variant="overline" sx={{ letterSpacing: 0.4, lineHeight: 1, fontWeight: 800 }}>
               {t('partners.venueListingsPage.venueRegistration')}
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
               {venue ? venue.venue_name || 'Your venue' : t('partners.common.registerYourVenue')}
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
               Complete each section, then submit your space for review.
             </Typography>
           </Box>

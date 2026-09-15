@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
 import InfoList from './InfoList';
-import { formatDate, formatDateTime, formatUptime } from './format';
-import type { ServerInfo } from './queries';
+import { formatBytes, formatDate, formatDateTime, formatUptime } from './format';
+import type { BytesInfo, ServerInfo } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
 function Panel({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
@@ -25,6 +25,10 @@ function Panel({ title, children }: Readonly<{ title: string; children: React.Re
 export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo }>) {
   const { t } = useTranslation();
   const { os, cpu, ssl, network } = info;
+  const usedOfTotal = (bytes: BytesInfo) =>
+    t('tech.server.usedOfTotal', {
+      vars: { used: formatBytes(bytes.usedBytes), total: formatBytes(bytes.totalBytes), pct: `${bytes.usagePercent}%` },
+    });
   const external = network.filter((n) => !n.internal && n.family === 'IPv4');
 
   return (
@@ -53,6 +57,23 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
             { label: t('tech.server.clock'), value: cpu.speedMhz ? `${(cpu.speedMhz / 1000).toFixed(2)} GHz` : '—' },
             { label: t('tech.server.usage'), value: `${cpu.usagePercent}%` },
             { label: t('tech.server.load1m5m15m'), value: `${cpu.loadAvg1} / ${cpu.loadAvg5} / ${cpu.loadAvg15}` },
+          ]}
+        />
+      </Panel>
+
+      <Panel title={t('tech.server.memoryStorage')}>
+        <InfoList
+          rows={[
+            { label: t('tech.server.memoryUsed'), value: usedOfTotal(info.memory) },
+            { label: t('tech.server.memoryAvailable'), value: formatBytes(info.memory.freeBytes) },
+            {
+              label: t('tech.server.swapUsed'),
+              value: info.swap.totalBytes > 0 ? usedOfTotal(info.swap) : t('tech.server.swapNone'),
+            },
+            { label: t('tech.server.diskMount'), value: info.disk.path },
+            { label: t('tech.server.diskUsed'), value: usedOfTotal(info.disk) },
+            { label: t('tech.server.diskFree'), value: formatBytes(info.disk.freeBytes) },
+            { label: t('tech.server.inodesUsed'), value: `${info.disk.inodeUsagePercent}%` },
           ]}
         />
       </Panel>

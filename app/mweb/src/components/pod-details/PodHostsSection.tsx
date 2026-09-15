@@ -1,4 +1,4 @@
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -29,15 +29,15 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
   return (
     <Stack data-testid="pod-hosts-section" spacing={0.5}>
       {hosts.map((h) => (
-        <Stack
+        <ButtonBase
           key={h.user_id}
           data-testid={`host-row-${h.user_id}`}
-          direction="row"
-          spacing={1.5}
           onClick={() => navigate(`/u/${h.user_id}`)}
           sx={{
-            alignItems: 'center',
-            cursor: 'pointer',
+            width: '100%',
+            justifyContent: 'flex-start',
+            textAlign: 'left',
+            gap: 1.5,
             py: 0.75,
             borderRadius: '14px',
             '&:hover': { bgcolor: 'action.hover' },
@@ -45,6 +45,7 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
         >
           <Avatar
             src={h.profile_photo || h.passport_photo_url || undefined}
+            alt=""
             sx={{ width: 40, height: 40, bgcolor: 'action.hover', color: 'text.primary' }}
           >
             {h.full_name?.[0]?.toUpperCase() ?? 'H'}
@@ -58,7 +59,7 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
             </Typography>
           </Box>
           <ChevronRightIcon sx={{ color: 'text.secondary' }} />
-        </Stack>
+        </ButtonBase>
       ))}
     </Stack>
   );

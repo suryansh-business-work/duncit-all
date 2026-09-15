@@ -28,7 +28,7 @@ export default function WalletPage() {
           alignItems: "center",
           py: 8
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

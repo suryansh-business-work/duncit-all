@@ -116,7 +116,7 @@ export default function ActivityJourneyChart({ events }: Readonly<Props>) {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('admin.activity.overTheDay')}</Typography>
           <Box sx={{ height: 190 }}>
-            <Line data={chartData} options={options} />
+            <Line data={chartData} options={options} role="img" aria-label={t('admin.activity.overTheDay')} />
           </Box>
         </Box>
         <Box sx={{ width: { xs: '100%', md: 260 }, minWidth: 0 }}>

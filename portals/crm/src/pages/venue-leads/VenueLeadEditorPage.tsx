@@ -43,7 +43,7 @@ export default function VenueLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{isEdit ? `Edit ${lead?.venue_name}` : 'New Venue Lead'}</Typography>
         {!isEdit && aiPrefill && (

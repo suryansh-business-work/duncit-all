@@ -42,7 +42,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
 
   return (
     <Dialog open onClose={onClose} maxWidth="lg" fullWidth slotProps={{
-      paper: { sx: { bgcolor: 'common.black' } }
+      paper: { 'aria-label': t('admin.a11y.mediaViewer'), sx: { bgcolor: 'common.black' } }
     }}>
       <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 320, md: 520 } }}>
         <DuncitIconButton
@@ -64,6 +64,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         )}
 
         {isVideoMedia(current) ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
           <Box component="video" src={videoSourceUrl(current.url)} controls autoPlay sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
         ) : (
           <Box

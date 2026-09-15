@@ -1,5 +1,6 @@
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { Checkbox, FormControlLabel, FormHelperText, Stack } from '@mui/material';
+import { testIdProps } from '../../utils/testIdProps';
 
 interface Props<T extends FieldValues> {
   /** react-hook-form control from the parent `useForm`. */
@@ -27,6 +28,8 @@ export default function RhfCheckbox<T extends FieldValues>({
   hint,
   'data-testid': testId,
 }: Readonly<Props<T>>) {
+  // The <input> carries its own id, so a spec can read whether the box is ticked.
+  const inputTestId = testId ? testIdProps(`${testId}-input`) : undefined;
   return (
     <Controller
       control={control}
@@ -43,7 +46,7 @@ export default function RhfCheckbox<T extends FieldValues>({
                 onChange={(event) => field.onChange(event.target.checked)}
                 onBlur={field.onBlur}
                 data-testid={testId}
-                slotProps={{ input: { 'aria-label': label } }}
+                slotProps={{ input: { 'aria-label': label, ...inputTestId } }}
               />
             }
           />

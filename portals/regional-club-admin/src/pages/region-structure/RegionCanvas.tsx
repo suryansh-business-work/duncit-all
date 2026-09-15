@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
 import {
   Background,
   MiniMap,
@@ -81,6 +81,8 @@ function RegionCanvasInner({
         position: { x: node.x, y: node.y },
         draggable: false,
         connectable: false,
+        // A box that opens the drill-down is announced as a button (4.1.2).
+        ariaRole: OPENABLE.has(node.kind) ? 'button' : 'group',
         data: {
           kind: node.kind,
           label: node.label,
@@ -107,7 +109,7 @@ function RegionCanvasInner({
     [edges, theme.palette.divider],
   );
 
-  const handleNodeClick: NodeMouseHandler = (_event, node) => {
+  const openFlowNode = (node: Node) => {
     const data = node.data as RegionNodeData;
     if (!data.openable) return;
     // The node id ends in `/host:<userId>` or `/admin:<userId>` — the tree
@@ -115,6 +117,18 @@ function RegionCanvasInner({
     const marker = data.kind === 'HOST' ? '/host:' : '/admin:';
     const refId = node.id.split(marker)[1] ?? '';
     if (refId) onOpenNode(data.kind, refId, data.label);
+  };
+  const handleNodeClick: NodeMouseHandler = (_event, node) => openFlowNode(node);
+
+  // React Flow focuses a node on Tab but only SELECTS it on Enter, so a
+  // keyboard user could never open the drill-down (2.1.1). The node's keydown
+  // bubbles here; its wrapper carries the id as `data-id`.
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter') return;
+    const target = event.target as HTMLElement;
+    const id = target.closest<HTMLElement>('.react-flow__node')?.dataset.id;
+    const node = flowNodes.find((candidate) => candidate.id === id);
+    if (node) openFlowNode(node);
   };
 
   const minimapNodeColor = useCallback(
@@ -135,6 +149,7 @@ function RegionCanvasInner({
       edges={flowEdges}
       nodeTypes={NODE_TYPES}
       onNodeClick={handleNodeClick}
+      onKeyDown={handleKeyDown}
       onMoveEnd={persist}
       nodesDraggable={false}
       nodesConnectable={false}

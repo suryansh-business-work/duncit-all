@@ -96,6 +96,7 @@ export function StudioPodRow({
         {onOpenActions ? (
           <XStack
             testID={`${testID}-actions`}
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.hostManage.podActions')}
             onPress={onOpenActions}

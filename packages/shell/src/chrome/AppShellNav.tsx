@@ -64,6 +64,7 @@ export function AppShellNav({
         open={mobileOpen}
         onClose={onCloseMobile}
         ModalProps={{ keepMounted: true }}
+        slotProps={{ paper: { 'aria-label': t('shell.chrome.primaryNav') } }}
         sx={{
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': { width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },

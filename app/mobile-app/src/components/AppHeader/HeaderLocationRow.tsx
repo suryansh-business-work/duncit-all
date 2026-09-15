@@ -26,6 +26,11 @@ export function HeaderLocationRow({ onOpen }: Readonly<Props>) {
       testID="header-location"
       role="button"
       aria-label={t('mweb.common.selectLocation')}
+      // The city on the pill is read after the name, so the button still says
+      // where you are, not only what it does.
+      accessibilityHint={label}
+      tabIndex={0}
+      hitSlop={2}
       onPress={onOpen}
       alignItems="center"
       gap={6}

@@ -179,7 +179,7 @@ export function ClubClaimSheet({
         {busy ? <LoadingIndicator testID="auto-pod-claim-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-claim-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="auto-pod-claim-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

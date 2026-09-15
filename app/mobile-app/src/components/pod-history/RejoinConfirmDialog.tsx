@@ -37,6 +37,7 @@ export function RejoinConfirmDialog({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.podHistory.close')}
             onPress={busy ? undefined : onClose}
             position="absolute"
@@ -57,14 +58,16 @@ export function RejoinConfirmDialog({
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={18} fontWeight="700" color="$color">
+                <Text role="heading" fontSize={18} fontWeight="700" color="$color">
                   {t('mweb.podHistory.rejoinTitle')}
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="rejoin-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.close')}
+                  hitSlop={6}
                   onPress={busy ? undefined : onClose}
                   width={32}
                   height={32}
@@ -83,6 +86,7 @@ export function RejoinConfirmDialog({
                 <XStack
                   testID="rejoin-cancel"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.cancel')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onClose}
@@ -103,6 +107,7 @@ export function RejoinConfirmDialog({
                 <XStack
                   testID="rejoin-confirm"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podHistory.confirmRejoin')}
                   aria-disabled={busy}
                   onPress={busy ? undefined : onConfirm}

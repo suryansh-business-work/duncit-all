@@ -80,7 +80,7 @@ export function NotificationsScreen({
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} testID="notifications-screen">
+        <YStack flex={1} testID="notifications-screen" onAccessibilityEscape={onClose}>
           <AppBackground />
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
@@ -88,6 +88,8 @@ export function NotificationsScreen({
                 testID="notifications-close"
                 role="button"
                 aria-label={t('mweb.common.closeNotifications')}
+                tabIndex={0}
+                hitSlop={4}
                 onPress={onClose}
                 width={40}
                 height={40}
@@ -100,7 +102,13 @@ export function NotificationsScreen({
                 <MaterialIcons name="close" size={20} color={color} />
               </XStack>
               <YStack flex={1}>
-                <Text fontSize={20} fontWeight="600" color="$color">
+                <Text
+                  testID="notifications-screen-title"
+                  role="heading"
+                  fontSize={20}
+                  fontWeight="600"
+                  color="$color"
+                >
                   Notifications
                 </Text>
                 <Text fontSize={12} fontWeight="600" color="$muted">
@@ -113,6 +121,8 @@ export function NotificationsScreen({
                 aria-label={t('mweb.common.markAllAsRead')}
                 aria-disabled={markAllDisabled}
                 aria-busy={markAllBusy}
+                tabIndex={0}
+                hitSlop={4}
                 onPress={markAllDisabled ? undefined : onMarkAll}
                 width={40}
                 height={40}
@@ -151,7 +161,12 @@ export function NotificationsScreen({
                 </GroupedRow>
               )}
               ListEmptyComponent={
-                <SurfaceCard padding={24} alignItems="center">
+                <SurfaceCard
+                  testID="notifications-empty"
+                  role="status"
+                  padding={24}
+                  alignItems="center"
+                >
                   <Text fontSize={14} color="$muted">
                     {emptyText}
                   </Text>

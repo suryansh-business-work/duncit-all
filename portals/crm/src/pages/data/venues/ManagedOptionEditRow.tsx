@@ -32,34 +32,43 @@ export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel
           onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
           sx={{ width: 70 }}
           slotProps={{
-            htmlInput: { inputMode: 'numeric' }
+            htmlInput: { inputMode: 'numeric', 'aria-label': t('shell.common.order') }
           }}
+          data-testid="crm-managed-option-order-input"
         />
       </TableCell>
       <TableCell>
         <TextField
           size="small"
           fullWidth
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the inline editor the user just opened (WCAG 2.4.3)
           autoFocus
           placeholder={placeholder}
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          slotProps={{ htmlInput: { 'aria-label': t('shell.common.name') } }}
+          data-testid="crm-managed-option-name-input"
         />
       </TableCell>
       <TableCell>
-        <Switch checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} />
+        <Switch
+          checked={draft.is_active}
+          onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
+          slotProps={{ input: { 'aria-label': t('crm.common.active') } }}
+          data-testid="crm-managed-option-active-input"
+        />
       </TableCell>
       <TableCell align="right">
         <Tooltip title={t('shell.common.save')}>
           <span>
-            <DuncitIconButton size="small" color="primary" onClick={onSave} disabled={busy}>
+            <DuncitIconButton size="small" color="primary" aria-label={t('shell.common.save')} data-testid="crm-managed-option-save" onClick={onSave} disabled={busy}>
               <SaveIcon fontSize="small" />
             </DuncitIconButton>
           </span>
         </Tooltip>
         <Tooltip title={t('shell.common.cancel')}>
           <span>
-            <DuncitIconButton size="small" onClick={onCancel} disabled={busy}>
+            <DuncitIconButton size="small" aria-label={t('shell.common.cancel')} data-testid="crm-managed-option-cancel" onClick={onCancel} disabled={busy}>
               <CloseIcon fontSize="small" />
             </DuncitIconButton>
           </span>

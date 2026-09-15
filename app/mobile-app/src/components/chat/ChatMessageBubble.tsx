@@ -14,14 +14,15 @@ interface ChatMessageBubbleProps {
 }
 
 /** Foreground text colour for the bubble — tinted for my own messages. */
-type Ink = '$onPrimary' | '$color';
+type Ink = '$onPrimary' | '$color' | '$muted';
 
 /** Bubble body: a "deleted" placeholder, or the image and/or text content. */
 function BubbleBody({
   message,
   mine,
   ink,
-}: Readonly<{ message: ChatMessage; mine: boolean; ink: Ink }>) {
+  imageLabel,
+}: Readonly<{ message: ChatMessage; mine: boolean; ink: Ink; imageLabel: string }>) {
   if (message.deleted) {
     return (
       <Text fontSize={14} fontStyle="italic" color={mine ? '$onPrimary' : '$muted'}>
@@ -34,6 +35,7 @@ function BubbleBody({
       {message.image_url ? (
         <AppImage
           source={{ uri: message.image_url }}
+          accessibilityLabel={imageLabel}
           style={{ width: 180, height: 180, borderRadius: 12 }}
           resizeMode="cover"
         />
@@ -77,13 +79,18 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
   const time = formatMessageTime(message.createdAt);
   const reactions = groupReactions(message.reactions);
   const ink: Ink = mine ? '$onPrimary' : '$color';
+  // Faded white on the red fill fails 4.5:1, so the time is solid there.
+  const metaInk: Ink = mine ? '$onPrimary' : '$muted';
+  // One spoken line per message: who, what and when — never a bare "Chat message".
+  const spoken = [message.user_name, message.text, time].filter(Boolean).join(', ');
 
   return (
     <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} paddingHorizontal={12}>
       <YStack
         testID={`chat-message-${message.id}`}
         role="button"
-        aria-label={t('mweb.chat.chatMessage')}
+        aria-label={`${t('mweb.chat.chatMessage')}: ${spoken}`}
+        tabIndex={0}
         onLongPress={onReact ? () => onReact(message.id) : undefined}
         pressStyle={onReact ? { opacity: 0.85 } : undefined}
         maxWidth="80%"
@@ -103,11 +110,11 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
           </Text>
         ) : null}
 
-        <BubbleBody message={message} mine={mine} ink={ink} />
+        <BubbleBody message={message} mine={mine} ink={ink} imageLabel={t('mweb.chatRoom.image')} />
         <BubbleReactions reactions={reactions} ink={ink} messageId={message.id} />
 
         {time ? (
-          <Text fontSize={10} opacity={0.7} alignSelf="flex-end" color={ink}>
+          <Text fontSize={10} alignSelf="flex-end" color={metaInk}>
             {time}
           </Text>
         ) : null}

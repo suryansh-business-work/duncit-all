@@ -129,7 +129,7 @@ function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open:
               }}>{value}</Typography>
             </Stack>
           ))}
-          {job.error && <Typography variant="body2" color="error">{job.error}</Typography>}
+          {job.error && <Typography variant="body2" color="error" role="alert">{job.error}</Typography>}
         </Stack>
       </DialogContent>
     </Dialog>
@@ -209,7 +209,7 @@ export default function ExtractionWidget() {
 
       <Box sx={{ p: 1.5, pt: 1 }}>
         {job.status === 'FAILED' ? (
-          <Typography variant="body2" color="error">{job.error || 'Extraction failed.'}</Typography>
+          <Typography variant="body2" color="error" role="alert">{job.error || 'Extraction failed.'}</Typography>
         ) : (
           <StatRow job={job} />
         )}

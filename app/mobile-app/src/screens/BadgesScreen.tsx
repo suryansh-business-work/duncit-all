@@ -3,6 +3,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { sortBadgeProgress } from '@duncit/utils';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { BadgeProgressCard } from '@/components/badges';
 import { useBadges } from '@/hooks/useBadges';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,6 +25,7 @@ export function BadgesScreen() {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { rows, isLoading, hasError } = useBadges();
+  const loadingRegion = useLoadingRegion();
   const sorted = sortBadgeProgress(rows);
   const unlocked = sorted.filter((row) => row.achieved).length;
   const tileWidth = Math.floor((width - SIDE_PADDING * 2 - GRID_GAP) / 2);
@@ -31,13 +33,13 @@ export function BadgesScreen() {
   let body = null;
   if (isLoading) {
     body = (
-      <YStack testID="badges-loading" alignItems="center" paddingVertical={32}>
+      <YStack testID="badges-loading" alignItems="center" paddingVertical={32} {...loadingRegion}>
         <Spinner />
       </YStack>
     );
   } else if (hasError) {
     body = (
-      <Text testID="badges-error" fontSize={14} color="$danger">
+      <Text testID="badges-error" role="alert" fontSize={14} color="$danger">
         {t('mweb.badges.loadError')}
       </Text>
     );

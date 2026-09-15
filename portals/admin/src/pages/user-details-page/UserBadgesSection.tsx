@@ -51,7 +51,7 @@ export default function UserBadgesSection({ userId }: Readonly<{ userId: string 
                   alignItems: "center",
                   textAlign: 'center'
                 }}>
-                <Avatar src={ub.badge?.image_url || undefined} sx={{ width: 48, height: 48, bgcolor: 'primary.light' }}>
+                <Avatar alt="" src={ub.badge?.image_url || undefined} sx={{ width: 48, height: 48, bgcolor: 'primary.light' }}>
                   {!ub.badge?.image_url && <EmojiEventsIcon fontSize="small" />}
                 </Avatar>
                 <Typography

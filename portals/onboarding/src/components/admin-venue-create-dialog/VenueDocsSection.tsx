@@ -70,7 +70,11 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: R
                 folder="/venues/docs"
               />
             </Box>
-            <DuncitIconButton onClick={() => setDocs(docs.filter((_, j) => j !== i))}>
+            <DuncitIconButton
+              aria-label={t('onboarding.a11y.removeDocument')}
+              data-testid="venue-docs-remove-document"
+              onClick={() => setDocs(docs.filter((_, j) => j !== i))}
+            >
               <DeleteIcon />
             </DuncitIconButton>
           </Box>

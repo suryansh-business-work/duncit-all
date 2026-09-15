@@ -43,9 +43,15 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="host-pods-filter-sheet">
+        <YStack
+          flex={1}
+          justifyContent="flex-end"
+          testID="host-pods-filter-sheet"
+          onAccessibilityEscape={onClose}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
+            importantForAccessibility="no"
             role="button"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
@@ -64,12 +70,19 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text
+                  testID="host-pods-filter-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
                   Filter pods
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="host-filter-close"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
@@ -114,6 +127,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
               <XStack gap={12} padding={16}>
                 <XStack
                   testID="host-filter-reset"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.resetFilters')}
                   onPress={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
@@ -132,6 +146,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                 </XStack>
                 <XStack
                   testID="host-filter-apply"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.applyFilters')}
                   onPress={() => onApply(draft)}

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { BrandDetailSheet } from '@/components/details/BrandDetailSheet';
+import { HeroButton } from '@/components/details/DetailHero/HeroButton';
 import { ZoomableImageModal } from '@/components/details/ZoomableImageModal';
 import {
   PublicInventoryProductDocument,
@@ -19,10 +19,10 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { selectionKey } from '@/utils/product-selection';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { ProductBody } from './ProductBody';
 import { productImages, variantLabel, type Product, type VariantPick } from './types';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface Props {
   productId: string | null;
@@ -49,8 +49,9 @@ export function ProductDetailSheet({
   onUpdateLine,
   readOnly,
 }: Readonly<Props>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
-  const { primary, color } = useThemeColors();
+  const { primary } = useThemeColors();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -130,7 +131,7 @@ export function ProductDetailSheet({
   // Body variants hoisted to consts so the render tree keeps flat (non-nested)
   // ternaries — identical branches, same scope.
   const loadedBody = error ? (
-    <Text testID="product-detail-error" padding={24} color="$danger">
+    <Text role="alert" testID="product-detail-error" padding={24} color="$danger">
       {error}
     </Text>
   ) : (
@@ -162,28 +163,17 @@ export function ProductDetailSheet({
           <YStack flex={1} backgroundColor="$background" testID="product-detail-sheet">
             <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack paddingHorizontal={16} paddingVertical={8}>
-                <XStack
-                  pressStyle={PRESS_STYLE.row}
+                <HeroButton
                   testID="product-detail-close"
-                  role="button"
-                  aria-label={t('mweb.common.close')}
+                  icon="arrow-back"
+                  label={t('mweb.common.close')}
                   onPress={onClose}
-                  width={40}
-                  height={40}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={20}
-                  borderWidth={1}
-                  borderColor="$cardBorder"
-                  backgroundColor="$surface"
-                >
-                  <MaterialIcons name="arrow-back" size={20} color={color} />
-                </XStack>
+                />
               </XStack>
 
               {isLoading ? (
                 <YStack padding={32} alignItems="center">
-                  <Spinner testID="product-detail-loading" color="$primary" />
+                  <Spinner {...loadingRegion} testID="product-detail-loading" color="$primary" />
                 </YStack>
               ) : (
                 loadedBody

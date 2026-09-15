@@ -30,9 +30,10 @@ function FilterChip({ label, active, onPress, testID }: Readonly<ChipProps>) {
   return (
     <XStack
       testID={testID}
-      role="button"
+      tabIndex={0}
+      role="checkbox"
       aria-label={label}
-      aria-pressed={active}
+      aria-checked={active}
       onPress={onPress}
       minHeight={36}
       alignItems="center"
@@ -74,6 +75,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
           value={criteria.search}
           onChangeText={(search) => patch({ search })}
           placeholder={t('podProduct.searchPlaceholder')}
+          aria-label={t('podProduct.searchPlaceholder')}
           borderWidth={0}
           backgroundColor="transparent"
           fontSize={14}
@@ -115,6 +117,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
       <XStack alignItems="center" gap={10} flexWrap="wrap">
         <XStack
           testID="product-in-stock"
+          tabIndex={0}
           role="button"
           aria-label={t('podProduct.inStockOnly')}
           aria-pressed={criteria.inStockOnly}
@@ -136,12 +139,13 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
         {activeCount > 0 ? (
           <XStack
             testID="product-clear-filters"
+            tabIndex={0}
             role="button"
             aria-label={t('podProduct.clearFilters')}
             onPress={onClear}
             pressStyle={PRESS_STYLE.row}
           >
-            <Text fontSize={13} fontWeight="600" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$accent">
               {t('podProduct.clearFilters')}
             </Text>
           </XStack>

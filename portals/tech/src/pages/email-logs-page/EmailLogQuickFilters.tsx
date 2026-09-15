@@ -61,6 +61,8 @@ export default function EmailLogQuickFilters({ value, onChange }: Readonly<Props
         size="small"
         color={narrowed ? 'default' : 'primary'}
         variant={narrowed ? 'outlined' : 'filled'}
+        aria-pressed={!narrowed}
+        data-testid="email-log-filter-all"
         onClick={() => onChange(EMPTY_QUICK_FILTERS)}
       />
       {value.template && (
@@ -80,6 +82,8 @@ export default function EmailLogQuickFilters({ value, onChange }: Readonly<Props
             size="small"
             color={on ? STATUS_COLOR[option.value] : 'default'}
             variant={on ? 'filled' : 'outlined'}
+            aria-pressed={on}
+            data-testid="email-log-filter-status"
             // Clicking the chip that is already on clears it, so the same
             // gesture both asks and un-asks.
             onClick={() => onChange({ ...value, status: on ? '' : option.value })}
@@ -95,6 +99,8 @@ export default function EmailLogQuickFilters({ value, onChange }: Readonly<Props
             size="small"
             color={on ? 'primary' : 'default'}
             variant={on ? 'filled' : 'outlined'}
+            aria-pressed={on}
+            data-testid="email-log-filter-source"
             onClick={() => onChange({ ...value, source: on ? '' : option.value })}
           />
         );

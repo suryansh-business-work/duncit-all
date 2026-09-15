@@ -143,6 +143,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
             <AiMonitoringChip />
           </Box>
           {hasReel && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               data-testid="reel-preview"
               component="video"
@@ -164,7 +165,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           )}
           {pct !== null && (
             <Box>
-              <LinearProgress variant="determinate" value={pct} />
+              <LinearProgress variant="determinate" value={pct} aria-label={progressLabel} />
               <Typography variant="caption" sx={{
                 color: "text.secondary"
               }}>
@@ -177,7 +178,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               data-testid="reel-upload-add"
               size="small"
               variant="outlined"
-              startIcon={busy ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
+              startIcon={busy ? <CircularProgress size={16} aria-hidden /> : <VideocamOutlinedIcon />}
               disabled={busy}
               onClick={() => fileRef.current?.click()}
             >

@@ -122,10 +122,15 @@
     "gen:package-manifest": "node scripts/generate-package-manifest.mjs",
     "dup": "node scripts/verify-duplication.mjs",
     "dup:report": "node scripts/verify-duplication.mjs --summary=duplication-report.md",
-    "dup:update": "node scripts/verify-duplication.mjs --update"
+    "dup:update": "node scripts/verify-duplication.mjs --update",
+    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored app/mweb/src portals packages"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/eslint-parser": "^7.29.7",
     "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "husky": "^9.1.7",
     "jscpd": "5.1.1",
     "lint-staged": "^17.4.1",

@@ -46,7 +46,7 @@ export function CurrentPasswordForm({
         required
       />
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="current-password-error">
+        <Text fontSize={14} color="$danger" testID="current-password-error" role="alert">
           {errorMessage}
         </Text>
       ) : null}
@@ -81,6 +81,8 @@ export function NewPasswordForm({
         label="6-digit OTP"
         placeholder="123456"
         keyboardType="number-pad"
+        autoComplete="sms-otp"
+        textContentType="oneTimeCode"
         maxLength={6}
         required
       />
@@ -106,7 +108,7 @@ export function NewPasswordForm({
         required
       />
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="new-password-error">
+        <Text fontSize={14} color="$danger" testID="new-password-error" role="alert">
           {errorMessage}
         </Text>
       ) : null}

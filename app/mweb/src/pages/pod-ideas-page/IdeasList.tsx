@@ -72,7 +72,7 @@ export default function IdeasList({
 
       {loading && !hasData ? (
         <Box data-testid="ideas-list-loading" sx={{ py: 6, textAlign: 'center' }}>
-          <CircularProgress />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} />
         </Box>
       ) : (
         ideasContent

@@ -34,10 +34,16 @@ interface ScopeRowProps {
   optionalLabel: string;
 }
 
+/** titleAccess names each mark, so the state is not carried by colour and shape alone (WCAG 1.1.1). */
 function ScopeIcon({ granted, known }: Readonly<{ granted: boolean; known: boolean }>) {
-  if (!known) return <HelpOutlineIcon sx={{ fontSize: 16 }} color="disabled" />;
-  if (granted) return <CheckCircleIcon sx={{ fontSize: 16 }} color="success" />;
-  return <CancelIcon sx={{ fontSize: 16 }} color="error" />;
+  const { t } = useTranslation();
+  if (!known) {
+    return <HelpOutlineIcon sx={{ fontSize: 16 }} color="action" titleAccess={t('tech.a11y.scopeUnknown')} />;
+  }
+  if (granted) {
+    return <CheckCircleIcon sx={{ fontSize: 16 }} color="success" titleAccess={t('tech.a11y.scopeGranted')} />;
+  }
+  return <CancelIcon sx={{ fontSize: 16 }} color="error" titleAccess={t('tech.a11y.scopeMissing')} />;
 }
 
 function ScopeRow({ scope, known, optionalLabel }: Readonly<ScopeRowProps>) {
@@ -133,7 +139,13 @@ export default function SlackPermissionsButton() {
   return (
     <>
       <Tooltip title={t('tech.slack.permissionsTitle')}>
-        <DuncitIconButton size="small" onClick={open} aria-label={t('tech.slack.permissionsTitle')}>
+        <DuncitIconButton
+          size="small"
+          onClick={open}
+          aria-label={t('tech.slack.permissionsTitle')}
+          aria-expanded={Boolean(anchor)}
+          data-testid="slack-permissions-open"
+        >
           <InfoOutlinedIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

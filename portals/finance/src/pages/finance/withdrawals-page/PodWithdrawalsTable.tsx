@@ -126,6 +126,7 @@ export default function PodWithdrawalsTable({
 
   return (
     <DuncitTable<PodWithdrawalGroup>
+      ariaLabel={t('shell.nav.withdrawal')}
       tableId="finance-withdrawal-pods"
       columns={columns}
       fetchRows={fetchRows}

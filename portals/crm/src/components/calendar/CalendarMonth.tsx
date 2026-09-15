@@ -48,9 +48,11 @@ export default function CalendarMonth({ cursor, events, onEvent }: Readonly<Prop
           const dayEvents = events.filter((e) => isSameDay(e.date, day));
           const muted = !isSameMonth(day, cursor);
           const todayColor = isToday(day) ? 'primary.main' : 'text.primary';
-          const labelColor = muted ? 'text.disabled' : todayColor;
+          // Out-of-month days are told apart by their tinted cell; the number itself
+          // stays AA-readable (1.4.3).
+          const labelColor = muted ? 'text.secondary' : todayColor;
           return (
-            <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: muted ? 'action.hover' : 'background.paper' }}>
+            <Box key={day.toISOString()} aria-current={isToday(day) ? 'date' : undefined} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: muted ? 'action.hover' : 'background.paper' }}>
               <Typography
                 variant="caption"
                 sx={{

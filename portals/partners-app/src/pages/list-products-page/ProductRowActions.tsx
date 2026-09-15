@@ -36,7 +36,7 @@ export default function ProductRowActions({ actions }: Readonly<{ actions: Produ
   const close = () => setAnchor(null);
   return (
     <>
-      <DuncitIconButton size="small" aria-label={t('partners.listProductsPage.productActions')} onClick={(event) => setAnchor(event.currentTarget)}>
+      <DuncitIconButton size="small" aria-label={t('partners.listProductsPage.productActions')} aria-haspopup="menu" aria-expanded={Boolean(anchor)} onClick={(event) => setAnchor(event.currentTarget)}>
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>

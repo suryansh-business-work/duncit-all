@@ -27,6 +27,8 @@ export function FilterChip({
       role="button"
       aria-label={label}
       aria-pressed={selected}
+      accessibilityState={{ selected }}
+      tabIndex={0}
       onPress={onPress}
       height={onPage ? 36 : 32}
       paddingHorizontal={14}
@@ -53,7 +55,13 @@ interface SectionProps {
 export function Section({ title, children }: Readonly<SectionProps>) {
   return (
     <YStack gap={8}>
-      <Text fontSize={11.5} fontWeight="600" color="$muted" textTransform="uppercase">
+      <Text
+        role="heading"
+        fontSize={11.5}
+        fontWeight="600"
+        color="$muted"
+        textTransform="uppercase"
+      >
         {title}
       </Text>
       {children}

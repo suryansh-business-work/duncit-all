@@ -77,7 +77,7 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
           mb: 1
         }}>
         <Box>
-          <Typography variant="subtitle2" sx={{
+          <Typography variant="subtitle2" component="h3" sx={{
             fontWeight: 700
           }}>
             Assign Clubs
@@ -109,6 +109,8 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
         size="small"
         fullWidth
         placeholder={t('onboarding.clubAdmins.searchClubs')}
+        slotProps={{ htmlInput: { 'aria-label': t('onboarding.clubAdmins.searchClubs') } }}
+        data-testid="assign-clubs-search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         sx={{ mb: 1 }}
@@ -116,7 +118,7 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
 
       {loading && options.length === 0 ? (
         <Box sx={{ py: 3, textAlign: 'center' }}>
-          <CircularProgress size={22} />
+          <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />
         </Box>
       ) : (
         <List
@@ -136,8 +138,17 @@ export default function AssignClubsSection({ row, saving, onSave }: Readonly<Pro
             />
           )}
           {options.map((club) => (
-            <ListItemButton key={club.id} onClick={() => toggle(club.id)} dense>
-              <Checkbox edge="start" size="small" checked={selected.has(club.id)} tabIndex={-1} disableRipple />
+            // The row is the one control, so it carries the checked state the
+            // tab-skipped Checkbox inside it would otherwise hide (4.1.2).
+            <ListItemButton
+              key={club.id}
+              onClick={() => toggle(club.id)}
+              dense
+              role="checkbox"
+              aria-checked={selected.has(club.id)}
+              data-testid="assign-clubs-option"
+            >
+              <Checkbox edge="start" size="small" checked={selected.has(club.id)} tabIndex={-1} disableRipple slotProps={{ input: { 'aria-hidden': true } }} />
               {/* A club they run from outside their category says so rather
                   than sitting in the list looking like a match. */}
               <ListItemText

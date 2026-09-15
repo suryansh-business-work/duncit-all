@@ -23,7 +23,7 @@ export default function LeaderboardSettingsPage() {
       }}>
         <TuneIcon color="primary" />
         <Stack>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             {t('admin.leaderboard.settingsTitle')}

@@ -121,6 +121,7 @@ export default function RegionPodsTable({
   return (
     <DuncitTable<RegionHostPod>
       tableId={`regional-pods-${rootField}`}
+      ariaLabel={t('partners.regional.podCountColumn')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

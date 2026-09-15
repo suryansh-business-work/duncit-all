@@ -43,7 +43,7 @@ export default function HostLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{isEdit ? `Edit ${lead?.host_name}` : 'New Host Lead'}</Typography>
         {!isEdit && aiPrefill && (

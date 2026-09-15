@@ -160,6 +160,7 @@ export default function WithdrawalsTable({
 
   return (
     <DuncitTable<WithdrawalRow>
+      ariaLabel={t('finance.withdrawals.title')}
       tableId={tableId}
       columns={columns}
       fetchRows={fetchRows}

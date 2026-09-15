@@ -37,7 +37,7 @@ export default function IdeaDetailsBody({
   if (loading && !hasData) {
     return (
       <Box data-testid="idea-details-loading" sx={{ textAlign: 'center', py: 4 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
   }
@@ -60,7 +60,7 @@ export default function IdeaDetailsBody({
           alignItems: "center",
           mb: 1.5
         }}>
-        <Avatar
+        <Avatar alt=""
           src={idea.author?.profile_photo || undefined}
           sx={{ width: 40, height: 40 }}
         >

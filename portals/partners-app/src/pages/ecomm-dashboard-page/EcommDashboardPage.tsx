@@ -8,6 +8,7 @@ import EcommStatCards from './EcommStatCards';
 import EcommProductsChart from './EcommProductsChart';
 import { PARTNER_ECOMM_STATS } from './ecomm-dashboard.queries';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 /** Partner E-Commerce Dashboard: owner-scoped brand/product/warehouse/order KPIs. */
 export default function EcommDashboardPage() {
@@ -20,7 +21,7 @@ export default function EcommDashboardPage() {
     {
       id: 'performance',
       title: t('partners.ecommDashboardPage.eCommercePerformance'),
-      headerActions: loading ? <CircularProgress size={22} /> : undefined,
+      headerActions: loading ? <CircularProgress size={22} aria-label={t('shell.a11y.loading')} /> : undefined,
       // The card row is one line at desktop and wraps below ~1050px — a fixed
       // h is dead space in one shape and a cut in the other.
       fitContent: true,
@@ -52,21 +53,21 @@ export default function EcommDashboardPage() {
             sx={{
               p: 2.5,
               borderRadius: 2,
-              color: 'primary.contrastText',
-              background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+              color: 'common.white',
+              background: primaryHeroBackground,
             }}
           >
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
               justifyContent: "space-between"
             }}>
               <Box>
-                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>
+                <Typography variant="overline" sx={{ fontWeight: 800 }}>
                   E-Commerce Brand
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1.05 }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 950, lineHeight: 1.05 }}>
                   Dashboard
                 </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
                   How your brands, products and orders are performing on Duncit.
                 </Typography>
               </Box>

@@ -56,7 +56,7 @@ export function PodFeedbackCard({
         {t('mweb.podFeedback.subtitle')}
       </Text>
       {rated ? (
-        <Text testID="pod-feedback-already-rated" fontSize={12} color="$primary">
+        <Text testID="pod-feedback-already-rated" fontSize={12} color="$accent">
           {t('mweb.podFeedback.alreadyRated')}
         </Text>
       ) : null}
@@ -70,7 +70,7 @@ export function PodFeedbackCard({
       />
 
       {failed ? (
-        <Text testID="pod-feedback-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="pod-feedback-error" fontSize={12} color="$danger">
           {t('mweb.podFeedback.failed')}
         </Text>
       ) : null}
@@ -85,6 +85,7 @@ export function PodFeedbackCard({
           pressStyle={PRESS_STYLE.control}
           testID="pod-feedback-skip"
           role="button"
+          tabIndex={0}
           aria-label={leaveLabel}
           onPress={onLeave}
           height={42}
@@ -103,6 +104,7 @@ export function PodFeedbackCard({
           pressStyle={PRESS_STYLE.control}
           testID="pod-feedback-submit"
           role="button"
+          tabIndex={0}
           aria-label={submitLabel}
           aria-disabled={!ready}
           onPress={ready ? onSubmit : undefined}

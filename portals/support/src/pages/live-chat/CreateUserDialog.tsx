@@ -71,7 +71,7 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
             <TextField label={t('support.createUser.ext')} size="small" sx={{ width: 90 }} value={form.phone_extension} onChange={set('phone_extension')} />
             <TextField label={t('support.createUser.phoneOptional')} size="small" fullWidth value={form.phone_number} onChange={set('phone_number')} />
           </Stack>
-          <TextField label={t('support.createUser.tempPassword')} size="small" type="password" value={form.password} onChange={set('password')} required helperText={t('support.createUser.tempPasswordHint')} />
+          <TextField label={t('support.createUser.tempPassword')} size="small" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required helperText={t('support.createUser.tempPasswordHint')} />
         </Stack>
       </DialogContent>
       <DialogActions>

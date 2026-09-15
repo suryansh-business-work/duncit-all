@@ -36,7 +36,13 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
         </Box>
         <Tooltip title={t('shell.common.edit')}>
           <span>
-            <DuncitIconButton size="small" disabled={busy} onClick={() => onEdit(adjustment)}>
+            <DuncitIconButton
+              size="small"
+              aria-label={t('shell.common.edit')}
+              data-testid="health-adjustment-edit"
+              disabled={busy}
+              onClick={() => onEdit(adjustment)}
+            >
               <EditIcon fontSize="small" />
             </DuncitIconButton>
           </span>
@@ -46,6 +52,8 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
             <DuncitIconButton
               size="small"
               color="error"
+              aria-label={t('shell.common.delete')}
+              data-testid="health-adjustment-delete"
               disabled={busy}
               onClick={() => onDelete(adjustment)}
             >

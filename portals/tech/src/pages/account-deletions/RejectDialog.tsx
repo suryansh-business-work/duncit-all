@@ -47,6 +47,7 @@ export default function RejectDialog({ open, onConfirm, onClose }: Readonly<Prop
         <Stack spacing={2}>
           <DialogContentText>{t('tech.accountDeletions.rejectMessage')}</DialogContentText>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
             fullWidth
             multiline

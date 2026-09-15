@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router';
 import { CircularProgress, Box } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
-import { useProductVisibility } from '@duncit/app-settings';
+import { useProductVisibility, useTranslation } from '@duncit/app-settings';
 import { landingPath } from '../config/app-config';
 
 /**
@@ -12,6 +12,7 @@ import { landingPath } from '../config/app-config';
  * are the only thing that says which section is theirs.
  */
 export default function PartnerLanding() {
+  const { t } = useTranslation();
   const { user, loading } = useUserData();
   // The product flag decides as much as the roles do: an E-commerce partner
   // must not land on a brand dashboard the feature switch has taken away.
@@ -20,7 +21,7 @@ export default function PartnerLanding() {
   if ((loading && !user) || productsPending) {
     return (
       <Box sx={{ display: 'grid', placeItems: 'center', py: 8 }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Box>
     );
   }

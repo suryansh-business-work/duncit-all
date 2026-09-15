@@ -54,7 +54,7 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
           alignItems: "center",
           py: 3
         }}>
-        <CircularProgress size={22} />
+        <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -66,7 +66,7 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Typography variant="h6" sx={{
+          <Typography variant="h6" component="h2" sx={{
             fontWeight: 950
           }}>
             Analytics
@@ -85,7 +85,7 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
           {analytics.variants.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2" sx={{
+              <Typography variant="subtitle2" component="h3" sx={{
                 fontWeight: 800
               }}>
                 By variant
@@ -119,7 +119,7 @@ export default function ProductAnalyticsPanel({ productId }: Readonly<{ productI
           {analytics.locations.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2" sx={{
+              <Typography variant="subtitle2" component="h3" sx={{
                 fontWeight: 800
               }}>
                 Purchase locations

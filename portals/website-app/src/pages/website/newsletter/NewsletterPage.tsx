@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { PageHeader } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import {
   NEWSLETTER_SOURCES,
@@ -75,22 +76,18 @@ export default function NewsletterPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" sx={{
-        fontWeight: 700
-      }}>
-        Newsletter Submission
-      </Typography>
+      <PageHeader title="Newsletter Submission" titleWeight={700} />
       <Stack direction="row" spacing={2}>
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="overline">{t('websiteApp.newsletter.statTotal')}</Typography>
-            <Typography variant="h4">{all.length}</Typography>
+            <Typography variant="h4" component="p">{all.length}</Typography>
           </CardContent>
         </Card>
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="overline">{t('websiteApp.newsletter.statActive')}</Typography>
-            <Typography variant="h4">{active}</Typography>
+            <Typography variant="h4" component="p">{active}</Typography>
           </CardContent>
         </Card>
       </Stack>

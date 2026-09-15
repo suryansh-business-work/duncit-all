@@ -66,7 +66,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
             minWidth: 0,
             flexWrap: 'wrap'
           }}>
-          <Typography
+          <Typography component="p"
             variant="subtitle2"
             noWrap
             sx={{

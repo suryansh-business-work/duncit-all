@@ -29,7 +29,7 @@ brand tweak was two edits, and "two edits" reliably means one edit.
 
 Now `packages/auth-tokens/tokens.json` is the only place a hex value is written.
 `app/mweb/src/theme.ts` imports `{ brand, neutral, semantic, surface }` from here;
-`app/mobile-app/tamagui.config.ts` imports `{ dark, light, semantic, typography }`. There is
+`app/mobile-app/tamagui.config.ts` imports `{ dark, light, typography }`. There is
 no build step — it is JSON plus two three-line view modules.
 
 ## Use it
@@ -37,7 +37,7 @@ no build step — it is JSON plus two three-line view modules.
 `app/mobile-app/tamagui.config.ts`:
 
 ```ts
-import { dark, light, semantic, typography } from '@duncit/auth-tokens';
+import { dark, light, typography } from '@duncit/auth-tokens';
 
 const brandLight = {
   background: light.bg,
@@ -45,7 +45,7 @@ const brandLight = {
   borderColor: light.border,
   primary: light.primary,
   onPrimary: light.onPrimary,
-  danger: semantic.error,
+  danger: light.error,
 };
 ```
 
@@ -55,7 +55,7 @@ const brandLight = {
 import { brand, neutral, semantic, light, dark } from '@duncit/auth-tokens';
 
 export const tokens = { brand, neutral, semantic };
-const m = isDark ? dark : light; // m.primary = green CTA, m.accent = coral
+const m = isDark ? dark : light; // m.primary = CTA fill, m.accent = red text, m.brand = decoration
 ```
 
 A default export of the whole object also exists (`import tokens from '@duncit/auth-tokens'`),
@@ -72,8 +72,8 @@ brand      // { '50':'#fff1f1', '100':'#ffe1e1', '200':'#ffc7c7', '300':'#ff9e9e
            //   '500':'#ff5757', '600':'#f03e3e', '700':'#d92d2d', '800':'#b42323', '900':'#8f1d1d' }
 neutral    // { '50':'#fafafa', '100':'#f5f5f5', '200':'#e5e7eb', '300':'#d1d5db', '400':'#9ca3af',
            //   '500':'#6b7280', '600':'#4b5563', '700':'#374151', '800':'#1f2937', '900':'#111827' }
-semantic   // { success:'#22c55e', warning:'#f59e0b', error:'#ef4444',
-           //   info:'#3b82f6', secondary:'#8b5cf6', accent:'#06b6d4' }
+semantic   // { success:'#16833f', warning:'#b85609', error:'#dc2626',
+           //   info:'#2a6aee', secondary:'#8b5cf6', accent:'#06b6d4' }   ← mode-less, see below
 surface    // { bg:'#f2f3ef', paper:'#ffffff', soft:'#ebede8', border:'#e3e5df' }
 radii      // { sm: 8, md: 10, lg: 16, xl: 24, pill: 999 }
 ```
@@ -88,15 +88,50 @@ light                       dark
   surface:       '#ffffff',   surface:       '#181b1f',
   soft:          '#ebede8',   soft:          '#22262b',
   ink:           '#16181d',   ink:           '#f2f4f1',
-  muted:         '#6b7079',   muted:         '#9aa0a8',
+  muted:         '#62676f',   muted:         '#9aa0a8',
   border:        '#e3e5df',   border:        'rgba(255,255,255,0.08)',
-  primary:       '#f82c2e',   primary:       '#f82c2e',
-  primaryHover:  '#e0282a',   primaryHover:  '#ff4547',
-  primaryActive: '#c62226',   primaryActive: '#e0282a',
+  inputBorder:   '#7f8279',   inputBorder:   '#767b84',
+  primary:       '#d92d2d',   primary:       '#d92d2d',
+  primaryHover:  '#c62226',   primaryHover:  '#c62226',
+  primaryActive: '#b42323',   primaryActive: '#b42323',
   onPrimary:     '#ffffff',   onPrimary:     '#ffffff',
-  accent:        '#f82c2e',   accent:        '#ff4d4f',
+  accent:        '#c62226',   accent:        '#ff4d4f',
+  onAccent:      '#ffffff',   onAccent:      '#0e1012',
+  brand:         '#f82c2e',   brand:         '#f82c2e',
+  success:       '#137333',   success:       '#4ade80',
+  warning:       '#a14e06',   warning:       '#fbbf24',
+  error:         '#c62828',   error:         '#f87171',
+  info:          '#1d4ed8',   info:          '#60a5fa',
+  onSemantic:    '#ffffff',   onSemantic:    '#0e1012',
 }                           }
 ```
+
+## Contrast roles (WCAG 2.2 AA)
+
+Every value above is chosen for a **role**, and `node scripts/verify-contrast.mjs` fails CI
+when a pair drops under its threshold. Pick the token by what the colour is doing, not by how
+red it should look:
+
+| Role | Token | Guarantee |
+| --- | --- | --- |
+| A filled call to action | `primary` under `onPrimary` | white text 4.81:1; `primaryHover` / `primaryActive` are darker, never lighter |
+| Red **text** — links, "See all", active tab, focus ring | `accent` | at least 4.5:1 on `bg`, `surface` and `soft` of its mode |
+| A filled `accent` chip | `accent` under `onAccent` | 4.5:1 — dark ink in dark mode, where `accent` is light |
+| Logo, illustration, decorative icon, large display heading | `brand` | none — it is the exact brand red `#f82c2e` and fails as body text (3.5:1 on `bg`) |
+| Secondary text | `muted` | 4.5:1 on `bg`, `surface` and `soft` |
+| A form field's outline | `inputBorder` | 3:1 against every ground (WCAG 1.4.11) |
+| A divider or card hairline | `border` | none — decorative |
+| Status text or a status fill | `success` `warning` `error` `info` under `onSemantic` | 4.5:1 as text on every ground and as a fill |
+
+`#d92d2d` clears 4.5:1 on white but only 4.32:1 on the off-white `bg`, which is why red text
+uses `accent` (`#c62226`) and not `primary`.
+
+The mode-less `semantic` group is for a component that does not know its mode (an icon colour
+passed to `@expo/vector-icons`, a chart stroke). No single colour can be 4.5:1 text on both a
+light and a dark page, so each value is chosen to be 4.5:1 text on a white card, 4.5:1 under
+white text as a fill, and 3:1 as an icon on every light and dark ground. Status **text** on the
+page ground, or in dark mode, reads `light.*` / `dark.*` — which is what MUI's `palette.success`
+and Tamagui's `$success` already resolve to.
 
 `typography` and `auth`:
 
@@ -126,27 +161,28 @@ auth
 
 ## Worked examples
 
-`primary` is the **Duncit red** `#f82c2e` — the main brand colour and the fill of every call
-to action, identical in both modes. Hover and press step darker in light mode
-(`#e0282a` / `#c62226`) and lift in dark mode (`#ff4547` / `#e0282a`), so the state change
-stays visible against either ground. `accent` is the same red for the logo, the active tab,
-badges and "See all"; dark mode lifts it to `#ff4d4f` because red text on the near-black
-cards needs that to clear 4.5:1. The page ground is a warm off-white (`#f2f3ef`) with
-borderless white cards; dark mode is a near-black ground with hairline-bordered cards.
+`primary` is the **CTA red** `#d92d2d` — the fill of every call to action, identical in both
+modes, because white on it clears 4.81:1 where the brand red `#f82c2e` only reached 3.90:1.
+Hover and press step darker in both modes (`#c62226` / `#b42323`) so white text stays above
+4.5:1 in every state. `accent` is the red for text — links, the active tab, "See all" and the
+focus ring: `#c62226` in light mode and `#ff4d4f` in dark mode, where red text on the
+near-black cards needs the lift to clear 4.5:1. `brand` keeps the exact `#f82c2e` for the logo
+and illustrations only. The page ground is a warm off-white (`#f2f3ef`) with borderless white
+cards; dark mode is a near-black ground with hairline-bordered cards.
 
 ### mWeb (MUI)
 
 ```ts
-import { dark, light, semantic } from '@duncit/auth-tokens';
+import { dark, light } from '@duncit/auth-tokens';
 
 const m = isDark ? dark : light;
 const theme = createTheme({
   palette: {
-    primary:    { main: m.primary, dark: m.primaryActive },  // '#f82c2e' / '#c62226'
-    secondary:  { main: m.accent },                          // '#f82c2e' brand red
-    error:      { main: semantic.error },                    // '#ef4444'
+    primary:    { main: m.primary, dark: m.primaryActive },  // '#d92d2d' / '#b42323'
+    secondary:  { main: m.accent, contrastText: m.onAccent }, // '#c62226' red text
+    error:      { main: m.error, contrastText: m.onSemantic }, // '#c62828'
     background: { default: m.bg, paper: m.surface },         // '#f2f3ef' / '#ffffff'
-    text:       { primary: m.ink, secondary: m.muted },      // '#16181d' / '#6b7079'
+    text:       { primary: m.ink, secondary: m.muted },      // '#16181d' / '#62676f'
   },
 });
 ```
@@ -154,26 +190,30 @@ const theme = createTheme({
 ### Native (Tamagui)
 
 ```ts
-import { dark, light, semantic, typography } from '@duncit/auth-tokens';
+import { dark, light, typography } from '@duncit/auth-tokens';
 
 const brandLight = {
   background:  light.bg,          // '#f2f3ef'
   color:       light.ink,         // '#16181d'
   borderColor: light.border,      // '#e3e5df'
-  primary:     light.primary,     // '#f82c2e'
-  accent:      light.accent,      // '#f82c2e'
+  inputBorder: light.inputBorder, // '#7f8279'
+  primary:     light.primary,     // '#d92d2d'
+  accent:      light.accent,      // '#c62226'
+  brand:       light.brand,       // '#f82c2e'  ← decoration only
   onPrimary:   light.onPrimary,   // '#ffffff'
-  danger:      semantic.error,    // '#ef4444'
+  danger:      light.error,       // '#c62828'
 };
 
 const brandDark = {
   background:  dark.bg,           // '#0e1012'
   color:       dark.ink,          // '#f2f4f1'
   borderColor: dark.border,       // 'rgba(255,255,255,0.08)'
-  primary:     dark.primary,      // '#f82c2e'  ← identical to light
+  inputBorder: dark.inputBorder,  // '#767b84'
+  primary:     dark.primary,      // '#d92d2d'  ← identical to light
   accent:      dark.accent,       // '#ff4d4f'
+  brand:       dark.brand,        // '#f82c2e'
   onPrimary:   dark.onPrimary,    // '#ffffff'
-  danger:      semantic.error,
+  danger:      dark.error,        // '#f87171'
 };
 ```
 
@@ -201,8 +241,8 @@ functions, no options and no defaults to pass.
 | `neutral` | `ColorScale` | Greys, keys `50`–`900`. |
 | `semantic` | `SemanticColors` | `success`, `warning`, `error`, `info`, `secondary`, `accent`. |
 | `surface` | `SurfaceColors` | `bg`, `paper`, `soft`, `border` (light-mode surfaces). |
-| `light` | `ModeColors` | Light palette — 11 keys. |
-| `dark` | `ModeColors` | Dark palette — the same 11 keys. |
+| `light` | `ModeColors` | Light palette — 19 keys. |
+| `dark` | `ModeColors` | Dark palette — the same 19 keys. |
 | `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `fog`, `legal`. |
 | `radii` | `Radii` | `sm`, `md`, `lg`, `xl`, `pill` (numbers, px). |
 | `typography` | `Typography` | `fontFamily` plus six named `weight`s. |
@@ -211,7 +251,7 @@ functions, no options and no defaults to pass.
 | Type | Shape |
 | --- | --- |
 | `ColorScale` | `Record<'50'\|'100'\|…\|'900', string>` |
-| `ModeColors` | `bg, surface, soft, ink, muted, border, primary, primaryHover, primaryActive, onPrimary, accent` — all `string` |
+| `ModeColors` | `bg, surface, soft, ink, muted, border, inputBorder, primary, primaryHover, primaryActive, onPrimary, accent, onAccent, brand, success, warning, error, info, onSemantic` — all `string` |
 | `GradientPair` | `{ light: [string, string, string]; dark: [string, string, string] }` |
 | `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `fog: AuthFog`, `legal: { termsUrl, privacyUrl }` |
 | `FogLayer` | `veil`, `edge`, `clear` — all `string` |

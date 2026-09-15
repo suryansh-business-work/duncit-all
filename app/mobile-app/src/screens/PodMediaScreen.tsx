@@ -123,7 +123,7 @@ export function PodMediaScreen() {
           busy={busy}
         />
         {error ? (
-          <Text testID="pod-media-write-error" fontSize={12.5} color="$danger">
+          <Text role="alert" testID="pod-media-write-error" fontSize={12.5} color="$danger">
             {error}
           </Text>
         ) : null}

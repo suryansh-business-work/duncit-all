@@ -84,7 +84,7 @@ export default function PodHistoryDetailsPage() {
       sx={{
         alignItems: "center",
         p: 6
-      }}><CircularProgress /></Stack>
+      }}><CircularProgress aria-label={t('mweb.a11y.loading')} /></Stack>
   );
   if (error) return (
     <Alert severity="error" data-testid="pod-history-details-error">

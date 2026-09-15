@@ -63,6 +63,8 @@ export function MeetingPhoneFields({
             testID="meeting-go-to-profile"
             role="button"
             aria-label={t('mweb.surveyOnboarding.goToProfile')}
+            tabIndex={0}
+            hitSlop={4}
             onPress={onGoToProfile}
             alignSelf="flex-start"
             height={36}

@@ -40,7 +40,13 @@ export function HostCategoriesCard() {
 
   return (
     <SurfaceCard testID="host-categories-card" gap={12}>
-      <Text fontSize={16} fontWeight="600" color="$color">
+      <Text
+        testID="host-categories-card-title"
+        role="heading"
+        fontSize={16}
+        fontWeight="600"
+        color="$color"
+      >
         Your hosting categories
       </Text>
       <XStack flexWrap="wrap" gap={8}>

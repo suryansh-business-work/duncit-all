@@ -1,5 +1,6 @@
 import { Box, Skeleton, Stack } from '@mui/material';
 import { SURFACE_SX } from '../../../theme';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /** Rows a placeholder Manage-Account group stands in for. */
 const LIST_ROWS = ['a', 'b', 'c'];
@@ -52,8 +53,9 @@ function ListSkeleton() {
  * anonymous "User" avatar sitting at 0% profile completion.
  */
 export default function MenuSkeleton() {
+  const { t } = useTranslation();
   return (
-    <Box data-testid="menu-skeleton">
+    <Box data-testid="menu-skeleton" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')}>
       <Box sx={{ px: 2, pb: 1.5 }}>
         <Stack direction="row" spacing={1.75} sx={{ ...SURFACE_SX, p: 2, alignItems: 'center' }}>
           <Skeleton variant="circular" width={52} height={52} />

@@ -19,44 +19,12 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { AddressRowAction } from './AddressRowAction';
 
 type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
 const oneLine = (a: UserAddress) =>
   [a.line1, a.line2, a.landmark, a.city, a.state, a.pincode].filter(Boolean).join(', ');
-
-/** A 36px round soft icon button (edit / delete on an address row). */
-function RowAction({
-  testID,
-  label,
-  icon,
-  onPress,
-}: Readonly<{
-  testID: string;
-  label: string;
-  icon: 'edit' | 'delete-outline';
-  onPress: () => void;
-}>) {
-  const { muted } = useThemeColors();
-  return (
-    <XStack
-      testID={testID}
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      width={36}
-      height={36}
-      alignItems="center"
-      justifyContent="center"
-      borderRadius={999}
-      backgroundColor="$soft"
-      pressStyle={PRESS_STYLE.control}
-    >
-      <MaterialIcons name={icon} size={18} color={muted} />
-    </XStack>
-  );
-}
 
 /** Profile Settings › Address Book — saved delivery addresses, selectable at
  * checkout. RN twin of mWeb's AddressBookSection. */
@@ -113,7 +81,13 @@ export function AddressBookSection() {
   return (
     <SurfaceCard testID="address-book-section" marginHorizontal={16} gap={4}>
       <XStack alignItems="center" justifyContent="space-between" gap={8} marginBottom={4}>
-        <Text fontSize={17} fontWeight="600" color="$color">
+        <Text
+          testID="address-book-title"
+          role="heading"
+          fontSize={17}
+          fontWeight="600"
+          color="$color"
+        >
           Address Book
         </Text>
         <DuncitButton
@@ -128,7 +102,7 @@ export function AddressBookSection() {
         />
       </XStack>
       {error ? (
-        <Text testID="address-error" fontSize={12} color="$danger">
+        <Text testID="address-error" role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -159,7 +133,7 @@ export function AddressBookSection() {
                   borderRadius={999}
                   backgroundColor="$primarySoft"
                 >
-                  <Text fontSize={11} fontWeight="600" color="$primary">
+                  <Text fontSize={11} fontWeight="600" color="$accent">
                     {t('mweb.account.default')}
                   </Text>
                 </XStack>
@@ -169,7 +143,7 @@ export function AddressBookSection() {
               {oneLine(address)}
             </Text>
           </YStack>
-          <RowAction
+          <AddressRowAction
             testID={`address-edit-${address.id}`}
             label={`Edit ${address.label}`}
             icon="edit"
@@ -178,7 +152,7 @@ export function AddressBookSection() {
               setFormOpen(true);
             }}
           />
-          <RowAction
+          <AddressRowAction
             testID={`address-delete-${address.id}`}
             label={`Delete ${address.label}`}
             icon="delete-outline"

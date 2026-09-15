@@ -59,7 +59,7 @@ export function AvailabilityCalendarCard({
         onRecurring={onRecurring}
       />
       {error ? (
-        <Text testID="availability-error" fontSize={13} color="$danger">
+        <Text role="alert" testID="availability-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}

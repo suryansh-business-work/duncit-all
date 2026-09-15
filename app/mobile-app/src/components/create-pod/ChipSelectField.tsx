@@ -50,16 +50,17 @@ export function ChipSelectField({
           {emptyHint ?? t('mweb.createPod.noOptions')}
         </Text>
       ) : (
-        <XStack gap={8} flexWrap="wrap">
+        <XStack gap={8} flexWrap="wrap" role="radiogroup" aria-label={label}>
           {options.map((option) => {
             const selected = value === option.value;
             return (
               <XStack
                 key={option.value}
                 testID={`${testID}-${option.value}`}
-                role="button"
+                tabIndex={0}
+                role="radio"
                 aria-label={option.label}
-                aria-pressed={selected}
+                aria-checked={selected}
                 onPress={() => onChange(option.value)}
                 minHeight={36}
                 alignItems="center"
@@ -77,7 +78,7 @@ export function ChipSelectField({
         </XStack>
       )}
       {error ? (
-        <Text testID={`${testID}-error`} fontSize={12} color="$danger">
+        <Text role="alert" testID={`${testID}-error`} fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

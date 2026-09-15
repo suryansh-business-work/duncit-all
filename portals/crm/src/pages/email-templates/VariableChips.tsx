@@ -45,7 +45,7 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
 
   return (
     <Stack spacing={0.5}>
-      {title && <Typography variant="subtitle2">{title}</Typography>}
+      {title && <Typography component="h3" variant="subtitle2">{title}</Typography>}
       <Stack direction="row" spacing={0.5} useFlexGap sx={{
         flexWrap: "wrap"
       }}>
@@ -71,6 +71,8 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
                   color={color}
                   variant={selected ? 'filled' : 'outlined'}
                   onClick={() => onToggle(it.slug)}
+                  aria-pressed={selected}
+                  data-testid="crm-template-variable-chip"
                   onDelete={() => copy(it.slug)}
                   deleteIcon={
                     <Tooltip title={copied === it.slug ? 'Copied!' : `Copy {{ ${it.slug} }}`}>

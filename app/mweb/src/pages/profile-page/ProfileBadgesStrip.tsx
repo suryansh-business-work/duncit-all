@@ -59,6 +59,7 @@ export default function ProfileBadgesStrip() {
               >
                 <Avatar
                   src={row.badge.image_url || undefined}
+                  alt=""
                   sx={{ width: 56, height: 56, bgcolor: 'action.hover', color: 'secondary.main' }}
                 >
                   {!row.badge.image_url && <EmojiEventsIcon />}

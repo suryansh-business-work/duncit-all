@@ -38,6 +38,31 @@ describe('@duncit/auth-tokens ESM view (tokens.mjs)', () => {
     expect(auth.avatars).toHaveLength(3);
     expect(typography.weight.bold).toBe(700);
   });
+
+  it('splits the CTA fill, the red text colour and the decorative brand red (WCAG AA)', () => {
+    expect(light.primary).toBe('#d92d2d');
+    expect(light.primaryHover).toBe('#c62226');
+    expect(light.primaryActive).toBe('#b42323');
+    expect(light.accent).toBe('#c62226');
+    expect(dark.accent).toBe('#ff4d4f');
+    expect(dark.onAccent).toBe('#0e1012');
+    expect(light.brand).toBe('#f82c2e');
+    expect(dark.brand).toBe('#f82c2e');
+  });
+
+  it('keeps mode-aware status colours beside the mode-less semantic group', () => {
+    expect(semantic.error).toBe('#dc2626');
+    expect(light.error).toBe('#c62828');
+    expect(dark.error).toBe('#f87171');
+    expect(light.onSemantic).toBe('#ffffff');
+    expect(dark.onSemantic).toBe('#0e1012');
+  });
+
+  it('gives both modes the same keys, so a theme can swap the object', () => {
+    expect(Object.keys(dark).sort((a, b) => a.localeCompare(b))).toEqual(
+      Object.keys(light).sort((a, b) => a.localeCompare(b))
+    );
+  });
 });
 
 describe('@duncit/auth-tokens CJS view (tokens.cjs)', () => {

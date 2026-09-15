@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box } from '@mui/material';
+import { Box, ButtonBase, useMediaQuery } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
 import { isVideoMedia } from '@duncit/utils';
 import MomentLightbox from '../../components/moments/MomentLightbox';
@@ -13,6 +13,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
 import ClubHeroActions from './ClubHeroActions';
+import SlideshowToggle from '../pod-details-page/SlideshowToggle';
 
 interface Props {
   media: { url: string; type: string }[];
@@ -82,6 +83,9 @@ export default function ClubHero({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const [pausedByUser, setPausedByUser] = useState<boolean | null>(null);
+  const playing = media.length > 1 && !(pausedByUser ?? reduceMotion);
   const overlay = (
     <ClubHeroActions
       saved={saved}
@@ -107,7 +111,7 @@ export default function ClubHero({
           justifyContent: 'center',
         }}
       >
-        <GroupsIcon sx={{ fontSize: 72, color: 'secondary.main' }} />
+        <GroupsIcon sx={{ fontSize: 72, color: 'brand.main' }} />
         {overlay}
       </Box>
     );
@@ -129,7 +133,7 @@ export default function ClubHero({
         prevArrow={<PrevArrow />}
         nextArrow={<NextArrow />}
         infinite={media.length > 1}
-        autoplay={media.length > 1}
+        autoplay={playing}
         autoplaySpeed={5000}
         slidesToShow={1}
         slidesToScroll={1}
@@ -143,25 +147,24 @@ export default function ClubHero({
               testId={`detail-hero-video-${i}`}
             />
           ) : (
-            <Box
+            <ButtonBase
               key={m.url}
               data-testid={`detail-hero-image-${i}`}
-              component="img"
-              src={m.url}
-              alt={title}
-              role="button"
               aria-label={t('mweb.clubDetails.openImage')}
               onClick={() => setLightbox(i)}
-              sx={{
-                width: '100%',
-                height: { xs: 280, md: 460 },
-                objectFit: 'cover',
-                cursor: 'zoom-in',
-              }}
-            />
+              sx={{ display: 'block', width: '100%', cursor: 'zoom-in' }}
+            >
+              <Box
+                component="img"
+                src={m.url}
+                alt={title}
+                sx={{ display: 'block', width: '100%', height: { xs: 280, md: 460 }, objectFit: 'cover' }}
+              />
+            </ButtonBase>
           )
         )}
       </Slider>
+      {media.length > 1 && <SlideshowToggle playing={playing} onToggle={() => setPausedByUser(playing)} />}
       {overlay}
       <MomentLightbox
         moments={media}

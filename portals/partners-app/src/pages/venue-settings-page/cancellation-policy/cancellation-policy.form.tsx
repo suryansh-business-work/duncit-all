@@ -79,7 +79,7 @@ export default function CancellationPolicyForm({
         <Alert severity="info">{t('venueSettings.policyDisabled')}</Alert>
       ) : null}
 
-      <Typography variant="subtitle2">{t('venueSettings.bandsTitle')}</Typography>
+      <Typography variant="subtitle2" component="h3">{t('venueSettings.bandsTitle')}</Typography>
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>

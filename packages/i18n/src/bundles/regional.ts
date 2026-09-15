@@ -17,6 +17,9 @@ import type { NestedCatalogue } from '../catalogue';
 export const REGIONAL_BUNDLE: NestedCatalogue = {
   partners: {
     regional: {
+      a11y: {
+        removeMember: 'Remove {name} from region',
+      },
       structureTitle: 'Region Structure',
       structureSubtitle:
         'Your whole region on one canvas — every city, locality, Club Admin and Host under you.',

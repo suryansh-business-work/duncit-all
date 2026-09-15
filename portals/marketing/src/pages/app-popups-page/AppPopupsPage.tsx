@@ -130,7 +130,7 @@ export default function AppPopupsPage() {
           alignItems: "center"
         }}>
           <PhoneIphoneIcon color="primary" />
-          <Typography variant="h5">{t('shell.nav.appPopups')}</Typography>
+          <Typography component="h1" variant="h5">{t('shell.nav.appPopups')}</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"

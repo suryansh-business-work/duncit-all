@@ -5,11 +5,14 @@ import { Stack } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, useConfirm } from '@duncit/dialogs';
+import { downloadTextFile } from '@duncit/utils';
 import RunHeader from './RunHeader';
 import RunKpis from './RunKpis';
 import RunCharts from './RunCharts';
 import EventLog from './EventLog';
 import ProfileCard from './ProfileCard';
+import VerdictCard from './verdict';
+import { buildRunReport } from './report/runReport';
 import BotsTable from './tables/BotsTable';
 import ContainersTable from './tables/ContainersTable';
 import EndpointsTable from './tables/EndpointsTable';
@@ -84,12 +87,18 @@ export default function StressRunDetailPage() {
     }
   }, [confirm, run, runQuery, stopRun, t]);
 
+  const onDownload = useCallback(() => {
+    if (!run) return;
+    downloadTextFile(buildRunReport(t, run, samples), `${run.run_no}-stress-report.html`);
+  }, [run, samples, t]);
+
   return (
     <QueryGuard loading={runQuery.loading && !run} error={runQuery.error} errorText={runQuery.error?.message}>
       {run && (
         <Stack spacing={2.5}>
-          <RunHeader run={run} onStop={onStop} />
+          <RunHeader run={run} onStop={onStop} onDownload={onDownload} />
           <RunKpis run={run} latest={latest} />
+          <VerdictCard run={run} />
           <RunCharts samples={samples} startedAt={run.started_at} />
           {live && <BotsTable shards={shards} />}
           {latest && latest.containers.length > 0 && <ContainersTable containers={latest.containers} />}

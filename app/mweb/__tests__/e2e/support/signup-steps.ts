@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-import { fill, openSignedOut } from './account-steps';
+import { fill, openSignedOut, sendCode } from './account-steps';
 import { typeDob, type Dob } from './dob';
 
 /**
@@ -32,10 +32,18 @@ export function fillWho(name: string, dob: Dob, referralCode = ''): void {
   if (referralCode) fill('field-referralCode', referralCode);
 }
 
+/**
+ * "This is also my mobile number" — ticked unless the person says otherwise, and
+ * the only thing that files the number as the profile phone (which a callback
+ * request and an SOS call back on). Every signup walk leaves it ticked.
+ */
+export const expectSameAsMobile = () => cy.byTestId('signup-same-as-mobile-input').should('be.checked');
+
 /** Step 2. Both boxes ask the server as they are typed; Continue waits for the answers. */
 export function fillContact(phone: string, email: string): void {
   onSignupStep(2);
   fill('field-phoneNumber', phone);
+  expectSameAsMobile();
   fill('field-email', email);
 }
 
@@ -83,3 +91,23 @@ export function acceptAllPolicies(): void {
 
 /** Google renders its own button once the client id is known. */
 export const googleButton = () => cy.byTestId('google-auth-button', { timeout: 30_000 });
+
+const interestChip = (index: number) => cy.byTestIdPrefix('chip-').eq(index);
+const findMyCrew = () => cy.byTestId('survey-submit');
+
+/** The interests survey every new account meets: three picks, then Home. */
+export function finishInterestSurvey(): void {
+  cy.location('pathname').should('eq', '/signup-survey');
+  cy.byTestId('survey-screen')
+    .should('contain.text', "What's your vibe?")
+    .and('contain.text', 'Pick at least 3 interests across categories to find your tribe.');
+  findMyCrew().should('be.disabled');
+  interestChip(0).click();
+  interestChip(1).click();
+  findMyCrew().should('be.disabled');
+  interestChip(2).click();
+  sendCode('SaveInterests', () => {
+    findMyCrew().should('be.enabled').click();
+  });
+  cy.location('pathname').should('eq', '/');
+}

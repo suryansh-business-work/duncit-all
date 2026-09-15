@@ -40,6 +40,7 @@ exports:
   - 'TopProgressBar'
   - 'FormActionsRow'
   - 'useDebouncedValue'
+  - 'useRouteFocus'
   - 'mergeSx'
   - 'RICH_TEXT_BODY_SX'
   - 'ModerationBlockedDialog'
@@ -315,7 +316,7 @@ been deleted or moved server-side is still reachable instead of rendering a blan
 | `title` | `ReactNode` | yes | — | Page title. |
 | `subtitle` | `ReactNode` | no | — | Secondary line under the title. |
 | `actions` | `ReactNode` | no | — | Right-hand slot; switches the block to a space-between row. |
-| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography. |
+| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography — how it LOOKS. The element is always `<h1>`, the page's one top heading, whatever size it is drawn at. |
 | `titleWeight` | `number` | no | `800` | Title font weight. |
 | `sx` | `SxProps<Theme>` | no | — | Wrapper style. |
 
@@ -331,7 +332,7 @@ been deleted or moved server-side is still reachable instead of rendering a blan
 | `backTo` | `string` | no | — | Router link target — **requires a router context**. |
 | `backAriaLabel` | `string` | no | `'Back'` | `aria-label` on the icon button. |
 | `backSize` | `'small' \| 'medium'` | no | `'small'` | Icon button size. |
-| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography. |
+| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography; the element is always `<h1>`, as on `PageHeader`. |
 | `titleNoWrap` | `boolean` | no | `false` | Ellipsize a long title. |
 | `sx` / `backSx` / `titleSx` | `SxProps<Theme>` | no | — | Style overrides. |
 | `children` (`BackButton`) | `ReactNode` | yes | — | Button label, e.g. "Back to Venue Leads". |
@@ -407,6 +408,7 @@ disagree about whether a submit in flight shows anything at all.
 | --- | --- | --- |
 | `LanguageSelect` | `({ value, options, onChange, label?, helperText?, disabled?, size?, fullWidth?, showSingle? })` | `options: readonly LanguageOption[]` where `LanguageOption = { code, label, english_label? }`. Renders `null` under two options — under ONE with `showSingle`, which only the shell's clock tray passes. `label` defaults to `'Language'`, `size` to `'small'`, `fullWidth` to `true`. |
 | `ModerationBlockedDialog` | `({ violations, onJump, onClose, title?, description? })` | `violations: BlockedViolation[]` = `{ id, message, type, stepIndex, stepTitle }`. Open state is derived — it renders when `violations.length > 0`. `onJump(stepIndex)` moves the wizard. |
+| `useRouteFocus` | `(target: RefObject<HTMLElement \| null>) => void` | Called once by the portal shell and the mWeb app layout: on a pathname change it focuses `<main tabIndex={-1}>` unless focus is already inside it (WCAG 2.4.3). |
 | `useDebouncedValue` | `<T>(value: T, delayMs = 300) => T` | Standalone filter inputs only — `DuncitTable` already debounces its own search. |
 | `usageColor` | `(percent: number) => 'success' \| 'warning' \| 'error'` | `error` ≥ 90, `warning` ≥ 75, else `success`. |
 | `mergeSx` | `(defaults: SxProps<Theme>, override?: SxProps<Theme>) => SxProps<Theme>` | Returns `defaults` untouched when `override` is falsy. |

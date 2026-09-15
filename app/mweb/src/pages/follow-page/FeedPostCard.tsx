@@ -58,8 +58,9 @@ export default function FeedPostCard({
         }}
       >
         <Avatar
+          alt=""
           src={header.avatarUrl ?? undefined}
-          sx={{ width: 40, height: 40, bgcolor: 'primary.main', fontWeight: 600 }}
+          sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
         >
           {avatarFallback}
         </Avatar>
@@ -74,6 +75,7 @@ export default function FeedPostCard({
       </Stack>
 
       {post.media_type === 'VIDEO' ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
         <Box
           component="video"
           src={post.image_url}
@@ -95,7 +97,7 @@ export default function FeedPostCard({
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', px: 1, pt: 0.5 }}>
         <DuncitIconButton
           data-testid={`feed-like-${post.id}`}
-          aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
+          aria-label={post.liked_by_me ? t('mweb.a11y.unlike') : t('mweb.explore.like')}
           onClick={() => onToggleLike(post)}
           color={post.liked_by_me ? 'secondary' : 'default'}
         >

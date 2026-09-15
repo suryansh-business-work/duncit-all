@@ -74,6 +74,8 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
               </YStack>
               <XStack
                 testID={`cover-tray-remove-${index}`}
+                tabIndex={0}
+                hitSlop={12}
                 role="button"
                 aria-label={t('mweb.createPod.remove')}
                 onPress={() => onRemove(url)}

@@ -107,12 +107,12 @@ export default function OtpLoginPanel({
         size="small"
         sx={pillSx}
         disabled={busy || sent}
-        slotProps={{ htmlInput: { 'data-testid': 'otp-login-email' } }}
+        slotProps={{ htmlInput: { 'data-testid': 'otp-login-email', 'aria-label': t('shell.login.emailAddress'), autoComplete: 'email' } }}
       />
 
       {sent ? (
         <>
-          <Typography data-testid="otp-login-code-sent" variant="caption" sx={{ color: "text.secondary" }}>
+          <Typography data-testid="otp-login-code-sent" role="status" variant="caption" sx={{ color: "text.secondary" }}>
             If that address can sign in here, a {OTP_LENGTH}-digit code is on its way. It expires in
             a few minutes and only works for this portal.
           </Typography>

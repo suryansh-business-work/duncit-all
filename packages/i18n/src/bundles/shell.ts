@@ -9,6 +9,15 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
   },
   shell: {
+    a11y: {
+      agentMessage: 'Message the Agent',
+      editNamed: 'Edit {name}',
+      deleteNamed: 'Delete {name}',
+      removeNamed: 'Remove {name}',
+      fieldOf: '{field}: {name}',
+      loading: 'Loading…',
+      voiceNoteSeek: 'Voice note position',
+    },
     /**
      * The action words every console repeats — Cancel, Save, Delete and the
      * "…ing" line each one shows while it waits.
@@ -406,14 +415,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       engagement: 'Engagement',
       environmentVariables: 'Environment Variables',
       errorLogs: 'Error Logs',
+      errors: 'Errors',
       eventSuitabilityManagement: 'Event Suitability management',
       eventTickets: 'Event Tickets',
       faqs: 'FAQs',
       faqSubmissions: 'FAQ Submissions',
       featureFlags: 'Feature Flags',
+      fields: 'Fields',
       fragments: 'Fragments',
       fulfilment: 'Fulfilment',
       giftCards: 'Gift Cards',
+      graphqlMonitor: 'GraphQL Monitor',
       grievance: 'Grievance',
       grievanceInfo: 'Grievance Info',
       grievanceTickets: 'Grievance Tickets',
@@ -457,7 +469,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       onboardedVenues: 'Onboarded Venues',
       onboarding: 'Onboarding',
       openai: 'OpenAI',
+      operations: 'Operations',
       orders: 'Orders',
+      overview: 'Overview',
       packageDocumentation: 'Package Documentation',
       packageUpdates: 'Package Updates',
       partnerFaqs: 'Partner FAQs',

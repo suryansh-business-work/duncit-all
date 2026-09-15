@@ -115,6 +115,7 @@ export default function OccasionalIconRowFields({
             alignItems: "center"
           }}>
             <Switch
+              slotProps={{ input: { 'aria-label': t('admin.profile.active'), 'data-testid': 'occasional-icon-active' } as Record<string, string> }}
               checked={row.is_active}
               onChange={(_, v) => onChange(index, { is_active: v })}
             />

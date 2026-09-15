@@ -59,7 +59,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
                 alignItems: "center",
                 flexWrap: "wrap"
               }}>
-              <Typography sx={{
+              <Typography component="h3" sx={{
                 fontWeight: 900
               }}>{warehouse.nickname}</Typography>
               {warehouse.is_default && <Chip size="small" color="primary" label={t('partners.common.default')} />}

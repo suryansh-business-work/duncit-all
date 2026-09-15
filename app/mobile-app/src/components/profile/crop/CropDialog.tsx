@@ -72,10 +72,15 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
   return (
     <Modal visible transparent animationType="fade" onRequestClose={cancel}>
       <ModalThemeScope>
-        <YStack flex={1} backgroundColor="rgba(0,0,0,0.92)" testID="crop-dialog">
+        <YStack
+          flex={1}
+          backgroundColor="rgba(0,0,0,0.92)"
+          testID="crop-dialog"
+          onAccessibilityEscape={cancel}
+        >
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack alignItems="center" justifyContent="space-between" padding={16}>
-              <Text color="#ffffff" fontSize={17} fontWeight="700">
+              <Text role="heading" color="#ffffff" fontSize={17} fontWeight="700">
                 Adjust photo
               </Text>
               <XStack
@@ -83,6 +88,8 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 testID="crop-cancel"
                 role="button"
                 aria-label={t('mweb.common.cancel')}
+                tabIndex={0}
+                hitSlop={4}
                 onPress={cancel}
                 width={36}
                 height={36}
@@ -124,6 +131,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 testID="crop-cancel-btn"
                 role="button"
                 aria-label={t('mweb.common.discard')}
+                tabIndex={0}
                 onPress={cancel}
                 flex={1}
                 height={48}
@@ -143,6 +151,8 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 role="button"
                 aria-label={t('mweb.profile.savePhoto')}
                 aria-disabled={busy}
+                aria-busy={busy}
+                tabIndex={0}
                 onPress={busy ? undefined : confirm}
                 flex={1}
                 height={48}

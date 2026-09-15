@@ -83,6 +83,7 @@ export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }
           }}>
             <Typography
               variant="h3"
+              component="p"
               sx={{
                 fontWeight: 900,
                 lineHeight: 1

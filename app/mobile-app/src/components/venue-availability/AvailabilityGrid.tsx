@@ -45,7 +45,7 @@ export function AvailabilityGrid({
   const leaveNote = t('availability.onLeaveNotBookable');
 
   return (
-    <YStack gap={6} testID="availability-grid">
+    <YStack gap={6} testID="availability-grid" role="radiogroup">
       {dayView ? null : <WeekdayHeader initials={weekdayInitials(fmt)} />}
 
       {/* A row is keyed on its first day: a period's rows never reorder, and

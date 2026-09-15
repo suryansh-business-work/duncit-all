@@ -20,7 +20,7 @@ export default function HostCard({ host, onReview }: Readonly<Props>) {
             justifyContent: "space-between",
             mb: 1
           }}>
-          <Typography variant="subtitle1" sx={{
+          <Typography variant="subtitle1" component="h2" sx={{
             fontWeight: 700
           }}>
             {host.full_name || '(Unnamed)'}

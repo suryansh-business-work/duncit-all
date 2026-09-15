@@ -46,6 +46,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
       <XStack
         testID={`follow-open-${person.user_id}`}
         role="button"
+        tabIndex={0}
         aria-label={`Open ${person.full_name ?? 'profile'}`}
         onPress={onOpen}
         alignItems="center"
@@ -106,15 +107,23 @@ export function FollowListScreen() {
 
   return (
     <StackScreen title={t('mweb.followList.connections')} testID="follow-list-screen">
-      <XStack gap={8} paddingHorizontal={16} paddingTop={8} paddingBottom={4}>
+      <XStack
+        testID="follow-tabs"
+        role="tablist"
+        gap={8}
+        paddingHorizontal={16}
+        paddingTop={8}
+        paddingBottom={4}
+      >
         {TABS.map((value) => {
           const selected = tab === value;
           return (
             <XStack
               key={value}
               testID={`follow-tab-${value}`}
-              role="button"
-              aria-pressed={selected}
+              role="tab"
+              aria-selected={selected}
+              tabIndex={0}
               onPress={() => setTab(value)}
               flex={1}
               height={40}

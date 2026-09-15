@@ -106,8 +106,9 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       spacing={1.5}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
-      {/* No page title: the coral Venues tab already names the page, as on the
-          native Venues tab (rule 27). */}
+      {/* No visible title: the coral Venues tab already names the page, as on the
+          native Venues tab (rule 27). The h1 is for screen readers only. */}
+      <Typography component="h1" data-testid="venues-page-title" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{t('mweb.nav.venues')}</Typography>
       <VenuesLocationBar cityLabel={cityLabel} />
       <SearchPillField
         placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
@@ -118,11 +119,11 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       />
       {loading && !data && (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }} data-testid="venues-page-loading">
-          <CircularProgress size={22} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
         </Box>
       )}
       {!loading && error && (
-        <Typography variant="body2" color="error" data-testid="venues-page-error">
+        <Typography role="alert" variant="body2" color="error" data-testid="venues-page-error">
           Could not load venues — please try again.
         </Typography>
       )}

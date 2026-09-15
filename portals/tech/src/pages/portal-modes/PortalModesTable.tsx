@@ -89,6 +89,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
     const renderMaintenance = (row: PortalModeRow) => (
       <Switch
         color="warning"
+        slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('shell.nav.maintenance'), name: row.name } }), 'data-testid': 'portal-modes-maintenance-toggle' } as Record<string, string> }}
         checked={row.mode === 'MAINTENANCE'}
         disabled={busyKey === row.key}
         onChange={(e) => onChange(row, e.target.checked ? 'MAINTENANCE' : 'LIVE')}
@@ -97,6 +98,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
     const renderDevelopment = (row: PortalModeRow) => (
       <Switch
         color="info"
+        slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('tech.portalModes.development'), name: row.name } }), 'data-testid': 'portal-modes-development-toggle' } as Record<string, string> }}
         checked={row.mode === 'DEVELOPMENT'}
         disabled={busyKey === row.key}
         onChange={(e) => onChange(row, e.target.checked ? 'DEVELOPMENT' : 'LIVE')}
@@ -135,6 +137,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
 
   return (
     <DuncitTable<PortalModeRow>
+      ariaLabel={t('tech.portalModes.maintenanceAndDevelopment')}
       tableId="tech-portal-modes"
       columns={columns}
       fetchRows={fetchRows}

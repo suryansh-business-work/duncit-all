@@ -65,6 +65,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
       {error && (
         <Chip
           data-testid="support-chat-attach-error"
+          role="alert"
           size="small"
           color="error"
           label={error}
@@ -113,7 +114,12 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
             }
           }}
           sx={PILL_FIELD_SX}
-          slotProps={{ htmlInput: { 'data-testid': 'support-chat-input-input' } }}
+          slotProps={{
+            htmlInput: {
+              'data-testid': 'support-chat-input-input',
+              'aria-label': t('mweb.supportChat.typeAMessage'),
+            },
+          }}
         />
         <Box>
           <DuncitRoundButton

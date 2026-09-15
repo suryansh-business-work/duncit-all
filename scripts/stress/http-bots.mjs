@@ -5,8 +5,12 @@
  * jittered think time between steps, the way a person reads a page before
  * tapping the next one. The pool follows the plan's target every second: it
  * starts users as the ramp climbs, and a user whose number is above the target
- * finishes the step it is on and leaves. Nobody is killed mid-request, so the
- * latency of the last window is never polluted by aborted fetches.
+ * finishes the step it is on and leaves. Nobody is killed mid-request by the
+ * ramp, so the latency of the last window is never polluted by aborted fetches.
+ *
+ * A stop from the server is different: it aborts every request in flight at
+ * once (`ctx.abort`), because the server may be out of memory, and those
+ * aborted requests are not counted.
  */
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -21,33 +25,36 @@ function failureLabel(err) {
   return 'NETWORK';
 }
 
-async function send(step, ctx) {
-  const headers = { 'user-agent': USER_AGENT, 'x-duncit-stress': ctx.trafficKey };
+const baseHeaders = (ctx) => ({ 'user-agent': USER_AGENT, 'x-duncit-stress': ctx.trafficKey });
+
+/** Headers for a GraphQL call — shared with the seed loader, so its query rides the same path. */
+export const graphqlHeaders = (ctx) => ({
+  ...baseHeaders(ctx),
+  'content-type': 'application/json',
+  // What mWeb itself declares, so the server takes the same code path a
+  // real visit does (surface-aware caching, the same rate-limit systems).
+  'x-duncit-surface': 'MWEB',
+  'x-duncit-app': 'mweb',
+});
+
+/** One step. `pick` is the seed entry this walk is about (a pod, a club …), or null. */
+async function send(step, ctx, pick) {
+  const signal = AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), ctx.abort.signal]);
   if (step.kind === 'page') {
-    const res = await fetch(`${ctx.mwebUrl}${step.path}`, {
-      headers: { ...headers, accept: 'text/html' },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
+    const res = await fetch(`${ctx.mwebUrl}${step.path(pick)}`, { headers: { ...baseHeaders(ctx), accept: 'text/html' }, signal });
     await res.arrayBuffer();
     return { status: String(res.status), ok: res.ok };
   }
-  if (step.kind === 'health') {
-    const res = await fetch(`${ctx.serverUrl}/health`, { headers, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  if (step.kind === 'get') {
+    const res = await fetch(`${ctx.serverUrl}${step.path}`, { headers: baseHeaders(ctx), signal });
     await res.arrayBuffer();
     return { status: String(res.status), ok: res.ok };
   }
   const res = await fetch(ctx.graphqlUrl, {
     method: 'POST',
-    headers: {
-      ...headers,
-      'content-type': 'application/json',
-      // What mWeb itself declares, so the server takes the same code path a
-      // real visit does (surface-aware caching, the same rate-limit systems).
-      'x-duncit-surface': 'MWEB',
-      'x-duncit-app': 'mweb',
-    },
-    body: JSON.stringify({ operationName: step.operationName, query: step.query, variables: step.variables() }),
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    headers: graphqlHeaders(ctx),
+    body: JSON.stringify({ operationName: step.operationName, query: step.query, variables: step.variables(pick) }),
+    signal,
   });
   const json = await res.json().catch(() => null);
   // A 200 carrying errors is a failed request as far as a visitor is concerned.
@@ -55,14 +62,16 @@ async function send(step, ctx) {
   return { status: String(res.status), ok: res.ok };
 }
 
-async function runStep(step, ctx) {
+async function runStep(step, ctx, pick) {
   const started = performance.now();
   try {
-    const result = await send(step, ctx);
+    const result = await send(step, ctx, pick);
     ctx.metrics.request(step.key, performance.now() - started, result.status, result.ok);
     if (!result.ok) ctx.noteError(step.key, result.error ?? result.status);
     return result.status;
   } catch (err) {
+    // Aborted by a stop, not by the server under test — say nothing about latency.
+    if (ctx.abort.signal.aborted) return 'stopped';
     const label = failureLabel(err);
     ctx.metrics.request(step.key, performance.now() - started, label, false);
     ctx.noteError(step.key, label);
@@ -79,16 +88,18 @@ async function virtualUser(id, ctx, pool) {
   try {
     while (!ctx.stopped() && id < pool.target) {
       const journey = ctx.journeys[(id + iteration) % ctx.journeys.length];
+      const pick = journey.pick();
       iteration += 1;
       for (const step of journey.steps) {
         if (ctx.stopped() || id >= pool.target) return;
+        if (step.when && !step.when(pick)) continue;
         const started = performance.now();
         state.journey = journey.name;
         state.page = step.key;
-        state.status = await runStep(step, ctx);
+        state.status = await runStep(step, ctx, pick);
         state.load_ms = Math.round(performance.now() - started);
         state.at = new Date().toISOString();
-        await sleep(jitter(ctx.thinkTimeMs));
+        await sleep(jitter(ctx.thinkTimeMs), undefined, { signal: ctx.abort.signal }).catch(() => undefined);
       }
     }
   } finally {

@@ -67,8 +67,9 @@ export function PodSaveButton({ podId, saved, saving, label, onToggle }: Readonl
       }}
       sx={{
         position: 'absolute',
-        top: 6,
-        right: 6,
+        // Over the image corner: the card's 8px padding plus the 6px inset.
+        top: 14,
+        right: 14,
         bgcolor: 'background.paper',
         color: 'secondary.main',
         '&:hover': { bgcolor: 'background.paper' },

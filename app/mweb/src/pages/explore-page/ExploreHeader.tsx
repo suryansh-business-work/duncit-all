@@ -47,6 +47,7 @@ export default function ExploreHeader({
           already says this is Explore. */}
       <Typography
         data-testid="explore-live-count"
+        role="status"
         sx={(theme) => ({
           px: 1.5,
           py: 0.75,

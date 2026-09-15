@@ -129,12 +129,14 @@ export function VerifyWhatsappStep({
         label={t('mweb.resetPassword.otpLabel')}
         placeholder={t('mweb.resetPassword.otpPlaceholder')}
         keyboardType="number-pad"
+        autoComplete="sms-otp"
+        textContentType="oneTimeCode"
         digitsOnly
         maxLength={6}
         required
       />
       {shownError ? (
-        <Text fontSize={14} color="$danger" testID="signup-verify-error">
+        <Text fontSize={14} color="$danger" testID="signup-verify-error" role="alert">
           {shownError}
         </Text>
       ) : null}
@@ -153,10 +155,12 @@ export function VerifyWhatsappStep({
         </Text>
         <Text
           testID="signup-resend"
+          role="button"
+          aria-disabled={sending}
           pressStyle={PRESS_STYLE.inline}
           fontSize={14}
           fontWeight="600"
-          color={sending ? '$muted' : '$primary'}
+          color={sending ? '$muted' : '$accent'}
           onPress={
             sending
               ? undefined

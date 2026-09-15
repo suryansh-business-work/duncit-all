@@ -177,7 +177,7 @@ export default function ProductDetailDialog({
           alignItems: "center",
           py: 4
         }}>
-        <CircularProgress size={26} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={26} />
       </Stack>
     );
   } else if (error) {
@@ -209,7 +209,7 @@ export default function ProductDetailDialog({
             ))}
           </Stack>
         )}
-        <Typography variant="h6" data-testid="product-detail-name" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" component="h3" data-testid="product-detail-name" sx={{ fontWeight: 600 }}>
           {product.product_name}
         </Typography>
         <Stack direction="row" spacing={1} sx={{
@@ -217,8 +217,9 @@ export default function ProductDetailDialog({
         }}>
           <Typography
             variant="h5"
+            component="p"
             data-testid="product-detail-price"
-            sx={{ fontWeight: 700, color: 'primary.main' }}
+            sx={{ fontWeight: 700, color: 'accent.main' }}
           >
             {formatRupees(price)}
           </Typography>
@@ -242,6 +243,7 @@ export default function ProductDetailDialog({
                 key={v.id}
                 label={v.option_label || v.color || v.size_label || 'Variant'}
                 onClick={() => pickVariant(v.id)}
+                aria-pressed={selectedVariant?.id === v.id}
                 color={selectedVariant?.id === v.id ? 'primary' : 'default'}
                 variant={selectedVariant?.id === v.id ? 'filled' : 'outlined'}
                 size="small"
@@ -300,9 +302,13 @@ export default function ProductDetailDialog({
         onClose={onClose}
         fullScreen
         data-testid="product-detail-dialog"
+        aria-labelledby="product-detail-dialog-title"
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          Product details
+        <DialogTitle
+          id="product-detail-dialog-title-row"
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <span id="product-detail-dialog-title">Product details</span>
           <DuncitIconButton
             aria-label={t('mweb.common.close')}
             onClick={onClose}

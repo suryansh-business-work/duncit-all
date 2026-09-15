@@ -2,13 +2,14 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, useMediaQuery } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
 import { isVideoMedia } from '@duncit/utils';
 import HeroOverlayActions from './HeroOverlayActions';
+import SlideshowToggle from './SlideshowToggle';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -116,6 +117,10 @@ export default function PodHero({
   onShare,
 }: Readonly<Props>) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  // Starts still for anyone who asked their OS for less motion; the toggle wins after that.
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const [pausedByUser, setPausedByUser] = useState<boolean | null>(null);
+  const playing = media.length > 1 && !(pausedByUser ?? reduceMotion);
   const topBar = (
     <HeroOverlayActions
       onBack={onBack}
@@ -150,7 +155,7 @@ export default function PodHero({
           prevArrow={<PrevArrow />}
           nextArrow={<NextArrow />}
           infinite={media.length > 1}
-          autoplay={media.length > 1}
+          autoplay={playing}
           autoplaySpeed={4500}
           afterChange={setCurrentSlide}
           slidesToShow={1}
@@ -172,6 +177,7 @@ export default function PodHero({
           )}
         </Slider>
         {media.length > 1 && <SlideCounter index={currentSlide} total={media.length} />}
+        {media.length > 1 && <SlideshowToggle playing={playing} onToggle={() => setPausedByUser(playing)} />}
       </Box>
     </Stack>
   );

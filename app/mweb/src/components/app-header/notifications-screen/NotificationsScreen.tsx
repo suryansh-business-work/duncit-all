@@ -84,6 +84,7 @@ export default function NotificationsScreen({
       open={open}
       fullScreen
       onClose={onClose}
+      aria-labelledby="notifications-screen-title"
       slotProps={{
         paper: {
           sx: {
@@ -117,7 +118,7 @@ export default function NotificationsScreen({
             <CloseIcon />
           </DuncitRoundButton>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2 }}>
+            <Typography id="notifications-screen-title" data-testid="notifications-screen-title" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2 }}>
               Notifications
             </Typography>
             <Typography
@@ -155,7 +156,7 @@ export default function NotificationsScreen({
             item's automatic minimum size keeps it as tall as its content. */}
         <Box sx={{ px: 2, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {visible.length === 0 && (
-            <Paper data-testid="notifications-empty" sx={{ ...SURFACE_SX, p: 3, textAlign: 'center' }}>
+            <Paper data-testid="notifications-empty" role="status" sx={{ ...SURFACE_SX, p: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>

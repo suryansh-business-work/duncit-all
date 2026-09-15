@@ -56,17 +56,25 @@ export function ClubEditScreen() {
           {club ? <TwoToneHeading lead={club.club_name} fontSize={20} /> : null}
           <Text
             testID="club-edit-back-to-pods"
+            hitSlop={12}
             role="button"
             aria-label={t('clubAdmin.editClub.backToPods')}
             onPress={() => navigation.navigate('ClubPods', { clubId })}
             pressStyle={PRESS_STYLE.inline}
             fontSize={14}
             fontWeight="600"
-            color="$primary"
+            color="$accent"
           >
             {t('clubAdmin.editClub.backToPods')}
           </Text>
-          {isLoading ? <Spinner testID="club-edit-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="club-edit-loading"
+              color="$primary"
+            />
+          ) : null}
           {hasError ? <LoadErrorNotice testID="club-edit-error" onRetry={refetch} /> : null}
           {notFound ? (
             <Text testID="club-edit-not-found" fontSize={14} color="$muted">

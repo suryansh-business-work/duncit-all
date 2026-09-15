@@ -106,7 +106,7 @@ function HostPodsContent() {
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>
               Partner tools · Host
             </Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>
               Your Pods

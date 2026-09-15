@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import PostDialog from './profile-page/post-dialog/PostDialog';
+import { useTranslation } from '../i18n/useTranslation';
 
 const ME_ID = gql`
   query MeIdForPost {
@@ -20,6 +21,7 @@ const ME_ID = gql`
 export default function PostPage() {
   const { postId = '' } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // USER_INFO already holds these fields, so this answers from the cache.
   const { data, loading, error } = useQuery<any>(ME_ID, { fetchPolicy: 'cache-first' });
 
@@ -33,7 +35,7 @@ export default function PostPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

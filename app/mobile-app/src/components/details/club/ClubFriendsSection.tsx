@@ -10,6 +10,7 @@ import { PodPeopleDocument } from '@/graphql/details';
 import type { PodPerson } from '@/hooks/useDetails';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   friendIds: string[];
@@ -35,6 +36,7 @@ function useFriendProfiles(friendIds: string[]) {
 
 export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>) {
   const { muted } = useThemeColors();
+  const { t } = useTranslation();
   // The sheet is flush to the bottom edge the Android navigation bar paints over.
   const bottomInset = useBottomInset();
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,16 +82,23 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
             maxHeight="70%"
           >
             <XStack alignItems="center" justifyContent="space-between" marginBottom={16}>
-              <Text fontSize={17} fontWeight="700" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color" role="heading">
                 Friends in this club
               </Text>
-              <TouchableOpacity testID="friends-modal-close" onPress={() => setModalVisible(false)}>
+              <TouchableOpacity
+                testID="friends-modal-close"
+                role="button"
+                aria-label={t('mweb.common.close')}
+                hitSlop={11}
+                onPress={() => setModalVisible(false)}
+              >
                 <MaterialIcons name="close" size={22} color={muted} />
               </TouchableOpacity>
             </XStack>
             {profiles.map((p) => (
               <TouchableOpacity
                 key={p.user_id}
+                role="button"
                 onPress={() => {
                   setModalVisible(false);
                   onOpenProfile(p.user_id);

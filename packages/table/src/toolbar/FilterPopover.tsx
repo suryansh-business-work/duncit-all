@@ -58,6 +58,8 @@ export function FilterPopover<T>(props: Readonly<FilterPopoverProps<T>>) {
       anchorEl={anchorEl}
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      // The opener announces a dialog; the surface is one, named for it.
+      slotProps={{ paper: { role: 'dialog', 'aria-label': t('shell.table.filters') } }}
     >
       <Stack spacing={2} sx={{ p: 2, minWidth: 280, maxWidth: 400 }}>
         {filterable.map((column) => (

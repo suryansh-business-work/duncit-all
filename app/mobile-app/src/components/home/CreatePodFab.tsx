@@ -18,6 +18,7 @@ export function CreatePodFab({
       testID="home-create-pod-fab"
       role="button"
       aria-label={t('mweb.home.hostCtaButton')}
+      tabIndex={0}
       onPress={onPress}
       position="absolute"
       right={16}

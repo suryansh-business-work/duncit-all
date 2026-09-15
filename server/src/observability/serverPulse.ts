@@ -13,9 +13,10 @@ import { isStressTraffic } from '../modules/platform/stressTest/stressTest.traff
  *
  * Always on and deliberately cheap — one counter bump per request into a
  * per-second ring, and a five-second tick for the two readings that need a
- * delta (host CPU, event-loop delay). Nothing is written anywhere: the Tech
- * portal reads it live, and a stress run's sampler copies it into the run's
- * time series.
+ * delta (host CPU, event-loop delay). Nothing is written here: the Tech
+ * portal reads it live, a stress run's sampler copies it into the run's time
+ * series, and the server-history sampler drains its window every few minutes
+ * (Tech > Server > Info's 30-day charts).
  *
  * Stress traffic is counted SEPARATELY from real traffic (it carries a verified
  * run key, see stressTest.traffic), which is the whole point of reading this
@@ -57,6 +58,26 @@ const users = new Map<string, { at: number; surface: string }>();
 const visitors = new Map<string, number>();
 
 const ticked = { cpuPct: 0, lagMs: 0, lagP99Ms: 0 };
+
+/** Reservoir size for the history window's latency percentile (a window is minutes, not a second). */
+const WINDOW_LATENCY_SAMPLES = 2_000;
+
+/**
+ * Real (non-stress) traffic and host readings since the history sampler last
+ * drained them — so a stored sample describes its whole window, not the ten
+ * seconds before it was taken.
+ */
+const windowed = {
+  requests: 0,
+  errors5xx: 0,
+  totalMs: 0,
+  maxMs: 0,
+  latencies: [] as number[],
+  cpuSum: 0,
+  cpuTicks: 0,
+  cpuMax: 0,
+  lagP99Max: 0,
+};
 let lastCpu = cpuTotals();
 const loopDelay = monitorEventLoopDelay({ resolution: 20 });
 let timer: NodeJS.Timeout | null = null;
@@ -91,7 +112,21 @@ function noteCaller(nowMs: number): void {
   visitors.set(key, nowMs);
 }
 
+function recordWindow(status: number, ms: number): void {
+  windowed.requests += 1;
+  if (status >= 500) windowed.errors5xx += 1;
+  windowed.totalMs += ms;
+  windowed.maxMs = Math.max(windowed.maxMs, ms);
+  if (windowed.latencies.length < WINDOW_LATENCY_SAMPLES) {
+    windowed.latencies.push(ms);
+    return;
+  }
+  const slot = randomInt(windowed.requests);
+  if (slot < WINDOW_LATENCY_SAMPLES) windowed.latencies[slot] = ms;
+}
+
 function record(stress: boolean, status: number, ms: number): void {
+  if (!stress) recordWindow(status, ms);
   const bucket = bucketFor(Date.now());
   bucket.requests += 1;
   if (stress) bucket.stress += 1;
@@ -153,6 +188,10 @@ function tick(): void {
   ticked.lagMs = Math.max(0, loopDelay.mean / 1e6 - 20);
   ticked.lagP99Ms = Math.max(0, loopDelay.percentile(99) / 1e6 - 20);
   loopDelay.reset();
+  windowed.cpuSum += ticked.cpuPct;
+  windowed.cpuTicks += 1;
+  windowed.cpuMax = Math.max(windowed.cpuMax, ticked.cpuPct);
+  windowed.lagP99Max = Math.max(windowed.lagP99Max, ticked.lagP99Ms);
   prune(Date.now());
 }
 
@@ -217,6 +256,36 @@ export function readServerPulse() {
     users_by_surface: usersBySurface(),
     uptime_seconds: Math.round(process.uptime()),
   };
+}
+
+/**
+ * Everything counted since the last drain, then a fresh window. CPU is the
+ * average (and worst) of the five-second ticks inside it, so a sample taken
+ * every few minutes still sees a spike that lasted seconds.
+ */
+export function drainPulseWindow() {
+  const drained = {
+    requests: windowed.requests,
+    errors_5xx: windowed.errors5xx,
+    latency_avg_ms: windowed.requests > 0 ? round1(windowed.totalMs / windowed.requests) : 0,
+    latency_p95_ms: Math.round(percentile(windowed.latencies, 95)),
+    latency_max_ms: Math.round(windowed.maxMs),
+    cpu_avg_pct: windowed.cpuTicks > 0 ? round1(windowed.cpuSum / windowed.cpuTicks) : ticked.cpuPct,
+    cpu_peak_pct: windowed.cpuTicks > 0 ? windowed.cpuMax : ticked.cpuPct,
+    event_loop_p99_ms: round1(windowed.lagP99Max),
+  };
+  Object.assign(windowed, {
+    requests: 0,
+    errors5xx: 0,
+    totalMs: 0,
+    maxMs: 0,
+    latencies: [],
+    cpuSum: 0,
+    cpuTicks: 0,
+    cpuMax: 0,
+    lagP99Max: 0,
+  });
+  return drained;
 }
 
 /** Start the five-second tick. Returns a stop function. No-ops under NODE_ENV=test. */

@@ -101,7 +101,7 @@ export function CompanionOtpPanel({ index, entry, state, otp, onVerified }: Read
       ) : null}
 
       {live && otp.error ? (
-        <Text testID={`companion-otp-error-${index}`} fontSize={12} color="$danger">
+        <Text role="alert" testID={`companion-otp-error-${index}`} fontSize={12} color="$danger">
           {otp.error}
         </Text>
       ) : null}

@@ -124,7 +124,8 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
             onChange={(e) => setSearch(e.target.value)}
             sx={{ minWidth: 220, flex: 1 }}
             slotProps={{
-              input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }
+              input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> },
+              htmlInput: { 'aria-label': searchPlaceholder },
             }}
           />
           <DuncitButton variant="outlined" startIcon={<AddIcon />} onClick={startCreate} disabled={busy || !!draft}>

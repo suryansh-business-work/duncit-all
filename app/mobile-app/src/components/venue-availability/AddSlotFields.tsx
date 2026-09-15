@@ -85,7 +85,7 @@ export function AddSlotFields({ draft, patch, spaces, activeSpace, now }: Readon
         withTime={!wholeDay}
       />
       {isMultiDay ? (
-        <Text testID="add-slot-multi-day" fontSize={12} color="$primary">
+        <Text testID="add-slot-multi-day" fontSize={12} color="$accent">
           {t('availability.multiDayHint')}
         </Text>
       ) : null}

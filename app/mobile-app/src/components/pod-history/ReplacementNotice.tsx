@@ -29,6 +29,7 @@ export function ReplacementNotice({ deductionPct }: Readonly<Props>) {
           pressStyle={PRESS_STYLE.surface}
           testID="ph-replacement-info"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.podHistory.refundDetails')}
           aria-expanded={open}
           onPress={() => setOpen((prev) => !prev)}

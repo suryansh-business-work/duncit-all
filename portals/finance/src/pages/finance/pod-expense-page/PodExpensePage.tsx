@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Divider, Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import PodExpenseKpis from './PodExpenseKpis';
@@ -74,14 +74,16 @@ export default function PodExpensePage() {
         />
 
         <Box>
-          <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+          <DuncitTabs {...tabs} idPrefix="pod-expenses" variant="scrollable" allowScrollButtonsMobile />
           <Divider sx={{ mb: 2 }} />
-          <PodExpensePodsTable
-            currency={currency}
-            externalFilters={externalFilters}
-            refetchRef={podsRefetch}
-            onRowClick={setActivePod}
-          />
+          <Box {...tabPanelProps('pod-expenses', tabs.value)}>
+            <PodExpensePodsTable
+              currency={currency}
+              externalFilters={externalFilters}
+              refetchRef={podsRefetch}
+              onRowClick={setActivePod}
+            />
+          </Box>
         </Box>
       </Stack>
 

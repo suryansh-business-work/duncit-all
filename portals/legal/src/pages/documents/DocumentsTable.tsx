@@ -181,6 +181,7 @@ export default function DocumentsTable({
 
   return (
     <DuncitTable<LegalDocumentListItem>
+      ariaLabel={t('legal.documents.title')}
       tableId="legal-documents"
       columns={columns}
       fetchRows={fetchRows}

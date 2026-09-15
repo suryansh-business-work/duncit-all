@@ -25,7 +25,7 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
         <Stack direction="row" spacing={1.5} sx={{
           alignItems: "center"
         }}>
-          <Avatar src={matched.profile_photo || undefined} sx={{ bgcolor: 'success.main' }}>
+          <Avatar alt="" src={matched.profile_photo || undefined} sx={{ bgcolor: 'success.main' }}>
             {(matched.full_name || 'U')[0]?.toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -37,7 +37,7 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
                 alignItems: "center",
                 flexWrap: "wrap"
               }}>
-              <Typography variant="subtitle2" sx={{
+              <Typography component="p" variant="subtitle2" sx={{
                 fontWeight: 800
               }}>{matched.full_name || 'Duncit user'}</Typography>
               <MatchedUserChip matched={matched} />

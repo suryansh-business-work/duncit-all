@@ -51,7 +51,7 @@ export default function EmailTemplatesPage() {
       }}>
         <MarkEmailReadIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('shell.nav.emailTemplates')}</Typography>
           <Typography variant="body2" sx={{

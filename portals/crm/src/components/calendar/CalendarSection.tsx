@@ -113,6 +113,7 @@ export default function CalendarSection() {
           <EventIcon color="primary" />
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               fontWeight: 800,
               mr: 1
@@ -121,13 +122,14 @@ export default function CalendarSection() {
             <Stack direction="row" sx={{
               alignItems: "center"
             }}>
-              <DuncitIconButton size="small" onClick={() => step(-1)}><ChevronLeftIcon /></DuncitIconButton>
+              <DuncitIconButton size="small" aria-label={t('crm.a11y.previousPeriod')} data-testid="crm-calendar-previous" onClick={() => step(-1)}><ChevronLeftIcon /></DuncitIconButton>
               <DuncitButton size="small" onClick={() => setCursor(new Date())}>{t('crm.components.today')}</DuncitButton>
-              <DuncitIconButton size="small" onClick={() => step(1)}><ChevronRightIcon /></DuncitIconButton>
+              <DuncitIconButton size="small" aria-label={t('crm.a11y.nextPeriod')} data-testid="crm-calendar-next" onClick={() => step(1)}><ChevronRightIcon /></DuncitIconButton>
             </Stack>
           )}
-          <Typography
+          <Typography component="p"
             variant="subtitle1"
+            role="status"
             sx={{
               fontWeight: 700,
               minWidth: 160
@@ -146,7 +148,7 @@ export default function CalendarSection() {
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>Add</DuncitButton>
         </Stack>
 
-        <ToggleButtonGroup size="small" exclusive value={view} onChange={(_e, v) => v && setView(v)} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
+        <ToggleButtonGroup size="small" exclusive value={view} onChange={(_e, v) => v && setView(v)} aria-label={t('shell.common.view')} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
           {views(t).map((v) => <ToggleButton key={v.value} value={v.value}>{v.label}</ToggleButton>)}
         </ToggleButtonGroup>
 

@@ -192,6 +192,7 @@ export default function ContractsTable({
 
   return (
     <DuncitTable<Contract>
+      ariaLabel={t('legal.contracts.title')}
       tableId="legal-contracts"
       columns={columns}
       fetchRows={fetchRows}

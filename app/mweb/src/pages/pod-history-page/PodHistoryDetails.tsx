@@ -152,7 +152,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
             alignItems: { sm: 'center' }
           }}>
-            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: { xs: 140, sm: 96 }, borderRadius: '18px', bgcolor: 'action.hover', color: 'text.secondary' }}>
+            <Avatar alt="" src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: { xs: 140, sm: 96 }, borderRadius: '18px', bgcolor: 'action.hover', color: 'text.secondary' }}>
               <EventIcon />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>

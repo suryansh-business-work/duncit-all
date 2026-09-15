@@ -25,6 +25,11 @@ export interface CodeTarget {
   phone?: string;
 }
 
+/** What a spec may add to a boot: a stand-in for a browser API the page reaches for. */
+export interface VisitAppOptions {
+  onBeforeLoad?: (win: Cypress.AUTWindow) => void;
+}
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
@@ -49,8 +54,11 @@ declare global {
       apiLogin(email: string, password: string): Chainable<string>;
       /** Forget the token so the next `visitApp` boots signed out. */
       clearAuth(): Chainable<void>;
-      /** `cy.visit` with the current token applied and the marketing popup already closed. */
-      visitApp(path: string): Chainable<AUTWindow>;
+      /**
+       * `cy.visit` with the current token applied and the marketing popup already closed;
+       * `options.onBeforeLoad` then installs whatever stand-in the scenario needs.
+       */
+      visitApp(path: string, options?: VisitAppOptions): Chainable<AUTWindow>;
       /** Alias the next request carrying this operation so `cy.wait('@Name')` waits for the real answer. */
       interceptOperation(name: string, alias?: string): Chainable<void>;
       /** An element by the app's `testID` (react-native-web renders it as `data-testid`). */
@@ -58,6 +66,11 @@ declare global {
         testId: string,
         options?: Partial<Cypress.Timeoutable & Cypress.Loggable>,
       ): Chainable<JQuery<HTMLElement>>;
+      /**
+       * Every element whose `data-testid` starts with `prefix` (and ends with `suffix`), in page
+       * order — for rows keyed by an id the spec cannot know (`chip-<categoryId>`).
+       */
+      byTestIdPrefix(prefix: string, suffix?: string): Chainable<JQuery<HTMLElement>>;
     }
   }
 }
@@ -205,7 +218,7 @@ const closedPopups = (token: string | null): Cypress.Chainable<string[]> => {
     .then((data) => (data.activeAppPopup ? [data.activeAppPopup.id] : []));
 };
 
-Cypress.Commands.add('visitApp', (path: string) => {
+Cypress.Commands.add('visitApp', (path: string, options: VisitAppOptions = {}) => {
   const token = Cypress.env(TOKEN_KEY) as string | null;
   return closedPopups(token).then((popupIds) =>
     cy.visit(path, {
@@ -219,6 +232,7 @@ Cypress.Commands.add('visitApp', (path: string) => {
         } else {
           win.localStorage.removeItem(APP_TOKEN_KEY);
         }
+        options.onBeforeLoad?.(win);
       },
     }),
   );
@@ -237,5 +251,11 @@ Cypress.Commands.add(
   (testId: string, options?: Partial<Cypress.Timeoutable & Cypress.Loggable>) =>
     cy.get(`[data-testid="${testId}"]`, options),
 );
+
+Cypress.Commands.add('byTestIdPrefix', (prefix: string, suffix = '') => {
+  // `$=""` matches nothing in CSS, so the suffix clause only exists when there is one.
+  const ends = suffix ? `[data-testid$="${suffix}"]` : '';
+  return cy.get(`[data-testid^="${prefix}"]${ends}`);
+});
 
 export {};

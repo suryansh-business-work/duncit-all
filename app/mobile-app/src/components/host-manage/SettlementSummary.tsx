@@ -22,7 +22,7 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
       </Text>
       <Text
         fontSize={12.5}
-        color={line.strong ? '$primary' : '$color'}
+        color={line.strong ? '$accent' : '$color'}
         fontWeight={line.strong ? '700' : '600'}
       >
         {symbol}
@@ -84,7 +84,13 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
     );
   } else {
     body = isLoading ? (
-      <Spinner testID="settlement-loading" size="small" color="$primary" />
+      <Spinner
+        role="progressbar"
+        aria-label={t('mweb.a11y.loading')}
+        testID="settlement-loading"
+        size="small"
+        color="$primary"
+      />
     ) : (
       <Text testID="settlement-empty" fontSize={12} color="$muted">
         Enter a bill to preview your share.

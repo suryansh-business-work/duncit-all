@@ -84,6 +84,32 @@ export interface IStressShardResult {
   at: Date;
 }
 
+export type StressVerdictGrade = 'HEALTHY' | 'STRAINED' | 'OVERLOADED' | 'INCONCLUSIVE';
+export type StressLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+/** A finding with a weight — a bottleneck, or an upgrade to make. */
+export interface IStressVerdictItem {
+  title: string;
+  detail: string;
+  level: StressLevel;
+}
+
+/** OpenAI's reading of a finished run: how many users it holds and what to do about it. */
+export interface IStressVerdict {
+  grade: StressVerdictGrade;
+  headline: string;
+  safe_concurrent_users: number;
+  breaking_point_users: number;
+  confidence: StressLevel;
+  capacity_reasoning: string;
+  bottlenecks: IStressVerdictItem[];
+  upgrades: IStressVerdictItem[];
+  watch_points: string[];
+  model: string;
+  generated_by: string;
+  generated_at: Date;
+}
+
 export interface IStressRun extends Document {
   _id: Types.ObjectId;
   run_no: string;
@@ -104,6 +130,8 @@ export interface IStressRun extends Document {
   ended_at: Date | null;
   stop_requested_at: Date | null;
   stop_reason: string;
+  /** The host ran out of CPU or memory: the workflow is cancelled if the runners do not stop at once. */
+  terminated: boolean;
   last_report_at: Date | null;
   peaks: IStressPeaks;
   summary: IStressSummary | null;
@@ -111,6 +139,7 @@ export interface IStressRun extends Document {
   shard_results: IStressShardResult[];
   events: IStressEvent[];
   error_message: string;
+  verdict: IStressVerdict | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -174,6 +203,7 @@ const stressRunSchema = new Schema<IStressRun>(
     ended_at: { type: Date, default: null },
     stop_requested_at: { type: Date, default: null },
     stop_reason: { type: String, default: '' },
+    terminated: { type: Boolean, default: false },
     last_report_at: { type: Date, default: null },
     peaks: { type: Schema.Types.Mixed, default: zeroPeaks },
     summary: { type: Schema.Types.Mixed, default: null },
@@ -183,6 +213,7 @@ const stressRunSchema = new Schema<IStressRun>(
     shard_results: { type: Schema.Types.Mixed, default: [] },
     events: { type: [eventSchema], default: [] },
     error_message: { type: String, default: '' },
+    verdict: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -270,6 +301,7 @@ export interface IStressSettings extends Document {
   abort_error_rate_pct: number;
   abort_p95_ms: number;
   abort_host_cpu_pct: number;
+  abort_host_memory_pct: number;
   abort_breach_samples: number;
   sample_retention_days: number;
   created_at: Date;
@@ -288,6 +320,7 @@ const stressSettingsSchema = new Schema<IStressSettings>(
     abort_error_rate_pct: { type: Number, default: 25 },
     abort_p95_ms: { type: Number, default: 8000 },
     abort_host_cpu_pct: { type: Number, default: 95 },
+    abort_host_memory_pct: { type: Number, default: 95 },
     abort_breach_samples: { type: Number, default: 3 },
     sample_retention_days: { type: Number, default: 30 },
   },

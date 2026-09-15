@@ -89,6 +89,7 @@ export function AttachedProductRow({
         <XStack alignItems="center" gap={8} marginTop={4}>
           <XStack
             testID={`${testID}-dec`}
+            tabIndex={0}
             role="button"
             aria-label={t('podProduct.decreaseQty')}
             aria-disabled={!canDecrease}
@@ -110,6 +111,7 @@ export function AttachedProductRow({
           </Text>
           <XStack
             testID={`${testID}-inc`}
+            tabIndex={0}
             role="button"
             aria-label={t('podProduct.increaseQty')}
             aria-disabled={!canIncrease}
@@ -128,6 +130,7 @@ export function AttachedProductRow({
 
       <XStack
         testID={`${testID}-remove`}
+        tabIndex={0}
         role="button"
         aria-label={t('podProduct.removeProduct')}
         onPress={onRemove}

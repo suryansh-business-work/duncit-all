@@ -1,5 +1,6 @@
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 
 export interface CompletionMeterProps {
@@ -10,6 +11,7 @@ export interface CompletionMeterProps {
  * Computes the percentage via the shared pure helper (RN twin of mWeb's
  * CompletionMeter). No backend write. */
 export function CompletionMeter({ profile }: Readonly<CompletionMeterProps>) {
+  const { t } = useTranslation();
   const percent = profileCompletion(profile);
 
   return (
@@ -26,7 +28,11 @@ export function CompletionMeter({ profile }: Readonly<CompletionMeterProps>) {
         height={6}
         borderRadius={999}
         backgroundColor="$primarySoft"
-        accessibilityLabel="Profile completion"
+        role="progressbar"
+        aria-label={t('mweb.account.profileCompletion')}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
         overflow="hidden"
       >
         <YStack height={6} borderRadius={999} backgroundColor="$primary" width={`${percent}%`} />

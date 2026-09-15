@@ -1,4 +1,4 @@
-import { Box, ButtonBase } from '@mui/material';
+import { Box } from '@mui/material';
 import TwoToneHeading from '../TwoToneHeading';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,6 +15,14 @@ const WRAP_SX = {
   pb: 1.5,
   boxSizing: 'border-box',
   textAlign: 'left',
+} as const;
+
+/** The greeting as a tap target: the pressable resets a ButtonBase gave it. */
+const PRESSABLE_SX = {
+  ...WRAP_SX,
+  cursor: 'pointer',
+  userSelect: 'none',
+  WebkitTapHighlightColor: 'transparent',
 } as const;
 
 interface Props {
@@ -42,8 +50,20 @@ export default function HeaderGreeting({ tagline, firstName, onOpenLocation }: R
   // The greeting also opens the location picker — a bigger tap target than
   // the location pill alone (user ask).
   return (
-    <ButtonBase data-testid="header-greeting" component="div" disableRipple onClick={onOpenLocation} sx={WRAP_SX}>
+    <Box
+      data-testid="header-greeting"
+      role="button"
+      tabIndex={0}
+      onClick={onOpenLocation}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpenLocation();
+        }
+      }}
+      sx={PRESSABLE_SX}
+    >
       {heading}
-    </ButtonBase>
+    </Box>
   );
 }

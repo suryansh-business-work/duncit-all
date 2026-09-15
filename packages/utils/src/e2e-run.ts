@@ -39,6 +39,30 @@ export const E2E_PURGE_MUTATION = `mutation PurgeE2eRunData($input: PurgeE2eRunD
   purgeE2eRunData(input: $input) { accounts_deleted }
 }`;
 
+/**
+ * A Google credential for a run account address, accepted by THIS server's
+ * Google sign-in in place of Google's popup (which no automated browser can
+ * pass). Only on an e2e target, only for a run account.
+ */
+export const E2E_GOOGLE_CREDENTIAL_QUERY = `query E2eGoogleCredential($email: String!, $given_name: String!, $family_name: String!) {
+  e2eGoogleCredential(email: $email, given_name: $given_name, family_name: $family_name)
+}`;
+
+/** The portal role each staff portal's sign-in admits. */
+export type E2eStaffRole = 'SUPPORT_MANAGER' | 'LEGAL_MANAGER' | 'ALL_PODS_ACCESS';
+
+/** Give the run account portal roles, so the staff half of a journey needs no stored staff password. */
+export const E2E_GRANT_ROLES_MUTATION = `mutation GrantE2eRunAccountRoles($input: GrantE2eRunAccountRolesInput!) {
+  grantE2eRunAccountRoles(input: $input)
+}`;
+
+/**
+ * What every record a scenario files carries in its text — a ticket subject, a
+ * problem report, a pod idea title — so the staff half of the run finds that
+ * record and no other, on either surface: `[E2E 140920260300 mweb]`.
+ */
+export const runMarker = (stamp: string, surface: string): string => ['[E2E', stamp, `${surface}]`].join(' ');
+
 /** Where the account is in its life, which decides the password it holds. */
 export type RunPasswordStage = 'SIGNUP' | 'RECOVERED' | 'CHANGED';
 

@@ -1,7 +1,7 @@
 import { type ReactElement, type ReactNode } from 'react';
 import { Box, Card } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 
 export interface LeadTab {
   /** Stable id for selection + a11y. */
@@ -53,6 +53,7 @@ export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props
       >
         <DuncitTabs
           {...strip}
+          idPrefix="lead"
           variant="scrollable"
           scrollButtons="auto"
           allowScrollButtonsMobile
@@ -75,7 +76,7 @@ export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props
 
       {/* Render only the active panel — cheaper than mounting all of them, and
           tab transitions stay snappy because each panel mounts fresh on switch. */}
-      <Box role="tabpanel" data-testid={`lead-tabpanel-${active?.value ?? ''}`}>
+      <Box {...tabPanelProps('lead', strip.value)} data-testid={`lead-tabpanel-${active?.value ?? ''}`}>
         {active?.render()}
       </Box>
     </Box>

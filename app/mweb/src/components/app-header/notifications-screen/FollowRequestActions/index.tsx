@@ -123,7 +123,7 @@ export default function FollowRequestActions({
   const open = state === 'ANSWER';
 
   return (
-    <Stack data-testid="follow-request-actions" spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
+    <Stack data-testid="follow-request-actions" role="presentation" spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
       <Stack
         direction="row"
         spacing={1}
@@ -150,7 +150,7 @@ export default function FollowRequestActions({
         )}
         {followBackOffered && (
           <FollowBackButton
-            accentInk={accentInk}
+            accentInk="accent.main"
             busy={busy}
             spinning={inFlight === 'followBack'}
             pending={!canFollowBack(followBackStatus)}
@@ -160,7 +160,7 @@ export default function FollowRequestActions({
         )}
       </Stack>
       {error && (
-        <Typography data-testid="follow-request-error" variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
+        <Typography data-testid="follow-request-error" role="alert" variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
           {error}
         </Typography>
       )}

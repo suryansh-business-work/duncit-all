@@ -77,7 +77,7 @@ export default function PartnerPodsPage() {
           }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.podsPage.partnerPods')}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>{t('partners.podsPage.createAndManagePods')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.podsPage.useTheSamePodSetupFlow')}</Typography>

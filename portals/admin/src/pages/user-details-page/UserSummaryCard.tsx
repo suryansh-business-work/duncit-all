@@ -61,7 +61,7 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
               alignItems: "center",
               minWidth: 140
             }}>
-            <Avatar src={form.profile_photo || undefined} sx={{ width: 96, height: 96, fontSize: 36, bgcolor: 'primary.main' }}>
+            <Avatar alt="" src={form.profile_photo || undefined} sx={{ width: 96, height: 96, fontSize: 36, bgcolor: 'primary.main' }}>
               {(form.first_name?.[0] ?? '?').toUpperCase()}
             </Avatar>
             <MediaPickerField
@@ -75,7 +75,7 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
           </Stack>
           <Stack spacing={1.25} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
             <Stack spacing={0.5}>
-              <Typography variant="h6" noWrap>{form.first_name} {form.last_name}</Typography>
+              <Typography variant="h6" component="h2" noWrap>{form.first_name} {form.last_name}</Typography>
               <Stack
                 direction="row"
                 spacing={1}
@@ -97,7 +97,7 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.label}>
-                    <TableCell sx={{ pl: 0, width: 150, color: 'text.secondary', borderBottomStyle: 'dashed' }}>
+                    <TableCell component="th" scope="row" sx={{ pl: 0, width: 150, color: 'text.secondary', borderBottomStyle: 'dashed' }}>
                       {row.label}
                     </TableCell>
                     <TableCell sx={{ pr: 0, borderBottomStyle: 'dashed', wordBreak: 'break-word' }}>

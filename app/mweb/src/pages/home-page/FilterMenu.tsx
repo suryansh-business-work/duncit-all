@@ -89,8 +89,9 @@ export default function FilterMenu(props: Readonly<Props>) {
     setSortBy(DEFAULT_SORT);
   };
 
-  const activeCountSuffix = activeCount ? ` (${activeCount} active)` : '';
-  const triggerLabel = `Open filters${activeCountSuffix}`;
+  const triggerLabel = activeCount
+    ? t('mweb.a11y.openFiltersActive', { vars: { count: activeCount } })
+    : t('mweb.explore.openFilters');
   const trigger = props.round ? (
     <Badge badgeContent={activeCount} color="secondary" overlap="circular">
       <DuncitRoundButton
@@ -143,7 +144,7 @@ export default function FilterMenu(props: Readonly<Props>) {
               onClick={handleReset}
               disabled={activeCount === 0}
             >
-              Reset
+              {t('mweb.explore.reset')}
             </DuncitButton>
             <DuncitButton
               data-testid="home-filter-done"

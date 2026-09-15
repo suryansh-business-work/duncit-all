@@ -94,7 +94,7 @@ export default function FormAccordion({ title, children, defaultExpanded, fieldP
             minWidth: 0
           }}>
           {hasError && <ErrorOutlineIcon color="error" fontSize="small" />}
-          <Typography
+          <Typography component="span"
             variant="subtitle2"
             color={hasError ? 'error.main' : undefined}
             noWrap

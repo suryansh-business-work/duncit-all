@@ -73,13 +73,15 @@ export default function SlackComposer({ channelId, onSent }: Readonly<Props>) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={t('tech.slack.composerPlaceholder')}
-          aria-label={t('tech.slack.composerPlaceholder')}
+          slotProps={{ htmlInput: { 'aria-label': t('tech.slack.composerPlaceholder'), 'data-testid': 'slack-composer-input' } }}
         />
         <Tooltip title={t('tech.slack.blockKitToggle')}>
           <DuncitIconButton
             size="small"
             color={showBlocks ? 'primary' : 'default'}
             aria-label={t('tech.slack.blockKitToggle')}
+            aria-pressed={showBlocks}
+            data-testid="slack-composer-blocks-toggle"
             onClick={() => setShowBlocks((open) => !open)}
           >
             <CodeIcon fontSize="small" />

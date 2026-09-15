@@ -40,7 +40,7 @@ export default function PackagesDocsPage() {
   return (
     <FillViewport>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           Package Documentation

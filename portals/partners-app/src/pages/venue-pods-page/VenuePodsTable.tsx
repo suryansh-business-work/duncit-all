@@ -216,6 +216,7 @@ export default function VenuePodsTable({
   return (
     <DuncitTable<VenuePodRow>
       tableId="partners-venue-pods"
+      ariaLabel={t('shell.nav.pods')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

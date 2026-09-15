@@ -24,6 +24,19 @@ function Harness({ defaultValue = '', ...props }: Readonly<HarnessProps>) {
   );
 }
 
+/** Raises an error the way a failed submit does — asking the form to focus the field. */
+function FocusHarness() {
+  const { control, setError } = useForm<Values, any, Values>({ defaultValues: { name: '' } });
+  return (
+    <>
+      <RhfTextField control={control as Control<Values>} name="name" label="Name" />
+      <button type="button" onClick={() => setError('name', { message: 'Name is required' }, { shouldFocus: true })}>
+        focus
+      </button>
+    </>
+  );
+}
+
 const input = () => screen.getByLabelText('Name') as HTMLInputElement;
 
 describe('RhfTextField', () => {
@@ -49,6 +62,20 @@ describe('RhfTextField', () => {
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(screen.queryByText('Your full name')).not.toBeInTheDocument();
     expect(container.querySelector('.Mui-error')).toBeInTheDocument();
+  });
+
+  it('marks the input invalid and describes it with the message', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', { name: 'break' }));
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+    expect(input()).toHaveAttribute('aria-invalid', 'true');
+    expect(input()).toHaveAccessibleDescription('Name is required');
+  });
+
+  it('hands the form a ref to the input itself, so an invalid field can be focused', async () => {
+    render(<FocusHarness />);
+    await userEvent.click(screen.getByRole('button', { name: 'focus' }));
+    expect(input()).toHaveFocus();
   });
 
   it('renders a single blank-space helper when neither hint nor error is present', () => {

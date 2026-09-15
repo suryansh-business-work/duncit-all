@@ -34,7 +34,7 @@ export function GiftCardPurchaseSuccess({
   onMyCards,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink, primary } = useThemeColors();
+  const { color: ink, accent } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const invoiceLabel = t('mweb.checkout.downloadInvoice');
@@ -64,7 +64,7 @@ export function GiftCardPurchaseSuccess({
         justifyContent="center"
         backgroundColor="$primarySoft"
       >
-        <MaterialIcons name="check" size={44} color={primary} />
+        <MaterialIcons name="check" size={44} color={accent} />
       </YStack>
       <YStack gap={8} alignItems="center">
         <TwoToneHeading lead={t('mweb.giftCards.successTitle')} align="center" />
@@ -85,7 +85,7 @@ export function GiftCardPurchaseSuccess({
         />
       </SurfaceCard>
       {error ? (
-        <Text testID="gift-card-invoice-error" fontSize={13} color="$danger">
+        <Text testID="gift-card-invoice-error" role="alert" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -100,6 +100,8 @@ export function GiftCardPurchaseSuccess({
           role="button"
           aria-label={invoiceLabel}
           aria-disabled={busy}
+          aria-busy={busy}
+          tabIndex={0}
           onPress={
             busy
               ? undefined

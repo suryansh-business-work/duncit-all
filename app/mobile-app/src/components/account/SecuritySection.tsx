@@ -80,6 +80,8 @@ export function SecuritySection() {
           testID="open-change-password"
           role="button"
           aria-label={label}
+          tabIndex={0}
+          hitSlop={4}
           onPress={() => setChangeOpen(true)}
           height={36}
           alignItems="center"

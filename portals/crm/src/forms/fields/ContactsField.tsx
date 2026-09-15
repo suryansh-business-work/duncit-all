@@ -40,7 +40,7 @@ export default function ContactsField({ name }: Readonly<Props>) {
                 alignItems: "center",
                 mb: 1
               }}>
-              <Typography variant="subtitle2" sx={{
+              <Typography component="p" variant="subtitle2" sx={{
                 fontWeight: 700
               }}>
                 {isPrimary ? 'Primary Contact' : `Contact ${index + 1}`}

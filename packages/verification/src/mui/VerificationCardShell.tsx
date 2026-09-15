@@ -32,7 +32,7 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
           <CheckCircleIcon sx={{ color: tickColor, mt: 0.25 }} aria-hidden />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
               {t(VERIFICATION_LABEL_KEYS[item.type])}
             </Typography>
             <Chip

@@ -103,6 +103,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
   const emptyOrList = people.length === 0 ? (
     <Typography
       data-testid="follow-list-dialog-empty"
+      role="status"
       sx={{
         color: "text.secondary",
         textAlign: "center",
@@ -136,7 +137,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress size={28} />
+          <CircularProgress size={28} aria-label={t('mweb.a11y.loading')} />
         </Stack>
       ) : (
         emptyOrList

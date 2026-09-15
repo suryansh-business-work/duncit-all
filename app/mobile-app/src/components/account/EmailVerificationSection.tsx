@@ -39,7 +39,7 @@ export function EmailVerificationSection({
   autoSend = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const [otp, setOtp] = useState('');
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -107,8 +107,8 @@ export function EmailVerificationSection({
   return (
     <SurfaceCard testID="email-verification" gap={12}>
       <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="mark-email-read" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="600" color="$color">
+        <MaterialIcons name="mark-email-read" size={18} color={accent} />
+        <Text role="heading" fontSize={15} fontWeight="600" color="$color">
           Verify email
         </Text>
       </XStack>
@@ -117,7 +117,7 @@ export function EmailVerificationSection({
       </Text>
 
       {message ? (
-        <Text testID="email-verification-message" fontSize={12} color="$primary">
+        <Text testID="email-verification-message" role="status" fontSize={12} color="$accent">
           {message}
         </Text>
       ) : null}
@@ -127,7 +127,7 @@ export function EmailVerificationSection({
         </Text>
       ) : null}
       {error ? (
-        <Text testID="email-verification-error" fontSize={12} color="$danger">
+        <Text testID="email-verification-error" role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -146,6 +146,8 @@ export function EmailVerificationSection({
           onChangeText={setOtp}
           placeholder={t('mweb.common.enterOtp')}
           keyboardType="number-pad"
+          autoComplete="sms-otp"
+          textContentType="oneTimeCode"
           maxLength={6}
           aria-label={t('mweb.account.emailVerificationOtp')}
         />
@@ -154,6 +156,8 @@ export function EmailVerificationSection({
           role="button"
           aria-label={idleSendLabel}
           aria-disabled={sending || !email}
+          aria-busy={sending}
+          tabIndex={0}
           onPress={() => {
             if (!sending && email) fireAndForget(sendOtp());
           }}
@@ -173,7 +177,7 @@ export function EmailVerificationSection({
       </XStack>
 
       {otpHint ? (
-        <Text testID="email-verification-hint" fontSize={12} color="$danger">
+        <Text testID="email-verification-hint" role="alert" fontSize={12} color="$danger">
           Enter the OTP we sent
         </Text>
       ) : null}

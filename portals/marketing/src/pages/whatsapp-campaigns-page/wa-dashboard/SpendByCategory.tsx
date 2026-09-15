@@ -23,7 +23,7 @@ export default function SpendByCategory({
             justifyContent: "space-between",
             mb: 1.5
           }}>
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h2" variant="subtitle2" sx={{
             fontWeight: 700
           }}>
             Spend by category

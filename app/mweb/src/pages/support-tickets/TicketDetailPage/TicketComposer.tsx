@@ -56,7 +56,9 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
             multiline
             maxRows={4}
             sx={PILL_FIELD_SX}
-            slotProps={{ htmlInput: { 'data-testid': 'ticket-reply-input' } }}
+            slotProps={{
+              htmlInput: { 'data-testid': 'ticket-reply-input', 'aria-label': t('mweb.common.writeAReply') },
+            }}
           />
           <DuncitRoundButton
             data-testid="ticket-reply-send"

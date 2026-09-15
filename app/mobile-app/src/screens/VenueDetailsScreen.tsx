@@ -23,6 +23,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { venueImages } from '@duncit/utils';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 function addressLine(venue: PublicVenue): string {
   return [
@@ -77,7 +78,7 @@ function VenueDetailsContent({
   venue,
   gallery,
 }: Readonly<{ venue: PublicVenue; gallery: string[] }>) {
-  const { accent } = useThemeColors();
+  const { accent, brand } = useThemeColors();
   const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   return (
@@ -95,6 +96,7 @@ function VenueDetailsContent({
             pressStyle={PRESS_STYLE.surface}
             testID="venue-cover-image"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podDetails.viewImage')}
             onPress={() => setViewerIndex(0)}
             width="100%"
@@ -107,7 +109,7 @@ function VenueDetailsContent({
             />
           </XStack>
         ) : (
-          <MaterialIcons name="storefront" size={44} color={accent} />
+          <MaterialIcons name="storefront" size={44} color={brand} />
         )}
       </YStack>
 
@@ -163,6 +165,7 @@ function VenueDetailsContent({
 /** Read-only venue details — cover, chips, description, location, amenities,
  * gallery. RN twin of mWeb's VenueDetailsPage. */
 export function VenueDetailsScreen() {
+  const loadingRegion = useLoadingRegion();
   const route = useRoute<RouteProp<RootStackParamList, 'VenueDetails'>>();
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
@@ -185,7 +188,7 @@ export function VenueDetailsScreen() {
     <StackScreen title={venue?.venue_name || 'Venue'} testID="venue-details-screen">
       {isLoading && !venue ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="venue-details-loading" color="$primary" />
+          <Spinner {...loadingRegion} testID="venue-details-loading" color="$primary" />
         </YStack>
       ) : (
         body

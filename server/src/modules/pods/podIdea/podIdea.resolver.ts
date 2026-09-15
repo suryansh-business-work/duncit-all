@@ -3,7 +3,9 @@ import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+// ALL_PODS_ACCESS is the Pods portal's own sign-in role: the portal shows it
+// Approve / Reject / Delete on every idea, so the server must honour them.
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ALL_PODS_ACCESS'];
 
 const isAdminCtx = (ctx: GraphQLContext) =>
   !!ctx.user?.roles?.some((r) => ADMIN_ROLES.includes(r));

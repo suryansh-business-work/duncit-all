@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DuncitTabs } from '../src/DuncitTabs';
+import { tabIds, tabPanelProps } from '../src/tabPanelProps';
 import type { DuncitTabItem } from '../src/types';
 
 const ITEMS: DuncitTabItem<string>[] = [
@@ -91,5 +92,33 @@ describe('DuncitTabs', () => {
     render(<DuncitTabs items={[]} value="upcoming" onChange={vi.fn()} />);
 
     expect(screen.queryAllByRole('tab')).toHaveLength(0);
+  });
+
+  it('wires each tab to its panel when given an idPrefix', () => {
+    render(
+      <>
+        <DuncitTabs items={ITEMS} value="upcoming" onChange={vi.fn()} idPrefix="pods" />
+        <div {...tabPanelProps('pods', 'upcoming')}>DUN-POD-4821</div>
+      </>
+    );
+
+    const tab = screen.getByRole('tab', { name: 'Upcoming' });
+    expect(tab.getAttribute('id')).toBe('pods-tab-upcoming');
+    expect(tab.getAttribute('aria-controls')).toBe('pods-panel-upcoming');
+    expect(screen.getByRole('tabpanel', { name: 'Upcoming' }).textContent).toBe('DUN-POD-4821');
+  });
+
+  it('leaves tabs without ids or aria-controls when no idPrefix is given', () => {
+    render(<DuncitTabs items={ITEMS} value="upcoming" onChange={vi.fn()} />);
+
+    const tab = screen.getByRole('tab', { name: 'Upcoming' });
+    expect(tab.hasAttribute('aria-controls')).toBe(false);
+    expect(tab.hasAttribute('id')).toBe(false);
+  });
+});
+
+describe('tabIds', () => {
+  it('derives the tab and panel ids from the prefix and the value', () => {
+    expect(tabIds('pods', 2)).toEqual({ tabId: 'pods-tab-2', panelId: 'pods-panel-2' });
   });
 });

@@ -25,7 +25,7 @@ export default function IncompleteBanner({ percent, onComplete }: Readonly<Incom
         }}
       >
         <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', minWidth: 0 }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }} />
+          <Box aria-hidden sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }} />
           <Box sx={{ minWidth: 0 }}>
             <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
               Your profile is incomplete

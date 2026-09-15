@@ -161,6 +161,7 @@ export default function MomentLightbox({
             p: 2
           }}>
           {moment.type === 'VIDEO' ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               component="video"
               data-testid="moment-lightbox-media"

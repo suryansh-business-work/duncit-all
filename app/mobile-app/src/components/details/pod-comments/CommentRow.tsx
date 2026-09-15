@@ -101,6 +101,7 @@ export function CommentRow({
       <XStack
         testID={`comment-like-${comment.id}`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.likeComment')}
         onPress={onToggleLike}
         alignItems="center"

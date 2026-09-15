@@ -141,6 +141,7 @@ export default function OpenInAppBanner() {
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
+          aria-hidden
           sx={{
             width: 40,
             height: 40,
@@ -157,16 +158,17 @@ export default function OpenInAppBanner() {
         <Typography sx={{ minWidth: 0, flex: 1, fontSize: 15, fontWeight: 600 }}>
           {t('mweb.openInApp.title')}
         </Typography>
-        <DuncitRoundButton tone="surface" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss}>
+        <DuncitRoundButton data-testid="open-in-app-dismiss" tone="surface" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss}>
           <CloseIcon />
         </DuncitRoundButton>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-        <DuncitButton size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
+        <DuncitButton data-testid="open-in-app-open" size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
           {t('mweb.openInApp.open')}
         </DuncitButton>
         {storeUrl && (
           <DuncitButton
+            data-testid="open-in-app-get"
             size="small"
             variant="contained"
             href={storeUrl}

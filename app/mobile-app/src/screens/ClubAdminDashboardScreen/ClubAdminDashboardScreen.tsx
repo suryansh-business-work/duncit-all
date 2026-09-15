@@ -48,7 +48,14 @@ export function ClubAdminDashboardScreen() {
             onChange={(next) => setRange(next as ClubAdminRange)}
             testID="club-dashboard-range"
           />
-          {isLoading ? <Spinner testID="club-dashboard-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="club-dashboard-loading"
+              color="$primary"
+            />
+          ) : null}
           {hasError ? <LoadErrorNotice testID="club-dashboard-error" onRetry={refetch} /> : null}
           <KpiGroupsSection kpis={data.kpis} />
           <TrendCard trend={data.trend} />

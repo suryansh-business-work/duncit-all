@@ -31,6 +31,8 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
       <YStack height={height} borderRadius={18} overflow="hidden" backgroundColor="$soft">
         <WebView
           testID="pod-map"
+          // The same name the web build gives its <iframe> title.
+          accessibilityLabel={t('mweb.mapEmbed.podLocationMap')}
           originWhitelist={['*']}
           source={{ html: mapEmbedHtml(url) }}
           style={{ flex: 1, backgroundColor: 'transparent' }}
@@ -40,6 +42,9 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
         testID="map-open-external"
         role="button"
         aria-label={openLabel}
+        tabIndex={0}
+        // A one-line text link — the touch area reaches 44pt.
+        hitSlop={8}
         onPress={() => Linking.openURL(mapUrl)}
         alignItems="center"
         alignSelf="flex-end"

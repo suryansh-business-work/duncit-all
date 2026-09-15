@@ -3,6 +3,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { HealthBreakdown, HealthMeter } from '@/components/health';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { useAccountHealth } from '@/hooks/useHealth';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -13,17 +14,18 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 export function AccountHealthScreen() {
   const { t } = useTranslation();
   const { health, isLoading, error } = useAccountHealth();
+  const loadingRegion = useLoadingRegion();
 
   let body: ReactNode;
   if (isLoading && !health) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="account-health-loading" color="$primary" />
+        <Spinner testID="account-health-loading" color="$primary" {...loadingRegion} />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="account-health-error" padding={24} color="$danger">
+      <Text testID="account-health-error" role="alert" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );

@@ -5,6 +5,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { LocationItem } from '@/stores/location.store';
 import { clubCountLabel } from '@/utils/location-tree';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -35,9 +36,13 @@ function CityTile({
   return (
     <YStack
       testID={`location-${loc.id}`}
-      role="button"
+      // One city out of the rail: a radio whose checked state reaches a native
+      // screen reader, with its club count read after the name.
+      role="radio"
       aria-label={loc.location_name}
-      aria-pressed={active}
+      aria-checked={active}
+      accessibilityHint={clubCountLabel(loc.active_club_count)}
+      tabIndex={0}
       onPress={onPress}
       width={110}
       height={112}
@@ -77,6 +82,7 @@ function CityTile({
 }
 
 export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <YStack gap={8}>
       <SectionLabel>CITY</SectionLabel>
@@ -86,7 +92,13 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
         </Text>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <XStack gap={8} paddingRight={8}>
+          <XStack
+            testID="city-options"
+            role="radiogroup"
+            aria-label={t('mweb.common.city')}
+            gap={8}
+            paddingRight={8}
+          >
             {cities.map((loc) => (
               <CityTile
                 key={loc.id}

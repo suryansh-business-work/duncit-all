@@ -22,6 +22,11 @@ export function HeaderRoundButton({ testID, label, onPress, children }: Readonly
       testID={testID}
       role="button"
       aria-label={label}
+      // Makes the circle one screen-reader element on native (the icon inside
+      // has no text to read) and a tab stop on web.
+      tabIndex={0}
+      // 40 drawn, 44 touchable.
+      hitSlop={2}
       onPress={onPress}
       width={40}
       height={40}

@@ -45,7 +45,7 @@ export default function GiftCardCardsPage() {
         alignItems: "center"
       }}>
         <CardGiftcardIcon color="primary" />
-        <Typography variant="h5" sx={{ fontWeight: 900 }}>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 900 }}>
           {t('finance.giftCards.cardsTitle')}
         </Typography>
         {total != null && <Chip size="small" label={total} sx={{ ml: 1 }} />}

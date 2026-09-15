@@ -152,7 +152,14 @@ export default function PexelsPhotosTab({
     photos.length === 0 ? (
       <Alert severity="info">{t('media.pexels.noPhotos')}</Alert>
     ) : (
-      <ImageList cols={3} gap={8} rowHeight={160}>
+      <ImageList
+        cols={3}
+        gap={8}
+        rowHeight={160}
+        role="listbox"
+        aria-label={t('media.picker.pexelsPhotos')}
+        aria-multiselectable={multi}
+      >
         {photos.map((p: any) => (
           <PexelsPhotoCard
             key={p.id}

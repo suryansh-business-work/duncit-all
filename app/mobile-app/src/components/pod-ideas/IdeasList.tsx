@@ -6,6 +6,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import type { PodIdea } from '@/hooks/usePodIdeas';
 import { useTranslation } from '@/hooks/useTranslation';
 import { IdeaCard } from './IdeaCard';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface Props {
   isLoading: boolean;
@@ -32,6 +33,7 @@ export function IdeasList({
   onShare,
   onDelete,
 }: Readonly<Props>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const cardActions = (idea: PodIdea) => ({
     onOpen: () => onOpen(idea.id),
@@ -44,7 +46,7 @@ export function IdeasList({
     <YStack gap={12}>
       {myIdeas.length > 0 ? (
         <YStack gap={12} marginBottom={12}>
-          <SectionHeader title="Your submissions" />
+          <SectionHeader testID="ideas-list-mine-header" title="Your submissions" />
           {myIdeas.map((idea, index) => (
             <Reveal key={idea.id} index={index} scale>
               <IdeaCard idea={idea} myId={myId} showStatus {...cardActions(idea)} />
@@ -55,7 +57,7 @@ export function IdeasList({
 
       {isLoading && !hasData ? (
         <YStack alignItems="center" paddingVertical={32}>
-          <Spinner testID="pod-ideas-loading" color="$primary" />
+          <Spinner {...loadingRegion} testID="pod-ideas-loading" color="$primary" />
         </YStack>
       ) : null}
 

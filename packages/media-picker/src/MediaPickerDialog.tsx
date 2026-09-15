@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
 import {
   Alert,
@@ -54,6 +54,8 @@ export default function MediaPickerDialog({
   // Resolved in the body, not as a default parameter: a hook cannot run in
   // the parameter list, and a caller-supplied heading must still win.
   const heading = title ?? t('media.picker.title');
+  const headingId = useId();
+  const titleRowId = useId();
   const [error, setError] = useState<string | null>(null);
   const multi = max > 1;
   const selection = useMediaSelection(max, open);
@@ -145,17 +147,22 @@ export default function MediaPickerDialog({
       // page, and it is the only layout where the row that finishes the pick
       // cannot end up below the fold.
       fullScreen={onPhone}
+      // Named by the heading text alone, not the whole title row with its
+      // monitoring chip and Close button in it.
+      aria-labelledby={headingId}
     >
       {/* The notice belongs on the title row, not next to the Upload button:
           it has to be readable BEFORE a file is chosen, and this dialog is the
           one screen every picker-driven upload in mWeb and the portals passes
           through. */}
-      <DialogTitle sx={{ pr: 6, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        {heading}
+      <DialogTitle id={titleRowId} sx={{ pr: 6, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <span id={headingId}>{heading}</span>
         <AiMonitoringChip />
         <DuncitIconButton
           onClick={onClose}
           disabled={device.uploading}
+          aria-label={t('media.a11y.close')}
+          data-testid="media-picker-close"
           sx={{ position: 'absolute', right: 8, top: 8 }}
           size="small"
         >
@@ -226,11 +233,12 @@ export default function MediaPickerDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={device.uploading}>
+        <DuncitButton onClick={onClose} disabled={device.uploading} data-testid="media-picker-cancel">
           Cancel
         </DuncitButton>
         {(multi || tab === 'device') && (
           <DuncitButton
+            data-testid="media-picker-done"
             variant="contained"
             onClick={done}
             disabled={pickCount === 0 || device.uploading}

@@ -38,7 +38,7 @@ export default function ClicksOverTime({
             justifyContent: "space-between",
             mb: 2
           }}>
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h2" variant="subtitle2" sx={{
             fontWeight: 700
           }}>
             Clicks over time
@@ -103,7 +103,9 @@ export default function ClicksOverTime({
                     key={point.date}
                     title={`${formatDate(point.date)} — ${point.count.toLocaleString()} clicks`}
                   >
+                    {/* role=img so the Tooltip's day + count label is exposed per bar (1.1.1). */}
                     <Box
+                      role="img"
                       data-testid="click-bar"
                       data-count={point.count}
                       sx={{

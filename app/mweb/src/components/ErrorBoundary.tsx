@@ -24,6 +24,8 @@ function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
   return (
     <Box
       data-testid="error-boundary-fallback"
+      // The page it replaced vanished without a sound; this says why (WCAG 4.1.3).
+      role="alert"
       sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
     >
       <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>

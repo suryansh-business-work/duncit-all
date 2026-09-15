@@ -45,6 +45,7 @@ export function ExpandableSection({
     >
       <XStack
         testID={`${testID}-toggle`}
+        tabIndex={0}
         role="button"
         aria-label={title}
         aria-expanded={open}

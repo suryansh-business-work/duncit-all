@@ -14,7 +14,27 @@ import { GraphQLError } from 'graphql';
  * at production, and nothing it does may create a booking, a message or a row
  * a real person would later see.
  */
-export const STRESS_JOURNEYS = ['home', 'explore', 'clubs', 'search', 'venues', 'api_health'] as const;
+export const STRESS_JOURNEYS = [
+  'app_boot',
+  'auth',
+  'home',
+  'explore',
+  'clubs',
+  'search',
+  'venues',
+  'happening_nearby',
+  'pod_detail',
+  'club_detail',
+  'venue_detail',
+  'profile',
+  'hosts_venues',
+  'pod_ideas',
+  'membership',
+  'leaderboard',
+  'gift_cards',
+  'help',
+  'api_health',
+] as const;
 
 export type StressJourney = (typeof STRESS_JOURNEYS)[number];
 

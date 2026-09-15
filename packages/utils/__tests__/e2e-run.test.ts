@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  E2E_GOOGLE_CREDENTIAL_QUERY,
+  E2E_GRANT_ROLES_MUTATION,
   E2E_ONE_TIME_CODE_QUERY,
   E2E_PURGE_MUTATION,
   E2E_TRAFFIC_HEADER,
   E2E_TRAFFIC_KEY_QUERY,
   runAddress,
+  runMarker,
   runPassword,
 } from '../src/e2e-run';
 
@@ -48,5 +51,19 @@ describe('the server contract', () => {
   it('asks the server under test for the traffic key and purges by run account', () => {
     expect(E2E_TRAFFIC_KEY_QUERY).toContain('e2eTrafficKey(stamp: $stamp)');
     expect(E2E_PURGE_MUTATION).toContain('purgeE2eRunData(input: $input)');
+  });
+
+  it('mints a Google credential by address and name, and grants portal roles by input', () => {
+    expect(E2E_GOOGLE_CREDENTIAL_QUERY).toContain(
+      'e2eGoogleCredential(email: $email, given_name: $given_name, family_name: $family_name)',
+    );
+    expect(E2E_GRANT_ROLES_MUTATION).toContain('grantE2eRunAccountRoles(input: $input)');
+  });
+});
+
+describe('runMarker', () => {
+  it('names the run and the surface that filed the record', () => {
+    expect(runMarker('140920260300', 'mweb')).toBe('[E2E 140920260300 mweb]');
+    expect(runMarker('140920260300', 'native')).not.toBe(runMarker('140920260300', 'mweb'));
   });
 });

@@ -27,7 +27,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
   const fg = disabled ? muted : onPrimary;
   return (
     <SurfaceCard gap={12}>
-      <Text fontSize={16} fontWeight="600" color="$color">
+      <Text role="heading" fontSize={16} fontWeight="600" color="$color">
         Call support now
       </Text>
       <Text fontSize={13} color="$muted">
@@ -40,6 +40,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
         role="button"
         aria-label={t('mweb.callback.callNow')}
         aria-disabled={disabled}
+        tabIndex={0}
         onPress={target?.available ? () => Linking.openURL(`tel:${target.phone}`) : undefined}
         height={52}
         alignItems="center"
@@ -64,7 +65,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
 export function CallbackScreen() {
   const { t } = useTranslation();
   const { loadSupportTarget, requestCallback } = useBouncer();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const [target, setTarget] = useState<SupportTarget>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -103,7 +104,7 @@ export function CallbackScreen() {
         <CallNowCard target={target} />
 
         <SurfaceCard gap={12}>
-          <Text fontSize={16} fontWeight="600" color="$color">
+          <Text role="heading" fontSize={16} fontWeight="600" color="$color">
             Request a callback
           </Text>
           <Text fontSize={13} color="$muted">
@@ -144,6 +145,8 @@ export function CallbackScreen() {
             role="button"
             aria-label={t('mweb.callback.requestCallback')}
             aria-disabled={busy}
+            aria-busy={busy}
+            tabIndex={0}
             onPress={busy ? undefined : () => void request()}
             height={52}
             alignItems="center"
@@ -151,12 +154,12 @@ export function CallbackScreen() {
             gap={8}
             borderRadius={999}
             borderWidth={1}
-            borderColor="$primary"
+            borderColor="$accent"
             opacity={busy ? 0.6 : 1}
             pressStyle={PRESS_STYLE.control}
           >
-            <MaterialIcons name="phone-callback" size={18} color={primary} />
-            <Text fontSize={14} fontWeight="600" color="$primary">
+            <MaterialIcons name="phone-callback" size={18} color={accent} />
+            <Text fontSize={14} fontWeight="600" color="$accent">
               {busy ? 'Requesting…' : 'Request callback'}
             </Text>
           </XStack>

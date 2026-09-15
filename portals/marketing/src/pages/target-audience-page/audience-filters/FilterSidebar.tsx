@@ -64,7 +64,7 @@ export default function FilterSidebar({ state, onChange, options }: Readonly<Pro
         <Badge badgeContent={count} color="primary">
           <FilterListIcon fontSize="small" />
         </Badge>
-        <Typography
+        <Typography component="h2"
           variant="subtitle2"
           sx={{
             fontWeight: 800,

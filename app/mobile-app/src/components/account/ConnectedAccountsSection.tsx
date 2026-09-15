@@ -95,7 +95,13 @@ export function ConnectedAccountsSection() {
 
   return (
     <SurfaceCard gap={12} testID="account-connected-section">
-      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+      <Text
+        testID="connected-accounts-title"
+        role="heading"
+        fontSize={17}
+        fontWeight="600"
+        color="$color"
+      >
         {t('mweb.account.connected.title')}
       </Text>
 
@@ -139,7 +145,7 @@ export function ConnectedAccountsSection() {
       {error ? (
         <XStack alignItems="center" gap={6}>
           <MaterialIcons name="error-outline" size={16} color={muted} />
-          <Text testID="connected-error" fontSize={12} color="$danger" flex={1}>
+          <Text testID="connected-error" role="alert" fontSize={12} color="$danger" flex={1}>
             {error}
           </Text>
         </XStack>

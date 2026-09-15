@@ -28,15 +28,16 @@ export function ContactsFilters({ scope, onScope, search, onSearch }: Readonly<P
   };
   return (
     <YStack gap={10} paddingHorizontal={16}>
-      <XStack gap={8}>
+      <XStack testID="contacts-scope-tabs" role="tablist" gap={8}>
         {SCOPES.map((value) => {
           const selected = scope === value;
           return (
             <XStack
               key={value}
               testID={`contacts-scope-${value}`}
-              role="button"
-              aria-pressed={selected}
+              role="tab"
+              aria-selected={selected}
+              tabIndex={0}
               onPress={() => onScope(value)}
               flex={1}
               height={40}

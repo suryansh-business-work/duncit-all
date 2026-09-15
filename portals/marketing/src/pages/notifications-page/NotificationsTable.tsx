@@ -184,6 +184,7 @@ export default function NotificationsTable({
 
   return (
     <DuncitTable<NotificationRow>
+      ariaLabel={t('shell.nav.notifications')}
       tableId="marketing-notifications"
       columns={columns}
       fetchRows={fetchRows}

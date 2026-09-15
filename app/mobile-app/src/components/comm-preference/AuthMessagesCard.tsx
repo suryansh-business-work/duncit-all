@@ -48,7 +48,12 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
   return (
     <YStack gap={8} testID={`auth-messages-${channel}`}>
       {state.saveFailed ? (
-        <Text testID={`auth-messages-failed-${channel}`} fontSize={12.5} color={danger}>
+        <Text
+          testID={`auth-messages-failed-${channel}`}
+          role="alert"
+          fontSize={12.5}
+          color={danger}
+        >
           {labels.saveFailed}
         </Text>
       ) : null}
@@ -67,7 +72,11 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
           </Text>
         </YStack>
         {busy ? (
-          <ActivityIndicator testID={`auth-messages-busy-${channel}`} color={primary} />
+          <ActivityIndicator
+            testID={`auth-messages-busy-${channel}`}
+            color={primary}
+            aria-label={t('mweb.a11y.loading')}
+          />
         ) : null}
         {!busy && card.showSwitch ? (
           <Switch

@@ -50,6 +50,8 @@ export function ChipArrayField({
             <XStack
               key={tag}
               testID={`${testID}-chip-${tag}`}
+              tabIndex={0}
+              hitSlop={6}
               role="button"
               aria-label={t('mweb.createPod.removeTag', { vars: { tag } })}
               onPress={() => onChange(value.filter((item) => item !== tag))}
@@ -84,7 +86,7 @@ export function ChipArrayField({
         aria-label={label}
       />
       {error ? (
-        <Text testID={`${testID}-error`} fontSize={12} color="$danger">
+        <Text role="alert" testID={`${testID}-error`} fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

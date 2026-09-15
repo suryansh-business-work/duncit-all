@@ -122,11 +122,13 @@ export function BotChat({ botKey, copy, onRegisterRestart }: Readonly<Props>) {
         <TextField
           fullWidth
           size="small"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
           autoFocus
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t('shell.askBot.placeholder')}
           slotProps={{
+            htmlInput: { 'aria-label': t('shell.askBot.placeholder'), 'data-testid': 'ask-bot-composer' },
             input: {
               endAdornment: (
                 <InputAdornment position="end">

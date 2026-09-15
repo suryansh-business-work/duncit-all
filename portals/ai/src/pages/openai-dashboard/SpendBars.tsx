@@ -50,7 +50,7 @@ export default function SpendBars({ rows, emptyText }: Readonly<{ rows: readonly
               {usd(row.cost_usd)}
             </Typography>
           </Stack>
-          <Box sx={{ height: 6, borderRadius: 3, bgcolor: 'action.hover', overflow: 'hidden' }}>
+          <Box aria-hidden sx={{ height: 6, borderRadius: 3, bgcolor: 'action.hover', overflow: 'hidden' }}>
             <Box
               sx={{
                 height: '100%',

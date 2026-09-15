@@ -57,15 +57,22 @@ export function FollowingScreen() {
 
   return (
     <StackScreen title={t('mweb.nav.following')} testID="following-screen">
-      <XStack gap={8} paddingHorizontal={16} paddingVertical={8}>
+      <XStack
+        testID="following-tabs"
+        role="tablist"
+        gap={8}
+        paddingHorizontal={16}
+        paddingVertical={8}
+      >
         {TABS.map((value) => {
           const selected = tab === value;
           return (
             <XStack
               key={value}
               testID={`following-tab-${value.toLowerCase()}`}
-              role="button"
-              aria-pressed={selected}
+              role="tab"
+              aria-selected={selected}
+              tabIndex={0}
               onPress={() => setTab(value)}
               flex={1}
               height={40}

@@ -28,10 +28,12 @@ import { TicketComposer } from './TicketComposer';
 import { TicketSummaryCard } from './TicketSummaryCard';
 import { useTicketActions } from './useTicketActions';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** One support ticket — subject, status and the full reply thread. Users land
  * here right after creating a ticket so they can track it immediately. */
 export function TicketDetailsScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'TicketDetails'>>();
   const details = useTicketDetails(route.params.ticketId);
@@ -101,7 +103,7 @@ export function TicketDetailsScreen() {
   if (isLoading) {
     ticketBody = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner size="large" testID="ticket-details-loading" />
+        <Spinner {...loadingRegion} size="large" testID="ticket-details-loading" />
       </YStack>
     );
   } else if (ticket) {
@@ -122,7 +124,13 @@ export function TicketDetailsScreen() {
           ) : null}
         </YStack>
         {a.error ? (
-          <Text testID="ticket-reply-error" color="$danger" fontSize={12} paddingHorizontal={16}>
+          <Text
+            role="alert"
+            testID="ticket-reply-error"
+            color="$danger"
+            fontSize={12}
+            paddingHorizontal={16}
+          >
             {a.error}
           </Text>
         ) : null}

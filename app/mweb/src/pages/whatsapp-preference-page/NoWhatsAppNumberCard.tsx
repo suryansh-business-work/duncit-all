@@ -26,7 +26,7 @@ export default function NoWhatsAppNumberCard() {
             <PhonelinkEraseOutlinedIcon />
           </IconDisc>
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 15, fontWeight: 600 }}>
+            <Typography component="h2" sx={{ fontSize: 15, fontWeight: 600 }}>
               {t('whatsappPreference.noNumberTitle')}
             </Typography>
             <Typography variant="body2" sx={{

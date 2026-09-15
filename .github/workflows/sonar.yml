@@ -13,15 +13,24 @@ on:
       # about to become main. The concurrency group above cancels a superseded
       # scan, so a burst of staging pushes still costs one run.
       - staging
+  # The quality gate is a PR check: `Build and analyze` fails when the gate does
+  # (see sonar.qualitygate.wait on the scan step), and that red check fails the
+  # PR it reports on.
+  #
+  # A PR INTO staging comes from a branch nothing else scans, so it gets its own
+  # run. A PR into main is deliberately NOT listed: rule 32 makes its head the
+  # staging tip, which the push trigger above already scans, and that push run's
+  # `Build and analyze` sits on the same commit — so it is the check the
+  # staging -> main PR shows. Listing main here would scan the identical commit
+  # twice and race it to publish over Community Build's single analysis.
+  pull_request:
+    branches:
+      - staging
   # Run it by hand from the Actions tab ("Run workflow") against ANY branch —
   # the automatic scan only fires on main, so without this a staging cleanup is
   # invisible in SonarQube until it is merged.
   workflow_dispatch:
     inputs:
-      fail_on_unreachable:
-        description: 'Fail the run (instead of skipping) if the SonarQube server is down'
-        type: boolean
-        default: false
       skip_coverage:
         description: 'Skip the test runs and scan without coverage (much faster; use only for a quick issue check)'
         type: boolean
@@ -40,17 +49,21 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Is the server even up? It is a manually-managed VPS container; when it is
-  # down the scanner returns 502 and fails the pipeline for no good reason.
+  # Is the server even up? It is a manually-managed VPS container. Checking
+  # first spares the coverage matrix (thirteen runners) when it is not.
+  #
+  # An unreachable server FAILS the run. It used to skip every job and stay
+  # green — but this workflow is the quality gate on PRs now, and a skipped
+  # check cannot be told apart from a passed one (GitHub even counts a skipped
+  # job as satisfying a required check). On 2026-09-02 three people read that
+  # green as a quality signal while nothing had been analysed. No analysis
+  # means the gate was not passed.
   # ---------------------------------------------------------------------------
   probe:
     name: Probe SonarQube
     runs-on: ubuntu-latest
-    outputs:
-      up: ${{ steps.sonar.outputs.up }}
     steps:
       - name: Check SonarQube availability
-        id: sonar
         run: |
           # `|| true`, NOT `|| echo "000"`: curl ALREADY writes 000 through -w
           # when the connection never completes, so the fallback echo appended a
@@ -58,43 +71,13 @@ jobs:
           # 000000". The `||` itself is still needed — the step runs under
           # `bash -e`, so a non-zero curl would abort before the branch below.
           code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "${{ secrets.SONAR_HOST_URL }}/api/server/version" || true)
-          if [ "$code" = "200" ]; then
-            echo "up=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "up=false" >> "$GITHUB_OUTPUT"
-          if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
-            echo "::error::SonarQube server unreachable (HTTP $code)."
+          if [ "$code" != "200" ]; then
+            # 000 is a connection that never completed — when the server answers
+            # from a developer machine but not from here, that is egress from
+            # GitHub's runner ranges to the VPS (firewall / fail2ban).
+            echo "::error::SonarQube server unreachable (curl status $code) — the quality gate cannot be evaluated."
             exit 1
           fi
-
-          # A skipped scan leaves this run GREEN on purpose: a manually-managed
-          # VPS being down is not this commit's fault, and reddening every push
-          # over it would only teach people to ignore the check.
-          #
-          # That trade has one cost, and it is the whole reason for the noise
-          # below: nothing in the checks list distinguishes "analysed and clean"
-          # from "never analysed". Three people read `Probe SonarQube: success`
-          # on 2026-09-02 and took it as a quality signal, while every run since
-          # 10:58 UTC had published nothing — the probe job exits 0, so the run
-          # reports success with all three real jobs skipped. Say it plainly
-          # here, in the two places a person actually looks.
-          echo "::warning::SonarQube server unreachable (HTTP $code) — NO analysis was published for this commit. This run being green says nothing about code quality."
-          {
-            echo "## :warning: No SonarQube analysis was published"
-            echo
-            echo "\`/api/server/version\` did not answer (curl status \`$code\` — \`000\` means the connection never completed, which is a network failure rather than an HTTP error)."
-            echo
-            echo "Both coverage jobs and **Build and analyze** were skipped, so:"
-            echo
-            echo "- this run being green says nothing about code quality, and"
-            echo "- the SonarQube dashboard still shows the last commit that *did* analyse."
-            echo
-            echo "If the server answers from a developer machine but not from here, the fault is egress to the VPS from GitHub's runner ranges (firewall / fail2ban) — not SonarQube being down."
-            echo
-            echo "Re-run with **fail_on_unreachable: true** to make this state fail instead of skip."
-          } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # Coverage. The scanner NEVER runs tests — it only reads the lcov each runner
@@ -116,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     needs: probe
-    if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
+    if: ${{ !inputs.skip_coverage }}
     strategy:
       fail-fast: false
       matrix:
@@ -189,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     needs: probe
-    if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
+    if: ${{ !inputs.skip_coverage }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -272,10 +255,26 @@ jobs:
     # let the next queued commit have the runner.
     timeout-minutes: 90
     needs: [probe, coverage-workspaces, coverage-mobile]
-    # `always()` so a skipped/failed coverage job still lets the scan run —
-    # a scan without coverage beats no scan at all.
-    if: always() && needs.probe.outputs.up == 'true'
+    # This job's conclusion IS the quality-gate verdict, so it must never be
+    # skipped — a skipped job reads as passed. `!cancelled()` runs it after a
+    # failed coverage job (the scan still publishes) and after a failed probe
+    # (the availability step below then fails it with the reason). Not
+    # `always()`, which kept the job running through a cancelled run.
+    if: ${{ !cancelled() }}
     steps:
+      # The probe ran before the coverage jobs — forty-odd minutes ago — and a
+      # manually-managed VPS can die inside that window. Ask again at the one
+      # moment that matters, before anything else spends time.
+      - name: Check SonarQube availability
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$SONAR_HOST_URL/api/server/version" || true)
+          if [ "$code" != "200" ]; then
+            echo "::error::SonarQube server unreachable (curl status $code) — no analysis, so the quality gate was not passed."
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # shallow clones hurt new-code relevancy
@@ -301,12 +300,22 @@ jobs:
       # If those two families ever need type-aware rules, the way back is a
       # curated `sonar.typescript.tsconfigPaths` naming just them, NOT a blanket
       # install that hands the sensor the whole monorepo.
+      #
+      # And so NO package-manager cache either. `cache: pnpm` saves the pnpm
+      # store in a post step, and with no install that store never exists: on a
+      # cache miss the post step errors "Path(s) specified in the action for
+      # caching do(es) not exist" and fails the job AFTER a successful analysis.
+      # Caches are branch-scoped, so main missed every time — its run for
+      # 7c73284b1 went red exactly that way. Node alone is all this job uses.
+      #
+      # Dropping `cache:` is not enough: setup-node v5 turns caching back on by
+      # itself when package.json names a `packageManager` (the root says pnpm),
+      # then dies "Unable to locate executable file: pnpm" — fd8cd71d4's run.
       # -----------------------------------------------------------------------
-      - uses: pnpm/action-setup@v4.4.0
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: pnpm
+          package-manager-cache: false
 
       # One artifact per matrix group (lcov-server, lcov-mweb, …), merged into
       # one directory. The mobile artifact is named mobile-lcov on purpose so
@@ -407,37 +416,24 @@ jobs:
             sonar-cache-${{ runner.os }}-${{ github.ref_name }}-
             sonar-cache-${{ runner.os }}-
 
-      # The probe job ran BEFORE the two coverage jobs — twenty-odd minutes ago.
-      # A manually-managed VPS can die inside that window, and then the scan
-      # fails for precisely the "no good reason" the probe was added to avoid
-      # (the probe only ever guarded the START of the run). Ask again at the one
-      # moment that matters. This does NOT swallow scanner errors: if the server
-      # answers, the scan runs and any real failure still reds the pipeline.
-      - name: Re-check SonarQube availability
-        id: recheck
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$SONAR_HOST_URL/api/server/version" || echo "000")
-          if [ "$code" = "200" ]; then
-            echo "up=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "up=false" >> "$GITHUB_OUTPUT"
-            if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
-              echo "::error::SonarQube went down after the probe (HTTP $code)."
-              exit 1
-            fi
-            echo "::warning::SonarQube went down after the probe (HTTP $code) — skipping the scan."
-          fi
-
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
-        if: steps.recheck.outputs.up == 'true'
+        id: scan
         with:
           # The set actually present on disk (see "Normalize lcov paths" above).
           # Left empty on a skip_coverage run so the scan still publishes rather
           # than being handed an empty reportPaths and reporting a false 0%.
+          #
+          # sonar.qualitygate.wait makes the scan the gate. Without it this step
+          # succeeded the moment the report was UPLOADED, so a failed gate never
+          # reached GitHub and every PR stayed green over it. Now the scanner
+          # waits for the server to process the report and exits non-zero when
+          # the gate fails. The timeout covers the server's queue: Community
+          # Build processes one report at a time, and a staging, a main and a PR
+          # scan can land together.
           args: >-
             -Dsonar.projectVersion=${{ env.SONAR_PROJECT_VERSION }}
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=1200
             ${{ env.SONAR_LCOV_PATHS && format('-Dsonar.javascript.lcov.reportPaths={0}', env.SONAR_LCOV_PATHS) || '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -450,3 +446,14 @@ jobs:
           # the JS/TS sensor dies with "bridge server is unresponsive" after ~25
           # minutes, publishing nothing.
           SONAR_SCANNER_JAVA_OPTS: -Xmx4096m
+
+      # The scanner prints only a dashboard link on a failed gate, and the server
+      # forces a login — so a red PR check would explain nothing to most readers.
+      # This writes the failed conditions, the new-code issues and hotspots, and
+      # the files behind a coverage/duplication miss into the job summary.
+      - name: Explain the quality gate failure
+        if: failure() && steps.scan.outcome == 'failure'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: node scripts/sonar-gate-report.mjs

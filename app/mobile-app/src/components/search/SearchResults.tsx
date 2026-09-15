@@ -62,6 +62,8 @@ export function SearchResults({
         <XStack
           testID="search-sort-button"
           role="button"
+          tabIndex={0}
+          hitSlop={2}
           aria-label={t('mweb.common.sort')}
           onPress={() => setSortOpen(true)}
           alignItems="center"
@@ -82,6 +84,8 @@ export function SearchResults({
         <XStack
           testID="search-filter-button"
           role="button"
+          tabIndex={0}
+          hitSlop={2}
           aria-label={t('mweb.common.filter')}
           onPress={() => setFilterOpen(true)}
           alignItems="center"
@@ -103,7 +107,12 @@ export function SearchResults({
 
       {loading && isEmpty ? (
         <YStack alignItems="center" paddingVertical={24}>
-          <Spinner testID="search-loading" color="$primary" />
+          <Spinner
+            testID="search-loading"
+            role="progressbar"
+            aria-label={t('mweb.a11y.loading')}
+            color="$primary"
+          />
         </YStack>
       ) : null}
 

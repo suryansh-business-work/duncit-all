@@ -55,7 +55,7 @@ export default function BookingPage() {
   }
   return (
     <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }} data-testid="booking-loading">
-      <CircularProgress />
+      <CircularProgress aria-label={t('mweb.a11y.loading')} />
     </Box>
   );
 }

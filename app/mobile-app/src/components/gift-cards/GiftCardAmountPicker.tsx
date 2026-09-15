@@ -43,7 +43,12 @@ export function GiftCardAmountPicker({
   return (
     <SurfaceCard gap={12}>
       <SectionHeader title={t('mweb.giftCards.amountHeading')} />
-      <XStack gap={8} flexWrap="wrap">
+      <XStack
+        gap={8}
+        flexWrap="wrap"
+        role="radiogroup"
+        aria-label={t('mweb.giftCards.amountHeading')}
+      >
         {denominations.map((amount) => {
           const isActive = selected === amount && !customText;
           const label = formatMoney(currency, amount);
@@ -51,8 +56,10 @@ export function GiftCardAmountPicker({
             <XStack
               key={amount}
               testID={`gift-card-amount-${amount}`}
-              role="button"
+              role="radio"
               aria-label={label}
+              aria-checked={isActive}
+              tabIndex={0}
               onPress={() => onSelect(amount)}
               height={36}
               paddingHorizontal={16}

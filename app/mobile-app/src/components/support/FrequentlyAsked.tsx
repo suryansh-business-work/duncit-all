@@ -20,6 +20,7 @@ function FrequentlyAskedTile({ faq, onOpen }: Readonly<FrequentlyAskedTileProps>
     <SurfaceCard
       testID={`faq-card-${faq.id}`}
       role="button"
+      tabIndex={0}
       aria-label={faq.question}
       onPress={() => onOpen(faq)}
       width={190}

@@ -38,7 +38,12 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack testID="image-viewer" flex={1} backgroundColor="rgba(0,0,0,0.96)">
+        <YStack
+          testID="image-viewer"
+          flex={1}
+          backgroundColor="rgba(0,0,0,0.96)"
+          onAccessibilityEscape={onClose}
+        >
           <FlatList
             data={images}
             horizontal
@@ -47,8 +52,17 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
             initialScrollIndex={index ?? 0}
             getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
             keyExtractor={(url, i) => `${i}-${url}`}
-            renderItem={({ item }) => (
-              <AppImage source={{ uri: item }} style={{ width, height }} resizeMode="contain" />
+            renderItem={({ item, index: position }) => (
+              // The picture IS the content here, so it is never left unnamed;
+              // no caption exists for it, so it says where in the set it is.
+              <AppImage
+                source={{ uri: item }}
+                style={{ width, height }}
+                resizeMode="contain"
+                accessibilityLabel={t('mweb.a11y.imageOf', {
+                  vars: { current: position + 1, total: images.length },
+                })}
+              />
             )}
           />
           <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, right: 0 }}>
@@ -57,6 +71,8 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
               testID="image-viewer-close"
               role="button"
               aria-label={t('mweb.common.closeImage')}
+              tabIndex={0}
+              hitSlop={2}
               onPress={onClose}
               margin={12}
               width={40}
@@ -86,6 +102,8 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
                   role="button"
                   aria-label={action.label}
                   aria-disabled={action.busy}
+                  aria-busy={action.busy}
+                  tabIndex={0}
                   onPress={action.busy ? undefined : action.onPress}
                   height={52}
                   alignItems="center"

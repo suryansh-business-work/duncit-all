@@ -9,6 +9,8 @@ interface Props<T> {
   searchOf: (row: T) => string;
   emptyText: string;
   searchPlaceholder: string;
+  onRowClick?: (row: T) => void;
+  defaultSort?: { field: string; dir: 'asc' | 'desc' };
 }
 
 /**
@@ -24,6 +26,8 @@ export default function LiveRowsTable<T>({
   searchOf,
   emptyText,
   searchPlaceholder,
+  onRowClick,
+  defaultSort,
 }: Readonly<Props<T>>) {
   const refetchRef = useRef<(() => void) | null>(null);
   const fetchRows = useMemo(() => clientTableFetch(rows, searchOf), [rows, searchOf]);
@@ -41,6 +45,8 @@ export default function LiveRowsTable<T>({
       emptyText={emptyText}
       searchPlaceholder={searchPlaceholder}
       refetchRef={refetchRef}
+      onRowClick={onRowClick}
+      defaultSort={defaultSort}
     />
   );
 }

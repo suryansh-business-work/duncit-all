@@ -42,9 +42,15 @@ export function HostInsightsFilterSheet({
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="insights-filter-sheet">
+        <YStack
+          flex={1}
+          justifyContent="flex-end"
+          testID="insights-filter-sheet"
+          onAccessibilityEscape={onClose}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
+            importantForAccessibility="no"
             role="button"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
@@ -63,12 +69,19 @@ export function HostInsightsFilterSheet({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text
+                  testID="insights-filter-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
                   Filter pods by month
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.ghost}
                   testID="insights-filter-close"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
@@ -95,6 +108,7 @@ export function HostInsightsFilterSheet({
               <XStack gap={12} padding={16}>
                 <XStack
                   testID="insights-filter-reset"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.resetFilters')}
                   onPress={() => setDraft(DEFAULT_HOST_CHART_RANGE)}
@@ -115,6 +129,7 @@ export function HostInsightsFilterSheet({
                 </XStack>
                 <XStack
                   testID="insights-filter-apply"
+                  tabIndex={0}
                   role="button"
                   aria-label={t('mweb.common.applyFilters')}
                   onPress={() => onApply(draft)}

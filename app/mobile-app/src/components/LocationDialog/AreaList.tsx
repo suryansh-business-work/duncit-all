@@ -51,9 +51,14 @@ function Row({
   return (
     <XStack
       testID={testID}
-      role="button"
+      // One area out of the list: a radio whose checked state a native screen
+      // reader announces (`aria-pressed` never reached one). The club count
+      // and PIN under the name are read after it.
+      role="radio"
       aria-label={label}
-      aria-pressed={active}
+      aria-checked={active}
+      accessibilityHint={sub}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       gap={12}
@@ -136,7 +141,7 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
               color="$color"
             />
           </XStack>
-          <SurfaceCard padding={0} overflow="hidden">
+          <SurfaceCard testID="area-options" role="radiogroup" padding={0} overflow="hidden">
             <Row
               testID="area-all"
               label={t('mweb.common.allAreas')}

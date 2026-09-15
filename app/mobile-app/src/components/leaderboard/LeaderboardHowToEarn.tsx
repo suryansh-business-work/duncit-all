@@ -35,7 +35,7 @@ export function LeaderboardHowToEarn({ config }: Readonly<{ config: LeaderboardC
 
   return (
     <SurfaceCard testID="leaderboard-how-to-earn" marginHorizontal={16} gap={12}>
-      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+      <Text role="heading" fontSize={17} fontWeight="600" color="$color">
         {t('mweb.leaderboard.howToTitle')}
       </Text>
       {active.map((category) => (
@@ -51,7 +51,7 @@ export function LeaderboardHowToEarn({ config }: Readonly<{ config: LeaderboardC
             borderRadius={999}
             backgroundColor="$primarySoft"
           >
-            <Text fontSize={12} fontWeight="600" color="$primary">
+            <Text fontSize={12} fontWeight="600" color="$accent">
               {t('mweb.leaderboard.earnPoints', {
                 vars: { points: config[LEADERBOARD_POINTS_FIELD[category]] },
               })}

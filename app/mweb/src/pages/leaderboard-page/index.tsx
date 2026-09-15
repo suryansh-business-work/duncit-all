@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
         alignItems: "center",
         py: 4
       }}>
-      <CircularProgress size={24} />
+      <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
     </Stack>
   );
 
@@ -120,6 +120,7 @@ export default function LeaderboardPage() {
           size="small"
           value={period}
           data-testid="leaderboard-period-toggle"
+          aria-label={t('mweb.a11y.leaderboardPeriod')}
           onChange={(_e, next: LeaderboardPeriodKey | null) => next && setPeriod(next)}
           sx={SEGMENTED_SX}
         >

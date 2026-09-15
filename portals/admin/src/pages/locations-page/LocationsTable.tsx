@@ -27,7 +27,7 @@ const zoneLabel = (z: { zone_name: string; pincode?: string | null }) =>
   z.pincode ? `${z.zone_name} · ${z.pincode}` : z.zone_name;
 
 const renderImage = (loc: LocationRow) => (
-  <Avatar variant="rounded" src={loc.location_image ?? undefined} sx={{ width: 32, height: 32 }}>
+  <Avatar variant="rounded" alt="" src={loc.location_image ?? undefined} sx={{ width: 32, height: 32 }}>
     {(loc.city || loc.location_name || '?')[0]}
   </Avatar>
 );
@@ -126,6 +126,7 @@ export default function LocationsTable({
 
   return (
     <DuncitTable<LocationRow>
+      ariaLabel={t('admin.locations.title')}
       tableId="admin-locations"
       columns={columns}
       fetchRows={fetchRows}

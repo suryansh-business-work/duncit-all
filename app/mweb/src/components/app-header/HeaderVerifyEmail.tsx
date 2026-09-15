@@ -12,7 +12,20 @@ export default function HeaderVerifyEmail({ onOpen }: Readonly<{ onOpen: () => v
       data-testid="header-verify-email"
       sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 2, pb: 1.5, boxSizing: 'border-box' }}
     >
-      <Alert data-testid="verify-email-banner" severity="info" onClick={onOpen} sx={{ cursor: 'pointer', py: 0.5 }}>
+      <Alert
+        data-testid="verify-email-banner"
+        severity="info"
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
+        sx={{ cursor: 'pointer', py: 0.5 }}
+      >
         {t('mweb.home.verifyYourEmail')}
       </Alert>
     </Box>

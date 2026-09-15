@@ -73,6 +73,8 @@ export function AppPopupCard({
             testID="app-popup-close"
             role="button"
             aria-label={closeLabel}
+            tabIndex={0}
+            hitSlop={4}
             onPress={onClose}
             position="absolute"
             top={10}

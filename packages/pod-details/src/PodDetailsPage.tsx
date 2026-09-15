@@ -140,7 +140,7 @@ function PodDetailsView({
                   minWidth: 0
                 }}>
                 <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
-                <Typography variant="h5" noWrap sx={{
+                <Typography variant="h5" component="h1" noWrap sx={{
                   fontWeight: 900
                 }}>
                   {pod.pod_title}

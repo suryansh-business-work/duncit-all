@@ -40,7 +40,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
       backgroundColor="rgba(0,0,0,0.35)"
     >
       {media.heading ? (
-        <Text fontSize={24} fontWeight="600" color="#ffffff" maxWidth={260}>
+        <Text role="heading" fontSize={24} fontWeight="600" color="#ffffff" maxWidth={260}>
           {media.heading}
         </Text>
       ) : null}
@@ -53,6 +53,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
         <XStack
           testID="pod-shop-slide-cta"
           role="button"
+          tabIndex={0}
           aria-label={media.cta_label}
           onPress={() => openSliderCta(media.cta_url)}
           marginTop={14}
@@ -63,7 +64,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
           backgroundColor="#ffffff"
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {media.cta_label}
           </Text>
         </XStack>

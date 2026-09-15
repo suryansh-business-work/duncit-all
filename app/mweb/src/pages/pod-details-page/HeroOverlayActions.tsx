@@ -33,7 +33,7 @@ const roundBtn = {
 export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggleSave, onShare }: Readonly<Props>) {
   const { t } = useTranslation();
   const savedIcon = saved ? (
-    <BookmarkIcon fontSize="small" sx={{ color: 'primary.main' }} />
+    <BookmarkIcon fontSize="small" sx={{ color: 'accent.main' }} />
   ) : (
     <BookmarkBorderIcon fontSize="small" />
   );

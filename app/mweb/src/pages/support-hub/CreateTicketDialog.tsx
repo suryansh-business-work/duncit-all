@@ -60,6 +60,7 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             fullWidth
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
             slotProps={{ htmlInput: { 'data-testid': 'create-ticket-subject' } }}
           />

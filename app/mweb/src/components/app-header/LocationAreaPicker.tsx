@@ -102,12 +102,12 @@ export default function LocationAreaPicker({
                   </InputAdornment>
                 ),
               },
-              htmlInput: { 'data-testid': 'area-search-input' },
+              htmlInput: { 'aria-label': t('mweb.appHeader.searchLocalityOrPinCode'), 'data-testid': 'area-search-input' },
             }}
           />
           <Box sx={{ ...SURFACE_SX, width: '100%', maxHeight: 258, overflow: 'auto' }}>
             <List disablePadding sx={{ width: '100%' }}>
-              <ListItemButton data-testid="area-all" selected={!draftZone} onClick={() => setDraftZone('')} sx={areaItemSx}>
+              <ListItemButton data-testid="area-all" selected={!draftZone} aria-pressed={!draftZone} onClick={() => setDraftZone('')} sx={areaItemSx}>
                 <ListItemIcon sx={{ minWidth: 34, color: draftZone ? 'text.secondary' : 'primary.main' }}>
                   <LayersIcon fontSize="small" />
                 </ListItemIcon>
@@ -125,6 +125,7 @@ export default function LocationAreaPicker({
                     key={zone.zone_name}
                     data-testid={zoneTestId}
                     selected={selected}
+                    aria-pressed={selected}
                     onClick={() => setDraftZone(zone.zone_name)}
                     sx={areaItemSx}
                   >
@@ -144,7 +145,7 @@ export default function LocationAreaPicker({
             </List>
           </Box>
           {filteredZones.length === 0 && (
-            <Typography data-testid="location-area-picker-empty" variant="body2" sx={{
+            <Typography data-testid="location-area-picker-empty" role="status" variant="body2" sx={{
               color: "text.secondary"
             }}>
               No matching localities found.

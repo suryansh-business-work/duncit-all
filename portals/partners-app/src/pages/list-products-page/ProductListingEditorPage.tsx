@@ -12,6 +12,7 @@ import {
   canManageProductListings,
 } from './productAccess';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 export default function ProductListingEditorPage() {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ export default function ProductListingEditorPage() {
         sx={{
           alignItems: "center",
           py: 5
-        }}><CircularProgress size={24} /></Stack>
+        }}><CircularProgress size={24} aria-label={t('shell.a11y.loading')} /></Stack>
     );
   }
 
@@ -44,7 +45,7 @@ export default function ProductListingEditorPage() {
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
-      <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
+      <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
         <Stack direction="row" spacing={1.25} sx={{
           alignItems: "center"
         }}>
@@ -52,8 +53,8 @@ export default function ProductListingEditorPage() {
             {t('partners.venueAvailabilityPage.back')}
           </DuncitButton>
           <Box>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{editing ? 'Edit product' : 'New product'}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="overline" sx={{ fontWeight: 900 }}>{editing ? 'Edit product' : 'New product'}</Typography>
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>{editing ? product?.product_name || 'Product listing' : 'Add Product'}</Typography>
           </Box>

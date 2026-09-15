@@ -46,7 +46,7 @@ export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
         <Typography
           variant="body2"
           sx={{
-            color: "text.disabled",
+            color: "text.secondary",
             mt: 0.5
           }}>
           {copy.variablesEmpty}
@@ -57,7 +57,7 @@ export function PromptVariables({ kind, variables }: Readonly<VariablesProps>) {
             <Stack key={v.name} direction="row" spacing={1} sx={{
               alignItems: "flex-start"
             }}>
-              <Tooltip title={copy.copyVariable}>
+              <Tooltip title={copy.copyVariable} describeChild>
                 <Chip
                   size="small"
                   label={braced(v.name)}
@@ -109,7 +109,7 @@ export function PromptUsage({ usage }: Readonly<{ usage: AiPrompt['usage'] }>) {
       </Typography>
       {usage.length === 0 ? (
         <Typography variant="body2" sx={{
-          color: "text.disabled"
+          color: "text.secondary"
         }}>
           {copy.usageEmpty}
         </Typography>
@@ -132,7 +132,7 @@ export function PromptUsage({ usage }: Readonly<{ usage: AiPrompt['usage'] }>) {
                 component="div"
                 sx={{
                   fontFamily: "monospace",
-                  color: "text.disabled",
+                  color: "text.secondary",
                   wordBreak: 'break-all'
                 }}>
                 {u.file}

@@ -8,21 +8,21 @@ import AttachmentList from '../../components/AttachmentList';
 import { userMessageTick } from './chatHelpers';
 import { bubbleRadiusSx } from './calmStyles';
 import type { SupportChatMessage } from './queries';
-
-const SEEN_BLUE = '#34b7f1';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function Tick({
   msg,
   agentLastReadAt,
   onRetry,
 }: Readonly<{ msg: SupportChatMessage; agentLastReadAt: string | null; onRetry?: () => void }>) {
+  const { t } = useTranslation();
   const state = userMessageTick(msg, agentLastReadAt);
   if (state === 'failed') {
     return (
       <Stack data-testid={`tick-${msg.id}`} direction="row" spacing={0.25} sx={{
         alignItems: "center"
       }}>
-        <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} />
+        <ErrorOutlineIcon titleAccess={t('mweb.a11y.messageFailed')} sx={{ fontSize: 14, color: 'inherit' }} />
         {onRetry && (
           <Link
             data-testid={`retry-${msg.id}`}
@@ -30,7 +30,7 @@ function Tick({
             type="button"
             onClick={onRetry}
             underline="always"
-            sx={{ fontSize: 11, fontWeight: 600, color: 'error.main' }}
+            sx={{ fontSize: 11, fontWeight: 600, color: 'inherit' }}
           >
             Retry
           </Link>
@@ -38,9 +38,13 @@ function Tick({
       </Stack>
     );
   }
-  if (state === 'pending') return <AccessTimeIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 14, opacity: 0.7 }} />;
-  if (state === 'seen') return <DoneAllIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 15, color: SEEN_BLUE }} />;
-  return <CheckIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 15, opacity: 0.6 }} />;
+  if (state === 'pending') {
+    return <AccessTimeIcon data-testid={`tick-${msg.id}`} titleAccess={t('mweb.a11y.messageSending')} sx={{ fontSize: 14 }} />;
+  }
+  if (state === 'seen') {
+    return <DoneAllIcon data-testid={`tick-${msg.id}`} titleAccess={t('mweb.a11y.messageSeen')} sx={{ fontSize: 15 }} />;
+  }
+  return <CheckIcon data-testid={`tick-${msg.id}`} titleAccess={t('mweb.a11y.messageSent')} sx={{ fontSize: 15 }} />;
 }
 
 interface Props {
@@ -77,7 +81,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
       spacing={1}
     >
       {!isUser && (
-        <Avatar src={msg.sender_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12, bgcolor: msg.is_ai ? 'secondary.main' : undefined }}>
+        <Avatar alt="" src={msg.sender_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12, bgcolor: msg.is_ai ? 'secondary.main' : undefined, color: msg.is_ai ? 'secondary.contrastText' : undefined }}>
           {msg.is_ai ? <SmartToyIcon sx={{ fontSize: 16 }} /> : label[0]?.toUpperCase() || 'S'}
         </Avatar>
       )}
@@ -107,7 +111,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
             justifyContent: 'flex-end',
             mt: 0.25
           }}>
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>
+          <Typography variant="caption" sx={{ color: isUser ? 'inherit' : 'text.secondary' }}>
             {timeText}
           </Typography>
           {isUser && <Tick msg={msg} agentLastReadAt={agentLastReadAt} onRetry={onRetry} />}

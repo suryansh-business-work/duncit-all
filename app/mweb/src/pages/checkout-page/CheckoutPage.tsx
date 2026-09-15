@@ -309,8 +309,9 @@ function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () => void;
 }
 
 function CheckoutSkeleton() {
+  const { t } = useTranslation();
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }} data-testid="checkout-loading">
+    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }} data-testid="checkout-loading" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')}>
       <Stack spacing={2}>
         <Skeleton variant="text" width="40%" height={40} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

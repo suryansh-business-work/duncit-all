@@ -165,6 +165,7 @@ export default function PodContentFormDialog({
                         <DuncitIconButton
                           size="small"
                           onClick={() => remove(index)}
+                          aria-label={t('shell.common.delete')}
                           sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'background.paper' }}
                         >
                           <DeleteIcon fontSize="small" />

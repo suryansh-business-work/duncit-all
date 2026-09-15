@@ -18,7 +18,7 @@ export default function TotalsCards({ totals }: Readonly<{ totals: Totals }>) {
           }}>
             Successful Payments
           </Typography>
-          <Typography variant="h6" sx={{
+          <Typography component="p" variant="h6" sx={{
             fontWeight: 700
           }}>
             {totals.count}
@@ -32,7 +32,7 @@ export default function TotalsCards({ totals }: Readonly<{ totals: Totals }>) {
           }}>
             Gross
           </Typography>
-          <Typography variant="h6" sx={{
+          <Typography component="p" variant="h6" sx={{
             fontWeight: 700
           }}>
             {fmt(totals.gross)}
@@ -46,7 +46,7 @@ export default function TotalsCards({ totals }: Readonly<{ totals: Totals }>) {
           }}>
             Platform Fees
           </Typography>
-          <Typography variant="h6" sx={{
+          <Typography component="p" variant="h6" sx={{
             fontWeight: 700
           }}>
             {fmt(totals.fee)}
@@ -60,7 +60,7 @@ export default function TotalsCards({ totals }: Readonly<{ totals: Totals }>) {
           }}>
             GST Collected
           </Typography>
-          <Typography variant="h6" sx={{
+          <Typography component="p" variant="h6" sx={{
             fontWeight: 700
           }}>
             {fmt(totals.gst)}

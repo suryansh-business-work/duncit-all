@@ -88,8 +88,21 @@ export default function OnboardingTrendChart({ buckets, showBrands }: Readonly<P
     },
   };
 
+  // The canvas has no text of its own (1.1.1): name it with each series' total.
+  const summary = series
+    .map((entry) => {
+      const total = buckets.reduce((sum, bucket) => sum + bucket[entry.field], 0);
+      return `${t(entry.labelKey)} ${total}`;
+    })
+    .join(', ');
+
   return (
-    <div style={{ height: 280 }}>
+    <div
+      role="img"
+      aria-label={`${t('onboarding.dashboard.onboardingTrendLast6Months')}: ${summary}`}
+      data-testid="onboarding-trend-chart"
+      style={{ height: 280 }}
+    >
       <Bar data={data} options={options} />
     </div>
   );

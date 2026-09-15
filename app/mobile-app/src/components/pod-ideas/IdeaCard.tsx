@@ -96,6 +96,7 @@ export function IdeaCard({
         </YStack>
         {showStatus ? (
           <XStack
+            testID={`idea-card-status-${idea.id}`}
             height={24}
             alignItems="center"
             paddingHorizontal={10}
@@ -111,6 +112,7 @@ export function IdeaCard({
           <XStack
             testID={`idea-delete-${idea.id}`}
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podIdeas.deleteIdea')}
             onPress={onDelete}
             padding={4}
@@ -123,6 +125,7 @@ export function IdeaCard({
 
       <YStack
         role="button"
+        tabIndex={0}
         aria-label={idea.title}
         onPress={onOpen}
         gap={4}

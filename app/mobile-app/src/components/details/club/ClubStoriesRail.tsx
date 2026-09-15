@@ -116,7 +116,7 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
     <YStack gap={10} testID="club-stories">
       <SectionHeader title={t('mweb.clubDetailsPage.stories')} />
       {railError ? (
-        <Text testID="club-story-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="club-story-error" fontSize={12} color="$danger">
           {railError}
         </Text>
       ) : null}

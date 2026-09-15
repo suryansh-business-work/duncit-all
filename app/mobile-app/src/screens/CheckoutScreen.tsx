@@ -36,6 +36,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import type { Translator } from '@duncit/i18n';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 type CouponState = { ok?: boolean; code?: string | null; discount_amount?: number } | null;
 
@@ -83,6 +84,7 @@ function buildDiscounts(
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
 export function CheckoutScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Checkout'>>();
@@ -235,7 +237,7 @@ export function CheckoutScreen() {
   if (isLoading && !finance) {
     checkoutBody = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="checkout-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="checkout-loading" color="$primary" />
       </YStack>
     );
   } else if (breakup) {

@@ -73,6 +73,7 @@ export default function ChangeLogsSection({
         </Typography>
       </Stack>
       <DuncitTable<EntityChangeLogRow>
+        ariaLabel={t('directory.changeLogs.title')}
         tableId={tableId}
         columns={columns}
         fetchRows={fetchRows}

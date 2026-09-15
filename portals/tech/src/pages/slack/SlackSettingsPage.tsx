@@ -52,7 +52,7 @@ export default function SlackSettingsPage() {
   if (!isConfigured) {
     return (
       <Stack spacing={2.5}>
-        <Typography variant="h4" sx={{
+        <Typography variant="h4" component="h1" sx={{
           fontWeight: 950
         }}>
           {t('tech.slack.title')}
@@ -71,7 +71,7 @@ export default function SlackSettingsPage() {
           justifyContent: "space-between"
         }}>
         <Box>
-          <Typography variant="h4" sx={{
+          <Typography variant="h4" component="h1" sx={{
             fontWeight: 950
           }}>
             {t('tech.slack.title')}

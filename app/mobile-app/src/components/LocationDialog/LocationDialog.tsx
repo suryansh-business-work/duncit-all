@@ -45,12 +45,15 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} testID="location-dialog">
+          <YStack flex={1} testID="location-dialog" onAccessibilityEscape={onClose}>
             <YStack
               pressStyle={PRESS_STYLE.surface}
               testID="location-backdrop"
               role="button"
               aria-label={t('mweb.common.close')}
+              // A touch target, not a screen-reader stop — the header ✕ and
+              // Cancel are the named ways out (same as DuncitDialog's scrim).
+              importantForAccessibility="no"
               onPress={onClose}
               position="absolute"
               top={0}

@@ -50,14 +50,27 @@ export function ProductsManageScreen() {
     >
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
-          {isLoading ? <Spinner testID="ecomm-dashboard-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="ecomm-dashboard-loading"
+              color="$primary"
+            />
+          ) : null}
           <XStack gap={10}>
             <StatTile label={t('mweb.productsManage.products')} value={products.length} />
             <StatTile label={t('mweb.productsManage.inStock')} value={totalStock} />
             <StatTile label={t('mweb.productsManage.avgPrice')} value={`₹${avgPrice}`} />
           </XStack>
           <SurfaceCard gap={8}>
-            <Text fontSize={16} fontWeight="600" color="$color">
+            <Text
+              testID="ecomm-dashboard-stock-title"
+              role="heading"
+              fontSize={16}
+              fontWeight="600"
+              color="$color"
+            >
               Stock by product
             </Text>
             {stockChart.length === 0 ? (

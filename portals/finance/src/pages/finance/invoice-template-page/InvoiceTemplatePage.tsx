@@ -67,7 +67,7 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
         }}>
         <ReceiptLongIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             {meta.title}

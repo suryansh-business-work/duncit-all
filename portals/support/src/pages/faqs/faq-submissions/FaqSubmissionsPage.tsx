@@ -143,6 +143,7 @@ export default function FaqSubmissionsPage() {
         hint={t('support.faqSubmissions.hint')}
       />
       <DuncitTable<FaqSubmissionRow>
+        ariaLabel={t('support.faqSubmissions.title')}
         tableId="support-faq-submissions"
         columns={columns}
         fetchRows={fetchRows}

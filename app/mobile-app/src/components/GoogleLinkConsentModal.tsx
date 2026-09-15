@@ -51,6 +51,7 @@ export function GoogleLinkConsentModal({
             right={0}
             bottom={0}
             backgroundColor="rgba(0,0,0,0.55)"
+            importantForAccessibility="no"
           />
           <YStack
             testID="google-link-consent"
@@ -63,7 +64,14 @@ export function GoogleLinkConsentModal({
           >
             <XStack alignItems="center" gap={8}>
               <MaterialIcons name="link" size={20} color={accent} />
-              <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
+              <Text
+                testID="google-link-consent-title"
+                role="heading"
+                fontSize={17}
+                fontWeight="600"
+                color="$color"
+                flexShrink={1}
+              >
                 {t('mweb.login.linkConsentTitle')}
               </Text>
             </XStack>
@@ -76,7 +84,7 @@ export function GoogleLinkConsentModal({
             </Text>
 
             {error ? (
-              <Text testID="google-link-consent-error" fontSize={12.5} color="$danger">
+              <Text testID="google-link-consent-error" role="alert" fontSize={12.5} color="$danger">
                 {error}
               </Text>
             ) : null}
@@ -87,6 +95,7 @@ export function GoogleLinkConsentModal({
                 role="button"
                 aria-label={t('mweb.login.linkConsentDeny')}
                 aria-disabled={busy}
+                tabIndex={0}
                 onPress={busy ? undefined : onDeny}
                 flex={1}
                 height={44}
@@ -107,6 +116,8 @@ export function GoogleLinkConsentModal({
                 role="button"
                 aria-label={t('mweb.login.linkConsentAllow')}
                 aria-disabled={busy}
+                aria-busy={busy}
+                tabIndex={0}
                 onPress={busy ? undefined : onAllow}
                 flex={1.4}
                 height={44}

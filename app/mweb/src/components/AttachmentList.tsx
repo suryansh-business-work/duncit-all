@@ -2,13 +2,16 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { describeAttachment, typeLabel, type AttachmentInfo } from '../utils/attachment';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Document/other file card: icon + file name + type badge + open/download link. */
 function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
+  const { t } = useTranslation();
   return (
     <Chip
       data-testid={`attachment-doc-${info.url}`}
       component="a"
+      aria-label={t('mweb.a11y.openAttachment', { vars: { name: info.name } })}
       href={info.url}
       target="_blank"
       rel="noopener noreferrer"
@@ -26,7 +29,7 @@ function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
           <Typography variant="caption" noWrap sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}>
             {info.name}
           </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {typeLabel(info.ext)}
           </Typography>
           <DownloadIcon sx={{ fontSize: 15, opacity: 0.7 }} />
@@ -48,7 +51,7 @@ function VideoCard({ info }: Readonly<{ info: AttachmentInfo }>) {
         preload="metadata"
         style={{ width: '100%', maxHeight: 160, borderRadius: '12px', background: '#000' }}
       />
-      <Typography variant="caption" noWrap sx={{ display: 'block', opacity: 0.8, mt: 0.25 }}>
+      <Typography variant="caption" noWrap sx={{ display: 'block', mt: 0.25 }}>
         {info.name}
       </Typography>
     </Box>

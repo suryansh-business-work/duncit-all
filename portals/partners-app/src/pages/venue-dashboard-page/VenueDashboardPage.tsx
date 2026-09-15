@@ -96,7 +96,7 @@ export default function VenueDashboardPage() {
             }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.common.partnerToolsVenues')}</Typography>
-                <Typography variant="h5" sx={{
+                <Typography variant="h5" component="h1" sx={{
                   fontWeight: 950
                 }}>{t('partners.venueDashboardPage.venueDashboard')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>

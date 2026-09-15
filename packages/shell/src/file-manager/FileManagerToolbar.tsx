@@ -57,6 +57,7 @@ export default function FileManagerToolbar({
         placeholder={t('shell.fileManager.search')}
         sx={{ flex: 1, minWidth: 220 }}
         slotProps={{
+          htmlInput: { 'aria-label': t('shell.fileManager.search'), 'data-testid': 'file-manager-search' },
           input: {
             startAdornment: (
               <InputAdornment position="start">

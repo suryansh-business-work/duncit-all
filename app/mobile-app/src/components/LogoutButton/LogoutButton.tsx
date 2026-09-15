@@ -17,6 +17,8 @@ export function LogoutButton() {
       testID="logout-button"
       role="button"
       aria-label={t('mweb.common.logout')}
+      tabIndex={0}
+      hitSlop={2}
       onPress={() => void onLogout()}
       width={40}
       height={40}

@@ -41,6 +41,7 @@ function TicketLine({ row, isFirst, onOpen }: Readonly<TicketLineProps>) {
     <XStack
       testID={`all-ticket-${row.ticket_no}`}
       role="button"
+      tabIndex={0}
       aria-label={row.title}
       onPress={() => onOpen(row)}
       gap={12}

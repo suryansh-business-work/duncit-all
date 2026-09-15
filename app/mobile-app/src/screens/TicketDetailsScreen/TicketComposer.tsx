@@ -67,6 +67,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
             value={text}
             onChangeText={setText}
             placeholder={t('mweb.common.writeAReply')}
+            accessibilityLabel={t('mweb.common.writeAReply')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline
@@ -75,7 +76,9 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
         <XStack
           testID="ticket-reply-send"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.ticketDetails.sendReply')}
+          aria-busy={busy}
           onPress={() => void submit()}
           width={44}
           height={44}

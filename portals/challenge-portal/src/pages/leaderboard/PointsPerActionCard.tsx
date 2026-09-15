@@ -82,7 +82,7 @@ export default function PointsPerActionCard({ settings }: Readonly<Props>) {
     <Paper variant="outlined" sx={{ p: 2.5 }}>
       <Stack spacing={2}>
         <Stack>
-          <Typography variant="h6" sx={{
+          <Typography component="h2" variant="h6" sx={{
             fontWeight: 700
           }}>
             {t('admin.leaderboard.pointsCardTitle')}

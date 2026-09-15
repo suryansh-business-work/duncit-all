@@ -25,15 +25,17 @@ export function GiftCardSegmented<T extends string | boolean>({
   onChange,
 }: Readonly<Props<T>>) {
   return (
-    <XStack padding={4} gap={4} borderRadius={999} backgroundColor="$soft">
+    <XStack role="tablist" padding={4} gap={4} borderRadius={999} backgroundColor="$soft">
       {options.map((option) => {
         const isActive = option.value === value;
         return (
           <XStack
             key={option.testID}
             testID={option.testID}
-            role="button"
+            role="tab"
             aria-label={option.label}
+            aria-selected={isActive}
+            tabIndex={0}
             onPress={() => onChange(option.value)}
             flex={1}
             height={40}

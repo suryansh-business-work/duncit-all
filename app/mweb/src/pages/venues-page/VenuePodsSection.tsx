@@ -5,6 +5,7 @@ import { Box, CircularProgress, Stack } from '@mui/material';
 import ClubPodsScheduleSection from '../club-details-page/ClubPodsScheduleSection';
 import SectionHeader from '../../components/SectionHeader';
 import { usePricing } from '../../hooks/usePricing';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export const VENUE_PODS = gql`
   query VenueHostedPods($venueId: ID!) {
@@ -37,6 +38,7 @@ export const VENUE_PODS = gql`
  * details/VenuePodsSection. */
 export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { format } = usePricing();
   const { data, loading } = useQuery<any>(VENUE_PODS, {
     variables: { venueId },
@@ -54,7 +56,7 @@ export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string
       <SectionHeader testId="venue-pods-section-header" title="Pods at this venue" />
       {loading && !data ? (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 2 }}>
-          <CircularProgress size={20} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={20} />
         </Box>
       ) : (
         <ClubPodsScheduleSection pods={pods} priceFormat={format} onOpen={openPod} />

@@ -58,7 +58,7 @@ export default function SurveysHubPage() {
       }}>
         <AssignmentIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{t('shell.nav.surveys')}</Typography>
           <Typography variant="body2" sx={{

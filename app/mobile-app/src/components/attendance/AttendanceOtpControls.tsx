@@ -11,8 +11,10 @@ export function MediumToggle({
   return (
     <XStack
       testID={`attendance-otp-medium-${label}`}
-      role="button"
+      tabIndex={0}
+      role="checkbox"
       aria-label={label}
+      aria-checked={selected}
       onPress={onPress}
       alignItems="center"
       justifyContent="center"
@@ -51,8 +53,10 @@ export function PillButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
+      aria-disabled={disabled}
       onPress={() => !disabled && onPress()}
       alignItems="center"
       justifyContent="center"

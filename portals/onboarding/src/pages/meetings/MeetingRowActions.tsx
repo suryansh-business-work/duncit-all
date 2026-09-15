@@ -65,7 +65,7 @@ export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onD
   };
   return (
     <>
-      <DuncitIconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.meetings.meetingActions')}>
+      <DuncitIconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.meetings.meetingActions')} aria-haspopup="menu" aria-expanded={!!anchor}>
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>

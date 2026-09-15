@@ -37,6 +37,7 @@ export function SearchSuggestions({ suggestions, onPick }: Readonly<Props>) {
           key={`${suggestion.kind}:${suggestion.text}`}
           testID={`search-suggestion-${index}`}
           role="button"
+          tabIndex={0}
           aria-label={suggestion.text}
           onPress={() => onPick(suggestion.text)}
           alignItems="center"

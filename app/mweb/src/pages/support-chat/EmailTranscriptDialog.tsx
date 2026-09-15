@@ -30,8 +30,8 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
   };
 
   return (
-    <Dialog data-testid="support-email-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.emailThisChat')}</DialogTitle>
+    <Dialog data-testid="support-email-modal" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="support-email-title">
+      <DialogTitle id="support-email-title" sx={{ fontWeight: 600 }}>{t('mweb.supportChat.emailThisChat')}</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert data-testid="email-done" severity="success">Transcript sent to {email}.</Alert>
@@ -43,10 +43,13 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
               </Alert>
             )}
             <TextField
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
               autoFocus
               fullWidth
               size="small"
               type="email"
+              autoComplete="email"
+              required
               data-testid="email-field"
               label={t('mweb.common.emailAddress')}
               value={email}

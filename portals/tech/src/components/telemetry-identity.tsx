@@ -50,7 +50,7 @@ export function UserCell({ user }: Readonly<{ user: TelemetryUserRef | null }>) 
         spacing={0.5}
         sx={{
           alignItems: "center",
-          color: "text.disabled"
+          color: "text.secondary"
         }}>
         <PersonOffIcon fontSize="small" />
         <Typography variant="body2">{t('tech.telemetryIdentity.signedOut')}</Typography>

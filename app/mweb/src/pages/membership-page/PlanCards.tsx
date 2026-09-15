@@ -33,7 +33,7 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
           alignItems: "center",
           flexWrap: "wrap"
         }}>
-        <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: accent ?? 'primary.main' }}>
+        <Typography component="h3" sx={{ fontSize: '0.875rem', fontWeight: 600, color: accent ?? 'accent.main' }}>
           {plan.name}
         </Typography>
         {plan.badge_label && (

@@ -55,6 +55,9 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
     <Stack sx={{ flex: 1, minHeight: 0 }}>
       <Stack
         spacing={1.25}
+        role="log"
+        aria-live="polite"
+        data-testid="shell-agent-thread"
         sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', px: 2, py: 1.5 }}
       >
         <Typography variant="body2" sx={{
@@ -107,10 +110,10 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
         ))}
 
         {loading && (
-          <Stack direction="row" spacing={1} sx={{
+          <Stack direction="row" spacing={1} role="status" sx={{
             alignItems: "center"
           }}>
-            <CircularProgress size={16} />
+            <CircularProgress size={16} aria-hidden />
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
@@ -139,6 +142,7 @@ export function AgentChat({ isAvailable, canAct, onRegisterRestart }: Readonly<P
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t('shell.agent.placeholder')}
           slotProps={{
+            htmlInput: { 'aria-label': t('shell.a11y.agentMessage'), 'data-testid': 'shell-agent-composer' },
             input: {
               endAdornment: (
                 <InputAdornment position="end">

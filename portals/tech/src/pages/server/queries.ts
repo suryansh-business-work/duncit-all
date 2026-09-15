@@ -30,12 +30,19 @@ export const SERVER_INFO = gql`
         usedBytes
         usagePercent
       }
+      swap {
+        totalBytes
+        freeBytes
+        usedBytes
+        usagePercent
+      }
       disk {
         path
         totalBytes
         freeBytes
         usedBytes
         usagePercent
+        inodeUsagePercent
       }
       network {
         name
@@ -147,6 +154,7 @@ export interface BytesInfo {
 }
 export interface DiskInfo extends BytesInfo {
   path: string;
+  inodeUsagePercent: number;
 }
 export interface OsInfo {
   platform: string;
@@ -189,6 +197,7 @@ export interface ServerInfo {
   os: OsInfo;
   cpu: CpuInfo;
   memory: BytesInfo;
+  swap: BytesInfo;
   disk: DiskInfo;
   network: NetworkInterface[];
   sshPort: number;

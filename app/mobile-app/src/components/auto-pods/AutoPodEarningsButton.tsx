@@ -17,10 +17,11 @@ interface Props {
  * The Tamagui twin of `@duncit/auto-pods`' `AutoPodEarningsButton` (rule 27).
  */
 export function AutoPodEarningsButton({ labels, onPress, testID }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { primary, accent } = useThemeColors();
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={labels.viewEarningsCta}
       onPress={onPress}
@@ -31,7 +32,7 @@ export function AutoPodEarningsButton({ labels, onPress, testID }: Readonly<Prop
       pressStyle={PRESS_STYLE.inline}
     >
       <MaterialIcons name="insights" size={16} color={primary} />
-      <Text fontSize={13} fontWeight="600" color={primary}>
+      <Text fontSize={13} fontWeight="600" color={accent}>
         {labels.viewEarningsCta}
       </Text>
     </XStack>

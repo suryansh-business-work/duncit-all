@@ -168,7 +168,7 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
               Paste your master/admin key above, then generate a dedicated key (saved automatically).
             </Typography>
             {generateState.error && (
-              <Typography variant="caption" color="error" sx={{
+              <Typography variant="caption" color="error" role="alert" sx={{
                 display: "block"
               }}>
                 {generateState.error.message}

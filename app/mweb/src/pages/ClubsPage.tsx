@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, CircularProgress, Link, Stack } from '@mui/material';
+import { Alert, CircularProgress, Link, Stack, Typography } from '@mui/material';
 import LocationOffOutlinedIcon from '@mui/icons-material/LocationOffOutlined';
 import EmptyState from '../components/EmptyState';
 import SearchPillField from './pod-list/SearchPillField';
@@ -125,7 +125,7 @@ export default function ClubsPage({
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   if (error) return <Alert severity="error" data-testid="clubs-error">{error.message}</Alert>;
@@ -156,8 +156,9 @@ export default function ClubsPage({
         minHeight: '100%',
       }}
     >
-      {/* No page title: the coral Clubs tab already names the page, as on the
-          native Clubs tab (rule 27). */}
+      {/* No visible title: the coral Clubs tab already names the page, as on the
+          native Clubs tab (rule 27). The h1 is for screen readers only. */}
+      <Typography component="h1" data-testid="clubs-page-title" sx={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{t('mweb.nav.clubs')}</Typography>
       {locationId && selectedLocationName && (
         <Alert severity="info" data-testid="clubs-location-notice" sx={{ py: 0.25, alignItems: 'center' }}>
           Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}

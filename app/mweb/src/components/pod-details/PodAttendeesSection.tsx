@@ -161,7 +161,7 @@ export default function PodAttendeesSection({
               </Avatar>
             ))}
           </AvatarGroup>
-          <Typography variant="caption" sx={{ color: 'primary.main', ml: 1, fontWeight: 600 }}>
+          <Typography variant="caption" sx={{ color: 'accent.main', ml: 1, fontWeight: 600 }}>
             {t('mweb.podDetails.viewAll')}
           </Typography>
         </ButtonBase>
@@ -173,7 +173,7 @@ export default function PodAttendeesSection({
               <Typography
                 component="span"
                 variant="caption"
-                sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+                sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
               >
                 {fill.old_name}
               </Typography>

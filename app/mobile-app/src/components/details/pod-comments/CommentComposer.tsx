@@ -78,6 +78,7 @@ export function CommentComposer({
       <XStack
         testID="pod-comment-send"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.sendComment')}
         onPress={onSubmit}
         width={42}

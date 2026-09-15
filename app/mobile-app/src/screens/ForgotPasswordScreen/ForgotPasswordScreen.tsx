@@ -105,7 +105,7 @@ export function ForgotPasswordScreen() {
       ) : null}
 
       {error ? (
-        <Text fontSize={14} color="$danger" testID="recovery-error">
+        <Text fontSize={14} color="$danger" testID="recovery-error" role="alert">
           {error}
         </Text>
       ) : null}
@@ -127,10 +127,11 @@ export function ForgotPasswordScreen() {
         {canGoBack ? (
           <Text
             testID="recovery-back"
+            role="button"
             pressStyle={PRESS_STYLE.inline}
             fontSize={14}
             fontWeight="600"
-            color="$primary"
+            color="$accent"
             onPress={recovery.goBack}
           >
             {labels.back}
@@ -142,10 +143,11 @@ export function ForgotPasswordScreen() {
           </Text>
           <Text
             testID="recovery-back-login"
+            role="link"
             pressStyle={PRESS_STYLE.inline}
             fontSize={14}
             fontWeight="600"
-            color="$primary"
+            color="$accent"
             onPress={() => navigation.navigate('Login')}
           >
             {labels.backToLogin}

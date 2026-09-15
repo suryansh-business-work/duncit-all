@@ -66,7 +66,14 @@ export function ClubPodActivitySheet({ pod, onClose }: Readonly<Props>) {
       footer={footer}
     >
       <YStack>
-        {isLoading ? <Spinner testID="club-pod-activity-loading" color="$primary" /> : null}
+        {isLoading ? (
+          <Spinner
+            role="progressbar"
+            aria-label={t('mweb.a11y.loading')}
+            testID="club-pod-activity-loading"
+            color="$primary"
+          />
+        ) : null}
         {!isLoading && logs.length === 0 ? (
           <Text testID="club-pod-activity-empty" fontSize={14} color="$muted">
             {t('clubAdmin.pods.noActivity')}

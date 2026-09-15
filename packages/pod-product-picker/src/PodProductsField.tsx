@@ -112,7 +112,7 @@ export default function PodProductsField({
       {products.length === 0 && <Alert severity="info">{t('podProduct.emptyCategory')}</Alert>}
 
       {error && (
-        <Typography variant="caption" color="error">
+        <Typography role="alert" variant="caption" color="error">
           {error}
         </Typography>
       )}

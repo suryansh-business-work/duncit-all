@@ -88,7 +88,7 @@ function ClubAdminRow({
   const links = contactLinks(admin, t);
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-      <Avatar src={admin.avatar_url ?? undefined} sx={{ width: 40, height: 40 }}>
+      <Avatar alt="" src={admin.avatar_url ?? undefined} sx={{ width: 40, height: 40 }}>
         {(admin.name?.[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack spacing={0.75} sx={{ minWidth: 0, flex: 1 }}>
@@ -116,6 +116,9 @@ function ClubAdminRow({
               variant="outlined"
               icon={link.icon}
               label={link.label}
+              // The chip's label is its visible text; spelled out so the link's
+              // name does not depend on how Chip nests it.
+              aria-label={link.label}
               href={link.href}
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener' : undefined}

@@ -119,7 +119,7 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
             }}>
             <LanguageIcon color="primary" />
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{
+              <Typography component="h2" variant="subtitle1" sx={{
                 fontWeight: 800
               }}>{t('crm.common.website')}</Typography>
               <ExternalLink variant="body2" href={website} />

@@ -25,6 +25,10 @@ export function LocationButton() {
         testID="location-button"
         role="button"
         aria-label={t('mweb.common.selectLocation')}
+        // The city on the chip is read after the name.
+        accessibilityHint={cityLabel || undefined}
+        tabIndex={0}
+        hitSlop={2}
         onPress={() => setOpen(true)}
         alignItems="center"
         gap={6}

@@ -57,10 +57,10 @@ export default function GpsLocationPicker({
           borderRadius: 999,
           fontSize: 14,
           fontWeight: 600,
-          color: 'primary.main',
+          color: 'accent.main',
           bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
           '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.18) },
-          '&.Mui-disabled': { color: 'primary.main', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12) },
+          '&.Mui-disabled': { color: 'accent.main', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12) },
         }}
       >
         {busy ? 'Locating…' : 'Use my location'}
@@ -68,6 +68,7 @@ export default function GpsLocationPicker({
       {geocoded?.city && (
         <Typography
           data-testid="gps-location-picker-detected"
+          role="status"
           variant="caption"
           sx={{
             color: "text.secondary",

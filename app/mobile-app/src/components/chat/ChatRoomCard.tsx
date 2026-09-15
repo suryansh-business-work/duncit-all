@@ -15,8 +15,10 @@ type StatusMeta = { label: string; bg: string; fg: string };
 
 /** The same filled tones as mWeb's status chip (podStatusChip). */
 const statusMeta = (t: Translate): Record<PodStatus, StatusMeta> => ({
-  LIVE: { label: t('mweb.common.live'), bg: '$success', fg: '$onPrimary' },
-  UPCOMING: { label: t('mweb.common.upcoming'), bg: '$warning', fg: '$onPrimary' },
+  // $success / $warning are mode-aware fills; their ink is the semantic on-colour
+  // (white in light, dark ink in dark), never the CTA's $onPrimary.
+  LIVE: { label: t('mweb.common.live'), bg: '$success', fg: '$onSuccess' },
+  UPCOMING: { label: t('mweb.common.upcoming'), bg: '$warning', fg: '$onSuccess' },
   ENDED: { label: t('mweb.common.previous'), bg: '$soft', fg: '$color' },
 });
 
@@ -34,7 +36,8 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
     <SurfaceCard
       testID={`chat-room-${room.id}`}
       role="button"
-      aria-label={room.pod_title}
+      tabIndex={0}
+      aria-label={`${room.pod_title}, ${status.label}`}
       onPress={onPress}
       flexDirection="row"
       alignItems="center"

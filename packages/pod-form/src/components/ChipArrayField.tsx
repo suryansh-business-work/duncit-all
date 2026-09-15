@@ -72,6 +72,7 @@ export default function ChipArrayField({
         size="small"
         fullWidth
         error={!!error}
+        slotProps={{ htmlInput: { 'aria-label': label } }}
         helperText={error || helperText || `Press Enter to add. Max ${max}.`}
       />
     </Box>

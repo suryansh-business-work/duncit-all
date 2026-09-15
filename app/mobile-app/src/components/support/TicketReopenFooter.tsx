@@ -30,6 +30,7 @@ export function TicketReopenFooter({
         <XStack
           testID="ticket-reopen"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.support.reOpenTicket')}
           onPress={onReopen}
           height={44}
@@ -42,7 +43,7 @@ export function TicketReopenFooter({
           pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="replay" size={18} color={primary} />
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             Re-open ticket
           </Text>
         </XStack>

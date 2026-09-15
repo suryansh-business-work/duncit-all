@@ -178,6 +178,7 @@ export default function CampaignTable({
 
   return (
     <DuncitTable<MarketingCampaignRow>
+      ariaLabel={t('shell.nav.campaigns')}
       tableId="marketing-campaigns"
       columns={columns}
       fetchRows={fetchRows}

@@ -55,7 +55,7 @@ export default function IdeaCard({
             alignItems: "center",
             mb: 1
           }}>
-          <Avatar src={author?.profile_photo || undefined} sx={{ width: 36, height: 36 }}>
+          <Avatar alt="" src={author?.profile_photo || undefined} sx={{ width: 36, height: 36 }}>
             {(author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -86,7 +86,19 @@ export default function IdeaCard({
             </Tooltip>
           )}
         </Stack>
-        <Box sx={{ cursor: 'pointer' }} onClick={onOpen} data-testid={`idea-card-open-${idea.id}`}>
+        <Box
+          sx={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onClick={onOpen}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onOpen();
+            }
+          }}
+          data-testid={`idea-card-open-${idea.id}`}
+        >
           <Typography
             component="h3"
             sx={{
@@ -150,6 +162,7 @@ export default function IdeaCard({
               )
             }
             onClick={onLike}
+            aria-pressed={!!idea.liked_by_me}
             data-testid={`idea-card-like-${idea.id}`}
             sx={{ color: idea.liked_by_me ? 'secondary.main' : 'text.secondary' }}
           >

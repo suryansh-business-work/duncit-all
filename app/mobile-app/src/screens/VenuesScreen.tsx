@@ -14,11 +14,13 @@ import { useVenuesExplore } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** Venues discovery — venues in the selected location with a server-side
  * debounced search, filtered by the header's Super-category tiles (the app-wide
  * filter every other tab reads). mWeb twin: /venues (VenuesPage). */
 export function VenuesScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { venues, cityLabel, searchInput, setSearchInput, isLoading, error } = useVenuesExplore();
@@ -42,9 +44,11 @@ export function VenuesScreen() {
               onChangeText={setSearchInput}
             />
           </XStack>
-          {isLoading ? <Spinner testID="venues-loading" color="$primary" /> : null}
+          {isLoading ? (
+            <Spinner {...loadingRegion} testID="venues-loading" color="$primary" />
+          ) : null}
           {!isLoading && error ? (
-            <Text testID="venues-error" fontSize={13} color="$danger">
+            <Text role="alert" testID="venues-error" fontSize={13} color="$danger">
               Could not load venues — please try again.
             </Text>
           ) : null}

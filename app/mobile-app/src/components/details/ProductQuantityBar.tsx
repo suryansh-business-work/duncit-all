@@ -29,6 +29,7 @@ function AddToSelection({
     <XStack
       testID="product-detail-add"
       role="button"
+      tabIndex={0}
       aria-disabled={outOfStock}
       aria-label={t('mweb.details.addToSelection')}
       onPress={outOfStock ? undefined : onAdd}
@@ -88,6 +89,7 @@ function QuantityStepper({
       <XStack
         testID="product-detail-remove"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.details.removeFromSelection')}
         onPress={() => onUpdate(0)}
         gap={5}

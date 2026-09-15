@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
-import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import WaAutomation from './wa-automation';
 import WaDashboard from './wa-dashboard';
 import WaLogs from './wa-logs';
@@ -106,7 +106,7 @@ export default function WhatsappCampaignsPage() {
       <Stack spacing={0.25} sx={{
         mb: 2
       }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           WhatsApp
@@ -119,7 +119,8 @@ export default function WhatsappCampaignsPage() {
         </Typography>
       </Stack>
 
-      <DuncitTabs {...tabs} sx={{ mb: 2 }} />
+      <DuncitTabs {...tabs} idPrefix="whatsapp" sx={{ mb: 2 }} />
+      <Box {...tabPanelProps('whatsapp', tabs.value)}>
 
       {!configured && tab !== 'settings' && (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -157,6 +158,7 @@ export default function WhatsappCampaignsPage() {
           onDeleteName={actions.removeName}
         />
       )}
+      </Box>
 
       <WaCampaignForm
         open={formOpen}

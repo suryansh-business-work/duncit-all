@@ -78,6 +78,7 @@ export default function LoginForm({
           type="email"
           placeholder={t('session.login.email')}
           fullWidth
+          required
           sx={pillSx}
           slotProps={{
             input: {
@@ -87,7 +88,9 @@ export default function LoginForm({
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'field-email' },
+            // The placeholder is not a label: name the field and state its
+            // purpose so assistive tech and autofill both know what it holds.
+            htmlInput: { 'data-testid': 'field-email', 'aria-label': t('session.login.email'), autoComplete: 'email' },
             formHelperText: EMAIL_ERROR_SLOT,
           }}
         />
@@ -96,6 +99,7 @@ export default function LoginForm({
           type={showPwd ? 'text' : 'password'}
           placeholder={t('session.login.password')}
           fullWidth
+          required
           sx={pillSx}
           slotProps={{
             input: {
@@ -106,13 +110,24 @@ export default function LoginForm({
               ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <DuncitIconButton onClick={() => setShowPwd((v) => !v)} edge="end" size="small" aria-label={t('session.login.togglePassword')}>
+                  <DuncitIconButton
+                    onClick={() => setShowPwd((v) => !v)}
+                    edge="end"
+                    size="small"
+                    aria-label={t('session.login.togglePassword')}
+                    aria-pressed={showPwd}
+                    data-testid="login-toggle-password"
+                  >
                     {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
                   </DuncitIconButton>
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'field-password' },
+            htmlInput: {
+              'data-testid': 'field-password',
+              'aria-label': t('session.login.password'),
+              autoComplete: 'current-password',
+            },
             formHelperText: PASSWORD_ERROR_SLOT,
           }}
         />

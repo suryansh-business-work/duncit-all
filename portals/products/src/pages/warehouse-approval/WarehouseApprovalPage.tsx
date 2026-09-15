@@ -59,7 +59,7 @@ export default function WarehouseApprovalPage() {
         justifyContent: "space-between"
       }}>
         <Box>
-          <Typography variant="h4" sx={{
+          <Typography component="h1" variant="h4" sx={{
             fontWeight: 950
           }}>
             Warehouse Approval
@@ -75,6 +75,8 @@ export default function WarehouseApprovalPage() {
           size="small"
           value={status}
           onChange={(_, value) => value && setStatus(value)}
+          aria-label={t('shell.common.status')}
+          data-testid="warehouse-approval-status"
         >
           {STATUS_TABS.map((item) => (
             <ToggleButton key={item} value={item}>
@@ -109,7 +111,7 @@ export default function WarehouseApprovalPage() {
                   <Stack direction="row" spacing={1} sx={{
                     alignItems: "center"
                   }}>
-                    <Typography variant="subtitle1" noWrap sx={{
+                    <Typography component="h2" variant="subtitle1" noWrap sx={{
                       fontWeight: 900
                     }}>
                       {row.title}

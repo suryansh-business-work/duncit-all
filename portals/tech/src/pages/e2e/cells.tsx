@@ -174,7 +174,7 @@ export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: E2eRunRow) =
         </Tooltip>
       ) : (
         <Tooltip title={labels.runPending}>
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             —
           </Typography>
         </Tooltip>

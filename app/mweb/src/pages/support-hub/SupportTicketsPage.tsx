@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Box, CardActionArea, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
@@ -107,20 +107,22 @@ export default function SupportTicketsPage() {
           </Stack>
         </Paper>
 
-        <Paper
-          data-testid="tickets-faq-banner"
-          onClick={() => navigate('/faqs')}
-          sx={{ ...SURFACE_SX, p: 2, cursor: 'pointer' }}
-        >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-            <Box sx={ICON_DISC_SX}>
-              <HelpOutlineIcon fontSize="small" />
-            </Box>
-            <Typography sx={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 600 }}>
-              Maybe answered already?
-            </Typography>
-            <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />
-          </Stack>
+        <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+          <CardActionArea
+            data-testid="tickets-faq-banner"
+            onClick={() => navigate('/faqs')}
+            sx={{ p: 2 }}
+          >
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+              <Box sx={ICON_DISC_SX}>
+                <HelpOutlineIcon fontSize="small" />
+              </Box>
+              <Typography sx={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 600 }}>
+                Maybe answered already?
+              </Typography>
+              <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />
+            </Stack>
+          </CardActionArea>
         </Paper>
 
         <Paper sx={{ ...SURFACE_SX, p: 2 }}>

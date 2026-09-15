@@ -31,7 +31,7 @@ export default function CampaignEngagement({ campaign, formatDateTime }: Readonl
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography
+        <Typography component="h3"
           variant="subtitle2"
           sx={{
             fontWeight: 700,

@@ -26,6 +26,7 @@ export type { FormActionsRowProps } from './FormActionsRow';
 export { Loader, LoadingOverlay, TopProgressBar } from './loader';
 export type { LoaderProps, LoaderVariant, LoadingOverlayProps, TopProgressBarProps } from './loader';
 export { useDebouncedValue } from './useDebouncedValue';
+export { useRouteFocus } from './useRouteFocus';
 export { mergeSx } from './mergeSx';
 export { RICH_TEXT_BODY_SX } from './richTextBodySx';
 export { ModerationBlockedDialog } from './ModerationBlockedDialog';

@@ -1,5 +1,5 @@
-import { Stack } from '@mui/material';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { Box, Stack } from '@mui/material';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '../../i18n/useTranslation';
 import PageHeader from '../../components/PageHeader';
 import BuyTab from './BuyTab';
@@ -30,8 +30,10 @@ export default function GiftCardsPage() {
       sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}
     >
       <PageHeader testId="gift-cards-header" title={t('mweb.giftCards.title')} />
-      <DuncitTabs {...tabs} variant="fullWidth" sx={SEGMENTED_TABS_SX} />
-      {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
+      <DuncitTabs {...tabs} idPrefix="gift-cards" variant="fullWidth" sx={SEGMENTED_TABS_SX} />
+      <Box {...tabPanelProps('gift-cards', tabs.value)}>
+        {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
+      </Box>
     </Stack>
   );
 }

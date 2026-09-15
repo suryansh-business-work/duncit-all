@@ -53,7 +53,7 @@ export default function CallPromptsPage() {
           alignItems: "center"
         }}>
           <SmartToyIcon color="primary" />
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>
             Static Content

@@ -35,6 +35,8 @@ export function CrumbNode({ crumb, isFirst, isLast }: Readonly<CrumbNodeProps>) 
   return (
     <Typography
       color={isLast ? 'text.primary' : 'text.secondary'}
+      // The trail's last crumb is the page being shown (WAI-ARIA breadcrumb pattern).
+      aria-current={isLast ? 'page' : undefined}
       sx={{ ...ROW_SX, fontWeight: isLast ? 700 : 500 }}
     >
       {home}

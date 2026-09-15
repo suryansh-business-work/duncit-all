@@ -17,9 +17,11 @@ export default function HostReviewDocuments({ passportUrl, policeVerificationUrl
   const { t } = useTranslation();
   return (
     <>
-      <Divider textAlign="left">
+      <Divider textAlign="left" role="presentation">
         <Typography
           variant="caption"
+          role="heading"
+          aria-level={3}
           sx={{
             color: "text.secondary",
             fontWeight: 700

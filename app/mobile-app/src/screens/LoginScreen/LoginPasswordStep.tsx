@@ -35,9 +35,10 @@ export function LoginPasswordStep({
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="go-forgot-password"
+          role="link"
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           onPress={onForgotPassword}
         >
           {t('mweb.login.forgotPassword')}
@@ -47,9 +48,10 @@ export function LoginPasswordStep({
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="back-to-options"
+          role="button"
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           onPress={onBack}
         >
           {t('mweb.login.backToOptions')}

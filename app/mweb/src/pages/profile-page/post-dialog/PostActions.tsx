@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Box, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -24,6 +25,7 @@ export default function PostActions({
   submitting,
 }: Readonly<PostActionsProps>) {
   const { t } = useTranslation();
+  const commentInput = useRef<HTMLInputElement>(null);
   return (
     <Box data-testid="post-actions" sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
       <Stack direction="row" spacing={0.5} sx={{
@@ -33,10 +35,16 @@ export default function PostActions({
           data-testid="post-actions-like"
           onClick={onLike}
           color={post.liked_by_me ? 'error' : 'default'}
+          aria-label={t('mweb.profile.likePost')}
+          aria-pressed={!!post.liked_by_me}
         >
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </DuncitIconButton>
-        <DuncitIconButton data-testid="post-actions-comment-icon">
+        <DuncitIconButton
+          data-testid="post-actions-comment-icon"
+          aria-label={t('mweb.podDetails.comment')}
+          onClick={() => commentInput.current?.focus()}
+        >
           <ChatBubbleOutlineIcon />
         </DuncitIconButton>
       </Stack>
@@ -64,7 +72,9 @@ export default function PostActions({
           }
         }}
         sx={{ px: 1, mt: 0.5 }}
+        inputRef={commentInput}
         slotProps={{
+          htmlInput: { 'aria-label': t('mweb.common.addAComment') },
           input: {
             disableUnderline: true,
             endAdornment: (
@@ -74,6 +84,7 @@ export default function PostActions({
                   onClick={onSend}
                   disabled={!comment.trim() || submitting}
                   color="primary"
+                  aria-label={t('mweb.podDetails.sendComment')}
                 >
                   <SendIcon fontSize="small" />
                 </DuncitIconButton>

@@ -28,7 +28,7 @@ export default function InterviewDetailsForm({
   return (
     <Card data-testid="interview-details-form">
       <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ fontSize: '1.0625rem' }}>
+        <Typography variant="h6" component="h2" gutterBottom sx={{ fontSize: '1.0625rem' }}>
           Your details
         </Typography>
         <Stack spacing={2}>
@@ -37,6 +37,7 @@ export default function InterviewDetailsForm({
               control={control}
               name="applicant_name"
               label={t('mweb.interviewBooking.fullName')}
+              autoComplete="name"
               required
             />
             <RhfTextField
@@ -44,6 +45,7 @@ export default function InterviewDetailsForm({
               name="applicant_email"
               label={t('mweb.common.email')}
               type="email"
+              autoComplete="email"
               required
             />
           </Stack>
@@ -65,6 +67,7 @@ export default function InterviewDetailsForm({
               name="applicant_phone_number"
               label={t('mweb.common.phone')}
               type="tel"
+              autoComplete="tel-national"
               required
               // Digits are a property of the box, not a message after the fact:
               // a paste and an autofill are how letters get into a phone field.
@@ -80,16 +83,18 @@ export default function InterviewDetailsForm({
                 control={control}
                 name="business_name"
                 label={t('mweb.interviewBooking.venueName')}
+                autoComplete="organization"
               />
               <RhfTextField
                 control={control}
                 name="business_address"
                 label={t('mweb.interviewBooking.venueAddress')}
+                autoComplete="street-address"
               />
             </Stack>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <RhfTextField control={control} name="city" label={t('mweb.common.city')} />
+            <RhfTextField control={control} name="city" label={t('mweb.common.city')} autoComplete="address-level2" />
             <RhfTextField
               control={control}
               name="zone"

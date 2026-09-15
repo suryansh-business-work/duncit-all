@@ -19,9 +19,12 @@ export default function SurveyQuestionField({ question: q, answer, onChange }: R
     onChange({ values: cur.includes(opt) ? cur.filter((v) => v !== opt) : [...cur, opt] });
   };
 
+  // The visible question is the fieldset's legend and the name of every input in it (1.3.1).
+  const inputA11y = { 'aria-label': q.label, 'aria-required': q.required };
   return (
     <FormControl component="fieldset" fullWidth>
       <Typography
+        component="legend"
         variant="body2"
         sx={{
           fontWeight: 700,
@@ -33,8 +36,8 @@ export default function SurveyQuestionField({ question: q, answer, onChange }: R
           color: "text.secondary",
           mb: 0.5
         }}>{q.help}</Typography>}
-      {q.type === 'TEXT' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth />}
-      {q.type === 'TEXTAREA' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth multiline minRows={3} />}
+      {q.type === 'TEXT' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth slotProps={{ htmlInput: inputA11y }} />}
+      {q.type === 'TEXTAREA' && <TextField size="small" value={answer.value} onChange={(e) => onChange({ value: e.target.value })} fullWidth multiline minRows={3} slotProps={{ htmlInput: inputA11y }} />}
       {q.type === 'MCQ' && q.multi && (
         <FormGroup>
           {q.options.map((opt) => (
@@ -43,7 +46,7 @@ export default function SurveyQuestionField({ question: q, answer, onChange }: R
         </FormGroup>
       )}
       {q.type === 'MCQ' && !q.multi && (
-        <RadioGroup value={answer.value} onChange={(e) => onChange({ value: e.target.value })}>
+        <RadioGroup value={answer.value} onChange={(e) => onChange({ value: e.target.value })} aria-label={q.label}>
           {q.options.map((opt) => <FormControlLabel key={opt} value={opt} control={<Radio />} label={opt} />)}
         </RadioGroup>
       )}

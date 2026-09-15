@@ -10,141 +10,226 @@
  * Every step is READ-ONLY and anonymous — a run may target production, and
  * nothing a bot does may create a booking, a message or a row a real person
  * would later see. The GraphQL documents are the ones mWeb sends on the same
- * page (app/mweb/src/pages/*), so the server does the same work a real visit
- * costs, including the feed's relation priming.
+ * page (see ./queries), so the server does the same work a real visit costs.
+ *
+ * Most mWeb pages are signed-in only in the BROWSER (the client redirects to
+ * /login), but their load queries answer a signed-out caller and their HTML is
+ * still rendered by the mWeb server, so an HTTP bot costs what a visit costs.
+ *
+ * A detail journey walks one random real record per iteration, drawn from the
+ * seed pool it `needs` (skipped when that pool is empty) or `uses` (its record
+ * steps are skipped instead, via `when`).
  */
-
-const HOME_FEED_STATIC = `query HomeFeedStatic {
-  clubs(filter: { is_active: true }) {
-    id club_id club_name club_description
-    club_feature_images_and_videos { url type }
-    club_moments { url type }
-    category_id super_category_id followers_count is_verified location_id
-  }
-  publicHosts { user_id full_name }
-  categories { id name slug icon level parent_id icon_layout_mweb { position width height } }
-}`;
-
-const HOME_FEED_LIVE = `query HomeFeedLive($podFilter: PodFilterInput) {
-  pods(filter: $podFilter) {
-    id pod_id pod_title pod_date_time pod_end_date_time pod_type pod_amount
-    pod_attendees seats_taken no_of_spots pod_hosts_id host_names
-    pod_images_and_videos { url type }
-    club_id club_slug location_id zone_name place_label place_detail
-  }
-  stories {
-    id author_id club_id image_url media_type caption created_at expires_at
-    seen_by_me liked_by_me likes_count views_count
-  }
-}`;
-
-const PUBLIC_FEATURE_FLAGS = `query PublicFeatureFlags { publicFeatureFlags { key enabled } }`;
-
-const EXPLORE_PODS = `query ExplorePods {
-  pods(filter: { is_active: true, has_reel: true }) {
-    id pod_id pod_title pod_description pod_date_time pod_type pod_amount
-    pod_attendees seats_taken no_of_spots zone_name reel_url club_id club_slug
-    location_id pod_mode venue_id place_label place_detail like_count liked_by_me
-    liked_user_ids comment_count
-  }
-  clubs(filter: { is_active: true }) { id club_id club_name is_verified super_category_id category_id }
-  superCategories: categories(filter: { level: SUPER }) { id slug }
-  categories { id name slug level parent_id }
-  locations { id location_name }
-}`;
-
-const ALL_CLUBS = `query AllClubs($locationId: ID, $locality: String) {
-  superCategories: categories(filter: { level: SUPER }) { id slug }
-  locations { id location_name }
-  clubs(filter: { is_active: true, location_id: $locationId, locality: $locality }) {
-    id club_id club_name club_description category_id super_category_id
-    club_feature_images_and_videos { url type }
-  }
-  pods(filter: { is_active: true }) { id club_id }
-}`;
-
-const SEARCH_DISCOVERY = `query SearchDiscovery($input: SearchDiscoveryInput) {
-  searchDiscovery(input: $input) {
-    query
-    happening { ...SearchClubResultFields }
-    more_clubs { ...SearchClubResultFields }
-  }
-}
-fragment SearchClubResultFields on SearchClubResult {
-  is_following participant_count next_pod_date
-  club {
-    id club_id club_name club_description followers_count category_id super_category_id
-    club_feature_images_and_videos { url type }
-  }
-  upcoming_pods {
-    id pod_id club_slug pod_title pod_date_time pod_amount pod_type no_of_spots
-    pod_attendees seats_taken host_names place_label place_detail
-    pod_images_and_videos { url type }
-  }
-}`;
-
-const PUBLIC_VENUES = `query PublicVenues {
-  publicVenues {
-    id owner_user_id venue_name venue_type capacity description cover_image_url
-    country city state locality postal_code amenities tags
-  }
-}`;
+import * as D from './queries/discovery.mjs';
+import * as P from './queries/details.mjs';
+import * as Q from './queries/public.mjs';
+import { pickFrom } from './seeds.mjs';
 
 /** Search terms a visitor might type — varied so the search cache is not the only thing tested. */
 const SEARCH_TERMS = ['music', 'run', 'yoga', 'football', 'art', 'food', 'games', 'tech', 'dance', 'books'];
+const randomTerm = () => SEARCH_TERMS[Math.floor(Math.random() * SEARCH_TERMS.length)];
 
-const page = (path) => ({ kind: 'page', key: `page ${path}`, path });
-const graphql = (operationName, query, variables = () => ({})) => ({
+/** A page GET. `pattern` names the endpoint in the totals; `build` fills it with this walk's record. */
+const page = (pattern, build = () => pattern) => ({ kind: 'page', key: `page ${pattern}`, path: build });
+const graphql = (operationName, query, variables = () => ({}), when = null) => ({
   kind: 'graphql',
   key: `gql ${operationName}`,
   operationName,
   query,
   variables,
+  when,
 });
 
+const enc = encodeURIComponent;
+const podPath = (pod) => `/club/${enc(pod.club_slug)}/pod/${enc(pod.pod_id)}`;
+const podPeople = (pod) => [...(pod.pod_hosts_id ?? []), ...(pod.pod_attendees ?? [])];
+const hasRecord = (record) => record !== null;
+
 export const JOURNEYS = {
+  app_boot: {
+    page: () => '/login',
+    steps: [
+      page('/login'),
+      graphql('MwebPublicClientConfig', Q.PUBLIC_CLIENT_CONFIG),
+      graphql('PortalMode', Q.PORTAL_MODE, () => ({ key: 'mweb' })),
+      graphql('PublicLocales', Q.PUBLIC_LOCALES),
+      graphql('PublicTranslations', Q.PUBLIC_TRANSLATIONS, () => ({ locale: 'en-IN' })),
+      graphql('PublicAppSettings', Q.PUBLIC_APP_SETTINGS),
+      graphql('BrandingAssets', Q.BRANDING_ASSETS),
+      graphql('MwebBrandFont', Q.BRAND_FONT),
+      graphql('TourViewer', Q.TOUR_VIEWER),
+      graphql('PublicFeatureFlags', Q.PUBLIC_FEATURE_FLAGS),
+    ],
+  },
+  auth: {
+    page: () => '/register',
+    steps: [
+      page('/login'),
+      graphql('AuthBranding', Q.AUTH_BRANDING),
+      page('/register'),
+      graphql('SignupPolicies', Q.SIGNUP_POLICIES),
+      page('/forgot-password'),
+    ],
+  },
   home: {
-    page: '/',
+    page: () => '/',
     steps: [
       page('/'),
-      graphql('PublicFeatureFlags', PUBLIC_FEATURE_FLAGS),
-      graphql('HomeFeedStatic', HOME_FEED_STATIC),
-      graphql('HomeFeedLive', HOME_FEED_LIVE, () => ({ podFilter: { is_active: true } })),
+      graphql('PublicFeatureFlags', Q.PUBLIC_FEATURE_FLAGS),
+      graphql('AppHeaderStatic', D.APP_HEADER_STATIC),
+      graphql('HomeFeedStatic', D.HOME_FEED_STATIC),
+      graphql('HomeFeedLive', D.HOME_FEED_LIVE, () => ({ podFilter: { is_active: true } })),
     ],
   },
   explore: {
-    page: '/explore',
-    steps: [page('/explore'), graphql('ExplorePods', EXPLORE_PODS)],
+    page: () => '/explore',
+    steps: [page('/explore'), graphql('ExplorePods', D.EXPLORE_PODS)],
   },
   clubs: {
-    page: '/clubs',
-    steps: [page('/clubs'), graphql('AllClubs', ALL_CLUBS)],
+    page: () => '/clubs',
+    steps: [page('/clubs'), graphql('AllClubs', D.ALL_CLUBS)],
   },
   search: {
-    page: '/search',
-    steps: [
-      page('/search'),
-      graphql('SearchDiscovery', SEARCH_DISCOVERY, () => ({
-        input: { query: SEARCH_TERMS[Math.floor(Math.random() * SEARCH_TERMS.length)] },
-      })),
-    ],
+    page: () => '/search',
+    steps: [page('/search'), graphql('SearchDiscovery', D.SEARCH_DISCOVERY, () => ({ input: { query: randomTerm() } }))],
   },
   venues: {
-    page: '/venues',
-    steps: [page('/venues'), graphql('PublicVenues', PUBLIC_VENUES)],
+    page: () => '/venues',
+    steps: [
+      page('/venues'),
+      graphql('VenuesExplore', D.VENUES_EXPLORE),
+      graphql('VenuesSuperCategories', D.VENUES_SUPER_CATEGORIES),
+      graphql('VenuesLocationNames', D.VENUES_LOCATION_NAMES),
+    ],
+  },
+  happening_nearby: {
+    page: () => '/happening-nearby',
+    steps: [
+      page('/happening-nearby'),
+      graphql('AppHeaderStatic', D.APP_HEADER_STATIC),
+      graphql('HomeFeedStatic', D.HOME_FEED_STATIC),
+      graphql('HomeFeedLive', D.HOME_FEED_LIVE, () => ({ podFilter: { is_active: true } })),
+      graphql('ActiveAds', D.ACTIVE_ADS, () => ({ position: 'POD_LIST' })),
+    ],
+  },
+  pod_detail: {
+    needs: 'pods',
+    page: podPath,
+    steps: [
+      page('/club/:clubSlug/pod/:podSlug', podPath),
+      graphql('PodIdBySlugs', P.POD_ID_BY_SLUGS, (pod) => ({ clubSlug: pod.club_slug, podSlug: pod.pod_id })),
+      graphql('PodDetails', P.POD_DETAILS, (pod) => ({ id: pod.id })),
+      graphql('PodPeople', P.POD_PEOPLE, (pod) => ({ ids: podPeople(pod) }), (pod) => podPeople(pod).length > 0),
+      graphql('PodSpotFills', P.POD_SPOT_FILLS, (pod) => ({ id: pod.id })),
+      graphql('PodAttendeeSeats', P.POD_ATTENDEE_SEATS, (pod) => ({ id: pod.id })),
+      graphql('ActiveAds', D.ACTIVE_ADS, () => ({ position: 'POD_DETAILS' })),
+      graphql('PublicFinanceSettingsForPricing', P.PRICING_SETTINGS),
+    ],
+  },
+  club_detail: {
+    needs: 'clubs',
+    page: (club) => `/club/${enc(club.club_id)}`,
+    steps: [
+      page('/club/:clubSlug', (club) => `/club/${enc(club.club_id)}`),
+      graphql('ClubBySlug', P.CLUB_BY_SLUG, (club) => ({ slug: club.club_id })),
+      graphql('ClubDetailsRelated', P.CLUB_DETAILS_RELATED, (club) => ({ id: club.id })),
+      graphql('CategoryTree', P.CATEGORY_TREE),
+      graphql('ClubStories', P.CLUB_STORIES, (club) => ({ id: club.id })),
+      graphql('ClubRatings', P.CLUB_RATINGS, (club) => ({ id: club.id })),
+      graphql('LocationMismatchNames', P.LOCATION_NAMES),
+    ],
+  },
+  venue_detail: {
+    needs: 'venues',
+    page: (venue) => `/venue/${enc(venue.id)}`,
+    steps: [
+      page('/venue/:venueId', (venue) => `/venue/${enc(venue.id)}`),
+      graphql('PublicVenueDetails', P.PUBLIC_VENUE_DETAILS),
+      graphql('VenueHostedPods', P.VENUE_HOSTED_PODS, (venue) => ({ venueId: venue.id })),
+      graphql('PublicFinanceSettingsForPricing', P.PRICING_SETTINGS),
+      graphql('LocationMismatchNames', P.LOCATION_NAMES),
+    ],
+  },
+  profile: {
+    needs: 'hosts',
+    page: (host) => `/u/${enc(host.user_id)}`,
+    steps: [
+      page('/u/:handle', (host) => `/u/${enc(host.user_id)}`),
+      graphql('PublicProfile', P.PUBLIC_PROFILE, (host) => ({ user_id: host.user_id })),
+      graphql('UserBadgesPublic', P.USER_BADGES_PUBLIC, (host) => ({ user_id: host.user_id })),
+      graphql('PublicUserPosts', P.PUBLIC_USER_POSTS, (host) => ({ id: host.user_id })),
+    ],
+  },
+  hosts_venues: {
+    page: () => '/hosts-venues',
+    steps: [page('/hosts-venues'), graphql('PublicHosts', D.PUBLIC_HOSTS), graphql('PublicVenues', D.PUBLIC_VENUES)],
+  },
+  pod_ideas: {
+    page: () => '/pod-ideas',
+    steps: [page('/pod-ideas'), graphql('PodIdeas', Q.POD_IDEAS, () => ({ filter: { status: 'APPROVED' } }))],
+  },
+  membership: {
+    page: () => '/membership',
+    steps: [
+      page('/pod-plans'),
+      graphql('PublicPodPlans', Q.PUBLIC_POD_PLANS),
+      page('/membership'),
+      graphql('MembershipPricing', Q.MEMBERSHIP_PRICING),
+    ],
+  },
+  leaderboard: {
+    page: () => '/leaderboard',
+    steps: [page('/leaderboard'), graphql('LeaderboardConfig', Q.LEADERBOARD_CONFIG)],
+  },
+  gift_cards: {
+    page: () => '/gift-cards',
+    steps: [
+      page('/gift-cards'),
+      graphql('GiftCardCategories', Q.GIFT_CARD_CATEGORIES),
+      graphql('PublicFinanceSettings', Q.PUBLIC_FINANCE_SETTINGS),
+    ],
+  },
+  help: {
+    // A policy is a bonus, not a requirement: with none published the FAQ half still walks.
+    uses: 'policies',
+    page: () => '/faqs',
+    steps: [
+      page('/faqs'),
+      graphql('PublicFaqs', Q.PUBLIC_FAQS),
+      graphql('GrievanceOfficer', Q.GRIEVANCE_OFFICER),
+      { ...page('/policies/:slug', (policy) => `/policies/${enc(policy.slug)}`), when: hasRecord },
+      graphql('PolicyBySlug', Q.POLICY_BY_SLUG, (policy) => ({ slug: policy.slug }), hasRecord),
+    ],
   },
   api_health: {
     page: null,
-    steps: [{ kind: 'health', key: 'GET /health' }],
+    steps: [{ kind: 'get', key: 'GET /health', path: '/health' }],
   },
 };
 
-/** The requested journeys, or a thrown error naming the ones this runner cannot walk. */
+/**
+ * The requested journeys, or a thrown error naming the ones this runner cannot
+ * walk. Each carries `pick()`, which hands a walk its record (null when the
+ * journey needs none), and `page()` for the browser bots.
+ */
 export function resolveJourneys(names) {
   const unknown = names.filter((name) => !JOURNEYS[name]);
   if (unknown.length > 0) {
     throw new Error(`This runner has no steps for journey(s): ${unknown.join(', ')}`);
   }
   if (names.length === 0) throw new Error('The run names no journeys.');
-  return names.map((name) => ({ name, ...JOURNEYS[name] }));
+  return names.map((name) => {
+    const journey = JOURNEYS[name];
+    const pool = journey.needs ?? journey.uses;
+    const pick = pool ? () => pickFrom(pool) : () => null;
+    const browserPage = journey.page ? () => journey.page(pick()) : null;
+    return { name, needs: journey.needs ?? null, pool: pool ?? null, steps: journey.steps, pick, page: browserPage };
+  });
+}
+
+/** Splits journeys into the ones the loaded seeds can walk and the ones whose pool came back empty. */
+export function walkable(journeys) {
+  const ready = journeys.filter((j) => !j.needs || pickFrom(j.needs) !== null);
+  const empty = journeys.filter((j) => j.needs && pickFrom(j.needs) === null);
+  return { ready, empty };
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Box, FormHelperText, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { DuncitButton } from '@duncit/buttons';
@@ -32,6 +32,9 @@ const PREVIEW_SX = {
 export default function AdMediaField({ adType, value, onChange, error, helperText, required }: Readonly<AdMediaFieldProps>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  // The label, hint and error are read with the button that sets the value (1.3.1, 3.3.1).
+  const labelId = useId();
+  const helperId = useId();
   const isVideo = adType === 'VIDEO';
   // Each wording is its own catalogue row rather than a noun slotted into a
   // sentence: a language that inflects the verb for the noun cannot be built
@@ -51,6 +54,7 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
   return (
     <Box>
       <Typography
+        id={labelId}
         variant="body2"
         sx={{
           color: "text.secondary",
@@ -67,7 +71,14 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
           alignItems: "center",
           flexWrap: "wrap"
         }}>
-        <DuncitButton variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
+        <DuncitButton
+          variant="outlined"
+          startIcon={<CloudUploadIcon />}
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-describedby={`${labelId} ${helperId}`}
+          data-testid="ad-media-upload"
+        >
           {value ? replaceLabel : uploadLabel}
         </DuncitButton>
         {value && (
@@ -84,13 +95,14 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
       {value && (
         <Box sx={{ mt: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
           {isVideo ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box component="video" src={value} controls sx={PREVIEW_SX} />
           ) : (
             <Box component="img" src={value} alt={t('adRequest.media.previewAlt')} sx={PREVIEW_SX} />
           )}
         </Box>
       )}
-      <FormHelperText error={error}>{helperText ?? defaultHint}</FormHelperText>
+      <FormHelperText id={helperId} error={error}>{helperText ?? defaultHint}</FormHelperText>
       <MediaPickerDialog
         open={open}
         onClose={() => setOpen(false)}

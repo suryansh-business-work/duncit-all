@@ -90,6 +90,11 @@ export function DuncitRichTextInput({
     editorProps: {
       attributes: {
         'aria-label': ariaLabel ?? t('shell.richText.editorLabel'),
+        // A contenteditable is only "editable text" to assistive tech; this
+        // announces it as the multi-line field it is.
+        role: 'textbox',
+        'aria-multiline': 'true',
+        'data-testid': 'rich-text-editor',
       },
     },
   });
@@ -150,8 +155,14 @@ export function DuncitRichTextInput({
           overflowWrap: 'anywhere',
           padding: bare ? theme.spacing(1, 1.25) : theme.spacing(1.5),
         },
+        // The browser outline is off above (it hugged the text, not the box), so
+        // the focused document draws its own ring inside the frame (WCAG 2.4.7).
+        '& .ProseMirror:focus-visible': {
+          boxShadow: `inset 0 0 0 2px ${theme.palette.primary.main}`,
+        },
         '& .tiptap p.is-editor-empty:first-of-type::before': {
-          color: theme.palette.text.disabled,
+          // Placeholder text is text: secondary keeps it at 4.5:1 (WCAG 1.4.3).
+          color: theme.palette.text.secondary,
           content: 'attr(data-placeholder)',
           float: 'left',
           height: 0,

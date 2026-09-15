@@ -32,6 +32,7 @@ import {
 } from './queries';
 import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 type Editing = EcommBrand | 'new' | null;
 
@@ -114,14 +115,14 @@ export default function EcommBrandPage() {
     }
   };
 
-  if (loading && !data) return <Typography>Loading…</Typography>;
+  if (loading && !data) return <Typography role="status">Loading…</Typography>;
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
-      <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
-        <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
-        <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05 }}>E-Commerce Brands</Typography>
-        <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
+      <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
+        <Typography variant="overline" sx={{ fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>E-Commerce Brands</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
           Register one or more product brands — our onboarding team verifies each before it goes live.
         </Typography>
       </Box>
@@ -132,6 +133,7 @@ export default function EcommBrandPage() {
         <CardContent>
           <Typography
             variant="h6"
+            component="h2"
             sx={{
               fontWeight: 900,
               mb: 2
@@ -152,9 +154,9 @@ export default function EcommBrandPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
+      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm" aria-labelledby="brand-dialog-title">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <span>{dialogTitle}</span>
+          <span id="brand-dialog-title">{dialogTitle}</span>
           <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>

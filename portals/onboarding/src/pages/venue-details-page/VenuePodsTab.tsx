@@ -22,7 +22,7 @@ export default function VenuePodsTab({ venueId }: Readonly<{ venueId: string }>)
   return (
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
-        <Typography variant="h6" sx={{
+        <Typography variant="h6" component="h2" sx={{
           fontWeight: 900
         }}>
           Pods at this venue

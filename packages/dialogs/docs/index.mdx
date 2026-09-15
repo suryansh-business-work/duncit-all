@@ -315,6 +315,14 @@ the spinner, it does not sit beside it.
 renders as-is, so a list or a warning `<Alert>` can go straight in. Omitting `message`
 entirely drops the `DialogContent` rather than rendering an empty gap.
 
+## Accessibility
+
+The dialog is named by its `title` and, when there is a `message`, described by it
+(`aria-describedby`), so a screen reader announces what is being confirmed. A red confirmation
+(`destructive`, or `confirmColor: 'error'`) opens with focus on **Cancel**: an Enter pressed on
+arrival backs out instead of deleting. Both buttons carry test ids — `confirm-dialog-cancel` and
+`confirm-dialog-confirm` — the same ids the native app's confirm dialog uses.
+
 ## Peers and coverage
 
 MUI, React and React DOM are peer dependencies — the package has no runtime dependencies of

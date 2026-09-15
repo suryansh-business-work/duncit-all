@@ -33,7 +33,7 @@ export function MailPreferenceSection({
     <SurfaceCard testID="mail-preference-section">
       <Text
         testID="mail-preference-section-heading"
-        accessibilityRole="header"
+        role="heading"
         fontSize={17}
         fontWeight="600"
         color="$color"

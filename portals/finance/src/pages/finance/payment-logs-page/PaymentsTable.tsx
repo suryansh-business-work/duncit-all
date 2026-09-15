@@ -47,12 +47,18 @@ export default function PaymentsTable({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<PaymentRow>[]>(() => {
-    const renderActions = (p: PaymentRow) => (
+    const renderActions = (p: PaymentRow) => {
+      const downloadTitle = p.invoice_no ? t('finance.payment.downloadInvoice') : t('finance.payment.noInvoiceGenerated');
+      const refundTitle = p.status === 'SUCCESS' ? t('finance.payment.refund') : t('finance.payment.refundOnlySuccess');
+      return (
       <Stack direction="row" spacing={0.5} component="span">
-        <Tooltip title={p.invoice_no ? t('finance.payment.downloadInvoice') : t('finance.payment.noInvoiceGenerated')}>
+        <Tooltip title={downloadTitle}>
           <span>
+            {/* The Tooltip names the span, so the button needs its own name. */}
             <DuncitIconButton
               size="small"
+              aria-label={downloadTitle}
+              data-testid="finance-payments-download-invoice"
               disabled={!p.invoice_no || downloadingId === p.id}
               onClick={(event) => {
                 // The row opens the detail page; downloading must not also navigate.
@@ -64,10 +70,12 @@ export default function PaymentsTable({
             </DuncitIconButton>
           </span>
         </Tooltip>
-        <Tooltip title={p.status === 'SUCCESS' ? t('finance.payment.refund') : t('finance.payment.refundOnlySuccess')}>
+        <Tooltip title={refundTitle}>
           <span>
             <DuncitIconButton
               size="small"
+              aria-label={refundTitle}
+              data-testid="finance-payments-refund"
               color="warning"
               disabled={p.status !== 'SUCCESS'}
               onClick={(event) => {
@@ -80,7 +88,8 @@ export default function PaymentsTable({
           </span>
         </Tooltip>
       </Stack>
-    );
+      );
+    };
     return [
       { field: 'created_at', headerName: t('finance.payment.colWhen'), width: 160, filter: { type: 'date' }, valueGetter: whenValue },
       {
@@ -163,6 +172,7 @@ export default function PaymentsTable({
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('finance.payment.logsSearch')}
       refetchRef={refetchRef}
+      ariaLabel={t('finance.payment.logsTitle')}
     />
   );
 }

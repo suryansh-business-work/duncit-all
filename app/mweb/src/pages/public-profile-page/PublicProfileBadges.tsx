@@ -72,10 +72,11 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
                 minHeight: 44,
                 minWidth: 0,
                 '&:hover': { bgcolor: 'action.hover' },
-                '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+                '&:focus-visible': { outline: '2px solid', outlineColor: 'accent.main', outlineOffset: 2 },
               }}
             >
               <Avatar
+                alt=""
                 src={ub.badge?.image_url || undefined}
                 sx={{ width: 56, height: 56, bgcolor: 'action.hover', color: 'secondary.main', mb: 0.75 }}
               >

@@ -40,6 +40,7 @@ function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProp
     <XStack
       testID={`support-topic-${id}`}
       role="button"
+      tabIndex={0}
       aria-label={name}
       onPress={onOpen}
       alignItems="center"
@@ -85,7 +86,7 @@ export function SupportTopics({ groups, onOpenTopic }: Readonly<SupportTopicsPro
   if (groups.length === 0) return null;
   return (
     <YStack gap={12}>
-      <SectionHeader title={t('mweb.supportHub.topics')} />
+      <SectionHeader testID="support-topics-header" title={t('mweb.supportHub.topics')} />
       <SurfaceCard padding={0} overflow="hidden">
         {groups.map((group, index) => (
           <SupportTopicRow

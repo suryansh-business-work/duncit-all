@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 import {
   Box,
   Dialog,
@@ -45,6 +45,7 @@ export default function ResponsiveDialog({
   children,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useSheet = bottomSheetOnly || (!desktopOnly && isMobile);
@@ -59,6 +60,7 @@ export default function ResponsiveDialog({
         disableSwipeToOpen
         slotProps={{
           paper: {
+            'aria-labelledby': title ? titleId : undefined,
             sx: {
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
@@ -85,6 +87,8 @@ export default function ResponsiveDialog({
             }}>
             <Typography
               variant="subtitle1"
+              component="h2"
+              id={titleId}
               noWrap
               sx={{
                 fontWeight: 700,

@@ -39,6 +39,7 @@ export function PodCardScroll({
       {pods.length === 0 ? (
         <Text
           testID={`${testID}-empty`}
+          role="status"
           textAlign="center"
           fontSize={13}
           color="$muted"

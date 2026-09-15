@@ -13,7 +13,7 @@ export default function SettingsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">{t('admin.settings.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('admin.settings.title')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

@@ -86,9 +86,10 @@ function SpaceChip({
   return (
     <XStack
       testID={`create-pod-space-${space.label}`}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={label}
-      aria-pressed={selected}
+      aria-checked={selected}
       onPress={() => onPick(space)}
       minHeight={36}
       alignItems="center"
@@ -129,7 +130,12 @@ function VenueSpaceCard({
       </Text>
       <YStack gap={8}>
         <FieldLabel label={t('mweb.createPod.spaceCapacity')} required testID="create-pod-space" />
-        <XStack gap={8} flexWrap="wrap">
+        <XStack
+          gap={8}
+          flexWrap="wrap"
+          role="radiogroup"
+          aria-label={t('mweb.createPod.spaceCapacity')}
+        >
           {spaces.map((space) => (
             <SpaceChip
               key={space.label}

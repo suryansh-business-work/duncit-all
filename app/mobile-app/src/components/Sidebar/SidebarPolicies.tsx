@@ -55,9 +55,11 @@ export function SidebarPolicies({
   return (
     <YStack testID="sidebar-policies">
       <SidebarRow
+        testID="sidebar-policies-toggle"
         icon="description"
         label={t('mweb.common.policies')}
         onPress={toggle}
+        expanded={open}
         chevron={false}
         trailing={
           <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={22} color={muted} />
@@ -72,6 +74,7 @@ export function SidebarPolicies({
                 testID={`sidebar-policy-${p.slug}`}
                 role="button"
                 aria-label={p.title}
+                tabIndex={0}
                 onPress={() => onSelect(p.slug)}
                 alignItems="center"
                 gap={10}

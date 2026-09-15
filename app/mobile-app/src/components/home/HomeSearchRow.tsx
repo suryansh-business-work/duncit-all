@@ -38,6 +38,7 @@ export function HomeSearchRow({
             testID="home-search"
             role="button"
             aria-label={t('mweb.appHeader.searchPods')}
+            tabIndex={0}
             onPress={onSearch}
             height={52}
             alignItems="center"

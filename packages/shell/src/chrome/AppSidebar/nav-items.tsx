@@ -73,7 +73,12 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
       component={NavLink}
       to={item.to ?? '#'}
       selected={selected}
+      // NavLink marks every prefix match current, so `/host-leads` would claim
+      // the page alongside `/host-leads/services`; the group's single winner
+      // is the one page a screen reader should hear as current.
+      aria-current={selected ? 'page' : false}
       onClick={onNavigate}
+      data-testid="shell-nav-leaf"
       sx={item.featured ? featuredLeafSx : leafSx}
     >
       <ListItemIcon sx={{ minWidth: 34, color: 'text.secondary' }}>
@@ -104,7 +109,12 @@ function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonl
   const isOpen = searching ? true : open;
   return (
     <Box sx={{ mb: 0.25 }}>
-      <ListItemButton onClick={() => setOpen((v) => !v)} sx={{ py: 0.75 }}>
+      <ListItemButton
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={isOpen}
+        data-testid="shell-nav-group"
+        sx={{ py: 0.75 }}
+      >
         <ListItemIcon sx={{ minWidth: 34, color: active ? 'primary.main' : 'text.secondary' }}>
           <AppIcon name={item.icon} fontSize="small" />
         </ListItemIcon>

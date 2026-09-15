@@ -45,7 +45,7 @@ export default function GiftCardLogsPage() {
         alignItems: "center"
       }}>
         <ReceiptLongIcon color="primary" />
-        <Typography variant="h5" sx={{ fontWeight: 900 }}>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 900 }}>
           {t('finance.giftCards.logsTitle')}
         </Typography>
         {total != null && <Chip size="small" label={total} sx={{ ml: 1 }} />}

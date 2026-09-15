@@ -36,6 +36,9 @@ export function IconDisc({ icon, size = 36, tone = 'accent' }: Readonly<Props>) 
       justifyContent="center"
       backgroundColor="$soft"
       flexShrink={0}
+      // Decoration beside a row's own text — kept out of the reading order.
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
       <MaterialIcons name={icon} size={Math.round(size * 0.55)} color={tint[tone]} />
     </YStack>

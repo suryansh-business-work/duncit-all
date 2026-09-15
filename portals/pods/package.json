@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:forms": "vitest run --passWithNoTests",
     "test:forms:watch": "vitest",
-    "e2e": "node ../../scripts/e2e-no-surface.mjs pods"
+    "e2e": "node ../../scripts/e2e-no-surface.mjs pods",
+    "build:e2e": "tsc -b && vite build"
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",

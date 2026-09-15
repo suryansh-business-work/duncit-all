@@ -101,7 +101,7 @@ export default function TicketDetailPage() {
   if (loading && !ticket) {
     return (
       <Box data-testid="ticket-details-loading" sx={{ p: 4, textAlign: 'center' }}>
-        <CircularProgress size={24} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={24} />
       </Box>
     );
   }

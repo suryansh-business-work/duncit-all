@@ -89,7 +89,7 @@ function ResetAction({
 const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" label={p.category} />;
 
 const renderModel = (p: AiPrompt, defaultModel: string) => (
-  <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.disabled'}>
+  <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.secondary'}>
     {p.target_model || defaultModel}
   </Typography>
 );
@@ -178,6 +178,7 @@ export function PromptsTable({
 
   return (
     <DuncitTable<AiPrompt>
+      ariaLabel={t('ai.library.pageTitle')}
       tableId={`ai-prompts-${kind.toLowerCase()}`}
       columns={columns}
       fetchRows={fetchRows}

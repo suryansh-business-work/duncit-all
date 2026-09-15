@@ -39,7 +39,7 @@ describe('BasicSection', () => {
     // showIsActive is on but there is no club id yet, so no Active switch.
     expect(screen.queryByText('Active')).not.toBeInTheDocument();
 
-    await user.click(screen.getByText('Not verified').closest('div')!.querySelector('input')!);
+    await user.click(screen.getByText('Not verified').closest('label')!.querySelector('input')!);
     expect(methods?.getValues('is_verified')).toBe(true);
     expect(screen.getByText('Verified club')).toBeInTheDocument();
   });
@@ -71,7 +71,7 @@ describe('BasicSection', () => {
     expect(screen.queryByText('Not verified')).not.toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
 
-    await user.click(screen.getByText('Active').closest('div')!.querySelector('input')!);
+    await user.click(screen.getByText('Active').closest('label')!.querySelector('input')!);
     expect(methods?.getValues('is_active')).toBe(false);
     expect(screen.getByText('Inactive')).toBeInTheDocument();
   });

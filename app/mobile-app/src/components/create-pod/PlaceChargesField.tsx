@@ -83,6 +83,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
           />
           <XStack
             testID={`charge-remove-${idx}`}
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.createPod.removeCharge')}
             onPress={() => remove(idx)}
@@ -99,6 +100,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
       ))}
       <XStack
         testID="charge-add"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.createPod.addCharge')}
         onPress={add}
@@ -107,7 +109,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
         pressStyle={PRESS_STYLE.row}
       >
         <MaterialIcons name="add" size={18} color={primary} />
-        <Text fontSize={13} fontWeight="600" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$accent">
           {t('mweb.createPod.addCharge')}
         </Text>
       </XStack>

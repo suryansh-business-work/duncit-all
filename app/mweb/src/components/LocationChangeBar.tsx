@@ -51,7 +51,7 @@ export default function LocationChangeBar({
       <Stack
         direction="row"
         spacing={0.25}
-        sx={{ alignItems: 'center', color: 'primary.main', flex: '0 0 auto' }}
+        sx={{ alignItems: 'center', color: 'accent.main', flex: '0 0 auto' }}
       >
         <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
           {changeLabel}

@@ -36,6 +36,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -79,6 +80,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
  * payment, delivery listed per warehouse (separate from the pod-membership
  * payment). RN twin of mWeb's ProductCheckoutPage. */
 export function ProductCheckoutScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const lines = useCartStore((s) => s.lines);
@@ -248,7 +250,7 @@ export function ProductCheckoutScreen() {
   } else if (isLoading && !finance) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="product-checkout-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="product-checkout-loading" color="$primary" />
       </YStack>
     );
   } else if (breakup) {

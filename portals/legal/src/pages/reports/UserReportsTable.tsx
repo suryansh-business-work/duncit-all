@@ -54,7 +54,7 @@ export default function UserReportsTable({
           alignItems: "center",
           minWidth: 0
         }}>
-        <Avatar variant="rounded" src={r.target_preview_url || undefined} sx={{ width: 34, height: 34 }}>
+        <Avatar variant="rounded" alt="" src={r.target_preview_url || undefined} sx={{ width: 34, height: 34 }}>
           <ImageNotSupportedOutlinedIcon fontSize="small" />
         </Avatar>
         <Stack sx={{ minWidth: 0 }}>

@@ -134,6 +134,8 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
           <XStack
             testID={`search-follow-${club.club_id}`}
             role="button"
+            tabIndex={0}
+            hitSlop={6}
             aria-label={`Follow ${club.club_name}`}
             onPress={toggle}
             disabled={busy}

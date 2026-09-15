@@ -81,7 +81,7 @@ export default function AuthMessagesCard({ channel }: Readonly<Props>) {
             {/* The lock is explained on hover as well as in the note — the note
                 is what a touch device gets, the tooltip what a pointer gets,
                 and neither is the only place it is said. */}
-            {busy && <CircularProgress size={20} sx={{ m: 1 }} />}
+            {busy && <CircularProgress size={20} sx={{ m: 1 }} aria-label={t('mweb.a11y.loading')} />}
             {!busy && card.showSwitch && (
               <Tooltip title={card.canToggle ? '' : card.note}>
                 <span>

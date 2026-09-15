@@ -47,7 +47,7 @@ export default function ReferralPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

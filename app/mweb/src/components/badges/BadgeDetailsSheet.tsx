@@ -61,6 +61,7 @@ export default function BadgeDetailsSheet({
         }}>
           <Avatar
             src={badge.image_url || undefined}
+            alt=""
             sx={{ width: 72, height: 72, bgcolor: 'action.hover', color: 'secondary.main' }}
           >
             {!badge.image_url && <EmojiEventsIcon fontSize="large" />}
@@ -118,6 +119,7 @@ export default function BadgeDetailsSheet({
               data-testid="badge-details-sheet-progress-bar"
               variant="determinate"
               value={pct ?? 100}
+              aria-label={t('mweb.badges.progressLabel')}
               sx={{ mt: 0.75 }}
             />
           </Box>

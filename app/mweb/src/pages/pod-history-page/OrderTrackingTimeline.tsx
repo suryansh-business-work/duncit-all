@@ -6,9 +6,9 @@ import type { TimelineStep } from './productOrders';
 
 /** The dot a step wears: done (green check) / current (coral) / still to come (muted). */
 function stepDot(step: TimelineStep) {
-  if (step.done) return { Icon: CheckCircleIcon, color: 'primary.main' };
+  if (step.done) return { Icon: CheckCircleIcon, color: 'accent.main' };
   if (step.current) return { Icon: RadioButtonCheckedIcon, color: 'secondary.main' };
-  return { Icon: RadioButtonUncheckedIcon, color: 'text.disabled' };
+  return { Icon: RadioButtonUncheckedIcon, color: 'text.secondary' };
 }
 
 interface Props {

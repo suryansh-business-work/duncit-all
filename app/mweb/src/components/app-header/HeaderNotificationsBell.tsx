@@ -79,16 +79,20 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
     }
   };
 
-  const unreadLabel = unreadCount ? ` (${unreadCount} unread)` : '';
+  // The tooltip title IS the button's name (MUI writes it over aria-label), so
+  // it carries the unread count rather than a bare 'Notifications'.
+  const bellLabel = unreadCount
+    ? t('mweb.a11y.notificationsUnread', { vars: { count: unreadCount } })
+    : t('mweb.appHeader.notifications');
 
   return (
     <>
-      <Tooltip title={t('mweb.appHeader.notifications')}>
+      <Tooltip title={bellLabel}>
         <DuncitIconButton
           data-testid="notifications-bell"
           size="small"
           onClick={() => setNotificationsOpen(true)}
-          aria-label={`Notifications${unreadLabel}`}
+          aria-label={bellLabel}
           sx={HEADER_ROUND_BUTTON_SX}
         >
           <Badge badgeContent={unreadCount} color="secondary">

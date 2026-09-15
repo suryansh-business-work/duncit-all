@@ -33,8 +33,8 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
   const submit = () => onSubmit(reason.trim());
 
   return (
-    <Dialog data-testid="reopen-reason-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
+    <Dialog data-testid="reopen-reason-modal" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="reopen-reason-title">
+      <DialogTitle id="reopen-reason-title" sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert data-testid="reopen-error" severity="error" sx={{ mb: 1 }}>
@@ -50,6 +50,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           Tell us why you need to re-open this — it helps our team pick up where you left off. (optional)
         </Typography>
         <TextField
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
           autoFocus
           fullWidth
           size="small"

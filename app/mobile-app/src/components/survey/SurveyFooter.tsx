@@ -62,6 +62,7 @@ export function SurveyFooter({
           role="button"
           aria-disabled={!canSubmit}
           aria-busy={saving}
+          tabIndex={0}
           disabled={!canSubmit}
           onPress={() => {
             if (canSubmit) onSubmit();

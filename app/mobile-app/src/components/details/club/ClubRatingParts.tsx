@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate } from '@/utils/date-format';
 
 const STARS = [1, 2, 3, 4, 5] as const;
@@ -40,12 +41,16 @@ export function StarPicker({
   onChange,
 }: Readonly<{ value: number; onChange: (v: number) => void }>) {
   const { warning } = useThemeColors();
+  const { t } = useTranslation();
   return (
-    <XStack gap={4}>
+    <XStack gap={4} role="radiogroup" aria-label={t('mweb.clubDetails.rateThisClub')}>
       {STARS.map((s) => (
         <TouchableOpacity
           key={s}
           testID={`star-${s}`}
+          role="radio"
+          aria-checked={s === value}
+          aria-label={t('mweb.a11y.rateStars', { vars: { stars: s } })}
           onPress={() => onChange(s)}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >

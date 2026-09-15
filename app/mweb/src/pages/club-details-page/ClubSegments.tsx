@@ -87,6 +87,7 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
             label={label}
             clickable
             color={active === key ? 'primary' : 'default'}
+            aria-pressed={active === key}
             onClick={() => setActive(key)}
             sx={active === key ? SEGMENT_SX : IDLE_SEGMENT_SX}
           />

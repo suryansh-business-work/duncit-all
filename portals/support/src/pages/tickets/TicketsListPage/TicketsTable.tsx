@@ -147,6 +147,7 @@ export default function TicketsTable({
   const columns = useMemo(() => buildColumns(t), [t]);
   return (
     <DuncitTable<Ticket>
+      ariaLabel={t('support.tickets.title')}
       tableId="support-tickets"
       columns={columns}
       fetchRows={fetchRows}

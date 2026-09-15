@@ -21,6 +21,7 @@ function CountStat({
     <YStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={`${value} ${label}`}
       onPress={onPress}
       flex={1}
@@ -72,7 +73,14 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
         )}
       </YStack>
       <YStack alignItems="center" gap={4} alignSelf="stretch">
-        <Text fontSize={22} fontWeight="600" color="$color" textAlign="center">
+        <Text
+          testID="public-profile-name"
+          role="heading"
+          fontSize={22}
+          fontWeight="600"
+          color="$color"
+          textAlign="center"
+        >
           {user.full_name || 'Duncit user'}
         </Text>
         <Text fontSize={14} fontWeight="500" color="$muted">

@@ -50,6 +50,9 @@ export function SidebarRefreshBar({ active }: Readonly<{ active: boolean }>) {
     <View
       testID="sidebar-refresh-bar"
       accessibilityLabel={t('mweb.sidebar.refreshing')}
+      // A progress indicator that is busy only while a re-read is in flight.
+      role="progressbar"
+      aria-busy={active}
       onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
       style={{ height: TRACK_HEIGHT, overflow: 'hidden' }}
     >

@@ -122,8 +122,10 @@ function ReleasedSeatsRow({
       <XStack
         testID="pod-take-seats-back"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.takeSeatsBack')}
         aria-disabled={restoringSpot}
+        hitSlop={2}
         onPress={restoringSpot ? undefined : onKeepSpot}
         alignItems="center"
         justifyContent="center"

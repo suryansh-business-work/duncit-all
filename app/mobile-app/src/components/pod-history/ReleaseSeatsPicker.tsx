@@ -50,8 +50,10 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
           <XStack
             testID="backout-seat-minus"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podDetails.oneSeatFewer')}
             aria-disabled={seats <= 1}
+            hitSlop={3}
             onPress={() => step(seats - 1)}
             width={38}
             height={44}
@@ -74,8 +76,10 @@ export function ReleaseSeatsPicker({ held, value, onChange, disabled }: Readonly
           <XStack
             testID="backout-seat-plus"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podDetails.oneSeatMore')}
             aria-disabled={seats >= held}
+            hitSlop={3}
             onPress={() => step(seats + 1)}
             width={38}
             height={44}

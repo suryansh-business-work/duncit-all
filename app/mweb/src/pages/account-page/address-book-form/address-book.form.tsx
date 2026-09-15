@@ -93,18 +93,18 @@ export default function AddressForm({
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
           {field('label', t('mweb.address.labelHomeOffice'))}
-          {field('name', t('mweb.address.receiverName'))}
-          {field('phone', t('mweb.address.phone'))}
-          {field('line1', t('mweb.address.addressLine1'))}
-          {field('line2', t('mweb.address.addressLine2'))}
-          {field('landmark', t('mweb.address.landmark'))}
+          {field('name', t('mweb.address.receiverName'), { autoComplete: 'name' })}
+          {field('phone', t('mweb.address.phone'), { autoComplete: 'tel' })}
+          {field('line1', t('mweb.address.addressLine1'), { autoComplete: 'address-line1' })}
+          {field('line2', t('mweb.address.addressLine2'), { autoComplete: 'address-line2' })}
+          {field('landmark', t('mweb.address.landmark'), { autoComplete: 'address-line3' })}
           <Stack direction="row" spacing={1.5}>
-            {field('city', t('mweb.address.city'))}
-            {field('state', t('mweb.address.state'))}
+            {field('city', t('mweb.address.city'), { autoComplete: 'address-level2' })}
+            {field('state', t('mweb.address.state'), { autoComplete: 'address-level1' })}
           </Stack>
           <Stack direction="row" spacing={1.5}>
-            {field('pincode', t('mweb.address.pincode'))}
-            {field('country', t('mweb.address.country'))}
+            {field('pincode', t('mweb.address.pincode'), { autoComplete: 'postal-code' })}
+            {field('country', t('mweb.address.country'), { autoComplete: 'country-name' })}
           </Stack>
           <Controller
             name="is_default"

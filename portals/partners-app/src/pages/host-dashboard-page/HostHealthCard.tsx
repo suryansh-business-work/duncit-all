@@ -45,7 +45,7 @@ export default function HostHealthCard({ health, podsCompleted }: Readonly<Props
           {health.total_score}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" sx={{
+          <Typography variant="subtitle2" component="h2" sx={{
             fontWeight: 900
           }}>
             Profile health

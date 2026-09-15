@@ -50,7 +50,7 @@ export default function AttendeeRow({
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <Avatar src={row.profile_photo ?? undefined} sx={{ width: 30, height: 30 }}>
+            <Avatar alt="" src={row.profile_photo ?? undefined} sx={{ width: 30, height: 30 }}>
               {(row.full_name?.[0] ?? '?').toUpperCase()}
             </Avatar>
             <Stack>
@@ -61,7 +61,7 @@ export default function AttendeeRow({
                 sx={{
                   textAlign: 'left',
                   fontWeight: 700,
-                  ...(struck && { textDecoration: 'line-through', color: 'text.disabled' }),
+                  ...(struck && { textDecoration: 'line-through', color: 'text.secondary' }),
                 }}
               >
                 {row.full_name ?? 'Unknown user'}

@@ -105,6 +105,7 @@ export default function RolesTable({
 
   return (
     <DuncitTable<RoleRow>
+      ariaLabel={t('admin.roles.title')}
       tableId="admin-roles"
       columns={columns}
       fetchRows={fetchRows}

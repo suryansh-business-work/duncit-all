@@ -12,6 +12,15 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const CRM_BUNDLE: NestedCatalogue = {
   crm: {
+    a11y: {
+      previousPeriod: 'Previous period',
+      nextPeriod: 'Next period',
+      overdue: 'Overdue',
+      dueSoon: 'Due within 24 hours',
+      moveUpNamed: 'Move {name} up',
+      moveDownNamed: 'Move {name} down',
+      timeRange: 'Time range',
+    },
     callPrompts: {
       deleteStaticContent: 'Delete Static Content',
     },

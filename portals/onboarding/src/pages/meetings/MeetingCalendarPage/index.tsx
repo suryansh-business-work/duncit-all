@@ -17,6 +17,7 @@ import MonthView from './MonthView';
 import TimeGridView from './TimeGridView';
 import { rangeLabel, stepCursor, viewDays, type CalendarView } from './calendarMath';
 import { logs } from '@duncit/logs';
+import { useTranslation } from '@duncit/app-settings';
 
 interface MenuState {
   mouseX: number;
@@ -26,6 +27,7 @@ interface MenuState {
 
 /** Onboarding → Meeting → Calendar: Outlook-style Day / Week / Month views. */
 export default function MeetingCalendarPage() {
+  const { t } = useTranslation();
   const [view, setView] = useState<CalendarView>('week');
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
@@ -81,7 +83,7 @@ export default function MeetingCalendarPage() {
       sx={{
         alignItems: "center",
         py: 5
-      }}><CircularProgress /></Stack>;
+      }}><CircularProgress aria-label={t('shell.a11y.loading')} /></Stack>;
   } else if (view === 'month') {
     body = <MonthView days={days} cursor={cursor} meetings={meetings} holidays={holidays} slotMinutes={slotMinutes} now={now} onSelect={setSelected} onContext={openContext} onMore={(day) => { setCursor(day); setView('day'); }} />;
   } else {

@@ -21,9 +21,9 @@ export default function EstimateCard({ pricing, loading, position, durationDays 
   const { t } = useTranslation();
   if (loading || !pricing) {
     return (
-      <Card>
+      <Card aria-busy="true">
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom sx={{
+          <Typography variant="subtitle1" component="h2" gutterBottom sx={{
             fontWeight: 700
           }}>
             {t('adRequest.estimate.title')}
@@ -43,7 +43,7 @@ export default function EstimateCard({ pricing, loading, position, durationDays 
   return (
     <Card>
       <CardContent>
-        <Typography variant="subtitle1" gutterBottom sx={{
+        <Typography variant="subtitle1" component="h2" gutterBottom sx={{
           fontWeight: 700
         }}>
           {t('adRequest.estimate.title')}

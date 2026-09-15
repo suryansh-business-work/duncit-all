@@ -53,66 +53,77 @@ export default function PodCard({
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
   const joiningText = spotsTaken > 0 ? t('mweb.home.joiningNow', { count: spotsTaken }) : '';
   const dateText = formatDateTime(pod.pod_date_time) || '—';
+  const priceText = isFree ? t('mweb.slots.free') : format(pod.pod_amount);
+  // One spoken name for the whole card, title first (2.5.3).
+  const cardLabel = [pod.pod_title, dateText, priceText, spotsText].join(', ');
 
+  // The save button is a SIBLING of the card button, laid over the image
+  // corner: a button nested inside role=button is unreachable (4.1.2).
   return (
-    <Card
-      data-testid={`pod-card-${pod.pod_id}`}
-      onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      aria-label={pod.pod_title}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
+    <Box
       sx={{
-        width: CARD_WIDTH,
-        minWidth: CARD_WIDTH,
-        maxWidth: CARD_WIDTH,
-        height: CARD_HEIGHT,
+        position: 'relative',
         flex: '0 0 auto',
-        p: 1,
-        display: 'flex',
-        flexDirection: 'column',
         scrollSnapAlign: 'start',
-        cursor: 'pointer',
         transition: 'transform 180ms ease',
         '&:hover': { transform: 'translateY(-2px)' },
       }}
     >
-      <Box
+      <Card
+        data-testid={`pod-card-${pod.pod_id}`}
+        onClick={onOpen}
+        role="button"
+        tabIndex={0}
+        aria-label={cardLabel}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
         sx={{
-          position: 'relative',
-          flex: 1,
-          minHeight: 0,
-          borderRadius: '18px',
-          overflow: 'hidden',
-          bgcolor: 'action.hover',
+          width: CARD_WIDTH,
+          minWidth: CARD_WIDTH,
+          maxWidth: CARD_WIDTH,
+          height: CARD_HEIGHT,
+          p: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          cursor: 'pointer',
         }}
       >
-        <PodCardMedia media={pod.pod_images_and_videos?.[0]} title={pod.pod_title} />
-        <PodDatePill text={dateText} />
-        {categoryLabel && <PodCategoryPill label={categoryLabel} />}
-        {onToggleSave && (
-          <PodSaveButton
-            podId={pod.pod_id}
-            saved={saved}
-            saving={saving}
-            label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
-            onToggle={onToggleSave}
-          />
-        )}
-      </Box>
-      <PodCardInfo
-        title={pod.pod_title}
-        price={isFree ? t('mweb.slots.free') : format(pod.pod_amount)}
-        joiningText={joiningText}
-        spotsText={spotsText}
-        subText={[hostText, placeText].filter(Boolean).join(' · ')}
-        testIdPrefix={`pod-card-${pod.pod_id}`}
-      />
-    </Card>
+        <Box
+          sx={{
+            position: 'relative',
+            flex: 1,
+            minHeight: 0,
+            borderRadius: '18px',
+            overflow: 'hidden',
+            bgcolor: 'action.hover',
+          }}
+        >
+          <PodCardMedia media={pod.pod_images_and_videos?.[0]} title={pod.pod_title} />
+          <PodDatePill text={dateText} />
+          {categoryLabel && <PodCategoryPill label={categoryLabel} />}
+        </Box>
+        <PodCardInfo
+          title={pod.pod_title}
+          price={priceText}
+          joiningText={joiningText}
+          spotsText={spotsText}
+          subText={[hostText, placeText].filter(Boolean).join(' · ')}
+          testIdPrefix={`pod-card-${pod.pod_id}`}
+        />
+      </Card>
+      {onToggleSave && (
+        <PodSaveButton
+          podId={pod.pod_id}
+          saved={saved}
+          saving={saving}
+          label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
+          onToggle={onToggleSave}
+        />
+      )}
+    </Box>
   );
 }

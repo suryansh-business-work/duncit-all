@@ -18,6 +18,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
     <XStack gap={12} paddingTop={12}>
       <XStack
         testID="pod-resubmit-cancel"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.common.cancel')}
         aria-disabled={busy}
@@ -38,6 +39,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
       </XStack>
       <XStack
         testID="pod-resubmit-save"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.hostManage.resubmitRequest')}
         aria-disabled={busy}

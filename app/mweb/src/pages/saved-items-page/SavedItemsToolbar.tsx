@@ -114,6 +114,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         <DuncitIconButton
           data-testid="saved-items-toolbar-filter"
           aria-label={t('mweb.savedItems.filterByCategory')}
+          aria-expanded={!!filterAnchor}
           onClick={(event) => setFilterAnchor(event.currentTarget)}
           sx={FILTER_BTN_SX}
         >
@@ -123,6 +124,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
       <DuncitIconButton
         data-testid="saved-items-toolbar-sort"
         aria-label={t('mweb.savedItems.sortSavedPods')}
+        aria-expanded={!!sortAnchor}
         onClick={(event) => setSortAnchor(event.currentTarget)}
         sx={SORT_BTN_SX}
       >

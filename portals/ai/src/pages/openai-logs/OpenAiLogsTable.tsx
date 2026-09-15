@@ -170,6 +170,7 @@ export default function OpenAiLogsTable({
 
   return (
     <DuncitTable<OpenAiLogRow>
+      ariaLabel={t('ai.openAiLogs.title')}
       tableId="ai-openai-logs"
       columns={columns}
       fetchRows={fetchRows}

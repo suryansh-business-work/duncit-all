@@ -92,7 +92,7 @@ export default function InvoiceManagementPage() {
         }}>
         <DescriptionIcon color="primary" sx={{ fontSize: 28 }} />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>{t('finance.invoiceManagement.invoiceManagement')}</Typography>
           <Typography variant="body2" sx={{
@@ -116,7 +116,7 @@ export default function InvoiceManagementPage() {
             <InvoiceBrandingForm value={form} onChange={onChange} emailError={emailError} />
             <Card variant="outlined">
               <CardContent>
-                <Typography variant="subtitle1" gutterBottom sx={{
+                <Typography component="h2" variant="subtitle1" gutterBottom sx={{
                   fontWeight: 700
                 }}>
                   Payment processing

@@ -155,7 +155,7 @@ export default function CategoriesPage() {
           alignItems: "center"
         }}>
           <CategoryIcon color="primary" />
-          <Typography variant="h5">{t('admin.categories.title')}</Typography>
+          <Typography variant="h5" component="h1">{t('admin.categories.title')}</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"

@@ -122,7 +122,7 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
               <Text fontSize={13} fontWeight="600" color="$color">
                 {labels.otpMediumLabel}
               </Text>
-              <XStack gap={8}>
+              <XStack gap={8} role="group" aria-label={labels.otpMediumLabel}>
                 {OTP_MEDIUMS.map((medium) => (
                   <MediumToggle
                     key={medium}
@@ -137,7 +137,12 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
                 ))}
               </XStack>
               {fieldState.error ? (
-                <Text fontSize={12} color="$danger">
+                <Text
+                  testID="attendance-otp-mediums-error"
+                  role="alert"
+                  fontSize={12}
+                  color="$danger"
+                >
                   {fieldState.error.message}
                 </Text>
               ) : null}
@@ -153,7 +158,7 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
           disabled={otp.sending}
         />
         {otp.error ? (
-          <Text fontSize={12} color="$danger">
+          <Text testID="attendance-otp-error" role="alert" fontSize={12} color="$danger">
             {otp.error}
           </Text>
         ) : null}

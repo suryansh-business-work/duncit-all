@@ -83,8 +83,11 @@ export function ContactValueStep({
               name="number"
               label={copy.fieldLabel}
               keyboardType="phone-pad"
+              autoComplete="tel-national"
+              textContentType="telephoneNumber"
               digitsOnly
               maxLength={15}
+              required
             />
           </YStack>
         </XStack>
@@ -95,6 +98,9 @@ export function ContactValueStep({
           label={copy.fieldLabel}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+          required
         />
       )}
       <PrimaryButton

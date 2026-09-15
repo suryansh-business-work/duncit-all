@@ -182,7 +182,8 @@ const ArtifactLink = ({
   if (!artifact.url) {
     return (
       <Tooltip title={artifact.error || labels.noArtifact}>
-        <ErrorOutlineIcon fontSize="small" color="warning" />
+        {/* Exposed as an image so the tooltip's name reaches a screen reader. */}
+        <ErrorOutlineIcon fontSize="small" color="warning" role="img" aria-hidden={false} />
       </Tooltip>
     );
   }
@@ -199,7 +200,7 @@ const ArtifactLink = ({
 /** Icon links stop propagation so opening them never also opens the details dialog. */
 export const makeRenderLinks = (labels: LinkLabels, onDelete: (row: AppBuildRow) => void) => {
   const renderLinks = (row: AppBuildRow) => (
-    <Box onClick={(e) => e.stopPropagation()}>
+    <Box role="presentation" onClick={(e) => e.stopPropagation()}>
       {row.artifacts.map((a) => (
         <ArtifactLink key={a.kind} artifact={a} labels={labels} />
       ))}

@@ -63,21 +63,21 @@ export default function ActivityLogsSection({
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="subtitle2" gutterBottom>
+        <Typography component="h2" variant="subtitle2" gutterBottom>
           Last 30-day stock movement
         </Typography>
         <InventoryAnalyticsChart points={analytics} loading={loading} />
       </Box>
       <Divider />
       <Box>
-        <Typography variant="subtitle2" gutterBottom>
+        <Typography component="h2" variant="subtitle2" gutterBottom>
           Stock movement timeline
         </Typography>
         <StockMovementTimeline movements={movements} loading={loading} />
       </Box>
       <Divider />
       <Box>
-        <Typography variant="subtitle2" gutterBottom>
+        <Typography component="h2" variant="subtitle2" gutterBottom>
           Activity logs
         </Typography>
         {logs.length === 0 ? (

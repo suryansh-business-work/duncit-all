@@ -25,6 +25,7 @@ export function SuperCategoryTabs() {
   return (
     <XStack
       testID="super-cat-tabs"
+      role="tablist"
       marginHorizontal={16}
       marginBottom={12}
       height={44}
@@ -41,9 +42,12 @@ export function SuperCategoryTabs() {
           <XStack
             key={cat.id}
             testID={`super-cat-${cat.slug}`}
-            role="button"
+            // Selected tab, not a pressed button: `aria-selected` is the state a
+            // native screen reader actually announces.
+            role="tab"
             aria-label={cat.name}
-            aria-pressed={selected}
+            aria-selected={selected}
+            tabIndex={0}
             onPress={() => select(cat.slug)}
             flex={1}
             minWidth={0}

@@ -3,6 +3,7 @@ import VenueRequestRow from './VenueRequestRow';
 import HostSectionHeader from '../HostSectionHeader';
 import RowGroup from '../RowGroup';
 import type { HostPodRowActions } from '../hostPodRowActions';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /** The old two-line empty copy — kept exported for existing importers; the
  * section now draws only its one line (`emptyText`). */
@@ -38,13 +39,14 @@ export default function VenueRequestsCard({
   rowProps,
   testId,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (pods.length === 0 && !emptyText) return null;
 
   let body;
   if (loading) {
     body = (
       <Stack data-testid={testId ? `${testId}-loading` : undefined} sx={{ alignItems: 'center', py: 3 }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Stack>
     );
   } else if (pods.length === 0) {

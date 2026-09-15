@@ -107,7 +107,7 @@ export default function VenueDetailsPage() {
 
   if (loading && !data) {
     return (
-      <CircularProgress
+      <CircularProgress aria-label={t('mweb.a11y.loading')}
         data-testid="venue-details-loading"
         sx={{ display: 'block', mx: 'auto', my: 6 }}
       />
@@ -159,12 +159,13 @@ export default function VenueDetailsPage() {
           />
         </ButtonBase>
       ) : (
-        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'secondary.main' }}>
+        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'brand.main' }}>
           <StorefrontIcon sx={{ fontSize: 44 }} />
         </Box>
       )}
 
       <Stack spacing={1.25}>
+        {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}
         <TwoToneHeading lead={venue.venue_name} component="h2" />
         <Stack direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"

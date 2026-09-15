@@ -27,6 +27,7 @@ function NavRow({
       testID={testID}
       role="button"
       aria-label={label}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       gap={12}
@@ -63,7 +64,7 @@ export function ProfilePanels({
   onOpenVenue: () => void;
 }>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -91,8 +92,9 @@ export function ProfilePanels({
             <XStack
               pressStyle={PRESS_STYLE.surface}
               key={link.url}
-              role="button"
+              role="link"
               aria-label={link.label}
+              tabIndex={0}
               onPress={() => {
                 /* istanbul ignore next -- an OS-level open failure has no user-facing recovery */
                 Linking.openURL(link.url).catch(() => undefined);
@@ -100,8 +102,8 @@ export function ProfilePanels({
               alignItems="center"
               gap={8}
             >
-              <MaterialIcons name="open-in-new" size={15} color={primary} />
-              <Text fontSize={13.5} fontWeight="700" color="$primary">
+              <MaterialIcons name="open-in-new" size={15} color={accent} />
+              <Text fontSize={13.5} fontWeight="700" color="$accent">
                 {link.label}
               </Text>
             </XStack>

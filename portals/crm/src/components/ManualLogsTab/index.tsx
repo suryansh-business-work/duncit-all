@@ -78,7 +78,7 @@ export default function ManualLogsTab({
           }}>
           <EventNoteIcon color="primary" />
           <Box>
-            <Typography variant="subtitle1" sx={{
+            <Typography component="h2" variant="subtitle1" sx={{
               fontWeight: 800
             }}>
               Manual logs
@@ -94,6 +94,8 @@ export default function ManualLogsTab({
           size="small"
           value={granularity}
           onChange={(event) => setGranularity(event.target.value as Granularity)}
+          inputProps={{ 'aria-label': t('crm.a11y.timeRange') }}
+          data-testid="manual-log-range"
           sx={{ minWidth: 140 }}
         >
           <MenuItem value="all">{t('crm.components.allTime')}</MenuItem>

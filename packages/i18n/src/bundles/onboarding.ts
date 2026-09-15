@@ -11,6 +11,13 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const ONBOARDING_BUNDLE: NestedCatalogue = {
   onboarding: {
+    a11y: {
+      removeDocument: 'Remove document',
+      podTimeFilter: 'Filter pods by time',
+      calendarView: 'Calendar view',
+      meetingStatusFilter: 'Filter meetings by status',
+      viewVenuePods: '{count} pods — view pods hosted at this venue',
+    },
     adminVenueCreateDialog: {
       additionalVenuePhotosShownOnThe: 'Additional venue photos shown on the public venue page.',
       addressLine2: 'Address line 2',

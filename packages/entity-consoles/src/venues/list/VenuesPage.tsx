@@ -42,7 +42,7 @@ export default function VenuesPage() {
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <StorefrontIcon color="primary" />
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
               {t('admin.clubs.venues')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>

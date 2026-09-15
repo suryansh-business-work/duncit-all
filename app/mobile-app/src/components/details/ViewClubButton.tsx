@@ -13,6 +13,7 @@ export function ViewClubButton({ onOpenClub }: Readonly<{ onOpenClub: () => void
     <XStack
       testID="pod-view-club"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.podDetails.viewClub')}
       onPress={onOpenClub}
       alignItems="center"

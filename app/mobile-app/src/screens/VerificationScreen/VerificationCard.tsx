@@ -45,7 +45,13 @@ export function VerificationCard({
       <XStack alignItems="flex-start" gap={12}>
         <MaterialIcons name="check-circle" size={22} color={verified ? success : muted} />
         <YStack flex={1} gap={6}>
-          <Text fontSize={16} fontWeight="600" color="$color">
+          <Text
+            testID={`verification-${item.type}-title`}
+            role="heading"
+            fontSize={16}
+            fontWeight="600"
+            color="$color"
+          >
             {t(VERIFICATION_LABEL_KEYS[item.type])}
           </Text>
           <XStack

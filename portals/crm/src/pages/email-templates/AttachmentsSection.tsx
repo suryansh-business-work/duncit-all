@@ -53,7 +53,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
         }}>
         <AttachFileIcon fontSize="small" color="action" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle2">{t('crm.emailTemplates.attachments')}</Typography>
+          <Typography component="h2" variant="subtitle2">{t('crm.emailTemplates.attachments')}</Typography>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>{t('crm.emailTemplates.imageOrVideoSentWithEvery')}</Typography>

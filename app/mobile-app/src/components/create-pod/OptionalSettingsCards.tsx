@@ -81,6 +81,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
           >
             <XStack
               testID={`optional-${panel.key}`}
+              tabIndex={0}
               role="button"
               aria-label={title}
               aria-expanded={open}

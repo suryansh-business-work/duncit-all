@@ -45,7 +45,7 @@ export function VenuePicker({
     <YStack gap={8}>
       <FieldLabel label={selectVenue} required={required} testID="create-pod-venue" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap={12} paddingRight={12}>
+        <XStack gap={12} paddingRight={12} role="radiogroup" aria-label={selectVenue}>
           {venues.map((venue) => {
             const selected = venue.id === selectedId;
             const locality = [venue.locality, venue.city].filter(Boolean).join(', ');
@@ -55,9 +55,10 @@ export function VenuePicker({
               <YStack
                 key={venue.id}
                 testID={`create-pod-venue-${venue.id}`}
-                role="button"
+                tabIndex={0}
+                role="radio"
                 aria-label={venue.venue_name}
-                aria-pressed={selected}
+                aria-checked={selected}
                 onPress={() => onSelect(venue.id)}
                 width={236}
                 padding={12}
@@ -116,7 +117,7 @@ export function VenuePicker({
         </XStack>
       </ScrollView>
       {error ? (
-        <Text testID="create-pod-venue-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="create-pod-venue-error" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

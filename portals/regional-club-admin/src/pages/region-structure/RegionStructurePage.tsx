@@ -140,6 +140,7 @@ export default function RegionStructurePage() {
         >
           {drawing ? (
             <Stack
+              role="status"
               spacing={1.5}
               sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}
             >

@@ -114,6 +114,7 @@ export default function ClubAdminPodMonitoringTable({ fetchRows, refetchRef, onR
   return (
     <DuncitTable<PodAuditLog>
       tableId="club-admin-pod-monitoring"
+      ariaLabel={t('clubAdmin.monitoring.title')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

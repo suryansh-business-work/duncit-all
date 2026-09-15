@@ -82,7 +82,7 @@ export default function CancellationTriggerForm({
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+      <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800 }}>
         {t('onboarding.venues.cancellationTrigger')}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
@@ -124,7 +124,7 @@ export default function CancellationTriggerForm({
         </Alert>
 
         <Stack spacing={0.25}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+          <Typography variant="subtitle2" component="h4" sx={{ fontWeight: 800 }}>
             {t('onboarding.venues.refundBands')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

@@ -114,7 +114,7 @@ export default function MeetingAvailabilityPage() {
   };
 
   if (loading && !av) {
-    return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>;
+    return <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress aria-label={t('shell.a11y.loading')} /></Box>;
   }
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
@@ -125,7 +125,7 @@ export default function MeetingAvailabilityPage() {
       }}>
         <EventAvailableIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{t('shell.nav.meetingAvailability')}</Typography>
           <Typography variant="body2" sx={{
@@ -140,8 +140,8 @@ export default function MeetingAvailabilityPage() {
         <CardContent>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>{t('onboarding.meetings.workingDays')}</Typography>
-              <Stack direction="row" useFlexGap sx={{
+              <Typography variant="subtitle2" id="working-days-label" sx={{ mb: 0.5 }}>{t('onboarding.meetings.workingDays')}</Typography>
+              <Stack direction="row" role="group" aria-labelledby="working-days-label" useFlexGap sx={{
                 flexWrap: "wrap"
               }}>
                 {days(t).map((day) => (

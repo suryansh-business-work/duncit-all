@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import Editor from '@monaco-editor/react';
 import { AppBar, Box, Dialog, Toolbar, Typography, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -30,11 +31,12 @@ export default function CodeExpandDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const titleId = useId();
   return (
-    <Dialog fullScreen open={open} onClose={onClose}>
+    <Dialog fullScreen open={open} onClose={onClose} aria-labelledby={titleId}>
       <AppBar position="static" color="default" elevation={0}>
         <Toolbar variant="dense">
-          <Typography variant="subtitle2" sx={{ flex: 1, fontFamily: 'monospace' }}>
+          <Typography variant="subtitle2" component="h2" id={titleId} sx={{ flex: 1, fontFamily: 'monospace' }}>
             {title}
           </Typography>
           <DuncitIconButton edge="end" onClick={onClose} aria-label={t('tech.packagesDocs.closeEditor')}>

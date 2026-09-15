@@ -35,6 +35,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             key={item.id}
             testID={`badge-${item.id}`}
             role="button"
+            tabIndex={0}
             aria-label={item.badge?.title ?? 'Badge'}
             onPress={() => setActive(item)}
             width={72}
@@ -81,6 +82,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
           <XStack
             testID="badge-sheet-close"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.common.close')}
             onPress={() => setActive(null)}
             height={44}

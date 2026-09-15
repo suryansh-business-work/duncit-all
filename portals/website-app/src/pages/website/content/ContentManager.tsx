@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { Box, Snackbar, Stack, Typography } from '@mui/material';
+import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm } from '@duncit/dialogs';
+import { PageHeader } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import ContentTable from './ContentTable';
 import ContentDialog from './ContentDialog';
@@ -93,18 +94,7 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h5" sx={{
-          fontWeight: 700
-        }}>
-          {labels.title}
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {labels.description}
-        </Typography>
-      </Box>
+      <PageHeader title={labels.title} subtitle={labels.description} titleWeight={700} />
       <ContentTable
         tableId={`website-content-${type.toLowerCase()}`}
         fetchRows={fetchRows}

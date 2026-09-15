@@ -99,6 +99,13 @@ export function AppPopup() {
     <YStack
       pressStyle={PRESS_STYLE.surface}
       testID="app-popup"
+      // It covers the whole app without being a <Modal>, so it has to say so
+      // itself: a screen reader must not wander into the screen behind it,
+      // and the iOS escape gesture closes it like the backdrop does.
+      role="dialog"
+      aria-modal
+      accessibilityViewIsModal
+      onAccessibilityEscape={close}
       position="absolute"
       top={0}
       left={0}

@@ -35,7 +35,7 @@ export default function DuncitCoinPage() {
             alignItems: "center",
             py: 3
           }}>
-          <CircularProgress size={24} />
+          <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
         </Stack>
       ) : (
         <CoinHistoryList transactions={transactions} />

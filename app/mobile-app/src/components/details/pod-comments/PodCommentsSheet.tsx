@@ -15,6 +15,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { CommentComposer } from './CommentComposer';
 import { CommentRow } from './CommentRow';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface Props {
   podId: string;
@@ -35,6 +36,7 @@ export function PodCommentsSheet({
   onClose,
   onCountChange,
 }: Readonly<Props>) {
+  const loadingRegion = useLoadingRegion();
   const { color } = useThemeColors();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -77,12 +79,12 @@ export function PodCommentsSheet({
   if (isLoading) {
     commentsBody = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner color="$primary" />
+        <Spinner {...loadingRegion} color="$primary" />
       </YStack>
     );
   } else if (error) {
     commentsBody = (
-      <Text padding={16} color="$danger">
+      <Text role="alert" padding={16} color="$danger">
         {error}
       </Text>
     );
@@ -120,6 +122,7 @@ export function PodCommentsSheet({
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
+              importantForAccessibility="no"
               aria-label={t('mweb.podDetails.close')}
               onPress={onClose}
               position="absolute"
@@ -147,14 +150,16 @@ export function PodCommentsSheet({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.podDetails.comments')}
                   </Text>
                   <XStack
                     pressStyle={PRESS_STYLE.surface}
                     testID="pod-comments-close"
                     role="button"
+                    tabIndex={0}
                     aria-label={t('mweb.podDetails.close')}
+                    hitSlop={4}
                     onPress={onClose}
                     width={36}
                     height={36}
@@ -201,7 +206,7 @@ export function PodCommentsSheet({
                   borderRadius={28}
                   backgroundColor="$surface"
                 >
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.podDetails.deleteCommentTitle')}
                   </Text>
                   <Text fontSize={13} color="$muted">
@@ -212,6 +217,7 @@ export function PodCommentsSheet({
                       pressStyle={PRESS_STYLE.surface}
                       testID="comment-delete-cancel"
                       role="button"
+                      tabIndex={0}
                       aria-label={t('mweb.podDetails.cancel')}
                       onPress={() => setDeleteTarget(null)}
                       height={44}
@@ -230,6 +236,7 @@ export function PodCommentsSheet({
                       pressStyle={PRESS_STYLE.surface}
                       testID="comment-delete-confirm-btn"
                       role="button"
+                      tabIndex={0}
                       aria-label={t('mweb.podDetails.delete')}
                       onPress={() => confirmDelete(deleteTarget)}
                       height={44}

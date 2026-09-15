@@ -41,7 +41,14 @@ export function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
         current={current}
         label={labels.stepOf(current, SIGNUP_STEP_COUNT)}
       />
-      <Text fontSize={17} fontWeight="600" color="$color" textAlign="center">
+      <Text
+        testID="signup-stepper-title"
+        role="heading"
+        fontSize={17}
+        fontWeight="600"
+        color="$color"
+        textAlign="center"
+      >
         {title}
       </Text>
     </YStack>

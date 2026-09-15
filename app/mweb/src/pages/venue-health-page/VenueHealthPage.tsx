@@ -47,7 +47,7 @@ export default function VenueHealthPage() {
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress size={24} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={24} />
         </Stack>
       )}
 

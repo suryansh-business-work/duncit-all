@@ -37,7 +37,7 @@ export function SuperCategoryGroup({
         backgroundColor={withAlpha(hue, 0.12)}
       >
         {emoji ? <Text fontSize={16}>{emoji}</Text> : null}
-        <Text color={hue} fontWeight="600">
+        <Text role="heading" color="$color" fontWeight="600">
           {superCategory.name}
         </Text>
       </XStack>

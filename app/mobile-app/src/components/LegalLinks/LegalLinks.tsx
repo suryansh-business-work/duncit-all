@@ -22,6 +22,9 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       <Text
         pressStyle={PRESS_STYLE.inline}
         testID="legal-terms"
+        // Opens a web page — a link, so both screen readers offer it as one
+        // (Android and iOS expose a nested link inside the sentence).
+        role="link"
         color="$primary"
         fontWeight="600"
         onPress={() => Linking.openURL(auth.legal.termsUrl)}
@@ -32,6 +35,7 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       <Text
         pressStyle={PRESS_STYLE.inline}
         testID="legal-privacy"
+        role="link"
         color="$primary"
         fontWeight="600"
         onPress={() => Linking.openURL(auth.legal.privacyUrl)}

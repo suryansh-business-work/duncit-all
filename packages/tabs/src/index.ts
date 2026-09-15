@@ -7,6 +7,7 @@
  */
 export { DuncitTabs } from './DuncitTabs';
 export type { DuncitTabsProps } from './DuncitTabs';
+export { tabIds, tabPanelProps } from './tabPanelProps';
 export { TAB_PARAM, useTabParam } from './useTabParam';
 export type { UseTabParamOptions } from './useTabParam';
 export type { DuncitTabItem, DuncitTabsState, TabValue } from './types';

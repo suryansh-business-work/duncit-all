@@ -38,6 +38,7 @@ export function SpacePricingSection({ spaces, onChange }: Readonly<Props>) {
             {showToggle ? (
               <XStack
                 testID={`recurring-space-${rowId}-include`}
+                tabIndex={0}
                 role="checkbox"
                 aria-label={t('availability.recurring.includeSpace', { vars: { space: name } })}
                 aria-checked={space.enabled}

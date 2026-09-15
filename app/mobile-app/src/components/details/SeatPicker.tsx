@@ -55,8 +55,10 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       <XStack
         testID="pod-seat-minus"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.oneSeatFewer')}
         aria-disabled={seats <= 1}
+        hitSlop={3}
         onPress={() => step(seats - 1)}
         width={38}
         height={48}
@@ -79,8 +81,10 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       <XStack
         testID="pod-seat-plus"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.oneSeatMore')}
         aria-disabled={seats >= top}
+        hitSlop={3}
         onPress={() => step(seats + 1)}
         width={38}
         height={48}

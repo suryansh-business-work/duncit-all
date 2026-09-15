@@ -38,6 +38,7 @@ export function ClubBreakdown({ clubs, currency, onOpen }: Readonly<Props>) {
             {index > 0 ? <RowDivider /> : null}
             <XStack
               testID={`club-dashboard-club-${club.club_id}`}
+              tabIndex={0}
               role="button"
               aria-label={club.club_name}
               onPress={() => onOpen(club.club_id)}

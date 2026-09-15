@@ -16,6 +16,7 @@ import {
   fillContact,
   fillSecurity,
   fillWho,
+  finishInterestSurvey,
   googleButton,
   logNoPolicies,
   onSignupStep,
@@ -80,8 +81,6 @@ function itRefusesOnStepOne({ title, box, value, message }: Readonly<StepOneRefu
 
 const verifyButton = () => cy.byTestId('signup-verify');
 const verifyError = () => cy.byTestId('signup-verify-error');
-const interestChip = (index: number) => cy.byTestIdPrefix('chip-').eq(index);
-const findMyCrew = () => cy.byTestId('survey-submit');
 
 describe('01 Sign up', () => {
   const account = runAccount();
@@ -262,18 +261,7 @@ describe('01 Sign up', () => {
     });
 
     it('SU-19 the survey needs three interests, then lands on Home', () => {
-      cy.byTestId('survey-screen')
-        .should('contain.text', "What's your vibe?")
-        .and('contain.text', 'Pick at least 3 interests across categories to find your tribe.');
-      findMyCrew().should('be.disabled');
-      interestChip(0).click();
-      interestChip(1).click();
-      findMyCrew().should('be.disabled');
-      interestChip(2).click();
-      sendCode('SaveInterests', () => {
-        findMyCrew().should('be.enabled').click();
-      });
-      cy.location('pathname').should('eq', '/');
+      finishInterestSurvey();
     });
   });
 

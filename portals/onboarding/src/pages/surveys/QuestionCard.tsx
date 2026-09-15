@@ -58,8 +58,9 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
               color: "text.secondary",
               flex: 1
             }}>Q{index + 1}</Typography>
-          <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
-          <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          {/* The Tooltip names its <span>, not the button inside it — so the button carries its own name. */}
+          <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveUp')} onClick={() => onMove(-1)} disabled={index === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+          <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveDown')} onClick={() => onMove(1)} disabled={index === total - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
           <Tooltip title={t('shell.common.delete')}><DuncitIconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
         </Stack>
         <Stack spacing={1.5}>

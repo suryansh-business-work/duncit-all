@@ -33,6 +33,7 @@ export {
   type TintSource,
 } from './press-css';
 export { pressColorsOf, pressFor, restStatesCss } from './state-css';
+export { focusVisibleGlobalCss, reducedMotionGlobalCss } from './global-css';
 export { mergeCss, mergeSlot, type SlotStyle } from './merge';
 export {
   PRESS,

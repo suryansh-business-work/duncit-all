@@ -19,6 +19,8 @@ import { seedRateLimitDefaults } from '@modules/platform/rateLimit/rateLimit.see
 import { startRateLimitCleanupScheduler } from '@modules/platform/rateLimit/rateLimit.scheduler';
 import { startRateLimitFlush } from '@modules/platform/rateLimit/rateLimit.enforcer';
 import { rateLimitMiddleware, rateLimitPlugin } from '@modules/platform/rateLimit/rateLimit.guard';
+import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMonitor.plugin';
+import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
@@ -26,6 +28,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
+import { startServerHistorySampler } from '@modules/platform/tech/tech.history.sampler';
 import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
@@ -421,6 +424,10 @@ async function bootstrap() {
   // The same, for recorded rate-limit breaches.
   startRateLimitCleanupScheduler();
 
+  // GraphQL Monitor (Tech portal): fold the minute of per-operation timings the
+  // plugin counted in memory into the rollups, and re-read its settings.
+  startGraphqlMonitorFlusher();
+
   // Mail automation: read each connected Gmail mailbox forward from its cursor,
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
@@ -446,6 +453,9 @@ async function bootstrap() {
   // a single indexed query while no run is live.
   startServerPulse();
   startStressTestSampler();
+  // Tech > Server > Info's month of history: one host sample every five
+  // minutes (CPU, memory, disk, latency, containers), expired by TTL.
+  startServerHistorySampler();
 
   // Account deletions: a one-minute tick that carries out requests whose grace
   // period has run out (Admin Panel > Settings > Account deletion; off until an
@@ -573,6 +583,9 @@ async function bootstrap() {
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       graphqlErrorLogger,
+      // Ahead of the rate limiter and the cache, so its clock starts before
+      // either runs — a refused or cached request is timed like any other.
+      graphqlMonitorPlugin,
       // Before the cache: a refused request must not be answered from Redis.
       rateLimitPlugin,
       redisResponseCachePlugin,

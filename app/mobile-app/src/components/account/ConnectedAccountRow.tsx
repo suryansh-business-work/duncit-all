@@ -61,6 +61,8 @@ export function ConnectedAccountRow({
             role="button"
             aria-label={actionLabel}
             aria-disabled={busy}
+            tabIndex={0}
+            hitSlop={4}
             onPress={busy ? undefined : onAction}
             height={36}
             alignItems="center"

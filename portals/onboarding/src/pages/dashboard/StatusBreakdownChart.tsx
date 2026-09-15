@@ -6,8 +6,9 @@ import { ONBOARDING_STATUSES, type StatusCounts } from './onboardingStats';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: '#9ca3af',
+/** DRAFT has no entry: it takes the theme's secondary text colour, since the
+ * old `#9ca3af` grey was 2.5:1 on the card — under the 3:1 graphics floor. */
+const STATUS_COLORS: Partial<Record<string, string>> = {
   SUBMITTED: '#2563eb',
   APPROVED: '#16a34a',
   REJECTED: '#dc2626',
@@ -35,7 +36,9 @@ export default function StatusBreakdownChart({ title, counts }: Readonly<Props>)
     datasets: [
       {
         data: ONBOARDING_STATUSES.map((key) => counts[key]),
-        backgroundColor: ONBOARDING_STATUSES.map((key) => STATUS_COLORS[key]),
+        backgroundColor: ONBOARDING_STATUSES.map(
+          (key) => STATUS_COLORS[key] ?? theme.palette.text.secondary,
+        ),
         borderWidth: 0,
       },
     ],
@@ -58,8 +61,11 @@ export default function StatusBreakdownChart({ title, counts }: Readonly<Props>)
     },
   };
 
+  // The canvas has no text of its own (1.1.1): name it with every count.
+  const summary = ONBOARDING_STATUSES.map((key) => `${key} ${counts[key]}`).join(', ');
+
   return (
-    <div style={{ height: 260 }}>
+    <div role="img" aria-label={`${title}: ${summary}`} style={{ height: 260 }}>
       <Doughnut data={data} options={options} />
     </div>
   );

@@ -64,7 +64,7 @@ const renderWebsite = (t: Translate) => (row: StatusReportRow) => {
   if (!url) {
     return (
       <Typography variant="body2" sx={{
-        color: "text.disabled"
+        color: "text.secondary"
       }}>
         {t('tech.statusReports.unknownWebsite')}
       </Typography>
@@ -173,6 +173,7 @@ export default function StatusReportsTable({ fetchRows, refetchRef, onOpen }: Re
 
   return (
     <DuncitTable<StatusReportRow>
+      ariaLabel={t('tech.statusReports.title')}
       tableId="tech-status-reports"
       columns={columns}
       fetchRows={fetchRows}

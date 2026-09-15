@@ -47,6 +47,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
               label={formatMoney(denomination, { symbol: currencySymbol })}
               color={active ? 'primary' : 'default'}
               onClick={() => onChange(String(denomination))}
+              aria-pressed={active}
               sx={active ? CARD_PILL_SX : CARD_PILL_IDLE_SX}
             />
           );

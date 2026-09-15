@@ -104,7 +104,7 @@ export function RecurringSheet({
       <YStack gap={20}>
         <RecurringBasicSection form={form} patch={patch} settings={venueSettings} />
         {serverError ? (
-          <Text testID="recurring-server-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="recurring-server-error" fontSize={13} color="$danger">
             {serverError}
           </Text>
         ) : null}

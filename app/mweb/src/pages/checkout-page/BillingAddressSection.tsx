@@ -107,7 +107,7 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
             pincodeHint={t('mweb.checkout.pincodeHint')}
           />
         )}
-        <RhfTextField control={control} name="billing_email" label={t('mweb.checkout.billingEmail')} sx={fieldSx} />
+        <RhfTextField control={control} name="billing_email" label={t('mweb.checkout.billingEmail')} autoComplete="email" sx={fieldSx} />
         {!hasMainAddress && (
           <BillingCheckbox
             control={control}

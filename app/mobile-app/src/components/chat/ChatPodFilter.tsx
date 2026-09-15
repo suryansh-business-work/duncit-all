@@ -24,7 +24,7 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink, onPrimary } = useThemeColors();
   return (
-    <XStack gap={8} paddingHorizontal={16} paddingTop={12} flexWrap="wrap">
+    <XStack testID="chat-pod-filter" gap={8} paddingHorizontal={16} paddingTop={12} flexWrap="wrap">
       {options(t).map((option) => {
         const selected = option.value === value;
         return (
@@ -34,6 +34,8 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
             role="button"
             aria-label={option.label}
             aria-pressed={selected}
+            accessibilityState={{ selected }}
+            tabIndex={0}
             onPress={() => onChange(option.value)}
             paddingHorizontal={14}
             height={36}

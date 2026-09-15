@@ -50,7 +50,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
           </DialogTitle>
           <DialogContent dividers>
             {error && <Alert severity="error">{error.message}</Alert>}
-            {!error && loading && entries.length === 0 && <CircularProgress size={22} />}
+            {!error && loading && entries.length === 0 && <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />}
             {!error && !loading && entries.length === 0 && (
               <Typography variant="body2" sx={{
                 color: "text.secondary"

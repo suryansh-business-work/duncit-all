@@ -85,6 +85,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           <DuncitIconButton
             size="small"
             color="secondary"
+            aria-expanded={open}
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <AutoAwesomeIcon fontSize="small" />
@@ -96,6 +97,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           variant="outlined"
           color="secondary"
           startIcon={<AutoAwesomeIcon fontSize="small" />}
+          aria-expanded={open}
           onClick={(e) => setAnchorEl(e.currentTarget)}
         >
           {label || 'Fill with AI'}
@@ -127,8 +129,10 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
             </Typography>
           </Box>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the popover the user just opened (WCAG 2.4.3)
             autoFocus
             placeholder={promptPlaceholder(entity)}
+            slotProps={{ htmlInput: { 'aria-label': t('admin.ai.fill'), 'data-testid': 'ai-fill-prompt' } }}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             multiline

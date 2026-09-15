@@ -30,6 +30,7 @@ export default function AvailabilityHeader({ venueName, onBack }: Readonly<Props
         </Typography>
         <Typography
           variant="h4"
+          component="h1"
           sx={{
             fontWeight: 950,
             lineHeight: 1.1

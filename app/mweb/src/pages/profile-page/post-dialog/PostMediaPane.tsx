@@ -39,6 +39,7 @@ export default function PostMediaPane({
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- double-tap-to-like is a pointer shortcut; the dialog's Like button (PostActions) is the keyboard path
     <Box
       data-testid="post-media"
       onClick={onClick}

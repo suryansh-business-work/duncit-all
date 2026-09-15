@@ -42,7 +42,12 @@ export function BadgeProgressCard({ row }: Readonly<{ row: BadgeRowShape }>) {
     <SurfaceCard testID={`badge-card-${badge.id}`} flex={1} gap={8} alignItems="center">
       <YStack opacity={row.achieved ? 1 : 0.55}>
         {badge.image_url ? (
-          <Image source={{ uri: badge.image_url }} style={ART_STYLE} />
+          <Image
+            source={{ uri: badge.image_url }}
+            style={ART_STYLE}
+            accessible={false}
+            accessibilityIgnoresInvertColors
+          />
         ) : (
           <YStack
             width={64}
@@ -56,7 +61,7 @@ export function BadgeProgressCard({ row }: Readonly<{ row: BadgeRowShape }>) {
           </YStack>
         )}
       </YStack>
-      <Text fontSize={13} fontWeight="600" color="$color" textAlign="center">
+      <Text role="heading" fontSize={13} fontWeight="600" color="$color" textAlign="center">
         {badge.title}
       </Text>
       <XStack
@@ -82,7 +87,17 @@ export function BadgeProgressCard({ row }: Readonly<{ row: BadgeRowShape }>) {
       </Text>
 
       <YStack gap={4} alignSelf="stretch" marginTop="auto" paddingTop={4}>
-        <YStack height={4} borderRadius={999} backgroundColor="$soft" overflow="hidden">
+        <YStack
+          height={4}
+          borderRadius={999}
+          backgroundColor="$soft"
+          overflow="hidden"
+          role="progressbar"
+          aria-label={badge.title}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+        >
           <YStack
             testID={`badge-bar-${badge.id}`}
             height={4}

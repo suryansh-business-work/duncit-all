@@ -43,6 +43,7 @@ export default function ClubSummaryHeader({
           — real people, from real pods. The cover avatar went too: it was the
           hero's first photo a second time. */}
       <Stack spacing={0.75} data-tour="club-header">
+        {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}
         <TwoToneHeading lead={club.club_name} component="h1" />
         <LocalityChip locality={club.locality} testId="club-summary-header-locality" />
         {categoryCrumbs.length > 0 && <CategoryBreadcrumb crumbs={categoryCrumbs} />}

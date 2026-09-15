@@ -22,6 +22,7 @@ function ProductBar({
       <LinearProgress
         variant="determinate"
         value={(row.gross_revenue / best) * 100}
+        aria-label={row.name}
         sx={{ height: 8, borderRadius: 999 }}
       />
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>

@@ -21,6 +21,7 @@ function ConflictOption({ mode, title, hint, selected, tint, onPress }: Readonly
   return (
     <XStack
       testID={`recurring-conflict-${mode}`}
+      tabIndex={0}
       role="radio"
       aria-label={title}
       aria-checked={selected}

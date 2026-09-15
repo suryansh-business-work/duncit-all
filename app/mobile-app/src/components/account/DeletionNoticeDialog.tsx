@@ -83,6 +83,7 @@ export function DeletionNoticeDialog() {
         testID="deletion-notice-keep"
         role="button"
         aria-label={t('mweb.account.deletion.noticeKeep')}
+        tabIndex={0}
         onPress={close}
         flex={1}
         height={48}
@@ -100,6 +101,8 @@ export function DeletionNoticeDialog() {
         testID="deletion-notice-withdraw"
         role="button"
         aria-label={t('mweb.account.deletion.withdraw')}
+        aria-busy={cancelling}
+        tabIndex={0}
         onPress={withdraw}
         flex={1}
         height={48}
@@ -148,7 +151,7 @@ export function DeletionNoticeDialog() {
           {t('mweb.account.deletion.pendingRef', { vars: { code: pending.request_id } })}
         </Text>
         {error && (
-          <Text fontSize={12.5} color="$danger" testID="deletion-notice-error">
+          <Text fontSize={12.5} color="$danger" testID="deletion-notice-error" role="alert">
             {error}
           </Text>
         )}

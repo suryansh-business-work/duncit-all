@@ -10,7 +10,7 @@ export default function LocationsToolbar() {
         alignItems: "center"
       }}>
         <LocationOnIcon color="primary" />
-        <Typography variant="h5">{t('admin.locations.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('admin.locations.title')}</Typography>
       </Stack>
       <Typography variant="body2" sx={{
         color: "text.secondary"

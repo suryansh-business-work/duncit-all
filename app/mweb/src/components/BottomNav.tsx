@@ -42,12 +42,7 @@ function NavIcon({
 }: Readonly<{ icon: ReactNode; count: number; badgeTestId?: string }>) {
   return (
     <Box className="nav-icon-wrap">
-      <Badge
-        data-testid={badgeTestId}
-        badgeContent={count}
-        color="secondary"
-        max={CART_BADGE_MAX}
-      >
+      <Badge data-testid={badgeTestId} badgeContent={count} color="secondary" max={CART_BADGE_MAX}>
         {icon}
       </Badge>
     </Box>
@@ -64,7 +59,7 @@ export default function BottomNav() {
   const { t } = useTranslation();
   const { totalCount } = useCart();
   const { visible: productsVisible } = useProductVisibility();
-  const paperRef = useRef<HTMLDivElement | null>(null);
+  const paperRef = useRef<HTMLElement | null>(null);
   const tabs = productsVisible ? [...TABS, CART_TAB] : TABS;
 
   useEffect(() => {
@@ -114,6 +109,8 @@ export default function BottomNav() {
   return (
     <Paper
       ref={paperRef}
+      component="nav"
+      aria-label={t('mweb.a11y.mainNavigation')}
       data-testid="bottom-nav"
       elevation={0}
       square
@@ -183,6 +180,7 @@ export default function BottomNav() {
             key={tab.value}
             data-testid={`tab-bar-${tab.testId}`}
             value={tab.value}
+            aria-current={tab.value === active ? 'page' : undefined}
             label={t(tab.labelKey)}
             icon={
               <NavIcon

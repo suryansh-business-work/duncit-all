@@ -82,6 +82,8 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8 }}
+        role="radiogroup"
+        aria-label={t('mweb.giftCards.themeHeading')}
       >
         {GROUPS.map(({ scope, labelKey }) => {
           const isActive = group === scope;
@@ -90,8 +92,10 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
             <XStack
               key={scope}
               testID={`gift-card-group-${scope}`}
-              role="button"
+              role="radio"
               aria-label={label}
+              aria-checked={isActive}
+              tabIndex={0}
               onPress={() => setGroup(scope)}
               height={36}
               paddingHorizontal={16}
@@ -125,8 +129,10 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
             <YStack
               key={key}
               testID={`gift-card-theme-${key}`}
-              role="button"
+              role="radio"
               aria-label={choice.scope_name || t('mweb.giftCards.shopTheme')}
+              aria-checked={isSelected}
+              tabIndex={0}
               onPress={() => onChange(choice)}
               width={CARD_WIDTH}
               borderRadius={18}

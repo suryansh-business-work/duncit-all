@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { PageHeader } from '@duncit/ui';
 import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import {
@@ -106,8 +106,9 @@ export default function ExpensesPage() {
         />
 
         <Box>
-          <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+          <DuncitTabs {...tabs} idPrefix="my-expenses" variant="scrollable" allowScrollButtonsMobile />
           <Divider sx={{ mb: 2 }} />
+          <Box {...tabPanelProps('my-expenses', tabs.value)}>
           <MyExpensesTable
             currency={currency}
             externalFilters={externalFilters}
@@ -125,6 +126,7 @@ export default function ExpensesPage() {
               </DuncitButton>
             }
           />
+          </Box>
         </Box>
       </Stack>
 

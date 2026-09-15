@@ -57,6 +57,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
       <XStack
         testID={`club-venue-open-${venue.id}`}
         role="button"
+        tabIndex={0}
         aria-label={`Venue details for ${venue.venue_name}`}
         onPress={onOpen}
         alignItems="center"
@@ -64,7 +65,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
         gap={4}
         pressStyle={PRESS_STYLE.row}
       >
-        <Text fontSize={13} fontWeight="600" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$accent">
           Venue details
         </Text>
         <MaterialIcons name="open-in-new" size={13} color={primary} />

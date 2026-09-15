@@ -27,6 +27,9 @@ export function ClubMomentsRail({ moments }: Readonly<{ moments: ClubMoment[] }>
           <AppImage
             key={`${i}-${moment.url}`}
             source={{ uri: moment.url }}
+            accessibilityLabel={t('mweb.a11y.imageOf', {
+              vars: { current: i + 1, total: moments.length },
+            })}
             style={{ width: tile, height: tile, borderRadius: 18 }}
             resizeMode="cover"
           />

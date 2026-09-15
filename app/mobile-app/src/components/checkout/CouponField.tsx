@@ -67,11 +67,12 @@ export function CouponField({
         <XStack
           testID="coupon-remove"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.checkout.couponRemoveAria')}
           onPress={onRemove}
           pressStyle={PRESS_STYLE.inline}
         >
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {t('mweb.checkout.couponRemove')}
           </Text>
         </XStack>
@@ -97,6 +98,7 @@ export function CouponField({
           <XStack
             testID="coupon-apply"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.checkout.couponApplyAria')}
             onPress={() => onApply()}
             alignItems="center"
@@ -112,7 +114,7 @@ export function CouponField({
             {applying ? (
               <Spinner color={primary} />
             ) : (
-              <Text fontSize={14} fontWeight="600" color="$primary">
+              <Text fontSize={14} fontWeight="600" color="$accent">
                 {t('mweb.checkout.couponApply')}
               </Text>
             )}
@@ -123,18 +125,19 @@ export function CouponField({
         <XStack
           testID="coupon-view-available"
           role="button"
+          tabIndex={0}
           aria-label={availableLabel}
           onPress={() => setSheetOpen(true)}
           alignSelf="flex-start"
           pressStyle={PRESS_STYLE.row}
         >
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {availableLabel}
           </Text>
         </XStack>
       ) : null}
       {error ? (
-        <Text testID="coupon-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="coupon-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

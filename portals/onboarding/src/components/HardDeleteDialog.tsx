@@ -68,7 +68,8 @@ export default function HardDeleteDialog({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             fullWidth
-            autoComplete="off"
+            required
+            autoComplete="email"
             disabled={loading}
           />
           <TextField
@@ -77,7 +78,8 @@ export default function HardDeleteDialog({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
-            autoComplete="off"
+            required
+            autoComplete="current-password"
             disabled={loading}
           />
           {error && <Alert severity="error">{error}</Alert>}

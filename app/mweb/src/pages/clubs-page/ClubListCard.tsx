@@ -26,6 +26,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
     : { alt: club.club_name };
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a pointer shortcut for the card's own Open button, which is the keyboard control; a role=button card would nest it
     <Card data-testid={`club-card-${club.id}`} onClick={onOpen} sx={{ cursor: 'pointer', p: 1.5 }}>
       {cover?.url ? (
         <CardMedia

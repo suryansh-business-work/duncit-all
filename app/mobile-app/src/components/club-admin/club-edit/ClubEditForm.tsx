@@ -98,7 +98,7 @@ export function ClubEditForm({ initialValues, busy, error, onSubmit }: Readonly<
         <ClubContentFields control={control} />
       </SurfaceCard>
       {error ? (
-        <Text testID="club-edit-error" fontSize={13} color="$danger">
+        <Text role="alert" testID="club-edit-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}

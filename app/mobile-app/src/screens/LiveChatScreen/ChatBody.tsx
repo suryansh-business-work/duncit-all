@@ -10,6 +10,7 @@ import { SupportChatBubble } from '@/components/support-chat/SupportChatBubble';
 import type { SupportChatMessage, SupportChatSession } from '@/hooks/useSupportChat';
 import { dayLabel, showDaySeparator } from '@/utils/support-chat';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface Props {
   isLoading: boolean;
@@ -40,16 +41,17 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
   },
   ref,
 ) {
+  const loadingRegion = useLoadingRegion();
   if (isLoading) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
+      <YStack flex={1} alignItems="center" justifyContent="center" {...loadingRegion}>
         <Spinner size="large" testID="support-chat-loading" />
       </YStack>
     );
   }
   if (error) {
     return (
-      <Text testID="support-chat-error" color="$muted" textAlign="center" padding={24}>
+      <Text testID="support-chat-error" role="alert" color="$muted" textAlign="center" padding={24}>
         {error}
       </Text>
     );
@@ -102,6 +104,7 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
       {typingLine ? (
         <Text
           testID="support-typing"
+          role="status"
           fontSize={12}
           fontStyle="italic"
           color="$muted"

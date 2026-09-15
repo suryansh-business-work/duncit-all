@@ -63,7 +63,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
 
   const likersList =
     likers.length === 0 ? (
-      <Text padding={16} color="$muted" testID="likes-empty">
+      <Text padding={16} color="$muted" testID="likes-empty" role="status">
         No likes yet.
       </Text>
     ) : (
@@ -77,6 +77,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
             pressStyle={PRESS_STYLE.surface}
             testID={`liker-${item.user_id}`}
             role="button"
+            tabIndex={0}
             aria-label={item.full_name ?? 'User'}
             onPress={() => openProfile(item.user_id)}
             alignItems="center"
@@ -118,7 +119,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} testID="likes-sheet">
+        <YStack flex={1} testID="likes-sheet" onAccessibilityEscape={onClose}>
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
@@ -149,13 +150,21 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 paddingTop={16}
                 paddingBottom={8}
               >
-                <Text fontSize={17} fontWeight="600" color="$color">
-                  Liked by
+                <Text
+                  testID="likes-sheet-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
+                  {t('mweb.explore.likedBy')}
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="likes-close"
                   role="button"
+                  tabIndex={0}
+                  hitSlop={2}
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
                   width={40}
@@ -171,7 +180,11 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
 
               {isLoading ? (
                 <YStack flex={1} alignItems="center" justifyContent="center">
-                  <Spinner color="$primary" />
+                  <Spinner
+                    role="progressbar"
+                    aria-label={t('mweb.a11y.loading')}
+                    color="$primary"
+                  />
                 </YStack>
               ) : (
                 likersList

@@ -9,8 +9,8 @@ type Translate = ReturnType<typeof useTranslation>['t'];
  *  Labels are copy, so the list is built from the active catalogue; the
  *  VALUES are what the URL is checked against and never change. */
 export const sessionFilters = (t: Translate): DuncitTabItem<SupportChatStatus>[] => [
-  { value: 'OPEN', label: t('support.chat.filterOpen') },
-  { value: 'CLOSED', label: t('support.chat.filterResolved') },
+  { value: 'OPEN', label: t('support.chat.filterOpen'), testId: 'live-chat-tab-open' },
+  { value: 'CLOSED', label: t('support.chat.filterResolved'), testId: 'live-chat-tab-resolved' },
 ];
 
 interface Props {

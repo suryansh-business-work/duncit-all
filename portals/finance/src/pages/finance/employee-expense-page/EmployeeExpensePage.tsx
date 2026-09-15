@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Divider, Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import type { EmployeeExpenseClaim, EmployeeExpenseTotals } from '@duncit/utils';
@@ -74,14 +74,16 @@ export default function EmployeeExpensePage() {
         />
 
         <Box>
-          <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+          <DuncitTabs {...tabs} idPrefix="employee-expenses" variant="scrollable" allowScrollButtonsMobile />
           <Divider sx={{ mb: 2 }} />
-          <EmployeeExpensesTable
-            currency={currency}
-            externalFilters={externalFilters}
-            refetchRef={queueRefetch}
-            onRowClick={setActiveClaim}
-          />
+          <Box {...tabPanelProps('employee-expenses', tabs.value)}>
+            <EmployeeExpensesTable
+              currency={currency}
+              externalFilters={externalFilters}
+              refetchRef={queueRefetch}
+              onRowClick={setActiveClaim}
+            />
+          </Box>
         </Box>
       </Stack>
 

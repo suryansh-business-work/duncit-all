@@ -29,6 +29,7 @@ import {
   type BrandWarehouse,
 } from './warehouse.queries';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../../components/primaryHero';
 
 type Editing = BrandWarehouse | 'new' | null;
 
@@ -105,7 +106,7 @@ export default function BrandSettingsPage() {
           alignItems: "center",
           py: 5
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -114,8 +115,8 @@ export default function BrandSettingsPage() {
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box
         sx={{
-          p: 2.5, borderRadius: 2, color: 'primary.contrastText',
-          background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+          p: 2.5, borderRadius: 2, color: 'common.white',
+          background: primaryHeroBackground,
         }}
       >
         <DuncitButton
@@ -128,13 +129,14 @@ export default function BrandSettingsPage() {
         </DuncitButton>
         <Typography
           variant="h4"
+          component="h1"
           sx={{
             fontWeight: 950,
             mt: 1
           }}>
           {brand?.brand_name || 'Brand'} settings
         </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.85, fontWeight: 600, mt: 0.5 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
           Warehouses your products ship from. Orders pick up from the warehouse chosen on each product.
         </Typography>
       </Box>
@@ -144,7 +146,7 @@ export default function BrandSettingsPage() {
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h2" sx={{
                 fontWeight: 950
               }}>{t('partners.ecommBrandPage.warehouses')}</Typography>
               <Alert severity="info">
@@ -165,9 +167,9 @@ export default function BrandSettingsPage() {
         </Card>
       )}
 
-      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
+      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm" aria-labelledby="warehouse-dialog-title">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <span>{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
+          <span id="warehouse-dialog-title">{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
           <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
         </DialogTitle>
         <DialogContent dividers>

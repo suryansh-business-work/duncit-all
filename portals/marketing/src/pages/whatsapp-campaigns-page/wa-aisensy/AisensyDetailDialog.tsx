@@ -59,7 +59,7 @@ export default function AisensyDetailDialog({
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <Typography
+          <Typography component="span"
             variant="h6"
             noWrap
             sx={{

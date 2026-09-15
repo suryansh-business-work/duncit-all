@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
-import { StatusChip } from '@duncit/ui';
+import { PageHeader, StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import ApplicationDetailsDialog from './ApplicationDetailsDialog';
 import {
@@ -83,11 +83,7 @@ export default function JobApplicationsPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" sx={{
-        fontWeight: 700
-      }}>
-        Job Applications
-      </Typography>
+      <PageHeader title="Job Applications" titleWeight={700} />
       <DuncitTable<JobApplication>
         tableId="website-job-applications"
         columns={columns}

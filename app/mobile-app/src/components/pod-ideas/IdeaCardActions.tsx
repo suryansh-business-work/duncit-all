@@ -15,16 +15,29 @@ interface CountProps {
   icon: IconName;
   iconColor: string;
   count: number;
+  /** A toggle's current state (the like) — absent on plain actions. */
+  pressed?: boolean;
   onPress: () => void;
 }
 
 /** One muted icon + count action (like / comment / share). */
-function CountAction({ testID, label, icon, iconColor, count, onPress }: Readonly<CountProps>) {
+function CountAction({
+  testID,
+  label,
+  icon,
+  iconColor,
+  count,
+  pressed,
+  onPress,
+}: Readonly<CountProps>) {
   return (
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={label}
+      aria-pressed={pressed}
+      accessibilityState={{ selected: pressed }}
       onPress={onPress}
       alignItems="center"
       gap={5}
@@ -64,6 +77,7 @@ export function IdeaCardActions({ idea, onOpen, onLike, onShare }: Readonly<Prop
         icon={idea.liked_by_me ? 'favorite' : 'favorite-border'}
         iconColor={idea.liked_by_me ? accent : muted}
         count={idea.likes_count}
+        pressed={!!idea.liked_by_me}
         onPress={onLike}
       />
       <CountAction

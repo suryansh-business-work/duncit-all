@@ -3,9 +3,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import AttachmentList from '../../components/AttachmentList';
 import { bubbleRadiusSx } from '../support-chat/calmStyles';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { TicketMessage } from './queries';
-
-const SEEN_BLUE = '#34b7f1';
 
 interface Props {
   msg: TicketMessage;
@@ -18,6 +17,7 @@ interface Props {
 /** A single message bubble in the ticket thread (B7 renders SYSTEM as a chip).
  * The user's own messages carry a Sent (✓) / Seen (✓✓ blue) tick like the live chat (B12). */
 export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (msg.author_role === 'SYSTEM') {
     return (
       <Stack
@@ -46,7 +46,7 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
       spacing={1}
     >
       {!isUser && (
-        <Avatar src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
+        <Avatar alt="" src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
           {msg.author_name?.[0]?.toUpperCase() || 'S'}
         </Avatar>
       )}
@@ -76,14 +76,22 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
             justifyContent: "flex-end",
             mt: 0.25
           }}>
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>
+          <Typography variant="caption" sx={{ color: isUser ? 'inherit' : 'text.secondary' }}>
             {timeText}
           </Typography>
           {isUser &&
             (seen ? (
-              <DoneAllIcon data-testid={`ticket-tick-${msg.id}`} sx={{ fontSize: 15, color: SEEN_BLUE }} />
+              <DoneAllIcon
+                data-testid={`ticket-tick-${msg.id}`}
+                titleAccess={t('mweb.a11y.messageSeen')}
+                sx={{ fontSize: 15 }}
+              />
             ) : (
-              <CheckIcon data-testid={`ticket-tick-${msg.id}`} sx={{ fontSize: 15, opacity: 0.7 }} />
+              <CheckIcon
+                data-testid={`ticket-tick-${msg.id}`}
+                titleAccess={t('mweb.a11y.messageSent')}
+                sx={{ fontSize: 15 }}
+              />
             ))}
         </Stack>
       </Box>

@@ -17,7 +17,10 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onNavigate(REFERRAL_TILE.to);
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onNavigate(REFERRAL_TILE.to);
+          }
         }}
         sx={{
           ...SURFACE_SX,

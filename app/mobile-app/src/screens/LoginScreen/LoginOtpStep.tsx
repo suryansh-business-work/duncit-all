@@ -58,7 +58,13 @@ export function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
       )}
 
       {error ? (
-        <Text fontSize={14} color="$danger" testID="otp-login-error">
+        <Text
+          fontSize={14}
+          color="$danger"
+          testID="otp-login-error"
+          role="alert"
+          aria-live="polite"
+        >
           {error}
         </Text>
       ) : null}
@@ -66,10 +72,11 @@ export function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
       <XStack justifyContent="center">
         <Text
           testID="otp-back"
+          role="button"
           pressStyle={PRESS_STYLE.inline}
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           onPress={onCode ? otp.goBack : onBack}
         >
           {onCode ? labels.back : t('mweb.login.backToOptions')}

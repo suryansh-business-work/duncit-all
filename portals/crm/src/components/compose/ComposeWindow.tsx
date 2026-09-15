@@ -63,9 +63,11 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
       }}
       data-testid="compose-window"
     >
+      {/* Pointer-only drag handle: the minimize/maximize buttons below are its keyboard equivalents. */}
       <Stack
         direction="row"
         spacing={1}
+        role="presentation"
         onPointerDown={onPointerDown}
         onDoubleClick={() => setMinimized((m) => !m)}
         sx={{
@@ -79,7 +81,7 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
           touchAction: 'none'
         }}>
         {icon}
-        <Typography
+        <Typography component="h2"
           variant="subtitle2"
           noWrap
           sx={{

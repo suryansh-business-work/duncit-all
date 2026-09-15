@@ -56,7 +56,9 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
         <XStack
           testID="shop-filter-toggle"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.common.filters')}
+          aria-expanded={open}
           onPress={() => setOpen((v) => !v)}
           width={52}
           height={52}
@@ -136,6 +138,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
           <XStack
             testID="shop-oos-toggle"
             role="checkbox"
+            tabIndex={0}
             aria-label={t('mweb.shop.includeOutOfStock')}
             aria-checked={filters.includeOutOfStock}
             onPress={() => filters.setIncludeOutOfStock(!filters.includeOutOfStock)}

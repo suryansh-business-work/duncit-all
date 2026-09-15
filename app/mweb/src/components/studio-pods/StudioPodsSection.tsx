@@ -54,7 +54,7 @@ function StudioPodsBody({
           alignItems: "center",
           py: 3
         }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Stack>
     );
   }

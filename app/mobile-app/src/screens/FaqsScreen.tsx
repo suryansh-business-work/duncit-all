@@ -27,6 +27,12 @@ function filterFaqGroups(groups: FaqGroup[], query: string): FaqGroup[] {
     .filter((group) => group.faqs.length > 0);
 }
 
+/** `faqs-group-<superCategoryId>-header`; the uncategorised group is GENERIC. */
+function groupHeaderTestId(group: FaqGroup): string {
+  const groupId = group.super_category?.id ?? 'GENERIC';
+  return `faqs-group-${groupId}-header`;
+}
+
 /** FAQs — searchable, grouped questions in collapsible accordions. */
 export function FaqsScreen() {
   const { t } = useTranslation();
@@ -99,7 +105,10 @@ export function FaqsScreen() {
           {filteredGroups.map((group, groupIndex) => (
             <Reveal key={group.super_category?.id ?? 'general'} index={groupIndex}>
               <YStack gap={12} marginBottom={16}>
-                <SectionHeader title={group.super_category?.name ?? 'General'} />
+                <SectionHeader
+                  testID={groupHeaderTestId(group)}
+                  title={group.super_category?.name ?? 'General'}
+                />
                 {group.faqs.map((faq) => (
                   <Accordion
                     key={faq.id}

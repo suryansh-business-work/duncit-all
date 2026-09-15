@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Box, Checkbox, Chip, FormControl, FormHelperText, InputLabel, ListItemText, MenuItem, OutlinedInput, Select } from '@mui/material';
 
@@ -12,6 +13,8 @@ interface Props {
 /** Multi-select with chips bound to react-hook-form (value is string[]). */
 export default function MultiSelectField({ name, label, options, hint, required }: Readonly<Props>) {
   const { control } = useFormContext();
+  // Ties the floating label to the combobox so it is the control's name (1.3.1).
+  const labelId = useId();
   return (
     <Controller
       control={control}
@@ -20,9 +23,10 @@ export default function MultiSelectField({ name, label, options, hint, required 
         const value = (field.value as string[]) ?? [];
         return (
           <FormControl fullWidth size="small" error={!!fieldState.error} required={required}>
-            <InputLabel>{label}</InputLabel>
+            <InputLabel id={labelId}>{label}</InputLabel>
             <Select
               multiple
+              labelId={labelId}
               value={value}
               onChange={(event) =>
                 field.onChange(typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)

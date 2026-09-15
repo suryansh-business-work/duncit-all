@@ -106,6 +106,8 @@ const renderPods = (v: VenueRow, t: Translate) => (
       startIcon={<EventNoteIcon fontSize="small" />}
       component={RouterLink}
       to={`/venues/${v.id}?selectedtab=pods`}
+      // Starts with the visible count (2.5.3) — the tooltip alone replaced it.
+      aria-label={t('onboarding.a11y.viewVenuePods', { vars: { count: v.pod_count ?? 0 } })}
     >
       {v.pod_count ?? 0}
     </DuncitButton>
@@ -174,6 +176,7 @@ export default function VenuesTable({
   return (
     <DuncitTable<VenueRow>
       tableId="onboarding-venues"
+      ariaLabel={t('onboarding.venues.registeredVenues')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getVenueRowId}

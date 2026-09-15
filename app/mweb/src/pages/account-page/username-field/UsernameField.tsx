@@ -70,7 +70,7 @@ export default function UsernameField({ control, current, onStatusChange }: Read
         helperText={statusLine || labels.hint}
         slotProps={{
           inputLabel: { shrink: true },
-          htmlInput: { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false, ...testIdProps('field-username') },
+          htmlInput: { autoComplete: 'username', autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false, ...testIdProps('field-username') },
           formHelperText: testIdProps(errored ? 'username-error' : 'username-hint'),
           input: {
             startAdornment: (
@@ -80,7 +80,7 @@ export default function UsernameField({ control, current, onStatusChange }: Read
             ),
             endAdornment: (
               <InputAdornment position="end">
-                {check.checking && <CircularProgress size={16} />}
+                {check.checking && <CircularProgress size={16} aria-label={t('mweb.a11y.loading')} />}
                 {status === 'AVAILABLE' && (
                   <CheckCircleOutlinedIcon fontSize="small" color="success" />
                 )}

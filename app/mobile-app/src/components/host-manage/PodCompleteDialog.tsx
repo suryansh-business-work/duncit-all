@@ -95,12 +95,12 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   // The preview error only speaks when there is nothing better to show.
   const previewErrorText =
     previewError && !settlement && !isLoading ? (
-      <Text testID="pod-complete-preview-error" fontSize={12.5} color="$danger">
+      <Text role="alert" testID="pod-complete-preview-error" fontSize={12.5} color="$danger">
         {previewError}
       </Text>
     ) : null;
   const errorText = error ? (
-    <Text testID="pod-complete-error" fontSize={12.5} color="$danger">
+    <Text role="alert" testID="pod-complete-error" fontSize={12.5} color="$danger">
       {error}
     </Text>
   ) : null;

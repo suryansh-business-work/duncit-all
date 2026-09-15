@@ -27,7 +27,7 @@ function VariantRow({ variant }: Readonly<{ variant: ProductVariantValues }>) {
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <Avatar src={variant.image_urls[0]} variant="rounded" sx={{ width: 36, height: 36 }} />
+          <Avatar src={variant.image_urls[0]} alt="" variant="rounded" sx={{ width: 36, height: 36 }} />
           <Typography variant="body2" sx={{
             fontWeight: 700
           }}>
@@ -68,7 +68,7 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h6" sx={{
+        <Typography variant="h6" component="h2" sx={{
           fontWeight: 950
         }}>
           {values.product_name || 'Product preview'}

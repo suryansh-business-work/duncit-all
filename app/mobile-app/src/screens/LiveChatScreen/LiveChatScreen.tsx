@@ -171,6 +171,7 @@ export function LiveChatScreen() {
           {sendError ? (
             <Text
               testID="support-chat-send-error"
+              role="alert"
               color="$danger"
               fontSize={12}
               paddingHorizontal={16}

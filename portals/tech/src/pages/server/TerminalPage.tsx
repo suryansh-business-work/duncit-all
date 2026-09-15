@@ -54,7 +54,7 @@ export default function TerminalPage() {
       }}>
         <TerminalIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>
             {t('tech.terminal.title')}

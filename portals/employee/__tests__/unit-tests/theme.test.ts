@@ -6,7 +6,8 @@ describe('theme re-export', () => {
   it('builds a light theme honouring the portal accent', () => {
     const theme = buildTheme('light', appConfig.accent);
     expect(theme.palette.mode).toBe('light');
-    expect(theme.palette.primary.main).toBe(appConfig.accent.main);
+    // The raw accent is decoration; primary.main is derived from it to stay AA as text.
+    expect(theme.palette.brand.main).toBe(appConfig.accent.main);
   });
 
   it('builds a dark theme', () => {

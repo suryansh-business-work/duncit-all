@@ -16,7 +16,7 @@ type CountTone = 'error' | 'warning' | 'info' | 'text.primary';
  */
 function CountCell({ value, tone }: Readonly<{ value: number; tone: CountTone }>) {
   return (
-    <Typography variant="body2" color={value > 0 ? tone : 'text.disabled'} sx={{
+    <Typography variant="body2" color={value > 0 ? tone : 'text.secondary'} sx={{
       fontWeight: value > 0 ? 700 : 400
     }}>
       {value}

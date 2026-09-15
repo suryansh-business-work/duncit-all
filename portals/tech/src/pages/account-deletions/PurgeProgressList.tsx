@@ -18,7 +18,7 @@ function StepIcon({ status }: Readonly<{ status: PurgeStep['status'] }>) {
   if (status === 'FAILED') {
     return <ErrorOutlineIcon color="error" sx={{ fontSize: ICON_SIZE }} />;
   }
-  return <RadioButtonUncheckedIcon color="disabled" sx={{ fontSize: ICON_SIZE }} />;
+  return <RadioButtonUncheckedIcon color="action" sx={{ fontSize: ICON_SIZE }} />;
 }
 
 function StepRow({ step }: Readonly<{ step: PurgeStep }>) {
@@ -44,7 +44,7 @@ function StepRow({ step }: Readonly<{ step: PurgeStep }>) {
       {step.redacts && <ShieldOutlinedIcon color="info" sx={{ fontSize: 15 }} />}
       <Typography
         variant="caption"
-        sx={{ color: done ? 'text.secondary' : 'text.disabled', flexShrink: 0 }}
+        sx={{ color: 'text.secondary', flexShrink: 0 }}
       >
         {done
           ? t(countKey, { vars: { count: step.removed } })

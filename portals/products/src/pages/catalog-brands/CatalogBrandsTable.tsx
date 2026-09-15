@@ -19,7 +19,7 @@ interface Props {
 const getRowId = (b: CatalogBrandRow) => b.id;
 
 const renderLogo = (b: CatalogBrandRow) => (
-  <Avatar src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+  <Avatar alt="" src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
     {b.brand_name?.[0]?.toUpperCase() ?? '?'}
   </Avatar>
 );
@@ -159,6 +159,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
 
   return (
     <DuncitTable<CatalogBrandRow>
+      ariaLabel={t('shell.nav.brands')}
       tableId="products-catalog-brands"
       columns={columns}
       fetchRows={fetchRows}

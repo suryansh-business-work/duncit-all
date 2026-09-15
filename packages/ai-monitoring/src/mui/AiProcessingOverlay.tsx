@@ -46,7 +46,9 @@ export function AiProcessingOverlay({
         p: 2,
       }}
     >
+      {/* role=status: the wait is announced when it appears, not only seen (4.1.3). */}
       <Stack
+        role="status"
         spacing={1.25}
         sx={{
           alignItems: 'center',

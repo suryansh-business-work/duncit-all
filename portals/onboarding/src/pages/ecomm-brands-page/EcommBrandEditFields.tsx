@@ -159,7 +159,11 @@ export default function EcommBrandEditFields({ values, setValues, docs, setDocs,
                 folder="/ecomm/brands/docs"
               />
             </Box>
-            <DuncitIconButton onClick={() => setDocs(docs.filter((x) => x.id !== doc.id))}>
+            <DuncitIconButton
+              aria-label={t('onboarding.a11y.removeDocument')}
+              data-testid="brand-edit-remove-document"
+              onClick={() => setDocs(docs.filter((x) => x.id !== doc.id))}
+            >
               <DeleteIcon />
             </DuncitIconButton>
           </Box>

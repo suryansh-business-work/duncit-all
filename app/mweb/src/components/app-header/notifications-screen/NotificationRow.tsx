@@ -4,6 +4,7 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { formatRelative } from '../queries';
 import { notificationIcon } from '../notificationIcon';
 import FollowRequestActions from './FollowRequestActions';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   item: any;
@@ -31,6 +32,7 @@ export default function NotificationRow({
   onClick,
   onAnswered,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const unread = !item.read_at;
   const notification = item.notification;
   // The same decision the buttons below make, so the two cannot disagree: an
@@ -44,77 +46,94 @@ export default function NotificationRow({
     followBackStatus: notification?.follow_back_status,
     actorId: notification?.action_actor_id,
   });
-  const showChevron = !busy && !!notification?.link_url && rowState === 'HIDDEN';
+  const hasActions = rowState !== 'HIDDEN';
+  const showChevron = !busy && !!notification?.link_url && !hasActions;
   // Contextual icon by notification type (falls back to the bell) instead of
   // repeating a generic bell on every row.
   const RowIcon = notificationIcon(notification?.title);
 
+  // The follow-request buttons sit BESIDE the row's button, not inside it: a
+  // button nested in a role=button is unreachable for assistive tech (4.1.2).
+  // They are indented past the icon disc so the layout reads as before.
   return (
     <Box
-      data-testid={`notification-${item.id}`}
-      onClick={busy ? undefined : onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (!busy && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault();
-          onClick();
-        }
-      }}
-      aria-busy={busy}
+      data-testid={`notification-row-${item.id}`}
       sx={{
-        px: 2,
-        py: 1.75,
-        cursor: busy ? 'progress' : 'pointer',
         color: 'text.primary',
         opacity: busy ? 0.6 : 1,
         transition: 'background-color 160ms ease, opacity 160ms ease',
         '&:hover': { bgcolor: busy ? undefined : 'action.hover' },
-        '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 },
       }}
     >
-      <Stack direction="row" spacing={1.5} sx={{
-        alignItems: "flex-start"
-      }}>
-        <Avatar
-          src={notification?.image_url || undefined}
-          sx={{ width: 40, height: 40, bgcolor: 'action.hover', color: 'secondary.main' }}
-        >
-          <RowIcon fontSize="small" />
-        </Avatar>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" spacing={0.75} sx={{
-            alignItems: "center"
-          }}>
-            <Typography
-              data-testid={`notification-title-${item.id}`}
-              sx={{ fontSize: '0.875rem', fontWeight: 600, flex: 1, minWidth: 0, ...CLAMP_2 }}
-            >
-              {notification?.title ?? 'Notification'}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
-              {formatRelative(item.created_at)}
-            </Typography>
-            {unread && (
-              <Box
-                data-testid={`notification-new-${item.id}`}
-                aria-hidden
-                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }}
-              />
-            )}
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{
-            alignItems: "center"
-          }}>
-            <Typography
-              variant="body2"
-              sx={{ flex: 1, minWidth: 0, color: 'text.secondary', fontSize: '0.8125rem', ...CLAMP_2 }}
-            >
-              {notification?.body}
-            </Typography>
-            {busy && <CircularProgress size={18} color="inherit" />}
-            {showChevron && <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />}
-          </Stack>
+      {/* eslint-disable-next-line jsx-a11y/control-has-associated-label -- false positive: the button is named by its title/body text, nested deeper than the rule looks */}
+      <Box
+        data-testid={`notification-${item.id}`}
+        onClick={busy ? undefined : onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (!busy && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+        aria-busy={busy}
+        sx={{
+          px: 2,
+          py: 1.75,
+          cursor: busy ? 'progress' : 'pointer',
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'accent.main', outlineOffset: -2 },
+        }}
+      >
+        <Stack direction="row" spacing={1.5} sx={{
+          alignItems: "flex-start"
+        }}>
+          <Avatar
+            alt=""
+            src={notification?.image_url || undefined}
+            sx={{ width: 40, height: 40, bgcolor: 'action.hover', color: 'accent.main' }}
+          >
+            <RowIcon fontSize="small" />
+          </Avatar>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Stack direction="row" spacing={0.75} sx={{
+              alignItems: "center"
+            }}>
+              <Typography
+                data-testid={`notification-title-${item.id}`}
+                sx={{ fontSize: '0.875rem', fontWeight: 600, flex: 1, minWidth: 0, ...CLAMP_2 }}
+              >
+                {notification?.title ?? 'Notification'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
+                {formatRelative(item.created_at)}
+              </Typography>
+              {unread && (
+                <Box
+                  data-testid={`notification-new-${item.id}`}
+                  role="img"
+                  aria-label={t('mweb.a11y.unread')}
+                  sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }}
+                />
+              )}
+            </Stack>
+            <Stack direction="row" spacing={1} sx={{
+              alignItems: "center"
+            }}>
+              <Typography
+                variant="body2"
+                sx={{ flex: 1, minWidth: 0, color: 'text.secondary', fontSize: '0.8125rem', ...CLAMP_2 }}
+              >
+                {notification?.body}
+              </Typography>
+              {busy && <CircularProgress size={18} color="inherit" />}
+              {showChevron && <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />}
+            </Stack>
+          </Box>
+        </Stack>
+      </Box>
+      {hasActions && (
+        <Box sx={{ pl: 8.5, pr: 2, mt: -1.75, pb: 1.75 }}>
           <FollowRequestActions
             actionType={notification?.action_type}
             requestId={notification?.action_ref_id}
@@ -125,7 +144,7 @@ export default function NotificationRow({
             onAnswered={() => onAnswered?.()}
           />
         </Box>
-      </Stack>
+      )}
     </Box>
   );
 }

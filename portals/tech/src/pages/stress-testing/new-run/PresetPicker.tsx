@@ -31,12 +31,14 @@ export default function PresetPicker({ value, onPick }: Readonly<Props>) {
         size="small"
         value={value}
         onChange={(_, next: StressPresetKey | null) => next && onPick(next)}
+        aria-label={t('tech.stress.presetsLabel')}
         sx={{ flexWrap: 'wrap' }}
       >
         {STRESS_PRESETS.map((key) => {
           const copy = presetCopy(t, key);
           return (
-            <Tooltip key={key} title={copy.hint}>
+            // describeChild: the hint describes the preset; its visible label stays its name (WCAG 2.5.3).
+            <Tooltip key={key} title={copy.hint} describeChild>
               <ToggleButton value={key}>{copy.label}</ToggleButton>
             </Tooltip>
           );

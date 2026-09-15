@@ -6,10 +6,10 @@ name: Coverage
 #
 # WHY A DEDICATED WORKFLOW
 # ------------------------
-# Coverage already ran in sonar.yml, but it could never answer a PR: that
-# workflow fires on push to main/staging only, and every job is gated behind a
-# probe of the manually-managed SonarQube VPS — so when the box is down (which is
-# routine) there is no coverage at all. The number a reviewer needs must not
+# Coverage already ran in sonar.yml, but it could never answer every PR: that
+# workflow fires on push to main/staging and on PRs into staging only, and every
+# job is gated behind a probe of the manually-managed SonarQube VPS — so when the
+# box is down (which is routine) there is no coverage at all. The number a reviewer needs must not
 # depend on a third-party server being up, so it is produced here and the two
 # consumers share one runner script (scripts/ci-coverage-run.sh, rule 34).
 #

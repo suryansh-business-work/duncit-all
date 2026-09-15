@@ -136,7 +136,7 @@ export function SpotsStepper({
               value={value}
               onChange={(e) => set(Number.parseInt(e.target.value, 10))}
               sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
-              slotProps={{ htmlInput: { 'aria-label': labels.totalSpots, min, max, 'data-testid': 'field-no_of_spots_text' } }}
+              slotProps={{ htmlInput: { 'aria-label': labels.totalSpots, 'aria-invalid': Boolean(error), min, max, 'data-testid': 'field-no_of_spots_text' } }}
             />
             <DuncitIconButton
               aria-label={labels.increase}

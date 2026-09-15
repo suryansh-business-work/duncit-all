@@ -18,7 +18,7 @@ export function WhatsAppNoNumberNotice({ onAddNumber }: Readonly<{ onAddNumber: 
     <SurfaceCard testID="whatsapp-preference-no-number" flexDirection="row" gap={12}>
       <IconDisc icon="phonelink-erase" tone="muted" />
       <YStack flex={1} gap={4}>
-        <Text fontSize={15} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={15} fontWeight="600" color="$color">
           {t('whatsappPreference.noNumberTitle')}
         </Text>
         <Text fontSize={14} color="$muted">
@@ -29,6 +29,7 @@ export function WhatsAppNoNumberNotice({ onAddNumber }: Readonly<{ onAddNumber: 
           testID="whatsapp-preference-add-number"
           role="button"
           aria-label={t('whatsappPreference.addNumber')}
+          tabIndex={0}
           onPress={onAddNumber}
           alignSelf="flex-start"
           marginTop={8}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import FollowListDialog from '../../components/FollowListDialog';
 import { SURFACE_SX } from '../../theme';
@@ -26,11 +26,10 @@ function CountStat({
   testId,
 }: Readonly<{ value: number; label: string; onClick: () => void; testId: string }>) {
   return (
-    <Box
+    <ButtonBase
       data-testid={testId}
       onClick={onClick}
-      role="button"
-      sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: 'pointer' }}
+      sx={{ flex: 1, flexDirection: 'column', textAlign: 'center', py: 1.5 }}
     >
       <Typography sx={{ display: 'block', fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
         {value}
@@ -38,7 +37,7 @@ function CountStat({
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {label}
       </Typography>
-    </Box>
+    </ButtonBase>
   );
 }
 
@@ -49,8 +48,9 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
     <Stack data-testid="public-profile-header" spacing={2} sx={{ alignItems: 'center' }}>
       <Avatar
         data-testid="public-profile-header-avatar"
+        alt=""
         src={user.profile_photo || undefined}
-        sx={{ width: 88, height: 88, fontSize: 34, fontWeight: 600, bgcolor: 'primary.main' }}
+        sx={{ width: 88, height: 88, fontSize: 34, fontWeight: 600, bgcolor: 'primary.main', color: 'primary.contrastText' }}
       >
         {user.full_name?.[0]?.toUpperCase() ?? '?'}
       </Avatar>
@@ -69,7 +69,7 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
             spacing={0.5}
             sx={{ alignItems: 'center', justifyContent: 'center', color: 'text.secondary', mt: 0.5 }}
           >
-            <PlaceIcon sx={{ fontSize: 16 }} />
+            <PlaceIcon aria-hidden sx={{ fontSize: 16 }} />
             <Typography variant="body2">{[user.zone, user.city].filter(Boolean).join(', ')}</Typography>
           </Stack>
         )}

@@ -51,6 +51,7 @@ function StepperButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       aria-disabled={!enabled}
@@ -106,7 +107,7 @@ export function ProductQuantityBar({
           >
             {product.product_name}
           </Text>
-          <Text fontSize={13} fontWeight="700" color="$primary">
+          <Text fontSize={13} fontWeight="700" color="$accent">
             {t('podProduct.lineTotal', {
               vars: { amount: `₹${podProductLineTotal(product, quantity)}` },
             })}
@@ -157,7 +158,7 @@ export function ProductQuantityBar({
       </XStack>
 
       {error ? (
-        <Text testID="product-picker-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="product-picker-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -168,6 +169,7 @@ export function ProductQuantityBar({
           SAYS so. */}
       <XStack
         testID="product-add-to-pod"
+        tabIndex={0}
         role="button"
         aria-label={t('podProduct.addToPod')}
         onPress={onAdd}

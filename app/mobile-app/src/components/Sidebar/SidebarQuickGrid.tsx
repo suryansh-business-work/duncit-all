@@ -19,6 +19,7 @@ function GridTile({
       testID={`sidebar-grid-${tile.key}`}
       role="button"
       aria-label={tile.label}
+      tabIndex={0}
       onPress={() => onNavigate(tile.route)}
       width="100%"
       flexGrow={1}

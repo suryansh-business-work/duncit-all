@@ -42,6 +42,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
         )}
         {ad.redirect_url && (
           <DuncitButton
+            data-testid="ad-slide-learn-more"
             variant="contained"
             size="small"
             endIcon={<OpenInNewIcon />}

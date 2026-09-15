@@ -13,7 +13,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 const SOON_SX = {
   height: 24,
   fontWeight: 600,
-  color: 'primary.main',
+  color: 'accent.main',
   bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
 } as const;
 
@@ -48,7 +48,7 @@ export default function MembershipPage() {
           alignItems: "center",
           py: 4
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   } else if (plans.length === 0) {

@@ -84,7 +84,7 @@ export default function ClubDetailsPage() {
                 alignItems: "center",
                 flexWrap: 'wrap'
               }}>
-              <Typography variant="h5" noWrap sx={{
+              <Typography variant="h5" component="h1" noWrap sx={{
                 fontWeight: 900
               }}>
                 {club.club_name}

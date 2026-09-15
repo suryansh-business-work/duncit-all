@@ -72,7 +72,7 @@ export default function WhatsAppApiKeyHelp() {
             WhatsApp password/token is ever needed.
           </Typography>
 
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h3" variant="subtitle2" sx={{
             fontWeight: 800
           }}>
             Option A — use the master key (quickest)
@@ -83,7 +83,7 @@ export default function WhatsAppApiKeyHelp() {
           </Step>
           <Step n={2}>{t('crm.tools.pasteItIntoTheApiKey')} <b>{t('crm.tools.saveAndAmpConnect')}</b>.</Step>
 
-          <Typography
+          <Typography component="h3"
             variant="subtitle2"
             sx={{
               fontWeight: 800,

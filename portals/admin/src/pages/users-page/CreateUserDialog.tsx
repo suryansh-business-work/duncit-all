@@ -63,11 +63,21 @@ export default function CreateUserDialog({
   const pwdAdornment = (
     <InputAdornment position="end">
       <Tooltip title={t('admin.users.generate')}>
-        <DuncitIconButton size="small" onClick={() => setValue('password', genPassword(), { shouldValidate: true })}>
+        <DuncitIconButton
+          size="small"
+          data-testid="create-user-generate-password"
+          onClick={() => setValue('password', genPassword(), { shouldValidate: true })}
+        >
           <CasinoIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
-      <DuncitIconButton size="small" onClick={() => setShowPwd((show) => !show)}>
+      <DuncitIconButton
+        size="small"
+        aria-label={t('session.login.togglePassword')}
+        aria-pressed={showPwd}
+        data-testid="create-user-toggle-password"
+        onClick={() => setShowPwd((show) => !show)}
+      >
         {showPwd ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
       </DuncitIconButton>
     </InputAdornment>
@@ -118,7 +128,7 @@ export default function CreateUserDialog({
               />
             </Grid>
             <Grid size={12}>
-              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} label={t('admin.users.temporaryPassword')} required hint="Minimum 8 characters." slotProps={{ input: { endAdornment: pwdAdornment } }} />
+              <RhfTextField control={control} name="password" type={showPwd ? 'text' : 'password'} autoComplete="new-password" label={t('admin.users.temporaryPassword')} required hint="Minimum 8 characters." slotProps={{ input: { endAdornment: pwdAdornment } }} />
             </Grid>
             <Grid size={12}>
               <Controller

@@ -53,6 +53,9 @@ function setup(item: Verification, mocks: MockedResponse[] = [okMock]) {
 const type = (label: string | RegExp, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
+const autocompleteOf = (label: string) =>
+  screen.getByLabelText(label).getAttribute('autocomplete');
+
 const fillRequired = () => {
   type('Address line 1', '12 Turner Road');
   type('State', 'Maharashtra');
@@ -61,6 +64,14 @@ const fillRequired = () => {
 };
 
 describe('AddressCard', () => {
+  it('tells autofill what each address box is', () => {
+    setup(row());
+    expect(autocompleteOf('Address line 1')).toBe('address-line1');
+    expect(autocompleteOf('City')).toBe('address-level2');
+    expect(autocompleteOf('State')).toBe('address-level1');
+    expect(autocompleteOf('Pincode')).toBe('postal-code');
+  });
+
   it('renders every field the shared table describes', () => {
     setup(row());
     for (const label of [

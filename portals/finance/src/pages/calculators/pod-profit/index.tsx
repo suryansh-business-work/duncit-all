@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 import MultiPodCalculator from './multi';
 import SinglePodTab from './single';
@@ -32,7 +32,7 @@ export default function PodProfitCalculatorPage() {
       }}>
         <CalculateIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('finance.calculators.podProfitCalculator')}</Typography>
           <Typography
@@ -45,9 +45,11 @@ export default function PodProfitCalculatorPage() {
         </Box>
       </Stack>
 
-      <DuncitTabs {...tabs} />
+      <DuncitTabs {...tabs} idPrefix="pod-profit" />
 
-      {isSingle ? <SinglePodTab /> : <MultiPodCalculator />}
+      <Box {...tabPanelProps('pod-profit', tabs.value)}>
+        {isSingle ? <SinglePodTab /> : <MultiPodCalculator />}
+      </Box>
     </Stack>
   );
 }

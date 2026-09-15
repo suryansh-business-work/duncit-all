@@ -74,7 +74,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
             <DuncitButton startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
               Call
             </DuncitButton>
-            <DuncitButton size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
+            <DuncitButton size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} aria-haspopup="menu" aria-expanded={menuOpen} data-testid="lead-call-options" sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
               <ArrowDropDownIcon fontSize="small" />
             </DuncitButton>
           </ButtonGroup>
@@ -85,7 +85,12 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
           <Grow {...TransitionProps}>
             <Paper elevation={3}>
               <ClickAwayListener onClickAway={() => setMenuOpen(false)}>
-                <MenuList autoFocusItem={menuOpen} dense>
+                <MenuList
+                  autoFocusItem={menuOpen}
+                  dense
+                  // Escape closes the menu the way a click outside does (2.1.2).
+                  onKeyDown={(event) => { if (event.key === 'Escape' || event.key === 'Tab') setMenuOpen(false); }}
+                >
                   <MenuItem onClick={() => { setMenuOpen(false); setPortalOpen(true); }}>
                     <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> Call
                   </MenuItem>

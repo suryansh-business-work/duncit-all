@@ -86,11 +86,18 @@ export function ClubPodsScreen() {
             </Text>
           ) : null}
           {sheets.deleteError ? (
-            <Text testID="club-pods-delete-error" fontSize={13} color="$danger">
+            <Text role="alert" testID="club-pods-delete-error" fontSize={13} color="$danger">
               {sheets.deleteError}
             </Text>
           ) : null}
-          {pods.isLoading ? <Spinner testID="club-pods-loading" color="$primary" /> : null}
+          {pods.isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="club-pods-loading"
+              color="$primary"
+            />
+          ) : null}
           {pods.hasError ? (
             <LoadErrorNotice testID="club-pods-error" onRetry={pods.refetch} />
           ) : null}

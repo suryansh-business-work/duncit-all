@@ -67,6 +67,8 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         size="small"
         variant={count ? 'contained' : 'text'}
         aria-label={filterLabel}
+        aria-haspopup="dialog"
+        aria-expanded={!!filterAnchor}
         onClick={(e) => setFilterAnchor(e.currentTarget)}
         data-testid="pod-history-filter-button"
         sx={filterSx}
@@ -77,6 +79,8 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
       <DuncitButton
         size="small"
         aria-label={t('mweb.podHistory.sort')}
+        aria-haspopup="menu"
+        aria-expanded={!!sortAnchor}
         onClick={(e) => setSortAnchor(e.currentTarget)}
         data-testid="pod-history-sort-button"
         sx={{ ...roundSx, ...surfaceSx }}

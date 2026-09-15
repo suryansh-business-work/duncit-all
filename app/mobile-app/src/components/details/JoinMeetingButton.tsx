@@ -41,6 +41,7 @@ export function JoinMeetingButton({ onJoinMeeting }: Readonly<Props>) {
       <XStack
         testID="pod-join-meeting"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.joinMeeting')}
         aria-busy={pending}
         onPress={join}
@@ -60,7 +61,7 @@ export function JoinMeetingButton({ onJoinMeeting }: Readonly<Props>) {
         </Text>
       </XStack>
       {error ? (
-        <Text testID="pod-join-meeting-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="pod-join-meeting-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

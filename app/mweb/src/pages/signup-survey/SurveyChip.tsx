@@ -35,13 +35,14 @@ export function SurveyChip({
     <Chip
       data-testid={`chip-${id}`}
       onClick={() => onToggle(id)}
+      aria-pressed={selected}
       label={
         <Box
           component="span"
           sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
         >
           {emoji && (
-            <Box component="span" sx={{ fontSize: dims.fontSize + 2, lineHeight: 1 }}>
+            <Box component="span" aria-hidden sx={{ fontSize: dims.fontSize + 2, lineHeight: 1 }}>
               {emoji}
             </Box>
           )}
@@ -59,7 +60,7 @@ export function SurveyChip({
         cursor: 'pointer',
         transition: 'background-color 180ms ease',
         backgroundColor: selected ? hue : alpha(hue, 0.1),
-        color: selected ? 'common.white' : hue,
+        color: selected ? 'common.white' : 'text.primary',
         border: `1.5px solid ${selected ? hue : alpha(hue, 0.4)}`,
         '&:hover': {
           backgroundColor: selected ? hue : alpha(hue, 0.18),

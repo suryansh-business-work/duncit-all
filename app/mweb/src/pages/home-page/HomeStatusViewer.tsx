@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Dialog, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Dialog, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -267,8 +267,8 @@ export default function HomeStatusViewer({
   );
 
   return (
-    <Dialog open={!!item} fullScreen onClose={onClose} slotProps={{
-      paper: { sx: { bgcolor: '#08070b' } }
+    <Dialog data-testid="home-status-viewer" open={!!item} fullScreen onClose={onClose} slotProps={{
+      paper: { 'aria-label': item.label, sx: { bgcolor: '#08070b' } }
     }}>
       <Box
         onPointerDown={(event) => {
@@ -299,9 +299,10 @@ export default function HomeStatusViewer({
         )}
         <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.52) 0%, transparent 30%, rgba(0,0,0,0.82) 100%)' }} />
 
-        {/* Tap zones */}
-        <Box onClick={goPrev} sx={{ position: 'absolute', top: 64, bottom: 120, left: 0, width: '30%', cursor: 'pointer', zIndex: 2 }} />
-        <Box onClick={goNext} sx={{ position: 'absolute', top: 64, bottom: 120, right: 0, width: '40%', cursor: 'pointer', zIndex: 2 }} />
+        {/* Tap zones — real buttons, so a keyboard and a screen reader can step
+            through the slides too (2.1.1). */}
+        <ButtonBase data-testid="status-prev" aria-label={t('mweb.a11y.previousStory')} disableRipple onClick={goPrev} sx={{ position: 'absolute', top: 64, bottom: 120, left: 0, width: '30%', zIndex: 2 }} />
+        <ButtonBase data-testid="status-next" aria-label={t('mweb.a11y.nextStory')} disableRipple onClick={goNext} sx={{ position: 'absolute', top: 64, bottom: 120, right: 0, width: '40%', zIndex: 2 }} />
         <Stack spacing={1.2} sx={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 3 }}>
           <Stack direction="row" spacing={0.5}>
             {slides.map((slide, slideIndex) => {
@@ -321,6 +322,8 @@ export default function HomeStatusViewer({
             <Box
               component={item.avatarUrl ? 'img' : 'div'}
               src={item.avatarUrl || undefined}
+              alt=""
+              aria-hidden
               onClick={item.authorId ? openAuthor : undefined}
               sx={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', bgcolor: 'primary.main', cursor: item.authorId ? 'pointer' : 'default' }}
             />
@@ -355,7 +358,7 @@ export default function HomeStatusViewer({
                 <DuncitRoundButton
                   tone="overlay"
                   onClick={toggleLike}
-                  aria-label={liked ? 'Unlike story' : 'Like story'}
+                  aria-label={liked ? t('mweb.a11y.unlikeStory') : t('mweb.a11y.likeStory')}
                   data-testid="status-like"
                   sx={{ color: liked ? 'secondary.main' : '#fff' }}
                 >
@@ -399,11 +402,11 @@ export default function HomeStatusViewer({
                   sx={{ color: 'error.main', fontWeight: 600 }}
                 >
                   <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                  Delete
+                  {t('mweb.common.delete')}
                 </MenuItem>
               </Menu>
             )}
-            <DuncitRoundButton tone="overlay" onClick={onClose} aria-label={t('mweb.common.closeStatus')}>
+            <DuncitRoundButton data-testid="status-close" tone="overlay" onClick={onClose} aria-label={t('mweb.common.closeStatus')}>
               <CloseIcon />
             </DuncitRoundButton>
           </Stack>
@@ -420,12 +423,13 @@ export default function HomeStatusViewer({
         />
         {item.targetUrl && (
           <DuncitButton
+            data-testid="status-open-target"
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={openTarget}
             size="large" sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))' }}
           >
-            Open details
+            {t('mweb.status.openDetails')}
           </DuncitButton>
         )}
       </Box>

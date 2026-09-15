@@ -8,7 +8,8 @@ import { seriesColor } from './chartSetup';
 export interface ChartSeries {
   id: string;
   label: string;
-  values: number[];
+  /** A null is a missing reading — drawn as a gap, never as zero. */
+  values: Array<number | null>;
 }
 
 interface Props {

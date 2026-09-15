@@ -188,7 +188,14 @@ export function LoginScreen() {
       {step === 'OTP' ? <LoginOtpStep otp={otp} onBack={() => setStep('CHOOSE')} /> : null}
 
       {choosing && error ? (
-        <Text testID="login-error" fontSize={14} color="$danger" textAlign="center">
+        <Text
+          testID="login-error"
+          role="alert"
+          aria-live="polite"
+          fontSize={14}
+          color="$danger"
+          textAlign="center"
+        >
           {error}
         </Text>
       ) : null}

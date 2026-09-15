@@ -59,7 +59,7 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }} data-testid="review-host-commission">
-      <Typography variant="subtitle2" sx={{
+      <Typography variant="subtitle2" component="h3" sx={{
         fontWeight: 800
       }}>
         Host commission
@@ -98,7 +98,7 @@ export default function HostReviewCommission({ value, defaultPct, saving, onSave
             htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Host commission percentage' }
           }} />
         {saving && (
-          <Typography variant="caption" data-testid="commission-saving" sx={{
+          <Typography variant="caption" role="status" data-testid="commission-saving" sx={{
             color: "text.secondary"
           }}>
             Saving…

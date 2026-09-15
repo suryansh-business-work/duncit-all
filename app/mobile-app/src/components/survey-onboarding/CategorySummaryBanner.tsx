@@ -19,7 +19,7 @@ export function CategorySummaryBanner({
   onChange,
 }: Readonly<{ labels: CategoryLabels; onChange: () => void }>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const text = summary(labels);
   if (!text) return null;
   return (
@@ -50,14 +50,16 @@ export function CategorySummaryBanner({
         testID="category-change"
         role="button"
         aria-label={t('mweb.surveyOnboarding.changeCategory')}
+        tabIndex={0}
+        hitSlop={12}
         onPress={onChange}
         alignItems="center"
         gap={4}
         paddingVertical={4}
         paddingHorizontal={6}
       >
-        <MaterialIcons name="edit" size={14} color={primary} />
-        <Text fontSize={12} fontWeight="600" color={primary}>
+        <MaterialIcons name="edit" size={14} color={accent} />
+        <Text fontSize={12} fontWeight="600" color={accent}>
           Change
         </Text>
       </XStack>

@@ -106,6 +106,7 @@ export default function CoworkerList({
           onChange={(event) => onSearch(event.target.value)}
           placeholder={t('shell.chat.list.searchPlaceholder')}
           slotProps={{
+            htmlInput: { 'aria-label': t('shell.chat.list.searchPlaceholder'), 'data-testid': 'staff-chat-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">
@@ -142,7 +143,7 @@ export default function CoworkerList({
               <ListItemAvatar>
                 <Badge color="error" badgeContent={thread.unread} overlap="circular">
                   <PresenceDot status={statusOf(thread.peer.id)}>
-                    <Avatar src={thread.peer.photo || undefined} sx={{ width: 34, height: 34 }}>
+                    <Avatar src={thread.peer.photo || undefined} alt="" sx={{ width: 34, height: 34 }}>
                       {initials(thread.peer.name)}
                     </Avatar>
                   </PresenceDot>
@@ -180,7 +181,7 @@ export default function CoworkerList({
           <ListItemButton onClick={() => onOpen(person)}>
             <ListItemAvatar>
               <PresenceDot status={statusOf(person.id)}>
-                <Avatar src={person.photo || undefined} sx={{ width: 34, height: 34 }}>
+                <Avatar src={person.photo || undefined} alt="" sx={{ width: 34, height: 34 }}>
                   {initials(person.name)}
                 </Avatar>
               </PresenceDot>

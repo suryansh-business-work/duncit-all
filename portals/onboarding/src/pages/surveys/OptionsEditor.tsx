@@ -64,8 +64,9 @@ export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
                 htmlInput: { 'aria-label': `Option ${i + 1}` }
               }}
             />
-            <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
-            <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+            {/* The Tooltip names its <span>, not the button inside it — so the button carries its own name. */}
+            <Tooltip title={t('onboarding.common.moveUp')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveUp')} onClick={() => move(i, -1)} disabled={i === 0}><ArrowUpwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+            <Tooltip title={t('onboarding.common.moveDown')}><span><DuncitIconButton size="small" aria-label={t('onboarding.common.moveDown')} onClick={() => move(i, 1)} disabled={i === list.length - 1}><ArrowDownwardIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
             <Tooltip title={t('onboarding.surveys.removeOption')}><DuncitIconButton size="small" color="error" onClick={() => remove(i)}><DeleteIcon fontSize="small" /></DuncitIconButton></Tooltip>
           </Stack>
         );

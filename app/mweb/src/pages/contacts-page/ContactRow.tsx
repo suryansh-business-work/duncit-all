@@ -25,20 +25,18 @@ export default memo(function ContactRow({ row, onToggleFollow, onOpen }: Readonl
       ? t('mweb.contacts.savedAs', { vars: { label: row.contact_label } })
       : '';
   const open = () => onOpen(profile.user_id);
+  // The Nearby pill is part of the spoken name, not a visual-only badge (1.4.1).
+  const openLabel = t('mweb.podDetails.openProfileOf', { vars: { name } });
+  const rowLabel = row.is_nearby ? `${openLabel}, ${t('mweb.contacts.nearbyBadge')}` : openLabel;
 
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.25 }}>
-      <Avatar
-        src={profile.profile_photo || undefined}
-        onClick={open}
-        sx={{ width: 44, height: 44, cursor: 'pointer', bgcolor: 'primary.main', fontWeight: 600 }}
-      >
-        {name[0]?.toUpperCase()}
-      </Avatar>
+      {/* Avatar and name are one control: the avatar used to be a second,
+          mouse-only way to the same profile (2.1.1). */}
       <Box
         role="button"
         tabIndex={0}
-        aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
+        aria-label={rowLabel}
         data-testid={`contact-row-${profile.user_id}`}
         onClick={open}
         onKeyDown={(event) => {
@@ -47,28 +45,37 @@ export default memo(function ContactRow({ row, onToggleFollow, onOpen }: Readonl
             open();
           }
         }}
-        sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+        sx={{ minWidth: 0, flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1.5 }}
       >
-        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
-          <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
-            {name}
+        <Avatar
+          alt=""
+          src={profile.profile_photo || undefined}
+          sx={{ width: 44, height: 44, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+        >
+          {name[0]?.toUpperCase()}
+        </Avatar>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
+            <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
+              {name}
+            </Typography>
+            {row.is_nearby && (
+              <Chip
+                size="small"
+                label={t('mweb.contacts.nearbyBadge')}
+                sx={{
+                  height: 22,
+                  fontSize: 11,
+                  color: 'secondary.main',
+                  bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.12),
+                }}
+              />
+            )}
+          </Stack>
+          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', display: 'block' }}>
+            {[`@${profile.username}`, savedAs].filter(Boolean).join(' · ')}
           </Typography>
-          {row.is_nearby && (
-            <Chip
-              size="small"
-              label={t('mweb.contacts.nearbyBadge')}
-              sx={{
-                height: 22,
-                fontSize: 11,
-                color: 'secondary.main',
-                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.12),
-              }}
-            />
-          )}
-        </Stack>
-        <Typography variant="caption" noWrap sx={{ color: 'text.secondary', display: 'block' }}>
-          {[`@${profile.username}`, savedAs].filter(Boolean).join(' · ')}
-        </Typography>
+        </Box>
       </Box>
       <FollowButton
         status={readFollowStatus(profile)}

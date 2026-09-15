@@ -43,6 +43,7 @@ export default function GiftRecipientFields({
         size="small"
         value={gift ? 'gift' : 'self'}
         onChange={(_event, next: string | null) => next && onGift(next === 'gift')}
+        aria-label={t('mweb.giftCards.forHeading')}
         sx={{ ...SEGMENTED_TOGGLE_SX, mt: 1.5 }}
       >
         <ToggleButton data-testid="gift-card-for-myself" value="self">{t('mweb.giftCards.forMyself')}</ToggleButton>

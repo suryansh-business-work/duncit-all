@@ -65,8 +65,11 @@ export function ContactOtpStep({
         name="otp"
         label={labels.codeLabel}
         keyboardType="number-pad"
+        autoComplete="sms-otp"
+        textContentType="oneTimeCode"
         digitsOnly
         maxLength={6}
+        required
       />
       <XStack gap={12}>
         <YStack flex={1}>
@@ -74,6 +77,7 @@ export function ContactOtpStep({
             testID="contact-change-edit"
             role="button"
             aria-label={labels.editValue}
+            tabIndex={0}
             onPress={onEditValue}
             height={52}
             alignItems="center"

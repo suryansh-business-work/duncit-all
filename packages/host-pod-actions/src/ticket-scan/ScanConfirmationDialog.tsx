@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Dialog, DialogActions, DialogContent, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
@@ -43,12 +44,14 @@ function toPeople(result: HostTicketScanResult | null): ChecklistPerson[] {
  */
 export default function ScanConfirmationDialog({ result, text, onDone }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
+  const titleId = useId();
   return (
     <Dialog
       open={!!result}
       onClose={onDone}
       fullWidth
       maxWidth="xs"
+      aria-labelledby={titleId}
       data-testid="scan-confirmation"
     >
       <DialogContent>
@@ -60,7 +63,7 @@ export default function ScanConfirmationDialog({ result, text, onDone }: Readonl
             pt: 1
           }}>
           <CheckCircleIcon color="success" sx={{ fontSize: 56 }} />
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography id={titleId} variant="h6" component="h2" sx={{ fontWeight: 700 }}>
             {labels.attendanceMarked}
           </Typography>
           <Typography variant="body2" sx={{

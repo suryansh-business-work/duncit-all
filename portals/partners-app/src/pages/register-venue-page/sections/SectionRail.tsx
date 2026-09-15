@@ -41,12 +41,15 @@ interface Props {
   mode: RegisterVenueMode;
 }
 
-const stateIcon = (key: VenueSectionKey, sectionState: Props['sectionState']) => {
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** The tick is the only sign a section is done, so it is named (1.1.1 / 1.4.1). */
+const stateIcon = (key: VenueSectionKey, sectionState: Props['sectionState'], t: Translate) => {
   if (key === 'review' || key === 'leaves') return null;
   if (sectionState[key] === 'complete') {
-    return <CheckCircleIcon color="success" sx={{ fontSize: 18 }} />;
+    return <CheckCircleIcon color="success" titleAccess={t('partners.a11y.sectionComplete')} sx={{ fontSize: 18 }} />;
   }
-  return <RadioButtonUncheckedIcon color="disabled" sx={{ fontSize: 18 }} />;
+  return <RadioButtonUncheckedIcon color="action" titleAccess={t('partners.a11y.sectionIncomplete')} sx={{ fontSize: 18 }} />;
 };
 
 /** 250px side drawer listing the registration sections (md+); collapses to
@@ -90,7 +93,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
                   primary: { sx: { fontWeight: 800, fontSize: 14 } },
                   secondary: { sx: { fontSize: 11.5 } }
                 }} />
-              <Box sx={{ mt: 0.6 }}>{stateIcon(section.key, sectionState)}</Box>
+              <Box sx={{ mt: 0.6 }}>{stateIcon(section.key, sectionState, t)}</Box>
             </ListItemButton>
           ))}
         </List>

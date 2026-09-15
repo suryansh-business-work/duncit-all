@@ -149,7 +149,7 @@ export default function HostDashboardPage() {
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>
                   Partner tools · Host
                 </Typography>
-                <Typography variant="h5" sx={{
+                <Typography variant="h5" component="h1" sx={{
                   fontWeight: 950
                 }}>
                   Host Dashboard

@@ -44,7 +44,7 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
             <Stack spacing={2}>
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" gutterBottom sx={{
+                  <Typography component="h3" variant="subtitle2" gutterBottom sx={{
                     fontWeight: 800
                   }}>
                     Cancellation
@@ -59,7 +59,7 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
 
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" gutterBottom sx={{
+                  <Typography component="h3" variant="subtitle2" gutterBottom sx={{
                     fontWeight: 800
                   }}>
                     Attendee refunds
@@ -84,7 +84,7 @@ export default function CancellationDetailDialog({ row, onClose }: Readonly<Prop
 
               <Card variant="outlined">
                 <CardContent sx={{ py: 1.5 }}>
-                  <Typography variant="subtitle2" gutterBottom sx={{
+                  <Typography component="h3" variant="subtitle2" gutterBottom sx={{
                     fontWeight: 800
                   }}>
                     Venue

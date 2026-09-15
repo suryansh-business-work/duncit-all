@@ -47,6 +47,7 @@ export function HostApplyScreen() {
         <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="host-apply-back"
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.common.goBack')}
             onPress={goBack}
@@ -62,7 +63,15 @@ export function HostApplyScreen() {
           >
             <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
+          <Text
+            testID="host-apply-title"
+            role="heading"
+            flex={1}
+            fontSize={17}
+            fontWeight="600"
+            color="$color"
+            numberOfLines={1}
+          >
             {headerTitle}
           </Text>
         </XStack>

@@ -11,6 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { allPoliciesAccepted, togglePolicyId } from '@/utils/policy-acceptance';
 import { PolicyAcceptanceBody } from './PolicyAcceptanceBody';
+import { PolicyAcceptanceFooter } from './PolicyAcceptanceFooter';
 import { PolicyAcceptanceReader } from './PolicyAcceptanceReader';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -72,7 +73,12 @@ export function PolicyAcceptanceSheet({
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="policy-acceptance-sheet">
+        <YStack
+          flex={1}
+          justifyContent="flex-end"
+          testID="policy-acceptance-sheet"
+          onAccessibilityEscape={dismiss}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
@@ -93,13 +99,23 @@ export function PolicyAcceptanceSheet({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" gap={8} paddingHorizontal={16} paddingVertical={16}>
-                <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={2}>
+                <Text
+                  testID="policy-acceptance-sheet-title"
+                  role="heading"
+                  flex={1}
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                  numberOfLines={2}
+                >
                   {reading?.title ?? t('policyAcceptance.dialogTitle')}
                 </Text>
                 <XStack
                   testID="policy-acceptance-dismiss"
                   role="button"
                   aria-label={t('policyAcceptance.close')}
+                  tabIndex={0}
+                  hitSlop={4}
                   onPress={dismiss}
                   width={40}
                   height={40}
@@ -128,53 +144,13 @@ export function PolicyAcceptanceSheet({
               )}
 
               {reading ? null : (
-                <YStack gap={10} paddingHorizontal={16} paddingTop={12}>
-                  <Text testID="policy-acceptance-count" fontSize={12.5} color="$muted">
-                    {t('policyAcceptance.acceptedCount', {
-                      vars: { done, total: policies.length },
-                    })}
-                  </Text>
-                  <XStack gap={10}>
-                    <XStack
-                      testID="policy-acceptance-close"
-                      role="button"
-                      aria-label={t('policyAcceptance.close')}
-                      onPress={onClose}
-                      flex={1}
-                      height={48}
-                      borderRadius={999}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="$surface"
-                      alignItems="center"
-                      justifyContent="center"
-                      pressStyle={PRESS_STYLE.control}
-                    >
-                      <Text fontSize={15} fontWeight="600" color="$color">
-                        {t('policyAcceptance.close')}
-                      </Text>
-                    </XStack>
-                    <XStack
-                      testID="policy-acceptance-accept-all"
-                      role="button"
-                      aria-label={t('policyAcceptance.acceptAll')}
-                      aria-disabled={!canAcceptAll}
-                      onPress={acceptAll}
-                      flex={1.4}
-                      height={48}
-                      borderRadius={999}
-                      backgroundColor="$primary"
-                      alignItems="center"
-                      justifyContent="center"
-                      opacity={canAcceptAll ? 1 : 0.5}
-                      pressStyle={PRESS_STYLE.solid}
-                    >
-                      <Text fontSize={15} fontWeight="600" color="$onPrimary">
-                        {t('policyAcceptance.acceptAll')}
-                      </Text>
-                    </XStack>
-                  </XStack>
-                </YStack>
+                <PolicyAcceptanceFooter
+                  done={done}
+                  total={policies.length}
+                  canAcceptAll={canAcceptAll}
+                  onClose={onClose}
+                  onAcceptAll={acceptAll}
+                />
               )}
             </SafeAreaView>
           </YStack>

@@ -86,7 +86,7 @@ export default function CoinSettingsPage() {
         }}>
         <TuneIcon color="primary" sx={{ fontSize: 28 }} />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Coin Settings

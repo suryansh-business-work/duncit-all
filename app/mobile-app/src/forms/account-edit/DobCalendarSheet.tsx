@@ -45,9 +45,11 @@ function DayCell({
     <YStack
       pressStyle={PRESS_STYLE.surface}
       testID={testID}
-      role="button"
+      role="radio"
       aria-label={`Day ${day}`}
+      aria-checked={selected}
       aria-disabled={disabled}
+      tabIndex={0}
       onPress={onPick}
       width="14.28%"
       height={38}
@@ -143,8 +145,10 @@ export function DobCalendarSheet({
                 pressStyle={PRESS_STYLE.control}
                 key={y}
                 testID={`${testID}-year-${y}`}
-                role="button"
+                role="radio"
                 aria-label={`Year ${y}`}
+                aria-checked={selected}
+                tabIndex={0}
                 onPress={() => pickYear(y)}
                 paddingHorizontal={12}
                 paddingVertical={7}
@@ -172,6 +176,7 @@ export function DobCalendarSheet({
           testID={`${testID}-prev-month`}
           role="button"
           aria-label={t('mweb.accountEdit.previousMonth')}
+          tabIndex={0}
           onPress={() => setView((v) => addMonths(v, -1))}
           padding={8}
           pressStyle={PRESS_STYLE.row}
@@ -185,6 +190,7 @@ export function DobCalendarSheet({
           testID={`${testID}-next-month`}
           role="button"
           aria-label={t('mweb.accountEdit.nextMonth')}
+          tabIndex={0}
           onPress={() => setView((v) => addMonths(v, 1))}
           padding={8}
           pressStyle={PRESS_STYLE.row}
@@ -213,6 +219,7 @@ export function DobCalendarSheet({
         testID={`${testID}-done`}
         role="button"
         aria-label={t('mweb.common.done')}
+        tabIndex={0}
         onPress={() => onDone(new Date(view.getFullYear(), view.getMonth(), day))}
         height={46}
         alignItems="center"

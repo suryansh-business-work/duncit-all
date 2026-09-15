@@ -75,11 +75,11 @@ function SosAlertActions({ status, busy, onAck, onResolve }: Readonly<SosAlertAc
   return (
     <Stack direction="row" spacing={1}>
       {status === 'ACTIVE' && (
-        <DuncitButton variant="contained" color="warning" disabled={busy} onClick={onAck}>
+        <DuncitButton variant="contained" color="warning" disabled={busy} onClick={onAck} data-testid="sos-acknowledge">
           Acknowledge
         </DuncitButton>
       )}
-      <DuncitButton variant="contained" color="success" disabled={busy} onClick={onResolve}>
+      <DuncitButton variant="contained" color="success" disabled={busy} onClick={onResolve} data-testid="sos-resolve">
         Mark resolved
       </DuncitButton>
     </Stack>
@@ -111,11 +111,11 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
                 alignItems: "center",
                 flexWrap: "wrap"
               }}>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              <Typography variant="h6" data-testid="sos-detail-user" sx={{ fontWeight: 800 }}>
                 {alert.user.name}
               </Typography>
               <Chip size="small" variant="outlined" label={alert.ticket_no} />
-              <StatusChip status={alert.status} colorMap={SOS_STATUS_COLORS} />
+              <StatusChip status={alert.status} colorMap={SOS_STATUS_COLORS} data-testid="sos-detail-status" />
             </Stack>
             <Typography variant="caption" sx={{
               color: "text.secondary"
@@ -131,7 +131,7 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
           </Typography>
 
           {alert.message && (
-            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+            <Typography variant="body2" data-testid="sos-detail-message" sx={{ fontStyle: 'italic' }}>
               "{alert.message}"
             </Typography>
           )}

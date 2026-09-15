@@ -51,12 +51,12 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     <>
       {iconOnly ? (
         <Tooltip title={t('crm.emailTemplates.createUpdateWithAi')}>
-          <DuncitIconButton size="small" color="secondary" onClick={(e) => setAnchorEl(e.currentTarget)}>
+          <DuncitIconButton size="small" color="secondary" aria-haspopup="dialog" aria-expanded={open} onClick={(e) => setAnchorEl(e.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
       ) : (
-        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(e) => setAnchorEl(e.currentTarget)}>
+        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} aria-haspopup="dialog" aria-expanded={open} onClick={(e) => setAnchorEl(e.currentTarget)}>
           {label || 'Create with AI'}
         </DuncitButton>
       )}
@@ -66,13 +66,14 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         onClose={() => !loading && setAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
+        slotProps={{ paper: { role: 'dialog', 'aria-label': t('crm.emailTemplates.createUpdateMjmlWithAi'), sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
-          <Typography variant="subtitle2" sx={{
+          <Typography component="h2" variant="subtitle2" sx={{
             fontWeight: 700
           }}>{t('crm.emailTemplates.createUpdateMjmlWithAi')}</Typography>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the popover the user just opened (WCAG 2.4.3)
             autoFocus
             label={t('crm.emailTemplates.prompt')}
             placeholder={t('crm.emailTemplates.aDiwaliOfferEmailWithA')}

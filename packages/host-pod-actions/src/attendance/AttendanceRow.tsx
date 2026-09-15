@@ -75,7 +75,7 @@ export default function AttendanceRow({
         // The same rgba the native twin uses, so the two read identically.
         bgcolor: marked ? 'rgba(46,160,67,0.14)' : 'background.paper'
       }}>
-      <Avatar src={row.avatar_url || undefined} sx={{ width: 36, height: 36 }}>
+      <Avatar src={row.avatar_url || undefined} alt="" sx={{ width: 36, height: 36 }}>
         {(row.name[0] ?? '?').toUpperCase()}
       </Avatar>
 

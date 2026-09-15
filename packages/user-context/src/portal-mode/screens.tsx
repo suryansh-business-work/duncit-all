@@ -36,7 +36,7 @@ const Shell = ({
         maxWidth: 480
       }}>
       {icon}
-      <Typography variant="h4" sx={{
+      <Typography variant="h4" component="h1" sx={{
         fontWeight: 800
       }}>{title}</Typography>
       <Typography variant="body1" sx={{

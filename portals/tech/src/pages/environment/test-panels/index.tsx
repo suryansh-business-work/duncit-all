@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import type { EnvEntry } from '../queries';
 import EmailTestPanel from './EmailTestPanel';
@@ -49,14 +50,15 @@ interface Props {
 
 /** Right-side drawer hosting the category-specific interactive test. */
 export default function TestDrawer({ entry, onClose }: Readonly<Props>) {
+  const titleId = useId();
   return (
     <Drawer anchor="right" open={!!entry} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 440 } } }
+      paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 440 } } }
     }}>
       {entry && (
         <Stack sx={{ height: '100%' }}>
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6" sx={{
+            <Typography variant="h6" component="h2" id={titleId} sx={{
               fontWeight: 800
             }}>Test {entry.name}</Typography>
             <Typography variant="body2" sx={{

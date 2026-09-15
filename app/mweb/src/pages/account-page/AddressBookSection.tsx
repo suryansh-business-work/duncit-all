@@ -60,7 +60,7 @@ const DEFAULT_CHIP_SX = {
   height: 22,
   fontSize: 11,
   fontWeight: 600,
-  color: 'primary.main',
+  color: 'accent.main',
   bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
 } as const;
 

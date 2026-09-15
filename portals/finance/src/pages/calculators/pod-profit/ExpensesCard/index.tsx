@@ -51,7 +51,7 @@ export default function ExpensesCard({ expenses, totals, onChange }: Readonly<Pr
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
           <PaymentsOutlinedIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+          <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 800 }}>
             {t('finance.calculators.expenses')}
           </Typography>
         </Stack>

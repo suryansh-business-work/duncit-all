@@ -58,7 +58,7 @@ export default function SlotRequestsPage() {
                 color: "text.secondary",
                 fontWeight: 800
               }}>{t('partners.common.partnerToolsVenues')}</Typography>
-            <Typography variant="h5" sx={{
+            <Typography variant="h5" component="h1" sx={{
               fontWeight: 950
             }}>{t('partners.slotRequestsPage.slotRequests')}</Typography>
             <Typography variant="body2" sx={{
@@ -92,7 +92,7 @@ export default function SlotRequestsPage() {
       {requestsQuery.error && <Alert severity="error">{requestsQuery.error.message}</Alert>}
 
       {requestsQuery.loading && !requestsQuery.data && (
-        <Stack spacing={1.5}>
+        <Stack spacing={1.5} aria-busy="true">
           <Skeleton variant="rounded" height={140} />
           <Skeleton variant="rounded" height={140} />
         </Stack>

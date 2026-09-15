@@ -17,6 +17,12 @@ import { useUploadSettings, type MobileUploadSettings } from '@/hooks/useUploadS
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
+
+/** 16px thumbs reach 44pt tall; sideways only as far as the count between
+ * them allows, so a tap there can never land on the other vote. */
+const VOTE_HIT_SLOP = { top: 14, bottom: 14, left: 6, right: 6 } as const;
+const STAR_HIT_SLOP = { top: 8, bottom: 8, left: 1, right: 1 } as const;
 
 interface Review {
   id: string;
@@ -40,16 +46,41 @@ function Stars({
   onChange,
   size,
 }: Readonly<{ value: number; onChange?: (n: number) => void; size: number }>) {
+  const { t } = useTranslation();
   const { warning } = useThemeColors();
+  if (!onChange) {
+    return (
+      <XStack
+        gap={2}
+        role="img"
+        aria-label={t('mweb.a11y.starRating', { vars: { rating: value } })}
+      >
+        {[1, 2, 3, 4, 5].map((n) => (
+          <MaterialIcons
+            key={n}
+            name={n <= value ? 'star' : 'star-border'}
+            size={size}
+            color={warning}
+          />
+        ))}
+      </XStack>
+    );
+  }
   return (
-    <XStack gap={2}>
+    <XStack gap={2} role="radiogroup" aria-label={t('mweb.shop.rating')}>
       {[1, 2, 3, 4, 5].map((n) => (
         <YStack
           pressStyle={PRESS_STYLE.surface}
           key={n}
-          testID={onChange ? `star-${n}` : undefined}
-          role={onChange ? 'button' : undefined}
-          onPress={onChange ? () => onChange(n) : undefined}
+          testID={`star-${n}`}
+          role="radio"
+          aria-checked={n === value}
+          aria-label={t('mweb.a11y.rateStars', { vars: { stars: n } })}
+          tabIndex={0}
+          // Stars sit 2px apart: the extra reach is vertical, so a tap on a
+          // star never counts as its neighbour.
+          hitSlop={STAR_HIT_SLOP}
+          onPress={() => onChange(n)}
         >
           <MaterialIcons name={n <= value ? 'star' : 'star-border'} size={size} color={warning} />
         </YStack>
@@ -66,13 +97,14 @@ function ReviewPhotos({
   images,
   upload,
   settings,
-  primary,
+  accent,
 }: Readonly<{
   images: string[];
   upload: ReviewUpload;
   settings: MobileUploadSettings | null;
-  primary: string;
+  accent: string;
 }>) {
+  const { t } = useTranslation();
   const uploadBusy = upload.uploading;
   return (
     <>
@@ -82,6 +114,7 @@ function ReviewPhotos({
             <AppImage
               key={u}
               source={{ uri: u }}
+              accessibilityLabel={t('mweb.podDetails.review')}
               style={{ width: 56, height: 56, borderRadius: 8 }}
             />
           ))}
@@ -91,13 +124,14 @@ function ReviewPhotos({
         pressStyle={PRESS_STYLE.surface}
         testID="review-add-photo"
         role="button"
+        tabIndex={0}
         onPress={uploadBusy ? undefined : () => void upload.pick()}
         alignItems="center"
         gap={6}
         opacity={uploadBusy ? 0.6 : 1}
       >
-        <MaterialIcons name="add-photo-alternate" size={18} color={primary} />
-        <Text fontSize={13} fontWeight="700" color={primary}>
+        <MaterialIcons name="add-photo-alternate" size={18} color={accent} />
+        <Text fontSize={13} fontWeight="700" color={accent}>
           {uploadBusy ? 'Uploading…' : 'Add photo'}
         </Text>
       </XStack>
@@ -123,18 +157,21 @@ function ReviewPhotos({
 function ReviewCard({
   review,
   ink,
-  primary,
+  accent,
   muted,
   danger,
   onVote,
 }: Readonly<{
   review: Review;
   ink: string;
-  primary: string;
+  accent: string;
   muted: string;
   danger: string;
   onVote: (id: string, value: number, current: number) => void;
 }>) {
+  const { t } = useTranslation();
+  const upvoted = review.my_vote === 1;
+  const downvoted = review.my_vote === -1;
   return (
     <YStack gap={4} paddingTop={10} borderTopWidth={1} borderColor="$borderColor">
       <XStack gap={6} alignItems="center">
@@ -154,6 +191,7 @@ function ReviewCard({
             <AppImage
               key={u}
               source={{ uri: u }}
+              accessibilityLabel={t('mweb.podDetails.review')}
               style={{ width: 56, height: 56, borderRadius: 8 }}
             />
           ))}
@@ -161,7 +199,7 @@ function ReviewCard({
       ) : null}
       {review.seller_reply ? (
         <YStack gap={2} padding={8} backgroundColor="$color2" borderRadius={8}>
-          <Text fontSize={11} fontWeight="600" color={primary}>
+          <Text fontSize={11} fontWeight="600" color={accent}>
             Seller response
           </Text>
           <Text fontSize={13} color={ink}>
@@ -174,9 +212,14 @@ function ReviewCard({
           pressStyle={PRESS_STYLE.surface}
           testID={`review-up-${review.id}`}
           role="button"
+          aria-label={t('mweb.faqsPage.helpful')}
+          aria-pressed={upvoted}
+          accessibilityState={{ selected: upvoted }}
+          tabIndex={0}
+          hitSlop={VOTE_HIT_SLOP}
           onPress={() => onVote(review.id, 1, review.my_vote)}
         >
-          <MaterialIcons name="thumb-up" size={16} color={review.my_vote === 1 ? primary : muted} />
+          <MaterialIcons name="thumb-up" size={16} color={upvoted ? accent : muted} />
         </YStack>
         <Text fontSize={12} color="$muted">
           {review.up_votes}
@@ -185,13 +228,14 @@ function ReviewCard({
           pressStyle={PRESS_STYLE.surface}
           testID={`review-down-${review.id}`}
           role="button"
+          aria-label={t('mweb.a11y.notHelpful')}
+          aria-pressed={downvoted}
+          accessibilityState={{ selected: downvoted }}
+          tabIndex={0}
+          hitSlop={VOTE_HIT_SLOP}
           onPress={() => onVote(review.id, -1, review.my_vote)}
         >
-          <MaterialIcons
-            name="thumb-down"
-            size={16}
-            color={review.my_vote === -1 ? danger : muted}
-          />
+          <MaterialIcons name="thumb-down" size={16} color={downvoted ? danger : muted} />
         </YStack>
         <Text fontSize={12} color="$muted">
           {review.down_votes}
@@ -204,8 +248,9 @@ function ReviewCard({
 /** Ratings & reviews — the RN twin of mWeb's ProductReviews: summary, a write
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
-  const { color: ink, primary, muted, danger } = useThemeColors();
+  const { color: ink, primary, accent, muted, danger } = useThemeColors();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
@@ -289,12 +334,13 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           value={comment}
           onChangeText={setComment}
           placeholder={t('mweb.common.shareYourExperienceOptional')}
+          aria-label={t('mweb.common.shareYourExperienceOptional')}
           placeholderTextColor="$muted"
           minHeight={60}
         />
-        <ReviewPhotos images={images} upload={upload} settings={settings} primary={primary} />
+        <ReviewPhotos images={images} upload={upload} settings={settings} accent={accent} />
         {error ? (
-          <Text testID="review-error" color="$danger" fontSize={12}>
+          <Text role="alert" testID="review-error" color="$danger" fontSize={12}>
             {error}
           </Text>
         ) : null}
@@ -311,14 +357,14 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
       </YStack>
 
       {loading && reviews.length === 0 ? (
-        <Spinner testID="reviews-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="reviews-loading" color="$primary" />
       ) : null}
       {reviews.map((r) => (
         <ReviewCard
           key={r.id}
           review={r}
           ink={ink}
-          primary={primary}
+          accent={accent}
           muted={muted}
           danger={danger}
           onVote={vote}

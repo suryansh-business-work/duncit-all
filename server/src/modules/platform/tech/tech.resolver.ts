@@ -1,4 +1,6 @@
 import { techService } from './tech.service';
+import { serverHistory } from './tech.history.service';
+import { generateServerAdvice, latestServerAdvice } from './tech.advice';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -14,6 +16,14 @@ export const techResolvers = {
     techServerInfo: async (_p: unknown, args: { sslHost?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return techService.serverInfo(args.sslHost ?? undefined);
+    },
+    techServerHistory: async (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return serverHistory(args.days ?? undefined);
+    },
+    techServerAdvice: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return latestServerAdvice();
     },
     techDockerInfo: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
@@ -36,6 +46,10 @@ export const techResolvers = {
     techRestartContainer: async (_p: unknown, args: { name: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_MANAGE);
       return techService.restartContainer(args.name, user);
+    },
+    techGenerateServerAdvice: async (_p: unknown, args: { sslHost?: string | null }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, TECH_MANAGE);
+      return generateServerAdvice(user, args.sslHost ?? undefined);
     },
     techExec: async (_p: unknown, args: { command: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_EXEC);

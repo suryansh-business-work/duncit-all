@@ -25,6 +25,7 @@ export function ActionButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}
@@ -38,7 +39,7 @@ export function ActionButton({
       pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={16} color={danger ? dangerInk : primary} />
-      <Text fontSize={13} fontWeight="600" color={danger ? '$danger' : '$primary'}>
+      <Text fontSize={13} fontWeight="600" color={danger ? '$danger' : '$accent'}>
         {label}
       </Text>
     </XStack>

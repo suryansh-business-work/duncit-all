@@ -36,7 +36,7 @@ export function ContactsEmpty({ scope, synced, searching, loading, error }: Read
   if (loading) return <ListSkeleton testID="contacts-list-loading" />;
   if (error) {
     return (
-      <Text testID="contacts-list-error" padding={24} color="$danger">
+      <Text testID="contacts-list-error" role="alert" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );
@@ -44,6 +44,7 @@ export function ContactsEmpty({ scope, synced, searching, loading, error }: Read
   return (
     <Text
       testID="contacts-empty"
+      role="status"
       textAlign="center"
       fontSize={14}
       color="$muted"

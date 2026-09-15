@@ -50,6 +50,8 @@ function RoundAction({
       testID={testID}
       role="button"
       aria-label={label}
+      tabIndex={0}
+      hitSlop={4}
       onPress={onPress}
       width={36}
       height={36}

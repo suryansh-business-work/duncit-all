@@ -24,7 +24,7 @@ export default function BackoutTimeline({ participation, podDateTime, backoutNo 
   return (
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle1"
           sx={{
             fontWeight: 700,

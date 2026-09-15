@@ -57,6 +57,8 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
 
   return (
     <XStack
+      testID="tab-bar"
+      role="tablist"
       position="absolute"
       left={0}
       right={0}
@@ -90,9 +92,12 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
           <YStack
             key={route.key}
             testID={`tab-bar-${cfg.name}`}
-            role="button"
-            aria-label={cfg.label}
-            aria-pressed={focused}
+            // A tab with a selected state, not a toggle button: `aria-pressed`
+            // never reached a native screen reader, `aria-selected` does.
+            role="tab"
+            aria-label={t(cfg.labelKey)}
+            aria-selected={focused}
+            tabIndex={0}
             onPress={onPress}
             flex={1}
             alignItems="center"

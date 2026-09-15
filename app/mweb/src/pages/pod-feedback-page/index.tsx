@@ -87,7 +87,7 @@ export default function PodFeedbackPage() {
         data-testid="pod-feedback-loading"
         sx={{ display: 'grid', placeItems: 'center', minHeight: '40dvh' }}
       >
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
   }

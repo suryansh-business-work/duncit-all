@@ -62,7 +62,7 @@ export default function PodPlansPage() {
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} />
         </Stack>
       )}
       {error && <Alert severity="error" data-testid="pod-plans-error">{error.message}</Alert>}

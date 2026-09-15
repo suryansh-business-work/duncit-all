@@ -130,6 +130,7 @@ export function ReviewCell({ item, saving, onAct }: Readonly<ReviewCellProps>) {
       <TextField
         size="small"
         placeholder={t('admin.verification.rejectReason')}
+        slotProps={{ htmlInput: { 'aria-label': t('admin.verification.rejectReason'), 'data-testid': 'verification-reject-reason' } }}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         sx={{ width: 160 }}

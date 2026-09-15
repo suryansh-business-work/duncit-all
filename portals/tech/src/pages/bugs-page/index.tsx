@@ -48,7 +48,7 @@ export default function BugsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Bugs</Typography>
+        <Typography variant="h5" component="h1">Bugs</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

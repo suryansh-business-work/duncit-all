@@ -29,6 +29,7 @@ export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
               pressStyle={PRESS_STYLE.surface}
               testID={`club-faq-${faq.question}`}
               role="button"
+              tabIndex={0}
               aria-label={faq.question}
               onPress={() => setOpen(expanded ? null : faq.question)}
               alignItems="center"

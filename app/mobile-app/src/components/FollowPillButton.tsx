@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Follow / Following pill used on pod + club details: the green pill to
@@ -18,12 +19,18 @@ export function FollowPillButton({
   testID?: string;
 }>) {
   const { onPrimary, color: ink } = useThemeColors();
+  const { t } = useTranslation();
+  // The name is the words on the pill (WCAG 2.5.3), exactly as mWeb's twin
+  // names it — "Following" already says the follow exists.
+  const label = following ? t('mweb.follow.following') : t('mweb.follow.follow');
   return (
     <XStack
       testID={testID}
       role="button"
-      aria-label={following ? 'Unfollow' : 'Follow'}
+      aria-label={label}
       aria-disabled={busy}
+      aria-busy={busy}
+      tabIndex={0}
       onPress={busy ? undefined : onToggle}
       alignSelf="flex-start"
       alignItems="center"
@@ -41,7 +48,7 @@ export function FollowPillButton({
         color={following ? ink : onPrimary}
       />
       <Text fontSize={14} fontWeight="600" color={following ? '$color' : '$onPrimary'}>
-        {following ? 'Following' : 'Follow'}
+        {label}
       </Text>
     </XStack>
   );

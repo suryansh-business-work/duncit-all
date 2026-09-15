@@ -3,12 +3,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AttachmentView } from '@/components/AttachmentView';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatTime, tickState } from '@/utils/support-chat';
-
-/** The "seen" double tick keeps the blue every chat uses (mWeb SEEN_BLUE). */
-const SEEN_TICK = '#34b7f1';
-
-const TICK_DIM = { opacity: 0.7 } as const;
 
 export interface TicketThreadMessage {
   id: string;
@@ -51,6 +47,7 @@ function SystemLine({ id, text }: Readonly<{ id: string; text: string }>) {
 /** One ticket message — USER/AGENT bubbles, or a centered SYSTEM timeline line (B7).
  * The user's own messages carry a Sent (✓) / Seen (✓✓) tick like the live chat (B12). */
 export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   if (message.author_role === 'SYSTEM') {
     return <SystemLine id={message.id} text={message.body_text} />;
@@ -62,7 +59,9 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
   // Every `mine`-derived value is resolved once here, so the JSX below stays flat.
   const ink = mine ? '$onPrimary' : '$color';
   const subtleInk = mine ? '$onPrimary' : '$muted';
-  const tickColor = seen ? SEEN_TICK : onPrimary;
+  // The tick sits on the red bubble, so it keeps the bubble's full ink (3:1)
+  // and the shape (✓ / ✓✓) plus its spoken name carry Sent vs Seen.
+  const tickLabel = seen ? t('mweb.a11y.messageSeen') : t('mweb.a11y.messageSent');
 
   return (
     <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`ticket-msg-${message.id}`}>
@@ -91,7 +90,7 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
         ) : null}
         <XStack alignSelf="flex-end" alignItems="center" gap={4}>
           {time ? (
-            <Text fontSize={10} color={subtleInk} opacity={0.7}>
+            <Text fontSize={10} color={subtleInk}>
               {time}
             </Text>
           ) : null}
@@ -100,8 +99,9 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
               testID={`ticket-tick-${message.id}`}
               name={seen ? 'done-all' : 'done'}
               size={13}
-              color={tickColor}
-              style={seen ? undefined : TICK_DIM}
+              color={onPrimary}
+              role="img"
+              aria-label={tickLabel}
             />
           ) : null}
         </XStack>

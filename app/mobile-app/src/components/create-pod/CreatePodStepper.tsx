@@ -332,7 +332,7 @@ export function CreatePodStepper({
         <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
       ) : null}
       {error ? (
-        <Text testID="create-pod-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="create-pod-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

@@ -32,7 +32,14 @@ export function NotFoundScreen() {
           >
             <MaterialIcons name="search-off" size={44} color={accent} />
           </YStack>
-          <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
+          <Text
+            testID="not-found-title"
+            role="heading"
+            fontSize={20}
+            fontWeight="600"
+            color="$color"
+            textAlign="center"
+          >
             Page not found
           </Text>
           <DuncitButton

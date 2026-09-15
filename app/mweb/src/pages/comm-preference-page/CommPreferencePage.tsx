@@ -35,15 +35,17 @@ export default function CommPreferencePage() {
         {heading}
         {/* Three placeholders, matching what is about to arrive — a spinner
             here would collapse the page and push everything below it. */}
-        {COMM_CHANNELS.map((channel) => (
-          <Skeleton
-            key={channel}
-            variant="rounded"
-            height={72}
-            sx={{ borderRadius: '16px' }}
-            data-testid={`comm-skeleton-${channel}`}
-          />
-        ))}
+        <Stack spacing={2} role="progressbar" aria-label={t('mweb.a11y.loading')} aria-busy>
+          {COMM_CHANNELS.map((channel) => (
+            <Skeleton
+              key={channel}
+              variant="rounded"
+              height={72}
+              sx={{ borderRadius: '16px' }}
+              data-testid={`comm-skeleton-${channel}`}
+            />
+          ))}
+        </Stack>
       </Stack>
     );
   }

@@ -36,6 +36,7 @@ export default function BrandPickupRow({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const review = reviewChip(t)[location.review_status] ?? reviewChip(t).PENDING;
+  const defaultTitle = location.is_default ? t('products.a11y.defaultLocation') : t('products.a11y.setAsDefault');
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -54,7 +55,7 @@ export default function BrandPickupRow({
                 alignItems: "center",
                 mb: 0.5
               }}>
-              <Typography variant="subtitle2" noWrap sx={{
+              <Typography component="p" variant="subtitle2" noWrap sx={{
                 fontWeight: 700
               }}>
                 {location.nickname}
@@ -81,9 +82,15 @@ export default function BrandPickupRow({
             </Typography>
           </Box>
           <Stack direction="row" spacing={0.5}>
-            <Tooltip title={location.is_default ? 'Default location' : 'Set as default'}>
+            <Tooltip title={defaultTitle}>
               <span>
-                <DuncitIconButton size="small" disabled={busy || location.is_default} onClick={onSetDefault}>
+                <DuncitIconButton
+                  size="small"
+                  aria-label={defaultTitle}
+                  data-testid="products-pickup-set-default"
+                  disabled={busy || location.is_default}
+                  onClick={onSetDefault}
+                >
                   {location.is_default ? <StarIcon fontSize="small" color="primary" /> : <StarBorderIcon fontSize="small" />}
                 </DuncitIconButton>
               </span>

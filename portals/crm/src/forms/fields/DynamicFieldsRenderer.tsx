@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useController, useFormContext } from 'react-hook-form';
 import {
@@ -44,11 +44,13 @@ interface CellProps {
 
 function MultiSelectCell({ field, value, onChange }: Readonly<CellProps>) {
   const selected: string[] = Array.isArray(value) ? value : [];
+  const labelId = useId();
   return (
     <FormControl fullWidth size="small" required={field.required}>
-      <InputLabel>{field.label}</InputLabel>
+      <InputLabel id={labelId}>{field.label}</InputLabel>
       <Select
         multiple
+        labelId={labelId}
         value={selected}
         input={<OutlinedInput label={field.label} />}
         onChange={(e) => onChange(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}

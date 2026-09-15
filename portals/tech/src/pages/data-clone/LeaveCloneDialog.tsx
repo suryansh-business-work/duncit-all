@@ -32,6 +32,7 @@ export default function LeaveCloneDialog({ open, onStay, onLeave }: Readonly<Pro
         <DuncitButton onClick={onLeave} color="inherit">
           {t('tech.dataClone.leaveAnyway')}
         </DuncitButton>
+        {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves to the safe Stay action in the dialog the user just opened (WCAG 2.4.3) */}
         <DuncitButton onClick={onStay} variant="contained" autoFocus>
           {t('tech.dataClone.leaveStay')}
         </DuncitButton>

@@ -86,6 +86,7 @@ export default function SosTable({ fetchRows, refetchRef, onRowClick }: Readonly
   const columns = useMemo(() => buildColumns(t), [t]);
   return (
     <DuncitTable<SosAlert>
+      ariaLabel={t('support.sos.title')}
       tableId="support-sos"
       columns={columns}
       fetchRows={fetchRows}

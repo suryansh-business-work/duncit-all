@@ -78,7 +78,7 @@ export default function HostDetailsPage() {
           <Divider />
 
           <Stack spacing={1}>
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
               fontWeight: 800
             }}>Pods</Typography>
             <PodsTable

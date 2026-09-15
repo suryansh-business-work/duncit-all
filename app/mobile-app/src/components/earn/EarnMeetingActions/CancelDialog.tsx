@@ -1,7 +1,6 @@
 import { Text, XStack, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { ReasonField } from './ReasonField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -35,12 +34,12 @@ export function CancelDialog({
   onConfirm,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
 
   const footer = (
     <XStack gap={12}>
       <XStack
         testID="cancel-keep"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.earn.keepMeeting')}
         onPress={onClose}
@@ -58,6 +57,7 @@ export function CancelDialog({
       </XStack>
       <XStack
         testID="cancel-confirm"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.earn.cancelMeeting')}
         aria-disabled={busy}
@@ -71,7 +71,7 @@ export function CancelDialog({
         opacity={busy ? 0.7 : 1}
         pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={15} fontWeight="600" color={onPrimary}>
+        <Text fontSize={15} fontWeight="600" color="$onDanger">
           {busy ? 'Cancelling…' : 'Cancel meeting'}
         </Text>
       </XStack>
@@ -101,7 +101,7 @@ export function CancelDialog({
           onChangeText={onChangeReason}
         />
         {error ? (
-          <Text testID="cancel-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="cancel-error" fontSize={13} color="$danger">
             {error}
           </Text>
         ) : null}

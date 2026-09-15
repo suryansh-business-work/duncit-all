@@ -73,7 +73,7 @@ export default function AddClubAdminDialog({ open, onClose, onAdded }: Readonly<
       <DialogContent>
         <Stack spacing={1.5} sx={{ pt: 1 }}>
           {error && (
-            <Typography variant="body2" sx={{ color: 'error.main' }}>
+            <Typography variant="body2" role="alert" sx={{ color: 'error.main' }}>
               {error}
             </Typography>
           )}

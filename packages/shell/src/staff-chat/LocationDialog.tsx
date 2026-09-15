@@ -115,6 +115,7 @@ export default function LocationDialog({ open, onClose, onSend }: Readonly<Props
             <TextField
               size="small"
               fullWidth
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
               autoFocus
               label={t('shell.chat.location.label')}
               value={query}

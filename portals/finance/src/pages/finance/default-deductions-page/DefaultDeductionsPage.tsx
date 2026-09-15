@@ -38,7 +38,7 @@ function DeductionCard({ title, subtitle, children }: Readonly<SectionProps>) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Typography variant="subtitle1" sx={{
+        <Typography component="h2" variant="subtitle1" sx={{
           fontWeight: 700
         }}>
           {title}
@@ -111,7 +111,7 @@ export default function DefaultDeductionsPage() {
         }}>
         <PercentIcon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Default Deductions

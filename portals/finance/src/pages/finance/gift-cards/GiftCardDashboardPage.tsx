@@ -69,7 +69,7 @@ export default function GiftCardDashboardPage() {
                 alignItems: "center"
               }}>
                 <CardGiftcardIcon color="primary" />
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
                   {t('finance.giftCards.dashboardTitle')}
                 </Typography>
               </Stack>

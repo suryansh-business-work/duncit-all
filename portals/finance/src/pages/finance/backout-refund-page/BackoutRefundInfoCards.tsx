@@ -15,7 +15,7 @@ function InfoCard({ title, children }: Readonly<{ title: string; children: React
   return (
     <Card variant="outlined" sx={{ flex: 1, minWidth: 260, width: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle1"
           sx={{
             fontWeight: 700,
@@ -77,7 +77,7 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
       </InfoCard>
 
       <InfoCard title={t('finance.backoutRefund.backoutAttempts')}>
-        <Typography variant="h4" data-testid="backout-attempts-metric" sx={{
+        <Typography component="p" variant="h4" data-testid="backout-attempts-metric" sx={{
           fontWeight: 800
         }}>
           {request.backout_attempts_used} / {request.max_backout_attempts}
@@ -91,7 +91,7 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
       </InfoCard>
 
       <InfoCard title={t('finance.backoutRefund.replacementConfirmed')}>
-        <Typography
+        <Typography component="p"
           variant="h4"
           color={request.replacement_confirmed ? 'success.main' : 'text.secondary'}
           data-testid="replacement-confirmed-metric"

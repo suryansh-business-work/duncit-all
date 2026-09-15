@@ -23,6 +23,9 @@ export function TaskbarClock() {
       <ButtonBase
         onClick={(event) => setAnchor(event.currentTarget)}
         aria-label={t('shell.taskbar.clockLabel')}
+        aria-haspopup="dialog"
+        aria-expanded={Boolean(anchor)}
+        data-testid="shell-taskbar-clock"
         sx={{
           px: 1,
           py: 0.25,

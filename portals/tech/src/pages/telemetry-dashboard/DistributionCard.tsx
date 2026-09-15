@@ -4,10 +4,12 @@ import type { CountBucket } from './queries';
 interface Props {
   title: string;
   buckets: CountBucket[];
+  /** What an empty range says. */
+  emptyText?: string;
 }
 
 /** Simple horizontal-bar distribution (dependency-free) for a set of {key,count}. */
-export default function DistributionCard({ title, buckets }: Readonly<Props>) {
+export default function DistributionCard({ title, buckets, emptyText }: Readonly<Props>) {
   const max = buckets.reduce((m, b) => Math.max(m, b.count), 0) || 1;
   return (
     <Card sx={{ flex: 1, minWidth: 260 }}>
@@ -19,7 +21,7 @@ export default function DistributionCard({ title, buckets }: Readonly<Props>) {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            No data in this range.
+            {emptyText ?? 'No data in this range.'}
           </Typography>
         ) : (
           <Stack spacing={1.25} sx={{ mt: 1 }}>

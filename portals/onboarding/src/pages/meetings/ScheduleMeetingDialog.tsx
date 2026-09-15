@@ -97,7 +97,7 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
             Requested for {fmt(meeting?.requested_at)}{meeting?.notes ? ` · ${meeting.notes}` : ''}
           </Typography>
           {loading && slots.length === 0 ? (
-            <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}><CircularProgress size={22} /></Box>
+            <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}><CircularProgress size={22} aria-label={t('shell.a11y.loading')} /></Box>
           ) : (
             <ScheduleSlotPicker slots={slots} value={slot} onChange={setSlot} />
           )}

@@ -129,6 +129,7 @@ export default function LocationFormDialog({
               alignItems: "center"
             }}>
               <Switch
+                slotProps={{ input: { 'aria-label': t('admin.profile.active'), 'data-testid': 'location-form-active' } as Record<string, string> }}
                 checked={form.is_active}
                 onChange={(_, v) => setForm({ ...form, is_active: v })}
               />
@@ -198,6 +199,8 @@ export default function LocationFormDialog({
                   />
                   <DuncitIconButton
                     size="small"
+                    aria-label={t('shell.a11y.removeNamed', { vars: { name: z.zone_name || String(index + 1) } })}
+                    data-testid="location-form-remove-zone"
                     onClick={() => removeZone(index)}
                     disabled={form.zones.length === 1}
                   >

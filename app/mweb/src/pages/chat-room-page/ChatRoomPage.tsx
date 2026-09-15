@@ -126,7 +126,7 @@ export default function ChatRoomPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
 
@@ -164,6 +164,7 @@ export default function ChatRoomPage() {
       <Box
         ref={scrollRef}
         data-testid="chat-room-messages"
+        role="log"
         sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
       >
         <ChatRoomNotice ended={podEnded} />

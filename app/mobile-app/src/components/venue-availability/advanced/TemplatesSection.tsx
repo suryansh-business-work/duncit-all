@@ -120,7 +120,7 @@ export function TemplatesSection({
         </XStack>
       ))}
       {error ? (
-        <Text testID="template-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="template-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

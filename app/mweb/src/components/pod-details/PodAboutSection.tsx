@@ -34,6 +34,7 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
             <DuncitButton
               data-testid="pod-about-toggle"
               size="small"
+              aria-expanded={expanded}
               onClick={() => setExpanded((v) => !v)}
               sx={{ mt: 0.5, p: 0 }}
             >

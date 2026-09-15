@@ -109,7 +109,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && <Alert severity="warning" sx={{ borderRadius: 0 }}>{previewErrors.slice(0, 3).join(' · ')}</Alert>}
           <iframe title="preview" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
-          <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen>
+          <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen slotProps={{ paper: { 'aria-label': t('crm.emailTemplates.fullScreenPreview') } }}>
             <Stack
               direction="row"
               sx={{
@@ -118,7 +118,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                 borderBottom: 1,
                 borderColor: 'divider'
               }}>
-              <Typography
+              <Typography component="h2"
                 variant="subtitle1"
                 sx={{
                   fontWeight: 700,
@@ -136,7 +136,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               <Stack direction="row" sx={{
                 alignItems: "center"
               }}>
-                <Typography variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
+                <Typography component="h2" variant="subtitle2" sx={{ flex: 1 }}>{t('crm.emailTemplates.detectedInTemplate')}</Typography>
                 <DuncitButton size="small" onClick={onImportDetected} disabled={!detected.length}>{t('crm.emailTemplates.syncAll')}</DuncitButton>
               </Stack>
               <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
@@ -160,13 +160,13 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
             )}
 
             <Divider />
-            <Typography variant="subtitle2">{t('crm.emailTemplates.defaultValues')}</Typography>
+            <Typography component="h2" variant="subtitle2">{t('crm.emailTemplates.defaultValues')}</Typography>
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>{t('crm.emailTemplates.usedForPreviewAndAsThe')}</Typography>
             <VariablesValuesEditor variables={draft.variables} values={sampleValues} onChange={setSampleValues} emptyHint="Add variables above to set default values." />
 
-            <Typography variant="subtitle2">{t('crm.emailTemplates.declaredVariables')}</Typography>
+            <Typography component="h2" variant="subtitle2">{t('crm.emailTemplates.declaredVariables')}</Typography>
             {draft.variables.length === 0 ? (
               <Typography variant="caption" sx={{
                 color: "text.secondary"
@@ -186,9 +186,11 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                         setDraft({ ...draft, variables: copy });
                       }}
                       sx={{ width: 160 }}
+                      slotProps={{ htmlInput: { 'aria-label': t('crm.emailTemplates.slug') } }}
                     />
                     <TextField
                       size="small"
+                      slotProps={{ htmlInput: { 'aria-label': t('shell.common.description') } }}
                       placeholder="description"
                       value={v.description ?? ''}
                       onChange={(e) => {
@@ -201,7 +203,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                     <Tooltip title={`Copy {{ ${v.key} }}`}>
                       <DuncitIconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
                     </Tooltip>
-                    <DuncitIconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
+                    <DuncitIconButton size="small" color="error" aria-label={t('shell.a11y.removeNamed', { vars: { name: v.key } })} data-testid="crm-template-variable-remove" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
                       <DeleteIcon fontSize="small" />
                     </DuncitIconButton>
                   </Stack>

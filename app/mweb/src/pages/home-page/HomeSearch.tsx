@@ -27,7 +27,14 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
       disabled={disabled}
       placeholder={t('mweb.home.searchPods')}
       onClick={open}
-      onFocus={open}
+      // Enter/Space, never focus: moving to Search on focus changed the page
+      // under a keyboard user who only tabbed through (3.2.1).
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open();
+        }
+      }}
       sx={{
         '& .MuiOutlinedInput-root': {
           height: 52,

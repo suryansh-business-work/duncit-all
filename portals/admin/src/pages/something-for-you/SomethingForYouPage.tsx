@@ -85,7 +85,7 @@ export default function SomethingForYouPage() {
         alignItems: "center"
       }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 700
           }}>
             Something for you

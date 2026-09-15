@@ -107,6 +107,7 @@ export default function HostRequestsTable({
   return (
     <DuncitTable<HostRequest>
       tableId="onboarding-host-requests"
+      ariaLabel={t('onboarding.hostRequests.hostRequests')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRequestRowId}

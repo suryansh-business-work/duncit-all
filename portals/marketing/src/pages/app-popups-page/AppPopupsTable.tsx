@@ -57,7 +57,7 @@ const renderName = (popup: AppPopupRow) => (
   <Stack direction="row" spacing={1} sx={{
     alignItems: "center"
   }}>
-    <Avatar src={popup.image_url} variant="rounded" sx={{ width: 40, height: 40 }} />
+    <Avatar alt="" src={popup.image_url} variant="rounded" sx={{ width: 40, height: 40 }} />
     <Box sx={{ lineHeight: 1.2 }}>
       <Typography variant="body2" component="div" sx={{
         fontWeight: 600
@@ -188,6 +188,7 @@ export default function AppPopupsTable({
 
   return (
     <DuncitTable<AppPopupRow>
+      ariaLabel={t('shell.nav.appPopups')}
       tableId="marketing-app-popups"
       columns={columns}
       fetchRows={fetchRows}

@@ -70,7 +70,7 @@ export default function BackoutRefundPage() {
         }}>
         <RequestQuoteIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>{t('finance.backoutRefund.backoutRefunds')}</Typography>
           <Typography variant="body2" sx={{

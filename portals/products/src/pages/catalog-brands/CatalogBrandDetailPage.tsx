@@ -80,7 +80,7 @@ export default function CatalogBrandDetailPage() {
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="subtitle1" sx={{
+            <Typography component="h2" variant="subtitle1" sx={{
               fontWeight: 700
             }}>
               Brand details

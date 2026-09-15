@@ -18,6 +18,7 @@ function DragGrip({ label, floating }: GripProps) {
   return (
     <Tooltip title={label}>
       <Box
+        role="img"
         aria-label={label}
         className={DRAG_HANDLE_CLASS}
         sx={{
@@ -69,7 +70,7 @@ function WidgetHeader({ widget, editing, dragLabel }: HeaderProps) {
       {editing ? <DragGrip label={dragLabel} /> : null}
       <Box sx={{ minWidth: 0, flex: 1 }}>
         {widget.title ? (
-          <Typography variant="subtitle1" noWrap sx={{
+          <Typography variant="subtitle1" component="h2" noWrap sx={{
             fontWeight: 800
           }}>
             {widget.title}
@@ -140,8 +141,11 @@ export function DashboardWidgetCard({ widget, editing, dragLabel }: DashboardWid
   const hasHeader = !!widget.title || !!widget.subtitle || !!widget.headerActions || editing;
 
   return (
+    // A titled widget is a named region of the dashboard, under its h2.
     <Card
       variant="outlined"
+      component="section"
+      aria-label={widget.title}
       sx={{
         display: 'flex',
         flexDirection: 'column',

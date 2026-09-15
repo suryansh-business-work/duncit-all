@@ -1,9 +1,20 @@
 import { Tab, Tabs, type TabsProps } from '@mui/material';
+import { tabIds } from './tabPanelProps';
 import type { DuncitTabsState, TabValue } from './types';
 
 export interface DuncitTabsProps<T extends TabValue>
   extends DuncitTabsState<T>,
-    Omit<TabsProps, 'value' | 'onChange' | 'children'> {}
+    Omit<TabsProps, 'value' | 'onChange' | 'children'> {
+  /**
+   * Wires each tab to the panel it reveals: the tab gets an `id` and an
+   * `aria-controls`, and the panel spreads `tabPanelProps(idPrefix, value)`.
+   * Omit it for a strip that reveals no panel of its own (a filter bar).
+   */
+  idPrefix?: string;
+}
+
+/** What a strip without an `idPrefix` puts on its tabs — nothing. */
+const NO_IDS = { tabId: undefined, panelId: undefined };
 
 /**
  * The tab strip every portal, mWeb and shared dialog renders.
@@ -26,22 +37,28 @@ export function DuncitTabs<T extends TabValue>({
   items,
   value,
   onChange,
+  idPrefix,
   ...tabsProps
 }: Readonly<DuncitTabsProps<T>>) {
   return (
     <Tabs {...tabsProps} value={value} onChange={(_event, next: T) => onChange(next)}>
-      {items.map((item) => (
-        <Tab
-          key={item.key ?? item.value}
-          value={item.value}
-          label={item.label}
-          icon={item.icon}
-          iconPosition={item.iconPosition}
-          disabled={item.disabled}
-          sx={item.sx}
-          data-testid={item.testId}
-        />
-      ))}
+      {items.map((item) => {
+        const ids = idPrefix === undefined ? NO_IDS : tabIds(idPrefix, item.value);
+        return (
+          <Tab
+            key={item.key ?? item.value}
+            value={item.value}
+            label={item.label}
+            icon={item.icon}
+            iconPosition={item.iconPosition}
+            disabled={item.disabled}
+            sx={item.sx}
+            id={ids.tabId}
+            aria-controls={ids.panelId}
+            data-testid={item.testId}
+          />
+        );
+      })}
     </Tabs>
   );
 }

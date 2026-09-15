@@ -3,6 +3,7 @@ import { Spinner, Text, XStack } from 'tamagui';
 import {
   buttonSpec,
   PRESS_STYLE,
+  TOUCH_TARGET,
   type ButtonSize,
   type ButtonTone,
   type ButtonVariant,
@@ -27,6 +28,14 @@ export interface DuncitButtonProps {
   icon?: ReactNode;
   iconAfter?: ReactNode;
   testID?: string;
+  /**
+   * The name a screen reader announces when the visible label alone is
+   * ambiguous (a row of "Edit" buttons). Must START with `label` (WCAG 2.5.3
+   * Label in Name) — voice-control users say what they see. Defaults to `label`.
+   */
+  accessibilityLabel?: string;
+  /** What a press does, read after the name — only when the result is not obvious. */
+  accessibilityHint?: string;
 }
 
 /**
@@ -56,8 +65,12 @@ export function DuncitButton({
   icon,
   iconAfter,
   testID,
+  accessibilityLabel,
+  accessibilityHint,
 }: Readonly<DuncitButtonProps>) {
   const spec = buttonSpec({ variant, tone, size, disabled, loading, fullWidth });
+  // `sm` draws 36 tall; the touchable area still reaches the 44pt target.
+  const hitSlop = Math.max(0, (TOUCH_TARGET - spec.height) / 2);
   const pressed = spec.interactive
     ? { ...PRESS_STYLE[spec.intent], backgroundColor: spec.pressBackgroundColor }
     : undefined;
@@ -66,9 +79,15 @@ export function DuncitButton({
     <XStack
       testID={testID}
       role="button"
-      aria-label={label}
+      aria-label={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       aria-busy={loading}
       aria-disabled={!spec.interactive}
+      // tabIndex 0 is what makes Tamagui mark the view `accessible` on native —
+      // without it VoiceOver skips the button and reads its label as loose
+      // text. On web it puts the button in the tab order.
+      tabIndex={0}
+      hitSlop={hitSlop}
       disabled={!spec.interactive}
       onPress={spec.interactive ? onPress : undefined}
       alignItems="center"

@@ -97,7 +97,7 @@ export default function ServicesChart({ data, title }: Readonly<Props>) {
     <Card>
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 700 }}>
             {titleText}
           </Typography>
           <Typography variant="caption" sx={{

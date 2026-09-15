@@ -21,6 +21,8 @@ import { FINAL, MY_HOST, STEP1, STEP2, STEP3, WITHDRAW_HOST } from './queries';
 import { HOST_STEPS, blankHostStep1, blankHostStep2, blankHostStep3 } from './types';
 import { validateHostStep } from './validation';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
+import { tokens } from '../../theme';
 
 type PickerKind = null | 'photo' | 'police';
 
@@ -88,22 +90,22 @@ export default function BecomeHostPage() {
       setErr(error.message);
     }
   };
-  if (loading && !data) return <Typography>Loading...</Typography>;
+  if (loading && !data) return <Typography role="status">Loading...</Typography>;
 
   return (
     <Stack spacing={2.25}>
-      <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
+      <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
         <Stack direction="row" spacing={1.25} sx={{
           alignItems: "flex-start"
         }}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 950 }}>{isHost ? 'Your hosting' : 'Become a host'}</Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 800 }}>
+            <Typography variant="overline" sx={{ fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 950 }}>{isHost ? 'Your hosting' : 'Become a host'}</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 800 }}>
               {isHost ? 'Manage your pods and hosting profile.' : '4 steps - submit your profile for review'}
             </Typography>
           </Box>
-          {status && <Chip size="small" label={isHost ? 'HOST' : status} sx={{ bgcolor: status === 'APPROVED' ? 'success.main' : 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 900 }} />}
+          {status && <Chip size="small" label={isHost ? 'HOST' : status} sx={{ bgcolor: status === 'APPROVED' ? tokens.semantic.success : 'rgba(0,0,0,0.28)', color: '#fff', fontWeight: 900 }} />}
         </Stack>
       </Box>
       {!isHost && (

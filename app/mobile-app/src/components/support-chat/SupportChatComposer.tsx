@@ -38,6 +38,8 @@ function AttachmentChip({ url, index, tint, onRemove }: Readonly<ChipProps>) {
       <XStack
         testID={`support-chat-attach-remove-${index}`}
         role="button"
+        tabIndex={0}
+        hitSlop={11}
         aria-label={t('mweb.common.removeAttachment')}
         onPress={() => onRemove?.(url)}
         width={22}
@@ -115,6 +117,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-attach"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.supportChat.attachFile')}
           onPress={busy ? undefined : onAttach}
           width={44}
@@ -135,6 +138,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-attach-doc"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.supportChat.attachDocument')}
           onPress={busy ? undefined : onAttachDocument}
           width={44}
@@ -161,6 +165,7 @@ export function SupportChatComposer({
             value={text}
             onChangeText={change}
             placeholder={t('mweb.supportChat.typeAMessage')}
+            accessibilityLabel={t('mweb.supportChat.typeAMessage')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline
@@ -169,6 +174,7 @@ export function SupportChatComposer({
         <XStack
           testID="support-chat-send"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.common.sendMessage')}
           onPress={send}
           width={44}

@@ -107,12 +107,15 @@ export default function CallWaveform({ stream, label }: Readonly<Props>) {
         }}>
         {label}
       </Typography>
-      <Box
-        component="canvas"
-        ref={canvasRef}
-        aria-hidden
-        sx={{ width: '100%', height: 44, display: 'block' }}
-      />
+      {/* Decorative: the label above says what it shows. Hidden on a wrapper,
+          because the linter counts a bare canvas as focusable. */}
+      <Box aria-hidden>
+        <Box
+          component="canvas"
+          ref={canvasRef}
+          sx={{ width: '100%', height: 44, display: 'block' }}
+        />
+      </Box>
     </Box>
   );
 }

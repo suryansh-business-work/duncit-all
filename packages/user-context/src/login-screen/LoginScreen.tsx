@@ -106,7 +106,7 @@ export default function LoginScreen({
                 </Stack>
                 <Chip label={config.portalName} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700 }} />
               </Stack>
-              <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 800, mb: 2 }}>
                 {t('session.login.heading')}
               </Typography>
               {errorMessage && (
@@ -144,7 +144,7 @@ export default function LoginScreen({
                   }, legalLink]}>
                   {t('session.login.privacyPolicy')}
                 </Link>
-                <Box sx={{ color: 'text.disabled' }}>·</Box>
+                <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
                 <Link
                   href={config.termsUrl ?? DEFAULT_TERMS}
                   target="_blank"
@@ -155,7 +155,7 @@ export default function LoginScreen({
                   }, legalLink]}>
                   {t('session.login.termsOfUse')}
                 </Link>
-                <Box sx={{ color: 'text.disabled' }}>·</Box>
+                <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
                 <Link component="button" type="button" onClick={() => setPortalsOpen(true)} underline="none" color="primary" sx={legalLink}>
                   {t('session.login.otherPortals')}
                 </Link>

@@ -70,7 +70,7 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
             <Typography
               variant="h4"
               data-testid="recurring-preview-total"
-              sx={{ fontWeight: 950, color: 'primary.main', lineHeight: 1.05 }}
+              sx={{ fontWeight: 950, color: 'accent.main', lineHeight: 1.05 }}
             >
               {t('availability.recurring.preview.slotsCount', { vars: { count: summary.total } })}
             </Typography>

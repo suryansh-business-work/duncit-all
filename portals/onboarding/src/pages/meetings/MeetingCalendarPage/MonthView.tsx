@@ -54,7 +54,7 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
           const holidayNamePart = holiday?.name ? ` · ${holiday.name}` : '';
           return (
             <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? bg.holiday : cellBg(day, cursor, bg) }}>
-              <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.disabled' : 'text.primary' }}>{format(day, 'd')}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.secondary' : 'text.primary' }}>{format(day, 'd')}</Typography>
               {holiday && (
                 <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holidayNamePart}`}>
                   <Chip

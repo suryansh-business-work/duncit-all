@@ -12,6 +12,12 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const PARTNERS_BUNDLE: NestedCatalogue = {
   partners: {
+    a11y: {
+      upVotes: 'Up votes',
+      downVotes: 'Down votes',
+      sectionComplete: 'Section complete',
+      sectionIncomplete: 'Section not complete',
+    },
     earn: {
       title: 'Earn with Duncit',
       subtitle: 'Pick a way to start earning on Duncit.',

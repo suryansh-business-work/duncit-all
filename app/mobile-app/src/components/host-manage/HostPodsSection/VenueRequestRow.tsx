@@ -88,6 +88,7 @@ export function VenueRequestRow({
       <XStack alignItems="flex-start" gap={8}>
         <XStack
           testID={`venue-request-open-${id}`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.common.openPod')}
           onPress={onOpen}

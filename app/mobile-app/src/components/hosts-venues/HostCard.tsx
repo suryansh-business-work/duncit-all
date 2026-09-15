@@ -137,8 +137,10 @@ function FollowButton({ userId, status, pending, onToggleFollow }: Readonly<Foll
     <XStack
       testID={`host-follow-${userId}`}
       role="button"
+      tabIndex={0}
       aria-label={ARIA[status]}
       aria-disabled={pending}
+      hitSlop={5}
       onPress={() => {
         if (!pending) onToggleFollow();
       }}

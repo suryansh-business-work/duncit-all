@@ -49,6 +49,7 @@ export function AutoPodLocationRow({ labels }: Readonly<Props>) {
         </Text>
         <XStack
           testID="auto-pods-change-location"
+          tabIndex={0}
           role="button"
           aria-label={labels.changeLocation}
           onPress={() => setOpen(true)}
@@ -59,7 +60,7 @@ export function AutoPodLocationRow({ labels }: Readonly<Props>) {
           borderRadius={999}
           pressStyle={PRESS_STYLE.row}
         >
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {labels.changeLocation}
           </Text>
           <MaterialIcons name="keyboard-arrow-down" size={16} color={primary} />

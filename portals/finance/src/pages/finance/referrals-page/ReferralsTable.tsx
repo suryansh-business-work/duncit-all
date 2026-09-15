@@ -56,6 +56,7 @@ export default function ReferralsTable({ fetchRows }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <DuncitTable<ReferralRow>
+      ariaLabel={t('shell.nav.referrals')}
       tableId="finance-referrals"
       columns={columns(t)}
       fetchRows={fetchRows}

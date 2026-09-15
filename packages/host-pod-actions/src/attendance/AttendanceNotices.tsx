@@ -99,7 +99,7 @@ function ClubAdminRow({
       sx={{
         alignItems: "center"
       }}>
-      <Avatar src={admin.avatar_url || undefined} sx={{ width: 34, height: 34 }}>
+      <Avatar src={admin.avatar_url || undefined} alt="" sx={{ width: 34, height: 34 }}>
         {(admin.name[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>

@@ -57,6 +57,19 @@ export const appConfig = {
       ],
     },
     {
+      // Beside Telemetry: both watch the platform run, one through the logs it
+      // writes, the other through what every GraphQL operation costs.
+      label: 'GraphQL Monitor', labelKey: 'shell.nav.graphqlMonitor',
+      icon: 'hub',
+      children: [
+        { label: 'Overview', labelKey: 'shell.nav.overview', to: '/graphql-monitor/overview', icon: 'dashboard' },
+        { label: 'Operations', labelKey: 'shell.nav.operations', to: '/graphql-monitor/operations', icon: 'operations' },
+        { label: 'Fields', labelKey: 'shell.nav.fields', to: '/graphql-monitor/fields', icon: 'accountTree' },
+        { label: 'Errors', labelKey: 'shell.nav.errors', to: '/graphql-monitor/errors', icon: 'bug' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/graphql-monitor/settings', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Server', labelKey: 'shell.nav.server',
       icon: 'dns',
       children: [

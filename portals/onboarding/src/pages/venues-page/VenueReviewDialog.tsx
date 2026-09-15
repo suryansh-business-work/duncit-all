@@ -76,6 +76,7 @@ export default function VenueReviewDialog({
         }}>
           <Typography
             variant="h6"
+            component="span"
             noWrap
             sx={{
               fontWeight: 900,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import type { ProductListingRow } from './queries';
 
 /** Only APPROVED/DENIED are mapped — everything else (incl. SUBMITTED) stays warning. */
@@ -55,6 +56,7 @@ interface QuantityCellProps {
 
 /** Inline quantity editor — each cell owns its draft, seeded from the row. */
 export function QuantityCell({ product, disabled, onSave }: Readonly<QuantityCellProps>) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(String(product.inventory_count ?? 0));
   return (
     <Stack
@@ -71,8 +73,9 @@ export function QuantityCell({ product, disabled, onSave }: Readonly<QuantityCel
         disabled={disabled}
         onChange={(event) => setValue(event.target.value)}
         sx={{ width: 92 }}
+        // The column header is not the input's label inside a grid cell (1.3.1).
         slotProps={{
-          htmlInput: { min: 0 }
+          htmlInput: { min: 0, 'aria-label': t('partners.listProductsPage.quantity') }
         }}
       />
       <DuncitButton size="small" disabled={disabled} onClick={() => onSave(product, Number(value || 0))}>

@@ -43,7 +43,9 @@ export function ClubsLocationNote() {
           <Text
             pressStyle={PRESS_STYLE.inline}
             testID="clubs-location-note-change"
-            color="$primary"
+            role="link"
+            hitSlop={8}
+            color="$accent"
             fontWeight="600"
             textDecorationLine="underline"
             onPress={() => setOpen(true)}

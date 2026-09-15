@@ -32,6 +32,7 @@ export function ActionButton({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={ariaLabel}
       aria-disabled={busy}
       onPress={busy ? undefined : onPress}
@@ -52,7 +53,7 @@ export function ActionButton({
       ) : (
         <MaterialIcons name={iconName} size={18} color={filled ? onPrimary : primary} />
       )}
-      <Text fontSize={15} fontWeight="600" color={filled ? onPrimary : '$primary'}>
+      <Text fontSize={15} fontWeight="600" color={filled ? onPrimary : '$accent'}>
         {busy ? t('mweb.checkout.preparing') : label}
       </Text>
     </XStack>

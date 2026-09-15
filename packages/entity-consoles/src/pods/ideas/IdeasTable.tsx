@@ -45,7 +45,7 @@ const renderAuthor = (it: IdeaRow) => (
   <Stack direction="row" spacing={1} component="span" sx={{
     alignItems: "center"
   }}>
-    <Avatar src={it.author?.profile_photo || undefined} sx={{ width: 28, height: 28 }}>
+    <Avatar alt="" src={it.author?.profile_photo || undefined} sx={{ width: 28, height: 28 }}>
       {(it.author?.first_name?.[0] ?? 'U').toUpperCase()}
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
@@ -95,7 +95,7 @@ const renderEngagement = (it: IdeaRow, t: Translate) => (
 );
 
 const renderStatus = (it: IdeaRow) => (
-  <StatusChip status={it.status} icon={statusIcon(it.status)} fallbackColor="warning" colorMap={STATUS_COLOR_MAP} />
+  <StatusChip status={it.status} icon={statusIcon(it.status)} fallbackColor="warning" colorMap={STATUS_COLOR_MAP} data-testid={`pod-idea-status-${it.id}`} />
 );
 
 export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus, onDelete }: Readonly<Props>) {
@@ -106,26 +106,26 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
         justifyContent: "flex-end"
       }}>
         <Tooltip title={t('shell.common.view')}>
-          <DuncitIconButton size="small" onClick={() => onView(it.id)}>
+          <DuncitIconButton size="small" data-testid={`pod-idea-view-${it.id}`} onClick={() => onView(it.id)}>
             <VisibilityIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
         {it.status !== 'APPROVED' && (
           <Tooltip title={t('admin.podIdeas.approve')}>
-            <DuncitIconButton size="small" color="success" onClick={() => onSetStatus(it.id, 'APPROVED')}>
+            <DuncitIconButton size="small" color="success" data-testid={`pod-idea-approve-${it.id}`} onClick={() => onSetStatus(it.id, 'APPROVED')}>
               <CheckCircleIcon fontSize="small" />
             </DuncitIconButton>
           </Tooltip>
         )}
         {it.status !== 'REJECTED' && (
           <Tooltip title={t('admin.podIdeas.reject')}>
-            <DuncitIconButton size="small" color="warning" onClick={() => onSetStatus(it.id, 'REJECTED')}>
+            <DuncitIconButton size="small" color="warning" data-testid={`pod-idea-reject-${it.id}`} onClick={() => onSetStatus(it.id, 'REJECTED')}>
               <CancelIcon fontSize="small" />
             </DuncitIconButton>
           </Tooltip>
         )}
         <Tooltip title={t('shell.common.delete')}>
-          <DuncitIconButton size="small" color="error" onClick={() => onDelete(it)}>
+          <DuncitIconButton size="small" color="error" data-testid={`pod-idea-delete-${it.id}`} onClick={() => onDelete(it)}>
             <DeleteIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

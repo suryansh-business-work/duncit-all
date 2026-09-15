@@ -1,5 +1,4 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { neutral } from '@duncit/auth-tokens';
 import { draftHoursLeft, type ExpiringDraft } from '@duncit/utils';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -8,10 +7,6 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate } from '@/utils/date-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-
-/** Dark ink on the amber CTA in both themes — what MUI's contained `warning`
- * button computes as its contrast text on mWeb (white on amber fails WCAG). */
-const ON_WARNING = neutral[900];
 
 export interface DraftRowData extends ExpiringDraft {
   id: string;
@@ -77,6 +72,7 @@ export function DraftRow({ draft, expiring, onContinue, onDelete }: Readonly<Pro
       </YStack>
       <XStack
         testID={`draft-continue-${draft.id}`}
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.hostManage.continueDraft')}
         onPress={() => onContinue(draft.id)}
@@ -86,16 +82,17 @@ export function DraftRow({ draft, expiring, onContinue, onDelete }: Readonly<Pro
         justifyContent="center"
         borderRadius={999}
         borderWidth={1}
-        borderColor={expiring ? warning : '$primary'}
+        borderColor={expiring ? warning : '$accent'}
         backgroundColor={expiring ? warning : 'transparent'}
         pressStyle={PRESS_STYLE.control}
       >
-        <Text fontSize={13} fontWeight="600" color={expiring ? ON_WARNING : '$primary'}>
+        <Text fontSize={13} fontWeight="600" color={expiring ? '$onDanger' : '$accent'}>
           {t('mweb.common.continue')}
         </Text>
       </XStack>
       <XStack
         testID={`draft-delete-${draft.id}`}
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.common.deleteDraft2')}
         onPress={() => onDelete(draft.id)}

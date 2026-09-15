@@ -15,11 +15,12 @@ type RowProps = Readonly<{
   category: EditableCategory;
   shownLabel: string;
   removeLabel: string;
+  nameLabel: string;
   onChange: (rows: EditableCategory[]) => void;
   rows: EditableCategory[];
 }>;
 
-function CategoryRow({ category, shownLabel, removeLabel, onChange, rows }: RowProps) {
+function CategoryRow({ category, shownLabel, removeLabel, nameLabel, onChange, rows }: RowProps) {
   return (
     <Stack direction="row" spacing={1.5} sx={{
       alignItems: "center"
@@ -27,6 +28,7 @@ function CategoryRow({ category, shownLabel, removeLabel, onChange, rows }: RowP
       <TextField
         size="small"
         value={category.label}
+        slotProps={{ htmlInput: { 'aria-label': nameLabel, 'data-testid': 'problem-settings-category-name' } }}
         onChange={(event) => onChange(renameCategory(rows, category.uid, event.target.value))}
         sx={{ flex: 1 }}
       />
@@ -91,6 +93,7 @@ export default function CategoryList({ rows, onChange, onAdd }: Props) {
             onChange={onChange}
             shownLabel={t('support.problemSettings.shown')}
             removeLabel={t('support.problemSettings.removeCategory')}
+            nameLabel={t('support.tickets.category')}
           />
         ))}
       </Stack>

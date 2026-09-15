@@ -47,6 +47,7 @@ export function ProfileTabs({ value, onChange, isHost, isOwner }: Readonly<Props
             testID={`profile-tab-${tab.key}`}
             role="tab"
             aria-selected={selected}
+            tabIndex={0}
             onPress={() => onChange(tab.key)}
             flex={1}
             height={40}

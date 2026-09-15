@@ -31,6 +31,7 @@ export default function SupportHubPage() {
     <SupportShell title={t('mweb.support.support')} backTo="/">
       <Stack data-testid="support-hub-page" spacing={3}>
         <Stack spacing={2}>
+          {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}
           <TwoToneHeading
             lead={t('mweb.supportHub.haveABurningQuestion')}
             component="h2"
@@ -42,7 +43,7 @@ export default function SupportHubPage() {
         {error && <Alert data-testid="support-error" severity="error">{error.message}</Alert>}
 
         {!searching && loading && (
-          <Stack data-testid="support-loading" spacing={1.5}>
+          <Stack data-testid="support-loading" spacing={1.5} role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')}>
             <Skeleton variant="rounded" height={140} sx={{ borderRadius: '24px' }} />
             <Skeleton variant="rounded" height={180} sx={{ borderRadius: '24px' }} />
           </Stack>

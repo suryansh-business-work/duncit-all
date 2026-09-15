@@ -1,15 +1,21 @@
 import { alpha, type Theme } from '@mui/material';
 import type { OnboardingMeeting } from './queries';
 
-/** Onboarding calendar / slot-picker status palette (vivid; works in both themes). */
+/**
+ * Onboarding calendar / slot-picker status palette.
+ *
+ * Every event draws white text ON its status colour, so each fill is dark
+ * enough for 4.5:1 under white (WCAG 1.4.3) — the old amber, sky and green
+ * fills sat at 2.2–2.8:1 and the cancelled red text at 3.8:1.
+ */
 export const CAL = {
-  available: '#22C55E',
+  available: '#15803D',
   selected: '#2563EB',
   booked: '#7C3AED',
-  pending: '#F59E0B',
-  ongoing: '#0EA5E9',
+  pending: '#B45309',
+  ongoing: '#0369A1',
   completed: '#64748B',
-  cancelled: '#EF4444',
+  cancelled: '#DC2626',
   blocked: '#374151',
   nowLine: '#DC2626',
 } as const;

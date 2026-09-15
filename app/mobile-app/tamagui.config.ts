@@ -1,27 +1,30 @@
 import { defaultConfig } from '@tamagui/config/v4';
 import { Platform } from 'react-native';
 import { createTamagui } from 'tamagui';
-import { dark, light, semantic, typography } from '@duncit/auth-tokens';
+import { dark, light, typography } from '@duncit/auth-tokens';
 import { pressThemeKeys } from '@duncit/buttons-native';
 
 /**
  * Brand themes layered on top of Tamagui's default config. We keep the default
  * sub-themes/tokens/animations (so built-in components keep working) and only
  * override the core surface/text/border keys + add brand keys (`$primary`,
- * `$muted`, `$danger`, `$surface`) from the shared @duncit/auth-tokens — the
+ * `$accent`, `$brand`, `$muted`, `$inputBorder`, `$danger`, `$info`, `$surface`) from
+ * the shared @duncit/auth-tokens — every text/fill pair WCAG AA — the
  * SAME source mWeb's MUI theme and the old NativeWind config consumed, so brand
  * colours stay in lock-step across web and native.
  */
 // The extra keys the press system needs and a plain palette does not carry:
 // tonal (`*Soft`) fills, and a pressed step for the tones that had no darker
 // one. Derived in @duncit/buttons-native so the alpha maths is the same one
-// mWeb's MUI theme runs, rather than a hand-typed rgba() per screen.
-const pressKeys = pressThemeKeys({
-  primary: light.primary,
-  primaryActive: light.primaryActive,
-  danger: semantic.error,
-  success: semantic.success,
-});
+// mWeb's MUI theme runs, rather than a hand-typed rgba() per screen. Per mode,
+// because the status colours are lighter in dark mode.
+const pressKeysFor = (m: typeof light) =>
+  pressThemeKeys({
+    primary: m.primary,
+    primaryActive: m.primaryActive,
+    danger: m.error,
+    success: m.success,
+  });
 
 const brandLight = {
   background: light.bg,
@@ -35,21 +38,33 @@ const brandLight = {
   borderColor: light.border,
   borderColorHover: light.border,
   placeholderColor: light.muted,
+  // A form field's outline — 3:1 against every ground (WCAG 1.4.11).
+  // `borderColor` stays the decorative hairline.
+  inputBorder: light.inputBorder,
   surface: light.surface,
   // Light cards sit borderless on the off-white ground; dark cards keep the
   // hairline (same rule as mWeb's --duncit-card-border).
   cardBorder: 'transparent',
   soft: light.soft,
   muted: light.muted,
+  // Red TEXT — links, "See all", active tab, outline/ghost button labels.
   accent: light.accent,
+  onAccent: light.onAccent,
+  // The exact brand red, for decoration only (logo, illustration, large display type).
+  brand: light.brand,
+  // Call-to-action FILL, always under `onPrimary`.
   primary: light.primary,
   primaryHover: light.primaryHover,
   primaryPress: light.primaryActive,
   onPrimary: light.onPrimary,
-  danger: semantic.error,
-  success: semantic.success,
-  warning: semantic.warning,
-  ...pressKeys,
+  danger: light.error,
+  success: light.success,
+  warning: light.warning,
+  info: light.info,
+  // Text on a filled danger/success colour (dark ink in dark mode).
+  onDanger: light.onSemantic,
+  onSuccess: light.onSemantic,
+  ...pressKeysFor(light),
 };
 
 const brandDark: typeof brandLight = {
@@ -64,19 +79,25 @@ const brandDark: typeof brandLight = {
   borderColor: dark.border,
   borderColorHover: dark.border,
   placeholderColor: dark.muted,
+  inputBorder: dark.inputBorder,
   surface: dark.surface,
   cardBorder: dark.border,
   soft: dark.soft,
   muted: dark.muted,
   accent: dark.accent,
+  onAccent: dark.onAccent,
+  brand: dark.brand,
   primary: dark.primary,
   primaryHover: dark.primaryHover,
   primaryPress: dark.primaryActive,
   onPrimary: dark.onPrimary,
-  danger: semantic.error,
-  success: semantic.success,
-  warning: semantic.warning,
-  ...pressKeys,
+  danger: dark.error,
+  success: dark.success,
+  warning: dark.warning,
+  info: dark.info,
+  onDanger: dark.onSemantic,
+  onSuccess: dark.onSemantic,
+  ...pressKeysFor(dark),
 };
 
 // Brand typeface. On web we use the SAME Quicksand stack mWeb loads via Google

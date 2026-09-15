@@ -35,7 +35,7 @@ interface Props {
  */
 export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary, accent } = useThemeColors();
+  const { accent } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [redeeming, setRedeeming] = useState(false);
   const [result, setResult] = useState<RedeemResult | null>(null);
@@ -77,9 +77,9 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
           justifyContent="center"
           backgroundColor="$primarySoft"
         >
-          <MaterialIcons name="check" size={40} color={primary} />
+          <MaterialIcons name="check" size={40} color={accent} />
         </YStack>
-        <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
+        <Text role="heading" fontSize={20} fontWeight="600" color="$color" textAlign="center">
           {t('mweb.giftCards.redeemSuccessTitle')}
         </Text>
         <Text fontSize={14} color="$muted" textAlign="center">
@@ -157,7 +157,7 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
       ) : null}
       {footer}
       {error ? (
-        <Text testID="gift-card-redeem-error" fontSize={13} color="$danger">
+        <Text testID="gift-card-redeem-error" role="alert" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}

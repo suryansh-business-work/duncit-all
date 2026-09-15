@@ -19,7 +19,7 @@ export default function PartnerPoliciesPage() {
     <Stack spacing={2.25}>
       <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
         <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.common.duncitPartners')}</Typography>
-        <Typography variant="h4" sx={{
+        <Typography variant="h4" component="h1" sx={{
           fontWeight: 950
         }}>{t('shell.nav.policies')}</Typography>
         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.policiesPage.policyContentIsManagedFromThe')}</Typography>
@@ -31,11 +31,11 @@ export default function PartnerPoliciesPage() {
         <Card variant="outlined" sx={{ borderRadius: 2, width: { xs: '100%', md: 260 }, flexShrink: 0 }}>
           <CardContent>
             <Stack spacing={1}>
-              {loading && policies.length === 0 && <CircularProgress size={22} />}
+              {loading && policies.length === 0 && <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />}
               {policies.length === 0 && !loading && <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>{t('partners.policiesPage.noActivePoliciesYet')}</Typography>}
-              {policies.map((policy: any) => <DuncitButton key={policy.id} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</DuncitButton>)}
+              {policies.map((policy: any) => <DuncitButton key={policy.id} component={RouterLink} to={`/policies/${policy.slug}`} startIcon={<ArticleIcon />} variant={policy.slug === slug ? 'contained' : 'text'} aria-current={policy.slug === slug ? 'page' : undefined} sx={{ justifyContent: 'flex-start', borderRadius: 1.25 }}>{policy.title}</DuncitButton>)}
             </Stack>
           </CardContent>
         </Card>

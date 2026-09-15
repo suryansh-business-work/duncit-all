@@ -1,4 +1,4 @@
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import { readFollowStatus } from '@duncit/utils';
 import FollowButton from '../FollowButton';
 
@@ -36,32 +36,37 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
         alignItems: "center",
         py: 1.25
       }}>
-      <Avatar
-        data-testid={`follow-row-avatar-${person.user_id}`}
-        src={person.profile_photo || undefined}
+      {/* Avatar and name are ONE keyboard-reachable control that opens the
+          profile (2.1.1) — the native twin's follow-open row. */}
+      <ButtonBase
+        data-testid={`follow-open-${person.user_id}`}
         onClick={() => onOpen(person.user_id)}
-        sx={{ width: 44, height: 44, cursor: 'pointer', bgcolor: 'primary.main', fontWeight: 600 }}
+        sx={{ flex: 1, minWidth: 0, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left', borderRadius: '12px' }}
       >
-        {name[0]?.toUpperCase()}
-      </Avatar>
-      <Box
-        onClick={() => onOpen(person.user_id)}
-        sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
-      >
-        <Typography data-testid={`follow-row-name-${person.user_id}`} noWrap sx={{
-          fontSize: 15,
-          fontWeight: 600
-        }}>
-          {name}
-        </Typography>
-        <Typography data-testid={`follow-row-handle-${person.user_id}`} variant="caption" noWrap sx={{
-          display: 'block',
-          fontSize: 13,
-          color: "text.secondary"
-        }}>
-          @{person.username}
-        </Typography>
-      </Box>
+        <Avatar
+          data-testid={`follow-row-avatar-${person.user_id}`}
+          alt=""
+          src={person.profile_photo || undefined}
+          sx={{ width: 44, height: 44, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+        >
+          {name[0]?.toUpperCase()}
+        </Avatar>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography data-testid={`follow-row-name-${person.user_id}`} noWrap sx={{
+            fontSize: 15,
+            fontWeight: 600
+          }}>
+            {name}
+          </Typography>
+          <Typography data-testid={`follow-row-handle-${person.user_id}`} variant="caption" noWrap sx={{
+            display: 'block',
+            fontSize: 13,
+            color: "text.secondary"
+          }}>
+            @{person.username}
+          </Typography>
+        </Box>
+      </ButtonBase>
       {isSelf ? null : (
         <FollowButton
           status={readFollowStatus(person)}

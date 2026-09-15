@@ -44,6 +44,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
             testID={`ad-reel-${ad.id}-cta`}
             role="button"
             aria-label={t('mweb.ads.learnMore')}
+            tabIndex={0}
             onPress={() => fireAndForget(Linking.openURL(redirect))}
             alignSelf="flex-start"
             alignItems="center"

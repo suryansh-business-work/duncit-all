@@ -129,7 +129,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
             onClick={sendOtp}
             disabled={!email || requestState.loading}
             startIcon={
-              requestState.loading ? <CircularProgress size={16} color="inherit" /> : undefined
+              requestState.loading ? <CircularProgress size={16} color="inherit" aria-hidden /> : undefined
             }
           >
             {requested ? 'Resend OTP' : 'Send OTP'}
@@ -142,6 +142,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
                 {...field}
                 data-testid="email-verification-form-otp"
                 label="OTP"
+                autoComplete="one-time-code"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message ?? ' '}
                 size="small"
@@ -161,7 +162,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
             variant="contained"
             disabled={verifyState.loading}
             startIcon={
-              verifyState.loading ? <CircularProgress size={16} color="inherit" /> : undefined
+              verifyState.loading ? <CircularProgress size={16} color="inherit" aria-hidden /> : undefined
             }
           >
             {t('mweb.common.verify')}

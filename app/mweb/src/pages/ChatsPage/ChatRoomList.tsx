@@ -28,9 +28,10 @@ function ChatRoomRow({ room, onOpen }: Readonly<RowProps>) {
       }}
     >
       <Avatar
+        alt=""
         src={room.cover_url || undefined}
         variant="rounded"
-        sx={{ width: 48, height: 48, borderRadius: '12px', bgcolor: 'primary.main', flexShrink: 0 }}
+        sx={{ width: 48, height: 48, borderRadius: '12px', bgcolor: 'primary.main', color: 'primary.contrastText', flexShrink: 0 }}
       >
         <GroupsIcon />
       </Avatar>

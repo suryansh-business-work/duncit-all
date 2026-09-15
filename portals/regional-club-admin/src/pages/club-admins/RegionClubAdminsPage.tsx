@@ -99,6 +99,7 @@ export default function RegionClubAdminsPage() {
           {() => (
             <DuncitTable<RegionMember>
               tableId="regional-club-admins"
+              ariaLabel={t('partners.regional.clubAdminsTitle')}
               columns={columns}
               fetchRows={fetchRows}
               getRowId={getRowId}

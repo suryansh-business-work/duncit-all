@@ -86,7 +86,7 @@ export default function BadgesPage() {
         direction="row"
         sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
           {t('admin.badgesPage.title')}
         </Typography>
         <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={startCreate}>

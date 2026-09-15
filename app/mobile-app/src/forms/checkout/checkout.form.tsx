@@ -99,6 +99,7 @@ export function CheckoutForm({
           testID="simulate-failure"
           role="switch"
           aria-checked={simulate.field.value}
+          tabIndex={0}
           onPress={() => simulate.field.onChange(!simulate.field.value)}
           alignItems="center"
           gap={10}
@@ -116,7 +117,7 @@ export function CheckoutForm({
       ) : null}
 
       {errorMessage ? (
-        <Text testID="checkout-error" fontSize={14} color="$danger">
+        <Text testID="checkout-error" role="alert" fontSize={14} color="$danger">
           {errorMessage}
         </Text>
       ) : null}

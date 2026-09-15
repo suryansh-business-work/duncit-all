@@ -55,9 +55,10 @@ export function VenueSlotRequestsScreen() {
     >
       <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         {slots.venues.length > 1 && (
-          <XStack gap={8} flexWrap="wrap" aria-label={t('mweb.common.venue')}>
+          <XStack gap={8} flexWrap="wrap" role="radiogroup" aria-label={t('mweb.common.venue')}>
             <SelectChip
               testID="slot-requests-venue-all"
+              role="radio"
               label={t('mweb.venueSlotRequests.allVenues')}
               selected={slots.venueId === ALL_VENUES}
               onPress={() => slots.setVenueId(ALL_VENUES)}
@@ -66,6 +67,7 @@ export function VenueSlotRequestsScreen() {
               <SelectChip
                 key={venue.id}
                 testID={`slot-requests-venue-${venue.id}`}
+                role="radio"
                 label={venue.venue_name || t('mweb.venueManagePage.untitledVenue')}
                 selected={slots.venueId === venue.id}
                 onPress={() => slots.setVenueId(venue.id)}
@@ -76,17 +78,21 @@ export function VenueSlotRequestsScreen() {
 
         {slots.feedback && (
           <Text
+            hitSlop={12}
             pressStyle={PRESS_STYLE.inline}
             fontSize={13}
             color={slots.feedback.ok ? '$success' : '$danger'}
             onPress={slots.clearFeedback}
+            aria-live="polite"
             testID="slot-request-feedback"
           >
             {slots.feedback.text}
           </Text>
         )}
 
-        {slots.isLoading && <Spinner color="$primary" />}
+        {slots.isLoading && (
+          <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />
+        )}
 
         {!slots.isLoading && slots.requests.length === 0 && (
           <Text fontSize={14} color="$muted" textAlign="center">

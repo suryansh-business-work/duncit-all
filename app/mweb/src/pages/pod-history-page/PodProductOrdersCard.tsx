@@ -25,7 +25,7 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
           <Stack direction="row" spacing={1} data-testid="po-loading" sx={{
             alignItems: "center"
           }}>
-            <CircularProgress size={18} />
+            <CircularProgress aria-label={t('mweb.a11y.loading')} size={18} />
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>

@@ -74,6 +74,9 @@ export function GiftCardRedeemScreen() {
                   testID="gift-card-check"
                   role="button"
                   aria-label={checkLabel}
+                  aria-disabled={checking || !code.trim()}
+                  aria-busy={checking}
+                  tabIndex={0}
                   onPress={() => {
                     check().catch(() => undefined);
                   }}
@@ -98,7 +101,7 @@ export function GiftCardRedeemScreen() {
             </Field>
           </SurfaceCard>
           {lookupError ? (
-            <Text testID="gift-card-lookup-error" fontSize={13} color="$danger">
+            <Text testID="gift-card-lookup-error" role="alert" fontSize={13} color="$danger">
               {lookupError}
             </Text>
           ) : null}

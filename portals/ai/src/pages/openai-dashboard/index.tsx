@@ -45,7 +45,7 @@ export default function OpenAiDashboardPage() {
         alignItems: { xs: 'flex-start', sm: 'center' }
       }}>
       <Box>
-        <Typography variant="h5">{t('ai.dashboard.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('ai.dashboard.title')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

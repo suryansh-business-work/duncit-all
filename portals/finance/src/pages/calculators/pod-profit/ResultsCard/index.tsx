@@ -32,7 +32,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
             mb: 1.5
           }}>
           <TrendingUpIcon color="primary" />
-          <Typography variant="subtitle1" sx={{
+          <Typography component="h2" variant="subtitle1" sx={{
             fontWeight: 800
           }}>{t('finance.calculators.results')}</Typography>
         </Stack>
@@ -48,7 +48,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           })}
         >
           <SectionLabel text={t('finance.calculators.totalDuncitRevenue')} />
-          <Typography
+          <Typography component="p"
             variant="h4"
             sx={{
               fontWeight: 900,

@@ -50,6 +50,7 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
             error={!!error}
             helperText={error?.message}
             fullWidth
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
           />
           <TextField

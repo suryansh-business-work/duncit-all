@@ -55,6 +55,8 @@ export function CompanionRow({
         value={entry.name}
         onChangeText={(name) => onChange(index, { name })}
         placeholder={t('mweb.hostScan.companionName')}
+        aria-label={t('mweb.hostScan.companionName')}
+        aria-required
         size="$4"
         {...lock}
       />
@@ -68,6 +70,7 @@ export function CompanionRow({
             value={entry.phone_extension}
             onChangeText={(phone_extension) => onChange(index, { phone_extension })}
             placeholder={t('mweb.hostScan.companionExtension')}
+            aria-label={t('mweb.hostScan.companionExtension')}
             keyboardType="phone-pad"
             size="$4"
             {...lock}
@@ -79,6 +82,8 @@ export function CompanionRow({
             value={entry.phone_number}
             onChangeText={(phone_number) => onChange(index, { phone_number })}
             placeholder={t('mweb.hostScan.companionPhone')}
+            aria-label={t('mweb.hostScan.companionPhone')}
+            aria-required
             keyboardType="number-pad"
             size="$4"
             {...lock}

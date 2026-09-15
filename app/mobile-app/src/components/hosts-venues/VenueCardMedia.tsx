@@ -39,6 +39,7 @@ function Arrow({
       justifyContent="center"
       backgroundColor="rgba(0,0,0,0.4)"
       role="button"
+      tabIndex={0}
       aria-label={label}
       onPress={onPress}
       pressStyle={PRESS_STYLE.row}
@@ -64,7 +65,7 @@ interface Props {
  * venues-page/VenueCardMedia. */
 export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { accent } = useThemeColors();
+  const { brand } = useThemeColors();
   const listRef = useRef<FlatList<string>>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
@@ -88,7 +89,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
         alignItems="center"
         justifyContent="center"
       >
-        <MaterialIcons name="storefront" size={40} color={accent} />
+        <MaterialIcons name="storefront" size={40} color={brand} />
       </YStack>
     );
   }
@@ -119,6 +120,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
               width={width}
               height={height}
               role="button"
+              tabIndex={0}
               aria-label={venueName}
               onPress={onOpen}
               pressStyle={PRESS_STYLE.surface}

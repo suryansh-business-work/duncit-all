@@ -76,7 +76,7 @@ export function GrievanceForm({
         multiline
       />
       {errorMessage ? (
-        <Text fontSize={12} color="$danger" testID="grievance-error">
+        <Text role="alert" fontSize={12} color="$danger" testID="grievance-error">
           {errorMessage}
         </Text>
       ) : null}

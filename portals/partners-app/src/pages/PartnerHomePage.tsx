@@ -68,7 +68,7 @@ function ActionTile({ action }: Readonly<{ action: PartnerAction }>) {
           >
             <FontAwesomeIcon icon={action.icon} style={{ fontSize: 62 }} />
           </Box>
-          <Typography variant="h6" sx={{
+          <Typography variant="h6" component="h2" sx={{
             fontWeight: 900
           }}>{action.title}</Typography>
           <Typography variant="body2" sx={{
@@ -98,7 +98,7 @@ export default function PartnerHomePage() {
       header={
         <Box sx={{ p: 2.5, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
           <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.common.duncitPartners')}</Typography>
-          <Typography variant="h4" sx={{
+          <Typography variant="h4" component="h1" sx={{
             fontWeight: 950
           }}>{t('partners.page.chooseYourPartnerPath')}</Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 1 }}>{t('partners.page.useTheSameDuncitAccountFor')}</Typography>

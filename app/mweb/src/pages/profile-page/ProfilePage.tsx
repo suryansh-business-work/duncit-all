@@ -10,8 +10,10 @@ import ProfileBadgesStrip from './ProfileBadgesStrip';
 import ProfilePostsGrid from './ProfilePostsGrid';
 import UploadDialog from './UploadDialog';
 import { ProfilePodsPanel, ProfileTabs, useProfileTabs } from '../../components/profile-tabs';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { data, loading, error, refetch } = useQuery<any>(ME_AND_POSTS, {
@@ -51,7 +53,7 @@ export default function ProfilePage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

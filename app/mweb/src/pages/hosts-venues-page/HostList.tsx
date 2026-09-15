@@ -48,7 +48,7 @@ export default function HostList({ hosts, meId, statusFor, pendingUserId, onTogg
             <Stack direction="row" spacing={1.5} sx={{
               alignItems: "center"
             }}>
-              <Avatar
+              <Avatar alt=""
                 src={h.passport_photo_url || undefined}
                 sx={{
                   width: 56,

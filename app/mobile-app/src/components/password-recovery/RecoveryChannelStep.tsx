@@ -32,6 +32,7 @@ interface ToggleProps {
 function ChannelToggle({ channel, labels, onChannel }: Readonly<ToggleProps>) {
   return (
     <XStack
+      role="tablist"
       gap={4}
       padding={4}
       borderRadius={999}
@@ -45,8 +46,10 @@ function ChannelToggle({ channel, labels, onChannel }: Readonly<ToggleProps>) {
           <XStack
             key={value}
             testID={`recovery-channel-${value}`}
-            role="button"
+            role="tab"
             aria-label={labels.channel(value).name}
+            aria-selected={active}
+            tabIndex={0}
             onPress={() => onChannel(value)}
             pressStyle={PRESS_STYLE.inline}
             flex={1}
@@ -136,6 +139,8 @@ export function RecoveryChannelStep({
               label={copy.fieldLabel}
               placeholder={copy.placeholder}
               keyboardType="phone-pad"
+              autoComplete="tel-national"
+              textContentType="telephoneNumber"
               digitsOnly
               maxLength={15}
               required
@@ -157,13 +162,13 @@ export function RecoveryChannelStep({
       )}
 
       {notFound ? (
-        <Text fontSize={13} color="$danger" testID="recovery-not-found">
+        <Text fontSize={13} color="$danger" testID="recovery-not-found" role="alert">
           {labels.notFound}
         </Text>
       ) : null}
 
       {notSent ? (
-        <Text fontSize={13} color="$danger" testID="recovery-not-sent">
+        <Text fontSize={13} color="$danger" testID="recovery-not-sent" role="alert">
           {labels.notSent}
         </Text>
       ) : null}

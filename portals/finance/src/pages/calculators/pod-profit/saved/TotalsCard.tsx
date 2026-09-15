@@ -20,7 +20,7 @@ export default function TotalsCard({ totals }: Readonly<{ totals: PodTotals }>) 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
           <FunctionsIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+            <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 800 }}>
               {t('finance.calculators.grandTotal')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>

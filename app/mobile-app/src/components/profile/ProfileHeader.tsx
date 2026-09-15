@@ -26,6 +26,7 @@ function Stat({
       testID={testID}
       role="button"
       aria-label={`${value} ${label}`}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       flex={1}
@@ -50,7 +51,7 @@ export function ProfileHeader({
   onChanged,
 }: Readonly<{ me: ProfileMe; onChanged?: () => void | Promise<void> }>) {
   const { t } = useTranslation();
-  const { primary, color } = useThemeColors();
+  const { accent, color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const openFollow = (tab: 'followers' | 'following') =>
@@ -64,14 +65,22 @@ export function ProfileHeader({
         {/* The tick sits beside the NAME and is the only thing that says the
             email is verified (mWeb shows the same, rule 27). */}
         <XStack alignItems="center" justifyContent="center" gap={5}>
-          <Text fontSize={22} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
+          <Text
+            testID="profile-header-name"
+            role="heading"
+            fontSize={22}
+            fontWeight="600"
+            color="$color"
+            numberOfLines={1}
+            flexShrink={1}
+          >
             {me.full_name ?? 'User'}
           </Text>
           {me.is_email_verified ? (
             <MaterialIcons
               name="verified"
               size={19}
-              color={primary}
+              color={accent}
               accessibilityLabel="Email verified"
             />
           ) : null}

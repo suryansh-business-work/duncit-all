@@ -49,7 +49,7 @@ export default function SupportPage() {
         }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 900 }}>{t('partners.supportPage.partnerSupport')}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>{t('partners.supportPage.needHelp')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 0.75 }}>{t('partners.supportPage.sendHostVenueProductPayoutOr')}</Typography>
@@ -61,14 +61,14 @@ export default function SupportPage() {
         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h2" sx={{
                 fontWeight: 950
               }}>{t('partners.supportPage.createSupportRequest')}</Typography>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>{t('partners.supportPage.yourAccountEmailIsUsedFor')}</Typography>
             </Box>
-            {loadingAccount && !data ? <CircularProgress size={24} /> : (
+            {loadingAccount && !data ? <CircularProgress size={24} aria-label={t('shell.a11y.loading')} /> : (
               <SupportForm initialValues={{ name, email: me?.email || '' }} loading={loading} errorMessage={error} onSubmit={handleSubmit} />
             )}
           </Stack>

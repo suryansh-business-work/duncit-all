@@ -71,7 +71,7 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle1" sx={{
+      <Typography component="h3" variant="subtitle1" sx={{
         fontWeight: 800
       }}>
         Refunds &amp; timeline

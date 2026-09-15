@@ -67,7 +67,13 @@ export function ProductBody({
         <YStack gap={16} paddingBottom={24}>
           {images.length > 0 ? <ProductGallery images={images} onZoom={onZoom} /> : null}
           <YStack gap={6}>
-            <Text testID="product-detail-name" fontSize={22} fontWeight="600" color="$color">
+            <Text
+              role="heading"
+              testID="product-detail-name"
+              fontSize={22}
+              fontWeight="600"
+              color="$color"
+            >
               {product.product_name}
             </Text>
             <XStack alignItems="baseline" gap={8}>

@@ -32,7 +32,7 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
         }}>
         <EventIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 180 }}>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{t('onboarding.meetings.meetingCalendar')}</Typography>
           <Typography variant="body2" sx={{
@@ -44,6 +44,8 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
           exclusive
           value={view}
           onChange={(_e, v) => v && onView(v as CalendarView)}
+          aria-label={t('onboarding.a11y.calendarView')}
+          data-testid="meeting-calendar-view"
         >
           {VIEWS.map((v) => (
             <ToggleButton key={v} value={v} sx={{ textTransform: 'capitalize', px: 1.5, fontWeight: 700 }}>{v}</ToggleButton>
@@ -65,7 +67,8 @@ export default function CalendarHeader({ view, label, onView, onStep, onToday }:
           justifyContent: "space-between",
           flexWrap: "wrap"
         }}>
-        <Typography variant="subtitle1" sx={{
+        {/* Polite live region: Previous / Next / Today change this range. */}
+        <Typography variant="subtitle1" component="h2" aria-live="polite" data-testid="meeting-calendar-range" sx={{
           fontWeight: 800
         }}>{label}</Typography>
         <CalendarLegend />

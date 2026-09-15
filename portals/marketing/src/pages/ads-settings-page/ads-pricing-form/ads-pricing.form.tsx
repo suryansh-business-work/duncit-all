@@ -34,7 +34,7 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Typography variant="subtitle2" gutterBottom>
+      <Typography component="h2" variant="subtitle2" gutterBottom>
         Live example
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{

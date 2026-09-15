@@ -38,7 +38,7 @@ export default function FormField<T extends FieldValues = FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => {
+      render={({ field: { ref, ...field }, fieldState }) => {
         const { error, isTouched, isDirty } = fieldState;
         const visible = errorMode === 'always' || isTouched || isDirty;
         const showError = Boolean(error) && visible;
@@ -48,6 +48,8 @@ export default function FormField<T extends FieldValues = FieldValues>({
           <TextField
             {...rest}
             {...field}
+            // To the <input> so react-hook-form can focus the first invalid field.
+            inputRef={ref}
             value={field.value ?? ''}
             fullWidth={rest.fullWidth ?? true}
             error={showError}

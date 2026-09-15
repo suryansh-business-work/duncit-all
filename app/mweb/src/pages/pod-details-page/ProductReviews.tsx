@@ -103,7 +103,13 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         <Stack direction="row" spacing={1} data-testid="review-summary" sx={{
           alignItems: "center"
         }}>
-          <Rating value={summary.average_rating} precision={0.1} readOnly size="small" />
+          <Rating
+            value={summary.average_rating}
+            precision={0.1}
+            readOnly
+            size="small"
+            getLabelText={(value) => t('mweb.a11y.starRating', { vars: { rating: value } })}
+          />
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
@@ -121,11 +127,17 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           }}>
           Write a review
         </Typography>
-        <Rating value={rating} onChange={(_, v) => setRating(v)} data-testid="review-rating-input" />
+        <Rating
+          value={rating}
+          onChange={(_, v) => setRating(v)}
+          getLabelText={(value) => t('mweb.a11y.rateStars', { vars: { stars: value } })}
+          data-testid="review-rating-input"
+        />
         <TextField
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={t('mweb.common.shareYourExperienceOptional')}
+          slotProps={{ htmlInput: { 'aria-label': t('mweb.common.shareYourExperienceOptional') } }}
           multiline
           minRows={2}
           fullWidth
@@ -176,7 +188,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           data-testid="review-photo-input"
         />
         {error && (
-          <Alert severity="warning" data-testid="review-error" sx={{ mt: 1 }}>
+          <Alert severity="warning" role="alert" data-testid="review-error" sx={{ mt: 1 }}>
             {error}
           </Alert>
         )}
@@ -199,7 +211,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             alignItems: "center",
             py: 2
           }}>
-          <CircularProgress size={22} />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
         </Stack>
       ) : null}
       {reviews.map((r) => (
@@ -207,13 +219,18 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <Avatar sx={{ width: 28, height: 28, fontSize: 13 }}>{(r.user_name[0] ?? 'U').toUpperCase()}</Avatar>
+            <Avatar aria-hidden sx={{ width: 28, height: 28, fontSize: 13 }}>{(r.user_name[0] ?? 'U').toUpperCase()}</Avatar>
             <Typography variant="body2" sx={{
               fontWeight: 600
             }}>
               {r.user_name}
             </Typography>
-            <Rating value={r.rating} readOnly size="small" />
+            <Rating
+              value={r.rating}
+              readOnly
+              size="small"
+              getLabelText={(value) => t('mweb.a11y.starRating', { vars: { rating: value } })}
+            />
           </Stack>
           {r.comment && (
             <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>
@@ -239,7 +256,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                 variant="caption"
                 sx={{
                   fontWeight: 600,
-                  color: "primary.main"
+                  color: "accent.main"
                 }}>
                 Seller response
               </Typography>
@@ -256,6 +273,8 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             <DuncitIconButton
               size="small"
               color={r.my_vote === 1 ? 'primary' : 'default'}
+              aria-label={t('mweb.faqsPage.helpful')}
+              aria-pressed={r.my_vote === 1}
               onClick={() => vote(r.id, 1, r.my_vote)}
               data-testid={`review-up-${r.id}`}
             >
@@ -265,6 +284,8 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             <DuncitIconButton
               size="small"
               color={r.my_vote === -1 ? 'error' : 'default'}
+              aria-label={t('mweb.a11y.notHelpful')}
+              aria-pressed={r.my_vote === -1}
               onClick={() => vote(r.id, -1, r.my_vote)}
               data-testid={`review-down-${r.id}`}
             >

@@ -60,7 +60,7 @@ const STATS: ReadonlyArray<StatConfig> = [
     key: 'expired',
     labelKey: 'ads.stats.expired',
     icon: <EventBusyOutlinedIcon fontSize="small" />,
-    iconColor: 'text.disabled',
+    iconColor: 'text.secondary',
   },
   {
     key: 'total_approved_cost',

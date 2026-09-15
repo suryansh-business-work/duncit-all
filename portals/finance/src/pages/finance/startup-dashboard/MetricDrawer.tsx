@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Box, Chip, Divider, Drawer, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
@@ -29,6 +29,7 @@ function editableKeys(metric: FounderMetric): string[] {
 export default function MetricDrawer({ metric, mode, settings, saving, onClose, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const titleId = useId();
 
   useEffect(() => {
     if (!metric || mode !== 'settings') return;
@@ -52,7 +53,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
 
   return (
     <Drawer anchor="right" open onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 420 } } }
+      paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 420 } } }
     }}>
       <Stack
         direction="row"
@@ -61,7 +62,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
           justifyContent: "space-between",
           p: 2
         }}>
-        <Typography variant="h6">{metric.label}</Typography>
+        <Typography component="h2" variant="h6" id={titleId}>{metric.label}</Typography>
         <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}>
           <CloseIcon />
         </DuncitIconButton>
@@ -79,7 +80,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
 
         {mode === 'info' ? (
           <>
-            <Typography variant="subtitle2" sx={{
+            <Typography component="h3" variant="subtitle2" sx={{
               color: "text.secondary"
             }}>
               What is this?
@@ -87,7 +88,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {metric.definition}
             </Typography>
-            <Typography
+            <Typography component="h3"
               variant="subtitle2"
               sx={{
                 color: "text.secondary",
@@ -101,7 +102,7 @@ export default function MetricDrawer({ metric, mode, settings, saving, onClose, 
           </>
         ) : (
           <>
-            <Typography variant="subtitle2" sx={{
+            <Typography component="h3" variant="subtitle2" sx={{
               color: "text.secondary"
             }}>
               Formula

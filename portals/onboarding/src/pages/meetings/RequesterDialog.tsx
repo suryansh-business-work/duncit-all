@@ -21,9 +21,9 @@ export default function RequesterDialog({ meeting, onClose }: Readonly<Props>) {
   const catPath =
     [meeting.super_category_name, meeting.category_name, meeting.sub_category_name].filter(Boolean).join(' › ') || '—';
   return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="requester-details-title">
       <DialogTitle sx={{ pr: 6, fontWeight: 800 }}>
-        Requester details
+        <span id="requester-details-title">Requester details</span>
         <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </DuncitIconButton>

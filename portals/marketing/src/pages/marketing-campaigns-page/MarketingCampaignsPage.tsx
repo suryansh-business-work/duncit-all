@@ -93,7 +93,7 @@ export default function MarketingCampaignsPage() {
           mb: 2
         }}>
         <Stack spacing={0.25} sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Marketing Campaigns

@@ -64,7 +64,7 @@ export default function AmountBreakupCard({ detail }: Readonly<{ detail: Payment
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 300, width: '100%' }}>
       <CardContent>
-        <Typography
+        <Typography component="h2"
           variant="subtitle1"
           sx={{
             fontWeight: 700,

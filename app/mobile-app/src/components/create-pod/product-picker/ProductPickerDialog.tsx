@@ -124,7 +124,13 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
               borderBottomColor="$borderColor"
             >
               <YStack flex={1}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text
+                  testID="product-picker-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
                   {t('podProduct.dialogTitle')}
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -133,6 +139,7 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
               </YStack>
               <XStack
                 testID="product-picker-close"
+                tabIndex={0}
                 role="button"
                 aria-label={t('podProduct.close')}
                 onPress={close}

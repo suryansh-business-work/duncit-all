@@ -59,7 +59,7 @@ export default function ProductPageHeader({
         alignItems: { md: 'center' }
       }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{
+          <Typography component="h1" variant="h4" sx={{
             fontWeight: 700
           }}>
             {isNew ? 'Add inventory product' : product?.product_name}

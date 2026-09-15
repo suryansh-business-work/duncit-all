@@ -36,7 +36,8 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{
       alignItems: "stretch"
     }}>
-      <Box sx={{ height: 220, flex: '0 0 280px', minWidth: 0 }}>
+      {/* The same counts are listed as text in the cards beside it (WCAG 1.1.1). */}
+      <Box aria-hidden sx={{ height: 220, flex: '0 0 280px', minWidth: 0 }}>
         <Doughnut
           data={{
             labels,
@@ -106,7 +107,7 @@ export default function CountsBySuperCategoryGrid({ counts, color = '#FF4D4F' }:
               {c.super_category_name || c.super_category_slug || 'Uncategorised'}
             </Typography>
             <Typography
-              variant="h4"
+              variant="h4" component="p"
               sx={{
                 fontWeight: 800,
                 /* v8 ignore next -- unreachable, same as the borderLeft above */

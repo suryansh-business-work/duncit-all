@@ -46,7 +46,7 @@ export default function UserLeadDetailPage() {
             }}>
               <WhatsAppIcon sx={{ color: '#25D366' }} />
               <Box>
-                <Typography variant="h6" sx={{
+                <Typography component="h2" variant="h6" sx={{
                   fontWeight: 800
                 }}>
                   {lead.name || `+${lead.phone}`}

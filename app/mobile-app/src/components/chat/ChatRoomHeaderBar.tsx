@@ -22,6 +22,8 @@ export function ChatRoomHeaderBar({ title, onBack, onOpenPod }: Readonly<Props>)
       <XStack
         testID="chat-room-back"
         role="button"
+        tabIndex={0}
+        hitSlop={2}
         aria-label={t('mweb.common.goBack')}
         onPress={onBack}
         width={40}
@@ -37,6 +39,7 @@ export function ChatRoomHeaderBar({ title, onBack, onOpenPod }: Readonly<Props>)
       <XStack
         testID="chat-room-title"
         role="button"
+        tabIndex={0}
         aria-label={`Open pod details for ${title}`}
         onPress={onOpenPod}
         flex={1}

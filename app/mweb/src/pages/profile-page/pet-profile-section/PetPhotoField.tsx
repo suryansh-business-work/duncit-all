@@ -24,6 +24,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
         <Avatar
           data-testid="pet-photo-field-avatar"
           src={value || undefined}
+          alt=""
           sx={{
             width: 72,
             height: 72,
@@ -65,7 +66,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
             </DuncitButton>
           )}
           {touched && error && (
-            <Typography data-testid="pet-photo-field-error" variant="caption" color="error">
+            <Typography data-testid="pet-photo-field-error" variant="caption" color="error" role="alert">
               {error}
             </Typography>
           )}

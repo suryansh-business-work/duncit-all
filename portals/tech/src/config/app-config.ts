@@ -71,6 +71,14 @@ export const appConfig = {
       ],
     },
     {
+      // The token behind every portal table's "GET API" button.
+      label: 'Table API', labelKey: 'shell.nav.tableApi',
+      icon: 'code',
+      children: [
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/table-api/settings', icon: 'tune' },
+      ],
+    },
+    {
       label: 'Server', labelKey: 'shell.nav.server',
       icon: 'dns',
       children: [

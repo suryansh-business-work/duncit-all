@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import ClearIcon from '@mui/icons-material/Clear';
 import DensityMediumIcon from '@mui/icons-material/DensityMedium';
 import DensitySmallIcon from '@mui/icons-material/DensitySmall';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
@@ -55,13 +54,14 @@ export interface DuncitTableToolbarProps<T> {
   resetColumns: () => void;
   density: TableDensity;
   toggleDensity: () => void;
-  onExportCsv: () => void;
+  /** Download + GET API — `TableDataActions`, sitting just left of refresh. */
+  dataActions: ReactNode;
   onRefresh: () => void;
   /** A fetch is in flight: every control here is dead until it lands. */
   loading: boolean;
 }
 
-/** Search + filters + chips on the left; actions slot, columns, density, CSV, refresh on the right. */
+/** Search + filters + chips on the left; actions slot, columns, density, download, GET API, refresh on the right. */
 export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>>) {
   const {
     columns,
@@ -76,7 +76,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
     resetColumns,
     density,
     toggleDensity,
-    onExportCsv,
+    dataActions,
     onRefresh,
     loading,
   } = props;
@@ -184,16 +184,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
           {isCompact ? <DensityMediumIcon fontSize="small" /> : <DensitySmallIcon fontSize="small" />}
         </DuncitIconButton>
       </Tooltip>
-      <Tooltip title={t('shell.table.exportCsv')}>
-        <DuncitIconButton
-          size="small"
-          aria-label={t('shell.table.exportCsv')}
-          disabled={loading}
-          onClick={onExportCsv}
-        >
-          <FileDownloadIcon fontSize="small" />
-        </DuncitIconButton>
-      </Tooltip>
+      {dataActions}
       <Tooltip title={t('shell.table.refresh')}>
         <DuncitIconButton
           size="small"

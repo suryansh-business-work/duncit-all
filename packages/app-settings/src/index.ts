@@ -12,6 +12,8 @@ export {
 } from './useFeatureFlag';
 export type { FeatureFlagState } from './useFeatureFlag';
 export { PRODUCT_VISIBILITY_FLAG, useProductVisibility } from './useProductVisibility';
+export { MY_TABLE_API_ACCESS, useTableApiAccess } from './useTableApiAccess';
+export type { TableApiAccess } from './useTableApiAccess';
 export type { ProductVisibility } from './useProductVisibility';
 export { applyPageMeta, pageTitle, usePageMeta } from './usePageMeta';
 export type { PageMetaInput } from './usePageMeta';

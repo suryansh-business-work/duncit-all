@@ -22,6 +22,8 @@ exports:
   - 'PUBLIC_FEATURE_FLAGS'
   - 'useProductVisibility'
   - 'PRODUCT_VISIBILITY_FLAG'
+  - 'useTableApiAccess'
+  - 'MY_TABLE_API_ACCESS'
   - 'LANGUAGE_PREFERENCE_FLAG'
   - 'LocaleProvider'
   - 'AppLocaleProvider'
@@ -226,6 +228,25 @@ function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
 `PRODUCT_VISIBILITY_FLAG` is the key itself (`'is_product_visible'`), for a caller that
 already has the whole flag map from `useFeatureFlags()`.
 
+### `useTableApiAccess`
+
+The signed-in person's personal token for the table GET API, plus its base URL. Every
+`@duncit/table` "GET API" dialog reads it to build a ready-to-copy URL; Tech → Table API →
+Settings generates, rotates and revokes it (refetch `MY_TABLE_API_ACCESS` after a change).
+Pass `false` until the dialog is open — the query is skipped until then.
+
+```ts
+const { loading, token, baseUrl, error } = useTableApiAccess(open);
+
+// no token generated yet:
+token     // null
+baseUrl   // 'https://server.duncit.com/table-api'
+
+// after Tech → Table API → Settings → Generate:
+token     // 'dtt_9f3c…'
+`${baseUrl}/podsTable?token=${token}&page=1&page_size=25`
+```
+
 `LANGUAGE_PREFERENCE_FLAG` (`'language_preference'`) is the key behind the language
 switcher: mWeb's account page, the native account screen, every portal's profile page and
 the taskbar clock tray read it through `useFeatureFlag` and render nothing while it is off.
@@ -280,6 +301,7 @@ Pass the bundle. Calling `useTranslation()` bare outside a provider renders raw 
 | `useDateFormat` | `(options?: { timeZoneAware?: boolean }) => DateFormatter` | `timeZoneAware: false` | Formatter driven by `publicAppSettings`. |
 | `useFeatureFlag` | `(key: string, defaultValue?: boolean) => boolean` | `false` | Returns `defaultValue` while loading and for unknown keys. |
 | `useProductVisibility` | `() => { pending: boolean; visible: boolean }` | `{ pending: true, visible: false }` | The product kill switch. Hide on `visible`; wait on `pending` before redirecting. |
+| `useTableApiAccess` | `(enabled: boolean) => { loading: boolean; token: string \| null; baseUrl: string; error: boolean }` | skipped while `enabled` is false | The caller's table GET API token and base URL. |
 | `useTranslation` | `(fallback?: FlatCatalogue) => LocaleContextValue` | — | `{ t, has, locale, isRtl, locales, setLocale }`. Never throws. |
 
 ### Providers

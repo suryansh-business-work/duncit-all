@@ -1557,6 +1557,8 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@mui/icons-material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@mui/x-date-pickers", range: "^9.12.0", kind: "devDependencies" },

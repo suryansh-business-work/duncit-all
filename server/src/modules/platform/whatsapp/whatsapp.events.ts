@@ -665,7 +665,7 @@ export const WA_EVENTS: readonly WaEvent[] = [
   },
   {
     key: 'SUPPORT_TICKET_UPDATED',
-    campaign: 'support_ticket_seen',
+    campaign: 'support_ticket_opened',
     audience: 'SUPPORT',
     category: 'support',
     fires: 'A support ticket is updated',

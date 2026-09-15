@@ -181,9 +181,10 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Open your Club Studio to take it on or pass: https://mweb.duncit.com/change-requests — Team Duncit',
   },
   /*
-   * Sent when a support agent first opens the ticket — the "seen" moment, which
-   * is what the campaign is named for. There was never a template behind it; the
-   * nearest one, `support_update`, takes four values to this scenario's three.
+   * Sent when a support agent first opens the ticket, which is what the campaign
+   * is named for. There was never a template behind it; the nearest one,
+   * `support_update`, takes four values to this scenario's three. It was first
+   * named `support_ticket_seen`, a name AiSensy still holds and will not reissue.
    */
   SUPPORT_TICKET_UPDATED: {
     category: 'UTILITY',

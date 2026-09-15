@@ -3,7 +3,11 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { aisensyService } from '@modules/platform/aisensy/aisensy.service';
-import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
+import {
+  INVALID_NUMBER_REASON,
+  isAisensyConfigured,
+} from '@modules/platform/aisensy/aisensy.gateway';
+import { isWhatsappDestination } from '@utils/phone';
 import {
   recordManualSend,
   WA_MANUAL_EVENT_KEY,
@@ -152,9 +156,21 @@ const RECIPIENT_TABLE_CONFIG: TableEntityConfig = {
     name: 'name',
     destination: 'destination',
     status: 'status',
+    reason: 'reason',
+    template_params: 'template_params',
+    submitted_message_id: 'submitted_message_id',
+    attempts: 'attempts',
     created_at: 'created_at',
   },
-  filterFields: { status: { type: 'enum' } },
+  filterFields: {
+    name: { type: 'string' },
+    status: { type: 'enum' },
+    reason: { type: 'string' },
+    template_params: { type: 'string' },
+    submitted_message_id: { type: 'string' },
+    attempts: { type: 'number' },
+    created_at: { type: 'date' },
+  },
   // Send order — the run reads top to bottom the way it happened.
   defaultSort: { created_at: 1 },
 };
@@ -336,6 +352,9 @@ async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRo
   if (!base.destination) {
     return { ...base, status: 'SKIPPED', reason: 'No WhatsApp number with a country code' };
   }
+  if (!isWhatsappDestination(base.destination)) {
+    return { ...base, status: 'SKIPPED', reason: INVALID_NUMBER_REASON };
+  }
   if (!base.name) return { ...base, status: 'SKIPPED', reason: 'No name on the account' };
   const { params, missingReason } = fillParams(doc.template_params ?? [], user);
   if (missingReason) return { ...base, status: 'SKIPPED', reason: missingReason };
@@ -367,6 +386,14 @@ async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRo
   }
 }
 
+/**
+ * The error on a send that reached nobody. It carries the first recipient's own
+ * reason: a campaign that does not exist fails every recipient the same way, and
+ * "No message could be delivered" alone sent the reader into the rows to find it.
+ */
+const nobodyReached = (reason: string) =>
+  reason ? `No message could be delivered: ${reason}` : 'No message could be delivered';
+
 const COUNTER_OF: Record<WaRecipientStatus, 'sent_count' | 'skipped_count' | 'failed_count'> = {
   SENT: 'sent_count',
   SKIPPED: 'skipped_count',
@@ -390,6 +417,7 @@ async function runSend(campaignId: string) {
     doc.recipient_count = users.length;
     await doc.save();
     let pending: RecipientRow[] = [];
+    let firstReason = '';
     // Rows land in batches rather than one insert per message: the send is
     // already one HTTP call per recipient without adding a write to each.
     const flush = async () => {
@@ -400,12 +428,13 @@ async function runSend(campaignId: string) {
     for (const [index, user] of users.entries()) {
       const row = await deliver(doc, user);
       doc[COUNTER_OF[row.status]] += 1;
+      firstReason ||= row.reason;
       pending.push(row);
       if (index % PROGRESS_EVERY === PROGRESS_EVERY - 1) await flush();
     }
     await flush();
     doc.status = doc.sent_count > 0 ? 'SENT' : 'FAILED';
-    if (doc.sent_count === 0) doc.error = 'No message could be delivered';
+    if (doc.sent_count === 0) doc.error = nobodyReached(firstReason);
     doc.sent_at = new Date();
   } catch (e: any) {
     doc.status = 'FAILED';
@@ -496,7 +525,7 @@ async function runRetry(campaignId: string) {
     }
     await refreshCounters(doc);
     doc.status = doc.sent_count > 0 ? 'SENT' : 'FAILED';
-    doc.error = doc.sent_count > 0 ? null : 'No message could be delivered';
+    doc.error = doc.sent_count > 0 ? null : nobodyReached(rows.find((row) => row.reason)?.reason ?? '');
   } catch (e: any) {
     doc.status = 'FAILED';
     doc.error = str(e?.message) || 'WhatsApp campaign retry failed';

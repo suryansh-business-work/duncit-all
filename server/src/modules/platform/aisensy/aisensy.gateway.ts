@@ -129,6 +129,22 @@ export function isMediaMissing(error: unknown): boolean {
 }
 
 /**
+ * Is this AiSensy's "no campaign by that name" rejection (`Campaign does not
+ * exist.`)?
+ *
+ * A campaign is created at AiSensy, never by a send, so the vendor's sentence
+ * leaves the reader guessing whether the name, the key or the project is wrong.
+ * Recognising it lets the log row name the screen that creates the campaign.
+ */
+export function isCampaignMissing(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : JSON.stringify(error ?? '')).toLowerCase();
+  return message.includes('campaign') && message.includes('does not exist');
+}
+
+/** The reason a send to a number no WhatsApp account can live on is refused. */
+export const INVALID_NUMBER_REASON = 'Not a valid WhatsApp mobile number';
+
+/**
  * Did AiSensy take the message? Its own answer is the STRING `"true"` alongside
  * HTTP 200, so an `res.ok` check on its own reports rejections as sends.
  */

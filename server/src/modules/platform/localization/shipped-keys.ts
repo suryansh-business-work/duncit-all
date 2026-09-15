@@ -4388,6 +4388,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "media.picker.open": "Open",
   "media.picker.pexelsPhotos": "Pexels photos",
   "media.picker.pexelsVideos": "Pexels videos",
+  "media.picker.pickUpToAny": "Pick up to {max} — from your device, from Pexels, or both.",
   "media.picker.pickUpToDevice": "Pick up to {max} from your device.",
   "media.picker.remove": "Remove",
   "media.picker.removeAttachment": "Remove attachment",

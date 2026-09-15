@@ -26,6 +26,7 @@ export const MEDIA_BUNDLE: NestedCatalogue = {
       useThis: 'Use this image',
       useTheseCount: 'Use these {count}',
       pickUpToDevice: 'Pick up to {max} from your device.',
+      pickUpToAny: 'Pick up to {max} — from your device, from Pexels, or both.',
       remove: 'Remove',
       removeImage: 'Remove image',
       removeAttachment: 'Remove attachment',

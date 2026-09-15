@@ -404,20 +404,28 @@ describe('SelectionTray', () => {
   const URLS = ['https://ik.imagekit.io/a.jpg', 'https://ik.imagekit.io/b.jpg'];
 
   it('numbers what has been picked, because the first one is the cover', () => {
-    const { container } = wrap(<SelectionTray urls={URLS} max={5} onRemove={vi.fn()} />);
+    const { container } = wrap(<SelectionTray urls={URLS} max={5} onRemove={vi.fn()} deviceOnly={false} />);
 
     expect(container.textContent).toContain('2 of 5');
   });
 
   it('renders an empty tray without pretending something is chosen', () => {
-    const { container } = wrap(<SelectionTray urls={[]} max={5} onRemove={vi.fn()} />);
+    const { container } = wrap(<SelectionTray urls={[]} max={5} onRemove={vi.fn()} deviceOnly={false} />);
 
     expect(container.textContent).toContain('0 of 5');
+    expect(container.textContent).toContain('Pick up to 5 — from your device, from Pexels, or both.');
+  });
+
+  it('leaves Pexels out of the empty hint when only the device tab is offered', () => {
+    const { container } = wrap(<SelectionTray urls={[]} max={5} onRemove={vi.fn()} deviceOnly />);
+
+    expect(container.textContent).toContain('Pick up to 5 from your device.');
+    expect(container.textContent).not.toContain('Pexels');
   });
 
   it('removes by URL, which is what the caller holds', () => {
     const onRemove = vi.fn();
-    const { container } = wrap(<SelectionTray urls={URLS} max={5} onRemove={onRemove} />);
+    const { container } = wrap(<SelectionTray urls={URLS} max={5} onRemove={onRemove} deviceOnly={false} />);
 
     for (const control of container.querySelectorAll<HTMLElement>('button')) {
       fireEvent.click(control);

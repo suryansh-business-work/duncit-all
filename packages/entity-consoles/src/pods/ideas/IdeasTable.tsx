@@ -135,6 +135,7 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       {
         field: 'title',
         headerName: t('admin.podIdeas.colIdea'),
+        type: 'text',
         flex: 1.4,
         minWidth: 240,
         cellRenderer: renderIdea,
@@ -143,7 +144,10 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       {
         field: 'author',
         headerName: t('admin.podIdeas.colAuthor'),
+        type: 'text',
+        // Resolved per row from the users collection — the idea stores only the author's id.
         sortable: false,
+        filterable: false,
         minWidth: 200,
         cellRenderer: renderAuthor,
         valueGetter: (it) => it.author?.full_name ?? '—',
@@ -151,7 +155,10 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       {
         field: 'engagement',
         headerName: t('admin.podIdeas.colEngagement'),
+        type: 'text',
+        // Three counts at once, two of them list lengths — no single stored value to order or match on.
         sortable: false,
+        filterable: false,
         width: 150,
         cellRenderer: (row: IdeaRow) => renderEngagement(row, t),
         valueGetter: (it) => `${it.likes_count} likes · ${it.comments_count} comments · ${it.shares_count} shares`,
@@ -159,7 +166,8 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: STATUS_FILTER_OPTIONS },
+        type: 'enum',
+        options: STATUS_FILTER_OPTIONS,
         width: 140,
         cellRenderer: renderStatus,
         valueGetter: (it) => it.status,
@@ -167,11 +175,11 @@ export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus,
       {
         field: 'created_at',
         headerName: t('shell.common.created'),
-        filter: { type: 'date' },
+        type: 'date',
         width: 170,
         valueGetter: (it) => (it.created_at ? formatDateTime(it.created_at) : '—'),
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
     ];
   }, [onView, onSetStatus, onDelete]);
 

@@ -31,6 +31,9 @@ export function ExploreReels() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
+  // Reels start muted; once unmuted the choice carries across swipes.
+  const [soundOn, setSoundOn] = useState(false);
+  const toggleSound = () => setSoundOn((on) => !on);
   const { onPrimary } = useThemeColors();
   const screen = useScreenRefresh();
   const { openPod: navOpenPod, openClub: navOpenClub } = useDetailNav();
@@ -138,6 +141,8 @@ export function ExploreReels() {
                 onToggleLike={() => toggleLike(item.id, like)}
                 onComment={() => setCommentsPod(item)}
                 onShowLikers={() => setLikersPod(item)}
+                soundOn={soundOn}
+                onToggleSound={toggleSound}
               />
             );
           }}

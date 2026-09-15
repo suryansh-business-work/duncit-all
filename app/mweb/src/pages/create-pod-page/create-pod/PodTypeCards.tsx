@@ -58,6 +58,9 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
     if (free) {
       setValue('pod_type', 'FREE', { shouldDirty: true, shouldValidate: true });
       setValue('pod_amount', 0, { shouldDirty: true, shouldValidate: true });
+      // A free pod has no ticket price to discount, so its offer goes with it.
+      setValue('ticket_discount_enabled', false, { shouldDirty: true, shouldValidate: true });
+      setValue('ticket_discount_tiers', [], { shouldDirty: true, shouldValidate: true });
     } else {
       setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
       // The ₹0 a Free pod forces was never typed by the host — a paid pod goes

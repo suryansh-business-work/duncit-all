@@ -1,7 +1,5 @@
-import { formResolver } from '../../utils/form-resolver';
-import { useEffect } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -12,15 +10,10 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { ContentCheckNotice } from './ContentCheckNotice';
+import { PodEditTicketDiscount } from './PodEditTicketDiscount';
 import { PodSpotsField } from './PodSpotsField';
-import { usePodEditSave } from './usePodEditSave';
-import { usePodSpotLimits } from './usePodSpotLimits';
-import {
-  podEditInitialValues,
-  podEditSchema,
-  type HostPodSummary,
-  type PodEditValues,
-} from './pod-edit.form';
+import { usePodEditForm } from './usePodEditForm';
+import type { HostPodSummary } from './pod-edit.form';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
@@ -30,7 +23,8 @@ interface Props {
 }
 
 /**
- * Host's pod edit sheet — title, images, description and the pod's capacity.
+ * Host's pod edit sheet — title, images, description, the pod's capacity and
+ * (for a paid pod) its multi-ticket discount.
  *
  * "Flexible pod count": a pod published with fewer spots than the space it
  * booked can hold is not stuck that way. The range comes from the server, which
@@ -43,37 +37,9 @@ interface Props {
 export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setError, setValue } = useForm<
-    PodEditValues,
-    any,
-    PodEditValues
-  >({
-    resolver: formResolver<PodEditValues>(podEditSchema),
-    defaultValues: podEditInitialValues(pod),
-  });
-  const limits = usePodSpotLimits(pod?.id);
-  const { busy, error, blocked, save, clear } = usePodEditSave(
-    pod?.id,
-    setError,
-    onSaved,
-    !!limits,
-  );
-
-  useEffect(() => {
-    reset(podEditInitialValues(pod));
-    clear();
-    // `clear` is a fresh closure each render; re-seeding is keyed on the pod.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pod, reset]);
-
-  // The limits land after the reset above, so the capacity is seeded from the
-  // SERVER's current figure rather than the row the list happened to hold.
-  useEffect(() => {
-    if (limits) setValue('no_of_spots_text', String(limits.current));
-  }, [limits, setValue]);
-
+  const { form, free, limits, busy, error, blocked, save } = usePodEditForm(pod, onSaved);
+  const { control, handleSubmit } = form;
   const submit = handleSubmit(save);
-
   const dismiss = busy ? undefined : onClose;
 
   return (
@@ -166,6 +132,9 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       )}
                     />
                   ) : null}
+                  {free ? null : (
+                    <PodEditTicketDiscount form={form} unitPrice={Number(pod?.pod_amount) || 0} />
+                  )}
                   <ContentCheckNotice
                     violations={blocked}
                     title={t('mweb.hostPodEdit.contentCheck')}

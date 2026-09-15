@@ -24,6 +24,8 @@ interface Props {
   onDuplicate: (p: CatalogBrandProductRow) => void;
 }
 
+const LISTING_REVIEW_OPTIONS = Object.keys(REQUEST_STATUS_COLOR).map((value) => ({ value, label: value }));
+
 const getRowId = (p: CatalogBrandProductRow) => p.id;
 
 const renderCover = (p: CatalogBrandProductRow) => (
@@ -97,34 +99,40 @@ export default function CatalogBrandProductsTable({
     );
 
     return [
-      { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
+      // A decorative thumbnail — no value to order or match.
+      { field: 'cover', headerName: '', type: 'actions', width: 64, cellRenderer: renderCover },
       {
         field: 'product_name',
         headerName: t('products.brandProducts.colProduct'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderProduct,
         valueGetter: (p) => p.product_name,
       },
-      { field: 'sku', headerName: 'SKU', filter: { type: 'text' }, width: 140 },
+      { field: 'sku', headerName: 'SKU', type: 'text', width: 140 },
       {
         field: 'selling_price',
         headerName: t('products.brandProducts.colPrice'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 120,
         valueGetter: priceValue,
       },
       {
         field: 'available',
         headerName: t('products.brandProducts.colAvailable'),
+        type: 'number',
+        // Stock less open requests and reservations, computed per row — no stored path to order or match.
         sortable: false,
+        filterable: false,
         width: 110,
         valueGetter: (p) => p.available_count,
       },
       {
         field: 'listing_review_status',
         headerName: t('products.brandProducts.colListingReview'),
-        sortable: false,
+        type: 'enum',
+        options: LISTING_REVIEW_OPTIONS,
         width: 140,
         cellRenderer: renderListingStatus,
         valueGetter: (p) => p.listing_review_status,
@@ -132,15 +140,14 @@ export default function CatalogBrandProductsTable({
       {
         field: 'commission_pct',
         headerName: t('products.brands.colCommission'),
-        sortable: false,
+        type: 'number',
         width: 120,
         valueGetter: (p) => `${p.commission_pct}%`,
       },
       {
         field: 'is_active',
         headerName: t('products.brands.colActive'),
-        sortable: false,
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 110,
         cellRenderer: renderActive,
         valueGetter: activeValue,
@@ -148,7 +155,8 @@ export default function CatalogBrandProductsTable({
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         hide: true,
         width: 130,
         cellRenderer: renderStatus,
@@ -157,7 +165,7 @@ export default function CatalogBrandProductsTable({
       {
         field: 'created_at',
         headerName: t('products.brandProducts.colAdded'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (p) => (p.created_at ? formatDate(p.created_at) : '—'),
@@ -165,7 +173,7 @@ export default function CatalogBrandProductsTable({
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 170,
         cellRenderer: renderActions,
       },

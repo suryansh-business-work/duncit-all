@@ -8,6 +8,11 @@ import { ACCOUNT_DELETION_RUNS, type DeletionRun } from './queries';
 
 const getRowId = (row: DeletionRun) => row.id;
 
+// The chips show the stored codes as they are, so the filter offers the same words.
+const codeOptions = (codes: ReadonlyArray<string>) => codes.map((code) => ({ value: code, label: code }));
+const TRIGGER_OPTIONS = codeOptions(['SCHEDULED', 'MANUAL']);
+const STATUS_OPTIONS = codeOptions(['RUNNING', 'SUCCEEDED', 'FAILED']);
+
 // Cells live at module scope so a re-render does not hand the table a brand-new
 // component type per column (S6478).
 const renderRunId = (row: DeletionRun) => (
@@ -80,35 +85,43 @@ export default function RunHistoryDialog({ open, onClose }: Readonly<Props>) {
       {
         field: 'run_id',
         headerName: t('admin.accountDeletion.runReference'),
+        type: 'text',
         width: 165,
         cellRenderer: renderRunId,
       },
       {
         field: 'started_at',
         headerName: t('admin.accountDeletion.runStarted'),
+        type: 'date',
         width: 190,
         cellRenderer: renderStarted,
       },
       {
         field: 'trigger',
         headerName: t('admin.accountDeletion.runTrigger'),
+        type: 'enum',
+        options: TRIGGER_OPTIONS,
         width: 130,
         cellRenderer: renderTrigger,
       },
       {
         field: 'status',
         headerName: t('admin.accountDeletion.runStatus'),
+        type: 'enum',
+        options: STATUS_OPTIONS,
         width: 130,
         cellRenderer: renderStatus,
       },
       {
         field: 'eligible',
         headerName: t('admin.accountDeletion.runEligible'),
+        type: 'number',
         width: 110,
       },
       {
         field: 'purged',
         headerName: t('admin.accountDeletion.runPurged'),
+        type: 'number',
         width: 150,
         cellRenderer: renderOutcome,
       },

@@ -159,6 +159,7 @@ const POLICY_TABLE_CONFIG: TableEntityConfig = {
     is_active: { type: 'boolean' },
     requires_signup_acceptance: { type: 'boolean' },
     policy_no: { type: 'string' },
+    title: { type: 'string' },
     slug: { type: 'string' },
     policy_type: { type: 'string' },
     sort_order: { type: 'number' },

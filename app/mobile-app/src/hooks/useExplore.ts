@@ -26,9 +26,11 @@ export function useExplore() {
   const { selectedSuperId } = useSuperCategories();
   const { selectedId: selectedLocationId } = useLocations();
 
+  // The city is a server filter (the pod's city, a venue in it, or a virtual
+  // pod), so another city's reels never reach the feed; picking a city refetches.
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetch(selectedLocationId);
+  }, [fetch, selectedLocationId]);
 
   const clubsById = useMemo(() => {
     const map = new Map<string, ExploreClub>();
@@ -41,16 +43,9 @@ export function useExplore() {
       // Explore is reel-only: the server filters on has_reel, but guard against
       // stale caches / older servers so a card never renders without a video.
       if (!p.reel_url) return false;
-      if (selectedSuperId && clubsById.get(p.club_id)?.super_category_id !== selectedSuperId) {
-        return false;
-      }
-      // Virtual pods are location-independent — they show under the Super Category
-      // regardless of the selected city (bug: hidden by the location filter).
-      const isVirtual = p.pod_mode === 'VIRTUAL';
-      if (selectedLocationId && !isVirtual && p.location_id !== selectedLocationId) return false;
-      return true;
+      return !selectedSuperId || clubsById.get(p.club_id)?.super_category_id === selectedSuperId;
     });
-  }, [data?.pods, clubsById, selectedSuperId, selectedLocationId]);
+  }, [data?.pods, clubsById, selectedSuperId]);
 
   const serverSaved = useMemo(
     () => new Set(data?.me?.saved_pod_ids ?? []),
@@ -69,7 +64,7 @@ export function useExplore() {
   // render becomes a changing dependency in a caller's effect, and an effect
   // that refetches then loops. See the ~35,000-request incident in useSupport.
 
-  const refetch = useCallback(() => fetch(true), [fetch]);
+  const refetch = useCallback(() => fetch(selectedLocationId, true), [fetch, selectedLocationId]);
 
   useRefreshRegistration(refetch);
 

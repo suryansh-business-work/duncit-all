@@ -52,6 +52,7 @@ export function memberColumns(
     {
       field: 'name',
       headerName: t('partners.regional.clubAdmin'),
+      type: 'text',
       flex: 1,
       minWidth: 220,
       cellRenderer: renderPerson,
@@ -60,15 +61,16 @@ export function memberColumns(
     {
       field: 'clubs',
       headerName: t('partners.regional.clubs'),
+      type: 'text',
       flex: 1,
       minWidth: 240,
-      sortable: false,
       cellRenderer: renderClubs,
       valueGetter: (row) => row.clubs.join(', '),
     },
     {
       field: 'club_count',
       headerName: t('partners.regional.clubCount'),
+      type: 'number',
       width: 110,
       valueGetter: (row) => row.club_count,
     },

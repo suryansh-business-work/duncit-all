@@ -10,6 +10,8 @@ export const MobileDummyProductCheckoutDocument = gql(`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -41,6 +43,8 @@ export const MobileCreateRazorpayProductOrderDocument = gql(`
         payment_id
         invoice_no
         total
+        ticket_discount_amount
+        ticket_discount_pct
         currency_symbol
         status
         paid_at

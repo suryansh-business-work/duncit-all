@@ -38,16 +38,18 @@ export default function MembershipSubscribersPage() {
 
   const columns = useMemo<DuncitColumn<SubscriberRow>[]>(
     () => [
-      { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 240 },
+      { field: 'email', headerName: t('shell.common.email'), type: 'text', flex: 1, minWidth: 240 },
       {
         field: 'name',
         headerName: t('shell.common.name'),
+        type: 'text',
         minWidth: 200,
         valueGetter: (r) => r.name || '—',
       },
       {
         field: 'created_at',
         headerName: t('admin.membership.signedUp'),
+        type: 'date',
         minWidth: 200,
         valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
       },

@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types, type Document } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { isEmailAddress } from '@utils/email';
+import type { TableQueryInput } from '@utils/table-query';
 import { SIGNATURE_METHODS, type ISignatory, type SignatureMethod } from './signing.model';
 
 /**
@@ -175,6 +176,28 @@ export function signatoriesForPdf(signatories: Types.DocumentArray<ISignatory>) 
     signature_image: s.signature_image,
     signed_at: s.signed_at,
   }));
+}
+
+/**
+ * A signable table's `signing_status` column filter, as a condition on the
+ * stored `signed_at` it is derived from.
+ *
+ * The status never lives on the document, so the table engine's allowlist
+ * cannot match it: an `in` of SIGNED / UNSIGNED is lifted out here into
+ * "has / has not been signed", and the remaining query goes to the engine.
+ * Both or neither ticked is no condition at all.
+ */
+export function liftSigningStatusFilter(input?: TableQueryInput | null): {
+  base: Record<string, unknown>;
+  query: TableQueryInput;
+} {
+  const filters = input?.filters ?? [];
+  const status = filters.find((f) => f.field === 'signing_status' && f.op === 'in');
+  const query = { ...input, filters: filters.filter((f) => f.field !== 'signing_status') };
+  const wanted = new Set(status?.values ?? []);
+  const signed = wanted.has('SIGNED');
+  if (signed === wanted.has('UNSIGNED')) return { base: {}, query };
+  return { base: { signed_at: signed ? { $ne: null } : null }, query };
 }
 
 /** Refuse an address the mail server would only bounce. */

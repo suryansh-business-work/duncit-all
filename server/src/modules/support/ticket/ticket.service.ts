@@ -25,11 +25,18 @@ import {
   type TranscriptData,
   type TranscriptFormat,
 } from '@modules/support/transcript';
-import { paginateDocs, paginateDocsRanked, supportSearchRegex } from '@modules/support/support.pagination';
+import {
+  paginateDocs,
+  paginateDocsRanked,
+  supportSearchRegex,
+  withColumnFilters,
+  type SupportPageOpts,
+} from '@modules/support/support.pagination';
 import { notifyEvent } from '@services/notify/notify.service';
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
 import { trimTrailingSlash } from '@utils/url';
+import type { TableFieldConfig } from '@utils/table-query';
 
 const TICKET_SORTABLE = new Set([
   'last_message_at',
@@ -37,7 +44,20 @@ const TICKET_SORTABLE = new Set([
   'status',
   'priority',
   'subject',
+  'category',
+  'source',
 ]);
+
+/** Column filters the agent tickets table may send — stored fields only. */
+const TICKET_FILTERABLE: Record<string, TableFieldConfig> = {
+  subject: { type: 'string' },
+  category: { type: 'enum' },
+  source: { type: 'enum' },
+  status: { type: 'enum' },
+  priority: { type: 'enum' },
+  last_message_at: { type: 'date' },
+  created_at: { type: 'date' },
+};
 
 /** Display order for the agent list's priority-first sort: the selected
  * priority leads, the rest follow by severity. */
@@ -638,22 +658,21 @@ export const ticketService = {
     return pub;
   },
 
-  async list(opts: {
-    status?: TicketStatus;
-    assigneeId?: string;
-    search?: string;
-    page?: number | null;
-    page_size?: number | null;
-    sort_by?: string | null;
-    sort_dir?: string | null;
-    priority_first?: TicketPriority | null;
-  }) {
-    const q: any = {};
-    if (opts.status) q.status = opts.status;
+  async list(
+    opts: {
+      status?: TicketStatus;
+      assigneeId?: string;
+      search?: string;
+      priority_first?: TicketPriority | null;
+    } & SupportPageOpts
+  ) {
+    const base: any = {};
+    if (opts.status) base.status = opts.status;
     if (opts.assigneeId && Types.ObjectId.isValid(opts.assigneeId)) {
-      q.assignee_id = new Types.ObjectId(opts.assigneeId);
+      base.assignee_id = new Types.ObjectId(opts.assigneeId);
     }
-    if (opts.search) q.subject = supportSearchRegex(opts.search);
+    if (opts.search) base.subject = supportSearchRegex(opts.search);
+    const q = withColumnFilters(base, opts, TICKET_FILTERABLE);
     const rankOrder = opts.priority_first ? PRIORITY_FIRST_ORDER[opts.priority_first] : null;
     const { docs, total, page, page_size } = rankOrder
       ? await paginateDocsRanked<ITicket>(TicketModel, q, opts, TICKET_SORTABLE, { last_message_at: -1 }, { field: 'priority', order: rankOrder })

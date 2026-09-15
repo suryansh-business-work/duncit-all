@@ -52,19 +52,39 @@ export interface TablePage<T> {
 
 export type TableFetch<T> = (q: TableQueryState) => Promise<TablePage<T>>;
 
-export type DuncitColumnFilter =
-  | { type: 'text' }
-  | {
-      type: 'select';
-      options: ReadonlyArray<{ value: string; label: string }>;
-      multiple?: boolean;
-    }
-  | { type: 'number' } // renders min/max -> gte/lte/between
-  | { type: 'date' } // renders from/to (MUI X pickers) -> between with ISO values
-  | { type: 'boolean' };
+/**
+ * What a column HOLDS — the one declaration its filter control, its filter
+ * operators, its first sort direction and `clientTableFetch`'s comparisons are
+ * all derived from.
+ *
+ * - `text`    contains / equals / not equal
+ * - `number`  = ≠ ≥ ≤ between, compared numerically
+ * - `date`    from / to (either optional), compared chronologically
+ * - `boolean` yes / no
+ * - `enum`    one or more of `options`
+ * - `actions` row controls — never sorted, never filtered
+ */
+export type DuncitColumnType = 'text' | 'number' | 'date' | 'boolean' | 'enum' | 'actions';
 
-export interface DuncitColumn<T> {
-  field: string; // server-side sort/filter key AND row accessor
+/** Every type a filter control exists for. */
+export type FilterableColumnType = Exclude<DuncitColumnType, 'actions'>;
+
+export type DuncitColumnOption = { value: string; label: string };
+
+/** The type, and the options an `enum` column must carry. */
+export type DuncitColumnKind =
+  | { type: Exclude<DuncitColumnType, 'enum'> }
+  | { type: 'enum'; options: ReadonlyArray<DuncitColumnOption> };
+
+export type DuncitColumn<T> = DuncitColumnBase<T> & DuncitColumnKind;
+
+interface DuncitColumnBase<T> {
+  /**
+   * The server-side sort/filter key AND the row accessor. A dotted path
+   * (`venue_category.category_name`) reads a nested value, so a column whose
+   * cell shows a composite still sorts and filters on the raw value beneath it.
+   */
+  field: string;
   /** The header, already translated by whoever built the column. */
   headerName?: string;
   /**
@@ -76,8 +96,13 @@ export interface DuncitColumn<T> {
    * baked into a definition (rule 38). Pass one or the other, never both.
    */
   headerKey?: string;
-  sortable?: boolean; // default true
-  filter?: DuncitColumnFilter; // absent => not filterable
+  /**
+   * Every column but `actions` sorts and filters by its type. `false` is for
+   * the one case the data source cannot answer — a value computed per row that
+   * has no stored path to order or match on (a count of another collection).
+   */
+  sortable?: boolean;
+  filterable?: boolean;
   width?: number;
   flex?: number;
   minWidth?: number;

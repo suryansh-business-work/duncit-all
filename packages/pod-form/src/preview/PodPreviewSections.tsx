@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined';
 import RedeemIcon from '@mui/icons-material/RedeemOutlined';
+import type { TicketDiscountRow } from '@duncit/utils';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** A titled block of the pod page, hidden entirely when it has nothing to say. */
 export function PreviewSection({
@@ -91,6 +93,30 @@ export function PreviewCharges({
               flex: '0 0 auto'
             }}>
             {money(charge.amount)}
+          </Typography>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
+/** The multi-ticket offer, one line per tier with what a ticket then costs. */
+export function PreviewTicketDiscount({
+  tiers,
+  money,
+}: Readonly<{ tiers: TicketDiscountRow[]; money: (n: number) => string }>) {
+  const { t } = useTranslation();
+  return (
+    <Stack spacing={0.5} divider={<Divider flexItem />}>
+      {tiers.map((tier) => (
+        <Stack key={tier.min_tickets} direction="row" spacing={1} sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="body2">
+            {t('podForm.preview.ticketDiscountTier', {
+              vars: { count: tier.min_tickets, pct: tier.discount_pct },
+            })}
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 700, flex: '0 0 auto' }}>
+            {money(tier.per_ticket)}
           </Typography>
         </Stack>
       ))}

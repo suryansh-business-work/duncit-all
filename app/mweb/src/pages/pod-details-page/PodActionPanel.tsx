@@ -3,6 +3,7 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { podPhase } from '@duncit/utils';
 import { DuncitButton } from '@duncit/buttons';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
+import BookingPriceLabel from './BookingPriceLabel';
 import MemberPanel from './MemberPanel';
 import ReferralRefillPanel from './ReferralRefillPanel';
 import { BarLabel, BarNotice } from './BarLabel';
@@ -133,19 +134,11 @@ export default function PodActionPanel({
   const maxSeats = Number(ms?.max_seats_per_booking ?? 1);
   const isFull = ms?.can_join === false;
   const bookLabel = isFree ? t('mweb.podDetails.join') : t('mweb.podDetails.bookNow');
-  const priceValue = isFree
-    ? t('mweb.podDetails.free')
-    : priceFormat(Number(pod.pod_amount || 0) * seats);
   const busy = isFree && joining;
 
   return (
     <Stack direction="row" spacing={1.5} data-testid="pod-action-panel" sx={{ alignItems: 'center', pl: 1 }}>
-      <BarLabel
-        caption={isFree ? t('mweb.podDetails.entry') : t('mweb.podDetails.price')}
-        value={priceValue}
-        emphasis="price"
-        valueTestId="pod-price"
-      />
+      <BookingPriceLabel pod={pod} isFree={isFree} seats={seats} priceFormat={priceFormat} />
       <SeatPicker
         value={seats}
         onChange={onSeatsChange}

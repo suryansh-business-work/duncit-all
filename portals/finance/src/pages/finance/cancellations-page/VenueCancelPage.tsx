@@ -2,14 +2,9 @@ import { useCallback, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import type { TableQueryState } from '@duncit/table';
 import CancellationsTable from './CancellationsTable';
 import CancellationDetailDialog from './CancellationDetailDialog';
-import {
-  applyCancellationQuery,
-  POD_CANCELLATIONS,
-  type PodCancellationRow,
-} from './queries';
+import { POD_CANCELLATIONS, type PodCancellationRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
 /** Pods cancelled from the venue's side (booking request declined). */
@@ -18,17 +13,14 @@ export default function VenueCancelPage() {
   const client = useApolloClient();
   const [selected, setSelected] = useState<PodCancellationRow | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
-        query: POD_CANCELLATIONS,
-        variables: { kind: 'VENUE' },
-        fetchPolicy: 'network-only',
-      });
-      return applyCancellationQuery(result.data?.podCancellations ?? [], q);
-    },
-    [client],
-  );
+  const loadRows = useCallback(async () => {
+    const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
+      query: POD_CANCELLATIONS,
+      variables: { kind: 'VENUE' },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.podCancellations ?? [];
+  }, [client]);
 
   return (
     <Box>
@@ -62,7 +54,7 @@ export default function VenueCancelPage() {
 
       <CancellationsTable
         tableId="finance-cancellations-venue"
-        fetchRows={fetchRows}
+        loadRows={loadRows}
         onRowClick={setSelected}
         emptyText={t('finance.cancellations.noVenueDeclinedPodsYet')}
       />

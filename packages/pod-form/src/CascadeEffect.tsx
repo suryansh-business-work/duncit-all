@@ -26,7 +26,7 @@ function clearVirtualFields(values: PodFormValues, setValue: UseFormSetValue<Pod
  * Keeps dependent fields consistent inside the RHF tree:
  * - clears venue/meeting/place/product fields when the pod mode flips
  * - resets venue when the club no longer links the selected venue
- * - forces pod_amount = 0 for FREE pod types
+ * - forces pod_amount = 0 and clears the multi-ticket discount for FREE pod types
  * - drops product rows the newly-selected club does not offer
  */
 export default function CascadeEffect() {
@@ -63,9 +63,11 @@ export default function CascadeEffect() {
   }, [clubId, venueId, clubs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (podType.includes('FREE') && getValues('pod_amount') !== 0) {
-      setValue('pod_amount', 0);
-    }
+    if (!podType.includes('FREE')) return;
+    if (getValues('pod_amount') !== 0) setValue('pod_amount', 0);
+    // A free pod never carries a multi-ticket discount.
+    if (getValues('ticket_discount_enabled')) setValue('ticket_discount_enabled', false);
+    if (getValues('ticket_discount_tiers').length > 0) setValue('ticket_discount_tiers', []);
   }, [podType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Switching category (a club, or an Auto Pod's own pair) switches which

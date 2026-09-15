@@ -1,10 +1,25 @@
 import { z } from 'zod';
-import { isVideoUrl, podModerationImageUrls, type PodSpotLimits } from '@duncit/utils';
+import {
+  isVideoUrl,
+  podModerationImageUrls,
+  ticketDiscountInput,
+  type PodSpotLimits,
+  type TicketDiscountTier,
+} from '@duncit/utils';
 
 import { CategoryMediaType } from '@/generated/graphql/graphql';
+import {
+  blankTicketDiscountValues,
+  hydrateTicketDiscount,
+  refineTicketDiscount,
+  ticketDiscountSchemaShape,
+  type TicketDiscountValues,
+} from '@/components/create-pod/ticket-discount.form';
+import type { Translate } from '@/i18n/fallback';
 
-/** Shapes for the host's pod edit (title, images, description, capacity — 2A). */
-export interface PodEditValues {
+/** Shapes for the host's pod edit (title, images, description, capacity and
+ * the multi-ticket discount — 2A). */
+export interface PodEditValues extends TicketDiscountValues {
   pod_title: string;
   pod_description: string;
   media_text: string;
@@ -19,7 +34,16 @@ export interface HostPodSummary {
   pod_images_and_videos?: { url: string; type: string }[] | null;
   /** Capacity as last published — the edit sheet starts its slider here. */
   no_of_spots?: number | null;
+  pod_type?: string | null;
+  pod_amount?: number | null;
+  ticket_discount_enabled?: boolean | null;
+  ticket_discount_tiers?: readonly TicketDiscountTier[] | null;
 }
+
+/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount — the
+ * sheet hides the field for it. mWeb twin: @duncit/host-pod-actions. */
+export const podEditIsFree = (pod: HostPodSummary | null): boolean =>
+  !pod || (pod.pod_type ?? '').includes('FREE') || !(Number(pod.pod_amount) > 0);
 
 /** The range a live pod may be resized within — one definition, in @duncit/utils. */
 export type { PodSpotLimits } from '@duncit/utils';
@@ -29,6 +53,7 @@ export const blankPodEditValues: PodEditValues = {
   pod_description: '',
   media_text: '',
   no_of_spots_text: '',
+  ...blankTicketDiscountValues,
 };
 
 const splitLines = (text: string) =>
@@ -51,15 +76,37 @@ export const podEditSchema = z.object({
 });
 
 /**
+ * The sheet's full schema: the base fields plus the multi-ticket discount,
+ * validated against the spots the host is choosing (the tiers must fit them)
+ * and skipped for a free pod.
+ */
+export function makePodEditSchema(t: Translate, free: boolean) {
+  return podEditSchema.extend(ticketDiscountSchemaShape).superRefine((values, ctx) => {
+    refineTicketDiscount(
+      {
+        ticket_discount_enabled: values.ticket_discount_enabled,
+        ticket_discount_tiers: values.ticket_discount_tiers,
+        noOfSpots: Number.parseInt(values.no_of_spots_text, 10) || 0,
+        free,
+      },
+      ctx,
+      t,
+    );
+  });
+}
+
+/**
  * Maps the validated values onto the server's HostUpdatePodInput.
  *
  * no_of_spots is omitted until the limits load: without them the form has no
  * range to have picked inside, and sending the seeded 0 would ask the server to
- * empty the pod. mWeb twin: buildHostUpdateInput in @duncit/host-pod-actions.
+ * empty the pod. The discount always travels (off with no tiers for a free
+ * pod), so unchanged tiers are simply re-sent as stored. mWeb twin:
+ * buildHostUpdateInput in @duncit/host-pod-actions.
  */
 export function buildHostUpdateInput(
   values: PodEditValues,
-  options?: Readonly<{ includeSpots?: boolean }>,
+  options?: Readonly<{ includeSpots?: boolean; free?: boolean }>,
 ) {
   return {
     pod_title: values.pod_title.trim(),
@@ -71,6 +118,7 @@ export function buildHostUpdateInput(
     ...(options?.includeSpots
       ? { no_of_spots: Number.parseInt(values.no_of_spots_text, 10) || 0 }
       : {}),
+    ...ticketDiscountInput(values, options?.free ?? false),
   };
 }
 
@@ -115,6 +163,7 @@ export function podEditInitialValues(pod: HostPodSummary | null): PodEditValues 
     pod_description: pod.pod_description ?? '',
     no_of_spots_text: String(pod.no_of_spots ?? ''),
     media_text: (pod.pod_images_and_videos ?? []).map((m) => m.url).join('\n'),
+    ...hydrateTicketDiscount(pod),
   };
 }
 

@@ -296,8 +296,9 @@ const toPub = (t: ITicket) => ({
 
 /** Allowlists for the shared table engine (eventTicketsTable — DUNCIT TABLE
  * CONTRACT v1). Search spans the same code/attendee/event fields as listAdmin.
- * snapshot.pod_date_time is stored as an ISO string, so it sorts fine but is
- * deliberately NOT a date filter. */
+ * snapshot.pod_date_time is stored as an ISO string (toISOString, always UTC),
+ * so it is filtered as a STRING: the table's date filter sends ISO strings too,
+ * and two such strings compare in time order — a Date would match none. */
 const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['ticket_code', 'snapshot.user_name', 'snapshot.user_email', 'snapshot.pod_title'],
   sortFields: {
@@ -314,6 +315,10 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     pod_id: { type: 'string' },
     user_id: { type: 'string' },
+    ticket_code: { type: 'string' },
+    pod_title: { path: 'snapshot.pod_title', type: 'string' },
+    user_name: { path: 'snapshot.user_name', type: 'string' },
+    pod_date_time: { path: 'snapshot.pod_date_time', type: 'string' },
     status: { type: 'enum' },
     checked_in_at: { type: 'date' },
     created_at: { type: 'date' },

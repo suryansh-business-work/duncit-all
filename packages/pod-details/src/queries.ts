@@ -91,6 +91,8 @@ export const PAYMENTS_SELECTION = `
         status
         gateway
         coupon_code
+        ticket_discount_amount
+        ticket_discount_pct
         paid_at
         created_at
       }
@@ -141,6 +143,11 @@ export const POD_DETAIL = gql`
       meeting_url
       pod_type
       pod_amount
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
       pod_occurrence
       no_of_spots
       seats_taken
@@ -264,6 +271,10 @@ export interface PodPaymentRow {
   status: string;
   gateway: string | null;
   coupon_code: string | null;
+  /** Rupees the multi-ticket tier took off, frozen on the payment at checkout (0 when none). */
+  ticket_discount_amount: number;
+  /** That tier's percentage (0 when none). */
+  ticket_discount_pct: number;
   paid_at: string | null;
   created_at: string;
 }
@@ -314,6 +325,7 @@ export const POD_FINANCE_BREAKDOWN = gql`
       collected_total
       refunded_total
       refunded_count
+      ticket_discount_total
       currency_symbol
       has_venue
       completed_at

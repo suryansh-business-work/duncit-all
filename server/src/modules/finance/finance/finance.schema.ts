@@ -276,6 +276,12 @@ export const financeTypeDefs = /* GraphQL */ `
     "Coins this pod's bookings paid back to buyers as reward."
     coins_earned_total: Float!
     """
+    Multi-ticket discounts given across this pod's successful bookings. Like
+    coins, they come off the ticket price before GST, so collected_total is
+    already lower by this much — stated so the gap is explainable.
+    """
+    ticket_discount_total: Float!
+    """
     Money handed back to buyers on this pod. A cancelled pod refunds every
     booking, so collected_total is 0 for it — this is what explains that zero
     rather than leaving it looking like missing money.

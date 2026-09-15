@@ -5,7 +5,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
-import { BRAND_STATUS_COLOR } from './brandStatus';
+import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from './brandStatus';
 import { useDateFormat } from '@duncit/app-settings';
 import type { EcommBrandRow } from './queries';
 import { useTranslation } from '@duncit/shell';
@@ -82,32 +82,39 @@ export default function BrandsReviewTable({
       </DuncitButton>
     );
     return [
-      { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },
+      // A decorative thumbnail — no value to order or match.
+      { field: 'logo', headerName: '', type: 'actions', width: 64, cellRenderer: renderLogo },
       {
         field: 'brand_name',
         headerName: t('products.brands.colBrand'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderBrand,
         valueGetter: (b) => b.brand_name,
       },
       {
         field: 'city',
         headerName: t('products.brands.colLocation'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 150,
         valueGetter: locationValue,
       },
       {
         field: 'approved_product_count',
         headerName: t('products.brands.colApprovedProducts'),
+        type: 'number',
+        // A count of the products collection resolved per row — the brand document holds no path to order or match.
         sortable: false,
+        filterable: false,
         width: 150,
       },
       {
         field: 'pickup',
         headerName: t('products.review.colPickup'),
-        sortable: false,
+        type: 'boolean',
+        // Derived from whether a pickup-location id is set — a yes/no filter cannot match an ObjectId path.
+        filterable: false,
         width: 130,
         cellRenderer: (row: EcommBrandRow) => renderPickup(row, t),
         valueGetter: pickupValue,
@@ -119,25 +126,28 @@ export default function BrandsReviewTable({
         field: 'status',
         headerName: t('shell.common.status'),
         width: 130,
+        type: 'enum',
+        options: BRAND_STATUS_OPTIONS,
+        filterable: false,
         cellRenderer: renderStatus,
         valueGetter: (b) => b.status,
       },
       {
         field: 'submitted_at',
         headerName: t('products.review.colSubmitted'),
-        filter: { type: 'date' },
+        type: 'date',
         width: 130,
         valueGetter: (b) => (b.submitted_at ? formatDate(b.submitted_at) : '—'),
       },
       {
         field: 'created_at',
         headerName: t('shell.common.created'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
       },
-      { field: 'review', headerName: t('products.review.action'), sortable: false, width: 110, cellRenderer: renderReview },
+      { field: 'review', headerName: t('products.review.action'), type: 'actions', width: 110, cellRenderer: renderReview },
     ];
   }, [onReview, formatDate]);
 

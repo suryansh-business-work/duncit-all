@@ -102,6 +102,8 @@ describe('component branch variants', () => {
     } as never;
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={podWith({ place_label: 'Cafe' })}
         club={club}
         width={390}

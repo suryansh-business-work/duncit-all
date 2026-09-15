@@ -2,15 +2,14 @@ import { gql } from '@apollo/client';
 import { useLazyQuery } from '@apollo/client/react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useState } from 'react';
-import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import PaymentLottie from '../../components/PaymentLottie';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
 import TwoToneHeading from '../../components/TwoToneHeading';
-import { SURFACE_SX } from '../../theme';
-import { SuccessPodCard, SuccessRow } from './SuccessDetails';
+import { SuccessPodCard, SuccessReceiptCard } from './SuccessDetails';
 import { notify } from '../../components/notify';
 import { formatMoney } from './checkoutMath';
 import { parseApiError } from '../../utils/parseApiError';
@@ -58,7 +57,6 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const profileAction = profileLabel ?? t('mweb.checkout.myProfile');
-  const paidAt = payment.paid_at || payment.created_at;
   const venueCharges: Array<{ amount: number }> = pod?.place_charges ?? [];
   const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
@@ -147,14 +145,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.checkout.successSubtitle')}
         </Typography>
-        <Box sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
-          <Stack spacing={1} divider={<Divider flexItem />}>
-            <SuccessRow label={t('mweb.checkout.amountPaid')} value={formatMoney(payment.currency_symbol, payment.total)} bold />
-            {paidAt && <SuccessRow label={t('mweb.checkout.paidOn')} value={formatDateTime(paidAt)} />}
-            <SuccessRow label={t('mweb.checkout.paymentId')} value={payment.payment_id} mono />
-            {payment.invoice_no && <SuccessRow label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no} mono />}
-          </Stack>
-        </Box>
+        <SuccessReceiptCard payment={payment} />
         {pod && (
           <SuccessPodCard
             title={pod.pod_title}

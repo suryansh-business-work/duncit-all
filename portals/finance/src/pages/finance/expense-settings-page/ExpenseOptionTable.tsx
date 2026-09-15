@@ -39,18 +39,6 @@ export default function ExpenseOptionTable({
   onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  // clientTableFetch searches the text this returns, so both halves of the row
-  // identity are in it: an admin looks for "Food" and for FOOD_AND_BEVERAGE.
-  const fetchRows = useMemo(
-    () => clientTableFetch(rows, (row) => [row.label, row.key, row.entity_source].join(" ")),
-    [rows],
-  );
-  // The grid holds fetchRows in a ref, so a new list is only picked up when the
-  // page asks it to re-read (the same arrangement the WhatsApp console uses).
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
 
   const columns = useMemo<DuncitColumn<ExpenseOptionRow>[]>(() => {
     const lockedTitle = t('finance.expenseConfig.cannotDelete');
@@ -80,6 +68,7 @@ export default function ExpenseOptionTable({
         headerName: t('finance.expenseConfig.option'),
         flex: 1,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderOption,
         valueGetter: (row) => row.label,
       },
@@ -87,6 +76,7 @@ export default function ExpenseOptionTable({
         field: 'is_active',
         headerName: t('shell.common.status'),
         width: 130,
+        type: 'boolean',
         cellRenderer: renderActive,
         valueGetter: (row) => (row.is_active ? 1 : 0),
       },
@@ -94,6 +84,7 @@ export default function ExpenseOptionTable({
         field: 'usage_count',
         headerName: t('finance.expenseConfig.usedBy'),
         width: 120,
+        type: 'number',
         cellRenderer: renderUsage,
         valueGetter: (row) => row.usage_count ?? 0,
       },
@@ -101,7 +92,7 @@ export default function ExpenseOptionTable({
         field: 'is_system',
         headerName: t('finance.expenseConfig.origin'),
         width: 120,
-        sortable: false,
+        type: 'boolean',
         cellRenderer: renderBuiltIn,
         valueGetter: (row) => (row.is_system ? 1 : 0),
       },
@@ -116,10 +107,24 @@ export default function ExpenseOptionTable({
       field: 'entity_source',
       headerName: t('finance.expenseConfig.entitySource'),
       width: 160,
+      type: 'text',
       valueGetter: (row) => row.entity_source || '—',
     };
     return [base[0], sourceColumn, ...base.slice(1)];
   }, [t, onEdit, onDelete, showSource]);
+
+  // clientTableFetch searches the text this returns, so both halves of the row
+  // identity are in it: an admin looks for "Food" and for FOOD_AND_BEVERAGE.
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, (row) => [row.label, row.key, row.entity_source].join(" "), columns),
+    [rows, columns],
+  );
+  // The grid holds fetchRows in a ref, so a new list is only picked up when the
+  // page asks it to re-read (the same arrangement the WhatsApp console uses).
+  const refetchRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    refetchRef.current?.();
+  }, [fetchRows]);
 
   return (
     <DuncitTable<ExpenseOptionRow>

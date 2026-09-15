@@ -69,7 +69,8 @@ export default function PartnerFaqsPage() {
     () => ({
       field: 'partner_topic',
       headerName: t('support.faqs.topic'),
-      filter: { type: 'select', options: topics },
+      type: 'enum',
+      options: topics,
       minWidth: 140,
       cellRenderer: renderTopic(topics),
       valueGetter: (row) => topicLabel(row, topics),

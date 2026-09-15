@@ -57,22 +57,13 @@ export default function DependenciesTable({ groups }: Readonly<{ groups: readonl
   const [type, setType] = useState<UpdateType | typeof ALL>(ALL);
   const noLatest = t('tech.packageUpdates.notPublished');
 
-  const filtered = useMemo(
-    () => (type === ALL ? groups : groups.filter((row) => row.updateType === type)),
-    [groups, type],
-  );
-
-  const fetchRows = useMemo(() => clientTableFetch(filtered, dependencySearchText), [filtered]);
-
   /**
-   * The filter is applied to the ROWS above, not by the fetch — a client-side
-   * fetch ignores query filters by design. This declares it to the table anyway
-   * because that is what makes the table re-read and drop back to page 1; a
-   * change it is never told about would leave it showing page 4 of a list that
-   * no longer has one.
+   * The toolbar's type picker, as a pinned filter the fetch applies — which is
+   * also what makes the table re-read and drop back to page 1 when it changes.
+   * "All" pins nothing.
    */
   const externalFilters = useMemo<TableFilterValue[]>(
-    () => [{ field: 'updateType', op: 'eq', value: type }],
+    () => (type === ALL ? [] : [{ field: 'updateType', op: 'eq', value: type }]),
     [type],
   );
 
@@ -83,6 +74,7 @@ export default function DependenciesTable({ groups }: Readonly<{ groups: readonl
         headerName: t('tech.packageUpdates.dependency'),
         flex: 1,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderName,
       },
       {
@@ -90,28 +82,38 @@ export default function DependenciesTable({ groups }: Readonly<{ groups: readonl
         headerName: t('tech.packageUpdates.declared'),
         flex: 1,
         minWidth: 180,
+        type: 'text',
         cellRenderer: renderRanges,
       },
       {
         field: 'latest',
         headerName: t('tech.packageUpdates.latest'),
         width: 150,
+        type: 'text',
         cellRenderer: renderLatest(noLatest),
       },
       {
         field: 'updateType',
         headerName: t('shell.common.type'),
         width: 150,
+        type: 'enum',
+        options: updateTypeOptions(t),
         cellRenderer: renderType,
       },
       {
         field: 'usedIn',
         headerName: t('tech.packageUpdates.usedIn'),
         width: 120,
+        type: 'number',
         cellRenderer: renderUsedIn,
       },
     ],
     [t, noLatest],
+  );
+
+  const fetchRows = useMemo(
+    () => clientTableFetch(groups, dependencySearchText, columns),
+    [groups, columns],
   );
 
   const filterControl = (

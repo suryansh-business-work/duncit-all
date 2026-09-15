@@ -154,17 +154,19 @@ export default function HostsTable({
       </>
     );
     return [
-      { field: 'host_no', headerName: t('onboarding.hosts.hostId'), width: 130, sortable: false, valueGetter: (h) => h.host_no || '—' },
-      { field: 'full_name', headerName: t('onboarding.common.host'), flex: 1, minWidth: 170, cellRenderer: renderHost, valueGetter: (h) => h.full_name || '—' },
-      { field: 'email', headerName: t('onboarding.common.contact'), minWidth: 180, cellRenderer: renderContact, valueGetter: (h) => h.email || '—' },
-      { field: 'documents', headerName: t('shell.nav.documents'), sortable: false, minWidth: 170, cellRenderer: renderDocuments, valueGetter: documentsValue },
-      { field: 'host_categories', headerName: t('onboarding.common.category'), sortable: false, minWidth: 200, cellRenderer: renderCategories, valueGetter: categoriesValue },
-      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (h) => h.status },
-      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'commission', headerName: t('onboarding.common.commission'), sortable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
+      { field: 'host_no', headerName: t('onboarding.hosts.hostId'), width: 130, type: 'text', valueGetter: (h) => h.host_no || '—' },
+      { field: 'full_name', headerName: t('onboarding.common.host'), flex: 1, minWidth: 170, type: 'text', cellRenderer: renderHost, valueGetter: (h) => h.full_name || '—' },
+      { field: 'email', headerName: t('onboarding.common.contact'), minWidth: 180, type: 'text', cellRenderer: renderContact, valueGetter: (h) => h.email || '—' },
+      // Two identity numbers (PAN + Aadhaar) shown as one cell — no single path, and not a value to search by.
+      { field: 'documents', headerName: t('shell.nav.documents'), type: 'text', sortable: false, filterable: false, minWidth: 170, cellRenderer: renderDocuments, valueGetter: documentsValue },
+      { field: 'host_categories', headerName: t('onboarding.common.category'), type: 'text', minWidth: 200, cellRenderer: renderCategories, valueGetter: categoriesValue },
+      { field: 'status', headerName: t('shell.common.status'), width: 125, type: 'enum', options: STATUS_OPTIONS, cellRenderer: renderStatus, valueGetter: (h) => h.status },
+      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, type: 'boolean', cellRenderer: renderActive, valueGetter: activeValue },
+      // Read from the host's user account per page — the host document holds no path to order or match.
+      { field: 'commission', headerName: t('onboarding.common.commission'), type: 'number', sortable: false, filterable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
       dateColumn<HostRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
-      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 190, cellRenderer: renderActions },
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, type: 'date' },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 190, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 

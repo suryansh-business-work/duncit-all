@@ -104,10 +104,10 @@ const amountValue = (row: CoinTxnRow) =>
   `${isCredit(row) ? '+' : '-'}${coinCount(row.amount)}`;
 
 /**
- * `sortable: false` on the joined columns is deliberate: user, pod and the
- * payment total are resolved after the page is fetched, so they are not in the
- * server's sort allowlist. Leaving them sortable would offer a sort the engine
- * silently drops.
+ * `sortable: false` / `filterable: false` on the joined columns is deliberate:
+ * user, pod and the payment total are resolved after the page is fetched, so
+ * they are not in the server's allowlists. Leaving them on would offer a sort or
+ * filter the engine silently drops.
  */
 const buildColumns = (
   t: Translate,
@@ -128,7 +128,10 @@ const buildColumns = (
   {
     field: 'user_name',
     headerName: t('finance.duncitCoin.user'),
+    type: 'text',
+    // Joined after the page is fetched — no stored path on the ledger row.
     sortable: false,
+    filterable: false,
     flex: 1,
     minWidth: 190,
     cellRenderer: renderUser,
@@ -137,7 +140,10 @@ const buildColumns = (
   {
     field: 'pods',
     headerName: t('finance.common.pod'),
+    type: 'text',
+    // Two hops away (payment → orders) and joined per page — no stored path.
     sortable: false,
+    filterable: false,
     flex: 1,
     minWidth: 190,
     cellRenderer: renderPod,
@@ -147,7 +153,8 @@ const buildColumns = (
     field: 'type',
     headerName: t('shell.common.type'),
     minWidth: 130,
-    filter: { type: 'select', options: typeOptions(t) },
+    type: 'enum',
+    options: typeOptions(t),
     cellRenderer: (row: CoinTxnRow) => renderType(row, t),
     valueGetter: (row) => row.type,
   },
@@ -155,35 +162,39 @@ const buildColumns = (
     field: 'source',
     headerName: t('finance.duncitCoin.source'),
     minWidth: 170,
-    filter: { type: 'select', options: sourceOptions(t) },
+    type: 'enum',
+    options: sourceOptions(t),
     valueGetter: (row) => sourceLabel(t).get(row.source) ?? row.source,
   },
   {
     field: 'amount',
     headerName: t('finance.duncitCoin.coins'),
     minWidth: 110,
-    filter: { type: 'number' },
+    type: 'number',
     valueGetter: amountValue,
   },
-  { field: 'balance_after', headerName: t('finance.duncitCoin.balanceAfter'), minWidth: 140, valueGetter: (row) => coinCount(row.balance_after) },
+  { field: 'balance_after', headerName: t('finance.duncitCoin.balanceAfter'), minWidth: 140, type: 'number', valueGetter: (row) => coinCount(row.balance_after) },
   {
     field: 'payment_total',
     headerName: t('finance.duncitCoin.orderTotal'),
+    type: 'number',
+    // Read off the joined Payment after the page is fetched — no stored path.
     sortable: false,
+    filterable: false,
     minWidth: 130,
     valueGetter: (row) => formatMoney(row.payment_total, { symbol }),
   },
   {
     field: 'payment_id',
     headerName: t('finance.common.payment'),
-    sortable: false,
+    type: 'text',
     minWidth: 160,
     valueGetter: (row) => row.payment_id ?? EM_DASH,
   },
   {
     field: 'reason',
     headerName: t('finance.common.reason'),
-    sortable: false,
+    type: 'text',
     flex: 1,
     minWidth: 200,
     valueGetter: (row) => row.reason || EM_DASH,

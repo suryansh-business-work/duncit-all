@@ -11,6 +11,7 @@ import { Accordion } from '@/components/details/Accordion';
 import { PodClubCard } from '@/components/details/PodClubCard';
 import { ViewClubButton } from '@/components/details/ViewClubButton';
 import { PodClubAdminsSection } from '@/components/details/PodClubAdminsSection';
+import { PodTicketDiscountSection, showsTicketDiscount } from './PodTicketDiscountSection';
 import {
   AboutSection,
   AttendeesSection,
@@ -201,6 +202,14 @@ export function PodAccordions({
         ),
       },
     ];
+    if (showsTicketDiscount(pod, isFree)) {
+      list.push({
+        id: 'ticketDiscount',
+        title: t('mweb.podDetails.sectionTicketDiscount'),
+        icon: 'local-offer',
+        content: <PodTicketDiscountSection pod={pod} currency={currency} />,
+      });
+    }
     if (terms) {
       list.push({
         id: 'terms',

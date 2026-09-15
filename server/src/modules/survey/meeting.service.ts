@@ -373,9 +373,12 @@ const MEETING_TABLE_CONFIG: TableEntityConfig = {
     approval_status: 'approval_status',
     requested_at: 'requested_at',
     scheduled_at: 'scheduled_at',
+    link: 'meeting_link',
     created_at: 'created_at',
   },
   filterFields: {
+    request_no: { type: 'string' },
+    link: { path: 'meeting_link', type: 'string' },
     kind: { type: 'enum' },
     status: { type: 'enum' },
     approval_status: { type: 'enum' },

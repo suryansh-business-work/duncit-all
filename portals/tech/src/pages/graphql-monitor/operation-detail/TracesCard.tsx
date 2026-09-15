@@ -29,17 +29,17 @@ export default function TracesCard({ operationId }: Readonly<Props>) {
   });
   const columns = useMemo<DuncitColumn<MonitorTrace>[]>(
     () => [
-      { field: 'at', headerName: t('tech.graphqlMonitor.colWhen'), width: 170, valueGetter: (row) => formatDateTime(row.at) },
-      { field: 'duration_ms', headerName: t('tech.graphqlMonitor.colDuration'), width: 110, valueGetter: (row) => formatMs(row.duration_ms) },
-      { field: 'execute_ms', headerName: t('tech.graphqlMonitor.phaseExecute'), width: 110, valueGetter: (row) => formatMs(row.execute_ms) },
-      { field: 'resolver_count', headerName: t('tech.graphqlMonitor.colResolvers'), width: 110, valueGetter: (row) => row.resolver_count },
-      { field: 'client', headerName: t('tech.graphqlMonitor.traceClient'), width: 160, valueGetter: (row) => row.client || '—' },
+      { field: 'at', headerName: t('tech.graphqlMonitor.colWhen'), width: 170, type: 'date', valueGetter: (row) => formatDateTime(row.at) },
+      { field: 'duration_ms', headerName: t('tech.graphqlMonitor.colDuration'), width: 110, type: 'number', valueGetter: (row) => formatMs(row.duration_ms) },
+      { field: 'execute_ms', headerName: t('tech.graphqlMonitor.phaseExecute'), width: 110, type: 'number', valueGetter: (row) => formatMs(row.execute_ms) },
+      { field: 'resolver_count', headerName: t('tech.graphqlMonitor.colResolvers'), width: 110, type: 'number', valueGetter: (row) => row.resolver_count },
+      { field: 'client', headerName: t('tech.graphqlMonitor.traceClient'), width: 160, type: 'text', valueGetter: (row) => row.client || '—' },
       {
         field: 'error_messages',
         headerName: t('tech.graphqlMonitor.colErrors'),
         flex: 1,
         minWidth: 200,
-        sortable: false,
+        type: 'text',
         valueGetter: (row) => row.error_messages.join(' · ') || '—',
       },
     ],

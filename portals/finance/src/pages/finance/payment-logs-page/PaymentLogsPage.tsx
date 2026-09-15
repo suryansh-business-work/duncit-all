@@ -6,14 +6,21 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { downloadBase64File } from '@duncit/utils';
-import { INVOICE_PDF, PAYMENT_TOTALS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
+import {
+  INVOICE_PDF,
+  PAYMENT_TOTALS,
+  PAYMENTS_TABLE,
+  REFUND_PAYMENT,
+  type PaymentRow,
+  type PaymentTotals,
+} from './queries';
 import { paymentTableFilter } from './helpers';
 import TotalsCards from './TotalsCards';
 import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
 
 const POLL_MS = 30000;
-const EMPTY_TOTALS = { count: 0, gross: 0, fee: 0, gst: 0 };
+const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 };
 
 export default function PaymentLogsPage() {
   const { t } = useTranslation();

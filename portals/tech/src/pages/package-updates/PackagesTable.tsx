@@ -81,10 +81,6 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const privateLabel = t('tech.packageUpdates.privateManifest');
 
-  // The table reads this once, on mount. A new sweep remounts it by key rather
-  // than pushing rows in — see the `key` the page gives this component.
-  const fetchRows = useMemo(() => clientTableFetch(packages, packageSearchText), [packages]);
-
   const columns = useMemo<DuncitColumn<PackageUpdate>[]>(
     () => [
       {
@@ -92,6 +88,7 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
         headerName: t('shell.common.name'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderName(privateLabel),
       },
       {
@@ -99,35 +96,47 @@ export default function PackagesTable({ packages, onOpen }: Readonly<Props>) {
         headerName: t('tech.packageUpdates.path'),
         flex: 1.4,
         minWidth: 240,
+        type: 'text',
         cellRenderer: renderPath,
       },
-      { field: 'total', headerName: t('tech.packageUpdates.declaredCount'), width: 120 },
+      { field: 'total', headerName: t('tech.packageUpdates.declaredCount'), width: 120, type: 'number' },
       {
         field: 'outdated',
         headerName: t('tech.packageUpdates.outdated'),
         width: 120,
+        type: 'number',
         cellRenderer: renderOutdated,
       },
       {
         field: 'major',
         headerName: t('tech.packageUpdates.major'),
         width: 110,
+        type: 'number',
         cellRenderer: renderMajor,
       },
       {
         field: 'minor',
         headerName: t('tech.packageUpdates.minor'),
         width: 110,
+        type: 'number',
         cellRenderer: renderMinor,
       },
       {
         field: 'patch',
         headerName: t('tech.packageUpdates.patch'),
         width: 110,
+        type: 'number',
         cellRenderer: renderPatch,
       },
     ],
     [t, privateLabel],
+  );
+
+  // The table reads this once, on mount. A new sweep remounts it by key rather
+  // than pushing rows in — see the `key` the page gives this component.
+  const fetchRows = useMemo(
+    () => clientTableFetch(packages, packageSearchText, columns),
+    [packages, columns],
   );
 
   return (

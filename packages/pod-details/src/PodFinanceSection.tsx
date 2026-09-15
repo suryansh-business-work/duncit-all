@@ -88,6 +88,14 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
             label={t('podDetailsPanel.podFinanceSection.collectedTotal')}
             value={`${breakdown.currency_symbol}${breakdown.collected_total.toFixed(2)}`}
           />
+          {/* Tiers come off the ticket price before anyone pays, so the collected
+              total already sits below face value by exactly this much. */}
+          {breakdown.ticket_discount_total > 0 && (
+            <SummaryRow
+              label={t('podDetailsPanel.podFinanceSection.ticketDiscounts')}
+              value={`${breakdown.currency_symbol}${breakdown.ticket_discount_total.toFixed(2)}`}
+            />
+          )}
           {breakdown.refunded_total > 0 && (
             <>
               <SummaryRow

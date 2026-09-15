@@ -39,6 +39,12 @@ const renderPayer = (row: PodPaymentRow) => (
   </Stack>
 );
 
+/** The tier frozen on the payment at checkout — amount and percentage — or a dash when none applied. */
+const ticketDiscountValue = (row: PodPaymentRow) =>
+  row.ticket_discount_amount > 0
+    ? `${money(row.currency_symbol, row.ticket_discount_amount)} · ${row.ticket_discount_pct}%`
+    : '—';
+
 const renderStatus = (row: PodPaymentRow) => (
   <StatusChip status={row.status} colorMap={PAYMENT_STATUS_COLORS} />
 );
@@ -72,12 +78,14 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
       {
         field: 'payment_id',
         headerName: t('podDetailsPanel.podPaymentsSection.paymentId'),
+        type: 'text',
         minWidth: 170,
         valueGetter: (row) => row.invoice_no ?? row.payment_id,
       },
       {
         field: 'user_name',
         headerName: t('podDetailsPanel.podPaymentsSection.payer'),
+        type: 'text',
         flex: 1,
         minWidth: 190,
         cellRenderer: renderPayer,
@@ -86,38 +94,49 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
       {
         field: 'total',
         headerName: t('podDetailsPanel.podPaymentsSection.amount'),
+        type: 'number',
         width: 120,
         valueGetter: (row) => money(row.currency_symbol, row.total),
       },
       {
         field: 'status',
         headerName: t('podDetailsPanel.common.status'),
+        type: 'enum',
+        options: STATUS_OPTIONS,
         width: 140,
-        filter: { type: 'select', options: STATUS_OPTIONS },
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
-      { field: 'gateway', headerName: t('podDetailsPanel.podPaymentsSection.gateway'), width: 120, valueGetter: (row) => row.gateway ?? '—' },
+      { field: 'gateway', headerName: t('podDetailsPanel.podPaymentsSection.gateway'), type: 'text', width: 120, valueGetter: (row) => row.gateway ?? '—' },
       {
         field: 'coupon_code',
         headerName: t('podDetailsPanel.podPaymentsSection.coupon'),
+        type: 'text',
         width: 130,
         hide: true,
         valueGetter: (row) => row.coupon_code ?? '—',
       },
       {
+        field: 'ticket_discount_amount',
+        headerName: t('podDetailsPanel.podPaymentsSection.ticketDiscount'),
+        width: 160,
+        hide: true,
+        type: 'number',
+        valueGetter: ticketDiscountValue,
+      },
+      {
         field: 'paid_at',
         headerName: t('podDetailsPanel.podPaymentsSection.paidAt'),
+        type: 'date',
         width: 170,
-        filter: { type: 'date' },
         valueGetter: (row) => fmtDateTime(row.paid_at),
       },
       {
         field: 'created_at',
         headerName: t('podDetailsPanel.common.created'),
+        type: 'date',
         width: 170,
         hide: true,
-        filter: { type: 'date' },
         valueGetter: (row) => fmtDateTime(row.created_at),
       },
     ],

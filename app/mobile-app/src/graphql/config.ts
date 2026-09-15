@@ -25,6 +25,7 @@ export const PublicAppSettingsDocument = gql(`
       server_time
       min_signup_age
       draft_retention_days
+      ticket_discount_max_pct
     }
   }
 `);

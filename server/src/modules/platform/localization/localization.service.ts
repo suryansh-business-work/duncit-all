@@ -21,8 +21,10 @@ const TRANSLATION_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ["key", "description"],
   sortFields: { key: "key", surface: "surface", page: "page", updated_at: "updated_at" },
   filterFields: {
+    key: { path: "key", type: "string" },
     surface: { path: "surface", type: "string" },
     page: { path: "page", type: "string" },
+    updated_at: { path: "updated_at", type: "date" },
   },
   defaultSort: { key: 1 },
 };
@@ -32,9 +34,35 @@ const TRANSLATION_TABLE_CONFIG: TableEntityConfig = {
 const TRANSLATION_GROUP_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ["surface", "page"],
   sortFields: { surface: "surface", page: "page", key_count: "key_count" },
-  filterFields: { surface: { path: "surface", type: "string" } },
+  filterFields: {
+    surface: { path: "surface", type: "string" },
+    page: { path: "page", type: "string" },
+    key_count: { path: "key_count", type: "number" },
+  },
   defaultSort: { surface: 1, page: 1 },
 };
+
+/** The Translations table's per-locale `value_<code>` column. */
+const LOCALE_VALUE_FIELD = /^value_(.+)$/;
+
+/**
+ * TRANSLATION_TABLE_CONFIG plus the `value_<code>` columns this request sorts or
+ * filters on. There is one such column per locale, so the entries are taken
+ * from the request itself — no locale read per page — and a code only becomes
+ * a `values.<code>` path once it passes PROJECTABLE_LOCALE.
+ */
+function translationTableConfig(input?: TableQueryInput | null): TableEntityConfig {
+  const sortFields = { ...TRANSLATION_TABLE_CONFIG.sortFields };
+  const filterFields = { ...TRANSLATION_TABLE_CONFIG.filterFields };
+  for (const field of [input?.sort_by, ...(input?.filters ?? []).map((f) => f.field)]) {
+    if (!field) continue;
+    const code = LOCALE_VALUE_FIELD.exec(field)?.[1];
+    if (!code || !PROJECTABLE_LOCALE.test(code)) continue;
+    sortFields[field] = `values.${code}`;
+    filterFields[field] = { path: `values.${code}`, type: "string" };
+  }
+  return { ...TRANSLATION_TABLE_CONFIG, sortFields, filterFields };
+}
 
 /**
  * The locale codes a key actually carries text for. `values` is a Map, so it is
@@ -321,7 +349,7 @@ export const localizationService = {
       TranslationModel,
       {},
       input,
-      TRANSLATION_TABLE_CONFIG,
+      translationTableConfig(input),
     );
     return { rows: docs.map(translationToPub), total, page, page_size };
   },
@@ -367,17 +395,36 @@ export const localizationService = {
       { $sort: { "_id.surface": 1, "_id.page": 1 } },
     ]);
 
-    const rows = groups.map((group) => ({
-      id: `${group._id.surface}.${group._id.page}`,
-      surface: group._id.surface,
-      page: group._id.page,
-      key_count: group.key_count,
-      locales: codes.map((code, index) => ({
+    const rows = groups.map((group) => {
+      const locales = codes.map((code, index) => ({
         locale: code,
         translated: Number(group[localeCountField(index)] ?? 0),
-      })),
-    }));
+      }));
+      return {
+        id: `${group._id.surface}.${group._id.page}`,
+        surface: group._id.surface,
+        page: group._id.page,
+        key_count: group.key_count,
+        locales,
+        // Flat `translated_<code>` copies, so the per-locale columns sort and filter.
+        ...Object.fromEntries(locales.map((l) => [`translated_${l.locale}`, l.translated])),
+      };
+    });
 
-    return applyTableQueryInMemory(rows, input, TRANSLATION_GROUP_TABLE_CONFIG);
+    // One `translated_<code>` column per active locale.
+    const localeFields = codes.map((code) => `translated_${code}`);
+    const config: TableEntityConfig = {
+      ...TRANSLATION_GROUP_TABLE_CONFIG,
+      sortFields: {
+        ...TRANSLATION_GROUP_TABLE_CONFIG.sortFields,
+        ...Object.fromEntries(localeFields.map((field) => [field, field])),
+      },
+      filterFields: {
+        ...TRANSLATION_GROUP_TABLE_CONFIG.filterFields,
+        ...Object.fromEntries(localeFields.map((field) => [field, { type: "number" as const }])),
+      },
+    };
+
+    return applyTableQueryInMemory(rows, input, config);
   },
 };

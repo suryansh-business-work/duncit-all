@@ -1,9 +1,11 @@
 import { z } from 'zod';
-import { isMeetingPlatform, isVideoUrl, mediaTypeForUrl } from '@duncit/utils';
+import { DEFAULT_TICKET_DISCOUNT_MAX_PCT, isMeetingPlatform, isVideoUrl, mediaTypeForUrl, ticketDiscountInput } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
+import { refineTicketDiscount } from './create-pod.ticket-discount';
 import {
   POD_TYPE_VALUES,
   blankCreatePodForm,
+  isFreePodType,
   type CreatePodClub,
   type CreatePodFormValues,
   type CreatePodHostCategory,
@@ -100,8 +102,9 @@ function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Tra
  *
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
- * bundled English for callers that parse the schema outside React. */
-export function makeCreatePodSchema(t: Translate = fallbackT) {
+ * bundled English for callers that parse the schema outside React.
+ * `ticketDiscountMaxPct` is the admin's public `ticket_discount_max_pct`. */
+export function makeCreatePodSchema(t: Translate = fallbackT, ticketDiscountMaxPct = DEFAULT_TICKET_DISCOUNT_MAX_PCT) {
   return z
     .object({
       location_id: z.string().min(1, t('mweb.createPod.validation.locationRequired')),
@@ -169,6 +172,9 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
           })
         )
         .max(10),
+      // Shape only — the tier rules run in refineTicketDiscount below.
+      ticket_discount_enabled: z.boolean(),
+      ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
     })
@@ -191,6 +197,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
         ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: t('mweb.createPod.validation.endMinDuration') });
       }
       refinePublish(values, ctx, t);
+      refineTicketDiscount(values, ctx, t, ticketDiscountMaxPct);
     });
 }
 
@@ -203,7 +210,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['host_category_key', 'pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
   ['location_id', 'locality', 'pod_mode', 'club_id'],
   ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
-  ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
+  ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'ticket_discount_enabled', 'ticket_discount_tiers', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
 
 /** Catalogue keys for the four step titles, in step order. Components translate
@@ -285,6 +292,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
+    // A FREE pod or a switched-off offer always sends the cleared pair.
+    ...ticketDiscountInput(values, isFreePodType(values.pod_type)),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
     // the flag also means a stale draft that still holds `products_enabled: true`

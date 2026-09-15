@@ -199,10 +199,11 @@ function leadTableConfig(
       ...extras.sortFields,
     },
     filterFields: {
+      [nameField]: { type: 'string' },
       city: { type: 'string' },
       lead_status: { type: 'enum' },
       priority: { type: 'enum' },
-      super_category_id: { type: 'string' },
+      super_category_id: { type: 'enum' },
       next_follow_up_date: { type: 'date' },
       created_at: { type: 'date' },
       ...extras.filterFields,

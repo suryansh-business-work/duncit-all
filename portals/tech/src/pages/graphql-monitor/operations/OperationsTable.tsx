@@ -6,7 +6,7 @@ import LiveRowsTable from '../../stress-testing/components/LiveRowsTable';
 import { formatCount, formatMs, formatPct } from '../../stress-testing/labels';
 import { formatDateTime } from '../../server/format';
 import OperationTypeChip from '../components/OperationTypeChip';
-import { errorRateColor, latencyColor } from '../labels';
+import { errorRateColor, latencyColor, operationTypeOptions } from '../labels';
 import type { OperationSummary } from '../queries';
 
 interface Props {
@@ -54,18 +54,18 @@ export default function OperationsTable({ operations, slowMs, onOpen }: Readonly
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<OperationSummary>[]>(
     () => [
-      { field: 'name', headerName: t('tech.graphqlMonitor.colOperation'), flex: 1, minWidth: 240, cellRenderer: renderName, valueGetter: (row) => row.name },
-      { field: 'type', headerName: t('tech.graphqlMonitor.colType'), width: 130, cellRenderer: renderType, valueGetter: (row) => row.type },
-      { field: 'requests', headerName: t('tech.graphqlMonitor.colRequests'), width: 110, valueGetter: (row) => formatCount(row.requests) },
-      { field: 'rpm', headerName: t('tech.graphqlMonitor.colRpm'), width: 100, valueGetter: (row) => row.rpm },
-      { field: 'error_rate_pct', headerName: t('tech.graphqlMonitor.colErrorRate'), width: 110, cellRenderer: renderErrorRate, valueGetter: (row) => row.error_rate_pct },
-      { field: 'p50_ms', headerName: t('tech.graphqlMonitor.colP50'), width: 100, valueGetter: (row) => formatMs(row.p50_ms) },
-      { field: 'p95_ms', headerName: t('tech.graphqlMonitor.colP95'), width: 100, cellRenderer: makeRenderMs((row) => row.p95_ms, slowMs), valueGetter: (row) => row.p95_ms },
-      { field: 'p99_ms', headerName: t('tech.graphqlMonitor.colP99'), width: 100, valueGetter: (row) => formatMs(row.p99_ms) },
-      { field: 'avg_ms', headerName: t('tech.graphqlMonitor.colAvg'), width: 100, valueGetter: (row) => formatMs(row.avg_ms) },
-      { field: 'execute_avg_ms', headerName: t('tech.graphqlMonitor.colExecute'), width: 110, hide: true, valueGetter: (row) => formatMs(row.execute_avg_ms) },
-      { field: 'cached', headerName: t('tech.graphqlMonitor.colCached'), width: 100, hide: true, valueGetter: (row) => formatCount(row.cached) },
-      { field: 'last_seen_at', headerName: t('tech.graphqlMonitor.colLastSeen'), width: 170, valueGetter: (row) => formatDateTime(row.last_seen_at) },
+      { field: 'name', headerName: t('tech.graphqlMonitor.colOperation'), flex: 1, minWidth: 240, type: 'text', cellRenderer: renderName, valueGetter: (row) => row.name },
+      { field: 'type', headerName: t('tech.graphqlMonitor.colType'), width: 130, type: 'enum', options: operationTypeOptions(t), cellRenderer: renderType, valueGetter: (row) => row.type },
+      { field: 'requests', headerName: t('tech.graphqlMonitor.colRequests'), width: 110, type: 'number', valueGetter: (row) => formatCount(row.requests) },
+      { field: 'rpm', headerName: t('tech.graphqlMonitor.colRpm'), width: 100, type: 'number', valueGetter: (row) => row.rpm },
+      { field: 'error_rate_pct', headerName: t('tech.graphqlMonitor.colErrorRate'), width: 110, type: 'number', cellRenderer: renderErrorRate, valueGetter: (row) => row.error_rate_pct },
+      { field: 'p50_ms', headerName: t('tech.graphqlMonitor.colP50'), width: 100, type: 'number', valueGetter: (row) => formatMs(row.p50_ms) },
+      { field: 'p95_ms', headerName: t('tech.graphqlMonitor.colP95'), width: 100, type: 'number', cellRenderer: makeRenderMs((row) => row.p95_ms, slowMs), valueGetter: (row) => row.p95_ms },
+      { field: 'p99_ms', headerName: t('tech.graphqlMonitor.colP99'), width: 100, type: 'number', valueGetter: (row) => formatMs(row.p99_ms) },
+      { field: 'avg_ms', headerName: t('tech.graphqlMonitor.colAvg'), width: 100, type: 'number', valueGetter: (row) => formatMs(row.avg_ms) },
+      { field: 'execute_avg_ms', headerName: t('tech.graphqlMonitor.colExecute'), width: 110, hide: true, type: 'number', valueGetter: (row) => formatMs(row.execute_avg_ms) },
+      { field: 'cached', headerName: t('tech.graphqlMonitor.colCached'), width: 100, hide: true, type: 'number', valueGetter: (row) => formatCount(row.cached) },
+      { field: 'last_seen_at', headerName: t('tech.graphqlMonitor.colLastSeen'), width: 170, type: 'date', valueGetter: (row) => formatDateTime(row.last_seen_at) },
     ],
     [slowMs, t]
   );

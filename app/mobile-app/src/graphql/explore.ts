@@ -3,10 +3,11 @@ import { gql } from '@/generated/graphql';
 /**
  * Reels feed for Explore — every live pod that carries a reel video, with its
  * social counts, the clubs (cover/name) and the viewer's saved set. Mirrors
- * mWeb's EXPLORE_PODS. Explore is reel-only now, so the server pre-filters.
+ * mWeb's EXPLORE_PODS. Explore is reel-only now, so the server pre-filters —
+ * by reel and by the header city.
  */
 export const ExplorePodsDocument = gql(`
-  query MobileExplorePods {
+  query MobileExplorePods($locationId: ID) {
     me {
       user_id
       profile_photo
@@ -23,7 +24,7 @@ export const ExplorePodsDocument = gql(`
         type
       }
     }
-    pods(filter: { is_active: true, has_reel: true }) {
+    pods(filter: { is_active: true, has_reel: true, location_id: $locationId }) {
       id
       pod_id
       pod_title
@@ -40,6 +41,7 @@ export const ExplorePodsDocument = gql(`
         type
       }
       reel_url
+      reel_has_audio
       club_id
       club_slug
       location_id

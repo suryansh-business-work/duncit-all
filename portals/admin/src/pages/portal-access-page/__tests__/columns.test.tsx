@@ -70,8 +70,8 @@ describe('getPortalAccessColumns / column set', () => {
   it('hides the Reviewed at column by default and offers a date filter on both date columns', () => {
     expect(columnBy('reviewed_at').hide).toBe(true);
     expect(columnBy('subject_name').hide).toBeUndefined();
-    expect(columnBy('created_at').filter).toEqual({ type: 'date' });
-    expect(columnBy('reviewed_at').filter).toEqual({ type: 'date' });
+    expect(columnBy('created_at').type).toBe('date');
+    expect(columnBy('reviewed_at').type).toBe('date');
   });
 
   it('marks the portal and actions columns unsortable', () => {

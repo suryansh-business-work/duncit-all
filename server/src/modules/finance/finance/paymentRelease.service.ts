@@ -94,6 +94,8 @@ const RELEASE_TABLE_CONFIG: TableEntityConfig = {
     status: { type: 'enum' },
     kind: { type: 'enum' },
     pod_id: { type: 'string' },
+    pod_title: { type: 'string' },
+    beneficiary_name: { type: 'string' },
     amount_requested: { type: 'number' },
     requested_at: { type: 'date' },
     created_at: { type: 'date' },

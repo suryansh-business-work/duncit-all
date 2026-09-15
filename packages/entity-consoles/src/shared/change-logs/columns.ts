@@ -33,7 +33,7 @@ export const changeLogColumns = (
         {
           field: 'entity_label',
           headerName: t('directory.changeLogs.colRecord'),
-          filter: { type: 'text' },
+          type: 'text',
           flex: 1,
           minWidth: 180,
           cellRenderer: renderEntity,
@@ -47,7 +47,7 @@ export const changeLogColumns = (
     {
       field: 'field_label',
       headerName: t('directory.changeLogs.colField'),
-      filter: { type: 'text' },
+      type: 'text',
       flex: 1,
       minWidth: 180,
       cellRenderer: renderField,
@@ -56,7 +56,7 @@ export const changeLogColumns = (
     {
       field: 'old_value',
       headerName: t('directory.changeLogs.colOld'),
-      sortable: false,
+      type: 'text',
       flex: 1.5,
       minWidth: 180,
       cellRenderer: renderOld,
@@ -65,7 +65,7 @@ export const changeLogColumns = (
     {
       field: 'new_value',
       headerName: t('directory.changeLogs.colNew'),
-      sortable: false,
+      type: 'text',
       flex: 1.5,
       minWidth: 180,
       cellRenderer: renderNew,
@@ -74,7 +74,8 @@ export const changeLogColumns = (
     {
       field: 'action',
       headerName: t('directory.changeLogs.colAction'),
-      filter: { type: 'select', options: actionOptions(t) },
+      type: 'enum',
+      options: actionOptions(t),
       width: 120,
       cellRenderer: renderAction(t),
       valueGetter: (row) => row.action,
@@ -82,14 +83,15 @@ export const changeLogColumns = (
     {
       field: 'created_at',
       headerName: t('directory.changeLogs.colWhen'),
-      filter: { type: 'date' },
+      type: 'date',
       minWidth: 190,
       valueGetter: whenValue,
     },
     {
       field: 'actor_type',
       headerName: t('directory.changeLogs.colBy'),
-      filter: { type: 'select', options: actorOptions(t) },
+      type: 'enum',
+      options: actorOptions(t),
       width: 130,
       cellRenderer: renderActor(t),
       valueGetter: (row) => row.actor_type,
@@ -97,6 +99,7 @@ export const changeLogColumns = (
     {
       field: 'actor_name',
       headerName: t('directory.changeLogs.colByName'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: renderActorName,
@@ -105,7 +108,8 @@ export const changeLogColumns = (
     {
       field: 'source',
       headerName: t('directory.changeLogs.colSource'),
-      filter: { type: 'select', options: sourceOptions(t) },
+      type: 'enum',
+      options: sourceOptions(t),
       width: 140,
       cellRenderer: renderSource(t),
       valueGetter: (row) => row.source,

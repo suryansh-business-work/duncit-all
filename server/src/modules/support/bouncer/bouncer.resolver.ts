@@ -1,5 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
+import type { TableFilterInput } from '@utils/table-query';
 import { bouncerService } from './bouncer.service';
 import type { PodFeedbackReminderChoice } from './bouncer.model';
 
@@ -26,6 +27,7 @@ export const bouncerResolvers = {
         page_size?: number;
         sort_by?: string;
         sort_dir?: string;
+        filters?: TableFilterInput[];
       },
       ctx: GraphQLContext
     ) => {
@@ -37,6 +39,7 @@ export const bouncerResolvers = {
         page_size: args.page_size,
         sort_by: args.sort_by,
         sort_dir: args.sort_dir,
+        filters: args.filters,
       });
     },
     bouncerCallbackRequests: (
@@ -48,6 +51,7 @@ export const bouncerResolvers = {
         page_size?: number;
         sort_by?: string;
         sort_dir?: string;
+        filters?: TableFilterInput[];
       },
       ctx: GraphQLContext
     ) => {
@@ -59,6 +63,7 @@ export const bouncerResolvers = {
         page_size: args.page_size,
         sort_by: args.sort_by,
         sort_dir: args.sort_dir,
+        filters: args.filters,
       });
     },
     bouncerSosAlert: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

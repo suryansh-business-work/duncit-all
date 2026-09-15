@@ -25,8 +25,10 @@ describe('POD_DETAIL', () => {
         'venue_approval_status',
         'pod_hosts_id',
         'host_names',
+        'ticket_discount_enabled',
       ]),
     );
+    expect(fieldsAt(POD_DETAIL, 'pod', 'ticket_discount_tiers')).toEqual(['min_tickets', 'discount_pct']);
   });
 });
 
@@ -86,7 +88,16 @@ describe('POD_PAYMENTS_TABLE', () => {
       expect.arrayContaining(['rows', 'total', 'page', 'page_size']),
     );
     expect(fieldsAt(POD_PAYMENTS_TABLE, 'paymentsTable', 'rows')).toEqual(
-      expect.arrayContaining(['payment_id', 'user_name', 'user_email', 'total', 'status', 'paid_at']),
+      expect.arrayContaining([
+        'payment_id',
+        'user_name',
+        'user_email',
+        'total',
+        'status',
+        'paid_at',
+        'ticket_discount_amount',
+        'ticket_discount_pct',
+      ]),
     );
   });
 });

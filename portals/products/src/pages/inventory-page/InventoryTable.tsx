@@ -118,36 +118,40 @@ export default function InventoryTable({
       );
     };
     return [
-      { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
+      // A decorative thumbnail — no value to order or match.
+      { field: 'cover', headerName: '', type: 'actions', width: 64, cellRenderer: renderCover },
       {
         field: 'product_name',
         headerName: t('products.inventory.colProduct'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderProduct,
         valueGetter: (p) => p.product_name,
       },
-      { field: 'sku', headerName: 'SKU', filter: { type: 'text' }, width: 140 },
+      { field: 'sku', headerName: 'SKU', type: 'text', width: 140 },
       {
         field: 'selling_price',
         headerName: t('products.pricing.sellingPrice'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 130,
         valueGetter: priceValue,
       },
       {
         field: 'inventory_count',
         headerName: t('products.inventory.colStock'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 150,
         cellRenderer: renderStock,
         valueGetter: (p) => p.inventory_count,
       },
-      { field: 'available_count', headerName: t('products.inventory.colAvailable'), sortable: false, width: 100 },
+      // Stock less open requests and reservations, computed per row — no stored path to order or match.
+      { field: 'available_count', headerName: t('products.inventory.colAvailable'), type: 'number', sortable: false, filterable: false, width: 100 },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         width: 130,
         cellRenderer: renderStatus,
         valueGetter: (p) => p.status,
@@ -155,22 +159,21 @@ export default function InventoryTable({
       {
         field: 'is_active',
         headerName: t('products.inventory.colActive'),
-        sortable: false,
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 110,
         cellRenderer: renderActive,
         valueGetter: activeValue,
       },
-      { field: 'brand_name', headerName: t('products.inventory.colBrand'), filter: { type: 'text' }, hide: true, minWidth: 140 },
+      { field: 'brand_name', headerName: t('products.inventory.colBrand'), type: 'text', hide: true, minWidth: 140 },
       {
         field: 'created_at',
         headerName: t('products.inventory.created'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (p) => (p.created_at ? formatDate(p.created_at) : '—'),
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
     ];
   }, [onEdit, onArchive, onToggleActive, onDelete, formatDate]);
 

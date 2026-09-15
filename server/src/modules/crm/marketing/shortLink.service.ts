@@ -51,21 +51,25 @@ const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
     code: 'code',
     source: 'source',
     medium: 'medium',
+    utm_campaign: 'utm_campaign',
     click_count: 'click_count',
     last_clicked_at: 'last_clicked_at',
+    is_active: 'is_active',
     created_at: 'created_at',
   },
   filterFields: {
+    label: { type: 'string' },
     source: { type: 'enum' },
     medium: { type: 'enum' },
     campaign_id: { type: 'string' },
     // The console filters by the frozen tag rather than the id: it is what the
     // Campaign column shows, and it is the same value in a link filed under a
     // share campaign and one filed by hand under the same campaign.
-    utm_campaign: { type: 'string' },
+    utm_campaign: { type: 'enum' },
     share_target: { type: 'enum' },
     is_active: { type: 'boolean' },
     click_count: { type: 'number' },
+    last_clicked_at: { type: 'date' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },

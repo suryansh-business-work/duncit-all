@@ -1,9 +1,10 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import type { RateLimitEventRow } from '../queries';
-import { allowance, enumLabel } from '../labels';
+import { OPTIONS, type RateLimitEventRow, type RateLimitOptionsData } from '../queries';
+import { allowance, enumLabel, enumOptions } from '../labels';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -55,6 +56,11 @@ interface Props {
 /** Every breach, refused or merely recorded. */
 export default function BlockedTable({ fetchRows, refetchRef, toolbarActions }: Readonly<Props>) {
   const { t } = useTranslation();
+  // The server's enum lists — the filter options for mode and surface.
+  const { data } = useQuery<{ rateLimitOptions: RateLimitOptionsData }>(OPTIONS, {
+    fetchPolicy: 'cache-first',
+  });
+  const enums = data?.rateLimitOptions;
 
   const columns = useMemo<DuncitColumn<RateLimitEventRow>[]>(
     () => [
@@ -68,7 +74,8 @@ export default function BlockedTable({ fetchRows, refetchRef, toolbarActions }: 
         field: 'mode',
         headerName: t('tech.rateLimit.field.mode'),
         width: 120,
-        filter: { type: 'text' },
+        type: 'enum',
+        options: enumOptions(t, enums?.modes ?? []),
         cellRenderer: (row) => renderMode(row, t),
         valueGetter: (row) => row.mode,
       },
@@ -77,19 +84,22 @@ export default function BlockedTable({ fetchRows, refetchRef, toolbarActions }: 
         headerName: t('tech.rateLimit.blocked.rule'),
         flex: 1,
         minWidth: 190,
+        type: 'text',
       },
       {
         field: 'limit_key',
         headerName: t('tech.rateLimit.blocked.who'),
         flex: 1,
         minWidth: 190,
+        type: 'text',
         cellRenderer: renderWho,
       },
       {
         field: 'surface',
         headerName: t('tech.rateLimit.blocked.system'),
         width: 160,
-        filter: { type: 'text' },
+        type: 'enum',
+        options: enumOptions(t, enums?.surfaces ?? []),
         cellRenderer: (row) => renderSystem(row, t),
         valueGetter: (row) => `${row.surface} ${row.app}`,
       },
@@ -98,17 +108,19 @@ export default function BlockedTable({ fetchRows, refetchRef, toolbarActions }: 
         headerName: t('tech.rateLimit.blocked.what'),
         flex: 1,
         minWidth: 180,
+        type: 'text',
         cellRenderer: renderWhat,
       },
       {
         field: 'count',
         headerName: t('tech.rateLimit.blocked.overBy'),
         width: 130,
+        type: 'number',
         valueGetter: (row) => allowance(row.count, row.limit),
       },
-      { field: 'retry_after', headerName: t('tech.rateLimit.blocked.retryAfter'), width: 130 },
+      { field: 'retry_after', headerName: t('tech.rateLimit.blocked.retryAfter'), width: 130, type: 'number' },
     ],
-    [t],
+    [enums, t],
   );
 
   return (

@@ -5,7 +5,7 @@ import ExploreReelVideo from '../ExploreReelVideo';
 
 describe('ExploreReelVideo', () => {
   it('renders a video element with the given src and autoplay attributes', () => {
-    const { container } = render(<ExploreReelVideo src="https://cdn.example.com/reel.mp4" />);
+    const { container } = render(<ExploreReelVideo src="https://cdn.example.com/reel.mp4" muted />);
     const video = container.querySelector('video');
     expect(video).toBeInTheDocument();
     expect(video).toHaveAttribute('src', 'https://cdn.example.com/reel.mp4');
@@ -16,7 +16,7 @@ describe('ExploreReelVideo', () => {
   });
 
   it('applies full-bleed cover styling', () => {
-    const { container } = render(<ExploreReelVideo src="x.mp4" />);
+    const { container } = render(<ExploreReelVideo src="x.mp4" muted />);
     const video = container.querySelector('video') as HTMLVideoElement;
     expect(video).toHaveStyle({ objectFit: 'cover', width: '100%', height: '100%' });
   });

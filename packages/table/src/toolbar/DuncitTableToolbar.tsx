@@ -3,24 +3,20 @@ import ClearIcon from '@mui/icons-material/Clear';
 import DensityMediumIcon from '@mui/icons-material/DensityMedium';
 import DensitySmallIcon from '@mui/icons-material/DensitySmall';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n';
 import type { TableDensity } from '../persistence';
 import type { DuncitColumn, TableFilterValue } from '../types';
+import { ActiveFilterChips } from './ActiveFilterChips';
 import { ColumnMenu } from './ColumnMenu';
-import { FilterPopover } from './FilterPopover';
-import { filterChipLabel } from './filterState';
 
 /**
  * The page's own toolbar buttons, switched off with the rest of the toolbar.
@@ -61,7 +57,11 @@ export interface DuncitTableToolbarProps<T> {
   loading: boolean;
 }
 
-/** Search + filters + chips on the left; actions slot, columns, density, CSV, refresh on the right. */
+/**
+ * Search + the active-filter chips on the left; actions slot, columns, density,
+ * CSV, refresh on the right. Filters are set from each column's header — the
+ * chips are where every applied one is seen and removed.
+ */
 export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>>) {
   const {
     columns,
@@ -81,16 +81,10 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
     loading,
   } = props;
   const { t } = useTranslation();
-  const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
   const [columnAnchor, setColumnAnchor] = useState<HTMLElement | null>(null);
-  const hasFilterableColumns = columns.some((column) => column.filter);
   const isCompact = density === 'compact';
   const densityTitle = isCompact ? t('shell.table.densityStandard') : t('shell.table.densityCompact');
   const placeholder = searchPlaceholder ?? t('shell.table.search');
-
-  const removeFilter = (field: string) => {
-    setFilters(filters.filter((filter) => filter.field !== field));
-  };
 
   const clearAdornment = (
     <InputAdornment position="end">
@@ -134,30 +128,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
 
           htmlInput: { 'aria-label': placeholder, 'data-testid': 'table-toolbar-search' }
         }} />
-      {hasFilterableColumns ? (
-        <Badge badgeContent={filters.length} color="primary">
-          <DuncitButton
-            size="small"
-            startIcon={<FilterListIcon />}
-            disabled={loading}
-            aria-haspopup="dialog"
-            aria-expanded={Boolean(filterAnchor)}
-            data-testid="table-toolbar-filters"
-            onClick={(event) => setFilterAnchor(event.currentTarget)}
-          >
-            {t('shell.table.filters')}
-          </DuncitButton>
-        </Badge>
-      ) : null}
-      {filters.map((filter) => (
-        <Chip
-          key={filter.field}
-          size="small"
-          label={filterChipLabel(columns, filter, t)}
-          disabled={loading}
-          onDelete={() => removeFilter(filter.field)}
-        />
-      ))}
+      <ActiveFilterChips columns={columns} filters={filters} setFilters={setFilters} loading={loading} />
       <Box sx={{ flexGrow: 1 }} />
       <Box component="fieldset" disabled={loading} sx={ACTIONS_FIELDSET_SX}>
         {toolbarActions}
@@ -204,14 +175,6 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
           <RefreshIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
-      <FilterPopover
-        open={Boolean(filterAnchor)}
-        anchorEl={filterAnchor}
-        onClose={() => setFilterAnchor(null)}
-        columns={columns}
-        filters={filters}
-        setFilters={setFilters}
-      />
       <ColumnMenu
         open={Boolean(columnAnchor)}
         anchorEl={columnAnchor}

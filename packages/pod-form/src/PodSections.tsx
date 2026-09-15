@@ -19,11 +19,14 @@ import OffersSection from './sections/OffersSection';
 import PerksSection from './sections/PerksSection';
 import ProductsSection from './sections/ProductsSection';
 import PaymentSection from './sections/PaymentSection';
+import TicketDiscountSection from './sections/TicketDiscountSection';
+import { podHasTicketPrice } from './ticket-discount';
 import type { PodFormValues } from './types';
 import { useTranslation } from './i18n/useTranslation';
 import type { Translate } from './i18n/useTranslation';
 
-type SectionId = 'basic' | 'when' | 'meeting' | 'about' | 'offers' | 'perks' | 'products' | 'payment';
+type SectionId =
+  | 'basic' | 'when' | 'meeting' | 'about' | 'offers' | 'perks' | 'products' | 'payment' | 'ticketDiscount';
 interface SectionDef {
   id: SectionId;
   label: string;
@@ -44,7 +47,13 @@ function whereSection(isVirtual: boolean, t: Translate): SectionDef {
  * physical one, and the host brings the meeting link and window to a virtual
  * one when they assign themselves.
  */
-function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boolean, t: Translate): SectionDef[] {
+function buildSections(
+  isVirtual: boolean,
+  showProducts: boolean,
+  autoPod: boolean,
+  ticketPriced: boolean,
+  t: Translate,
+): SectionDef[] {
   const list: SectionDef[] = [
     { id: 'basic', label: t('podForm.podSections.basicInformation'), render: () => <BasicSection /> },
   ];
@@ -65,6 +74,11 @@ function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boole
   if (!autoPod) {
     list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
   }
+  // Only a priced pod has a ticket to discount: hidden for a FREE type or a
+  // zero price, and never on a template the host prices later.
+  if (!autoPod && ticketPriced) {
+    list.push({ id: 'ticketDiscount', label: t('podForm.podSections.ticketDiscount'), render: () => <TicketDiscountSection /> });
+  }
   return list;
 }
 
@@ -73,7 +87,10 @@ export default function PodSections() {
   const { config, onPickImage, onPickVideo } = usePodFormData();
   const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
+  const podType = useWatch({ control, name: 'pod_type' });
+  const podAmount = useWatch({ control, name: 'pod_amount' });
   const isVirtual = podMode === 'VIRTUAL';
+  const ticketPriced = podHasTicketPrice({ pod_type: podType, pod_amount: podAmount });
   // The Pexels tabs open on people doing THIS category — the pod's own
   // sub-category, whether it comes from its club or an Auto Pod's template —
   // so the picker never asks for what the form already knows.
@@ -82,7 +99,7 @@ export default function PodSections() {
   const seedQuery = coverSearchTerm(category.sub_name);
   const pickImage = onPickImage ? () => onPickImage({ seedQuery }) : undefined;
   const pickVideo = onPickVideo ? () => onPickVideo({ seedQuery }) : undefined;
-  const sections = buildSections(isVirtual, config.showProducts, !!config.autoPod, t).map((section, index) => ({
+  const sections = buildSections(isVirtual, config.showProducts, !!config.autoPod, ticketPriced, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
   }));

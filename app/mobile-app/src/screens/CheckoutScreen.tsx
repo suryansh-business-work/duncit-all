@@ -8,13 +8,12 @@ import {
   CheckoutSuccess,
   AlreadyBookedDialog,
   OrderSummary,
-  type CheckoutDiscount,
   ProcessingOverlay,
   RazorpayWebView,
 } from '@/components/checkout';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
-import { buildBreakup, formatMoney } from '@/utils/checkout-math';
+import { formatMoney } from '@/utils/checkout-math';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
   buildCheckoutContact,
@@ -24,8 +23,8 @@ import {
   type RazorpayOrder,
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
-import { useCoinRedemption } from '@/hooks/useCoinRedemption';
-import { applyBillDiscounts, coinCheckoutSummary } from '@duncit/utils';
+import { usePodCheckoutBill } from '@/hooks/usePodCheckoutBill';
+import { coinCheckoutSummary } from '@duncit/utils';
 import { useCoinBalance } from '@/hooks/useCoins';
 import { useServerIssue } from '@/hooks/useServerIssue';
 import { IssueNotice } from '@/components/issue-notice/IssueNotice';
@@ -34,11 +33,8 @@ import { usePodTicket } from '@/hooks/usePodHistory';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
-import type { Translator } from '@duncit/i18n';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
-
-type CouponState = { ok?: boolean; code?: string | null; discount_amount?: number } | null;
 
 /** Which pay mutation the submit will call — named for the issue log. Module
  * scope so its branch stays off the screen's own complexity budget (S3776). */
@@ -49,36 +45,6 @@ const payOperationName = (razorpayEnabled: boolean) =>
 function CheckoutIssue({ issue }: Readonly<{ issue: ParsedIssue | null }>) {
   if (!issue) return null;
   return <IssueNotice issue={issue} page="Checkout" />;
-}
-
-/**
- * The deductions, in the order they are taken, for the summary card's own
- * rows. Coins are 1:1 with the rupee, so the count applied IS the amount off.
- * Module scope so the screen stays under its complexity budget. mWeb twin.
- *
- * They are taken off the gross and stopped at zero, so a coupon (or a coupon
- * plus coins) worth more than the ticket prints only what it actually paid
- * for: the excess is dropped, never refunded and never a negative total.
- */
-function buildDiscounts(
-  gross: number,
-  coupon: CouponState,
-  coinsApplied: number,
-  t: Translator['t'],
-): CheckoutDiscount[] {
-  const rows: CheckoutDiscount[] = [];
-  const couponOff = coupon?.discount_amount ?? 0;
-  if (coupon?.ok && couponOff > 0) {
-    rows.push({
-      key: 'coupon',
-      label: t('mweb.checkout.couponDiscount', { vars: { code: coupon.code ?? '' } }),
-      amount: couponOff,
-    });
-  }
-  if (coinsApplied > 0) {
-    rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coinsApplied });
-  }
-  return applyBillDiscounts(gross, rows).discounts;
 }
 
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
@@ -118,9 +84,15 @@ export function CheckoutScreen() {
   // payment through the standalone product checkout. Never mix the two.
   // Seats ride in from Pod Details. The ticket price multiplies; the server
   // re-prices and re-checks capacity, so this is a preview, never the charge.
+  // The multi-ticket tier comes off first, then the coupon, coins and GST.
   const seats = Math.max(1, Number(route.params?.seats ?? 1) || 1);
-  const amount = Math.round(Number(pod?.pod_amount ?? 0) * seats * 100) / 100;
-  const breakup = buildBreakup(amount, finance);
+  const { ticket, breakup, coins, payBreakup, discounts } = usePodCheckoutBill(
+    pod,
+    seats,
+    finance,
+    coupon,
+  );
+  const amount = ticket.gross;
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.
   const razorpayEnabled = !!finance?.razorpay_enabled;
@@ -132,13 +104,6 @@ export function CheckoutScreen() {
     paymentDocId: order?.payment_doc_id ?? null,
   }));
   const appliedCode = coupon?.ok ? coupon.code : null;
-  // The coupon discounts the whole pod bill, so coins redeem against its result.
-  const payableAfterCoupon = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
-  const coins = useCoinRedemption(payableAfterCoupon);
-  // What is actually charged, broken up the same way. Coins and coupons cut the
-  // GROSS, and the server re-quotes on what is left, so the tax owed drops with
-  // it — reusing the undiscounted breakup here would print a GST nobody pays.
-  const payBreakup = buildBreakup(coins.effectiveTotal, finance);
   // Earned on what is ACTUALLY charged — the server credits on the total after
   // coins are spent, so previewing off the gross would promise coins that never
   // arrive. A pod ticket earns at the pod rate.
@@ -149,7 +114,6 @@ export function CheckoutScreen() {
     payable: coins.effectiveTotal,
     earnPct: coinBalance?.earn_pct ?? 0,
   });
-  const discounts = buildDiscounts(amount, coupon, coins.applied, t);
   // Server-operation failures, parsed + logged once by the shared error module.
   const serverIssue = useServerIssue('Checkout');
   const payOperation = payOperationName(razorpayEnabled);
@@ -165,7 +129,8 @@ export function CheckoutScreen() {
     setApplyingCoupon(true);
     setCouponError(null);
     try {
-      const preview = await previewCoupon(code, amount);
+      // Priced on the post-tier ticket money, exactly as the server evaluates it.
+      const preview = await previewCoupon(code, ticket.net);
       if (preview?.ok) setCoupon(preview);
       else {
         setCoupon(null);

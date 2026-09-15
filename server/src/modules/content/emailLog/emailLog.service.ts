@@ -35,6 +35,8 @@ const EMAIL_LOG_TABLE_CONFIG: TableEntityConfig = {
     source: 'source',
     duration_ms: 'duration_ms',
     created_at: 'created_at',
+    reason: 'reason',
+    message_id: 'message_id',
   },
   filterFields: {
     status: { type: 'enum' },
@@ -44,6 +46,9 @@ const EMAIL_LOG_TABLE_CONFIG: TableEntityConfig = {
     template: { type: 'string' },
     to: { type: 'string' },
     created_at: { type: 'date' },
+    reason: { type: 'string' },
+    duration_ms: { type: 'number' },
+    message_id: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };

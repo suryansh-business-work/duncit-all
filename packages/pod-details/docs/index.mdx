@@ -70,6 +70,28 @@ The field selections live once in `queries.ts` and are interpolated into both do
 sets. The two sets feed the **same** components, so a field added to one and missed on
 the other renders a blank cell for one audience only (rule 34).
 
+## Multi-ticket discount: live offer vs frozen payment
+
+A pod can give a cheaper ticket when one checkout books several seats. The page shows
+it in two places, and each reads a different source:
+
+| Where | Reads | Why |
+| --- | --- | --- |
+| Overview → **Multi-ticket offer** | `pod.ticket_discount_enabled` + `ticket_discount_tiers` (live) | What a buyer gets **today**. One line per tier, e.g. `4+ tickets · 20% off`, built from `ticketDiscountRows` in `@duncit/utils` without the base "1 ticket" row. Hidden for a free pod, a ₹0 pod, or when the offer is off. |
+| Payments → **Multi-ticket discount** (hidden column) | `payment.ticket_discount_amount` + `ticket_discount_pct` (frozen) | What that booking **actually got** at checkout. Changing the tiers later never changes it. Shows `₹99.80 · 20%`, or `—` when no tier applied. |
+| Finance → **Multi-ticket discounts given** | `podFinanceBreakdown.ticket_discount_total` | The total of those frozen amounts across the pod's successful payments. Shown only when above 0, because it explains why **Collected total** is below face value. |
+
+```graphql
+pod(pod_doc_id: $id, include_deleted: true) {
+  pod_amount
+  ticket_discount_enabled
+  ticket_discount_tiers { min_tickets discount_pct }
+}
+```
+
+The payments selection is the shared `PAYMENTS_SELECTION` string, so the Club Admin and
+Regional twins pick up the two payment fields automatically.
+
 ## Slots
 
 Coupons are **not** in this package: managing them is platform-wide (`ADMIN_RW`

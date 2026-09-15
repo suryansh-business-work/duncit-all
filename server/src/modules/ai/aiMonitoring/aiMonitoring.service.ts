@@ -273,6 +273,8 @@ const MONITORING_TABLE_CONFIG: TableEntityConfig = {
     action: 'action',
     surface: 'surface',
     folder: 'folder',
+    file_name: 'file_name',
+    summary: 'summary',
   },
   filterFields: {
     risk: { type: 'enum' },
@@ -280,6 +282,8 @@ const MONITORING_TABLE_CONFIG: TableEntityConfig = {
     action: { type: 'enum' },
     surface: { type: 'enum' },
     folder: { type: 'string' },
+    file_name: { type: 'string' },
+    summary: { type: 'string' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },

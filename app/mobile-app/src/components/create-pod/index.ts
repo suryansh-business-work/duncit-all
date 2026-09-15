@@ -4,6 +4,14 @@ export { ChipArrayField } from './ChipArrayField';
 export { ClubSearchField } from './ClubSearchField';
 export { PlaceChargesField } from './PlaceChargesField';
 export {
+  TicketDiscountField,
+  type TicketDiscountFieldErrors,
+  type TicketDiscountFieldProps,
+} from './TicketDiscountField';
+export { TicketDiscountTierRow, type TicketDiscountTierRowErrors } from './TicketDiscountTierRow';
+export { PodTicketDiscountCard } from './PodTicketDiscountCard';
+export { useTicketDiscountField, type TicketDiscountFieldSource } from './useTicketDiscountField';
+export {
   AttachedProductRow,
   PodProductsField,
   ProductPickerCard,

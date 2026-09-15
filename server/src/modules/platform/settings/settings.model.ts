@@ -5,6 +5,7 @@ import {
   THEME_TOKEN_SOURCES,
   type ThemeTokens,
 } from "./theme-tokens";
+import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
 
 export interface IAppSettings extends Document {
   singleton_key: string;
@@ -43,6 +44,10 @@ export interface IAppSettings extends Document {
    * pod settles with NO host earnings — the venue, the club admin and the
    * product sellers are still paid from the same collection. */
   pod_complete_timeout_hours: number;
+  /** The biggest discount (whole %, 1–99) any multi-ticket tier on a pod may
+   * give (Admin > Pods > Pod Settings). Checked whenever a pod's tiers are
+   * written; tiers already stored above a lowered value stay until edited. */
+  ticket_discount_max_pct: number;
   /** How many hours after a pod ENDS the host is emailed and WhatsApped a
    * reminder to complete it (Admin > Pods > Pod Settings). Meant to sit BELOW
    * `pod_complete_timeout_hours` — a nudge that lands after the deadline is a
@@ -141,6 +146,12 @@ const appSettingsSchema = new Schema<IAppSettings>(
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
     attendance_otp_required: { type: Boolean, default: true },
     pod_complete_timeout_hours: { type: Number, default: 24, min: 1, max: 8760 },
+    ticket_discount_max_pct: {
+      type: Number,
+      default: DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+      min: 1,
+      max: 99,
+    },
     pod_complete_reminder_hours: { type: Number, default: 12, min: 1, max: 8760 },
     pod_reminder_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     venue_slot_reminder_lead_hours: { type: Number, default: 48, min: 1, max: 8760 },

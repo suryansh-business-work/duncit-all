@@ -9,7 +9,7 @@ import {
 } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import type { PodWithdrawalGroup } from './queries';
-import { translatedRoleLabel, type WithdrawerRole } from './roles';
+import { WITHDRAWER_ROLES, translatedRoleLabel, type WithdrawerRole } from './roles';
 
 type ChipColor = 'default' | 'primary' | 'secondary' | 'info' | 'warning' | 'success';
 
@@ -98,6 +98,7 @@ export default function PodWithdrawalsTable({
         headerName: t('finance.withdrawals.colPodTitle'),
         flex: 1,
         minWidth: 240,
+        type: 'text',
         cellRenderer: renderPodTitle,
         valueGetter: (row) => row.pod_title || EM_DASH,
       },
@@ -106,10 +107,13 @@ export default function PodWithdrawalsTable({
         headerName: t('finance.withdrawals.colRequestedFrom'),
         flex: 1,
         minWidth: 280,
+        type: 'enum',
+        options: WITHDRAWER_ROLES.map((role) => ({ value: role, label: translatedRoleLabel(t, role) })),
         // Derived from the allocations rather than stored on a row, so the
         // server has no path to sort or filter it — the page-level Role filter
         // is how this column is narrowed.
         sortable: false,
+        filterable: false,
         cellRenderer: renderRequestedFrom(t),
         valueGetter: (row) => row.requested_from.map((role) => translatedRoleLabel(t, role)).join(', '),
       },
@@ -117,6 +121,11 @@ export default function PodWithdrawalsTable({
         field: 'status',
         headerName: t('finance.withdrawals.colStatus'),
         width: 160,
+        type: 'enum',
+        options: [
+          { value: 'PENDING', label: t('finance.withdrawals.statusPending') },
+          { value: 'APPROVED', label: t('finance.withdrawals.statusApproved') },
+        ],
         cellRenderer: renderStatus(t),
         valueGetter: (row) => row.status,
       },

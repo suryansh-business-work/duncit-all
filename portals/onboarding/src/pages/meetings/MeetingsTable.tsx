@@ -162,18 +162,28 @@ export default function MeetingsTable({
         onReject={onReject}
       />
     );
+    const statusOptions = [
+      { value: 'REQUESTED', label: t('onboarding.meetings.requested') },
+      { value: 'SCHEDULED', label: t('onboarding.meetings.scheduled') },
+      { value: 'DONE', label: t('onboarding.meetings.done') },
+      { value: 'CANCELLED', label: t('onboarding.meetings.cancelled') },
+    ];
     return [
       {
         field: 'request_no',
         headerName: t('onboarding.common.requestId'),
         minWidth: 150,
+        type: 'text',
         cellRenderer: renderRequestNo,
         valueGetter: (m) => m.request_no || '—',
       },
       {
         field: 'requester',
         headerName: t('onboarding.meetings.requester'),
+        type: 'text',
+        // The account's name joined from users at read time, else the contact name — no single stored path.
         sortable: false,
+        filterable: false,
         flex: 1,
         minWidth: 170,
         cellRenderer: renderRequester,
@@ -182,7 +192,10 @@ export default function MeetingsTable({
       {
         field: 'category',
         headerName: t('onboarding.common.category'),
+        type: 'text',
+        // Joined from three category-name lookups at read time — no stored path to order or match.
         sortable: false,
+        filterable: false,
         minWidth: 190,
         valueGetter: catPath,
       },
@@ -190,20 +203,20 @@ export default function MeetingsTable({
         field: 'requested_at',
         headerName: t('onboarding.meetings.requestedFor'),
         minWidth: 170,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (m) => fmt(m.requested_at),
       },
       {
         field: 'scheduled_at',
         headerName: t('onboarding.meetings.scheduled'),
         minWidth: 170,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (m) => fmt(m.scheduled_at),
       },
       {
         field: 'link',
         headerName: t('onboarding.meetings.link'),
-        sortable: false,
+        type: 'text',
         width: 90,
         cellRenderer: renderJoin,
         valueGetter: (m) => m.meeting_link ?? '',
@@ -212,6 +225,8 @@ export default function MeetingsTable({
         field: 'status',
         headerName: t('shell.common.status'),
         width: 140,
+        type: 'enum',
+        options: statusOptions,
         cellRenderer: renderMeetingStatus,
         valueGetter: (m) => m.status,
       },
@@ -219,14 +234,15 @@ export default function MeetingsTable({
         field: 'approval_status',
         headerName: t('onboarding.meetings.approval'),
         width: 150,
-        filter: { type: 'select', options: APPROVAL_OPTIONS },
+        type: 'enum',
+        options: APPROVAL_OPTIONS,
         cellRenderer: renderApproval,
         valueGetter: (m) => APPROVAL_LABELS[m.approval_status ?? 'NONE'],
       },
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 90,
         cellRenderer: renderActions,
         // Renderer-only: @duncit/table marks renderer columns never-equal, so the
@@ -235,7 +251,7 @@ export default function MeetingsTable({
         valueGetter: (m) => (m.approval_status === 'DENIED' || m.status === 'CANCELLED' ? '—' : m.status),
       },
     ];
-  }, [onSchedule, onMarkDone, onDecide, onReject, onRequester]);
+  }, [onSchedule, onMarkDone, onDecide, onReject, onRequester, t]);
 
   return (
     <DuncitTable<OnboardingMeeting>

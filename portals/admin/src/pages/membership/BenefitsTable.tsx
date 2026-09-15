@@ -65,6 +65,7 @@ export default function BenefitsTable({
       {
         field: 'label',
         headerName: t('admin.membership.benefit'),
+        type: 'text',
         flex: 1,
         minWidth: 320,
         cellRenderer: renderLabel,
@@ -73,19 +74,19 @@ export default function BenefitsTable({
       {
         field: 'group',
         headerName: t('admin.membership.section'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 160,
         valueGetter: (r) => r.group,
       },
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 120,
         cellRenderer: (row: BenefitRow) => renderStatus(row, t),
         valueGetter: (r) => (r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')),
       },
-      { field: 'sort_order', headerName: t('admin.podPlans.sort'), width: 90 },
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), type: 'number', width: 90 },
       actionsColumn<BenefitRow>({ onEdit, onDelete }),
     ],
     [onEdit, onDelete]

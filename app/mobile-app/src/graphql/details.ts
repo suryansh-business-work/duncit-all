@@ -87,6 +87,11 @@ export const PodDetailsDocument = gql(`
         amount
         note
       }
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
       products_enabled
       product_requests {
         product_id

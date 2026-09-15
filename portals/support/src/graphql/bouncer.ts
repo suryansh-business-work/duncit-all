@@ -66,6 +66,7 @@ export const BOUNCER_SOS_ALERTS = gql`
     $page_size: Int
     $sort_by: String
     $sort_dir: String
+    $filters: [TableFilterInput!]
   ) {
     bouncerSosAlerts(
       status: $status
@@ -74,6 +75,7 @@ export const BOUNCER_SOS_ALERTS = gql`
       page_size: $page_size
       sort_by: $sort_by
       sort_dir: $sort_dir
+      filters: $filters
     ) {
       items {
         ${SOS_FIELDS}
@@ -101,6 +103,7 @@ export const BOUNCER_CALLBACK_REQUESTS = gql`
     $page_size: Int
     $sort_by: String
     $sort_dir: String
+    $filters: [TableFilterInput!]
   ) {
     bouncerCallbackRequests(
       status: $status
@@ -109,6 +112,7 @@ export const BOUNCER_CALLBACK_REQUESTS = gql`
       page_size: $page_size
       sort_by: $sort_by
       sort_dir: $sort_dir
+      filters: $filters
     ) {
       items {
         ${CALLBACK_FIELDS}

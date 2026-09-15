@@ -39,6 +39,13 @@ export interface InvoiceData {
   // callers that predate coins keep working; zero prints nothing.
   coins_redeemed?: number;
   coins_earned?: number;
+  // The pod's multi-ticket discount, frozen on the payment. The line items are
+  // already priced net of it, so the row states why they sit below list price.
+  // Optional like the coins; a zero amount prints nothing.
+  ticket_discount_pct?: number;
+  ticket_discount_amount?: number;
+  /** Tickets the discount covered — the booking's seats. */
+  ticket_discount_tickets?: number;
   // Dynamic branding pulled from Finance → Invoice Management. All optional so
   // older callers keep working; the generator renders only what is provided.
   invoice_label?: string;
@@ -111,6 +118,18 @@ function drawBillToCard(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R
     by += 13;
   }
   return cardH;
+}
+
+/** The multi-ticket discount's totals row, or null when the payment had none. */
+function ticketDiscountRow(
+  data: InvoiceData,
+  fmt: (n: number) => string
+): { label: string; value: string } | null {
+  const amount = Math.max(0, Number(data.ticket_discount_amount) || 0);
+  if (amount <= 0) return null;
+  const pct = Number(data.ticket_discount_pct) || 0;
+  const tickets = Number(data.ticket_discount_tickets) || 0;
+  return { label: `Multi-ticket discount (${pct}% on ${tickets} tickets)`, value: `- ${fmt(amount)}` };
 }
 
 /** The invoice page. Exported so a combined document can add a page of the
@@ -209,15 +228,22 @@ export function drawInvoice(
   // ---- Totals ----
   y += 10;
   const totalsRow = (label: string, value: string, bold = false) => {
+    // The label box starts at the left margin but still ends at 450, right
+    // aligned, so short labels sit where they always did and a long one (the
+    // multi-ticket discount) fits on one line instead of wrapping into the next.
     doc
       .font(bold ? 'Helvetica-Bold' : 'Helvetica')
       .fontSize(bold ? 12 : 10)
       .fillColor(bold ? INK : MUTED)
-      .text(label, 300, y, { width: 150, align: 'right' })
+      .text(label, L, y, { width: 450 - L, align: 'right' })
       .fillColor(bold ? ACCENT : INK)
       .text(value, 456, y, { width: R - 456, align: 'right' });
     y += bold ? 22 : 17;
   };
+  // Above the tax lines on purpose: the discount came off the ticket price
+  // before GST was worked out, so the block reads discount → taxable → GST → paid.
+  const discountRow = ticketDiscountRow(data, fmt);
+  if (discountRow) totalsRow(discountRow.label, discountRow.value);
   totalsRow('Taxable value', fmt(data.subtotal));
   totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
   doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();

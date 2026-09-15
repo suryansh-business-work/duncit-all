@@ -9,6 +9,7 @@ import {
   allowedSignatureMethods,
   applySignature,
   assertRecipient,
+  liftSigningStatusFilter,
   signatoriesForPdf,
   signatoriesToPub,
   validateSignature,
@@ -53,14 +54,17 @@ const CONTRACT_TABLE_CONFIG: TableEntityConfig = {
     contract_no: 'contract_no',
     title: 'title',
     status: 'status',
+    // Derived from signed_at: unsigned (null) orders before signed.
+    signing_status: 'signed_at',
     counterparty: 'counterparty',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
+  // `signing_status` is matched by liftSigningStatusFilter, not listed here.
   filterFields: {
     contract_no: { type: 'string' },
     title: { type: 'string' },
-    status: { type: 'string' },
+    status: { type: 'enum' },
     counterparty: { type: 'string' },
     created_at: { type: 'date' },
     updated_at: { type: 'date' },
@@ -84,10 +88,11 @@ const asDate = (value: unknown): Date | null => {
 export const contractService = {
   /** Server-side table page (search/filter/sort/paginate) for contractsTable. */
   async table(input?: TableQueryInput | null) {
+    const { base, query } = liftSigningStatusFilter(input);
     const { docs, total, page, page_size } = await runTableQuery<IContract>(
       ContractModel,
-      {},
-      input,
+      base,
+      query,
       CONTRACT_TABLE_CONFIG
     );
     return { rows: docs.map(toPub), total, page, page_size };

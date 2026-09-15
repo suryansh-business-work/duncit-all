@@ -534,6 +534,13 @@ changeRequests: {
       changeRequestLabel: 'Points',
       changeRequestMin: 'Between 0 and 10 points. Default 5.',
       changeRequestInvalid: 'Enter a whole number between 0 and 10.',
+
+      // The cap on every pod's multi-ticket discount tiers (1–99, default 50).
+      ticketDiscountMaxPctLabel: 'Max multi-ticket discount (%)',
+      ticketDiscountMaxPctHint:
+        'The biggest discount any multi-ticket tier on a pod may give (1–99). Pods already above it keep their tiers until they are edited.',
+      ticketDiscountMaxPctMin: 'Between 1 and 99 percent. Default 50.',
+      ticketDiscountMaxPctInvalid: 'Enter a whole number between 1 and 99.',
     },
 
     completePod: {

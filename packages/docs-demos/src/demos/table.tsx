@@ -17,14 +17,94 @@ import { defineDemo, defineDemos } from '../types';
 
 interface QueryMock {
   query: TableQueryState;
-  /** Column headers, so a chip can name a field the way the table does. */
-  columns: { field: string; headerName: string }[];
+  /** The columns, so a chip names a field — and prints its value — the way the table does. */
+  columns: DuncitColumn<Record<string, unknown>>[];
+}
+
+interface ClientRow {
+  id: string;
+  pod: string;
+  venue: string;
+  created_at: string;
 }
 
 interface RowsMock {
-  rows: { id: string; pod: string; venue: string; created_at: string }[];
+  rows: ClientRow[];
   search: string;
   page_size: number;
+}
+
+const CLIENT_COLUMNS: DuncitColumn<ClientRow>[] = [
+  { field: 'id', headerName: 'Pod', type: 'text' },
+  { field: 'pod', headerName: 'Title', type: 'text' },
+  { field: 'venue', headerName: 'Venue', type: 'text' },
+  { field: 'created_at', headerName: 'Created', type: 'date' },
+];
+
+interface PayoutRowMock {
+  id: string;
+  payout_no: string;
+  host_name: string;
+  amount: number;
+  payout_status: 'PENDING' | 'PAID' | 'ON_HOLD';
+  is_instant: boolean;
+  requested_at: string;
+}
+
+interface TypedColumnsMock {
+  rows: PayoutRowMock[];
+}
+
+const PAYOUT_STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'ON_HOLD', label: 'On hold' },
+];
+
+const payoutRowId = (row: PayoutRowMock) => row.id;
+
+const PAYOUT_COLUMNS: DuncitColumn<PayoutRowMock>[] = [
+  { field: 'payout_no', headerName: 'Payout', type: 'text', minWidth: 150 },
+  { field: 'host_name', headerName: 'Host', type: 'text', flex: 1, minWidth: 150 },
+  { field: 'amount', headerName: 'Amount (₹)', type: 'number', width: 140 },
+  { field: 'payout_status', headerName: 'Status', type: 'enum', options: PAYOUT_STATUS_OPTIONS, width: 140 },
+  {
+    field: 'is_instant',
+    headerName: 'Instant',
+    type: 'boolean',
+    width: 120,
+    valueGetter: (row) => (row.is_instant ? 'Yes' : 'No'),
+  },
+  {
+    field: 'requested_at',
+    headerName: 'Requested',
+    type: 'date',
+    width: 150,
+    valueGetter: (row) => formatDateCell(row.requested_at),
+  },
+];
+
+/**
+ * One column of every type, over rows held in memory. Each header carries its
+ * own sort and filter, and `clientTableFetch` compares the way the column's
+ * type says — so the same controls a server table sends as a query are answered
+ * here in the browser.
+ */
+function TypedColumnsDemo({ rows }: Readonly<{ rows: PayoutRowMock[] }>) {
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, (row) => `${row.payout_no} ${row.host_name}`, PAYOUT_COLUMNS),
+    [rows],
+  );
+  return (
+    <DuncitTable<PayoutRowMock>
+      tableId="docs-demo-typed-columns"
+      columns={PAYOUT_COLUMNS}
+      fetchRows={fetchRows}
+      getRowId={payoutRowId}
+      defaultSort={{ field: 'requested_at', dir: 'desc' }}
+      emptyText="No payouts"
+    />
+  );
 }
 
 interface MeetingRowMock {
@@ -53,11 +133,17 @@ const renderStatus = (row: MeetingRowMock) => (
 );
 
 const MEETING_COLUMNS: DuncitColumn<MeetingRowMock>[] = [
-  { field: 'request_no', headerName: 'Request', minWidth: 160 },
-  { field: 'applicant', headerName: 'Applicant', flex: 1, minWidth: 150 },
+  { field: 'request_no', headerName: 'Request', type: 'text', minWidth: 160 },
+  { field: 'applicant', headerName: 'Applicant', type: 'text', flex: 1, minWidth: 150 },
   {
     field: 'status',
     headerName: 'Status',
+    type: 'enum',
+    options: [
+      { value: 'REQUESTED', label: 'Requested' },
+      { value: 'SCHEDULED', label: 'Scheduled' },
+      { value: 'DONE', label: 'Done' },
+    ],
     width: 140,
     cellRenderer: renderStatus,
     valueGetter: (row) => row.status,
@@ -76,7 +162,7 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
   const updateRowRef = useRef<((row: MeetingRowMock) => void) | null>(null);
   const [applied, setApplied] = useState(0);
   const fetchRows = useMemo(
-    () => clientTableFetch(rows, (row) => `${row.request_no} ${row.applicant}`),
+    () => clientTableFetch(rows, (row) => `${row.request_no} ${row.applicant}`, MEETING_COLUMNS),
     [rows],
   );
 
@@ -128,9 +214,9 @@ interface ScopeMock {
 const scopeRowId = (row: ScopeRowMock) => row.id;
 
 const SCOPE_COLUMNS: DuncitColumn<ScopeRowMock>[] = [
-  { field: 'id', headerName: 'Pod', width: 150 },
-  { field: 'pod', headerName: 'Title', flex: 1, minWidth: 180 },
-  { field: 'city', headerName: 'City', width: 130 },
+  { field: 'id', headerName: 'Pod', type: 'text', width: 150 },
+  { field: 'pod', headerName: 'Title', type: 'text', flex: 1, minWidth: 180 },
+  { field: 'city', headerName: 'City', type: 'text', width: 130 },
 ];
 
 /**
@@ -150,7 +236,7 @@ function BulkScopeDemo({ rows }: Readonly<{ rows: ScopeRowMock[] }>) {
   const [view, setView] = useState<TableQuerySnapshot | null>(null);
   const clearRef = useRef<(() => void) | null>(null);
   const fetchRows = useMemo(
-    () => clientTableFetch(rows, (row) => `${row.pod} ${row.city} ${row.id}`),
+    () => clientTableFetch(rows, (row) => `${row.pod} ${row.city} ${row.id}`, SCOPE_COLUMNS),
     [rows],
   );
   const selection = useMemo(() => ({ onChange: setTicked, clearRef }), []);
@@ -205,9 +291,17 @@ export default defineDemos('table', [
         ],
       },
       columns: [
-        { field: 'status', headerName: 'Status' },
-        { field: 'is_paid', headerName: 'Paid' },
-        { field: 'created_at', headerName: 'Created' },
+        {
+          field: 'status',
+          headerName: 'Status',
+          type: 'enum',
+          options: [
+            { value: 'ACTIVE', label: 'Active' },
+            { value: 'PENDING', label: 'Pending' },
+          ],
+        },
+        { field: 'is_paid', headerName: 'Paid', type: 'boolean' },
+        { field: 'created_at', headerName: 'Created', type: 'date' },
       ],
     },
     compute: (mock) => ({
@@ -223,6 +317,23 @@ export default defineDemos('table', [
       'A date cell it cannot read': formatDateCell('1787824800000'),
       'The em dash it uses': EM_DASH,
     }),
+  }),
+
+  defineDemo<TypedColumnsMock>({
+    id: 'typed-columns',
+    title: 'Every column sorts and filters by what it holds',
+    note:
+      'One column of each type. Open a header’s filter: Payout and Host offer contains / equals / does not equal, Amount offers = ≠ ≥ ≤ and between, Status is a pick-list of its options, Instant is yes / no, Requested is a from–to date range. Click a header to sort — Amount and Requested start largest / newest first, the text columns A→Z. Sorting and filtering compare the raw value by type, so ₹900 sorts below ₹12,400 and dates stay chronological even though the cells print formatted text.',
+    mock: {
+      rows: [
+        { id: 'p1', payout_no: 'DUN-PAY-10241', host_name: 'Aarav Mehta', amount: 8250, payout_status: 'PENDING', is_instant: true, requested_at: '2026-09-12T09:15:00.000Z' },
+        { id: 'p2', payout_no: 'DUN-PAY-10240', host_name: 'Nikita Rao', amount: 12400, payout_status: 'PAID', is_instant: false, requested_at: '2026-09-08T11:40:00.000Z' },
+        { id: 'p3', payout_no: 'DUN-PAY-10239', host_name: 'Kabir Singh', amount: 900, payout_status: 'ON_HOLD', is_instant: false, requested_at: '2026-09-10T06:05:00.000Z' },
+        { id: 'p4', payout_no: 'DUN-PAY-10238', host_name: 'Meera Iyer', amount: 4600, payout_status: 'PAID', is_instant: true, requested_at: '2026-09-01T14:20:00.000Z' },
+        { id: 'p5', payout_no: 'DUN-PAY-10237', host_name: 'Rohan Das', amount: 15200, payout_status: 'PENDING', is_instant: false, requested_at: '2026-09-14T18:45:00.000Z' },
+      ],
+    },
+    render: (mock) => <TypedColumnsDemo rows={mock.rows} />,
   }),
 
   defineDemo<RowUpdateMock>({
@@ -269,7 +380,7 @@ export default defineDemos('table', [
     id: 'client-fetch',
     title: 'The same table, paged in the browser',
     note:
-      'Not every table has a server endpoint. clientTableFetch gives an in-memory array the identical contract, so the component never learns which kind it is looking at.',
+      'Not every table has a server endpoint. clientTableFetch gives an in-memory array the identical contract — search, every column filter and the sort, compared by each column’s type — so the component never learns which kind it is looking at.',
     mock: {
       search: 'hsr',
       page_size: 2,
@@ -282,7 +393,7 @@ export default defineDemos('table', [
     compute: (mock) => {
       // The fetch is a Promise by contract, so the demo shows the contract and
       // the filtering it does rather than pretending to await it in a getter.
-      const fetch = clientTableFetch(mock.rows, (row) => `${row.pod} ${row.venue} ${row.id}`);
+      const fetch = clientTableFetch(mock.rows, (row) => `${row.pod} ${row.venue} ${row.id}`, CLIENT_COLUMNS);
       const matches = mock.rows.filter((row) =>
         `${row.pod} ${row.venue} ${row.id}`.toLowerCase().includes(mock.search.toLowerCase())
       );

@@ -1,6 +1,6 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
-import type { PodPickerProduct } from '@duncit/utils';
+import type { PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 
 export const podTypes = (t: Translate) => [
@@ -59,6 +59,8 @@ export interface CreatePodFormValues {
   products_enabled: boolean;
   product_requests: PodProductRequest[];
   place_charges: PodPlaceCharge[];
+  ticket_discount_enabled: boolean;
+  ticket_discount_tiers: TicketDiscountTier[];
   payment_terms: string;
   /** Client-side publish gate — host must accept the Organizer Terms (last step). */
   agreed_to_terms: boolean;
@@ -93,6 +95,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   products_enabled: false,
   product_requests: [],
   place_charges: [],
+  ticket_discount_enabled: false,
+  ticket_discount_tiers: [],
   payment_terms: '',
   agreed_to_terms: false,
 };

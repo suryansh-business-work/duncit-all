@@ -4,10 +4,9 @@ import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { StatusChip } from '@duncit/ui';
-import { DuncitTable, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { DuncitTable, clientTableFetch, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import {
   POD_FINANCE_RELEASES,
-  applyPodFinanceQuery,
   groupReleasesByPod,
   money,
   type PodFinanceGroup,
@@ -40,6 +39,8 @@ interface QueryData {
 
 const getGroupRowId = (g: PodFinanceGroup) => g.pod_id;
 
+const searchGroup = (g: PodFinanceGroup) => g.pod_title;
+
 const renderPod = (g: PodFinanceGroup) => (
   <Typography variant="body2" component="span" sx={{
     fontWeight: 700
@@ -66,32 +67,24 @@ export default function PodFinancePage() {
   const client = useApolloClient();
   const [sym, setSym] = useState('');
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query<QueryData>({
-        query: POD_FINANCE_RELEASES,
-        fetchPolicy: 'network-only',
-      });
-      setSym(data?.publicFinanceSettings?.currency_symbol ?? '');
-      return applyPodFinanceQuery(groupReleasesByPod(data?.paymentReleaseRequests ?? []), q);
-    },
-    [client],
-  );
-
   const columns = useMemo<DuncitColumn<PodFinanceGroup>[]>(
     () => [
-      { field: 'pod_title', headerName: t('finance.common.pod'), flex: 1, minWidth: 200, cellRenderer: renderPod },
-      { field: 'releases_count', headerName: t('finance.podFinance.releases'), width: 110 },
+      { field: 'pod_title', headerName: t('finance.common.pod'), flex: 1, minWidth: 200, type: 'text', cellRenderer: renderPod },
+      { field: 'releases_count', headerName: t('finance.podFinance.releases'), width: 110, type: 'number' },
       {
         field: 'requested_total',
         headerName: t('finance.common.requested'),
         width: 130,
+        type: 'number',
         valueGetter: (g) => money(sym, g.requested_total),
       },
       {
         field: 'status_counts',
         headerName: t('finance.podFinance.releaseStatuses'),
+        type: 'text',
+        // A per-status count map assembled in JS — no single value to order or match.
         sortable: false,
+        filterable: false,
         minWidth: 220,
         cellRenderer: renderStatuses,
         valueGetter: statusesValue,
@@ -101,10 +94,26 @@ export default function PodFinancePage() {
         headerName: t('finance.podFinance.lastActivity'),
         hide: true,
         width: 170,
+        type: 'date',
         valueGetter: lastActivityValue,
       },
     ],
     [sym],
+  );
+
+  // There is no grouped server *Table query for pod finance: the flat releases
+  // are fetched, grouped per pod, then searched/filtered/sorted/paged in memory.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query<QueryData>({
+        query: POD_FINANCE_RELEASES,
+        fetchPolicy: 'network-only',
+      });
+      setSym(data?.publicFinanceSettings?.currency_symbol ?? '');
+      const groups = groupReleasesByPod(data?.paymentReleaseRequests ?? []);
+      return clientTableFetch(groups, searchGroup, columns)(q);
+    },
+    [client, columns],
   );
 
   const openDetail = useCallback(

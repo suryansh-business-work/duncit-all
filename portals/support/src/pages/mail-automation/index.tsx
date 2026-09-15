@@ -12,7 +12,6 @@ import {
 import { DuncitButton } from '@duncit/buttons';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
-import type { TableFetch } from '@duncit/table';
 import {
   MAIL_AUTOMATION_ACCOUNTS,
   type MailAutomationAccount,
@@ -20,6 +19,10 @@ import {
 import MailboxRulesTable from './MailboxRulesTable';
 import { MailAutomationRuleForm } from './mail-automation-rule';
 import RecentThreads from './RecentThreads';
+
+/** One stable empty list, so the table's fetch is not rebuilt on every render
+ *  while the accounts are still loading. */
+const NO_ACCOUNTS: readonly MailAutomationAccount[] = [];
 
 /**
  * Support > Mail Automation.
@@ -47,16 +50,6 @@ export default function MailAutomationPage() {
   */
   const [opened, setOpened] = useState<MailAutomationAccount | null>(null);
   const rows = data?.mailAutomationAccounts;
-
-  const fetchRows = useCallback<TableFetch<MailAutomationAccount>>(
-    async (query) => {
-      const all = rows ?? [];
-      const term = query.search.trim().toLowerCase();
-      const matched = term ? all.filter((row) => row.email.toLowerCase().includes(term)) : all;
-      return { rows: matched, total: matched.length };
-    },
-    [rows]
-  );
 
   // The table caches its page until told otherwise, so a refetched list has to
   // push itself in rather than wait to be asked.
@@ -96,7 +89,7 @@ export default function MailAutomationPage() {
       ) : null}
 
       <MailboxRulesTable
-        fetchRows={fetchRows}
+        rows={rows ?? NO_ACCOUNTS}
         refetchRef={refetchRef}
         onConfigure={onConfigure}
       />

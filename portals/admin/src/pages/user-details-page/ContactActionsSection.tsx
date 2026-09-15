@@ -110,16 +110,18 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       {
         field: 'type',
         headerName: t('admin.roles.type'),
-        filter: { type: 'select', options: typeOptions(t) },
+        type: 'enum',
+        options: typeOptions(t),
         width: 110,
         cellRenderer: renderType,
         valueGetter: (a) => a.type,
       },
-      { field: 'target', headerName: t('admin.contact.target'), flex: 1, minWidth: 160 },
-      { field: 'status', headerName: t('shell.common.status'), filter: { type: 'text' }, minWidth: 130 },
+      { field: 'target', headerName: t('admin.contact.target'), type: 'text', flex: 1, minWidth: 160 },
+      { field: 'status', headerName: t('shell.common.status'), type: 'text', minWidth: 130 },
       {
         field: 'notes',
         headerName: t('admin.contact.notes'),
+        type: 'text',
         flex: 2,
         minWidth: 240,
         cellRenderer: renderNotes,
@@ -128,18 +130,18 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       {
         field: 'created_at',
         headerName: t('admin.contact.when'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 190,
         valueGetter: whenValue,
       },
       {
         field: 'duration_seconds',
         headerName: t('admin.contact.durationS'),
-        filter: { type: 'number' },
+        type: 'number',
         hide: true,
         width: 120,
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 90, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 90, cellRenderer: renderActions },
     ];
   }, [deleteAction]);
 

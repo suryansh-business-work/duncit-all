@@ -34,12 +34,13 @@ const renderStatus = (a: SosAlert) => <StatusChip status={a.status} colorMap={SO
 const podValue = (a: SosAlert) =>
   a.pod.venue_name ? `${a.pod.title} · ${a.pod.venue_name}` : a.pod.title;
 
-// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
-// filter maps onto the bouncerSosAlerts query's `status` arg.
+// Sort and filter keys are allowlisted on the server (BOUNCER_SORTABLE /
+// BOUNCER_FILTERABLE); column filters travel in the query's `filters` arg.
 const buildColumns = (t: Translate): DuncitColumn<SosAlert>[] => [
   {
     field: 'ticket_no',
     headerName: t('support.sos.colId'),
+    type: 'text',
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (a) => a.ticket_no,
@@ -47,15 +48,29 @@ const buildColumns = (t: Translate): DuncitColumn<SosAlert>[] => [
   {
     field: 'user',
     headerName: t('support.sos.colUser'),
+    type: 'text',
+    // The alert stores only the user's id; the name is looked up per row.
     sortable: false,
+    filterable: false,
     minWidth: 140,
     cellRenderer: renderUser,
     valueGetter: (a) => a.user.name,
   },
-  { field: 'pod', headerName: t('support.sos.colPod'), sortable: false, flex: 1, minWidth: 180, valueGetter: podValue },
+  {
+    field: 'pod',
+    headerName: t('support.sos.colPod'),
+    type: 'text',
+    // The alert stores only the pod's id; title and venue are looked up per row.
+    sortable: false,
+    filterable: false,
+    flex: 1,
+    minWidth: 180,
+    valueGetter: podValue,
+  },
   {
     field: 'contact_phone',
     headerName: t('shell.common.phone'),
+    type: 'text',
     minWidth: 150,
     valueGetter: (a) => a.contact_phone || '—',
   },
@@ -63,13 +78,15 @@ const buildColumns = (t: Translate): DuncitColumn<SosAlert>[] => [
     field: 'status',
     headerName: t('shell.common.status'),
     width: 150,
-    filter: { type: 'select', options: statusOptions(t) },
+    type: 'enum',
+    options: statusOptions(t),
     cellRenderer: renderStatus,
     valueGetter: (a) => a.status,
   },
   {
     field: 'created_at',
     headerName: t('support.sos.colRaised'),
+    type: 'date',
     minWidth: 160,
     valueGetter: (a) => relativeTime(a.created_at),
   },

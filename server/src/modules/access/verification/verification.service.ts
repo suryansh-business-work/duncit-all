@@ -56,14 +56,28 @@ const VERIFICATION_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     type: 'type',
     status: 'status',
+    details: 'details',
     reviewed_at: 'reviewed_at',
     updated_at: 'updated_at',
   },
   filterFields: {
     type: { type: 'enum' },
     status: { type: 'enum' },
+    details: { type: 'string' },
   },
   defaultSort: { type_rank: 1 },
+};
+
+/** The one line the review table's Details column shows: the address, or the document link. */
+const detailsOf = (
+  row: Readonly<{ type: string; document_url: string | null; address: ReturnType<typeof toAddress> }>
+): string => {
+  if (row.type !== 'ADDRESS') return row.document_url ?? '';
+  const a = row.address;
+  if (!a) return '';
+  return [a.line1, a.line2, [a.city, a.state, a.pincode].filter(Boolean).join(' '), a.country]
+    .filter((line) => Boolean(line?.trim()))
+    .join(', ');
 };
 
 function assertType(type: string): asserts type is VerificationType {
@@ -151,7 +165,7 @@ export const verificationService = {
    * same dataset as listForUser, paged with the shared in-memory engine. */
   async tableForUser(userId: string, input?: TableQueryInput | null) {
     const rows = await this.listForUser(userId);
-    const ranked = rows.map((row, index) => ({ ...row, type_rank: index }));
+    const ranked = rows.map((row, index) => ({ ...row, details: detailsOf(row), type_rank: index }));
     return applyTableQueryInMemory(ranked, input, VERIFICATION_TABLE_CONFIG);
   },
 

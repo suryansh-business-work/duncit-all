@@ -60,8 +60,10 @@ const LOCATION_TABLE_CONFIG: TableEntityConfig = {
   ],
   sortFields: {
     location_name: 'location_name',
+    image: 'location_image',
     city: 'city',
     state: 'state',
+    zones: 'location_zones.zone_name',
     country: 'country',
     is_active: 'is_active',
     created_at: 'created_at',
@@ -69,9 +71,11 @@ const LOCATION_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    image: { path: 'location_image', type: 'string' },
     country: { type: 'string' },
     state: { type: 'string' },
     city: { type: 'string' },
+    zones: { path: 'location_zones.zone_name', type: 'string' },
     created_at: { type: 'date' },
   },
   defaultSort: { location_name: 1 },

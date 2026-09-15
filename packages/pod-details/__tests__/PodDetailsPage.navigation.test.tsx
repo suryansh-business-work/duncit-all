@@ -33,6 +33,8 @@ const pod = (over: Record<string, unknown> = {}) => ({
   meeting_url: null,
   pod_type: 'PUBLIC',
   pod_amount: 250,
+  ticket_discount_enabled: false,
+  ticket_discount_tiers: [],
   pod_occurrence: 'ONE_TIME',
   no_of_spots: 8,
   seats_taken: 3,

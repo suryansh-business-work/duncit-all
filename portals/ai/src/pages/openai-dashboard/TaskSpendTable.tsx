@@ -54,8 +54,6 @@ const renderCost = (row: TaskSpend) => (
 /** Per-task spend for the selected range — the answer to "which feature is the bill". */
 export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskSpend[] }>) {
   const { t } = useTranslation();
-  const fetchRows = useMemo(() => clientTableFetch<TaskSpend>(rows, searchOf), [rows]);
-
   const columns = useMemo<DuncitColumn<TaskSpend>[]>(
     () => [
       {
@@ -63,20 +61,23 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
         headerName: t('ai.taskSpend.colTask'),
         flex: 1,
         minWidth: 230,
+        type: 'text',
         cellRenderer: renderTask,
         valueGetter: (row) => row.label,
       },
-      { field: 'module', headerName: t('ai.taskSpend.colArea'), width: 140, valueGetter: (row) => row.module },
+      { field: 'module', headerName: t('ai.taskSpend.colArea'), width: 140, type: 'text', valueGetter: (row) => row.module },
       {
         field: 'calls',
         headerName: t('ai.taskSpend.colCalls'),
         width: 100,
+        type: 'number',
         valueGetter: (row) => row.calls.toLocaleString(),
       },
       {
         field: 'failures',
         headerName: t('ai.taskSpend.colFailed'),
         width: 100,
+        type: 'number',
         cellRenderer: renderFailures,
         valueGetter: (row) => row.failures,
       },
@@ -84,24 +85,28 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
         field: 'tokens',
         headerName: t('ai.taskSpend.colTokens'),
         width: 130,
+        type: 'number',
         valueGetter: (row) => tokens(row.tokens),
       },
       {
         field: 'avg_duration_ms',
         headerName: t('ai.taskSpend.colAvgTime'),
         width: 110,
+        type: 'number',
         valueGetter: (row) => `${row.avg_duration_ms} ms`,
       },
       {
         field: 'cost_usd',
         headerName: t('ai.taskSpend.colCost'),
         width: 130,
+        type: 'number',
         cellRenderer: renderCost,
         valueGetter: (row) => row.cost_usd,
       },
     ],
     []
   );
+  const fetchRows = useMemo(() => clientTableFetch<TaskSpend>(rows, searchOf, columns), [rows, columns]);
 
   if (rows.length === 0) {
     return (

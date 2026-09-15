@@ -130,8 +130,10 @@ const HOST_REQUEST_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    request_no: { type: 'string' },
     status: { type: 'enum' },
     host_name: { path: 'contact_name', type: 'string' },
+    category_name: { type: 'string' },
     super_category_id: { type: 'string' },
     category_id: { type: 'string' },
     sub_category_id: { type: 'string' },

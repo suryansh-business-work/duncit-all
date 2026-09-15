@@ -126,14 +126,16 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
       {
         field: 'type',
         headerName: t('admin.roles.type'),
-        filter: { type: 'select', options: typeOptions(t) },
+        type: 'enum',
+        options: typeOptions(t),
         minWidth: 120,
         valueGetter: (v) => TYPE_LABELS[v.type],
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: statusOptions(t) },
+        type: 'enum',
+        options: statusOptions(t),
         minWidth: 160,
         cellRenderer: renderStatusCell,
         valueGetter: (v) => statusLabel(v.status),
@@ -141,13 +143,13 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
       {
         field: 'details',
         headerName: t('admin.verification.details'),
-        sortable: false,
+        type: 'text',
         flex: 1,
         minWidth: 200,
         cellRenderer: renderDetailCell,
         valueGetter: detailValue,
       },
-      { field: 'review', headerName: t('admin.verification.review'), sortable: false, minWidth: 380, cellRenderer: renderReview },
+      { field: 'review', headerName: t('admin.verification.review'), type: 'actions', minWidth: 380, cellRenderer: renderReview },
     ];
   }, [saving, onAct]);
 

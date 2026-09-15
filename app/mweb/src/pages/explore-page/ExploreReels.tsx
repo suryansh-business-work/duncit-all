@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { Box } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -32,6 +33,11 @@ export default function ExploreReels({
 }: Readonly<ExploreReelsProps>) {
   const { ads } = useActiveAds('EXPLORE_SCROLL');
   const slides = interleaveAds(pods, ads, AD_EVERY_REELS);
+  // Every slide stays mounted and autoplays, so sound follows the slide on
+  // screen; the choice itself carries across swipes.
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [soundOn, setSoundOn] = useState(false);
+  const toggleSound = useCallback(() => setSoundOn((on) => !on), []);
   return (
     <Slider
       vertical
@@ -44,8 +50,9 @@ export default function ExploreReels({
       swipeToSlide
       touchThreshold={12}
       adaptiveHeight={false}
+      afterChange={setActiveIndex}
     >
-      {slides.map((entry) => {
+      {slides.map((entry, index) => {
         if (isAdEntry(entry)) {
           return (
             <Box key={entry.__ad.id} data-testid={`explore-ad-slide-${entry.__ad.id}`} sx={{ height: '100%' }}>
@@ -64,6 +71,7 @@ export default function ExploreReels({
               savePending={pendingSave.has(p.id)}
               onToggleSave={() => onToggleSave(p.id)}
               viewerId={viewerId}
+              sound={{ on: soundOn, active: index === activeIndex, onToggle: toggleSound }}
             />
           </Box>
         );

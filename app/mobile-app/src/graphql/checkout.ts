@@ -64,6 +64,11 @@ export const MobileCheckoutPodDocument = gql(`
       pod_date_time
       pod_type
       pod_amount
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
       place_charges {
         label
         amount
@@ -97,6 +102,8 @@ export const MobileDummyCheckoutDocument = gql(`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -156,6 +163,8 @@ export const MobileCreateRazorpayOrderDocument = gql(`
         payment_id
         invoice_no
         total
+        ticket_discount_amount
+        ticket_discount_pct
         currency_symbol
         status
         paid_at
@@ -173,6 +182,8 @@ export const MobileVerifyRazorpayDocument = gql(`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -197,6 +208,8 @@ export const MobileMyPaymentDocument = gql(`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at

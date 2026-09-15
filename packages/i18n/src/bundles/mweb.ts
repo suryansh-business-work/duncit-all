@@ -974,6 +974,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       join: 'Join',
       like: 'Like',
       comments: 'Comments',
+      // The reel rail's sound toggle. A reel with no audio track keeps the
+      // button, dimmed, and a tap on it shows noAudio.
+      mute: 'Mute video',
+      unmute: 'Unmute video',
+      noAudio: 'This video has no audio',
     },
     // The bar offering the app. Shown only when the OS did not already hand
     // the link over — a verified App Link never reaches this code at all.
@@ -1156,6 +1161,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sectionPayment: 'Payment details',
       sectionTerms: 'Payment terms',
       sectionCharges: 'Place charges',
+      // The multi-ticket offer: its accordion, its tier rows and the booking
+      // bar's caption once the chosen seats reach a tier.
+      sectionTicketDiscount: 'Multi-ticket offer',
+      ticketDiscountIntro: 'Book more tickets in one booking and pay less per ticket.',
+      ticketDiscountBaseRow: '1 ticket',
+      ticketDiscountTierRow: '{count}+ tickets',
+      ticketDiscountPct: '{pct}% off',
+      ticketDiscountFullPrice: 'Full price',
+      ticketDiscountPerTicket: '{price} per ticket',
+      ticketDiscountApplied: '{pct}% off for {count} tickets',
       aboutEmpty: 'No description provided.',
       offersEmpty: 'Details coming soon.',
       perksEmpty: 'No additional perks listed.',
@@ -1701,6 +1716,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // can see applied above it reads as the discount having failed. The coin
       // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
       couponDiscount: 'Coupon {code}',
+      // The multi-ticket tier comes off the ticket money FIRST, before the
+      // coupon and coins; the Saved label names it on the payment result.
+      ticketDiscount: 'Multi-ticket discount ({pct}% on {count} tickets)',
+      ticketDiscountSaved: 'Multi-ticket discount',
       totalPayable: 'Total payable',
       // What an account must have before it can pay. The server refuses the
       // payment without these, so the buyer is told BEFORE entering a card
@@ -1909,6 +1928,30 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       simulate: 'Simulate',
       successfulPayment: 'Successful Payment',
       dummyGatewayOnly: 'Dummy gateway only',
+    },
+    // The multi-ticket discount editor — host create, the Club Admin editor and
+    // the host's Edit Pod sheet, on mWeb and native alike. Rendered through
+    // `mwebTicketDiscountLabels` in @duncit/utils; word-for-word identical to
+    // `shell.ticketDiscount` and `podForm.ticketDiscount`.
+    ticketDiscount: {
+      title: 'Multi-ticket discount',
+      switchLabel: 'Offer a discount when one person books multiple tickets',
+      hint: 'The best matching tier applies to the ticket price when a single booking has at least that many tickets.',
+      baseRow: '1 ticket · 0% (full price)',
+      ticketsLabel: 'Tickets',
+      discountLabel: 'Discount %',
+      addTier: 'Add tier',
+      removeTier: 'Remove tier',
+      maxHint: 'Up to {max}% off',
+      perTicket: '{price} per ticket',
+      errorTiersRequired: 'Add at least one discount tier',
+      errorTooManyTiers: 'You can add up to {max} tiers',
+      errorTicketsMin: 'Tickets must be a whole number of at least 2',
+      errorTicketsMax: 'Tickets can’t be more than {max}',
+      errorTicketsNotIncreasing: 'Needs more tickets than the row above',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     // Creating a pod — the host's 4-step stepper (Basics → Location/Category/
     // Club → Venue & Slot → Pricing & Publish), its fields, its cover picker

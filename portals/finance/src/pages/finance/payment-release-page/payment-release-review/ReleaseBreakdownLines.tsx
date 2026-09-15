@@ -13,6 +13,13 @@ interface BreakdownLine {
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
+/** The live pod totals that explain why "Customer collected" sits below face value. */
+interface PodMoneyNotes {
+  coins_redeemed_total: number;
+  coins_earned_total: number;
+  ticket_discount_total: number;
+}
+
 const partyLabelByKind = (t: Translate): Record<string, string> => ({
   HOST_PAYMENT: t('finance.paymentRelease.hostAmountPoolRemainder'),
   CLUB_ADMIN: t('finance.paymentRelease.clubAdminCutOffThePool'),
@@ -72,9 +79,8 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
   // the settlement record, and back-filling one would rewrite money history.
   // They explain the COLLECTED figure at the top of the waterfall — the pod
   // banked less than the tickets' face value because coins cut the gross.
-  const coins = useQuery<{
-    podFinanceBreakdown: { coins_redeemed_total: number; coins_earned_total: number };
-  }>(POD_COIN_TOTALS, {
+  // The multi-ticket discounts ride on the same read for the same reason.
+  const coins = useQuery<{ podFinanceBreakdown: PodMoneyNotes }>(POD_COIN_TOTALS, {
     variables: { podId: request?.pod_id },
     skip: !request?.pod_id,
     fetchPolicy: 'cache-first',
@@ -112,8 +118,33 @@ export default function ReleaseBreakdownLines({ request }: Readonly<{ request: a
         ))}
       </Stack>
       {coinsNote(coins.data?.podFinanceBreakdown, t)}
+      {ticketDiscountNote(coins.data?.podFinanceBreakdown, sym, t)}
     </Box>
   );
+}
+
+/** A caption under the settlement lines explaining a figure in them. */
+function noteLine(text: string) {
+  return (
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.secondary",
+        display: 'block',
+        mt: 1
+      }}>
+      {text}
+    </Typography>
+  );
+}
+
+/** One line naming the multi-ticket discounts already off the collected total,
+ * or nothing when no booking on the pod reached a tier. */
+function ticketDiscountNote(totals: PodMoneyNotes | undefined, sym: string, t: Translate) {
+  const total = Math.max(0, Number(totals?.ticket_discount_total) || 0);
+  if (total === 0) return null;
+  const amount = formatMoney(total, { symbol: sym, decimals: 2, grouping: false });
+  return noteLine(t('finance.paymentRelease.ticketDiscountNote', { vars: { amount } }));
 }
 
 /** One line naming both halves of the pod's coin movement, or nothing when the
@@ -125,15 +156,5 @@ function coinsNote(
   const spent = Math.max(0, Math.floor(Number(totals?.coins_redeemed_total) || 0));
   const earned = Math.max(0, Math.floor(Number(totals?.coins_earned_total) || 0));
   if (spent === 0 && earned === 0) return null;
-  return (
-    <Typography
-      variant="caption"
-      sx={{
-        color: "text.secondary",
-        display: 'block',
-        mt: 1
-      }}>
-      {t('finance.paymentRelease.coinsNote', { vars: { spent, earned } })}
-    </Typography>
-  );
+  return noteLine(t('finance.paymentRelease.coinsNote', { vars: { spent, earned } }));
 }

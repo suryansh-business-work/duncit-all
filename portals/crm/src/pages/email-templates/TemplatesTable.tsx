@@ -63,17 +63,18 @@ export default function TemplatesTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EmailTemplateRow>[]>(
     () => [
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 180, cellRenderer: renderName, valueGetter: (t) => t.name },
-      { field: 'slug', headerName: t('crm.emailTemplates.slug'), minWidth: 150, cellRenderer: renderSlug, valueGetter: (t) => t.slug },
+      { field: 'name', headerName: t('shell.common.name'), type: 'text', flex: 1, minWidth: 180, cellRenderer: renderName, valueGetter: (t) => t.name },
+      { field: 'slug', headerName: t('crm.emailTemplates.slug'), type: 'text', minWidth: 150, cellRenderer: renderSlug, valueGetter: (t) => t.slug },
       {
         field: 'target',
         headerName: t('crm.emailTemplates.for'),
-        filter: { type: 'select', options: targetOptions(t) },
+        type: 'enum',
+        options: targetOptions(t),
         width: 110,
         cellRenderer: (row: EmailTemplateRow) => renderTarget(row, t),
         valueGetter: (row: EmailTemplateRow) => targetValue(row, t),
       },
-      { field: 'subject', headerName: t('crm.common.subject'), flex: 1, minWidth: 200, valueGetter: (t) => t.subject },
+      { field: 'subject', headerName: t('crm.common.subject'), type: 'text', flex: 1, minWidth: 200, valueGetter: (t) => t.subject },
       activeChipColumn<EmailTemplateRow>(),
       dateColumn<EmailTemplateRow>({ field: 'updated_at', headerName: t('shell.common.updated'), hide: false }),
       dateColumn<EmailTemplateRow>(),

@@ -1,5 +1,10 @@
 import { gql } from '@apollo/client';
-import type { TableQueryState } from '@duncit/table';
+import {
+  clientTableFetch,
+  type DuncitColumn,
+  type TablePage,
+  type TableQueryState,
+} from '@duncit/table';
 import type { StatusColorMap } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
 import {
@@ -144,36 +149,22 @@ export const fmtDate = (iso?: string | null) => {
   return formatDateTime(iso) || '—';
 };
 
-type RowComparator = (a: VenuePodRow, b: VenuePodRow) => number;
-
-const ROW_COMPARATORS: Record<string, RowComparator> = {
-  pod_title: (a, b) => a.pod_title.localeCompare(b.pod_title),
-  pod_date_time: (a, b) => a.pod_date_time.localeCompare(b.pod_date_time),
-  pod_amount: (a, b) => a.pod_amount - b.pod_amount,
-  attendee_count: (a, b) => a.attendee_count - b.attendee_count,
-};
+const venuePodSearchText = (row: VenuePodRow) =>
+  [row.pod_title, row.venue_name, row.host_names.join(' ')].join(' ');
 
 /**
- * In-memory search/sort/page over the venuePods rows. The active tab arrives
- * through the table's externalFilters (field "tab"), so switching tabs
- * re-slices without a second data source.
+ * In-memory search/filter/sort/page over the venuePods rows. The active tab
+ * arrives through the table's externalFilters (field "tab"), so switching tabs
+ * re-slices without a second data source; every other filter and the sort are
+ * the columns' own, compared by their types.
  */
 export function applyVenuePodsQuery(
   rows: readonly VenuePodRow[],
   q: TableQueryState,
-): { rows: VenuePodRow[]; total: number } {
+  columns: ReadonlyArray<DuncitColumn<VenuePodRow>>,
+): Promise<TablePage<VenuePodRow>> {
   const tab = (q.filters.find((f) => f.field === 'tab')?.value ?? 'ALL') as VenuePodTab;
-  const term = q.search.trim().toLowerCase();
-  let filtered = rows.filter((row) => matchesTab(row, tab));
-  if (term) {
-    filtered = filtered.filter((row) =>
-      [row.pod_title, row.venue_name, row.host_names.join(' ')].join(' ').toLowerCase().includes(term),
-    );
-  }
-  const cmp = q.sortBy ? ROW_COMPARATORS[q.sortBy] : undefined;
-  if (cmp) {
-    filtered.sort(q.sortDir === 'desc' ? (a, b) => cmp(b, a) : cmp);
-  }
-  const start = (q.page - 1) * q.pageSize;
-  return { rows: filtered.slice(start, start + q.pageSize), total: filtered.length };
+  const inTab = rows.filter((row) => matchesTab(row, tab));
+  const columnFilters = q.filters.filter((f) => f.field !== 'tab');
+  return clientTableFetch(inTab, venuePodSearchText, columns)({ ...q, filters: columnFilters });
 }

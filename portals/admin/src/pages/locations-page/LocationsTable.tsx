@@ -84,11 +84,11 @@ export default function LocationsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<LocationRow>[]>(() => {
     return [
-      { field: 'image', headerName: t('admin.branding.assetImage'), sortable: false, width: 76, cellRenderer: renderImage },
+      { field: 'image', headerName: t('admin.branding.assetImage'), type: 'text', width: 76, cellRenderer: renderImage },
       {
         field: 'city',
         headerName: t('admin.locations.city'),
-        filter: { type: 'text' },
+        type: 'text',
         flex: 1,
         minWidth: 160,
         cellRenderer: renderCity,
@@ -97,14 +97,14 @@ export default function LocationsTable({
       {
         field: 'state',
         headerName: t('admin.locations.state'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 130,
         valueGetter: (loc) => loc.state || '—',
       },
       {
         field: 'zones',
         headerName: t('admin.locations.localities'),
-        sortable: false,
+        type: 'text',
         flex: 1.4,
         minWidth: 260,
         cellRenderer: renderZones,
@@ -113,7 +113,7 @@ export default function LocationsTable({
       {
         field: 'country',
         headerName: t('admin.locations.country'),
-        filter: { type: 'text' },
+        type: 'text',
         hide: true,
         minWidth: 130,
         valueGetter: (loc) => loc.country ?? '—',

@@ -24,9 +24,11 @@ export type {
   EntityIdColumnOptions,
   RowActionOptions,
 } from './cells';
+export { isColumnFilterable, isColumnSortable } from './columnTypes';
 export type {
   DuncitColumn,
-  DuncitColumnFilter,
+  DuncitColumnOption,
+  DuncitColumnType,
   TableFetch,
   TableFilterOp,
   TableFilterValue,

@@ -23,7 +23,9 @@ export {
   podEditInitialValues,
   buildPodEditSchema,
 } from './pod-edit.form';
-export type { PodEditValues } from './pod-edit.form';
+export type { PodEditFormInput, PodEditValues } from './pod-edit.form';
+export { podEditTicketDiscount } from './pod-edit-ticket-discount';
+export type { PodEditTicketDiscount } from './pod-edit-ticket-discount';
 
 export {
   default as PodCancelDialog,

@@ -1,6 +1,6 @@
 ---
 name: '@duncit/table'
-summary: 'The one server-driven table every portal renders — AG Grid rows inside MUI chrome, with search, sort, column filters, pagination and persisted column prefs.'
+summary: 'The one server-driven table every portal renders — AG Grid rows inside MUI chrome, with search, typed per-column sort and filters, pagination and persisted column prefs.'
 category: 'ui'
 zeroDeps: true
 frameworkFree: false
@@ -39,7 +39,11 @@ exports:
   - 'entityIdColumn'
   - 'formatDateCell'
   - 'EM_DASH'
+  - 'isColumnSortable'
+  - 'isColumnFilterable'
   - 'DuncitColumn'
+  - 'DuncitColumnType'
+  - 'DuncitColumnOption'
   - 'TableFetch'
   - 'TableQuerySnapshot'
   - 'TableQueryState'
@@ -67,9 +71,9 @@ server's sort, or `clientTableFetch`'s); a header arrow changes the query and re
 ### While a fetch is in flight, the table is read-only
 
 The progress bar is not the only thing that says "loading". Every control the table owns goes
-`disabled` for the length of the fetch — the search box and its clear button, the Filters
-button and the filter chips, columns, density, CSV, refresh, the pager — and the grid itself
-stops taking clicks, so a header sort or a row click cannot land on rows that belong to the
+`disabled` for the length of the fetch — the search box and its clear button, the filter
+chips and Clear all, columns, density, CSV, refresh, the pager — and the grid itself stops
+taking clicks, so a header sort, a header filter or a row click cannot land on rows that belong to the
 query being replaced. `toolbarActions` goes with them: the page's own "+ Create" sits inside a
 `disabled` fieldset, which switches off every control in it and takes them out of the tab order
 without the page passing anything down.
@@ -92,15 +96,16 @@ From `portals/finance/src/pages/finance/backout-refund-page/BackoutRefundTable.t
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 
 const columns: DuncitColumn<BackoutRefundRequest>[] = [
-  { field: 'backout_no', headerName: 'Backout ID', cellRenderer: renderBackoutNo },
+  { field: 'backout_no', headerName: 'Backout ID', type: 'text', cellRenderer: renderBackoutNo },
   {
     field: 'backout_status',
     headerName: 'Status',
-    filter: { type: 'select', options: BACKOUT_STATUS_OPTIONS },
+    type: 'enum',
+    options: BACKOUT_STATUS_OPTIONS,
     cellRenderer: renderBackoutStatus,
   },
-  { field: 'joined_at', headerName: 'Joined', hide: true, sortable: false, width: 170 },
-  { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+  { field: 'joined_at', headerName: 'Joined', type: 'date', hide: true, width: 170 },
+  { field: 'actions', headerName: 'Actions', type: 'actions', width: 110, cellRenderer: renderActions },
 ];
 
 <DuncitTable<BackoutRefundRequest>
@@ -167,22 +172,20 @@ export const payoutRows: PayoutRow[] = [
 ];
 
 export const payoutColumns: DuncitColumn<PayoutRow>[] = [
-  { field: 'payout_no', headerName: 'Payout ID', filter: { type: 'text' } },
-  { field: 'host_name', headerName: 'Host', filter: { type: 'text' } },
-  { field: 'amount', headerName: 'Amount (₹)', filter: { type: 'number' }, width: 140 },
+  { field: 'payout_no', headerName: 'Payout ID', type: 'text' },
+  { field: 'host_name', headerName: 'Host', type: 'text' },
+  { field: 'amount', headerName: 'Amount (₹)', type: 'number', width: 140 },
   {
     field: 'payout_status',
     headerName: 'Status',
-    filter: {
-      type: 'select',
-      multiple: true,
-      options: [
-        { value: 'PENDING', label: 'Pending' },
-        { value: 'PAID', label: 'Paid' },
-      ],
-    },
+    type: 'enum',
+    options: [
+      { value: 'PENDING', label: 'Pending' },
+      { value: 'PAID', label: 'Paid' },
+    ],
   },
-  { field: 'is_active', headerName: 'Active', filter: { type: 'boolean' }, width: 110 },
+  { field: 'is_active', headerName: 'Active', type: 'boolean', width: 110 },
+  { field: 'created_at', headerName: 'Created', type: 'date', width: 130 },
 ];
 
 /** What the table hands to fetchRows after a search, a sort and four filters. */
@@ -230,13 +233,15 @@ sees one stable shape:
 An empty search is sent as `null`, not `''` (`search: q.search || null`).
 
 `filterChipLabel(payoutColumns, filter, t)` — one chip per applied filter, labelled from the
-column's header. The chip's own words (`Yes`, `No`, `contains`) come from the catalogue, so
-it takes a translator: `useTranslation().t` inside a component, `fallbackT` outside one.
+column's header and printed the way the column's type reads: an `enum` value as its option's
+label, a `date` value in the admin's date pattern. The chip's own words (`Yes`, `No`,
+`contains`) come from the catalogue, so it takes a translator: `useTranslation().t` inside a
+component, `fallbackT` outside one.
 
 ```ts
 payoutQuery.filters.map((f) => filterChipLabel(payoutColumns, f, t));
 // [
-//   'Status: PENDING, PAID',
+//   'Status: Pending, Paid',    ← option labels, not the raw values
 //   'Amount (₹): 500 – 5000',   ← en dash, from the `between` op
 //   'Active: Yes',              ← is_true / is_false render as Yes / No
 //   'Host contains aarav',
@@ -275,7 +280,8 @@ dateColumn<PayoutRow>();
 //   headerKey: 'shell.common.created',   ← the grid translates it at render time
 //   hide: true,
 //   width: 130,
-//   filter: { type: 'date' },
+//   type: 'date',
+//   filterable: true,
 //   valueGetter: [Function],
 // }
 
@@ -293,7 +299,8 @@ activeChipColumn<PayoutRow>();
 //   field: 'is_active',
 //   headerKey: 'shell.common.status',
 //   width: 110,
-//   filter: { type: 'boolean' },
+//   type: 'boolean',
+//   filterable: true,
 //   cellRenderer: [Function],   ← <Chip size="small" color="success|default" />
 //   valueGetter: [Function],
 // }
@@ -348,7 +355,8 @@ function that names the row (`(row) => t('…', { vars: { name: row.name } })`) 
 identical "Delete" buttons become ten distinguishable ones.
 
 End-to-end suites select by test id only, so the table names its own parts: the search box is
-`table-toolbar-search`, and every row is `<tableId>-row-<rowId>` — the id `getRowId` returned,
+`table-toolbar-search`, a column's filter button is `table-filter-<field>`, Clear all is
+`table-toolbar-clear-filters`, and every row is `<tableId>-row-<rowId>` — the id `getRowId` returned,
 set when AG Grid creates the row. A spec that filed a ticket finds it as
 `support-tickets-row-<ticketId>` without reading AG Grid's attributes.
 
@@ -362,8 +370,9 @@ set when AG Grid creates the row. A spec that filed a ticket finds it as
 | `TableFilterOp` | `'eq' \| 'ne' \| 'in' \| 'contains' \| 'gte' \| 'lte' \| 'between' \| 'is_true' \| 'is_false'` | — |
 | `TablePage<T>` | `{ rows: T[]; total: number }` | `total` drives `TablePagination`, so it must be the unpaged count. |
 | `TableFetch<T>` | `(q: TableQueryState) => Promise<TablePage<T>>` | — |
-| `DuncitColumn<T>` | `{ field; headerName?; headerKey?; sortable?; filter?; width?; flex?; minWidth?; hide?; valueGetter?; cellRenderer? }` | `field` is both the server sort/filter key and the row accessor. Give a header as `headerName` (already translated) or as `headerKey` (a catalogue key the grid resolves at render) — never both. `sortable` defaults to `true`; no `filter` means not filterable; `hide` hides by default but keeps it in the column menu. |
-| `DuncitColumnFilter` | `{ type: 'text' } \| { type: 'select'; options; multiple? } \| { type: 'number' } \| { type: 'date' } \| { type: 'boolean' }` | `number` renders min/max → `gte`/`lte`/`between`; `date` renders from/to MUI X pickers → `between` with ISO values. |
+| `DuncitColumn<T>` | `{ field; type; options?; headerName?; headerKey?; sortable?; filterable?; width?; flex?; minWidth?; hide?; valueGetter?; cellRenderer? }` | `field` is both the server sort/filter key and the row accessor (a dotted path reads a nested value). `type` is **required**; an `enum` column also requires `options`. Give a header as `headerName` (already translated) or as `headerKey` (a catalogue key the grid resolves at render) — never both. Every column but `actions` sorts and filters; `sortable: false` / `filterable: false` are only for a value the data source cannot order or match. `hide` hides by default but keeps it in the column menu. |
+| `DuncitColumnType` | `'text' \| 'number' \| 'date' \| 'boolean' \| 'enum' \| 'actions'` | What the column holds — see [Column types](#column-types-decide-the-filter-and-the-sort). |
+| `DuncitColumnOption` | `{ value: string; label: string }` | One choice of an `enum` column. |
 
 ### Hooks and helpers
 
@@ -373,7 +382,8 @@ set when AG Grid creates the row. A spec that filed a ticket finds it as
 | `useTablePrefs` | `(tableId: string) => { hiddenOverrides: Record<string, boolean>; toggleColumn; resetColumns; density; toggleDensity }` | Reads/writes `localStorage`, every access wrapped in try/catch. Density defaults to `'standard'`. |
 | `makeApolloTableFetch` | `<Row>(client, query, resultKey, options?) => TableFetch<Row>` | Outside React only. `options`: `extraFilters`, `mapQuery`, `extraVariables`, `buildVariables`, `mapRow`, `fetchPolicy` (default `'network-only'`). |
 | `useApolloTableFetch` | `<Row>(client, query, resultKey, options?, deps?) => TableFetch<Row>` | The same thing memoized — **always** this one inside a component. |
-| `clientTableFetch` | `<T>(rows: readonly T[], searchOf: (row: T) => string) => TableFetch<T>` | For rows the page already holds (a full list query, a live third-party read, an embedded list). Applies search → sort → page slice in memory. Ignores column `filter`s, so don't declare any. Memoize it (`useMemo` on the rows) inside a component. |
+| `clientTableFetch` | `<T>(rows: readonly T[], searchOf: (row: T) => string, columns: ReadonlyArray<DuncitColumn<T>>) => TableFetch<T>` | For rows the page already holds (a full list query, a live third-party read, an embedded list). Applies search → every column filter → sort → page slice in memory, comparing `row[field]` by the column's type. Memoize it (`useMemo` on the rows and columns) inside a component. |
+| `isColumnSortable` / `isColumnFilterable` | `<T>(column: DuncitColumn<T>) => boolean` | The one answer to "does this header offer a sort / a filter": every type but `actions`, unless the column opts out. |
 | `TableGqlClient` | `{ query(options: { query: unknown; variables?: Record<string, unknown>; fetchPolicy?: string }): Promise<{ data: unknown }> }` | Structural, so the package needs no `@apollo/client` dependency. |
 | `tableQueryToGql` | `(q: TableQueryState) => { query: {...} }` | The single client→server mapping. |
 | `filterChipLabel` | `<T>(columns, filter: TableFilterValue, t: Translate) => string` | Falls back to `filter.field` when no column matches. |
@@ -407,6 +417,44 @@ import payoutsTableSource from '@duncit/docs-demos/examples/PayoutsTableDemo.tsx
 The demo's `fetchRows` would resolve from the `payoutRows` fixture above, so the preview
 needs no server. Until then the worked examples are the real output.
 
+## Column types decide the filter and the sort
+
+Every column declares what it holds with `type`, and everything a reader can do to that column
+follows from it. Each header carries its own sort toggle and a filter button; the popover edits
+a draft that reaches the query only on **Apply**, and every applied filter shows as a chip in the
+toolbar, where **Clear all** drops them together.
+
+| `type` | Filter control | What it sends | First header click |
+| --- | --- | --- | --- |
+| `text` | condition (contains / equals / does not equal) + value | `contains` / `eq` / `ne` | A → Z |
+| `number` | condition (= ≠ ≥ ≤ between) + value (min / max for between) | `eq` / `ne` / `gte` / `lte` / `between` | largest first |
+| `date` | from / to date pickers, either optional | `gte` / `lte` / `between` — ISO, from = start of that day, to = end of that day | newest first |
+| `boolean` | Any / Yes / No | `is_true` / `is_false` | A → Z |
+| `enum` | multi-select of `options` | `in` (always, even for one value) | A → Z |
+| `actions` | none | — | not sortable |
+
+A whole-day range is the point of the date bounds: "to 8 Sep" used to send midnight at the start
+of 8 Sep and silently dropped every row written that day.
+
+**The server has to answer every column.** A column is only as sortable and filterable as the
+entity's `TableEntityConfig` lets it be — a field missing from `sortFields` / `filterFields` is
+dropped silently, so the header would offer a control that does nothing. Add each column's
+`field` to both, with the matching server type (`text` → `'string'`, `enum` → `'enum'`, `number`,
+`date`, `boolean`) and a `path` when the stored value lives elsewhere
+(`venue_category: { path: 'venue_category.category_name', type: 'string' }`). Two traps:
+
+- A `'string'` filter becomes a RegExp for `contains`, and Mongoose cannot cast a RegExp to an
+  ObjectId — the whole query throws. Point an id column at a human-readable stored field, or opt it
+  out of filtering.
+- `enum` always sends `in`. Server code that special-cased a field's `eq` must accept `values` too.
+
+`sortable: false` / `filterable: false` exist for the one case no config can fix: a value computed
+per row at read time with no stored path (a count of another collection). Say why beside it.
+
+`clientTableFetch` answers the same controls in memory: it reads `row[field]` (a dotted path
+reaches nested values) and compares numbers numerically, dates chronologically and text without
+regard to case — which is why it needs the columns.
+
 ## `tableId` is a persistence namespace, not a label
 
 Column visibility, column order and density are written to `localStorage` under
@@ -418,12 +466,12 @@ will find it hidden on the other. Prefix it with the portal (`finance-backout-re
 Storage is wrapped in try/catch on every read and write — private mode or a full quota simply
 means prefs do not persist, not that the table breaks.
 
-## `externalFilters` vs a column `filter`
+## `externalFilters` vs a column filter
 
 Both narrow the query, and picking the wrong one produces a UI the user cannot explain.
 
-- A column `filter` is **user-driven**: it renders a control in the filter popover and shows a
-  removable chip. Use it for anything the user should be able to clear.
+- A column filter is **user-driven**: it lives in the column's header popover and shows a
+  removable chip. Every column but `actions` has one.
 - `externalFilters` are **page-driven** — a tab, a URL param, a page-level select. They are
   compared by value, reset to page 1 when they change, and deliberately render **no chip**,
   because a chip the user can dismiss would drop the page's own scoping.
@@ -588,7 +636,7 @@ id existed rather than leaving the cell blank (which reads as a loading bug):
 ```ts
 entityIdColumn<Contract>({ field: 'contract_no', headerName: 'Contract ID' });
 // { field: 'contract_no', headerName: 'Contract ID', width: 150,
-//   filter: { type: 'text' }, cellRenderer: [Function], valueGetter: [Function] }
+//   type: 'text', filterable: true, cellRenderer: [Function], valueGetter: [Function] }
 
 col.valueGetter({ contract_no: 'CTR-000042' }); // 'CTR-000042'
 col.valueGetter({ contract_no: null });        // '—'

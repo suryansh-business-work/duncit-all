@@ -63,11 +63,11 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       field: 'auto_pod_no',
       headerName: t('admin.autoPods.colAutoPodNo'),
       width: 150,
-      filterable: false,
     }),
     {
       field: 'pod_title',
       headerName: t('admin.autoPods.colTitle'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       valueGetter: (row) => row.pod_title,
@@ -75,29 +75,32 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
     {
       field: 'category_path',
       headerName: t('admin.autoPods.colCategory'),
+      type: 'text',
+      // Walked up the category tree per row from the stored sub-category id — no stored path of names.
       sortable: false,
+      filterable: false,
       minWidth: 220,
       valueGetter: (row) => categoryPathOf(row) || EM_DASH,
     },
     {
       field: 'pod_mode',
       headerName: t('admin.autoPods.colMode'),
+      type: 'enum',
+      options: [
+        { value: 'PHYSICAL', label: labels.modePhysical },
+        { value: 'VIRTUAL', label: labels.modeVirtual },
+      ],
       width: 120,
-      filter: {
-        type: 'select',
-        options: [
-          { value: 'PHYSICAL', label: labels.modePhysical },
-          { value: 'VIRTUAL', label: labels.modeVirtual },
-        ],
-      },
       valueGetter: (row) => modeLabelOf(row, labels),
     },
     {
       field: 'pending',
       headerName: t('admin.autoPods.colDependency'),
+      type: 'enum',
+      options: pendingFilterOptions(t),
+      // "Still waiting on" is a clause over three claims, not a value — it filters, but has no order.
       sortable: false,
       minWidth: 380,
-      filter: { type: 'select', options: pendingFilterOptions(t), multiple: true },
       cellRenderer: (row) => (
         <AutoPodDependencyTimeline
           row={row}
@@ -112,7 +115,8 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
     {
       field: 'stage',
       headerName: t('admin.autoPods.colStage'),
-      filter: { type: 'select', options: stageFilterOptions(t) },
+      type: 'enum',
+      options: stageFilterOptions(t),
       width: 170,
       cellRenderer: (row) => <AutoPodStageChip row={row} t={t} />,
       valueGetter: (row) => t(STAGE_LABEL_KEY[row.stage]),
@@ -141,8 +145,8 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
     {
       field: 'actions',
       headerName: t('admin.autoPods.colActions'),
+      type: 'actions',
       width: 80,
-      sortable: false,
       cellRenderer: (row) => (
         <AutoPodRowMenu
           row={row}

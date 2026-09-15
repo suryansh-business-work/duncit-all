@@ -15,11 +15,23 @@ import {
   SpotsStepper,
   StatCard,
   StatusChip,
+  TicketDiscountField,
   TopProgressBar,
   type LoaderVariant,
   type SpotsStepperLabels,
+  type TicketDiscountFieldErrors,
 } from '@duncit/ui';
-import { formatMoney } from '@duncit/utils';
+import { POD_FORM_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
+import {
+  TICKET_DISCOUNT_MAX_TIERS,
+  formatMoney,
+  podFormTicketDiscountLabels,
+  ticketDiscountMaxTickets,
+  ticketDiscountTierIssues,
+  type TicketDiscountIssue,
+  type TicketDiscountLimits,
+  type TicketDiscountTier,
+} from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
 
 interface SeatsMock {
@@ -83,6 +95,78 @@ function SpotsDemo({ mock }: Readonly<{ mock: SpotsMock }>) {
       max={mock.venue_capacity}
       slidable={mock.venue_capacity > min}
       boundsHint={boundsHint}
+    />
+  );
+}
+
+interface TicketDiscountMock {
+  pod_id: string;
+  pod_amount: number;
+  no_of_spots: number;
+  /** `publicAppSettings.ticket_discount_max_pct`. */
+  ticket_discount_max_pct: number;
+  ticket_discount_enabled: boolean;
+  ticket_discount_tiers: TicketDiscountTier[];
+}
+
+/** The portal pod form's own English for `podForm.ticketDiscount.*`, resolved the way the form does. */
+const { t: podFormT } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(POD_FORM_BUNDLE) });
+const TICKET_DISCOUNT_LABELS = podFormTicketDiscountLabels(podFormT);
+
+const formatPaise = (amount: number) => formatMoney(amount, { decimals: 2 });
+
+/**
+ * What a surface's Zod superRefine does with the shared issue list: one
+ * translated message per path, the first issue on a field winning.
+ */
+function toFieldErrors(
+  issues: readonly TicketDiscountIssue[],
+  limits: TicketDiscountLimits,
+): TicketDiscountFieldErrors {
+  const rows: Array<{ min_tickets?: string; discount_pct?: string }> = [];
+  let list: string | undefined;
+  for (const issue of issues) {
+    const message = TICKET_DISCOUNT_LABELS.errors[issue.code](limits);
+    if (issue.index === null) {
+      list ??= message;
+    } else {
+      rows[issue.index] = { [issue.field]: message, ...rows[issue.index] };
+    }
+  }
+  return { list, rows };
+}
+
+/** Holds the ladder the way a form would — hoisted for the same reason as `SpotsDemo`. */
+function TicketDiscountDemo({ mock }: Readonly<{ mock: TicketDiscountMock }>) {
+  const [enabled, setEnabled] = useState(mock.ticket_discount_enabled);
+  const [tiers, setTiers] = useState(mock.ticket_discount_tiers);
+  useEffect(() => {
+    setEnabled(mock.ticket_discount_enabled);
+    setTiers(mock.ticket_discount_tiers);
+  }, [mock.ticket_discount_enabled, mock.ticket_discount_tiers]);
+  const limits: TicketDiscountLimits = {
+    maxPct: mock.ticket_discount_max_pct,
+    maxTickets: ticketDiscountMaxTickets(mock.no_of_spots),
+    maxTiers: TICKET_DISCOUNT_MAX_TIERS,
+  };
+  const issues = ticketDiscountTierIssues({
+    enabled,
+    tiers,
+    maxPct: limits.maxPct,
+    maxTickets: limits.maxTickets,
+  });
+  return (
+    <TicketDiscountField
+      enabled={enabled}
+      tiers={tiers}
+      onEnabledChange={setEnabled}
+      onTiersChange={setTiers}
+      maxPct={limits.maxPct}
+      maxTickets={limits.maxTickets}
+      labels={TICKET_DISCOUNT_LABELS}
+      unitPrice={mock.pod_amount}
+      formatPrice={formatPaise}
+      errors={toFieldErrors(issues, limits)}
     />
   );
 }
@@ -221,6 +305,25 @@ export default defineDemos('ui', [
       'Drop venue_capacity to the floor and the slider becomes a plain stepper — there is nothing left to choose. Raise seats_taken past no_of_spots and the thumb cannot go back below the seats already sold.',
     mock: { no_of_spots: 12, min_pax: 4, venue_capacity: 30, seats_taken: 9 },
     render: (mock) => <SpotsDemo mock={mock} />,
+  }),
+
+  defineDemo<TicketDiscountMock>({
+    id: 'ticket-discount-field',
+    title: 'TicketDiscountField — a ₹499 pod giving 10% off 2+ tickets and 20% off 4+',
+    note:
+      'Type 5 into the second tier’s discount and it goes red: every tier must give more than the one above. Drop no_of_spots to 4 and the 4-ticket tier can no longer be reached (3 payable seats). Lower ticket_discount_max_pct to 15 and the 20% tier is over the admin’s cap. Switch it off and the tiers are gone.',
+    mock: {
+      pod_id: 'DUN-POD-4821',
+      pod_amount: 499,
+      no_of_spots: 12,
+      ticket_discount_max_pct: 50,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [
+        { min_tickets: 2, discount_pct: 10 },
+        { min_tickets: 4, discount_pct: 20 },
+      ],
+    },
+    render: (mock) => <TicketDiscountDemo mock={mock} />,
   }),
 
   defineDemo<SeatsMock>({

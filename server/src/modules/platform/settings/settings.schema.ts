@@ -36,6 +36,8 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean!
     "How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings."
     pod_complete_timeout_hours: Int!
+    "The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited."
+    ticket_discount_max_pct: Int!
     "How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it."
     pod_complete_reminder_hours: Int!
     "How many hours before a pod starts its attendees are reminded over email and WhatsApp."
@@ -96,6 +98,8 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean!
     "How many hours after a pod ends its host has to complete it. Past that the host can no longer mark attendance and the pod settles with no host earnings."
     pod_complete_timeout_hours: Int!
+    "The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it."
+    ticket_discount_max_pct: Int!
   }
 
   type PublicClientConfig {
@@ -124,6 +128,8 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean
     "How many hours after a pod ends its host has to complete it (1-8760)."
     pod_complete_timeout_hours: Int
+    "The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99)."
+    ticket_discount_max_pct: Int
     "How many hours after a pod ends the host is reminded to complete it (1-8760)."
     pod_complete_reminder_hours: Int
     "How many hours before a pod starts its attendees are reminded (1-8760)."

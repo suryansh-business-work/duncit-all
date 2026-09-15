@@ -3,7 +3,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { AI_MONITOR_GRADIENT_CSS, AI_MONITOR_MOTION } from '@duncit/utils';
 import { aiMotion, aiSweep, aiTwinkle } from './motion';
 
-const { sweepMs, twinkleMs } = AI_MONITOR_MOTION;
+const { driftMs, twinkleMs } = AI_MONITOR_MOTION;
 
 /** White 11px text fails on the gradient's amber (2.1:1) and pink (3.5:1) stops;
  * a 35% ink scrim under the label lifts every stop past 4.5:1 (WCAG 1.4.3). */
@@ -62,7 +62,7 @@ export function AiMonitorPill({
         background: PILL_BACKGROUND,
         backgroundSize: '200% 100%',
         boxShadow: 1,
-        ...aiMotion(`${aiSweep} ${sweepMs}ms ease-in-out infinite alternate`),
+        ...aiMotion(`${aiSweep} ${driftMs}ms ease-in-out infinite alternate`),
       }}
     >
       <AutoAwesomeIcon

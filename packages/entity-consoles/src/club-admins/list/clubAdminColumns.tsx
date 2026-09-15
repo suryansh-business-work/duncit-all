@@ -73,7 +73,7 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'full_name',
       headerName: t('directory.clubAdminEditor.colAdmin'),
-      filter: { type: 'text' },
+      type: 'text',
       flex: 1,
       minWidth: 190,
       cellRenderer: renderAdmin,
@@ -82,7 +82,7 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'email',
       headerName: t('directory.hostEditor.colContact'),
-      filter: { type: 'text' },
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: renderContact,
@@ -91,7 +91,10 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'assigned_clubs',
       headerName: t('directory.clubAdmins.assignedClubs'),
+      type: 'text',
+      // Read per page from the clubs collection (Club.admin_user_ids) — nothing stored on the record.
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 180,
       valueGetter: clubsValue,
@@ -99,7 +102,10 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'category',
       headerName: t('directory.clubAdmins.category'),
+      type: 'text',
+      // The record stores category ids; the names are looked up per page from the categories collection.
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 170,
       valueGetter: categoryValue,
@@ -107,13 +113,11 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'status',
       headerName: t('directory.hostEditor.colStatus'),
-      filter: {
-        type: 'select',
-        options: (Object.keys(labels) as ClubAdminStatus[]).map((value) => ({
-          value,
-          label: labels[value],
-        })),
-      },
+      type: 'enum',
+      options: (Object.keys(labels) as ClubAdminStatus[]).map((value) => ({
+        value,
+        label: labels[value],
+      })),
       width: 140,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
@@ -121,7 +125,7 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'is_active',
       headerName: t('directory.hostEditor.colLive'),
-      filter: { type: 'boolean' },
+      type: 'boolean',
       width: 120,
       cellRenderer: renderActive,
       valueGetter: (row) => (row.is_active ? 'true' : 'false'),
@@ -129,13 +133,14 @@ export const clubAdminColumns = (t: Translate): DuncitColumn<ClubAdminRow>[] => 
     {
       field: 'commission_pct',
       headerName: t('directory.hostEditor.colCommission'),
+      type: 'number',
       width: 150,
       valueGetter: (row) => (row.commission_pct ? `${row.commission_pct}%` : platformDefault),
     },
     {
       field: 'joined_at',
       headerName: t('directory.clubAdmins.joinedAt'),
-      filter: { type: 'date' },
+      type: 'date',
       minWidth: 170,
       valueGetter: (row) => (row.joined_at ? formatDateTime(row.joined_at) : EMPTY),
     },

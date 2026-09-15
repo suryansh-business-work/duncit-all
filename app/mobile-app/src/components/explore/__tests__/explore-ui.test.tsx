@@ -91,6 +91,8 @@ describe('ExplorePodCard', () => {
     const onOpen = jest.fn();
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('1')}
         width={390}
         height={700}
@@ -124,6 +126,8 @@ describe('ExplorePodCard', () => {
     } as never;
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={expiredPod}
         width={390}
         height={700}
@@ -144,6 +148,8 @@ describe('ExplorePodCard', () => {
   it('renders the liked/saved/pending states and an unlimited-spots join label', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={{ ...(pod('v') as Record<string, unknown>), no_of_spots: 0 } as never}
         width={390}
         height={2000}
@@ -167,6 +173,8 @@ describe('ExplorePodCard', () => {
     const onOpen = jest.fn();
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('1')}
         width={390}
         height={700}
@@ -190,6 +198,8 @@ describe('ExplorePodCard', () => {
   it('shows every action inline when the screen is tall enough', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('tall')}
         width={390}
         height={2000}
@@ -215,6 +225,8 @@ describe('ExplorePodCard', () => {
     const shareSpy = jest.spyOn(Share, 'share').mockRejectedValue(new Error('cancelled'));
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('err')}
         width={390}
         height={2000}
@@ -236,6 +248,8 @@ describe('ExplorePodCard', () => {
   it('shows the "Confirm with UPI" payment copy for paid pods (BUG-9)', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={
           {
             ...(pod('2') as Record<string, unknown>),
@@ -262,6 +276,8 @@ describe('ExplorePodCard', () => {
     const onOpenClub = jest.fn();
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={
           { ...(pod('vp') as Record<string, unknown>), pod_description: 'd'.repeat(120) } as never
         }
@@ -300,6 +316,8 @@ describe('ExplorePodCard', () => {
     const onShowLikers = jest.fn();
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('lk')}
         width={390}
         height={2000}
@@ -321,6 +339,8 @@ describe('ExplorePodCard', () => {
   it('disables the likers tap when there are no likes (item 8)', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('nolk')}
         width={390}
         height={2000}
@@ -341,6 +361,8 @@ describe('ExplorePodCard', () => {
   it('omits the verified badge and caption toggle for short, unverified content', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('plain')}
         club={
           {
@@ -373,6 +395,8 @@ describe('ExplorePodCard', () => {
   it('plays the muted looping reel while active and re-asserts play once ready', () => {
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={pod('vid')}
         width={390}
         height={700}
@@ -412,6 +436,8 @@ describe('ExplorePodCard', () => {
       onToggleSave: jest.fn(),
       onComment: jest.fn(),
       onOpen: jest.fn(),
+      soundOn: false,
+      onToggleSound: jest.fn(),
     };
     const { rerender } = renderWithProviders(
       <ExplorePodCard pod={pod('idle')} isActive {...props} />,

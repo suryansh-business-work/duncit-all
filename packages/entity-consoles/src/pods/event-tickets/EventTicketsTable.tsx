@@ -138,10 +138,11 @@ export default function EventTicketsTable({
       </Stack>
     );
     return [
-      { field: 'ticket_code', headerName: t('admin.eventTickets.colTicket'), minWidth: 140, cellRenderer: renderCode, valueGetter: (t) => t.ticket_code },
+      { field: 'ticket_code', headerName: t('admin.eventTickets.colTicket'), type: 'text', minWidth: 140, cellRenderer: renderCode, valueGetter: (t) => t.ticket_code },
       {
         field: 'pod_title',
         headerName: t('admin.eventTickets.colEvent'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         cellRenderer: renderEvent,
@@ -150,16 +151,18 @@ export default function EventTicketsTable({
       {
         field: 'user_name',
         headerName: t('admin.eventTickets.colAttendee'),
+        type: 'text',
         flex: 1,
         minWidth: 180,
         cellRenderer: renderAttendee,
         valueGetter: (t) => t.user_name,
       },
-      { field: 'pod_date_time', headerName: t('admin.eventTickets.colWhen'), minWidth: 170, valueGetter: (t) => fmt(t.pod_date_time) },
+      { field: 'pod_date_time', headerName: t('admin.eventTickets.colWhen'), type: 'date', minWidth: 170, valueGetter: (t) => fmt(t.pod_date_time) },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: statusOptions(t) },
+        type: 'enum',
+        options: statusOptions(t),
         minWidth: 140,
         cellRenderer: renderStatus,
         valueGetter: (t) => t.status.replace('_', ' '),
@@ -167,7 +170,7 @@ export default function EventTicketsTable({
       {
         field: 'checked_in_at',
         headerName: t('admin.eventTickets.checkedIn'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         minWidth: 170,
         valueGetter: (t) => fmt(t.checked_in_at),
@@ -175,12 +178,12 @@ export default function EventTicketsTable({
       {
         field: 'created_at',
         headerName: t('shell.common.created'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         minWidth: 170,
         valueGetter: (t) => fmt(t.created_at),
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 110, cellRenderer: renderActions },
     ];
   }, [onDownload, onCheckIn]);
 

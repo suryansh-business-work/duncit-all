@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isMeetingPlatform, isVideoUrl } from '@duncit/utils';
+import { isMeetingPlatform, isVideoUrl, ticketDiscountInput } from '@duncit/utils';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
@@ -10,6 +10,11 @@ import {
   type CreatePodFormValues,
   type CreatePodHostCategory,
 } from './create-pod.types';
+import {
+  hydrateTicketDiscount,
+  refineTicketDiscount,
+  ticketDiscountSchemaShape,
+} from './ticket-discount.form';
 
 /** Minimum pod length — the end picker blocks the first 30 minutes after the
  * start, and the schema enforces the same for typed times. mWeb twin. */
@@ -180,6 +185,11 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
   }
 }
 
+/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount. mWeb twin. */
+export const isFreeTicket = (
+  values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
+): boolean => values.pod_type === 'FREE' || !(Number(values.pod_amount_text) > 0);
+
 /** Products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   // Products are optional and `products_enabled` is derived from the rows, so
@@ -280,6 +290,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
           }),
         )
         .max(10),
+      ...ticketDiscountSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
     })
@@ -289,6 +300,16 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       refineSchedule(values, ctx, t);
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
+      refineTicketDiscount(
+        {
+          ticket_discount_enabled: values.ticket_discount_enabled,
+          ticket_discount_tiers: values.ticket_discount_tiers,
+          noOfSpots: Number(values.no_of_spots_text) || 0,
+          free: isFreeTicket(values),
+        },
+        ctx,
+        t,
+      );
       refinePublish(values, ctx, t);
     });
 }
@@ -327,6 +348,8 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_amount_text',
     'no_of_spots_text',
     'place_charges',
+    'ticket_discount_enabled',
+    'ticket_discount_tiers',
     'payment_terms',
     'products_enabled',
     'product_requests',
@@ -416,6 +439,8 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
+    // Off with no tiers for a free pod, whatever a stale draft still holds.
+    ...ticketDiscountInput(values, isFreeTicket(values)),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
     // the flag also means a stale draft that still holds `products_enabled: true`
@@ -537,7 +562,8 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
     };
     // Old drafts may carry retired pod types — coerce onto FREE/PAID.
     values.pod_type = normalizePodType(values.pod_type, values.pod_mode);
-    return values;
+    // …and the discount tiers may be missing or half-typed.
+    return { ...values, ...hydrateTicketDiscount(values) };
   } catch {
     return blankCreatePodForm;
   }

@@ -38,10 +38,10 @@ export default function ContainersTable({ containers }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<StressContainerSample>[]>(
     () => [
-      { field: 'name', headerName: t('tech.stress.colContainer'), flex: 1, minWidth: 220, valueGetter: (row) => row.name },
-      { field: 'cpu_pct', headerName: t('tech.stress.colCpu'), width: 200, cellRenderer: renderCpu, valueGetter: (row) => row.cpu_pct },
-      { field: 'memory_mb', headerName: t('tech.stress.colMemory'), width: 130, valueGetter: (row) => `${row.memory_mb} MB` },
-      { field: 'memory_pct', headerName: t('tech.stress.colMemoryPct'), width: 130, valueGetter: (row) => formatPct(row.memory_pct) },
+      { field: 'name', headerName: t('tech.stress.colContainer'), flex: 1, minWidth: 220, type: 'text', valueGetter: (row) => row.name },
+      { field: 'cpu_pct', headerName: t('tech.stress.colCpu'), width: 200, type: 'number', cellRenderer: renderCpu, valueGetter: (row) => row.cpu_pct },
+      { field: 'memory_mb', headerName: t('tech.stress.colMemory'), width: 130, type: 'number', valueGetter: (row) => `${row.memory_mb} MB` },
+      { field: 'memory_pct', headerName: t('tech.stress.colMemoryPct'), width: 130, type: 'number', valueGetter: (row) => formatPct(row.memory_pct) },
     ],
     [t]
   );

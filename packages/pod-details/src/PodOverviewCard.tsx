@@ -2,6 +2,7 @@ import { Box, Divider, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { InfoRow } from '@duncit/ui';
 import SectionCard from './SectionCard';
+import PodTicketDiscountRow from './PodTicketDiscountRow';
 import { fmtDateTime } from './format';
 import { useTranslation } from './i18n/useTranslation';
 
@@ -34,6 +35,7 @@ export default function PodOverviewCard({ pod, showProducts }: Readonly<Props>) 
       )}
       <Row label={t('podDetailsPanel.podOverviewCard.peopleIn')} value={attendees} />
       <Row label={t('podDetailsPanel.podOverviewCard.spotsLeft')} value={Math.max((pod.no_of_spots ?? 0) - attendees, 0)} />
+      <PodTicketDiscountRow pod={pod} />
       <Row label={t('podDetailsPanel.podOverviewCard.views')} value={pod.pod_hits ?? 0} />
       <Row label={t('podDetailsPanel.podOverviewCard.likesComments')} value={`${pod.like_count ?? 0} · ${pod.comment_count ?? 0}`} />
       {showProducts && <Row label={t('podDetailsPanel.podOverviewCard.products')} value={pod.products_enabled ? 'Enabled' : 'Off'} />}

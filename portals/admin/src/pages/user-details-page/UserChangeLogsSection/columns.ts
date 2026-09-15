@@ -18,14 +18,13 @@ import {
  *
  * Entries are append-only, so a row is written once and never touched again:
  * "Created Date" and "Last Updated Date" are both the moment the change was
- * recorded. Only the first is sortable/filterable — it is the one the server
- * indexes.
+ * recorded, so both sort and filter on the same stored timestamp.
  */
 export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'field_label',
     headerName: 'Field / Data Name',
-    filter: { type: 'text' },
+    type: 'text',
     flex: 1,
     minWidth: 180,
     cellRenderer: renderField,
@@ -34,7 +33,7 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'old_value',
     headerName: 'Old Data',
-    sortable: false,
+    type: 'text',
     flex: 1.5,
     minWidth: 180,
     cellRenderer: renderOld,
@@ -43,7 +42,7 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'new_value',
     headerName: 'New Data',
-    sortable: false,
+    type: 'text',
     flex: 1.5,
     minWidth: 180,
     cellRenderer: renderNew,
@@ -52,7 +51,8 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'action',
     headerName: 'Action',
-    filter: { type: 'select', options: ACTION_OPTIONS },
+    type: 'enum',
+    options: ACTION_OPTIONS,
     width: 120,
     cellRenderer: renderAction,
     valueGetter: (row) => row.action,
@@ -60,21 +60,22 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'created_at',
     headerName: 'Created Date',
-    filter: { type: 'date' },
+    type: 'date',
     minWidth: 190,
     valueGetter: whenValue,
   },
   {
     field: 'updated_at',
     headerName: 'Last Updated Date',
-    sortable: false,
+    type: 'date',
     minWidth: 190,
     valueGetter: whenValue,
   },
   {
     field: 'actor_type',
     headerName: 'Updated By',
-    filter: { type: 'select', options: ACTOR_OPTIONS },
+    type: 'enum',
+    options: ACTOR_OPTIONS,
     width: 130,
     cellRenderer: renderActor,
     valueGetter: (row) => row.actor_type,
@@ -82,6 +83,7 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'actor_name',
     headerName: 'Updated By Name / ID',
+    type: 'text',
     flex: 1,
     minWidth: 200,
     cellRenderer: renderActorName,
@@ -90,7 +92,8 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
   {
     field: 'source',
     headerName: 'Source',
-    filter: { type: 'select', options: SOURCE_OPTIONS },
+    type: 'enum',
+    options: SOURCE_OPTIONS,
     width: 140,
     cellRenderer: renderSource,
     valueGetter: (row) => row.source,

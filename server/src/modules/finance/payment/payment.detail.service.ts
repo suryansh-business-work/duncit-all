@@ -611,19 +611,25 @@ function buildGiftCard(card: IGiftCard | null): PaymentGiftCardInfo | null {
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * The gross the cart was worth before the coupon and the coins came off — the
- * top line of the amount waterfall, which then SUBTRACTS both from it.
+ * The gross the cart was worth before every discount came off — the
+ * multi-ticket discount, the coupon and the coins — the top line of the amount
+ * waterfall, which then SUBTRACTS all three from it.
  *
  * `metadata.original_total` is that number frozen at checkout, but it only
  * exists on payments priced after the key shipped. `payment.total` is not a
- * fallback for it: the total is already net of the coupon and the coins, so
- * using it makes the card subtract them a second time and show a bill that does
- * not add up. Older rows are reconstructed by adding them back instead.
+ * fallback for it: the total is already net of every discount, so using it
+ * makes the card subtract them a second time and show a bill that does not add
+ * up. Older rows are reconstructed by adding them back instead.
  */
 function originalTotal(payment: IPayment, meta: Record<string, unknown> | undefined): number {
   const frozen = Number(meta?.original_total ?? Number.NaN);
   if (Number.isFinite(frozen)) return frozen;
-  return round2(payment.total + (payment.coupon_discount ?? 0) + (payment.coins_redeemed ?? 0));
+  return round2(
+    payment.total +
+      (payment.ticket_discount_amount ?? 0) +
+      (payment.coupon_discount ?? 0) +
+      (payment.coins_redeemed ?? 0)
+  );
 }
 
 const toOrderLine = (o: IProductOrder): PaymentProductOrderLine => ({

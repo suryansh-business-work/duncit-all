@@ -31,6 +31,8 @@ export interface EditablePod {
   payment_terms?: string | null;
   place_charges: readonly { label: string; amount: number; note?: string | null }[];
   product_requests: readonly { product_id: string; quantity: number }[];
+  ticket_discount_enabled?: boolean | null;
+  ticket_discount_tiers?: readonly { min_tickets: number; discount_pct: number }[] | null;
 }
 
 /**
@@ -82,6 +84,11 @@ export function podToCreatePodForm(
       label: charge.label,
       amount: charge.amount,
       note: charge.note ?? '',
+    })),
+    ticket_discount_enabled: !!pod.ticket_discount_enabled,
+    ticket_discount_tiers: (pod.ticket_discount_tiers ?? []).map((tier) => ({
+      min_tickets: tier.min_tickets,
+      discount_pct: tier.discount_pct,
     })),
     payment_terms: pod.payment_terms ?? '',
   };

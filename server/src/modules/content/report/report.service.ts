@@ -54,9 +54,9 @@ const REPORT_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     report_no: { type: 'string' },
-    target_type: { type: 'string' },
-    reason: { type: 'string' },
-    status: { type: 'string' },
+    target_type: { type: 'enum' },
+    reason: { type: 'enum' },
+    status: { type: 'enum' },
     created_at: { type: 'date' },
     updated_at: { type: 'date' },
   },

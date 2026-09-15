@@ -11,11 +11,12 @@ import CoinSummaryRows from './CoinSummaryRows';
 import { isVideoMedia, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
-/** One line of money taken off the bill — a coupon, redeemed coins. */
+/** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
 export interface CheckoutDiscount {
   key: string;
   label: string;
   amount: number;
+  testId?: string;
 }
 
 interface Props {
@@ -105,6 +106,7 @@ export default function OrderSummaryCard({
           {discounts.map((discount) => (
             <Row
               key={discount.key}
+              testId={discount.testId}
               label={discount.label}
               value={`− ${fmt(discount.amount)}`}
               tone="success.main"

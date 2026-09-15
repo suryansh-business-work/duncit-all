@@ -58,8 +58,11 @@ export default function RegionClubAdminsPage() {
     refetch().catch((e) => setError(parseApiError(e)));
   }, [refetch]);
 
-  const fetchRows = useMemo(() => clientTableFetch(members, memberSearchText), [members]);
   const columns = useMemo(() => memberColumns(t, setPendingRemove), [t]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(members, memberSearchText, columns),
+    [members, columns],
+  );
 
   const confirmRemove = async (row: RegionMember) => {
     try {

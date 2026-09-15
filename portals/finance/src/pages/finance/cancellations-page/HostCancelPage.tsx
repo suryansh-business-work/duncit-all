@@ -2,14 +2,9 @@ import { useCallback, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
-import type { TableQueryState } from '@duncit/table';
 import CancellationsTable from './CancellationsTable';
 import CancellationDetailDialog from './CancellationDetailDialog';
-import {
-  applyCancellationQuery,
-  POD_CANCELLATIONS,
-  type PodCancellationRow,
-} from './queries';
+import { POD_CANCELLATIONS, type PodCancellationRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
 /** Pods the host cancelled — reason, attendee refund status and the venue's
@@ -19,17 +14,14 @@ export default function HostCancelPage() {
   const client = useApolloClient();
   const [selected, setSelected] = useState<PodCancellationRow | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
-        query: POD_CANCELLATIONS,
-        variables: { kind: 'HOST' },
-        fetchPolicy: 'network-only',
-      });
-      return applyCancellationQuery(result.data?.podCancellations ?? [], q);
-    },
-    [client],
-  );
+  const loadRows = useCallback(async () => {
+    const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
+      query: POD_CANCELLATIONS,
+      variables: { kind: 'HOST' },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.podCancellations ?? [];
+  }, [client]);
 
   return (
     <Box>
@@ -62,7 +54,7 @@ export default function HostCancelPage() {
 
       <CancellationsTable
         tableId="finance-cancellations-host"
-        fetchRows={fetchRows}
+        loadRows={loadRows}
         onRowClick={setSelected}
         emptyText={t('finance.cancellations.noHostCancelledPodsYet')}
       />

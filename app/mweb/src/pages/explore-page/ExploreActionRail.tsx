@@ -15,6 +15,8 @@ export interface ExploreAction {
   onClick: () => void;
   active?: boolean;
   loading?: boolean;
+  /** Looks unavailable but still takes the tap (which explains why). */
+  dimmed?: boolean;
   tooltip?: string;
   onLabelClick?: () => void;
   testId?: string;
@@ -84,6 +86,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
           onClick={action.onClick}
           active={action.active}
           loading={action.loading}
+          dimmed={action.dimmed}
           tooltip={action.tooltip}
           onLabelClick={action.onLabelClick}
         />

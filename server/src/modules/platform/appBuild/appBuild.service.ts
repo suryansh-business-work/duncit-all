@@ -10,6 +10,7 @@ import { signToken } from '@modules/access/user/user.service';
 import { getUrlConfigs } from '@config/url-configs';
 import type { AuthUser } from '@context';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { presenceFilter } from '@utils/table-presence-filter';
 import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import {
   AppBuildModel,
@@ -101,13 +102,25 @@ const APP_BUILD_TABLE_CONFIG: TableEntityConfig = {
     app_env: 'app_env',
     triggered_by: 'triggered_by',
     created_at: 'created_at',
+    commit_sha: 'commit_sha',
+    files_changed: 'files_changed',
+    slack_ts: 'slack_ts',
   },
+  // slack_ts is deliberately absent: "posted" is the presence of a ts, which a
+  // literal true/false match cannot express — see presenceFilter.
   filterFields: {
     status: { type: 'enum' },
     version: { type: 'string' },
     branch: { type: 'string' },
     app_env: { type: 'enum' },
     created_at: { type: 'date' },
+    build_name: { type: 'string' },
+    commit_sha: { type: 'string' },
+    files_changed: { type: 'number' },
+    size_mb: { type: 'number' },
+    duration_seconds: { type: 'number' },
+    triggered_by: { type: 'string' },
+    reported_by: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };
@@ -599,7 +612,7 @@ export const appBuildService = {
   async table(platform: AppBuildPlatform, input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IAppBuild>(
       AppBuildModel,
-      { platform },
+      { platform, ...presenceFilter(input, 'slack_ts') },
       input,
       APP_BUILD_TABLE_CONFIG
     );

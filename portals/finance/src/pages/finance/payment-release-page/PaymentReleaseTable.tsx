@@ -108,7 +108,8 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         field: 'kind',
         headerName: t('shell.common.type'),
         width: 140,
-        filter: { type: 'select', options: kindOptions(t) },
+        type: 'enum',
+        options: kindOptions(t),
         cellRenderer: renderKind,
         valueGetter: (row) => row.kind,
       },
@@ -117,6 +118,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         headerName: t('finance.common.pod'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderPod,
         valueGetter: (row) => row.pod_title,
       },
@@ -124,6 +126,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         field: 'beneficiary_name',
         headerName: t('finance.paymentRelease.beneficiary'),
         minWidth: 180,
+        type: 'text',
         cellRenderer: renderBeneficiary,
         valueGetter: (row) => row.beneficiary_name,
       },
@@ -131,13 +134,16 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         field: 'amount_requested',
         headerName: t('finance.common.requested'),
         width: 120,
-        filter: { type: 'number' },
+        type: 'number',
         valueGetter: (row) => `Rs ${Number(row.amount_requested || 0).toFixed(2)}`,
       },
       {
         field: 'proof',
         headerName: t('finance.paymentRelease.proof'),
+        type: 'text',
+        // Assembled from bill_url, evidence_media and notes — no one stored path.
         sortable: false,
+        filterable: false,
         minWidth: 160,
         cellRenderer: renderProof,
         valueGetter: proofValue,
@@ -146,7 +152,8 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         field: 'status',
         headerName: t('shell.common.status'),
         width: 120,
-        filter: { type: 'select', options: statusOptions(t) },
+        type: 'enum',
+        options: statusOptions(t),
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
@@ -155,13 +162,13 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
         headerName: t('finance.paymentRelease.requestedAt'),
         hide: true,
         width: 170,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (row) => {
           const d = new Date(row.requested_at);
           return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
         },
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 130, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 130, cellRenderer: renderActions },
     ];
   }, [onReview]);
 

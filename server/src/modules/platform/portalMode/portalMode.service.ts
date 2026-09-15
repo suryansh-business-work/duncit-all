@@ -16,11 +16,16 @@ const PORTAL_MODE_TABLE_CONFIG: TableEntityConfig = {
     key: 'key',
     kind: 'kind',
     mode: 'mode',
+    chat_enabled: 'chat_enabled',
+    apps_enabled: 'apps_enabled',
     updated_at: 'updated_at',
   },
   filterFields: {
+    name: { type: 'string' },
     kind: { type: 'enum' },
     mode: { type: 'enum' },
+    chat_enabled: { type: 'boolean' },
+    apps_enabled: { type: 'boolean' },
   },
   defaultSort: { kind: 1, name: 1 },
 };

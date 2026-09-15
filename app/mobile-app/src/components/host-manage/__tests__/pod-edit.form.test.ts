@@ -13,6 +13,8 @@ const valid = {
   pod_description: 'A relaxed group hike around the lake.',
   media_text: 'https://cdn/img.jpg',
   no_of_spots_text: '12',
+  ticket_discount_enabled: false,
+  ticket_discount_tiers: [],
 };
 
 const issuesOf = (values: typeof valid) => {

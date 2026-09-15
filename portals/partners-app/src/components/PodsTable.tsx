@@ -120,21 +120,34 @@ export default function PodsTable<T extends PodRowBase>({
         headerName: t('partners.common.pod'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderPod,
         valueGetter: (pod) => pod.pod_title,
       },
-      { field: 'place', headerName: t('partners.components.place'), sortable: false, minWidth: 150, valueGetter: placeValue },
+      {
+        field: 'place',
+        headerName: t('partners.components.place'),
+        type: 'text',
+        // A venue name looked up on the client from the pod's venue id — no stored path to order or match.
+        sortable: false,
+        filterable: false,
+        minWidth: 150,
+        valueGetter: placeValue,
+      },
       {
         field: 'pod_date_time',
         headerName: t('partners.common.date'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 175,
         valueGetter: dateValue,
       },
       {
         field: 'attendees',
         headerName: t('partners.common.attendees'),
+        type: 'number',
+        // Seats summed from the pod's bookings at read time — no stored count to order or match.
         sortable: false,
+        filterable: false,
         width: 120,
         cellRenderer: renderAttendees,
         valueGetter: attendeesValue,
@@ -144,7 +157,10 @@ export default function PodsTable<T extends PodRowBase>({
         // settled on the seats scanned at the door, so both are shown.
         field: 'attendance',
         headerName: t('partners.components.attendance'),
+        type: 'number',
+        // Tallied from the pod's tickets per row — the pod document holds no path to order or match.
         sortable: false,
+        filterable: false,
         width: 150,
         cellRenderer: renderAttendance,
         valueGetter: (p: PodRowBase) =>
@@ -155,7 +171,7 @@ export default function PodsTable<T extends PodRowBase>({
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 120,
         cellRenderer: renderStatus,
         valueGetter: statusLabel,
@@ -163,7 +179,7 @@ export default function PodsTable<T extends PodRowBase>({
       {
         field: 'pod_amount',
         headerName: t('partners.common.amount'),
-        filter: { type: 'number' },
+        type: 'number',
         hide: true,
         width: 110,
         valueGetter: (pod) => pod.pod_amount ?? 0,
@@ -171,7 +187,7 @@ export default function PodsTable<T extends PodRowBase>({
       {
         field: 'completed_at',
         headerName: t('partners.common.completed'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 140,
         valueGetter: (pod) => formatDate(pod.completed_at) || '—',
@@ -181,7 +197,7 @@ export default function PodsTable<T extends PodRowBase>({
       cols.push({
         field: 'ai_monitor',
         headerName: t('shell.nav.aiMonitoring'),
-        sortable: false,
+        type: 'actions',
         width: 150,
         cellRenderer: renderMonitor,
         // Renderer-only column: keyed on the title the activity dialog shows,
@@ -193,7 +209,7 @@ export default function PodsTable<T extends PodRowBase>({
       cols.push({
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: actionsWidth,
         cellRenderer: renderActions,
       });

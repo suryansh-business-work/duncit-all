@@ -507,6 +507,8 @@ const BACKOUT_REFUND_TABLE_CONFIG: TableEntityConfig = {
     backout_status: 'status',
     attempt_no: 'attempt_no',
     created_at: 'created_at',
+    payment_amount: 'payment_amount',
+    coins_refunded: 'coins_refunded',
   },
   filterFields: {
     backout_no: { type: 'string' },
@@ -514,6 +516,8 @@ const BACKOUT_REFUND_TABLE_CONFIG: TableEntityConfig = {
     pod_id: { type: 'string' },
     user_id: { type: 'string' },
     created_at: { type: 'date' },
+    payment_amount: { type: 'number' },
+    coins_refunded: { type: 'number' },
   },
   defaultSort: { created_at: -1 },
 };

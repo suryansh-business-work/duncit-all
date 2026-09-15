@@ -151,15 +151,18 @@ export interface PaymentReleaseRow {
   notes: string | null;
   requested_at: string;
 }
-/** The pod's coin movement, for the release review's explanatory line. Live
- * rather than from the frozen settlement snapshot: coins were never part of
- * that record and back-filling one would rewrite money history. */
+/** The pod's coin movement and multi-ticket discounts, for the release review's
+ * explanatory lines. Live rather than from the frozen settlement snapshot:
+ * neither was ever part of that record and back-filling one would rewrite money
+ * history. The discount total is itself a sum of per-payment snapshots, so it
+ * does not move when the pod's tiers are edited. */
 export const POD_COIN_TOTALS = gql`
   query PodCoinTotals($podId: ID!) {
     podFinanceBreakdown(pod_id: $podId) {
       pod_id
       coins_redeemed_total
       coins_earned_total
+      ticket_discount_total
     }
   }
 `;

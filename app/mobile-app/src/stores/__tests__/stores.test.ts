@@ -66,12 +66,12 @@ describe('store fetch guards', () => {
       savedOverride: {},
       likeOverride: {},
     });
-    await useExploreStore.getState().fetch(); // isLoading → early return
+    await useExploreStore.getState().fetch(''); // isLoading → early return
     expect(mockRequest).not.toHaveBeenCalled();
 
     useExploreStore.setState({ isLoading: false });
     mockRequest.mockResolvedValueOnce({ me: null, clubs: [], pods: [] });
-    await useExploreStore.getState().fetch(true); // force refetch despite cached data
+    await useExploreStore.getState().fetch('', true); // force refetch despite cached data
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 

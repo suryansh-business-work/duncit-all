@@ -124,6 +124,7 @@ export default function AppPopupsTable({
       {
         field: 'name',
         headerName: t('marketing.appPopups.popup'),
+        type: 'text',
         flex: 1,
         minWidth: 240,
         cellRenderer: renderName,
@@ -135,7 +136,7 @@ export default function AppPopupsTable({
         width: 130,
         // A boolean column filters is_true/is_false — a select of 'true'/'false'
         // is dropped by the shared engine and would filter nothing at all.
-        filter: { type: 'boolean' },
+        type: 'boolean',
         cellRenderer: renderStatus,
         valueGetter: statusOf,
       },
@@ -143,7 +144,8 @@ export default function AppPopupsTable({
         field: 'platform',
         headerName: t('marketing.appPopups.platform'),
         minWidth: 160,
-        filter: { type: 'select', options: selectPlatforms(t) },
+        type: 'enum',
+        options: selectPlatforms(t),
         cellRenderer: (popup: AppPopupRow) => renderPlatform(popup, t),
         valueGetter: (popup) => platformLabels(t).get(popup.platform) ?? popup.platform,
       },
@@ -151,7 +153,8 @@ export default function AppPopupsTable({
         field: 'audience_type',
         headerName: t('marketing.common.audience'),
         minWidth: 180,
-        filter: { type: 'select', options: selectAudiences(t) },
+        type: 'enum',
+        options: selectAudiences(t),
         valueGetter: audienceLabel,
       },
       dateColumn<AppPopupRow>({
@@ -173,13 +176,13 @@ export default function AppPopupsTable({
         headerName: t('marketing.appPopups.close'),
         hide: true,
         width: 110,
-        filter: { type: 'boolean' },
+        type: 'boolean',
         valueGetter: (popup) => (popup.close_button_enabled ? 'Yes' : 'No'),
       },
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 110,
         cellRenderer: renderActions,
       },

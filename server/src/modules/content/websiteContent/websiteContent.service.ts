@@ -67,9 +67,11 @@ const WEBSITE_CONTENT_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     type: { type: 'enum' },
+    title: { type: 'string' },
     category: { type: 'string' },
     is_published: { type: 'boolean' },
     published_at: { type: 'date' },
+    sort_order: { type: 'number' },
     created_at: { type: 'date' },
   },
   defaultSort: { sort_order: 1, published_at: -1, created_at: -1 },

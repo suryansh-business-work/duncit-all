@@ -3,7 +3,7 @@ import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, dateColumn, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import type { RateLimitSystemRow } from '../queries';
-import { enumLabel } from '../labels';
+import { enumLabel, enumOptions } from '../labels';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -49,7 +49,8 @@ interface Props {
  */
 export default function SystemsTable({ rows }: Readonly<Props>) {
   const { t } = useTranslation();
-  const fetchRows = useMemo(() => clientTableFetch(rows, searchOf), [rows]);
+  // The surfaces these rows actually carry — every one a filter could match.
+  const surfaces = useMemo(() => [...new Set(rows.map((row) => row.surface))], [rows]);
 
   const columns = useMemo<DuncitColumn<RateLimitSystemRow>[]>(
     () => [
@@ -58,37 +59,42 @@ export default function SystemsTable({ rows }: Readonly<Props>) {
         headerName: t('tech.rateLimit.systems.system'),
         flex: 1.2,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderLabel,
       },
       {
         field: 'surface',
         headerName: t('tech.rateLimit.field.surface'),
         width: 150,
+        type: 'enum',
+        options: enumOptions(t, surfaces),
         valueGetter: (row) => enumLabel(t, row.surface),
       },
-      { field: 'requests', headerName: t('tech.rateLimit.systems.requests'), width: 130 },
+      { field: 'requests', headerName: t('tech.rateLimit.systems.requests'), width: 130, type: 'number' },
       {
         field: 'blocked',
         headerName: t('tech.rateLimit.systems.blocked'),
         width: 120,
+        type: 'number',
         cellRenderer: renderBlocked,
       },
       {
         field: 'rule_count',
         headerName: t('tech.rateLimit.systems.rules'),
         width: 130,
+        type: 'number',
         cellRenderer: (row) => renderRuleCount(row, t),
       },
       dateColumn<RateLimitSystemRow>({
         field: 'last_seen_at',
         headerName: t('tech.rateLimit.systems.lastSeen'),
         hide: false,
-        filterable: false,
         width: 190,
       }),
     ],
-    [t],
+    [surfaces, t],
   );
+  const fetchRows = useMemo(() => clientTableFetch(rows, searchOf, columns), [rows, columns]);
 
   return (
     <DuncitTable<RateLimitSystemRow>

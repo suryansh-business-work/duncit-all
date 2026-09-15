@@ -107,6 +107,7 @@ export default function PlansTable({
       {
         field: 'name',
         headerName: t('admin.membership.tier'),
+        type: 'text',
         flex: 1,
         minWidth: 240,
         cellRenderer: renderName,
@@ -115,7 +116,7 @@ export default function PlansTable({
       {
         field: 'key',
         headerName: t('admin.podPlans.key'),
-        filter: { type: 'text' },
+        type: 'text',
         width: 130,
         cellRenderer: renderKey,
         valueGetter: (r) => r.key,
@@ -123,6 +124,7 @@ export default function PlansTable({
       {
         field: 'price_label',
         headerName: t('admin.membership.price'),
+        type: 'text',
         minWidth: 180,
         cellRenderer: renderPrice,
         valueGetter: (r) => r.price_label,
@@ -130,12 +132,12 @@ export default function PlansTable({
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         minWidth: 180,
         cellRenderer: (row: PlanRow) => renderStatus(row, t),
         valueGetter: (r) => (r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')),
       },
-      { field: 'sort_order', headerName: t('admin.podPlans.sort'), width: 90 },
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), type: 'number', width: 90 },
       actionsColumn<PlanRow>({ onEdit, onDelete }),
     ],
     [onEdit, onDelete]

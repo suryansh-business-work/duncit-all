@@ -35,6 +35,8 @@ const FAQ_SUBMISSION_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    question: { type: 'string' },
+    email: { type: 'string' },
     status: { type: 'enum' },
     super_category_slug: { type: 'string' },
     created_at: { type: 'date' },

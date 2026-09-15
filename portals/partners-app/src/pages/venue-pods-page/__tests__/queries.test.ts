@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { TableFilterValue } from '@duncit/table';
+import type { DuncitColumn, TableFilterValue } from '@duncit/table';
 import { fieldsAt, operationOf, variablesOf } from '../../../__tests__/gql-contract';
 import {
   applyVenuePodsQuery,
@@ -10,7 +10,10 @@ import {
   VENUE_POD_ATTENDEE_PROFILES,
   VENUE_PODS,
 } from '../queries';
+import type { VenuePodRow } from '../queries';
 import { makeVenuePodRow as makeRow } from './fixtures';
+
+const columns: DuncitColumn<VenuePodRow>[] = [{ field: 'pod_amount', type: 'number' }];
 
 const baseQuery = {
   search: '',
@@ -113,28 +116,30 @@ describe('applyVenuePodsQuery', () => {
     makeRow({ id: '4', bucket: 'CANCELLED', cancelled_at: '2026-07-03T00:00:00.000Z' }),
   ];
 
-  it('applies the tab from externalFilters plus search, sort and paging', () => {
-    const cancelled = applyVenuePodsQuery(rows, {
+  it('applies the tab from externalFilters plus search, sort and paging', async () => {
+    const cancelled = await applyVenuePodsQuery(rows, {
       ...baseQuery,
       filters: [{ field: 'tab', op: 'eq', value: 'CANCELLED' }],
-    });
+    }, columns);
     expect(cancelled.total).toBe(1);
     expect(cancelled.rows[0].id).toBe('4');
 
-    const searched = applyVenuePodsQuery(
+    const searched = await applyVenuePodsQuery(
       [makeRow(), makeRow({ id: '2', pod_title: 'Book Club', host_names: ['Ravi'] })],
       { ...baseQuery, search: 'ravi' },
+      columns,
     );
     expect(searched.total).toBe(1);
     expect(searched.rows[0].pod_title).toBe('Book Club');
 
-    const sorted = applyVenuePodsQuery(
+    const sorted = await applyVenuePodsQuery(
       [makeRow({ pod_amount: 100 }), makeRow({ id: '2', pod_amount: 900 })],
       { ...baseQuery, sortBy: 'pod_amount', sortDir: 'desc' },
+      columns,
     );
     expect(sorted.rows[0].pod_amount).toBe(900);
 
-    const paged = applyVenuePodsQuery(rows, { ...baseQuery, pageSize: 3, page: 2 });
+    const paged = await applyVenuePodsQuery(rows, { ...baseQuery, pageSize: 3, page: 2 }, columns);
     expect(paged.rows).toHaveLength(1);
     expect(paged.total).toBe(4);
   });

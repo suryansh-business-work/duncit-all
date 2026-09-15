@@ -38,17 +38,27 @@ const AUDIENCE_TABLE_CONFIG: TableEntityConfig = {
     first_name: 'profile.first_name',
     last_name: 'profile.last_name',
     email: 'auth.email',
+    phone: 'auth.phone.number',
     city: 'profile.city',
     state: 'profile.state',
     zone: 'profile.zone',
+    pincode: 'profile.pincode',
+    country: 'profile.country',
     status: 'metadata.status',
+    role: 'metadata.role_keys',
     dob: 'profile.dob',
     locale: 'profile.locale',
+    email_verified: 'auth.is_email_verified',
+    phone_verified: 'auth.phone.is_verified',
+    // Set once the number is verified, so ordering on it groups reachable from unreachable.
+    whatsapp: 'communication.whatsapp.verified_at',
     last_login_provider: 'auth.last_login_provider',
     last_login_at: 'auth.last_login_at',
     created_at: 'metadata.created_at',
   },
   filterFields: {
+    first_name: { path: 'profile.first_name', type: 'string' },
+    phone: { path: 'auth.phone.number', type: 'string' },
     status: { path: 'metadata.status', type: 'enum' },
     role: { path: 'metadata.role_keys', type: 'enum' },
     country: { path: 'profile.country', type: 'string' },
@@ -130,13 +140,29 @@ async function anyPushReachableIds(): Promise<Types.ObjectId[]> {
   return [...native, ...web];
 }
 
-async function pushCondition(value: string): Promise<IdCondition | undefined> {
-  if (value === 'NONE') return { $nin: await anyPushReachableIds() };
-  if (value === 'ANY') return { $in: await anyPushReachableIds() };
-  if (value === 'WEB' || value === 'ANDROID' || value === 'IOS') {
-    return { $in: await pushReachableIds(value) };
+const PUSH_PLATFORMS = new Set(['WEB', 'ANDROID', 'IOS']);
+
+/** Ids reachable on any of the named platforms — ANY is every platform. */
+async function reachableOn(platforms: string[]): Promise<Types.ObjectId[]> {
+  if (platforms.includes('ANY')) return anyPushReachableIds();
+  const sets = await Promise.all(platforms.filter((p) => PUSH_PLATFORMS.has(p)).map(pushReachableIds));
+  return sets.flat();
+}
+
+/**
+ * One or more push choices (the sidebar sends one with `eq`, a column filter
+ * several with `in`), OR-ed. NONE is the unreachable, so with other platforms
+ * it keeps everybody except those reachable only elsewhere.
+ */
+async function pushCondition(values: string[]): Promise<IdCondition | undefined> {
+  const platforms = values.filter((v) => v !== 'NONE');
+  if (platforms.length === values.length) {
+    if (!platforms.some((p) => p === 'ANY' || PUSH_PLATFORMS.has(p))) return undefined;
+    return { $in: await reachableOn(platforms) };
   }
-  return undefined;
+  const keep = new Set((await reachableOn(platforms)).map((id) => id.toHexString()));
+  const reachable = await anyPushReachableIds();
+  return { $nin: reachable.filter((id) => !keep.has(id.toHexString())) };
 }
 
 async function interestCondition(f: TableFilterInput): Promise<IdCondition | undefined> {
@@ -189,8 +215,10 @@ function applyWhatsapp(base: BaseFilter, f: TableFilterInput) {
 }
 
 async function applyPush(base: BaseFilter, f: TableFilterInput) {
-  if (!f.value) return;
-  const cond = await pushCondition(f.value);
+  const raw = f.op === 'in' ? (f.values ?? []) : [f.value];
+  const values = raw.filter((v): v is string => !!v);
+  if (values.length === 0) return;
+  const cond = await pushCondition(values);
   if (cond) mergeId(base, cond);
 }
 
@@ -219,7 +247,13 @@ async function translate(input?: TableQueryInput | null) {
   }
 
   const passthrough = all.filter((f) => !TRANSLATED.has(f.field));
-  return { base, query: { ...input, filters: passthrough } };
+  return { base, query: { ...input, ...ageSort(input), filters: passthrough } };
+}
+
+/** Age is not stored — it orders as the birthdate, reversed: the youngest have the latest dob. */
+function ageSort(input?: TableQueryInput | null): Pick<TableQueryInput, 'sort_by' | 'sort_dir'> {
+  if (input?.sort_by !== 'age') return {};
+  return { sort_by: 'dob', sort_dir: input.sort_dir === 'asc' ? 'desc' : 'asc' };
 }
 
 /** Whole years between a birthdate and today, or null when unknown. Exported

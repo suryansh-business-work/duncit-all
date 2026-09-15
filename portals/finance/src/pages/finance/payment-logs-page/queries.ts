@@ -7,9 +7,20 @@ export const PAYMENT_TOTALS = gql`
       gross
       fee
       gst
+      ticket_discount_total
     }
   }
 `;
+
+/** The KPI roll-up over the payments the table's filter matches. */
+export interface PaymentTotals {
+  count: number;
+  gross: number;
+  fee: number;
+  gst: number;
+  /** Sum of the multi-ticket discounts frozen on those payments. */
+  ticket_discount_total: number;
+}
 
 /** Row shape for the payments table (fields the columns and dialogs touch). */
 export interface PaymentRow {
@@ -24,6 +35,9 @@ export interface PaymentRow {
   gst_amount: number;
   coins_redeemed?: number | null;
   coins_earned?: number | null;
+  /** The multi-ticket tier frozen on the payment at checkout (0 when none applied). */
+  ticket_discount_amount: number;
+  ticket_discount_pct: number;
   total: number;
   currency_symbol: string;
   status: string;
@@ -47,6 +61,8 @@ const PAYMENT_ROW_FIELDS = gql`
     gst_amount
     coins_redeemed
     coins_earned
+    ticket_discount_amount
+    ticket_discount_pct
     total
     currency_symbol
     status

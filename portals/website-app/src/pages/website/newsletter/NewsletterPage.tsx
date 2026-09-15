@@ -40,17 +40,20 @@ export default function NewsletterPage() {
 
   const columns = useMemo<DuncitColumn<Subscriber>[]>(
     () => [
-      { field: 'email', headerName: t('shell.common.email'), flex: 1, minWidth: 220 },
+      { field: 'email', headerName: t('shell.common.email'), type: 'text', flex: 1, minWidth: 220 },
       {
         field: 'source',
         headerName: t('websiteApp.newsletter.colSource'),
-        filter: { type: 'select', options: SOURCE_OPTIONS },
+        type: 'enum',
+        options: SOURCE_OPTIONS,
         minWidth: 150,
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        sortable: false,
+        type: 'text',
+        // Derived from whether unsubscribed_at is set (it sorts on that date) — the Unsubscribed column filters it.
+        filterable: false,
         width: 140,
         cellRenderer: renderStatus,
         valueGetter: (row) => (row.unsubscribed_at ? 'Unsubscribed' : 'Active'),
@@ -58,14 +61,14 @@ export default function NewsletterPage() {
       {
         field: 'created_at',
         headerName: t('websiteApp.newsletter.colSubscribed'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'unsubscribed_at',
         headerName: t('websiteApp.newsletter.colUnsubscribed'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         minWidth: 180,
         valueGetter: (row) => (row.unsubscribed_at ? formatDateTime(row.unsubscribed_at) : '—'),

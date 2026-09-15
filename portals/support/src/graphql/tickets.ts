@@ -50,6 +50,7 @@ export const TICKETS = gql`
     $sort_by: String
     $sort_dir: String
     $priority_first: TicketPriority
+    $filters: [TableFilterInput!]
   ) {
     tickets(
       status: $status
@@ -59,6 +60,7 @@ export const TICKETS = gql`
       sort_by: $sort_by
       sort_dir: $sort_dir
       priority_first: $priority_first
+      filters: $filters
     ) {
       items {
         ...TicketFields
@@ -182,6 +184,8 @@ export const EMAIL_TICKET_TRANSCRIPT = gql`
 export type TicketStatus = 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
 export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type TicketCategory = 'GENERAL' | 'PAYMENT' | 'BOOKING' | 'SAFETY' | 'TECHNICAL' | 'OTHER';
+/** Every category, in the order the new-ticket picker and the list's filter offer them. */
+export const TICKET_CATEGORIES: readonly TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
 export interface TicketMessage {
   id: string;

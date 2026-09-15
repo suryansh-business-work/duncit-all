@@ -236,6 +236,8 @@ export const bouncerTypeDefs = /* GraphQL */ `
       page_size: Int
       sort_by: String
       sort_dir: String
+      "The table's column filters; fields the list does not allowlist are dropped."
+      filters: [TableFilterInput!]
     ): BouncerSosAlertPage!
     bouncerCallbackRequests(
       status: BouncerCallbackStatus
@@ -244,6 +246,8 @@ export const bouncerTypeDefs = /* GraphQL */ `
       page_size: Int
       sort_by: String
       sort_dir: String
+      "The table's column filters; fields the list does not allowlist are dropped."
+      filters: [TableFilterInput!]
     ): BouncerCallbackRequestPage!
     "A single SOS alert by id — backs the agent SOS detail page (deep-linkable)."
     bouncerSosAlert(id: ID!): BouncerSosAlert

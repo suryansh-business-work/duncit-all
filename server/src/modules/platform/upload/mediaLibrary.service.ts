@@ -184,6 +184,13 @@ export const mediaLibraryService = {
     }));
   },
 
+  /** Whether a video has an audio track — ImageKit names an `audioCodec` only when it does. */
+  async hasAudio(url: string): Promise<boolean> {
+    const params = new URLSearchParams({ url });
+    const metadata = await call<{ audioCodec?: string }>(`/metadata?${params.toString()}`);
+    return !!metadata?.audioCodec;
+  },
+
   /** Drop a URL from ImageKit's CDN cache after replacing what sits behind it. */
   async purge(url: string): Promise<string> {
     const result = await call<{ requestId?: string }>('/files/purge', {

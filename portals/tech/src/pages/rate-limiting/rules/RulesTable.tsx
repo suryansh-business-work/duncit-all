@@ -8,8 +8,8 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import type { RateLimitRuleRow } from '../queries';
-import { allowance, enumLabel } from '../labels';
+import type { RateLimitOptionsData, RateLimitRuleRow } from '../queries';
+import { allowance, enumLabel, enumOptions } from '../labels';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -69,6 +69,8 @@ interface Props {
   fetchRows: TableFetch<RateLimitRuleRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
+  /** The server's enum lists — the filter options for surface and mode. */
+  options: RateLimitOptionsData;
   onToggle: (row: RateLimitRuleRow) => void;
   onEdit: (row: RateLimitRuleRow) => void;
   onRemove: (row: RateLimitRuleRow) => void;
@@ -79,6 +81,7 @@ export default function RulesTable({
   fetchRows,
   refetchRef,
   toolbarActions,
+  options,
   onToggle,
   onEdit,
   onRemove,
@@ -99,16 +102,18 @@ export default function RulesTable({
         field: 'enabled',
         headerName: t('tech.rateLimit.field.enabled'),
         width: 100,
-        filter: { type: 'boolean' },
+        // The switch edits a stored flag, so the column still sorts and filters on it.
+        type: 'boolean',
         cellRenderer: renderEnabled,
         valueGetter: (row) => (row.enabled ? 1 : 0),
       },
-      { field: 'priority', headerName: t('tech.rateLimit.field.priority'), width: 100 },
+      { field: 'priority', headerName: t('tech.rateLimit.field.priority'), width: 100, type: 'number' },
       {
         field: 'name',
         headerName: t('shell.common.name'),
         flex: 1.4,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderName,
       },
       {
@@ -116,7 +121,8 @@ export default function RulesTable({
         headerName: t('tech.rateLimit.rules.scope'),
         flex: 1,
         minWidth: 170,
-        filter: { type: 'text' },
+        type: 'enum',
+        options: enumOptions(t, options.surfaces),
         cellRenderer: (row) => renderScope(row, t),
         valueGetter: (row) => `${row.surface} ${row.app} ${row.channel}`,
       },
@@ -124,21 +130,24 @@ export default function RulesTable({
         field: 'limit',
         headerName: t('tech.rateLimit.rules.allowance'),
         width: 170,
+        type: 'number',
         cellRenderer: (row) => renderAllowance(row, t),
       },
       {
         field: 'mode',
         headerName: t('tech.rateLimit.field.mode'),
         width: 120,
-        filter: { type: 'text' },
+        type: 'enum',
+        options: enumOptions(t, options.modes),
         cellRenderer: (row) => renderMode(row, t),
         valueGetter: (row) => row.mode,
       },
-      { field: 'hit_count', headerName: t('tech.rateLimit.rules.hits'), width: 110 },
+      { field: 'hit_count', headerName: t('tech.rateLimit.rules.hits'), width: 110, type: 'number' },
       {
         field: 'blocked_count',
         headerName: t('tech.rateLimit.systems.blocked'),
         width: 120,
+        type: 'number',
         cellRenderer: renderBlocked,
       },
       dateColumn<RateLimitRuleRow>({
@@ -149,7 +158,7 @@ export default function RulesTable({
       }),
       actionsColumn<RateLimitRuleRow>({ width: 120, onEdit, onDelete: onRemove }),
     ];
-  }, [onEdit, onRemove, onToggle, t]);
+  }, [onEdit, onRemove, onToggle, options, t]);
 
   return (
     <DuncitTable<RateLimitRuleRow>

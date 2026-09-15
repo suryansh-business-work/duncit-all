@@ -18,9 +18,9 @@ const renderUser = (row: LeaderboardPointRow) => (
 );
 
 /**
- * Ledger columns. Sortable columns match the server's allowlist (created_at,
- * points, category, source_type); the joined user and pod fields are resolved
- * after the page is fetched, so offering a sort there would be silently
+ * Ledger columns. Sort and filter keys match the server's allowlist
+ * (POINTS_TABLE_CONFIG); the joined user and pod fields are resolved after the
+ * page is fetched, so offering a sort or filter there would be silently
  * dropped.
  */
 export function buildLeaderboardPointsColumns(
@@ -39,16 +39,17 @@ export function buildLeaderboardPointsColumns(
       field: 'category',
       headerName: t('admin.leaderboard.rewardCategory'),
       minWidth: 150,
-      filter: {
-        type: 'select',
-        options: CATEGORIES.map((value) => ({ value, label: t(CATEGORY_LABEL_KEYS[value]) })),
-      },
+      type: 'enum',
+      options: CATEGORIES.map((value) => ({ value, label: t(CATEGORY_LABEL_KEYS[value]) })),
       valueGetter: (row) => t(CATEGORY_LABEL_KEYS[row.category]),
     },
     {
       field: 'user_name',
       headerName: t('admin.leaderboard.colUser'),
+      type: 'text',
+      // Joined after the page is fetched — nothing stored to order or match on.
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 190,
       cellRenderer: renderUser,
@@ -58,30 +59,31 @@ export function buildLeaderboardPointsColumns(
       field: 'points',
       headerName: t('admin.leaderboard.colPoints'),
       minWidth: 110,
-      filter: { type: 'number' },
+      type: 'number',
       valueGetter: (row) => row.points,
     },
     {
       field: 'source_type',
       headerName: t('admin.leaderboard.colAction'),
       minWidth: 190,
-      filter: {
-        type: 'select',
-        options: SOURCE_TYPES.map((value) => ({ value, label: value })),
-      },
+      type: 'enum',
+      options: SOURCE_TYPES.map((value) => ({ value, label: value })),
       valueGetter: (row) => row.source_type,
     },
     {
       field: 'source_id',
       headerName: t('admin.leaderboard.colSource'),
-      sortable: false,
+      type: 'text',
       minWidth: 180,
       valueGetter: (row) => row.source_id || EM_DASH,
     },
     {
       field: 'pod_title',
       headerName: t('admin.leaderboard.colPod'),
+      type: 'text',
+      // Joined after the page is fetched — nothing stored to order or match on.
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 190,
       valueGetter: (row) => row.pod_title || EM_DASH,

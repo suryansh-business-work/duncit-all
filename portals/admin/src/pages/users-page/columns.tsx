@@ -155,6 +155,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'first_name',
       headerName: t('admin.users.colUser'),
+      type: 'text',
       flex: 1.2,
       minWidth: 240,
       cellRenderer: renderUser,
@@ -163,6 +164,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'phone_number',
       headerName: t('admin.users.colContact'),
+      type: 'text',
       minWidth: 180,
       cellRenderer: renderContact,
       valueGetter: (u) => u.phone_number ?? '',
@@ -170,7 +172,8 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'roles',
       headerName: t('admin.roles.title'),
-      sortable: false,
+      type: 'enum',
+      options: roleOptions,
       minWidth: 200,
       cellRenderer: renderRoles,
       valueGetter: rolesValue,
@@ -178,8 +181,8 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'role',
       headerName: t('admin.users.colRole'),
-      sortable: false,
-      filter: { type: 'select', options: roleOptions },
+      type: 'enum',
+      options: roleOptions,
       hide: true,
       minWidth: 140,
       valueGetter: rolesValue,
@@ -187,7 +190,8 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'last_login_provider',
       headerName: t('admin.users.colLoginMethod'),
-      filter: { type: 'select', options: providerOptions(t) },
+      type: 'enum',
+      options: providerOptions(t),
       width: 170,
       cellRenderer: renderLogin,
       valueGetter: (u) => loginMeta(u, t).label,
@@ -195,7 +199,8 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'status',
       headerName: t('shell.common.status'),
-      filter: { type: 'select', options: STATUS_FILTER_OPTIONS },
+      type: 'enum',
+      options: STATUS_FILTER_OPTIONS,
       width: 120,
       cellRenderer: renderStatus,
       valueGetter: (u) => u.status || 'ACTIVE',
@@ -203,17 +208,17 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'google_email',
       headerName: t('admin.users.googleAccount'),
-      filter: { type: 'text' },
+      type: 'text',
       hide: true,
       minWidth: 220,
       valueGetter: (u) => u.google_email ?? '',
     },
-    { field: 'city', headerName: t('admin.profile.city'), filter: { type: 'text' }, hide: true, minWidth: 130 },
-    { field: 'zone', headerName: t('admin.profile.zone'), filter: { type: 'text' }, hide: true, minWidth: 130 },
+    { field: 'city', headerName: t('admin.profile.city'), type: 'text', hide: true, minWidth: 130 },
+    { field: 'zone', headerName: t('admin.profile.zone'), type: 'text', hide: true, minWidth: 130 },
     {
       field: 'last_login_at',
       headerName: t('admin.users.colLastLogin'),
-      filter: { type: 'date' },
+      type: 'date',
       hide: true,
       width: 150,
       valueGetter: (u) => (u.last_login_at ? formatDate(u.last_login_at) : ''),
@@ -221,7 +226,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
     {
       field: 'created_at',
       headerName: t('shell.common.created'),
-      filter: { type: 'date' },
+      type: 'date',
       width: 170,
       valueGetter: (u) => (u.created_at ? formatDateTime(u.created_at) : ''),
     },

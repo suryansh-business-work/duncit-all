@@ -35,12 +35,12 @@ export default function ErrorsTable({ errors, onOpenOperation }: Readonly<Props>
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorGroup>[]>(
     () => [
-      { field: 'message', headerName: t('tech.graphqlMonitor.colMessage'), flex: 1, minWidth: 280, cellRenderer: renderMessage, valueGetter: (row) => row.message },
-      { field: 'code', headerName: t('tech.graphqlMonitor.colCode'), width: 190, cellRenderer: renderCode, valueGetter: (row) => row.code },
-      { field: 'operation_name', headerName: t('tech.graphqlMonitor.colOperation'), width: 220, valueGetter: (row) => row.operation_name },
-      { field: 'count', headerName: t('tech.graphqlMonitor.colCount'), width: 100, valueGetter: (row) => formatCount(row.count) },
-      { field: 'first_seen_at', headerName: t('tech.graphqlMonitor.colFirstSeen'), width: 170, valueGetter: (row) => formatDateTime(row.first_seen_at) },
-      { field: 'last_seen_at', headerName: t('tech.graphqlMonitor.colLastSeen'), width: 170, valueGetter: (row) => formatDateTime(row.last_seen_at) },
+      { field: 'message', headerName: t('tech.graphqlMonitor.colMessage'), flex: 1, minWidth: 280, type: 'text', cellRenderer: renderMessage, valueGetter: (row) => row.message },
+      { field: 'code', headerName: t('tech.graphqlMonitor.colCode'), width: 190, type: 'text', cellRenderer: renderCode, valueGetter: (row) => row.code },
+      { field: 'operation_name', headerName: t('tech.graphqlMonitor.colOperation'), width: 220, type: 'text', valueGetter: (row) => row.operation_name },
+      { field: 'count', headerName: t('tech.graphqlMonitor.colCount'), width: 100, type: 'number', valueGetter: (row) => formatCount(row.count) },
+      { field: 'first_seen_at', headerName: t('tech.graphqlMonitor.colFirstSeen'), width: 170, type: 'date', valueGetter: (row) => formatDateTime(row.first_seen_at) },
+      { field: 'last_seen_at', headerName: t('tech.graphqlMonitor.colLastSeen'), width: 170, type: 'date', valueGetter: (row) => formatDateTime(row.last_seen_at) },
     ],
     [t]
   );

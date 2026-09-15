@@ -73,6 +73,7 @@ export default function FaqsTableBase({
       {
         field: 'question',
         headerName: t('support.faqs.question'),
+        type: 'text',
         flex: 1.6,
         minWidth: 280,
         cellRenderer: renderQuestion,
@@ -82,7 +83,7 @@ export default function FaqsTableBase({
       {
         field: 'sort_order',
         headerName: t('support.faqs.sort'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 90,
       },
       activeChipColumn<FaqRow>({

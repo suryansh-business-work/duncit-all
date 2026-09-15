@@ -204,6 +204,11 @@ export const sourdoughPod: PodFormValues = {
   place_charges: [{ label: 'Oven cleaning', amount: 400, note: 'Charged once per pod' }],
   products_enabled: true,
   product_requests: [{ product_id: '66f1a2b3c4d5e6f708192b01', quantity: 12 }],
+  ticket_discount_enabled: true,
+  ticket_discount_tiers: [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 20 },
+  ],
   is_active: true,
 };
 
@@ -266,6 +271,11 @@ strings, and `venue_slot_id` is present **only** because `config.showVenueSlot` 
   place_charges: [{ label: 'Oven cleaning', amount: 400, note: 'Charged once per pod' }],
   products_enabled: true,
   product_requests: [{ product_id: '66f1a2b3c4d5e6f708192b01', quantity: 12 }],
+  ticket_discount_enabled: true,
+  ticket_discount_tiers: [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 20 }
+  ],
   is_active: true,
   venue_slot_id: '66f1a2b3c4d5e6f708192a5d'
 }
@@ -408,7 +418,7 @@ both surfaces render can be asserted without mounting either.
 | Export | Signature | Returns |
 | --- | --- | --- |
 | `makeNativeParityPodConfig` | `({ showProducts }: { showProducts: boolean }) => PodFormConfig` | The native-parity flag set. |
-| `makePodSchema` | `(config: PodFormConfig, t: Translate) => PodSchema` | A Zod object with config-gated `superRefine`s. Every message comes from `podForm.validation.*`, so the schema is rebuilt when the language changes. |
+| `makePodSchema` | `(config: PodFormConfig, t: Translate, ticketDiscountMaxPct?: number) => PodSchema` | A Zod object with config-gated `superRefine`s. Every message comes from `podForm.validation.*` (and `podForm.ticketDiscount.*` for the tiers), so the schema is rebuilt when the language changes. `ticketDiscountMaxPct` is the admin's `publicAppSettings.ticket_discount_max_pct`; `PodForm` reads it itself, and the default (`DEFAULT_TICKET_DISCOUNT_MAX_PCT`, 50) only serves a caller outside the React tree. |
 | `buildPodInput` | `(values: PodFormValues, { draft?, config }) => Record<string, unknown>` | The GraphQL create/update input. |
 | `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted. |
 | `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
@@ -528,6 +538,57 @@ edited (`editingPod`) and owns only the values and the submit; the route owns wh
 (`onPicked(url)`) while the form wants promises (`onPickImage: () => Promise<string | null>`). The
 hook adapts one to the other and hands back ready-made `accept` / `title` dialog props for the kind
 being picked. Do not re-implement the promise bridge at the call site.
+
+## Multi-ticket discount
+
+A priced pod can charge less per ticket when ONE booking buys several seats. The form holds it
+as two values — `ticket_discount_enabled` and `ticket_discount_tiers: { min_tickets, discount_pct }[]`
+(both off / empty in `blankPodFormValues`) — and edits them in their own **Multi-ticket discount**
+accordion, straight after Payment & Charges. The accordion mounts `TicketDiscountField` from
+`@duncit/ui`; the tier rules and copy come from `@duncit/utils` (`ticketDiscountTierIssues`,
+`podFormTicketDiscountLabels`), so this form, the host's Edit Pod sheet and both Create Pod
+steppers enforce the same ladder.
+
+- The fixed "1 ticket · 0%" row is only drawn, never stored. A stored tier starts at 2 tickets and
+  1%, and every row needs **strictly more** tickets and a **strictly bigger** discount than the one
+  above. Whole numbers only, at most 10 tiers.
+- `min_tickets` is capped at the seats the pod can sell — `no_of_spots − 1` (the host's seat is
+  free), or 10 on an unlimited pod. `discount_pct` is capped at the admin's
+  `ticket_discount_max_pct` (Admin > Pods > Pod Settings), read off `PUBLIC_APP_SETTINGS`.
+- Switched on with no tiers is invalid. Each problem lands on its own cell
+  (`ticket_discount_tiers.<row>.min_tickets` / `.discount_pct`) or on the list.
+- Only a priced pod has the section: a FREE `pod_type` or a price of 0 hides it, skips the tier
+  rules, and `buildPodInput` sends `{ ticket_discount_enabled: false, ticket_discount_tiers: [] }`.
+  Switching the type to FREE also clears both values (`CascadeEffect`).
+- The live preview lists the offer — one "2+ tickets · 10% off" line per tier with the price a
+  ticket then costs.
+- Auto Pod mode never shows or sends it: the template carries no price, and `buildAutoPodInput`
+  leaves both fields out.
+
+The discount the buyer actually got is frozen on their Payment at checkout, so editing the tiers
+later never changes a past booking.
+
+```ts
+import { blankPodFormValues, buildPodInput, makePodSchema, fallbackT, CLUB_ADMIN_POD_CONFIG } from '@duncit/pod-form';
+
+const values = {
+  ...blankPodFormValues,
+  pod_type: 'NATIVE_PAID',
+  pod_amount: 499,
+  no_of_spots: 8, // 7 payable seats
+  ticket_discount_enabled: true,
+  ticket_discount_tiers: [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 5 }, // not bigger than the row above
+  ],
+};
+
+makePodSchema(CLUB_ADMIN_POD_CONFIG, fallbackT, 50).safeParse(values);
+// issue at ticket_discount_tiers.1.discount_pct — 'Needs a bigger discount than the row above'
+
+buildPodInput({ ...values, pod_type: 'NATIVE_FREE' }, { config: CLUB_ADMIN_POD_CONFIG });
+// { …, ticket_discount_enabled: false, ticket_discount_tiers: [] }
+```
 
 ## Auto Pod mode
 

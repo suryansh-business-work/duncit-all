@@ -15,6 +15,7 @@ interface Props {
 }
 
 const DELIVERY_OPTIONS = DELIVERY_TARGET_OPTIONS;
+const REQUEST_STATUS_OPTIONS = Object.keys(REQUEST_STATUS_COLOR).map((value) => ({ value, label: value }));
 
 const getRowId = (r: ProductListingRow) => r.id;
 
@@ -85,13 +86,15 @@ export default function ProductsReviewTable({
         headerName: t('products.brandProducts.colProduct'),
         flex: 1,
         minWidth: 240,
+        type: 'text',
         cellRenderer: renderProduct,
         valueGetter: (r) => r.product_name,
       },
       {
         field: 'delivery_target',
         headerName: t('products.review.colDelivery'),
-        filter: { type: 'select', options: DELIVERY_OPTIONS },
+        type: 'enum',
+        options: DELIVERY_OPTIONS,
         width: 140,
         cellRenderer: renderDelivery,
         valueGetter: (r) => deliveryTargetLabel(r.delivery_target),
@@ -100,20 +103,26 @@ export default function ProductsReviewTable({
         field: 'inventory_count',
         headerName: t('products.review.colInventory'),
         width: 150,
+        type: 'number',
         valueGetter: inventoryValue,
       },
       {
         field: 'commission_pct',
         headerName: t('products.brands.colCommission'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 150,
         cellRenderer: renderCommission,
         valueGetter: (r) => `${r.commission_pct}%`,
       },
       {
+        // No column filter: the page's status tabs own listing_review_status and
+        // are appended AFTER the column filters, so a column filter here would be
+        // silently overridden on every tab but ALL.
         field: 'status',
         headerName: t('shell.common.status'),
-        sortable: false,
+        type: 'enum',
+        options: REQUEST_STATUS_OPTIONS,
+        filterable: false,
         width: 120,
         cellRenderer: renderStatus,
         valueGetter: (r) => r.listing_review_status,
@@ -121,12 +130,12 @@ export default function ProductsReviewTable({
       {
         field: 'created_at',
         headerName: t('products.review.colSubmitted'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (r) => (r.created_at ? formatDate(r.created_at) : '—'),
       },
-      { field: 'review', headerName: t('products.review.action'), sortable: false, width: 110, cellRenderer: renderReview },
+      { field: 'review', headerName: t('products.review.action'), type: 'actions', width: 110, cellRenderer: renderReview },
     ];
   }, [onReview, formatDate]);
 

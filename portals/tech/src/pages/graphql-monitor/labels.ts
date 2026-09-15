@@ -46,6 +46,17 @@ export function operationTypeLabel(t: Translate, type: OperationType | FieldUsag
   return labels[type] ?? type;
 }
 
+const OPERATION_TYPES: readonly OperationType[] = ['QUERY', 'MUTATION', 'SUBSCRIPTION', 'UNKNOWN'];
+const FIELD_KINDS: readonly FieldUsage['kind'][] = ['QUERY', 'MUTATION', 'SUBSCRIPTION', 'TYPE'];
+
+/** The operation types as table filter options. */
+export const operationTypeOptions = (t: Translate) =>
+  OPERATION_TYPES.map((type) => ({ value: type, label: operationTypeLabel(t, type) }));
+
+/** The schema field kinds as table filter options. */
+export const fieldKindOptions = (t: Translate) =>
+  FIELD_KINDS.map((kind) => ({ value: kind, label: operationTypeLabel(t, kind) }));
+
 const TYPE_COLOR: Record<OperationType | FieldUsage['kind'], ChipColor> = {
   QUERY: 'info',
   MUTATION: 'warning',

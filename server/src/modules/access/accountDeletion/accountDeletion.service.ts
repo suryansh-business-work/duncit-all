@@ -38,12 +38,19 @@ const TABLE_CONFIG: TableEntityConfig = {
     // row counts down against the same clock.
     scheduled_delete_at: 'scheduled_delete_at',
     reviewed_at: 'reviewed_at',
+    // The countdown is derived from the date above, so it orders by that date.
+    days_remaining: 'scheduled_delete_at',
+    reason: 'reason',
   },
   filterFields: {
     status: { type: 'enum' },
     surface: { type: 'enum' },
     requested_at: { type: 'date' },
     snapshot_email: { type: 'string' },
+    request_id: { type: 'string' },
+    snapshot_name: { type: 'string' },
+    scheduled_delete_at: { type: 'date' },
+    reason: { type: 'string' },
   },
   // Oldest open request first: the queue is a waiting line, not a news feed.
   defaultSort: { requested_at: 1 },

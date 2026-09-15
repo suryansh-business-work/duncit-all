@@ -61,7 +61,7 @@ export interface DateColumnOptions<T> {
   flex?: number;
   minWidth?: number;
   sortable?: boolean;
-  filterable?: boolean; // default true -> { type: 'date' }
+  filterable?: boolean; // default true
   /** date-fns pattern; defaults to the admin's configured date format. */
   format?: string;
   /** Full custom formatter (e.g. toLocaleDateString); wins over `format`. */
@@ -102,7 +102,8 @@ export function dateColumn<T>(options: DateColumnOptions<T> = {}): DuncitColumn<
     flex,
     minWidth,
     sortable,
-    filter: filterable ? { type: 'date' } : undefined,
+    type: 'date',
+    filterable,
     valueGetter: (row) => toText(readIso(row)),
   };
 }
@@ -113,7 +114,7 @@ export interface EntityIdColumnOptions<T> {
   headerName: string; // e.g. 'Contract ID'
   width?: number; // default 150
   minWidth?: number;
-  filterable?: boolean; // default true -> { type: 'text' }
+  filterable?: boolean; // default true
   /** Reads the id off the row; defaults to `row[field]`. */
   getId?: (row: T) => string | null | undefined;
 }
@@ -135,7 +136,8 @@ export function entityIdColumn<T>(options: EntityIdColumnOptions<T>): DuncitColu
     headerName,
     width,
     minWidth,
-    filter: filterable ? { type: 'text' } : undefined,
+    type: 'text',
+    filterable,
     cellRenderer: (row) => (
       <Typography variant="body2" sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
         {toText(row)}
@@ -184,7 +186,7 @@ export interface ActiveChipColumnOptions<T> {
   inactiveLabel?: string;
   /** Render the inactive chip with variant "outlined" (challenge-portal style). */
   outlineInactive?: boolean;
-  filterable?: boolean; // default true -> { type: 'boolean' }
+  filterable?: boolean; // default true
   /** Reads the flag off the row; defaults to `Boolean(row[field])`. */
   getActive?: (row: T) => boolean;
 }
@@ -211,7 +213,8 @@ export function activeChipColumn<T>(options: ActiveChipColumnOptions<T> = {}): D
     headerName,
     headerKey: headerName ? undefined : 'shell.common.status',
     width,
-    filter: filterable ? { type: 'boolean' } : undefined,
+    type: 'boolean',
+    filterable,
     cellRenderer: (row) => (
       <ActiveChip
         active={readActive(row)}
@@ -289,7 +292,7 @@ export interface ActionsColumnOptions<T> {
   renderExtra?: (row: T) => ReactNode;
 }
 
-/** Right-aligned Edit/Delete IconButton actions column (sortable: false). */
+/** Right-aligned Edit/Delete IconButton actions column — never sorted or filtered. */
 export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn<T> {
   const {
     field = 'actions',
@@ -306,7 +309,7 @@ export function actionsColumn<T>(options: ActionsColumnOptions<T>): DuncitColumn
     headerName,
     headerKey: headerName ? undefined : 'shell.common.actions',
     width,
-    sortable: false,
+    type: 'actions',
     cellRenderer: (row) => (
       <Stack direction="row" spacing={0.5} component="span" sx={{
         justifyContent: "flex-end"

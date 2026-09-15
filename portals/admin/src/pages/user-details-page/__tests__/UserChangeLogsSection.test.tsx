@@ -113,14 +113,14 @@ describe('columns.ts — CHANGE_LOG_COLUMNS shape', () => {
     expect(columnBy('old_value').sortable).toBe(false);
     expect(columnBy('new_value').sortable).toBe(false);
     expect(columnBy('updated_at').sortable).toBe(false);
-    expect(columnBy('created_at').filter).toEqual({ type: 'date' });
-    expect(columnBy('updated_at').filter).toBeUndefined();
+    expect(columnBy('created_at').type).toBe('date');
+    expect(columnBy('updated_at').filterable).toBe(false);
   });
 
   it('offers the exact enum options each filterable column accepts', () => {
-    expect(columnBy('action').filter).toEqual({ type: 'select', options: ACTION_OPTIONS });
-    expect(columnBy('actor_type').filter).toEqual({ type: 'select', options: ACTOR_OPTIONS });
-    expect(columnBy('source').filter).toEqual({ type: 'select', options: SOURCE_OPTIONS });
+    expect(columnBy('action')).toMatchObject({ type: 'enum', options: ACTION_OPTIONS });
+    expect(columnBy('actor_type')).toMatchObject({ type: 'enum', options: ACTOR_OPTIONS });
+    expect(columnBy('source')).toMatchObject({ type: 'enum', options: SOURCE_OPTIONS });
   });
 });
 

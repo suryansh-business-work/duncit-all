@@ -87,7 +87,9 @@ function applyInput(brand: IEcommBrand, input: any) {
 const ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['brand_no', 'brand_name', 'contact_person', 'contact_email', 'contact_phone', 'city'],
   sortFields: {
+    brand_no: 'brand_no',
     brand_name: 'brand_name',
+    product_categories: 'product_categories',
     city: 'city',
     status: 'status',
     submitted_at: 'submitted_at',
@@ -96,8 +98,14 @@ const ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
     contact_person: 'contact_person',
     is_active: 'is_active',
     product_commission_pct: 'product_commission_pct',
+    // Presence of a default pickup location: ascending lists brands without one first.
+    pickup: 'default_pickup_location_id',
   },
   filterFields: {
+    brand_no: { type: 'string' },
+    brand_name: { type: 'string' },
+    product_categories: { type: 'string' },
+    contact_person: { type: 'string' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     city: { type: 'string' },
@@ -113,13 +121,17 @@ const MY_ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['brand_name', 'tagline'],
   sortFields: {
     brand_name: 'brand_name',
+    categories: 'product_categories',
     status: 'status',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
   filterFields: {
+    brand_name: { type: 'string' },
+    categories: { path: 'product_categories', type: 'string' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
+    updated_at: { type: 'date' },
   },
   defaultSort: { updated_at: -1 },
 };

@@ -71,20 +71,20 @@ export default function ApiKeysTable({
         headerName: t('developers.apiKeys.colName'),
         flex: 1,
         minWidth: 160,
-        filter: { type: 'text' },
+        type: 'text',
       },
       {
         field: 'key_prefix',
         headerName: t('developers.apiKeys.colKey'),
         minWidth: 140,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderKey,
         valueGetter: (k) => k.key_prefix,
       },
       {
         field: 'scopes',
         headerName: t('developers.apiKeys.colScopes'),
-        sortable: false,
+        type: 'text',
         minWidth: 160,
         cellRenderer: renderScopes,
         valueGetter: scopesValue,
@@ -92,21 +92,24 @@ export default function ApiKeysTable({
       {
         field: 'created_at',
         headerName: t('developers.apiKeys.colCreated'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 180,
         valueGetter: createdValue,
       },
       {
         field: 'last_used_at',
         headerName: t('developers.apiKeys.colLastUsed'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 180,
         valueGetter: lastUsedValue,
       },
       {
         field: 'status',
         headerName: t('developers.apiKeys.colStatus'),
-        sortable: false,
+        type: 'text',
+        // Derived from revoked_at, which the server sorts it by; nothing stored
+        // to match the words on — filter on "Revoked at" instead.
+        filterable: false,
         width: 110,
         cellRenderer: renderStatus,
         valueGetter: (k) => statusValue(k, t),
@@ -114,12 +117,12 @@ export default function ApiKeysTable({
       {
         field: 'revoked_at',
         headerName: t('developers.apiKeys.colRevokedAt'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         minWidth: 180,
         valueGetter: revokedValue,
       },
-      { field: 'actions', headerName: '', sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: '', type: 'actions', width: 110, cellRenderer: renderActions },
     ];
   }, [onRevoke, t]);
 

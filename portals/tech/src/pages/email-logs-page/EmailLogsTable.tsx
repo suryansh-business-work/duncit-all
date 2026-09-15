@@ -47,9 +47,7 @@ const renderTo = (row: EmailLogRow) => (
     <Typography variant="body2" noWrap title={row.to}>
       {row.to || '—'}
     </Typography>
-    <Typography variant="caption" noWrap title={row.subject} sx={{
-      color: "text.secondary"
-    }}>
+    <Typography variant="caption" noWrap title={row.subject} sx={{ color: 'text.secondary' }}>
       {row.subject || '—'}
     </Typography>
   </Box>
@@ -62,9 +60,7 @@ const renderTo = (row: EmailLogRow) => (
  */
 const renderReason = (row: EmailLogRow) => {
   if (!row.reason) return (
-    <Typography variant="body2" sx={{
-      color: "text.secondary"
-    }}>—</Typography>
+    <Typography variant="body2" sx={{ color: 'text.secondary' }}>—</Typography>
   );
   return (
     <Tooltip title={row.reason}>
@@ -81,9 +77,7 @@ const renderTemplate = (row: EmailLogRow) => (
       {row.template || '—'}
     </Typography>
     {row.fragment_key && (
-      <Typography variant="caption" sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         + {row.fragment_key}
       </Typography>
     )}
@@ -107,16 +101,13 @@ export default function EmailLogsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EmailLogRow>[]>(
     () => [
-      dateColumn<EmailLogRow>({
-        field: 'created_at',
-        headerName: t('tech.common.when'),
-        width: 165,
-      }),
+      dateColumn<EmailLogRow>({ field: 'created_at', headerName: t('tech.common.when'), width: 165 }),
       {
         field: 'status',
         headerName: t('shell.common.status'),
         width: 110,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
@@ -125,14 +116,14 @@ export default function EmailLogsTable({
         headerName: 'To',
         flex: 1,
         minWidth: 220,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderTo,
         valueGetter: (row) => row.to || '—',
       },
       {
         field: 'reason',
         headerName: t('tech.emailLogs.reason'),
-        sortable: false,
+        type: 'text',
         minWidth: 240,
         cellRenderer: renderReason,
         valueGetter: (row) => row.reason || '—',
@@ -141,7 +132,7 @@ export default function EmailLogsTable({
         field: 'template',
         headerName: t('tech.emailLogs.template'),
         minWidth: 170,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderTemplate,
         valueGetter: (row) => row.template || '—',
       },
@@ -149,14 +140,16 @@ export default function EmailLogsTable({
         field: 'category',
         headerName: t('tech.emailLogs.category'),
         width: 140,
-        filter: { type: 'select', options: CATEGORY_OPTIONS },
+        type: 'enum',
+        options: CATEGORY_OPTIONS,
         valueGetter: (row) => row.category,
       },
       {
         field: 'source',
         headerName: t('tech.common.source'),
         width: 115,
-        filter: { type: 'select', options: SOURCE_OPTIONS },
+        type: 'enum',
+        options: SOURCE_OPTIONS,
         cellRenderer: renderSource,
         valueGetter: (row) => row.source,
       },
@@ -164,14 +157,14 @@ export default function EmailLogsTable({
         field: 'provider',
         headerName: t('tech.emailLogs.provider'),
         width: 110,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.provider || '—',
       },
       {
         field: 'duration_ms',
         headerName: t('tech.emailLogs.took'),
         width: 95,
-        filter: { type: 'number' },
+        type: 'number',
         valueGetter: (row) => `${row.duration_ms} ms`,
       },
       {
@@ -179,6 +172,7 @@ export default function EmailLogsTable({
         headerName: t('tech.emailLogs.messageId'),
         hide: true,
         minWidth: 220,
+        type: 'text',
         valueGetter: (row) => row.message_id || '—',
       },
     ],

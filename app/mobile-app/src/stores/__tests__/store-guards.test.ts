@@ -44,7 +44,7 @@ describe('fetch guards skip while a request is already in flight', () => {
       savePending: {},
       likeOverride: {},
     });
-    await useExploreStore.getState().fetch();
+    await useExploreStore.getState().fetch('');
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
@@ -92,7 +92,7 @@ describe('fetch error paths capture the error and clear loading', () => {
       likeOverride: {},
     });
     mockRequest.mockRejectedValueOnce(new Error('boom'));
-    await useExploreStore.getState().fetch();
+    await useExploreStore.getState().fetch('');
     expect(useExploreStore.getState().error).toBeInstanceOf(Error);
     expect(useExploreStore.getState().isLoading).toBe(false);
   });

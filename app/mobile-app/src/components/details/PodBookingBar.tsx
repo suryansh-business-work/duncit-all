@@ -127,6 +127,7 @@ export function PodBookingBar({
                 isFree={isFree}
                 isFull={isFull}
                 podAmount={pod.pod_amount}
+                ticketDiscount={pod}
                 seats={seats}
                 maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
                 onSeatsChange={onSeatsChange}

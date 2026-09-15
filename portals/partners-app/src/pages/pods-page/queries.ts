@@ -70,6 +70,10 @@ export interface PartnerPodRow {
   pod_date_time?: string | null;
   pod_end_date_time?: string | null;
   pod_amount?: number | null;
+  no_of_spots?: number | null;
+  /** The live multi-ticket offer — seeds the host's Edit Pod sheet. */
+  ticket_discount_enabled?: boolean | null;
+  ticket_discount_tiers?: { min_tickets: number; discount_pct: number }[] | null;
   pod_attendees?: string[] | null;
   /** Seats held — attendees plus every extra seat a multi-seat booking bought. */
   seats_taken?: number | null;
@@ -102,6 +106,9 @@ const PARTNER_POD_ROW_FIELDS = gql`
     pod_date_time
     pod_end_date_time
     pod_amount
+    no_of_spots
+    ticket_discount_enabled
+    ticket_discount_tiers { min_tickets discount_pct }
     pod_attendees
     seats_taken
     attendance { attended_seats booked_seats recorded }

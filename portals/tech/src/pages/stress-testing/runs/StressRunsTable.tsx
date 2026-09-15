@@ -7,7 +7,15 @@ import { useTranslation } from '@duncit/shell';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { EnvironmentChip, RunStatusChip } from '../components/RunStatusChip';
 import { isLiveRun, type StressRun, type StressRunStatus } from '../queries';
-import { formatCount, formatMs, formatPct, formatRps, formatSeconds, statusLabel } from '../labels';
+import {
+  environmentOptions,
+  formatCount,
+  formatMs,
+  formatPct,
+  formatRps,
+  formatSeconds,
+  statusLabel,
+} from '../labels';
 
 interface Props {
   fetchRows: TableFetch<StressRun>;
@@ -73,12 +81,13 @@ export default function StressRunsTable({ fetchRows, refetchRef, onRowClick, onD
   const columns = useMemo<DuncitColumn<StressRun>[]>(
     () => [
       dateColumn<StressRun>({ field: 'created_at', headerName: t('tech.stress.colWhen'), width: 165, hide: false }),
-      { field: 'run_no', headerName: t('tech.stress.colRun'), width: 150, valueGetter: (row) => row.run_no },
+      { field: 'run_no', headerName: t('tech.stress.colRun'), width: 150, type: 'text', valueGetter: (row) => row.run_no },
       {
         field: 'status',
         headerName: t('tech.stress.colStatus'),
         width: 130,
-        filter: { type: 'select', options: STATUSES.map((s) => ({ value: s, label: statusLabel(t, s) })) },
+        type: 'enum',
+        options: STATUSES.map((s) => ({ value: s, label: statusLabel(t, s) })),
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
       },
@@ -86,65 +95,73 @@ export default function StressRunsTable({ fetchRows, refetchRef, onRowClick, onD
         field: 'environment',
         headerName: t('tech.stress.colEnvironment'),
         width: 130,
+        type: 'enum',
+        options: environmentOptions(t),
         cellRenderer: renderEnvironment,
         valueGetter: (row) => row.environment,
       },
-      { field: 'profile', headerName: t('tech.stress.colLoad'), width: 150, sortable: false, valueGetter: loadLabel },
+      // The server maps each numeric column below to its stored path
+      // (profile.virtual_users, summary.requests, peaks.rps, …).
+      { field: 'profile', headerName: t('tech.stress.colLoad'), width: 150, type: 'number', valueGetter: loadLabel },
       {
         field: 'duration_seconds',
         headerName: t('tech.stress.colDuration'),
         width: 105,
+        type: 'number',
+        // Computed at read time from started_at / ended_at (or the clock, for a
+        // live run) — no stored value to order or match on.
         sortable: false,
+        filterable: false,
         valueGetter: (row) => formatSeconds(row.duration_seconds),
       },
       {
         field: 'summary',
         headerName: t('tech.stress.colRequests'),
         width: 115,
-        sortable: false,
+        type: 'number',
         valueGetter: (row) => (row.summary ? formatCount(row.summary.requests) : '—'),
       },
       {
         field: 'peaks',
         headerName: t('tech.stress.colPeakRps'),
         width: 110,
-        sortable: false,
+        type: 'number',
         valueGetter: (row) => formatRps(row.peaks.rps),
       },
       {
         field: 'p95',
         headerName: t('tech.stress.colP95'),
         width: 100,
-        sortable: false,
+        type: 'number',
         valueGetter: (row) => formatMs(row.summary?.p95_ms ?? row.peaks.p95_ms),
       },
       {
         field: 'error_rate',
         headerName: t('tech.stress.colErrors'),
         width: 100,
-        sortable: false,
+        type: 'number',
         valueGetter: (row) => formatPct(row.summary?.error_rate_pct ?? row.peaks.error_rate_pct),
       },
       {
         field: 'host_cpu',
         headerName: t('tech.stress.colPeakCpu'),
         width: 110,
-        sortable: false,
+        type: 'number',
         valueGetter: (row) => formatPct(row.peaks.host_cpu_pct),
       },
-      { field: 'triggered_by', headerName: t('tech.stress.colTriggeredBy'), minWidth: 190, valueGetter: (row) => row.triggered_by || '—' },
+      { field: 'triggered_by', headerName: t('tech.stress.colTriggeredBy'), minWidth: 190, type: 'text', valueGetter: (row) => row.triggered_by || '—' },
       {
         field: 'stop_reason',
         headerName: t('tech.stress.colStopReason'),
         minWidth: 220,
-        sortable: false,
+        type: 'text',
         valueGetter: (row) => row.stop_reason || row.error_message || '—',
       },
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
         width: 100,
-        sortable: false,
+        type: 'actions',
         cellRenderer: makeRenderActions({ openRun: t('tech.stress.openWorkflow'), delete: t('shell.common.delete') }, onDelete),
         valueGetter: (row) => row.workflow_run_url,
       },

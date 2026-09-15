@@ -67,18 +67,18 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 
 function buildColumns(formatDateTime: DateFormatter['formatDateTime'], t: Translate): DuncitColumn<FeedbackReportRow>[] {
   return [
-    { field: 'report_no', headerName: t('support.problems.colId'), filter: { type: 'text' }, width: 160 },
+    { field: 'report_no', headerName: t('support.problems.colId'), type: 'text', width: 160 },
     {
       field: 'category',
       headerName: t('support.problems.colCategory'),
-      filter: { type: 'text' },
+      type: 'text',
       width: 130,
       cellRenderer: (r) => <CategoryCell row={r} />,
     },
     {
       field: 'message',
       headerName: t('support.problems.colWhatHappened'),
-      sortable: false,
+      type: 'text',
       flex: 1,
       minWidth: 260,
       cellRenderer: (r) => <MessageCell row={r} />,
@@ -86,29 +86,30 @@ function buildColumns(formatDateTime: DateFormatter['formatDateTime'], t: Transl
     {
       field: 'user_name',
       headerName: t('support.problems.colReportedBy'),
-      filter: { type: 'text' },
+      type: 'text',
       minWidth: 190,
       cellRenderer: (r) => <ReporterCell row={r} />,
     },
-    { field: 'platform', headerName: t('support.problems.colFrom'), filter: { type: 'text' }, width: 110 },
+    { field: 'platform', headerName: t('support.problems.colFrom'), type: 'text', width: 110 },
     {
       field: 'status',
       headerName: t('shell.common.status'),
-      filter: { type: 'select', options: STATUS_OPTIONS },
+      type: 'enum',
+      options: STATUS_OPTIONS,
       width: 140,
       cellRenderer: (r) => <StatusCell row={r} />,
     },
     {
       field: 'slack_error',
       headerName: t('support.problems.colSlack'),
-      sortable: false,
+      type: 'text',
       width: 120,
       cellRenderer: (r) => <SlackCell row={r} />,
     },
     {
       field: 'created_at',
       headerName: t('support.problems.colReported'),
-      filter: { type: 'date' },
+      type: 'date',
       width: 180,
       valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
     },

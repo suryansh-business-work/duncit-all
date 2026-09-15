@@ -87,12 +87,14 @@ export default function FaqSubmissionsPage() {
       {
         field: 'question',
         headerName: t('support.faqSubmissions.question'),
+        type: 'text',
         flex: 2,
         minWidth: 260,
       },
       {
         field: 'email',
         headerName: t('shell.common.email'),
+        type: 'text',
         flex: 1,
         minWidth: 180,
         valueGetter: (row) => dash(row.email),
@@ -100,20 +102,18 @@ export default function FaqSubmissionsPage() {
       {
         field: 'super_category_slug',
         headerName: t('support.faqSubmissions.superCategory'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 130,
         valueGetter: (row) => dash(row.super_category_slug),
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: {
-          type: 'select',
-          options: FAQ_SUBMISSION_STATUSES.map((status) => ({
-            value: status,
-            label: labels[status],
-          })),
-        },
+        type: 'enum',
+        options: FAQ_SUBMISSION_STATUSES.map((status) => ({
+          value: status,
+          label: labels[status],
+        })),
         width: 130,
         cellRenderer: renderStatus(labels),
         valueGetter: (row) => row.status,
@@ -121,14 +121,14 @@ export default function FaqSubmissionsPage() {
       {
         field: 'created_at',
         headerName: t('support.faqSubmissions.received'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 250,
         cellRenderer: renderActions(t, setStatus),
       },

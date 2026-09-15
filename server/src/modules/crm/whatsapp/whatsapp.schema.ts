@@ -44,6 +44,8 @@ export const waLeadsTypeDefs = gql`
     sort_by: String
     sort_dir: String
     community_jid: String
+    "Column filters — honoured by waUserLeads."
+    filters: [TableFilterInput!]
   }
 
   type WaCommunity {

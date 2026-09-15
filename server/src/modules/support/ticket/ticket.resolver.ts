@@ -3,6 +3,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 import { ticketService } from './ticket.service';
 import type { TranscriptFormat } from '@modules/support/transcript';
+import type { TableFilterInput } from '@utils/table-query';
 
 const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
 
@@ -30,6 +31,7 @@ export const ticketResolvers = {
         sort_by?: string;
         sort_dir?: string;
         priority_first?: any;
+        filters?: TableFilterInput[];
       },
       ctx: GraphQLContext
     ) => {
@@ -43,6 +45,7 @@ export const ticketResolvers = {
         sort_by: args.sort_by,
         sort_dir: args.sort_dir,
         priority_first: args.priority_first,
+        filters: args.filters,
       });
     },
     ticket: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

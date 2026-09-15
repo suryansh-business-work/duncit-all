@@ -52,6 +52,7 @@ export function getRedemptionColumns(
     {
       field: 'user_name',
       headerName: t('shell.coupons.colMember'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: renderMember,
@@ -60,6 +61,7 @@ export function getRedemptionColumns(
     {
       field: 'description',
       headerName: t('shell.coupons.colFor'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       valueGetter: (r) => r.description || EM_DASH,
@@ -67,21 +69,22 @@ export function getRedemptionColumns(
     {
       field: 'coupon_discount',
       headerName: t('shell.coupons.colDiscount'),
-      filter: { type: 'number' },
+      type: 'number',
       width: 130,
       valueGetter: (r) => money(r.coupon_discount),
     },
     {
       field: 'total',
       headerName: t('shell.coupons.colOrderTotal'),
-      filter: { type: 'number' },
+      type: 'number',
       width: 140,
       valueGetter: (r) => money(r.total),
     },
     {
       field: 'status',
       headerName: t('shell.common.status'),
-      filter: { type: 'select', options: statusOptions(t) },
+      type: 'enum',
+      options: statusOptions(t),
       width: 130,
       cellRenderer: renderStatus,
       valueGetter: (r) => r.status,
@@ -89,6 +92,7 @@ export function getRedemptionColumns(
     {
       field: 'payment_id',
       headerName: t('shell.coupons.colPayment'),
+      type: 'text',
       minWidth: 180,
       valueGetter: paymentValue,
     },

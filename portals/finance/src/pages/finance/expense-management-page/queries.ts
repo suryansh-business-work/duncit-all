@@ -138,15 +138,20 @@ const rangeBounds = (f: TableFilterValue): [string | undefined, string | undefin
   return [undefined, undefined];
 };
 
+/** The one value an enum filter pins. It sends `in`; ExpenseFilterInput takes a
+ * single key, so only a single picked option narrows the summary. */
+const pinnedValue = (f: TableFilterValue): string | undefined => {
+  if (f.op === 'eq') return f.value;
+  if (f.op === 'in' && f.values?.length === 1) return f.values[0];
+  return undefined;
+};
+
 const applyExpenseFilter = (filter: ExpenseSummaryFilter, f: TableFilterValue) => {
-  if (f.field === 'category' && f.op === 'eq' && f.value) filter.category = f.value;
-  if (f.field === 'payment_method' && f.op === 'eq' && f.value) filter.payment_method = f.value;
-  if (f.field === 'related_from_type' && f.op === 'eq' && f.value) {
-    filter.related_from_type = f.value;
-  }
-  if (f.field === 'compensation_status' && f.op === 'eq' && f.value) {
-    filter.compensation_status = f.value;
-  }
+  const pinned = pinnedValue(f);
+  if (f.field === 'category' && pinned) filter.category = pinned;
+  if (f.field === 'payment_method' && pinned) filter.payment_method = pinned;
+  if (f.field === 'related_from_type' && pinned) filter.related_from_type = pinned;
+  if (f.field === 'compensation_status' && pinned) filter.compensation_status = pinned;
   if (f.field === 'date') {
     const [from, to] = rangeBounds(f);
     if (from) filter.from = from;

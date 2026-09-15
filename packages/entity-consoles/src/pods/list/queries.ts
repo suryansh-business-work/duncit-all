@@ -79,6 +79,9 @@ export interface PodRow {
   no_of_spots?: number | null;
   product_requests?: { product_id: string; product_name: string; quantity: number }[] | null;
   product_cost_total?: number | null;
+  /** Multi-ticket discount: the switch and its tiers, rehydrated by the admin editor. */
+  ticket_discount_enabled?: boolean | null;
+  ticket_discount_tiers?: { min_tickets: number; discount_pct: number }[] | null;
   is_active: boolean;
   completed_at?: string | null;
   created_at?: string | null;
@@ -144,6 +147,11 @@ const POD_ROW_FIELDS = gql`
       total_cost
     }
     product_cost_total
+    ticket_discount_enabled
+    ticket_discount_tiers {
+      min_tickets
+      discount_pct
+    }
     is_active
     completed_at
     created_at

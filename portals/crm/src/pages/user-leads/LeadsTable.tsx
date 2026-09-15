@@ -80,12 +80,12 @@ export default function LeadsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<LeadRow>[]>(
     () => [
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
-      { field: 'phone', headerName: t('shell.common.phone'), minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
+      { field: 'name', headerName: t('shell.common.name'), type: 'text', flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
+      { field: 'phone', headerName: t('shell.common.phone'), type: 'text', minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
       {
         field: 'source_communities',
         headerName: t('crm.common.community'),
-        sortable: false,
+        type: 'text',
         minWidth: 160,
         cellRenderer: renderCommunities,
         valueGetter: (lead) => sourceNames(lead.source_communities),
@@ -93,7 +93,7 @@ export default function LeadsTable({
       {
         field: 'source_groups',
         headerName: t('crm.common.groups'),
-        sortable: false,
+        type: 'text',
         minWidth: 160,
         cellRenderer: renderGroups,
         valueGetter: (lead) => sourceNames(lead.source_groups),
@@ -102,7 +102,6 @@ export default function LeadsTable({
         field: 'imported_at',
         headerName: t('crm.userLeads.imported'),
         hide: false,
-        filterable: false,
       }),
       actionsColumn<LeadRow>({
         onEdit,

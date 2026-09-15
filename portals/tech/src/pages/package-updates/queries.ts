@@ -155,6 +155,9 @@ const KIND_LABEL_KEY = new Map(KIND_KEYS.map((row) => [row.value, row.key]));
 export const kindLabel = (t: Translate, kind: DependencyKind) =>
   t(KIND_LABEL_KEY.get(kind) ?? 'tech.packageUpdates.kindRuntime');
 
+export const kindOptions = (t: Translate) =>
+  KIND_KEYS.map((row) => ({ value: row.value, label: t(row.key) }));
+
 /** Worst first, then alphabetical — the reading order of every list here. */
 export function compareBySeverity(
   a: { updateType: UpdateType; name: string },

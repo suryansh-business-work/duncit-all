@@ -3,21 +3,21 @@ import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { CheckoutReceiptCard, type ReceiptPayment } from './CheckoutReceiptCard';
 import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
-import { ActionButton, Row } from '@/components/checkout/SuccessParts';
-import { SurfaceCard } from '@/components/SurfaceCard';
+import { ActionButton } from '@/components/checkout/SuccessParts';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { refreshCoinBalance } from '@/hooks/useCoins';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
+import type { CheckoutPod } from '@/hooks/useCheckout';
 import { formatMoney } from '@/utils/checkout-math';
-import { formatDateTime } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface CheckoutSuccessProps {
-  payment: NonNullable<CheckoutPayment>;
+  /** The pod payment, or the product checkout's — which never carries a ticket discount. */
+  payment: ReceiptPayment;
   pod?: CheckoutPod;
   onDownloadInvoice: () => Promise<void>;
   onDownloadTicket?: () => Promise<void>;
@@ -100,20 +100,7 @@ export function CheckoutSuccess({
       <Text fontSize={14} color="$muted" textAlign="center">
         {t('mweb.checkout.successSubtitle')}
       </Text>
-      <SurfaceCard alignSelf="stretch" gap={10}>
-        <Row
-          label={t('mweb.checkout.amountPaid')}
-          value={formatMoney(payment.currency_symbol, payment.total)}
-          bold
-        />
-        <YStack height={1} backgroundColor="$borderColor" />
-        <Row
-          label={t('mweb.checkout.paidOn')}
-          value={formatDateTime(payment.paid_at ?? payment.created_at)}
-        />
-        <YStack height={1} backgroundColor="$borderColor" />
-        <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no ?? '—'} />
-      </SurfaceCard>
+      <CheckoutReceiptCard payment={payment} />
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
 

@@ -91,10 +91,10 @@ export default function PartnersPage() {
 
   const columns = useMemo<DuncitColumn<PartnerRow>[]>(
     () => [
-      { field: 'full_name', headerName: t('admin.partners.title'), flex: 1, minWidth: 200, cellRenderer: renderPartner, valueGetter: (r) => r.full_name || '—' },
-      { field: 'role', headerName: t('admin.partners.partnerType'), minWidth: 220, sortable: false, filter: { type: 'select', options: TYPE_OPTIONS }, cellRenderer: renderTypes, valueGetter: (r) => partnerTypesOf(r).join(', ') },
-      { field: 'phone_number', headerName: t('shell.common.phone'), minWidth: 140, valueGetter: (r) => r.phone_number || '—' },
-      { field: 'created_at', headerName: t('admin.partners.joined'), width: 125, filter: { type: 'date' }, valueGetter: joinedValue },
+      { field: 'full_name', headerName: t('admin.partners.title'), type: 'text', flex: 1, minWidth: 200, cellRenderer: renderPartner, valueGetter: (r) => r.full_name || '—' },
+      { field: 'role', headerName: t('admin.partners.partnerType'), type: 'enum', options: TYPE_OPTIONS, minWidth: 220, cellRenderer: renderTypes, valueGetter: (r) => partnerTypesOf(r).join(', ') },
+      { field: 'phone_number', headerName: t('shell.common.phone'), type: 'text', minWidth: 140, valueGetter: (r) => r.phone_number || '—' },
+      { field: 'created_at', headerName: t('admin.partners.joined'), type: 'date', width: 125, valueGetter: joinedValue },
     ],
     [],
   );

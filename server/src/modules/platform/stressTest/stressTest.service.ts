@@ -49,11 +49,30 @@ const STRESS_TABLE_CONFIG: TableEntityConfig = {
     triggered_by: 'triggered_by',
     started_at: 'started_at',
     created_at: 'created_at',
+    // The table's numeric columns, each on the stored figure its cell shows.
+    // p95 / error rate read the finished run's summary; a live run (no summary
+    // yet) sorts as empty.
+    profile: 'profile.virtual_users',
+    summary: 'summary.requests',
+    peaks: 'peaks.rps',
+    p95: 'summary.p95_ms',
+    error_rate: 'summary.error_rate_pct',
+    host_cpu: 'peaks.host_cpu_pct',
+    stop_reason: 'stop_reason',
   },
   filterFields: {
     status: { type: 'enum' },
     environment: { type: 'enum' },
     created_at: { type: 'date' },
+    run_no: { type: 'string' },
+    triggered_by: { type: 'string' },
+    stop_reason: { type: 'string' },
+    profile: { path: 'profile.virtual_users', type: 'number' },
+    summary: { path: 'summary.requests', type: 'number' },
+    peaks: { path: 'peaks.rps', type: 'number' },
+    p95: { path: 'summary.p95_ms', type: 'number' },
+    error_rate: { path: 'summary.error_rate_pct', type: 'number' },
+    host_cpu: { path: 'peaks.host_cpu_pct', type: 'number' },
   },
   defaultSort: { created_at: -1 },
 };

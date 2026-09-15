@@ -24,15 +24,34 @@ const JOURNEY_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     clicked_at: 'clicked_at',
     platform: 'platform',
+    country: 'country',
     converted_amount: 'converted_amount',
   },
   filterFields: {
     platform: { type: 'string' },
     country: { type: 'string' },
     clicked_at: { type: 'date' },
+    converted_amount: { type: 'number' },
   },
   defaultSort: { clicked_at: -1 },
 };
+
+/**
+ * "Got as far as" is not stored — it is the deepest step in the trail. A click
+ * got as far as a step when it reached that step and none after it (CLICKED
+ * needs no entry: a click that never reported back still counts as clicked).
+ */
+function furthestStepFilter(input?: TableQueryInput | null): Record<string, unknown> {
+  const filter = input?.filters?.find((f) => f.field === 'furthest_step' && f.op === 'in');
+  const steps = JOURNEY_STEPS.filter((step) => filter?.values?.includes(step));
+  if (steps.length === 0) return {};
+  return {
+    $or: steps.map((step) => {
+      const beyond = { 'journey.step': { $nin: JOURNEY_STEPS.slice(JOURNEY_STEPS.indexOf(step) + 1) } };
+      return step === 'CLICKED' ? beyond : { $and: [{ 'journey.step': step }, beyond] };
+    }),
+  };
+}
 
 /** The furthest step a click reached, by the canonical order. */
 export function furthestStep(journey: { step: JourneyStep }[]): JourneyStep {
@@ -190,7 +209,7 @@ export const shortLinkJourneyService = {
   async journeys(shortLinkId: string, input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IShortLinkClick>(
       ShortLinkClickModel,
-      { short_link_id: new Types.ObjectId(shortLinkId) },
+      { short_link_id: new Types.ObjectId(shortLinkId), ...furthestStepFilter(input) },
       input,
       JOURNEY_TABLE_CONFIG
     );

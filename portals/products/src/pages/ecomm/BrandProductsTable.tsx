@@ -53,34 +53,41 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
 
   const columns = useMemo<DuncitColumn<BrandProductRow>[]>(
     () => [
-      { field: 'cover', headerName: '', sortable: false, width: 64, cellRenderer: renderCover },
-      { field: 'product_name', headerName: t('products.brandProducts.colProduct'), flex: 1, minWidth: 200 },
-      { field: 'sku', headerName: 'SKU', width: 140 },
+      // A decorative thumbnail — no value to order or match.
+      { field: 'cover', headerName: '', type: 'actions', width: 64, cellRenderer: renderCover },
+      { field: 'product_name', headerName: t('products.brandProducts.colProduct'), flex: 1, minWidth: 200, type: 'text' },
+      { field: 'sku', headerName: 'SKU', width: 140, type: 'text' },
       {
         field: 'selling_price',
         headerName: t('products.brandProducts.colPrice'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 120,
         valueGetter: priceValue,
       },
       {
         field: 'available',
         headerName: t('products.brandProducts.colAvailable'),
+        type: 'number',
+        // Stock less open requests and reservations, computed per row — no stored path to order or match.
         sortable: false,
+        filterable: false,
         width: 100,
         valueGetter: (p) => p.available_count ?? p.inventory_count,
       },
       {
         field: 'commission_pct',
         headerName: t('products.brands.colCommission'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 120,
         valueGetter: (p) => `${p.commission_pct}%`,
       },
       {
         field: 'dimensions',
         headerName: t('products.brandProducts.colDimensions'),
+        type: 'text',
+        // Four measurements joined into one label — no single stored path to order or match.
         sortable: false,
+        filterable: false,
         minWidth: 180,
         cellRenderer: renderDimensions,
         valueGetter: dimensionsLabel,
@@ -88,7 +95,7 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
       {
         field: 'created_at',
         headerName: t('products.brandProducts.colAdded'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (p) => (p.created_at ? formatDate(p.created_at) : '—'),

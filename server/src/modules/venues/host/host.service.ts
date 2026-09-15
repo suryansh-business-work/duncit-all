@@ -210,6 +210,7 @@ const HOST_TABLE_CONFIG: TableEntityConfig = {
     host_no: 'host_no',
     full_name: 'full_name',
     email: 'email',
+    host_categories: 'host_categories.category_name',
     status: 'status',
     is_active: 'is_active',
     submitted_at: 'submitted_at',
@@ -217,6 +218,10 @@ const HOST_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    host_no: { type: 'string' },
+    full_name: { type: 'string' },
+    email: { type: 'string' },
+    host_categories: { path: 'host_categories.category_name', type: 'string' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     submitted_at: { type: 'date' },

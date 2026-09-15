@@ -69,6 +69,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     coupon_discount: Float!
     "Duncit Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
+    "Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied."
+    ticket_discount_amount: Float!
+    "Percentage of the multi-ticket tier that applied (0 when none)."
+    ticket_discount_pct: Int!
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
@@ -211,7 +215,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     can_retry_finalize: Boolean!
     "Every deferred step still owed. What the page's Retry all sends."
     retryable_step_keys: [String!]!
-    "Gross before coupon + coins, taken from the frozen checkout metadata."
+    "Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata."
     original_total: Float!
     "Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
@@ -276,6 +280,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     gross: Float!
     fee: Float!
     gst: Float!
+    "Multi-ticket discounts given on the matching payments — already off gross."
+    ticket_discount_total: Float!
   }
 
   type CheckoutQuote {
@@ -287,6 +293,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     total: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
+    "Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies)."
+    ticket_discount_amount: Float!
+    "Percentage of the multi-ticket tier that applied (0 when none)."
+    ticket_discount_pct: Int!
   }
 
   input CheckoutQuoteInput {

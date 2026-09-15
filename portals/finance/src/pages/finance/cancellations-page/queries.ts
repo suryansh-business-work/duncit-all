@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client';
-import type { TableQueryState } from '@duncit/table';
 import type { StatusColorMap } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
 
@@ -105,39 +104,7 @@ export const fmtDate = (iso?: string | null) => {
   return formatDateTime(iso) || '—';
 };
 
-type RowComparator = (a: PodCancellationRow, b: PodCancellationRow) => number;
-
-const ROW_COMPARATORS: Record<string, RowComparator> = {
-  pod_title: (a, b) => a.pod_title.localeCompare(b.pod_title),
-  cancelled_at: (a, b) => a.cancelled_at.localeCompare(b.cancelled_at),
-  attendee_count: (a, b) => a.attendee_count - b.attendee_count,
-  refunded_total: (a, b) => a.refunded_total - b.refunded_total,
-  unrefunded_total: (a, b) => a.unrefunded_total - b.unrefunded_total,
-  venue_amount: (a, b) => a.venue_amount - b.venue_amount,
-};
-
-/**
- * In-memory search/sort/page over the cancellation rows — podCancellations is
- * a bounded, hydrated list (same convention as the Pod Finance grouped list),
- * so the table's fetchRows slices it here.
- */
-export function applyCancellationQuery(
-  rows: readonly PodCancellationRow[],
-  q: TableQueryState,
-): { rows: PodCancellationRow[]; total: number } {
-  const term = q.search.trim().toLowerCase();
-  const filtered = term
-    ? rows.filter((row) =>
-        [row.pod_title, row.reason, row.actor_name, row.venue_name ?? '']
-          .join(' ')
-          .toLowerCase()
-          .includes(term),
-      )
-    : [...rows];
-  const cmp = q.sortBy ? ROW_COMPARATORS[q.sortBy] : undefined;
-  if (cmp) {
-    filtered.sort(q.sortDir === 'desc' ? (a, b) => cmp(b, a) : cmp);
-  }
-  const start = (q.page - 1) * q.pageSize;
-  return { rows: filtered.slice(start, start + q.pageSize), total: filtered.length };
-}
+/** The text a row is searched by — podCancellations is a bounded, hydrated
+ * list, so the table searches/filters/sorts/pages it in memory. */
+export const cancellationSearchText = (row: PodCancellationRow) =>
+  [row.pod_title, row.reason, row.actor_name, row.venue_name ?? ''].join(' ');

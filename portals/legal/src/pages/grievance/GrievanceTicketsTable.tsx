@@ -78,9 +78,7 @@ export default function GrievanceTicketsTable({
       </Tooltip>
     );
 
-    // Only server-allowlisted fields are sortable/filterable
-    // (GRIEVANCE_TABLE_CONFIG): sort grievance_no/name/email/subject/status/
-    // source/created_at/updated_at; filter the same, status + source as selects.
+    // Sort and filter keys are allowlisted on the server (GRIEVANCE_TABLE_CONFIG).
     return [
       entityIdColumn<GrievanceTicket>({ field: 'grievance_no', headerName: t('legal.grievance.colId') }),
       {
@@ -88,26 +86,27 @@ export default function GrievanceTicketsTable({
         headerName: t('legal.grievance.colSubject'),
         flex: 1,
         minWidth: 220,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderSubject,
       },
       {
         field: 'support_ticket_ref',
         headerName: t('legal.grievance.colSupportTicket'),
         minWidth: 160,
-        filter: { type: 'text' },
+        type: 'text',
         // Blank is the whole reason this column is in the queue: it names the
         // grievances that skipped support, which is what gets rejected.
         valueGetter: (g) => g.support_ticket_ref || t('legal.grievance.noSupportTicket'),
       },
-      { field: 'name', headerName: t('shell.common.name'), minWidth: 160, filter: { type: 'text' } },
-      { field: 'email', headerName: t('shell.common.email'), minWidth: 200, filter: { type: 'text' } },
-      { field: 'phone', headerName: t('shell.common.phone'), minWidth: 140, sortable: false, filter: { type: 'text' } },
+      { field: 'name', headerName: t('shell.common.name'), minWidth: 160, type: 'text' },
+      { field: 'email', headerName: t('shell.common.email'), minWidth: 200, type: 'text' },
+      { field: 'phone', headerName: t('shell.common.phone'), minWidth: 140, type: 'text' },
       {
         field: 'status',
         headerName: t('shell.common.status'),
         width: 130,
-        filter: { type: 'select', options: GRIEVANCE_STATUS_OPTIONS },
+        type: 'enum',
+        options: GRIEVANCE_STATUS_OPTIONS,
         cellRenderer: renderStatus,
         valueGetter: (g) => GRIEVANCE_STATUS_LABEL[g.status],
       },
@@ -115,12 +114,10 @@ export default function GrievanceTicketsTable({
         field: 'source',
         headerName: t('legal.grievance.colSource'),
         width: 110,
-        filter: {
-          type: 'select',
-          // Built from the same map the cell reads, so the filter and the
-          // column can never name a source two different things.
-          options: Object.entries(SOURCE_KEY).map(([value, key]) => ({ value, label: t(key) })),
-        },
+        type: 'enum',
+        // Built from the same map the cell reads, so the filter and the
+        // column can never name a source two different things.
+        options: Object.entries(SOURCE_KEY).map(([value, key]) => ({ value, label: t(key) })),
         valueGetter: (g) => t(SOURCE_KEY[g.source]),
       },
       dateColumn<GrievanceTicket>({
@@ -130,7 +127,7 @@ export default function GrievanceTicketsTable({
         minWidth: 180,
         formatDate: formatDateTime,
       }),
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 90, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 90, cellRenderer: renderActions },
     ];
   }, [formatDateTime, onOpen]);
 

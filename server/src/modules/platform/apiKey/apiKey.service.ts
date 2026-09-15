@@ -20,13 +20,17 @@ const API_KEY_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     name: 'name',
     key_prefix: 'key_prefix',
+    scopes: 'scopes',
     created_at: 'created_at',
     last_used_at: 'last_used_at',
     revoked_at: 'revoked_at',
+    // The Active / Revoked column reads revoked_at: active keys (null) order first.
+    status: 'revoked_at',
   },
   filterFields: {
     name: { type: 'string' },
     key_prefix: { type: 'string' },
+    scopes: { type: 'string' },
     created_at: { type: 'date' },
     last_used_at: { type: 'date' },
     revoked_at: { type: 'date' },

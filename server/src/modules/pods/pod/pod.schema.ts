@@ -124,6 +124,18 @@ export const podTypeDefs = /* GraphQL */ `
     quantity: Int!
   }
 
+  "One multi-ticket discount tier: a single booking of at least min_tickets seats gets discount_pct off its ticket price."
+  type PodTicketDiscountTier {
+    min_tickets: Int!
+    discount_pct: Int!
+  }
+
+  "One multi-ticket discount tier: min_tickets 2 or more, discount_pct 1 up to the admin's max; each row must beat the one above on both."
+  input PodTicketDiscountTierInput {
+    min_tickets: Int!
+    discount_pct: Int!
+  }
+
   enum CoHostStatus {
     PENDING
     ACCEPTED
@@ -184,6 +196,11 @@ export const podTypeDefs = /* GraphQL */ `
     pod_images_and_videos: [PodMedia!]!
     "Explore reel video URL. Set = reel enabled; live pods with a reel appear in Explore."
     reel_url: String
+    """
+    Whether the reel has an audio track — Explore disables its unmute control
+    when false. Null when there is no reel or the check could not answer.
+    """
+    reel_has_audio: Boolean
     pod_hits: Int!
     pod_attendees: [ID!]!
     "Seats taken — attendees plus every extra seat a multi-seat booking holds."
@@ -217,6 +234,10 @@ export const podTypeDefs = /* GraphQL */ `
     products_enabled: Boolean!
     product_requests: [PodProductRequest!]!
     product_cost_total: Float!
+    "Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod."
+    ticket_discount_enabled: Boolean!
+    "The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price."
+    ticket_discount_tiers: [PodTicketDiscountTier!]!
     is_active: Boolean!
     is_deleted: Boolean!
     deleted_at: String
@@ -383,6 +404,9 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
+    "Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod."
+    ticket_discount_enabled: Boolean
+    ticket_discount_tiers: [PodTicketDiscountTierInput!]
     is_active: Boolean
   }
 
@@ -422,6 +446,9 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
+    "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
+    ticket_discount_enabled: Boolean
+    ticket_discount_tiers: [PodTicketDiscountTierInput!]
     is_active: Boolean
   }
 
@@ -472,6 +499,9 @@ export const podTypeDefs = /* GraphQL */ `
     the space the pod booked — omit it to leave the capacity alone.
     """
     no_of_spots: Int
+    "Offer a multi-ticket discount — omit both discount fields to leave it alone."
+    ticket_discount_enabled: Boolean
+    ticket_discount_tiers: [PodTicketDiscountTierInput!]
   }
 
   "Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed."
@@ -503,6 +533,9 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
+    "Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced."
+    ticket_discount_enabled: Boolean
+    ticket_discount_tiers: [PodTicketDiscountTierInput!]
   }
 
   extend type Query {

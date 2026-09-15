@@ -234,6 +234,32 @@ export {
   type DiscountedBill,
 } from './checkout-bill';
 export {
+  DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+  TICKET_DISCOUNT_MAX_TIERS,
+  TICKET_DISCOUNT_MIN_TICKETS,
+  nextTicketDiscountTier,
+  resolveTicketDiscountTier,
+  ticketDiscountFor,
+  ticketDiscountInput,
+  ticketDiscountMaxTickets,
+  ticketDiscountRows,
+  ticketDiscountTierIssues,
+  type TicketDiscountIssue,
+  type TicketDiscountIssueCode,
+  type TicketDiscountQuote,
+  type TicketDiscountRow,
+  type TicketDiscountSource,
+  type TicketDiscountTier,
+} from './pod-ticket-discount';
+export {
+  mwebTicketDiscountLabels,
+  podFormTicketDiscountLabels,
+  shellTicketDiscountLabels,
+  type TicketDiscountLabels,
+  type TicketDiscountLimits,
+  type TicketDiscountTranslate,
+} from './pod-ticket-discount-copy';
+export {
   HOST_FREE_SPOT_NOTE,
   SPOTS_HARD_MAX,
   attendeeSeatCount,

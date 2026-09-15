@@ -5,9 +5,16 @@ import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { formatMoney } from '@duncit/utils';
 import PreviewMedia from './PreviewMedia';
-import { PreviewBullets, PreviewCharges, PreviewChips, PreviewSection } from './PodPreviewSections';
+import {
+  PreviewBullets,
+  PreviewCharges,
+  PreviewChips,
+  PreviewSection,
+  PreviewTicketDiscount,
+} from './PodPreviewSections';
 import type { PodPreviewModel } from './pod-preview-model';
 import { useTranslation } from '../i18n/useTranslation';
+import { formatTicketPrice } from '../ticket-discount';
 
 /** The two figures the apps put above the fold, side by side. */
 function StatBox({ caption, value }: Readonly<{ caption: string; value: string }>) {
@@ -143,6 +150,12 @@ export default function PodPreviewDetails({ model }: Readonly<{ model: PodPrevie
         {model.charges.length > 0 && (
           <PreviewSection title={t('podForm.preview.chargesAtTheVenue')}>
             <PreviewCharges charges={model.charges} money={money} />
+          </PreviewSection>
+        )}
+
+        {model.ticketDiscountTiers.length > 0 && (
+          <PreviewSection title={t('podForm.preview.ticketDiscount')}>
+            <PreviewTicketDiscount tiers={model.ticketDiscountTiers} money={formatTicketPrice} />
           </PreviewSection>
         )}
 

@@ -2,7 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import type { MailAutomationAccount } from '../../graphql/mail-automation';
 
@@ -13,9 +13,10 @@ const QUEUE_LABEL: Record<MailAutomationAccount['ticket_type'], string> = {
 };
 
 const getRowId = (row: MailAutomationAccount) => row.id;
+const mailboxSearchText = (row: MailAutomationAccount) => row.email;
 
 interface Props {
-  fetchRows: TableFetch<MailAutomationAccount>;
+  rows: readonly MailAutomationAccount[];
   refetchRef: MutableRefObject<(() => void) | null>;
   onConfigure: (account: MailAutomationAccount) => void;
 }
@@ -28,7 +29,7 @@ interface Props {
  * those are decisions to make together rather than cells to tab through.
  */
 export default function MailboxRulesTable({
-  fetchRows,
+  rows,
   refetchRef,
   onConfigure,
 }: Readonly<Props>) {
@@ -79,6 +80,7 @@ export default function MailboxRulesTable({
       {
         field: 'email',
         headerName: t('support.mailAutomation.colMailbox'),
+        type: 'text',
         flex: 1.4,
         minWidth: 220,
         cellRenderer: renderMailbox,
@@ -86,24 +88,28 @@ export default function MailboxRulesTable({
       {
         field: 'is_active',
         headerName: t('support.mailAutomation.colState'),
+        type: 'boolean',
         width: 190,
-        sortable: false,
         cellRenderer: renderState,
       },
       {
         field: 'ticket_type',
         headerName: t('support.mailAutomation.colOpens'),
+        type: 'enum',
+        options: Object.entries(QUEUE_LABEL).map(([value, key]) => ({ value, label: t(key) })),
         width: 170,
         valueGetter: (row) => t(QUEUE_LABEL[row.ticket_type]),
       },
       {
         field: 'sla_label',
         headerName: t('support.mailAutomation.colRepliesIn'),
+        type: 'text',
         width: 130,
       },
       {
         field: 'ai_enabled',
         headerName: t('support.mailAutomation.colWriter'),
+        type: 'boolean',
         flex: 1,
         minWidth: 200,
         cellRenderer: renderWriter,
@@ -111,12 +117,17 @@ export default function MailboxRulesTable({
       {
         field: 'actions',
         headerName: '',
+        type: 'actions',
         width: 150,
-        sortable: false,
         cellRenderer: renderActions,
       },
     ];
   }, [t, onConfigure]);
+
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, mailboxSearchText, columns),
+    [rows, columns],
+  );
 
   return (
     <DuncitTable<MailAutomationAccount>

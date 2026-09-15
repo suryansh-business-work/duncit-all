@@ -52,12 +52,13 @@ export default function CallPromptsTable({
       {
         field: 'name',
         headerName: t('shell.common.name'),
+        type: 'text',
         flex: 1,
         minWidth: 220,
         cellRenderer: renderName,
         valueGetter: (p) => p.name,
       },
-      { field: 'language', headerName: t('crm.common.language'), filter: { type: 'text' }, width: 130 },
+      { field: 'language', headerName: t('crm.common.language'), type: 'text', width: 130 },
       activeChipColumn<CrmCallPrompt>(),
       dateColumn<CrmCallPrompt>(),
       actionsColumn<CrmCallPrompt>({

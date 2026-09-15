@@ -53,6 +53,16 @@ export interface IPodProductRequest {
   total_cost: number;
 }
 
+/**
+ * One multi-ticket discount tier: a single booking of at least `min_tickets`
+ * seats gets `discount_pct` off its ticket money. The "1 ticket · full price"
+ * row is implied, so stored tiers start at 2 tickets. Rules: pod.ticketDiscount.ts.
+ */
+export interface IPodTicketDiscountTier {
+  min_tickets: number;
+  discount_pct: number;
+}
+
 export interface IPodComment {
   _id?: Types.ObjectId;
   author_id: Types.ObjectId;
@@ -126,6 +136,9 @@ export interface IPod extends Document {
   pod_party_media: IPodPartyMedia[];
   /** Explore reel video URL (direct ImageKit upload, ≤100MB). Presence = reel enabled. */
   reel_url?: string | null;
+  /** Whether the reel carries an audio track, probed once per `url` — a replaced
+   * reel no longer matches, so it is probed again on its next read. */
+  reel_audio?: { url: string; has_audio: boolean } | null;
   pod_hits: number;
   /**
    * WHO is in the pod — one entry per person, hosts included. Drives chat
@@ -155,6 +168,11 @@ export interface IPod extends Document {
   products_enabled: boolean;
   product_requests: IPodProductRequest[];
   product_cost_total: number;
+  /** Whether a booking of several seats gets a tiered discount on its tickets.
+   * Always false (with no tiers) on a FREE or zero-priced pod. */
+  ticket_discount_enabled: boolean;
+  /** Strictly increasing in both tickets and discount; empty when switched off. */
+  ticket_discount_tiers: IPodTicketDiscountTier[];
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
   completed_at?: Date | null;
@@ -220,6 +238,14 @@ const productRequestSchema = new Schema<IPodProductRequest>(
   { _id: false }
 );
 
+const ticketDiscountTierSchema = new Schema<IPodTicketDiscountTier>(
+  {
+    min_tickets: { type: Number, required: true, min: 2 },
+    discount_pct: { type: Number, required: true, min: 1, max: 99 },
+  },
+  { _id: false }
+);
+
 const commentSchema = new Schema<IPodComment>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -276,6 +302,10 @@ const podSchema = new Schema<IPod>(
     pod_images_and_videos: { type: [mediaSchema], default: [] },
     pod_party_media: { type: [partyMediaSchema], default: [] },
     reel_url: { type: String, default: null, trim: true, maxlength: 1000 },
+    reel_audio: {
+      type: new Schema({ url: String, has_audio: Boolean }, { _id: false }),
+      default: null,
+    },
     pod_hits: { type: Number, default: 0 },
     pod_attendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     extra_seats: { type: Number, default: 0, min: 0 },
@@ -302,6 +332,8 @@ const podSchema = new Schema<IPod>(
     products_enabled: { type: Boolean, default: false },
     product_requests: { type: [productRequestSchema], default: [] },
     product_cost_total: { type: Number, default: 0, min: 0 },
+    ticket_discount_enabled: { type: Boolean, default: false },
+    ticket_discount_tiers: { type: [ticketDiscountTierSchema], default: [] },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },

@@ -130,7 +130,7 @@ function buildColumns({ t, busyKey, onToggle }: ColumnDeps): DuncitColumn<Portal
   ): DuncitColumn<PortalAppRow> => ({
     field,
     headerName,
-    sortable: false,
+    type: 'boolean',
     width: 190,
     cellRenderer: (row: PortalAppRow) => (
       <FeatureCell
@@ -154,6 +154,7 @@ function buildColumns({ t, busyKey, onToggle }: ColumnDeps): DuncitColumn<Portal
     {
       field: 'name',
       headerName: t('admin.portalApp.colPortal'),
+      type: 'text',
       flex: 1,
       minWidth: 220,
       cellRenderer: renderName,
@@ -162,7 +163,10 @@ function buildColumns({ t, busyKey, onToggle }: ColumnDeps): DuncitColumn<Portal
     {
       field: 'url',
       headerName: t('admin.portalApp.colLink'),
+      type: 'text',
+      // Resolved per row from the server's portal registry — not a stored field to order or match on.
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 200,
       cellRenderer: renderLink,

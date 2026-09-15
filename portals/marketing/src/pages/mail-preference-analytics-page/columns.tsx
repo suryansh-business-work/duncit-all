@@ -58,6 +58,7 @@ export function getMailPreferenceLogColumns(
     {
       field: 'email',
       headerName: t('mailPreference.analytics.columnPerson'),
+      type: 'text',
       flex: 1,
       minWidth: 220,
       cellRenderer: renderPerson,
@@ -67,17 +68,15 @@ export function getMailPreferenceLogColumns(
       field: 'category',
       headerName: t('mailPreference.analytics.columnCategory'),
       minWidth: 170,
-      filter: {
-        type: 'select',
-        options: categories.map((category) => ({ value: category, label: label(category) })),
-      },
+      type: 'enum',
+      options: categories.map((category) => ({ value: category, label: label(category) })),
       valueGetter: (row) => label(row.category),
     },
     {
       field: 'enabled',
       headerName: t('mailPreference.analytics.columnAction'),
       width: 150,
-      filter: { type: 'boolean' },
+      type: 'boolean',
       cellRenderer: renderAction,
       valueGetter: (row) =>
         row.enabled
@@ -87,6 +86,7 @@ export function getMailPreferenceLogColumns(
     {
       field: 'source',
       headerName: t('mailPreference.analytics.columnSource'),
+      type: 'text',
       minWidth: 150,
       valueGetter: (row) => row.source_detail || row.source || EM_DASH,
     },

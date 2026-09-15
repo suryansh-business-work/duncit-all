@@ -109,6 +109,7 @@ export default function PodsTable({
         headerName: t('onboarding.podsTable.pod'),
         flex: 1,
         minWidth: 180,
+        type: 'text',
         cellRenderer: renderPod,
         valueGetter: (pod) => pod.pod_title,
       },
@@ -116,7 +117,7 @@ export default function PodsTable({
         field: 'pod_date_time',
         headerName: t('onboarding.podsTable.dateAndTime'),
         minWidth: 180,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: dateValue,
       },
     ];
@@ -124,7 +125,10 @@ export default function PodsTable({
       cols.push({
         field: 'host_names',
         headerName: 'Host(s)',
+        type: 'text',
+        // Names resolved from the users collection per row — the pod stores only host ids.
         sortable: false,
+        filterable: false,
         minWidth: 150,
         valueGetter: hostsValue,
       });
@@ -133,7 +137,8 @@ export default function PodsTable({
       field: 'pod_mode',
       headerName: t('onboarding.podsTable.mode'),
       width: 120,
-      filter: { type: 'select', options: MODE_OPTIONS },
+      type: 'enum',
+      options: MODE_OPTIONS,
       cellRenderer: renderMode,
       valueGetter: (pod) => pod.pod_mode,
     });
@@ -142,7 +147,8 @@ export default function PodsTable({
         field: 'venue_approval_status',
         headerName: t('onboarding.podsTable.venueApproval'),
         width: 150,
-        filter: { type: 'select', options: APPROVAL_OPTIONS },
+        type: 'enum',
+        options: APPROVAL_OPTIONS,
         cellRenderer: renderApproval,
         valueGetter: (pod) => pod.venue_approval_status,
       });
@@ -151,7 +157,7 @@ export default function PodsTable({
       field: 'is_active',
       headerName: t('shell.common.status'),
       width: 110,
-      filter: { type: 'boolean' },
+      type: 'boolean',
       cellRenderer: renderStatus,
       valueGetter: statusValue,
     });

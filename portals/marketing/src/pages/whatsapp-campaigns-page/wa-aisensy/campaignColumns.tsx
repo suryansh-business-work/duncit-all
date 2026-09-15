@@ -46,17 +46,19 @@ export function getCampaignColumns({
   onOpenLogs,
 }: Readonly<ColumnDeps>): DuncitColumn<CampaignSendRow>[] {
   return [
-    { field: 'name', headerName: t('marketing.common.campaign'), flex: 1, minWidth: 220 },
-    { field: 'type', headerName: t('shell.common.type'), width: 150 },
+    { field: 'name', headerName: t('marketing.common.campaign'), type: 'text', flex: 1, minWidth: 220 },
+    { field: 'type', headerName: t('shell.common.type'), type: 'text', width: 150 },
     {
       field: 'status',
       headerName: t('shell.common.status'),
+      type: 'text',
       width: 120,
       cellRenderer: renderStatus,
     },
     {
       field: 'template_name',
       headerName: t('marketing.whatsappCampaigns.template'),
+      type: 'text',
       flex: 1,
       minWidth: 180,
     },
@@ -65,14 +67,15 @@ export function getCampaignColumns({
       // out" asks — the attempts beside it are context, not the ranking.
       field: 'sent_count',
       headerName: t('marketingWhatsapp.sendCount.header'),
+      type: 'number',
       width: 110,
       cellRenderer: (campaign) => <SendCountCell row={campaign} onOpenLogs={onOpenLogs} />,
     },
     {
       field: 'actions',
       headerName: t('shell.common.actions'),
+      type: 'actions',
       width: 110,
-      sortable: false,
       cellRenderer: (campaign) => (
         <CampaignRowActions campaign={campaign} onSend={onSend} onTest={onTest} />
       ),

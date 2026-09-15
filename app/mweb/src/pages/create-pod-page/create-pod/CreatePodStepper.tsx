@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -12,10 +12,10 @@ import {
   buildModerationInput,
   filterClubs,
   hostCategoryKeyOf,
-  makeCreatePodSchema,
   serializeDraft,
   stepForField,
 } from './create-pod.form';
+import { useCreatePodSchema } from './useCreatePodSchema';
 import { useTranslation } from '../../../i18n/useTranslation';
 import AiMonitorBackdrop from './AiMonitorBackdrop';
 import StepHero from './StepHero';
@@ -81,9 +81,7 @@ export default function CreatePodStepper({
   onPublish,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  // The schema cannot call `t` at module scope, so it is built here from the
-  // reader's own catalogue — the validation messages are copy like any other.
-  const schema = useMemo(() => makeCreatePodSchema(t), [t]);
+  const schema = useCreatePodSchema(t);
   // The schema coerces a few fields (a spot count arrives from the DOM as a
   // string), so its INPUT type differs from CreatePodFormValues. The fields are
   // the values type — every step component is typed on it — so the resolver is

@@ -12,12 +12,10 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { CREATE_TICKET, type TicketCategory } from '../../../graphql/tickets';
+import { CREATE_TICKET, TICKET_CATEGORIES, type TicketCategory } from '../../../graphql/tickets';
 import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { DuncitRichTextInput, htmlToText } from '@duncit/rich-text';
 import { useTranslation } from '@duncit/shell';
-
-const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
 interface Props {
   open: boolean;
@@ -68,7 +66,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
             onChange={(e) => setCategory(e.target.value as TicketCategory)}
             fullWidth
           >
-            {CATEGORIES.map((c) => (
+            {TICKET_CATEGORIES.map((c) => (
               <MenuItem key={c} value={c}>
                 {c}
               </MenuItem>

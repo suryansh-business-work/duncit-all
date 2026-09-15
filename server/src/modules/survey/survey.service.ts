@@ -99,6 +99,7 @@ const SURVEY_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     kind: { type: 'enum' },
+    title: { type: 'string' },
     super_category_id: { type: 'string' },
     category_id: { type: 'string' },
     sub_category_id: { type: 'string' },

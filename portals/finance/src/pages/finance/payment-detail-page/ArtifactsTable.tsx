@@ -4,11 +4,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
-import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, EM_DASH, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import RetryButton from './RetryButton';
 import { useTableRefresh } from './useTableRefresh';
-import { staticTableFetch, type PaymentArtifact } from './queries';
+import type { PaymentArtifact } from './queries';
 
 type ArtifactState = 'CREATED' | 'NOT_APPLICABLE' | 'MISSING';
 
@@ -94,11 +94,11 @@ const artifactColumns = (
   retry: RetryCell | null,
 ): DuncitColumn<PaymentArtifact>[] => {
   const columns: DuncitColumn<PaymentArtifact>[] = [
-    { field: 'label', headerName: t('finance.payment.artifactItem'), sortable: false, flex: 1, minWidth: 200 },
+    { field: 'label', headerName: t('finance.payment.artifactItem'), type: 'text', flex: 1, minWidth: 200 },
     {
       field: 'created',
       headerName: t('finance.payment.artifactStatus'),
-      sortable: false,
+      type: 'boolean',
       width: 170,
       cellRenderer: (artifact) => renderStatus(artifact, t),
       valueGetter: (artifact) => t(ARTIFACT_STATES[artifactState(artifact)].labelKey),
@@ -106,7 +106,7 @@ const artifactColumns = (
     {
       field: 'refs',
       headerName: t('finance.payment.artifactReference'),
-      sortable: false,
+      type: 'text',
       flex: 1.4,
       minWidth: 220,
       cellRenderer: (artifact) => renderRefs(artifact, t),
@@ -117,7 +117,7 @@ const artifactColumns = (
   columns.push({
     field: 'retry_key',
     headerName: t('finance.payment.artifactAction'),
-    sortable: false,
+    type: 'actions',
     width: 130,
     cellRenderer: (artifact) =>
       artifact.retry_key ? (
@@ -148,11 +148,14 @@ interface Props {
  */
 export default function ArtifactsTable({ artifacts, tableId, busyKey, onRetry }: Readonly<Props>) {
   const { t } = useTranslation();
-  const fetchRows = useMemo(() => staticTableFetch(artifacts, artifactSearchText), [artifacts]);
   const retryable = artifacts.some((artifact) => artifact.retry_key);
   const columns = useMemo(
     () => artifactColumns(t, retryable ? { busyKey, onRetry } : null),
     [t, retryable, busyKey, onRetry],
+  );
+  const fetchRows = useMemo(
+    () => clientTableFetch(artifacts, artifactSearchText, columns),
+    [artifacts, columns],
   );
   // A re-run rewrites these rows without touching the query the table asks
   // with, so it has to be told to read them again.

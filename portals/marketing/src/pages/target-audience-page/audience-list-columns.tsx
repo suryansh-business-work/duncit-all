@@ -56,6 +56,7 @@ export function getAudienceListColumns({
     {
       field: 'name',
       headerName: t('marketing.targetAudience.list'),
+      type: 'text',
       minWidth: 260,
       flex: 1,
       cellRenderer: renderList,
@@ -64,22 +65,28 @@ export function getAudienceListColumns({
     {
       field: 'owner',
       headerName: t('marketing.targetAudience.owner'),
-      filter: { type: 'text' },
+      type: 'text',
       minWidth: 160,
       valueGetter: (row) => row.owner,
     },
     {
+      // Counted per list against the users collection at read time — nothing stored to order or match on.
       field: 'member_count',
       headerName: t('marketing.common.people'),
+      type: 'number',
       sortable: false,
+      filterable: false,
       width: 120,
       cellRenderer: renderMembers,
       valueGetter: (row) => row.member_count,
     },
     {
+      // The length of the stored filter array — a count with no path to order or match on.
       field: 'criteria',
       headerName: t('marketing.targetAudience.criteria'),
+      type: 'number',
       sortable: false,
+      filterable: false,
       width: 130,
       cellRenderer: renderCriteria,
       valueGetter: (row) => row.filters.length,

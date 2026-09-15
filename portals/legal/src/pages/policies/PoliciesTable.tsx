@@ -42,10 +42,7 @@ export default function PoliciesTable({
   onNotify,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  // Only server-allowlisted fields are sortable/filterable (POLICY_TABLE_CONFIG):
-  // sort policy_no/title/slug/policy_type/sort_order/is_active/created_at/updated_at; filter
-  // is_active (boolean), policy_no + slug + policy_type (text), sort_order (number),
-  // created_at/updated_at (date).
+  // Sort and filter keys are allowlisted on the server (POLICY_TABLE_CONFIG).
   const columns = useMemo<DuncitColumn<Policy>[]>(() => {
     const activeLabel = (p: Policy) =>
       p.is_active ? t('shell.common.active') : t('legal.policies.hidden');
@@ -76,34 +73,36 @@ export default function PoliciesTable({
     );
     return [
       entityIdColumn<Policy>({ field: 'policy_no', headerName: t('legal.policies.colId') }),
-      { field: 'title', headerName: t('shell.common.title'), flex: 1, minWidth: 200, cellRenderer: renderTitle },
-      { field: 'slug', headerName: t('legal.policies.colSlug'), minWidth: 180, filter: { type: 'text' } },
+      { field: 'title', headerName: t('shell.common.title'), type: 'text', flex: 1, minWidth: 200, cellRenderer: renderTitle },
+      { field: 'slug', headerName: t('legal.policies.colSlug'), minWidth: 180, type: 'text' },
       {
         field: 'policy_type',
         headerName: t('legal.policies.colPolicyType'),
         minWidth: 180,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (p) => p.policy_type || '—',
       },
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
         width: 110,
-        filter: { type: 'boolean' },
+        type: 'boolean',
         cellRenderer: renderStatus,
         valueGetter: activeLabel,
       },
-      // Computed from the stored history, so it is not sortable server-side.
       {
         field: 'version_count',
         headerName: t('legal.policies.colVersions'),
+        type: 'number',
+        // Counted from the embedded history when the row is read — nothing stored to order or match on.
         sortable: false,
+        filterable: false,
         width: 100,
       },
-      { field: 'sort_order', headerName: t('legal.policies.colSort'), width: 90, filter: { type: 'number' } },
+      { field: 'sort_order', headerName: t('legal.policies.colSort'), width: 90, type: 'number' },
       // Hidden by default — carries the allowlisted updated-date filter.
-      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, filter: { type: 'date' }, minWidth: 150 },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 220, cellRenderer: renderActions },
+      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, type: 'date', minWidth: 150 },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 220, cellRenderer: renderActions },
     ];
   }, [onEdit, onRemove, onHistory, onNotify, t]);
 

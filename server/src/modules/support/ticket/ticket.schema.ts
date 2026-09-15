@@ -131,6 +131,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       sort_dir: String
       "When set, tickets of this priority list first (display order only — priorities are never modified)."
       priority_first: TicketPriority
+      "The table's column filters; fields the list does not allowlist are dropped."
+      filters: [TableFilterInput!]
     ): TicketPage!
     ticket(id: ID!): Ticket
     myTickets: [Ticket!]!

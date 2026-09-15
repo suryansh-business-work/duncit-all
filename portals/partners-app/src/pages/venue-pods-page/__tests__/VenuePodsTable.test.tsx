@@ -1,7 +1,6 @@
 import '../../../../__tests__/helpers/agGridEnv';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { TablePage, TableQueryState } from '@duncit/table';
 import VenuePodsTable from '../VenuePodsTable';
 import type { VenuePodRow } from '../queries';
 import { makeVenuePodRow } from './fixtures';
@@ -29,14 +28,6 @@ const rows: VenuePodRow[] = [
   }),
 ];
 
-const makeFetch = (data: VenuePodRow[] = rows) =>
-  vi.fn(
-    async (_query: TableQueryState): Promise<TablePage<VenuePodRow>> => ({
-      rows: data,
-      total: data.length,
-    }),
-  );
-
 /** The grid row a given cell belongs to, so per-pod assertions stay scoped. */
 const podRow = (cell: HTMLElement): HTMLElement => {
   const row = cell.closest('[role="row"]');
@@ -54,7 +45,7 @@ const renderTable = (data: VenuePodRow[] = rows) => {
   const onRowClick = vi.fn();
   render(
     <VenuePodsTable
-      fetchRows={makeFetch(data)}
+      rows={data}
       externalFilters={[{ field: 'tab', op: 'eq', value: 'ALL' }]}
       refetchRef={{ current: null }}
       onRowClick={onRowClick}

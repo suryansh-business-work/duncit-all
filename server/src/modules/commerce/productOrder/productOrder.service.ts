@@ -113,6 +113,8 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
     buyer_email: 'buyer_email',
   },
   filterFields: {
+    buyer_name: { type: 'string' },
+    awb: { path: 'shiprocket.awb', type: 'string' },
     fulfilment_method: { type: 'enum' },
     fulfilment_status: { type: 'enum' },
     buyer_email: { type: 'string' },

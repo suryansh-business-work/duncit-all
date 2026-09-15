@@ -88,6 +88,7 @@ export default function PodPlansTable({
       {
         field: 'name',
         headerName: t('shell.common.name'),
+        type: 'text',
         flex: 1,
         minWidth: 220,
         cellRenderer: renderName,
@@ -96,7 +97,7 @@ export default function PodPlansTable({
       {
         field: 'key',
         headerName: t('admin.podPlans.key'),
-        filter: { type: 'text' },
+        type: 'text',
         width: 130,
         cellRenderer: renderKey,
         valueGetter: (r) => r.key,
@@ -104,20 +105,24 @@ export default function PodPlansTable({
       {
         field: 'price_label',
         headerName: t('admin.podPlans.priceLabel'),
+        type: 'text',
         minWidth: 140,
         valueGetter: (r) => r.price_label || '—',
       },
       {
         field: 'features',
         headerName: t('admin.podPlans.features'),
+        type: 'number',
+        // The length of the plan's feature list — a count, not a stored field to order or match on.
         sortable: false,
+        filterable: false,
         width: 100,
         valueGetter: (r) => (r.features ?? []).length,
       },
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         minWidth: 180,
         cellRenderer: (row: PlanRow) => renderStatus(row, t),
         valueGetter: (r) => (r.is_active ? t('admin.profile.active') : t('admin.profile.inactive')),
@@ -125,12 +130,12 @@ export default function PodPlansTable({
       {
         field: 'is_coming_soon',
         headerName: t('admin.podPlans.comingSoon'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         hide: true,
         width: 130,
         valueGetter: (r) => (r.is_coming_soon ? 'Yes' : 'No'),
       },
-      { field: 'sort_order', headerName: t('admin.podPlans.sort'), hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('admin.podPlans.sort'), type: 'number', hide: true, width: 90 },
       actionsColumn<PlanRow>({ onEdit, onDelete }),
     ];
   }, [onEdit, onDelete]);

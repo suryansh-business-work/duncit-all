@@ -6,11 +6,9 @@ import { parseApiError } from '@duncit/utils';
 import { StatCard } from '@duncit/ui';
 import { AppIcon } from '@duncit/shell';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
-import type { TableQueryState } from '@duncit/table';
 import CancellationsTable from './CancellationsTable';
 import CancellationDetailDialog from './CancellationDetailDialog';
 import {
-  applyCancellationQuery,
   money,
   POD_CANCELLATIONS,
   POD_CANCELLATION_STATS,
@@ -42,17 +40,14 @@ export default function CancellationsDashboardPage() {
   const stats = data?.podCancellationStats;
   const sym = stats?.currency_symbol ?? '';
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
-        query: POD_CANCELLATIONS,
-        variables: { kind: null },
-        fetchPolicy: 'network-only',
-      });
-      return applyCancellationQuery(result.data?.podCancellations ?? [], q);
-    },
-    [client],
-  );
+  const loadRows = useCallback(async () => {
+    const result = await client.query<{ podCancellations: PodCancellationRow[] }>({
+      query: POD_CANCELLATIONS,
+      variables: { kind: null },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.podCancellations ?? [];
+  }, [client]);
 
   const widgets: DashboardWidget[] = [
     ...cards(t).map((card, index) => ({
@@ -83,7 +78,7 @@ export default function CancellationsDashboardPage() {
       content: (
         <CancellationsTable
           tableId="finance-cancellations-all"
-          fetchRows={fetchRows}
+          loadRows={loadRows}
           onRowClick={setSelected}
           showKind
           emptyText={t('finance.cancellations.noPodsHaveBeenCancelledYet')}

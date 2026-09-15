@@ -96,6 +96,7 @@ const ExplorePage = lazy(() => import('../pages/ExplorePage'));
 const SearchPage = lazy(() => import('../pages/search-page'));
 const PreviousPodsPage = lazy(() => import('../pages/PreviousPodsPage'));
 const HappeningNearbyPage = lazy(() => import('../pages/HappeningNearbyPage'));
+const CityLaunchPage = lazy(() => import('../pages/city-launch-page'));
 const CreatePodPage = lazy(() => import('../pages/create-pod-page'));
 const PodPendingPage = lazy(() => import('../pages/pod-pending-page'));
 const BookingPage = lazy(() => import('../pages/booking-page'));
@@ -178,6 +179,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
+        {/* A not-yet-launched city's waitlist — the link its "Send this to your
+            friends" hands out. Public: signed out, it asks to sign in there. */}
+        <Route path="/city-launch/:locationId" element={<CityLaunchPage />} />
         <Route
           path="/venues"
           element={withAuth(

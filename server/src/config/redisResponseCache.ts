@@ -99,7 +99,9 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   'categoryTree',
   // The city picker. No auth and no ctx read: `active_club_count` only memoises
   // an aggregate on the context. The admin grid reads `locationsTable`, which
-  // stays off this list, so an edit there is never served stale.
+  // stays off this list, so an edit there is never served stale. The picker's
+  // `subscriber_count` may lag by the TTL; the subscribe page's live count is
+  // `locationLaunchStatus`, which — like the admin waitlist queries — stays off.
   'locations',
   // Every ad slot on every surface. Argument-keyed (position), no auth, no ctx,
   // no write and no field resolver on PublicAd; an approved ad reaches the slots

@@ -140,6 +140,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PublicProfile: 'u/:userId',
       PostDetail: 'post/:postId',
       VenueDetails: 'venue/:venueId',
+      // The link a member shares from a city's waitlist, on mWeb's exact path.
+      CityLaunch: 'city-launch/:locationId',
       Checkout: 'checkout/:podId',
       ProductCheckout: 'product-checkout',
       AddressBook: 'address-book',

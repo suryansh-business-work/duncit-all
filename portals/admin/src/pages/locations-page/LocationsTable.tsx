@@ -119,6 +119,15 @@ export default function LocationsTable({
         valueGetter: (loc) => loc.country ?? '—',
       },
       activeChipColumn<LocationRow>(),
+      activeChipColumn<LocationRow>({
+        field: 'is_launched',
+        headerName: t('admin.locations.launched'),
+        width: 140,
+        activeLabel: t('admin.locations.launched'),
+        inactiveLabel: t('admin.locations.notLaunched'),
+        outlineInactive: true,
+        filterable: false,
+      }),
       dateColumn<LocationRow>(),
       actionsColumn<LocationRow>({ onEdit, onDelete, delete: { color: 'default' } }),
     ];

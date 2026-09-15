@@ -1749,4 +1749,70 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
       },
     ],
   },
+  {
+    name: 'Admin: City Launch Settings',
+    description: 'The Launched switch, launch target and city WhatsApp group link on Catalog > Locations add/edit.',
+    sub_flows: [
+      {
+        name: 'Add a city that is not launched yet',
+        description: 'A new city starts as a waitlist.',
+        steps: [
+          ['Open /locations and add a location', 'The dialog shows a Launched switch (on), Launch target (2000) with its hint, and City WhatsApp group link'],
+          ['Turn Launched off, set the target to 1500, fill the rest and save', 'The table shows the city with a "Not launched" chip'],
+          ['Open the app location picker', 'The city tile shows "0 people are in" with "Coming soon"'],
+        ],
+      },
+      {
+        name: 'Launch target and WhatsApp link validation',
+        description: 'Bad values never reach the server.',
+        steps: [
+          ['Enter a launch target of 0, then 2.5', 'An inline error asks for a whole number of at least 1 and Save is disabled'],
+          ['Enter a WhatsApp group link that is not https://chat.whatsapp.com/…', 'An inline error shows and Save is disabled'],
+          ['Clear the WhatsApp link', 'The error clears; an empty link is allowed'],
+        ],
+      },
+      {
+        name: 'Launch a city',
+        description: 'Turning the switch on makes the city live.',
+        steps: [
+          ['Edit a not-launched city and turn Launched on', 'The table chip reads "Launched"'],
+          ['Reopen the app with that city selected', 'Home shows the pod feed and the tile shows its club count again'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Admin: Subscribe for location',
+    description: 'The /location-subscriptions page: city waitlist totals, subscribers and the WhatsApp launch message.',
+    sub_flows: [
+      {
+        name: 'Review city waitlists and subscribers',
+        description: 'Totals per city and a searchable subscriber list.',
+        steps: [
+          ['Open Catalog > Subscribe for location', 'A cities table lists each city with subscribers: launched chip, Subscribers, Notified and Pending counts'],
+          ['Filter the subscribers table by a city and by status', 'Only that city\'s rows with the chosen status remain, each with name, WhatsApp, status chip and subscribed date'],
+          ['Hover a Skipped or Failed chip', 'A tooltip shows the reason'],
+        ],
+      },
+      {
+        name: 'Send is locked until the city launches',
+        description: 'The launch message says the city is live.',
+        steps: [
+          ['Hover Send on a city that is not launched', 'The button is disabled and the tooltip says to switch Launched on first'],
+          ['Call sendLocationLaunchMessage for it via the API', 'Error "Switch Launched on for {city} before sending the launch message."'],
+        ],
+      },
+      {
+        name: 'Send the WhatsApp launch message',
+        description: 'Pending and failed subscribers get the City launched template once.',
+        steps: [
+          ['Create the "City launched" template and campaign from Marketing > WhatsApp > Automation', 'The scenario has no blocker left'],
+          ['Launch the city, then press Send launch message on its row', 'A confirm names the city and how many subscribers will be messaged'],
+          ['Confirm', 'A toast says the send started for that many subscribers; after it runs the rows turn Sent and Pending drops to 0'],
+          ['Press Send again with nobody pending', 'The button is disabled'],
+          ['Add a new subscriber and press Send', 'Only the new subscriber is messaged'],
+        ],
+      },
+    ],
+  },
 ];

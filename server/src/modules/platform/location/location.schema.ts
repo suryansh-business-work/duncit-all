@@ -28,6 +28,17 @@ export const locationTypeDefs = /* GraphQL */ `
     is_active: Boolean!
     "Count of active clubs currently operating in this city (Home location selector)."
     active_club_count: Int!
+    """
+    Live in the app. Off: the city still shows in the location picker, but the
+    app opens its subscribe-for-launch page instead of the feed.
+    """
+    is_launched: Boolean!
+    "How many subscribers the city needs before launch — the goal the app shows. Default 2000."
+    launch_target: Int!
+    "Optional chat.whatsapp.com invite link shown on the subscribe page; empty when unset."
+    whatsapp_group_url: String!
+    "Signed-in members who asked to be told when this city launches."
+    subscriber_count: Int!
     created_at: String!
     updated_at: String!
   }
@@ -56,6 +67,12 @@ export const locationTypeDefs = /* GraphQL */ `
     location_image: String!
     location_pincode: String!
     location_zones: [LocationZoneInput!]
+    is_active: Boolean
+    "Defaults to true."
+    is_launched: Boolean
+    "Defaults to 2000."
+    launch_target: Int
+    whatsapp_group_url: String
   }
 
   input UpdateLocationInput {
@@ -69,6 +86,9 @@ export const locationTypeDefs = /* GraphQL */ `
     location_pincode: String
     location_zones: [LocationZoneInput!]
     is_active: Boolean
+    is_launched: Boolean
+    launch_target: Int
+    whatsapp_group_url: String
   }
 
   extend type Query {

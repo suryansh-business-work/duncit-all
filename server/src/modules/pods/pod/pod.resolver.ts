@@ -114,6 +114,11 @@ export const podResolvers = {
       const place = await resolvePodPlace(parent, ctx);
       return place.detail || null;
     },
+    // Same memoised place as the two above, so a card's chip costs no extra read.
+    locality: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
+      const place = await resolvePodPlace(parent, ctx);
+      return place.locality;
+    },
     host_names: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string[]> => {
       const ids: string[] = (parent.pod_hosts_id ?? []).filter(Boolean).map(String);
       if (ids.length === 0) return [];

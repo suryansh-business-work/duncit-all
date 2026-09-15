@@ -112,6 +112,7 @@ export default function PodCard({
           joiningText={joiningText}
           spotsText={spotsText}
           subText={[hostText, placeText].filter(Boolean).join(' · ')}
+          locality={pod.locality}
           testIdPrefix={`pod-card-${pod.pod_id}`}
         />
       </Card>

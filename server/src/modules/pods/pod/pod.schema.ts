@@ -192,6 +192,8 @@ export const podTypeDefs = /* GraphQL */ `
     meeting_notes: String
     place_label: String
     place_detail: String
+    "The pod's area for its card chip: the venue's locality, else its zone; null for virtual pods."
+    locality: String
     pod_hashtag: [String!]!
     pod_images_and_videos: [PodMedia!]!
     "Explore reel video URL. Set = reel enabled; live pods with a reel appear in Explore."

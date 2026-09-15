@@ -155,6 +155,8 @@ export type RootStackParamList = {
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
+  /** /city-launch/:locationId — a not-yet-launched city's waitlist (Location.id). */
+  CityLaunch: { locationId: string };
   NotFound: undefined;
 };
 
@@ -192,6 +194,7 @@ export type MenuStackRoute = Exclude<
   | 'PostDetail'
   | 'Follow'
   | 'VenueDetails'
+  | 'CityLaunch'
   | 'Checkout'
   | 'ProductCheckout'
   | 'ProductDetail'

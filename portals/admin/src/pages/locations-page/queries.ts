@@ -33,6 +33,9 @@ export interface LocationRow {
   location_image?: string | null;
   location_zones: { zone_name: string; pincode?: string | null }[];
   is_active: boolean;
+  is_launched: boolean;
+  launch_target: number;
+  whatsapp_group_url: string;
   created_at?: string | null;
 }
 
@@ -52,6 +55,9 @@ const LOCATION_ROW_FIELDS = gql`
       pincode
     }
     is_active
+    is_launched
+    launch_target
+    whatsapp_group_url
     created_at
     updated_at
   }

@@ -3,6 +3,7 @@ import { YStack } from 'tamagui';
 import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
 
 import { Reveal } from '@/animations/Reveal';
+import { LocalityChip } from '@/components/LocalityChip';
 import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
 import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -37,7 +38,7 @@ export function ClubSection({
 
   return (
     <YStack testID={sectionTestID} gap={12}>
-      <YStack paddingHorizontal={16}>
+      <YStack paddingHorizontal={16} gap={6}>
         <SectionHeader
           testID={`${sectionTestID}-header`}
           title={club.club_name}
@@ -46,6 +47,8 @@ export function ClubSection({
           actionTestID={sectionTestID}
           actionAriaLabel={club.club_name}
         />
+        {/* Two clubs can share a name; the area under it tells their rails apart. */}
+        <LocalityChip locality={club.locality} testID="club-section-locality" />
       </YStack>
       <ScrollRail testID={`${sectionTestID}-pods`} gap={12} paddingHorizontal={16}>
         {pods.map((pod, index) => (

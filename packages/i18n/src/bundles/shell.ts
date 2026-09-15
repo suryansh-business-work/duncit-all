@@ -479,6 +479,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       locales: 'Locales',
       localization: 'Localization',
       locations: 'Locations',
+      locationSubscriptions: 'Subscribe for location',
       logs: 'Logs',
       logsSettings: 'Logs Settings',
       mailAutomation: 'Mail Automation',

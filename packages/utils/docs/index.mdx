@@ -329,6 +329,9 @@ exports:
   - 'locationLabel'
   - 'LocationMismatch'
   - 'LocationPick'
+  - 'DEFAULT_LAUNCH_TARGET'
+  - 'launchProgress'
+  - 'showsWaitlist'
   - 'clubCityName'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
@@ -2325,6 +2328,35 @@ are what the switch selects, so the header lands on the pod's own area, not just
 The MUI dialog is mWeb's `LocationMismatchDialog`; the Tamagui one is the native app's. Each
 surface's `useLocationMismatch` hook resolves the two ids to names against its own location
 list and hands this result to its dialog — rule 40's twin clause: one rule, two views.
+
+## A city that has not launched yet
+
+`city-launch.ts` holds the rules for a city an admin has added with **Launched** switched off.
+It still shows in both apps' location pickers — its tile reads "N people are in" with a Coming
+soon badge instead of its club count — and choosing it opens the launch waitlist in place of the
+home feed. mWeb's `CityLaunchView` and the native `CityLaunch` screen render it.
+
+```ts
+import { DEFAULT_LAUNCH_TARGET, formatCount, launchProgress, showsWaitlist } from '@duncit/utils';
+
+showsWaitlist({ is_launched: false }); // true  — Ahmedabad, not launched: "1,252 people are in"
+showsWaitlist({ is_launched: true }); // false — Pune, live: "18 clubs"
+showsWaitlist({}); // false — a location from before the flag existed is live
+
+launchProgress(1252, DEFAULT_LAUNCH_TARGET); // 63 — the progress bar's value
+launchProgress(2600, 2000); // 100 — never past full
+launchProgress(40, 0); // 0 — a non-positive target never divides by zero
+formatCount(1252); // '1,252' — the hero's big number
+```
+
+`showsWaitlist` is `false` for anything but an explicit `false`, so a stale cached location
+without the field keeps its feed.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `DEFAULT_LAUNCH_TARGET` | `2000` | The launch goal a city gets when an admin sets none; the server's default too. |
+| `launchProgress` | `(count: number, target: number) => number` | Whole percent of the way to the target, clamped to 0–100; 0 for a non-positive target. |
+| `showsWaitlist` | `(city: Readonly<{ is_launched?: boolean \| null }>) => boolean` | Whether the picker tile and home show the waitlist rather than clubs and the feed. |
 
 ## Clubs grouped by city, then by locality
 

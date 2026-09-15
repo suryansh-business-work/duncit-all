@@ -1550,4 +1550,97 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
       },
     ],
   },
+  {
+    name: 'App: City Launch Waitlist',
+    description:
+      'A city an admin has not launched yet (Admin > Locations, Launched off) in the customer app (mWeb + native): its picker tile, the subscribe-for-launch page that replaces the feed, and the shareable /city-launch/:locationId page.',
+    sub_flows: [
+      {
+        name: 'Unlaunched city in the location picker',
+        description: 'The tile shows the waitlist instead of clubs, and the city can still be chosen.',
+        steps: [
+          ['Open "Choose your location" and find a city whose Launched switch is off', 'Its tile shows "N people are in" and a "Coming soon" badge instead of "N clubs"'],
+          ['Open that city', 'Its localities are still listed'],
+          ['Pick the city and Apply', 'The city becomes the selected location and Home shows the city launch page instead of the pod feed'],
+          ['Pick a launched city again', 'The normal Home feed returns'],
+        ],
+      },
+      {
+        name: 'Add your name to a city waitlist',
+        description: 'A signed-in member with a WhatsApp number subscribes.',
+        steps: [
+          ['Open Home with an unlaunched city selected', 'The hero shows the city image, "Live count", the subscriber number, "people are in for {city}", "We\'ll launch once {target} people have added their names." and a progress bar'],
+          ['Tap "Notify me when {city} launches"', 'The page flips to "Your name has been added" with "We\'ll notify you on WhatsApp when we launch in {city}."'],
+          ['Reload the page', 'The count went up by one and the added state stays'],
+          ['Tap notify again via the API', 'No second subscription is created; the count is unchanged'],
+        ],
+      },
+      {
+        name: 'Subscribe without a WhatsApp number',
+        description: 'The launch message needs a WhatsApp number on the profile.',
+        steps: [
+          ['As a member with no WhatsApp or phone number tap "Notify me when {city} launches"', 'A card says "Add your WhatsApp number to your profile so we can tell you when {city} launches." with "Go to profile"'],
+          ['Tap "Go to profile"', 'The account screen opens where the WhatsApp number is edited'],
+          ['Add a WhatsApp number, come back and tap notify', 'The added state shows'],
+        ],
+      },
+      {
+        name: 'Signed-out visitor on the launch page',
+        description: 'Subscribing needs an account.',
+        steps: [
+          ['Open /city-launch/<location id> signed out', 'The count and goal show with "Sign in to get notified" instead of notify'],
+          ['Tap "Sign in to get notified"', 'Sign-in opens and returns to the same city launch page afterwards'],
+        ],
+      },
+      {
+        name: 'Share the waitlist and join the city WhatsApp group',
+        description: 'The added state offers two actions.',
+        steps: [
+          ['Tap "Send this to your friends"', 'The share sheet opens with the city launch link (mWeb without share support copies it and shows "Link copied")'],
+          ['With a WhatsApp group link set on the city tap "Join {city}\'s WhatsApp for launch updates"', 'The chat.whatsapp.com invite opens outside the app'],
+          ['Clear the city WhatsApp group link in Admin and reload', 'The WhatsApp group tile is hidden'],
+        ],
+      },
+      {
+        name: 'What else can you do cards',
+        description: 'Three cards send people to the Earn journeys.',
+        steps: [
+          ['Scroll to "What else can you do?"', 'Cards "Want to host your own meet-ups?", "Have a space people can hang out in?" and "Want to help get this going?" show, each with "Tell me more"'],
+          ['Tap "Tell me more" on each card', 'They open the Earn host, venue and club admin journeys respectively'],
+        ],
+      },
+      {
+        name: 'Launched or unknown city on the launch page',
+        description: 'Edge states of the shareable page.',
+        steps: [
+          ['Open /city-launch/<an unknown id>', '"This city is not on Duncit." shows'],
+          ['Subscribe to a city that was launched in the meantime (API)', 'Error "{city} is already live on Duncit."'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'App: Pod and Club Locality Chips',
+    description:
+      'Clubs can share a name, so the customer app (mWeb + native) shows a locality chip on club sections and pod cards.',
+    sub_flows: [
+      {
+        name: 'Locality on home club sections and pod cards',
+        description: 'Two same-name clubs are told apart by their area.',
+        steps: [
+          ['Open Home in a city with two clubs of the same name in different localities', 'Each club section title has its own locality chip under it'],
+          ['Look at a venue pod card on a home rail', 'A pin chip with the venue locality shows at the bottom of the card and the card height matches its neighbours'],
+          ['Look at a virtual pod card', 'No locality chip shows'],
+        ],
+      },
+      {
+        name: 'Locality on See all and club page cards',
+        description: 'The same chip on the full lists.',
+        steps: [
+          ['Open "Happening nearby" See all', 'Every pod card with a venue or zone shows its locality chip at the bottom'],
+          ['Open a club page and look at its pod cards', 'Each card shows the pod locality chip'],
+        ],
+      },
+    ],
+  },
 ];

@@ -21,6 +21,7 @@ import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { CityLaunchScreen } from '@/screens/CityLaunchScreen';
 import { AddressBookScreen } from '@/screens/AddressBookScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
@@ -253,6 +254,7 @@ export function RootNavigator() {
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
+      <Stack.Screen name="CityLaunch" component={CityLaunchScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />
       <Stack.Screen name="Shop" component={GatedShopScreen} />

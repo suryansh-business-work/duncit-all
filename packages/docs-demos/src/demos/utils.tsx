@@ -190,6 +190,10 @@ import {
   groupClubsByLocality,
   type ClubCityLocation,
   resolveThemeTokens,
+  DEFAULT_LAUNCH_TARGET,
+  formatCount,
+  launchProgress,
+  showsWaitlist,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -450,6 +454,14 @@ interface ClubGroupingMock {
   openCityId: string;
 }
 
+/** One city from the `locations` query, with its launch waitlist fields. */
+interface CityLaunchMock {
+  location_name: string;
+  is_launched: boolean | null;
+  subscriber_count: number;
+  launch_target: number;
+}
+
 /** Admin → Branding → Theme tokens, as the `branding` query answers it. */
 interface ThemeTokensMock {
   theme_token_source: 'LOCAL' | 'SERVER';
@@ -478,6 +490,26 @@ export default defineDemos('utils', [
         'Bundled palettes returned untouched': palettes === local,
       };
     },
+  }),
+
+  defineDemo<CityLaunchMock>({
+    id: 'city-launch',
+    title: 'A city that has not launched yet',
+    note:
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0.',
+    mock: {
+      location_name: 'Ahmedabad',
+      is_launched: false,
+      subscriber_count: 1252,
+      launch_target: DEFAULT_LAUNCH_TARGET,
+    },
+    compute: (mock) => ({
+      'Shows the waitlist': showsWaitlist(mock),
+      'Tile caption': mwebT('mweb.cityLaunch.peopleIn', { count: mock.subscriber_count }),
+      'Hero number': formatCount(mock.subscriber_count),
+      'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
+      'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+    }),
   }),
 
   defineDemo<ClubGroupingMock>({

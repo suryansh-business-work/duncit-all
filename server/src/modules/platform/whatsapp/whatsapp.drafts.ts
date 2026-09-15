@@ -33,7 +33,7 @@ export interface WaTemplateDraft {
 
 export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
   USER_CONTACT_INVITE: {
-    // The only MARKETING draft here: everything else tells somebody about a pod
+    // MARKETING: everything but the city launch below tells somebody about a pod
     // they are already part of, and this one arrives at a number that has never
     // heard of Duncit. Categorising it UTILITY is how a WhatsApp number gets
     // taken down.
@@ -49,6 +49,20 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Sign up and you BOTH earn 50 Duncit Coins. ' +
       'Use referral code DUN-9F3A2C when you join, or open this link and it is filled in for you: ' +
       'https://mweb.duncit.com/register?ref=DUN-9F3A2C ' +
+      '— Team Duncit',
+  },
+  USER_CITY_LAUNCHED: {
+    // MARKETING too: the member asked to hear about the launch, but the message
+    // promotes a city opening rather than anything they have booked.
+    category: 'MARKETING',
+    language: 'English',
+    body:
+      'Hi {{1}}, good news — Duncit is now live in {{2}}! ' +
+      'You asked us to tell you when we launched there. Find pods and clubs near you: {{3}} ' +
+      '— Team Duncit',
+    sample:
+      'Hi Ritu, good news — Duncit is now live in Ahmedabad! ' +
+      'You asked us to tell you when we launched there. Find pods and clubs near you: https://mweb.duncit.com ' +
       '— Team Duncit',
   },
   HOST_POD_CANCELLATION_RISK: {

@@ -54,6 +54,9 @@ export default function LocationsPage() {
       location_image: loc.location_image ?? '',
       location_pincode: '',
       is_active: loc.is_active,
+      is_launched: loc.is_launched,
+      launch_target: String(loc.launch_target),
+      whatsapp_group_url: loc.whatsapp_group_url,
       zones:
         loc.location_zones.length > 0
           ? loc.location_zones.map((z) => ({

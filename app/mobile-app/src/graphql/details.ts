@@ -525,6 +525,7 @@ export const ClubDetailsDocument = gql(`
       pod_mode
       place_label
       place_detail
+      locality
     }
     categories {
       id

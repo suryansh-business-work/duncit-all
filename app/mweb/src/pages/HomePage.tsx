@@ -1,2 +1,2 @@
-export { default } from './home-page/HomePage';
+export { default } from './home-page/HomeRoute';
 

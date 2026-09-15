@@ -1896,4 +1896,27 @@ export const WEBSITE_SERVER_FLOWS: readonly CatalogueFlow[] = [
       },
     ],
   },
+  {
+    name: 'Server: City launch message',
+    description: 'The background WhatsApp send behind Admin > Subscribe for location (scenario USER_CITY_LAUNCHED).',
+    sub_flows: [
+      {
+        name: 'Background send updates each subscriber',
+        description: 'The mutation returns at once and the rows settle as messages go out.',
+        steps: [
+          ['Call sendLocationLaunchMessage for a launched city with pending subscribers', 'It returns queued = the PENDING + FAILED count immediately'],
+          ['Wait for the batches to finish', 'SENT rows get notified_at; SKIPPED and FAILED rows store the reason; the WhatsApp log shows one row per number'],
+          ['Call it twice in quick succession', 'No number is billed twice — the second attempt logs "Already sent" and the row stays Sent'],
+        ],
+      },
+      {
+        name: 'Opt-outs and the kill switch are respected',
+        description: 'A marketing send goes through the automatic WhatsApp gates.',
+        steps: [
+          ['Switch marketing WhatsApp off for a subscriber, then send', 'That row is Skipped with "Recipient switched this off"'],
+          ['Turn the global WhatsApp kill switch off and send', 'Rows are Skipped with the switched-off reason and can be retried later'],
+        ],
+      },
+    ],
+  },
 ];

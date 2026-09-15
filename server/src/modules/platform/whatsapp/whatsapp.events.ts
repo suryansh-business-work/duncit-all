@@ -648,6 +648,14 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Inviter name', 'Coins', 'Referral code', 'Invite Link'],
   },
   {
+    key: 'USER_CITY_LAUNCHED',
+    campaign: 'city_launched',
+    audience: 'USER',
+    category: 'marketing',
+    fires: 'An admin sends the launch message to the members who subscribed for a city',
+    params: ['Recipient name', 'City', 'City Link'],
+  },
+  {
     key: 'SUPPORT_TICKET_CREATED',
     campaign: 'support_ticket_created',
     audience: 'SUPPORT',

@@ -149,17 +149,20 @@ export const aiModerateProduct = (input: ModerateProductInput): Promise<Moderati
     detail: input.product_name,
   });
 
+/** Reason checks share one shape: the prompt key doubles as the task key. */
+type ReasonCheckKey = 'moderation.meeting_reason' | 'moderation.callback_reason';
+
 /**
- * Fast text-only check that a meeting cancel/reschedule reason is genuine.
+ * Fast text-only check that a free-text reason a user typed is genuine.
  * Sends ONLY the reason text (no user data) to the default mini model for
  * minimal latency. Fail-open: returns true when the key is missing or the call
- * fails, so an AI outage never blocks a user from cancelling their meeting.
+ * fails, so an AI outage never blocks the action the reason belongs to.
  */
-export async function aiValidateMeetingReason(reason: string): Promise<boolean> {
+async function aiValidateReason(key: ReasonCheckKey, reason: string): Promise<boolean> {
   try {
-    const system = await resolvePrompt('moderation.meeting_reason');
+    const system = await resolvePrompt(key);
     const res = await openaiChat({
-      task: 'moderation.meeting_reason',
+      task: key,
       model: system.model,
       temperature: 0,
       max_tokens: 16,
@@ -178,3 +181,11 @@ export async function aiValidateMeetingReason(reason: string): Promise<boolean> 
     return true;
   }
 }
+
+/** A meeting cancel/reschedule reason. */
+export const aiValidateMeetingReason = (reason: string): Promise<boolean> =>
+  aiValidateReason('moderation.meeting_reason', reason);
+
+/** What a support callback request is about. */
+export const aiValidateCallbackReason = (reason: string): Promise<boolean> =>
+  aiValidateReason('moderation.callback_reason', reason);

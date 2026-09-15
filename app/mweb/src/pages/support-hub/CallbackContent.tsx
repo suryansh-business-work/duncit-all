@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Paper, Stack, TextField, Typography } from '@mui/material';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CallIcon from '@mui/icons-material/Call';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import { DuncitButton } from '@duncit/buttons';
@@ -8,6 +9,7 @@ import type { SupportPodOption } from './queries';
 import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK, MY_CALLBACK_REQUESTS } from './queries';
 import CallbackHistory from './CallbackHistory';
 import { SURFACE_SX } from '../../theme';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const CARD_SX = { ...SURFACE_SX, p: 2 } as const;
 const CARD_TITLE_SX = { fontSize: '1rem', fontWeight: 600 } as const;
@@ -17,6 +19,7 @@ interface Props {
 }
 
 export default function CallbackContent({ selected }: Readonly<Props>) {
+  const { t } = useTranslation();
   const { data } = useQuery<any>(SUPPORT_CALL_TARGET, { fetchPolicy: 'cache-first' });
   const target = data?.bouncerSupportTarget;
 
@@ -81,18 +84,30 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
           }}>
             We will call you back on your registered phone number.
           </Typography>
-          <TextField
-            label="What's it about? (optional)"
-            data-testid="callback-reason-field"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            size="small"
-            multiline
-            minRows={2}
-            slotProps={{
-              htmlInput: { maxLength: 500, 'data-testid': 'callback-reason' }
-            }}
-          />
+          <Stack spacing={0.75}>
+            <TextField
+              label="What's it about? (optional)"
+              data-testid="callback-reason-field"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              size="small"
+              multiline
+              minRows={2}
+              slotProps={{
+                htmlInput: { maxLength: 500, 'data-testid': 'callback-reason' }
+              }}
+            />
+            {/* The typed reason is screened by AI Monitoring on submit. */}
+            <Stack
+              data-testid="callback-reason-ai-monitoring"
+              direction="row"
+              spacing={0.5}
+              sx={{ alignItems: 'center', color: 'text.secondary' }}
+            >
+              <AutoAwesomeIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption">{t('mweb.callback.aiMonitoring')}</Typography>
+            </Stack>
+          </Stack>
           {error && (
             <Alert data-testid="callback-error" severity="error" onClose={() => setError(null)}>
               {error}

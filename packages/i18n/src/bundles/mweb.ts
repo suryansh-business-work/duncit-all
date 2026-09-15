@@ -3277,6 +3277,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       startHostingPodsAndBringPeople: 'Start hosting pods and bring people together.',
     },
     callback: {
+      // Under the reason box: a typed reason is screened by AI on submit.
+      aiMonitoring: 'AI Monitoring',
       callbackRequestedWeWillReachYou: 'Callback requested. We will reach you shortly.',
       callNow: 'Call now',
       requestCallback: 'Request callback',

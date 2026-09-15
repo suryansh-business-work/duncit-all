@@ -130,6 +130,31 @@ export const MODERATION_PROMPTS = [
     ].join('\n'),
   },
   {
+    key: 'moderation.callback_reason',
+    name: 'Support callback reason check',
+    description: 'Judges whether the text typed into a callback request is a genuine support concern.',
+    category: MODERATION,
+    role: 'SYSTEM',
+    tasks: ['moderation.callback_reason'],
+    target_model: '',
+    variables: [],
+    usage: [
+      {
+        file: 'server/src/modules/moderation/moderation.ai.ts',
+        surface: 'Mobile app · mWeb',
+        trigger: 'A user requests a support callback with a note on what it is about',
+      },
+    ],
+    content: [
+      'You validate the note a user typed when requesting a support callback on Duncit, a social-events platform.',
+      'You are given ONLY the note text. Decide whether it is a genuine thing a person could want support to call them about.',
+      'ACCEPT any real concern in any natural language or Hinglish, even short or imperfectly written ones (e.g. "refund not received", "booking issue", "host did not show up", "payment kat gaya par ticket nahi mila", "need help with my account").',
+      'REJECT: random characters or keyboard mashing (e.g. "asdfgh", "xxxxx"), spam or promotional text, excessive repetition of the same word/phrase, abusive, sexual or hateful content, and text with no plausible connection to a support request.',
+      'When genuinely unsure, lean towards ACCEPT — a real user must not be blocked from reaching support over wording.',
+      'Return STRICT JSON only, no markdown, of shape: {"valid": boolean}.',
+    ].join('\n'),
+  },
+  {
     key: 'upload.image_scan',
     name: 'Image upload risk scan',
     description: 'Rates one freshly uploaded image LOW / MEDIUM / HIGH risk.',

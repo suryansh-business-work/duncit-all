@@ -4895,6 +4895,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.booking.notFound": "This booking could not be found.",
   "mweb.booking.podUnavailable": "This pod is no longer available to view.",
   "mweb.booking.title": "Your Booking",
+  "mweb.callback.aiMonitoring": "AI Monitoring",
   "mweb.callback.callbackRequestedWeWillReachYou": "Callback requested. We will reach you shortly.",
   "mweb.callback.callNow": "Call now",
   "mweb.callback.requestCallback": "Request callback",

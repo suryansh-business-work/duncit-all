@@ -28,6 +28,7 @@ export const OPENAI_TASKS = {
   'moderation.pod': { label: 'Pod moderation scan', module: 'Moderation' },
   'moderation.product': { label: 'Product moderation scan', module: 'Moderation' },
   'moderation.meeting_reason': { label: 'Meeting reason check', module: 'Moderation' },
+  'moderation.callback_reason': { label: 'Callback reason check', module: 'Moderation' },
   'moderation.image_scan': { label: 'Uploaded image scan', module: 'Moderation' },
   'moderation.pod_audit': { label: 'Pod audit review', module: 'Moderation' },
   'support.assistant': { label: 'Support chat reply', module: 'Support' },

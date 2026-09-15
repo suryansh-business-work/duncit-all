@@ -29,6 +29,7 @@ import { coinService } from '@modules/finance/coin/coin.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { aiValidateCallbackReason } from '@modules/moderation/moderation.ai';
 import {
   paginateDocs,
   supportSearchRegex,
@@ -386,6 +387,12 @@ export const bouncerService = {
     const phone = num ? `${ext}${num}` : '';
     if (!phone) fail('BAD_USER_INPUT', 'No phone number on profile');
 
+    // AI Monitoring: the note is optional, but a typed one must be a genuine concern.
+    const reason = (input.reason ?? '').trim();
+    if (reason && !(await aiValidateCallbackReason(reason))) {
+      fail('BAD_USER_INPUT', 'Please enter a valid reason for your callback request.');
+    }
+
     let podId: Types.ObjectId | null = null;
     let hostId: Types.ObjectId | null = null;
     if (input.pod_id && Types.ObjectId.isValid(input.pod_id)) {
@@ -401,7 +408,7 @@ export const bouncerService = {
       pod_id: podId,
       host_id: hostId,
       contact_phone: phone,
-      reason: (input.reason ?? '').trim(),
+      reason,
       status: 'PENDING',
     });
     await stampTicketNo(doc, 'CB');

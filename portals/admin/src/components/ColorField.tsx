@@ -8,6 +8,10 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   helperText?: string;
+  /** Shown while the field is blank; a hex placeholder also colours the swatch. */
+  placeholder?: string;
+  error?: boolean;
+  size?: 'small' | 'medium';
 }
 
 /**
@@ -15,16 +19,27 @@ interface Props {
  * swatch adornment. Both bind to the same string value; the swatch normalises to a
  * valid hex so it never misrenders while the text field keeps whatever was typed.
  */
-export default function ColorField({ label, value, onChange, helperText }: Readonly<Props>) {
-  const swatch = HEX.test(value) ? value : DEFAULT_COLOR;
+export default function ColorField({
+  label,
+  value,
+  onChange,
+  helperText,
+  placeholder = DEFAULT_COLOR,
+  error,
+  size,
+}: Readonly<Props>) {
+  const blankSwatch = HEX.test(placeholder) ? placeholder : DEFAULT_COLOR;
+  const swatch = HEX.test(value) ? value : blankSwatch;
   return (
     <TextField
       label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       fullWidth
-      placeholder={DEFAULT_COLOR}
+      placeholder={placeholder}
       helperText={helperText}
+      error={error}
+      size={size}
       slotProps={{
         input: {
           startAdornment: (

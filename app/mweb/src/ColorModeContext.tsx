@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import type { PaletteMode } from '@mui/material';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { buildTheme } from './theme';
+import { useThemeTokens } from './hooks/useThemeTokens';
 
 interface ColorModeContextValue {
   mode: PaletteMode;
@@ -42,7 +43,8 @@ export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }
     [mode]
   );
 
-  const theme = useMemo(() => buildTheme(mode), [mode]);
+  const palettes = useThemeTokens();
+  const theme = useMemo(() => buildTheme(mode, palettes[mode]), [mode, palettes]);
 
   return (
     <ColorModeContext.Provider value={value}>

@@ -1,6 +1,6 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
-import { brand, neutral, semantic, light, dark, radii } from '@duncit/auth-tokens';
+import { brand, neutral, semantic, light, dark, radii, type ModeColors } from '@duncit/auth-tokens';
 import { focusVisibleGlobalCss, reducedMotionGlobalCss, withPress } from '@duncit/buttons';
 
 // Design-system tokens now come from the shared @duncit/auth-tokens package so
@@ -63,9 +63,13 @@ export const SURFACE_SX = {
   boxShadow: 'var(--duncit-card-shadow)',
 } as const;
 
-export const buildTheme = (mode: PaletteMode = 'light') => {
+/**
+ * `palette` is the mode's colour tokens — the bundled ones unless Admin →
+ * Branding → Theme tokens is set to Server (see `useThemeTokens`).
+ */
+export const buildTheme = (mode: PaletteMode = 'light', palette?: ModeColors) => {
   const isDark = mode === 'dark';
-  const m = isDark ? dark : light;
+  const m = palette ?? (isDark ? dark : light);
   const INK = m.ink;
   const MUTED = m.muted;
   const BORDER = m.border;

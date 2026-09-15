@@ -906,3 +906,11 @@ export {
   type E2eStaffRole,
   type RunPasswordStage,
 } from './e2e-run';
+export {
+  applyTokenOverrides,
+  resolveThemeTokens,
+  type ThemePalettes,
+  type ThemeTokenOverrides,
+  type ThemeTokenSettings,
+  type ThemeTokenSource,
+} from './theme-tokens';

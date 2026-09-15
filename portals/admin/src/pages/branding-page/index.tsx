@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  Box,
-  Divider,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
+import BrandingAccordion from './BrandingAccordion';
 import IdentitySection from './IdentitySection';
+import { ThemeTokensSection, toThemeTokensInput } from './theme-tokens';
 import LoginBackgroundSection from './LoginBackgroundSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
@@ -30,35 +21,6 @@ import {
   type BrandingFormState,
 } from './queries';
 import { useTranslation } from '@duncit/shell';
-
-interface SectionProps {
-  title: string;
-  subtitle: string;
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}
-
-function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Readonly<SectionProps>) {
-  return (
-    <Accordion defaultExpanded={defaultExpanded} disableGutters>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
-            {title}
-          </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            {subtitle}
-          </Typography>
-        </Box>
-      </AccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
-    </Accordion>
-  );
-}
 
 export default function BrandingPage() {
   const { t } = useTranslation();
@@ -86,6 +48,9 @@ export default function BrandingPage() {
       // carrying Apollo's __typename and would be posted straight back into
       // CategoryIconLayoutInput, which rejects it.
       next.home_all_vibe_icon_layout = toIconLayoutInput(b.home_all_vibe_icon_layout);
+      // Same for the two token objects.
+      next.theme_tokens_light = toThemeTokensInput(b.theme_tokens_light);
+      next.theme_tokens_dark = toThemeTokensInput(b.theme_tokens_dark);
       setForm(next);
     }
   }, [data]);
@@ -133,6 +98,13 @@ export default function BrandingPage() {
           defaultExpanded
         >
           <IdentitySection form={form} setForm={setForm} />
+        </BrandingAccordion>
+
+        <BrandingAccordion
+          title={t('admin.branding.themeTokens')}
+          subtitle={t('admin.branding.themeTokensHint')}
+        >
+          <ThemeTokensSection form={form} setForm={setForm} />
         </BrandingAccordion>
 
         {PLATFORM_SECTIONS.map((section) => (

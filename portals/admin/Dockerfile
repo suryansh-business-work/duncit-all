@@ -46,6 +46,7 @@ COPY packages/shell/package.json ./packages/shell/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
+COPY packages/auth-tokens/package.json ./packages/auth-tokens/
 COPY packages/availability-calendar/package.json ./packages/availability-calendar/
 COPY packages/category/package.json ./packages/category/
 COPY packages/location/package.json ./packages/location/

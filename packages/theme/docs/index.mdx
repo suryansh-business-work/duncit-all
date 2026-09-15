@@ -30,6 +30,10 @@ exports:
   - 'createDuncitTheme'
   - 'buildTheme'
   - 'buildThemeCtx'
+  - 'AA_TEXT'
+  - 'contrastRatio'
+  - 'mix'
+  - 'textOn'
   - 'buildComponents'
   - 'ComponentExtend'
   - 'DuncitThemeProvider'
@@ -262,6 +266,22 @@ portal that hardcodes `44` is a portal that will not follow when the token moves
 | `DuncitThemeProvider` | React component | — | Theme + `CssBaseline` + persisted colour mode. |
 | `useColorMode` | `() => { mode, toggle, set }` | `{ mode: 'light', … no-ops }` outside a provider | Read and flip the mode. |
 | `tokens` | `Tokens` (const object) | — | Colours, radii, sizes, fonts. The only place a literal lives. |
+| `AA_TEXT` | `4.5` | — | WCAG AA minimum for normal-size text. |
+| `contrastRatio` | `(a: string, b: string) => number` | — | WCAG contrast ratio (1–21) between two `#rgb` / `#rrggbb` colours. |
+| `mix` | `(from: string, to: string, weight: number) => string` | — | `from` mixed toward `to` by `weight` (0–1), as `#rrggbb`. |
+| `textOn` | `(fill: string, ink: string) => string` | — | White when it clears 4.5:1 on `fill`, otherwise `ink`. |
+
+The four contrast helpers are what the theme itself uses to make an accent AA-safe. Admin →
+Branding → Theme tokens reuses them to show each token's contrast and to derive the hover and
+pressed steps from a new primary colour:
+
+```ts
+import { contrastRatio, mix, textOn } from '@duncit/theme';
+
+contrastRatio('#d92d2d', '#ffffff'); // 4.81
+mix('#2563eb', '#000000', 0.1);      // '#2159d4' — one step darker
+textOn('#facc15', '#16181d');        // '#16181d' — white fails on yellow
+```
 
 ### `DuncitThemeProvider` props
 

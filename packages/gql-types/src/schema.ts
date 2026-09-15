@@ -2373,6 +2373,12 @@ export type Branding = {
   primary_color: Scalars['String']['output'];
   support_email: Scalars['String']['output'];
   support_phone: Scalars['String']['output'];
+  /** Where mWeb and the native app read their colour tokens from. */
+  theme_token_source: ThemeTokenSource;
+  /** Dark-mode colour tokens; a blank token keeps the app's bundled value. */
+  theme_tokens_dark: ThemeModeTokens;
+  /** Light-mode colour tokens; a blank token keeps the app's bundled value. */
+  theme_tokens_light: ThemeModeTokens;
   updated_at?: Maybe<Scalars['String']['output']>;
   venues_card_video_url: Scalars['String']['output'];
   website_favicon_url: Scalars['String']['output'];
@@ -22917,6 +22923,61 @@ export type TelemetryUserImportInput = {
   roles?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+/**
+ * One colour mode of the app theme, key for key the same as @duncit/auth-tokens'
+ * ModeColors. Values are CSS colour strings (#hex or rgb/rgba); blank keeps the
+ * bundled value.
+ */
+export type ThemeModeTokens = {
+  __typename?: 'ThemeModeTokens';
+  accent: Scalars['String']['output'];
+  bg: Scalars['String']['output'];
+  border: Scalars['String']['output'];
+  brand: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  info: Scalars['String']['output'];
+  ink: Scalars['String']['output'];
+  inputBorder: Scalars['String']['output'];
+  muted: Scalars['String']['output'];
+  onAccent: Scalars['String']['output'];
+  onPrimary: Scalars['String']['output'];
+  onSemantic: Scalars['String']['output'];
+  primary: Scalars['String']['output'];
+  primaryActive: Scalars['String']['output'];
+  primaryHover: Scalars['String']['output'];
+  soft: Scalars['String']['output'];
+  success: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+  warning: Scalars['String']['output'];
+};
+
+export type ThemeModeTokensInput = {
+  accent?: InputMaybe<Scalars['String']['input']>;
+  bg?: InputMaybe<Scalars['String']['input']>;
+  border?: InputMaybe<Scalars['String']['input']>;
+  brand?: InputMaybe<Scalars['String']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  info?: InputMaybe<Scalars['String']['input']>;
+  ink?: InputMaybe<Scalars['String']['input']>;
+  inputBorder?: InputMaybe<Scalars['String']['input']>;
+  muted?: InputMaybe<Scalars['String']['input']>;
+  onAccent?: InputMaybe<Scalars['String']['input']>;
+  onPrimary?: InputMaybe<Scalars['String']['input']>;
+  onSemantic?: InputMaybe<Scalars['String']['input']>;
+  primary?: InputMaybe<Scalars['String']['input']>;
+  primaryActive?: InputMaybe<Scalars['String']['input']>;
+  primaryHover?: InputMaybe<Scalars['String']['input']>;
+  soft?: InputMaybe<Scalars['String']['input']>;
+  success?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<Scalars['String']['input']>;
+  warning?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** LOCAL = the apps' bundled @duncit/auth-tokens; SERVER = Branding's theme tokens laid over them. */
+export type ThemeTokenSource =
+  | 'LOCAL'
+  | 'SERVER';
+
 export type Ticket = {
   __typename?: 'Ticket';
   agent_last_read_at?: Maybe<Scalars['String']['output']>;
@@ -23372,6 +23433,9 @@ export type UpdateBrandingInput = {
   primary_color?: InputMaybe<Scalars['String']['input']>;
   support_email?: InputMaybe<Scalars['String']['input']>;
   support_phone?: InputMaybe<Scalars['String']['input']>;
+  theme_token_source?: InputMaybe<ThemeTokenSource>;
+  theme_tokens_dark?: InputMaybe<ThemeModeTokensInput>;
+  theme_tokens_light?: InputMaybe<ThemeModeTokensInput>;
   venues_card_video_url?: InputMaybe<Scalars['String']['input']>;
   website_favicon_url?: InputMaybe<Scalars['String']['input']>;
   website_footer_logo_url?: InputMaybe<Scalars['String']['input']>;

@@ -25,6 +25,8 @@ export const MobileUserInfoDocument = gql(`
       whatsapp_extension
       profile_photo
       bio
+      gender
+      is_pet_owner
       dob
       roles
       status
@@ -107,6 +109,8 @@ export const MobileUpdateProfileDocument = gql(`
       last_name
       full_name
       bio
+      gender
+      is_pet_owner
       city
       state
       country

@@ -21,6 +21,8 @@ export const TRACKED_USER_FIELDS: readonly TrackedUserField[] = [
   { path: 'profile.dob', label: 'Date of Birth' },
   { path: 'profile.profile_photo', label: 'Profile Photo' },
   { path: 'profile.bio', label: 'Bio' },
+  { path: 'profile.gender', label: 'Gender' },
+  { path: 'profile.is_pet_owner', label: 'Pet Owner' },
   { path: 'profile_links', label: 'Profile Links', ordered: true },
 
   // Contact

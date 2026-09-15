@@ -3183,6 +3183,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       bioHint: 'Up to {max} characters',
       discardChanges: 'Discard changes',
       enterCity: 'Enter city',
+      // Gender and Pet Owner single-selects; options from @duncit/utils (rule 27).
+      gender: {
+        label: 'Gender',
+        placeholder: 'Select gender',
+        male: 'Male',
+        female: 'Female',
+        other: 'Other',
+      },
+      petOwner: {
+        label: 'Pet Owner',
+        placeholder: 'Select an option',
+        yes: 'Yes',
+        no: 'No',
+      },
       nextMonth: 'Next month',
       previousMonth: 'Previous month',
       selectCountry: 'Select country',

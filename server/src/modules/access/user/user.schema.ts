@@ -18,6 +18,13 @@ export const userTypeDefs = gql`
     PRIVATE
   }
 
+  "Self-reported on Edit profile."
+  enum Gender {
+    MALE
+    FEMALE
+    OTHER
+  }
+
   enum AdminContactActionType {
     CALL
     EMAIL
@@ -98,6 +105,10 @@ export const userTypeDefs = gql`
 
     profile_photo: String
     bio: String
+    "Null until the member picks one on Edit profile."
+    gender: Gender
+    "Null until the member answers on Edit profile."
+    is_pet_owner: Boolean
     "BCP-47 language the user picked (e.g. en-IN). Drives every surface."
     locale: String
     """

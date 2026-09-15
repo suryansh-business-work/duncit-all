@@ -14,6 +14,7 @@ import AddressFields, { type AddressFieldNames } from '../../../forms/components
 import { UsernameField } from '../username-field';
 import DobDateField from '../../../components/DobDateField';
 import LocationSelect from './LocationSelect';
+import ProfileDemographicsFields from './ProfileDemographicsFields';
 import AccountEditActions from './AccountEditActions';
 import { ContactSection } from '../contact-change';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
@@ -161,6 +162,7 @@ export default function AccountEditForm({
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
         />
+        <ProfileDemographicsFields control={control} />
         <ContactSection
           snapshot={contactSnapshot}
           onChanged={(_channel, next) => {

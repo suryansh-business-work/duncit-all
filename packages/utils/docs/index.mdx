@@ -196,6 +196,12 @@ exports:
   - 'USERNAME_CHECK_DEBOUNCE_MS'
   - 'profileUrl'
   - 'buildUsernameLabels'
+  - 'GENDERS'
+  - 'PET_OWNER_CHOICES'
+  - 'toGenderValue'
+  - 'toPetOwnerValue'
+  - 'fromPetOwnerValue'
+  - 'buildProfileDemographicsLabels'
   - 'BADGE_CONDITIONS'
   - 'BADGE_GOAL_KEY'
   - 'BADGE_WINDOWS'
@@ -1669,6 +1675,25 @@ const labels = buildUsernameLabels(t);
 labels.handle('ravi-9x3m');                  // '@ravi-9x3m'
 labels.status('AVAILABLE', 'ravi-plays');    // '@ravi-plays is available.'
 labels.copyLink;                             // the button beside it
+```
+
+### Gender and Pet Owner
+
+Two single-selects on **Edit profile**, identical on mWeb and native. `GENDERS` restates
+the server's GraphQL `Gender` enum. Pet Owner is stored as a boolean but picked as Yes / No,
+so the form holds `'YES' | 'NO' | ''` and maps at the edges. An unanswered field maps to
+`undefined`, which the mutation omits, so a save never clears an answer.
+
+```ts
+toGenderValue('FEMALE');   // 'FEMALE'
+toGenderValue(null);       // ''
+toPetOwnerValue(false);    // 'NO'
+fromPetOwnerValue('YES');  // true
+fromPetOwnerValue('');     // undefined — left out of UpdateMyProfileInput
+
+const labels = buildProfileDemographicsLabels(t);
+labels.genderOptions;      // [{ value: 'MALE', label: 'Male' }, …]
+labels.petOwnerOptions;    // [{ value: 'YES', label: 'Yes' }, { value: 'NO', label: 'No' }]
 ```
 
 ### Communication preferences

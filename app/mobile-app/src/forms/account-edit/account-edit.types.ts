@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { PERSON_NAME, PINCODE } from '@duncit/regex';
-import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
+import {
+  GENDERS,
+  PET_OWNER_CHOICES,
+  USERNAME_PATTERN,
+  fromPetOwnerValue,
+  normalizeUsername,
+  toGenderValue,
+  toPetOwnerValue,
+} from '@duncit/utils';
 import { makeProfileBioSchema } from '@duncit/forms/schemas';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -14,6 +22,7 @@ import {
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
+import type { Gender as GqlGender } from '@/generated/graphql/graphql';
 
 /**
  * Edit-profile contract — mirrors mWeb's account-edit schema so both apps
@@ -90,6 +99,9 @@ export const makeAccountEditSchema = (
         t('mweb.accountEdit.validation.lastNamePattern'),
       ),
     bio: makeProfileBioSchema(t),
+    // Single-selects: '' until the member picks one of the shared options.
+    gender: z.enum(['', ...GENDERS]),
+    pet_owner: z.enum(['', ...PET_OWNER_CHOICES]),
     dob: makeDob(minAge, initialDob, datePlaceholder),
     country: z.string().trim().max(80, 'Too long'),
     state: z.string().trim().max(80, 'Too long'),
@@ -118,6 +130,8 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
     first_name: me?.first_name ?? '',
     last_name: me?.last_name ?? '',
     bio: me?.bio ?? '',
+    gender: toGenderValue(me?.gender),
+    pet_owner: toPetOwnerValue(me?.is_pet_owner),
     dob: toDobInput(me?.dob),
     country: me?.country ?? '',
     state: me?.state ?? '',
@@ -145,6 +159,9 @@ export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileIn
     first_name: values.first_name,
     last_name: values.last_name,
     bio: values.bio,
+    // An unanswered select is omitted, so a save never clears a stored answer.
+    gender: (values.gender || undefined) as GqlGender | undefined,
+    is_pet_owner: fromPetOwnerValue(values.pet_owner),
     dob: values.dob || undefined,
     country: values.country,
     state: values.state,

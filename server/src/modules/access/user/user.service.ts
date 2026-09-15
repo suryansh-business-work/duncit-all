@@ -825,6 +825,8 @@ async function toPublic(u: any, preloaded?: Awaited<ReturnType<typeof loadRelati
     // migrated yet; every reader falls back to the id for those.
     username: profile.username ?? null,
     bio: profile.bio ?? legacy.bio ?? null,
+    gender: profile.gender ?? null,
+    is_pet_owner: profile.is_pet_owner ?? null,
     // Dormant since the schema was written; now the users language choice.
     locale: profile.locale ?? 'en-IN',
     // Documents written before the field existed have none; '' tells the client
@@ -1228,6 +1230,7 @@ const MY_PROFILE_PATHS: Record<string, string> = {
   first_name: 'profile.first_name',
   last_name: 'profile.last_name',
   bio: 'profile.bio',
+  gender: 'profile.gender',
   profile_photo: 'profile.profile_photo',
   city: 'profile.city',
   state: 'profile.state',
@@ -1990,6 +1993,8 @@ export const userService = {
     // contactChangeService, behind a one-time code sent to the new value.
     await assertContactsUnchanged(user_id, input);
     if (input.profile_links !== undefined) set.profile_links = cleanProfileLinks(input.profile_links);
+    // Set directly, not through assignMappedFields: its blank-to-null would turn "No" into unanswered.
+    if (input.is_pet_owner !== undefined) set['profile.is_pet_owner'] = input.is_pet_owner;
     assignMyDob(set, input);
     // Save the whole main address as a normalized object (partial inputs fill in).
     if ((input as any).address !== undefined) {

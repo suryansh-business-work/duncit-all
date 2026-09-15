@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { PERSON_NAME, PINCODE } from '@duncit/regex';
-import { USERNAME_PATTERN, normalizeUsername } from '@duncit/utils';
+import {
+  GENDERS,
+  PET_OWNER_CHOICES,
+  USERNAME_PATTERN,
+  fromPetOwnerValue,
+  normalizeUsername,
+} from '@duncit/utils';
 import { makeProfileBioSchema } from '@duncit/forms/schemas';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -86,6 +92,9 @@ export const makeAccountEditSchema = (
     }),
   last_name: optionalPersonName('Last name', t('mweb.accountEdit.validation.lastNamePattern')),
   bio: makeProfileBioSchema(t),
+  // Single-selects: '' until the member picks one of the shared options.
+  gender: z.enum(['', ...GENDERS]),
+  pet_owner: z.enum(['', ...PET_OWNER_CHOICES]),
   dob: makeDob(minAge, initialDob, datePlaceholder),
   country: optionalLocation('Country'),
   state: optionalLocation('State'),
@@ -117,6 +126,8 @@ export function accountEditDefaults(initial: Partial<AccountEditValues>): Accoun
     first_name: '',
     last_name: '',
     bio: '',
+    gender: '',
+    pet_owner: '',
     dob: '',
     country: '',
     state: '',
@@ -145,6 +156,9 @@ export function toUpdateProfileInput(values: AccountEditValues) {
     first_name: values.first_name,
     last_name: values.last_name,
     bio: values.bio,
+    // An unanswered select is omitted, so a save never clears a stored answer.
+    gender: values.gender || undefined,
+    is_pet_owner: fromPetOwnerValue(values.pet_owner),
     country: values.country,
     state: values.state,
     city: values.city,

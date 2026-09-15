@@ -18,6 +18,7 @@ import { useAppSettings } from '@/hooks/useAppSettings';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
+import { ProfileDemographicsFields } from './ProfileDemographicsFields';
 import { UsernameField } from './UsernameField';
 import { AccountEditActions } from './AccountEditActions';
 import {
@@ -162,6 +163,7 @@ export function AccountEditForm({
         multiline
         numberOfLines={3}
       />
+      <ProfileDemographicsFields control={control} />
 
       <ContactSection
         snapshot={contacts}
@@ -172,7 +174,6 @@ export function AccountEditForm({
       />
 
       <DobDateField control={control} minAge={minSignupAge} />
-
       <LocationSelect control={control} setValue={setValue} />
 
       <Text

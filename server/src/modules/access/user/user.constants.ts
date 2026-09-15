@@ -41,6 +41,10 @@ export type UserRole = (typeof ROLES)[number];
 export const STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export type UserStatus = (typeof STATUSES)[number];
 
+/** Self-reported on Edit profile. Mirrors @duncit/utils' GENDERS (server has no @duncit deps). */
+export const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
+export type Gender = (typeof GENDERS)[number];
+
 // Access is portal-based: each role maps to exactly one console (or the app /
 // admin scopes). Holding the role grants full access to that portal — there are
 // no sub-permissions/resources/actions. This catalog seeds the Role collection

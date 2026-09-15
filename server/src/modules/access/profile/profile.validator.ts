@@ -1,5 +1,6 @@
 import * as yup from 'yup';
 import { phoneRegex, extRegex, personNameRegex } from '@modules/access/user/user.validator';
+import { GENDERS } from '@modules/access/user/user.constants';
 
 const profileLinkSchema = yup.object({
   label: yup.string().trim().min(1).max(40).required(),
@@ -29,6 +30,8 @@ export const updateMyProfileSchema = yup.object({
     .matches(personNameRegex, { message: 'Invalid last name', excludeEmptyString: true })
     .optional(),
   bio: yup.string().max(500).optional(),
+  gender: yup.string().oneOf([...GENDERS]).optional(),
+  is_pet_owner: yup.boolean().optional(),
   // null is "Remove photo" — the service writes it through as a cleared field.
   profile_photo: yup.string().url().nullable().optional(),
   profile_links: yup.array().of(profileLinkSchema).max(5).optional(),

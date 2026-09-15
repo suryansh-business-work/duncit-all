@@ -1,5 +1,5 @@
 import { Schema, model, InferSchemaType, type HydratedDocument } from 'mongoose';
-import { STATUSES } from './user.constants';
+import { GENDERS, STATUSES } from './user.constants';
 
 // Nested storage. Keep one-to-one + bounded data embedded (auth, profile,
 // pet_profile, metadata, counters, security, communication). Unbounded
@@ -135,6 +135,9 @@ const profileSchema = new Schema(
     country: { type: String, default: 'India' },
     profile_photo: { type: String },
     bio: { type: String, maxlength: 500 },
+    // Self-reported on Edit profile; null until the member picks one.
+    gender: { type: String, enum: [...GENDERS, null], default: null },
+    is_pet_owner: { type: Boolean, default: null },
     locale: { type: String, default: 'en-IN' },
     timezone: { type: String, default: 'Asia/Kolkata' },
     city: { type: String },

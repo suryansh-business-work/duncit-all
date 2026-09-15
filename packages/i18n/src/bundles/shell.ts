@@ -426,6 +426,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       fulfilment: 'Fulfilment',
       giftCards: 'Gift Cards',
       graphqlMonitor: 'GraphQL Monitor',
+      graphqlQueryMutation: 'Query & Mutation',
       grievance: 'Grievance',
       grievanceInfo: 'Grievance Info',
       grievanceTickets: 'Grievance Tickets',

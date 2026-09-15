@@ -589,6 +589,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       phaseValidateHint: 'Checked against the schema',
       phasesSubtitle: 'Where an average request’s time goes.',
       phasesTitle: 'Request phases',
+      queryMutationSubtitle: 'Every query and mutation a client sent in this range, split by kind, with its traffic, error rate and latency. A row opens the operation.',
+      queryMutationTitle: 'Query & Mutation',
       range: 'Range',
       range24Hours: 'Last 24 hours',
       range30Days: 'Last 30 days',

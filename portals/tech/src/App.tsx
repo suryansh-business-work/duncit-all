@@ -41,6 +41,7 @@ import MailAutomationPage from './pages/mail-automation';
 import GraphqlMonitorOverviewPage from './pages/graphql-monitor/overview';
 import GraphqlOperationsPage from './pages/graphql-monitor/operations';
 import GraphqlOperationDetailPage from './pages/graphql-monitor/operation-detail';
+import GraphqlQueryMutationPage from './pages/graphql-monitor/query-mutation';
 import GraphqlFieldsPage from './pages/graphql-monitor/fields';
 import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/graphql-monitor/operations" element={authed(<GraphqlOperationsPage />)} />
         {/* One operation at its own address — reloadable, bookmarkable, pasteable. */}
         <Route path="/graphql-monitor/operations/:operationId" element={authed(<GraphqlOperationDetailPage />)} />
+        <Route path="/graphql-monitor/query-mutation" element={authed(<GraphqlQueryMutationPage />)} />
         <Route path="/graphql-monitor/fields" element={authed(<GraphqlFieldsPage />)} />
         <Route path="/graphql-monitor/errors" element={authed(<GraphqlErrorsPage />)} />
         <Route path="/graphql-monitor/settings" element={authed(<GraphqlMonitorSettingsPage />)} />

@@ -12,6 +12,7 @@
  * 10: React Hook Form + Zod), and the patterns it validates against live in
  * @duncit/regex, which this zero-dependency package cannot import.
  */
+import type { SignupContactCopy } from './signup-contact';
 
 /** The three contact details an account can change about itself. */
 export const CONTACT_CHANNELS = ['EMAIL', 'PHONE', 'WHATSAPP'] as const;
@@ -228,6 +229,12 @@ export interface ContactChangeLabels {
   cancel: string;
   /** Refusals raised before the server is asked. */
   unchanged: string;
+  /**
+   * The lines under a new number while it is checked as typed — "checking",
+   * then the refusal when another account already holds it. Rendered with
+   * `signupContactLines`, the same reading signup's number box uses.
+   */
+  numberCopy: SignupContactCopy;
   /** The code the server echoes back while no transport is wired. */
   testCode: (code: string) => string;
   /**
@@ -295,6 +302,11 @@ export function buildContactChangeLabels(t: ContactTranslate): ContactChangeLabe
     editValue: t('mweb.contactChange.editValue'),
     cancel: t('mweb.contactChange.cancel'),
     unchanged: t('mweb.contactChange.unchanged'),
+    numberCopy: {
+      hint: '',
+      checking: t('mweb.contactChange.checkingNumber'),
+      taken: t('mweb.contactChange.numberTaken'),
+    },
     testCode: (code) => t('mweb.contactChange.testCode', { vars: { code } }),
     whyOtp: t('mweb.contactChange.whyOtp'),
     allRequired: t('mweb.contactChange.allRequired'),

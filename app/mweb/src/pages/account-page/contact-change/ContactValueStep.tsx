@@ -6,12 +6,15 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   contactChangeNeedsOtp,
   isPhoneChannel,
+  signupContactBlocksContinue,
+  signupContactLines,
   type ContactChangeLabels,
   type ContactChannel,
   type ContactDraft,
 } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import CountryCodeField from '../../../forms/components/CountryCodeField';
+import { useSignupPhoneCheck } from '../../../forms/register/useSignupContactCheck';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { makeContactValueSchema, type ContactValueValues } from './contact-change.types';
 
@@ -66,11 +69,18 @@ export default function ContactValueStep({
     return () => sub.unsubscribe();
   }, [watch, onEdit]);
 
+  // Asked as the number is typed, so a number another account already holds is
+  // a warning beside the box and a shut button — not a refusal after the press.
+  // The EMAIL box leaves `number` blank, which never leaves the device.
+  const numberStatus = useSignupPhoneCheck(control, { extension: 'extension', number: 'number' });
+  const numberLines = signupContactLines(numberStatus, labels.numberCopy);
+
   const submit = handleSubmit(onSend);
   // The contact number is stored straight, so its button may not promise a code.
   const needsCode = contactChangeNeedsOtp(channel);
   const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
   const busyLabel = needsCode ? labels.sending : labels.savingNumber;
+  const disabled = busy || blocked || !isValid || signupContactBlocksContinue(numberStatus);
 
   return (
     <form data-testid="contact-value-step" noValidate onSubmit={submit}>
@@ -92,6 +102,8 @@ export default function ContactValueStep({
               label={copy.fieldLabel}
               size="small"
               required
+              hint={numberLines.hint}
+              errorText={numberLines.error}
               autoComplete="tel-national"
               slotProps={{ inputLabel: { shrink: true }, htmlInput: numericInput }}
             />
@@ -108,7 +120,7 @@ export default function ContactValueStep({
             slotProps={{ inputLabel: { shrink: true } }}
           />
         )}
-        <DuncitButton data-testid="contact-change-send" type="submit" variant="contained" disabled={busy || blocked || !isValid}>
+        <DuncitButton data-testid="contact-change-send" type="submit" variant="contained" disabled={disabled}>
           {busy ? busyLabel : idleLabel}
         </DuncitButton>
       </Stack>

@@ -14,6 +14,7 @@
  * across the screen that spends it: the challenge id alone would be guessable.
  */
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { numberHeldElsewhere } from '@modules/access/user/number-owner';
@@ -106,18 +107,27 @@ export const whatsappAuthService = {
    *
    * Each half is null when it was not asked about. A malformed value is
    * refused by the normalisers rather than reported as free.
+   *
+   * `exclude_user_id` is the signed-in caller, when there is one: the profile's
+   * contact change asks this too, and a value its own account already holds is
+   * not a clash — the same exclusion its mutations apply.
    */
-  async contactAvailability(input: SignupContactInput) {
+  async contactAvailability(input: SignupContactInput, exclude_user_id?: string) {
     const rawEmail = String(input.email ?? '').trim();
     let email_available: boolean | null = null;
     if (rawEmail) {
-      const mailbox = normalizeEmail(rawEmail);
-      email_available = !(await UserModel.exists({ 'auth.email': mailbox }));
+      const filter: Record<string, unknown> = { 'auth.email': normalizeEmail(rawEmail) };
+      if (exclude_user_id) filter._id = { $ne: new Types.ObjectId(exclude_user_id) };
+      email_available = !(await UserModel.exists(filter));
     }
     let phone_available: boolean | null = null;
     if (String(input.phone_number ?? '').trim()) {
       const target = normalizePhone(input.phone_extension, input.phone_number);
-      phone_available = !(await numberRegistered(target.phone_extension, target.phone_number));
+      phone_available = !(await numberHeldElsewhere(
+        target.phone_extension,
+        target.phone_number,
+        exclude_user_id
+      ));
     }
     return { email_available, phone_available };
   },

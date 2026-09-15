@@ -9,13 +9,16 @@ import {
   contactDraftIsUnchanged,
   contactDraftValue,
   contactSubmitAction,
+  contactValueStepView,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
   isPhoneChannel,
   type ContactChannel,
+  type ContactChangeLabels,
   type ContactSnapshot,
   type ContactTranslate,
+  type ContactValueStepInput,
 } from '../src/contact-change';
 
 type Vars = Record<string, string | number> | undefined;
@@ -394,5 +397,57 @@ describe('contactSubmitAction', () => {
         number: '4155551234',
       }),
     ).toBe('UNCHANGED');
+  });
+});
+
+describe('contactValueStepView', () => {
+  const labels: ContactChangeLabels = buildContactChangeLabels(recorder().t);
+  const idle: ContactValueStepInput = {
+    busy: false,
+    blocked: false,
+    isValid: true,
+    numberStatus: 'IDLE',
+  };
+
+  it('promises a code on the two channels a code proves, idle and busy', () => {
+    expect(contactValueStepView('EMAIL', labels, idle).buttonLabel).toBe(labels.sendCode);
+    expect(
+      contactValueStepView('EMAIL', labels, { ...idle, busy: true }).buttonLabel,
+    ).toBe(labels.sending);
+    expect(contactValueStepView('WHATSAPP', labels, idle).buttonLabel).toBe(labels.sendCode);
+  });
+
+  it('saves the contact number straight away, idle and busy, with no code wording', () => {
+    expect(contactValueStepView('PHONE', labels, idle).buttonLabel).toBe(labels.saveNumber);
+    expect(
+      contactValueStepView('PHONE', labels, { ...idle, busy: true }).buttonLabel,
+    ).toBe(labels.savingNumber);
+  });
+
+  it('is disabled while busy, while a refusal is showing, or while the form is invalid', () => {
+    expect(contactValueStepView('EMAIL', labels, { ...idle, busy: true }).disabled).toBe(true);
+    expect(contactValueStepView('EMAIL', labels, { ...idle, blocked: true }).disabled).toBe(true);
+    expect(contactValueStepView('EMAIL', labels, { ...idle, isValid: false }).disabled).toBe(true);
+    expect(contactValueStepView('EMAIL', labels, idle).disabled).toBe(false);
+  });
+
+  it('is disabled while the typed number is taken or still being checked, and names the refusal', () => {
+    const taken = contactValueStepView('PHONE', labels, { ...idle, numberStatus: 'TAKEN' });
+    expect(taken.disabled).toBe(true);
+    expect(taken.numberLines).toEqual({ hint: labels.numberCopy.hint, error: labels.numberCopy.taken });
+
+    const checking = contactValueStepView('PHONE', labels, { ...idle, numberStatus: 'CHECKING' });
+    expect(checking.disabled).toBe(true);
+    expect(checking.numberLines).toEqual({ hint: labels.numberCopy.checking });
+  });
+
+  it('leaves Continue open once the number is free, with just the box hint showing', () => {
+    const available = contactValueStepView('PHONE', labels, { ...idle, numberStatus: 'AVAILABLE' });
+    expect(available.disabled).toBe(false);
+    expect(available.numberLines).toEqual({ hint: labels.numberCopy.hint });
+
+    // A failed availability ask is a hint, not a gate (see signupContactStatus).
+    const unknown = contactValueStepView('PHONE', labels, { ...idle, numberStatus: 'UNKNOWN' });
+    expect(unknown.disabled).toBe(false);
   });
 });

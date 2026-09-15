@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Box, alpha, type SxProps, type Theme } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -68,17 +68,16 @@ export function ScrollRail({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const updateEdges = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setScrollable(el.scrollWidth > el.clientWidth + EDGE_TOLERANCE);
-    setCanScrollLeft(el.scrollLeft > EDGE_TOLERANCE);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - EDGE_TOLERANCE);
-  }, []);
-
+  // The scroller Box below renders unconditionally, so its ref is always set
+  // by the time an effect or an arrow click reads it — no null guard, which
+  // would be a branch nothing can reach under this package's 100% gate.
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return undefined;
+    const el = scrollerRef.current as HTMLDivElement;
+    const updateEdges = () => {
+      setScrollable(el.scrollWidth > el.clientWidth + EDGE_TOLERANCE);
+      setCanScrollLeft(el.scrollLeft > EDGE_TOLERANCE);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - EDGE_TOLERANCE);
+    };
     updateEdges();
     const resizeObserver = new ResizeObserver(updateEdges);
     resizeObserver.observe(el);
@@ -87,12 +86,11 @@ export function ScrollRail({
       resizeObserver.disconnect();
       el.removeEventListener('scroll', updateEdges);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- children count/width changes must re-measure
-  }, [updateEdges, children]);
+    // Children count/width changes must re-measure.
+  }, [children]);
 
   const scrollByPage = (direction: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const el = scrollerRef.current as HTMLDivElement;
     el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: 'smooth' });
   };
 

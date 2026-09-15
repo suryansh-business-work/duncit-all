@@ -74,5 +74,14 @@ export const UI_BUNDLE: NestedCatalogue = {
       description:
         'Our AI check found content that breaks the community guidelines, so it was not saved. Fix the items below and try again.',
     },
+    /**
+     * Left/right arrow buttons layered over a sideways-scrolling card row —
+     * one namespace since the same rail renders on mWeb, every portal and the
+     * native app (rule 27/40).
+     */
+    scrollRail: {
+      previous: 'Scroll left',
+      next: 'Scroll right',
+    },
   },
 };

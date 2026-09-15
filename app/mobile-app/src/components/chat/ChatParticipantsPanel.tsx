@@ -1,8 +1,8 @@
-import { ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { ScrollRail } from '@/components/ScrollRail';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatPerson } from '@/hooks/useChat';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -104,11 +104,7 @@ export function ChatParticipantsPanel({
       <Text fontSize={12} fontWeight="600" color="$muted">
         {count} {count === 1 ? 'participant' : 'participants'}
       </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingRight: 12 }}
-      >
+      <ScrollRail testID="chat-participants-scroll" gap={12}>
         {hosts.map((host) => (
           <PersonChip
             key={host.user_id}
@@ -124,7 +120,7 @@ export function ChatParticipantsPanel({
             onPress={() => onOpenProfile(person.user_id)}
           />
         ))}
-      </ScrollView>
+      </ScrollRail>
     </YStack>
   );
 }

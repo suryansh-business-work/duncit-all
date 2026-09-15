@@ -1,9 +1,8 @@
-import { ScrollView } from 'tamagui';
-
 import { Reveal } from '@/animations/Reveal';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
+import { ScrollRail } from '@/components/ScrollRail';
 
 interface HomeFeaturedPodsProps {
   pods: HomePod[];
@@ -40,11 +39,7 @@ export function HomeFeaturedPods({
   if (pods.length === 0) return null;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
-    >
+    <ScrollRail testID="home-featured-pods-scroll" gap={12} paddingHorizontal={16}>
       {pods.map((pod, index) => (
         <Reveal key={pod.id} index={index} scale>
           <PodCard
@@ -66,6 +61,6 @@ export function HomeFeaturedPods({
           onPress={() => onSeeAll(filtered ? undefined : pods.length)}
         />
       ) : null}
-    </ScrollView>
+    </ScrollRail>
   );
 }

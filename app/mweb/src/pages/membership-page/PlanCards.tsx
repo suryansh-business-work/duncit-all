@@ -1,5 +1,6 @@
 import { Box, Card, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { ScrollRail } from '@duncit/ui';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { MembershipPlanData } from './queries';
 
@@ -87,21 +88,17 @@ export default function PlanCards({ plans }: Readonly<Props>) {
   const { t } = useTranslation();
   const ctaHint = t('mweb.membership.ctaDisabledHint');
   return (
-    <Stack
-      direction="row"
-      spacing={1.5}
-      sx={{
-        overflowX: 'auto',
-        pb: 1,
-        // The rail scrolls; the page body never does (artifact of `overflow-x`
-        // on the container rather than on the page).
-        scrollSnapType: 'x mandatory',
-        '& > *': { scrollSnapAlign: 'start' },
-      }}
+    <ScrollRail
+      testId="membership-plans"
+      gap={1.5}
+      // The rail scrolls; the page body never does (artifact of `overflow-x`
+      // on the container rather than on the page).
+      sx={{ scrollSnapType: 'x mandatory' }}
+      contentSx={{ '& > *': { scrollSnapAlign: 'start' } }}
     >
       {plans.map((plan) => (
         <PlanCard key={plan.id} plan={plan} ctaHint={ctaHint} />
       ))}
-    </Stack>
+    </ScrollRail>
   );
 }

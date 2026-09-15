@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { useMutation } from '@apollo/client/react';
+import { ScrollRail } from '@duncit/ui';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { SURFACE_SX } from '../../theme';
 import AdTile from '../../components/ads/AdTile';
@@ -105,61 +106,46 @@ export default function HomeStatusRail({
     <>
       {/* The mock frames the story rail in its own card, with a decorative
        * paper-plane doodle trailing the tiles. */}
-      <Box
-        data-testid="home-status-rail"
-        sx={{
-          ...SURFACE_SX,
-          py: 1.5,
-          minHeight: 96,
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          scrollPaddingInline: 12,
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
+      <ScrollRail
+        testId="home-status-rail"
+        gap={1.1}
+        alignItems="flex-start"
+        sx={{ ...SURFACE_SX, py: 1.5, minHeight: 96, overflowY: 'hidden', scrollPaddingInline: 12 }}
+        contentSx={{ px: 1.5 }}
       >
+        <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
+        {/* The sponsored tile sits second, right after "Your story" (mock). */}
+        {ad && <AdTile ad={ad} onOpen={() => setAdOpen(true)} />}
+        {entries.map((entry, entryIndex) => (
+          <HomeStatusTile
+            key={entry.key}
+            testId={`status-${entry.key}`}
+            label={entry.label}
+            imageUrl={entry.imageUrl}
+            videoUrl={entry.videoUrl}
+            initials={entry.initials}
+            active={entry.active}
+            onClick={() => setActiveIndex(offset + entryIndex)}
+          />
+        ))}
+        {/* Decorative dotted-arrow doodle from the mock. */}
         <Stack
           direction="row"
-          spacing={1.1}
+          spacing={0.6}
+          aria-hidden
           sx={{
-            alignItems: "flex-start",
-            width: 'max-content',
-            px: 1.5
+            alignItems: "center",
+            pt: 3,
+            pl: 0.75,
+            opacity: 0.55,
+            flex: '0 0 auto'
           }}>
-          <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
-          {/* The sponsored tile sits second, right after "Your story" (mock). */}
-          {ad && <AdTile ad={ad} onOpen={() => setAdOpen(true)} />}
-          {entries.map((entry, entryIndex) => (
-            <HomeStatusTile
-              key={entry.key}
-              testId={`status-${entry.key}`}
-              label={entry.label}
-              imageUrl={entry.imageUrl}
-              videoUrl={entry.videoUrl}
-              initials={entry.initials}
-              active={entry.active}
-              onClick={() => setActiveIndex(offset + entryIndex)}
-            />
-          ))}
-          {/* Decorative dotted-arrow doodle from the mock. */}
-          <Stack
-            direction="row"
-            spacing={0.6}
-            aria-hidden
-            sx={{
-              alignItems: "center",
-              pt: 3,
-              pl: 0.75,
-              opacity: 0.55,
-              flex: '0 0 auto'
-            }}>
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
-            <NearMeIcon sx={{ fontSize: 22, color: 'secondary.main', transform: 'rotate(45deg)' }} />
-          </Stack>
+          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+          <NearMeIcon sx={{ fontSize: 22, color: 'secondary.main', transform: 'rotate(45deg)' }} />
         </Stack>
-      </Box>
+      </ScrollRail>
       {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
           running past its end closes the viewer (which falls back to onClose). */}
       <HomeStatusViewer

@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FlatList, Linking, useWindowDimensions } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { ReelVideo } from '@/components/explore/ReelVideo';
 import { PodShopSliderDocument } from '@/graphql/shop';
 import { graphqlRequest } from '@/services/graphql.client';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native';
 
 interface SliderMedia {
   url: string;
@@ -75,17 +78,81 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
 
 /** Page side padding the slider is inset by — its corners sit inside it. */
 const SIDE_INSET = 16;
+const ARROW_SIZE = 32;
+
+/** Left/right pager arrow; hidden at whichever end has no more slides.
+ * Hoisted to module scope (S6478). */
+function SliderArrow({
+  testID,
+  direction,
+  label,
+  color,
+  surface,
+  onPress,
+}: Readonly<{
+  testID: string;
+  direction: 'left' | 'right';
+  label: string;
+  color: string;
+  surface: string;
+  onPress: () => void;
+}>) {
+  const hitSlop = Math.max(0, (TOUCH_TARGET - ARROW_SIZE) / 2);
+  return (
+    <YStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      tabIndex={0}
+      hitSlop={hitSlop}
+      onPress={onPress}
+      position="absolute"
+      top={0}
+      bottom={0}
+      {...(direction === 'left' ? { left: 8 } : { right: 8 })}
+      width={ARROW_SIZE}
+      alignItems="center"
+      justifyContent="center"
+      pressStyle={PRESS_STYLE.ghost}
+      hoverStyle={PRESS_STYLE.ghost}
+    >
+      <YStack
+        width={ARROW_SIZE}
+        height={ARROW_SIZE}
+        borderRadius={ARROW_SIZE / 2}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor={surface}
+      >
+        <MaterialIcons
+          name={direction === 'left' ? 'chevron-left' : 'chevron-right'}
+          size={20}
+          color={color}
+        />
+      </YStack>
+    </YStack>
+  );
+}
 
 /** The global Pod Shop top slider — admin-managed image/video media + overlay
  * copy/CTA (products portal), shown above the Pod Shop grid. Hidden until media
  * is configured. RN twin of mWeb's shop-page slider. */
 export function PodShopSlider() {
+  const { t } = useTranslation();
+  const { surface, color } = useThemeColors();
   const { width: screenWidth } = useWindowDimensions();
   const [media, setMedia] = useState<SliderMedia[]>([]);
   const [index, setIndex] = useState(0);
+  const listRef = useRef<FlatList<SliderMedia>>(null);
   // Each page is the inset card's width, so paging still lands one slide a swipe.
   const width = screenWidth - SIDE_INSET * 2;
   const height = Math.round(width * 0.5);
+
+  const goToIndex = (next: number) => {
+    const clamped = Math.max(0, Math.min(media.length - 1, next));
+    listRef.current?.scrollToOffset({ offset: clamped * width, animated: true });
+    setIndex(clamped);
+  };
 
   useEffect(() => {
     let active = true;
@@ -122,6 +189,7 @@ export function PodShopSlider() {
       backgroundColor="$soft"
     >
       <FlatList
+        ref={listRef}
         testID="pod-shop-slider-list"
         data={media}
         horizontal
@@ -156,6 +224,26 @@ export function PodShopSlider() {
             />
           ))}
         </XStack>
+      ) : null}
+      {media.length > 1 && index > 0 ? (
+        <SliderArrow
+          testID="pod-shop-slider-prev"
+          direction="left"
+          label={t('ui.scrollRail.previous')}
+          color={color}
+          surface={surface}
+          onPress={() => goToIndex(index - 1)}
+        />
+      ) : null}
+      {media.length > 1 && index < media.length - 1 ? (
+        <SliderArrow
+          testID="pod-shop-slider-next"
+          direction="right"
+          label={t('ui.scrollRail.next')}
+          color={color}
+          surface={surface}
+          onPress={() => goToIndex(index + 1)}
+        />
       ) : null}
     </YStack>
   );

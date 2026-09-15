@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router';
-import { Avatar, Box, ButtonBase, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Paper, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { ScrollRail } from '@duncit/ui';
 import { SURFACE_SX } from '../../theme';
 
 /** The row of active pod covers above the list — tap one to open its chat. */
@@ -11,7 +12,7 @@ export default function ActivePodsStrip({ rooms }: Readonly<{ rooms: any[] }>) {
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.4 }}>
         ACTIVE PODS · {rooms.length}
       </Typography>
-      <Stack direction="row" spacing={1.25} sx={{ mt: 1.25, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
+      <ScrollRail testId="active-pods-strip-scroll" gap={1.25} sx={{ mt: 1.25 }}>
         {rooms.slice(0, 10).map((room: any) => (
           <ButtonBase
             key={room.id}
@@ -26,7 +27,7 @@ export default function ActivePodsStrip({ rooms }: Readonly<{ rooms: any[] }>) {
             <Box aria-hidden sx={{ position: 'absolute', right: 2, bottom: 2, width: 10, height: 10, borderRadius: '50%', bgcolor: 'success.main', border: 2, borderColor: 'background.paper' }} />
           </ButtonBase>
         ))}
-      </Stack>
+      </ScrollRail>
     </Paper>
   );
 }

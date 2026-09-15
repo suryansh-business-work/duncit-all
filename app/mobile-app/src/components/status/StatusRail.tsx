@@ -3,10 +3,11 @@ import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import type { RootStackParamList } from '@/navigation/types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -138,10 +139,11 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
       {/* The mock frames the story rail in its own card, with a decorative
        * paper-plane doodle trailing the tiles. */}
       <SurfaceCard marginHorizontal={16} paddingHorizontal={0} paddingVertical={12}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 12, paddingHorizontal: 14, alignItems: 'flex-start' }}
+        <ScrollRail
+          testID="status-rail-scroll"
+          gap={12}
+          paddingHorizontal={14}
+          alignItems="flex-start"
         >
           <StatusTile
             testID="status-mine"
@@ -197,7 +199,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
               style={{ transform: [{ rotate: '45deg' }] }}
             />
           </XStack>
-        </ScrollView>
+        </ScrollRail>
       </SurfaceCard>
       {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
           running past its end closes the viewer (which falls back to onClose). */}

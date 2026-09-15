@@ -16,6 +16,7 @@ import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton, DuncitRoundButton } from '@duncit/buttons';
+import { ScrollRail } from '@duncit/ui';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -238,7 +239,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             </Typography>
           )}
           {r.images.length > 0 && (
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5, overflowX: 'auto' }}>
+            <ScrollRail testId={`product-review-images-${r.id}`} gap={1} sx={{ mt: 0.5 }}>
               {r.images.map((url) => (
                 <Box
                   key={url}
@@ -248,7 +249,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                   sx={{ width: 64, height: 64, borderRadius: 1, objectFit: 'cover' }}
                 />
               ))}
-            </Stack>
+            </ScrollRail>
           )}
           {r.seller_reply && (
             <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: '16px' }}>

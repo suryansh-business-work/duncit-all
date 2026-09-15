@@ -12006,6 +12006,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "ui.podSeats.hint": "{seats} seats held by {bookings} bookings — one seat each.",
   "ui.podSeats.hintMulti": "{seats} seats held by {bookings} bookings — {extra} of them are extra seats bought on a single booking.",
   "ui.queryGuard.notFound": "Not found.",
+  "ui.scrollRail.next": "Scroll right",
+  "ui.scrollRail.previous": "Scroll left",
   "ui.timeline.inProgress": "In progress",
   "ui.waterfall.customerPaid": "Customer Paid",
   "ui.waterfall.duncitRevenue": "Duncit revenue",

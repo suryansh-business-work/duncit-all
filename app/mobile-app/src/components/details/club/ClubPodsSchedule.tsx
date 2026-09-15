@@ -1,6 +1,7 @@
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { EmptyState } from '@/components/EmptyState';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import type { ClubPod } from '@/hooks/useDetails';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -41,15 +42,11 @@ export function ClubPodsSchedule({ pods, onOpenPod }: Readonly<Props>) {
         return (
           <YStack key={phase} gap={10}>
             <SectionHeader title={title} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
-            >
+            <ScrollRail testID={`club-pods-schedule-rail-${phase}-scroll`} gap={12}>
               {rail.map((pod) => (
                 <ClubPodRailCard key={pod.id} pod={pod} onPress={() => onOpenPod(pod)} />
               ))}
-            </ScrollView>
+            </ScrollRail>
           </YStack>
         );
       })}

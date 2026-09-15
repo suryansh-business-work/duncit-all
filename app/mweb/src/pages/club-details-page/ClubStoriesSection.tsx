@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Box, Stack } from '@mui/material';
+import { Box } from '@mui/material';
+import { ScrollRail } from '@duncit/ui';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import SectionHeader from '../../components/SectionHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -92,13 +93,9 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
   return (
     <Box data-testid="club-stories">
       <SectionHeader testId="club-stories-header" title={t('mweb.clubDetailsPage.stories')} />
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{ overflowX: 'auto', pt: 1.25, pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}
-      >
+      <ScrollRail testId="club-stories-scroll" gap={1.5} sx={{ pt: 1.25 }}>
         <ClubStoryTiles clubId={clubId} canPost={canPost} stories={stories} onOpen={showStory} />
-      </Stack>
+      </ScrollRail>
       <MomentLightbox
         moments={moments}
         index={lightbox}

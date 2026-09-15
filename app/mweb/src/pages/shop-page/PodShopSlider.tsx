@@ -5,9 +5,11 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
+import { alpha, Box, Stack, Typography, useMediaQuery, type Theme } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitButton } from '@duncit/buttons';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { useTranslation } from '../../i18n/useTranslation';
 import VideoMedia from '../../components/media/VideoMedia';
 import SlideshowToggle from '../pod-details-page/SlideshowToggle';
 
@@ -92,6 +94,39 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
   );
 }
 
+const arrowBtn = (theme: Theme) => ({
+  position: 'absolute' as const,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 2,
+  bgcolor: alpha(theme.palette.common.black, 0.35),
+  color: 'common.white',
+  width: 40,
+  height: 40,
+  minHeight: 40,
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.5) },
+});
+
+function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <DuncitIconButton data-testid="pod-shop-slider-prev" size="small" onClick={onClick} aria-label={t('ui.scrollRail.previous')} sx={(theme: Theme) => ({ ...arrowBtn(theme), left: 12 })}>
+      <ChevronLeftIcon />
+    </DuncitIconButton>
+  );
+}
+
+function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <DuncitIconButton data-testid="pod-shop-slider-next" size="small" onClick={onClick} aria-label={t('ui.scrollRail.next')} sx={(theme: Theme) => ({ ...arrowBtn(theme), right: 12 })}>
+      <ChevronRightIcon />
+    </DuncitIconButton>
+  );
+}
+
 /** The global Pod Shop top slider (image/video + admin overlay copy/CTA) —
  * admin-managed from the products portal, shown above the Pod Shop grid. Hidden
  * until media is configured. mWeb twin of the mobile PodShopSlider. */
@@ -131,7 +166,9 @@ export default function PodShopSlider() {
     >
       <Slider
         dots={media.length > 1}
-        arrows={false}
+        arrows={media.length > 1}
+        prevArrow={<PrevArrow />}
+        nextArrow={<NextArrow />}
         infinite={media.length > 1}
         autoplay={playing}
         autoplaySpeed={4500}

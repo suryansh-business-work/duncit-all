@@ -1,7 +1,8 @@
 import { AppImage } from '@/components/AppImage';
 
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { ClubDetail } from '@/hooks/useDetails';
@@ -35,11 +36,7 @@ export function ClubHostsRail({
   return (
     <SurfaceCard gap={12} testID={`${testIdPrefix}s`}>
       <SectionHeader title={titleText} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 16 }}
-      >
+      <ScrollRail testID={`${testIdPrefix}s-scroll`} gap={16}>
         {hosts.map((host) => (
           <YStack
             pressStyle={PRESS_STYLE.surface}
@@ -77,7 +74,7 @@ export function ClubHostsRail({
             </Text>
           </YStack>
         ))}
-      </ScrollView>
+      </ScrollRail>
     </SurfaceCard>
   );
 }

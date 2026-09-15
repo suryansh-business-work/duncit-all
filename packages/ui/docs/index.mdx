@@ -51,6 +51,8 @@ exports:
   - 'buildSpotsLabels'
   - 'mwebSpotsLabels'
   - 'shellSpotsLabels'
+  - 'ScrollRail'
+  - 'ScrollRailProps'
   - 'SpotsStepperLabels'
   - 'StatusColorMap'
   - 'StatCardLayout'
@@ -605,6 +607,38 @@ count on top, the bookings behind it underneath, and the multi-seat split in the
 Admin’s Pods table, the Partners pods list and the Become-a-Host list all render this one
 component: three copies of the same arithmetic is three chances for two portals to quote
 different numbers for the same pod (rule 40).
+
+## `ScrollRail` — a sideways row with left/right arrows
+
+Every horizontally scrolling row of cards in mWeb (Club and Venue "Pods Schedule", the Home
+rails, hosts, stories, product images, membership plans) renders through this one component.
+It wraps the children in a hidden-scrollbar `overflow-x: auto` row and layers a chevron
+button over each edge. The arrows are left out of the DOM when the row fits, and each one
+fades out (`disabled`, opacity 0) at the edge that has nothing left to scroll to. A click
+scrolls by 85% of the visible width. The native twin lives in
+`app/mobile-app/src/components/ScrollRail` and takes the same `ui.scrollRail.*` keys.
+
+```tsx
+import { ScrollRail } from '@duncit/ui';
+
+<ScrollRail testId="club-pods-schedule-rail-Previous-scroll" gap={1.5}>
+  {pods.map((pod) => (
+    <ClubPodRailCard key={pod.id} pod={pod} />
+  ))}
+</ScrollRail>
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `children` | `ReactNode` | yes | — | The row's entries, laid out in a `max-content` flex row. |
+| `gap` | `number` | no | `1.5` | Space between entries, in theme spacing units. |
+| `testId` | `string` | no | — | Root test id; the arrows get `${testId}-scroll-prev` / `-scroll-next`. |
+| `bleed` | `boolean` | no | `false` | Home-rail style: bleeds past the page's 16px gutter and insets by the same amount. |
+| `sx` | `SxProps<Theme>` | no | — | Merged onto the scroll container, e.g. a card surface, `scrollSnapType`, `minHeight`. |
+| `contentSx` | `SxProps<Theme>` | no | — | Merged onto the inner row, e.g. an inset baked into the scrollable width. |
+| `alignItems` | `'stretch' \| 'flex-start' \| 'center' \| 'flex-end'` | no | `'stretch'` | Cross-axis alignment of the row. |
+
+The arrow labels come from `ui.scrollRail.previous` / `ui.scrollRail.next` in `UI_BUNDLE`.
 
 ## Localization and coverage
 

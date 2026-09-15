@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Avatar, Stack } from '@mui/material';
+import { Avatar } from '@mui/material';
+import { ScrollRail } from '@duncit/ui';
 import HomeStatusViewer from '../home-page/HomeStatusViewer';
 import { useTranslation } from '../../i18n/useTranslation';
 import { buildStoryViewerItem } from '../home-page/storyViewerItem';
@@ -41,7 +42,7 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
 
   return (
     <>
-      <Stack data-testid="public-profile-stories" direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 0.5 }}>
+      <ScrollRail testId="public-profile-stories" gap={1.25}>
         {slides.map((slide, index) => (
           <Avatar
             key={slide.id}
@@ -67,7 +68,7 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
             }}
           />
         ))}
-      </Stack>
+      </ScrollRail>
 
       {openIndex !== null && (
         <HomeStatusViewer

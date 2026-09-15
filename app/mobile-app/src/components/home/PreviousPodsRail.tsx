@@ -1,8 +1,9 @@
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { Reveal } from '@/animations/Reveal';
 import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
+import { ScrollRail } from '@/components/ScrollRail';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
 import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -37,11 +38,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
           actionAriaLabel={t('mweb.home.seeAllPreviousPods')}
         />
       </YStack>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
-      >
+      <ScrollRail testID="previous-pods-rail-scroll" gap={12} paddingHorizontal={16}>
         {pods.slice(0, RAIL_CAP).map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
             <PodCard pod={pod} width={POD_CARD_RAIL_WIDTH} onPress={() => onOpenPod(pod)} />
@@ -54,7 +51,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
             onPress={() => onSeeAll(filtered ? undefined : RAIL_CAP)}
           />
         ) : null}
-      </ScrollView>
+      </ScrollRail>
     </YStack>
   );
 }

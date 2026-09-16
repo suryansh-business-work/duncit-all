@@ -67,6 +67,6 @@ export function pickSlideSeen(
   record: { official: (slideId: string) => void; story: (slideId: string) => Promise<void> },
 ): ((slideId: string) => void) | undefined {
   if (open.official) return record.official;
-  if (open.person) return record.story;
+  if (open.person) return (slideId: string) => fireAndForget(record.story(slideId));
   return undefined;
 }

@@ -13,3 +13,4 @@ export * from './notifications.mock';
 export * from './mjml.mock';
 export * from './short-links.mock';
 export * from './dashboard.mock';
+export * from './status.mock';

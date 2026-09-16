@@ -5468,6 +5468,9 @@ importers:
       '@duncit/portal-pod-form':
         specifier: workspace:*
         version: link:../../packages/portal-pod-form
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../../packages/regex
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -24224,7 +24227,7 @@ snapshots:
 
   is-core-module@2.16.2:
     dependencies:
-      hasown: 2.0.3
+      hasown: 2.0.4
 
   is-data-view@1.0.2:
     dependencies:

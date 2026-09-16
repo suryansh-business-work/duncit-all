@@ -69,6 +69,10 @@ export default function ReviewSection({ form }: Readonly<Props>) {
     .filter((doc) => doc.url)
     .map((doc) => doc.type)
     .join(', ');
+  const payoutDetailLine =
+    values.payout_method === 'UPI'
+      ? values.upi_id
+      : [values.account_number, values.ifsc_code].filter(Boolean).join(' · ');
 
   return (
     <Stack spacing={2}>
@@ -99,6 +103,10 @@ export default function ReviewSection({ form }: Readonly<Props>) {
         <Row label={t('partners.registerVenuePage.owner')} value={values.owner_name} />
         <Row label={t('partners.registerVenuePage.ownerEmail')} value={values.owner_email} />
         <Row label={t('partners.registerVenuePage.ownerPhone')} value={values.owner_phone} />
+        <Divider flexItem sx={{ my: 0.5 }} />
+        <Row label={t('partners.registerVenuePage.payoutMethod')} value={values.payout_method} />
+        <Row label={t('partners.registerVenuePage.accountHolderName')} value={values.account_holder_name} />
+        <Row label={t('partners.registerVenuePage.payoutDetails')} value={payoutDetailLine} />
       </Stack>
       <Typography variant="caption" sx={{
         color: "text.secondary"

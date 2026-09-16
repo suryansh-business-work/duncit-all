@@ -715,7 +715,7 @@
   "portals/partners-app/src/pages/list-products-page/ProductSettingsPage.tsx": 3,
   "portals/partners-app/src/pages/LoginPage.tsx": 2,
   "portals/partners-app/src/pages/PartnerHomePage.tsx": 3,
-  "portals/partners-app/src/pages/register-venue-page/register-venue/register-venue.schema.ts": 28,
+  "portals/partners-app/src/pages/register-venue-page/register-venue/register-venue.schema.ts": 29,
   "portals/partners-app/src/pages/register-venue-page/register-venue/useRegisterVenueForm.ts": 2,
   "portals/partners-app/src/pages/register-venue-page/sections/AmenitiesSection.tsx": 5,
   "portals/partners-app/src/pages/register-venue-page/sections/DocumentsSection.tsx": 1,

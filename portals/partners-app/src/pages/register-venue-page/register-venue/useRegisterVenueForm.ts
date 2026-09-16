@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTabParam } from '@duncit/tabs';
+import { useTranslation } from '@duncit/shell';
 import { VENUE_SECTIONS, sectionsForMode } from '../sections/venue-sections';
 import { FINAL, STEP1, STEP2, STEP3, UPDATE_APPROVED_VENUE } from '../queries';
 import { SECTION_FIELDS, registerVenueSchema } from './register-venue.schema';
@@ -47,6 +48,10 @@ interface Options {
 }
 
 export function useRegisterVenueForm({ venue, locations, account, mode, onPersisted }: Readonly<Options>) {
+  const { t } = useTranslation();
+  // Rebuilt only when the reader's language changes, not on every render —
+  // registerVenueSchema() constructs a fresh Zod object each call.
+  const schema = useMemo(() => registerVenueSchema(t), [t]);
   // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
   // to ?selectedtab=review — a section its rail does not offer and its form
   // would render as nothing.
@@ -64,7 +69,7 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
   const originalDocCount = venue?.documents?.length ?? 0;
 
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: blankRegisterVenueValues,
     mode: 'onBlur',
   });
@@ -100,8 +105,9 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
     amenities: 'complete',
     documents: 'complete',
     owner: 'complete',
+    payout: 'complete',
   };
-  const parsed = registerVenueSchema.safeParse(values);
+  const parsed = schema.safeParse(values);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
       const root = String(issue.path[0] ?? '');
@@ -205,7 +211,7 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
     setError(null);
     const ok = await form.trigger();
     if (!ok) {
-      const parsed = registerVenueSchema.safeParse(form.getValues());
+      const parsed = schema.safeParse(form.getValues());
       const firstPath = parsed.success ? '' : String(parsed.error.issues[0]?.path[0] ?? '');
       const section = (Object.keys(SECTION_FIELDS) as EditableSectionKey[]).find((key) =>
         (SECTION_FIELDS[key] as string[]).includes(firstPath)

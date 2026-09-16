@@ -50,6 +50,11 @@ export interface RegisterVenueValues extends VenueLocationValues {
   owner_phone: string;
   owner_dob: string;
   owner_address: string;
+  payout_method: string;
+  account_holder_name: string;
+  account_number: string;
+  ifsc_code: string;
+  upi_id: string;
 }
 
 export type VenueSectionKey =
@@ -58,6 +63,7 @@ export type VenueSectionKey =
   | 'amenities'
   | 'documents'
   | 'owner'
+  | 'payout'
   | 'leaves'
   | 'review';
 
@@ -109,4 +115,9 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   owner_phone: '',
   owner_dob: '',
   owner_address: '',
+  payout_method: '',
+  account_holder_name: '',
+  account_number: '',
+  ifsc_code: '',
+  upi_id: '',
 };

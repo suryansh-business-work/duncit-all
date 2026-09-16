@@ -16,10 +16,11 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import PersonIcon from '@mui/icons-material/Person';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import SendIcon from '@mui/icons-material/Send';
 import type { SectionState } from '../register-venue/useRegisterVenueForm';
 import type { RegisterVenueMode, VenueSectionKey } from '../register-venue';
-import { sectionsForMode } from './venue-sections';
+import { sectionsForMode, type VenueSectionDef } from './venue-sections';
 import { useTranslation } from '@duncit/shell';
 
 export const RAIL_WIDTH = 250;
@@ -30,6 +31,7 @@ const SECTION_ICONS: Record<VenueSectionKey, JSX.Element> = {
   amenities: <ChecklistIcon fontSize="small" />,
   documents: <DescriptionIcon fontSize="small" />,
   owner: <PersonIcon fontSize="small" />,
+  payout: <AccountBalanceIcon fontSize="small" />,
   leaves: <EventBusyIcon fontSize="small" />,
   review: <SendIcon fontSize="small" />,
 };
@@ -42,6 +44,11 @@ interface Props {
 }
 
 type Translate = ReturnType<typeof useTranslation>['t'];
+
+const sectionLabel = (section: VenueSectionDef, t: Translate) =>
+  section.labelKey ? t(section.labelKey) : section.label;
+const sectionHint = (section: VenueSectionDef, t: Translate) =>
+  section.hintKey ? t(section.hintKey) : section.hint;
 
 /** The tick is the only sign a section is done, so it is named (1.1.1 / 1.4.1). */
 const stateIcon = (key: VenueSectionKey, sectionState: Props['sectionState'], t: Translate) => {
@@ -87,8 +94,8 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
             >
               <ListItemIcon sx={{ minWidth: 34, mt: 0.4 }}>{SECTION_ICONS[section.key]}</ListItemIcon>
               <ListItemText
-                primary={section.label}
-                secondary={section.hint}
+                primary={sectionLabel(section, t)}
+                secondary={sectionHint(section, t)}
                 slotProps={{
                   primary: { sx: { fontWeight: 800, fontSize: 14 } },
                   secondary: { sx: { fontSize: 11.5 } }
@@ -101,7 +108,7 @@ export default function SectionRail({ active, sectionState, onSelect, mode }: Re
       <DuncitTabs
         items={sections.map((section) => ({
           value: section.key,
-          label: section.label,
+          label: sectionLabel(section, t),
           sx: { fontWeight: 800 },
         }))}
         value={active}

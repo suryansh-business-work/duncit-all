@@ -1,10 +1,15 @@
 import { z } from 'zod';
-import { POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
+import { BANK_PAYOUT_METHODS, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
+import { BANK_ACCOUNT_NUMBER, IFSC, UPI_ID } from '@duncit/regex';
+import { fallbackT, type Translate } from '@duncit/shell';
 import type { RegisterVenueValues, VenueSectionKey } from './register-venue.types';
 
 const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
 const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 const OWNER_PHONE_PATTERN = /^\+?\d{6,15}$/;
+/** Bank account holder name — letters and single spaces between words only
+ * (no digits/punctuation), per the Payout Method step's spec. */
+const ACCOUNT_HOLDER_NAME_PATTERN = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
 const capacityItemSchema = z.object({
   label: z
@@ -50,7 +55,10 @@ const requiredPattern = (pattern: RegExp, requiredMessage: string, formatMessage
     .min(1, requiredMessage)
     .refine((value) => !value || pattern.test(value.toUpperCase()), formatMessage);
 
-export const registerVenueSchema = z.object({
+/** Payout Method's messages depend on the reader's language (`t` from the form
+ * that renders it); every other field here is pre-existing, unlocalized debt
+ * this change does not touch. */
+export const registerVenueSchema = (t: Translate = fallbackT) => z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
   description: z
     .string()
@@ -109,7 +117,60 @@ export const registerVenueSchema = z.object({
     .trim()
     .min(1, 'Owner address is required')
     .max(500, 'Address must be 500 characters or fewer'),
-});
+  payout_method: z
+    .string()
+    .trim()
+    .min(1, t('partners.registerVenuePage.payoutMethodRequired'))
+    .refine(
+      (value) => (BANK_PAYOUT_METHODS as readonly string[]).includes(value),
+      t('partners.registerVenuePage.payoutMethodInvalid')
+    ),
+  account_holder_name: z
+    .string()
+    .trim()
+    .min(1, t('partners.registerVenuePage.accountHolderNameRequired'))
+    .regex(ACCOUNT_HOLDER_NAME_PATTERN, t('partners.registerVenuePage.accountHolderNameInvalid')),
+  account_number: z.string().trim(),
+  ifsc_code: z.string().trim(),
+  upi_id: z.string().trim(),
+})
+  // Which payout fields are required depends on the selected method, so this
+  // is a superRefine rather than per-field .min() — RHF keeps every payout
+  // field registered while the reader switches the Payout Method dropdown.
+  .superRefine((values, ctx) => {
+    if (values.payout_method === 'UPI') {
+      if (!values.upi_id) {
+        ctx.addIssue({ code: 'custom', path: ['upi_id'], message: t('partners.registerVenuePage.upiIdRequired') });
+      } else if (!UPI_ID.test(values.upi_id)) {
+        ctx.addIssue({ code: 'custom', path: ['upi_id'], message: t('partners.registerVenuePage.upiIdInvalid') });
+      }
+      return;
+    }
+    if (values.payout_method === 'IMPS' || values.payout_method === 'NEFT') {
+      if (!values.account_number) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['account_number'],
+          message: t('partners.registerVenuePage.accountNumberRequired'),
+        });
+      } else if (!BANK_ACCOUNT_NUMBER.test(values.account_number)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['account_number'],
+          message: t('partners.registerVenuePage.accountNumberInvalid'),
+        });
+      }
+      if (!values.ifsc_code) {
+        ctx.addIssue({ code: 'custom', path: ['ifsc_code'], message: t('partners.registerVenuePage.ifscCodeRequired') });
+      } else if (!IFSC.test(values.ifsc_code.toUpperCase())) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['ifsc_code'],
+          message: t('partners.registerVenuePage.ifscCodeInvalid'),
+        });
+      }
+    }
+  });
 
 /** Fields validated (and shown as incomplete in the rail) per section.
  * 'review' has no fields; 'leaves' persists via venue settings, not this form. */
@@ -137,4 +198,5 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
   amenities: ['amenities', 'facilities', 'security'],
   documents: ['documents', 'gstin', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],
+  payout: ['payout_method', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id'],
 };

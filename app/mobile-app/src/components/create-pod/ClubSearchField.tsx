@@ -44,7 +44,11 @@ export function ClubSearchField({ clubs, value, onChange, error, required }: Rea
       />
       <ChipSelectField
         label=""
-        options={filtered.map((club) => ({ value: club.id, label: club.club_name }))}
+        options={filtered.map((club) => ({
+          value: club.id,
+          label: club.club_name,
+          locality: club.locality,
+        }))}
         value={value}
         onChange={onChange}
         error={error}

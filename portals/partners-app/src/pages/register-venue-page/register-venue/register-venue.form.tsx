@@ -8,6 +8,7 @@ import VenueTypeCapacitySection from '../sections/VenueTypeCapacitySection';
 import AmenitiesSection from '../sections/AmenitiesSection';
 import DocumentsSection from '../sections/DocumentsSection';
 import OwnerSection from '../sections/OwnerSection';
+import PayoutMethodSection from '../sections/PayoutMethodSection';
 import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
 import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
@@ -75,6 +76,7 @@ export default function RegisterVenueForm({
               />
             )}
             {active === 'owner' && <OwnerSection form={form} accountEmail={account.email} />}
+            {active === 'payout' && <PayoutMethodSection form={form} disabled={mode === 'edit-approved'} />}
             {active === 'leaves' && (
               <LeavesSection
                 venueId={venueId}

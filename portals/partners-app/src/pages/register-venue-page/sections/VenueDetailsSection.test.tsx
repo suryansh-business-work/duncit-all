@@ -90,7 +90,7 @@ interface HarnessProps {
 
 function Harness({ mode, defaults, formRef }: Readonly<HarnessProps>) {
   const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
+    resolver: zodResolver(registerVenueSchema()) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });

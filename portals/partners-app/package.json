@@ -42,6 +42,7 @@
     "@duncit/pod-form": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",
+    "@duncit/regex": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/table": "workspace:*",

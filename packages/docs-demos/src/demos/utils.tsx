@@ -108,6 +108,17 @@ import {
   participationInputFrom,
   payableSpots,
   payingSeats,
+  mwebTicketDiscountLabels,
+  nextTicketDiscountTier,
+  resolveTicketDiscountTier,
+  ticketDiscountFor,
+  ticketDiscountInput,
+  ticketDiscountMaxTickets,
+  ticketDiscountRows,
+  ticketDiscountTierIssues,
+  DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+  TICKET_DISCOUNT_MAX_TIERS,
+  type TicketDiscountTier,
   podSeatsTaken,
   podParticipationActions,
   podPhase,
@@ -179,6 +190,10 @@ import {
   groupClubsByLocality,
   type ClubCityLocation,
   resolveThemeTokens,
+  DEFAULT_LAUNCH_TARGET,
+  formatCount,
+  launchProgress,
+  showsWaitlist,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -422,10 +437,29 @@ interface SeatsSoldMock {
   price_per_seat: number;
 }
 
+/** A pod's multi-ticket offer plus the seats one checkout is booking. */
+interface TicketDiscountMock {
+  pod_id: string;
+  pod_amount: number;
+  no_of_spots: number;
+  ticket_discount_enabled: boolean;
+  ticket_discount_tiers: TicketDiscountTier[];
+  seats: number;
+  is_free: boolean;
+}
+
 interface ClubGroupingMock {
   locations: ClubCityLocation[];
   clubs: { club_name: string; location_id: string; locality: string }[];
   openCityId: string;
+}
+
+/** One city from the `locations` query, with its launch waitlist fields. */
+interface CityLaunchMock {
+  location_name: string;
+  is_launched: boolean | null;
+  subscriber_count: number;
+  launch_target: number;
 }
 
 /** Admin → Branding → Theme tokens, as the `branding` query answers it. */
@@ -456,6 +490,26 @@ export default defineDemos('utils', [
         'Bundled palettes returned untouched': palettes === local,
       };
     },
+  }),
+
+  defineDemo<CityLaunchMock>({
+    id: 'city-launch',
+    title: 'A city that has not launched yet',
+    note:
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0.',
+    mock: {
+      location_name: 'Ahmedabad',
+      is_launched: false,
+      subscriber_count: 1252,
+      launch_target: DEFAULT_LAUNCH_TARGET,
+    },
+    compute: (mock) => ({
+      'Shows the waitlist': showsWaitlist(mock),
+      'Tile caption': mwebT('mweb.cityLaunch.peopleIn', { count: mock.subscriber_count }),
+      'Hero number': formatCount(mock.subscriber_count),
+      'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
+      'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+    }),
   }),
 
   defineDemo<ClubGroupingMock>({
@@ -528,6 +582,54 @@ export default defineDemos('utils', [
         (mock.pod_attendees.length - mock.pod_hosts_id.length) * mock.price_per_seat,
       ),
     }),
+  }),
+
+  defineDemo<TicketDiscountMock>({
+    id: 'multi-ticket-discount',
+    title: 'Four tickets in one booking, 20% off the tickets',
+    note:
+      'Change seats: the best tier the booking reaches applies to the ticket money only, before any coupon or coins. Set a tier’s discount_pct above 50, or make a row ask for fewer tickets than the one above, and the issues list names the row and the rule. Flip is_free and the input sent to the server clears the offer.',
+    mock: {
+      pod_id: 'DUN-POD-4821',
+      pod_amount: 499,
+      no_of_spots: 12,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [
+        { min_tickets: 2, discount_pct: 10 },
+        { min_tickets: 4, discount_pct: 20 },
+      ],
+      seats: 4,
+      is_free: false,
+    },
+    compute: (mock) => {
+      const quote = ticketDiscountFor(mock.pod_amount, mock.seats, mock);
+      const maxTickets = ticketDiscountMaxTickets(mock.no_of_spots);
+      const labels = mwebTicketDiscountLabels(mwebT);
+      const limits = { maxPct: DEFAULT_TICKET_DISCOUNT_MAX_PCT, maxTickets, maxTiers: TICKET_DISCOUNT_MAX_TIERS };
+      const issues = ticketDiscountTierIssues({
+        enabled: mock.ticket_discount_enabled,
+        tiers: mock.ticket_discount_tiers,
+        maxPct: DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+        maxTickets,
+      });
+      return {
+        'resolveTicketDiscountTier(pod, seats)': resolveTicketDiscountTier(mock, mock.seats),
+        'ticketDiscountFor(pod_amount, seats, pod)': quote,
+        'Ticket gross': formatMoney(quote.gross),
+        'Multi-ticket discount': formatMoney(quote.amount),
+        'Tickets cost (the coupon evaluates on this)': formatMoney(quote.net),
+        'Offer rows': ticketDiscountRows(mock.pod_amount, mock).map(
+          (row) => `${row.min_tickets}+ · ${row.discount_pct}% · ${formatMoney(row.per_ticket)}`,
+        ),
+        'ticketDiscountMaxTickets(no_of_spots)': maxTickets,
+        'Issues, worded': issues.map((issue) => labels.errors[issue.code](limits)),
+        'Add tier would append': nextTicketDiscountTier(
+          mock.ticket_discount_tiers,
+          DEFAULT_TICKET_DISCOUNT_MAX_PCT,
+        ),
+        'ticketDiscountInput(values, is_free)': ticketDiscountInput(mock, mock.is_free),
+      };
+    },
   }),
 
   defineDemo<BookingMock>({

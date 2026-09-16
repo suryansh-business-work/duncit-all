@@ -48,12 +48,16 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
     pod_date_time: 'pod_date_time',
     pod_amount: 'pod_amount',
     no_of_spots: 'no_of_spots',
+    is_active: 'is_active',
     created_at: 'created_at',
   },
   filterFields: {
+    pod_title: { type: 'string' },
     pod_date_time: { type: 'date' },
     pod_mode: { type: 'enum' },
     pod_amount: { type: 'number' },
+    no_of_spots: { type: 'number' },
+    is_active: { type: 'boolean' },
   },
   defaultSort: { pod_date_time: -1 },
 };
@@ -69,8 +73,15 @@ const CLUB_TABLE_CONFIG: TableEntityConfig = {
     city: 'city',
     locality: 'locality',
     pod_count: 'pod_count',
+    is_active: 'is_active',
   },
-  filterFields: { pod_count: { type: 'number' }, is_active: { type: 'boolean' } },
+  filterFields: {
+    club_name: { type: 'string' },
+    city: { type: 'string' },
+    locality: { type: 'string' },
+    pod_count: { type: 'number' },
+    is_active: { type: 'boolean' },
+  },
   defaultSort: { club_name: 1 },
 };
 

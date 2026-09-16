@@ -47,6 +47,7 @@ const breakdown = (over: Record<string, unknown> = {}) => ({
   collected_total: 1000,
   refunded_total: 0,
   refunded_count: 0,
+  ticket_discount_total: 0,
   currency_symbol: '₹',
   has_venue: true,
   completed_at: null,
@@ -72,6 +73,17 @@ describe('PodFinanceSection', () => {
     expect(screen.getByText('Host receives')).toBeInTheDocument();
     expect(screen.getByText('Payouts are released after Finance approval.')).toBeInTheDocument();
     expect(screen.queryByText('Frozen snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Multi-ticket discounts given')).not.toBeInTheDocument();
+  });
+
+  // Tiers came off the tickets before anyone paid — saying how much explains
+  // why the collected total sits below face value.
+  it('names the multi-ticket discounts already off the collected total', async () => {
+    mountSection(<PodFinanceSection podId={POD_ID} />, [financeMock(breakdown({ ticket_discount_total: 199.6 }))]);
+    await settle();
+
+    expect(screen.getByText('Multi-ticket discounts given')).toBeInTheDocument();
+    expect(screen.getByText('₹199.60')).toBeInTheDocument();
   });
 
   it('marks a frozen snapshot awaiting Finance approval', async () => {

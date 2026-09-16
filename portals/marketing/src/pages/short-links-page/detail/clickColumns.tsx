@@ -69,6 +69,7 @@ export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[]
     {
       field: 'platform',
       headerName: t('marketing.shortLinks.cameFrom'),
+      type: 'text',
       minWidth: 180,
       cellRenderer: renderPlatform,
       valueGetter: (row) => row.platform,
@@ -76,6 +77,7 @@ export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[]
     {
       field: 'country',
       headerName: t('marketing.common.location'),
+      type: 'text',
       minWidth: 200,
       valueGetter: locationOf,
     },
@@ -83,14 +85,12 @@ export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[]
       field: 'device_type',
       headerName: t('marketing.shortLinks.device'),
       minWidth: 170,
-      filter: {
-        type: 'select',
-        options: Object.entries(DEVICE_LABELS).map(([value, label]) => ({ value, label })),
-      },
+      type: 'enum',
+      options: Object.entries(DEVICE_LABELS).map(([value, label]) => ({ value, label })),
       cellRenderer: renderDevice,
       valueGetter: (row) => DEVICE_LABELS[row.device_type] ?? row.device_type,
     },
-    { field: 'os', headerName: 'OS', width: 130, hide: true },
-    { field: 'browser', headerName: t('marketing.shortLinks.browser'), width: 160, hide: true },
+    { field: 'os', headerName: 'OS', type: 'text', width: 130, hide: true },
+    { field: 'browser', headerName: t('marketing.shortLinks.browser'), type: 'text', width: 160, hide: true },
   ];
 }

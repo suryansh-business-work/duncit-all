@@ -13,6 +13,7 @@ import PortalAppSettingsPage from './pages/portal-app-settings';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
+import LocationSubscriptionsPage from './pages/location-subscriptions';
 import PartnersPage from './pages/PartnersPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
 import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSettingPage';
@@ -57,6 +58,7 @@ export default function App() {
                 <Route path="/users/:user_id" element={<UserDetailsPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/locations" element={<LocationsPage />} />
+                <Route path="/location-subscriptions" element={<LocationSubscriptionsPage />} />
                 <Route path="/partners" element={<PartnersPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/something-for-you" element={<SomethingForYouPage />} />

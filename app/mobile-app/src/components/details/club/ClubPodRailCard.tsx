@@ -5,6 +5,7 @@ import { coverImageUrl, imageSourceUrl } from '@duncit/utils';
 import { PressScale } from '@/animations/PressScale';
 import { AppImage } from '@/components/AppImage';
 import { DuncitButton } from '@/components/DuncitButton';
+import { LocalityChip } from '@/components/LocalityChip';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { ClubPod } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -15,6 +16,10 @@ import { podPriceLabel } from '@/utils/pod-format';
 const CARD_WIDTH = 180;
 /** Twice the card's width, for a sharp photo without the full-size file. */
 const IMAGE_WIDTH = 360;
+const IMAGE_HEIGHT = 104;
+/** The area chip (24) and its gap (8) come out of the photo, so every card in
+ * a rail stays the same height with or without one. */
+const IMAGE_HEIGHT_WITH_LOCALITY = IMAGE_HEIGHT - 32;
 
 interface Props {
   pod: ClubPod;
@@ -31,6 +36,7 @@ export function ClubPodRailCard({ pod, onPress }: Readonly<Props>) {
   const { accent } = useThemeColors();
   const cover = coverImageUrl(pod.pod_images_and_videos);
   const dateLabel = formatDate(pod.pod_date_time).toUpperCase();
+  const imageHeight = pod.locality?.trim() ? IMAGE_HEIGHT_WITH_LOCALITY : IMAGE_HEIGHT;
 
   return (
     <PressScale
@@ -40,7 +46,7 @@ export function ClubPodRailCard({ pod, onPress }: Readonly<Props>) {
     >
       <SurfaceCard width={CARD_WIDTH} padding={8}>
         <YStack
-          height={104}
+          height={imageHeight}
           borderRadius={18}
           overflow="hidden"
           backgroundColor="$soft"
@@ -84,6 +90,7 @@ export function ClubPodRailCard({ pod, onPress }: Readonly<Props>) {
             {pod.pod_title}
           </Text>
           <DuncitButton fullWidth size="sm" label={podPriceLabel(pod, t)} onPress={onPress} />
+          <LocalityChip locality={pod.locality} testID="pod-card-locality" />
         </YStack>
       </SurfaceCard>
     </PressScale>

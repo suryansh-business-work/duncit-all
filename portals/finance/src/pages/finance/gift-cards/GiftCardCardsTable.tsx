@@ -21,9 +21,10 @@ interface Props {
 const getCardRowId = (row: GiftCardCardRow) => row.id;
 
 /**
- * `sortable: false` on the joined columns is deliberate: buyer and redeemer are
- * resolved after the page is fetched, so they are not in the server's sort
- * allowlist. Leaving them sortable would offer a sort the engine silently drops.
+ * `sortable: false` / `filterable: false` on the joined columns is deliberate:
+ * buyer and redeemer are resolved after the page is fetched, so they are not in
+ * the server's allowlists. Leaving them on would offer a sort or filter the
+ * engine silently drops.
  */
 const buildColumns = (
   t: Translator['t'],
@@ -70,6 +71,7 @@ const buildColumns = (
       field: 'code',
       headerName: t('finance.giftCards.colCode'),
       minWidth: 180,
+      type: 'text',
       cellRenderer: (row) => renderCode(row.code),
       valueGetter: (row) => row.code,
     },
@@ -78,6 +80,7 @@ const buildColumns = (
       headerName: t('finance.giftCards.colTheme'),
       flex: 1,
       minWidth: 160,
+      type: 'text',
       cellRenderer: renderTheme,
       valueGetter: themeName,
     },
@@ -85,21 +88,24 @@ const buildColumns = (
       field: 'initial_amount',
       headerName: t('finance.giftCards.colAmount'),
       minWidth: 110,
-      filter: { type: 'number' },
+      type: 'number',
       valueGetter: (row) => formatMoney(row.initial_amount, { symbol }),
     },
     {
       field: 'status',
       headerName: t('finance.giftCards.colStatus'),
       minWidth: 130,
-      filter: { type: 'select', options: statusOptions(t) },
+      type: 'enum',
+      options: statusOptions(t),
       cellRenderer: renderStatus,
       valueGetter: (row) => displayStatus(row),
     },
     {
       field: 'purchaser_name',
       headerName: t('finance.giftCards.colBuyer'),
+      type: 'text',
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 180,
       cellRenderer: (row) => renderPerson(row.purchaser_name, row.purchaser_email),
@@ -110,13 +116,16 @@ const buildColumns = (
       headerName: t('finance.giftCards.colRecipient'),
       flex: 1,
       minWidth: 180,
+      type: 'text',
       cellRenderer: (row) => renderPerson(row.recipient_name, row.recipient_email),
       valueGetter: (row) => row.recipient_name,
     },
     {
       field: 'redeemer_name',
       headerName: t('finance.giftCards.colRedeemer'),
+      type: 'text',
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 180,
       cellRenderer: (row) => renderPerson(row.redeemer_name, row.redeemer_email),
@@ -132,7 +141,7 @@ const buildColumns = (
     {
       field: 'payment_id',
       headerName: t('finance.giftCards.colPayment'),
-      sortable: false,
+      type: 'text',
       minWidth: 160,
       valueGetter: (row) => row.payment_id || EM_DASH,
     },

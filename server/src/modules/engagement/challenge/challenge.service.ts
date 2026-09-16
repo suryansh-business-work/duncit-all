@@ -64,11 +64,14 @@ const CHALLENGE_TABLE_CONFIG: TableEntityConfig = {
     category_id: 'category_id',
     sub_category_id: 'sub_category_id',
   },
+  // The category ids are ObjectIds: matched by `in` against the column's
+  // category options, never by a `contains` regex Mongoose could not cast.
   filterFields: {
+    name: { type: 'string' },
     is_active: { type: 'boolean' },
-    super_category_id: { type: 'string' },
-    category_id: { type: 'string' },
-    sub_category_id: { type: 'string' },
+    super_category_id: { type: 'enum' },
+    category_id: { type: 'enum' },
+    sub_category_id: { type: 'enum' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },

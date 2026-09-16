@@ -65,16 +65,6 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
     [templates, counts, campaigns]
   );
 
-  const fetchRows = useMemo(() => clientTableFetch(rows, templateSearchText), [rows]);
-
-  // The table re-reads only when its own query changes, so a fresh AiSensy
-  // answer has to ask for the re-read — otherwise it keeps showing the list it
-  // first mounted with.
-  const refetchRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    refetchRef.current?.();
-  }, [fetchRows]);
-
   // Spelled out on the dialog rather than implied by a red icon: there is no
   // edit, no undo, and a campaign already pointing at it stops sending.
   const askDelete = useCallback(
@@ -102,6 +92,19 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
     () => getTemplateColumns({ t, busy: drafts.deletingTemplate, onDelete, onOpenLogs }),
     [t, drafts.deletingTemplate, onDelete, onOpenLogs]
   );
+
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, templateSearchText, columns),
+    [rows, columns]
+  );
+
+  // The table re-reads only when its own query changes, so a fresh AiSensy
+  // answer has to ask for the re-read — otherwise it keeps showing the list it
+  // first mounted with.
+  const refetchRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    refetchRef.current?.();
+  }, [fetchRows]);
 
   const selected = templates.find((template) => templateRowId(template) === openId) ?? null;
 

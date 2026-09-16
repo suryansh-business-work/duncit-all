@@ -60,24 +60,22 @@ export default function FaqsPage() {
     },
   });
 
+  const categoryOptions = useMemo(
+    () => supers.map((sc) => ({ value: sc.id, label: sc.name })),
+    [supers],
+  );
+
   const entityColumn = useMemo<DuncitColumn<FaqRow>>(
     () => ({
       field: 'super_category_id',
       headerName: t('support.faqs.superCategory'),
-      filter: {
-        type: 'select',
-        options: supers.map((sc) => ({ value: sc.id, label: sc.name })),
-      },
+      type: 'enum',
+      options: categoryOptions,
       minWidth: 170,
       cellRenderer: (row: FaqRow) => renderSuperCategory(row, t),
       valueGetter: (row) => row.super_category?.name ?? t('support.faqs.general'),
     }),
-    [supers, t],
-  );
-
-  const categoryOptions = useMemo(
-    () => supers.map((sc) => ({ value: sc.id, label: sc.name })),
-    [supers],
+    [categoryOptions, t],
   );
 
   const formTitle = crud.editing ? t('support.faqs.editTitle') : t('support.faqs.newTitle');

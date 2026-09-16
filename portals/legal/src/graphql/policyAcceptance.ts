@@ -66,6 +66,15 @@ export const POLICY_ACCEPTANCE_METHODS: PolicyAcceptanceMethod[] = [
   'ACCOUNT',
 ];
 
+/** The surface values the server stores — shown as stored, so values only. */
+export const POLICY_ACCEPTANCE_SURFACES: PolicyAcceptanceSurface[] = [
+  'MWEB',
+  'APP',
+  'PORTAL',
+  'WEBSITE',
+  'UNKNOWN',
+];
+
 /** One wording a policy has had. The live one comes back flagged `is_current`. */
 export interface PolicyVersionRow {
   id: string;

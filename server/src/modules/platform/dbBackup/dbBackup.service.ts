@@ -64,6 +64,11 @@ const DB_BACKUP_TABLE_CONFIG: TableEntityConfig = {
     status: { type: 'enum' },
     trigger: { type: 'enum' },
     started_at: { type: 'date' },
+    finished_at: { type: 'date' },
+    size_bytes: { type: 'number' },
+    documents_total: { type: 'number' },
+    file_name: { type: 'string' },
+    started_by: { type: 'string' },
   },
   defaultSort: { started_at: -1 },
 };

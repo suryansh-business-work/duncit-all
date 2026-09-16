@@ -41,6 +41,12 @@ export function environmentLabel(t: Translate, environment: string): string {
 export const environmentColor = (environment: string): ChipColor =>
   environment === 'production' ? 'error' : 'info';
 
+/** The environments a server reports itself as, as table filter options. */
+const ENVIRONMENTS = ['production', 'staging', 'localhost'] as const;
+
+export const environmentOptions = (t: Translate) =>
+  ENVIRONMENTS.map((value) => ({ value, label: environmentLabel(t, value) }));
+
 export function journeyLabel(t: Translate, journey: string): string {
   const labels: Record<string, string> = {
     app_boot: t('tech.stress.journeyAppBoot'),

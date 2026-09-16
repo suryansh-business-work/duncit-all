@@ -110,9 +110,12 @@ describe('audience helpers', () => {
 });
 
 describe('audience columns', () => {
-  // Filtering moved to the sidebar; a column popover can only ever show one.
-  it('carries no column filters at all', () => {
-    expect(getAudienceColumns(columnDeps, t).filter((c) => c.filter)).toEqual([]);
+  // The sidebar builds the segment; each column's own header filter narrows within it.
+  it('filters every column from its header by the column type, with none opting out', () => {
+    const columns = getAudienceColumns(columnDeps, t);
+    expect(columns.filter((c) => c.filterable === false)).toEqual([]);
+    const typeOf = (field: string) => columns.find((c) => c.field === field)?.type;
+    expect([typeOf('age'), typeOf('whatsapp'), typeOf('status')]).toEqual(['number', 'boolean', 'enum']);
   });
 
   // The audience directory and the create wizard's preview render the same

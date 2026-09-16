@@ -6,13 +6,11 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { clientTableFetch, type TableQueryState } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { AI_PROMPTS, DELETE_AI_PROMPT, RESET_AI_PROMPT } from '../queries';
 import { promptFeedUrl } from '../copy';
 import { useTranslation } from '@duncit/app-settings';
 import { usePromptCopy } from '../i18n/useCopy';
-import { promptSearchText } from '../search';
 import type { AiPrompt, PromptKind } from '../types';
 import { PromptsTable } from './PromptsTable';
 import { PromptDialog } from './PromptDialog';
@@ -78,13 +76,6 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
     // a branch no test can reach, which is the whole package's 100% threshold.
     return (data as { aiPrompts: AiPrompt[] }).aiPrompts;
   }, [client, kind]);
-
-  // The table asks for a page; the query answers with the whole (small) list,
-  // and search/sort/paging happen over what is already here.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => clientTableFetch(await load(), promptSearchText)(q),
-    [load],
-  );
 
   const openCreate = () => {
     setEditing(null);
@@ -154,7 +145,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
 
       <PromptsTable
         kind={kind}
-        fetchRows={fetchRows}
+        load={load}
         refetchRef={refetchRef}
         toolbarActions={
           kind === 'AI' ? (

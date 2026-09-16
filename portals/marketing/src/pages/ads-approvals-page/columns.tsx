@@ -4,14 +4,17 @@ import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { dateColumn, type DuncitColumn } from '@duncit/table';
 import { AD_POSITIONS, adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
-import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from './helpers';
+import { AD_STATUS_CHIP_COLORS, STATUS_FILTERS, type AdRequestRow } from './helpers';
 import { useTranslation } from '@duncit/app-settings';
 
-const POSITION_OPTIONS = AD_POSITIONS.map((p) => ({ value: p.position, label: p.label }));
+export const POSITION_OPTIONS = AD_POSITIONS.map((p) => ({ value: p.position, label: p.label }));
+
+/** The stored review states a status column filters on ('' is the toolbar's All tab). */
+export const STORED_STATUS_OPTIONS = STATUS_FILTERS.filter((s) => s.value !== '');
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const adTypeOptions = (t: Translate) => [
+export const adTypeOptions = (t: Translate) => [
   { value: 'IMAGE', label: t('marketing.adsApprovals.image') },
   { value: 'VIDEO', label: t('marketing.adsApprovals.video') },
 ];
@@ -50,28 +53,33 @@ export function getAdColumns({ onReview }: Readonly<ColumnDeps>, t: Translate): 
     {
       field: 'trace_id',
       headerName: t('marketing.adsApprovals.traceId'),
+      type: 'text',
       width: 130,
       valueGetter: (row) => row.trace_id,
     },
     {
       field: 'ad_kind',
       headerName: t('marketing.adsApprovals.kind'),
-      filter: { type: 'select', options: adKindOptions(t) },
+      type: 'enum',
+      options: adKindOptions(t),
       minWidth: 170,
       valueGetter: adKindLabel,
     },
     {
       field: 'ad_title',
       headerName: t('marketing.adsApprovals.adTitle'),
+      type: 'text',
       flex: 1.2,
       minWidth: 200,
       valueGetter: (row) => row.ad_title,
     },
     {
-      // Display name resolved server-side; no sortable DB path, so keep it unsorted.
+      // Display name resolved per row from the users collection; no stored path to order or match on.
       field: 'submitted_by_name',
       headerName: t('marketing.adsApprovals.submittedBy'),
+      type: 'text',
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 150,
       valueGetter: (row) => row.submitted_by_name || '—',
@@ -79,14 +87,16 @@ export function getAdColumns({ onReview }: Readonly<ColumnDeps>, t: Translate): 
     {
       field: 'position',
       headerName: t('marketing.common.position'),
-      filter: { type: 'select', options: POSITION_OPTIONS },
+      type: 'enum',
+      options: POSITION_OPTIONS,
       minWidth: 160,
       valueGetter: (row) => adPositionLabel(row.position),
     },
     {
       field: 'ad_type',
       headerName: t('marketing.adsApprovals.media'),
-      filter: { type: 'select', options: adTypeOptions(t) },
+      type: 'enum',
+      options: adTypeOptions(t),
       width: 110,
       cellRenderer: renderAdType,
       valueGetter: (row) => row.ad_type,
@@ -100,18 +110,22 @@ export function getAdColumns({ onReview }: Readonly<ColumnDeps>, t: Translate): 
     {
       field: 'duration_days',
       headerName: t('marketing.common.days'),
+      type: 'number',
       width: 90,
       valueGetter: (row) => row.duration_days,
     },
     {
       field: 'estimated_cost',
       headerName: t('marketing.adsApprovals.estCost'),
+      type: 'number',
       width: 130,
       valueGetter: (row) => formatAdMoney(row.currency_symbol, row.estimated_cost),
     },
     {
       field: 'status',
       headerName: t('shell.common.status'),
+      type: 'enum',
+      options: STORED_STATUS_OPTIONS,
       width: 120,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
@@ -122,6 +136,6 @@ export function getAdColumns({ onReview }: Readonly<ColumnDeps>, t: Translate): 
       width: 160,
       format: 'd MMM yyyy, HH:mm',
     }),
-    { field: 'actions', headerName: t('marketing.adsApprovals.action'), sortable: false, width: 120, cellRenderer: renderAction },
+    { field: 'actions', headerName: t('marketing.adsApprovals.action'), type: 'actions', width: 120, cellRenderer: renderAction },
   ];
 }

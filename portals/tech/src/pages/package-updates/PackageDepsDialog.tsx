@@ -15,6 +15,8 @@ import {
   compareBySeverity,
   dependencyRowSearchText,
   kindLabel,
+  kindOptions,
+  updateTypeOptions,
   type DependencyUpdate,
   type PackageUpdate,
 } from './queries';
@@ -53,19 +55,13 @@ interface Props {
 /**
  * Everything ONE manifest declares, worst first.
  *
- * The severity order is applied to the list itself rather than offered as a
- * sort: the question a manifest is opened with is "what in here is behind",
- * and alphabetical would bury it.
+ * The severity order is applied to the list itself, so an unsorted table opens
+ * on the question a manifest is opened with — "what in here is behind" — and
+ * alphabetical would bury it.
  */
 export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const noLatest = t('tech.packageUpdates.notPublished');
-
-  // The dialog's children unmount on close, so every open is a fresh mount and
-  // the table reads the manifest it was opened for. There is no second manifest
-  // to switch to without closing this one.
-  const rows = useMemo(() => (pkg ? [...pkg.dependencies].sort(compareBySeverity) : []), [pkg]);
-  const fetchRows = useMemo(() => clientTableFetch(rows, dependencyRowSearchText), [rows]);
 
   const columns = useMemo<DuncitColumn<DependencyUpdate>[]>(
     () => [
@@ -74,34 +70,50 @@ export default function PackageDepsDialog({ pkg, onClose }: Readonly<Props>) {
         headerName: t('tech.packageUpdates.dependency'),
         flex: 1,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderName,
       },
       {
         field: 'kind',
         headerName: t('tech.packageUpdates.kind'),
         width: 130,
+        type: 'enum',
+        options: kindOptions(t),
         valueGetter: (row) => kindLabel(t, row.kind),
       },
       {
         field: 'range',
         headerName: t('tech.packageUpdates.declared'),
         width: 160,
+        type: 'text',
         cellRenderer: renderRange,
       },
       {
         field: 'latest',
         headerName: t('tech.packageUpdates.latest'),
         width: 150,
+        type: 'text',
         cellRenderer: renderLatest(noLatest),
       },
       {
         field: 'updateType',
         headerName: t('shell.common.type'),
         width: 150,
+        type: 'enum',
+        options: updateTypeOptions(t),
         cellRenderer: renderType,
       },
     ],
     [t, noLatest],
+  );
+
+  // The dialog's children unmount on close, so every open is a fresh mount and
+  // the table reads the manifest it was opened for. There is no second manifest
+  // to switch to without closing this one.
+  const rows = useMemo(() => (pkg ? [...pkg.dependencies].sort(compareBySeverity) : []), [pkg]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, dependencyRowSearchText, columns),
+    [rows, columns],
   );
 
   return (

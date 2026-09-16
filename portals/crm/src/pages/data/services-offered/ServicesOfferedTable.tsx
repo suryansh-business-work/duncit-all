@@ -55,15 +55,17 @@ export default function ServicesOfferedTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<CrmServiceOfferedRow>[]>(
     () => [
-      { field: 'title', headerName: t('shell.common.title'), flex: 1, minWidth: 180, cellRenderer: renderTitle, valueGetter: (s) => s.title },
-      { field: 'super_category_name', headerName: t('crm.common.superCategory'), sortable: false, minWidth: 150, valueGetter: (s) => dash(s.super_category_name) },
-      { field: 'category_name', headerName: t('crm.common.category'), sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
-      { field: 'sub_category_name', headerName: t('crm.common.subCategory'), sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
-      { field: 'applies_to', headerName: t('crm.common.appliesTo'), sortable: false, width: 110, cellRenderer: (row: CrmServiceOfferedRow) => renderTarget(row, t), valueGetter: (row: CrmServiceOfferedRow) => targetLabel(row, t) },
-      { field: 'applies_to_venue', headerName: t('crm.data.forVenue'), filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
-      { field: 'applies_to_host', headerName: t('crm.data.forHost'), filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
+      { field: 'title', headerName: t('shell.common.title'), type: 'text', flex: 1, minWidth: 180, cellRenderer: renderTitle, valueGetter: (s) => s.title },
+      // The three category names are read from the Category collection per row — nothing stored to order by.
+      { field: 'super_category_name', headerName: t('crm.common.superCategory'), type: 'text', sortable: false, minWidth: 150, valueGetter: (s) => dash(s.super_category_name) },
+      { field: 'category_name', headerName: t('crm.common.category'), type: 'text', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
+      { field: 'sub_category_name', headerName: t('crm.common.subCategory'), type: 'text', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
+      // Assembled from the venue + host flags (no stored value) — the For Venue / For Host columns sort and filter those.
+      { field: 'applies_to', headerName: t('crm.common.appliesTo'), type: 'text', sortable: false, filterable: false, width: 110, cellRenderer: (row: CrmServiceOfferedRow) => renderTarget(row, t), valueGetter: (row: CrmServiceOfferedRow) => targetLabel(row, t) },
+      { field: 'applies_to_venue', headerName: t('crm.data.forVenue'), type: 'boolean', hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
+      { field: 'applies_to_host', headerName: t('crm.data.forHost'), type: 'boolean', hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
       activeChipColumn<CrmServiceOfferedRow>(),
-      { field: 'sort_order', headerName: t('crm.data.sort'), hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('crm.data.sort'), type: 'number', hide: true, width: 90 },
       dateColumn<CrmServiceOfferedRow>(),
       actionsColumn<CrmServiceOfferedRow>({
         onEdit,

@@ -23,6 +23,7 @@ import {
 } from '@modules/finance/giftcard/giftcard.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
+import { ticketDiscountFor } from '@modules/pods/pod/pod.ticketDiscount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
@@ -74,6 +75,9 @@ export const toPub = (p: IPayment) => ({
   coupon_code: p.coupon_code ?? null,
   coupon_discount: p.coupon_discount ?? 0,
   coins_redeemed: p.coins_redeemed ?? 0,
+  // Payments priced before the multi-ticket discount existed carry neither.
+  ticket_discount_amount: p.ticket_discount_amount ?? 0,
+  ticket_discount_pct: p.ticket_discount_pct ?? 0,
   status: p.status,
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
@@ -99,9 +103,13 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     subtotal: 'subtotal',
     platform_fee_amount: 'platform_fee_amount',
     gst_amount: 'gst_amount',
+    coins_redeemed: 'coins_redeemed',
+    coins_earned: 'coins_earned',
     total: 'total',
+    ticket_discount_amount: 'ticket_discount_amount',
     status: 'status',
     gateway: 'gateway',
+    coupon_code: 'coupon_code',
     paid_at: 'paid_at',
     created_at: 'created_at',
   },
@@ -112,8 +120,16 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     user_id: { type: 'string' },
     pod_id: { type: 'string' },
     coupon_code: { type: 'string' },
+    payment_id: { type: 'string' },
+    user_name: { type: 'string' },
+    description: { type: 'string' },
     subtotal: { type: 'number' },
+    platform_fee_amount: { type: 'number' },
+    gst_amount: { type: 'number' },
+    coins_redeemed: { type: 'number' },
+    coins_earned: { type: 'number' },
     total: { type: 'number' },
+    ticket_discount_amount: { type: 'number' },
     paid_at: { type: 'date' },
     created_at: { type: 'date' },
   },
@@ -369,9 +385,36 @@ function buildBuyerFields(input: any, user: any) {
   return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
 }
 
+/** A pod's multi-ticket discount as priced for one booking. */
+type TicketDiscount = ReturnType<typeof ticketDiscountFor>;
+
+/** No pod on the checkout, so no ticket money and nothing to discount. */
+const NO_TICKET_DISCOUNT: TicketDiscount = { gross: 0, pct: 0, min_tickets: 0, amount: 0 };
+
+/**
+ * A pod booking's payable: the ticket money after the pod's multi-ticket
+ * discount, plus add-on products charged once at full price. The discount never
+ * touches the products, so `product_cost_total` stays the product gross that
+ * settlement and refunds subtract.
+ */
+function pricePodBooking(pod: any, seats: number, addOns: number) {
+  const ticketDiscount = ticketDiscountFor(Number(pod.pod_amount || 0), seats, pod);
+  return {
+    ticketDiscount,
+    payableAmount: round2(ticketDiscount.gross - ticketDiscount.amount + addOns),
+  };
+}
+
 /** The metadata blob recorded on every payment doc (source + pod breakdown).
- * `products` is the checkout's resolved product selection (variant-aware). */
-const paymentMetadata = (input: any, pod: any, products: ProductResolution) => ({
+ * `products` is the checkout's resolved product selection (variant-aware);
+ * `ticketDiscount` is the multi-ticket tier that priced it, frozen here so the
+ * invoice, finance and refunds never re-read the pod's (editable) tiers. */
+const paymentMetadata = (
+  input: any,
+  pod: any,
+  products: ProductResolution,
+  ticketDiscount: TicketDiscount
+) => ({
   source: 'app_checkout',
   checkout_url: input.checkout_url,
   pod_id: input.pod_id || null,
@@ -379,6 +422,11 @@ const paymentMetadata = (input: any, pod: any, products: ProductResolution) => (
   // Read back at capture time — a webhook replay must book the seats that were
   // actually paid for, never the client's word at that later moment.
   seats: pod ? clampSeatsForPod(pod, input.seats) : null,
+  // Every ticket at list price, before the multi-ticket discount came off.
+  ticket_gross: pod ? ticketDiscount.gross : null,
+  ticket_discount_pct: ticketDiscount.pct,
+  ticket_discount_amount: ticketDiscount.amount,
+  ticket_discount_min_tickets: ticketDiscount.min_tickets,
   product_cost_total: pod ? products.total : null,
   selected_products: input.selected_products ?? [],
   // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
@@ -388,16 +436,25 @@ const paymentMetadata = (input: any, pod: any, products: ProductResolution) => (
   shipping_address: input.shipping_address ?? null,
 });
 
-/** Apply an optional coupon to the gross payable, returning the priced quote, the
+/** Apply an optional coupon to the payable, returning the priced quote, the
  * undiscounted original total (for strikethrough/records) and the coupon meta.
+ * The payable already has the multi-ticket discount off, so the coupon (its
+ * floor and min_order_amount) is evaluated on the discounted bill; the original
+ * total adds that discount back — the gross before EVERY discount.
  * Throws when a supplied coupon is invalid — never silently ignores it. */
-async function applyCoupon(input: any, payableAmount: number, userId: string) {
+async function applyCoupon(
+  input: any,
+  payableAmount: number,
+  userId: string,
+  ticketDiscountAmount: number
+) {
   const originalQuote = await computeQuote(payableAmount);
+  const originalTotal = round2(originalQuote.total + ticketDiscountAmount);
   const code = (input.coupon_code || '').trim();
   if (!code) {
     return {
       quote: originalQuote,
-      originalTotal: originalQuote.total,
+      originalTotal,
       couponCode: null as string | null,
       couponDiscount: 0,
     };
@@ -410,7 +467,7 @@ async function applyCoupon(input: any, payableAmount: number, userId: string) {
   const quote = await computeQuote(result.final_total);
   return {
     quote,
-    originalTotal: originalQuote.total,
+    originalTotal,
     couponCode: result.coupon!.code,
     couponDiscount: round2(originalQuote.total - quote.total),
   };
@@ -506,6 +563,7 @@ async function resolvePayable(input: any, userId?: string) {
   let description = input.description || 'Booking';
   let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
   let seats = 1;
+  let ticketDiscount = NO_TICKET_DISCOUNT;
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -528,14 +586,16 @@ async function resolvePayable(input: any, userId?: string) {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    // The ticket price is per seat; add-on products are charged once.
-    payableAmount = round2(Number(pod.pod_amount || 0) * seats + products.total);
+    // The ticket price is per seat, less the pod's multi-ticket discount for
+    // this many seats; add-on products are charged once. The discount comes off
+    // BEFORE the coupon, the coins and the GST split.
+    ({ ticketDiscount, payableAmount } = pricePodBooking(pod, seats, products.total));
   }
   if (!payableAmount || payableAmount <= 0)
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description, products, seats };
+  return { pod, payableAmount, description, products, seats, ticketDiscount };
 }
 
 /** Group cart selections by their pod so each pod's own product_requests
@@ -790,16 +850,28 @@ export const paymentService = {
     const seats = normalizeSeats(input.seats);
     // Single-seat quotes keep their exact previous behaviour (the caller's
     // amount already carries any add-on products); only the multi-seat case
-    // needs the server to re-price, and only the ticket multiplies.
-    if (!input.pod_id || seats <= 1) return computeQuote(input.amount);
+    // needs the server to re-price, and only the ticket multiplies. A single
+    // seat never earns a multi-ticket discount — every tier starts at 2.
+    if (!input.pod_id || seats <= 1) {
+      return {
+        ...(await computeQuote(input.amount)),
+        ticket_discount_amount: 0,
+        ticket_discount_pct: 0,
+      };
+    }
     const pod = await PodModel.findById(input.pod_id).select(
-      'pod_amount no_of_spots pod_attendees extra_seats'
+      'pod_amount no_of_spots pod_attendees extra_seats ticket_discount_enabled ticket_discount_tiers'
     );
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     clampSeatsForPod(pod, seats);
     const ticket = Number(pod.pod_amount || 0);
     const extras = Math.max(round2(Number(input.amount) || 0) - ticket, 0);
-    return computeQuote(round2(ticket * seats + extras));
+    const { ticketDiscount, payableAmount } = pricePodBooking(pod, seats, extras);
+    return {
+      ...(await computeQuote(payableAmount)),
+      ticket_discount_amount: ticketDiscount.amount,
+      ticket_discount_pct: ticketDiscount.pct,
+    };
   },
 
   async list(filter?: PaymentListFilter, limit = 200) {
@@ -814,7 +886,7 @@ export const paymentService = {
    * status matches nothing, exactly like SUCCESS-only cards over that list.
    */
   async totals(filter?: PaymentListFilter) {
-    const empty = { count: 0, gross: 0, fee: 0, gst: 0 };
+    const empty = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0 };
     const q = buildListFilter(filter);
     if (q.status && q.status !== 'SUCCESS') return empty;
     q.status = 'SUCCESS';
@@ -827,11 +899,19 @@ export const paymentService = {
           gross: { $sum: '$total' },
           fee: { $sum: '$platform_fee_amount' },
           gst: { $sum: '$gst_amount' },
+          // Already off `gross` — reported so the gap to list price is explained.
+          ticket_discount_total: { $sum: '$ticket_discount_amount' },
         },
       },
     ]);
     if (!row) return empty;
-    return { count: row.count, gross: round2(row.gross), fee: round2(row.fee), gst: round2(row.gst) };
+    return {
+      count: row.count,
+      gross: round2(row.gross),
+      fee: round2(row.fee),
+      gst: round2(row.gst),
+      ticket_discount_total: round2(row.ticket_discount_total),
+    };
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the paymentsTable query. */
@@ -906,13 +986,16 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products } = await resolvePayable(input, userId);
+    const { pod, payableAmount, description, products, ticketDiscount } = await resolvePayable(
+      input,
+      userId
+    );
     const {
       quote: couponedQuote,
       originalTotal,
       couponCode,
       couponDiscount,
-    } = await applyCoupon(input, payableAmount, userId);
+    } = await applyCoupon(input, payableAmount, userId, ticketDiscount.amount);
     const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
 
     // Created PENDING even on the happy path: the finalizer is the only thing
@@ -938,11 +1021,16 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
+      ticket_discount_amount: ticketDiscount.amount,
+      ticket_discount_pct: ticketDiscount.pct,
       status: failed ? 'FAILED' : 'PENDING',
       gateway: 'DUMMY',
       gateway_ref: failed ? null : `dummy_${Date.now()}`,
       paid_at: null,
-      metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
+      metadata: {
+        ...paymentMetadata(input, pod, products, ticketDiscount),
+        original_total: originalTotal,
+      },
     });
 
     if (failed) return toPub(doc);
@@ -957,13 +1045,16 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description, products } = await resolvePayable(input, userId);
+    const { pod, payableAmount, description, products, ticketDiscount } = await resolvePayable(
+      input,
+      userId
+    );
     const {
       quote: couponedQuote,
       originalTotal,
       couponCode,
       couponDiscount,
-    } = await applyCoupon(input, payableAmount, userId);
+    } = await applyCoupon(input, payableAmount, userId, ticketDiscount.amount);
     const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
     const payment_id = newPaymentId();
     const base = {
@@ -984,10 +1075,17 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
+      ticket_discount_amount: ticketDiscount.amount,
+      ticket_discount_pct: ticketDiscount.pct,
+    };
+    const metadata = {
+      ...paymentMetadata(input, pod, products, ticketDiscount),
+      original_total: originalTotal,
     };
 
     // Nothing left to charge (100%-off coupon, or coins covering the whole
-    // bill) → finalize immediately and skip the gateway.
+    // bill) → finalize immediately and skip the gateway. The multi-ticket
+    // discount alone never gets here: a tier tops out below 100%.
     if (quote.total <= 0) {
       const settlement = freeSettlement(couponCode);
       const freeDoc = await PaymentModel.create({
@@ -997,7 +1095,7 @@ export const paymentService = {
         gateway: settlement.gateway,
         gateway_ref: `free_${Date.now()}`,
         paid_at: null,
-        metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
+        metadata,
       });
       return razorpaySheet({
         paymentDocId: String(freeDoc._id),
@@ -1029,7 +1127,7 @@ export const paymentService = {
       gateway: 'RAZORPAY',
       gateway_ref: order.id,
       paid_at: null,
-      metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal, razorpay_order_id: order.id },
+      metadata: { ...metadata, razorpay_order_id: order.id },
     });
 
     return razorpaySheet({

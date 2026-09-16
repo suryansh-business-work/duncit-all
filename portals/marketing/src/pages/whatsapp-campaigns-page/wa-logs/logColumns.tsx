@@ -57,7 +57,7 @@ export function getLogColumns({
     {
       field: 'created_at',
       headerName: t('adminWhatsapp.logColWhen'),
-      filter: { type: 'date' },
+      type: 'date',
       width: 175,
       valueGetter: (row) => (row.created_at ? formatDateTime(row.created_at) : EM_DASH),
     },
@@ -65,30 +65,28 @@ export function getLogColumns({
       field: 'kind',
       headerName: t('marketingWhatsapp.logs.colKind'),
       width: 130,
-      filter: {
-        type: 'select',
-        options: [
-          { value: 'CAMPAIGN', label: kindLabels.CAMPAIGN },
-          { value: 'AUTOMATIC', label: kindLabels.AUTOMATIC },
-        ],
-      },
+      type: 'enum',
+      options: [
+        { value: 'CAMPAIGN', label: kindLabels.CAMPAIGN },
+        { value: 'AUTOMATIC', label: kindLabels.AUTOMATIC },
+      ],
       cellRenderer: (row) => <KindCell row={row} labels={kindLabels} />,
       valueGetter: (row) => kindLabels[row.kind] ?? row.kind,
     },
     {
       field: 'name',
       headerName: t('marketingWhatsapp.logs.colSend'),
+      type: 'text',
       flex: 1.3,
       minWidth: 230,
       cellRenderer: (row) => <SendCell row={row} />,
       valueGetter: (row) => `${row.name} ${row.reference}`,
     },
     {
-      // Two different things by kind — an audience, or one number — so there is
-      // nothing on either collection for the server to sort it by.
+      // Two different things by kind — an audience, or one number.
       field: 'target',
       headerName: t('marketingWhatsapp.logs.colTo'),
-      sortable: false,
+      type: 'text',
       width: 165,
       valueGetter: (row) => row.target || EM_DASH,
     },
@@ -96,7 +94,8 @@ export function getLogColumns({
       field: 'status',
       headerName: t('shell.common.status'),
       width: 130,
-      filter: { type: 'select', options: statusOptions },
+      type: 'enum',
+      options: statusOptions,
       cellRenderer: (row) => (
         <StatusChip
           status={row.status}
@@ -109,6 +108,7 @@ export function getLogColumns({
     {
       field: 'sent_count',
       headerName: t('marketingWhatsapp.logs.colReach'),
+      type: 'number',
       width: 130,
       cellRenderer: (row) => <ReachCell row={row} t={t} />,
       valueGetter: (row) => `${row.sent_count} / ${row.recipient_count}`,
@@ -116,7 +116,7 @@ export function getLogColumns({
     {
       field: 'reason',
       headerName: t('adminWhatsapp.logColReason'),
-      sortable: false,
+      type: 'text',
       flex: 1.2,
       minWidth: 240,
       cellRenderer: (row) => <ReasonCell row={row} />,
@@ -125,6 +125,7 @@ export function getLogColumns({
     {
       field: 'cost',
       headerName: t('marketingWhatsapp.logs.colCost'),
+      type: 'number',
       width: 130,
       cellRenderer: (row) => <CostCell row={row} currency={currency} t={t} />,
       valueGetter: (row) => waMoney(row.cost, currency),
@@ -136,9 +137,9 @@ export function getLogColumns({
       field: 'category',
       headerName: t('adminWhatsapp.logColCategory'),
       hide: true,
-      sortable: false,
       width: 150,
-      filter: { type: 'select', options: WA_CATEGORY_OPTIONS },
+      type: 'enum',
+      options: WA_CATEGORY_OPTIONS,
       valueGetter: (row) => categoryLabel(row.category),
     },
   ];

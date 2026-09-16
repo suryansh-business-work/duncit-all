@@ -19,13 +19,17 @@ export interface LikeState {
 
 interface ExploreState {
   data?: ExploreData;
+  /** The header city `data` was (or is being) loaded for; '' is every city. */
+  locationId?: string;
   isLoading: boolean;
   error?: unknown;
   savedOverride: Record<string, boolean>;
   savePending: Record<string, boolean>;
   likeOverride: Record<string, LikeState>;
   commentDelta: Record<string, number>;
-  fetch: (force?: boolean) => Promise<void>;
+  /** Load the reels for one city. A different city replaces the feed outright,
+   *  so reels from the previous city are never shown while the new ones load. */
+  fetch: (locationId: string, force?: boolean) => Promise<void>;
   toggleSave: (podId: string, currentlySaved: boolean) => Promise<void>;
   toggleLike: (podId: string, current: LikeState) => Promise<void>;
   /** Push a like result from elsewhere (e.g. the Pod Detail page) so the feed banner stays in sync. */
@@ -46,15 +50,20 @@ export const useExploreStore = create<ExploreState>((set, get) => ({
     set((s) => ({
       commentDelta: { ...s.commentDelta, [podId]: (s.commentDelta[podId] ?? 0) + delta },
     })),
-  fetch: async (force = false) => {
-    if (get().isLoading) return;
-    if (get().data && !force) return;
-    set({ isLoading: true, error: undefined });
+  fetch: async (locationId, force = false) => {
+    const sameCity = get().locationId === locationId;
+    if (sameCity && (get().isLoading || (get().data && !force))) return;
+    set({ locationId, isLoading: true, error: undefined, data: sameCity ? get().data : undefined });
     try {
-      const data = await graphqlRequest(ExplorePodsDocument, undefined, { auth: true });
-      set({ data, isLoading: false });
+      const data = await graphqlRequest(
+        ExplorePodsDocument,
+        { locationId: locationId || null },
+        { auth: true },
+      );
+      // A city picked mid-request owns the feed now; this answer is stale.
+      if (get().locationId === locationId) set({ data, isLoading: false });
     } catch (error) {
-      set({ error, isLoading: false });
+      if (get().locationId === locationId) set({ error, isLoading: false });
     }
   },
   toggleSave: async (podId, currentlySaved) => {

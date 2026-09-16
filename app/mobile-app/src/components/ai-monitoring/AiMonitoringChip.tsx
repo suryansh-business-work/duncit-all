@@ -34,7 +34,8 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
   // Red TEXT and its outline use the AA accent, not the CTA fill.
   const { accent } = useThemeColors();
   const [open, setOpen] = useState(false);
-  const sheenStyle = useAiSweep(visible, '-140%', '240%');
+  // The band is 45% of the chip wide and travels -140%..240% of its own width.
+  const { sweepStyle: sheenStyle, onLayout } = useAiSweep(visible, -1.4 * 0.45, 2.4 * 0.45);
   const twinkleStyle = useAiTwinkle(visible);
 
   if (!visible) return null;
@@ -48,6 +49,7 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
         hitSlop={6}
         aria-label={copy.title}
         onPress={() => setOpen(true)}
+        onLayout={onLayout}
         pressStyle={PRESS_STYLE.control}
         alignItems="center"
         gap={5}

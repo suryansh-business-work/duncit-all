@@ -21,6 +21,8 @@ describe('package entry point', () => {
     expect(typeof api.clientTableFetch).toBe('function');
     expect(typeof api.fallbackT).toBe('function');
     expect(typeof api.useTranslation).toBe('function');
+    expect(typeof api.isColumnFilterable).toBe('function');
+    expect(typeof api.isColumnSortable).toBe('function');
     expect(api.EM_DASH).toBe('—');
   });
 });

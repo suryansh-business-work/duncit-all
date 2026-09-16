@@ -231,6 +231,7 @@ const WITHDRAWAL_TABLE_CONFIG: TableEntityConfig = {
     status: { type: 'enum' },
     payout_method: { type: 'enum' },
     withdrawer_role: { type: 'enum' },
+    beneficiary_name: { type: 'string' },
     amount: { type: 'number' },
     scheduled_for: { type: 'date' },
     requested_at: { type: 'date' },

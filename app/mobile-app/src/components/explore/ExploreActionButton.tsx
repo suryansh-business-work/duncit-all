@@ -22,6 +22,8 @@ interface ExploreActionButtonProps {
   onPress: () => void;
   active?: boolean;
   loading?: boolean;
+  /** Drawn as unavailable yet still pressable — the press explains why. */
+  dimmed?: boolean;
   testID?: string;
   /** Optional separate press on the caption (e.g. like count → who-liked list). */
   onLabelPress?: () => void;
@@ -36,6 +38,7 @@ export function ExploreActionButton({
   onPress,
   active,
   loading,
+  dimmed,
   testID,
   onLabelPress,
 }: Readonly<ExploreActionButtonProps>) {
@@ -57,7 +60,9 @@ export function ExploreActionButton({
         role="button"
         tabIndex={0}
         aria-label={label}
+        aria-disabled={dimmed || undefined}
         onPress={onPress}
+        opacity={dimmed ? 0.5 : 1}
         width={44}
         height={44}
         borderRadius={22}

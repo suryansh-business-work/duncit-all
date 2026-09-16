@@ -7,6 +7,7 @@ import {
   allowedSignatureMethods,
   applySignature,
   assertRecipient,
+  liftSigningStatusFilter,
   signatoriesForPdf,
   signatoriesToPub,
   validateSignature,
@@ -77,11 +78,15 @@ const LEGAL_DOCUMENT_TABLE_CONFIG: TableEntityConfig = {
     name: 'name',
     is_active: 'is_active',
     document_type: 'document_type',
+    // Derived from signed_at: unsigned (null) orders before signed.
+    signing_status: 'signed_at',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
+  // `signing_status` is matched by liftSigningStatusFilter, not listed here.
   filterFields: {
     document_no: { type: 'string' },
+    name: { type: 'string' },
     is_active: { type: 'boolean' },
     document_type: { type: 'string' },
     created_at: { type: 'date' },
@@ -116,10 +121,11 @@ export const legalDocumentService = {
 
   /** Server-side table page (search/filter/sort/paginate) for the legalDocumentsTable query. */
   async table(input?: TableQueryInput | null) {
+    const { base, query } = liftSigningStatusFilter(input);
     const { docs, total, page, page_size } = await runTableQuery<ILegalDocument>(
       LegalDocumentModel,
-      {},
-      input,
+      base,
+      query,
       LEGAL_DOCUMENT_TABLE_CONFIG
     );
     return { rows: docs.map(toPub), total, page, page_size };

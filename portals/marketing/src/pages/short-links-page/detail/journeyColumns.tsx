@@ -93,9 +93,12 @@ export function getJourneyColumns(t: Translate): DuncitColumn<ShortLinkJourneyRo
       format: DATE_TIME_FORMAT,
     }),
     {
+      // The visitor's name is read per row from the users collection — nothing stored on the click to order or match on.
       field: 'user_name',
       headerName: t('marketing.shortLinks.who'),
+      type: 'text',
       sortable: false,
+      filterable: false,
       minWidth: 200,
       cellRenderer: renderVisitor,
       valueGetter: (row) => row.user_name ?? row.user_email ?? 'Not signed in',
@@ -103,18 +106,18 @@ export function getJourneyColumns(t: Translate): DuncitColumn<ShortLinkJourneyRo
     {
       field: 'furthest_step',
       headerName: t('marketing.shortLinks.gotAsFarAs'),
+      // Derived from the journey trail per row; the server filters on it, but there is no stored value to order by.
       sortable: false,
       minWidth: 200,
-      filter: {
-        type: 'select',
-        options: Object.entries(STEP_LABELS).map(([value, label]) => ({ value, label })),
-      },
+      type: 'enum',
+      options: Object.entries(STEP_LABELS).map(([value, label]) => ({ value, label })),
       cellRenderer: renderStep,
       valueGetter: (row) => stepLabel(row.furthest_step),
     },
     {
       field: 'converted_amount',
       headerName: t('marketing.shortLinks.paid'),
+      type: 'number',
       width: 130,
       cellRenderer: renderPaid,
       valueGetter: (row) =>
@@ -122,7 +125,7 @@ export function getJourneyColumns(t: Translate): DuncitColumn<ShortLinkJourneyRo
           ? EM_DASH
           : formatINR(row.converted_amount),
     },
-    { field: 'platform', headerName: t('marketing.shortLinks.cameFrom'), minWidth: 150 },
-    { field: 'country', headerName: t('marketing.common.location'), minWidth: 180, valueGetter: locationOf },
+    { field: 'platform', headerName: t('marketing.shortLinks.cameFrom'), type: 'text', minWidth: 150 },
+    { field: 'country', headerName: t('marketing.common.location'), type: 'text', minWidth: 180, valueGetter: locationOf },
   ];
 }

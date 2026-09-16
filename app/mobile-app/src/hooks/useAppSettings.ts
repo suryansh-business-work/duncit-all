@@ -5,6 +5,7 @@ import {
   FALLBACK_TIME_FORMAT,
   FALLBACK_TIME_ZONE,
 } from '@duncit/datetime';
+import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 
 import { useAppSettingsStore } from '@/stores/app-settings.store';
 
@@ -28,5 +29,8 @@ export function useAppSettings() {
     minSignupAge: data?.publicAppSettings?.min_signup_age ?? DEFAULT_MIN_ACCOUNT_AGE_YEARS,
     draftRetentionDays:
       data?.publicAppSettings?.draft_retention_days ?? FALLBACK_DRAFT_RETENTION_DAYS,
+    /** Admin-set ceiling for any multi-ticket discount tier (Pods > Pod Settings). */
+    ticketDiscountMaxPct:
+      data?.publicAppSettings?.ticket_discount_max_pct ?? DEFAULT_TICKET_DISCOUNT_MAX_PCT,
   };
 }

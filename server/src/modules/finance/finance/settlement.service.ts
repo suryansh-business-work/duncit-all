@@ -113,6 +113,10 @@ export const SETTLEMENT_ENGINE_VERSION = 2;
  * via product invoices, never through the pod waterfall) and minus anything
  * already refunded back to the buyer (a partial backout leaves the payment
  * SUCCESS and records the returned money in metadata.refunded_amount).
+ *
+ * `total` is already net of the pod's multi-ticket discount (frozen on the
+ * payment at checkout, taken off the ticket money only), so the discount is
+ * host-funded by construction — never add `ticket_discount_amount` back here.
  */
 const ticketMoneyOf = (p: { total?: number; metadata?: any }) => {
   const products = Number(p.metadata?.product_cost_total) || 0;

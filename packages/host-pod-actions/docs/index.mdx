@@ -17,6 +17,7 @@ exports:
   - 'PodCompleteDialog'
   - 'PodCancelDialog'
   - 'PodEditDialog'
+  - 'podEditTicketDiscount'
   - 'PodResubmitDialog'
   - 'TicketScanDialog'
   - 'PodMediaView'
@@ -132,7 +133,7 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 
 `menuHandlers` also decides which edit a pod gets: a venue-**DECLINED** pod opens the full
 `PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the narrow
-`PodEditDialog` — title, description, media and the pod's capacity.
+`PodEditDialog` — title, description, media, the pod's capacity and its multi-ticket discount.
 
 ### The rows are their own file
 
@@ -181,6 +182,74 @@ offer a seat the mutation would refuse:
 
 The field renders only once the limits land, and `buildHostUpdateInput(values, { includeSpots })`
 omits `no_of_spots` until then — sending the seeded `0` would ask the server to empty the pod.
+
+### The multi-ticket discount, after the pod is live
+
+A pod can sell a single booking of several tickets cheaper — **2+ tickets → 10% off, 4+ → 20%**.
+`PodEditDialog` lets the host change that ladder on a live pod by rendering `@duncit/ui`'s shared
+`TicketDiscountField` (the same editor Create-a-Pod and the portal pod form use) through
+`PodTicketDiscountField`. The tier rules themselves live once in `@duncit/utils`
+(`ticketDiscountTierIssues`), beside the server's twin that re-checks every write. Payments freeze
+the discount they were sold at, so changing tiers never re-prices a booking already made.
+
+- The section is **hidden on a free pod** (`pod_type` includes `FREE`, or `pod_amount` is 0), and
+  the input then sends `ticket_discount_enabled: false` with no tiers.
+- The highest ticket count a tier may ask for follows the capacity control above it:
+  `ticketDiscountMaxTickets(no_of_spots)` — spots minus the host's free seat, or 10 when uncapped.
+- The highest discount is the admin's `publicAppSettings.ticket_discount_max_pct`, read from the
+  shared `PUBLIC_APP_SETTINGS` operation of `@duncit/app-settings`.
+- An **untouched** discount is not re-validated, exactly as the server skips it: an admin lowering
+  the cap must not stop a host fixing a typo in their title. Change any tier and the whole ladder
+  is checked.
+- The list that opens the dialog must select `pod_type`, `pod_amount`, `ticket_discount_enabled` and
+  `ticket_discount_tiers { min_tickets discount_pct }`. If it does not select the tiers,
+  `podEditTicketDiscount` answers `null` and the dialog neither shows nor sends the discount — a
+  narrow list can never switch a host's real offer off on an unrelated save.
+
+```ts
+import {
+  buildHostUpdateInput,
+  buildPodEditSchema,
+  mwebHostPodLabels,
+  podEditInitialValues,
+  podEditTicketDiscount,
+} from '@duncit/host-pod-actions';
+
+const labels = mwebHostPodLabels(t); // labels.ticketDiscount carries the tier messages
+const pod = {
+  id: 'DUN-POD-4821',
+  pod_title: 'Sunday Badminton Doubles',
+  pod_type: 'PAID',
+  pod_amount: 499,
+  no_of_spots: 12,
+  ticket_discount_enabled: true,
+  ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+};
+
+const discount = podEditTicketDiscount(pod, 50); // 50 = publicAppSettings.ticket_discount_max_pct
+const values = {
+  ...podEditInitialValues(pod),
+  ticket_discount_tiers: [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 20 },
+  ],
+};
+
+buildPodEditSchema(labels, discount).safeParse(values); // the new 4+ tier is validated
+buildHostUpdateInput(values, { includeSpots: true, ticketDiscount: discount });
+// → { …, no_of_spots: 12, ticket_discount_enabled: true,
+//     ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }, { min_tickets: 4, discount_pct: 20 }] }
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `podEditTicketDiscount` | `(pod: HostPodTarget \| null, maxPct: number) => PodEditTicketDiscount \| null` | `{ free, maxPct, stored }` for the dialog; `null` when the pod carries no tiers to edit. |
+| `buildPodEditSchema` | `(labels, ticketDiscount?: PodEditTicketDiscount \| null)` | Adds the tier `superRefine` when a discount context is given. |
+| `buildHostUpdateInput` | `(values, { includeSpots?, ticketDiscount? })` | Spreads `ticketDiscountInput(values, free)` when a discount context is given. |
+| `PodEditFormInput` | type | The form's raw values — what a `Control` over the edit form holds. |
+
+`PodResubmitDialog` does not carry the discount: a venue-rejected resubmission changes the venue,
+the slot and the copy, never the price.
 
 ## The pod's media
 

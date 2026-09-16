@@ -614,10 +614,16 @@ const INVENTORY_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
     selling_price: 'selling_price',
     inventory_count: 'inventory_count',
     status: 'status',
+    is_active: 'is_active',
+    listing_review_status: 'listing_review_status',
+    commission_pct: 'commission_pct',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
   filterFields: {
+    product_name: { type: 'string' },
+    listing_review_status: { type: 'enum' },
+    commission_pct: { type: 'number' },
     status: { type: 'enum' },
     ownership: { type: 'enum' },
     visibility: { type: 'enum' },
@@ -647,6 +653,8 @@ const MARKETPLACE_BRAND_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    product_name: { type: 'string' },
+    sku: { type: 'string' },
     selling_price: { type: 'number' },
     commission_pct: { type: 'number' },
     created_at: { type: 'date' },
@@ -664,9 +672,13 @@ const PRODUCT_LISTING_REQUEST_TABLE_CONFIG: TableEntityConfig = {
     unit_cost: 'unit_cost',
     commission_pct: 'commission_pct',
     delivery_target: 'delivery_target',
+    // The table's Status column shows the review status, not the product lifecycle status.
+    status: 'listing_review_status',
     created_at: 'created_at',
   },
   filterFields: {
+    product_name: { type: 'string' },
+    inventory_count: { type: 'number' },
     listing_review_status: { type: 'enum' },
     delivery_target: { type: 'enum' },
     commission_pct: { type: 'number' },
@@ -689,6 +701,8 @@ const MY_PRODUCT_LISTING_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    product_name: { type: 'string' },
+    unit_cost: { type: 'number' },
     listing_review_status: { type: 'enum' },
     delivery_target: { type: 'enum' },
     status: { type: 'enum' },

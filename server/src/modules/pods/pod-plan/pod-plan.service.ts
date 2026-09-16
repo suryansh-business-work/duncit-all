@@ -33,7 +33,10 @@ const POD_PLAN_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     is_active: { type: 'boolean' },
     is_coming_soon: { type: 'boolean' },
+    name: { type: 'string' },
     key: { type: 'string' },
+    price_label: { type: 'string' },
+    sort_order: { type: 'number' },
   },
   defaultSort: { sort_order: 1, name: 1 },
 };

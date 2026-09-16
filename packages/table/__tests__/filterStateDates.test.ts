@@ -1,81 +1,85 @@
+import { endOfDay, startOfDay } from 'date-fns';
 import { describe, expect, it } from 'vitest';
-import {
-  draftToFilters,
-  emptyDraft,
-  filterChipLabel,
-  filtersToDraft,
-} from '../src/toolbar/filterState';
-import type { DuncitColumn, TableFilterValue } from '../src/types';
+import { formatDateCell } from '../src/cells';
+import { fallbackT } from '../src/i18n';
+import { draftToFilter, emptyDraft, filterChipLabel, filterToDraft } from '../src/toolbar/filterState';
+import type { DuncitColumn } from '../src/types';
 
-type Row = Record<string, unknown>;
+type Pod = Record<string, unknown>;
 
-const columns: DuncitColumn<Row>[] = [
-  { field: 'created', headerName: 'Created', filter: { type: 'date' } },
-  { field: 'age', headerName: 'Age', filter: { type: 'number' } },
-];
+const created: DuncitColumn<Pod> = { field: 'created_at', headerName: 'Created', type: 'date' };
 
-const FROM = new Date('2026-01-01T00:00:00.000Z');
-const TO = new Date('2026-02-01T00:00:00.000Z');
+// Picked mid-afternoon on purpose: the filter must still cover the WHOLE day.
+const FROM_PICK = new Date(2026, 8, 1, 15, 30);
+const TO_PICK = new Date(2026, 8, 8, 9, 0);
+const FROM_ISO = startOfDay(FROM_PICK).toISOString();
+const TO_ISO = endOfDay(TO_PICK).toISOString();
+
+const draft = (from: Date | null, to: Date | null) => ({ ...emptyDraft(created), from, to });
 
 describe('date-range drafts', () => {
-  it('a to-only date draft becomes an lte filter with the ISO value', () => {
-    expect(draftToFilters(columns, { created: { ...emptyDraft(), to: TO } })).toEqual([
-      { field: 'created', op: 'lte', value: TO.toISOString() },
-    ]);
+  it('applies whole days: from starts at midnight and to ends at the last millisecond of its day', () => {
+    expect(draftToFilter(created, draft(FROM_PICK, TO_PICK))).toEqual({
+      field: 'created_at',
+      op: 'between',
+      values: [FROM_ISO, TO_ISO],
+    });
   });
 
-  it('a between filter on a date column prefills both pickers as Dates', () => {
-    const drafts = filtersToDraft(columns, [
-      { field: 'created', op: 'between', values: [FROM.toISOString(), TO.toISOString()] },
-    ]);
-    expect(drafts.created.from).toEqual(FROM);
-    expect(drafts.created.to).toEqual(TO);
-    // Dates go to the pickers, never to the text min/max inputs.
-    expect(drafts.created).toMatchObject({ min: '', max: '' });
-    // …and it round-trips back to the same filter.
-    expect(draftToFilters(columns, drafts)).toEqual([
-      { field: 'created', op: 'between', values: [FROM.toISOString(), TO.toISOString()] },
-    ]);
+  it('applies an open-ended range as gte or lte, and no filter with neither day picked', () => {
+    expect(draftToFilter(created, draft(FROM_PICK, null))).toEqual({ field: 'created_at', op: 'gte', value: FROM_ISO });
+    expect(draftToFilter(created, draft(null, TO_PICK))).toEqual({ field: 'created_at', op: 'lte', value: TO_ISO });
+    expect(draftToFilter(created, draft(null, null))).toBeNull();
   });
 
-  it('an lte filter on a date column fills only the "to" picker', () => {
-    const drafts = filtersToDraft(columns, [
-      { field: 'created', op: 'lte', value: TO.toISOString() },
-    ]);
-    expect(drafts.created.from).toBeNull();
-    expect(drafts.created.to).toEqual(TO);
-  });
-
-  it('a between filter whose high bound is not a date leaves that picker empty', () => {
-    const drafts = filtersToDraft(columns, [
-      { field: 'created', op: 'between', values: [FROM.toISOString(), 'not-a-date'] },
-    ]);
-    expect(drafts.created.from).toEqual(FROM);
-    expect(drafts.created.to).toBeNull();
-  });
-
-  it('a filter for a column that is not in the table leaves every draft empty', () => {
-    const drafts = filtersToDraft(columns, [{ field: 'ghost', op: 'contains', value: 'x' }]);
-    expect(drafts.created).toEqual(emptyDraft());
-    expect(drafts.age).toEqual(emptyDraft());
-    expect(drafts.ghost).toBeUndefined();
+  it('treats a half-typed (invalid) day as unpicked', () => {
+    expect(draftToFilter(created, draft(new Date('not a date'), TO_PICK))).toEqual({
+      field: 'created_at',
+      op: 'lte',
+      value: TO_ISO,
+    });
   });
 });
 
-describe('filterChipLabel operator symbols', () => {
-  it('renders the remaining mapped operators', () => {
-    expect(filterChipLabel(columns, { field: 'age', op: 'lte', value: '9' })).toBe('Age ≤ 9');
-    expect(filterChipLabel(columns, { field: 'age', op: 'ne', value: '9' })).toBe('Age ≠ 9');
+describe('reopening a date filter', () => {
+  it('prefills both pickers from a between filter, and round-trips to the same filter', () => {
+    const filter = { field: 'created_at', op: 'between' as const, values: [FROM_ISO, TO_ISO] };
+    const reopened = filterToDraft(created, filter);
+    expect(reopened.from?.getTime()).toBe(new Date(FROM_ISO).getTime());
+    expect(reopened.to?.getTime()).toBe(new Date(TO_ISO).getTime());
+    // Days go to the pickers, never to the text inputs.
+    expect(reopened).toMatchObject({ value: '', valueTo: '' });
+    expect(draftToFilter(created, reopened)).toEqual(filter);
   });
 
-  it('labels a date range with the column header and an en dash', () => {
-    const filter: TableFilterValue = {
-      field: 'created',
-      op: 'between',
-      values: [FROM.toISOString(), TO.toISOString()],
-    };
-    expect(filterChipLabel(columns, filter)).toBe(
-      `Created: ${FROM.toISOString()} – ${TO.toISOString()}`,
+  it('fills only the "from" picker for gte and only the "to" picker for lte', () => {
+    const gte = filterToDraft(created, { field: 'created_at', op: 'gte', value: FROM_ISO });
+    expect(gte.from?.toISOString()).toBe(FROM_ISO);
+    expect(gte.to).toBeNull();
+
+    const lte = filterToDraft(created, { field: 'created_at', op: 'lte', value: TO_ISO });
+    expect(lte.from).toBeNull();
+    expect(lte.to?.toISOString()).toBe(TO_ISO);
+  });
+
+  it('leaves a picker empty for a bound that is missing or is not a date', () => {
+    const unreadable = filterToDraft(created, { field: 'created_at', op: 'between', values: [FROM_ISO, 'not-a-date'] });
+    expect(unreadable.from?.toISOString()).toBe(FROM_ISO);
+    expect(unreadable.to).toBeNull();
+
+    const bare = filterToDraft(created, { field: 'created_at', op: 'between' });
+    expect(bare.from).toBeNull();
+    expect(bare.to).toBeNull();
+  });
+});
+
+describe('date filter chips', () => {
+  it('show the days in the admin-configured date format', () => {
+    expect(
+      filterChipLabel([created], { field: 'created_at', op: 'between', values: [FROM_ISO, TO_ISO] }, fallbackT),
+    ).toBe(`Created: ${formatDateCell(FROM_ISO)} – ${formatDateCell(TO_ISO)}`);
+    expect(filterChipLabel([created], { field: 'created_at', op: 'gte', value: FROM_ISO }, fallbackT)).toBe(
+      `Created ≥ ${formatDateCell(FROM_ISO)}`,
     );
   });
 });

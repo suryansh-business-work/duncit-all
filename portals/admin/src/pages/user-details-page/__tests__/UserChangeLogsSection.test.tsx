@@ -109,18 +109,21 @@ describe('columns.ts — CHANGE_LOG_COLUMNS shape', () => {
     });
   });
 
-  it('append-only rows are never edited, so only the created-at date sorts/filters', () => {
-    expect(columnBy('old_value').sortable).toBe(false);
-    expect(columnBy('new_value').sortable).toBe(false);
-    expect(columnBy('updated_at').sortable).toBe(false);
-    expect(columnBy('created_at').filter).toEqual({ type: 'date' });
-    expect(columnBy('updated_at').filter).toBeUndefined();
+  it('sorts and filters the values as text and both dates on the one stored timestamp', () => {
+    const kindOf = (field: string) => {
+      const col = columnBy(field);
+      return [col.type, col.sortable ?? true, col.filterable ?? true];
+    };
+    expect(kindOf('old_value')).toEqual(['text', true, true]);
+    expect(kindOf('new_value')).toEqual(['text', true, true]);
+    expect(kindOf('created_at')).toEqual(['date', true, true]);
+    expect(kindOf('updated_at')).toEqual(['date', true, true]);
   });
 
   it('offers the exact enum options each filterable column accepts', () => {
-    expect(columnBy('action').filter).toEqual({ type: 'select', options: ACTION_OPTIONS });
-    expect(columnBy('actor_type').filter).toEqual({ type: 'select', options: ACTOR_OPTIONS });
-    expect(columnBy('source').filter).toEqual({ type: 'select', options: SOURCE_OPTIONS });
+    expect(columnBy('action')).toMatchObject({ type: 'enum', options: ACTION_OPTIONS });
+    expect(columnBy('actor_type')).toMatchObject({ type: 'enum', options: ACTOR_OPTIONS });
+    expect(columnBy('source')).toMatchObject({ type: 'enum', options: SOURCE_OPTIONS });
   });
 });
 

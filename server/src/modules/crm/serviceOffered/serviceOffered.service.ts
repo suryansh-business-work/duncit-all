@@ -2,7 +2,12 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { ServiceOfferedModel } from './serviceOffered.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  buildTableFilter,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
@@ -88,6 +93,7 @@ const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    title: { type: 'string' },
     super_category_id: { type: 'string' },
     category_id: { type: 'string' },
     sub_category_id: { type: 'string' },
@@ -95,10 +101,38 @@ const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
     applies_to_venue: { type: 'boolean' },
     applies_to_host: { type: 'boolean' },
     applies_to_ecomm: { type: 'boolean' },
+    sort_order: { type: 'number' },
     created_at: { type: 'date' },
   },
   defaultSort: { sort_order: 1, title: 1 },
 };
+
+/** The category-name columns show a name read from the Category collection;
+ * this is the stored reference each one filters through. */
+const CATEGORY_NAME_PATHS: Record<string, string> = {
+  super_category_name: 'super_category_id',
+  category_name: 'category_id',
+  sub_category_name: 'sub_category_id',
+};
+const CATEGORY_NAME_CONFIG: TableEntityConfig = {
+  searchFields: [],
+  sortFields: {},
+  filterFields: { name: { type: 'string' } },
+  defaultSort: {},
+};
+
+/** A text filter on a category-name column, turned into an id match on the stored reference. */
+async function categoryNameFilter(input?: TableQueryInput | null): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  for (const f of input?.filters ?? []) {
+    if (!Object.hasOwn(CATEGORY_NAME_PATHS, f.field)) continue;
+    const nameMatch = buildTableFilter({ filters: [{ ...f, field: 'name' }] }, CATEGORY_NAME_CONFIG);
+    if (Object.keys(nameMatch).length === 0) continue; // invalid filter: dropped
+    const ids = await CategoryModel.distinct('_id', nameMatch);
+    out[CATEGORY_NAME_PATHS[f.field]] = { $in: ids };
+  }
+  return out;
+}
 
 export interface ServiceOfferedFilter {
   super_category_id?: string | null;
@@ -135,7 +169,7 @@ export const serviceOfferedService = {
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery(
       ServiceOfferedModel,
-      {},
+      await categoryNameFilter(input),
       input,
       SERVICE_OFFERED_TABLE_CONFIG
     );

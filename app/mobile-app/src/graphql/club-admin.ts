@@ -218,6 +218,11 @@ export const ClubAdminPodForEditDocument = gql(`
         product_id
         quantity
       }
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
     }
   }
 `);

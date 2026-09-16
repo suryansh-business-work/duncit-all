@@ -1,180 +1,189 @@
 import { describe, expect, it } from 'vitest';
 import {
-  draftToFilters,
+  draftToFilter,
   emptyDraft,
   filterChipLabel,
-  filtersToDraft,
-  type FilterDraftMap,
+  filterToDraft,
+  type FilterDraft,
 } from '../src/toolbar/filterState';
 import { fallbackT } from '../src/i18n';
 import type { DuncitColumn, TableFilterValue } from '../src/types';
 
-type Row = Record<string, unknown>;
+type Payout = Record<string, unknown>;
 
-const columns: DuncitColumn<Row>[] = [
-  { field: 'name', headerName: 'Name', filter: { type: 'text' } },
+// One column per type a filter control exists for — the type alone decides the
+// draft slots, the operator and the chip wording. Dates have their own suite.
+const columns: DuncitColumn<Payout>[] = [
+  { field: 'host_name', headerName: 'Host', type: 'text' },
   {
     field: 'status',
     headerName: 'Status',
-    filter: {
-      type: 'select',
-      options: [
-        { value: 'A', label: 'Active' },
-        { value: 'I', label: 'Inactive' },
-      ],
-      multiple: true,
-    },
+    type: 'enum',
+    options: [
+      { value: 'PENDING', label: 'Pending' },
+      { value: 'PAID', label: 'Paid' },
+    ],
   },
-  {
-    field: 'kind',
-    headerName: 'Kind',
-    filter: { type: 'select', options: [{ value: 'x', label: 'X' }] },
-  },
-  { field: 'age', headerName: 'Age', filter: { type: 'number' } },
-  { field: 'created', headerName: 'Created', filter: { type: 'date' } },
-  { field: 'active', headerName: 'Active', filter: { type: 'boolean' } },
-  { field: 'plain', headerName: 'Plain' }, // not filterable
+  { field: 'amount', headerName: 'Amount', type: 'number' },
+  { field: 'is_settled', headerName: 'Settled', type: 'boolean' },
 ];
 
-function draftsWith(overrides: FilterDraftMap): FilterDraftMap {
-  const base: FilterDraftMap = {};
-  for (const column of columns) {
-    if (column.filter) base[column.field] = emptyDraft();
-  }
-  return { ...base, ...overrides };
+function column(field: string): DuncitColumn<Payout> {
+  const found = columns.find((c) => c.field === field);
+  if (!found) throw new Error(`no ${field} column`);
+  return found;
 }
 
-describe('draftToFilters', () => {
-  it('text -> contains, trimmed; empty dropped', () => {
-    expect(draftToFilters(columns, draftsWith({ name: { ...emptyDraft(), text: ' ab ' } }))).toEqual(
-      [{ field: 'name', op: 'contains', value: 'ab' }],
-    );
-    expect(draftToFilters(columns, draftsWith({}))).toEqual([]);
-  });
+function draftFor(field: string, patch: Partial<FilterDraft>): FilterDraft {
+  return { ...emptyDraft(column(field)), ...patch };
+}
 
-  it('multi select -> in; single select -> eq', () => {
-    const drafts = draftsWith({
-      status: { ...emptyDraft(), selected: ['A', 'I'] },
-      kind: { ...emptyDraft(), selected: ['x'] },
-    });
-    expect(draftToFilters(columns, drafts)).toEqual([
-      { field: 'status', op: 'in', values: ['A', 'I'] },
-      { field: 'kind', op: 'eq', value: 'x' },
-    ]);
-  });
-
-  it('number min+max -> between; only min -> gte; only max -> lte', () => {
-    expect(
-      draftToFilters(columns, draftsWith({ age: { ...emptyDraft(), min: '1', max: '9' } })),
-    ).toEqual([{ field: 'age', op: 'between', values: ['1', '9'] }]);
-    expect(draftToFilters(columns, draftsWith({ age: { ...emptyDraft(), min: '1' } }))).toEqual([
-      { field: 'age', op: 'gte', value: '1' },
-    ]);
-    expect(draftToFilters(columns, draftsWith({ age: { ...emptyDraft(), max: '9' } }))).toEqual([
-      { field: 'age', op: 'lte', value: '9' },
-    ]);
-  });
-
-  it('date range -> between/gte/lte with ISO values', () => {
-    const from = new Date('2026-01-01T00:00:00.000Z');
-    const to = new Date('2026-02-01T00:00:00.000Z');
-    expect(
-      draftToFilters(columns, draftsWith({ created: { ...emptyDraft(), from, to } })),
-    ).toEqual([
-      { field: 'created', op: 'between', values: [from.toISOString(), to.toISOString()] },
-    ]);
-    expect(draftToFilters(columns, draftsWith({ created: { ...emptyDraft(), from } }))).toEqual([
-      { field: 'created', op: 'gte', value: from.toISOString() },
-    ]);
-  });
-
-  it('boolean -> is_true / is_false / dropped', () => {
-    expect(
-      draftToFilters(columns, draftsWith({ active: { ...emptyDraft(), bool: 'true' } })),
-    ).toEqual([{ field: 'active', op: 'is_true' }]);
-    expect(
-      draftToFilters(columns, draftsWith({ active: { ...emptyDraft(), bool: 'false' } })),
-    ).toEqual([{ field: 'active', op: 'is_false' }]);
+describe('emptyDraft', () => {
+  it('opens a number column on equals and every other column on contains, with every slot empty', () => {
+    const empty = { value: '', valueTo: '', from: null, to: null, bool: '', selected: [] };
+    expect(emptyDraft(column('amount'))).toEqual({ op: 'eq', ...empty });
+    expect(emptyDraft(column('host_name'))).toEqual({ op: 'contains', ...empty });
+    expect(emptyDraft(column('status'))).toEqual({ op: 'contains', ...empty });
   });
 });
 
-describe('filtersToDraft (round trip)', () => {
-  it('rebuilds the draft from every filter type', () => {
-    const from = new Date('2026-01-01T00:00:00.000Z');
-    const filters: TableFilterValue[] = [
-      { field: 'name', op: 'contains', value: 'ab' },
-      { field: 'status', op: 'in', values: ['A'] },
-      { field: 'kind', op: 'eq', value: 'x' },
-      { field: 'age', op: 'between', values: ['1', '9'] },
-      { field: 'created', op: 'gte', value: from.toISOString() },
-      { field: 'active', op: 'is_false' },
+describe('draftToFilter', () => {
+  it('applies a text draft with its operator and a trimmed value, and nothing when left blank', () => {
+    const host = column('host_name');
+    expect(draftToFilter(host, draftFor('host_name', { value: ' Asha ' }))).toEqual({
+      field: 'host_name',
+      op: 'contains',
+      value: 'Asha',
+    });
+    expect(draftToFilter(host, draftFor('host_name', { op: 'ne', value: 'Ravi' }))).toEqual({
+      field: 'host_name',
+      op: 'ne',
+      value: 'Ravi',
+    });
+    expect(draftToFilter(host, draftFor('host_name', { value: '   ' }))).toBeNull();
+  });
+
+  it('applies a number comparison, and nothing without a value', () => {
+    const amount = column('amount');
+    expect(draftToFilter(amount, draftFor('amount', { op: 'gte', value: ' 1200 ' }))).toEqual({
+      field: 'amount',
+      op: 'gte',
+      value: '1200',
+    });
+    expect(draftToFilter(amount, draftFor('amount', { op: 'eq', value: '' }))).toBeNull();
+  });
+
+  it('turns a number range into between, or into an open-ended bound when only one side is given', () => {
+    const amount = column('amount');
+    expect(draftToFilter(amount, draftFor('amount', { op: 'between', value: '500', valueTo: ' 2500 ' }))).toEqual({
+      field: 'amount',
+      op: 'between',
+      values: ['500', '2500'],
+    });
+    expect(draftToFilter(amount, draftFor('amount', { op: 'between', value: '500' }))).toEqual({
+      field: 'amount',
+      op: 'gte',
+      value: '500',
+    });
+    expect(draftToFilter(amount, draftFor('amount', { op: 'between', valueTo: '2500' }))).toEqual({
+      field: 'amount',
+      op: 'lte',
+      value: '2500',
+    });
+    expect(draftToFilter(amount, draftFor('amount', { op: 'between' }))).toBeNull();
+  });
+
+  it('turns a boolean draft into is_true / is_false, and Any into no filter', () => {
+    const settled = column('is_settled');
+    expect(draftToFilter(settled, draftFor('is_settled', { bool: 'true' }))).toEqual({
+      field: 'is_settled',
+      op: 'is_true',
+    });
+    expect(draftToFilter(settled, draftFor('is_settled', { bool: 'false' }))).toEqual({
+      field: 'is_settled',
+      op: 'is_false',
+    });
+    expect(draftToFilter(settled, draftFor('is_settled', { bool: '' }))).toBeNull();
+  });
+
+  it('turns picked enum options into an in filter on a copy of the list, and none picked into no filter', () => {
+    const selected = ['PENDING', 'PAID'];
+    const applied = draftToFilter(column('status'), draftFor('status', { selected }));
+    expect(applied).toEqual({ field: 'status', op: 'in', values: ['PENDING', 'PAID'] });
+    expect(applied?.values).not.toBe(selected);
+    expect(draftToFilter(column('status'), draftFor('status', { selected: [] }))).toBeNull();
+  });
+});
+
+describe('filterToDraft', () => {
+  it('opens on an empty draft when the column has no filter applied', () => {
+    expect(filterToDraft(column('amount'), undefined)).toEqual(emptyDraft(column('amount')));
+  });
+
+  it('reopens a boolean filter on its choice', () => {
+    expect(filterToDraft(column('is_settled'), { field: 'is_settled', op: 'is_true' }).bool).toBe('true');
+    expect(filterToDraft(column('is_settled'), { field: 'is_settled', op: 'is_false' }).bool).toBe('false');
+  });
+
+  it('reopens an enum filter on its picked options, and on none when it carries no list', () => {
+    const status = column('status');
+    expect(filterToDraft(status, { field: 'status', op: 'in', values: ['PAID'] }).selected).toEqual(['PAID']);
+    expect(filterToDraft(status, { field: 'status', op: 'in' }).selected).toEqual([]);
+  });
+
+  it('reopens a text or number filter on its operator and value, or on its range bounds', () => {
+    expect(filterToDraft(column('host_name'), { field: 'host_name', op: 'eq', value: 'Asha' })).toMatchObject({
+      op: 'eq',
+      value: 'Asha',
+      valueTo: '',
+    });
+    expect(
+      filterToDraft(column('amount'), { field: 'amount', op: 'between', values: ['500', '2500'] }),
+    ).toMatchObject({ op: 'between', value: '500', valueTo: '2500' });
+    // A hand-built filter with neither a value nor a list reopens blank rather than on "undefined".
+    expect(filterToDraft(column('amount'), { field: 'amount', op: 'gte' })).toMatchObject({
+      op: 'gte',
+      value: '',
+      valueTo: '',
+    });
+  });
+
+  it('round-trips every applied shape back to the same filter', () => {
+    const applied: Array<[string, TableFilterValue]> = [
+      ['host_name', { field: 'host_name', op: 'contains', value: 'Asha' }],
+      ['amount', { field: 'amount', op: 'between', values: ['500', '2500'] }],
+      ['amount', { field: 'amount', op: 'lte', value: '2500' }],
+      ['is_settled', { field: 'is_settled', op: 'is_false' }],
+      ['status', { field: 'status', op: 'in', values: ['PENDING'] }],
     ];
-    const drafts = filtersToDraft(columns, filters);
-    expect(drafts.name.text).toBe('ab');
-    expect(drafts.status.selected).toEqual(['A']);
-    expect(drafts.kind.selected).toEqual(['x']);
-    expect(drafts.age).toMatchObject({ min: '1', max: '9' });
-    expect(drafts.created.from?.toISOString()).toBe(from.toISOString());
-    expect(drafts.created.to).toBeNull();
-    expect(drafts.active.bool).toBe('false');
-    expect(drafts.plain).toBeUndefined(); // non-filterable columns get no draft
-    // and the round trip back:
-    expect(draftToFilters(columns, drafts)).toEqual(filters);
-  });
-
-  it('ignores invalid ISO dates', () => {
-    const drafts = filtersToDraft(columns, [{ field: 'created', op: 'gte', value: 'garbage' }]);
-    expect(drafts.created.from).toBeNull();
-  });
-
-  it('fills the draft with empty fallbacks for value-less filters, is_true and lte', () => {
-    const drafts = filtersToDraft(columns, [
-      { field: 'name', op: 'contains' }, // no value -> text ''
-      { field: 'kind', op: 'eq' }, // no value -> selected []
-      { field: 'status', op: 'in' }, // no values -> selected []
-      { field: 'active', op: 'is_true' },
-      { field: 'age', op: 'lte', value: '9' },
-    ]);
-    expect(drafts.name.text).toBe('');
-    expect(drafts.kind.selected).toEqual([]);
-    expect(drafts.status.selected).toEqual([]);
-    expect(drafts.active.bool).toBe('true');
-    expect(drafts.age).toMatchObject({ min: '', max: '9' });
-  });
-
-  it('skips a column that has a draft but declares no filter', () => {
-    // Forces draftToFilter down its `!filter` guard for the non-filterable column.
-    const drafts = { ...draftsWith({}), plain: emptyDraft() };
-    expect(draftToFilters(columns, drafts)).toEqual([]);
+    for (const [field, filter] of applied) {
+      expect(draftToFilter(column(field), filterToDraft(column(field), filter))).toEqual(filter);
+    }
   });
 });
 
 describe('filterChipLabel', () => {
-  it('labels every op shape with the column header', () => {
-    expect(filterChipLabel(columns, { field: 'name', op: 'contains', value: 'ab' }, fallbackT)).toBe(
-      'Name contains ab',
-    );
-    expect(filterChipLabel(columns, { field: 'status', op: 'in', values: ['A', 'I'] }, fallbackT)).toBe(
-      'Status: A, I',
-    );
-    expect(filterChipLabel(columns, { field: 'age', op: 'between', values: ['1', '9'] }, fallbackT)).toBe(
-      'Age: 1 – 9',
-    );
-    expect(filterChipLabel(columns, { field: 'age', op: 'gte', value: '1' }, fallbackT)).toBe('Age ≥ 1');
-    expect(filterChipLabel(columns, { field: 'active', op: 'is_true' }, fallbackT)).toBe('Active: Yes');
-    expect(filterChipLabel(columns, { field: 'active', op: 'is_false' }, fallbackT)).toBe('Active: No');
-    expect(filterChipLabel(columns, { field: 'unknown', op: 'eq', value: '1' }, fallbackT)).toBe(
-      'unknown = 1',
-    );
+  const label = (filter: TableFilterValue) => filterChipLabel(columns, filter, fallbackT);
+
+  it('words contains, and writes every other comparison as its symbol', () => {
+    expect(label({ field: 'host_name', op: 'contains', value: 'Asha' })).toBe('Host contains Asha');
+    expect(label({ field: 'amount', op: 'eq', value: '1200' })).toBe('Amount = 1200');
+    expect(label({ field: 'amount', op: 'ne', value: '1200' })).toBe('Amount ≠ 1200');
+    expect(label({ field: 'amount', op: 'gte', value: '500' })).toBe('Amount ≥ 500');
+    expect(label({ field: 'amount', op: 'lte', value: '2500' })).toBe('Amount ≤ 2500');
   });
 
-  it('falls back to empty value list and raw op when values/labels are missing', () => {
-    // `in` / `between` with no `values` array exercise the `?? []` fallbacks.
-    expect(filterChipLabel(columns, { field: 'status', op: 'in' }, fallbackT)).toBe('Status: ');
-    expect(filterChipLabel(columns, { field: 'age', op: 'between' }, fallbackT)).toBe('Age: ');
-    // An op outside OP_SYMBOLS renders the localized contains word; missing value -> '' (trimmed).
-    expect(
-      filterChipLabel(columns, { field: 'age', op: 'starts_with' as TableFilterValue['op'] }, fallbackT),
-    ).toBe('Age contains');
+  it('labels a range, a boolean and an enum by what the reader sees', () => {
+    expect(label({ field: 'amount', op: 'between', values: ['500', '2500'] })).toBe('Amount: 500 – 2500');
+    expect(label({ field: 'is_settled', op: 'is_true' })).toBe('Settled: Yes');
+    expect(label({ field: 'is_settled', op: 'is_false' })).toBe('Settled: No');
+    // An option the column no longer lists still shows its raw value.
+    expect(label({ field: 'status', op: 'in', values: ['PAID', 'ON_HOLD'] })).toBe('Status: Paid, ON_HOLD');
+  });
+
+  it('falls back to the field for a filter no column shows, and reads a missing value or list as empty', () => {
+    expect(label({ field: 'club_id', op: 'eq', value: 'DUN-CLUB-12' })).toBe('club_id = DUN-CLUB-12');
+    expect(label({ field: 'host_name', op: 'contains' })).toBe('Host contains');
+    expect(label({ field: 'status', op: 'in' })).toBe('Status: ');
   });
 });

@@ -80,6 +80,7 @@ export const CLUB_DETAILS_RELATED = gql`
       pod_attendees
       seats_taken
       no_of_spots
+      locality
       place_label
       place_detail
       club_slug

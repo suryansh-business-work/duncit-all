@@ -104,14 +104,17 @@ export default function BackoutRefundTable({
         field: 'backout_no',
         headerName: t('finance.backoutRefund.backoutId'),
         minWidth: 160,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderBackoutNo,
         valueGetter: (row) => row.backout_no,
       },
       {
         field: 'user_name',
         headerName: t('finance.backoutRefund.member'),
+        type: 'text',
+        // Hydrated from the user after the page is fetched — no stored path.
         sortable: false,
+        filterable: false,
         flex: 1,
         minWidth: 180,
         cellRenderer: renderMember,
@@ -120,7 +123,10 @@ export default function BackoutRefundTable({
       {
         field: 'pod_title',
         headerName: t('finance.common.pod'),
+        type: 'text',
+        // Hydrated from the pod after the page is fetched — no stored path.
         sortable: false,
+        filterable: false,
         minWidth: 160,
         valueGetter: (row) => row.pod?.pod_title ?? '—',
       },
@@ -128,7 +134,8 @@ export default function BackoutRefundTable({
         field: 'backout_status',
         headerName: t('shell.common.status'),
         width: 170,
-        filter: { type: 'select', options: BACKOUT_STATUS_OPTIONS },
+        type: 'enum',
+        options: BACKOUT_STATUS_OPTIONS,
         cellRenderer: renderBackoutStatus,
         valueGetter: (row) => BACKOUT_STATUS_LABELS[row.backout_status],
       },
@@ -136,13 +143,13 @@ export default function BackoutRefundTable({
         field: 'created_at',
         headerName: t('finance.backoutRefund.backedOut'),
         width: 170,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (row) => fmtDate(row.backed_out_at),
       },
       {
         field: 'payment_amount',
         headerName: t('finance.common.amount'),
-        sortable: false,
+        type: 'number',
         width: 110,
         valueGetter: (row) => money(sym, Number(row.payment_amount ?? 0)),
       },
@@ -151,7 +158,7 @@ export default function BackoutRefundTable({
         // column of zeroes would push the ones that matter off the screen.
         field: 'coins_refunded',
         headerName: t('finance.backoutRefund.coinsBack'),
-        sortable: false,
+        type: 'number',
         hide: true,
         width: 110,
         valueGetter: (row) => Math.max(0, Math.floor(Number(row.coins_refunded) || 0)),
@@ -159,7 +166,10 @@ export default function BackoutRefundTable({
       {
         field: 'refund_status',
         headerName: t('finance.backoutRefund.refundStatus'),
+        type: 'text',
+        // Derived per row from refund_processed_at / payment_id / status — no stored path.
         sortable: false,
+        filterable: false,
         width: 150,
         cellRenderer: renderRefundStatus,
         valueGetter: (row) => row.refund_status,
@@ -168,11 +178,14 @@ export default function BackoutRefundTable({
         field: 'joined_at',
         headerName: t('finance.backoutRefund.joined'),
         hide: true,
+        type: 'date',
+        // Read off the hydrated pod member after the page is fetched — no stored path.
         sortable: false,
+        filterable: false,
         width: 170,
         valueGetter: (row) => fmtDate(row.joined_at),
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 110, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 110, cellRenderer: renderActions },
     ];
   }, [sym, onRefund]);
 

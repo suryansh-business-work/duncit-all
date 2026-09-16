@@ -27,6 +27,7 @@ import {
   PreviewCharges,
   PreviewChips,
   PreviewSection,
+  PreviewTicketDiscount,
 } from '../../src/preview/PodPreviewSections';
 import type { PodPreviewModel } from '../../src/preview/pod-preview-model';
 
@@ -51,6 +52,7 @@ const model = (over: Partial<PodPreviewModel> = {}): PodPreviewModel => ({
   perks: ['Water'],
   hashtags: ['badminton', 'weekend'],
   charges: [{ label: 'Court fee', amount: 200, note: 'per hour' }],
+  ticketDiscountTiers: [],
   paymentTerms: 'Pay on arrival.',
   ...over,
 });
@@ -233,9 +235,43 @@ describe('PodPreviewDetails', () => {
 
     expect(container.textContent).toContain('Free');
   });
+
+  // The offer is listed exactly as the pod page will: one line per tier, with
+  // a discounted price that can land on paise.
+  it('lists the multi-ticket offer, priced to the paisa, when the pod has one', () => {
+    const tiers = [
+      { min_tickets: 2, discount_pct: 10, per_ticket: 449.1 },
+      { min_tickets: 4, discount_pct: 20, per_ticket: 399.2 },
+    ];
+    const { container } = wrap(<PodPreviewDetails model={model({ ticketDiscountTiers: tiers })} />);
+
+    expect(container.textContent).toContain('Multi-ticket offer');
+    expect(container.textContent).toContain('2+ tickets · 10% off');
+    expect(container.textContent).toContain('₹449.10');
+    expect(container.textContent).toContain('4+ tickets · 20% off');
+    expect(container.textContent).toContain('₹399.20');
+  });
+
+  it('leaves the offer out of a pod without one', () => {
+    const { container } = wrap(<PodPreviewDetails model={model()} />);
+
+    expect(container.textContent).not.toContain('Multi-ticket offer');
+  });
 });
 
 describe('the preview sections', () => {
+  it('prices every tier through the caller money formatter, never its own', () => {
+    const { container } = wrap(
+      <PreviewTicketDiscount
+        tiers={[{ min_tickets: 3, discount_pct: 15, per_ticket: 425 }]}
+        money={(amount) => `INR ${amount}`}
+      />
+    );
+
+    expect(container.textContent).toContain('3+ tickets · 15% off');
+    expect(container.textContent).toContain('INR 425');
+  });
+
   it('renders a titled section around whatever it was given', () => {
     const { container } = wrap(
       <PreviewSection title="What this pod offers">

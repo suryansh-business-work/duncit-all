@@ -534,6 +534,13 @@ changeRequests: {
       changeRequestLabel: 'Points',
       changeRequestMin: 'Between 0 and 10 points. Default 5.',
       changeRequestInvalid: 'Enter a whole number between 0 and 10.',
+
+      // The cap on every pod's multi-ticket discount tiers (1–99, default 50).
+      ticketDiscountMaxPctLabel: 'Max multi-ticket discount (%)',
+      ticketDiscountMaxPctHint:
+        'The biggest discount any multi-ticket tier on a pod may give (1–99). Pods already above it keep their tiers until they are edited.',
+      ticketDiscountMaxPctMin: 'Between 1 and 99 percent. Default 50.',
+      ticketDiscountMaxPctInvalid: 'Enter a whole number between 1 and 99.',
     },
 
     completePod: {
@@ -793,6 +800,61 @@ changeRequests: {
       country: 'Country',
       city: 'City',
       state: 'State',
+      // A city that is not launched still shows in the app's location picker,
+      // but opens its launch waitlist instead of the feed.
+      launched: 'Launched',
+      notLaunched: 'Not launched',
+      launchedHint:
+        'Off: the city still shows in the app’s location picker with a “Coming soon” badge, and opens its launch waitlist instead of the feed.',
+      launchTarget: 'Launch target',
+      launchTargetHint: 'Shown in the app as “We’ll launch once X people have added their names”. Default 2000.',
+      launchTargetInvalid: 'Enter a whole number from 1 to 1,000,000.',
+      whatsappGroupUrl: 'City WhatsApp group link',
+      whatsappGroupUrlHint: 'Optional. Shown on the launch waitlist page once someone has added their name.',
+      whatsappGroupUrlInvalid: 'Enter a WhatsApp group invite link starting with https://chat.whatsapp.com/',
+      addArea: 'Add Area',
+      fillWithAi: 'Fill with AI',
+      fillingWithAi: 'Filling…',
+      aiFillNeedsPlace: 'Select country, state and city before using AI fill.',
+      aiFillEmpty: 'AI did not return any localities with PIN codes.',
+      aiFillFailed: 'Could not fill localities with AI.',
+    },
+
+    // Admin > Catalog > Subscribe for location — the waitlists of cities that are not launched yet.
+    locationSubscriptions: {
+      title: 'Subscribe for location',
+      intro:
+        'Members who asked to be told when their city launches on Duncit. Their WhatsApp number comes from their profile.',
+      citiesTitle: 'Cities',
+      scenarioHint:
+        'Send uses the WhatsApp scenario “City launched”. Create its template and campaign in Marketing > WhatsApp > Automation first. Each person is messaged once.',
+      citiesEmpty: 'Nobody has subscribed to a city launch yet.',
+      searchCity: 'Search city',
+      subscribers: 'Subscribers',
+      notified: 'Notified',
+      pending: 'Pending',
+      send: 'Send launch message',
+      sendNeedsLaunch: 'Switch Launched on for this city in Catalog > Locations first.',
+      sendNothingPending: 'Everyone on this city’s list has already been messaged.',
+      sendTitle: 'Send launch message',
+      sendConfirm: {
+        one: 'Send the WhatsApp launch message to {count} person waiting for {city}? This cannot be undone.',
+        other: 'Send the WhatsApp launch message to {count} people waiting for {city}? This cannot be undone.',
+      },
+      sendQueued: {
+        one: 'Launch message queued for {count} person in {city}.',
+        other: 'Launch message queued for {count} people in {city}.',
+      },
+      subscribersTitle: 'Subscribers',
+      subscribersEmpty: 'No subscribers match.',
+      searchSubscribers: 'Search name, WhatsApp or city',
+      whatsapp: 'WhatsApp',
+      subscribedAt: 'Subscribed at',
+      notifiedAt: 'Notified at',
+      statusPending: 'Waiting',
+      statusSent: 'Sent',
+      statusSkipped: 'Skipped',
+      statusFailed: 'Failed',
     },
 
     policies: {

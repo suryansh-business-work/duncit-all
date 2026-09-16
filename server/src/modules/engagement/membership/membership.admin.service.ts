@@ -24,7 +24,10 @@ const PLAN_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    name: { type: 'string' },
     key: { type: 'string' },
+    price_label: { type: 'string' },
+    sort_order: { type: 'number' },
   },
   defaultSort: { sort_order: 1, name: 1 },
 };
@@ -40,7 +43,9 @@ const BENEFIT_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    label: { type: 'string' },
     group: { type: 'string' },
+    sort_order: { type: 'number' },
   },
   defaultSort: { sort_order: 1, label: 1 },
 };
@@ -48,7 +53,11 @@ const BENEFIT_TABLE_CONFIG: TableEntityConfig = {
 const SUBSCRIBER_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['email', 'name'],
   sortFields: { email: 'email', name: 'name', created_at: 'created_at' },
-  filterFields: {},
+  filterFields: {
+    email: { type: 'string' },
+    name: { type: 'string' },
+    created_at: { type: 'date' },
+  },
   defaultSort: { created_at: -1 },
 };
 

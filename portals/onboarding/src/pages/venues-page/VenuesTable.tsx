@@ -155,21 +155,22 @@ export default function VenuesTable({
       </>
     );
     return [
-      { field: 'venue_no', headerName: t('onboarding.venues.venueId'), width: 130, sortable: false, valueGetter: (v) => v.venue_no || '—' },
-      { field: 'venue_name', headerName: t('onboarding.common.venue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
-      { field: 'locality', headerName: t('onboarding.venues.location'), minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
-      { field: 'city', headerName: t('onboarding.common.city'), hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_type', headerName: t('shell.common.type'), hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_category', headerName: t('onboarding.common.category'), minWidth: 200, sortable: false, cellRenderer: renderCategory, valueGetter: categoryValue },
-      { field: 'owner_name', headerName: t('onboarding.common.owner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
-      { field: 'capacity', headerName: t('onboarding.common.capacity'), width: 105, filter: { type: 'number' } },
-      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
-      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'pod_count', headerName: t('shell.nav.pods'), sortable: false, width: 100, cellRenderer: (v: VenueRow) => renderPods(v, t), valueGetter: (v) => v.pod_count ?? 0 },
-      { field: 'venue_commission_pct', headerName: t('onboarding.common.commission'), width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
+      { field: 'venue_no', headerName: t('onboarding.venues.venueId'), width: 130, type: 'text', valueGetter: (v) => v.venue_no || '—' },
+      { field: 'venue_name', headerName: t('onboarding.common.venue'), flex: 1, minWidth: 180, type: 'text', cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'locality', headerName: t('onboarding.venues.location'), minWidth: 160, type: 'text', cellRenderer: renderLocation, valueGetter: locationValue },
+      { field: 'city', headerName: t('onboarding.common.city'), hide: true, minWidth: 130, type: 'text' },
+      { field: 'venue_type', headerName: t('shell.common.type'), hide: true, minWidth: 130, type: 'text' },
+      { field: 'venue_category', headerName: t('onboarding.common.category'), minWidth: 200, type: 'text', cellRenderer: renderCategory, valueGetter: categoryValue },
+      { field: 'owner_name', headerName: t('onboarding.common.owner'), minWidth: 150, type: 'text', cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
+      { field: 'capacity', headerName: t('onboarding.common.capacity'), width: 105, type: 'number' },
+      { field: 'status', headerName: t('shell.common.status'), width: 125, type: 'enum', options: STATUS_OPTIONS, cellRenderer: renderStatus, valueGetter: (v) => v.status },
+      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, type: 'boolean', cellRenderer: renderActive, valueGetter: activeValue },
+      // A count of the pods collection resolved per row — the venue document holds no path to order or match.
+      { field: 'pod_count', headerName: t('shell.nav.pods'), type: 'number', sortable: false, filterable: false, width: 100, cellRenderer: (v: VenueRow) => renderPods(v, t), valueGetter: (v) => v.pod_count ?? 0 },
+      { field: 'venue_commission_pct', headerName: t('onboarding.common.commission'), width: 130, type: 'number', cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
       dateColumn<VenueRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
-      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 190, cellRenderer: renderActions },
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, type: 'date' },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 190, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 

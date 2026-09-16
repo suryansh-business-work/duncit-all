@@ -22,7 +22,9 @@ function DomainBlock({ detail, segment, formatDateTime }: Readonly<DomainProps>)
   const symbol = detail.payment.currency_symbol;
   if (segment === 'POD') {
     if (!detail.pod_booking) return null;
-    return <PodBookingCard booking={detail.pod_booking} formatDateTime={formatDateTime} />;
+    return (
+      <PodBookingCard booking={detail.pod_booking} payment={detail.payment} formatDateTime={formatDateTime} />
+    );
   }
   if (segment === 'PRODUCT') {
     if (detail.product_orders.length === 0) return null;

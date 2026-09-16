@@ -2,22 +2,13 @@ import type {
   ColDef,
   ICellRendererParams,
   ITooltipParams,
+  SuppressHeaderKeyboardEventParams,
   ValueGetterParams,
 } from 'ag-grid-community';
+import { columnHeader, isColumnSortable, sortingOrderOf } from './columnTypes';
+import { ColumnHeader, type ColumnHeaderParams } from './header/ColumnHeader';
 import type { Translate } from './i18n';
 import type { DuncitColumn, TableSortDir } from './types';
-
-/**
- * The text a column's header shows.
- *
- * The single place `headerKey` is turned into copy, so the grid header, the
- * column menu, the filter controls and the active-filter chips can never
- * disagree about what a column is called.
- */
-export function columnHeader<T>(column: DuncitColumn<T>, t: Translate): string {
-  if (column.headerKey) return t(column.headerKey);
-  return column.headerName ?? column.field;
-}
 
 /** Class applied to plain-text cells so a global CSS rule can ellipsize them. */
 export const TRUNCATE_CELL_CLASS = 'duncit-truncate-cell';
@@ -109,6 +100,16 @@ const NEVER_EQUAL = () => false;
 const KEEP_FETCH_ORDER = () => 0;
 
 /**
+ * Keys pressed on the header's own sort and filter buttons belong to those
+ * buttons. Without this, Enter on the filter button would also reach the header
+ * cell's handler and sort the column; only a key on the cell itself is the grid's.
+ */
+function isInnerHeaderControlKey(params: SuppressHeaderKeyboardEventParams): boolean {
+  const { target } = params.event;
+  return target instanceof Element && !target.classList.contains('ag-header-cell');
+}
+
+/**
  * Derives AG Grid column defs from DuncitColumn[]. Sort display is controlled: the def
  * carries the hook's current sort so header arrows always mirror the query state.
  */
@@ -122,7 +123,11 @@ export function buildColDefs<T>(
   return columns.map((column) => ({
     colId: column.field,
     headerName: columnHeader(column, t),
-    sortable: column.sortable ?? true,
+    sortable: isColumnSortable(column),
+    sortingOrder: sortingOrderOf(column),
+    headerComponent: ColumnHeader,
+    headerComponentParams: { duncitColumn: column } satisfies ColumnHeaderParams<T>,
+    suppressHeaderKeyboardEvent: isInnerHeaderControlKey,
     hide: isColumnHidden(column, hiddenOverrides),
     width: column.width,
     flex: column.flex,

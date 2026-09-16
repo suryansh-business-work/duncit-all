@@ -17,6 +17,7 @@ import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import type { AuthUser } from '@context';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { presenceFilter } from '@utils/table-presence-filter';
 import { isDue, nextRunAt, parseTimeOfDay, type CronSchedule } from '@utils/cron-schedule';
 import {
   dispatchWorkflow,
@@ -64,12 +65,26 @@ const E2E_TABLE_CONFIG: TableEntityConfig = {
     ref: 'ref',
     duration_seconds: 'duration_seconds',
     created_at: 'created_at',
+    results: 'totals.suites_passed',
+    totals: 'totals.passed',
+    signup_email: 'signup_email',
+    reported_by: 'reported_by',
+    slack_ts: 'slack_ts',
   },
+  // slack_ts is deliberately absent: "posted" is the presence of a ts, which a
+  // literal true/false match cannot express — see presenceFilter.
   filterFields: {
+    run_no: { type: 'string' },
     status: { type: 'enum' },
     trigger_source: { type: 'enum' },
+    triggered_by: { type: 'string' },
     ref: { type: 'string' },
+    duration_seconds: { type: 'number' },
     created_at: { type: 'date' },
+    results: { path: 'totals.suites_passed', type: 'number' },
+    totals: { path: 'totals.passed', type: 'number' },
+    signup_email: { type: 'string' },
+    reported_by: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };
@@ -668,7 +683,7 @@ export const e2eRunService = {
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IE2eRun>(
       E2eRunModel,
-      {},
+      presenceFilter(input, 'slack_ts'),
       input,
       E2E_TABLE_CONFIG
     );

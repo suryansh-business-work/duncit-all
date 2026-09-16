@@ -27,6 +27,9 @@ const ROLE_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    key: { type: 'string' },
+    name: { type: 'string' },
+    description: { type: 'string' },
     is_system: { type: 'boolean' },
     created_at: { type: 'date' },
   },

@@ -72,8 +72,11 @@ const ENV_ENTRY_TABLE_CONFIG: TableEntityConfig = {
     last_used_at: 'last_used_at',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    assigned_portals: 'assigned_portals',
   },
   filterFields: {
+    name: { type: 'string' },
+    last_tested_at: { type: 'date' },
     category: { type: 'enum' },
     is_default: { type: 'boolean' },
     is_active: { type: 'boolean' },

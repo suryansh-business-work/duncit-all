@@ -13,9 +13,7 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 // component type per column (S6478). The ones that read copy take `t` through a
 // factory, which keeps the column definition a plain reference.
 const renderReference = (row: AccountDeletionRow) => (
-  <Typography variant="body2" noWrap sx={{
-    fontFamily: "monospace"
-  }}>
+  <Typography variant="body2" noWrap sx={{ fontFamily: 'monospace' }}>
     {row.request_id}
   </Typography>
 );
@@ -27,9 +25,7 @@ const renderMember = (row: AccountDeletionRow) => (
 );
 
 const renderContact = (row: AccountDeletionRow) => (
-  <Typography variant="body2" noWrap title={row.email} sx={{
-    color: "text.secondary"
-  }}>
+  <Typography variant="body2" noWrap title={row.email} sx={{ color: 'text.secondary' }}>
     {row.phone || row.email}
   </Typography>
 );
@@ -43,17 +39,13 @@ const renderSurface = (row: AccountDeletionRow) => (
 );
 
 const renderRequested = (row: AccountDeletionRow) => (
-  <Typography variant="body2" sx={{
-    color: "text.secondary"
-  }}>
+  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
     {formatDateTime(row.requested_at)}
   </Typography>
 );
 
 const renderScheduled = (row: AccountDeletionRow) => (
-  <Typography variant="body2" sx={{
-    color: "text.secondary"
-  }}>
+  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
     {formatDateTime(row.scheduled_delete_at)}
   </Typography>
 );
@@ -77,9 +69,7 @@ function remainingColor(days: number): 'error' | 'warning' | 'default' {
 const renderRemaining = (t: Translate) => (row: AccountDeletionRow) => {
   if (row.days_remaining === null) {
     return (
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         —
       </Typography>
     );
@@ -117,53 +107,62 @@ export default function AccountDeletionsTable({ fetchRows, refetchRef, onOpen }:
         field: 'request_id',
         headerName: t('tech.accountDeletions.reference'),
         width: 165,
+        type: 'text',
         cellRenderer: renderReference,
       },
       {
         field: 'status',
         headerName: t('tech.accountDeletions.status'),
         width: 130,
-        filter: { type: 'select', options: statusOptions() },
+        type: 'enum',
+        options: statusOptions(),
         cellRenderer: renderStatus,
       },
       {
         field: 'snapshot_name',
         headerName: t('tech.accountDeletions.member'),
         width: 180,
+        type: 'text',
         cellRenderer: renderMember,
       },
       {
         field: 'snapshot_email',
         headerName: t('tech.accountDeletions.contact'),
         width: 190,
+        type: 'text',
         cellRenderer: renderContact,
       },
       {
         field: 'surface',
         headerName: t('tech.accountDeletions.askedFrom'),
         width: 130,
-        filter: { type: 'select', options: surfaceOptions() },
+        type: 'enum',
+        options: surfaceOptions(),
         cellRenderer: renderSurface,
       },
       {
         field: 'requested_at',
         headerName: t('tech.accountDeletions.requested'),
         width: 175,
+        type: 'date',
         cellRenderer: renderRequested,
       },
       {
         field: 'scheduled_delete_at',
         headerName: t('tech.accountDeletions.scheduled'),
         width: 175,
+        type: 'date',
         cellRenderer: renderScheduled,
       },
       {
-        // Not sortable on itself: the countdown is derived, and sorting by the
-        // date it counts down from is the same order.
+        // Sorts by the date it counts down from (the same order). The countdown
+        // itself is computed against the clock at read time, so there is no
+        // stored number to match a filter on.
         field: 'days_remaining',
         headerName: t('tech.accountDeletions.timeLeft'),
         width: 125,
-        sortable: false,
+        type: 'number',
+        filterable: false,
         cellRenderer: renderRemaining(t),
       },
       {
@@ -171,7 +170,7 @@ export default function AccountDeletionsTable({ fetchRows, refetchRef, onOpen }:
         headerName: t('tech.accountDeletions.reason'),
         flex: 1,
         minWidth: 220,
-        sortable: false,
+        type: 'text',
         cellRenderer: renderReason(t),
       },
     ],

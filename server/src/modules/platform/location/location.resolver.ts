@@ -1,5 +1,6 @@
 import { locationService } from './location.service';
 import { clubService } from '@modules/clubs/club/club.service';
+import { locationSubscriptionService } from '@modules/platform/locationSubscription/locationSubscription.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -17,6 +18,16 @@ export const locationResolvers = {
       cache._activeClubCountsByLocation ??= clubService.activeClubCountsByLocation();
       const counts = await cache._activeClubCountsByLocation;
       return counts[String(parent.id)] ?? 0;
+    },
+    // Same shape as above: one aggregate over the launch waitlists per request,
+    // however many cities the list holds.
+    subscriber_count: async (parent: { id: string }, _a: unknown, ctx: GraphQLContext) => {
+      const cache = ctx as GraphQLContext & {
+        _subscriberCountsByLocation?: Promise<Record<string, number>>;
+      };
+      cache._subscriberCountsByLocation ??= locationSubscriptionService.countsByLocation();
+      const counts = await cache._subscriberCountsByLocation;
+      return counts[parent.id] ?? 0;
     },
   },
   LocationZone: {

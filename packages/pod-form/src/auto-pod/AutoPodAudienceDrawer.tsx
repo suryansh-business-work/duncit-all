@@ -38,10 +38,10 @@ function tableFor(role: AutoPodAudienceRole, audience: AutoPodAudience, t: Trans
       rows: audience.venues,
       rowId: 'id',
       columns: [
-        { field: 'venue_name', headerName: t('podForm.autoPod.colVenue'), flex: 1, minWidth: 180 },
-        { field: 'city', headerName: t('podForm.autoPod.colCity'), width: 140 },
-        { field: 'locality', headerName: t('podForm.autoPod.colLocality'), width: 150 },
-        { field: 'owner_name', headerName: t('podForm.autoPod.colOwner'), width: 170 },
+        { field: 'venue_name', headerName: t('podForm.autoPod.colVenue'), type: 'text', flex: 1, minWidth: 180 },
+        { field: 'city', headerName: t('podForm.autoPod.colCity'), type: 'text', width: 140 },
+        { field: 'locality', headerName: t('podForm.autoPod.colLocality'), type: 'text', width: 150 },
+        { field: 'owner_name', headerName: t('podForm.autoPod.colOwner'), type: 'text', width: 170 },
       ],
       search: (row) => ['venue_name', 'city', 'locality', 'owner_name'].map((f) => text(row, f)).join(' '),
     };
@@ -52,9 +52,9 @@ function tableFor(role: AutoPodAudienceRole, audience: AutoPodAudience, t: Trans
       rows: audience.hosts,
       rowId: 'user_id',
       columns: [
-        { field: 'full_name', headerName: t('podForm.autoPod.colName'), flex: 1, minWidth: 180 },
-        { field: 'email', headerName: t('podForm.autoPod.colEmail'), width: 220 },
-        { field: 'phone', headerName: t('podForm.autoPod.colPhone'), width: 150 },
+        { field: 'full_name', headerName: t('podForm.autoPod.colName'), type: 'text', flex: 1, minWidth: 180 },
+        { field: 'email', headerName: t('podForm.autoPod.colEmail'), type: 'text', width: 220 },
+        { field: 'phone', headerName: t('podForm.autoPod.colPhone'), type: 'text', width: 150 },
       ],
       search: (row) => ['full_name', 'email', 'phone'].map((f) => text(row, f)).join(' '),
     };
@@ -64,13 +64,13 @@ function tableFor(role: AutoPodAudienceRole, audience: AutoPodAudience, t: Trans
     rows: audience.club_admins,
     rowId: 'user_id',
     columns: [
-      { field: 'full_name', headerName: t('podForm.autoPod.colName'), flex: 1, minWidth: 180 },
-      { field: 'email', headerName: t('podForm.autoPod.colEmail'), width: 220 },
+      { field: 'full_name', headerName: t('podForm.autoPod.colName'), type: 'text', flex: 1, minWidth: 180 },
+      { field: 'email', headerName: t('podForm.autoPod.colEmail'), type: 'text', width: 220 },
       {
         field: 'club_names',
         headerName: t('podForm.autoPod.colClubs'),
+        type: 'text',
         width: 220,
-        sortable: false,
         valueGetter: (row) => (row.club_names as string[]).join(', '),
       },
     ],
@@ -93,7 +93,10 @@ export interface AutoPodAudienceDrawerProps {
 export default function AutoPodAudienceDrawer({ role, audience, onClose }: Readonly<AutoPodAudienceDrawerProps>) {
   const { t } = useTranslation();
   const table = useMemo(() => (role && audience ? tableFor(role, audience, t) : null), [role, audience, t]);
-  const fetchRows = useMemo(() => (table ? clientTableFetch(table.rows, table.search) : null), [table]);
+  const fetchRows = useMemo(
+    () => (table ? clientTableFetch(table.rows, table.search, table.columns) : null),
+    [table],
+  );
   const titleId = useId();
 
   return (

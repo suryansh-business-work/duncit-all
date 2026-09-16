@@ -94,39 +94,45 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       </Stack>
     );
     return [
-      { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },
+      // A decorative thumbnail — no value to order or match.
+      { field: 'logo', headerName: '', type: 'actions', width: 64, cellRenderer: renderLogo },
       {
         field: 'brand_name',
         headerName: t('products.brandForm.section'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderBrand,
         valueGetter: (b) => b.brand_name,
       },
       {
         field: 'city',
         headerName: t('products.brands.colLocation'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 150,
         valueGetter: locationValue,
       },
       {
         field: 'approved_product_count',
         headerName: t('products.brands.colApprovedProducts'),
+        type: 'number',
+        // A count of the products collection resolved per row — the brand document holds no path to order or match.
         sortable: false,
+        filterable: false,
         width: 150,
       },
       {
         field: 'product_commission_pct',
         headerName: t('products.brands.colCommission'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 130,
         valueGetter: commissionValue,
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: BRAND_STATUS_OPTIONS },
+        type: 'enum',
+        options: BRAND_STATUS_OPTIONS,
         width: 130,
         cellRenderer: renderStatus,
         valueGetter: (b) => b.status,
@@ -134,7 +140,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       {
         field: 'is_active',
         headerName: t('products.brands.colActive'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 110,
         cellRenderer: renderActive,
         valueGetter: activeValue,
@@ -142,7 +148,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       {
         field: 'created_at',
         headerName: t('shell.common.created'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
@@ -150,7 +156,7 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 220,
         cellRenderer: renderActions,
       },

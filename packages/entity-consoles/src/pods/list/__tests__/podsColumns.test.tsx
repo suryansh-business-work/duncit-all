@@ -48,6 +48,12 @@ const columnBy = (field: string, deps: Partial<PodsColumnDeps> = {}) => {
   return col;
 };
 
+/** A column's filter contract under the typed-column API: its type, plus the options an enum carries. */
+const filterOf = (field: string) => {
+  const col = columnBy(field);
+  return 'options' in col ? { type: col.type, options: col.options } : { type: col.type };
+};
+
 const valueOf = (field: string, pod: PodRow, deps: Partial<PodsColumnDeps> = {}) =>
   columnBy(field, deps).valueGetter?.(pod);
 
@@ -115,15 +121,15 @@ describe('buildPodsColumns / column set', () => {
   });
 
   it('offers the pod mode and pod type filter options the API accepts', () => {
-    expect(columnBy('pod_mode').filter).toEqual({
-      type: 'select',
+    expect(filterOf('pod_mode')).toEqual({
+      type: 'enum',
       options: [
         { value: 'PHYSICAL', label: 'Physical' },
         { value: 'VIRTUAL', label: 'Virtual' },
       ],
     });
-    expect(columnBy('pod_type').filter).toEqual({
-      type: 'select',
+    expect(filterOf('pod_type')).toEqual({
+      type: 'enum',
       options: [
         { value: 'NATIVE_FREE', label: 'NATIVE FREE' },
         { value: 'NATIVE_PAID', label: 'NATIVE PAID' },

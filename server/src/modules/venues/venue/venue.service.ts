@@ -372,8 +372,10 @@ const redactForPublic = (v: ReturnType<typeof toPub>) => ({
 const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
   searchFields: ['venue_no', 'venue_name', 'venue_type', 'city', 'locality', 'owner_name', 'owner_email'],
   sortFields: {
+    venue_no: 'venue_no',
     venue_name: 'venue_name',
     venue_type: 'venue_type',
+    venue_category: 'venue_category.category_name',
     city: 'city',
     locality: 'locality',
     capacity: 'capacity',
@@ -386,6 +388,11 @@ const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    venue_no: { type: 'string' },
+    venue_name: { type: 'string' },
+    venue_category: { path: 'venue_category.category_name', type: 'string' },
+    owner_name: { type: 'string' },
+    venue_commission_pct: { type: 'number' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     venue_type: { type: 'string' },

@@ -75,7 +75,11 @@ const USER_CHANGE_LOG_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['field_label', 'old_value', 'new_value', 'actor_name'],
   sortFields: {
     created_at: 'created_at',
+    // Entries are append-only: "last updated" is the moment they were written.
+    updated_at: 'created_at',
     field_label: 'field_label',
+    old_value: 'old_value',
+    new_value: 'new_value',
     action: 'action',
     actor_type: 'actor_type',
     actor_name: 'actor_name',
@@ -84,10 +88,14 @@ const USER_CHANGE_LOG_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     field: { type: 'string' },
     field_label: { type: 'string' },
+    old_value: { type: 'string' },
+    new_value: { type: 'string' },
     action: { type: 'enum' },
     actor_type: { type: 'enum' },
+    actor_name: { type: 'string' },
     source: { type: 'enum' },
     created_at: { type: 'date' },
+    updated_at: { path: 'created_at', type: 'date' },
   },
   defaultSort: { created_at: -1 },
 };

@@ -21,6 +21,7 @@ const CLUB_ADMIN_TABLE_CONFIG: TableEntityConfig = {
     club_admin_no: 'club_admin_no',
     full_name: 'full_name',
     email: 'email',
+    phone: 'phone',
     status: 'status',
     is_active: 'is_active',
     commission_pct: 'commission_pct',
@@ -28,6 +29,10 @@ const CLUB_ADMIN_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    club_admin_no: { type: 'string' },
+    full_name: { type: 'string' },
+    email: { type: 'string' },
+    phone: { type: 'string' },
     status: { type: 'enum' },
     is_active: { type: 'boolean' },
     commission_pct: { type: 'number' },

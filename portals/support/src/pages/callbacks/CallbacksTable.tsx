@@ -34,12 +34,13 @@ const renderStatus = (req: CallbackRequest) => (
   <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} />
 );
 
-// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
-// filter maps onto the bouncerCallbackRequests query's `status` arg.
+// Sort and filter keys are allowlisted on the server (BOUNCER_SORTABLE /
+// BOUNCER_FILTERABLE); column filters travel in the query's `filters` arg.
 const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
   {
     field: 'ticket_no',
     headerName: t('support.callbacks.colId'),
+    type: 'text',
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (req) => req.ticket_no,
@@ -47,7 +48,10 @@ const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
   {
     field: 'user',
     headerName: t('support.callbacks.colUser'),
+    type: 'text',
+    // The request stores only the user's id; the name is looked up per row.
     sortable: false,
+    filterable: false,
     minWidth: 140,
     cellRenderer: renderUser,
     valueGetter: (req) => req.user.name,
@@ -55,14 +59,17 @@ const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
   {
     field: 'contact_phone',
     headerName: t('shell.common.phone'),
+    type: 'text',
     minWidth: 150,
     valueGetter: (req) => req.contact_phone || '—',
   },
   {
     field: 'reason',
     headerName: t('support.callbacks.colDescription'),
-    // Not in the server's sort allowlist; the toolbar search covers it.
+    type: 'text',
+    // Not in the server's sort/filter allowlist; the toolbar search covers it.
     sortable: false,
+    filterable: false,
     flex: 1,
     minWidth: 220,
     valueGetter: (req) => req.reason || '—',
@@ -71,13 +78,15 @@ const buildColumns = (t: Translate): DuncitColumn<CallbackRequest>[] => [
     field: 'status',
     headerName: t('shell.common.status'),
     width: 150,
-    filter: { type: 'select', options: statusOptions(t) },
+    type: 'enum',
+    options: statusOptions(t),
     cellRenderer: renderStatus,
     valueGetter: (req) => req.status,
   },
   {
     field: 'created_at',
     headerName: t('support.callbacks.colRequested'),
+    type: 'date',
     minWidth: 160,
     valueGetter: (req) => relativeTime(req.created_at),
   },

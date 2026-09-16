@@ -23,6 +23,12 @@ const columnBy = (field: string, deps: Partial<ChangeRequestColumnDeps> = {}) =>
   return col;
 };
 
+/** A column's filter contract under the typed-column API: its type, plus the options an enum carries. */
+const filterOf = (field: string) => {
+  const col = columnBy(field);
+  return 'options' in col ? { type: col.type, options: col.options } : { type: col.type };
+};
+
 const valueOf = (field: string, row: PodChangeRow) => columnBy(field).valueGetter?.(row);
 
 const renderCell = (field: string, row: PodChangeRow, deps: Partial<ChangeRequestColumnDeps> = {}) => {
@@ -55,8 +61,8 @@ describe('buildChangeRequestColumns / column set', () => {
   });
 
   it('offers the four SDL statuses as the status filter, labelled like the chip', () => {
-    expect(columnBy('status').filter).toEqual({
-      type: 'select',
+    expect(filterOf('status')).toEqual({
+      type: 'enum',
       options: [
         { value: 'OPEN', label: 'changeRequest.statusOpen' },
         { value: 'OFFERED', label: 'changeRequest.statusOffered' },
@@ -64,7 +70,7 @@ describe('buildChangeRequestColumns / column set', () => {
         { value: 'WITHDRAWN', label: 'changeRequest.statusWithdrawn' },
       ],
     });
-    expect(columnBy('change_request_no').filter).toEqual({ type: 'text' });
+    expect(filterOf('change_request_no')).toEqual({ type: 'text' });
   });
 });
 

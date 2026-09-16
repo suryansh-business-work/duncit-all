@@ -30,6 +30,8 @@ interface ColumnDeps {
   onProvision: (row: WaScenario) => void;
   /** The platform default header asset, off the board. */
   defaults: WaDefaultUrls;
+  /** The consent categories the board's rows carry — the Category filter's choices. */
+  categories: readonly string[];
 }
 
 /**
@@ -45,6 +47,7 @@ export function getScenarioColumns({
   onSetMedia,
   onProvision,
   defaults,
+  categories,
 }: Readonly<ColumnDeps>): DuncitColumn<WaScenario>[] {
   const firesLabel = t('adminWhatsapp.firesLabel');
   const paramsLabel = t('adminWhatsapp.paramsLabel');
@@ -74,6 +77,7 @@ export function getScenarioColumns({
     {
       field: 'event_key',
       headerName: t('adminWhatsapp.colScenario'),
+      type: 'text',
       flex: 1.4,
       minWidth: 260,
       cellRenderer: (row) => <ScenarioCell row={row} firesLabel={firesLabel} />,
@@ -82,11 +86,17 @@ export function getScenarioColumns({
     {
       field: 'audience',
       headerName: t('adminWhatsapp.colAudience'),
+      type: 'text',
       width: 120,
     },
     {
       field: 'category',
       headerName: t('adminWhatsapp.colCategory'),
+      type: 'enum',
+      options: categories.map((category) => ({
+        value: category,
+        label: whatsappCategoryCopy(t, category).label,
+      })),
       width: 150,
       cellRenderer: (row) => <CategoryCell copy={whatsappCategoryCopy(t, row.category)} />,
       valueGetter: (row) => whatsappCategoryCopy(t, row.category).label,
@@ -94,6 +104,7 @@ export function getScenarioColumns({
     {
       field: 'campaign',
       headerName: t('adminWhatsapp.colCampaign'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: (row) => (
@@ -108,6 +119,7 @@ export function getScenarioColumns({
     {
       field: 'template_name',
       headerName: t('adminWhatsapp.colTemplate'),
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: (row) => (
@@ -124,6 +136,7 @@ export function getScenarioColumns({
       // raw verdict can be sorted on and read as plain text.
       field: 'campaign_status',
       headerName: t('adminWhatsapp.colStatus'),
+      type: 'text',
       hide: true,
       width: 180,
       valueGetter: (row) => `${row.campaign_status} / ${row.template_status}`,
@@ -131,7 +144,7 @@ export function getScenarioColumns({
     {
       field: 'template_params',
       headerName: t('adminWhatsapp.colValues'),
-      sortable: false,
+      type: 'number',
       width: 110,
       cellRenderer: (row) => <ValuesCell row={row} paramsLabel={paramsLabel} />,
       valueGetter: (row) => `${row.params.length} / ${row.template_params}`,
@@ -141,6 +154,7 @@ export function getScenarioColumns({
       // missing their asset" is the question this column answers.
       field: 'override_media_url',
       headerName: t('adminWhatsapp.colMedia'),
+      type: 'text',
       width: 150,
       cellRenderer: (row) => (
         <MediaCell
@@ -156,6 +170,7 @@ export function getScenarioColumns({
     {
       field: 'blocker',
       headerName: t('adminWhatsapp.colBlocker'),
+      type: 'text',
       flex: 1.2,
       minWidth: 240,
       cellRenderer: (row) => (
@@ -172,6 +187,7 @@ export function getScenarioColumns({
     {
       field: 'enabled',
       headerName: t('adminWhatsapp.colEnabled'),
+      type: 'boolean',
       width: 110,
       cellRenderer: (row) => (
         <EnabledCell

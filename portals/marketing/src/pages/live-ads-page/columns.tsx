@@ -5,6 +5,11 @@ import { StatusChip } from '@duncit/ui';
 import { actionsColumn, dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { adPositionLabel, formatAdMoney } from '../../lib/ad-positions';
 import { AD_STATUS_CHIP_COLORS, type AdRequestRow } from '../ads-approvals-page/helpers';
+import {
+  POSITION_OPTIONS,
+  STORED_STATUS_OPTIONS,
+  adTypeOptions,
+} from '../ads-approvals-page/columns';
 import { useTranslation } from '@duncit/app-settings';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -53,14 +58,19 @@ export function getLiveAdColumns({
     {
       field: 'ad_title',
       headerName: 'Ad',
+      type: 'text',
       minWidth: 240,
       flex: 1,
       cellRenderer: renderAd,
       valueGetter: (row) => row.ad_title,
     },
     {
+      // Brand name, else the submitter's name resolved per row from the users collection — no single stored path.
       field: 'submitted_by_name',
       headerName: t('marketing.liveAds.advertiser'),
+      type: 'text',
+      sortable: false,
+      filterable: false,
       minWidth: 160,
       cellRenderer: renderAdvertiser,
       valueGetter: (row) => row.brand_name || row.submitted_by_name,
@@ -68,13 +78,16 @@ export function getLiveAdColumns({
     {
       field: 'position',
       headerName: t('marketing.common.placement'),
+      type: 'enum',
+      options: POSITION_OPTIONS,
       minWidth: 150,
       valueGetter: (row) => adPositionLabel(row.position),
     },
     {
       field: 'ad_type',
       headerName: t('shell.common.type'),
-      sortable: false,
+      type: 'enum',
+      options: adTypeOptions(t),
       width: 110,
       cellRenderer: renderType,
       valueGetter: (row) => row.ad_type,
@@ -82,7 +95,8 @@ export function getLiveAdColumns({
     {
       field: 'status',
       headerName: t('shell.common.status'),
-      sortable: false,
+      type: 'enum',
+      options: STORED_STATUS_OPTIONS,
       width: 110,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
@@ -97,7 +111,7 @@ export function getLiveAdColumns({
     {
       field: 'approved_cost',
       headerName: t('marketing.common.cost'),
-      sortable: false,
+      type: 'number',
       width: 120,
       valueGetter: (row) =>
         formatAdMoney(row.currency_symbol, row.approved_cost ?? row.estimated_cost),

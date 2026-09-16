@@ -62,6 +62,13 @@ export const CHECKOUT_POD = gql`
       pod_end_date_time
       pod_type
       pod_amount
+      # The multi-ticket tier comes off the ticket money before the coupon and
+      # coins — the server prices the charge from the same two fields.
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
       place_charges {
         label
         amount
@@ -100,6 +107,8 @@ export const DUMMY_CHECKOUT = gql`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -165,6 +174,8 @@ export const CREATE_RAZORPAY_ORDER = gql`
         payment_id
         invoice_no
         total
+        ticket_discount_amount
+        ticket_discount_pct
         currency_symbol
         status
         paid_at
@@ -181,6 +192,8 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -204,6 +217,8 @@ export const MY_PAYMENT = gql`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -219,6 +234,9 @@ export interface CheckoutPaymentRow {
   payment_id: string;
   invoice_no: string | null;
   total: number;
+  /** The multi-ticket discount frozen on this payment (0 when none applied). */
+  ticket_discount_amount: number;
+  ticket_discount_pct: number;
   currency_symbol: string;
   status: string;
   paid_at: string | null;
@@ -234,6 +252,8 @@ export const DUMMY_PRODUCT_CHECKOUT = gql`
       payment_id
       invoice_no
       total
+      ticket_discount_amount
+      ticket_discount_pct
       currency_symbol
       status
       paid_at
@@ -264,6 +284,8 @@ export const CREATE_RAZORPAY_PRODUCT_ORDER = gql`
         payment_id
         invoice_no
         total
+        ticket_discount_amount
+        ticket_discount_pct
         currency_symbol
         status
         paid_at

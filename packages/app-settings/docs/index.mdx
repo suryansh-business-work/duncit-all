@@ -111,6 +111,7 @@ const publicAppSettings = {
   min_birth_year: 1940,
   max_birth_year: 2010,
   draft_retention_days: 30,
+  ticket_discount_max_pct: 50, // ceiling on every pod's multi-ticket discount tier
 };
 
 /** publicFeatureFlags */
@@ -322,7 +323,7 @@ Locale precedence: local override → `userLocale` → `localStorage['duncit_loc
 
 | Export | Operation | Selects |
 | --- | --- | --- |
-| `PUBLIC_APP_SETTINGS` | `query PublicAppSettings` | `date_format, time_format, time_zone, time_source, custom_time, custom_time_set_at, server_time, min_birth_year, max_birth_year, draft_retention_days` |
+| `PUBLIC_APP_SETTINGS` | `query PublicAppSettings` | `date_format, time_format, time_zone, time_source, custom_time, custom_time_set_at, server_time, min_birth_year, max_birth_year, draft_retention_days, ticket_discount_max_pct` |
 | `PUBLIC_FEATURE_FLAGS` | `query PublicFeatureFlags` | `key, enabled` |
 | `PUBLIC_LOCALES` | `query PublicLocales` | `code, label, english_label, is_rtl, is_default, sort_order` |
 | `PUBLIC_TRANSLATIONS` | `query PublicTranslations($locale: String!)` | `key, value` |

@@ -1,15 +1,14 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import DrawIcon from '@mui/icons-material/Draw';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitIconButton } from '@duncit/buttons';
-import { formatDistanceToNow } from 'date-fns';
-import { DuncitTable, entityIdColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import type { LegalDocumentListItem } from '../../graphql/documents';
-import DocumentActiveSwitch from './DocumentActiveSwitch';
+import { signingStatusOptions } from '../../components/signing';
+import { baseColumns } from './documentColumns';
 
 interface Props {
   fetchRows: TableFetch<LegalDocumentListItem>;
@@ -23,72 +22,6 @@ interface Props {
 }
 
 const getDocumentRowId = (d: LegalDocumentListItem) => d.id;
-
-const renderName = (d: LegalDocumentListItem) => (
-  <Typography variant="body2" component="span" sx={{
-    fontWeight: 700
-  }}>
-    {d.name}
-  </Typography>
-);
-
-const updatedByValue = (d: LegalDocumentListItem) => d.updated_by_name || '—';
-
-const lastUpdatedValue = (d: LegalDocumentListItem) =>
-  formatDistanceToNow(new Date(d.updated_at), { addSuffix: true });
-
-// Only server-allowlisted fields are sortable/filterable (LEGAL_DOCUMENT_TABLE_CONFIG):
-// sort document_no/name/is_active/document_type/updated_by_name/created_at/updated_at;
-// filter document_no/document_type/updated_by_name (text), is_active (boolean),
-// created_at/updated_at (date).
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-/**
- * Headings are copy, so the base columns are built per translator.
- *
- * `onActiveChanged` is threaded down to the Active column because the switch
- * writes on the spot: a toggle whose row still reads the old value is a toggle
- * people press twice.
- */
-const baseColumns = (
-  t: Translate,
-  onActiveChanged: () => void
-): DuncitColumn<LegalDocumentListItem>[] => [
-  entityIdColumn<LegalDocumentListItem>({ field: 'document_no', headerName: t('legal.documents.colId') }),
-  { field: 'name', headerName: t('legal.documents.colName'), flex: 1, minWidth: 220, cellRenderer: renderName },
-  { field: 'document_type', headerName: t('legal.documents.colType'), minWidth: 200, filter: { type: 'text' } },
-  {
-    field: 'is_active',
-    headerName: t('legal.documents.colActive'),
-    width: 150,
-    filter: { type: 'boolean' },
-    cellRenderer: (d) => (
-      <DocumentActiveSwitch
-        documentId={d.id}
-        isActive={d.is_active}
-        onChanged={onActiveChanged}
-      />
-    ),
-    valueGetter: (d) => (d.is_active ? t('shell.common.active') : t('shell.common.inactive')),
-  },
-  {
-    field: 'updated_by_name',
-    headerName: t('legal.documents.colUpdatedBy'),
-    minWidth: 140,
-    filter: { type: 'text' },
-    valueGetter: updatedByValue,
-  },
-  { field: 'version_count', headerName: t('legal.documents.colVersions'), sortable: false, width: 100 },
-  {
-    field: 'updated_at',
-    headerName: t('legal.documents.colLastUpdated'),
-    minWidth: 150,
-    filter: { type: 'date' },
-    valueGetter: lastUpdatedValue,
-  },
-  // Hidden by default — carries the allowlisted created-date filter.
-  { field: 'created_at', headerName: t('shell.common.created'), hide: true, filter: { type: 'date' }, minWidth: 150 },
-];
 
 export default function DocumentsTable({
   fetchRows,
@@ -165,14 +98,15 @@ export default function DocumentsTable({
         field: 'signing_status',
         headerName: t('shell.common.status'),
         width: 120,
-        sortable: false,
+        type: 'enum',
+        options: signingStatusOptions(t),
         cellRenderer: renderStatus,
         valueGetter: signedLabel,
       },
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 120,
         cellRenderer: renderActions,
       },

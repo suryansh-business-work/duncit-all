@@ -1,6 +1,5 @@
 import { gql } from '@apollo/client';
 import { formatMoney } from '@duncit/utils';
-import type { TableQueryState } from '@duncit/table';
 
 export const POD_FINANCE_RELEASES = gql`
   query PodFinanceReleases {
@@ -30,6 +29,7 @@ export const POD_FINANCE_BREAKDOWN = gql`
       collected_total
       coins_redeemed_total
       coins_earned_total
+      ticket_discount_total
       currency_symbol
       has_venue
       completed_at
@@ -96,6 +96,8 @@ export interface PodFinanceBreakdown {
   collected_total: number;
   coins_redeemed_total: number;
   coins_earned_total: number;
+  /** Multi-ticket discounts frozen on the pod's successful payments — already off collected_total. */
+  ticket_discount_total: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;
@@ -140,34 +142,4 @@ export function groupReleasesByPod(rows: readonly PodReleaseRow[]): PodFinanceGr
     byPod.set(row.pod_id, entry);
   }
   return [...byPod.values()].sort((a, b) => b.last_requested_at.localeCompare(a.last_requested_at));
-}
-
-type GroupComparator = (a: PodFinanceGroup, b: PodFinanceGroup) => number;
-
-const GROUP_COMPARATORS: Record<string, GroupComparator> = {
-  pod_title: (a, b) => a.pod_title.localeCompare(b.pod_title),
-  releases_count: (a, b) => a.releases_count - b.releases_count,
-  requested_total: (a, b) => a.requested_total - b.requested_total,
-  last_requested_at: (a, b) => a.last_requested_at.localeCompare(b.last_requested_at),
-};
-
-/**
- * In-memory search/sort/page over the DERIVED grouped rows — there is no
- * grouped server *Table query for pod finance, so the table's fetchRows
- * fetches the flat releases, groups them and slices the result here.
- */
-export function applyPodFinanceQuery(
-  groups: readonly PodFinanceGroup[],
-  q: TableQueryState
-): { rows: PodFinanceGroup[]; total: number } {
-  const term = q.search.trim().toLowerCase();
-  const filtered = term
-    ? groups.filter((g) => g.pod_title.toLowerCase().includes(term))
-    : [...groups];
-  const cmp = q.sortBy ? GROUP_COMPARATORS[q.sortBy] : undefined;
-  if (cmp) {
-    filtered.sort(q.sortDir === 'desc' ? (a, b) => cmp(b, a) : cmp);
-  }
-  const start = (q.page - 1) * q.pageSize;
-  return { rows: filtered.slice(start, start + q.pageSize), total: filtered.length };
 }

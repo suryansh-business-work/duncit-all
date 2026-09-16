@@ -3,7 +3,8 @@ import Divider from '@mui/material/Divider';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { columnHeader, isColumnHidden } from '../columnDefs';
+import { isColumnHidden } from '../columnDefs';
+import { columnHeader } from '../columnTypes';
 import { useTranslation } from '../i18n';
 import type { DuncitColumn } from '../types';
 

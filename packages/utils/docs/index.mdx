@@ -86,6 +86,28 @@ exports:
   - 'payingSeats'
   - 'HOST_FREE_SPOT_NOTE'
   - 'PodSpotLimits'
+  - 'resolveTicketDiscountTier'
+  - 'ticketDiscountFor'
+  - 'ticketDiscountMaxTickets'
+  - 'ticketDiscountTierIssues'
+  - 'nextTicketDiscountTier'
+  - 'ticketDiscountRows'
+  - 'ticketDiscountInput'
+  - 'TICKET_DISCOUNT_MAX_TIERS'
+  - 'TICKET_DISCOUNT_MIN_TICKETS'
+  - 'DEFAULT_TICKET_DISCOUNT_MAX_PCT'
+  - 'TicketDiscountTier'
+  - 'TicketDiscountSource'
+  - 'TicketDiscountQuote'
+  - 'TicketDiscountIssue'
+  - 'TicketDiscountIssueCode'
+  - 'TicketDiscountRow'
+  - 'mwebTicketDiscountLabels'
+  - 'shellTicketDiscountLabels'
+  - 'podFormTicketDiscountLabels'
+  - 'TicketDiscountLabels'
+  - 'TicketDiscountLimits'
+  - 'TicketDiscountTranslate'
   - 'buildEarningsStatement'
   - 'formatStatementMoney'
   - 'GRIEVANCE_FIELDS'
@@ -307,6 +329,9 @@ exports:
   - 'locationLabel'
   - 'LocationMismatch'
   - 'LocationPick'
+  - 'DEFAULT_LAUNCH_TARGET'
+  - 'launchProgress'
+  - 'showsWaitlist'
   - 'clubCityName'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
@@ -711,6 +736,55 @@ applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
 
 maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
 clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
+```
+
+### Multi-ticket discount — `pod-ticket-discount` + `pod-ticket-discount-copy`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `resolveTicketDiscountTier` | `(source: TicketDiscountSource, seats: number) => TicketDiscountTier \| null` | The tier with the largest `min_tickets` the booking reaches; `null` when the offer is off, under 2 seats or no tier matches. |
+| `ticketDiscountFor` | `(unitPrice: number, seats: number, source: TicketDiscountSource) => TicketDiscountQuote` | `{ gross, pct, min_tickets, amount, net }` — the discount rounded ONCE on the whole ticket gross. |
+| `ticketDiscountMaxTickets` | `(noOfSpots: number) => number` | The most tickets a tier may ask for: `payableSpots(spots)`, or `10` on an unlimited pod. |
+| `ticketDiscountTierIssues` | `(input: { enabled, tiers, maxPct, maxTickets }) => TicketDiscountIssue[]` | Zod-free issue codes (`TIERS_REQUIRED`, `TICKETS_NOT_INCREASING`, `PCT_MAX`…) each surface maps to its own copy; `[]` when off. |
+| `nextTicketDiscountTier` | `(tiers, maxPct: number) => TicketDiscountTier` | The row "Add tier" appends: one more ticket and 5% more than the last row, capped at `maxPct`. |
+| `ticketDiscountRows` | `(unitPrice: number, source: TicketDiscountSource) => TicketDiscountRow[]` | Display rows including the base `1 ticket · 0%` row, each with its per-ticket price. |
+| `ticketDiscountInput` | `(values, free: boolean) => { ticket_discount_enabled; ticket_discount_tiers }` | The mutation input: cleared on a free pod or a switched-off offer, numbers coerced otherwise. |
+| `TICKET_DISCOUNT_MAX_TIERS` / `TICKET_DISCOUNT_MIN_TICKETS` / `DEFAULT_TICKET_DISCOUNT_MAX_PCT` | `10` / `2` / `50` | Server-twin limits; the max pct default is used only while app settings load. |
+| `mwebTicketDiscountLabels` / `shellTicketDiscountLabels` / `podFormTicketDiscountLabels` | `(t: TicketDiscountTranslate) => TicketDiscountLabels` | Every word the editor renders — `mweb.ticketDiscount.*`, `shell.ticketDiscount.*`, `podForm.ticketDiscount.*`, word-for-word identical; `errors[code](limits)` words each issue. |
+
+One checkout booking N seats gets the best tier's percentage off its TICKET money only — never
+add-on products — before the coupon and Duncit Coins. The server keeps its own twin in
+`server/src/modules/pods/pod/pod.ticketDiscount.ts`, prices the charge with it and freezes the
+applied discount on the Payment; this copy only previews it, so both must change together:
+
+```ts
+const pod = {
+  pod_id: 'DUN-POD-4821',
+  pod_amount: 499,
+  no_of_spots: 12,
+  ticket_discount_enabled: true,
+  ticket_discount_tiers: [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 20 },
+  ],
+};
+
+ticketDiscountFor(pod.pod_amount, 4, pod)
+// { gross: 1996, pct: 20, min_tickets: 4, amount: 399.2, net: 1596.8 }
+
+ticketDiscountRows(pod.pod_amount, pod).map((row) => row.per_ticket)   // [499, 449.1, 399.2]
+
+ticketDiscountTierIssues({
+  enabled: true,
+  tiers: [{ min_tickets: 4, discount_pct: 10 }, { min_tickets: 3, discount_pct: 60 }],
+  maxPct: 50,
+  maxTickets: ticketDiscountMaxTickets(pod.no_of_spots),   // 11
+})
+// [{ index: 1, field: 'min_tickets', code: 'TICKETS_NOT_INCREASING' },
+//  { index: 1, field: 'discount_pct', code: 'PCT_MAX' }]
+
+const labels = mwebTicketDiscountLabels(t);
+labels.errors.PCT_MAX({ maxPct: 50, maxTickets: 11, maxTiers: 10 })   // 'Discount can’t be more than 50%'
 ```
 
 ### Coin ledger rows — `coin-ledger`
@@ -2254,6 +2328,35 @@ are what the switch selects, so the header lands on the pod's own area, not just
 The MUI dialog is mWeb's `LocationMismatchDialog`; the Tamagui one is the native app's. Each
 surface's `useLocationMismatch` hook resolves the two ids to names against its own location
 list and hands this result to its dialog — rule 40's twin clause: one rule, two views.
+
+## A city that has not launched yet
+
+`city-launch.ts` holds the rules for a city an admin has added with **Launched** switched off.
+It still shows in both apps' location pickers — its tile reads "N people are in" with a Coming
+soon badge instead of its club count — and choosing it opens the launch waitlist in place of the
+home feed. mWeb's `CityLaunchView` and the native `CityLaunch` screen render it.
+
+```ts
+import { DEFAULT_LAUNCH_TARGET, formatCount, launchProgress, showsWaitlist } from '@duncit/utils';
+
+showsWaitlist({ is_launched: false }); // true  — Ahmedabad, not launched: "1,252 people are in"
+showsWaitlist({ is_launched: true }); // false — Pune, live: "18 clubs"
+showsWaitlist({}); // false — a location from before the flag existed is live
+
+launchProgress(1252, DEFAULT_LAUNCH_TARGET); // 63 — the progress bar's value
+launchProgress(2600, 2000); // 100 — never past full
+launchProgress(40, 0); // 0 — a non-positive target never divides by zero
+formatCount(1252); // '1,252' — the hero's big number
+```
+
+`showsWaitlist` is `false` for anything but an explicit `false`, so a stale cached location
+without the field keeps its feed.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `DEFAULT_LAUNCH_TARGET` | `2000` | The launch goal a city gets when an admin sets none; the server's default too. |
+| `launchProgress` | `(count: number, target: number) => number` | Whole percent of the way to the target, clamped to 0–100; 0 for a non-positive target. |
+| `showsWaitlist` | `(city: Readonly<{ is_launched?: boolean \| null }>) => boolean` | Whether the picker tile and home show the waitlist rather than clubs and the feed. |
 
 ## Clubs grouped by city, then by locality
 

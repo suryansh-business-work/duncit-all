@@ -4,6 +4,8 @@ import type { DuncitColumn } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import EntityPodsTab from '../../shared/EntityPodsTab';
+import { VENUE_APPROVAL_OPTIONS } from '../../shared/recordPods';
+import { POD_MODE_OPTIONS } from '../../pods/list/podsColumns.values';
 import { HOST_PODS_TABLE, type HostPodRow } from '../queries';
 
 /**
@@ -32,6 +34,7 @@ export default function HostPodsTab({ userId }: Readonly<{ userId: string }>) {
       {
         field: 'pod_title',
         headerName: t('admin.venueDetails.colPod'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         valueGetter: (p) => p.pod_title,
@@ -39,13 +42,15 @@ export default function HostPodsTab({ userId }: Readonly<{ userId: string }>) {
       {
         field: 'pod_date_time',
         headerName: t('admin.venueDetails.colWhen'),
+        type: 'date',
         minWidth: 170,
-        filter: { type: 'date' },
         valueGetter: whenValue,
       },
       {
         field: 'pod_mode',
         headerName: t('directory.hostEditor.colMode'),
+        type: 'enum',
+        options: POD_MODE_OPTIONS,
         width: 130,
         cellRenderer: renderMode,
         valueGetter: (p) => p.pod_mode,
@@ -53,12 +58,15 @@ export default function HostPodsTab({ userId }: Readonly<{ userId: string }>) {
       {
         field: 'no_of_spots',
         headerName: t('directory.hostEditor.colSeats'),
+        type: 'number',
         width: 110,
         valueGetter: seatsValue,
       },
       {
         field: 'venue_approval_status',
         headerName: t('admin.venueDetails.colApproval'),
+        type: 'enum',
+        options: VENUE_APPROVAL_OPTIONS,
         width: 150,
         cellRenderer: renderApproval,
         valueGetter: (p) => p.venue_approval_status,

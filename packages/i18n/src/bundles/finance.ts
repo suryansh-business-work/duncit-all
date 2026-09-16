@@ -35,6 +35,14 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       // smaller than its line items explainable.
       colCoinsUsed: 'Coins used',
       colCoinsEarned: 'Coins earned',
+      // The multi-ticket tier frozen on the payment at checkout, and its sum
+      // across the filtered payments on the KPI card.
+      colTicketDiscount: 'Multi-ticket discount',
+      totalTicketDiscount: 'Multi-ticket discounts',
+      totalSuccessful: 'Successful Payments',
+      totalGross: 'Gross',
+      totalFees: 'Platform Fees',
+      totalGst: 'GST Collected',
       colStatus: 'Status',
       colIds: 'IDs',
       colPaidAt: 'Paid at',
@@ -78,6 +86,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       // reading the fee as an addend — see AmountBreakupCard.
       amountBreakup: 'Amount Breakup',
       originalTotal: 'Original total',
+      ticketDiscountLine: 'Multi-ticket discount ({pct}%)',
       couponDiscount: 'Coupon discount',
       couponDiscountWith: 'Coupon discount ({code})',
       coinsRedeemedLine: 'Coins redeemed ({n})',
@@ -164,6 +173,8 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       pod: 'Pod',
       podDate: 'Date',
       seats: 'Seats',
+      ticketDiscountTier: 'Multi-ticket tier',
+      ticketDiscountNone: 'None',
       membership: 'Membership',
       membershipStatus: 'Membership status',
       ticketCode: 'Ticket code',
@@ -743,6 +754,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       beneficiary: 'Beneficiary',
       clubAdminCutOffThePool: 'Club admin cut (off the pool)',
       coinsNote: 'Duncit Coins on this pod: {spent} spent by buyers (already deducted from Customer collected) · {earned} earned back.',
+      ticketDiscountNote: '{amount} in multi-ticket discounts is already off the collected total.',
       customerCollected: 'Customer collected',
       decision: 'Decision',
       duncitRevenuePodTotal: 'Duncit revenue (pod total)',
@@ -833,6 +845,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       releases: 'Releases',
       releaseStatuses: 'Release statuses',
       settled: 'Settled',
+      ticketDiscountsNote: '{amount} in multi-ticket discounts is already off the collected total.',
       theHostKeepsThePoolRemainder: 'The host keeps the pool remainder after the venue’s slot price.',
       theVenueSFixedBookedSlot: 'The venue’s fixed booked slot price (set in the Partners portal), clamped to the pool.',
       totalMatchesCustomerPayment: 'Total (matches customer payment)',

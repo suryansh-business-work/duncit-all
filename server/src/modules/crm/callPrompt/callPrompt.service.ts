@@ -35,6 +35,7 @@ const CALL_PROMPT_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    name: { type: 'string' },
     is_active: { type: 'boolean' },
     language: { type: 'string' },
     created_at: { type: 'date' },

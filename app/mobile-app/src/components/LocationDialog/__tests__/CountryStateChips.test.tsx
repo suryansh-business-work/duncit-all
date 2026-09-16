@@ -18,6 +18,10 @@ const city = (state: string, code: string): LocationItem =>
     location_pincode: '',
     location_zones: [],
     active_club_count: 0,
+    is_launched: true,
+    subscriber_count: 0,
+    launch_target: 2000,
+    whatsapp_group_url: '',
   }) as LocationItem;
 
 // 7 states → the state search box is shown (threshold > 6).

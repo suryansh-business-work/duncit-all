@@ -34,6 +34,7 @@ export const HOME_STATIC = gql`
       followers_count
       is_verified
       location_id
+      locality
     }
     publicHosts {
       user_id
@@ -79,6 +80,7 @@ export const HOME_LIVE = gql`
       club_slug
       location_id
       zone_name
+      locality
       place_label
       place_detail
     }

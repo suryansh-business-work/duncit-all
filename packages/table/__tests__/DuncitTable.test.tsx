@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DuncitTable } from '../src/DuncitTable';
 import type { DuncitColumn, TablePage, TableQueryState } from '../src/types';
@@ -12,8 +12,8 @@ const people: Person[] = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 const columns: DuncitColumn<Person>[] = [
-  { field: 'name', headerName: 'Name', filter: { type: 'text' } },
-  { field: 'email', headerName: 'Email' },
+  { field: 'name', headerName: 'Name', type: 'text' },
+  { field: 'email', headerName: 'Email', type: 'text' },
 ];
 
 function makeFetch(rows: Person[] = people) {
@@ -82,14 +82,15 @@ describe('DuncitTable', () => {
     expect(await screen.findByText('Person 26')).toBeInTheDocument();
   });
 
-  it('applying a filter from the popover fetches with filters and shows a chip', async () => {
+  it('applying a filter from a column header fetches with filters and shows a chip', async () => {
     const fetchRows = makeFetch();
     renderTable(fetchRows);
     await screen.findByText('Person 1');
 
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
-    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'ali' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    fireEvent.click(screen.getByTestId('table-filter-name'));
+    const popover = within(await screen.findByRole('dialog', { name: 'Filter Name' }));
+    fireEvent.change(popover.getByLabelText('Value'), { target: { value: 'ali' } });
+    fireEvent.click(popover.getByRole('button', { name: 'Apply' }));
 
     await waitFor(() =>
       expect(fetchRows).toHaveBeenLastCalledWith(

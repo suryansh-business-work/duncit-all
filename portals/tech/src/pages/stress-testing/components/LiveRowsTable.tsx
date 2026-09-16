@@ -30,7 +30,10 @@ export default function LiveRowsTable<T>({
   defaultSort,
 }: Readonly<Props<T>>) {
   const refetchRef = useRef<(() => void) | null>(null);
-  const fetchRows = useMemo(() => clientTableFetch(rows, searchOf), [rows, searchOf]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, searchOf, columns),
+    [rows, searchOf, columns]
+  );
 
   useEffect(() => {
     refetchRef.current?.();

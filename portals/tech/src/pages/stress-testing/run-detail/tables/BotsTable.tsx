@@ -33,22 +33,40 @@ interface Props {
 export default function BotsTable({ shards }: Readonly<Props>) {
   const { t } = useTranslation();
   const rows = useMemo(() => shards.flatMap((shard) => shard.bots), [shards]);
+  // The journeys these bots are on, as one stable key — so a poll that brings
+  // the same set does not rebuild the columns.
+  const journeyKey = useMemo(
+    () => [...new Set(rows.map((row) => row.journey))].sort((a, b) => a.localeCompare(b)).join('|'),
+    [rows]
+  );
   const columns = useMemo<DuncitColumn<StressBot>[]>(
     () => [
-      { field: 'bot', headerName: t('tech.stress.colBot'), width: 150, valueGetter: (row) => row.bot },
+      { field: 'bot', headerName: t('tech.stress.colBot'), width: 150, type: 'text', valueGetter: (row) => row.bot },
       {
         field: 'kind',
         headerName: t('tech.stress.colKind'),
         width: 110,
+        type: 'enum',
+        options: [
+          { value: 'BROWSER', label: t('tech.stress.kindBrowser') },
+          { value: 'HTTP', label: t('tech.stress.kindHttp') },
+        ],
         valueGetter: (row) => (row.kind === 'BROWSER' ? t('tech.stress.kindBrowser') : t('tech.stress.kindHttp')),
       },
-      { field: 'journey', headerName: t('tech.stress.colJourney'), width: 140, valueGetter: (row) => journeyLabel(t, row.journey) },
-      { field: 'page', headerName: t('tech.stress.colPage'), flex: 1, minWidth: 200, valueGetter: (row) => row.page },
-      { field: 'status', headerName: t('tech.stress.colStatus'), width: 150, cellRenderer: renderStatus, valueGetter: (row) => row.status },
-      { field: 'load_ms', headerName: t('tech.stress.colLoadTime'), width: 110, valueGetter: (row) => formatMs(row.load_ms) },
-      { field: 'at', headerName: t('tech.stress.colSeen'), width: 110, sortable: false, valueGetter: (row) => (row.at ? formatTime(row.at) : '—') },
+      {
+        field: 'journey',
+        headerName: t('tech.stress.colJourney'),
+        width: 140,
+        type: 'enum',
+        options: journeyKey ? journeyKey.split('|').map((journey) => ({ value: journey, label: journeyLabel(t, journey) })) : [],
+        valueGetter: (row) => journeyLabel(t, row.journey),
+      },
+      { field: 'page', headerName: t('tech.stress.colPage'), flex: 1, minWidth: 200, type: 'text', valueGetter: (row) => row.page },
+      { field: 'status', headerName: t('tech.stress.colStatus'), width: 150, type: 'text', cellRenderer: renderStatus, valueGetter: (row) => row.status },
+      { field: 'load_ms', headerName: t('tech.stress.colLoadTime'), width: 110, type: 'number', valueGetter: (row) => formatMs(row.load_ms) },
+      { field: 'at', headerName: t('tech.stress.colSeen'), width: 110, type: 'date', valueGetter: (row) => (row.at ? formatTime(row.at) : '—') },
     ],
-    [t]
+    [journeyKey, t]
   );
 
   return (

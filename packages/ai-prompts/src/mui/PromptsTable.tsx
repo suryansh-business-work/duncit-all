@@ -1,4 +1,4 @@
-import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { useCallback, useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -6,18 +6,21 @@ import {
   DuncitTable,
   actionsColumn,
   activeChipColumn,
+  clientTableFetch,
   dateColumn,
   type DuncitColumn,
-  type TableFetch,
+  type TableQueryState,
 } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { usePromptCopy } from '../i18n/useCopy';
 import type { PromptCopy } from '../copy';
+import { promptSearchText } from '../search';
 import type { AiPrompt, PromptKind } from '../types';
 
 interface Props {
   kind: PromptKind;
-  fetchRows: TableFetch<AiPrompt>;
+  /** The whole list of this kind; the table pages it in memory by its own column types. */
+  load: () => Promise<AiPrompt[]>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
   onEdit: (prompt: AiPrompt) => void;
@@ -107,7 +110,7 @@ const renderTokens = (p: AiPrompt, hint: string) => (
  */
 export function PromptsTable({
   kind,
-  fetchRows,
+  load,
   refetchRef,
   toolbarActions,
   onEdit,
@@ -125,6 +128,7 @@ export function PromptsTable({
       {
         field: 'name',
         headerName: copy.fields.name,
+        type: 'text',
         flex: 1,
         minWidth: 240,
         cellRenderer: (p) => renderName(p, copy),
@@ -133,6 +137,7 @@ export function PromptsTable({
       {
         field: 'key',
         headerName: copy.fields.key,
+        type: 'text',
         minWidth: 190,
         cellRenderer: renderKey,
         valueGetter: (p) => p.key ?? '',
@@ -140,6 +145,7 @@ export function PromptsTable({
       {
         field: 'category',
         headerName: copy.fields.category,
+        type: 'text',
         minWidth: 130,
         cellRenderer: renderCategory,
         valueGetter: (p) => p.category,
@@ -147,6 +153,7 @@ export function PromptsTable({
       {
         field: 'target_model',
         headerName: copy.fields.model,
+        type: 'text',
         width: 150,
         cellRenderer: (p) => renderModel(p, defaultModel),
         valueGetter: (p) => p.target_model || defaultModel,
@@ -154,6 +161,7 @@ export function PromptsTable({
       {
         field: 'token_count',
         headerName: t('ai.library.colTokens'),
+        type: 'number',
         width: 110,
         cellRenderer: (p) => renderTokens(p, t('ai.library.tokensHint')),
         valueGetter: (p) => p.token_count,
@@ -174,6 +182,12 @@ export function PromptsTable({
       }),
     ],
     [code, copy, defaultModel, t, onEdit, onDelete, onReset],
+  );
+
+  // Search, filters, sort and paging over the whole (small) list already here.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => clientTableFetch(await load(), promptSearchText, columns)(q),
+    [load, columns],
   );
 
   return (

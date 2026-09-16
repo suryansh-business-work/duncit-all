@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
-import type { TableFilterValue, TableQueryState } from '@duncit/table';
+import type { TableFilterValue } from '@duncit/table';
 import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import {
   tabCounts,
@@ -16,7 +16,6 @@ import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
 import VenueCancelPodDialog from './VenueCancelPodDialog';
 import {
-  applyVenuePodsQuery,
   cancelSuccessMessage,
   TAB_LABELS,
   VENUE_PODS,
@@ -57,18 +56,11 @@ export default function VenuePodsPage() {
   const tabs = useTabParam<VenuePodTab>({ items: tabItems, fallback: 'ALL' });
   const tab = tabs.value;
 
-  // The table reads rows through a ref (fetchRows identity is pinned inside
-  // DuncitTable), so a fresh server response must poke its refetch handle.
-  const rowsRef = useRef<VenuePodRow[]>(rows);
-  rowsRef.current = rows;
+  // DuncitTable does not refetch when its fetchRows changes identity, so a fresh
+  // server response must poke its refetch handle.
   useEffect(() => {
     refetchRef.current?.();
   }, [rows]);
-
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => applyVenuePodsQuery(rowsRef.current, q),
-    [],
-  );
 
   // Tab selection rides externalFilters — a value change resets to page 1 and
   // re-runs fetchRows without a second data source.
@@ -136,7 +128,7 @@ export default function VenuePodsPage() {
 
       <Box {...tabPanelProps('venue-pods', tab)}>
         <VenuePodsTable
-          fetchRows={fetchRows}
+          rows={rows}
           externalFilters={externalFilters}
           refetchRef={refetchRef}
           onRowClick={setSelected}

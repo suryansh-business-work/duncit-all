@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
@@ -7,7 +7,6 @@ import { PageHeader } from '@duncit/ui';
 import { notify, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
-import type { TableFetch } from '@duncit/table';
 import { urlConfigs } from '../../config/url-configs';
 import MailboxesTable from './MailboxesTable';
 import { useConnectOutcome } from './useConnectOutcome';
@@ -57,21 +56,6 @@ export default function MailAutomationPage() {
     });
 
   const rows = accounts.data?.mailAutomationAccounts;
-
-  /**
-   * The list is small and unpaginated on the server, so the table filters and
-   * sorts it in memory. Search is honoured because an operator with a dozen
-   * mailboxes will reach for it; paging is left to the table.
-   */
-  const fetchRows = useCallback<TableFetch<MailAutomationAccount>>(
-    async (query) => {
-      const all = rows ?? [];
-      const term = query.search.trim().toLowerCase();
-      const matched = term ? all.filter((row) => row.email.toLowerCase().includes(term)) : all;
-      return { rows: matched, total: matched.length };
-    },
-    [rows]
-  );
 
   // The table caches its page until told otherwise, so a refetched list has to
   // push itself in rather than wait to be asked.
@@ -166,7 +150,7 @@ export default function MailAutomationPage() {
       {accounts.error && <Alert severity="error">{accounts.error.message}</Alert>}
 
       <MailboxesTable
-        fetchRows={fetchRows}
+        rows={rows}
         refetchRef={refetchRef}
         disconnecting={disconnecting.loading}
         onDisconnect={askDisconnect}

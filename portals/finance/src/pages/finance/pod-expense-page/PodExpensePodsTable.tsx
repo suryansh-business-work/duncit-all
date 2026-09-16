@@ -81,6 +81,7 @@ export default function PodExpensePodsTable({
         </Typography>
       );
     };
+    const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({ value, label }));
     const renderTotal = (row: PodExpensePodRow) => (
       <Typography variant="body2" component="span" sx={{
         fontWeight: 700
@@ -94,6 +95,7 @@ export default function PodExpensePodsTable({
         headerName: t('finance.common.pod'),
         flex: 1,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderPod,
         valueGetter: (row) => row.pod_title,
       },
@@ -106,7 +108,12 @@ export default function PodExpensePodsTable({
       {
         field: 'pod_status',
         headerName: t('shell.common.status'),
+        type: 'enum',
+        options: statusOptions,
+        // Bucketed in JS from the pod's dates and the clock (bucketForPod) —
+        // there is no stored status to order or match on.
         sortable: false,
+        filterable: false,
         width: 130,
         cellRenderer: renderStatus,
         valueGetter: (row) => statusLabels[row.pod_status],
@@ -115,12 +122,14 @@ export default function PodExpensePodsTable({
         field: 'expense_count',
         headerName: t('finance.podExpense.entries'),
         width: 110,
+        type: 'number',
         valueGetter: (row) => row.expense_count,
       },
       {
         field: 'bill_count',
         headerName: t('finance.podExpense.bills'),
         width: 110,
+        type: 'number',
         cellRenderer: renderBills,
         valueGetter: (row) => `${row.bill_count} / ${row.expense_count}`,
       },
@@ -128,7 +137,7 @@ export default function PodExpensePodsTable({
         field: 'expense_total',
         headerName: t('finance.podExpense.totalSpent'),
         width: 140,
-        filter: { type: 'number' },
+        type: 'number',
         cellRenderer: renderTotal,
         valueGetter: (row) => money(row.expense_total),
       },
@@ -136,7 +145,6 @@ export default function PodExpensePodsTable({
         field: 'last_expense_at',
         headerName: t('finance.podExpense.lastExpense'),
         width: 140,
-        filterable: false,
       }),
     ];
   }, [currency, statusLabels, t]);

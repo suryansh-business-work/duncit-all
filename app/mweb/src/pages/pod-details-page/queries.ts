@@ -70,6 +70,13 @@ export const POD_DETAILS = gql`
         amount
         note
       }
+      # The multi-ticket offer: its accordion, and the booking bar's price for
+      # the seats picked (native selects the same, rule 27).
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
       products_enabled
       product_requests {
         product_id

@@ -34,6 +34,8 @@ export function usePodEditSave(
   onSaved: () => void,
   /** True once the server's spot range has landed — see buildHostUpdateInput. */
   includeSpots = false,
+  /** A FREE / ₹0 pod — its multi-ticket discount is always sent off. */
+  free = false,
 ) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export function usePodEditSave(
       }
       await graphqlRequest(
         HostUpdatePodDocument,
-        { pod_doc_id: podId, input: buildHostUpdateInput(values, { includeSpots }) },
+        { pod_doc_id: podId, input: buildHostUpdateInput(values, { includeSpots, free }) },
         { auth: true },
       );
       onSaved();

@@ -116,10 +116,11 @@ export default function ClubsTable({
       </Tooltip>
     );
     return [
-      { field: 'cover', headerName: t('admin.clubs.colCover'), sortable: false, width: 80, cellRenderer: renderCover },
+      { field: 'cover', headerName: t('admin.clubs.colCover'), type: 'text', width: 80, cellRenderer: renderCover },
       {
         field: 'club_name',
         headerName: t('admin.clubs.colClub'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         cellRenderer: (c) => <ClubNameCell club={c} t={t} />,
@@ -130,6 +131,9 @@ export default function ClubsTable({
       {
         field: 'category_id',
         headerName: t('admin.clubs.colCategory'),
+        type: 'text',
+        // The stored value is an ObjectId: a text match cannot be cast to one. The super-category select filters it.
+        filterable: false,
         minWidth: 140,
         cellRenderer: renderCategory,
         valueGetter: (c) => (c.category_id ? catName(c.category_id) : '—'),
@@ -137,24 +141,30 @@ export default function ClubsTable({
       {
         field: 'matched_venues_count',
         headerName: t('admin.clubs.venues'),
+        type: 'number',
+        // Counted per row by matching venues at read time — not a field stored on the club.
         sortable: false,
+        filterable: false,
         width: 96,
         valueGetter: (c) => c.matched_venues_count ?? 0,
       },
       {
         field: 'whatsapp',
         headerName: 'WhatsApp',
+        type: 'text',
+        // Two link fields folded into C / G markers — no single stored value to order or match on.
         sortable: false,
+        filterable: false,
         width: 110,
         cellRenderer: renderWhatsApp,
         valueGetter: whatsAppValue,
       },
-      { field: 'locality', headerName: t('admin.clubs.colLocality'), filter: { type: 'text' }, hide: true, minWidth: 140 },
+      { field: 'locality', headerName: t('admin.clubs.colLocality'), type: 'text', hide: true, minWidth: 140 },
       activeChipColumn<ClubRow>({ inactiveLabel: 'Draft' }),
       {
         field: 'is_verified',
         headerName: t('admin.clubs.verified'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         hide: true,
         width: 110,
         valueGetter: (c) => (c.is_verified ? 'Yes' : 'No'),

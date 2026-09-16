@@ -23,6 +23,9 @@ const KIND_COLOR: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
   UNKNOWN: 'default',
 };
 
+/** The chip shows the kind itself, so the filter lists the same raw values. */
+const KIND_OPTIONS = Object.keys(KIND_COLOR).map((kind) => ({ value: kind, label: kind }));
+
 const renderEnvironment = (row: ErrorLogRow) => (
   <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
 );
@@ -76,21 +79,25 @@ export default function ErrorLogsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorLogRow>[]>(
     () => [
-      { field: 'created_at', headerName: t('tech.common.when'), width: 175, cellRenderer: renderWhen },
+      { field: 'created_at', headerName: t('tech.common.when'), width: 175, type: 'date', cellRenderer: renderWhen },
       {
         field: 'environment',
         headerName: t('tech.common.env'),
         width: 115,
-        filter: { type: 'select', options: envOptions(t) },
+        type: 'enum',
+        options: envOptions(t),
         cellRenderer: renderEnvironment,
       },
-      { field: 'source', headerName: t('tech.common.source'), width: 130, filter: { type: 'text' } },
-      { field: 'page', headerName: t('tech.common.page'), width: 140, filter: { type: 'text' } },
+      { field: 'source', headerName: t('tech.common.source'), width: 130, type: 'text' },
+      { field: 'page', headerName: t('tech.common.page'), width: 140, type: 'text' },
+      // kind / code / operation live in the log's data blob; the server maps
+      // each to its stored `data.*` path.
       {
         field: 'kind',
         headerName: t('tech.errorLogs.kind'),
         width: 120,
-        sortable: false,
+        type: 'enum',
+        options: KIND_OPTIONS,
         cellRenderer: renderKind,
         valueGetter: (row) => parseIssueData(row).kind ?? '—',
       },
@@ -98,21 +105,21 @@ export default function ErrorLogsTable({
         field: 'code',
         headerName: t('tech.errorLogs.code'),
         width: 180,
-        sortable: false,
+        type: 'text',
         valueGetter: (row) => parseIssueData(row).code ?? '—',
       },
       {
         field: 'operation',
         headerName: t('tech.errorLogs.operation'),
         width: 190,
-        sortable: false,
+        type: 'text',
         valueGetter: (row) => parseIssueData(row).operation ?? '—',
       },
       {
         field: 'user',
         headerName: t('tech.common.user'),
         width: 165,
-        sortable: false,
+        type: 'text',
         cellRenderer: renderUser,
       },
       {
@@ -120,7 +127,7 @@ export default function ErrorLogsTable({
         headerName: t('tech.common.message'),
         flex: 1,
         minWidth: 240,
-        sortable: false,
+        type: 'text',
         cellRenderer: renderMessage,
       },
     ],

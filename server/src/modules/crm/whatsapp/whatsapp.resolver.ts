@@ -5,6 +5,7 @@ import { CRM_RW } from '@modules/crm/crm/crm.constants';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { WaConnectionDoc } from './whatsapp.model';
+import type { TableFilterInput } from '@utils/table-query';
 
 const RW = [...CRM_RW];
 
@@ -15,6 +16,7 @@ type PageInput = {
   sort_by?: string | null;
   sort_dir?: string | null;
   community_jid?: string | null;
+  filters?: TableFilterInput[] | null;
 };
 
 const id = (d: any) => ({ ...d, id: String(d._id) });

@@ -33,6 +33,7 @@ import type {
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
+import { TableHeaderContext } from './header/headerState';
 import { useTranslation } from './i18n';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
@@ -248,8 +249,12 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   const prefs = useTablePrefs(tableId);
   const muiTheme = useTheme();
   const gridRef = useRef<AgGridReact<T>>(null);
-  const { refetch, setSort, updateRow } = table;
-  const { sortBy, sortDir } = table.query;
+  const { refetch, setSort, updateRow, setFilters } = table;
+  const { sortBy, sortDir, filters } = table.query;
+  const headerState = useMemo(
+    () => ({ sortBy, sortDir, filters, setFilters }),
+    [sortBy, sortDir, filters, setFilters],
+  );
 
   const agTheme = useMemo(() => buildAgTheme(muiTheme, prefs.density), [muiTheme, prefs.density]);
   const defaultColDef = useMemo(() => {
@@ -448,8 +453,8 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           searchInput={table.searchInput}
           setSearchInput={table.setSearchInput}
           searchPlaceholder={searchPlaceholder}
-          filters={table.query.filters}
-          setFilters={table.setFilters}
+          filters={filters}
+          setFilters={setFilters}
           toolbarActions={toolbarActions}
           hiddenOverrides={prefs.hiddenOverrides}
           toggleColumn={prefs.toggleColumn}
@@ -496,6 +501,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             transition: (theme) => theme.transitions.create('opacity'),
           }}
         >
+          <TableHeaderContext.Provider value={headerState}>
           <AgGridReact<T>
             ref={gridRef}
             theme={agTheme}
@@ -519,6 +525,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             onCellKeyDown={handleCellKeyDown}
             onSelectionChanged={handleSelectionChanged}
           />
+          </TableHeaderContext.Provider>
         </Box>
       )}
       <TablePagination

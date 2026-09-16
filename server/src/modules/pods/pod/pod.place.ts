@@ -11,6 +11,9 @@ const LOCATION_PLACE_FIELDS = 'location_name city state country location_pincode
 export interface PodPlace {
   label: string | null;
   detail: string | null;
+  /** The area for a card chip: the venue's locality, else the pod's zone.
+   * Null for a virtual pod, and for a pod with neither. */
+  locality: string | null;
 }
 
 interface PlaceCache {
@@ -42,10 +45,12 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
     parent.__podPlace = {
       label: 'Virtual pod',
       detail: parent.meeting_platform || 'Online',
+      locality: null,
     };
     return parent.__podPlace;
   }
 
+  const zoneName = parent.zone_name?.trim() || '';
   if (parent.venue_id) {
     const key = String(parent.venue_id);
     if (!cache.venues.has(key)) {
@@ -67,12 +72,12 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
           venue.postal_code,
           venue.country,
         ]),
+        locality: venue.locality?.trim() || zoneName || null,
       };
       return parent.__podPlace;
     }
   }
 
-  const zoneName = parent.zone_name?.trim() || '';
   if (parent.location_id) {
     const key = String(parent.location_id);
     if (!cache.locations.has(key)) {
@@ -88,12 +93,15 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
       parent.__podPlace = {
         label: joinParts([zoneName, city]) || city || location.location_name,
         detail: joinParts([location.state, zone?.pincode || location.location_pincode, location.country]),
+        locality: zoneName || null,
       };
       return parent.__podPlace;
     }
   }
 
-  parent.__podPlace = zoneName ? { label: zoneName, detail: '' } : { label: null, detail: null };
+  parent.__podPlace = zoneName
+    ? { label: zoneName, detail: '', locality: zoneName }
+    : { label: null, detail: null, locality: null };
   return parent.__podPlace;
 }
 

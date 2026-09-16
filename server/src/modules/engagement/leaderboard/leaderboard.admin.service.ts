@@ -19,10 +19,12 @@ const POINTS_TABLE_CONFIG: TableEntityConfig = {
     points: 'points',
     category: 'category',
     source_type: 'source_type',
+    source_id: 'source_id',
   },
   filterFields: {
     category: { type: 'enum' },
     source_type: { type: 'enum' },
+    source_id: { type: 'string' },
     points: { type: 'number' },
     created_at: { type: 'date' },
   },

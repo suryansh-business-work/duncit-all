@@ -39,7 +39,7 @@ import type { DuncitColumn, TablePage, TableQueryState } from '../src/types';
 
 type Person = { id: string; name: string };
 
-const columns: DuncitColumn<Person>[] = [{ field: 'name', headerName: 'Name' }];
+const columns: DuncitColumn<Person>[] = [{ field: 'name', headerName: 'Name', type: 'text' }];
 
 function makeFetch() {
   return vi.fn(

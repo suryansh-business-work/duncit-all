@@ -5,14 +5,14 @@ import type { DuncitColumn, TableFilterValue } from '../src/types';
 
 type Row = { id: string; name: string; kind: string };
 
-const filterableColumns: DuncitColumn<Row>[] = [
-  { field: 'name', headerName: 'Name', filter: { type: 'text' } },
-  { field: 'kind', headerName: 'Kind' },
+const columns: DuncitColumn<Row>[] = [
+  { field: 'name', headerName: 'Name', type: 'text' },
+  { field: 'kind', headerName: 'Kind', type: 'text' },
 ];
 
 function renderToolbar(overrides: Partial<Parameters<typeof DuncitTableToolbar<Row>>[0]> = {}) {
   const props = {
-    columns: filterableColumns,
+    columns,
     searchInput: '',
     setSearchInput: vi.fn(),
     filters: [] as TableFilterValue[],
@@ -24,6 +24,7 @@ function renderToolbar(overrides: Partial<Parameters<typeof DuncitTableToolbar<R
     toggleDensity: vi.fn(),
     dataActions: <button type="button">Data actions</button>,
     onRefresh: vi.fn(),
+    loading: false,
     ...overrides,
   };
   render(<DuncitTableToolbar<Row> {...props} />);
@@ -37,38 +38,24 @@ describe('DuncitTableToolbar', () => {
       { field: 'name', op: 'contains', value: 'ab' },
       { field: 'kind', op: 'eq', value: 'x' },
     ];
-    const { container } = render(
-      <DuncitTableToolbar<Row>
-        columns={filterableColumns}
-        searchInput=""
-        setSearchInput={vi.fn()}
-        filters={filters}
-        setFilters={setFilters}
-        hiddenOverrides={{}}
-        toggleColumn={vi.fn()}
-        resetColumns={vi.fn()}
-        density="standard"
-        toggleDensity={vi.fn()}
-        dataActions={null}
-        onRefresh={vi.fn()}
-      />,
-    );
-    const firstChipDelete = container.querySelector('.MuiChip-deleteIcon');
+    renderToolbar({ filters, setFilters });
+    const chips = screen.getByRole('group', { name: 'Filters' });
+    const firstChipDelete = chips.querySelector('.MuiChip-deleteIcon');
     expect(firstChipDelete).not.toBeNull();
     fireEvent.click(firstChipDelete as Element);
     expect(setFilters).toHaveBeenCalledWith([{ field: 'kind', op: 'eq', value: 'x' }]);
   });
 
-  it('hides the Filters button when no column is filterable', () => {
-    renderToolbar({ columns: [{ field: 'kind', headerName: 'Kind' }] });
+  it('has no Filters button: filters are set from the column headers, and chipped only once applied', () => {
+    renderToolbar();
     expect(screen.queryByRole('button', { name: /filters/i })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Filters' })).toBeNull();
   });
 
-  it('Clear all inside the filter popover clears filters', async () => {
+  it('Clear all beside the chips clears every filter', () => {
     const setFilters = vi.fn();
-    renderToolbar({ setFilters });
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Clear all' }));
+    renderToolbar({ setFilters, filters: [{ field: 'name', op: 'contains', value: 'ab' }] });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all' }));
     expect(setFilters).toHaveBeenCalledWith([]);
   });
 

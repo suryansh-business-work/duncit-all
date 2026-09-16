@@ -53,21 +53,24 @@ export function getTemplateColumns({
     {
       field: 'name',
       headerName: t('marketing.whatsappCampaigns.template'),
+      type: 'text',
       minWidth: 220,
       flex: 1,
     },
-    { field: 'category', headerName: t('marketing.whatsappCampaigns.category'), width: 140 },
-    { field: 'language', headerName: t('marketing.common.language'), width: 120 },
+    { field: 'category', headerName: t('marketing.whatsappCampaigns.category'), type: 'text', width: 140 },
+    { field: 'language', headerName: t('marketing.common.language'), type: 'text', width: 120 },
     {
       field: 'status',
       headerName: t('shell.common.status'),
+      type: 'text',
       width: 130,
       cellRenderer: renderStatus,
     },
-    { field: 'param_count', headerName: t('marketing.whatsappCampaigns.params'), width: 100 },
+    { field: 'param_count', headerName: t('marketing.whatsappCampaigns.params'), type: 'number', width: 100 },
     {
       field: 'body',
       headerName: t('marketing.whatsappCampaigns.message'),
+      type: 'text',
       minWidth: 260,
       flex: 2,
       cellRenderer: renderBody,
@@ -77,14 +80,15 @@ export function getTemplateColumns({
       // CAMPAIGN — so this is the sum of the campaigns that send it.
       field: 'sent_count',
       headerName: t('marketingWhatsapp.sendCount.header'),
+      type: 'number',
       width: 110,
       cellRenderer: (template) => <SendCountCell row={template} onOpenLogs={onOpenLogs} />,
     },
     {
       field: 'actions',
       headerName: t('shell.common.actions'),
+      type: 'actions',
       width: 100,
-      sortable: false,
       cellRenderer: (template) => (
         <TemplateRowActions template={template} busy={busy} onDelete={onDelete} />
       ),

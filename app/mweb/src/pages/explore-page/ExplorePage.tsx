@@ -27,7 +27,10 @@ const DEFAULT_FILTERS: ExploreFilters = {
 
 export default function ExplorePage({ superCategorySlug, locationId, zoneName }: Readonly<ExplorePageProps>) {
   const { t } = useTranslation();
+  // The city is a server filter (same place rule as Home: the pod's city, a
+  // venue in it, or virtual), so another city's reels never reach this feed.
   const { data, loading, error, refetch } = useQuery<any>(EXPLORE_PODS, {
+    variables: { locationId: locationId || null },
     fetchPolicy: 'cache-and-network',
   });
   const [toggleSavedPod] = useMutation<any>(TOGGLE_SAVED_POD);

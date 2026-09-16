@@ -14,6 +14,7 @@ import { useTranslation } from '@duncit/app-settings';
 import {
   EMPLOYEE_EXPENSE_CATEGORIES,
   EMPLOYEE_EXPENSE_PAYMENT_METHODS,
+  EMPLOYEE_EXPENSE_STATUSES,
   EMPLOYEE_EXPENSE_STATUS_COLORS,
   EMPLOYEE_EXPENSE_STATUS_KEYS,
   formatMoney,
@@ -118,6 +119,7 @@ export default function EmployeeExpensesTable({
         headerName: t('employeeExpense.col.employee'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderEmployee,
         valueGetter: (row) => row.employee_name || row.employee_email,
       },
@@ -125,8 +127,14 @@ export default function EmployeeExpensesTable({
         field: 'status',
         headerName: t('employeeExpense.col.status'),
         width: 160,
+        type: 'enum',
+        options: EMPLOYEE_EXPENSE_STATUSES.map((status) => ({
+          value: status,
+          label: t(EMPLOYEE_EXPENSE_STATUS_KEYS[status]),
+        })),
         // No column filter: the tab strip above already pins the status, and two
         // controls setting the same field disagree the moment one is changed.
+        filterable: false,
         cellRenderer: renderStatus,
         valueGetter: statusLabel,
       },
@@ -134,7 +142,8 @@ export default function EmployeeExpensesTable({
         field: 'category',
         headerName: t('employeeExpense.col.spend'),
         minWidth: 190,
-        filter: { type: 'select', options: CATEGORY_OPTIONS },
+        type: 'enum',
+        options: CATEGORY_OPTIONS,
         cellRenderer: renderSpend,
         valueGetter: (row) => labelize(row.category),
       },
@@ -142,7 +151,7 @@ export default function EmployeeExpensesTable({
         field: 'amount',
         headerName: t('employeeExpense.col.amount'),
         width: 130,
-        filter: { type: 'number' },
+        type: 'number',
         valueGetter: (row) =>
           formatMoney(row.amount, { symbol: currency, decimals: 2, grouping: false }),
       },
@@ -151,13 +160,14 @@ export default function EmployeeExpensesTable({
         headerName: t('employeeExpense.form.paymentMethod'),
         width: 150,
         hide: true,
-        filter: { type: 'select', options: METHOD_OPTIONS },
+        type: 'enum',
+        options: METHOD_OPTIONS,
         valueGetter: (row) => labelize(row.payment_method),
       },
       {
         field: 'bill_url',
         headerName: t('employeeExpense.col.bill'),
-        sortable: false,
+        type: 'text',
         width: 150,
         cellRenderer: renderBill,
         valueGetter: (row) => (row.bill_url ? row.bill_number : t('employeeExpense.bill.missing')),
@@ -172,7 +182,6 @@ export default function EmployeeExpensesTable({
         field: 'reviewed_at',
         headerName: t('employeeExpense.col.reviewed'),
         width: 140,
-        filterable: false,
       }),
     ];
   }, [currency, t]);

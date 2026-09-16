@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
+import LocalityChip from '../../components/LocalityChip';
 
 interface Props {
   title: string;
@@ -9,6 +10,9 @@ interface Props {
   spotsText: string;
   /** Host and/or place, already joined; empty hides the line. */
   subText: string;
+  /** The pod's area (venue locality, else zone) — two clubs can share a name,
+   * so the chip tells their pods apart. Empty for a virtual pod. */
+  locality?: string | null;
   /** Stable per-pod prefix for the title/price test ids (e.g. `pod-card-${pod.pod_id}`). */
   testIdPrefix?: string;
 }
@@ -18,7 +22,7 @@ const META_SX = { fontSize: 12, fontWeight: 500, lineHeight: '16px', color: 'tex
 /**
  * The card's text under the image: who is coming, the title (always two lines
  * tall, so every card in a rail keeps the same image height) with the price
- * beside it, then the host/place line. Native twin: PodCard's PodCardInfo.
+ * beside it, then the host/place line and the locality chip. Native twin: PodCard's PodCardInfo.
  */
 export default function PodCardInfo({
   title,
@@ -26,6 +30,7 @@ export default function PodCardInfo({
   joiningText,
   spotsText,
   subText,
+  locality,
   testIdPrefix,
 }: Readonly<Props>) {
   return (
@@ -79,6 +84,7 @@ export default function PodCardInfo({
           {subText}
         </Typography>
       )}
+      <LocalityChip locality={locality} testId="pod-card-locality" />
     </Stack>
   );
 }

@@ -78,7 +78,7 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'full_name',
       headerName: t('directory.hostEditor.colHost'),
-      filter: { type: 'text' },
+      type: 'text',
       flex: 1,
       minWidth: 190,
       cellRenderer: renderHost,
@@ -87,7 +87,7 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'email',
       headerName: t('directory.hostEditor.colContact'),
-      filter: { type: 'text' },
+      type: 'text',
       flex: 1,
       minWidth: 200,
       cellRenderer: renderContact,
@@ -96,7 +96,7 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'host_categories',
       headerName: t('directory.hostEditor.colCategories'),
-      sortable: false,
+      type: 'text',
       flex: 1,
       minWidth: 180,
       valueGetter: categoriesValue,
@@ -104,13 +104,11 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'status',
       headerName: t('directory.hostEditor.colStatus'),
-      filter: {
-        type: 'select',
-        options: (Object.keys(labels) as HostStatus[]).map((value) => ({
-          value,
-          label: labels[value],
-        })),
-      },
+      type: 'enum',
+      options: (Object.keys(labels) as HostStatus[]).map((value) => ({
+        value,
+        label: labels[value],
+      })),
       width: 150,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
@@ -118,7 +116,7 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'is_active',
       headerName: t('directory.hostEditor.colLive'),
-      filter: { type: 'boolean' },
+      type: 'boolean',
       width: 120,
       cellRenderer: renderActive,
       valueGetter: (row) => (row.is_active ? 'true' : 'false'),
@@ -126,13 +124,17 @@ export const hostColumns = (t: Translate): DuncitColumn<HostRow>[] => {
     {
       field: 'host_commission_pct',
       headerName: t('directory.hostEditor.colCommission'),
+      type: 'number',
+      // Read per page from each host's user account (finance.host_commission_pct), not the host record.
+      sortable: false,
+      filterable: false,
       width: 150,
       valueGetter: (row) => commissionValue(row, platformDefault),
     },
     {
       field: 'created_at',
       headerName: t('directory.hostEditor.colApplied'),
-      filter: { type: 'date' },
+      type: 'date',
       minWidth: 170,
       valueGetter: (row) => formatDateTime(row.created_at),
     },

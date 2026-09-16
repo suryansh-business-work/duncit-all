@@ -57,7 +57,11 @@ const FAQ_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
-    super_category_id: { type: 'string' },
+    question: { type: 'string' },
+    // An ObjectId: matched by `in` against the column's category ids, never by
+    // a `contains` regex Mongoose could not cast.
+    super_category_id: { type: 'enum' },
+    sort_order: { type: 'number' },
     partner_topic: { type: 'enum' },
     is_active: { type: 'boolean' },
     created_at: { type: 'date' },

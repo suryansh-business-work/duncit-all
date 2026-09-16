@@ -22,7 +22,10 @@ const columns = (t: Translate): DuncitColumn<ReferralRow>[] => [
   {
     field: 'referrer',
     headerName: t('finance.referrals.referrer'),
+    type: 'text',
+    // The name is joined from the user after the page is fetched — no stored path.
     sortable: false,
+    filterable: false,
     flex: 1,
     minWidth: 180,
     valueGetter: referrerValue,
@@ -30,7 +33,10 @@ const columns = (t: Translate): DuncitColumn<ReferralRow>[] => [
   {
     field: 'referred',
     headerName: t('finance.referrals.referred'),
+    type: 'text',
+    // The name is joined from the user after the page is fetched — no stored path.
     sortable: false,
+    filterable: false,
     flex: 1,
     minWidth: 180,
     valueGetter: referredValue,
@@ -38,7 +44,7 @@ const columns = (t: Translate): DuncitColumn<ReferralRow>[] => [
   {
     field: 'code',
     headerName: t('finance.referrals.code'),
-    filter: { type: 'text' },
+    type: 'text',
     minWidth: 130,
     cellRenderer: renderCode,
     valueGetter: (r) => r.code,
@@ -46,7 +52,7 @@ const columns = (t: Translate): DuncitColumn<ReferralRow>[] => [
   {
     field: 'created_at',
     headerName: t('finance.common.when'),
-    filter: { type: 'date' },
+    type: 'date',
     minWidth: 190,
     valueGetter: whenValue,
   },

@@ -73,6 +73,7 @@ export const HomePodsDocument = gql(`
       pod_mode
       place_label
       place_detail
+      locality
     }
   }
 `);

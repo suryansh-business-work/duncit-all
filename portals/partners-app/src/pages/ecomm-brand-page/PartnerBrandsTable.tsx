@@ -124,13 +124,14 @@ export default function PartnerBrandsTable({
         headerName: t('partners.ecommBrandPage.brand'),
         flex: 1,
         minWidth: 220,
+        type: 'text',
         cellRenderer: renderBrand,
         valueGetter: (brand) => brand.brand_name || 'Untitled brand',
       },
       {
         field: 'categories',
         headerName: t('shell.nav.categories'),
-        sortable: false,
+        type: 'text',
         minWidth: 180,
         valueGetter: categoriesValue,
       },
@@ -138,12 +139,13 @@ export default function PartnerBrandsTable({
         field: 'status',
         headerName: t('shell.common.status'),
         width: 190,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         cellRenderer: renderStatus,
         valueGetter: (brand) => brand.status,
       },
-      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, valueGetter: updatedValue },
-      { field: 'actions', headerName: t('partners.common.action'), sortable: false, width: 160, cellRenderer: renderActions },
+      { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, type: 'date', valueGetter: updatedValue },
+      { field: 'actions', headerName: t('partners.common.action'), type: 'actions', width: 160, cellRenderer: renderActions },
     ];
   }, [onOpen, onManageProducts, onSettings, onToggleActive]);
 

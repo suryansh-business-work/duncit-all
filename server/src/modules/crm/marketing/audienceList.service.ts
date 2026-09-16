@@ -22,6 +22,7 @@ const LIST_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    name: { type: 'string' },
     owner: { type: 'string' },
     created_at: { type: 'date' },
   },

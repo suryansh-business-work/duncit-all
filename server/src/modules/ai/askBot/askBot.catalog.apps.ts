@@ -29,6 +29,8 @@ export const APP_PAGES: readonly NavigationPage[] = [
     description: 'Open the full-screen account menu to reach your profile, quick actions, Duncit Coin, referral, Manage Account and Shop lists, switch studio role, toggle dark mode, read policies and log out.' },
   { surface: 'mweb', path: '/search', label: 'Search',
     description: 'Type to search pods and clubs with live suggestions, use category quick actions, sort and filter results, and follow a club straight from the result card.' },
+  { surface: 'mweb', path: '/city-launch/:locationId', label: 'City Launch Waitlist',
+    description: 'For a city Duncit has not launched in yet: see how many people are in and the launch goal, add your name to be told on WhatsApp at launch, share the page, join the city WhatsApp group, or apply to host, list a venue or help as a club admin.' },
   { surface: 'mweb', path: '/happening-nearby', label: 'Happening Nearby',
     description: 'See every upcoming (live) pod for the selected city and super-category in one list, narrowed by the same category/price/date/sort filters as Home.' },
   { surface: 'mweb', path: '/previous-pods', label: 'Previous Pods',

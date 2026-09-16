@@ -14,15 +14,20 @@ interface BreakupLine {
  * The waterfall from what the cart was worth to what the card was charged —
  * and ONLY the lines that actually reconcile to the total.
  *
- * Coupon and coins each re-quote the reduced gross (payment.service
- * `applyCoupon`/`applyCoins`), so original − coupon − coins is the gross that
- * was priced; `computeQuote` then extracts GST inclusive from that gross
+ * `original_total` is the cart before EVERY discount (ticket gross + products).
+ * The multi-ticket tier comes off the tickets first; the coupon is then
+ * evaluated on that discounted payable and coins re-quote what the coupon left
+ * (payment.service `applyCoupon`/`applyCoins`). So
+ * original − ticket discount − coupon − coins is the gross that was priced;
+ * `computeQuote` then extracts GST inclusive from that gross
  * (gst = value × g/(100+g), subtotal = value − gst, total = value), which makes
  * subtotal + gst = total exactly. The platform fee is NOT in this list: it is
  * carved out of the subtotal, not added on top — see the memo block below.
  *
- * Coupon and coins render as negatives so the arithmetic reads top to bottom;
- * both are skipped when zero rather than shown as a "− ₹0.00" no-op.
+ * The ticket discount, coupon and coins render as negatives so the arithmetic
+ * reads top to bottom; each is skipped when zero rather than shown as a
+ * "− ₹0.00" no-op. The ticket discount reads the payment's frozen snapshot,
+ * never the pod's current tiers.
  */
 function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
   const p = detail.payment;
@@ -30,6 +35,13 @@ function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
   const lines: BreakupLine[] = [
     { key: 'original', label: t('finance.payment.originalTotal'), value: money(sym, detail.original_total) },
   ];
+  if (p.ticket_discount_amount > 0) {
+    lines.push({
+      key: 'ticket-discount',
+      label: t('finance.payment.ticketDiscountLine', { vars: { pct: p.ticket_discount_pct } }),
+      value: `− ${money(sym, p.ticket_discount_amount)}`,
+    });
+  }
   if (p.coupon_discount > 0) {
     // Named when the code survived on the payment, bare when it did not — the
     // two are separate keys so a translator is never handed a dangling "()".

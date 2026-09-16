@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ExplorePodCard from '../ExplorePodCard';
 import { TOGGLE_POD_LIKE } from '../../pod-details-page/queries';
 
+const SOUND = { on: false, active: true, onToggle: vi.fn() };
+
 // useNavigate spy.
 const navigateMock = vi.fn();
 vi.mock('react-router', async (importOriginal) => ({
@@ -114,6 +116,7 @@ const setup = (props: Record<string, any> = {}, mocks: any[] = []) => {
         saved={false}
         onToggleSave={vi.fn()}
         viewerId="viewer-1"
+        sound={SOUND}
         {...rest}
       />
     </MockedProvider>,
@@ -273,6 +276,7 @@ describe('ExplorePodCard', () => {
           saved={false}
           onToggleSave={vi.fn()}
           viewerId="viewer-1"
+          sound={SOUND}
         />
       </MockedProvider>,
     );
@@ -286,6 +290,7 @@ describe('ExplorePodCard', () => {
           saved={false}
           onToggleSave={vi.fn()}
           viewerId="viewer-1"
+          sound={SOUND}
         />
       </MockedProvider>,
     );

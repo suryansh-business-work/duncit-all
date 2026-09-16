@@ -56,6 +56,8 @@ export const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     place_charges { label amount note }
     products_enabled
     product_requests { product_id quantity }
+    ticket_discount_enabled
+    ticket_discount_tiers { min_tickets discount_pct }
     pod_attendees
     attendance { attended_seats booked_seats recorded }
     is_active

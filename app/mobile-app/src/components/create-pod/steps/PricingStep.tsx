@@ -6,6 +6,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PlaceChargesField } from '../PlaceChargesField';
+import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodTypeCards } from '../PodTypeCards';
 import {
   PricePanel,
@@ -90,6 +91,7 @@ export function PricingStep({
         />
       </SurfaceCard>
       <PricePanel finance={finance} pricing={pricing} />
+      {isFree ? null : <PodTicketDiscountCard form={form} currency={finance.currency_symbol} />}
       <SurfaceCard testID="pricing-step-payment-terms-card">
         <FormTextField
           control={control}

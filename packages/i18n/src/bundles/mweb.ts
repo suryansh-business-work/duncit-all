@@ -974,6 +974,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       join: 'Join',
       like: 'Like',
       comments: 'Comments',
+      // The reel rail's sound toggle. A reel with no audio track keeps the
+      // button, dimmed, and a tap on it shows noAudio.
+      mute: 'Mute video',
+      unmute: 'Unmute video',
+      noAudio: 'This video has no audio',
     },
     // The bar offering the app. Shown only when the OS did not already hand
     // the link over — a verified App Link never reaches this code at all.
@@ -1156,6 +1161,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sectionPayment: 'Payment details',
       sectionTerms: 'Payment terms',
       sectionCharges: 'Place charges',
+      // The multi-ticket offer: its accordion, its tier rows and the booking
+      // bar's caption once the chosen seats reach a tier.
+      sectionTicketDiscount: 'Multi-ticket offer',
+      ticketDiscountIntro: 'Book more tickets in one booking and pay less per ticket.',
+      ticketDiscountBaseRow: '1 ticket',
+      ticketDiscountTierRow: '{count}+ tickets',
+      ticketDiscountPct: '{pct}% off',
+      ticketDiscountFullPrice: 'Full price',
+      ticketDiscountPerTicket: '{price} per ticket',
+      ticketDiscountApplied: '{pct}% off for {count} tickets',
       aboutEmpty: 'No description provided.',
       offersEmpty: 'Details coming soon.',
       perksEmpty: 'No additional perks listed.',
@@ -1701,6 +1716,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // can see applied above it reads as the discount having failed. The coin
       // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
       couponDiscount: 'Coupon {code}',
+      // The multi-ticket tier comes off the ticket money FIRST, before the
+      // coupon and coins; the Saved label names it on the payment result.
+      ticketDiscount: 'Multi-ticket discount ({pct}% on {count} tickets)',
+      ticketDiscountSaved: 'Multi-ticket discount',
       totalPayable: 'Total payable',
       // What an account must have before it can pay. The server refuses the
       // payment without these, so the buyer is told BEFORE entering a card
@@ -1909,6 +1928,30 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       simulate: 'Simulate',
       successfulPayment: 'Successful Payment',
       dummyGatewayOnly: 'Dummy gateway only',
+    },
+    // The multi-ticket discount editor — host create, the Club Admin editor and
+    // the host's Edit Pod sheet, on mWeb and native alike. Rendered through
+    // `mwebTicketDiscountLabels` in @duncit/utils; word-for-word identical to
+    // `shell.ticketDiscount` and `podForm.ticketDiscount`.
+    ticketDiscount: {
+      title: 'Multi-ticket discount',
+      switchLabel: 'Offer a discount when one person books multiple tickets',
+      hint: 'The best matching tier applies to the ticket price when a single booking has at least that many tickets.',
+      baseRow: '1 ticket · 0% (full price)',
+      ticketsLabel: 'Tickets',
+      discountLabel: 'Discount %',
+      addTier: 'Add tier',
+      removeTier: 'Remove tier',
+      maxHint: 'Up to {max}% off',
+      perTicket: '{price} per ticket',
+      errorTiersRequired: 'Add at least one discount tier',
+      errorTooManyTiers: 'You can add up to {max} tiers',
+      errorTicketsMin: 'Tickets must be a whole number of at least 2',
+      errorTicketsMax: 'Tickets can’t be more than {max}',
+      errorTicketsNotIncreasing: 'Needs more tickets than the row above',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     // Creating a pod — the host's 4-step stepper (Basics → Location/Category/
     // Club → Venue & Slot → Pricing & Publish), its fields, its cover picker
@@ -3334,6 +3377,44 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       moments: 'Moments',
       stories: 'Stories',
       clubNotFound: 'Club not found.',
+    },
+    // A city that is not launched yet: its location-picker tile and the
+    // subscribe-for-launch page (mWeb CityLaunchView, native CityLaunchView).
+    cityLaunch: {
+      comingSoon: 'Coming soon',
+      peopleIn: {
+        one: '{count} person is in',
+        other: '{count} people are in',
+      },
+      liveCount: 'Live count',
+      peopleInFor: 'people are in for {city}',
+      launchGoal: "We'll launch once {target} people have added their names.",
+      notifyCta: 'Notify me when {city} launches',
+      signInCta: 'Sign in to get notified',
+      addedTitle: 'Your name has been added',
+      addedBody: "We'll notify you on WhatsApp when we launch in {city}.",
+      shareFriends: 'Send this to your friends',
+      shareText: 'Duncit is coming to {city}. Add your name so it launches sooner: {url}',
+      linkCopied: 'Link copied',
+      joinWhatsapp: "Join {city}'s WhatsApp for launch updates",
+      whatElse: 'What else can you do?',
+      hostEyebrow: 'Club leader',
+      hostTitle: 'Want to host your own meet-ups?',
+      hostBody:
+        'Super passionate about your hobby? Love getting people together? Create your own club on Duncit.',
+      venueEyebrow: 'Venue partner',
+      venueTitle: 'Have a space people can hang out in?',
+      venueBody:
+        'Looking for more footfall at your cafe, studio, turf or ground? Make your space a community home.',
+      volunteerEyebrow: 'Volunteer',
+      volunteerTitle: 'Want to help get this going?',
+      volunteerBody:
+        'Help kick-start Duncit in your city, from spreading the word to setting up meet-ups.',
+      tellMeMore: 'Tell me more',
+      needWhatsapp: 'Add your WhatsApp number to your profile so we can tell you when {city} launches.',
+      goToProfile: 'Go to profile',
+      subscribeFailed: 'Could not add your name. Please try again.',
+      notFound: 'This city is not on Duncit.',
     },
     clubsPage: {
       noClubsFound: 'No clubs found.',

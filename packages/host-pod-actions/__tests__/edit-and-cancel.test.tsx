@@ -7,6 +7,7 @@
  * that does not), and a cancel states who it affects and what it refunds before
  * the host confirms it.
  */
+import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -25,6 +26,9 @@ import {
 } from '../src/queries';
 import { hostActionsConfig, labelsFor } from './host-actions-config';
 import type { HostPodTarget } from '../src/types';
+
+/** The discount fields of the HostUpdatePodInput a save sent. */
+type SentInput = { ticket_discount_enabled?: boolean; ticket_discount_tiers?: object[] };
 
 const labels = labelsFor();
 const testTheme = createTheme();
@@ -234,6 +238,143 @@ describe('PodEditDialog', () => {
 
     expect(props.onClose).toHaveBeenCalledTimes(1);
     expect(props.onSaved).not.toHaveBeenCalled();
+  });
+
+  // The multi-ticket discount rides in the same sheet: shown on a paid pod,
+  // hidden (and cleared on save) on a free one.
+  describe('the multi-ticket discount', () => {
+    const settingsMock: MockedResponse = {
+      request: { query: PUBLIC_APP_SETTINGS },
+      result: {
+        data: {
+          publicAppSettings: {
+            __typename: 'PublicAppSettings',
+            date_format: 'dd MMM yyyy',
+            time_format: 'hh:mm a',
+            time_zone: 'Asia/Kolkata',
+            time_source: 'SERVER',
+            custom_time: null,
+            custom_time_set_at: null,
+            server_time: null,
+            min_signup_age: 18,
+            draft_retention_days: 30,
+            ticket_discount_max_pct: 30,
+          },
+        },
+      },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    };
+
+    /** 8 spots sell 7 tickets, and the admin caps a tier at 30%. */
+    const limits = { maxPct: 30, maxTickets: 7, maxTiers: 10 };
+
+    const paidPod = pod({
+      pod_type: 'PAID',
+      pod_amount: 499,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [
+        { __typename: 'TicketDiscountTier', min_tickets: 2, discount_pct: 10 },
+      ] as unknown as HostPodTarget['ticket_discount_tiers'],
+    });
+
+    /** A save mock that records the input the mutation was actually sent. */
+    const recordingSave = () => {
+      const sent: SentInput[] = [];
+      const mock = saveMock({
+        request: {
+          query: HOST_UPDATE_POD,
+          variables: (v: { input: SentInput }) => {
+            sent.push(v.input);
+            return true;
+          },
+        },
+      });
+      return { sent, mock };
+    };
+
+    it('offers the stored tiers on a paid pod, priced per ticket against the admin max', async () => {
+      dialog([limitsMock(), settingsMock], paidPod);
+      await settle();
+      await settle();
+
+      expect(screen.getByTestId('ticket-discount-tier-min-0')).toHaveValue(2);
+      expect(screen.getByTestId('ticket-discount-tier-pct-0')).toHaveValue(10);
+      // A 10% tier on ₹499 is ₹449.10 — priced to the paisa.
+      expect(screen.getByText(labels.ticketDiscount.perTicket('₹449.10'))).toBeInTheDocument();
+      expect(screen.getByText(labels.ticketDiscount.maxHint(30))).toBeInTheDocument();
+    });
+
+    it('saves an untouched discount exactly as stored, without Apollo typenames', async () => {
+      const { sent, mock } = recordingSave();
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, mock], paidPod);
+      await settle();
+      await settle();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({
+        ticket_discount_enabled: true,
+        ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+      });
+      expect(sent[0].ticket_discount_tiers?.[0]).not.toHaveProperty('__typename');
+    });
+
+    it('refuses a tier above the admin max, naming the max on that row', async () => {
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, saveMock()], paidPod);
+      await settle();
+      await settle();
+
+      fireEvent.change(screen.getByTestId('ticket-discount-tier-pct-0'), { target: { value: '40' } });
+      await save();
+
+      expect(screen.getByText(labels.ticketDiscount.errors.PCT_MAX(limits))).toBeInTheDocument();
+      expect(props.onSaved).not.toHaveBeenCalled();
+    });
+
+    // The other column of the same row: a tier asking for more tickets than the
+    // pod can sell is refused under the TICKETS field, not the discount one.
+    it('refuses a tier asking for more tickets than the pod has to sell', async () => {
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, saveMock()], paidPod);
+      await settle();
+      await settle();
+
+      fireEvent.change(screen.getByTestId('ticket-discount-tier-min-0'), { target: { value: '9' } });
+      await save();
+
+      expect(screen.getByText(labels.ticketDiscount.errors.TICKETS_MAX(limits))).toBeInTheDocument();
+      expect(screen.queryByText(labels.ticketDiscount.errors.PCT_MAX(limits))).not.toBeInTheDocument();
+      expect(props.onSaved).not.toHaveBeenCalled();
+    });
+
+    it('asks for a tier when the host empties a discount left switched on', async () => {
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, saveMock()], paidPod);
+      await settle();
+      await settle();
+
+      fireEvent.click(screen.getByTestId('ticket-discount-tier-remove-0'));
+      await save();
+
+      expect(screen.getByTestId('ticket-discount-list-error')).toHaveTextContent(
+        labels.ticketDiscount.errors.TIERS_REQUIRED(limits),
+      );
+      expect(props.onSaved).not.toHaveBeenCalled();
+    });
+
+    it('hides the discount on a free pod and clears it on save', async () => {
+      const { sent, mock } = recordingSave();
+      const freePod = pod({ pod_type: 'FREE', pod_amount: 0, ticket_discount_tiers: [] });
+      const { props } = dialog([limitsMock(), settingsMock, cleanCheck, mock], freePod);
+      await settle();
+      await settle();
+
+      expect(screen.queryByTestId('ticket-discount-field')).not.toBeInTheDocument();
+
+      await save();
+
+      expect(props.onSaved).toHaveBeenCalledTimes(1);
+      expect(sent[0]).toMatchObject({ ticket_discount_enabled: false, ticket_discount_tiers: [] });
+    });
   });
 });
 

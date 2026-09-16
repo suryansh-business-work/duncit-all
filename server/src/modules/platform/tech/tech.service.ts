@@ -363,6 +363,7 @@ const DOCKER_CONTAINER_TABLE_CONFIG: TableEntityConfig = {
     name: { type: 'string' },
     image: { type: 'string' },
     state: { type: 'enum' },
+    status: { type: 'string' },
     createdAt: { type: 'date' },
   },
   defaultSort: { name: 1 },

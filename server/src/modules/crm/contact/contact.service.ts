@@ -41,7 +41,9 @@ const CONTACT_TABLE_CONFIG: TableEntityConfig = {
   },
   filterFields: {
     status: { type: 'enum' },
+    name: { type: 'string' },
     email: { type: 'string' },
+    subject: { type: 'string' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },

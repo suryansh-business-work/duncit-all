@@ -112,6 +112,7 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
     {
       field: meta.nameField,
       headerName: meta.nameHeader,
+      type: 'text',
       flex: 1.4,
       minWidth: 200,
       cellRenderer: renderName,
@@ -123,17 +124,18 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       field: extra.field,
       headerName: extra.headerName,
       minWidth: 120,
-      filter: { type: 'text' },
+      type: 'text',
       valueGetter: (row) => fieldText(row, extra.field),
     });
   }
   columns.push(
-    { field: 'city', headerName: t('crm.common.city'), minWidth: 120, filter: { type: 'text' }, valueGetter: (row) => row.city ?? '—' },
+    { field: 'city', headerName: t('crm.common.city'), minWidth: 120, type: 'text', valueGetter: (row) => row.city ?? '—' },
     {
       field: 'lead_status',
       headerName: t('shell.common.status'),
       minWidth: 130,
-      filter: { type: 'select', options: options.statusOptions },
+      type: 'enum',
+      options: options.statusOptions,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.lead_status,
     },
@@ -141,7 +143,8 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       field: 'priority',
       headerName: t('crm.common.priority'),
       minWidth: 110,
-      filter: { type: 'select', options: options.priorityOptions },
+      type: 'enum',
+      options: options.priorityOptions,
       cellRenderer: renderPriority,
       valueGetter: (row) => row.priority,
     },
@@ -150,10 +153,11 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       headerName: t('crm.common.superCategory'),
       hide: true,
       minWidth: 150,
-      filter: { type: 'select', options: options.superCategoryOptions },
+      type: 'enum',
+      options: options.superCategoryOptions,
       valueGetter: superCategoryName,
     },
-    { field: 'next_follow_up_date', headerName: 'Follow-up', minWidth: 140, filter: { type: 'date' }, valueGetter: followUpValue },
+    { field: 'next_follow_up_date', headerName: 'Follow-up', minWidth: 140, type: 'date', valueGetter: followUpValue },
     dateColumn<T>({ formatDate: fmtDateObj }),
     actionsColumn<T>({
       onEdit: options.onEdit,

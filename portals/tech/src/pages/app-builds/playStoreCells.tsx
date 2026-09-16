@@ -138,7 +138,8 @@ export const makePlayStoreColumn = (t: Translate, onPush: PushToPlay): DuncitCol
     field: 'play_releases',
     headerName: labels.header,
     width: 235,
-    sortable: false,
+    // Push buttons per Play track — a row control, not a value.
+    type: 'actions',
     cellRenderer: renderPlay,
     valueGetter: (row) => row.play_releases.map((r) => `${r.track}:${r.status}`).join(','),
   };

@@ -1,12 +1,12 @@
 import { gql } from '@apollo/client';
 
 export const EXPLORE_PODS = gql`
-  query ExplorePods {
+  query ExplorePods($locationId: ID) {
     me {
       user_id
       saved_pod_ids
     }
-    pods(filter: { is_active: true, has_reel: true }) {
+    pods(filter: { is_active: true, has_reel: true, location_id: $locationId }) {
       id
       pod_id
       pod_title
@@ -19,6 +19,7 @@ export const EXPLORE_PODS = gql`
       no_of_spots
       zone_name
       reel_url
+      reel_has_audio
       club_id
       club_slug
       location_id

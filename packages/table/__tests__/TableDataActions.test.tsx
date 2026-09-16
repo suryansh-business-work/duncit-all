@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { DuncitColumn } from '../src/types';
 
 const { downloadTextFile, notify } = vi.hoisted(() => ({ downloadTextFile: vi.fn(), notify: vi.fn() }));
 
@@ -21,7 +22,7 @@ type Pod = { id: string; name: string };
 
 const QUERY = { search: '', page: 2, pageSize: 25, sortBy: null, sortDir: 'asc' as const, filters: [] };
 const ROWS: Pod[] = [{ id: 'DUN-POD-4821', name: 'Sunrise Yoga' }];
-const columns = [{ field: 'name', headerName: 'Pod' }];
+const columns: DuncitColumn<Pod>[] = [{ field: 'name', headerName: 'Pod', type: 'text' }];
 
 function renderActions(overrides: Record<string, unknown> = {}) {
   const fetchRows = vi.fn(async () => ({ rows: [{ id: 'DUN-POD-1', name: 'Book Club' }], total: 1 }));

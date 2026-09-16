@@ -4,13 +4,27 @@ import { FilterControl } from '../src/toolbar/filterControls';
 import { emptyDraft, type FilterDraft } from '../src/toolbar/filterState';
 import type { DuncitColumn } from '../src/types';
 
-// Deterministic stand-in for the MUI X DatePicker: two buttons that fire the
-// picker's onChange with a real Date and with null so both branches are exercised
-// without wrestling the real picker's text parsing under jsdom.
+// Deterministic stand-in for the MUI X DatePicker: it shows the bounds it was
+// given and fires onChange with a real Date or with null, so the date control's
+// wiring is asserted without driving the real picker's text parsing under jsdom.
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
-  DatePicker: ({ label, onChange }: { label: string; onChange: (v: Date | null) => void }) => (
-    <div>
-      <button type="button" onClick={() => onChange(new Date('2026-05-01T00:00:00.000Z'))}>
+  DatePicker: ({
+    label,
+    minDate,
+    maxDate,
+    onChange,
+  }: {
+    label: string;
+    minDate?: Date;
+    maxDate?: Date;
+    onChange: (v: Date | null) => void;
+  }) => (
+    <div
+      data-testid={`picker ${label}`}
+      data-min={minDate ? minDate.toISOString() : 'none'}
+      data-max={maxDate ? maxDate.toISOString() : 'none'}
+    >
+      <button type="button" onClick={() => onChange(new Date('2026-09-01T00:00:00.000Z'))}>
         {`set ${label}`}
       </button>
       <button type="button" onClick={() => onChange(null)}>{`clear ${label}`}</button>
@@ -18,108 +32,114 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   ),
 }));
 
-type Row = Record<string, unknown>;
+type Pod = Record<string, unknown>;
 
-function draft(overrides: Partial<FilterDraft> = {}): FilterDraft {
-  return { ...emptyDraft(), ...overrides };
+const title: DuncitColumn<Pod> = { field: 'pod_title', headerName: 'Title', type: 'text' };
+const amount: DuncitColumn<Pod> = { field: 'pod_amount', headerName: 'Amount', type: 'number' };
+const created: DuncitColumn<Pod> = { field: 'created_at', headerName: 'Created', type: 'date' };
+const active: DuncitColumn<Pod> = { field: 'is_active', headerName: 'Active', type: 'boolean' };
+const status: DuncitColumn<Pod> = {
+  field: 'status',
+  headerName: 'Status',
+  type: 'enum',
+  options: [
+    { value: 'OPEN', label: 'Open' },
+    { value: 'CLOSED', label: 'Closed' },
+  ],
+};
+
+function renderControl(column: DuncitColumn<Pod>, patch: Partial<FilterDraft> = {}) {
+  const onChange = vi.fn();
+  const label = column.headerName ?? column.field;
+  const draft = { ...emptyDraft(column), ...patch };
+  render(<FilterControl<Pod> column={column} label={label} draft={draft} onChange={onChange} />);
+  return onChange;
 }
 
-function renderControl(column: DuncitColumn<Row>, d: FilterDraft, onChange = vi.fn()) {
-  const utils = render(<FilterControl<Row> column={column} draft={d} onChange={onChange} />);
-  return { ...utils, onChange };
-}
-
-function openSelect(name: string | RegExp): ReturnType<typeof within> {
+function openSelect(name: RegExp) {
   fireEvent.mouseDown(screen.getByRole('combobox', { name }));
   return within(screen.getByRole('listbox'));
 }
 
-describe('FilterControl', () => {
-  it('renders nothing for a non-filterable column', () => {
-    const { container } = renderControl({ field: 'plain', headerName: 'Plain' }, draft());
-    expect(container).toBeEmptyDOMElement();
+const optionNames = (listbox: ReturnType<typeof within>) =>
+  listbox.getAllByRole('option').map((option: HTMLElement) => option.textContent);
+
+describe('FilterControl for a text column', () => {
+  it('offers contains / equals / not equal, and emits the picked condition and the typed value', () => {
+    const onChange = renderControl(title);
+    fireEvent.change(screen.getByLabelText('Value'), { target: { value: 'Sunday badminton' } });
+    expect(onChange).toHaveBeenCalledWith({ value: 'Sunday badminton' });
+
+    const listbox = openSelect(/Condition/);
+    expect(optionNames(listbox)).toEqual(['Contains', 'Equals', 'Does not equal']);
+    fireEvent.click(listbox.getByRole('option', { name: 'Equals' }));
+    expect(onChange).toHaveBeenCalledWith({ op: 'eq' });
+  });
+});
+
+describe('FilterControl for a number column', () => {
+  it('offers the numeric comparisons and a single value box outside a range', () => {
+    const onChange = renderControl(amount);
+    expect(screen.queryByLabelText('Amount max')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Value'), { target: { value: '500' } });
+    expect(onChange).toHaveBeenCalledWith({ value: '500' });
+
+    const listbox = openSelect(/Condition/);
+    expect(optionNames(listbox)).toEqual(['Equals', 'Does not equal', 'At least', 'At most', 'Between']);
+    fireEvent.click(listbox.getByRole('option', { name: 'Between' }));
+    expect(onChange).toHaveBeenCalledWith({ op: 'between' });
   });
 
-  it('text control emits trimmed-free text patches', () => {
-    const { onChange } = renderControl(
-      { field: 'name', headerName: 'Name', filter: { type: 'text' } },
-      draft(),
-    );
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'hello' } });
-    expect(onChange).toHaveBeenCalledWith({ text: 'hello' });
+  it('asks for a min and a max once the condition is between', () => {
+    const onChange = renderControl(amount, { op: 'between' });
+    expect(screen.queryByLabelText('Value')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Amount min'), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText('Amount max'), { target: { value: '2500' } });
+    expect(onChange).toHaveBeenCalledWith({ value: '100' });
+    expect(onChange).toHaveBeenCalledWith({ valueTo: '2500' });
   });
+});
 
-  it('multi-select renders selected chips (with a raw-value fallback) and emits arrays', () => {
-    const column: DuncitColumn<Row> = {
-      field: 'status',
-      headerName: 'Status',
-      filter: {
-        type: 'select',
-        multiple: true,
-        options: [
-          { value: 'A', label: 'Active' },
-          { value: 'I', label: 'Inactive' },
-        ],
-      },
-    };
-    const { onChange } = renderControl(column, draft({ selected: ['A', 'ZZZ'] }));
-    // Known value renders its label; unknown value falls back to the raw value.
-    expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getByText('ZZZ')).toBeInTheDocument();
+describe('FilterControl for a date column', () => {
+  it('emits the picked from / to days, with the pickers unbounded while nothing is picked', () => {
+    const onChange = renderControl(created);
+    expect(screen.getByTestId('picker Created from')).toHaveAttribute('data-max', 'none');
+    expect(screen.getByTestId('picker Created to')).toHaveAttribute('data-min', 'none');
 
-    const listbox = openSelect('Status');
-    fireEvent.click(listbox.getByRole('option', { name: 'Inactive' }));
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ selected: expect.arrayContaining(['I']) }),
-    );
-  });
-
-  const singleColumn: DuncitColumn<Row> = {
-    field: 'kind',
-    headerName: 'Kind',
-    filter: { type: 'select', options: [{ value: 'x', label: 'X' }] },
-  };
-
-  it('single-select emits [value] when a real option is picked (empty -> value)', () => {
-    const { onChange } = renderControl(singleColumn, draft({ selected: [] }));
-    fireEvent.click(openSelect('Kind').getByRole('option', { name: 'X' }));
-    expect(onChange).toHaveBeenLastCalledWith({ selected: ['x'] });
-  });
-
-  it('single-select emits [] when reset to Any (value -> empty)', () => {
-    const { onChange } = renderControl(singleColumn, draft({ selected: ['x'] }));
-    fireEvent.click(openSelect('Kind').getByRole('option', { name: 'Any' }));
-    expect(onChange).toHaveBeenLastCalledWith({ selected: [] });
-  });
-
-  it('number control emits min and max patches', () => {
-    const { onChange } = renderControl(
-      { field: 'age', headerName: 'Age', filter: { type: 'number' } },
-      draft(),
-    );
-    fireEvent.change(screen.getByLabelText('Age min'), { target: { value: '1' } });
-    fireEvent.change(screen.getByLabelText('Age max'), { target: { value: '9' } });
-    expect(onChange).toHaveBeenCalledWith({ min: '1' });
-    expect(onChange).toHaveBeenCalledWith({ max: '9' });
-  });
-
-  it('date control emits from (Date) and to (null) patches', () => {
-    const { onChange } = renderControl(
-      { field: 'created', headerName: 'Created', filter: { type: 'date' } },
-      draft(),
-    );
     fireEvent.click(screen.getByText('set Created from'));
     fireEvent.click(screen.getByText('clear Created to'));
-    expect(onChange).toHaveBeenCalledWith({ from: new Date('2026-05-01T00:00:00.000Z') });
+    expect(onChange).toHaveBeenCalledWith({ from: new Date('2026-09-01T00:00:00.000Z') });
     expect(onChange).toHaveBeenCalledWith({ to: null });
   });
 
-  it('boolean control emits the tri-state selection', () => {
-    const { onChange } = renderControl(
-      { field: 'active', headerName: 'Active', filter: { type: 'boolean' } },
-      draft(),
-    );
-    fireEvent.click(openSelect('Active').getByRole('option', { name: 'Yes' }));
-    expect(onChange).toHaveBeenCalledWith({ bool: 'true' });
+  it('keeps the range the right way round: from cannot pass to, and to cannot precede from', () => {
+    const from = new Date('2026-09-01T00:00:00.000Z');
+    const to = new Date('2026-09-08T00:00:00.000Z');
+    renderControl(created, { from, to });
+    expect(screen.getByTestId('picker Created from')).toHaveAttribute('data-max', to.toISOString());
+    expect(screen.getByTestId('picker Created to')).toHaveAttribute('data-min', from.toISOString());
+  });
+});
+
+describe('FilterControl for a boolean column', () => {
+  it('offers Any / Yes / No under the column name and emits the choice', () => {
+    const onChange = renderControl(active);
+    const listbox = openSelect(/Active/);
+    expect(optionNames(listbox)).toEqual(['Any', 'Yes', 'No']);
+    fireEvent.click(listbox.getByRole('option', { name: 'No' }));
+    expect(onChange).toHaveBeenCalledWith({ bool: 'false' });
+  });
+});
+
+describe('FilterControl for an enum column', () => {
+  it('chips the picked options by label (raw value for an unknown one) and adds to the picked list', () => {
+    const onChange = renderControl(status, { selected: ['OPEN', 'ARCHIVED'] });
+    expect(screen.getByText('Open')).toBeInTheDocument();
+    expect(screen.getByText('ARCHIVED')).toBeInTheDocument();
+
+    const listbox = openSelect(/Status/);
+    expect(optionNames(listbox)).toEqual(['Open', 'Closed']);
+    fireEvent.click(listbox.getByRole('option', { name: 'Closed' }));
+    expect(onChange).toHaveBeenCalledWith({ selected: ['OPEN', 'ARCHIVED', 'CLOSED'] });
   });
 });

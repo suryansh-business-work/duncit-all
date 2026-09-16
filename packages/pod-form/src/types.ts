@@ -1,4 +1,5 @@
 import type { SlotFormatter, SlotLabels } from '@duncit/slots';
+import type { TicketDiscountTier } from '@duncit/utils';
 
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 
@@ -56,6 +57,13 @@ export interface PodFormValues {
   place_charges: PodPlaceCharge[];
   products_enabled: boolean;
   product_requests: PodProductRequest[];
+  /**
+   * Multi-ticket discount: the switch and its stored tiers (min_tickets ≥ 2,
+   * both columns strictly increasing). Never sent for a free pod or an Auto
+   * Pod template — see `ticketDiscountInput` in @duncit/utils.
+   */
+  ticket_discount_enabled: boolean;
+  ticket_discount_tiers: TicketDiscountTier[];
   is_active: boolean;
 }
 
@@ -274,6 +282,8 @@ export const blankPodFormValues: PodFormValues = {
   place_charges: [],
   products_enabled: false,
   product_requests: [],
+  ticket_discount_enabled: false,
+  ticket_discount_tiers: [],
   is_active: true,
 };
 

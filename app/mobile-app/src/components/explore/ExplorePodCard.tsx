@@ -7,10 +7,12 @@ import { isPodExpired, podPriceLabel, podWebUrl } from '@/utils/pod-format';
 import { shareUrl } from '@/services/share-link';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExploreJoinBar } from '@/components/explore/ExploreJoinBar';
+import { ExploreNoAudioHint } from '@/components/explore/ExploreNoAudioHint';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
 import { podSeatsTaken } from '@duncit/utils';
+import { useReelSoundAction } from '@/hooks/useReelSoundAction';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface ExplorePodCardProps {
@@ -30,6 +32,9 @@ interface ExplorePodCardProps {
   onOpen: () => void;
   onOpenClub?: () => void;
   onShowLikers?: () => void;
+  /** The feed's sound choice; only the active reel ever plays it. */
+  soundOn: boolean;
+  onToggleSound: () => void;
 }
 
 /** One full-screen reel: the pod's reel video, info overlay, the right-side
@@ -50,9 +55,17 @@ export function ExplorePodCard({
   onOpen,
   onOpenClub,
   onShowLikers,
+  soundOn,
+  onToggleSound,
 }: Readonly<ExplorePodCardProps>) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const sound = useReelSoundAction({
+    podId: pod.pod_id,
+    hasAudio: pod.reel_has_audio !== false,
+    soundOn,
+    onToggleSound,
+  });
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
   const ctaBottom = insets.bottom + 80;
   const contentBottom = ctaBottom + 84; // clears the CTA bar above
@@ -85,8 +98,19 @@ export function ExplorePodCard({
   return (
     <YStack width={width} height={height} backgroundColor="#000000" testID={`reel-${pod.pod_id}`}>
       <DoubleTapJoin onJoin={onOpen} testID={`reel-doubletap-${pod.pod_id}`}>
-        <ReelBackdrop pod={pod} isActive={isActive} width={width} height={height} />
+        <ReelBackdrop
+          pod={pod}
+          isActive={isActive}
+          muted={!sound.audible}
+          width={width}
+          height={height}
+        />
       </DoubleTapJoin>
+      <ExploreNoAudioHint
+        open={sound.noAudioOpen}
+        onClose={sound.closeNoAudio}
+        podId={pod.pod_id}
+      />
       <ExplorePodOverlay
         pod={pod}
         clubName={club?.club_name}
@@ -99,6 +123,7 @@ export function ExplorePodCard({
         <ExploreActionRail
           availableHeight={railAvailable}
           actions={[
+            sound.action,
             {
               key: 'join',
               testID: `reel-join-${pod.pod_id}`,

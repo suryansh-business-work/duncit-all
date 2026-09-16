@@ -86,8 +86,11 @@ const CLUB_TABLE_CONFIG: TableEntityConfig = {
     is_active: 'is_active',
     is_verified: 'is_verified',
     category_id: 'category_id',
+    cover: 'club_feature_images_and_videos.url',
   },
   filterFields: {
+    club_name: { type: 'string' },
+    cover: { path: 'club_feature_images_and_videos.url', type: 'string' },
     is_active: { type: 'boolean' },
     is_verified: { type: 'boolean' },
     category_id: { type: 'string' },

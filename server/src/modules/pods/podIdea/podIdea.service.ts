@@ -53,6 +53,7 @@ const POD_IDEA_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    title: { type: 'string' },
     status: { type: 'enum' },
     author_id: { type: 'string' },
     created_at: { type: 'date' },

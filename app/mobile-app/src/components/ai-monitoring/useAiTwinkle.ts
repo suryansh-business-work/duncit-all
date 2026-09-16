@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import type { LayoutChangeEvent } from 'react-native';
 import { AI_MONITOR_MOTION } from '@duncit/utils';
 import { useAiMonitorLoop } from './useAiMonitorLoop';
 
@@ -29,17 +31,33 @@ export function useAiTwinkle(active: boolean) {
 }
 
 /**
- * A band of the AI gradient crossing a control, left to right and back.
+ * A band of the AI gradient crossing a control, `from` to `to` and back.
  *
- * `outputRange` is in percentages of the band's own width, so a caller sets
- * how wide the band is and this decides where it travels.
+ * `from`/`to` are fractions of the control's width, measured here through the
+ * returned `onLayout`: the native driver cannot apply a percentage
+ * `translateX`, and a band given one never drew at all.
  */
-export function useAiSweep(active: boolean, from: string, to: string) {
-  const sweep = useAiMonitorLoop(active, AI_MONITOR_MOTION.sweepMs);
+export function useAiSweep(
+  active: boolean,
+  from: number,
+  to: number,
+  durationMs: number = AI_MONITOR_MOTION.sweepMs,
+) {
+  const [width, setWidth] = useState(0);
+  const sweep = useAiMonitorLoop(active, durationMs);
+  const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
 
   return {
-    transform: [
-      { translateX: sweep.interpolate({ inputRange: [0, 0.5, 1], outputRange: [from, to, from] }) },
-    ],
+    onLayout,
+    sweepStyle: {
+      transform: [
+        {
+          translateX: sweep.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [from * width, to * width, from * width],
+          }),
+        },
+      ],
+    },
   };
 }

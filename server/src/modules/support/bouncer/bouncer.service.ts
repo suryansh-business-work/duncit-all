@@ -33,12 +33,23 @@ import { aiValidateCallbackReason } from '@modules/moderation/moderation.ai';
 import {
   paginateDocs,
   supportSearchRegex,
+  withColumnFilters,
   type SupportPageOpts,
 } from '@modules/support/support.pagination';
+import type { TableFieldConfig } from '@utils/table-query';
 
 const ADMIN_ROOM = 'admin:bouncers';
 
 const BOUNCER_SORTABLE = new Set(['created_at', 'status', 'ticket_no', 'contact_phone']);
+
+/** Column filters the SOS and callback tables may send — the same stored
+ * fields BOUNCER_SORTABLE orders on. */
+const BOUNCER_FILTERABLE: Record<string, TableFieldConfig> = {
+  ticket_no: { type: 'string' },
+  contact_phone: { type: 'string' },
+  status: { type: 'enum' },
+  created_at: { type: 'date' },
+};
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -350,7 +361,7 @@ export const bouncerService = {
     }
     const { docs, total, page, page_size } = await paginateDocs<IBouncerSosAlert>(
       BouncerSosAlertModel,
-      q,
+      withColumnFilters(q, opts, BOUNCER_FILTERABLE),
       opts,
       BOUNCER_SORTABLE,
       { created_at: -1 }
@@ -465,7 +476,7 @@ export const bouncerService = {
     }
     const { docs, total, page, page_size } = await paginateDocs<IBouncerCallbackRequest>(
       BouncerCallbackRequestModel,
-      q,
+      withColumnFilters(q, opts, BOUNCER_FILTERABLE),
       opts,
       BOUNCER_SORTABLE,
       { created_at: -1 }

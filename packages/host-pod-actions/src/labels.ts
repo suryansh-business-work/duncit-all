@@ -14,7 +14,12 @@
  */
 
 import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@duncit/ui';
-import { POD_SCAN_LEAD_MINUTES } from '@duncit/utils';
+import {
+  POD_SCAN_LEAD_MINUTES,
+  mwebTicketDiscountLabels,
+  shellTicketDiscountLabels,
+  type TicketDiscountLabels,
+} from '@duncit/utils';
 
 export type HostPodTranslate = (
   key: string,
@@ -106,6 +111,8 @@ export interface HostPodActionLabels {
   spotsFreeHint: (min: number, taken: number) => string;
   /** Why the control will not go below where it starts, for a host. */
   spotsIncreaseOnly: string;
+  /** The multi-ticket discount editor in the edit dialog — @duncit/utils' own words. */
+  ticketDiscount: TicketDiscountLabels;
   /** The pod-row menu and the dialogs it opens. */
   menuTooltip: string;
   scanTickets: string;
@@ -267,6 +274,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
       t('mweb.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
     spotsFreeHint: (min, taken) => t('mweb.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('mweb.hostPodEdit.spotsIncreaseOnly'),
+    ticketDiscount: mwebTicketDiscountLabels(t),
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
     scanClosed: t('mweb.hostPodActions.scanClosed'),
@@ -388,6 +396,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
       t('shell.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
     spotsFreeHint: (min, taken) => t('shell.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('shell.hostPodEdit.spotsIncreaseOnly'),
+    ticketDiscount: shellTicketDiscountLabels(t),
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
     scanClosed: t('shell.hostPodActions.scanClosed'),

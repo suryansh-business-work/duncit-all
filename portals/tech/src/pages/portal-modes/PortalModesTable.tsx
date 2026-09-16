@@ -105,13 +105,15 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       />
     );
     return [
-      { field: 'name', headerName: t('tech.portalModes.portalName'), flex: 1, minWidth: 220, cellRenderer: renderName, valueGetter: nameValue },
-      { field: 'kind', headerName: t('shell.common.type'), hide: true, width: 120, filter: { type: 'select', options: kindOptions(t) } },
-      { field: 'url', headerName: t('tech.portalModes.link'), sortable: false, flex: 1, minWidth: 200, cellRenderer: renderLink, valueGetter: linkValue },
+      { field: 'name', headerName: t('tech.portalModes.portalName'), flex: 1, minWidth: 220, type: 'text', cellRenderer: renderName, valueGetter: nameValue },
+      { field: 'kind', headerName: t('shell.common.type'), hide: true, width: 120, type: 'enum', options: kindOptions(t) },
+      // The link is resolved from the in-code portal registry by key at read
+      // time — nothing stored for the table query to order or match on.
+      { field: 'url', headerName: t('tech.portalModes.link'), type: 'text', sortable: false, filterable: false, flex: 1, minWidth: 200, cellRenderer: renderLink, valueGetter: linkValue },
       {
         field: 'maintenance',
         headerName: t('shell.nav.maintenance'),
-        sortable: false,
+        type: 'actions',
         width: 130,
         cellRenderer: renderMaintenance,
         valueGetter: maintenanceValue,
@@ -119,7 +121,7 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
       {
         field: 'development',
         headerName: t('tech.portalModes.development'),
-        sortable: false,
+        type: 'actions',
         width: 130,
         cellRenderer: renderDevelopment,
         valueGetter: developmentValue,
@@ -128,7 +130,8 @@ export default function PortalModesTable({ fetchRows, refetchRef, busyKey, onCha
         field: 'mode',
         headerName: t('shell.common.status'),
         width: 150,
-        filter: { type: 'select', options: modeOptions(t) },
+        type: 'enum',
+        options: modeOptions(t),
         cellRenderer: (row: PortalModeRow) => renderStatus(row, t),
         valueGetter: (row: PortalModeRow) => statusValue(row, t),
       },

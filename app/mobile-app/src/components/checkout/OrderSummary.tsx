@@ -11,35 +11,18 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
 import { coverImageUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
+import { SummaryRow as Row } from '@/components/checkout/SummaryRow';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** One line of money taken off the bill — a coupon, redeemed coins. */
+/** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
 export interface CheckoutDiscount {
   key: string;
   label: string;
   amount: number;
-}
-
-function Row({
-  label,
-  value,
-  bold,
-  tone,
-}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string }>) {
-  const labelColor = tone ?? (bold ? '$color' : '$muted');
-  return (
-    <XStack justifyContent="space-between" alignItems="center">
-      <Text fontSize={bold ? 15 : 13} fontWeight={bold ? '700' : '500'} color={labelColor}>
-        {label}
-      </Text>
-      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color={tone ?? '$color'}>
-        {value}
-      </Text>
-    </XStack>
-  );
+  testID?: string;
 }
 
 /** Order summary with the inclusive fee/GST breakup — RN twin of mWeb's
@@ -144,6 +127,7 @@ export function OrderSummary({
         {discounts.map((discount) => (
           <Row
             key={discount.key}
+            testID={discount.testID}
             label={discount.label}
             value={`− ${fmt(discount.amount)}`}
             tone="$success"

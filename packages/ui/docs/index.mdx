@@ -53,6 +53,9 @@ exports:
   - 'shellSpotsLabels'
   - 'ScrollRail'
   - 'ScrollRailProps'
+  - 'TicketDiscountField'
+  - 'TicketDiscountFieldProps'
+  - 'TicketDiscountFieldErrors'
   - 'SpotsStepperLabels'
   - 'StatusColorMap'
   - 'StatCardLayout'
@@ -639,6 +642,82 @@ import { ScrollRail } from '@duncit/ui';
 | `alignItems` | `'stretch' \| 'flex-start' \| 'center' \| 'flex-end'` | no | `'stretch'` | Cross-axis alignment of the row. |
 
 The arrow labels come from `ui.scrollRail.previous` / `ui.scrollRail.next` in `UI_BUNDLE`.
+
+## `TicketDiscountField` — one editor for a pod's multi-ticket discount
+
+A pod can give a single booking of several tickets a lower price: a switch, then a ladder of
+tiers such as **2+ tickets → 10% off, 4+ tickets → 20% off**. The ladder is edited in the mWeb
+Create-a-Pod stepper, the portal pod form (Admin, Club Admin, Partners) and the host's Edit Pod
+sheet — three places that were about to grow three tier editors. They render this one.
+
+It is **controlled and form-library free**. The calling form owns `enabled` and `tiers`, runs
+`ticketDiscountTierIssues` from `@duncit/utils` in its own Zod `superRefine`, and hands the
+translated messages back as `errors`. The rule itself therefore lives once, in `@duncit/utils`,
+beside the server's twin that re-checks it on write.
+
+```tsx
+import { useWatch } from 'react-hook-form';
+import { TicketDiscountField } from '@duncit/ui';
+import { formatMoney, podFormTicketDiscountLabels, ticketDiscountMaxTickets } from '@duncit/utils';
+
+const labels = podFormTicketDiscountLabels(t);
+const spots = useWatch({ control, name: 'no_of_spots' });
+const enabled = useWatch({ control, name: 'ticket_discount_enabled' });
+const tiers = useWatch({ control, name: 'ticket_discount_tiers' });
+const tierErrors = formState.errors.ticket_discount_tiers;
+
+<TicketDiscountField
+  enabled={enabled}
+  tiers={tiers}
+  onEnabledChange={(on) => setValue('ticket_discount_enabled', on, { shouldValidate: true })}
+  onTiersChange={(tiers) => setValue('ticket_discount_tiers', tiers, { shouldValidate: true })}
+  maxPct={settings.ticket_discount_max_pct}
+  maxTickets={ticketDiscountMaxTickets(spots)}
+  labels={labels}
+  unitPrice={499}
+  formatPrice={(amount) => formatMoney(amount, { decimals: 2 })}
+  errors={{
+    list: tierErrors?.message,
+    rows: tiers.map((_, i) => ({
+      min_tickets: tierErrors?.[i]?.min_tickets?.message,
+      discount_pct: tierErrors?.[i]?.discount_pct?.message,
+    })),
+  }}
+/>;
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `enabled` | `boolean` | yes | — | The switch. |
+| `tiers` | `readonly TicketDiscountTier[]` | yes | — | Stored tiers only — the "1 ticket · 0%" base row is drawn, never stored. |
+| `onEnabledChange` | `(enabled: boolean) => void` | yes | — | Called first when the switch flips. |
+| `onTiersChange` | `(tiers: TicketDiscountTier[]) => void` | yes | — | The whole new list after an add, edit or remove. |
+| `maxPct` | `number` | yes | — | `publicAppSettings.ticket_discount_max_pct` — the input's `max` and the "Up to N% off" hint. |
+| `maxTickets` | `number` | yes | — | `ticketDiscountMaxTickets(no_of_spots)` — spots minus the host's seat, or 10 when uncapped. |
+| `labels` | `TicketDiscountLabels` | yes | — | `mwebTicketDiscountLabels(t)`, `shellTicketDiscountLabels(t)` or `podFormTicketDiscountLabels(t)`. |
+| `unitPrice` / `formatPrice` | `number` / `(amount: number) => string` | no | — | Both given: each tier shows its price per ticket. |
+| `errors` | `TicketDiscountFieldErrors` | no | — | `list` under the ladder, `rows[i].min_tickets` / `rows[i].discount_pct` under that tier's inputs. |
+| `disabled` | `boolean` | no | `false` | Locks the switch, every input and both buttons. |
+
+What it does on its own, so no surface re-implements it:
+
+- Turning the switch **on** with no tiers seeds one row from `nextTicketDiscountTier`
+  (2 tickets, 5% — capped at `maxPct`). Turning it **off** calls `onTiersChange([])`: a switched-off
+  offer keeps nothing that could be published later.
+- **Add tier** appends `nextTicketDiscountTier(tiers, maxPct)` and is disabled at
+  `TICKET_DISCOUNT_MAX_TIERS` (10).
+- A cleared number input stores `0`, so validation names the problem ("at least 2 tickets")
+  instead of the row silently keeping the deleted value.
+- Row keys are minted once per row and removed with it, never the array index — deleting the
+  first tier does not remount the inputs below it.
+
+Test ids (the native twin in `app/mobile-app/src/components/create-pod/` uses the same names as
+`testID`): `ticket-discount-field`, `ticket-discount-switch`, `ticket-discount-base-row`,
+`ticket-discount-tier-${i}`, `ticket-discount-tier-min-${i}`, `ticket-discount-tier-pct-${i}`,
+`ticket-discount-tier-remove-${i}`, `ticket-discount-add-tier`, `ticket-discount-list-error`.
+
+Hide the whole field on a FREE pod and send `ticketDiscountInput(values, true)` — a free pod
+never carries a discount, and the server clears one if it arrives.
 
 ## Localization and coverage
 

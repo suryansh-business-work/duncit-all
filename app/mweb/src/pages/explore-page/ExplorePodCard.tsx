@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation } from '@apollo/client/react';
 import { Box } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
@@ -11,9 +10,9 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
-import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
 import ExploreActionRail from './ExploreActionRail';
 import ExploreJoinBar from './ExploreJoinBar';
+import ExploreNoAudioHint from './ExploreNoAudioHint';
 import ExploreReelVideo from './ExploreReelVideo';
 import ExplorePodOverlay from './ExplorePodOverlay';
 import LikesListDialog from './LikesListDialog';
@@ -21,6 +20,8 @@ import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
 import { isPodExpired } from '../../utils/podStatus';
 import { likersWithViewer, shareExplorePod } from './explorePodActions';
+import { useExploreLike } from './useExploreLike';
+import { useReelSoundAction } from './useReelSoundAction';
 import { podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -32,6 +33,8 @@ interface Props {
   savePending?: boolean;
   onToggleSave: () => void;
   viewerId?: string | null;
+  /** The feed's sound choice; only the reel on screen ever plays it. */
+  sound: Readonly<{ on: boolean; active: boolean; onToggle: () => void }>;
 }
 
 export default function ExplorePodCard({
@@ -42,6 +45,7 @@ export default function ExplorePodCard({
   savePending,
   onToggleSave,
   viewerId,
+  sound,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -51,34 +55,17 @@ export default function ExplorePodCard({
   const ctaSubtitle = pod.pod_type === 'FREE'
     ? 'Free spot'
     : `${format(pod.pod_amount)} · Confirm with UPI`;
-  const [liked, setLiked] = useState<boolean>(!!pod.liked_by_me);
-  const [likeCount, setLikeCount] = useState<number>(pod.like_count ?? 0);
+  const { liked, likeCount, onLike } = useExploreLike(pod);
   const [commentCount, setCommentCount] = useState<number>(pod.comment_count ?? 0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likersOpen, setLikersOpen] = useState(false);
-  const [toggleLike] = useMutation<any>(TOGGLE_POD_LIKE);
+  const soundAction = useReelSoundAction({ podId: pod.pod_id, hasAudio: pod.reel_has_audio !== false, soundOn: sound.on, onToggleSound: sound.onToggle });
 
-  // Re-sync to the latest server values when the feed refetches (e.g. after the
-  // user liked/commented on the Pod Detail page) so the banner stays in sync.
+  // Re-sync to the latest server count when the feed refetches (e.g. after the
+  // user commented on the Pod Detail page) so the banner stays in sync.
   useEffect(() => {
-    setLiked(!!pod.liked_by_me);
-    setLikeCount(pod.like_count ?? 0);
     setCommentCount(pod.comment_count ?? 0);
-  }, [pod.liked_by_me, pod.like_count, pod.comment_count]);
-
-  const onLike = async () => {
-    const prev = liked;
-    setLiked(!prev);
-    setLikeCount((c) => c + (prev ? -1 : 1));
-    try {
-      const res = await toggleLike({ variables: { id: pod.id } });
-      setLiked(!!res.data?.togglePodLike?.liked_by_me);
-      setLikeCount(res.data?.togglePodLike?.like_count ?? likeCount);
-    } catch {
-      setLiked(prev);
-      setLikeCount((c) => c + (prev ? 1 : -1));
-    }
-  };
+  }, [pod.comment_count]);
 
   const openPod = () => {
     if (pod.club_slug && pod.pod_id) navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
@@ -105,12 +92,13 @@ export default function ExplorePodCard({
         overflow: 'hidden',
       }}
     >
-      <ExploreReelVideo src={pod.reel_url} testId={`reel-video-${pod.pod_id}`} />
+      <ExploreReelVideo src={pod.reel_url} muted={!(soundAction.audible && sound.active)} testId={`reel-video-${pod.pod_id}`} />
 
       <ExplorePodOverlay pod={pod} club={club} location={location} />
 
       <ExploreActionRail
         actions={[
+          soundAction.action,
           {
             key: 'join',
             testId: `reel-join-${pod.pod_id}`,
@@ -169,6 +157,8 @@ export default function ExplorePodCard({
           },
         ]}
       />
+
+      <ExploreNoAudioHint open={soundAction.noAudioOpen} onClose={soundAction.closeNoAudio} podId={pod.pod_id} />
 
       <ExploreJoinBar
         expired={expired}

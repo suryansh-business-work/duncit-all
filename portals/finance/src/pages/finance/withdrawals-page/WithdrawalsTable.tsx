@@ -11,7 +11,7 @@ import {
 import { formatMoney } from '@duncit/utils';
 import { accountDetails } from './account-details';
 import type { WithdrawalRow } from './queries';
-import { roleLabel } from './roles';
+import { ROLE_OPTIONS, roleLabel } from './roles';
 import {
   podShareOf,
   renderAccount,
@@ -90,6 +90,7 @@ export default function WithdrawalsTable({
         headerName: t('finance.withdrawals.withdrawerName'),
         flex: 1,
         minWidth: 190,
+        type: 'text',
         cellRenderer: renderWithdrawer,
         valueGetter: withdrawerSearchText,
       },
@@ -97,7 +98,8 @@ export default function WithdrawalsTable({
         field: 'payout_method',
         headerName: t('finance.withdrawals.withdrawalMethod'),
         width: 160,
-        filter: { type: 'select', options: METHOD_OPTIONS },
+        type: 'enum',
+        options: METHOD_OPTIONS,
         cellRenderer: renderMethod,
         valueGetter: (w) => w.payout_method,
       },
@@ -105,6 +107,8 @@ export default function WithdrawalsTable({
         field: 'withdrawer_role',
         headerName: t('finance.withdrawals.role'),
         width: 170,
+        type: 'enum',
+        options: ROLE_OPTIONS,
         cellRenderer: renderRole,
         valueGetter: (w) => roleLabel(w.withdrawer_role),
       },
@@ -112,14 +116,14 @@ export default function WithdrawalsTable({
         field: 'scheduled_for',
         headerName: t('finance.withdrawals.scheduled'),
         width: 130,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (w) => formatDateCell(w.scheduled_for),
       },
       {
         field: 'amount',
         headerName: t('finance.common.amount'),
         width: 150,
-        filter: { type: 'number' },
+        type: 'number',
         cellRenderer: (w: WithdrawalRow) => {
           const share = podShareOf(w, podId);
           return renderAmount(
@@ -134,7 +138,11 @@ export default function WithdrawalsTable({
         headerName: t('finance.withdrawals.accountDetails'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
+        // UPI handle or masked account + IFSC, picked per payout method — no one
+        // stored path (and the raw account number is never offered as a filter).
         sortable: false,
+        filterable: false,
         cellRenderer: renderAccount,
         valueGetter: accountDetails,
       },
@@ -142,7 +150,8 @@ export default function WithdrawalsTable({
         field: 'status',
         headerName: t('shell.common.status'),
         minWidth: 150,
-        filter: { type: 'select', options: statusOptions(t) },
+        type: 'enum',
+        options: statusOptions(t),
         cellRenderer: renderStatus,
         valueGetter: (w) => w.status,
       },
@@ -151,10 +160,10 @@ export default function WithdrawalsTable({
         headerName: t('finance.common.requested'),
         hide: true,
         width: 130,
-        filter: { type: 'date' },
+        type: 'date',
         valueGetter: (w) => formatDateCell(w.requested_at),
       },
-      { field: 'actions', headerName: t('finance.withdrawals.review'), sortable: false, width: 210, cellRenderer: renderReview },
+      { field: 'actions', headerName: t('finance.withdrawals.review'), type: 'actions', width: 210, cellRenderer: renderReview },
     ];
   }, [podId, reviewing, onMarkPaid, onReject]);
 

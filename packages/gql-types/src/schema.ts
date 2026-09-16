@@ -1288,6 +1288,8 @@ export type AppSettings = {
   pod_complete_reminder_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings. */
   pod_complete_timeout_hours: Scalars['Int']['output'];
+  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
+  ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -2761,6 +2763,10 @@ export type CheckoutQuote = {
   platform_fee_amount: Scalars['Float']['output'];
   platform_fee_pct: Scalars['Float']['output'];
   subtotal: Scalars['Float']['output'];
+  /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
+  ticket_discount_amount: Scalars['Float']['output'];
+  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  ticket_discount_pct: Scalars['Int']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -4188,6 +4194,9 @@ export type CreatePodInput = {
   reel_url?: InputMaybe<Scalars['String']['input']>;
   /** The sub-category the host picked in step 2. Required to enforce the co-host cap. */
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
+  ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -6859,6 +6868,9 @@ export type HostResubmitPodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   /** A fresh slot to request — re-enters the venue's approval queue. */
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
@@ -6941,6 +6953,9 @@ export type HostUpdatePodInput = {
   pod_images_and_videos: Array<PodMediaInput>;
   pod_title: Scalars['String']['input'];
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
+  ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
 };
 
 /**
@@ -14134,6 +14149,10 @@ export type Payment = {
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
+  /** Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied. */
+  ticket_discount_amount: Scalars['Float']['output'];
+  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  ticket_discount_pct: Scalars['Int']['output'];
   total: Scalars['Float']['output'];
   updated_at: Scalars['String']['output'];
   user_email: Scalars['String']['output'];
@@ -14202,7 +14221,7 @@ export type PaymentDetail = {
   finalized_at?: Maybe<Scalars['String']['output']>;
   gift_card?: Maybe<PaymentGiftCard>;
   needs_refund: Scalars['Boolean']['output'];
-  /** Gross before coupon + coins, taken from the frozen checkout metadata. */
+  /** Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata. */
   original_total: Scalars['Float']['output'];
   payment: Payment;
   pod_booking?: Maybe<PaymentPodBooking>;
@@ -14430,6 +14449,8 @@ export type PaymentTotals = {
   fee: Scalars['Float']['output'];
   gross: Scalars['Float']['output'];
   gst: Scalars['Float']['output'];
+  /** Multi-ticket discounts given on the matching payments — already off gross. */
+  ticket_discount_total: Scalars['Float']['output'];
 };
 
 export type PayoutMode =
@@ -14621,6 +14642,10 @@ export type Pod = {
   seats_available: Scalars['Int']['output'];
   /** Seats taken — attendees plus every extra seat a multi-seat booking holds. */
   seats_taken: Scalars['Int']['output'];
+  /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
+  ticket_discount_enabled: Scalars['Boolean']['output'];
+  /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
+  ticket_discount_tiers: Array<PodTicketDiscountTier>;
   updated_at: Scalars['String']['output'];
   venue_approval_status: PodVenueApproval;
   venue_id?: Maybe<Scalars['ID']['output']>;
@@ -15370,6 +15395,12 @@ export type PodFinanceBreakdown = {
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
   settlement_status: PodSettlementStatus;
+  /**
+   * Multi-ticket discounts given across this pod's successful bookings. Like
+   * coins, they come off the ticket price before GST, so collected_total is
+   * already lower by this much — stated so the gap is explainable.
+   */
+  ticket_discount_total: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
 };
 
@@ -16012,6 +16043,19 @@ export type PodTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Pod>;
   total: Scalars['Int']['output'];
+};
+
+/** One multi-ticket discount tier: a single booking of at least min_tickets seats gets discount_pct off its ticket price. */
+export type PodTicketDiscountTier = {
+  __typename?: 'PodTicketDiscountTier';
+  discount_pct: Scalars['Int']['output'];
+  min_tickets: Scalars['Int']['output'];
+};
+
+/** One multi-ticket discount tier: min_tickets 2 or more, discount_pct 1 up to the admin's max; each row must beat the one above on both. */
+export type PodTicketDiscountTierInput = {
+  discount_pct: Scalars['Int']['input'];
+  min_tickets: Scalars['Int']['input'];
 };
 
 /** FREE is virtual-only — physical pods must be PAID. */
@@ -16726,6 +16770,8 @@ export type PublicAppSettings = {
   pod_complete_timeout_hours: Scalars['Int']['output'];
   /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
   server_time: Scalars['String']['output'];
+  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it. */
+  ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -23348,6 +23394,8 @@ export type UpdateAppSettingsInput = {
   pod_complete_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends its host has to complete it (1-8760). */
   pod_complete_timeout_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
+  ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;
@@ -23812,6 +23860,9 @@ export type UpdatePodInput = {
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
+  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   /**
    * Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
@@ -25322,6 +25373,7 @@ export type WaMessageLogRow = {
 /** Server-side pagination / search / sort options for the cache lists. */
 export type WaPageInput = {
   community_jid?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<TableFilterInput>>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;

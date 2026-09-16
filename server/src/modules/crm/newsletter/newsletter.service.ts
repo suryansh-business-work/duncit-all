@@ -30,10 +30,13 @@ const NEWSLETTER_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     email: 'email',
     source: 'source',
+    // The Active / Unsubscribed chip orders by whether (and when) the subscriber left.
+    status: 'unsubscribed_at',
     unsubscribed_at: 'unsubscribed_at',
     created_at: 'created_at',
   },
   filterFields: {
+    email: { type: 'string' },
     source: { type: 'enum' },
     unsubscribed_at: { type: 'date' },
     created_at: { type: 'date' },

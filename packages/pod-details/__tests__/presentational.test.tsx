@@ -189,5 +189,34 @@ describe('PodOverviewCard', () => {
     expect(screen.getByText('0 · 0')).toBeInTheDocument();
     expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(3);
     expect(screen.queryByText('Description')).not.toBeInTheDocument();
+    expect(screen.queryByText('Multi-ticket offer')).not.toBeInTheDocument();
+  });
+
+  const tiers = [
+    { min_tickets: 2, discount_pct: 10 },
+    { min_tickets: 4, discount_pct: 20 },
+  ];
+
+  it('lists every multi-ticket tier a paid pod offers, without the unstored base row', () => {
+    mount(
+      <PodOverviewCard
+        pod={pod({ pod_type: 'PUBLIC', pod_amount: 499, ticket_discount_enabled: true, ticket_discount_tiers: tiers })}
+        showProducts={false}
+      />,
+    );
+
+    expect(screen.getByText('Multi-ticket offer')).toBeInTheDocument();
+    expect(screen.getByText('2+ tickets · 10% off')).toBeInTheDocument();
+    expect(screen.getByText('4+ tickets · 20% off')).toBeInTheDocument();
+    expect(screen.queryByText(/^1\+ tickets/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['a free pod', { pod_type: 'FREE_PUBLIC', pod_amount: 499, ticket_discount_enabled: true, ticket_discount_tiers: tiers }],
+    ['a paid pod with the offer switched off', { pod_type: 'PUBLIC', pod_amount: 499, ticket_discount_enabled: false, ticket_discount_tiers: tiers }],
+  ])('shows no offer on %s', (_label, over) => {
+    mount(<PodOverviewCard pod={pod(over)} showProducts={false} />);
+
+    expect(screen.queryByText('Multi-ticket offer')).not.toBeInTheDocument();
   });
 });

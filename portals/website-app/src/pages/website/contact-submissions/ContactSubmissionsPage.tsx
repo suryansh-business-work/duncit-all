@@ -43,11 +43,12 @@ export default function ContactSubmissionsPage() {
       </DuncitIconButton>
     );
     return [
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 150 },
-      { field: 'email', headerName: t('shell.common.email'), filter: { type: 'text' }, flex: 1, minWidth: 200 },
+      { field: 'name', headerName: t('shell.common.name'), type: 'text', flex: 1, minWidth: 150 },
+      { field: 'email', headerName: t('shell.common.email'), type: 'text', flex: 1, minWidth: 200 },
       {
         field: 'subject',
         headerName: t('websiteApp.contact.colSubject'),
+        type: 'text',
         flex: 1,
         minWidth: 160,
         valueGetter: (row) => row.subject || '—',
@@ -55,7 +56,8 @@ export default function ContactSubmissionsPage() {
       {
         field: 'status',
         headerName: t('shell.common.status'),
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         width: 140,
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,
@@ -63,14 +65,14 @@ export default function ContactSubmissionsPage() {
       {
         field: 'created_at',
         headerName: t('websiteApp.contact.colReceived'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 180,
         valueGetter: (row) => formatDateTime(row.created_at),
       },
       {
         field: 'actions',
         headerName: '',
-        sortable: false,
+        type: 'actions',
         width: 70,
         cellRenderer: renderActions,
       },

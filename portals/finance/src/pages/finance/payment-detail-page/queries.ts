@@ -1,6 +1,5 @@
 import { gql } from '@apollo/client';
 import { formatMoney } from '@duncit/utils';
-import type { TableFetch } from '@duncit/table';
 
 /** The whole audit, as one fragment: the detail query reads it and the retry
  * mutation answers with it, so a re-run refreshes the page from its own reply
@@ -38,6 +37,8 @@ export const PAYMENT_DETAIL_FIELDS = gql`
       currency_symbol
       coupon_code
       coupon_discount
+      ticket_discount_amount
+      ticket_discount_pct
       status
       gateway
       gateway_ref
@@ -184,6 +185,10 @@ export interface DetailPayment {
   currency_symbol: string;
   coupon_code: string | null;
   coupon_discount: number;
+  /** Rupees the multi-ticket tier took off the ticket price, frozen at checkout (0 when none). */
+  ticket_discount_amount: number;
+  /** That tier's percentage (0 when none). */
+  ticket_discount_pct: number;
   status: string;
   gateway: string;
   gateway_ref: string | null;
@@ -285,25 +290,8 @@ export interface PaymentDetail {
   pod_booking: PaymentPodBooking | null;
   product_orders: PaymentProductOrderLine[];
   gift_card: PaymentGiftCardInfo | null;
+  /** The cart before EVERY discount: ticket gross + products, ahead of the tier, coupon and coins. */
   original_total: number;
   coins_redeemed: number;
   coins_earned: number;
-}
-
-/**
- * DuncitTable's only data path is a server bridge, but these rows arrive whole
- * with the detail query — so the "fetch" is an in-memory search + slice. The
- * columns declare `sortable: false` because this fetch ignores q.sortBy, and a
- * live sort affordance that does nothing would lie about that.
- */
-export function staticTableFetch<T>(
-  rows: readonly T[],
-  searchOf: (row: T) => string,
-): TableFetch<T> {
-  return (q) => {
-    const term = q.search.trim().toLowerCase();
-    const filtered = term ? rows.filter((row) => searchOf(row).toLowerCase().includes(term)) : rows;
-    const start = (q.page - 1) * q.pageSize;
-    return Promise.resolve({ rows: filtered.slice(start, start + q.pageSize), total: filtered.length });
-  };
 }

@@ -93,15 +93,16 @@ export default function VenuesTable({
   const openVenue = useCallback((v: VenueRow) => navigate(`/venues/${v.id}`), [navigate]);
   const columns = useMemo<DuncitColumn<VenueRow>[]>(
     () => [
-      { field: 'venue_name', headerName: t('admin.venues.colVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
-      { field: 'venue_category', headerName: t('admin.clubs.colCategory'), minWidth: 200, sortable: false, valueGetter: categoryValue },
-      { field: 'locality', headerName: t('admin.venues.colLocation'), minWidth: 160, filter: { type: 'text' }, valueGetter: locationValue },
-      { field: 'owner_name', headerName: t('admin.venues.colOwner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
-      { field: 'capacity', headerName: t('admin.venues.colCapacity'), width: 105, filter: { type: 'number' } },
-      { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
-      { field: 'is_active', headerName: t('admin.profile.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: (row: VenueRow) => renderActive(row, t), valueGetter: (row: VenueRow) => activeValue(row, t) },
-      { field: 'pod_count', headerName: t('admin.clubs.pods'), sortable: false, width: 90, valueGetter: (v) => v.pod_count ?? 0 },
-      { field: 'created_at', headerName: t('shell.common.created'), width: 125, filter: { type: 'date' }, valueGetter: createdValue },
+      { field: 'venue_name', headerName: t('admin.venues.colVenue'), type: 'text', flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'venue_category', headerName: t('admin.clubs.colCategory'), type: 'text', minWidth: 200, valueGetter: categoryValue },
+      { field: 'locality', headerName: t('admin.venues.colLocation'), type: 'text', minWidth: 160, valueGetter: locationValue },
+      { field: 'owner_name', headerName: t('admin.venues.colOwner'), type: 'text', minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
+      { field: 'capacity', headerName: t('admin.venues.colCapacity'), type: 'number', width: 105 },
+      { field: 'status', headerName: t('shell.common.status'), type: 'enum', options: STATUS_OPTIONS, width: 125, cellRenderer: renderStatus, valueGetter: (v) => v.status },
+      { field: 'is_active', headerName: t('admin.profile.active'), type: 'boolean', width: 110, cellRenderer: (row: VenueRow) => renderActive(row, t), valueGetter: (row: VenueRow) => activeValue(row, t) },
+      // Counted per row from the pods collection — not a field stored on the venue.
+      { field: 'pod_count', headerName: t('admin.clubs.pods'), type: 'number', sortable: false, filterable: false, width: 90, valueGetter: (v) => v.pod_count ?? 0 },
+      { field: 'created_at', headerName: t('shell.common.created'), type: 'date', width: 125, valueGetter: createdValue },
     ],
     [t],
   );

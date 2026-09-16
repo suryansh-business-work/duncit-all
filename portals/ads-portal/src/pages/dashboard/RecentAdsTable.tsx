@@ -4,7 +4,13 @@ import { useNavigate } from 'react-router';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
-import { AD_STATUS_COLORS, adPositionLabel, formatAdCost } from '../ads/ad-options';
+import {
+  AD_STATUS_COLORS,
+  adPositionLabel,
+  adPositionOptions,
+  adStatusOptions,
+  formatAdCost,
+} from '../ads/ad-options';
 import { MY_ADS_TABLE, type AdRequestRow } from '../ads/queries';
 
 const getAdRowId = (row: AdRequestRow) => row.id;
@@ -20,20 +26,21 @@ export default function RecentAdsTable() {
   const { t } = useTranslation();
   const fetchRows = useApolloTableFetch<AdRequestRow>(client, MY_ADS_TABLE, 'myAdRequestsTable');
 
-  // A trimmed My Ads column set with no filters, so the toolbar stays lean.
-  // Built per translator rather than frozen at module load: the headers have to
-  // follow the active catalogue.
+  // A trimmed My Ads column set. Built per translator rather than frozen at
+  // module load: the headers have to follow the active catalogue.
   const columns = useMemo<DuncitColumn<AdRequestRow>[]>(
     () => [
       {
         field: 'trace_id',
         headerName: t('ads.myAds.colTraceId'),
+        type: 'text',
         minWidth: 130,
         valueGetter: (row) => row.trace_id,
       },
       {
         field: 'ad_title',
         headerName: t('ads.myAds.colTitle'),
+        type: 'text',
         flex: 1,
         minWidth: 180,
         valueGetter: (row) => row.ad_title,
@@ -41,6 +48,8 @@ export default function RecentAdsTable() {
       {
         field: 'position',
         headerName: t('ads.myAds.colPosition'),
+        type: 'enum',
+        options: adPositionOptions(t),
         minWidth: 150,
         valueGetter: (row) => adPositionLabel(row.position, t),
       },
@@ -49,17 +58,19 @@ export default function RecentAdsTable() {
         headerName: t('ads.myAds.colStarts'),
         hide: false,
         width: 130,
-        filterable: false,
       }),
       {
         field: 'estimated_cost',
         headerName: t('ads.myAds.colEstimatedCost'),
+        type: 'number',
         width: 120,
         valueGetter: (row) => formatAdCost(row.estimated_cost, row.currency_symbol),
       },
       {
         field: 'status',
         headerName: t('ads.myAds.colStatus'),
+        type: 'enum',
+        options: adStatusOptions(t),
         width: 120,
         cellRenderer: renderStatus,
         valueGetter: (row) => row.status,

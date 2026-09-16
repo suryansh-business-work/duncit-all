@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { LocationItem } from '@/stores/location.store';
 import { clubCountLabel } from '@/utils/location-tree';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { showsWaitlist } from '@duncit/utils';
 
 import { SectionLabel } from './SectionLabel';
 
@@ -22,16 +23,22 @@ interface Props {
 }
 
 /** A city tile: the city's photo under a scrim (or a surface tile with a
- * coral city glyph when it has none), the name and its club count; the chosen
- * one is ringed green with a check. mWeb twin: app-header/LocationCityCard. */
+ * coral city glyph when it has none), the name and its club count — or, for a
+ * city not launched yet, a "Coming soon" badge and how many people are waiting;
+ * the chosen one is ringed with a check. mWeb twin: app-header/LocationCityCard. */
 function CityTile({
   loc,
   active,
   onPress,
 }: Readonly<{ loc: LocationItem; active: boolean; onPress: () => void }>) {
   const { primary, accent } = useThemeColors();
+  const { t } = useTranslation();
   const photo = loc.location_image;
   const ink = photo ? 'white' : '$color';
+  const waitlist = showsWaitlist(loc);
+  const caption = waitlist
+    ? t('mweb.cityLaunch.peopleIn', { count: loc.subscriber_count })
+    : clubCountLabel(loc.active_club_count);
 
   return (
     <YStack
@@ -41,7 +48,7 @@ function CityTile({
       role="radio"
       aria-label={loc.location_name}
       aria-checked={active}
-      accessibilityHint={clubCountLabel(loc.active_club_count)}
+      accessibilityHint={caption}
       tabIndex={0}
       onPress={onPress}
       width={110}
@@ -60,11 +67,32 @@ function CityTile({
           <AppImage source={{ uri: photo }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           <LinearGradient colors={PHOTO_SCRIM} style={StyleSheet.absoluteFill} />
         </>
-      ) : (
+      ) : null}
+      {/* The badge takes the glyph's corner on a city that is not live yet. */}
+      {photo || waitlist ? null : (
         <YStack position="absolute" top={10} left={10}>
           <MaterialIcons name="location-city" size={24} color={accent} />
         </YStack>
       )}
+      {waitlist ? (
+        <XStack
+          testID="city-tile-coming-soon"
+          position="absolute"
+          top={8}
+          left={8}
+          zIndex={1}
+          maxWidth={70}
+          height={20}
+          alignItems="center"
+          paddingHorizontal={6}
+          borderRadius={999}
+          backgroundColor="$primary"
+        >
+          <Text fontSize={10} fontWeight="600" color="$onPrimary" numberOfLines={1}>
+            {t('mweb.cityLaunch.comingSoon')}
+          </Text>
+        </XStack>
+      ) : null}
       {active ? (
         <YStack position="absolute" top={8} right={8} borderRadius={999} backgroundColor="$surface">
           <MaterialIcons name="check-circle" size={20} color={primary} />
@@ -74,8 +102,16 @@ function CityTile({
       <Text zIndex={1} fontSize={14} fontWeight="600" color={ink} numberOfLines={1}>
         {loc.location_name}
       </Text>
-      <Text zIndex={1} fontSize={12} fontWeight="500" color={ink} opacity={0.9} numberOfLines={1}>
-        {clubCountLabel(loc.active_club_count)}
+      <Text
+        testID={waitlist ? 'city-tile-people-in' : undefined}
+        zIndex={1}
+        fontSize={12}
+        fontWeight="500"
+        color={ink}
+        opacity={0.9}
+        numberOfLines={1}
+      >
+        {caption}
       </Text>
     </YStack>
   );

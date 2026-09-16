@@ -232,6 +232,7 @@ const MY_ADMIN_CLUBS_TABLE_CONFIG: TableEntityConfig = {
     super_category: { type: 'string' },
     category: { type: 'string' },
     locality: { type: 'string' },
+    location_label: { type: 'string' },
     followers_count: { type: 'number' },
     total_pods: { type: 'number' },
     upcoming_pods: { type: 'number' },

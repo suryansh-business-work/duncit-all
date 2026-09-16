@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { format } from 'date-fns';
+import type { DefaultValues } from 'react-hook-form';
 import HolidaysField from '../fields/HolidaysField';
 import { blankVenueValues, type VenueFormValues } from '../types';
 import { renderForm } from './harness';
@@ -9,8 +10,11 @@ import { renderForm } from './harness';
 /**
  * The days a venue is closed, stored as 'yyyy-MM-dd' and kept in date order so
  * the list reads the way a calendar does.
+ *
+ * Typed as form DEFAULTS, which may leave the list out: a venue saved before
+ * holidays existed loads with none, and the field must read that as empty.
  */
-const withHolidays = (holidays: string[] | undefined): VenueFormValues => ({
+const withHolidays = (holidays: string[] | undefined): DefaultValues<VenueFormValues> => ({
   ...blankVenueValues,
   settings: { ...blankVenueValues.settings, holidays },
 });

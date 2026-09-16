@@ -26,7 +26,7 @@ describe('DuncitTable row interactions', () => {
     const onRowClick = vi.fn();
     const onEdit = vi.fn();
     const columns: DuncitColumn<Person>[] = [
-      { field: 'name', headerName: 'Name' },
+      { field: 'name', headerName: 'Name', type: 'text' },
       actionsColumn<Person>({ onEdit }),
     ];
     render(

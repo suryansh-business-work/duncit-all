@@ -30,6 +30,10 @@ const CAMPAIGN_CONFIG: TableEntityConfig = {
     status: { type: 'enum' },
     category: { path: 'template_category', type: 'enum' },
     campaign: { path: 'wa_campaign_name', type: 'enum' },
+    // The projected names the table shows, at the path each half stores them.
+    name: { type: 'string' },
+    target: { path: 'audience', type: 'string' },
+    reason: { path: 'error', type: 'string' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },
@@ -46,14 +50,40 @@ const AUTOMATIC_CONFIG: TableEntityConfig = {
     // filter narrows the whole union. It is what the Campaigns and Templates
     // tabs hand over when a send count is clicked.
     campaign: { type: 'enum' },
+    name: { path: 'campaign', type: 'string' },
+    target: { path: 'destination', type: 'string' },
+    reason: { type: 'string' },
     created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
+/** Figures the projection COMPUTES differently per half (an automatic row's
+ * sent count is its status), so they are matched after the union, by the
+ * projected name. */
+const PROJECTED_CONFIG: TableEntityConfig = {
+  searchFields: [],
+  sortFields: {},
+  filterFields: {
+    sent_count: { type: 'number' },
+    cost: { type: 'number' },
   },
   defaultSort: { created_at: -1 },
 };
 
 /** Sortable columns, as the projection names them. Every one is a real
  * projected field — a synthetic name would sort by missing. */
-const SORT_FIELDS = new Set(['created_at', 'status', 'name', 'kind', 'cost', 'sent_count']);
+const SORT_FIELDS = new Set([
+  'created_at',
+  'status',
+  'name',
+  'kind',
+  'target',
+  'reason',
+  'category',
+  'cost',
+  'sent_count',
+]);
 
 /** What one half of the union may contain — the same stages a top-level
  * pipeline takes, minus the two that write a collection. */
@@ -243,6 +273,7 @@ export const waLogService = {
       });
     }
     pipeline.push(
+      { $match: buildTableFilter(input, PROJECTED_CONFIG) },
       { $sort: resolveSort(input) },
       {
         $facet: {

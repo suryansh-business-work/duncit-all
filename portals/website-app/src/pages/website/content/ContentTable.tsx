@@ -78,6 +78,7 @@ export default function ContentTable({
       {
         field: 'title',
         headerName: t('websiteApp.content.colEntry'),
+        type: 'text',
         flex: 1,
         minWidth: 240,
         cellRenderer: renderEntry,
@@ -86,14 +87,14 @@ export default function ContentTable({
       {
         field: 'category',
         headerName: t('websiteApp.content.colCategory'),
-        filter: { type: 'text' },
+        type: 'text',
         minWidth: 130,
         valueGetter: (item) => item.category || '—',
       },
       {
         field: 'is_published',
         headerName: t('shell.common.status'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 120,
         cellRenderer: renderStatus,
         valueGetter: (item) => (item.is_published ? 'Published' : 'Draft'),
@@ -101,15 +102,15 @@ export default function ContentTable({
       {
         field: 'published_at',
         headerName: t('websiteApp.content.colPublished'),
-        filter: { type: 'date' },
+        type: 'date',
         width: 150,
         valueGetter: (item) => (item.published_at ? formatDate(item.published_at) : '—'),
       },
-      { field: 'sort_order', headerName: t('shell.common.order'), hide: true, width: 90 },
+      { field: 'sort_order', headerName: t('shell.common.order'), type: 'number', hide: true, width: 90 },
       {
         field: 'created_at',
         headerName: t('shell.common.created'),
-        filter: { type: 'date' },
+        type: 'date',
         hide: true,
         width: 150,
         valueGetter: (item) => (item.created_at ? formatDate(item.created_at) : '—'),
@@ -117,7 +118,7 @@ export default function ContentTable({
       {
         field: 'actions',
         headerName: t('shell.common.actions'),
-        sortable: false,
+        type: 'actions',
         width: 110,
         cellRenderer: renderActions,
       },

@@ -99,6 +99,29 @@ describe('CascadeEffect', () => {
     expect(ref.current?.getValues('pod_amount')).toBe(500);
   });
 
+  // A free pod never carries a multi-ticket discount.
+  it('clears the multi-ticket discount when the pod type is free', () => {
+    const ref = mount({
+      pod_type: 'NATIVE_FREE',
+      pod_amount: 0,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+    });
+    expect(ref.current?.getValues('ticket_discount_enabled')).toBe(false);
+    expect(ref.current?.getValues('ticket_discount_tiers')).toEqual([]);
+  });
+
+  it('keeps the multi-ticket discount of a paid pod', () => {
+    const ref = mount({
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 499,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+    });
+    expect(ref.current?.getValues('ticket_discount_enabled')).toBe(true);
+    expect(ref.current?.getValues('ticket_discount_tiers')).toEqual([{ min_tickets: 2, discount_pct: 10 }]);
+  });
+
   it('clears product requests when products are disabled', () => {
     const ref = mount({ products_enabled: false, product_requests: [{ product_id: 'p1', quantity: 2 }] });
     expect(ref.current?.getValues('product_requests')).toEqual([]);

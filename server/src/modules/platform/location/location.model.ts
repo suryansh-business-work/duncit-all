@@ -18,9 +18,19 @@ export interface ILocation extends Document {
   location_pincode: string;
   location_zones: ILocationZone[];
   is_active: boolean;
+  /** Off: the city is listed in the app but opens its subscribe-for-launch page. */
+  is_launched: boolean;
+  /** The subscriber goal the subscribe page shows. */
+  launch_target: number;
+  /** Optional chat.whatsapp.com invite link; '' when unset. */
+  whatsapp_group_url: string;
   created_at: Date;
   updated_at: Date;
 }
+
+/** The launch goal a city gets when an admin sets none. */
+export const DEFAULT_LAUNCH_TARGET = 2000;
+export const MAX_LAUNCH_TARGET = 1_000_000;
 
 const zoneSchema = new Schema<ILocationZone>(
   {
@@ -44,6 +54,9 @@ const locationSchema = new Schema<ILocation>(
     location_pincode: { type: String, required: true, trim: true },
     location_zones: { type: [zoneSchema], default: [] },
     is_active: { type: Boolean, default: true },
+    is_launched: { type: Boolean, default: true },
+    launch_target: { type: Number, default: DEFAULT_LAUNCH_TARGET, min: 1, max: MAX_LAUNCH_TARGET },
+    whatsapp_group_url: { type: String, default: '', trim: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

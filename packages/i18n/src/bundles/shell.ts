@@ -108,18 +108,30 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       empty: 'No rows to display',
       selectRow: 'Select row',
       selectAllRows: 'Select every row on this page',
-      // The filter popover. `any` is the unset option of a select filter;
-      // `yes`/`no` are how a boolean column reads in a chip and a dropdown.
+      // A column's filter popover. `any` is the unset option of a boolean
+      // filter; `yes`/`no` are how a boolean column reads in a chip and a
+      // dropdown. `filters` names the group of active-filter chips.
       any: 'Any',
       yes: 'Yes',
       no: 'No',
       clearAll: 'Clear all',
+      clearFilter: 'Clear',
       apply: 'Apply',
+      filterColumn: 'Filter {label}',
+      condition: 'Condition',
+      value: 'Value',
       rangeMin: '{label} min',
       rangeMax: '{label} max',
       rangeFrom: '{label} from',
       rangeTo: '{label} to',
       opContains: 'contains',
+      // The condition dropdown of a text or number column.
+      opLabelContains: 'Contains',
+      opLabelEquals: 'Equals',
+      opLabelNotEquals: 'Does not equal',
+      opLabelAtLeast: 'At least',
+      opLabelAtMost: 'At most',
+      opLabelBetween: 'Between',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,
@@ -467,6 +479,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       locales: 'Locales',
       localization: 'Localization',
       locations: 'Locations',
+      locationSubscriptions: 'Subscribe for location',
       logs: 'Logs',
       logsSettings: 'Logs Settings',
       mailAutomation: 'Mail Automation',
@@ -1392,6 +1405,31 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       spotsFixedHint: 'Set by the venue space you picked.',
       decreaseSpots: 'Decrease spots',
       increaseSpots: 'Increase spots',
+    },
+    /**
+     * The multi-ticket discount editor in the portals (the host's Edit Pod
+     * dialog), rendered through `shellTicketDiscountLabels` in @duncit/utils.
+     * Word-for-word identical to `mweb.ticketDiscount`.
+     */
+    ticketDiscount: {
+      title: 'Multi-ticket discount',
+      switchLabel: 'Offer a discount when one person books multiple tickets',
+      hint: 'The best matching tier applies to the ticket price when a single booking has at least that many tickets.',
+      baseRow: '1 ticket · 0% (full price)',
+      ticketsLabel: 'Tickets',
+      discountLabel: 'Discount %',
+      addTier: 'Add tier',
+      removeTier: 'Remove tier',
+      maxHint: 'Up to {max}% off',
+      perTicket: '{price} per ticket',
+      errorTiersRequired: 'Add at least one discount tier',
+      errorTooManyTiers: 'You can add up to {max} tiers',
+      errorTicketsMin: 'Tickets must be a whole number of at least 2',
+      errorTicketsMax: 'Tickets can’t be more than {max}',
+      errorTicketsNotIncreasing: 'Needs more tickets than the row above',
+      errorPctMin: 'Discount must be a whole number of at least 1%',
+      errorPctMax: 'Discount can’t be more than {max}%',
+      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     /**
      * Staff chat — the panel every console renders in its header.

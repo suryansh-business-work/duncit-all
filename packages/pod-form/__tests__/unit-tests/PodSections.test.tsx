@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { UseFormReturn } from 'react-hook-form';
 import PodSections from '../../src/PodSections';
@@ -112,6 +112,23 @@ describe('PodSections', () => {
     renderSections(makeData({ config: makeConfig({ showProducts: true }) }), { pod_mode: 'VIRTUAL' });
     expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
   });
+
+  // Only a priced pod has a ticket to discount.
+  it('adds the multi-ticket discount after Payment & Charges on a priced pod', () => {
+    renderSections(makeData(), { pod_type: 'NATIVE_PAID', pod_amount: 499 });
+    expect(screen.getByText('6. Payment & Charges')).toBeInTheDocument();
+    expect(screen.getByText('7. Multi-ticket discount')).toBeInTheDocument();
+    expect(screen.getByTestId('ticket-discount-field')).toBeInTheDocument();
+  });
+
+  it('leaves the multi-ticket discount out of a free pod and of a paid one with no price yet', () => {
+    renderSections(makeData());
+    expect(screen.queryByTestId('ticket-discount-field')).not.toBeInTheDocument();
+    cleanup();
+
+    renderSections(makeData(), { pod_type: 'NATIVE_PAID', pod_amount: 0 });
+    expect(screen.queryByTestId('ticket-discount-field')).not.toBeInTheDocument();
+  });
 });
 
 describe('PodSections (autoPod)', () => {
@@ -121,6 +138,12 @@ describe('PodSections (autoPod)', () => {
     expect(screen.getByText('2. About this Pod')).toBeInTheDocument();
     expect(screen.queryByText(/Payment & Charges/)).not.toBeInTheDocument();
     expect(screen.queryByText(/When, Where/)).not.toBeInTheDocument();
+  });
+
+  // The host prices an Auto Pod when they claim it, so a template has no ticket to discount.
+  it('never offers the multi-ticket discount on a template, even a priced one', () => {
+    renderSections(makeData({ config: makeConfig({ autoPod: true }) }), { pod_type: 'PAID', pod_amount: 500 });
+    expect(screen.queryByTestId('ticket-discount-field')).not.toBeInTheDocument();
   });
 
   // A virtual template has no Meeting Details either: the host writes the link

@@ -14,6 +14,8 @@ interface Props {
   onClick: () => void;
   active?: boolean;
   loading?: boolean;
+  /** Drawn as unavailable yet still pressable — the press explains why. */
+  dimmed?: boolean;
   tooltip?: string;
   /** Optional separate tap on the count/label (e.g. like count → who-liked list). */
   onLabelClick?: () => void;
@@ -39,6 +41,7 @@ export default function ExploreActionButton({
   onClick,
   active,
   loading,
+  dimmed,
   tooltip,
   onLabelClick,
   testId,
@@ -74,11 +77,13 @@ export default function ExploreActionButton({
         onClick={onClick}
         disabled={loading}
         aria-label={ariaLabel}
+        aria-disabled={dimmed || undefined}
         title={tooltip}
         sx={(theme) => ({
           width: 44,
           height: 44,
           minHeight: 44,
+          opacity: dimmed ? 0.5 : 1,
           bgcolor: active ? 'secondary.main' : alpha(theme.palette.common.black, 0.4),
           color: 'common.white',
           backdropFilter: 'blur(10px)',

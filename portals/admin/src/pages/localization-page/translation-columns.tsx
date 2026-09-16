@@ -22,7 +22,7 @@ export function getTranslationColumns({
   const localeColumns: DuncitColumn<TranslationRow>[] = locales.map((locale) => ({
     field: `value_${locale.code}`,
     headerName: locale.label || locale.code,
-    sortable: false,
+    type: 'text',
     cellRenderer: (row: TranslationRow) => {
       const text = valueFor(row, locale.code);
       if (!text) {
@@ -45,7 +45,7 @@ export function getTranslationColumns({
     {
       field: 'key',
       headerName: t('admin.podPlans.key'),
-      sortable: true,
+      type: 'text',
       cellRenderer: (row: TranslationRow) => (
         <Stack spacing={0.25}>
           <Typography variant="body2" noWrap title={row.key} sx={{
@@ -66,20 +66,20 @@ export function getTranslationColumns({
     {
       field: 'surface',
       headerName: t('admin.roles.portal'),
-      sortable: true,
+      type: 'text',
       cellRenderer: (row: TranslationRow) => (row.surface ? <Chip size="small" label={row.surface} /> : '—'),
     },
     {
       field: 'page',
       headerName: t('admin.activity.page'),
-      sortable: true,
+      type: 'text',
       cellRenderer: (row: TranslationRow) => (row.page ? <Chip size="small" variant="outlined" label={row.page} /> : '—'),
     },
     ...localeColumns,
     {
       field: 'updated_at',
       headerName: t('shell.common.updated'),
-      sortable: true,
+      type: 'date',
       valueGetter: (row) => (row.updated_at ? formatDateTime(row.updated_at) : '—'),
     },
   ];

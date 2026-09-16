@@ -88,12 +88,12 @@ describe('getUsersColumns / column set', () => {
   });
 
   it('feeds the injected role catalog into the Role filter', () => {
-    expect(columnBy('role').filter).toEqual({ type: 'select', options: ROLE_OPTIONS });
+    expect(columnBy('role')).toMatchObject({ type: 'enum', options: ROLE_OPTIONS });
   });
 
   it('drops the blank entry from the status filter options', () => {
-    expect(columnBy('status').filter).toEqual({
-      type: 'select',
+    expect(columnBy('status')).toMatchObject({
+      type: 'enum',
       options: [
         { value: 'ACTIVE', label: 'ACTIVE' },
         { value: 'INACTIVE', label: 'INACTIVE' },
@@ -103,8 +103,8 @@ describe('getUsersColumns / column set', () => {
   });
 
   it('offers only the two supported login providers as filter options', () => {
-    expect(columnBy('last_login_provider').filter).toEqual({
-      type: 'select',
+    expect(columnBy('last_login_provider')).toMatchObject({
+      type: 'enum',
       options: [
         { value: 'GOOGLE', label: 'admin.users.google' },
         { value: 'EMAIL', label: 'shell.common.email' },

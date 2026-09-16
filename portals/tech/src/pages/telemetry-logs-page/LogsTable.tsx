@@ -15,9 +15,7 @@ import { formatDateTime, useTranslation } from '@duncit/app-settings';
 const getRowId = (row: TelemetryLogRow) => row.id;
 
 const renderWhen = (row: TelemetryLogRow) => (
-  <Typography variant="body2" sx={{
-    color: "text.secondary"
-  }}>
+  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
     {formatDateTime(row.created_at)}
   </Typography>
 );
@@ -93,35 +91,27 @@ export default function LogsTable({
 
   const columns = useMemo<DuncitColumn<TelemetryLogRow>[]>(
     () => [
-      { field: 'created_at', headerName: t('tech.common.when'), width: 175, cellRenderer: renderWhen },
+      { field: 'created_at', headerName: t('tech.common.when'), width: 175, type: 'date', cellRenderer: renderWhen },
       {
         field: 'environment',
         headerName: t('tech.common.env'),
         width: 110,
-        filter: { type: 'select', options: envOptions(t) },
+        type: 'enum',
+        options: envOptions(t),
         cellRenderer: renderEnvironment,
       },
-      { field: 'source', headerName: t('tech.common.source'), width: 135, filter: { type: 'text' } },
-      { field: 'page', headerName: t('tech.common.page'), width: 150, filter: { type: 'text' } },
-      // Sorting is server-side and allowlisted (LOG_TABLE_CONFIG.sortFields).
-      // A column the allowlist does not name must say so: otherwise the header
-      // offers a sort the server drops, and AG Grid re-orders the 25 rows on
-      // screen while the rest of the set stays in created_at order.
-      {
-        field: 'component',
-        headerName: t('tech.common.component'),
-        width: 160,
-        sortable: false,
-        filter: { type: 'text' },
-      },
-      { field: 'user', headerName: t('tech.common.user'), width: 170, cellRenderer: renderUser },
+      { field: 'source', headerName: t('tech.common.source'), width: 135, type: 'text' },
+      { field: 'page', headerName: t('tech.common.page'), width: 150, type: 'text' },
+      // Sorting and filtering are server-side and allowlisted (LOG_TABLE_CONFIG),
+      // which maps every column here to its stored path.
+      { field: 'component', headerName: t('tech.common.component'), width: 160, type: 'text' },
+      { field: 'user', headerName: t('tech.common.user'), width: 170, type: 'text', cellRenderer: renderUser },
       {
         field: 'user_email',
         headerName: t('shell.common.email'),
         hide: true,
         width: 210,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.user?.email ?? '—',
       },
       {
@@ -129,7 +119,7 @@ export default function LogsTable({
         headerName: t('tech.common.message'),
         flex: 1,
         minWidth: 240,
-        sortable: false,
+        type: 'text',
         cellRenderer: renderMessage,
       },
       {
@@ -137,8 +127,7 @@ export default function LogsTable({
         headerName: t('tech.telemetryLogs.version'),
         hide: true,
         width: 110,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.client?.app_version ?? '—',
       },
       // Platform and OS are two allowlisted filters on the server, so they are
@@ -149,16 +138,14 @@ export default function LogsTable({
         headerName: t('tech.common.platform'),
         hide: true,
         width: 110,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
       },
       {
         field: 'os',
         headerName: 'OS',
         hide: true,
         width: 100,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.os ?? '—',
       },
       {
@@ -166,8 +153,7 @@ export default function LogsTable({
         headerName: t('tech.common.session'),
         hide: true,
         width: 170,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.session_id ?? '—',
       },
       {
@@ -175,8 +161,7 @@ export default function LogsTable({
         headerName: t('tech.common.device'),
         hide: true,
         width: 170,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.duid ?? '—',
       },
       {
@@ -184,8 +169,7 @@ export default function LogsTable({
         headerName: 'IP',
         hide: true,
         width: 130,
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         valueGetter: (row) => row.ip ?? '—',
       },
     ],

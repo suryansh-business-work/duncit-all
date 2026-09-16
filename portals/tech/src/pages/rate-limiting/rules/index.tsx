@@ -110,6 +110,7 @@ export default function RateLimitRulesPage() {
             <RulesTable
               fetchRows={fetchRows}
               refetchRef={refetchRef}
+              options={options}
               toolbarActions={
                 <DuncitButton
                   size="small"

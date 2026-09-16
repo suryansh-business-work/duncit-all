@@ -99,13 +99,9 @@ describe('hostColumns', () => {
   });
 
   it('offers every status as a filter option', () => {
-    const filter = column('status').filter as { type: string; options: { value: string }[] };
-    expect(filter.type).toBe('select');
-    expect(filter.options.map((o) => o.value)).toEqual([
-      'DRAFT',
-      'SUBMITTED',
-      'APPROVED',
-      'REJECTED',
-    ]);
+    expect(column('status')).toMatchObject({
+      type: 'enum',
+      options: [{ value: 'DRAFT' }, { value: 'SUBMITTED' }, { value: 'APPROVED' }, { value: 'REJECTED' }],
+    });
   });
 });

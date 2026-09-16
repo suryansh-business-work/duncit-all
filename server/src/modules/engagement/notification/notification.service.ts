@@ -70,9 +70,11 @@ const NOTIFICATION_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    title: { type: 'string' },
+    body: { type: 'string' },
     scope: { type: 'enum' },
     silent: { type: 'boolean' },
-    location_id: { type: 'string' },
+    location_id: { type: 'enum' },
     zone_name: { type: 'string' },
     delivered_count: { type: 'number' },
     failed_count: { type: 'number' },

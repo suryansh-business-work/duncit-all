@@ -89,8 +89,7 @@ export default function UserReportsTable({
       </Tooltip>
     );
 
-    // Only server-allowlisted fields are sortable/filterable (REPORT_TABLE_CONFIG):
-    // report_no / target_type / reason / status / created_at / updated_at.
+    // Sort and filter keys are allowlisted on the server (REPORT_TABLE_CONFIG).
     return [
       entityIdColumn<ContentReport>({ field: 'report_no', headerName: t('reportLogs.colReportId') }),
       {
@@ -98,12 +97,10 @@ export default function UserReportsTable({
         headerName: t('reportLogs.colTarget'),
         flex: 1,
         minWidth: 240,
-        filter: {
-          type: 'select',
-          options: (Object.keys(REPORT_TARGET_KEY) as (keyof typeof REPORT_TARGET_KEY)[]).map(
-            (value) => ({ value, label: t(REPORT_TARGET_KEY[value]) }),
-          ),
-        },
+        type: 'enum',
+        options: (Object.keys(REPORT_TARGET_KEY) as (keyof typeof REPORT_TARGET_KEY)[]).map(
+          (value) => ({ value, label: t(REPORT_TARGET_KEY[value]) }),
+        ),
         cellRenderer: renderTarget,
         valueGetter: (r) => t(REPORT_TARGET_KEY[r.target_type]),
       },
@@ -111,34 +108,36 @@ export default function UserReportsTable({
         field: 'reason',
         headerName: t('reportLogs.colReason'),
         minWidth: 200,
-        filter: {
-          type: 'select',
-          options: (Object.keys(REPORT_REASON_KEY) as (keyof typeof REPORT_REASON_KEY)[]).map(
-            (value) => ({ value, label: t(REPORT_REASON_KEY[value]) }),
-          ),
-        },
+        type: 'enum',
+        options: (Object.keys(REPORT_REASON_KEY) as (keyof typeof REPORT_REASON_KEY)[]).map(
+          (value) => ({ value, label: t(REPORT_REASON_KEY[value]) }),
+        ),
         valueGetter: (r) => t(REPORT_REASON_KEY[r.reason]),
       },
       {
         field: 'reporter_name',
         headerName: t('reportLogs.colReporter'),
         minWidth: 160,
+        type: 'text',
+        // Resolved from the stored user id per row — no name to order or match on.
         sortable: false,
+        filterable: false,
       },
       {
         field: 'target_owner_name',
         headerName: t('reportLogs.colOwner'),
         minWidth: 160,
+        type: 'text',
+        // Resolved from the stored user id per row — no name to order or match on.
         sortable: false,
+        filterable: false,
       },
       {
         field: 'status',
         headerName: t('reportLogs.colStatus'),
         width: 130,
-        filter: {
-          type: 'select',
-          options: REPORT_STATUSES.map((value) => ({ value, label: t(REPORT_STATUS_KEY[value]) })),
-        },
+        type: 'enum',
+        options: REPORT_STATUSES.map((value) => ({ value, label: t(REPORT_STATUS_KEY[value]) })),
         cellRenderer: renderStatus,
         valueGetter: (r) => t(REPORT_STATUS_KEY[r.status]),
       },
@@ -152,7 +151,7 @@ export default function UserReportsTable({
       {
         field: 'actions',
         headerName: t('reportLogs.colActions'),
-        sortable: false,
+        type: 'actions',
         width: 90,
         cellRenderer: renderActions,
       },

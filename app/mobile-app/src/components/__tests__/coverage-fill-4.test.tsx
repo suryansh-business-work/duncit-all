@@ -33,6 +33,8 @@ describe('ExplorePodCard share', () => {
     const spy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' } as never);
     renderWithProviders(
       <ExplorePodCard
+        soundOn={false}
+        onToggleSound={jest.fn()}
         pod={explorePod}
         club={
           {

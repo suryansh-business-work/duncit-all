@@ -22,6 +22,7 @@ import {
   themeTokensToPub,
   type ThemeTokensInput,
 } from "./theme-tokens";
+import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
 const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
@@ -110,6 +111,11 @@ const cleanPodCancelRiskAlertHours = (value: unknown) =>
 const cleanPodCompleteTimeoutHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_TIMEOUT_HOURS));
 
+/** The biggest multi-ticket tier discount, clamped to 1–99% — a tier can never
+ * take a ticket to nothing, and 0 would forbid every tier outright. */
+const cleanTicketDiscountMaxPct = (value: unknown) =>
+  Math.min(99, Math.max(1, Math.floor(Number(value)) || DEFAULT_TICKET_DISCOUNT_MAX_PCT));
+
 /** When the complete-pod reminder goes out, clamped to 1 hour – 1 year. */
 const cleanPodCompleteReminderHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_REMINDER_HOURS));
@@ -186,6 +192,7 @@ const toAppPub = (d: any) => ({
   // otherwise.
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
   pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(d?.pod_complete_timeout_hours),
+  ticket_discount_max_pct: cleanTicketDiscountMaxPct(d?.ticket_discount_max_pct),
   pod_complete_reminder_hours: cleanPodCompleteReminderHours(d?.pod_complete_reminder_hours),
   pod_reminder_lead_hours: cleanPodReminderLeadHours(d?.pod_reminder_lead_hours),
   venue_slot_reminder_lead_hours: cleanVenueSlotReminderLeadHours(
@@ -245,6 +252,9 @@ const FEATURE_FLAG_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     enabled: { type: "boolean" },
     is_system: { type: "boolean" },
+    key: { type: "string" },
+    name: { type: "string" },
+    description: { type: "string" },
   },
   defaultSort: { key: 1 },
 };
@@ -563,6 +573,7 @@ type AppSettingsUpdateInput = {
   attendance_otp_required?: boolean;
   pod_cancel_refund_hold?: boolean;
   pod_complete_timeout_hours?: number;
+  ticket_discount_max_pct?: number;
   pod_complete_reminder_hours?: number;
   pod_reminder_lead_hours?: number;
   venue_slot_reminder_lead_hours?: number;
@@ -622,6 +633,8 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     update.pod_complete_timeout_hours = cleanPodCompleteTimeoutHours(
       input.pod_complete_timeout_hours,
     );
+  if (input.ticket_discount_max_pct !== undefined)
+    update.ticket_discount_max_pct = cleanTicketDiscountMaxPct(input.ticket_discount_max_pct);
   if (input.pod_complete_reminder_hours !== undefined)
     update.pod_complete_reminder_hours = cleanPodCompleteReminderHours(
       input.pod_complete_reminder_hours,
@@ -702,6 +715,7 @@ export const settingsService = {
       attendance_otp_required:
         doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
       pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(doc.pod_complete_timeout_hours),
+      ticket_discount_max_pct: cleanTicketDiscountMaxPct(doc.ticket_discount_max_pct),
     };
   },
 
@@ -756,6 +770,13 @@ export const settingsService = {
   async getMinSignupAge(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return cleanMinSignupAge(doc?.min_signup_age);
+  },
+
+  /** Clamped biggest multi-ticket tier discount (1–99%, default 50) — what a
+   * pod's changed tiers are validated against on every write. */
+  async getTicketDiscountMaxPct(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return cleanTicketDiscountMaxPct(doc?.ticket_discount_max_pct);
   },
 
   /** Clamped max-backout-attempts setting for the backout flow (min 1, default 3). */

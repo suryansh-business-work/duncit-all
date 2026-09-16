@@ -35,6 +35,9 @@ export const AI_MONITOR_GRADIENT_CSS = `linear-gradient(120deg, ${AI_MONITOR_GRA
 export const AI_MONITOR_MOTION = {
   /** One pass of the shimmer over an idle chip or pill, in ms. */
   sweepMs: 2600,
+  /** One slow drift of the gradient behind the AI Monitoring pill, one
+   * direction, in ms — it drifts back over the same time. */
+  driftMs: 6000,
   /** One breath of the badge — out to `breatheScale` and back, in ms. */
   breatheMs: 1800,
   /** A ring's whole flight, `ringFrom` → `ringTo`, in ms. */

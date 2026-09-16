@@ -44,6 +44,10 @@ export const HEADER_STATIC = gql`
       country_code
       location_pincode
       active_club_count
+      is_launched
+      subscriber_count
+      launch_target
+      whatsapp_group_url
       location_zones {
         zone_name
         pincode

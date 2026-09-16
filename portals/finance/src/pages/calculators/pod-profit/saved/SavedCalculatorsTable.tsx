@@ -64,44 +64,52 @@ export default function SavedCalculatorsTable({
     [rows]
   );
 
-  const fetchRows = useMemo(() => clientTableFetch<CalculatorRow>(tableRows, searchOf), [tableRows]);
-
   const columns = useMemo<DuncitColumn<CalculatorRow>[]>(
     () => [
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 200 },
-      { field: 'pods', headerName: t('finance.calculators.podsColumn'), width: 90 },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 200, type: 'text' },
+      { field: 'pods', headerName: t('finance.calculators.podsColumn'), width: 90, type: 'number' },
       {
         field: 'duncit_revenue_total',
         headerName: t('finance.calculators.duncitRevenue'),
         width: 170,
+        type: 'number',
         valueGetter: (row) => formatRupees(row.duncit_revenue_total),
       },
       {
         field: 'venue_receives',
         headerName: t('finance.calculators.venueReceives'),
         width: 170,
+        type: 'number',
         valueGetter: (row) => formatRupees(row.venue_receives),
       },
       {
         field: 'host_receives',
         headerName: t('finance.calculators.hostReceives'),
         width: 170,
+        type: 'number',
         valueGetter: (row) => formatRupees(row.host_receives),
       },
       {
         field: 'gst_amount',
         headerName: t('finance.calculators.gst'),
         width: 150,
+        type: 'number',
         valueGetter: (row) => formatRupees(row.gst_amount),
       },
       {
         field: 'updated_at',
         headerName: t('shell.common.updated'),
         width: 180,
+        type: 'date',
         valueGetter: (row) => formatDateTime(row.updated_at),
       },
     ],
     [t]
+  );
+
+  const fetchRows = useMemo(
+    () => clientTableFetch<CalculatorRow>(tableRows, searchOf, columns),
+    [tableRows, columns]
   );
 
   return (

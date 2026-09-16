@@ -95,6 +95,7 @@ export default function CouponsTable({
       {
         field: 'code',
         headerName: t('shell.coupons.code'),
+        type: 'text',
         flex: 1,
         minWidth: 180,
         cellRenderer: renderCode,
@@ -103,14 +104,15 @@ export default function CouponsTable({
       {
         field: 'discount_pct',
         headerName: t('shell.coupons.colDiscount'),
-        filter: { type: 'number' },
+        type: 'number',
         width: 110,
         valueGetter: (c) => `${c.discount_pct}%`,
       },
       {
         field: 'scope',
         headerName: t('shell.coupons.scope'),
-        filter: { type: 'select', options: scopeOptions(t) },
+        type: 'enum',
+        options: scopeOptions(t),
         minWidth: 140,
         cellRenderer: (c) => renderScope(c, t),
         valueGetter: (c) => scopeLabel(c, t),
@@ -118,7 +120,7 @@ export default function CouponsTable({
       {
         field: 'valid_from',
         headerName: t('shell.coupons.colValidity'),
-        filter: { type: 'date' },
+        type: 'date',
         minWidth: 170,
         valueGetter: validityValue,
       },
@@ -127,7 +129,7 @@ export default function CouponsTable({
         headerName: t('shell.coupons.validUntil'),
         formatDate: localeDate,
       }),
-      { field: 'used_count', headerName: t('shell.coupons.colUsed'), width: 100, valueGetter: usedValue },
+      { field: 'used_count', headerName: t('shell.coupons.colUsed'), type: 'number', width: 100, valueGetter: usedValue },
       activeChipColumn<CouponRow>(),
       dateColumn<CouponRow>({ formatDate: localeDate }),
       actionsColumn<CouponRow>({

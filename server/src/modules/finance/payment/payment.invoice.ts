@@ -50,6 +50,21 @@ export function invoiceBillTo(doc: IPayment) {
   };
 }
 
+/** Seats the payment bought, frozen in its metadata when it was priced. */
+const paidSeats = (meta: Record<string, unknown>) => normalizeSeats(Number(meta.seats ?? 1));
+
+/**
+ * What the booking's tickets actually sold for: every seat at list price, less
+ * the multi-ticket discount frozen on the payment. `ticket_gross` exists only on
+ * payments priced after the discount shipped; older rows had no discount, so one
+ * seat's price times the seats is exact for them.
+ */
+function soldTicketGross(doc: IPayment, meta: Record<string, unknown>, seats: number): number {
+  const frozen = Number(meta.ticket_gross ?? Number.NaN);
+  const listGross = Number.isFinite(frozen) ? frozen : Number(meta.ticket_amount ?? 0) * seats;
+  return round2(Math.max(0, listGross - (doc.ticket_discount_amount ?? 0)));
+}
+
 export function buildInvoiceItems(doc: IPayment): InvoiceLineItem[] {
   const meta: Record<string, unknown> = doc.metadata ?? {};
   const productLines = Array.isArray(meta.product_lines)
@@ -59,8 +74,10 @@ export function buildInvoiceItems(doc: IPayment): InvoiceLineItem[] {
   // `ticket_amount` is the price of ONE seat; the booking may hold several. The
   // split below weighs the ticket against the products, so comparing a unit
   // price with a product total handed the ticket too small a share of the bill.
-  const seats = normalizeSeats(Number(meta.seats ?? 1));
-  const ticketGross = round2(Number(meta.ticket_amount ?? 0) * seats);
+  // The weight is the DISCOUNTED ticket money: the products were charged in full,
+  // so weighing them against list-price tickets would understate their share.
+  const seats = paidSeats(meta);
+  const ticketGross = soldTicketGross(doc, meta, seats);
   const productGross = round2(
     productLines.reduce((sum, l) => sum + Number(l.gross || 0), 0)
   );
@@ -136,6 +153,11 @@ export async function invoiceDataForPayment(
     // invoice must keep saying what actually happened.
     coins_redeemed: doc.coins_redeemed ?? 0,
     coins_earned: doc.coins_earned ?? 0,
+    // The multi-ticket discount as frozen on the payment, never re-derived from
+    // the pod — its tiers can be edited after this booking was priced.
+    ticket_discount_pct: doc.ticket_discount_pct ?? 0,
+    ticket_discount_amount: doc.ticket_discount_amount ?? 0,
+    ticket_discount_tickets: paidSeats(doc.metadata ?? {}),
     invoice_label: fs.invoice_label,
     invoice_support_email: fs.invoice_support_email,
     invoice_support_phone: fs.invoice_support_phone,

@@ -75,6 +75,7 @@ export function getShortLinkColumns({
     {
       field: 'label',
       headerName: t('marketing.shortLinks.link'),
+      type: 'text',
       flex: 1,
       minWidth: 220,
       cellRenderer: renderLink,
@@ -84,14 +85,16 @@ export function getShortLinkColumns({
       field: 'source',
       headerName: t('marketing.shortLinks.createdFor'),
       minWidth: 160,
-      filter: { type: 'select', options: toFilterOptions(sources) },
+      type: 'enum',
+      options: toFilterOptions(sources),
       valueGetter: (row) => channelText(row, sources),
     },
     {
       field: 'medium',
       headerName: t('marketing.shortLinks.medium'),
       minWidth: 150,
-      filter: { type: 'select', options: toFilterOptions(mediums) },
+      type: 'enum',
+      options: toFilterOptions(mediums),
       valueGetter: (row) =>
         row.medium === 'OTHER' && row.medium_other
           ? row.medium_other
@@ -100,18 +103,15 @@ export function getShortLinkColumns({
     {
       field: 'utm_campaign',
       headerName: t('marketing.common.campaign'),
-      sortable: false,
       minWidth: 160,
-      filter: {
-        type: 'select',
-        options: campaigns.map((campaign) => ({
-          value: campaign.utm_campaign,
-          label: campaign.name,
-        })),
-      },
+      type: 'enum',
+      options: campaigns.map((campaign) => ({
+        value: campaign.utm_campaign,
+        label: campaign.name,
+      })),
       valueGetter: (row) => campaignText(row, campaigns),
     },
-    { field: 'click_count', headerName: t('marketing.shortLinks.clicks'), width: 110 },
+    { field: 'click_count', headerName: t('marketing.shortLinks.clicks'), type: 'number', width: 110 },
     dateColumn<ShortLinkRow>({
       field: 'last_clicked_at',
       headerName: t('marketing.shortLinks.lastClick'),
@@ -123,7 +123,7 @@ export function getShortLinkColumns({
       field: 'is_active',
       headerName: t('shell.common.status'),
       width: 120,
-      filter: { type: 'boolean' },
+      type: 'boolean',
       cellRenderer: renderStatus,
       valueGetter: (row) => (row.is_active ? 'Active' : 'Retired'),
     },

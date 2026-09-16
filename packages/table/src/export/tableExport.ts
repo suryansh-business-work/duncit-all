@@ -1,5 +1,6 @@
 import { downloadTextFile } from '@duncit/utils';
-import { columnHeader, isColumnHidden } from '../columnDefs';
+import { isColumnHidden } from '../columnDefs';
+import { columnHeader } from '../columnTypes';
 import type { Translate } from '../i18n';
 import type { DuncitColumn, TableFetch, TableQueryState } from '../types';
 

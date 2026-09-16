@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -6,11 +6,12 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   DuncitTable,
   type DuncitColumn,
-  type TableFetch,
   type TableFilterValue,
+  type TableQueryState,
 } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import {
+  applyVenuePodsQuery,
   BUCKET_COLORS,
   BUCKET_LABELS,
   cancelDisabledText,
@@ -20,6 +21,8 @@ import {
 import { useTranslation } from '@duncit/shell';
 
 const CANCEL_HINT = 'Cancel this pod and refund every paid attendee';
+
+const BUCKET_OPTIONS = Object.entries(BUCKET_LABELS).map(([value, label]) => ({ value, label }));
 
 const getRowId = (row: VenuePodRow) => row.id;
 
@@ -117,7 +120,7 @@ const actionsColumn = (
   field: 'actions',
   headerName: t('shell.common.actions'),
   width: 300,
-  sortable: false,
+  type: 'actions',
   valueGetter: (row) => cancelDisabledText(row) ?? CANCEL_HINT,
   cellRenderer: (row: VenuePodRow) => (
     <Stack component="span" direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
@@ -128,7 +131,8 @@ const actionsColumn = (
 });
 
 interface Props {
-  fetchRows: TableFetch<VenuePodRow>;
+  /** Every venuePods row; the table searches, filters, sorts and pages them in memory. */
+  rows: readonly VenuePodRow[];
   externalFilters: TableFilterValue[];
   refetchRef: React.MutableRefObject<(() => void) | null>;
   onRowClick: (row: VenuePodRow) => void;
@@ -140,7 +144,7 @@ interface Props {
 
 /** All pods booked at the partner's venues; click a row for attendees. */
 export default function VenuePodsTable({
-  fetchRows,
+  rows,
   externalFilters,
   refetchRef,
   onRowClick,
@@ -156,6 +160,7 @@ export default function VenuePodsTable({
         headerName: t('partners.common.pod'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderPod,
         valueGetter: (row) => `${row.pod_title} ${row.host_names.join(' ')}`,
       },
@@ -163,24 +168,27 @@ export default function VenuePodsTable({
         field: 'venue_name',
         headerName: t('partners.common.venue'),
         minWidth: 150,
-        sortable: false,
+        type: 'text',
       },
       {
         field: 'pod_date_time',
         headerName: t('partners.common.date'),
         width: 170,
+        type: 'date',
         valueGetter: (row) => fmtDate(row.pod_date_time),
       },
       {
         field: 'pod_amount',
         headerName: t('partners.common.price'),
         width: 110,
+        type: 'number',
         valueGetter: (row) => (row.pod_type === 'FREE' ? 'Free' : `₹${row.pod_amount}`),
       },
       {
         field: 'attendee_count',
         headerName: t('partners.common.attendees'),
         width: 120,
+        type: 'number',
         valueGetter: (row) =>
           row.no_of_spots > 0 ? `${row.attendee_count} / ${row.no_of_spots}` : String(row.attendee_count),
       },
@@ -188,7 +196,8 @@ export default function VenuePodsTable({
         field: 'bucket',
         headerName: t('shell.common.status'),
         width: 130,
-        sortable: false,
+        type: 'enum',
+        options: BUCKET_OPTIONS,
         cellRenderer: renderBucket,
         valueGetter: (row) => BUCKET_LABELS[row.bucket],
       },
@@ -197,7 +206,7 @@ export default function VenuePodsTable({
         headerName: t('partners.common.completed'),
         width: 170,
         hide: true,
-        sortable: false,
+        type: 'date',
         valueGetter: (row) => fmtDate(row.completed_at),
       },
       {
@@ -205,12 +214,17 @@ export default function VenuePodsTable({
         headerName: t('partners.common.cancelled'),
         width: 170,
         hide: true,
-        sortable: false,
+        type: 'date',
         valueGetter: (row) => fmtDate(row.cancelled_at),
       },
       actionsColumn(onCancel, onRequestChange, requestChangeLabel, t),
     ],
     [onCancel, onRequestChange, requestChangeLabel],
+  );
+
+  const fetchRows = useCallback(
+    (q: TableQueryState) => applyVenuePodsQuery(rows, q, columns),
+    [rows, columns],
   );
 
   return (

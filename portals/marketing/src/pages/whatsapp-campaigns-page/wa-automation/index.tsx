@@ -60,6 +60,7 @@ export default function WaAutomation() {
     () => ({ image: defaultImage, document: defaultDocument }),
     [defaultImage, defaultDocument]
   );
+  const categories = useMemo(() => [...new Set(rows.map((row) => row.category))], [rows]);
   const columns = useMemo(
     () =>
       getScenarioColumns({
@@ -69,10 +70,14 @@ export default function WaAutomation() {
         onSetMedia: setMediaFor,
         onProvision: provision,
         defaults,
+        categories,
       }),
-    [t, busyKey, toggle, provision, defaults]
+    [t, busyKey, toggle, provision, defaults, categories]
   );
-  const fetchRows = useMemo(() => clientTableFetch(rows, scenarioSearchText), [rows]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, scenarioSearchText, columns),
+    [rows, columns]
+  );
 
   // The table only re-reads when its own query changes, so a board that came
   // back from a toggle has to ask for the re-read — otherwise the switch snaps

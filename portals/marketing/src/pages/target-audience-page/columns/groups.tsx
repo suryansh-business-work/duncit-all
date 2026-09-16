@@ -1,14 +1,15 @@
 import { dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { AudienceRow } from '../helpers';
 import { dash, renderPerson, renderPush, renderRoles, yesNo } from './cells';
+import { PUSH_OPTIONS } from '../helpers';
 import type { AudienceColumnDeps } from './types';
 import { useTranslation } from '@duncit/app-settings';
 
 type Column = DuncitColumn<AudienceRow>;
 
 /**
- * No column carries a `filter`: every filter lives in the sidebar, which can
- * combine ten conditions at once where a column popover only ever shows one.
+ * The sidebar builds the segment — it combines ten conditions at once where a
+ * column popover only ever shows one; a column filter narrows within it.
  */
 
 /** Who they are. */
@@ -18,6 +19,7 @@ export const identityColumns = (t: Translate): Column[] => [
   {
     field: 'first_name',
     headerName: t('marketing.targetAudience.person'),
+    type: 'text',
     minWidth: 220,
     flex: 1,
     cellRenderer: renderPerson,
@@ -26,13 +28,14 @@ export const identityColumns = (t: Translate): Column[] => [
   {
     field: 'phone',
     headerName: t('shell.common.phone'),
-    sortable: false,
+    type: 'text',
     minWidth: 130,
     valueGetter: (row) => dash(row.phone),
   },
   {
     field: 'age',
     headerName: t('marketing.targetAudience.age'),
+    type: 'number',
     width: 90,
     valueGetter: (row) => row.age ?? EM_DASH,
   },
@@ -40,11 +43,12 @@ export const identityColumns = (t: Translate): Column[] => [
 
 /** Where they are — the browse-location fields, not the postal address. */
 export const placeColumns = (t: Translate): Column[] => [
-  { field: 'city', headerName: t('marketing.common.city'), minWidth: 130, valueGetter: (row) => dash(row.city) },
-  { field: 'state', headerName: t('marketing.targetAudience.state'), minWidth: 130, valueGetter: (row) => dash(row.state) },
+  { field: 'city', headerName: t('marketing.common.city'), type: 'text', minWidth: 130, valueGetter: (row) => dash(row.city) },
+  { field: 'state', headerName: t('marketing.targetAudience.state'), type: 'text', minWidth: 130, valueGetter: (row) => dash(row.state) },
   {
     field: 'zone',
     headerName: t('marketing.common.zone'),
+    type: 'text',
     minWidth: 130,
     hide: true,
     valueGetter: (row) => dash(row.zone),
@@ -52,7 +56,7 @@ export const placeColumns = (t: Translate): Column[] => [
   {
     field: 'pincode',
     headerName: t('marketing.targetAudience.pincode'),
-    sortable: false,
+    type: 'text',
     width: 120,
     hide: true,
     valueGetter: (row) => dash(row.pincode),
@@ -60,7 +64,7 @@ export const placeColumns = (t: Translate): Column[] => [
   {
     field: 'country',
     headerName: t('marketing.common.country'),
-    sortable: false,
+    type: 'text',
     minWidth: 120,
     hide: true,
     valueGetter: (row) => dash(row.country),
@@ -72,6 +76,9 @@ export const reachColumns = (t: Translate): Column[] => [
   {
     field: 'push_platform',
     headerName: t('marketing.targetAudience.pushReachable'),
+    type: 'enum',
+    options: PUSH_OPTIONS,
+    // Read from the push-token collections per page — no stored path on the user to order by.
     sortable: false,
     minWidth: 160,
     cellRenderer: renderPush,
@@ -80,14 +87,14 @@ export const reachColumns = (t: Translate): Column[] => [
   {
     field: 'whatsapp',
     headerName: 'WhatsApp',
-    sortable: false,
+    type: 'boolean',
     width: 110,
     valueGetter: (row) => yesNo(row.whatsapp_reachable),
   },
   {
     field: 'role',
     headerName: t('shell.nav.roles'),
-    sortable: false,
+    type: 'text',
     minWidth: 160,
     cellRenderer: renderRoles,
     valueGetter: (row) => row.roles.join(', '),

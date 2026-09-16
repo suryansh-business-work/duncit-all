@@ -3,6 +3,7 @@ import { Box, Stack, TextField } from '@mui/material';
 import { PodProductsField } from '@duncit/pod-product-picker';
 import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import PlaceChargesField from '../fields/PlaceChargesField';
+import TicketDiscountStepField from '../fields/TicketDiscountStepField';
 import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
 import TermsAgreement from '../TermsAgreement';
@@ -20,7 +21,8 @@ interface Props {
   spots: SpotsBounds;
 }
 
-/** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
+/** Step 4 — Free/Paid cards, ticket price, spots stepper, the paid pod's
+ * multi-ticket discount, the slot-cost / GST /
  * earnings panel, optional products and the Organizer Terms publish gate. */
 export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
@@ -56,6 +58,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
           )}
         />
       </Stack>
+      {!isFree && <TicketDiscountStepField form={form} />}
       <PricePanel preview={preview} />
       <Box sx={{ ...SURFACE_SX, p: 2 }}>
         <TextField

@@ -24,8 +24,8 @@ type Translate = ReturnType<typeof useTranslation>['t'];
 
 /** Headings are copy, so the columns are built from the active catalogue. */
 const statsColumns = (t: Translate): DuncitColumn<LegalDocumentTypeCount>[] => [
-  { field: 'document_type', headerName: t('legal.dashboard.documentType'), flex: 1, minWidth: 220, filter: { type: 'text' } },
-  { field: 'count', headerName: t('legal.dashboard.count'), width: 110, filter: { type: 'number' } },
+  { field: 'document_type', headerName: t('legal.dashboard.documentType'), flex: 1, minWidth: 220, type: 'text' },
+  { field: 'count', headerName: t('legal.dashboard.count'), width: 110, type: 'number' },
 ];
 
 // The policy aggregate has no id either — a row IS its type.
@@ -34,8 +34,8 @@ const getPolicyStatsRowId = (r: PolicyTypeCount) => r.policy_type;
 // Same shape as the document columns, against POLICY_STATS_TABLE_CONFIG's
 // allowlist: sort policy_type/count; filter policy_type (text) + count (number).
 const policyStatsColumns = (t: Translate): DuncitColumn<PolicyTypeCount>[] => [
-  { field: 'policy_type', headerName: t('legal.dashboard.policyType'), flex: 1, minWidth: 220, filter: { type: 'text' } },
-  { field: 'count', headerName: t('legal.dashboard.totalPolicies'), width: 140, filter: { type: 'number' } },
+  { field: 'policy_type', headerName: t('legal.dashboard.policyType'), flex: 1, minWidth: 220, type: 'text' },
+  { field: 'count', headerName: t('legal.dashboard.totalPolicies'), width: 140, type: 'number' },
 ];
 
 type NavCardProps = Readonly<{

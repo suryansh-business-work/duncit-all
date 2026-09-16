@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
-import { portalNameOf, type PortalAccessRequest } from './helpers';
+import { portalNameOf, STATUS_FILTERS, type PortalAccessRequest } from './helpers';
 
 const renderRequester = (row: PortalAccessRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
@@ -70,10 +70,16 @@ export function getPortalAccessColumns({
     );
   };
 
+  const statusOptions = STATUS_FILTERS.filter((f) => f.value).map((f) => ({
+    value: f.value,
+    label: t(f.labelKey),
+  }));
+
   return [
     {
       field: 'subject_name',
       headerName: t('admin.portalAccess.colRequester'),
+      type: 'text',
       flex: 1.2,
       minWidth: 220,
       cellRenderer: renderRequester,
@@ -82,21 +88,21 @@ export function getPortalAccessColumns({
     {
       field: 'portal',
       headerName: t('admin.portalAccess.colPortal'),
-      sortable: false,
+      type: 'text',
       minWidth: 150,
       valueGetter: (row) => portalNameOf(row.target_id),
     },
     {
       field: 'created_at',
       headerName: t('admin.portalAccess.colRequestedAt'),
-      filter: { type: 'date' },
+      type: 'date',
       width: 180,
       valueGetter: (row) => (row.created_at ? formatDateTime(row.created_at) : ''),
     },
     {
       field: 'reviewed_at',
       headerName: t('admin.portalAccess.colReviewedAt'),
-      filter: { type: 'date' },
+      type: 'date',
       hide: true,
       width: 180,
       valueGetter: (row) => (row.reviewed_at ? formatDateTime(row.reviewed_at) : ''),
@@ -104,6 +110,8 @@ export function getPortalAccessColumns({
     {
       field: 'status',
       headerName: t('admin.portalAccess.colStatus'),
+      type: 'enum',
+      options: statusOptions,
       width: 120,
       cellRenderer: renderStatus,
       valueGetter: (row) => row.status,
@@ -111,7 +119,7 @@ export function getPortalAccessColumns({
     {
       field: 'actions',
       headerName: t('admin.portalAccess.colActions'),
-      sortable: false,
+      type: 'actions',
       width: 210,
       cellRenderer: renderActions,
     },

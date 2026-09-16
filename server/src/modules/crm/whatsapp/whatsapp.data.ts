@@ -8,8 +8,34 @@ import {
 import { createWaClient, type WaClient } from './whatsapp.client';
 import { whatsappService } from './whatsapp.service';
 import { normalizePhone } from './whatsapp.phone';
+import {
+  buildTableFilter,
+  combineFilters,
+  type TableEntityConfig,
+  type TableFilterInput,
+} from '@utils/table-query';
 
 const KEY = 'default';
+
+/** Column filter + sort allowlist for the WhatsApp user-leads table (search stays on name/phone). */
+const USER_LEAD_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: [],
+  sortFields: {
+    name: 'name',
+    phone: 'phone',
+    source_communities: 'source_communities.name',
+    source_groups: 'source_groups.name',
+    imported_at: 'imported_at',
+  },
+  filterFields: {
+    name: { type: 'string' },
+    phone: { type: 'string' },
+    source_communities: { path: 'source_communities.name', type: 'string' },
+    source_groups: { path: 'source_groups.name', type: 'string' },
+    imported_at: { type: 'date' },
+  },
+  defaultSort: { imported_at: -1 },
+};
 
 export interface ExtractCounts {
   total: number;
@@ -391,7 +417,7 @@ export const whatsappData = {
     return paginate(WaContactModel, { connection_key: KEY }, opts, { name: 1 });
   },
   async listUserLeads(opts?: PageOpts) {
-    return paginate(WaUserLeadModel, { connection_key: KEY }, opts, { imported_at: -1 });
+    return paginate(WaUserLeadModel, { connection_key: KEY }, opts, { imported_at: -1 }, USER_LEAD_TABLE_CONFIG);
   },
   getUserLead: (id: string) => WaUserLeadModel.findById(id).lean(),
 
@@ -491,25 +517,39 @@ export interface PageOpts {
   sort_by?: string | null;
   sort_dir?: string | null;
   community_jid?: string | null;
+  filters?: TableFilterInput[] | null;
 }
 
 const SORTABLE = new Set(['name', 'phone', 'imported_at', 'created_at', 'members_count', 'groups_count']);
 
-/** Server-side pagination + search + whitelisted sorting → { items, total }. */
+/** The sort for one page: the table's allowlisted path when it has one, else the legacy set. */
+function pageSort(
+  o: PageOpts,
+  defaultSort: Record<string, 1 | -1>,
+  table?: TableEntityConfig
+): Record<string, 1 | -1> {
+  const dir: 1 | -1 = o.sort_dir === 'asc' ? 1 : -1;
+  if (!o.sort_by) return defaultSort;
+  if (table && Object.hasOwn(table.sortFields, o.sort_by)) return { [table.sortFields[o.sort_by]]: dir };
+  return SORTABLE.has(o.sort_by) ? { [o.sort_by]: dir } : defaultSort;
+}
+
+/** Server-side pagination + search + whitelisted sorting (and column filters when `table` is given) → { items, total }. */
 async function paginate(
   Model: { find: (f: Record<string, unknown>) => any; countDocuments: (f: Record<string, unknown>) => Promise<number> },
   baseFilter: Record<string, unknown>,
   opts: PageOpts | undefined,
-  defaultSort: Record<string, 1 | -1>
+  defaultSort: Record<string, 1 | -1>,
+  table?: TableEntityConfig
 ) {
   const o = opts ?? {};
-  const filter: Record<string, unknown> = { ...baseFilter };
-  if (o.community_jid) filter.community_jid = o.community_jid;
-  if (o.search) filter.$or = [{ name: rx(o.search) }, { phone: rx(o.search) }];
+  const own: Record<string, unknown> = { ...baseFilter };
+  if (o.community_jid) own.community_jid = o.community_jid;
+  if (o.search) own.$or = [{ name: rx(o.search) }, { phone: rx(o.search) }];
+  const filter = table ? combineFilters(own, buildTableFilter({ filters: o.filters }, table)) : own;
   const page = Math.max(1, Math.trunc(o.page ?? 1));
   const pageSize = Math.min(200, Math.max(1, Math.trunc(o.page_size ?? 25)));
-  const sort: Record<string, 1 | -1> =
-    o.sort_by && SORTABLE.has(o.sort_by) ? { [o.sort_by]: o.sort_dir === 'asc' ? 1 : -1 } : defaultSort;
+  const sort = pageSort(o, defaultSort, table);
   const [items, total] = await Promise.all([
     Model.find(filter).sort(sort).skip((page - 1) * pageSize).limit(pageSize).lean(),
     Model.countDocuments(filter),

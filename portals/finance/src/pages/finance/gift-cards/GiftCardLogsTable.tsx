@@ -30,9 +30,9 @@ const typeOptions = (t: Translator['t']) => [
 ];
 
 /**
- * `sortable: false` on the user column is deliberate: it is joined after the
- * page is fetched, so it is not in the server's sort allowlist. Leaving it
- * sortable would offer a sort the engine silently drops.
+ * `sortable: false` / `filterable: false` on the user column is deliberate: it
+ * is joined after the page is fetched, so it is not in the server's allowlists.
+ * Leaving it on would offer a sort or filter the engine silently drops.
  */
 const buildColumns = (
   t: Translator['t'],
@@ -62,13 +62,16 @@ const buildColumns = (
       field: 'code',
       headerName: t('finance.giftCards.colCode'),
       minWidth: 180,
+      type: 'text',
       cellRenderer: (row) => renderCode(row.code),
       valueGetter: (row) => row.code,
     },
     {
       field: 'user_name',
       headerName: t('finance.giftCards.colUser'),
+      type: 'text',
       sortable: false,
+      filterable: false,
       flex: 1,
       minWidth: 190,
       cellRenderer: (row) => renderPerson(row.user_name, row.user_email),
@@ -78,7 +81,8 @@ const buildColumns = (
       field: 'type',
       headerName: t('finance.giftCards.colType'),
       minWidth: 130,
-      filter: { type: 'select', options: typeOptions(t) },
+      type: 'enum',
+      options: typeOptions(t),
       cellRenderer: renderType,
       valueGetter: (row) => row.type,
     },
@@ -86,13 +90,14 @@ const buildColumns = (
       field: 'amount',
       headerName: t('finance.giftCards.colAmount'),
       minWidth: 120,
-      filter: { type: 'number' },
+      type: 'number',
       valueGetter: (row) => formatMoney(row.amount, { symbol }),
     },
     {
       field: 'balance_after',
       headerName: t('finance.giftCards.colBalanceAfter'),
       minWidth: 140,
+      type: 'number',
       valueGetter: (row) => formatMoney(row.balance_after, { symbol }),
     },
     {
@@ -101,13 +106,13 @@ const buildColumns = (
       field: 'source',
       headerName: t('finance.giftCards.colSource'),
       minWidth: 170,
-      filter: { type: 'text' },
+      type: 'text',
       valueGetter: (row) => row.source,
     },
     {
       field: 'payment_id',
       headerName: t('finance.giftCards.colPayment'),
-      sortable: false,
+      type: 'text',
       minWidth: 160,
       valueGetter: (row) => row.payment_id ?? EM_DASH,
     },

@@ -63,8 +63,11 @@ const RUN_TABLE_CONFIG: TableEntityConfig = {
     finished_at: 'finished_at',
   },
   filterFields: {
+    run_id: { type: 'string' },
     status: { type: 'enum' },
     trigger: { type: 'enum' },
+    eligible: { type: 'number' },
+    purged: { type: 'number' },
     started_at: { type: 'date' },
   },
   // Most recent first: the question asked of this table is "did last night run".

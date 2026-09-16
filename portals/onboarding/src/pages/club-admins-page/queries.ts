@@ -23,11 +23,9 @@ export interface ClubAdminRow {
   request_no?: string | null;
 }
 
-/** Status options for the table's select filter. */
-export const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-];
+/** Status options for the table's status filter — the stored statuses the server
+ * matches on (the chip's Active/Inactive is derived from status + is_active). */
+export const STATUS_OPTIONS = ['DRAFT', 'APPROVED', 'REJECTED'].map((s) => ({ value: s, label: s }));
 
 const ROW_FIELDS = gql`
   fragment ClubAdminRowFields on ClubAdminProfile {

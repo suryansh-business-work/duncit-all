@@ -89,24 +89,29 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
       </Stack>
     );
     return [
-      { field: 'name', headerName: t('tech.common.portal'), flex: 1, minWidth: 200, cellRenderer: renderPortal, valueGetter: portalValue },
+      { field: 'name', headerName: t('tech.common.portal'), flex: 1, minWidth: 200, type: 'text', cellRenderer: renderPortal, valueGetter: portalValue },
       {
         field: 'kind',
         headerName: t('shell.common.type'),
         width: 130,
-        filter: { type: 'select', options: kindOptions(t) },
+        type: 'enum',
+        options: kindOptions(t),
         cellRenderer: renderKind,
         valueGetter: kindLabel,
       },
       {
         field: 'configs',
         headerName: t('tech.environment.assignedConfigs'),
+        type: 'number',
+        // A count of env entries (another collection) joined per page in the
+        // client — the portal query has no stored value to order or match on.
         sortable: false,
+        filterable: false,
         width: 150,
         cellRenderer: renderConfigs,
         valueGetter: configsValue,
       },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
     ];
   }, [onAssign, onInfo]);
 

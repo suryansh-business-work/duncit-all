@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { DuncitTable, EM_DASH, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, EM_DASH, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import SectionBlock from './SectionBlock';
 import { useTableRefresh } from './useTableRefresh';
-import { money, staticTableFetch, type PaymentProductOrderLine } from './queries';
+import { money, type PaymentProductOrderLine } from './queries';
 
 const getOrderRowId = (order: PaymentProductOrderLine) => order.id;
 
@@ -12,21 +12,21 @@ const orderSearchText = (order: PaymentProductOrderLine) =>
 
 function buildColumns(currencySymbol: string, t: Translator['t']): DuncitColumn<PaymentProductOrderLine>[] {
   return [
-    { field: 'order_no', headerName: t('finance.payment.orderNo'), sortable: false, flex: 1, minWidth: 150 },
-    { field: 'fulfilment_method', headerName: t('finance.payment.orderMethod'), sortable: false, width: 130 },
-    { field: 'fulfilment_status', headerName: t('finance.payment.orderStatus'), sortable: false, width: 150 },
-    { field: 'item_count', headerName: t('finance.payment.orderItems'), sortable: false, width: 90 },
+    { field: 'order_no', headerName: t('finance.payment.orderNo'), type: 'text', flex: 1, minWidth: 150 },
+    { field: 'fulfilment_method', headerName: t('finance.payment.orderMethod'), type: 'text', width: 130 },
+    { field: 'fulfilment_status', headerName: t('finance.payment.orderStatus'), type: 'text', width: 150 },
+    { field: 'item_count', headerName: t('finance.payment.orderItems'), type: 'number', width: 90 },
     {
       field: 'total',
       headerName: t('finance.payment.orderTotal'),
-      sortable: false,
+      type: 'number',
       width: 110,
       valueGetter: (order) => money(currencySymbol, order.total),
     },
     {
       field: 'awb',
       headerName: t('finance.payment.orderAwb'),
-      sortable: false,
+      type: 'text',
       flex: 1,
       minWidth: 140,
       valueGetter: (order) => order.awb ?? EM_DASH,
@@ -42,8 +42,11 @@ interface Props {
 /** The product orders this payment produced — one per shipment/pickup group. */
 export default function ProductOrdersTable({ orders, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
-  const fetchRows = useMemo(() => staticTableFetch(orders, orderSearchText), [orders]);
   const columns = useMemo(() => buildColumns(currencySymbol, t), [currencySymbol, t]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(orders, orderSearchText, columns),
+    [orders, columns],
+  );
   // A shipment retry writes the AWB onto these rows — see useTableRefresh.
   const refetchRef = useTableRefresh(orders);
 

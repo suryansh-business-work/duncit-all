@@ -7,7 +7,7 @@ import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { DuncitButton } from '@duncit/buttons';
-import type { TableQueryState } from '@duncit/table';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import {
   WA_EXPORT_USER_LEADS,
   WA_IMPORT_USER_LEADS,
@@ -51,7 +51,7 @@ export default function UserLeadsPage() {
       const { data } = await client.query<any>({
         query: WA_USER_LEADS,
         variables: {
-          input: { search: q.search || null, page: q.page, page_size: q.pageSize, sort_by: q.sortBy, sort_dir: q.sortDir },
+          input: { search: q.search || null, page: q.page, page_size: q.pageSize, sort_by: q.sortBy, sort_dir: q.sortDir, filters: tableQueryToGql(q).query.filters },
         },
         fetchPolicy: 'network-only',
       });

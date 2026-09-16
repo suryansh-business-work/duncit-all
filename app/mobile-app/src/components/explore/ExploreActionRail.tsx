@@ -20,6 +20,8 @@ export interface ExploreRailAction {
   onPress: () => void;
   active?: boolean;
   loading?: boolean;
+  /** Looks unavailable but still takes the press (which explains why). */
+  dimmed?: boolean;
   testID?: string;
   onLabelPress?: () => void;
 }
@@ -52,6 +54,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
           caption={action.caption}
           active={action.active}
           loading={action.loading}
+          dimmed={action.dimmed}
           onPress={action.onPress}
           onLabelPress={action.onLabelPress}
         />

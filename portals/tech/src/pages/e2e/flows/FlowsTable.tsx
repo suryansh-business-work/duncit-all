@@ -35,6 +35,7 @@ export default function FlowsTable({
         headerName: t('shell.common.name'),
         flex: 1,
         minWidth: 260,
+        type: 'text',
         cellRenderer: renderNameCell,
         valueGetter: (row) => row.name,
       },
@@ -42,7 +43,11 @@ export default function FlowsTable({
         field: 'sub_flow_count',
         headerName: t('tech.e2eFlows.colSubFlows'),
         width: 120,
+        type: 'number',
+        // The length of the embedded sub_flows array, computed per row at read
+        // time — a Mongo find() can neither order nor range-match on it.
         sortable: false,
+        filterable: false,
         valueGetter: (row) => String(row.sub_flow_count),
       },
       {
@@ -51,7 +56,9 @@ export default function FlowsTable({
         field: 'looks_good_count',
         headerName: t('tech.e2eFlows.colLooksGood'),
         width: 130,
+        type: 'number',
         sortable: false,
+        filterable: false,
         valueGetter: (row) => `${row.looks_good_count} / ${row.sub_flow_count}`,
       },
       dateColumn<E2eFlowRow>({

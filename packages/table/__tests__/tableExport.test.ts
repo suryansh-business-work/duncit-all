@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TableQueryState } from '../src/types';
 
 const { downloadTextFile } = vi.hoisted(() => ({ downloadTextFile: vi.fn() }));
 vi.mock('@duncit/utils', () => ({ downloadTextFile }));
@@ -10,12 +11,12 @@ type Columns = Parameters<typeof rowsToCsv<Payout>>[1];
 type Payout = { id: string; host: string; amount: number; meta?: unknown; paid_at?: Date | null };
 
 const columns: Columns = [
-  { field: 'id', headerName: 'Payout' },
-  { field: 'host', headerName: 'Host, name' },
-  { field: 'amount', headerName: 'Amount', valueGetter: (row) => `INR ${row.amount}` },
-  { field: 'meta', headerKey: 'shell.table.download' },
-  { field: 'paid_at', headerName: 'Paid' },
-  { field: 'secret', headerName: 'Hidden', hide: true },
+  { field: 'id', headerName: 'Payout', type: 'text' },
+  { field: 'host', headerName: 'Host, name', type: 'text' },
+  { field: 'amount', headerName: 'Amount', type: 'number', valueGetter: (row) => `INR ${row.amount}` },
+  { field: 'meta', headerKey: 'shell.table.download', type: 'text' },
+  { field: 'paid_at', headerName: 'Paid', type: 'date' },
+  { field: 'secret', headerName: 'Hidden', type: 'text', hide: true },
 ];
 
 const QUERY = { search: '', page: 3, pageSize: 25, sortBy: null, sortDir: 'asc' as const, filters: [] };
@@ -26,7 +27,7 @@ beforeEach(() => {
 
 describe('fetchAllRows', () => {
   it('walks every page at the server ceiling and stops at the total', async () => {
-    const fetchRows = vi.fn(async (q: typeof QUERY) => ({
+    const fetchRows = vi.fn(async (q: TableQueryState) => ({
       rows: Array.from({ length: q.page === 3 ? 5 : 100 }, (_, i) => ({ id: `${q.page}-${i}` })),
       total: 205,
     }));
@@ -64,8 +65,8 @@ describe('rowsToCsv', () => {
 
   it('writes numbers and booleans as they are', () => {
     const csv = rowsToCsv([{ n: -5, ok: true }], [
-      { field: 'n', headerName: 'N' },
-      { field: 'ok', headerName: 'OK' },
+      { field: 'n', headerName: 'N', type: 'number' },
+      { field: 'ok', headerName: 'OK', type: 'boolean' },
     ], {}, fallbackT);
     expect(csv.slice(1).split('\r\n')[1]).toBe('-5,true');
   });

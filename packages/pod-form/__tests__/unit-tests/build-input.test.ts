@@ -200,6 +200,44 @@ describe('buildPodInput', () => {
     expect(input.is_active).toBe(false);
     expect('venue_slot_id' in input).toBe(false);
   });
+
+  it('sends the multi-ticket tiers of a priced pod as numbers', () => {
+    const input = buildPodInput(
+      baseValues({
+        pod_type: 'NATIVE_PAID',
+        pod_amount: 499,
+        media_text: '',
+        ticket_discount_enabled: true,
+        ticket_discount_tiers: [
+          { min_tickets: '2' as unknown as number, discount_pct: 10 },
+          { min_tickets: 4, discount_pct: '20' as unknown as number },
+        ],
+      }),
+      { config: makeConfig() },
+    );
+    expect(input.ticket_discount_enabled).toBe(true);
+    expect(input.ticket_discount_tiers).toEqual([
+      { min_tickets: 2, discount_pct: 10 },
+      { min_tickets: 4, discount_pct: 20 },
+    ]);
+  });
+
+  // The section is hidden on a free pod, but the switch it left behind is not
+  // what the server gets: a free pod always sends the discount cleared.
+  it('sends the discount cleared on a free pod, whatever the hidden switch holds', () => {
+    const input = buildPodInput(
+      baseValues({
+        pod_type: 'NATIVE_FREE',
+        pod_amount: 0,
+        media_text: '',
+        ticket_discount_enabled: true,
+        ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
+      }),
+      { config: makeConfig() },
+    );
+    expect(input.ticket_discount_enabled).toBe(false);
+    expect(input.ticket_discount_tiers).toEqual([]);
+  });
 });
 
 describe('podToFormValues', () => {
@@ -213,6 +251,19 @@ describe('podToFormValues', () => {
     expect(values.media_text).toBe('');
     expect(values.is_active).toBe(true);
     expect(values.products_enabled).toBe(false);
+    expect(values.ticket_discount_enabled).toBe(false);
+    expect(values.ticket_discount_tiers).toEqual([]);
+  });
+
+  it('hydrates the stored multi-ticket tiers as plain numbers, without Apollo typenames', () => {
+    const values = podToFormValues({
+      pod_type: 'NATIVE_PAID',
+      pod_amount: 499,
+      ticket_discount_enabled: true,
+      ticket_discount_tiers: [{ __typename: 'TicketDiscountTier', min_tickets: '3', discount_pct: 15 }],
+    });
+    expect(values.ticket_discount_enabled).toBe(true);
+    expect(values.ticket_discount_tiers).toEqual([{ min_tickets: 3, discount_pct: 15 }]);
   });
 
   it('hydrates a full physical pod', () => {

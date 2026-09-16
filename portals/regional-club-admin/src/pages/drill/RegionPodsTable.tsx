@@ -75,6 +75,7 @@ export default function RegionPodsTable({
       {
         field: 'pod_title',
         headerName: t('partners.regional.pod'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         cellRenderer: renderPod,
@@ -89,29 +90,33 @@ export default function RegionPodsTable({
       {
         field: 'club_name',
         headerName: t('partners.regional.club'),
-        minWidth: 150,
+        type: 'text',
+        // Joined from the clubs collection after the pod page is read — no pod field to order or match on.
         sortable: false,
+        filterable: false,
+        minWidth: 150,
         valueGetter: (row) => row.club_name,
       },
       {
         field: 'pod_amount',
         headerName: t('partners.regional.price'),
+        type: 'number',
         width: 110,
-        filter: { type: 'number' },
         valueGetter: (row) =>
           formatMoney(row.pod_amount, { symbol: currency, decimals: 2, grouping: false }),
       },
       {
         field: 'no_of_spots',
         headerName: t('partners.regional.spots'),
+        type: 'number',
         width: 100,
         valueGetter: (row) => row.no_of_spots,
       },
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
+        type: 'boolean',
         width: 120,
-        sortable: false,
         cellRenderer: renderActive,
         valueGetter: (row) => (row.is_active ? 1 : 0),
       },

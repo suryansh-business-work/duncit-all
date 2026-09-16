@@ -9,17 +9,44 @@
  * service maps `docs` through its own mapper before returning.
  */
 
+import {
+  buildTableFilter,
+  combineFilters,
+  type TableFieldConfig,
+  type TableFilterInput,
+} from '@utils/table-query';
+
 export interface SupportPageOpts {
   search?: string | null;
   page?: number | null;
   page_size?: number | null;
   sort_by?: string | null;
   sort_dir?: string | null;
+  /** The table's column filters — dropped unless the list allowlists the field. */
+  filters?: TableFilterInput[] | null;
 }
 
 /** Case-insensitive regex with the user input escaped (no ReDoS / injection).
  * Single implementation lives in the shared table-query engine. */
 export { escapedSearchRegex as supportSearchRegex } from '@utils/table-query';
+
+/**
+ * The list's own filter AND the column filters its table sent, each one
+ * allowlisted by `filterFields` and coerced by the shared table engine — so a
+ * list keeps its dedicated args (status, search) and still answers every
+ * column the agent can filter on.
+ */
+export function withColumnFilters(
+  base: Record<string, unknown>,
+  opts: SupportPageOpts | undefined,
+  filterFields: Record<string, TableFieldConfig>
+): Record<string, unknown> {
+  const built = buildTableFilter(
+    { filters: opts?.filters },
+    { searchFields: [], sortFields: {}, filterFields, defaultSort: {} }
+  );
+  return combineFilters(base, built);
+}
 
 interface PaginableModel {
   find: (filter: Record<string, unknown>) => any;

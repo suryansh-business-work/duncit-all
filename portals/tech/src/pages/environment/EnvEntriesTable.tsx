@@ -98,36 +98,36 @@ export default function EnvEntriesTable({
       </Stack>
     );
     return [
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 200, cellRenderer: renderName, valueGetter: nameValue },
+      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 200, type: 'text', cellRenderer: renderName, valueGetter: nameValue },
       {
         field: 'is_active',
         headerName: t('shell.common.status'),
         width: 150,
-        filter: { type: 'boolean' },
+        type: 'boolean',
         cellRenderer: (e: EnvEntry) => renderStatus(e, t),
         valueGetter: statusValue,
       },
-      { field: 'is_default', headerName: t('tech.environment.default'), hide: true, width: 100, filter: { type: 'boolean' } },
+      { field: 'is_default', headerName: t('tech.environment.default'), hide: true, width: 100, type: 'boolean' },
       {
         field: 'last_tested_at',
         headerName: t('tech.environment.lastTested'),
         width: 120,
+        type: 'date',
         cellRenderer: renderLastTested,
         valueGetter: lastTestedValue,
       },
-      { field: 'last_test_ok', headerName: t('tech.environment.testResult'), hide: true, width: 110, filter: { type: 'boolean' } },
+      { field: 'last_test_ok', headerName: t('tech.environment.testResult'), hide: true, width: 110, type: 'boolean' },
       {
         field: 'assigned_portals',
         headerName: t('tech.environment.assignedPortals'),
-        sortable: false,
-        filter: { type: 'text' },
+        type: 'text',
         flex: 1,
         minWidth: 160,
         cellRenderer: renderPortals,
         valueGetter: portalsValue,
       },
-      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 130, filter: { type: 'date' } },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 130, type: 'date' },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
     ];
   }, [onDelete, onEdit, onSetDefault, onTest]);
 

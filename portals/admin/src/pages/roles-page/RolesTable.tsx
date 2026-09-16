@@ -69,12 +69,15 @@ export default function RolesTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<RoleRow>[]>(() => {
     return [
-      { field: 'key', headerName: t('admin.roles.key'), minWidth: 180, cellRenderer: renderKey, valueGetter: (r) => r.key },
-      { field: 'name', headerName: t('shell.common.name'), flex: 1, minWidth: 160 },
+      { field: 'key', headerName: t('admin.roles.key'), type: 'text', minWidth: 180, cellRenderer: renderKey, valueGetter: (r) => r.key },
+      { field: 'name', headerName: t('shell.common.name'), type: 'text', flex: 1, minWidth: 160 },
       {
         field: 'portal',
         headerName: t('admin.roles.portal'),
+        type: 'text',
+        // Resolved in the client from the role key (portalForRole) — no stored field to order or match on.
         sortable: false,
+        filterable: false,
         minWidth: 160,
         cellRenderer: renderPortal,
         valueGetter: portalValue,
@@ -82,6 +85,7 @@ export default function RolesTable({
       {
         field: 'description',
         headerName: t('shell.common.description'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         valueGetter: (r) => r.description || '—',
@@ -89,7 +93,7 @@ export default function RolesTable({
       {
         field: 'is_system',
         headerName: t('admin.roles.type'),
-        filter: { type: 'boolean' },
+        type: 'boolean',
         width: 110,
         cellRenderer: (row: RoleRow) => renderType(row, t),
         valueGetter: (r) => (r.is_system ? 'System' : 'Custom'),

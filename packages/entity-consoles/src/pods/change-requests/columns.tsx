@@ -151,22 +151,28 @@ export function buildChangeRequestColumns(
     {
       field: 'change_request_no',
       headerName: t('admin.changeRequests.colRequestId'),
+      type: 'text',
       width: 170,
-      filter: { type: 'text' },
     },
     {
       field: 'pod',
       headerName: t('admin.changeRequests.colPod'),
-      width: 240,
+      type: 'text',
+      // Joined onto each row from the pods collection after the page is read — the request stores only the pod id.
       sortable: false,
+      filterable: false,
+      width: 240,
       valueGetter: (row) => `${row.pod.pod_title} ${row.pod_cancelled ? '(cancelled)' : ''}`.trim(),
       cellRenderer: (row) => <PodCell row={row} t={t} />,
     },
     {
       field: 'requested_by',
       headerName: t('admin.changeRequests.colRequestedBy'),
-      width: 260,
+      type: 'text',
+      // Joined onto each row from the users collection — the request stores only the requester's id.
       sortable: false,
+      filterable: false,
+      width: 260,
       valueGetter: (row) =>
         [row.requested_by.full_name, row.requested_by.phone, row.requested_by.email]
           .filter(Boolean)
@@ -176,21 +182,26 @@ export function buildChangeRequestColumns(
     {
       field: 'created_at',
       headerName: t('admin.changeRequests.colRequestedAt'),
+      type: 'date',
       width: 180,
       valueGetter: (row) => formatDateCell(row.created_at),
     },
     {
       field: 'attendees',
       headerName: t('admin.changeRequests.colAttendees'),
-      width: 120,
+      type: 'number',
+      // Counted per row from the pod's members at read time — not a stored field.
       sortable: false,
+      filterable: false,
+      width: 120,
       valueGetter: (row) => row.pod.attendee_count,
     },
     {
       field: 'status',
       headerName: t('admin.changeRequests.colStatus'),
+      type: 'enum',
+      options: statusOptions(t),
       width: 210,
-      filter: { type: 'select', options: statusOptions(t) },
       valueGetter: (row) => t(changeRequestStatusKey(row)),
       cellRenderer: (row) => (
         <Chip
@@ -204,8 +215,8 @@ export function buildChangeRequestColumns(
     {
       field: 'actions',
       headerName: t('shell.common.actions'),
+      type: 'actions',
       width: 130,
-      sortable: false,
       // Keyed on the state BOTH buttons read, so the cell repaints the moment
       // an offer lands or the pod is cancelled.
       valueGetter: (row) => `${row.status}:${row.pod_cancelled}`,

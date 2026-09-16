@@ -18,6 +18,7 @@ import {
   type Contract,
   type ContractStatus,
 } from '../../graphql/contracts';
+import { signingStatusOptions } from '../../components/signing';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -142,9 +143,7 @@ export default function ContractsTable({
       </>
     );
 
-    // Only server-allowlisted fields are sortable/filterable
-    // (CONTRACT_TABLE_CONFIG): sort contract_no/title/status/counterparty/
-    // created_at/updated_at; filter the same as text, status as a select.
+    // Keys allowlisted on the server (CONTRACT_TABLE_CONFIG); signing_status via liftSigningStatusFilter.
     return [
       entityIdColumn<Contract>({ field: 'contract_no', headerName: t('legal.contracts.colId') }),
       {
@@ -152,27 +151,28 @@ export default function ContractsTable({
         headerName: t('shell.common.title'),
         flex: 1,
         minWidth: 220,
-        filter: { type: 'text' },
+        type: 'text',
         cellRenderer: renderTitle,
       },
       {
         field: 'status',
         headerName: t('shell.common.status'),
         width: 130,
-        filter: { type: 'select', options: CONTRACT_STATUS_OPTIONS },
+        type: 'enum',
+        options: CONTRACT_STATUS_OPTIONS,
         cellRenderer: renderStatus,
         valueGetter: (c) => contractStatusLabel(c.status),
       },
-      // Derived from signed_at, so it is not in the server's sort allowlist.
       {
         field: 'signing_status',
         headerName: t('legal.contracts.colSigning'),
         width: 120,
-        sortable: false,
+        type: 'enum',
+        options: signingStatusOptions(t),
         cellRenderer: renderSigning,
         valueGetter: signedLabel,
       },
-      { field: 'counterparty', headerName: t('legal.contracts.colCounterparty'), minWidth: 180, filter: { type: 'text' } },
+      { field: 'counterparty', headerName: t('legal.contracts.colCounterparty'), minWidth: 180, type: 'text' },
       dateColumn<Contract>({
         field: 'updated_at',
         headerName: t('legal.contracts.colLastUpdated'),
@@ -186,7 +186,7 @@ export default function ContractsTable({
         minWidth: 180,
         formatDate: formatDateTime,
       }),
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 180, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 180, cellRenderer: renderActions },
     ];
   }, [formatDateTime, onView, onEdit, onArchive, onSign, t]);
 

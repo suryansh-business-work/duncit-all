@@ -16,6 +16,10 @@ export interface LocationLike {
     | { zone_name: string; pincode?: string | null; active_club_count?: number | null }[]
     | null;
   active_club_count?: number | null;
+  /** False for a city an admin has added but not launched — its tile counts the waitlist. */
+  is_launched?: boolean | null;
+  /** How many people have added their names for the city's launch. */
+  subscriber_count?: number | null;
 }
 
 /** Subtitle for a city in the location picker: "128 Clubs" / "1 Club", or

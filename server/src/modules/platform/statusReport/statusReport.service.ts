@@ -81,6 +81,8 @@ const STATUS_REPORT_TABLE_CONFIG: TableEntityConfig = {
     status: 'status',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    service_url: 'service_url',
+    message: 'message',
   },
   filterFields: {
     status: { type: 'enum' },
@@ -89,6 +91,10 @@ const STATUS_REPORT_TABLE_CONFIG: TableEntityConfig = {
     service_key: { type: 'string' },
     email: { type: 'string' },
     created_at: { type: 'date' },
+    service_name: { type: 'string' },
+    service_url: { type: 'string' },
+    name: { type: 'string' },
+    message: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };

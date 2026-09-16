@@ -84,8 +84,8 @@ describe('getApprovalColumns / column set', () => {
     expect(hidden).toEqual(['type', 'reviewed_at']);
   });
 
-  it('marks the actions column unsortable', () => {
-    expect(columnBy('actions').sortable).toBe(false);
+  it('types the actions column so it never sorts or filters', () => {
+    expect(columnBy('actions').type).toBe('actions');
   });
 });
 

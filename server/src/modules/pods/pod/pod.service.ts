@@ -6,6 +6,12 @@ import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from '
 import { podLifecycleFilter, type PodLifecycle } from './pod.lifecycle';
 import { podRowStatusFilter, type PodRowStatus } from './pod.rowStatus';
 import { PodModel, type PodMode, type PodType } from './pod.model';
+import {
+  assertTicketDiscountTiers,
+  sameTicketDiscountTiers,
+  ticketDiscountMaxTickets,
+  type TicketDiscountTier,
+} from './pod.ticketDiscount';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
@@ -134,6 +140,9 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       type: m.type ?? 'IMAGE',
     })),
     reel_url: d.reel_url ?? null,
+    // Carried raw for the `Pod.reel_has_audio` field resolver, which probes a
+    // reel this stored answer does not cover yet.
+    reel_audio: d.reel_audio ?? null,
     pod_hits: d.pod_hits ?? 0,
     pod_attendees: (d.pod_attendees ?? []).map(String),
     seats_taken: podSeatsTaken(d),
@@ -167,6 +176,11 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       total_cost: item.total_cost ?? 0,
     })),
     product_cost_total: d.product_cost_total ?? 0,
+    ticket_discount_enabled: !!d.ticket_discount_enabled,
+    ticket_discount_tiers: (d.ticket_discount_tiers ?? []).map((tier: any) => ({
+      min_tickets: tier.min_tickets,
+      discount_pct: tier.discount_pct,
+    })),
     is_active: !!d.is_active,
     is_deleted: !!d.deleted_at,
     deleted_at: d.deleted_at?.toISOString?.() ?? null,
@@ -209,8 +223,16 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
     pod_mode: 'pod_mode',
     pod_type: 'pod_type',
     venue_approval_status: 'venue_approval_status',
+    // Admin > Pods: the cover thumbnail and the products summary.
+    cover: 'pod_images_and_videos.url',
+    products: 'product_requests.product_name',
   },
   filterFields: {
+    pod_title: { type: 'string' },
+    cover: { path: 'pod_images_and_videos.url', type: 'string' },
+    products: { path: 'product_requests.product_name', type: 'string' },
+    no_of_spots: { type: 'number' },
+    pod_hits: { type: 'number' },
     club_id: { type: 'string' },
     venue_id: { type: 'string' },
     location_id: { type: 'string' },
@@ -1783,6 +1805,80 @@ async function applyProductsForUpdate(doc: any, input: any) {
   doc.product_cost_total = nextRequests.reduce((sum, item) => sum + item.total_cost, 0);
 }
 
+type PodTicketDiscountFields = {
+  ticket_discount_enabled: boolean;
+  ticket_discount_tiers: TicketDiscountTier[];
+};
+
+/** A free or zero-priced pod has no ticket money for a multi-ticket discount to come off. */
+function podHasTicketPrice(type: PodType, amount: number | null | undefined): boolean {
+  return type !== 'FREE' && (amount ?? 0) > 0;
+}
+
+/**
+ * The multi-ticket discount a new pod is written with: switched off (no tiers)
+ * on a free or zero-priced pod or when not asked for, otherwise the tiers
+ * validated against the pod's spots and Admin > Pod Settings' max discount.
+ */
+async function ticketDiscountForCreate(input: any): Promise<PodTicketDiscountFields> {
+  if (!input.ticket_discount_enabled || !podHasTicketPrice(input.pod_type, input.pod_amount)) {
+    return { ticket_discount_enabled: false, ticket_discount_tiers: [] };
+  }
+  const tiers = assertTicketDiscountTiers(input.ticket_discount_tiers ?? [], {
+    maxPct: await settingsService.getTicketDiscountMaxPct(),
+    noOfSpots: input.no_of_spots ?? 0,
+  });
+  return { ticket_discount_enabled: true, ticket_discount_tiers: tiers };
+}
+
+/** Untouched stored tiers still have to be reachable by one booking once the
+ * pod is resized — a pod cannot shrink below a tier it advertises. */
+function assertStoredTiersFitSpots(stored: TicketDiscountTier[], noOfSpots: number) {
+  const maxTickets = ticketDiscountMaxTickets(noOfSpots);
+  if (stored.some((tier) => tier.min_tickets > maxTickets)) {
+    throw new GraphQLError('Lower the multi-ticket discount tiers first', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+/**
+ * Re-applies the multi-ticket discount after an edit has written the pod's
+ * type, price and spots onto `doc`, so it is judged on what will be saved.
+ *
+ * - Neither the discount nor type/price/spots in the input: nothing to do.
+ * - Switched off, or the pod is now free / zero-priced: cleared.
+ * - Tiers that differ from the stored ones (or a discount being switched on):
+ *   full validation, including the admin's current max discount.
+ * - Stored tiers left as they are: only re-checked against a resized pod. The
+ *   max discount is NOT re-checked, so lowering it in Pod Settings never
+ *   blocks an unrelated edit to a pod that already carries a bigger tier.
+ */
+async function applyTicketDiscountForUpdate(doc: any, input: any) {
+  const discountTouched =
+    input.ticket_discount_enabled !== undefined || input.ticket_discount_tiers !== undefined;
+  const priceTouched =
+    input.pod_type !== undefined || input.pod_amount !== undefined || input.no_of_spots !== undefined;
+  if (!discountTouched && !priceTouched) return;
+  const enabled = input.ticket_discount_enabled ?? doc.ticket_discount_enabled;
+  if (!enabled || !podHasTicketPrice(doc.pod_type, doc.pod_amount)) {
+    doc.ticket_discount_enabled = false;
+    doc.ticket_discount_tiers = [];
+    return;
+  }
+  const stored: TicketDiscountTier[] = doc.ticket_discount_tiers ?? [];
+  const next: TicketDiscountTier[] = input.ticket_discount_tiers ?? stored;
+  if (doc.ticket_discount_enabled && sameTicketDiscountTiers(next, stored)) {
+    if (input.no_of_spots !== undefined) assertStoredTiersFitSpots(stored, doc.no_of_spots ?? 0);
+    return;
+  }
+  doc.ticket_discount_tiers = assertTicketDiscountTiers(next, {
+    maxPct: await settingsService.getTicketDiscountMaxPct(),
+    noOfSpots: doc.no_of_spots ?? 0,
+  });
+  doc.ticket_discount_enabled = true;
+}
+
 /** Meeting details are normalized on a virtual pod and cleared on a physical one. */
 function applyMeetingFieldsForUpdate(doc: any, input: any, nextMode: PodMode) {
   if (nextMode === 'VIRTUAL') {
@@ -1869,6 +1965,8 @@ async function applyPodEditCore(doc: any, input: any) {
   for (const f of fields) {
     if (input[f] !== undefined) doc[f] = input[f];
   }
+  // After the loop: the discount is judged on the type, price and spots it wrote.
+  await applyTicketDiscountForUpdate(doc, input);
   applyMeetingFieldsForUpdate(doc, input, nextMode);
   applyDatesForUpdate(doc, input);
 }
@@ -2285,6 +2383,7 @@ export const podService = {
     const podMode = normalizePodMode(input.pod_mode);
     assertWritablePodType(input.pod_type, podMode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
+    const ticketDiscount = await ticketDiscountForCreate(input);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
       input,
@@ -2373,6 +2472,7 @@ export const podService = {
         products_enabled: !!input.products_enabled,
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
+        ...ticketDiscount,
         // A pod awaiting the venue's slot approval stays offline until approved.
         is_active: needsVenueApproval ? false : input.is_active ?? true,
         venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
@@ -2614,6 +2714,9 @@ export const podService = {
       await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: false });
       doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
     }
+    // The host may set or change the multi-ticket discount on a live pod; it is
+    // judged on the spots just applied above.
+    await applyTicketDiscountForUpdate(doc, input);
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
 

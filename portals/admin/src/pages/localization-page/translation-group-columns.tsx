@@ -41,7 +41,7 @@ export function getTranslationGroupColumns(
   const localeColumns: DuncitColumn<TranslationGroupRow>[] = locales.map((locale) => ({
     field: `translated_${locale.code}`,
     headerName: locale.label || locale.code,
-    sortable: false,
+    type: 'number',
     cellRenderer: (row: TranslationGroupRow) => (
       <Completeness translated={translatedFor(row, locale.code)} total={row.key_count} />
     ),
@@ -51,14 +51,14 @@ export function getTranslationGroupColumns(
     {
       field: 'surface',
       headerName: t('admin.roles.portal'),
-      sortable: true,
+      type: 'text',
       cellRenderer: (row: TranslationGroupRow) =>
         row.surface ? <Chip size="small" label={row.surface} /> : '—',
     },
     {
       field: 'page',
       headerName: t('admin.activity.page'),
-      sortable: true,
+      type: 'text',
       cellRenderer: (row: TranslationGroupRow) => (
         <Stack spacing={0.25}>
           <Typography variant="body2" sx={{
@@ -77,7 +77,7 @@ export function getTranslationGroupColumns(
     {
       field: 'key_count',
       headerName: t('admin.localization.colKeys'),
-      sortable: true,
+      type: 'number',
     },
     ...localeColumns,
   ];

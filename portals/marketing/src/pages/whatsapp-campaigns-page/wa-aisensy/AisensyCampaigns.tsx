@@ -92,7 +92,10 @@ export default function AisensyCampaigns({
     [t, onSend, onTest, onOpenLogs]
   );
 
-  const fetchRows = useMemo(() => clientTableFetch(rows, campaignSearchText), [rows]);
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, campaignSearchText, columns),
+    [rows, columns]
+  );
 
   // The table re-reads only when its own query changes, so a fresh AiSensy
   // answer has to ask for the re-read — otherwise it keeps showing the list it

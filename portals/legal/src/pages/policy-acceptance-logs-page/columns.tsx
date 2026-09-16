@@ -7,6 +7,7 @@ import {
 } from '@duncit/app-settings';
 import {
   POLICY_ACCEPTANCE_METHODS,
+  POLICY_ACCEPTANCE_SURFACES,
   type PolicyAcceptance,
 } from '../../graphql/policyAcceptance';
 
@@ -65,7 +66,10 @@ export function getPolicyAcceptanceColumns(
     {
       field: 'user_name',
       headerName: t('legalAcceptanceLogs.colUser'),
+      type: 'text',
+      // Joined after the page is fetched — nothing stored to order or match on.
       sortable: false,
+      filterable: false,
       minWidth: 170,
       cellRenderer: renderPerson,
       valueGetter: (row) => row.user_name || EM_DASH,
@@ -73,7 +77,10 @@ export function getPolicyAcceptanceColumns(
     {
       field: 'user_email',
       headerName: t('legalAcceptanceLogs.colEmail'),
+      type: 'text',
+      // Joined after the page is fetched — nothing stored to order or match on.
       sortable: false,
+      filterable: false,
       minWidth: 220,
       valueGetter: (row) => row.user_email || EM_DASH,
     },
@@ -82,7 +89,7 @@ export function getPolicyAcceptanceColumns(
       headerName: t('legalAcceptanceLogs.colPolicy'),
       flex: 1,
       minWidth: 200,
-      filter: { type: 'text' },
+      type: 'text',
       cellRenderer: renderPolicy,
       valueGetter: (row) => row.policy_title,
     },
@@ -94,10 +101,8 @@ export function getPolicyAcceptanceColumns(
       field: 'method',
       headerName: t('legalAcceptanceLogs.colMethod'),
       minWidth: 160,
-      filter: {
-        type: 'select',
-        options: POLICY_ACCEPTANCE_METHODS.map((value) => ({ value, label: methodLabel(value) })),
-      },
+      type: 'enum',
+      options: POLICY_ACCEPTANCE_METHODS.map((value) => ({ value, label: methodLabel(value) })),
       cellRenderer: renderMethod,
       valueGetter: (row) => methodLabel(row.method),
     },
@@ -107,7 +112,8 @@ export function getPolicyAcceptanceColumns(
       field: 'surface',
       headerName: t('legalAcceptanceLogs.colSurface'),
       width: 120,
-      filter: { type: 'text' },
+      type: 'enum',
+      options: POLICY_ACCEPTANCE_SURFACES.map((value) => ({ value, label: value })),
       valueGetter: (row) => row.surface,
     },
   ];

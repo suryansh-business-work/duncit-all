@@ -1,5 +1,7 @@
 import { GraphQLError } from 'graphql';
-import { LocationModel } from './location.model';
+import { DEFAULT_LAUNCH_TARGET, LocationModel } from './location.model';
+import { locationLaunchSchema, type LocationLaunchInput } from './location.validator';
+import { validate } from '@utils/validate';
 import {
   escapedSearchRegex,
   runTableQuery,
@@ -36,6 +38,10 @@ const toPub = (d: any) => {
       _location_id: String(d._id),
     })),
     is_active: !!d.is_active,
+    // A city saved before the launch fields existed was already live.
+    is_launched: d.is_launched ?? true,
+    launch_target: d.launch_target ?? DEFAULT_LAUNCH_TARGET,
+    whatsapp_group_url: d.whatsapp_group_url ?? '',
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -43,6 +49,17 @@ const toPub = (d: any) => {
 
 function notFound(): never {
   throw new GraphQLError('Location not found', { extensions: { code: 'NOT_FOUND' } });
+}
+
+/** The launch fields the caller actually sent, validated. A null or missing
+ * field is left out, so an update never resets what it did not mention. */
+async function launchFields(
+  input: Record<string, unknown>
+): Promise<{ [K in keyof LocationLaunchInput]?: NonNullable<LocationLaunchInput[K]> }> {
+  const data = await validate<LocationLaunchInput>(locationLaunchSchema, input);
+  return Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== null && value !== undefined)
+  );
 }
 
 /** Allowlists for the shared table engine (locationsTable — DUNCIT TABLE CONTRACT v1).
@@ -60,18 +77,25 @@ const LOCATION_TABLE_CONFIG: TableEntityConfig = {
   ],
   sortFields: {
     location_name: 'location_name',
+    image: 'location_image',
     city: 'city',
     state: 'state',
+    zones: 'location_zones.zone_name',
     country: 'country',
     is_active: 'is_active',
+    // Sortable but not filterable: cities saved before the switch existed have
+    // no stored value, so a "launched = yes" match would miss them.
+    is_launched: 'is_launched',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    image: { path: 'location_image', type: 'string' },
     country: { type: 'string' },
     state: { type: 'string' },
     city: { type: 'string' },
+    zones: { path: 'location_zones.zone_name', type: 'string' },
     created_at: { type: 'date' },
   },
   defaultSort: { location_name: 1 },
@@ -117,6 +141,12 @@ export const locationService = {
     return toPub(d);
   },
 
+  /** Several cities in one read, for a list keyed by location id. */
+  async listByIds(ids: readonly string[]) {
+    const docs = await LocationModel.find({ _id: { $in: ids } });
+    return docs.map(toPub);
+  },
+
   async create(input: {
     location_name: string;
     location_id?: string;
@@ -128,7 +158,12 @@ export const locationService = {
     location_image: string;
     location_pincode: string;
     location_zones?: { zone_name: string; zone_code?: string; pincode?: string }[];
+    is_active?: boolean | null;
+    is_launched?: boolean | null;
+    launch_target?: number | null;
+    whatsapp_group_url?: string | null;
   }) {
+    const launch = await launchFields(input);
     const location_id = (input.location_id?.trim() || slugify(input.location_name));
     const dupe = await LocationModel.findOne({ location_id });
     if (dupe) {
@@ -147,6 +182,7 @@ export const locationService = {
       location_image: input.location_image,
       location_pincode: input.location_pincode.trim(),
       location_zones: input.location_zones ?? [],
+      ...launch,
     });
     return toPub(doc);
   },
@@ -164,8 +200,12 @@ export const locationService = {
       location_pincode?: string;
       location_zones?: { zone_name: string; zone_code?: string; pincode?: string }[];
       is_active?: boolean;
+      is_launched?: boolean | null;
+      launch_target?: number | null;
+      whatsapp_group_url?: string | null;
     }
   ) {
+    const { is_launched, launch_target, whatsapp_group_url } = await launchFields(input);
     const doc = await LocationModel.findById(id);
     if (!doc) notFound();
     if (input.location_name !== undefined) doc.location_name = input.location_name.trim();
@@ -178,6 +218,9 @@ export const locationService = {
     if (input.location_pincode !== undefined) doc.location_pincode = input.location_pincode.trim();
     if (input.location_zones !== undefined) doc.location_zones = input.location_zones as any;
     if (input.is_active !== undefined) doc.is_active = input.is_active;
+    if (is_launched !== undefined) doc.is_launched = is_launched;
+    if (launch_target !== undefined) doc.launch_target = launch_target;
+    if (whatsapp_group_url !== undefined) doc.whatsapp_group_url = whatsapp_group_url;
     await doc.save();
     return toPub(doc);
   },

@@ -15,6 +15,7 @@ import { InventoryProductModel } from '@modules/venues/inventory/inventory.model
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { primePodRelations } from './pod.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
+import { reelHasAudio } from './pod.reelAudio';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // Roles allowed to see pods still awaiting a venue's slot approval (admin +
@@ -50,6 +51,7 @@ async function canViewMeeting(parent: any, ctx: GraphQLContext) {
 export const podResolvers = {
   Pod: {
     pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    reel_has_audio: (parent: any): Promise<boolean | null> => reelHasAudio(parent),
     /**
      * The stored risk flag, for admins only. Mapped here rather than in the
      * public mapper because the pod type is served to every audience — a
@@ -111,6 +113,11 @@ export const podResolvers = {
     place_detail: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
       const place = await resolvePodPlace(parent, ctx);
       return place.detail || null;
+    },
+    // Same memoised place as the two above, so a card's chip costs no extra read.
+    locality: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
+      const place = await resolvePodPlace(parent, ctx);
+      return place.locality;
     },
     host_names: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string[]> => {
       const ids: string[] = (parent.pod_hosts_id ?? []).filter(Boolean).map(String);

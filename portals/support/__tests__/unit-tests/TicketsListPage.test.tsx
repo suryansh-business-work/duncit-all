@@ -3,6 +3,7 @@ import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import TicketsListPage from '../../src/pages/tickets/TicketsListPage';
 import { renderWithProviders } from '../testkit';
+import { applyEnumColumnFilter } from '../table-filter';
 import { createTicketMock, makeTicket, ticketsListMock } from '../mocks/ticket.mock';
 
 const sockMock = vi.hoisted(() => ({ events: {} as Record<string, () => void> }));
@@ -47,19 +48,18 @@ describe('TicketsListPage', () => {
     await waitFor(() => expect(screen.getByText('TICKET DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status from the table filter popover', async () => {
+  it('filters by status from the Status column header', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
         ticketsListMock([makeTicket({ id: 't1', subject: 'Open one' })]),
-        ticketsListMock([makeTicket({ id: 't2', subject: 'Resolved one' })], { status: 'RESOLVED' }),
+        ticketsListMock([makeTicket({ id: 't2', subject: 'Resolved one' })], {
+          filters: [{ field: 'status', op: 'in', values: ['RESOLVED'] }],
+        }),
       ],
     });
     await waitFor(() => expect(screen.getByText('Open one')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
-    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'RESOLVED' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    await applyEnumColumnFilter('status', 'Status', 'RESOLVED');
 
     await waitFor(() => expect(screen.getByText('Resolved one')).toBeInTheDocument());
     // AG Grid removes replaced row elements asynchronously.

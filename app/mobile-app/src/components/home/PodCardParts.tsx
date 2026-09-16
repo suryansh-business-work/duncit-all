@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { LocalityChip } from '@/components/LocalityChip';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -92,17 +93,20 @@ interface PodCardInfoProps {
   spotsText: string;
   /** The place line; empty hides it. */
   subText: string;
+  /** The pod's area chip — two clubs can share a name, so the area tells them apart. */
+  locality?: string | null;
 }
 
 /** The text under the image: who is coming, the title (always two lines tall,
  * so every card in a rail keeps the same image height) with the price beside
- * it, then the place. mWeb twin: home-page/PodCardInfo. */
+ * it, then the place and the area chip. mWeb twin: home-page/PodCardInfo. */
 export function PodCardInfo({
   title,
   price,
   joiningText,
   spotsText,
   subText,
+  locality,
 }: Readonly<PodCardInfoProps>) {
   const { muted } = useThemeColors();
   return (
@@ -146,6 +150,7 @@ export function PodCardInfo({
           {subText}
         </Text>
       ) : null}
+      <LocalityChip locality={locality} testID="pod-card-locality" />
     </YStack>
   );
 }

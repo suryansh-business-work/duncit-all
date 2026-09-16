@@ -123,6 +123,7 @@ export default function ClubAdminsTable({
         field: 'club_admin_no',
         headerName: t('onboarding.clubAdmins.clubAdminId'),
         width: 140,
+        type: 'text',
         valueGetter: (row) => row.club_admin_no || '—',
       },
       {
@@ -130,13 +131,17 @@ export default function ClubAdminsTable({
         headerName: t('onboarding.common.clubAdmin'),
         flex: 1,
         minWidth: 200,
+        type: 'text',
         cellRenderer: renderPerson,
         valueGetter: (row) => row.full_name || '—',
       },
       {
         field: 'category',
         headerName: t('onboarding.common.category'),
+        type: 'text',
+        // Names joined from three category ids at read time — the record stores only the ids.
         sortable: false,
+        filterable: false,
         minWidth: 220,
         cellRenderer: renderCategory,
         valueGetter: categoryPath,
@@ -144,7 +149,10 @@ export default function ClubAdminsTable({
       {
         field: 'assigned_clubs',
         headerName: t('onboarding.clubAdmins.assignedClubs2'),
+        type: 'text',
+        // Read from the clubs collection per page — the record holds no path to order or match.
         sortable: false,
+        filterable: false,
         minWidth: 200,
         cellRenderer: renderClubs,
         valueGetter: clubsValue,
@@ -153,7 +161,8 @@ export default function ClubAdminsTable({
         field: 'status',
         headerName: t('shell.common.status'),
         width: 120,
-        filter: { type: 'select', options: STATUS_OPTIONS },
+        type: 'enum',
+        options: STATUS_OPTIONS,
         cellRenderer: renderStatus,
         valueGetter: statusValue,
       },
@@ -166,12 +175,12 @@ export default function ClubAdminsTable({
         field: 'commission_pct',
         headerName: t('onboarding.clubAdmins.payCommission2'),
         width: 150,
-        filter: { type: 'number' },
+        type: 'number',
         cellRenderer: renderCommission,
         valueGetter: (row) => commissionLabel(row.commission_pct),
       },
-      { field: 'phone', headerName: t('shell.common.phone'), hide: true, minWidth: 140 },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 170, cellRenderer: renderActions },
+      { field: 'phone', headerName: t('shell.common.phone'), hide: true, minWidth: 140, type: 'text' },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderActions },
     ];
   }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
 

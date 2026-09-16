@@ -62,6 +62,9 @@ const EMAIL_TEMPLATE_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
   },
   filterFields: {
+    name: { type: 'string' },
+    slug: { type: 'string' },
+    subject: { type: 'string' },
     target: { type: 'enum' },
     is_active: { type: 'boolean' },
     created_at: { type: 'date' },

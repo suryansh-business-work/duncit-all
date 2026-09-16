@@ -85,6 +85,7 @@ const ROUTES = [
   '/users/smoke-id',
   '/categories',
   '/locations',
+  '/location-subscriptions',
   '/partners',
   '/badges',
   '/something-for-you',

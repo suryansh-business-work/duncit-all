@@ -2,7 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../server/format';
 import type { MailAutomationAccount } from './queries';
@@ -17,8 +17,12 @@ const QUEUE_LABEL: Record<MailAutomationAccount['ticket_type'], string> = {
 
 const getRowId = (row: MailAutomationAccount) => row.id;
 
+/** Search matches the mailbox address. */
+const mailboxOf = (row: MailAutomationAccount) => row.email;
+
 interface Props {
-  fetchRows: TableFetch<MailAutomationAccount>;
+  /** Every connected mailbox; undefined while the list is loading. */
+  rows: readonly MailAutomationAccount[] | undefined;
   refetchRef: MutableRefObject<(() => void) | null>;
   disconnecting: boolean;
   onDisconnect: (account: MailAutomationAccount) => void;
@@ -33,7 +37,7 @@ interface Props {
  * grant is being used for.
  */
 export default function MailboxesTable({
-  fetchRows,
+  rows,
   refetchRef,
   disconnecting,
   onDisconnect,
@@ -95,33 +99,46 @@ export default function MailboxesTable({
       </DuncitButton>
     );
 
+    const queueOptions = Object.entries(QUEUE_LABEL).map(([value, key]) => ({ value, label: t(key) }));
+
     return [
-      { field: 'email', headerName: t('support.mailAutomation.colMailbox'), flex: 1.4, minWidth: 220, cellRenderer: renderMailbox },
-      { field: 'is_active', headerName: t('support.mailAutomation.colState'), width: 150, sortable: false, cellRenderer: renderState },
+      { field: 'email', headerName: t('support.mailAutomation.colMailbox'), flex: 1.4, minWidth: 220, type: 'text', cellRenderer: renderMailbox },
+      { field: 'is_active', headerName: t('support.mailAutomation.colState'), width: 150, type: 'boolean', cellRenderer: renderState },
       {
         field: 'ticket_type',
         headerName: t('support.mailAutomation.colOpens'),
         width: 170,
+        type: 'enum',
+        options: queueOptions,
         valueGetter: (row) => t(QUEUE_LABEL[row.ticket_type]),
       },
-      { field: 'sla_label', headerName: t('support.mailAutomation.colRepliesIn'), width: 130 },
-      { field: 'ai_enabled', headerName: t('support.mailAutomation.colWriter'), width: 180, cellRenderer: renderWriter },
+      { field: 'sla_label', headerName: t('support.mailAutomation.colRepliesIn'), width: 130, type: 'text' },
+      { field: 'ai_enabled', headerName: t('support.mailAutomation.colWriter'), width: 180, type: 'boolean', cellRenderer: renderWriter },
       {
         field: 'last_polled_at',
         headerName: t('support.mailAutomation.colLastChecked'),
         flex: 1,
         minWidth: 190,
+        type: 'date',
         cellRenderer: renderLastChecked,
       },
       {
         field: 'connected_at',
         headerName: t('support.mailAutomation.colConnected'),
         width: 190,
+        type: 'date',
         valueGetter: (row) => formatDateTime(row.connected_at),
       },
-      { field: 'actions', headerName: '', width: 150, sortable: false, cellRenderer: renderActions },
+      { field: 'actions', headerName: '', width: 150, type: 'actions', cellRenderer: renderActions },
     ];
   }, [t, disconnecting, onDisconnect]);
+
+  // The list is small and unpaginated on the server, so search, filters, sort
+  // and paging all run in memory.
+  const fetchRows = useMemo(
+    () => clientTableFetch<MailAutomationAccount>(rows ?? [], mailboxOf, columns),
+    [rows, columns]
+  );
 
   return (
     <DuncitTable<MailAutomationAccount>

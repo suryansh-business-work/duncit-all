@@ -127,6 +127,7 @@ export function PodCard({
             joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
             spotsText={spotsText}
             subText={place}
+            locality={pod.locality}
           />
         </SurfaceCard>
       </PressScale>

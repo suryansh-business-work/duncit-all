@@ -27,7 +27,7 @@ const MAIL_PREFERENCE_LOG_CONFIG: TableEntityConfig = {
   filterFields: {
     category: { type: 'enum' },
     enabled: { type: 'boolean' },
-    source: { type: 'enum' },
+    source: { type: 'string' },
     email: { type: 'string' },
     created_at: { type: 'date' },
   },

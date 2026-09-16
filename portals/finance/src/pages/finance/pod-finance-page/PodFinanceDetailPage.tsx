@@ -59,6 +59,15 @@ function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdo
               the collected total) · {breakdown.coins_earned_total} earned back by buyers
             </Typography>
           )}
+          {/* Tiers come off the ticket price before checkout, so they too explain
+              why "Customer paid" sits below the tickets' face value. */}
+          {breakdown.ticket_discount_total > 0 && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('finance.podFinance.ticketDiscountsNote', {
+                vars: { amount: money(sym, breakdown.ticket_discount_total) },
+              })}
+            </Typography>
+          )}
         </Box>
       </Stack>
 

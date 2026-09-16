@@ -50,12 +50,18 @@ const hostsValue = (p: RecordPodRow) => p.host_names.join(', ') || EMPTY;
 
 const renderApproval = (p: RecordPodRow) => <Chip size="small" label={p.venue_approval_status} />;
 
+/** The approval chip shows the stored code as it is, so its filter offers the same words. */
+export const VENUE_APPROVAL_OPTIONS = (
+  ['NONE', 'PENDING', 'APPROVED', 'DECLINED'] satisfies RecordPodRow['venue_approval_status'][]
+).map((value) => ({ value, label: value }));
+
 /** Module scope so no cell is a component defined inside another (S6478), and a
  * factory over `t` because every header is copy (rule 38). */
 export const recordPodColumns = (t: Translate): DuncitColumn<RecordPodRow>[] => [
   {
     field: 'pod_title',
     headerName: t('admin.venueDetails.colPod'),
+    type: 'text',
     flex: 1,
     minWidth: 200,
     valueGetter: (p) => p.pod_title,
@@ -63,26 +69,32 @@ export const recordPodColumns = (t: Translate): DuncitColumn<RecordPodRow>[] => 
   {
     field: 'pod_date_time',
     headerName: t('admin.venueDetails.colWhen'),
+    type: 'date',
     minWidth: 170,
-    filter: { type: 'date' },
     valueGetter: whenValue,
   },
   {
     field: 'host_names',
     headerName: t('admin.venueDetails.colHosts'),
-    minWidth: 160,
+    type: 'text',
+    // Resolved per row from the users collection — the pod stores host ids, not names.
     sortable: false,
+    filterable: false,
+    minWidth: 160,
     valueGetter: hostsValue,
   },
   {
     field: 'no_of_spots',
     headerName: t('admin.venueDetails.colSpots'),
+    type: 'number',
     width: 95,
     valueGetter: (p) => p.no_of_spots,
   },
   {
     field: 'venue_approval_status',
     headerName: t('admin.venueDetails.colApproval'),
+    type: 'enum',
+    options: VENUE_APPROVAL_OPTIONS,
     width: 150,
     cellRenderer: renderApproval,
     valueGetter: (p) => p.venue_approval_status,

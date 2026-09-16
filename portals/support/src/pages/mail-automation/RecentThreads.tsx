@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Chip, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
 import {
   MAIL_AUTOMATION_THREADS,
@@ -10,8 +10,11 @@ import {
 } from '../../graphql/mail-automation';
 import { formatDateTime } from '@duncit/app-settings';
 
+const NO_THREADS: readonly MailAutomationThread[] = [];
 const getRowId = (row: MailAutomationThread) => row.id;
 const when = (iso: string | null) => (iso ? formatDateTime(iso) : '');
+const threadSearchText = (r: MailAutomationThread) =>
+  [r.from_email, r.from_name, r.subject, r.ticket_no].join(' ');
 
 /**
  * What the mailbox has actually done.
@@ -22,27 +25,12 @@ const when = (iso: string | null) => (iso ? formatDateTime(iso) : '');
  */
 export default function RecentThreads({ accountId }: Readonly<{ accountId: string }>) {
   const { t } = useTranslation();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data } = useQuery<{ mailAutomationThreads: MailAutomationThread[] }>(
     MAIL_AUTOMATION_THREADS,
     { variables: { account_id: accountId, limit: 100 }, fetchPolicy: 'cache-and-network' }
   );
-  const rows = data?.mailAutomationThreads;
-
-  const fetchRows = useCallback<TableFetch<MailAutomationThread>>(
-    async (query) => {
-      const all = rows ?? [];
-      const term = query.search.trim().toLowerCase();
-      const matched = term
-        ? all.filter((r) =>
-            [r.from_email, r.from_name, r.subject, r.ticket_no].some((v) =>
-              v.toLowerCase().includes(term)
-            )
-          )
-        : all;
-      return { rows: matched, total: matched.length };
-    },
-    [rows]
-  );
+  const rows = data?.mailAutomationThreads ?? NO_THREADS;
 
   const columns = useMemo<DuncitColumn<MailAutomationThread>[]>(() => {
     // Three states, not two. A thread with no reply and no error was claimed
@@ -95,12 +83,14 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
       {
         field: 'ticket_no',
         headerName: t('support.mailAutomation.colTicket'),
+        type: 'text',
         width: 150,
         cellRenderer: renderTicket,
       },
       {
         field: 'from_email',
         headerName: t('support.mailAutomation.colFrom'),
+        type: 'text',
         flex: 1,
         minWidth: 200,
         valueGetter: (row) => row.from_name || row.from_email,
@@ -108,6 +98,7 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
       {
         field: 'subject',
         headerName: t('support.mailAutomation.colSubject'),
+        type: 'text',
         flex: 1.4,
         minWidth: 220,
         cellRenderer: renderSubject,
@@ -115,19 +106,31 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
       {
         field: 'replied_at',
         headerName: t('support.mailAutomation.colStatus'),
+        type: 'date',
         flex: 1.2,
         minWidth: 220,
-        sortable: false,
         cellRenderer: renderStatus,
       },
       {
         field: 'created_at',
         headerName: t('support.mailAutomation.colReceived'),
+        type: 'date',
         width: 190,
         valueGetter: (row) => when(row.created_at),
       },
     ];
   }, [t]);
+
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, threadSearchText, columns),
+    [rows, columns],
+  );
+
+  // The grid holds its fetch in a ref, so a list that arrives after the first
+  // paint has to ask for the re-read.
+  useEffect(() => {
+    refetchRef.current?.();
+  }, [rows]);
 
   return (
     <Stack spacing={1}>
@@ -144,6 +147,7 @@ export default function RecentThreads({ accountId }: Readonly<{ accountId: strin
         emptyText={t('support.mailAutomation.recentEmpty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder={t('support.mailAutomation.colSubject')}
+        refetchRef={refetchRef}
       />
     </Stack>
   );

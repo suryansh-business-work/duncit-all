@@ -145,7 +145,13 @@ export function useDeviceUpload({
         });
         url = uploaded.url;
       }
-      onPicked(url, detectDuplicates ? { hash: await hashFile(picked) } : undefined);
+      // Called with one argument when duplicate detection is off, so every
+      // existing caller's onPicked(url) shape is untouched.
+      if (detectDuplicates) {
+        onPicked(url, { hash: await hashFile(picked) });
+      } else {
+        onPicked(url);
+      }
       if (clearAfterUpload) {
         setPicked(null);
         setCropRect(null);

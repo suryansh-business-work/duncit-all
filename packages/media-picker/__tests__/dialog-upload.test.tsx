@@ -217,4 +217,19 @@ describe('MediaPickerDialog upload flows', () => {
 
     await waitFor(() => expect(screen.getAllByRole('tab')).toHaveLength(1));
   });
+
+  // detectDuplicates is opt-in — venue documents use it to catch the same
+  // file being picked twice under different headings; every other caller
+  // above never sees a second onPicked argument.
+  it('hands back a content hash alongside the URL when the caller opts into duplicate detection', async () => {
+    const { onPicked } = mount({ detectDuplicates: true });
+
+    chooseFile(pngFile());
+    await screen.findByText('court.png');
+    clickUse();
+
+    await waitFor(() =>
+      expect(onPicked).toHaveBeenCalledWith(URL_A, { hash: expect.stringMatching(/^[0-9a-f]{64}$/) })
+    );
+  });
 });

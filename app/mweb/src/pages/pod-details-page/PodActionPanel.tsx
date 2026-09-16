@@ -61,12 +61,20 @@ export default function PodActionPanel({
   const m = ms?.membership;
   const referralToken = m?.referral_token as string | null;
 
+  // Once the pod has STARTED, booking is closed — block checkout entirely (the
+  // server enforces the same rule on joinFree + payment order creation). A pod
+  // that is still running says so rather than claiming it has already happened.
+  const phase = podPhase(pod?.pod_date_time, pod?.pod_end_date_time);
+  const isExpired = phase !== 'UPCOMING';
+
   // The host is auto-enrolled as an attendee and must never book their own pod
-  // — replace the booking CTA with the Host Studio entry point.
+  // — replace the booking CTA with the Host Studio entry point. Same tense
+  // rule as the member side: past tense once the pod's own time has passed.
   if (isHost) {
+    const hostingCaption = isExpired ? t('mweb.podDetails.youHosted') : t('mweb.podDetails.youreHosting');
     return (
       <Stack direction="row" spacing={1.5} data-testid="pod-action-panel-host" sx={{ alignItems: 'center', pl: 1 }}>
-        <BarLabel caption={t('mweb.podDetails.youreHosting')} value={t('mweb.podDetails.yourPod')} />
+        <BarLabel caption={hostingCaption} value={t('mweb.podDetails.yourPod')} />
         <DuncitButton
           variant="contained"
           onClick={onGoToDashboard}
@@ -79,11 +87,6 @@ export default function PodActionPanel({
     );
   }
 
-  // Once the pod has STARTED, booking is closed — block checkout entirely (the
-  // server enforces the same rule on joinFree + payment order creation). A pod
-  // that is still running says so rather than claiming it has already happened.
-  const phase = podPhase(pod?.pod_date_time, pod?.pod_end_date_time);
-  const isExpired = phase !== 'UPCOMING';
   const closedMessage = phase === 'ONGOING'
     ? t('mweb.podDetails.bookingClosedOngoing')
     : t('mweb.podDetails.bookingClosed');

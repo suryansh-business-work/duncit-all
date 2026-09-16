@@ -1216,7 +1216,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The booking bar — host state.
       goToDashboard: 'Go to Dashboard',
       // Native only — its bar pairs every CTA with a caption on the left.
+      // Once the pod's own time has passed, the caption switches to past
+      // tense — the same rule the member side already follows below.
       youreHosting: "You're hosting",
+      youHosted: 'You hosted',
       yourPod: 'Your Pod',
       // Closed state. A pod that is RUNNING has not "taken place" yet, so it
       // gets its own sentence rather than being told it is over.

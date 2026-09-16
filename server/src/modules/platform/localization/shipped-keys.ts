@@ -6824,6 +6824,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.podDetails.whatToExpect": "What to expect",
   "mweb.podDetails.when": "When",
   "mweb.podDetails.where": "Where",
+  "mweb.podDetails.youHosted": "You hosted",
   "mweb.podDetails.youreGoing": "You're going",
   "mweb.podDetails.youreHosting": "You're hosting",
   "mweb.podDetails.yourPod": "Your Pod",

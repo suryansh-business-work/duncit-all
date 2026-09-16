@@ -106,7 +106,7 @@ export function PodBookingBar({
             shadowRadius={16}
             shadowOffset={SHADOW_OFFSET}
           >
-            {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
+            {isHost ? <HostBar isExpired={isExpired} onGoToDashboard={onGoToDashboard} /> : null}
             {showClosedNotice ? <ClosedNotice ongoing={phase === 'ONGOING'} /> : null}
             {!isHost && inProcess ? (
               <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
@@ -142,12 +142,19 @@ export function PodBookingBar({
 }
 
 /** Host state: the host is auto-enrolled and never books their own pod — the
- * CTA jumps into Host Studio instead (mirrors mWeb's PodActionPanel). */
-function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>) {
+ * CTA jumps into Host Studio instead (mirrors mWeb's PodActionPanel). Same
+ * tense rule as MemberBookedBar: past tense once the pod's own time has
+ * passed, so the bar never claims a host is still "hosting" an evening
+ * that's already over. */
+function HostBar({
+  isExpired,
+  onGoToDashboard,
+}: Readonly<{ isExpired: boolean; onGoToDashboard: () => void }>) {
   const { t } = useTranslation();
+  const caption = isExpired ? t('mweb.podDetails.youHosted') : t('mweb.podDetails.youreHosting');
   return (
     <>
-      <BarLabel caption={t('mweb.podDetails.youreHosting')} value={t('mweb.podDetails.yourPod')} />
+      <BarLabel caption={caption} value={t('mweb.podDetails.yourPod')} />
       <BarCta
         testID="pod-go-dashboard"
         label={t('mweb.podDetails.goToDashboard')}

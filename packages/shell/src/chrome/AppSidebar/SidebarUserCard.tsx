@@ -34,12 +34,10 @@ export function SidebarUserCard({ user, fallbackName, collapsed = false }: Reado
     );
   }
   return (
-    <Box sx={{ px: 2, py: 1.25, borderTop: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.25 }}>
+    <Box sx={{ px: 1.5, py: 1, borderTop: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1.25 }}>
       {avatar}
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" noWrap sx={{
-          fontWeight: 700
-        }}>
+        <Typography variant="body2" noWrap sx={{ fontWeight: 'fontWeightMedium' }}>
           {name}
         </Typography>
         {email && (

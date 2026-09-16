@@ -2616,9 +2616,6 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
-      '@fontsource/nunito':
-        specifier: ^5.3.0
-        version: 5.3.0
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.4.0)

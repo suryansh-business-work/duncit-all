@@ -12,6 +12,7 @@ import type { ShellTool } from './AppsDrawer/tools';
 import { StaffChatPanel } from '../staff-chat';
 import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppShellNav } from './AppShellNav';
+import { CONTENT_PANEL_SX } from './shell-layout';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
 import type { ShellUser } from './user-display';
@@ -162,7 +163,7 @@ export function AppShell({
             mobileOpen={mobileOpen}
             onCloseMobile={closeMobileNav}
           />
-          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={CONTENT_PANEL_SX}>
             <AppHeader
               title={config.fullName ?? config.name}
               name={config.name}

@@ -24,7 +24,6 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/user-core": "workspace:*",
     "@duncit/utils": "workspace:*",
-    "@fontsource/nunito": "^5.3.0",
     "date-fns-tz": "^3.2.0",
     "react-internet-meter": "^1.1.1",
     "react-markdown": "^10.1.0",

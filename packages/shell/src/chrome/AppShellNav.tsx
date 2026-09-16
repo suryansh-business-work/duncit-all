@@ -5,6 +5,7 @@ import { tokens } from '@duncit/theme';
 import { useTranslation } from '../i18n/useTranslation';
 import type { AppNavItem } from '../types';
 import { AppSidebar } from './AppSidebar';
+import { SIDEBAR_PAPER_SX } from './shell-layout';
 import { RAIL_WIDTH } from './AppSidebar/NavRail';
 import type { ShellUser } from './user-display';
 import { ABOVE_TASKBAR_HEIGHT, useWorkspace } from '../workspace';
@@ -67,7 +68,7 @@ export function AppShellNav({
         slotProps={{ paper: { 'aria-label': t('shell.chrome.primaryNav') } }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },
+          '& .MuiDrawer-paper': { ...SIDEBAR_PAPER_SX, width: drawerWidth, height: ABOVE_TASKBAR_HEIGHT },
         }}
       >
         <AppSidebar
@@ -84,6 +85,7 @@ export function AppShellNav({
         sx={{
           display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': {
+            ...SIDEBAR_PAPER_SX,
             width,
             boxSizing: 'border-box',
             height: ABOVE_TASKBAR_HEIGHT,

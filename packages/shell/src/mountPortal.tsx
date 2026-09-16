@@ -1,10 +1,7 @@
-// Self-hosted Nunito (the shared portal theme font) — replaces the per-portal
-// Google Fonts <link>, so every console that mounts through the shell ships the
-// font from its own origin (no third-party request, no SRI concern).
-import '@fontsource/nunito/400.css';
-import '@fontsource/nunito/600.css';
-import '@fontsource/nunito/700.css';
-import '@fontsource/nunito/800.css';
+// No web font is bundled: the console theme renders in the platform UI face
+// (`tokens.font.family`), so nothing is downloaded before first paint. An
+// admin-picked family (Branding → Portals) still layers over it at runtime —
+// see PortalBranding.
 import React, { type ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client/react';

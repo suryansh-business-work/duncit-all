@@ -31,8 +31,6 @@ export function SidebarBrand({ name, collapsed = false, onNavigate }: Readonly<S
         alignItems: 'center',
         justifyContent: collapsed ? 'center' : 'flex-start',
         gap: 1.25,
-        borderBottom: 1,
-        borderColor: 'divider',
         textDecoration: 'none',
         color: 'inherit',
         cursor: 'pointer',
@@ -55,10 +53,7 @@ export function SidebarBrand({ name, collapsed = false, onNavigate }: Readonly<S
           variant="caption"
           color="primary"
           noWrap
-          sx={{
-            fontWeight: 800,
-            letterSpacing: 0.3
-          }}>
+          sx={{ fontWeight: 'fontWeightBold', letterSpacing: 0.2 }}>
           {name}
         </Typography>
       )}

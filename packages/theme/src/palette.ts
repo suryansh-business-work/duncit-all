@@ -24,5 +24,13 @@ export function buildPalette(c: ThemeCtx): ThemeOptions['palette'] {
     background: { default: c.bg, paper: c.surface },
     text: { primary: c.ink, secondary: c.muted },
     divider: c.border,
+    // State tints come from the same two tokens the overrides use, so MUI's
+    // own hover/selected (lists, table rows, AG Grid) match the system's.
+    action: {
+      hover: c.hover,
+      selected: c.selected,
+      hoverOpacity: c.t.state.hover,
+      selectedOpacity: c.t.state.selected,
+    },
   };
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Collapse, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
+import { tokens } from '@duncit/theme';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from 'react-router';
@@ -36,34 +37,31 @@ interface GroupItemProps extends NodeProps {
 
 interface NavNodeProps extends LeafItemProps, GroupItemProps {}
 
-const leafSx = {
-  mb: 0.25,
-  py: 0.75,
-  '&.Mui-selected': {
-    bgcolor: 'primary.main',
-    color: 'primary.contrastText',
-    '& .MuiListItemIcon-root': { color: 'inherit' },
-  },
+const rowSx = { py: 0.5, px: 1.25, minHeight: tokens.size.navRow };
+const leafSx = { ...rowSx, mb: 0.25 };
+
+/** Row glyphs: muted, one size under body icons. The selected row's accent
+ * icon comes from the theme's ListItemButton override. */
+const navIconSx = {
+  minWidth: 30,
+  color: 'text.secondary',
+  '& .MuiSvgIcon-root': { fontSize: tokens.size.icon.sm },
 };
 
+/** The group's open/closed chevron, quiet beside the label. */
+const chevronSx = { fontSize: tokens.size.icon.sm, color: 'text.secondary' };
+
 /** A `featured` leaf (e.g. Partners' "Earn with Duncit") renders as a
- * highlighted card: primary gradient wash, primary border and a caption line. */
+ * highlighted card: a soft accent wash, an accent edge and a caption line. */
 const featuredLeafSx = {
   ...leafSx,
-  mt: 0.25,
+  mt: 0.5,
   mb: 0.75,
-  borderRadius: 2,
+  py: 0.75,
   border: '1px solid',
   borderColor: 'primary.main',
-  background: (theme: Theme) =>
-    `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.18)} 0%, ${alpha(theme.palette.primary.main, 0.04)} 100%)`,
+  bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, tokens.state.selected),
   '& .MuiListItemIcon-root': { color: 'primary.main' },
-  '&.Mui-selected': {
-    bgcolor: 'primary.main',
-    color: 'primary.contrastText',
-    '& .MuiListItemIcon-root': { color: 'inherit' },
-    '& .MuiListItemText-secondary': { color: 'inherit', opacity: 0.85 },
-  },
 };
 
 function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafItemProps>) {
@@ -81,14 +79,14 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
       data-testid="shell-nav-leaf"
       sx={item.featured ? featuredLeafSx : leafSx}
     >
-      <ListItemIcon sx={{ minWidth: 34, color: 'text.secondary' }}>
+      <ListItemIcon sx={navIconSx}>
         <AppIcon name={item.icon} fontSize="small" />
       </ListItemIcon>
       <ListItemText
         primary={item.label}
         secondary={item.featured ? item.caption : undefined}
         slotProps={{
-          primary: { variant: 'body2', sx: { fontWeight: item.featured ? 800 : 600 } },
+          primary: { variant: 'body2', sx: { fontWeight: item.featured ? 'fontWeightBold' : 'fontWeightMedium' } },
           secondary: { variant: 'caption' }
         }} />
     </ListItemButton>
@@ -113,21 +111,26 @@ function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonl
         onClick={() => setOpen((v) => !v)}
         aria-expanded={isOpen}
         data-testid="shell-nav-group"
-        sx={{ py: 0.75 }}
+        sx={rowSx}
       >
-        <ListItemIcon sx={{ minWidth: 34, color: active ? 'primary.main' : 'text.secondary' }}>
+        <ListItemIcon sx={{ ...navIconSx, color: active ? 'primary.main' : 'text.secondary' }}>
           <AppIcon name={item.icon} fontSize="small" />
         </ListItemIcon>
         <ListItemText
           primary={item.label}
           slotProps={{
-            primary: { variant: 'body2', color: active ? 'primary.main' : 'inherit', sx: { fontWeight: active ? 800 : 600 } }
+            primary: {
+              variant: 'body2',
+              color: active ? 'primary.main' : 'inherit',
+              sx: { fontWeight: active ? 'fontWeightBold' : 'fontWeightMedium' },
+            },
           }}
         />
-        {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        {isOpen ? <ExpandLessIcon sx={chevronSx} /> : <ExpandMoreIcon sx={chevronSx} />}
       </ListItemButton>
       <Collapse in={isOpen} timeout="auto" unmountOnExit>
-        <List disablePadding sx={{ pl: 2 }}>
+        {/* A guide line down the group's children, so nesting reads at a glance. */}
+        <List disablePadding sx={{ ml: 2.25, pl: 0.75, borderLeft: 1, borderColor: 'divider' }}>
           {children.map((child) => (
             <NavNode
               key={child.label}

@@ -4,6 +4,7 @@ import { NavLink, useLocation } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import { groupActive, matches } from './helpers';
+import { tokens } from '@duncit/theme';
 import { NavNode } from './nav-items';
 
 /** The minimised sidebar's whole footprint — one icon, centred, plus its padding. */
@@ -15,18 +16,13 @@ interface RailMenu {
   item: AppNavItem;
 }
 
+/** One rail square. Its selected look (wash, accent icon) comes from the theme. */
 const railItemSx = {
-  minHeight: 42,
+  minHeight: tokens.size.controlLg,
   mb: 0.5,
-  borderRadius: 2,
   justifyContent: 'center',
   color: 'text.secondary',
   '& .MuiListItemIcon-root': { minWidth: 0, color: 'inherit' },
-  '&.Mui-selected': {
-    bgcolor: 'primary.main',
-    color: 'primary.contrastText',
-    '&:hover': { bgcolor: 'primary.dark' },
-  },
 };
 
 interface RailItemProps {
@@ -128,7 +124,7 @@ export function NavRail({ nav, onNavigate }: Readonly<NavRailProps>) {
         <Typography
           variant="overline"
           noWrap
-          sx={{ display: 'block', px: 2, pt: 1.5, color: 'text.secondary', fontWeight: 800 }}
+          sx={{ display: 'block', px: 2, pt: 1.5, color: 'text.secondary' }}
         >
           {menu?.item.label}
         </Typography>

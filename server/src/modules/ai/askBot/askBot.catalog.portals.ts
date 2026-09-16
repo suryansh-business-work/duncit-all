@@ -276,6 +276,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   // ---- Marketing (marketing) ------------------------------------------
   { surface: 'marketing', path: '/', label: 'Dashboard',
     description: 'Read last-N-days link clicks, revenue from links, emails delivered and live ads as clickable KPI tiles, then drill into a clicks-over-time chart, top links, recent campaign performance, click sources, countries and a what-is-set-up summary on a draggable widget grid.' },
+  { surface: 'marketing', path: '/status', label: 'Status',
+    description: 'Publish the Duncit statuses that ride at the front of the apps\' status rail: upload an image or video with a caption and an optional tap-through link, send it to everybody or to chosen cities, keep it for 24 hours, for ever or until a date you pick, and watch how many people have seen each one.' },
   { surface: 'marketing', path: '/audience', label: 'Target Audience',
     description: 'Browse the saved audience lists — each stores its filters so membership stays current — open one to inspect its members, delete a list, or start a new one.' },
   { surface: 'marketing', path: '/audience/new', label: 'Create list',

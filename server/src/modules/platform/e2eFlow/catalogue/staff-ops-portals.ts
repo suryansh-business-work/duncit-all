@@ -2694,6 +2694,72 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
+    name: 'Marketing: Status',
+    description:
+      'The Duncit statuses published at /status: media, caption and an optional link, sent to everyone or to chosen cities, kept for 24 hours, for ever or until a picked date. They ride at the front of the apps\' status rail.',
+    sub_flows: [
+      {
+        name: 'Publish a global status',
+        description: 'The simplest status: everyone sees it for 24 hours.',
+        steps: [
+          ['Open Marketing > Status', 'The table lists published statuses with their scope, expiry, Live chip and view count'],
+          ['Press New status', 'The dialog asks for a title, media, caption, link, scope and expiry'],
+          ['Upload an image, add a caption, leave the link empty, keep scope Global and expiry 24 hours, then save', 'A toast confirms it and the row shows "Global", an expiry 24 hours from now and a Live chip'],
+          ['Open the customer app in any city', 'A Duncit ring sits first in the status rail; opening it shows the image and caption'],
+        ],
+      },
+      {
+        name: 'Publish to chosen cities only',
+        description: 'A location-wise status reaches only the cities picked.',
+        steps: [
+          ['Create a status, choose scope "Selected cities" and pick two cities', 'The cities show as chips; saving with none picked is refused with "Pick at least one city"'],
+          ['Save it', 'The table row lists both city names instead of "Global"'],
+          ['Open the app with one of those cities selected', 'The Duncit ring shows'],
+          ['Switch the app to a city that was not picked', 'The Duncit ring is gone, and the rest of the rail is unchanged'],
+        ],
+      },
+      {
+        name: 'Expiry: never and custom',
+        description: 'The three expiry choices, and what the apps do at the end.',
+        steps: [
+          ['Create a status with expiry Never', 'The table shows "Never" and the status stays in the rail indefinitely'],
+          ['Create one with expiry Custom and pick a past date', 'The form refuses it and asks for a future date and time'],
+          ['Pick a time a few minutes ahead and save', 'The table shows that date; the app still shows the ring'],
+          ['Wait until that time passes and reload the app', 'The Duncit ring is gone, while the row stays in the table marked Expired'],
+          ['Reopen that expired row', 'It reopens as Custom with its stored date, not back at 24 hours'],
+        ],
+      },
+      {
+        name: 'A status with a link',
+        description: 'The slide can send someone somewhere.',
+        steps: [
+          ['Create a status with the link /pod-ideas', 'It saves; a link of plain http:// is refused'],
+          ['Open it in the app and tap "See more"', 'The app closes the status and opens Pod Ideas'],
+          ['Create one with an https link and tap "See more"', 'It opens outside the app'],
+        ],
+      },
+      {
+        name: 'Switch a status off, and delete one',
+        description: 'Taking a status out of the rail, with and without keeping the record.',
+        steps: [
+          ['Turn Active off on a live status and save', 'The Live chip clears and the app no longer shows it'],
+          ['Turn it back on', 'The app shows it again while it is still inside its expiry'],
+          ['Delete a status', 'A confirm names it; afterwards the row is gone and so is its view count'],
+        ],
+      },
+      {
+        name: 'Views and the unseen ring',
+        description: 'Watching a status is counted once per person.',
+        steps: [
+          ['Open the app as a member who has not seen it', 'The Duncit ring shows unseen'],
+          ['Watch the status, then go back to Home', 'The ring is greyed out, on both mWeb and the app'],
+          ['Reload the app and look again', 'It stays greyed'],
+          ['Open Marketing > Status', 'The Views count for that status went up by one; watching it twice does not count twice'],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Marketing: App Popups',
     description: 'Full-screen image popups shown once per person when the app opens, at /app-popups.',
     sub_flows: [

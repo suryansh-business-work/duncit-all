@@ -3995,6 +3995,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noOneHasViewedThisStory: 'No one has viewed this story yet.',
       openDetails: 'Open details',
       unmuteVideo: 'Unmute video',
+      // The Duncit tile: statuses the team publishes from Marketing > Status.
+      officialName: 'Duncit',
+      officialTile: 'Duncit status',
+      officialOpenLink: 'See more',
     },
     statusUpload: {
       preparingStatusUpload: 'Preparing status upload...',

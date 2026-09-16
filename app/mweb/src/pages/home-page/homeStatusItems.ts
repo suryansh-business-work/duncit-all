@@ -1,4 +1,4 @@
-import { isStoryLive } from '@duncit/utils';
+import { hasUnseenOfficialStatus, isStoryLive, type OfficialStatusSlide } from '@duncit/utils';
 import type { HomeStatusViewerItem } from './HomeStatusViewer';
 
 /** A rail tile + the viewer payload it opens. Building these as one ordered list
@@ -181,6 +181,47 @@ export function buildHomeStatusEntries(
   const unseen = all.filter((entry) => entry.active);
   const seen = all.filter((entry) => !entry.active);
   return [...shuffle(unseen), ...seen];
+}
+
+/**
+ * The pinned Duncit group: ONE tile whose slides are the live official statuses
+ * for the viewer's selected city. Its link rides each SLIDE (a status carries
+ * its own `link_url`), not the group, so "See more" follows what is on screen.
+ */
+export function buildOfficialEntry(
+  slides: OfficialStatusSlide[],
+  name: string,
+  tileLabel: string,
+): HomeStatusEntry | null {
+  const first = slides[0];
+  if (!first) return null;
+  const firstIsVideo = first.mediaType === 'VIDEO';
+  // A video has no still to put in the header circle; the first image does.
+  const avatar = slides.find((slide) => slide.mediaType === 'IMAGE');
+  return {
+    key: 'official',
+    label: tileLabel,
+    imageUrl: firstIsVideo ? null : first.mediaUrl,
+    videoUrl: firstIsVideo ? first.mediaUrl : null,
+    initials: initials(name),
+    active: hasUnseenOfficialStatus(slides),
+    viewer: {
+      kind: 'official',
+      label: name,
+      avatarUrl: avatar?.mediaUrl,
+      mediaUrl: first.mediaUrl,
+      mediaType: first.mediaType,
+      slides: slides.map((slide) => ({
+        id: slide.id,
+        mediaUrl: slide.mediaUrl,
+        mediaType: slide.mediaType,
+        caption: slide.caption,
+        expiresAt: slide.expiresAt,
+        linkUrl: slide.linkUrl,
+        linkInternal: slide.linkInternal,
+      })),
+    },
+  };
 }
 
 /** The ad fields a sponsored story is built from (the public ad projection). */

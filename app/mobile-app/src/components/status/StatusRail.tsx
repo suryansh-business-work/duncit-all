@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -19,7 +18,15 @@ import { TogglePostLikeDocument } from '@/graphql/posts';
 import type { StatusGroup } from '@/hooks/useStatus';
 import { AdCard } from '@/components/ads/AdCard';
 import { useActiveAds } from '@/hooks/useActiveAds';
+import { useOfficialStatus } from '@/hooks/useOfficialStatus';
 import { buildAdStory } from '@/components/status/adStory';
+import { buildOfficialStory, type OfficialStory } from '@/components/status/officialStory';
+import {
+  openOfficialLink,
+  openStoryTarget,
+  pickSlideSeen,
+  pickViewerStatus,
+} from '@/components/status/statusRailActions';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
@@ -51,7 +58,30 @@ function shuffleStatus<T>(items: T[]): T[] {
   return copy;
 }
 
-/** Home status rail — "Your story" upload tile first, then the followed clubs /
+/** Duncit's own pinned tile, at the very head of the rail — before "Your story"
+ * and before the sponsored tile. Renders nothing while no status is live, and
+ * greys its ring through the rail's own seen rule, like every other tile.
+ * Hoisted: a component defined inside another is remade on every render. */
+function OfficialStatusTile({
+  story,
+  seenIds,
+  onPress,
+}: Readonly<{ story: OfficialStory | null; seenIds: Set<string>; onPress: () => void }>) {
+  const { t } = useTranslation();
+  if (!story) return null;
+  return (
+    <StatusTile
+      testID="status-official-tile"
+      label={t('mweb.status.officialTile')}
+      image={story.photo}
+      seen={isGroupSeen(story, seenIds)}
+      onPress={onPress}
+    />
+  );
+}
+
+/** Home status rail — Duncit's own pinned status first (when one is live), then
+ * the "Your story" upload tile, the sponsored tile, and the followed clubs /
  * people ordered as [unseen (randomised)] → [seen, at the end]. The own tile
  * shows upload progress (Bug 1), and the viewer supports like (Bug 5), viewers
  * (Bug 4) and delete (Bug 7). */
@@ -72,12 +102,25 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   // it is not somebody's story to walk to, and keeping it out leaves the tile
   // indexes (and everything that reads them) exactly as they were.
   const [adOpen, setAdOpen] = useState(false);
+  // Duncit's own pinned group opens the same way, and for the same reason.
+  const [officialOpen, setOfficialOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
   const { ads } = useActiveAds('STATUS');
   const ad = ads[0];
   const adStory = useMemo(() => (ad ? buildAdStory(ad) : null), [ad]);
   const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
+  // The live Duncit statuses for the city the viewer has SELECTED.
+  const {
+    statuses: officialStatuses,
+    seenIds: officialSeenIds,
+    recordView: recordOfficialView,
+  } = useOfficialStatus();
+  const officialName = t('mweb.status.officialName');
+  const officialStory = useMemo(
+    () => buildOfficialStory(officialStatuses, officialName),
+    [officialStatuses, officialName],
+  );
 
   // Stable-per-load shuffle: re-shuffles only when `items` changes (refetch /
   // app open), NOT on every seen change.
@@ -112,15 +155,25 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
 
   const closeViewer = () => {
     setAdOpen(false);
+    setOfficialOpen(false);
     setActiveIndex(null);
   };
 
   const openTarget = (target: StoryTarget) => {
     closeViewer();
-    if (target.kind === 'club') openClub(target.clubSlug);
-    else if (target.kind === 'link') fireAndForget(Linking.openURL(target.url));
-    else navigation.navigate('PublicProfile', { userId: target.id });
+    openStoryTarget(target, navigation, openClub);
   };
+
+  // A pinned group has no siblings to walk to, so it gets no next/prev.
+  const standalone = adOpen || officialOpen;
+  const viewerStatus = pickViewerStatus(
+    { official: officialOpen, ad: adOpen },
+    { official: officialStory, ad: adStory, active },
+  );
+  const slideSeen = pickSlideSeen(
+    { official: officialOpen, person: activeIsPerson },
+    { official: recordOfficialView, story: recordView },
+  );
 
   const toggleLike = useCallback((slideId: string) => {
     graphqlRequest(TogglePostLikeDocument, { id: slideId }, { auth: true }).catch(() => undefined);
@@ -145,6 +198,11 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
           paddingHorizontal={14}
           alignItems="flex-start"
         >
+          <OfficialStatusTile
+            story={officialStory}
+            seenIds={officialSeenIds}
+            onPress={() => setOfficialOpen(true)}
+          />
           <StatusTile
             testID="status-mine"
             label={uploading ? 'Posting…' : 'Your story'}
@@ -201,18 +259,20 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
           </XStack>
         </ScrollRail>
       </SurfaceCard>
-      {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
-          running past its end closes the viewer (which falls back to onClose). */}
+      {/* A pinned story — sponsored or Duncit's own — has no siblings to walk
+          to, so it gets no next/prev: running past its end closes the viewer
+          (which falls back to onClose). */}
       <StatusViewer
-        status={adOpen ? adStory : (active ?? null)}
+        status={viewerStatus}
         onClose={closeViewer}
-        onNext={adOpen ? undefined : goNext}
-        onPrev={adOpen ? undefined : goPrev}
+        onNext={standalone ? undefined : goNext}
+        onPrev={standalone ? undefined : goPrev}
         onOpenTarget={openTarget}
+        onOpenLink={openOfficialLink}
         onDelete={activeIsMine ? setPendingDelete : undefined}
         onViewers={activeIsMine ? setViewersStoryId : undefined}
         onToggleLike={activeIsPerson ? toggleLike : undefined}
-        onSlideSeen={activeIsPerson ? recordView : undefined}
+        onSlideSeen={slideSeen}
         authorUserId={activeIsMine ? mine?.authorId : undefined}
         onOpenAuthor={(userId) => openTarget({ kind: 'user', id: userId })}
       />

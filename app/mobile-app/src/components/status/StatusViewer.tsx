@@ -10,7 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { StatusVideo } from '@/components/status/StatusVideo';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { StoryTarget } from '@/hooks/useStoryRail';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { StatusViewerFooter } from '@/components/status/StatusViewerFooter';
 import { StatusViewerMenu } from '@/components/status/StatusViewerMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { statusRemainingLabel } from '@/utils/date-format';
@@ -19,7 +19,12 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A viewer item: an author's story group, optionally carrying a sub-label and a
  * deep-link target (followed club/pod/user) for the "Open details" button. */
-type ViewerStatus = StatusGroup & { subLabel?: string | null; target?: StoryTarget };
+type ViewerStatus = StatusGroup & {
+  subLabel?: string | null;
+  target?: StoryTarget;
+  /** Duncit's own pinned group — names its parts with the official test ids. */
+  official?: boolean;
+};
 
 interface StatusViewerProps {
   status: ViewerStatus | null;
@@ -45,6 +50,9 @@ interface StatusViewerProps {
   onToggleLike?: (slideId: string) => void;
   /** Record that a slide was shown so its ring greys (Bug 2). */
   onSlideSeen?: (slideId: string) => void;
+  /** Duncit statuses only — open the slide's own link ("See more"). Each status
+   * carries its own, so it belongs to the slide rather than to the group. */
+  onOpenLink?: (url: string) => void;
   /** Slide to open on. A per-story rail (the club page) opens the tapped
    * story; author rails open at the start. */
   startIndex?: number;
@@ -209,42 +217,6 @@ function StatusMedia({
   );
 }
 
-/** Followers' stories only — the heart with its running like count (Bug 5). */
-function StatusLikeButton({
-  liked,
-  likeCount,
-  onPress,
-}: Readonly<{ liked: boolean; likeCount: number; onPress: () => void }>) {
-  const { t } = useTranslation();
-  const { accent } = useThemeColors();
-  return (
-    <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
-      <XStack
-        testID="status-like"
-        role="button"
-        tabIndex={0}
-        hitSlop={8}
-        aria-label={liked ? t('mweb.a11y.unlikeStory') : t('mweb.a11y.likeStory')}
-        onPress={onPress}
-        alignItems="center"
-        gap={6}
-        pressStyle={PRESS_STYLE.row}
-      >
-        <MaterialIcons
-          name={liked ? 'favorite' : 'favorite-border'}
-          size={26}
-          color={liked ? accent : '#ffffff'}
-        />
-        {likeCount > 0 ? (
-          <Text testID="status-like-count" fontSize={14} fontWeight="600" color="#ffffff">
-            {likeCount}
-          </Text>
-        ) : null}
-      </XStack>
-    </XStack>
-  );
-}
-
 /** Full-screen story viewer — multi-slide, auto-advancing (15s per image, video
  * to its end), with tap zones for manual prev/next and a close button. */
 export function StatusViewer({
@@ -258,11 +230,11 @@ export function StatusViewer({
   onViewers,
   onToggleLike,
   onSlideSeen,
+  onOpenLink,
   startIndex = 0,
   authorUserId,
   onOpenAuthor,
 }: Readonly<StatusViewerProps>) {
-  const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
   const authorId = authorUserId ?? (status?.target?.kind === 'user' ? status.target.id : undefined);
   const openAuthor =
@@ -295,6 +267,8 @@ export function StatusViewer({
   const hasMenu = canDeleteSlide || !!onReport;
   // Countdown until the status is auto-removed (recomputed per slide change).
   const remaining = statusRemainingLabel(current?.expiresAt);
+  // Duncit's own pinned group, whose parts carry the official test ids.
+  const official = status?.official === true;
 
   // Past the last slide, hand off to the next author's story (bug 2); if there
   // is none, close. A bare onClose is the fallback when no sibling exists.
@@ -438,7 +412,7 @@ export function StatusViewer({
             ) : null}
             <YStack
               flex={1}
-              testID="status-swipe"
+              testID={official ? 'status-official-slide' : 'status-swipe'}
               onStartShouldSetResponder={() => true}
               onResponderGrant={(event) => {
                 swipeStartX.current = event.nativeEvent.pageX;
@@ -474,58 +448,17 @@ export function StatusViewer({
                 />
               </XStack>
             </YStack>
-            {current?.caption ? (
-              <Text color="#ffffff" fontSize={14} textAlign="center" padding={16}>
-                {current.caption}
-              </Text>
-            ) : null}
-            {onToggleLike && current ? (
-              <StatusLikeButton liked={liked} likeCount={likeCount} onPress={toggleLike} />
-            ) : null}
-            {onViewers && current ? (
-              <XStack paddingHorizontal={16} paddingTop={8}>
-                <XStack
-                  testID="status-viewers"
-                  role="button"
-                  tabIndex={0}
-                  hitSlop={8}
-                  aria-label={t('mweb.common.seeWhoViewedThisStory')}
-                  onPress={() => onViewers(current.id)}
-                  alignItems="center"
-                  gap={6}
-                  pressStyle={PRESS_STYLE.row}
-                >
-                  <MaterialIcons name="visibility" size={20} color="#ffffff" />
-                  <Text fontSize={13} fontWeight="600" color="#ffffff">
-                    Viewers
-                  </Text>
-                </XStack>
-              </XStack>
-            ) : null}
-            {status?.target && onOpenTarget ? (
-              <XStack paddingHorizontal={16} paddingBottom={12}>
-                <XStack
-                  testID="status-open-target"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={t('mweb.status.openDetails')}
-                  onPress={() => onOpenTarget(status.target as StoryTarget)}
-                  flex={1}
-                  height={52}
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={6}
-                  borderRadius={999}
-                  backgroundColor="$primary"
-                  pressStyle={PRESS_STYLE.control}
-                >
-                  <Text fontSize={15} fontWeight="600" color={onPrimary}>
-                    {t('mweb.status.openDetails')}
-                  </Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={onPrimary} />
-                </XStack>
-              </XStack>
-            ) : null}
+            <StatusViewerFooter
+              slide={current}
+              official={official}
+              liked={liked}
+              likeCount={likeCount}
+              onToggleLike={onToggleLike ? toggleLike : undefined}
+              onViewers={onViewers}
+              target={status?.target}
+              onOpenTarget={onOpenTarget}
+              onOpenLink={onOpenLink}
+            />
           </SafeAreaView>
         </YStack>
       </ModalThemeScope>

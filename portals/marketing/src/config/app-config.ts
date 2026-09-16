@@ -42,6 +42,10 @@ export const appConfig = {
         { label: 'Mail Preferences', labelKey: 'shell.nav.mailPreferences', to: '/campaigns/mail-preferences', icon: 'markEmailRead' },
       ],
     },
+    // Beside Campaigns rather than inside it: a status is published, not sent —
+    // it sits at the front of the apps' status rail until it expires or is
+    // switched off, so nothing about it is a dispatch.
+    { label: 'Status', labelKey: 'shell.nav.status', to: '/status', icon: 'newspaper' },
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
     { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },

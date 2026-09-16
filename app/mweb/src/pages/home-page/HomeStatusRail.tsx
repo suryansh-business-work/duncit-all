@@ -13,6 +13,7 @@ import MyStatusUploadTile from './MyStatusUploadTile';
 import StoryViewersDialog from './StoryViewersDialog';
 import { buildAdViewer, buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
 import { DELETE_STORY_POST, RECORD_STORY_VIEW, TOGGLE_STORY_LIKE } from './queries';
+import { useOfficialStatuses } from './useOfficialStatuses';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface HomeStatusRailProps {
@@ -41,11 +42,15 @@ export default function HomeStatusRail({
   // not somebody's story to walk to, and keeping it out leaves the tile indexes
   // (and everything that reads them) exactly as they were.
   const [adOpen, setAdOpen] = useState(false);
+  // The pinned Duncit group opens the same way, for the same reason.
+  const [officialOpen, setOfficialOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
   const { ads } = useActiveAds('STATUS');
   const ad = ads[0];
   const adViewer = useMemo(() => (ad ? buildAdViewer(ad) : null), [ad]);
+  const official = useOfficialStatuses(t('mweb.status.officialName'), t('mweb.status.officialTile'));
+  const officialEntry = official.entry;
 
   const [recordView] = useMutation<any>(RECORD_STORY_VIEW);
   const [toggleLike] = useMutation<any>(TOGGLE_STORY_LIKE);
@@ -71,10 +76,15 @@ export default function HomeStatusRail({
   );
   const offset = myViewer ? 1 : 0;
   const openedItem = activeIndex == null ? null : viewerItems[activeIndex] ?? null;
-  const activeItem = adOpen ? adViewer : openedItem;
+  // Neither pinned tile joins the walk sequence, so only one of the three can be open.
+  let activeItem = openedItem;
+  if (adOpen) activeItem = adViewer;
+  else if (officialOpen) activeItem = officialEntry?.viewer ?? null;
   const activeKind = activeItem?.kind;
+  const pinnedOpen = adOpen || officialOpen;
   const closeViewer = () => {
     setAdOpen(false);
+    setOfficialOpen(false);
     setActiveIndex(null);
   };
 
@@ -95,6 +105,9 @@ export default function HomeStatusRail({
     },
     [toggleLike],
   );
+  // A Duncit slide is recorded the same moment a follower's story slide is.
+  const storyRecordView = activeKind === 'user' ? handleRecordView : undefined;
+  const recordViewOf = activeKind === 'official' ? official.recordView : storyRecordView;
   const confirmDelete = () => {
     const id = pendingDelete;
     setPendingDelete(null);
@@ -113,8 +126,20 @@ export default function HomeStatusRail({
         sx={{ ...SURFACE_SX, py: 1.5, minHeight: 96, overflowY: 'hidden', scrollPaddingInline: 12 }}
         contentSx={{ px: 1.5 }}
       >
+        {/* Duncit's own status is pinned ahead of every other tile. */}
+        {officialEntry && (
+          <HomeStatusTile
+            testId="status-official-tile"
+            label={officialEntry.label}
+            imageUrl={officialEntry.imageUrl}
+            videoUrl={officialEntry.videoUrl}
+            initials={officialEntry.initials}
+            active={officialEntry.active}
+            onClick={() => setOfficialOpen(true)}
+          />
+        )}
         <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
-        {/* The sponsored tile sits second, right after "Your story" (mock). */}
+        {/* The sponsored tile follows "Your story" (mock). */}
         {ad && <AdTile ad={ad} onOpen={() => setAdOpen(true)} />}
         {entries.map((entry, entryIndex) => (
           <HomeStatusTile
@@ -146,17 +171,17 @@ export default function HomeStatusRail({
           <NearMeIcon sx={{ fontSize: 22, color: 'secondary.main', transform: 'rotate(45deg)' }} />
         </Stack>
       </ScrollRail>
-      {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
+      {/* A pinned story has no siblings to walk to, so it gets no next/prev:
           running past its end closes the viewer (which falls back to onClose). */}
       <HomeStatusViewer
         item={activeItem}
         onClose={closeViewer}
-        onNext={adOpen ? undefined : goNext}
-        onPrev={adOpen ? undefined : goPrev}
+        onNext={pinnedOpen ? undefined : goNext}
+        onPrev={pinnedOpen ? undefined : goPrev}
         onDelete={activeKind === 'mine' ? setPendingDelete : undefined}
         onViewers={activeKind === 'mine' ? setViewersStoryId : undefined}
         onToggleLike={activeKind === 'user' ? handleLike : undefined}
-        onRecordView={activeKind === 'user' ? handleRecordView : undefined}
+        onRecordView={recordViewOf}
       />
       <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
       <ConfirmDialog

@@ -31,6 +31,10 @@ export interface HomeStatusViewerSlide {
   likedByMe?: boolean;
   commentCount?: number;
   thumbnailUrl?: string;
+  /** "See more" target — the pinned Duncit group carries its link per slide. */
+  linkUrl?: string;
+  /** True when linkUrl is an in-app path; false leaves the app. */
+  linkInternal?: boolean;
 }
 
 /** "X remaining" until the status auto-expires; null when unknown/expired.
@@ -59,8 +63,34 @@ export interface HomeStatusViewerItem {
    * Absent on club, pod and ad stories, whose header names nobody's profile. */
   authorId?: string;
   /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7).
-   * An `ad` story carries none of those: it is sponsored media, not somebody's post. */
-  kind?: 'mine' | 'user' | 'club' | 'pod' | 'ad';
+   * An `ad` story carries none of those: it is sponsored media, not somebody's post.
+   * `official` is the pinned Duncit group from Marketing > Status. */
+  kind?: 'mine' | 'user' | 'club' | 'pod' | 'ad' | 'official';
+}
+
+/** Where the action under the shown slide goes. The pinned Duncit group carries
+ * its link per SLIDE; every other story has one target for the whole item. */
+function slideTarget(item: HomeStatusViewerItem, slide?: HomeStatusViewerSlide) {
+  if (slide?.linkUrl) return { url: slide.linkUrl, internal: slide.linkInternal === true };
+  return { url: item.targetUrl, internal: item.internal === true };
+}
+
+/** Test ids and copy the pinned Duncit group names differently from a story. */
+function viewerChrome(kind: HomeStatusViewerItem['kind']) {
+  if (kind === 'official') {
+    return {
+      slideTestId: 'status-official-slide',
+      captionTestId: 'status-official-caption',
+      linkTestId: 'status-official-link',
+      linkKey: 'mweb.status.officialOpenLink',
+    };
+  }
+  return {
+    slideTestId: undefined,
+    captionTestId: undefined,
+    linkTestId: 'status-open-target',
+    linkKey: 'mweb.status.openDetails',
+  };
 }
 
 interface HomeStatusViewerProps {
@@ -215,11 +245,13 @@ export default function HomeStatusViewer({
   // sit there until the viewer closed it by hand.
   const handleVideoError = () => goNext();
 
+  const chrome = viewerChrome(item.kind);
+  const target = slideTarget(item, current);
   const openTarget = () => {
-    if (!item.targetUrl) return;
+    if (!target.url) return;
     onClose();
-    if (item.internal) navigate(item.targetUrl);
-    else window.open(item.targetUrl, '_blank', 'noreferrer');
+    if (target.internal) navigate(target.url);
+    else window.open(target.url, '_blank', 'noreferrer');
   };
 
   // The header sits over the tap zones, so the name is a real target; the
@@ -271,6 +303,7 @@ export default function HomeStatusViewer({
       paper: { 'aria-label': item.label, sx: { bgcolor: '#08070b' } }
     }}>
       <Box
+        data-testid={chrome.slideTestId}
         onPointerDown={(event) => {
           setPaused(true);
           pointerStartX.current = event.clientX;
@@ -419,17 +452,18 @@ export default function HomeStatusViewer({
           nextPeek={nextPeek}
           index={index}
           onJumpTo={(i) => setIndex(i)}
-          hasOpenButton={!!item.targetUrl}
+          hasOpenButton={!!target.url}
+          captionTestId={chrome.captionTestId}
         />
-        {item.targetUrl && (
+        {target.url && (
           <DuncitButton
-            data-testid="status-open-target"
+            data-testid={chrome.linkTestId}
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={openTarget}
             size="large" sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))' }}
           >
-            {t('mweb.status.openDetails')}
+            {t(chrome.linkKey)}
           </DuncitButton>
         )}
       </Box>

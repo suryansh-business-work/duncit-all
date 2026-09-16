@@ -63,6 +63,11 @@ exports:
   - 'formatMjml'
   - 'nationalPhoneDigits'
   - 'isStoryLive'
+  - 'isOfficialStatusLive'
+  - 'buildOfficialStatusSlides'
+  - 'hasUnseenOfficialStatus'
+  - 'OfficialStatusSlide'
+  - 'OfficialStatusSource'
   - 'videoSourceUrl'
   - 'imageSourceUrl'
   - 'isVideoUrl'
@@ -855,6 +860,9 @@ because native's codegen refuses an interpolated one.
 | `formatMjml` | `(mjml: string) => string` | — | Pretty-prints an MJML template. |
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
+| `isOfficialStatusLive` | `(status, now = Date.now()) => boolean` | — | Whether a Duncit status (Marketing > Status) still belongs in the rail. `is_active: false` never shows; `expires_at: null` never expires. |
+| `buildOfficialStatusSlides` | `(statuses, now = Date.now()) => OfficialStatusSlide[]` | — | The live statuses as the slides the pinned Duncit group renders — media, caption, and the "See more" link with `linkInternal` saying whether the router or the browser opens it. mWeb and the native app share this derivation and nothing else. |
+| `hasUnseenOfficialStatus` | `(slides) => boolean` | — | Whether the Duncit ring is lit — true while one slide is unwatched. |
 | `videoSourceUrl` | `(url) => string` | — | The URL to hand a video player: our ImageKit addresses ask for the stored file, everything else is unchanged. |
 | `imageSourceUrl` | `(url, width) => string` | — | The URL to paint an image `width` pixels wide: our ImageKit addresses ask for a resized copy (`tr=w-<width>`), everything else — and a URL already carrying a `tr=` — is unchanged. A card's photo drops 3-4x in bytes. |
 | `isVideoUrl` | `(url) => boolean` | — | Whether an address names a video file. Tolerates a query string, which the eight hand-rolled `/\.(mp4\|mov\|webm)$/` copies did not. |

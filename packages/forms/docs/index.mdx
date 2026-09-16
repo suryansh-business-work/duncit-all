@@ -442,9 +442,11 @@ one schema with every field optional. A schema that accepts a blank number becau
 typed `z.ZodType<ContactValueValues>` so both branches present ONE type to `useForm` — a raw
 union gives react-hook-form a union to resolve field paths against, which it cannot do.
 
-Phone numbers validate against `PHONE_INTL`, not the 10-digit Indian pattern: there is a
-country-code picker beside the box, and a `+91`-only rule would refuse numbers the picker
-itself offers.
+Phone numbers validate against `PHONE_INTL` (6-15 digits), not the 10-digit Indian pattern: there
+is a country-code picker beside the box, and a `+91`-only rule would refuse numbers the picker
+itself offers. The one exception is India's own dial code — `+91` is additionally held to
+`PHONE_NUMBER_IN`, so a 9-digit number no longer passes just because it fits the international
+range.
 
 ### One saved address
 

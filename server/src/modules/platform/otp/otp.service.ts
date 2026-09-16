@@ -7,7 +7,8 @@ import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SEC, OTP_TTL_MS } from './otp.constants';
 import { E2E_HELD_REASON, holdRunAccountCode } from '@modules/platform/e2eRun/e2eRun.codes';
-import { deliverOtp } from './otp.delivery';
+import { deliverOtp, type OtpDeliveryOutcome } from './otp.delivery';
+import { msg91VerifyOtp, runtimeMsg91Credentials } from '@modules/platform/msg91/msg91.gateway';
 import {
   isPhoneMedium,
   OTP_MEDIUMS,
@@ -229,7 +230,41 @@ function findLive(purpose: OtpPurpose, target: Readonly<NormalizedTarget>) {
     ...targetFilter(target),
     consumed_at: null,
     expires_at: { $gt: new Date() },
-  }).sort({ created_at: -1 });
+  })
+    .select('+sms_request_id')
+    .sort({ created_at: -1 });
+}
+
+/** A delivery as it is stored and returned — MSG91's request id stays behind. */
+const publicDelivery = ({ medium, status, reason }: OtpDeliveryOutcome): IOtpDelivery => ({
+  medium,
+  status,
+  reason,
+});
+
+/**
+ * Whether `supplied` is this challenge's code.
+ *
+ * Our own hash first: that is the code WhatsApp or email carried, or the test
+ * code. Then, only when an SMS really went out, MSG91 — it generated that code,
+ * so it is the only one that can say whether it is right. A MSG91 outage throws
+ * from the gateway before an attempt is counted, so it never burns a guess.
+ */
+async function codeMatches(doc: IOtpChallenge, supplied: string): Promise<boolean> {
+  if (sha(supplied) === doc.code_hash) return true;
+  if (!doc.sms_request_id) return false;
+  const creds = await runtimeMsg91Credentials();
+  if (!creds) return false;
+  const answer = await msg91VerifyOtp(creds, doc.sms_request_id, supplied);
+  if (!answer.ok) {
+    logs.server.info('otp.service', 'codeMatches', {
+      msg: 'MSG91 rejected the code',
+      code: answer.code,
+      reason: answer.message,
+      challenge_id: String(doc._id),
+    });
+  }
+  return answer.ok;
 }
 
 /**
@@ -268,13 +303,16 @@ export const otpService = {
     // A code for the e2e run account is recorded for the suite and not sent,
     // and reported SENT so every screen reads exactly as it does in production.
     const held = await holdRunAccountCode({ purpose: input.purpose, ...target, code: candidate });
-    const deliveries: IOtpDelivery[] = held
+    const outcomes: OtpDeliveryOutcome[] = held
       ? mediums.map((medium) => ({ medium, status: 'SENT', reason: E2E_HELD_REASON }))
       : await Promise.all(
           mediums.map((medium) =>
             deliverOtp({ medium, ...target, recipient_name, code: candidate, purpose: input.purpose })
           )
         );
+    const deliveries = outcomes.map(publicDelivery);
+    // MSG91 made the SMS code; its request id is how that code is checked.
+    const sms_request_id = outcomes.find((d) => d.request_id)?.request_id ?? '';
     const stubbed = deliberatelyStubbed(deliveries);
     const code = stubbed ? TEST_CODE : candidate;
 
@@ -289,6 +327,7 @@ export const otpService = {
           ...target,
           recipient_name,
           code_hash: sha(code),
+          sms_request_id,
           expires_at,
           // A fresh code deserves a fresh allowance; otherwise a resend
           // inherits the guesses already spent on the old one.
@@ -323,7 +362,9 @@ export const otpService = {
    * available the moment somebody gets one right.
    */
   async verify(challengeId: string, code: string): Promise<IOtpChallenge> {
-    const doc = await OtpChallengeModel.findById(challengeId).catch(() => null);
+    const doc = await OtpChallengeModel.findById(challengeId)
+      .select('+sms_request_id')
+      .catch(() => null);
     if (!doc) throw badInput('That code request has expired — send a new one');
     return this.check(doc, code);
   },
@@ -351,7 +392,7 @@ export const otpService = {
       });
     }
     const supplied = String(code ?? '').trim();
-    if (!supplied || sha(supplied) !== doc.code_hash) {
+    if (!supplied || !(await codeMatches(doc, supplied))) {
       doc.attempts += 1;
       await doc.save();
       const left = Math.max(OTP_MAX_ATTEMPTS - doc.attempts, 0);

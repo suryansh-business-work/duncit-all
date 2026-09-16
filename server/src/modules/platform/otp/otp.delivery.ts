@@ -9,6 +9,11 @@ import { isWhatsappDestination } from '@utils/phone';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { sendLoginOtpEmail, sendPasswordResetOtpEmail } from '@services/email/email.service';
+import {
+  msg91Identifier,
+  msg91SendOtp,
+  runtimeMsg91Credentials,
+} from '@modules/platform/msg91/msg91.gateway';
 import { OTP_TTL_MINUTES } from './otp.constants';
 import type { IOtpDelivery, OtpMedium, OtpPurpose } from './otp.model';
 
@@ -31,6 +36,15 @@ const destinationOf = (input: Readonly<OtpDeliveryInput>): string =>
 
 /** AiSensy records a name against every send and rejects an empty one. */
 const nameOf = (input: Readonly<OtpDeliveryInput>): string => input.recipient_name || 'there';
+
+/**
+ * What one medium reports back to `otpService`. `request_id` is MSG91's handle
+ * on an SMS it really sent — MSG91 made that code, so the id is what a typed
+ * code is later checked against. It is kept on the challenge, never returned.
+ */
+export interface OtpDeliveryOutcome extends IOtpDelivery {
+  request_id?: string;
+}
 
 const sent = (medium: OtpMedium): IOtpDelivery => ({ medium, status: 'SENT', reason: '' });
 const failed = (medium: OtpMedium, reason: string): IOtpDelivery =>
@@ -162,18 +176,60 @@ const EMAIL_SENDERS: Partial<Record<OtpPurpose, typeof sendPasswordResetOtpEmail
 };
 
 /**
+ * SMS, over MSG91's OTP widget.
+ *
+ * Unlike the other two mediums, the code is MSG91's, not `input.code`: the
+ * widget generates it, sends it and later checks it. What comes back is the
+ * request id that check needs, carried to the challenge as `request_id`.
+ *
+ * An unconfigured widget is STUBBED, exactly as WhatsApp is without an AiSensy
+ * key, so a fresh install still gets the displayed test code; a configured one
+ * that refuses is FAILED, so an outage never becomes a bypass.
+ */
+async function deliverSms(input: Readonly<OtpDeliveryInput>): Promise<OtpDeliveryOutcome> {
+  const creds = await runtimeMsg91Credentials();
+  if (!creds) {
+    return {
+      medium: 'SMS',
+      status: 'STUBBED',
+      reason: 'No SMS provider is configured yet — use the displayed test code',
+    };
+  }
+  try {
+    const answer = await msg91SendOtp(
+      creds,
+      msg91Identifier(input.phone_extension, input.phone_number)
+    );
+    if (!answer.ok) {
+      logs.server.warn('otp.delivery', 'deliverSms', {
+        msg: 'MSG91 refused the send',
+        code: answer.code,
+        reason: answer.message,
+        purpose: input.purpose,
+        // NEVER the full number.
+        phone_suffix: input.phone_number.slice(-4),
+      });
+      return failed('SMS', answer.message);
+    }
+    return { ...sent('SMS'), request_id: answer.message };
+  } catch (error) {
+    return failed('SMS', error instanceof Error ? error.message : 'MSG91 could not be reached');
+  }
+}
+
+/**
  * The ONE seam a one-time code leaves Duncit through.
  *
- * Two of the three mediums are live. SMS has no provider on this platform at
- * all, so a code asked for over it is reported STUBBED and the server hands the
- * fixed development code back to the client — the whole flow above it
- * (challenge, expiry, attempt limit, single use) is the real one either way.
+ * All three mediums are wired: email over the platform mailer, WhatsApp over
+ * AiSensy and SMS over MSG91. A phone medium whose provider has no key yet is
+ * reported STUBBED and the server hands the fixed development code back to the
+ * client — the whole flow above it (challenge, expiry, attempt limit, single
+ * use) is the real one either way.
  *
- * Wiring the third one up is adding ONE branch here. Deliberately not
- * `if (isDev)`: that would make the shipped behaviour depend on an environment
- * variable instead of on whether a transport exists.
+ * Deliberately not `if (isDev)`: that would make the shipped behaviour depend
+ * on an environment variable instead of on whether a transport is configured.
  */
-export async function deliverOtp(input: Readonly<OtpDeliveryInput>): Promise<IOtpDelivery> {
+export async function deliverOtp(input: Readonly<OtpDeliveryInput>): Promise<OtpDeliveryOutcome> {
   /*
     Held communications, asked before the mediums so no channel slips past.
     A HELD code is FAILED, not STUBBED: holding traffic is not a decision to
@@ -185,17 +241,5 @@ export async function deliverOtp(input: Readonly<OtpDeliveryInput>): Promise<IOt
 
   if (input.medium === 'WHATSAPP') return deliverWhatsApp(input);
   if (input.medium === 'EMAIL') return deliverEmail(input);
-
-  logs.server.info('otp.delivery', 'deliverOtp', {
-    msg: 'one-time code not transmitted (no transport wired)',
-    medium: input.medium,
-    purpose: input.purpose,
-    // NEVER the code itself, and never the full number.
-    phone_suffix: input.phone_number.slice(-4),
-  });
-  return {
-    medium: input.medium,
-    status: 'STUBBED',
-    reason: 'No SMS provider is configured yet — use the displayed test code',
-  };
+  return deliverSms(input);
 }

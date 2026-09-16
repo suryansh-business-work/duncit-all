@@ -9,7 +9,7 @@ export const otpTypeDefs = /* GraphQL */ `
   enum OtpDeliveryStatus {
     "Genuinely handed to a provider."
     SENT
-    "No transport is wired for this medium yet — the test code is returned instead."
+    "No provider is configured for this medium yet — the test code is returned instead."
     STUBBED
     "The provider refused it."
     FAILED
@@ -46,8 +46,9 @@ export const otpTypeDefs = /* GraphQL */ `
     resend_after_seconds: Int!
     """
     The code itself, echoed back ONLY while no medium could really carry it —
-    which is the case for both SMS and WhatsApp today. Null the moment a real
-    transport is wired, so no client may depend on reading it.
+    which is the case while neither MSG91 (SMS) nor AiSensy (WhatsApp) has its
+    key in the Tech portal. Null the moment a real send happens, so no client
+    may depend on reading it.
     """
     test_code: String
   }

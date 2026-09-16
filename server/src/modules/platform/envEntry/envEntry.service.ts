@@ -6,6 +6,7 @@ import {
   aisensyConnection,
   githubConnection,
   googlePlayConnection,
+  msg91Connection,
   razorpayConnection,
   shiprocketConnection,
   slackConnection,
@@ -200,6 +201,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   AISENSY: (str) => aisensyConnection(str),
   GITHUB: githubConnection,
   GOOGLE_PLAY: googlePlayConnection,
+  MSG91: msg91Connection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

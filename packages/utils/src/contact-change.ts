@@ -32,21 +32,30 @@ export const isPhoneChannel = (channel: ContactChannel): channel is ContactPhone
   channel !== 'EMAIL';
 
 /**
+ * The feature flag that decides whether the contact number is proved by an SMS
+ * code (sent through MSG91) before it is stored. Seeded OFF. It governs the
+ * contact number ONLY — the WhatsApp number and the address always need a code.
+ */
+export const PHONE_OTP_FLAG = 'phone_otp_verification';
+
+/**
  * Whether changing this detail still has to be proved by a one-time code.
  *
- * The contact number is saved as typed — it is the detail people correct most
- * often, and a code on every correction turned a one-line fix into a wait. The
- * address and the WhatsApp number keep theirs: both are delivery channels whose
- * whole worth is that a message actually arrives, and a typo in either goes
- * unnoticed until something silently fails to reach anybody.
+ * The address and the WhatsApp number always do: both are delivery channels
+ * whose whole worth is that a message actually arrives, and a typo in either
+ * goes unnoticed until something silently fails to reach anybody.
+ *
+ * The contact number follows `PHONE_OTP_FLAG` (`phoneOtp`). Off, it is saved
+ * as typed — it is the detail people correct most often. On, it is proved by
+ * an SMS code when it is added and on every change.
  *
  * Stated once here because mWeb and native both read it (rule 40): the two
  * screens must not disagree about whether a number is proved before it is
- * stored, and the server agrees from its own side —
- * `setContactPhoneNumber` takes no code, the other two refuse without one.
+ * stored, and the server agrees from its own side — `setContactPhoneNumber`
+ * refuses while the flag is on.
  */
-export const contactChangeNeedsOtp = (channel: ContactChannel): boolean =>
-  channel !== 'PHONE';
+export const contactChangeNeedsOtp = (channel: ContactChannel, phoneOtp: boolean): boolean =>
+  channel !== 'PHONE' || phoneOtp;
 
 /** Where the dialog is: typing the new value, or typing the code sent to it. */
 export type ContactChangeStep = 'ENTER' | 'CODE';
@@ -182,16 +191,17 @@ export type ContactSubmitAction = 'UNCHANGED' | 'SEND_CODE' | 'SAVE';
  * UNCHANGED when the draft matches what the account already holds — a code
  * costs the person a wait, and a save that writes the same digits back is
  * nothing but a closed dialog that looks like it did something.
- * SEND_CODE for the address and the WhatsApp number, SAVE for the contact
- * number, which is stored on this very submit.
+ * SEND_CODE whenever `contactChangeNeedsOtp` says so, SAVE for the contact
+ * number while `phoneOtp` is off — it is then stored on this very submit.
  */
 export function contactSubmitAction(
   snapshot: Readonly<ContactSnapshot>,
   channel: ContactChannel,
   draft: Readonly<ContactDraft>,
+  phoneOtp: boolean,
 ): ContactSubmitAction {
   if (contactDraftIsUnchanged(snapshot, channel, draft)) return 'UNCHANGED';
-  return contactChangeNeedsOtp(channel) ? 'SEND_CODE' : 'SAVE';
+  return contactChangeNeedsOtp(channel, phoneOtp) ? 'SEND_CODE' : 'SAVE';
 }
 
 /** Where the number box's two fields live in step one's form (a `ContactDraft`). */
@@ -207,9 +217,13 @@ export interface ContactValueStepInput {
   isValid: boolean;
   /** The as-you-type check of the new number (IDLE on the email channel). */
   numberStatus: SignupContactStatus;
+  /** `PHONE_OTP_FLAG` — whether the contact number is proved by a code. */
+  phoneOtp: boolean;
 }
 
 export interface ContactValueStepView {
+  /** The sentence above the box — it mentions a code only when one follows. */
+  hint: string;
   buttonLabel: string;
   disabled: boolean;
   /** The helper and error lines under the number box. */
@@ -220,8 +234,9 @@ export interface ContactValueStepView {
  * Step one's button and the lines under its number box, decided once for the
  * dialog and its native twin (rule 40).
  *
- * The contact number is stored straight, so its button may not promise a code.
- * A number another account already holds — or one whose check is still in
+ * While the contact number is stored straight, its button may not promise a
+ * code; while it is proved by one, its hint says a code will be texted. A
+ * number another account already holds — or one whose check is still in
  * flight — keeps the button shut, with the refusal written under the box.
  */
 export function contactValueStepView(
@@ -229,10 +244,12 @@ export function contactValueStepView(
   labels: Readonly<ContactChangeLabels>,
   input: Readonly<ContactValueStepInput>,
 ): ContactValueStepView {
-  const needsCode = contactChangeNeedsOtp(channel);
+  const needsCode = contactChangeNeedsOtp(channel, input.phoneOtp);
   const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
   const busyLabel = needsCode ? labels.sending : labels.savingNumber;
+  const provedPhone = channel === 'PHONE' && needsCode;
   return {
+    hint: provedPhone ? labels.phoneCodeHint : labels.channel(channel).changeHint,
     buttonLabel: input.busy ? busyLabel : idleLabel,
     disabled:
       input.busy ||
@@ -273,6 +290,8 @@ export interface ContactChangeLabels {
   /** Step one, when the value is stored straight away — the contact number. */
   saveNumber: string;
   savingNumber: string;
+  /** The contact number's hint while `PHONE_OTP_FLAG` is on: a code is texted. */
+  phoneCodeHint: string;
   /** Step two. */
   codeLabel: string;
   codeSentTo: (destination: string) => string;
@@ -347,6 +366,7 @@ export function buildContactChangeLabels(t: ContactTranslate): ContactChangeLabe
     sending: t('mweb.contactChange.sending'),
     saveNumber: t('mweb.contactChange.saveNumber'),
     savingNumber: t('mweb.contactChange.savingNumber'),
+    phoneCodeHint: t('mweb.contactChange.phoneCodeHint'),
     codeLabel: t('mweb.contactChange.codeLabel'),
     codeSentTo: (destination) =>
       t('mweb.contactChange.codeSentTo', { vars: { destination } }),

@@ -3779,6 +3779,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       phoneTitle: 'Change phone number',
       phoneDirectHint:
         'This is the number Duncit will reach you on. It is saved as soon as you enter it.',
+      // While the phone_otp_verification flag is on, the number is proved first.
+      phoneCodeHint: 'We will text a 6-digit code to this number to confirm it is yours.',
       whatsappName: 'WhatsApp number',
       whatsappField: 'New WhatsApp number',
       whatsappEmpty: 'No WhatsApp number yet',

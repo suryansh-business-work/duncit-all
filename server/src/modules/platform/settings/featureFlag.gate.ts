@@ -10,6 +10,15 @@ import { FeatureFlagModel } from "./settings.model";
 export const PRODUCT_VISIBILITY_FLAG = "is_product_visible";
 
 /**
+ * Whether the contact number (`auth.phone`) is proved by an SMS code, sent
+ * through MSG91, when it is added or changed on mWeb and native. Seeded OFF —
+ * off, the number is saved as typed and stored unverified. The WhatsApp number
+ * is not governed by it. Twin of `PHONE_OTP_FLAG` in `@duncit/utils`, which the
+ * server cannot import (rule 40).
+ */
+export const PHONE_OTP_FLAG = "phone_otp_verification";
+
+/**
  * Flag reads are cached for a beat: the gate runs on every product operation,
  * and a flag row changes only when an admin flips it — which busts the cache
  * outright, so the window never costs an operator their toggle.

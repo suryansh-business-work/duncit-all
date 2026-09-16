@@ -63,6 +63,7 @@ import {
   commRowState,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
+  contactSubmitAction,
   contactValueStepView,
   contactDetailsComplete,
   contactEntriesFromPhoneBook,
@@ -254,6 +255,8 @@ interface ContactChangeMock {
   draftNumber: string;
   /** The as-you-type answer for the draft number. */
   numberStatus: SignupContactStatus;
+  /** The `phone_otp_verification` feature flag (PHONE_OTP_FLAG). */
+  phoneOtp: boolean;
 }
 
 interface SignupStepMock {
@@ -1093,8 +1096,9 @@ export default defineDemos('utils', [
       'Edit `draftNumber` to a number the account does not have and `Is a change` flips to ' +
       'true. Change only `draftExtension` — same digits, different country — and it is still ' +
       'a change, because +1 9845012345 is not the same number as +91 9845012345. Move ' +
-      '`channel` to EMAIL and `Sends a code` flips to true: the contact number is stored as ' +
-      'typed, the other two are proved first. Blank the ' +
+      '`channel` to EMAIL and `Sends a code` flips to true: while `phoneOtp` is off the ' +
+      'contact number is stored as typed, the other two are proved first. Turn `phoneOtp` on ' +
+      'and the PHONE row sends a code too, with the button and the hint saying so. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
       'contact details are required before the profile form will save. Set `numberStatus` ' +
@@ -1110,6 +1114,7 @@ export default defineDemos('utils', [
       draftExtension: '+91',
       draftNumber: '9845099999',
       numberStatus: 'TAKEN',
+      phoneOtp: false,
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1130,6 +1135,7 @@ export default defineDemos('utils', [
         blocked: false,
         isValid: true,
         numberStatus: mock.numberStatus,
+        phoneOtp: mock.phoneOtp,
       });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,
@@ -1138,7 +1144,9 @@ export default defineDemos('utils', [
         'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
         'Value stored': contactDraftValue(draft, mock.channel),
         'Is a change': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
-        'Sends a code': String(contactChangeNeedsOtp(mock.channel)),
+        'Sends a code': String(contactChangeNeedsOtp(mock.channel, mock.phoneOtp)),
+        'Next step': contactSubmitAction(account, mock.channel, draft, mock.phoneOtp),
+        Hint: view.hint,
         'Edit profile can save': String(contactDetailsComplete(account)),
         Button: view.buttonLabel,
         'Button disabled': String(view.disabled),

@@ -14,6 +14,16 @@ import {
   type EnvConnectionResult,
 } from './envEntry.connection';
 import type { EnvEntryConfig } from './envEntry.service';
+import { normalizePhone } from '@modules/platform/otp/otp.service';
+import {
+  msg91Identifier,
+  msg91RetryOtp,
+  msg91SendOtp,
+  msg91VerifyAccessToken,
+  msg91VerifyOtp,
+  type Msg91Answer,
+  type Msg91Credentials,
+} from '@modules/platform/msg91/msg91.gateway';
 
 export interface EnvTestRichResult {
   ok: boolean;
@@ -78,6 +88,56 @@ async function testDestination(provided: string | null | undefined, userId: stri
 }
 
 const SMTP_TEST_SUBJECT = 'Duncit Tech — SMTP test email';
+
+export type Msg91TestAction = 'SEND_OTP' | 'RETRY_OTP' | 'VERIFY_OTP' | 'VERIFY_ACCESS_TOKEN';
+
+export interface Msg91TestInput {
+  action: Msg91TestAction;
+  phone_extension?: string | null;
+  phone_number?: string | null;
+  req_id?: string | null;
+  otp?: string | null;
+  retry_channel?: number | null;
+  access_token?: string | null;
+}
+
+const trimmed = (value?: string | null) => (value ?? '').trim();
+
+/** What each widget step asks MSG91, and what it calls a success. */
+const MSG91_STEPS: Record<
+  Msg91TestAction,
+  {
+    missing: (input: Readonly<Msg91TestInput>) => string;
+    run: (creds: Msg91Credentials, input: Readonly<Msg91TestInput>) => Promise<Msg91Answer>;
+    success: string;
+  }
+> = {
+  SEND_OTP: {
+    missing: () => '',
+    run: (creds, input) => {
+      // The ONE phone normaliser (rule 34) refuses a bad shape before MSG91 bills a send.
+      const phone = normalizePhone(input.phone_extension, input.phone_number);
+      return msg91SendOtp(creds, msg91Identifier(phone.phone_extension, phone.phone_number));
+    },
+    success: 'Code sent — the request id is below',
+  },
+  RETRY_OTP: {
+    missing: (input) => (trimmed(input.req_id) ? '' : 'A request id is required'),
+    run: (creds, input) => msg91RetryOtp(creds, trimmed(input.req_id), input.retry_channel),
+    success: 'Code sent again',
+  },
+  VERIFY_OTP: {
+    missing: (input) =>
+      trimmed(input.req_id) && trimmed(input.otp) ? '' : 'A request id and the code are required',
+    run: (creds, input) => msg91VerifyOtp(creds, trimmed(input.req_id), trimmed(input.otp)),
+    success: 'Code verified — the access token is below',
+  },
+  VERIFY_ACCESS_TOKEN: {
+    missing: (input) => (trimmed(input.access_token) ? '' : 'An access token is required'),
+    run: (creds, input) => msg91VerifyAccessToken(creds, trimmed(input.access_token)),
+    success: 'MSG91 issued this access token',
+  },
+};
 
 const impl = {
   /**
@@ -321,6 +381,35 @@ const impl = {
     }
   },
 
+  /**
+   * One step of the MSG91 OTP widget with this entry's own keys.
+   *
+   * Each step is a separate press because the steps wait on a person — the
+   * code has to arrive on a handset before it can be verified — and `data`
+   * hands the next step what it needs. MSG91's refusal is the RESULT here,
+   * with its own code, never an exception.
+   */
+  async msg91(id: string, input: Msg91TestInput): Promise<EnvTestRichResult> {
+    const config = await rawConfig(id, 'MSG91');
+    const creds = { widget_id: str(config, 'widget_id'), auth_key: str(config, 'auth_key') };
+    if (!creds.widget_id || !creds.auth_key) {
+      return { ok: false, message: 'Widget ID and auth key are both required' };
+    }
+    const step = MSG91_STEPS[input.action];
+    const missing = step.missing(input);
+    if (missing) return { ok: false, message: missing };
+    try {
+      const answer = await step.run(creds, input);
+      if (!answer.ok) {
+        return { ok: false, message: `MSG91 refused: ${answer.message} (code ${answer.code})` };
+      }
+      await touch(id);
+      return { ok: true, message: step.success, data: answer.message };
+    } catch (err: any) {
+      return { ok: false, message: err?.message || 'MSG91 request failed' };
+    }
+  },
+
   /** Run a tiny prompt against a Gemini entry's API key. */
   async gemini(id: string, prompt: string): Promise<EnvTestRichResult> {
     const config = await rawConfig(id, 'GEMINI');
@@ -361,4 +450,8 @@ export const envEntryTests = {
   twilioCall: (id: string, to: string) => tracked(id, () => impl.twilioCall(id, to)),
   openai: (id: string, prompt: string) => tracked(id, () => impl.openai(id, prompt)),
   gemini: (id: string, prompt: string) => tracked(id, () => impl.gemini(id, prompt)),
+  // Only a send stamps the entry: it is the step that proves the widget AND the
+  // key, while a mistyped code at verify says nothing about either.
+  msg91: (id: string, input: Msg91TestInput) =>
+    input.action === 'SEND_OTP' ? tracked(id, () => impl.msg91(id, input)) : impl.msg91(id, input),
 };

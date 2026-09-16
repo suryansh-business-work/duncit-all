@@ -36,6 +36,11 @@ jest.mock('@modules/platform/aisensy/aisensy.gateway', () => ({
   otpCampaign: jest.fn().mockResolvedValue('duncit_otp'),
   sendCampaign: jest.fn().mockResolvedValue('msg-1'),
 }));
+// The SMS provider reads its keys from the database; with none saved, SMS is a stub.
+jest.mock('@modules/platform/msg91/msg91.gateway', () => ({
+  ...jest.requireActual('@modules/platform/msg91/msg91.gateway'),
+  runtimeMsg91Credentials: jest.fn().mockResolvedValue(null),
+}));
 jest.mock('@modules/platform/whatsapp/whatsapp.manualLog', () => ({
   WA_OTP_EVENT_KEY: 'AUTH_ONE_TIME_CODE',
   recordManualSend: jest.fn().mockResolvedValue(undefined),
@@ -143,7 +148,7 @@ describe('deliverOtp — EMAIL', () => {
 */
 describe('hasOtpTransport, through the delivery module', () => {
   it('answers for every medium', () => {
-    expect(hasOtpTransport('SMS')).toBe(false);
+    expect(hasOtpTransport('SMS')).toBe(true);
     expect(hasOtpTransport('WHATSAPP')).toBe(true);
     expect(hasOtpTransport('EMAIL')).toBe(true);
   });
@@ -156,7 +161,7 @@ describe('hasOtpTransport, through the delivery module', () => {
 });
 
 describe('deliverOtp — SMS', () => {
-  it('is STUBBED, because no provider is wired for it', async () => {
+  it('is STUBBED while MSG91 has no keys saved', async () => {
     await expect(
       deliverOtp({ ...input, medium: 'SMS', phone_extension: '+91', phone_number: '9876543210' })
     ).resolves.toMatchObject({ medium: 'SMS', status: 'STUBBED' });

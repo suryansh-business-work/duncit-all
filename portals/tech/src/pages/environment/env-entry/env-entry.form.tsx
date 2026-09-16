@@ -85,6 +85,12 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 </Link>
               </Typography>
             )}
+            {def.apiDocsUrl && (
+              <Link href={def.apiDocsUrl} target="_blank" rel="noopener noreferrer" variant="body2" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                {t('tech.environment.apiDocs')}
+                <OpenInNewIcon sx={{ fontSize: 14 }} />
+              </Link>
+            )}
             <Controller
               control={control}
               name="name"

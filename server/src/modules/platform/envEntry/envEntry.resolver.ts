@@ -1,6 +1,6 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
-import { envEntryTests } from './envEntry.tests';
-import { CATEGORY_FIELDS, CATEGORY_DOCS } from './envEntry.fields';
+import { envEntryTests, type Msg91TestInput } from './envEntry.tests';
+import { CATEGORY_API_DOCS, CATEGORY_FIELDS, CATEGORY_DOCS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -24,6 +24,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TURN: 'TURN relay (staff calls)',
   GITHUB: 'GitHub (app builds)',
   GOOGLE_PLAY: 'Google Play (store releases)',
+  MSG91: 'MSG91 (SMS OTP)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */
@@ -61,6 +62,7 @@ export const envEntryResolvers = {
         category,
         label: CATEGORY_LABELS[category],
         docUrl: CATEGORY_DOCS[category] ?? null,
+        apiDocsUrl: CATEGORY_API_DOCS[category] ?? null,
         fields: CATEGORY_FIELDS[category].map((f) => ({
           name: f.name,
           label: f.label,
@@ -166,6 +168,14 @@ export const envEntryResolvers = {
     testEnvGemini: async (_p: unknown, args: { id: string; prompt: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryTests.gemini(args.id, args.prompt);
+    },
+    testEnvMsg91: async (
+      _p: unknown,
+      args: { id: string; input: Msg91TestInput },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.msg91(args.id, args.input);
     },
   },
 };

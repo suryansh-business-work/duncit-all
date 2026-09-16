@@ -13,6 +13,7 @@ import {
   playAccessToken,
   type PlayServiceAccount,
 } from '@modules/platform/appBuild/googlePlay.gateway';
+import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -427,6 +428,37 @@ export async function googlePlayConnection(str: EnvConfigReader): Promise<EnvCon
   };
 }
 
+// --- MSG91 ------------------------------------------------------------------
+
+/**
+ * Read today's widget analytics with this auth key — the one MSG91 call that
+ * proves the key and sends nothing. The widget id can only be proven by a real
+ * send, which is the Send OTP step of the test drawer, so this says so rather
+ * than implying it was checked.
+ */
+export async function msg91Connection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const creds = { widget_id: str('widget_id'), auth_key: str('auth_key') };
+  if (!creds.widget_id || !creds.auth_key) {
+    return { ok: false, message: 'Widget ID and auth key are both required', details: [] };
+  }
+  // UTC is never ahead of MSG91's own (IST) calendar, and MSG91 refuses a
+  // future end date.
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const { total } = await msg91WidgetAnalytics(creds, { startDate: today, endDate: today });
+    return {
+      ok: true,
+      message: 'MSG91 accepted this auth key',
+      details: [
+        `Widget requests today: ${total?.total ?? 0} (verified: ${total?.verified ?? 0})`,
+        'The widget ID is only proven by a real send — use Send OTP below.',
+      ],
+    };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+  }
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -441,6 +473,7 @@ const CONNECTION_CHECKS = {
   AISENSY: aisensyConnection,
   GITHUB: githubConnection,
   GOOGLE_PLAY: googlePlayConnection,
+  MSG91: msg91Connection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

@@ -15,7 +15,7 @@ import {
 import { DEFAULT_REOPEN_ZONE } from "@modules/support/reopenWindow";
 import { setAppTimeSettings } from "@utils/app-time";
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, MAX_ACCOUNT_AGE_YEARS } from "@utils/age";
-import { invalidateFeatureFlagCache } from "./featureFlag.gate";
+import { invalidateFeatureFlagCache, PHONE_OTP_FLAG } from "./featureFlag.gate";
 import {
   DEFAULT_THEME_TOKEN_SOURCE,
   normalizeThemeTokens,
@@ -554,6 +554,15 @@ const DEFAULT_FLAGS: {
     name: "Language Preference",
     description:
       "Show the Language preference (the language switcher) on the mobile app and mobile web account page, and on every portal's profile page and taskbar clock tray.",
+    enabled: false,
+  },
+  {
+    // Seeded OFF so turning it on is the deliberate act — it needs the MSG91
+    // widget in Tech → Environment first, or every code is the test code.
+    key: PHONE_OTP_FLAG,
+    name: "Phone Number OTP Verification",
+    description:
+      "Prove the mobile number with an SMS code (sent through MSG91) when someone adds or changes it in the mobile app and mobile web. Off, the number is saved as typed and stored unverified. The WhatsApp number is not affected.",
     enabled: false,
   },
 ];

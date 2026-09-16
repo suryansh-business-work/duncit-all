@@ -49,6 +49,8 @@ import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
 import StatusReportsPage from './pages/status-reports-page';
+import Msg91LogsPage from './pages/msg91-otp/logs';
+import Msg91AnalyticsPage from './pages/msg91-otp/analytics';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -125,6 +127,9 @@ export default function App() {
         <Route path="/rate-limiting/blocked" element={authed(<RateLimitBlockedPage />)} />
         <Route path="/rate-limiting/settings" element={authed(<RateLimitSettingsPage />)} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
+        <Route path="/msg91-otp" element={<Navigate to="/msg91-otp/logs" replace />} />
+        <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
+        <Route path="/msg91-otp/analytics" element={authed(<Msg91AnalyticsPage />)} />
         {/* What people reported by hand on status.duncit.com — the breakage the
             probes on that page cannot see. */}
         <Route path="/status-reports" element={authed(<StatusReportsPage />)} />

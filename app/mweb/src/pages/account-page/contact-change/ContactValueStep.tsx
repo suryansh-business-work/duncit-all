@@ -24,6 +24,8 @@ interface Props {
   busy: boolean;
   /** A refusal of the typed value is showing — resending it would only repeat it. */
   blocked: boolean;
+  /** PHONE_OTP_FLAG — whether the contact number is proved by an SMS code. */
+  phoneOtp: boolean;
   /** May be async: the contact number is stored by this very submit. */
   onSend: (draft: ContactDraft) => void | Promise<void>;
   /** Told on every edit, so a refusal about the old value can be dropped. */
@@ -47,6 +49,7 @@ export default function ContactValueStep({
   defaultValues,
   busy,
   blocked,
+  phoneOtp,
   onSend,
   onEdit,
 }: Readonly<Props>) {
@@ -72,14 +75,14 @@ export default function ContactValueStep({
   // a warning beside the box and a shut button — not a refusal after the press.
   // The EMAIL box leaves `number` blank, which never leaves the device.
   const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS);
-  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus });
+  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus, phoneOtp });
   const submit = handleSubmit(onSend);
 
   return (
     <form data-testid="contact-value-step" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {copy.changeHint}
+        <Typography data-testid="contact-change-hint-text" variant="body2" sx={{ color: 'text.secondary' }}>
+          {view.hint}
         </Typography>
         {isPhoneChannel(channel) ? (
           <Stack direction="row" spacing={1}>

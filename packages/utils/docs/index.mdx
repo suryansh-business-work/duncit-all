@@ -169,6 +169,7 @@ exports:
   - 'CONTACT_CHANNELS'
   - 'isPhoneChannel'
   - 'contactChangeNeedsOtp'
+  - 'PHONE_OTP_FLAG'
   - 'formatPhoneLine'
   - 'currentContactValue'
   - 'contactDetailsComplete'
@@ -1868,20 +1869,22 @@ contactDetailsComplete({ ...account, whatsapp_number: '9845012345' }); // true
 ```
 
 `contactChangeNeedsOtp` is which of the three still has to be PROVED before it is stored.
-The contact number is not: it is the detail people correct most often, and a code on every
-correction turned a one-line fix into a wait, so it is saved as typed and stored unverified.
-The address and the WhatsApp number keep theirs — both are delivery channels whose whole
+The address and the WhatsApp number always are — both are delivery channels whose whole
 worth is that a message arrives, and a typo in either goes unnoticed until something
-silently fails to reach anybody:
+silently fails to reach anybody. The contact number follows the `phone_otp_verification`
+feature flag (`PHONE_OTP_FLAG`), which each surface reads and passes in as `phoneOtp`: off,
+the number is saved as typed and stored unverified; on, an SMS code (sent through MSG91) proves
+it when it is added and on every change:
 
 ```ts
-contactChangeNeedsOtp('PHONE');    // false — one step, stored on submit
-contactChangeNeedsOtp('EMAIL');    // true  — a code goes to the new address
-contactChangeNeedsOtp('WHATSAPP'); // true  — a code goes to the new number
+contactChangeNeedsOtp('PHONE', false);    // false — one step, stored on submit
+contactChangeNeedsOtp('PHONE', true);     // true  — an SMS code goes to the new number
+contactChangeNeedsOtp('EMAIL', false);    // true  — a code goes to the new address
+contactChangeNeedsOtp('WHATSAPP', false); // true  — a code goes to the new number
 ```
 
-The server agrees from its own side: `setContactPhoneNumber` takes no code, and the other
-two refuse without one.
+The server agrees from its own side: `setContactPhoneNumber` takes no code and is refused
+while the flag is on, and the other two refuse without one.
 
 `contactDraftIsUnchanged` is the refusal that runs BEFORE a code is sent. A code costs the
 person an SMS and a wait, so a draft matching what the account already holds is turned back
@@ -1903,11 +1906,13 @@ they fold into the rows afterwards — the dialog closes onto those rows, and on
 the old number while the refetch is in flight reads as a change that failed:
 
 ```ts
-contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
+contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' }, false);
 // 'UNCHANGED' — same number, nothing to do
-contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
+contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' }, false);
 // 'SAVE' — stored on this submit
-contactSubmitAction(account, 'EMAIL', { email: 'ravi@duncit.in', extension: '', number: '' });
+contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' }, true);
+// 'SEND_CODE' — the flag is on, so an SMS code proves it first
+contactSubmitAction(account, 'EMAIL', { email: 'ravi@duncit.in', extension: '', number: '' }, false);
 // 'SEND_CODE' — a code goes to the new address first
 
 applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
@@ -1917,8 +1922,9 @@ applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845
 The new number is checked as it is typed. Each dialog runs signup's `useSignupPhoneCheck` on
 `CONTACT_NUMBER_FIELDS` — the server leaves the signed-in account out, so its own number is never
 "taken" — and hands the status to `contactValueStepView`, which decides the button and the lines
-under the box once for both surfaces. A number another account holds, or one still being checked,
-keeps Send code / Save number shut:
+under the box once for both surfaces, plus the hint above it (the contact number's hint names
+the SMS code only while `phoneOtp` is on). A number another account holds, or one still being
+checked, keeps Send code / Save number shut:
 
 ```ts
 const labels = buildContactChangeLabels(t);
@@ -1927,8 +1933,10 @@ contactValueStepView('WHATSAPP', labels, {
   blocked: false,
   isValid: true,
   numberStatus: 'TAKEN',
+  phoneOtp: false,
 });
-// { buttonLabel: 'Send code', disabled: true,
+// { hint: 'We'll send a code to this number on WhatsApp…', buttonLabel: 'Send code',
+//   disabled: true,
 //   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
 ```
 

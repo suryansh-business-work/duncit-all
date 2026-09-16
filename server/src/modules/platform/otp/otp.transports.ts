@@ -10,16 +10,17 @@ import type { OtpMedium } from './otp.model';
  * reaches `commPreferenceService`. Holding the table here is what keeps that
  * from closing a cycle.
  *
- * This is a statement about what is WIRED, not about what is configured. EMAIL
- * and WHATSAPP both have a provider behind them, so neither is refused here.
+ * This is a statement about what is WIRED, not about what is configured. EMAIL,
+ * WHATSAPP (AiSensy) and SMS (MSG91) all have a provider behind them, so none is
+ * refused here.
  * Whether that provider has actually been given its key is a different question
- * and belongs at the seam: a deployment that has not pasted its AiSensy key yet
- * gets a STUBBED delivery from `deliverOtp` — nothing is wired for it yet, the
- * same answer SMS gets — while a key that IS present and then fails is FAILED,
- * which is what keeps an outage from ever becoming a bypass.
+ * and belongs at the seam: a deployment that has not pasted its AiSensy or MSG91
+ * key yet gets a STUBBED delivery from `deliverOtp` for that medium, while a key
+ * that IS present and then fails is FAILED, which is what keeps an outage from
+ * ever becoming a bypass.
  */
 const TRANSPORTS: Record<OtpMedium, boolean> = {
-  SMS: false,
+  SMS: true,
   WHATSAPP: true,
   EMAIL: true,
 };

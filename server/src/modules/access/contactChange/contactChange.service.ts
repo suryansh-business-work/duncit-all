@@ -10,27 +10,43 @@ import {
   emailOtpExpiry,
   hashOtp,
 } from '@modules/access/user/email-otp';
-import { normalizePhone, otpService } from '@modules/platform/otp/otp.service';
-import type { OtpPurpose } from '@modules/platform/otp/otp.model';
+import {
+  anyDelivered,
+  deliberatelyStubbed,
+  normalizePhone,
+  otpService,
+} from '@modules/platform/otp/otp.service';
+import { logs } from '@observability/log';
+import type { OtpMedium, OtpPurpose } from '@modules/platform/otp/otp.model';
 import { sendEmailVerificationOtpEmail } from '@services/email/email.service';
+import { isFeatureEnabled, PHONE_OTP_FLAG } from '@modules/platform/settings/featureFlag.gate';
 
 /** Which number on the account is moving. */
 export type ContactPhoneField = 'PHONE' | 'WHATSAPP';
 
-/** Everything that differs between the two numbers, in one place. */
+/**
+ * Everything that differs between the two numbers, in one place.
+ *
+ * Each number is proved over the channel it IS: the contact number by an SMS
+ * (MSG91), the WhatsApp number by a WhatsApp message (AiSensy). Sending both
+ * would put two different codes on one handset — MSG91 makes its own — and a
+ * WhatsApp message proves nothing about a number's SMS reach, or the reverse.
+ */
 const PHONE_FIELDS: Record<
   ContactPhoneField,
-  { purpose: OtpPurpose; numberPath: string; extensionPath: string }
+  { purpose: OtpPurpose; numberPath: string; extensionPath: string; mediums: readonly OtpMedium[] }
 > = {
   PHONE: {
     purpose: 'PHONE_CHANGE',
     numberPath: 'auth.phone.number',
     extensionPath: 'auth.phone.extension',
+    mediums: ['SMS'],
   },
   WHATSAPP: {
     purpose: 'WHATSAPP_CHANGE',
     numberPath: 'communication.whatsapp.number',
     extensionPath: 'communication.whatsapp.extension',
+    mediums: ['WHATSAPP'],
   },
 };
 
@@ -39,9 +55,6 @@ const badInput = (message: string) =>
 
 const conflict = (message: string) =>
   new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
-
-/** The mediums a code for a phone-number change may travel on. */
-const PHONE_CHANGE_MEDIUMS = ['SMS', 'WHATSAPP'] as const;
 
 /**
  * Seconds between two email-change codes on one account.
@@ -160,8 +173,9 @@ async function applyNumber(
  * about to give up anyway, and says nothing about whether the new one is theirs
  * or a typo.
  *
- * The contact number is the exception: it is saved as typed, and stored
- * unverified. `setPhoneNumber` says why.
+ * The contact number follows the `phone_otp_verification` flag: on, it is
+ * proved by an SMS code like the other two; off, it is saved as typed and
+ * stored unverified. `setPhoneNumber` says why.
  *
  * The codes themselves are not implemented here. Phone codes are issued and
  * checked by the shared `otpService`, which owns expiry, the attempt limit and
@@ -181,18 +195,31 @@ export const contactChangeService = {
     const phone = normalizePhone(extension, number);
     const user = await loadUser(user_id);
     await assertNumberFree(user_id, field, phone.phone_extension, phone.phone_number);
-    return otpService.request({
+    const issued = await otpService.request({
       purpose: spec.purpose,
-      // The medium is an argument, never a second code path (rule 41). Both are
-      // offered because the number being proved is new: whichever of the two
-      // actually reaches the handset is the one that works.
-      mediums: PHONE_CHANGE_MEDIUMS,
+      // The medium is an argument, never a second code path (rule 41).
+      mediums: spec.mediums,
       phone_extension: phone.phone_extension,
       phone_number: phone.phone_number,
       recipient_name: user.profile?.first_name ?? '',
       context: { field, user_id },
       requested_by: user_id,
     });
+    // A provider that IS configured and did not deliver is an outage. Said here,
+    // rather than moving the person to a code box nothing will ever fill.
+    if (!anyDelivered(issued.deliveries) && !deliberatelyStubbed(issued.deliveries)) {
+      logs.server.warn('contactChange', 'requestPhoneOtp', {
+        msg: 'the change code did not go out',
+        field,
+        reason: issued.deliveries.find((d) => d.reason)?.reason ?? '',
+        // Never the full number.
+        phone_suffix: phone.phone_number.slice(-4),
+      });
+      throw new GraphQLError('We could not send the code right now. Please try again in a few minutes.', {
+        extensions: { code: 'OTP_DELIVERY_FAILED' },
+      });
+    }
+    return issued;
   },
 
   /** Spend the code and store the number it proved. */
@@ -232,8 +259,14 @@ export const contactChangeService = {
    * The one rule that does NOT relax is whose number it is. A number already
    * reaching another account is still refused, because a number is how
    * somebody signs in and two accounts may not share one.
+   *
+   * While `phone_otp_verification` is on this door is shut: the number is then
+   * only ever stored proved, and a direct save would be the way around the code.
    */
   async setPhoneNumber(user_id: string, extension: string, number: string) {
+    if (await isFeatureEnabled(PHONE_OTP_FLAG)) {
+      throw badInput('Verify your new phone number with the code we text you to save it');
+    }
     const phone = normalizePhone(extension, number);
     await assertNumberFree(user_id, 'PHONE', phone.phone_extension, phone.phone_number);
     return applyNumber(user_id, 'PHONE', phone, null);

@@ -493,6 +493,7 @@ export {
 export {
   CONTACT_CHANNELS,
   CONTACT_NUMBER_FIELDS,
+  PHONE_OTP_FLAG,
   applyContactDraft,
   buildContactChangeLabels,
   contactChangeNeedsOtp,

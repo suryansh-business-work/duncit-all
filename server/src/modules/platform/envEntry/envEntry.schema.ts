@@ -33,6 +33,7 @@ const SDL_CATEGORIES = [
   'TURN',
   'GITHUB',
   'GOOGLE_PLAY',
+  'MSG91',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -60,6 +61,7 @@ export const envEntryTypeDefs = gql`
     TURN
     GITHUB
     GOOGLE_PLAY
+    MSG91
   }
 
   type EnvConfigPair {
@@ -89,6 +91,8 @@ export const envEntryTypeDefs = gql`
     fields: [EnvFieldDef!]!
     "Link to where an operator obtains these credentials."
     docUrl: String
+    "Link to the provider's API documentation, when there is one worth reading."
+    apiDocsUrl: String
   }
 
   type EnvEntry {
@@ -198,6 +202,34 @@ export const envEntryTypeDefs = gql`
     details: [String!]!
   }
 
+  "One call of MSG91's OTP widget, run from the Tech portal against a saved entry."
+  enum EnvMsg91TestAction {
+    "Send a REAL SMS code to the number — answers with the request id."
+    SEND_OTP
+    "Re-send the code of a live request, optionally over another channel."
+    RETRY_OTP
+    "Check a code against a request id — answers with MSG91's access token."
+    VERIFY_OTP
+    "Ask MSG91 whether an access token from VERIFY_OTP is one it issued."
+    VERIFY_ACCESS_TOKEN
+  }
+
+  input EnvMsg91TestInput {
+    action: EnvMsg91TestAction!
+    "Country code, e.g. +91 — SEND_OTP only."
+    phone_extension: String
+    "The number without its country code — SEND_OTP only."
+    phone_number: String
+    "The request id SEND_OTP answered with — RETRY_OTP and VERIFY_OTP."
+    req_id: String
+    "The code that arrived — VERIFY_OTP only."
+    otp: String
+    "MSG91 channel code for RETRY_OTP: 11 SMS, 4 voice, 3 email, 12 WhatsApp. Blank uses the widget's own."
+    retry_channel: Int
+    "The token VERIFY_OTP answered with — VERIFY_ACCESS_TOKEN only."
+    access_token: String
+  }
+
   input EnvConnectionTestInput {
     """
     Where a provider whose only real credential check is a live send should
@@ -256,5 +288,11 @@ export const envEntryTypeDefs = gql`
     testEnvTwilioCall(id: ID!, to: String!): EnvTestRichResult!
     testEnvOpenai(id: ID!, prompt: String!): EnvTestRichResult!
     testEnvGemini(id: ID!, prompt: String!): EnvTestRichResult!
+    """
+    One step of the MSG91 OTP widget with this entry's keys. SEND_OTP and
+    RETRY_OTP deliver a real, billed message. The data field carries what the
+    next step needs: the request id, or the access token.
+    """
+    testEnvMsg91(id: ID!, input: EnvMsg91TestInput!): EnvTestRichResult!
   }
 `;

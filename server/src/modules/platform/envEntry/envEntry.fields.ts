@@ -168,6 +168,22 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     },
     { name: 'package_name', label: 'Package Name', hint: 'The app id on Google Play, e.g. com.duncit.mobile' },
   ],
+  // The SMS carrier for every phone one-time code. MSG91's OTP widget makes,
+  // sends and checks the code itself; the server only holds the request id.
+  // Both values stay on the server — the apps never talk to MSG91 directly.
+  MSG91: [
+    {
+      name: 'widget_id',
+      label: 'Widget ID',
+      hint: 'MSG91 → OTP → Widgets → your widget, e.g. 36686a6a6a59343937393739. Set the widget OTP length to 6 — the Duncit apps take a 6-digit code',
+    },
+    {
+      name: 'auth_key',
+      label: 'Auth Key',
+      secret: true,
+      hint: 'MSG91 → Settings → Security → Auth Key. Also reads the widget logs and analytics',
+    },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -188,6 +204,15 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   TURN: 'https://github.com/coturn/coturn',
   GITHUB: 'https://github.com/settings/personal-access-tokens',
   GOOGLE_PLAY: 'https://play.google.com/console/developers',
+  MSG91: 'https://control.msg91.com/app/m/l/settings/security/authkey',
+};
+
+/**
+ * The provider's API documentation, for the categories whose integration an
+ * operator is likely to need to read up on. Shown beside the dashboard link.
+ */
+export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
+  MSG91: 'https://docs.msg91.com/otp-widget',
 };
 
 const secretSet = new Set<string>();
@@ -257,6 +282,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_PLAY', field: 'service_account_json' },
   GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
+  MSG91_WIDGET_ID: { category: 'MSG91', field: 'widget_id' },
+  MSG91_AUTH_KEY: { category: 'MSG91', field: 'auth_key' },
 };
 
 export function maskSecret(value: string) {

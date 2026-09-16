@@ -10,7 +10,7 @@ export interface PageHeaderProps {
   actions?: ReactNode;
   /** Default 'h5'. */
   titleVariant?: 'h4' | 'h5' | 'h6';
-  /** Default 800. */
+  /** Defaults to the theme's heading weight for `titleVariant`. */
   titleWeight?: number;
   sx?: SxProps<Theme>;
 }
@@ -19,7 +19,7 @@ export interface PageHeaderProps {
  * The standard page title + subtitle block used at the top of dashboards and
  * list pages across every portal.
  */
-export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titleWeight = 800, sx }: Readonly<PageHeaderProps>) {
+export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titleWeight, sx }: Readonly<PageHeaderProps>) {
   const block = (
     <Box>
       {/* The page's one h1 whatever size it is drawn at: the variant is how it

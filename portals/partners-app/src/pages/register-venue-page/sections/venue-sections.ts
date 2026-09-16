@@ -4,6 +4,11 @@ export interface VenueSectionDef {
   key: VenueSectionKey;
   label: string;
   hint: string;
+  /** Translation keys for `label`/`hint`, same arrangement as `AppNavItem.labelKey`
+   * (`@duncit/shell`) — used when set, with the literal staying as the no-provider
+   * fallback. Only the sections swept for localization carry one. */
+  labelKey?: string;
+  hintKey?: string;
 }
 
 /**
@@ -20,6 +25,13 @@ export const VENUE_SECTIONS: VenueSectionDef[] = [
   { key: 'amenities', label: 'Amenities & Security', hint: 'Facilities, amenities & safety' },
   { key: 'documents', label: 'Venue Documents', hint: 'Uploads with document type' },
   { key: 'owner', label: 'Owner Details', hint: 'Contact for slot requests' },
+  {
+    key: 'payout',
+    label: 'Payout Method',
+    labelKey: 'partners.registerVenuePage.payoutMethod',
+    hint: 'Bank details for venue payouts',
+    hintKey: 'partners.registerVenuePage.payoutSectionHint',
+  },
   { key: 'leaves', label: 'Leaves & Holidays', hint: 'Closed dates — never bookable' },
   { key: 'review', label: 'Review & Submit', hint: 'Check everything and submit' },
 ];

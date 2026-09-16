@@ -243,6 +243,21 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoText:
           'Upcoming, running right now, and already settled — counted by where each pod sits in its life rather than by a status column.',
       },
+      communications: {
+        tagline: 'Every message Duncit sends, in one place.',
+        promoTitle: 'Every message, one console',
+        promoText: 'Email, SMS, WhatsApp and push — what Duncit tells its members, and how it lands.',
+      },
+      logs: {
+        tagline: 'Every log line Duncit writes, in one place.',
+        promoTitle: 'Every log, one console',
+        promoText: 'What the server, the apps and every console report, read from one place.',
+      },
+      analytics: {
+        tagline: 'Every number Duncit runs on, in one place.',
+        promoTitle: 'Every number, one console',
+        promoText: 'Bookings, revenue and growth across Duncit, read from one place.',
+      },
       hosts: {
         tagline: 'Every host on Duncit, in one place.',
         promoTitle: 'Every host, one list',
@@ -374,6 +389,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       allPods: 'All Pods',
       allUsers: 'All Users',
       amenitiesManagement: 'Amenities management',
+      analytics: 'Analytics',
       android: 'Android',
       appFaqs: 'App FAQs',
       apiKeys: 'API Keys',
@@ -482,6 +498,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       locationSubscriptions: 'Subscribe for location',
       logs: 'Logs',
       logsSettings: 'Logs Settings',
+      msg91OtpLogs: 'MSG91 OTP Logs',
       mailAutomation: 'Mail Automation',
       mailPreferences: 'Mail Preferences',
       maintenance: 'Maintenance',
@@ -552,6 +569,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',
+      // Marketing > Status — the statuses Duncit publishes into the apps' rail.
+      // Distinct from `statusReports`, which is the incident page.
+      status: 'Status',
       statusReports: 'Status Reports',
       stressTesting: 'Stress Testing',
       accountDeletions: 'Account Deletions',

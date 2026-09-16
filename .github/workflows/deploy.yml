@@ -187,6 +187,9 @@ jobs:
       club_admins: ${{ steps.filter.outputs.club_admins }}
       hosts: ${{ steps.filter.outputs.hosts }}
       pods: ${{ steps.filter.outputs.pods }}
+      communications: ${{ steps.filter.outputs.communications }}
+      logs: ${{ steps.filter.outputs.logs }}
+      analytics: ${{ steps.filter.outputs.analytics }}
       earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
       - uses: actions/checkout@v5
@@ -457,6 +460,33 @@ jobs:
               - '.github/workflows/deploy.yml'
             pods:
               - 'portals/pods/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            communications:
+              - 'portals/communications/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            logs:
+              - 'portals/logs/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            analytics:
+              - 'portals/analytics/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -1618,6 +1648,81 @@ jobs:
               --cache-to   type=gha,scope=duncit-pods${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
+  build-communications:
+    needs: changes
+    if: needs.changes.outputs.communications == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: communications
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push communications
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build               --file portals/communications/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=COMMUNICATIONS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }},mode=max               --push .
+
+  build-logs:
+    needs: changes
+    if: needs.changes.outputs.logs == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: logs-portal
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push logs
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build               --file portals/logs/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=LOGS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }},mode=max               --push .
+
+  build-analytics:
+    needs: changes
+    if: needs.changes.outputs.analytics == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: analytics
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push analytics
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build               --file portals/analytics/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=ANALYTICS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }},mode=max               --push .
+
   build-earnwith:
     needs: changes
     if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
@@ -1658,8 +1763,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-earnwith]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-earnwith.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-earnwith]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-earnwith.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Branch-aware deploy target: the staging stack lives side-by-side with
@@ -1730,6 +1835,9 @@ jobs:
           [ "${{ needs.build-club-admins.result }}" = "success" ] && PARTS+=("club-admins")
           [ "${{ needs.build-hosts.result }}" = "success" ] && PARTS+=("hosts")
           [ "${{ needs.build-pods.result }}" = "success" ] && PARTS+=("pods")
+          [ "${{ needs.build-communications.result }}" = "success" ] && PARTS+=("communications")
+          [ "${{ needs.build-logs.result }}" = "success" ] && PARTS+=("logs")
+          [ "${{ needs.build-analytics.result }}" = "success" ] && PARTS+=("analytics")
           [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
@@ -1913,7 +2021,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -1970,7 +2078,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else

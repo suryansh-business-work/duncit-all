@@ -68,6 +68,20 @@ const validateImageFile = (file: File, caps: Readonly<FileCaps>): string | null 
 };
 
 /**
+ * SHA-256 of a file's bytes, hex-encoded. Used to catch the exact same file
+ * being picked twice — e.g. a venue document uploaded under two different
+ * headings — which a URL comparison alone cannot: ImageKit assigns every
+ * upload a unique file name, so two uploads of identical bytes still come
+ * back with two different URLs.
+ */
+export async function hashFile(file: File): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
  * Gate a device-picked file against the picker's accept policy and the
  * admin-managed Upload Settings caps/formats (when loaded).
  * Returns an error message, or null when the file is acceptable.

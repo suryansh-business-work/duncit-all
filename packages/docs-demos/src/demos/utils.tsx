@@ -63,6 +63,7 @@ import {
   commRowState,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
+  contactSubmitAction,
   contactValueStepView,
   contactDetailsComplete,
   contactEntriesFromPhoneBook,
@@ -194,6 +195,10 @@ import {
   formatCount,
   launchProgress,
   showsWaitlist,
+  buildOfficialStatusSlides,
+  hasUnseenOfficialStatus,
+  isOfficialStatusLive,
+  type OfficialStatusSource,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -250,6 +255,8 @@ interface ContactChangeMock {
   draftNumber: string;
   /** The as-you-type answer for the draft number. */
   numberStatus: SignupContactStatus;
+  /** The `phone_otp_verification` feature flag (PHONE_OTP_FLAG). */
+  phoneOtp: boolean;
 }
 
 interface SignupStepMock {
@@ -460,6 +467,13 @@ interface CityLaunchMock {
   is_launched: boolean | null;
   subscriber_count: number;
   launch_target: number;
+}
+
+/** Marketing > Status, as the apps' `officialStatuses` query answers it. */
+interface OfficialStatusMock {
+  /** The clock the rail reads — move it past an expiry to watch a tile drop out. */
+  now: string;
+  statuses: OfficialStatusSource[];
 }
 
 /** Admin → Branding → Theme tokens, as the `branding` query answers it. */
@@ -1082,8 +1096,9 @@ export default defineDemos('utils', [
       'Edit `draftNumber` to a number the account does not have and `Is a change` flips to ' +
       'true. Change only `draftExtension` — same digits, different country — and it is still ' +
       'a change, because +1 9845012345 is not the same number as +91 9845012345. Move ' +
-      '`channel` to EMAIL and `Sends a code` flips to true: the contact number is stored as ' +
-      'typed, the other two are proved first. Blank the ' +
+      '`channel` to EMAIL and `Sends a code` flips to true: while `phoneOtp` is off the ' +
+      'contact number is stored as typed, the other two are proved first. Turn `phoneOtp` on ' +
+      'and the PHONE row sends a code too, with the button and the hint saying so. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
       'contact details are required before the profile form will save. Set `numberStatus` ' +
@@ -1099,6 +1114,7 @@ export default defineDemos('utils', [
       draftExtension: '+91',
       draftNumber: '9845099999',
       numberStatus: 'TAKEN',
+      phoneOtp: false,
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1119,6 +1135,7 @@ export default defineDemos('utils', [
         blocked: false,
         isValid: true,
         numberStatus: mock.numberStatus,
+        phoneOtp: mock.phoneOtp,
       });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,
@@ -1127,7 +1144,9 @@ export default defineDemos('utils', [
         'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
         'Value stored': contactDraftValue(draft, mock.channel),
         'Is a change': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
-        'Sends a code': String(contactChangeNeedsOtp(mock.channel)),
+        'Sends a code': String(contactChangeNeedsOtp(mock.channel, mock.phoneOtp)),
+        'Next step': contactSubmitAction(account, mock.channel, draft, mock.phoneOtp),
+        Hint: view.hint,
         'Edit profile can save': String(contactDetailsComplete(account)),
         Button: view.buttonLabel,
         'Button disabled': String(view.disabled),
@@ -1754,6 +1773,68 @@ export default defineDemos('utils', [
         'Category the server would keep': known ? mock.category : 'OTHER — the server drops what it does not know',
         'Categories offered': [...EMPLOYEE_EXPENSE_CATEGORIES],
         'Fields both queries ask for': EMPLOYEE_EXPENSE_SELECTION.trim().split(/\s+/),
+      };
+    },
+  }),
+
+  defineDemo<OfficialStatusMock>({
+    id: 'official-status',
+    title: 'The pinned Duncit tile in both status rails',
+    note:
+      'Push now past the second status\'s expires_at and it leaves the group — the third has expires_at null, so it never does. Switch the first link_url to https://duncit.com/blog and linkInternal flips to false: mWeb opens a new tab and the app opens the browser instead of navigating. Mark every seen_by_me true and the Duncit ring greys.',
+    mock: {
+      now: '2026-09-16T12:00:00.000Z',
+      statuses: [
+        {
+          id: 'official-1',
+          media_url: 'https://ik.imagekit.io/duncit/monsoon-run.jpg',
+          media_type: 'IMAGE',
+          caption: 'Monsoon runs are back in Pune',
+          link_url: '/pod-ideas',
+          expires_at: '2026-09-17T12:00:00.000Z',
+          is_active: true,
+          seen_by_me: false,
+        },
+        {
+          id: 'official-2',
+          media_url: 'https://ik.imagekit.io/duncit/coin-drop.mp4',
+          media_type: 'VIDEO',
+          caption: 'Duncit Coins on every pod this week',
+          link_url: '',
+          expires_at: '2026-09-16T09:00:00.000Z',
+          is_active: true,
+          seen_by_me: true,
+        },
+        {
+          id: 'official-3',
+          media_url: 'https://ik.imagekit.io/duncit/how-duncit-works.jpg',
+          media_type: 'IMAGE',
+          caption: 'How Duncit works',
+          link_url: 'https://duncit.com/about',
+          expires_at: null,
+          is_active: true,
+          seen_by_me: true,
+        },
+      ],
+    },
+    compute: (mock) => {
+      const now = new Date(mock.now).getTime();
+      const slides = buildOfficialStatusSlides(mock.statuses, now);
+      return {
+        'Tile name': mwebT('mweb.status.officialName'),
+        'Tile label': mwebT('mweb.status.officialTile'),
+        'Slides in the group': slides.map(
+          (slide) => `${slide.id} — ${slide.mediaType} — ${slide.caption || '(no caption)'}`,
+        ),
+        'Ring is lit': hasUnseenOfficialStatus(slides),
+        [`"${mwebT('mweb.status.officialOpenLink')}" opens`]: slides.map((slide) => {
+          if (!slide.linkUrl) return `${slide.id} — no action`;
+          const how = slide.linkInternal ? 'in-app path' : 'external URL';
+          return `${slide.id} — ${slide.linkUrl} (${how})`;
+        }),
+        'Each status still live': mock.statuses.map(
+          (status) => `${status.id}: ${isOfficialStatusLive(status, now)}`,
+        ),
       };
     },
   }),

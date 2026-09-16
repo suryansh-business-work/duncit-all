@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickBestVideoFile, validateFile } from '../src/utils';
+import { hashFile, pickBestVideoFile, validateFile } from '../src/utils';
 
 const file = (type: string, mb: number, name = '') =>
   (({
@@ -72,6 +72,23 @@ describe('validateFile', () => {
       }),
     ).toBeNull();
     expect(validateFile(file('image/png', 1, 'pic.png'), IMAGES_AND_VIDEO, {})).toBeNull();
+  });
+});
+
+describe('hashFile', () => {
+  it('hashes identical content to the same value, hex-encoded', async () => {
+    const a = await hashFile(new File([new Uint8Array([1, 2, 3])], 'a.pdf', { type: 'application/pdf' }));
+    const b = await hashFile(new File([new Uint8Array([1, 2, 3])], 'b.pdf', { type: 'application/pdf' }));
+
+    expect(a).toBe(b);
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('hashes different content to different values', async () => {
+    const a = await hashFile(new File([new Uint8Array([1, 2, 3])], 'a.pdf', { type: 'application/pdf' }));
+    const b = await hashFile(new File([new Uint8Array([4, 5, 6])], 'a.pdf', { type: 'application/pdf' }));
+
+    expect(a).not.toBe(b);
   });
 });
 

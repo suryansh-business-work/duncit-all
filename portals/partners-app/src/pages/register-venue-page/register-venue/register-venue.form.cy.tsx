@@ -31,13 +31,13 @@ const validValues: RegisterVenueValues = {
 };
 
 const messagesOf = (values: RegisterVenueValues) => {
-  const parsed = registerVenueSchema.safeParse(values);
+  const parsed = registerVenueSchema().safeParse(values);
   return parsed.success ? [] : parsed.error.issues.map((issue) => issue.message);
 };
 
 describe('registerVenueSchema', () => {
   it('accepts a fully filled registration (with stringy capacity numbers)', () => {
-    expect(registerVenueSchema.safeParse(validValues).success).toBe(true);
+    expect(registerVenueSchema().safeParse(validValues).success).toBe(true);
   });
 
   it('requires the full category triple', () => {
@@ -77,13 +77,13 @@ describe('registerVenueSchema', () => {
   });
 
   it('validates optional GSTIN/PAN formats only when present', () => {
-    expect(registerVenueSchema.safeParse({ ...validValues, gstin: '', pan: '' }).success).toBe(true);
+    expect(registerVenueSchema().safeParse({ ...validValues, gstin: '', pan: '' }).success).toBe(true);
     expect(messagesOf({ ...validValues, gstin: 'nope' })).toContain(
       'GSTIN must follow format like 22ABCDE1234F1Z5'
     );
     expect(messagesOf({ ...validValues, pan: 'nope' })).toContain('PAN must follow format ABCDE1234F');
     expect(
-      registerVenueSchema.safeParse({ ...validValues, gstin: '22ABCDE1234F1Z5', pan: 'ABCDE1234F' }).success
+      registerVenueSchema().safeParse({ ...validValues, gstin: '22ABCDE1234F1Z5', pan: 'ABCDE1234F' }).success
     ).toBe(true);
   });
 

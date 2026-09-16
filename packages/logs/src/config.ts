@@ -29,6 +29,10 @@ export const PORTALS = [
   'club-admins',
   'hosts',
   'pods',
+  // Shell-only consoles, awaiting their first screens.
+  'communications',
+  'logs',
+  'analytics',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

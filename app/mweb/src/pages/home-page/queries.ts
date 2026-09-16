@@ -112,6 +112,33 @@ export const FOLLOWED_USERS = gql`
   }
 `;
 
+/**
+ * The pinned Duncit statuses (Marketing > Status) for the city the viewer has
+ * SELECTED in the header — never their profile city. Kept out of the home
+ * documents on purpose: it carries `seen_by_me`, so it is never cached.
+ */
+export const OFFICIAL_STATUSES = gql`
+  query OfficialStatuses($locationId: ID) {
+    officialStatuses(location_doc_id: $locationId) {
+      id
+      media_url
+      media_type
+      caption
+      link_url
+      expires_at
+      is_active
+      seen_by_me
+    }
+  }
+`;
+
+/** Mark one Duncit slide watched, so the Duncit ring stops showing as unseen. */
+export const RECORD_OFFICIAL_STATUS_VIEW = gql`
+  mutation RecordOfficialStatusView($id: ID!) {
+    recordOfficialStatusView(status_doc_id: $id)
+  }
+`;
+
 /** Record that the viewer opened a story — greys its ring (Bug 2). */
 export const RECORD_STORY_VIEW = gql`
   mutation RecordStoryView($id: ID!) {

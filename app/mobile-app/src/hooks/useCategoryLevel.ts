@@ -13,18 +13,23 @@ import { useRefreshRegistration } from '@/components/PullToRefresh';
  * Active categories for one taxonomy level under a parent, sorted for display
  * (sort_order then name). Shared by the onboarding gate's CategoryPhase and the
  * pod-idea Super → Category → Sub cascade so the fetch/sort lives in one place.
+ * Mirrors mWeb's twin (`survey-gate/useCategoryLevel.ts`), which already
+ * returns `{ options, loading }`.
  */
 export function useCategoryLevel(level: CategoryLevel, parentId: string, enabled: boolean) {
   const [options, setOptions] = useState<CategoryOption[]>([]);
+  const [loading, setLoading] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     if (!enabled) {
       setOptions([]);
+      setLoading(false);
       return;
     }
     let alive = true;
+    setLoading(true);
     graphqlRequest<CategoriesResult, { level: CategoryLevel; parent_id: string | null }>(
       CategoriesDocument,
       { level, parent_id: level === 'SUPER' ? null : parentId },
@@ -40,12 +45,13 @@ export function useCategoryLevel(level: CategoryLevel, parentId: string, enabled
             ),
         );
       })
-      .catch(() => alive && setOptions([]));
+      .catch(() => alive && setOptions([]))
+      .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
   }, [level, parentId, enabled, attempt]);
 
   useRefreshRegistration(refetch);
-  return options;
+  return { options, loading };
 }

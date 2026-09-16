@@ -34,6 +34,9 @@ export const ROLES = [
   'ALL_CLUB_ADMINS_ACCESS',
   'ALL_HOSTS_ACCESS',
   'ALL_PODS_ACCESS',
+  'COMMUNICATIONS_MANAGER',
+  'LOGS_MANAGER',
+  'ANALYTICS_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -87,6 +90,9 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'ALL_CLUB_ADMINS_ACCESS', name: 'All Club Admins Access', description: 'Every club admin on Duncit — club-admins.duncit.com.' },
   { key: 'ALL_HOSTS_ACCESS', name: 'All Hosts Access', description: 'Every host on Duncit — hosts.duncit.com.' },
   { key: 'ALL_PODS_ACCESS', name: 'All Pods Access', description: 'Every pod on Duncit — pods.duncit.com.' },
+  { key: 'COMMUNICATIONS_MANAGER', name: 'Communications Manager', description: 'Communications console — communications.duncit.com.' },
+  { key: 'LOGS_MANAGER', name: 'Logs Manager', description: 'Logs console — logs.duncit.com.' },
+  { key: 'ANALYTICS_MANAGER', name: 'Analytics Manager', description: 'Analytics console — analytics.duncit.com.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

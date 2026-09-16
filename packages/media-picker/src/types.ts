@@ -36,10 +36,18 @@ export interface CropRect {
   height: number;
 }
 
+/** Extra detail about a device-picked file, handed back alongside its URL —
+ * for callers that need to reason about the source file itself, such as
+ * catching the same document uploaded twice. Undefined for a Pexels pick,
+ * which has no local file to hash. */
+export interface PickedFileMeta {
+  hash: string;
+}
+
 export interface MediaPickerDialogProps {
   open: boolean;
   onClose: () => void;
-  onPicked: (url: string) => void;
+  onPicked: (url: string, meta?: PickedFileMeta) => void;
   /**
    * How many images ONE open may return. 1 (the default) is the single-pick
    * behaviour every existing caller relies on — the dialog closes on the first
@@ -81,6 +89,12 @@ export interface MediaPickerDialogProps {
    * one there, so the tabs are not merely discouraged, they are absent.
    */
   deviceOnly?: boolean;
+  /**
+   * Hash the device-picked file and hand it back via `onPicked`'s second
+   * argument. Off by default — hashing is wasted work for pickers that never
+   * compare files against each other (covers, galleries, avatars, …).
+   */
+  detectDuplicates?: boolean;
 }
 
 export type Orientation = 'landscape' | 'portrait' | 'square' | '';

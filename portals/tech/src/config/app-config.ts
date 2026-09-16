@@ -114,6 +114,17 @@ export const appConfig = {
       ],
     },
     { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
+    {
+      // MSG91's own records of the OTP widget that carries every phone code —
+      // read live from MSG91, never copied here. The keys themselves are under
+      // Environment Variables → MSG91 (SMS OTP).
+      label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
+      icon: 'phone',
+      children: [
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
+        { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
+      ],
+    },
     // Sits beside Telemetry rather than inside it: those rows are written by
     // machines, these by people, and the triage is a different job.
     { label: 'Status Reports', labelKey: 'shell.nav.statusReports', to: '/status-reports', icon: 'sos' },

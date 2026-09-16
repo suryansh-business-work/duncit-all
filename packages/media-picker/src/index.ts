@@ -14,6 +14,7 @@ export type {
   FilePolicy,
   MediaPickerDialogProps,
   Orientation,
+  PickedFileMeta,
   UploadCropPreset,
   UploadSettings,
   UploadSurface,

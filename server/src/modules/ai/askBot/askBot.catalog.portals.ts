@@ -276,6 +276,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   // ---- Marketing (marketing) ------------------------------------------
   { surface: 'marketing', path: '/', label: 'Dashboard',
     description: 'Read last-N-days link clicks, revenue from links, emails delivered and live ads as clickable KPI tiles, then drill into a clicks-over-time chart, top links, recent campaign performance, click sources, countries and a what-is-set-up summary on a draggable widget grid.' },
+  { surface: 'marketing', path: '/status', label: 'Status',
+    description: 'Publish the Duncit statuses that ride at the front of the apps\' status rail: upload an image or video with a caption and an optional tap-through link, send it to everybody or to chosen cities, keep it for 24 hours, for ever or until a date you pick, and watch how many people have seen each one.' },
   { surface: 'marketing', path: '/audience', label: 'Target Audience',
     description: 'Browse the saved audience lists — each stores its filters so membership stays current — open one to inspect its members, delete a list, or start a new one.' },
   { surface: 'marketing', path: '/audience/new', label: 'Create list',
@@ -482,6 +484,24 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'A brief on every pod on Duncit, counted by where it sits in its life rather than by a status column: how many there are in total, how many are still upcoming, how many are running right now, and how many are already settled.' },
   { surface: 'pods', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Pods console.' },
+
+  // ---- Communications (communications) -------------------------------
+  { surface: 'communications', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Communications console has no other screens yet.' },
+  { surface: 'communications', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Communications console.' },
+
+  // ---- Logs (logs) ---------------------------------------------------
+  { surface: 'logs', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Logs console has no other screens yet.' },
+  { surface: 'logs', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Logs console.' },
+
+  // ---- Analytics (analytics) -----------------------------------------
+  { surface: 'analytics', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Analytics console has no other screens yet.' },
+  { surface: 'analytics', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Analytics console.' },
 
   // ---- Hosts (hosts) ---------------------------------------------------
   { surface: 'hosts', path: '/', label: 'Dashboard',

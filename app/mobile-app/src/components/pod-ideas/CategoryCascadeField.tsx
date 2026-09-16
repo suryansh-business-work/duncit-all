@@ -44,9 +44,13 @@ export function CategoryCascadeField({
   idPrefix = 'idea-cat',
 }: Readonly<Props>) {
   const { color: ink, onPrimary } = useThemeColors();
-  const supers = useCategoryLevel('SUPER', '', true);
-  const cats = useCategoryLevel('CATEGORY', value.super_category_id, !!value.super_category_id);
-  const subs = useCategoryLevel('SUB', value.category_id, !!value.category_id);
+  const { options: supers } = useCategoryLevel('SUPER', '', true);
+  const { options: cats } = useCategoryLevel(
+    'CATEGORY',
+    value.super_category_id,
+    !!value.super_category_id,
+  );
+  const { options: subs } = useCategoryLevel('SUB', value.category_id, !!value.category_id);
 
   const emit = (scope: CategoryScope) =>
     onChange(scope, {

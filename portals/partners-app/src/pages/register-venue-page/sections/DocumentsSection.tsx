@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Controller, useFieldArray, type UseFormReturn } from 'react-hook-form';
-import { Box, Chip, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Chip, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -24,6 +24,7 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
   const { control, setValue, watch, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'documents' });
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
+  const [duplicateAlert, setDuplicateAlert] = useState<string | null>(null);
   const documents = watch('documents');
   const listError = formState.errors.documents?.root?.message ?? formState.errors.documents?.message;
   const approvedEdit = mode === 'edit-approved';
@@ -83,6 +84,11 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
         </Typography>
       </Box>
       {typeof listError === 'string' && listError && <FormHelperText error>{listError}</FormHelperText>}
+      {duplicateAlert && (
+        <Alert severity="error" onClose={() => setDuplicateAlert(null)}>
+          {duplicateAlert}
+        </Alert>
+      )}
       {fields.map((row, index) => (
         <Stack key={row.id} spacing={0.5}>
           <Stack direction="row" spacing={1} sx={{
@@ -119,7 +125,10 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
                 onDelete={
                   isRowLocked(index)
                     ? undefined
-                    : () => setValue(`documents.${index}.url`, '', { shouldDirty: true, shouldValidate: true })
+                    : () => {
+                        setValue(`documents.${index}.url`, '', { shouldDirty: true, shouldValidate: true });
+                        setValue(`documents.${index}.hash`, undefined, { shouldDirty: true });
+                      }
                 }
               />
             ) : (
@@ -148,14 +157,29 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
       <MediaPickerDialog
         open={pickerIndex !== null}
         onClose={() => setPickerIndex(null)}
-        onPicked={(url) => {
+        onPicked={(url, meta) => {
           if (pickerIndex === null) return;
+          const duplicateIndex = meta?.hash
+            ? documents.findIndex((doc, i) => i !== pickerIndex && doc.hash && doc.hash === meta.hash)
+            : -1;
+          if (duplicateIndex !== -1) {
+            setDuplicateAlert(
+              t('partners.registerVenuePage.duplicateDocumentError', {
+                vars: { type: documents[duplicateIndex]?.type ?? '' },
+              })
+            );
+            setPickerIndex(null);
+            return;
+          }
+          setDuplicateAlert(null);
           setValue(`documents.${pickerIndex}.url`, url, { shouldDirty: true, shouldValidate: true });
+          setValue(`documents.${pickerIndex}.hash`, meta?.hash, { shouldDirty: true });
           setPickerIndex(null);
         }}
         folder="/venues/docs"
         title={t('partners.registerVenuePage.uploadDocumentPdfMax50Mb')}
         accept="application/pdf"
+        detectDuplicates
       />
     </Stack>
   );

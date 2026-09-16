@@ -8,6 +8,7 @@ import {
   type SocialAction,
 } from '@modules/engagement/notification/social-notify';
 import { logs } from '@observability/log';
+import { validateMediaUrl } from '@utils/media';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -82,23 +83,6 @@ async function assertMayPostToClub(clubId: Types.ObjectId, authorId: string) {
   throw new GraphQLError('Only this club’s admins can post a story to it', {
     extensions: { code: 'FORBIDDEN' },
   });
-}
-
-// Reject anything that isn't a sane media reference. The URL must be an
-// http(s) ImageKit URL (image or video) — every file goes through the picker.
-function validateMediaUrl(url: string) {
-  if (!url || typeof url !== 'string')
-    throw new GraphQLError('image_url is required', { extensions: { code: 'BAD_USER_INPUT' } });
-  if (!/^https?:\/\//i.test(url))
-    throw new GraphQLError(
-      'image_url must be an http(s) URL — please upload through the media picker',
-      { extensions: { code: 'BAD_USER_INPUT' } }
-    );
-  // Reject inline data URLs — every file must go through ImageKit.
-  if (/^data:/i.test(url))
-    throw new GraphQLError('Inline data URLs are not allowed; upload via ImageKit', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
 }
 
 function normalizeMediaType(value?: string | null): 'IMAGE' | 'VIDEO' {

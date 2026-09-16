@@ -9,6 +9,7 @@ import AiTestPanel from './AiTestPanel';
 import GoogleMapsTest from './GoogleMapsTest';
 import GoogleOAuthTab from './GoogleOAuthTab';
 import ConnectionTestPanel from './ConnectionTestPanel';
+import Msg91TestPanel from './msg91';
 
 function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
   switch (entry.category) {
@@ -38,6 +39,10 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     case 'GITHUB':
     case 'GOOGLE_PLAY':
       return <ConnectionTestPanel entry={entry} />;
+    // Its own panel: the widget is four calls that wait on a person between
+    // them, and the connection check above is only the first of them.
+    case 'MSG91':
+      return <Msg91TestPanel entry={entry} />;
     default:
       return null;
   }

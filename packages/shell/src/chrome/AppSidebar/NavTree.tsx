@@ -5,10 +5,17 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { DuncitButton } from '@duncit/buttons';
 import { useLocation } from 'react-router';
+import { tokens } from '@duncit/theme';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AppNavItem } from '../../types';
 import { filterNav } from './helpers';
 import { NavNode, type ExpandSignal } from './nav-items';
+
+/** A quiet filter field on the sidebar ground: control height, no fill of its own. */
+const searchSx = {
+  '& .MuiOutlinedInput-root': { bgcolor: 'transparent', minHeight: tokens.size.controlMd },
+  '& .MuiOutlinedInput-input': { py: 0.75, fontSize: tokens.font.size.body2 },
+};
 
 export interface NavTreeProps {
   nav: AppNavItem[];
@@ -34,19 +41,20 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
   const toggleAllLabel = allOpen ? t('shell.chrome.collapseAll') : t('shell.chrome.expandAll');
   return (
     <>
-      <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+      <Box sx={{ px: 1.25, pt: 0.5, pb: 0.5 }}>
         <TextField
           size="small"
           fullWidth
           placeholder={t('shell.chrome.searchMenu')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          sx={searchSx}
           slotProps={{
             htmlInput: { 'aria-label': t('shell.chrome.searchMenu'), 'data-testid': 'shell-nav-search' },
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchIcon sx={{ fontSize: tokens.size.icon.sm }} />
                 </InputAdornment>
               ),
             }
@@ -57,12 +65,12 @@ export function NavTree({ nav: navItems, onNavigate }: Readonly<NavTreeProps>) {
           fullWidth
           onClick={toggleAll}
           startIcon={allOpen ? <UnfoldLessIcon fontSize="small" /> : <UnfoldMoreIcon fontSize="small" />}
-          sx={{ mt: 0.75, justifyContent: 'flex-start', color: 'text.secondary', fontWeight: 700 }}
+          sx={{ mt: 0.5, justifyContent: 'flex-start', color: 'text.secondary' }}
         >
           {toggleAllLabel}
         </DuncitButton>
       </Box>
-      <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
+      <List sx={{ px: 1.25, pt: 0.5, pb: 1, flex: 1, overflowY: 'auto' }}>
         {nav.length === 0 ? (
           <Typography
             variant="caption"

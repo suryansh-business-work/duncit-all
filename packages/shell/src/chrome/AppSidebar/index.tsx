@@ -49,10 +49,8 @@ export function AppSidebar({
       <SidebarUserCard user={user} fallbackName={name} collapsed={collapsed} />
       <Box
         sx={{
-          px: collapsed ? 1 : 2,
-          py: 1,
-          borderTop: 1,
-          borderColor: 'divider',
+          px: collapsed ? 1 : 1.5,
+          py: 0.75,
           display: 'flex',
           alignItems: 'center',
           gap: 1,

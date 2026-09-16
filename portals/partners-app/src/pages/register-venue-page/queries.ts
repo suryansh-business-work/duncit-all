@@ -56,6 +56,13 @@ export const MY_VENUE = gql`
       owner_phone
       owner_dob
       owner_address
+      bank_account {
+        payout_method
+        account_holder_name
+        account_number
+        ifsc_code
+        upi_id
+      }
       reviewer_notes
       # Leaves & Holidays section edits settings.holidays
       settings {

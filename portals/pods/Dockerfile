@@ -24,6 +24,9 @@ COPY portals/tech/package.json ./portals/tech/
 COPY portals/support/package.json ./portals/support/
 COPY portals/website-app/package.json ./portals/website-app/
 COPY portals/pods/package.json ./portals/pods/
+COPY portals/communications/package.json ./portals/communications/
+COPY portals/logs/package.json ./portals/logs/
+COPY portals/analytics/package.json ./portals/analytics/
 COPY portals/ai/package.json ./portals/ai/
 COPY portals/products/package.json ./portals/products/
 COPY portals/marketing/package.json ./portals/marketing/

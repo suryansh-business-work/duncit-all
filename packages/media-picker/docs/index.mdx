@@ -246,7 +246,7 @@ pickBestVideoFile({
 | --- | --- | --- | --- | --- |
 | `open` | `boolean` | yes | — | Dialog visibility. |
 | `onClose` | `() => void` | yes | — | Close handler. |
-| `onPicked` | `(url: string) => void` | yes | — | Fires with the final stored URL. |
+| `onPicked` | `(url: string, meta?: PickedFileMeta) => void` | yes | — | Fires with the final stored URL. `meta.hash` is only present when `detectDuplicates` is on. |
 | `folder` | `string` | no | — | ImageKit folder, e.g. `'/pods'`, `'/branding'`. |
 | `title` | `string` | no | — | Dialog heading. |
 | `accept` | `string` | no | images + videos | Comma-separated MIME list. A Pexels tab it rules out is not offered at all — a `video/*` reel picker shows no photos tab. |
@@ -257,6 +257,7 @@ pickBestVideoFile({
 | `seedQuery` | `string` | no | — | What to search Pexels for before the user types — e.g. the pod's sub-category. Seeds the photos AND the videos tab, so a reel picker opens on the category too. |
 | `orientation` | `'landscape' \| 'portrait' \| 'square' \| ''` | no | `''` | Pexels orientation to start on. A cover is wide, so pass `'landscape'`. |
 | `deviceOnly` | `boolean` | no | `false` | Hide the Pexels tabs and offer the device alone. For a picker whose answer has to be a real photograph of something that happened — a pod’s own media, which is what a host’s payout is evidenced on. A stock library is right for a cover and wrong there, so the tabs are absent rather than discouraged. |
+| `detectDuplicates` | `boolean` | no | `false` | Hash the device-picked file (SHA-256) and hand it back via `onPicked`'s `meta.hash`, so the caller can catch the same file being picked twice — e.g. a venue document re-used under a second heading. A plain URL comparison cannot do this: ImageKit assigns every upload a unique file name, so identical bytes still come back as two different URLs. Off by default; a caller that never compares files pays nothing for it. |
 
 #### Picking more than one
 

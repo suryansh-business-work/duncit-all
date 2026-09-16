@@ -6,8 +6,8 @@ import { directUploadToImagekit } from './useImagekitDirectUpload';
 import { useUploadSettings } from './useUploadSettings';
 import { compressUploadedVideo } from './videoCompression';
 import { croppablePresets } from './cropUtils';
-import { validateFile } from './utils';
-import type { CropRect, FilePolicy, UploadSurface } from './types';
+import { hashFile, validateFile } from './utils';
+import type { CropRect, FilePolicy, PickedFileMeta, UploadSurface } from './types';
 
 // 'uploading'/'compressing' carry a real byte / FFmpeg percentage (video).
 // 'processing' is the image path — the server crops + compresses + uploads in a
@@ -19,7 +19,7 @@ interface Args extends FilePolicy {
   open: boolean;
   folder: string;
   surface: UploadSurface;
-  onPicked: (url: string) => void;
+  onPicked: (url: string, meta?: PickedFileMeta) => void;
   onClose: () => void;
   /**
    * Let go of the uploaded file instead of relying on the dialog closing.
@@ -27,6 +27,8 @@ interface Args extends FilePolicy {
    * would upload it a second time on the next press of the same button.
    */
   clearAfterUpload?: boolean;
+  /** Hash the picked file and hand it back via `onPicked`'s second argument. */
+  detectDuplicates?: boolean;
   setError: (msg: string | null) => void;
 }
 
@@ -40,6 +42,7 @@ export function useDeviceUpload({
   onPicked,
   onClose,
   clearAfterUpload,
+  detectDuplicates,
   setError,
 }: Args) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -142,7 +145,13 @@ export function useDeviceUpload({
         });
         url = uploaded.url;
       }
-      onPicked(url);
+      // Called with one argument when duplicate detection is off, so every
+      // existing caller's onPicked(url) shape is untouched.
+      if (detectDuplicates) {
+        onPicked(url, { hash: await hashFile(picked) });
+      } else {
+        onPicked(url);
+      }
       if (clearAfterUpload) {
         setPicked(null);
         setCropRect(null);

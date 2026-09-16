@@ -322,7 +322,7 @@ been deleted or moved server-side is still reachable instead of rendering a blan
 | `subtitle` | `ReactNode` | no | — | Secondary line under the title. |
 | `actions` | `ReactNode` | no | — | Right-hand slot; switches the block to a space-between row. |
 | `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography — how it LOOKS. The element is always `<h1>`, the page's one top heading, whatever size it is drawn at. |
-| `titleWeight` | `number` | no | `800` | Title font weight. |
+| `titleWeight` | `number` | no | theme heading weight | Title font weight; omit it to use the theme's weight for `titleVariant`. |
 | `sx` | `SxProps<Theme>` | no | — | Wrapper style. |
 
 ### `BackHeader` / `BackButton`

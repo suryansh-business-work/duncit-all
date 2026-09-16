@@ -24,8 +24,13 @@ consumers:
   - 'portals/support'
   - 'portals/tech'
   - 'portals/website-app'
+  - 'portals/communications'
+  - 'portals/logs'
+  - 'portals/analytics'
 exports:
   - 'mountPortal'
+  - 'mountWelcomePortal'
+  - 'resolvePortalGraphqlUrl'
   - 'AppShell'
   - 'PortalAppShell'
   - 'AppHeader'
@@ -245,6 +250,30 @@ console shut for all non-super users.
 | `extras` | `ReactNode` | no | `undefined` | Router-level siblings (e.g. admin's `NotifyHost`). |
 | `i18nFallback` | `FlatCatalogue` | no | `undefined` | The portal's own flat fallback, layered over `SHELL_FALLBACK_FLAT`. |
 | `rootId` | `string` | no | `'root'` | Mount element id. **Throws** when the node is missing. |
+
+### `mountWelcomePortal(options)` — `MountWelcomePortalOptions`
+
+A console that is only the shell: `/login`, the `WelcomeDashboard` at `/` and `/profile`. It is how a
+new subdomain ships before its first screen exists — the Communications, Logs and Analytics consoles
+are this one call:
+
+```tsx
+import { mountWelcomePortal } from '@duncit/shell';
+import { logs } from '@duncit/logs';
+import { appConfig } from './config/app-config';
+
+mountWelcomePortal({ appConfig, env: import.meta.env, logsPortal: logs.portal.analytics });
+```
+
+| Option | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `appConfig` | `AppConfig` | yes | The console's identity. `key` also names the dashboard layout (`analytics.overview`). |
+| `env` | `PortalBuildEnv` | yes | The portal's `import.meta.env` — `{ DEV, VITE_GRAPHQL_URL? }`. |
+| `logsPortal` | `LevelFns` | yes | The portal's `logs.portal.<x>` sink. |
+
+`resolvePortalGraphqlUrl(env)` is the address rule it uses: `VITE_GRAPHQL_URL` when the build set a
+non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
+`https://server.duncit.com/graphql`.
 
 ### `<AppShell>` — `AppShellProps`
 

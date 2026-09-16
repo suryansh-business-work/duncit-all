@@ -51,8 +51,14 @@ like" drift the moment one of them is touched: a slightly different border in da
 different `MuiPaper` elevation, a chip that is `rounded` here and `square` there.
 
 Now there is one theme and one set of overrides. **Only the brand `accent` differs per portal.**
-Everything else — ink, muted text, borders, surfaces, the app background gradient — is derived
-from `tokens` by `buildThemeCtx`, so no override file contains a literal colour.
+Everything else — ink, muted text, borders, the four surfaces, state tints and the overlay
+shadows — is derived from `tokens` by `buildThemeCtx`, so no override file contains a literal
+colour.
+
+The look is a quiet, dense workspace: flat surfaces separated by hairlines, a single raised
+layer for things that float (menus, popovers, dialogs), muted secondary text, and state shown
+as a tint rather than a change of colour. Status chips and alerts are soft tints whose text is
+darkened or lightened until it clears 4.5:1 on that tint.
 
 ## Use it
 
@@ -88,7 +94,7 @@ import themedControlsSource from '@duncit/docs-demos/examples/ThemedControls.tsx
 <Preview
   title="MUI controls under createDuncitTheme('light', financeAccent)"
   code={themedControlsSource}
-  note="Only `financeAccent` is portal-specific. The pill radius, the 30px chip height, the input focus ring, the Nunito face and the alert treatment all come from `tokens` via the shared overrides."
+  note="Only `financeAccent` is portal-specific. The 6px radius, the 24px chip height, the input focus ring, the platform UI face and the soft alert tint all come from `tokens` via the shared overrides."
 >
   <ThemedControls client:load />
 </Preview>
@@ -124,39 +130,50 @@ buildThemeCtx('dark', financeAccent)
   "isDark": true,
   "accent": { "light": "#86efac", "main": "#22c55e", "hover": "#16a34a", "active": "#15803d" },
   "primary": "#22c55e",
-  "onPrimary": "#111827",
+  "onPrimary": "#18181b",
   "primaryFill": "#178640",
   "primaryLight": "#86efac",
   "primaryHover": "#15793a",
   "primaryActive": "#136d34",
-  "ink": "#f4f6fb",
-  "muted": "#9aa3b2",
-  "border": "rgba(255,255,255,0.10)",
-  "inputBorder": "#737b88",
-  "bg": "#0b1220",
-  "surface": "#111a2e",
+  "ink": "#ececef",
+  "muted": "#9c9fa8",
+  "border": "rgba(255,255,255,0.08)",
+  "inputBorder": "#676b76",
+  "bg": "#101116",
+  "surface": "#16171d",
+  "soft": "#1a1b21",
+  "raised": "#1d1e25",
+  "hover": "rgba(236, 236, 239, 0.05)",
+  "selected": "rgba(236, 236, 239, 0.08)",
+  "shadow": {
+    "raised": "0 1px 2px 0 rgba(0, 0, 0, 0.4)",
+    "overlay": "0 8px 24px -4px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.06)",
+    "dialog": "0 24px 64px -12px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.06)"
+  },
+  "transition": "(props, ms = 180) => 'prop 180ms cubic-bezier(0.2, 0, 0, 1), …'",
   "semantic": { "success": "#4ade80", "warning": "#fbbf24", "error": "#f87171", "info": "#60a5fa", "secondary": "#a78bfa", "accent": "#22d3ee" },
-  "onSemantic": "#111827",
-  "appBg": "radial-gradient(circle at 8% 0%, rgba(34, 197, 94, 0.2), transparent 34%), radial-gradient(circle at 90% 16%, rgba(124, 58, 237, 0.18), transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)",
-  "surfaceGradient": "linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(34, 197, 94, 0.06) 100%)",
+  "onSemantic": "#18181b",
   "white": "#ffffff",
   "t": "…the whole tokens object"
 }
 ```
 
-Twenty derived values from four. The accent leaks into `appBg` and `surfaceGradient` as
-alpha washes — which is why a portal must never hand-roll its background.
+Derived values from four. The page is flat on purpose — no accent wash in the background, no
+gradient on a card — so a portal never needs to hand-roll a background. Depth means "this
+floats": only `raised` surfaces carry a `shadow`.
 
 The light-mode counterparts of the same call:
 
 ```ts
 const ctx = buildThemeCtx('light', financeAccent);
-ctx.ink          // '#111827'
-ctx.bg           // '#f8fafc'
-ctx.surface      // '#ffffff'
-ctx.border       // '#e5e7eb'   hairline — decorative
-ctx.inputBorder  // '#878e9a'   field outline, 3:1
-ctx.muted        // '#606774'   4.5:1 on paper, bg and soft
+ctx.ink          // '#18181b'
+ctx.bg           // '#f7f7f8'   sidebar + page ground
+ctx.surface      // '#ffffff'   content panel, cards
+ctx.soft         // '#f0f0f2'   table header, quiet fills
+ctx.raised       // '#ffffff'   menus, dialogs
+ctx.border       // '#e4e4e7'   hairline — decorative
+ctx.inputBorder  // '#85868f'   field outline, 3:1
+ctx.muted        // '#5f606a'   4.5:1 on paper, bg and soft
 ctx.primary      // '#167e3c'   #22c55e darkened until it is 4.5:1 text on every light ground
 ctx.primaryFill  // '#178640'   #22c55e darkened until white text on it is 4.5:1
 ```
@@ -168,9 +185,9 @@ never lets that reach the screen:
 
 | Context value | Rule | Used by |
 | --- | --- | --- |
-| `primary` | the accent mixed toward black (light mode) or white (dark mode) until it is **4.5:1 text** on every ground of the mode; unchanged when it already is | `palette.primary.main`, `palette.accent.main`, outlined buttons, input focus border, the focus ring |
+| `primary` | the accent mixed toward black (light mode) or white (dark mode) until it is **4.5:1 text** on every ground of the mode; unchanged when it already is | `palette.primary.main`, `palette.accent.main`, text buttons, the tab indicator, the selected row's icon and wash, input focus border and ring, the focus ring |
 | `onPrimary` | white when it clears 4.5:1 on `primary`, otherwise `neutral[900]` | `palette.primary.contrastText` |
-| `primaryFill` | the accent darkened until **white text** on it is 4.5:1 | contained buttons, filled primary chips, the selected list row |
+| `primaryFill` | the accent darkened until **white text** on it is 4.5:1 | contained buttons, filled primary chips, the "on" switch track |
 | `primaryHover` / `primaryActive` | the portal's own `hover` / `active` when visibly darker, otherwise the previous step 10% darker — never lighter, so white stays above 4.5:1 | the fill's hover and pressed states |
 | `semantic` / `onSemantic` | `tokens.semantic` + white in light mode, `tokens.dark.semantic` + `neutral[900]` in dark mode | `palette.success`/`warning`/`error`/`info`/`secondary`, alert tints, the required asterisk |
 
@@ -193,25 +210,50 @@ animations (progress indicators excepted).
 const theme = createDuncitTheme('dark', financeAccent);
 
 theme.palette.mode        // 'dark'
-theme.palette.primary     // { light: '#86efac', main: '#22c55e', dark: '#136d34', contrastText: '#111827' }
-theme.palette.accent      // { main: '#22c55e', contrastText: '#111827' }   ← red/accent TEXT
+theme.palette.primary     // { light: '#86efac', main: '#22c55e', dark: '#136d34', contrastText: '#18181b' }
+theme.palette.accent      // { main: '#22c55e', contrastText: '#18181b' }   ← red/accent TEXT
 theme.palette.brand       // { main: '#22c55e' }                            ← decoration only
-theme.palette.background  // { default: '#0b1220', paper: '#111a2e' }
-theme.palette.text        // { primary: '#f4f6fb', secondary: '#9aa3b2',
+theme.palette.background  // { default: '#101116', paper: '#16171d' }
+theme.palette.text        // { primary: '#ececef', secondary: '#9c9fa8',
                           //   disabled: 'rgba(255, 255, 255, 0.5)', icon: 'rgba(255, 255, 255, 0.5)' }
+theme.palette.action      // hover / selected = the ink tints above, so MUI's own states match
 theme.shape.borderRadius  // 6   — tokens.radius.sm
+theme.shadows             // 0 → 'none', 1–2 → raised, 3–12 → overlay, 13–24 → dialog
+theme.transitions.duration // { shortest: 120, shorter: 120, short: 180, standard: 180, complex: 240, … }
 theme.typography.fontFamily
-// '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+// '-apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+theme.typography.h5       // { fontSize: '1.25rem', fontWeight: 600, … }   ← a page title
 ```
 
-21 components are overridden — this is the list a portal inherits without asking:
+No web font ships with the shell: the console renders in the platform UI face, so nothing is
+downloaded before first paint. An admin-picked family (Admin → Branding → Portals) still layers
+over it at runtime.
+
+48 components are overridden — this is the list a portal inherits without asking:
 
 ```
-MuiCssBaseline, MuiAppBar, MuiPaper, MuiCard, MuiDialog, MuiDivider, MuiButton,
-MuiIconButton, MuiTextField, MuiSelect, MuiFormLabel, MuiFormHelperText,
-MuiOutlinedInput, MuiChip, MuiTooltip, MuiTable, MuiTableHead, MuiTableCell,
-MuiListItemButton, MuiAlert, MuiAvatar
+MuiCssBaseline, MuiAppBar, MuiPaper, MuiCard, MuiCardActionArea, MuiCardHeader,
+MuiAccordion, MuiAccordionSummary, MuiDialog, MuiDialogTitle, MuiDialogContent,
+MuiDialogActions, MuiBackdrop, MuiDrawer, MuiPopover, MuiMenu, MuiMenuItem,
+MuiAutocomplete, MuiDivider, MuiButton, MuiIconButton, MuiTextField, MuiSelect,
+MuiFormLabel, MuiFormHelperText, MuiInputBase, MuiOutlinedInput, MuiSwitch, MuiChip,
+MuiTooltip, MuiTable, MuiTableHead, MuiTableCell, MuiTableRow, MuiTablePagination,
+MuiListItemButton, MuiListItemIcon, MuiListSubheader, MuiAlert, MuiAlertTitle,
+MuiAvatar, MuiSkeleton, MuiLinearProgress, MuiTabs, MuiTab, MuiToggleButton,
+MuiBreadcrumbs, MuiPaginationItem
 ```
+
+A few of them decide how a whole console reads:
+
+- **Buttons** come in three weights. `contained` primary is the one action (accent fill);
+  `outlined` is the neutral secondary (ink on the surface, quiet edge); `text` is inline.
+- **Filled status chips** (`success`/`warning`/`error`/`info`/`secondary`) and **standard
+  alerts** are soft tints; the filled `primary` chip stays solid because it usually marks a
+  selection.
+- **The selected list row** is an accent wash + semibold ink + an accent icon — three cues, so
+  it never rests on colour alone.
+- **Placeholders** are `muted` at full opacity, which clears 4.5:1 (MUI's 42% does not).
+- **Switches** are compact pills whose "off" track is the 3:1 field-outline colour.
 
 `MuiTableHead` tints the header row, and that tint is **opaque in both modes**.
 It has to be: a `stickyHeader` table paints its header over the rows scrolling
@@ -235,24 +277,43 @@ tokens.defaultAccent
 
 tokens.semantic       // light: { success: '#137333', warning: '#a14e06', error: '#c62828', info: '#1d4ed8', secondary: '#7c3aed', accent: '#06b6d4' }
 tokens.dark.semantic  // dark:  { success: '#4ade80', warning: '#fbbf24', error: '#f87171', info: '#60a5fa', secondary: '#a78bfa', accent: '#22d3ee' }
-tokens.surface        // { bg: '#f8fafc', paper: '#ffffff', soft: '#f1f5f9', border: '#e5e7eb', muted: '#606774', inputBorder: '#878e9a' }
-tokens.dark.inputBorder  // '#737b88'
+tokens.surface        // { bg: '#f7f7f8', paper: '#ffffff', soft: '#f0f0f2', raised: '#ffffff',
+                      //   border: '#e4e4e7', muted: '#5f606a', inputBorder: '#85868f' }
+tokens.dark           // { ink: '#ececef', muted: '#9c9fa8', bg: '#101116', surface: '#16171d',
+                      //   soft: '#1a1b21', raised: '#1d1e25', border: 'rgba(255,255,255,0.08)',
+                      //   inputBorder: '#676b76', semantic: { … } }
 
 tokens.radius
-// { xs: 4, sm: 6, md: 8, lg: 10 }
+// { xs: 4, sm: 6, md: 8, lg: 12 }
+
+tokens.shadow         // geometry per layer + the black's alpha per mode + the dialog scrim
+// { raised: '0 1px 2px 0', overlay: '0 8px 24px -4px', dialog: '0 24px 64px -12px',
+//   alpha: { light: 0.16, dark: 0.6 }, scrim: { light: 0.36, dark: 0.64 } }
+
+tokens.state          // ink-tint opacities + the soft-tone wash strength
+// { hover: 0.05, selected: 0.08, ring: 0.28, outline: 0.14,
+//   tint: { light: 0.1, dark: 0.16 }, tintBorder: { light: 0.28, dark: 0.32 } }
+
+tokens.motion
+// { fast: 120, base: 180, slow: 240, ease: 'cubic-bezier(0.2, 0, 0, 1)' }
 
 tokens.size
-// { buttonPadX: 18, buttonPadY: 9, buttonLgPadX: 20, buttonLgPadY: 11, chipHeight: 30,
-//   chipPadX: 6, touchTarget: 44, scrollbar: 8, helperGap: 5, headerHeight: 48, drawerWidth: 256 }
+// { controlSm: 28, controlMd: 32, controlLg: 40, buttonPadX: 12, buttonPadY: 6,
+//   buttonLgPadX: 16, buttonLgPadY: 9, chipHeight: 24, chipPadX: 4, navRow: 30,
+//   touchTarget: 44, scrollbar: 10, helperGap: 4, headerHeight: 48, taskbarHeight: 40,
+//   drawerWidth: 244, panelInset: 8, indicator: 2, icon: { sm: 16, md: 18 },
+//   switch: { md: { width: 34, height: 20, thumb: 14 }, sm: { width: 28, height: 16, thumb: 10 }, pad: 6, inset: 3 } }
 
 tokens.font.size
-// { body1: '0.95rem', body2: '0.875rem', caption: '0.75rem', buttonLg: '0.92rem', tooltip: '0.75rem' }
+// { h3: '1.875rem', h4: '1.5rem', h5: '1.25rem', h6: '1rem', subtitle1: '0.9375rem',
+//   subtitle2: '0.8125rem', body1: '0.875rem', body2: '0.8125rem', caption: '0.75rem',
+//   overline: '0.6875rem', button: '0.8125rem', buttonLg: '0.875rem', tooltip: '0.75rem' }
 
 tokens.font.weight
-// { regular: 400, medium: 600, semibold: 700, bold: 800 }
+// { regular: 400, medium: 500, semibold: 600, bold: 700 }
 ```
 
-`touchTarget: 44` and `drawerWidth: 256` are in here for the same reason the colours are: a
+`touchTarget: 44` and `drawerWidth: 244` are in here for the same reason the colours are: a
 portal that hardcodes `44` is a portal that will not follow when the token moves.
 
 ## API
@@ -341,7 +402,8 @@ which is why every shell test passes its own key (`hdr_light`, `shell_test`). Pa
 
 `tokens` is the single source of truth: the neutral ramp, the semantic status colours, light
 surfaces, their dark counterparts, radii and fonts. Component styles read them through
-`ThemeCtx` (`ctx.ink`, `ctx.border`, `ctx.surface`, `ctx.appBg`, `ctx.surfaceGradient`), which
+`ThemeCtx` (`ctx.ink`, `ctx.border`, `ctx.surface`, `ctx.raised`, `ctx.hover`, `ctx.shadow`,
+`ctx.transition`), which
 `buildThemeCtx(mode, accent)` computes once per theme build.
 
 If you need a colour in a portal, take it from `tokens` or from the MUI theme — a hex literal

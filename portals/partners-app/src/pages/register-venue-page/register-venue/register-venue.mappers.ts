@@ -82,6 +82,11 @@ export function venueToValues(
     owner_phone: venue.owner_phone || '',
     owner_dob: venue.owner_dob ? venue.owner_dob.slice(0, 10) : '',
     owner_address: venue.owner_address || '',
+    payout_method: venue.bank_account?.payout_method || '',
+    account_holder_name: venue.bank_account?.account_holder_name || '',
+    account_number: venue.bank_account?.account_number || '',
+    ifsc_code: venue.bank_account?.ifsc_code || '',
+    upi_id: venue.bank_account?.upi_id || '',
   };
   return hydrateLocation(base, locations);
 }
@@ -127,7 +132,9 @@ export function toStep1Input(values: RegisterVenueValues) {
 
 export function toStep2Input(values: RegisterVenueValues) {
   return {
-    documents: values.documents.filter((doc) => doc.type && doc.url),
+    documents: values.documents
+      .filter((doc) => doc.type && doc.url)
+      .map((doc) => ({ type: doc.type, url: doc.url })),
     gstin: values.gstin,
     pan: values.pan,
   };
@@ -155,7 +162,8 @@ export function toApprovedUpdateInput(
     return {
       add_documents: values.documents
         .slice(originalDocCount)
-        .filter((doc) => doc.type && doc.url),
+        .filter((doc) => doc.type && doc.url)
+        .map((doc) => ({ type: doc.type, url: doc.url })),
     };
   }
   return {
@@ -167,11 +175,19 @@ export function toApprovedUpdateInput(
 }
 
 export function toStep3Input(values: RegisterVenueValues, accountEmail: string) {
+  const isUpi = values.payout_method === 'UPI';
   return {
     owner_name: values.owner_name,
     owner_email: accountEmail || values.owner_email,
     owner_phone: values.owner_phone,
     owner_dob: values.owner_dob || null,
     owner_address: values.owner_address,
+    bank_account: {
+      payout_method: values.payout_method || null,
+      account_holder_name: values.account_holder_name,
+      account_number: isUpi ? '' : values.account_number,
+      ifsc_code: isUpi ? '' : values.ifsc_code.toUpperCase(),
+      upi_id: isUpi ? values.upi_id : '',
+    },
   };
 }

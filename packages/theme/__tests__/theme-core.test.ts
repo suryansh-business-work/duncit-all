@@ -20,7 +20,7 @@ describe('tokens', () => {
     expect(tokens.common.white).toBe('#ffffff');
     expect(tokens.defaultAccent.main).toBe('#d92d2d');
     expect(tokens.radius.sm).toBe(6);
-    expect(tokens.font.weight.bold).toBe(800);
+    expect(tokens.font.weight.bold).toBe(700);
   });
 });
 
@@ -58,7 +58,9 @@ describe('buildThemeCtx', () => {
     expect(ctx.inputBorder).toBe(tokens.dark.inputBorder);
     expect(ctx.semantic).toBe(tokens.dark.semantic);
     expect(ctx.onSemantic).toBe(tokens.neutral[900]);
-    expect(ctx.appBg).toContain('linear-gradient');
+    expect(ctx.soft).toBe(tokens.dark.soft);
+    expect(ctx.raised).toBe(tokens.dark.raised);
+    expect(ctx.shadow.overlay).toContain('inset');
   });
 
   it('lifts the accent for text on a dark page and keeps the fill under white', () => {

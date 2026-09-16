@@ -122,6 +122,23 @@ describe('makeContactValueSchema', () => {
     );
   });
 
+  it('holds a +91 number to the 10-digit Indian mobile shape', () => {
+    const schema = makeContactValueSchema('PHONE', t);
+    // Both fit the international 6-15 digit range; neither is an Indian mobile.
+    for (const number of ['98200982', '1234567890']) {
+      const result = schema.safeParse({ ...blank, extension: '+91', number });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        expect.objectContaining({
+          path: ['number'],
+          message: 'mweb.contactChange.validation.phoneInvalid',
+        }),
+      ]);
+    }
+    // The same short number is fine on another dial code.
+    expect(schema.safeParse({ ...blank, extension: '+44', number: '98200982' }).success).toBe(true);
+  });
+
   it('asks an email channel for an address, ignoring the phone boxes', () => {
     const schema = makeContactValueSchema('EMAIL', t);
     expect(schema.safeParse({ ...blank, email: 'asha@duncit.com' }).success).toBe(true);

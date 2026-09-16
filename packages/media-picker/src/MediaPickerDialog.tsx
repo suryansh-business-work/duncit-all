@@ -48,6 +48,7 @@ export default function MediaPickerDialog({
   seedQuery,
   orientation,
   deviceOnly = false,
+  detectDuplicates = false,
 }: Readonly<MediaPickerDialogProps>) {
   const { t } = useTranslation();
   const onPhone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
@@ -102,6 +103,7 @@ export default function MediaPickerDialog({
     // Multi-pick keeps the dialog open, so the tab has to let go of the file it
     // just sent or the same file could be sent twice.
     clearAfterUpload: multi,
+    detectDuplicates,
     setError,
   });
 

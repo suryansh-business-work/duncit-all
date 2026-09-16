@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Alert, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import {
+  PHONE_OTP_FLAG,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
   contactDraftFrom,
@@ -10,6 +11,7 @@ import {
   type ContactSnapshot,
 } from '@duncit/utils';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import ContactValueStep from './ContactValueStep';
 import ContactOtpStep from './ContactOtpStep';
 import { useContactChange } from './useContactChange';
@@ -32,10 +34,11 @@ const stopSubmitBubbling = (e: FormEvent) => e.stopPropagation();
  * One dialog for all three channels rather than three: the refusals and the
  * wording are identical, and only the box in step one differs — which is a
  * prop, not a screen. The address and the WhatsApp number are proved by a code
- * sent to the new value; the contact number is stored the moment step one is
- * submitted, so for it there is no second step and nothing to explain about a
- * code. Its Tamagui twin is the native app's <ChangeContactSheet/>; the logic
- * both drive lives in @duncit/utils (rule 40).
+ * sent to the new value. The contact number follows PHONE_OTP_FLAG: on, an SMS
+ * code proves it the same way; off, it is stored the moment step one is
+ * submitted, with no second step and nothing to explain about a code. Its
+ * Tamagui twin is the native app's <ChangeContactSheet/>; the logic both drive
+ * lives in @duncit/utils (rule 40).
  */
 export default function ChangeContactDialog({
   channel,
@@ -45,6 +48,7 @@ export default function ChangeContactDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useMemo(() => buildContactChangeLabels(t), [t]);
+  const phoneOtp = useFeatureFlag(PHONE_OTP_FLAG);
   // Held here, not in the step, so the code box still knows which value the
   // code was sent for when it comes to confirm it.
   const [draft, setDraft] = useState<ContactDraft | null>(null);
@@ -67,10 +71,10 @@ export default function ChangeContactDialog({
 
   const copy = labels.channel(active);
   const { state } = change;
-  const needsCode = contactChangeNeedsOtp(active);
+  const needsCode = contactChangeNeedsOtp(active, phoneOtp);
 
   const handleSend = async (next: ContactDraft) => {
-    const action = contactSubmitAction(snapshot, active, next);
+    const action = contactSubmitAction(snapshot, active, next, phoneOtp);
     if (action === 'UNCHANGED') {
       change.setError(labels.unchanged);
       return;
@@ -114,6 +118,7 @@ export default function ChangeContactDialog({
               defaultValues={draft ?? contactDraftFrom(snapshot, active)}
               busy={state.sending}
               blocked={!!state.error}
+              phoneOtp={phoneOtp}
               onSend={handleSend}
               onEdit={clearError}
             />

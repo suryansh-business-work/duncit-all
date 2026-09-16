@@ -1,4 +1,5 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { EnvTestRichResult, MutationTestEnvMsg91Args } from '@duncit/gql-types';
 
 export const ENV_ENTRY_FIELDS = `
   id name category description is_default is_active assigned_portals
@@ -13,6 +14,7 @@ export const ENV_CATEGORIES = gql`
       category
       label
       docUrl
+      apiDocsUrl
       fields { name label secret number bool phone hint }
     }
   }
@@ -113,6 +115,16 @@ export const TEST_ENV_GEMINI = gql`
   mutation TestEnvGemini($id: ID!, $prompt: String!) { testEnvGemini(id: $id, prompt: $prompt) ${RICH} }
 `;
 
+/** One step of the MSG91 OTP widget — send, retry, verify, or check a token. */
+export const TEST_ENV_MSG91: TypedDocumentNode<
+  { testEnvMsg91: EnvTestRichResult },
+  MutationTestEnvMsg91Args
+> = gql`
+  mutation TestEnvMsg91($id: ID!, $input: EnvMsg91TestInput!) {
+    testEnvMsg91(id: $id, input: $input) ${RICH}
+  }
+`;
+
 export interface RichTestResult {
   ok: boolean;
   message: string;
@@ -149,6 +161,7 @@ export interface EnvCategoryDef {
   label: string;
   fields: EnvFieldDef[];
   docUrl?: string | null;
+  apiDocsUrl?: string | null;
 }
 
 export interface EnvEntry {

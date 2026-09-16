@@ -291,12 +291,13 @@ describe('buildContactChangeLabels', () => {
 
 describe('contactChangeNeedsOtp', () => {
   it('proves the two delivery channels, whose whole worth is that a message arrives', () => {
-    expect(contactChangeNeedsOtp('EMAIL')).toBe(true);
-    expect(contactChangeNeedsOtp('WHATSAPP')).toBe(true);
+    expect(contactChangeNeedsOtp('EMAIL', false)).toBe(true);
+    expect(contactChangeNeedsOtp('WHATSAPP', false)).toBe(true);
   });
 
   it('does not stand between a person and correcting their own contact number', () => {
-    expect(contactChangeNeedsOtp('PHONE')).toBe(false);
+    expect(contactChangeNeedsOtp('PHONE', false)).toBe(false);
+    expect(contactChangeNeedsOtp('PHONE', true)).toBe(true);
   });
 });
 
@@ -349,14 +350,14 @@ describe('contactSubmitAction', () => {
         email: 'ravi@duncit.com',
         extension: '+91',
         number: '',
-      }),
+      }, false),
     ).toBe('UNCHANGED');
     expect(
       contactSubmitAction(snapshot, 'PHONE', {
         email: '',
         extension: '+91',
         number: '9876543210',
-      }),
+      }, false),
     ).toBe('UNCHANGED');
   });
 
@@ -366,14 +367,14 @@ describe('contactSubmitAction', () => {
         email: 'asha@duncit.com',
         extension: '+91',
         number: '',
-      }),
+      }, false),
     ).toBe('SEND_CODE');
     expect(
       contactSubmitAction(snapshot, 'WHATSAPP', {
         email: '',
         extension: '+44',
         number: '7700900123',
-      }),
+      }, false),
     ).toBe('SEND_CODE');
   });
 
@@ -383,7 +384,7 @@ describe('contactSubmitAction', () => {
         email: '',
         extension: '+44',
         number: '7700900123',
-      }),
+      }, false),
     ).toBe('SAVE');
   });
 
@@ -395,7 +396,7 @@ describe('contactSubmitAction', () => {
         email: '',
         extension: '+1',
         number: '4155551234',
-      }),
+      }, false),
     ).toBe('UNCHANGED');
   });
 });
@@ -407,6 +408,7 @@ describe('contactValueStepView', () => {
     blocked: false,
     isValid: true,
     numberStatus: 'IDLE',
+    phoneOtp: false,
   };
 
   it('promises a code on the two channels a code proves, idle and busy', () => {
@@ -419,6 +421,10 @@ describe('contactValueStepView', () => {
 
   it('saves the contact number straight away, idle and busy, with no code wording', () => {
     expect(contactValueStepView('PHONE', labels, idle).buttonLabel).toBe(labels.saveNumber);
+    expect(contactValueStepView('PHONE', labels, idle).hint).toBe(labels.channel('PHONE').changeHint);
+    const proved = contactValueStepView('PHONE', labels, { ...idle, phoneOtp: true });
+    expect(proved.buttonLabel).toBe(labels.sendCode);
+    expect(proved.hint).toBe(labels.phoneCodeHint);
     expect(
       contactValueStepView('PHONE', labels, { ...idle, busy: true }).buttonLabel,
     ).toBe(labels.savingNumber);

@@ -5619,6 +5619,7 @@ export type EnvCategory =
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'IMAGEKIT'
+  | 'MSG91'
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
@@ -5630,6 +5631,8 @@ export type EnvCategory =
 
 export type EnvCategoryDef = {
   __typename?: 'EnvCategoryDef';
+  /** Link to the provider's API documentation, when there is one worth reading. */
+  apiDocsUrl?: Maybe<Scalars['String']['output']>;
   category: EnvCategory;
   /** Link to where an operator obtains these credentials. */
   docUrl?: Maybe<Scalars['String']['output']>;
@@ -5726,6 +5729,33 @@ export type EnvImportResult = {
   created: Array<Scalars['String']['output']>;
   skipped: Array<Scalars['String']['output']>;
   updated: Array<Scalars['String']['output']>;
+};
+
+/** One call of MSG91's OTP widget, run from the Tech portal against a saved entry. */
+export type EnvMsg91TestAction =
+  /** Re-send the code of a live request, optionally over another channel. */
+  | 'RETRY_OTP'
+  /** Send a REAL SMS code to the number — answers with the request id. */
+  | 'SEND_OTP'
+  /** Ask MSG91 whether an access token from VERIFY_OTP is one it issued. */
+  | 'VERIFY_ACCESS_TOKEN'
+  /** Check a code against a request id — answers with MSG91's access token. */
+  | 'VERIFY_OTP';
+
+export type EnvMsg91TestInput = {
+  /** The token VERIFY_OTP answered with — VERIFY_ACCESS_TOKEN only. */
+  access_token?: InputMaybe<Scalars['String']['input']>;
+  action: EnvMsg91TestAction;
+  /** The code that arrived — VERIFY_OTP only. */
+  otp?: InputMaybe<Scalars['String']['input']>;
+  /** Country code, e.g. +91 — SEND_OTP only. */
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  /** The number without its country code — SEND_OTP only. */
+  phone_number?: InputMaybe<Scalars['String']['input']>;
+  /** The request id SEND_OTP answered with — RETRY_OTP and VERIFY_OTP. */
+  req_id?: InputMaybe<Scalars['String']['input']>;
+  /** MSG91 channel code for RETRY_OTP: 11 SMS, 4 voice, 3 email, 12 WhatsApp. Blank uses the widget's own. */
+  retry_channel?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type EnvSecretFlag = {
@@ -8402,6 +8432,57 @@ export type ModerationViolation = {
   type: Scalars['String']['output'];
 };
 
+export type Msg91WidgetAnalytics = {
+  __typename?: 'Msg91WidgetAnalytics';
+  days: Array<Msg91WidgetDay>;
+  total?: Maybe<Msg91WidgetDay>;
+};
+
+/** One day of widget traffic, or the window's total (date blank). */
+export type Msg91WidgetDay = {
+  __typename?: 'Msg91WidgetDay';
+  date: Scalars['String']['output'];
+  email: Scalars['Int']['output'];
+  retries: Scalars['Int']['output'];
+  sms: Scalars['Int']['output'];
+  token_verified: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  verified: Scalars['Int']['output'];
+  voice: Scalars['Int']['output'];
+  whatsapp: Scalars['Int']['output'];
+};
+
+/** One OTP widget request, as MSG91 recorded it. */
+export type Msg91WidgetLog = {
+  __typename?: 'Msg91WidgetLog';
+  email: Scalars['Int']['output'];
+  /** Country code + number, digits only. */
+  identifier: Scalars['String']['output'];
+  request_id: Scalars['String']['output'];
+  /** ISO instant MSG91 received it. Blank when MSG91's own time was unreadable. */
+  requested_at: Scalars['String']['output'];
+  /** How many times the code was re-sent. */
+  retries: Scalars['Int']['output'];
+  /** Messages sent per channel for this request. */
+  sms: Scalars['Int']['output'];
+  /** The access token from that verification was checked as well. */
+  token_verified: Scalars['Boolean']['output'];
+  user_ip: Scalars['String']['output'];
+  /** How many verify calls the request took. */
+  verify_attempts: Scalars['Int']['output'];
+  /** The code was verified. */
+  verified: Scalars['Boolean']['output'];
+  voice: Scalars['Int']['output'];
+  whatsapp: Scalars['Int']['output'];
+};
+
+export type Msg91WidgetLogPage = {
+  __typename?: 'Msg91WidgetLogPage';
+  rows: Array<Msg91WidgetLog>;
+  /** How many requests MSG91 holds for the window. */
+  total: Scalars['Int']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /** The private profile's owner accepts — this is what creates the follow. */
@@ -9701,6 +9782,12 @@ export type Mutation = {
   testEnvEntry: EnvTestResult;
   testEnvGemini: EnvTestRichResult;
   testEnvImagekitUpload: EnvTestRichResult;
+  /**
+   * One step of the MSG91 OTP widget with this entry's keys. SEND_OTP and
+   * RETRY_OTP deliver a real, billed message. The data field carries what the
+   * next step needs: the request id, or the access token.
+   */
+  testEnvMsg91: EnvTestRichResult;
   testEnvOpenai: EnvTestRichResult;
   testEnvPexels: EnvTestRichResult;
   testEnvTwilioCall: EnvTestRichResult;
@@ -12795,6 +12882,12 @@ export type MutationTestEnvImagekitUploadArgs = {
   fileBase64: Scalars['String']['input'];
   fileName: Scalars['String']['input'];
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationTestEnvMsg91Args = {
+  id: Scalars['ID']['input'];
+  input: EnvMsg91TestInput;
 };
 
 
@@ -17489,6 +17582,15 @@ export type Query = {
   membershipPlansTable: MembershipPlanTablePage;
   /** The membership pricing screen — mWeb and the native app render this. */
   membershipPricing: MembershipPricing;
+  /** Whether the default MSG91 entry holds both a widget ID and an auth key. */
+  msg91Configured: Scalars['Boolean']['output'];
+  /** Per-day OTP widget traffic between two dates (yyyy-MM-dd, at most 31 days). */
+  msg91WidgetAnalytics: Msg91WidgetAnalytics;
+  /**
+   * Every OTP widget request between two dates (yyyy-MM-dd). MSG91 allows at
+   * most 3 days in one window and no end date in the future.
+   */
+  msg91WidgetLogs: Msg91WidgetLogPage;
   /** The signed-in member's own open request, or null. */
   myAccountDeletionRequest?: Maybe<AccountDeletionRequest>;
   /**  Account health for the signed-in user. Always returns a record (default base = 100).  */
@@ -19353,6 +19455,18 @@ export type QueryMembershipNewsSubscribersTableArgs = {
 
 export type QueryMembershipPlansTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMsg91WidgetAnalyticsArgs = {
+  end_date: Scalars['String']['input'];
+  start_date: Scalars['String']['input'];
+};
+
+
+export type QueryMsg91WidgetLogsArgs = {
+  end_date: Scalars['String']['input'];
+  start_date: Scalars['String']['input'];
 };
 
 

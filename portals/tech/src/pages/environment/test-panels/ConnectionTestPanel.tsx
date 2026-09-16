@@ -33,9 +33,11 @@ const NEEDS_DESTINATION = 'AISENSY';
 
 interface Props {
   entry: EnvEntry;
+  /** Replaces the per-category line above, for a panel that says it itself. */
+  description?: string;
 }
 
-export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
+export default function ConnectionTestPanel({ entry, description: override }: Readonly<Props>) {
   const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [result, setResult] = useState<ConnectionTestResult | null>(null);
@@ -43,7 +45,7 @@ export default function ConnectionTestPanel({ entry }: Readonly<Props>) {
 
   const needsDestination = entry.category === NEEDS_DESTINATION;
   const description =
-    WHAT_IT_DOES[entry.category] ?? 'Checks these credentials against the provider.';
+    override ?? WHAT_IT_DOES[entry.category] ?? 'Checks these credentials against the provider.';
 
   const test = async () => {
     setResult(null);

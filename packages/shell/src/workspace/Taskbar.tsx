@@ -38,9 +38,10 @@ export function Taskbar() {
         alignItems: 'center',
         gap: 1,
         px: 1,
-        borderTop: 1,
+        // From `md` the content panel's own frame is the edge above the bar.
+        borderTop: { xs: 1, md: 0 },
         borderColor: 'divider',
-        bgcolor: 'background.paper',
+        bgcolor: 'background.default',
         // Above the sidebar's drawer paper, which is fixed to the viewport.
         zIndex: (theme) => theme.zIndex.drawer + 3,
       }}

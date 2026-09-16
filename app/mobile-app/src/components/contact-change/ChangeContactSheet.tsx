@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, YStack } from 'tamagui';
 import {
+  PHONE_OTP_FLAG,
   buildContactChangeLabels,
   contactChangeNeedsOtp,
   contactDraftFrom,
@@ -12,6 +13,7 @@ import {
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useContactChange } from '@/hooks/useContactChange';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ContactOtpStep } from './ContactOtpStep';
 import { ContactValueStep } from './ContactValueStep';
@@ -32,13 +34,15 @@ interface Props {
  * One sheet for all three channels rather than three: the refusals and the
  * wording are identical, and only the box in step one differs — which is a
  * prop, not a screen. The address and the WhatsApp number are proved by a code
- * sent to the new value; the contact number is stored the moment step one is
- * submitted, so for it there is no second step and nothing to explain about a
- * code. The logic both surfaces drive lives in @duncit/utils (rule 40).
+ * sent to the new value. The contact number follows PHONE_OTP_FLAG: on, an SMS
+ * code proves it the same way; off, it is stored the moment step one is
+ * submitted, with no second step and nothing to explain about a code. The
+ * logic both surfaces drive lives in @duncit/utils (rule 40).
  */
 export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useMemo(() => buildContactChangeLabels(t), [t]);
+  const phoneOtp = useFeatureFlag(PHONE_OTP_FLAG);
   // Held here, not in the step, so the code box still knows which value the
   // code was sent for when it comes to confirm it.
   const [draft, setDraft] = useState<ContactDraft | null>(null);
@@ -61,10 +65,10 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
 
   const copy = labels.channel(active);
   const { state } = change;
-  const needsCode = contactChangeNeedsOtp(active);
+  const needsCode = contactChangeNeedsOtp(active, phoneOtp);
 
   const handleSend = async (next: ContactDraft) => {
-    const action = contactSubmitAction(snapshot, active, next);
+    const action = contactSubmitAction(snapshot, active, next, phoneOtp);
     if (action === 'UNCHANGED') {
       change.setError(labels.unchanged);
       return;
@@ -105,6 +109,7 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
             defaultValues={draft ?? contactDraftFrom(snapshot, active)}
             busy={state.sending}
             blocked={!!state.error}
+            phoneOtp={phoneOtp}
             onSend={handleSend}
             onEdit={clearError}
           />

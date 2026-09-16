@@ -15,6 +15,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useBranding } from '@/hooks/useBranding';
 import type { SurveyKind } from '@/graphql/onboarding-survey';
 import { useOnboardingFlow } from './useOnboardingFlow';
+import { IntroPhase } from './IntroPhase';
 import { CategoryPhase } from './CategoryPhase';
 import { CategorySummaryBanner } from './CategorySummaryBanner';
 import { SurveyPhase } from './SurveyPhase';
@@ -104,7 +105,8 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           <XStack justifyContent="center" paddingTop={8}>
             <AppImage
               source={{ uri: logoUrl }}
-              style={{ height: 28, width: 120, resizeMode: 'contain' }}
+              style={{ height: 28, width: 120 }}
+              resizeMode="contain"
             />
           </XStack>
         ) : null}
@@ -141,6 +143,13 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           <CategorySummaryBanner labels={flow.labels} onChange={flow.goToCategory} />
         )}
         <KeyboardScreen flush>
+          {flow.phase === 'intro' && (
+            <IntroPhase
+              html={flow.introHtml}
+              loading={flow.introLoading}
+              onContinue={flow.startCategory}
+            />
+          )}
           {flow.phase === 'category' && (
             <CategoryPhase
               busy={flow.busy}

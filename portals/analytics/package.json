@@ -1,0 +1,44 @@
+{
+  "name": "analytics",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deps:check": "node ../../scripts/deps.mjs check",
+    "deps:update": "node ../../scripts/deps.mjs update",
+    "dev": "vite",
+    "dev:main": "cross-env VITE_GRAPHQL_URL=https://server.duncit.com/graphql vite",
+    "dev:staging": "cross-env VITE_GRAPHQL_URL=https://staging.server.duncit.com/graphql vite",
+    "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
+    "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs analytics"
+  },
+  "dependencies": {
+    "@apollo/client": "^4.2.12",
+    "@duncit/logs": "workspace:*",
+    "@duncit/shell": "workspace:*",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
+    "@mui/system": "^9.4.0",
+    "@mui/x-date-pickers": "^9.12.0",
+    "@react-oauth/google": "^0.13.5",
+    "date-fns": "^4.4.0",
+    "graphql": "^16.14.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "cross-env": "^10.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  }
+}

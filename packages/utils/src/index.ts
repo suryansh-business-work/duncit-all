@@ -129,6 +129,13 @@ export { formatMjml } from './mjml-format';
 export { nationalPhoneDigits } from './phone';
 export { isStoryLive } from './story-live';
 export {
+  buildOfficialStatusSlides,
+  hasUnseenOfficialStatus,
+  isOfficialStatusLive,
+  type OfficialStatusSlide,
+  type OfficialStatusSource,
+} from './official-status';
+export {
   PAYMENT_FAILURE_KEYS,
   classifyPaymentFailure,
   paymentTicketDraft,
@@ -486,6 +493,7 @@ export {
 export {
   CONTACT_CHANNELS,
   CONTACT_NUMBER_FIELDS,
+  PHONE_OTP_FLAG,
   applyContactDraft,
   buildContactChangeLabels,
   contactChangeNeedsOtp,

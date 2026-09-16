@@ -21,6 +21,10 @@ export interface CapacityRow {
 export interface DocRow {
   type: string;
   url: string;
+  /** SHA-256 of the uploaded file, set by the picker — lets the form catch the
+   * same document being uploaded twice under different headings. Client-only:
+   * never sent to the server (see register-venue.mappers.ts). */
+  hash?: string;
 }
 
 export interface RegisterVenueValues extends VenueLocationValues {
@@ -46,6 +50,11 @@ export interface RegisterVenueValues extends VenueLocationValues {
   owner_phone: string;
   owner_dob: string;
   owner_address: string;
+  payout_method: string;
+  account_holder_name: string;
+  account_number: string;
+  ifsc_code: string;
+  upi_id: string;
 }
 
 export type VenueSectionKey =
@@ -54,6 +63,7 @@ export type VenueSectionKey =
   | 'amenities'
   | 'documents'
   | 'owner'
+  | 'payout'
   | 'leaves'
   | 'review';
 
@@ -105,4 +115,9 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   owner_phone: '',
   owner_dob: '',
   owner_address: '',
+  payout_method: '',
+  account_holder_name: '',
+  account_number: '',
+  ifsc_code: '',
+  upi_id: '',
 };

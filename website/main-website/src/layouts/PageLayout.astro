@@ -212,4 +212,28 @@ const accentText = {
     border-radius: 4px;
     font-size: 0.9em;
   }
+  .prose-page table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 1.25rem 0;
+  }
+  .prose-page th,
+  .prose-page td {
+    border: 1px solid var(--color-line);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose-page th {
+    background: var(--color-lilac);
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+  .prose-page td p,
+  .prose-page th p {
+    margin-bottom: 0;
+  }
 </style>

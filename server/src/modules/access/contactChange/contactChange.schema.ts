@@ -16,8 +16,10 @@ export const contactChangeTypeDefs = /* GraphQL */ `
   # number, they are asking us to start using. Proving the OLD one proves
   # nothing about the new one.
   #
-  # The contact number is saved without one — setContactPhoneNumber below — and
-  # is therefore stored unverified.
+  # The contact number follows the phone_otp_verification feature flag: on, it
+  # is proved by an SMS code (requestContactPhoneChangeOtp with field PHONE);
+  # off, it is saved without one — setContactPhoneNumber below — and is
+  # therefore stored unverified.
   #
   # This is deliberately the only way these three fields move from mWeb and the
   # native app — updateMyProfile refuses to move them. An admin editing
@@ -57,7 +59,8 @@ export const contactChangeTypeDefs = /* GraphQL */ `
     Saved as typed and stored UNVERIFIED — nothing has answered on the number,
     so is_phone_verified keeps saying so. It is still refused when the number
     already belongs to another account: a number is how somebody signs in, so
-    two accounts may not share one.
+    two accounts may not share one. Refused outright while the
+    phone_otp_verification feature flag is on — the number must then be proved.
     """
     setContactPhoneNumber(phone_extension: String!, phone_number: String!): User!
 

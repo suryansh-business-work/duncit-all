@@ -40,7 +40,8 @@ export function HostApplyScreen() {
           <XStack justifyContent="center" paddingTop={8}>
             <AppImage
               source={{ uri: logoUrl }}
-              style={{ height: 28, width: 120, resizeMode: 'contain' }}
+              style={{ height: 28, width: 120 }}
+              resizeMode="contain"
             />
           </XStack>
         ) : null}

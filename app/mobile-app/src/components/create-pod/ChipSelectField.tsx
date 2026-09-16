@@ -1,12 +1,15 @@
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
+import { LocalityChip } from '@/components/LocalityChip';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ChipOption {
   value: string;
   label: string;
+  /** Shown as a pin chip next to the label — only clubs set this today. */
+  locality?: string | null;
 }
 
 interface Props {
@@ -64,6 +67,7 @@ export function ChipSelectField({
                 onPress={() => onChange(option.value)}
                 minHeight={36}
                 alignItems="center"
+                gap={6}
                 paddingHorizontal={14}
                 borderRadius={999}
                 backgroundColor={selected ? '$primary' : '$soft'}
@@ -72,6 +76,12 @@ export function ChipSelectField({
                 <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {option.label}
                 </Text>
+                {option.locality ? (
+                  <LocalityChip
+                    locality={option.locality}
+                    testID={`${testID}-${option.value}-locality`}
+                  />
+                ) : null}
               </XStack>
             );
           })}

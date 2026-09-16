@@ -73,6 +73,13 @@ export interface IOtpChallenge extends Document {
   recipient_name: string;
   code_hash: string;
   /**
+   * The request id MSG91 answered an SMS send with, '' when no SMS was really
+   * sent. MSG91 generates the SMS code itself, so this id is what a typed code
+   * is checked against there. select:false — with the auth key it is a way to
+   * ask whether a code is right.
+   */
+  sms_request_id: string;
+  /**
    * The sha256 of the one-shot grant minted when the code was accepted.
    *
    * Verifying and spending are two different moments for a password reset —
@@ -115,6 +122,7 @@ const otpChallengeSchema = new Schema<IOtpChallenge>(
     email: { type: String, default: '', lowercase: true, trim: true, index: true },
     recipient_name: { type: String, default: '' },
     code_hash: { type: String, required: true },
+    sms_request_id: { type: String, default: '', select: false },
     grant_hash: { type: String, default: '', select: false },
     // Mongo's TTL monitor drops the row an hour AFTER it expires rather than on
     // the dot, so a just-expired challenge can still answer "that code has

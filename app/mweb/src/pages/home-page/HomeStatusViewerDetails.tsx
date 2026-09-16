@@ -10,6 +10,8 @@ interface Props {
   index: number;
   onJumpTo: (idx: number) => void;
   hasOpenButton: boolean;
+  /** The pinned Duncit group names its caption; a story's carries no test id. */
+  captionTestId?: string;
 }
 
 export default function HomeStatusViewerDetails({
@@ -19,6 +21,7 @@ export default function HomeStatusViewerDetails({
   index,
   onJumpTo,
   hasOpenButton,
+  captionTestId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
@@ -36,7 +39,11 @@ export default function HomeStatusViewerDetails({
       }}
     >
       {current?.caption && (
-        <Typography variant="body2" sx={{ color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+        <Typography
+          data-testid={captionTestId}
+          variant="body2"
+          sx={{ color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+        >
           {current.caption}
         </Typography>
       )}

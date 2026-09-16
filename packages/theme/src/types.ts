@@ -11,6 +11,13 @@ export interface AccentColors {
 
 export type ColorMode = PaletteMode;
 
+/** The three shadows the system has, one per floating layer. */
+export interface ElevationShadows {
+  raised: string;
+  overlay: string;
+  dialog: string;
+}
+
 /** The status colours for the active mode — same keys in light and dark. */
 export type SemanticColors = { readonly [K in keyof Tokens['semantic']]: string };
 
@@ -62,14 +69,26 @@ export interface ThemeCtx {
   border: string;
   /** A form field's outline — 3:1 against the surfaces it sits on. */
   inputBorder: string;
+  /** The app ground: sidebar and the page behind the content panel. */
   bg: string;
+  /** Content panel, cards, tables. */
   surface: string;
+  /** Quiet fill: table headers, inactive chips, code. */
+  soft: string;
+  /** What floats: menus, popovers, dialogs. */
+  raised: string;
+  /** Ink tint on a transparent control the pointer is over. */
+  hover: string;
+  /** Ink tint marking the current row / selected item. */
+  selected: string;
+  /** Box shadows — only floating layers carry one. */
+  shadow: ElevationShadows;
+  /** A CSS transition list for the given properties, on the shared curve. */
+  transition: (props: readonly string[], ms?: number) => string;
   /** Status colours readable as text in this mode. */
   semantic: SemanticColors;
   /** Text on a filled status colour. */
   onSemantic: string;
-  appBg: string;
-  surfaceGradient: string;
   white: string;
   t: Tokens;
 }

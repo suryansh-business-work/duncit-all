@@ -16,6 +16,7 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import { DuncitButton } from '@duncit/buttons';
 import LocationDialog from '../../../../components/app-header/LocationDialog';
+import LocalityChip from '../../../../components/LocalityChip';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import ClubPreview from '../ClubPreview';
@@ -156,6 +157,20 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
               value={clubs.find((club) => club.id === field.value) ?? null}
               onChange={(_e, next) => field.onChange(next?.id ?? '')}
               isOptionEqualToValue={(option, selected) => option.id === selected.id}
+              renderOption={(props, option) => (
+                <Box
+                  component="li"
+                  {...props}
+                  key={option.id}
+                  data-testid={`create-pod-club-option-${option.id}`}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}
+                >
+                  <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
+                    {option.club_name}
+                  </Typography>
+                  <LocalityChip locality={option.locality} testId={`create-pod-club-option-${option.id}-locality`} />
+                </Box>
+              )}
               renderInput={(params) => (
                 <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message} />
               )}

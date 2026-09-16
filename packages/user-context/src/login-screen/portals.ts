@@ -66,6 +66,9 @@ export const PORTALS: PortalEntry[] = [
   { key: 'club-admins', name: 'Club Admins', descriptionKey: 'session.portals.descriptions.clubAdmins', port: 2032, subdomain: 'club-admins', category: 'partners', image: PEXELS('3182812') },
   { key: 'hosts', name: 'Hosts', descriptionKey: 'session.portals.descriptions.hosts', port: 2033, subdomain: 'hosts', category: 'partners', image: PEXELS('1181395') },
   { key: 'pods', name: 'Pods', descriptionKey: 'session.portals.descriptions.pods', port: 2034, subdomain: 'pods', category: 'operations', image: PEXELS('1153213') },
+  { key: 'communications', name: 'Communications', descriptionKey: 'session.portals.descriptions.communications', port: 2035, subdomain: 'communications', category: 'growth', image: PEXELS('1591062') },
+  { key: 'logs', name: 'Logs', descriptionKey: 'session.portals.descriptions.logs', port: 2036, subdomain: 'logs', category: 'operations', image: PEXELS('546819') },
+  { key: 'analytics', name: 'Analytics', descriptionKey: 'session.portals.descriptions.analytics', port: 2037, subdomain: 'analytics', category: 'operations', image: PEXELS('590022') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

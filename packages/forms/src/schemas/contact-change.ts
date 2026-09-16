@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DIAL_CODE, EMAIL, OTP_6, PHONE_INTL } from '@duncit/regex';
+import { DIAL_CODE, EMAIL, OTP_6, PHONE_INTL, PHONE_NUMBER_IN } from '@duncit/regex';
 import { isPhoneChannel, type ContactChannel, type ContactDraft } from '@duncit/utils';
 
 import type { Translate } from './translate';
@@ -9,6 +9,10 @@ export type ContactValueValues = ContactDraft;
 
 /** The two boxes the current channel is not asking about. */
 const anyString = z.string();
+
+/** The dial code the country picker defaults to — the only one whose numbers
+ * are checked against the stricter 10-digit Indian shape below. */
+const INDIA_DIAL_CODE = '+91';
 
 /**
  * The value being asked for, per channel.
@@ -50,7 +54,20 @@ export function makeContactValueSchema(
     .refine((v) => PHONE_INTL.test(v), t('mweb.contactChange.validation.phoneInvalid'));
 
   if (isPhoneChannel(channel)) {
-    return z.object({ email: anyString, extension: extensionValue, number: numberValue });
+    return z
+      .object({ email: anyString, extension: extensionValue, number: numberValue })
+      // On India's own dial code there is no picker ambiguity left to protect:
+      // a 9-digit number is simply short, so it is held to the real 10-digit
+      // Indian mobile shape rather than the international 6-15 digit range.
+      .superRefine((values, ctx) => {
+        if (values.extension === INDIA_DIAL_CODE && !PHONE_NUMBER_IN.test(values.number)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('mweb.contactChange.validation.phoneInvalid'),
+            path: ['number'],
+          });
+        }
+      });
   }
   return z.object({ email: emailValue, extension: anyString, number: anyString });
 }

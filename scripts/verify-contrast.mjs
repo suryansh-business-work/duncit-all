@@ -172,7 +172,7 @@ function checkPortalLight() {
     check(surface, `${status} text`, portal.semantic[status], grounds, TEXT);
     check(surface, 'white', portal.white, { [status]: portal.semantic[status] }, TEXT);
   }
-  check(surface, 'inputBorder', portal.surface.inputBorder, { paper: grounds.paper, bg: grounds.bg }, UI);
+  check(surface, 'inputBorder', portal.surface.inputBorder, grounds, UI);
   check(surface, 'white', portal.white, {
     'defaultAccent.main': portal.defaultAccent.main,
     'defaultAccent.hover': portal.defaultAccent.hover,
@@ -184,7 +184,7 @@ function checkPortalLight() {
 
 function checkPortalDark() {
   const surface = 'portals (dark)';
-  const grounds = { bg: portal.dark.bg, surface: portal.dark.surface };
+  const grounds = { bg: portal.dark.bg, surface: portal.dark.surface, soft: portal.dark.soft, raised: portal.dark.raised };
   check(surface, 'ink', portal.dark.ink, grounds, TEXT);
   check(surface, 'muted', portal.dark.muted, grounds, TEXT);
   for (const status of [...STATUS, 'secondary']) {

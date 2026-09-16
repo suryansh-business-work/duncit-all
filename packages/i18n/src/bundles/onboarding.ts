@@ -251,6 +251,18 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       upcoming: 'Upcoming',
       venueApproval: 'Venue approval',
     },
+    settingsPage: {
+      title: 'Onboarding Intro',
+      subtitle:
+        'The intro screen shown first on each onboarding flow, before the category picker. Leave a section blank to skip it for that flow.',
+      hint: 'Written here as rich text — shown before the Super/Category/Sub picker on Become a Host, Register Venue, List Product and Be a Club Admin.',
+      hostIntro: 'Host intro',
+      venueIntro: 'Venue intro',
+      ecommIntro: 'Product intro',
+      clubAdminIntro: 'Club Admin intro',
+      saved: 'Onboarding intro saved.',
+      saveFailed: 'Could not save the onboarding intro.',
+    },
     surveys: {
       add: 'Add',
       addOption: 'Add option',

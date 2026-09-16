@@ -1216,7 +1216,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The booking bar — host state.
       goToDashboard: 'Go to Dashboard',
       // Native only — its bar pairs every CTA with a caption on the left.
+      // Once the pod's own time has passed, the caption switches to past
+      // tense — the same rule the member side already follows below.
       youreHosting: "You're hosting",
+      youHosted: 'You hosted',
       yourPod: 'Your Pod',
       // Closed state. A pod that is RUNNING has not "taken place" yet, so it
       // gets its own sentence rather than being told it is over.
@@ -3776,6 +3779,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       phoneTitle: 'Change phone number',
       phoneDirectHint:
         'This is the number Duncit will reach you on. It is saved as soon as you enter it.',
+      // While the phone_otp_verification flag is on, the number is proved first.
+      phoneCodeHint: 'We will text a 6-digit code to this number to confirm it is yours.',
       whatsappName: 'WhatsApp number',
       whatsappField: 'New WhatsApp number',
       whatsappEmpty: 'No WhatsApp number yet',
@@ -3995,6 +4000,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noOneHasViewedThisStory: 'No one has viewed this story yet.',
       openDetails: 'Open details',
       unmuteVideo: 'Unmute video',
+      // The Duncit tile: statuses the team publishes from Marketing > Status.
+      officialName: 'Duncit',
+      officialTile: 'Duncit status',
+      officialOpenLink: 'See more',
     },
     statusUpload: {
       preparingStatusUpload: 'Preparing status upload...',

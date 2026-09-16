@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildHomeStatusEntries, buildMyStatusViewer, initials } from '../homeStatusItems';
+import { buildHomeStatusEntries, buildMyStatusViewer, buildOfficialEntry, initials } from '../homeStatusItems';
 
 const baseArgs = {
   followedClubs: [] as any[],
@@ -181,5 +181,80 @@ describe('buildMyStatusViewer', () => {
         my_stories: [{ id: 's-old', image_url: 'old.jpg', media_type: 'IMAGE', expires_at: past }],
       }),
     ).toBeNull();
+  });
+});
+
+describe('buildOfficialEntry', () => {
+  const slide = (overrides: Partial<Record<string, unknown>> = {}) => ({
+    id: 's1',
+    mediaUrl: 'https://x/a.jpg',
+    mediaType: 'IMAGE' as const,
+    caption: 'Hi',
+    linkUrl: '',
+    linkInternal: false,
+    seen: false,
+    expiresAt: null,
+    ...overrides,
+  });
+
+  it('returns null when there are no live slides', () => {
+    expect(buildOfficialEntry([], 'Duncit', 'Duncit')).toBeNull();
+  });
+
+  it('fills the header circle from the first slide when it is an image', () => {
+    const entry = buildOfficialEntry([slide()] as any, 'Duncit', 'Duncit');
+    expect(entry?.imageUrl).toBe('https://x/a.jpg');
+    expect(entry?.videoUrl).toBeNull();
+    expect(entry?.viewer.avatarUrl).toBe('https://x/a.jpg');
+  });
+
+  it('puts the first slide in videoUrl and leaves the avatar unset when every slide is a video', () => {
+    const entry = buildOfficialEntry(
+      [slide({ id: 'v1', mediaType: 'VIDEO', mediaUrl: 'https://x/a.mp4' })] as any,
+      'Duncit',
+      'Duncit',
+    );
+    expect(entry?.imageUrl).toBeNull();
+    expect(entry?.videoUrl).toBe('https://x/a.mp4');
+    expect(entry?.viewer.avatarUrl).toBeUndefined();
+  });
+
+  it('finds the first IMAGE slide for the avatar even when the group opens on a video', () => {
+    const entry = buildOfficialEntry(
+      [
+        slide({ id: 'v1', mediaType: 'VIDEO', mediaUrl: 'https://x/a.mp4' }),
+        slide({ id: 'i1', mediaType: 'IMAGE', mediaUrl: 'https://x/b.jpg' }),
+      ] as any,
+      'Duncit',
+      'Duncit',
+    );
+    expect(entry?.viewer.avatarUrl).toBe('https://x/b.jpg');
+  });
+
+  it('is active while any slide is unseen, and quiet once every slide is seen', () => {
+    expect(buildOfficialEntry([slide({ seen: false })] as any, 'Duncit', 'Duncit')?.active).toBe(true);
+    expect(buildOfficialEntry([slide({ seen: true })] as any, 'Duncit', 'Duncit')?.active).toBe(false);
+  });
+
+  it("carries the label, initials and each slide's link fields straight through", () => {
+    const entry = buildOfficialEntry(
+      [slide({ linkUrl: '/promo', linkInternal: true, caption: 'Sale', expiresAt: '2026-01-01' })] as any,
+      'Duncit App',
+      'Status tile',
+    );
+    expect(entry?.key).toBe('official');
+    expect(entry?.label).toBe('Status tile');
+    expect(entry?.initials).toBe('DA');
+    expect(entry?.viewer.label).toBe('Duncit App');
+    expect(entry?.viewer.kind).toBe('official');
+    expect(entry?.viewer.slides?.[0]).toMatchObject({
+      id: 's1',
+      mediaUrl: 'https://x/a.jpg',
+      mediaType: 'IMAGE',
+      caption: 'Sale',
+      expiresAt: '2026-01-01',
+      linkUrl: '/promo',
+      linkInternal: true,
+    });
   });
 });

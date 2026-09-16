@@ -32,7 +32,9 @@ describe('StatusViewerFooter', () => {
 
   describe('caption', () => {
     it('hides the caption block when the slide has none', () => {
-      renderWithProviders(<StatusViewerFooter {...baseProps} slide={{ ...slide, caption: null }} />);
+      renderWithProviders(
+        <StatusViewerFooter {...baseProps} slide={{ ...slide, caption: null }} />,
+      );
       expect(screen.queryByText('A caption')).toBeNull();
       expect(screen.queryByTestId('status-official-caption')).toBeNull();
     });
@@ -52,7 +54,9 @@ describe('StatusViewerFooter', () => {
   describe('like button', () => {
     it('renders only when both onToggleLike and a slide are given, and fires on press', () => {
       const onToggleLike = jest.fn();
-      renderWithProviders(<StatusViewerFooter {...baseProps} slide={slide} onToggleLike={onToggleLike} />);
+      renderWithProviders(
+        <StatusViewerFooter {...baseProps} slide={slide} onToggleLike={onToggleLike} />,
+      );
       fireEvent.press(screen.getByTestId('status-like'));
       expect(onToggleLike).toHaveBeenCalled();
     });
@@ -99,7 +103,9 @@ describe('StatusViewerFooter', () => {
   describe('viewers row', () => {
     it('renders only when both onViewers and a slide are given, and fires with the slide id', () => {
       const onViewers = jest.fn();
-      renderWithProviders(<StatusViewerFooter {...baseProps} slide={slide} onViewers={onViewers} />);
+      renderWithProviders(
+        <StatusViewerFooter {...baseProps} slide={slide} onViewers={onViewers} />,
+      );
       fireEvent.press(screen.getByTestId('status-viewers'));
       expect(onViewers).toHaveBeenCalledWith('s1');
     });
@@ -118,7 +124,9 @@ describe('StatusViewerFooter', () => {
   describe('open details button', () => {
     it('renders only when both a target and onOpenTarget are given, and fires with the target', () => {
       const onOpenTarget = jest.fn();
-      renderWithProviders(<StatusViewerFooter {...baseProps} target={target} onOpenTarget={onOpenTarget} />);
+      renderWithProviders(
+        <StatusViewerFooter {...baseProps} target={target} onOpenTarget={onOpenTarget} />,
+      );
       fireEvent.press(screen.getByTestId('status-open-target'));
       expect(onOpenTarget).toHaveBeenCalledWith(target);
     });
@@ -137,7 +145,9 @@ describe('StatusViewerFooter', () => {
   describe('see more link button', () => {
     it('renders only when the slide carries a link and onOpenLink is given, and fires with the url', () => {
       const onOpenLink = jest.fn();
-      renderWithProviders(<StatusViewerFooter {...baseProps} slide={slide} onOpenLink={onOpenLink} />);
+      renderWithProviders(
+        <StatusViewerFooter {...baseProps} slide={slide} onOpenLink={onOpenLink} />,
+      );
       fireEvent.press(screen.getByTestId('status-official-link'));
       expect(onOpenLink).toHaveBeenCalledWith('/deal');
     });
@@ -149,7 +159,11 @@ describe('StatusViewerFooter', () => {
 
     it('stays hidden when the slide has no link', () => {
       renderWithProviders(
-        <StatusViewerFooter {...baseProps} slide={{ ...slide, linkUrl: null }} onOpenLink={jest.fn()} />,
+        <StatusViewerFooter
+          {...baseProps}
+          slide={{ ...slide, linkUrl: null }}
+          onOpenLink={jest.fn()}
+        />,
       );
       expect(screen.queryByTestId('status-official-link')).toBeNull();
     });

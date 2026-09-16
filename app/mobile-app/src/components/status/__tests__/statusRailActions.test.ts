@@ -35,28 +35,31 @@ beforeEach(() => {
 
 describe('openStoryTarget', () => {
   it('opens the club instead of navigating for a club target', () => {
-    const navigation = { navigate: jest.fn() } as never;
+    const navigate = jest.fn();
+    const navigation = { navigate } as never;
     const openClub = jest.fn();
     const target: StoryTarget = { kind: 'club', id: 'c1', clubSlug: 'runners', title: 'Runners' };
     openStoryTarget(target, navigation, openClub);
     expect(openClub).toHaveBeenCalledWith('runners');
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
     expect(mockedOpenURL).not.toHaveBeenCalled();
   });
 
   it('opens the sponsored link instead of navigating for a link target', () => {
-    const navigation = { navigate: jest.fn() } as never;
+    const navigate = jest.fn();
+    const navigation = { navigate } as never;
     const target: StoryTarget = { kind: 'link', url: 'https://sponsor.example/landing' };
     openStoryTarget(target, navigation, jest.fn());
     expect(mockedOpenURL).toHaveBeenCalledWith('https://sponsor.example/landing');
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('navigates to the public profile for a user target', () => {
-    const navigation = { navigate: jest.fn() } as never;
+    const navigate = jest.fn();
+    const navigation = { navigate } as never;
     const target: StoryTarget = { kind: 'user', id: 'u1' };
     openStoryTarget(target, navigation, jest.fn());
-    expect(navigation.navigate).toHaveBeenCalledWith('PublicProfile', { userId: 'u1' });
+    expect(navigate).toHaveBeenCalledWith('PublicProfile', { userId: 'u1' });
     expect(mockedOpenURL).not.toHaveBeenCalled();
   });
 });
@@ -81,9 +84,7 @@ describe('pickViewerStatus', () => {
   const active = { id: 'active' } as never;
 
   it('prefers the official status while it is open', () => {
-    expect(pickViewerStatus({ official: true, ad: true }, { official, ad, active })).toBe(
-      official,
-    );
+    expect(pickViewerStatus({ official: true, ad: true }, { official, ad, active })).toBe(official);
   });
 
   it('prefers the sponsored ad over the active story once official is closed', () => {
@@ -91,9 +92,7 @@ describe('pickViewerStatus', () => {
   });
 
   it('falls back to the active story once official and ad are both closed', () => {
-    expect(pickViewerStatus({ official: false, ad: false }, { official, ad, active })).toBe(
-      active,
-    );
+    expect(pickViewerStatus({ official: false, ad: false }, { official, ad, active })).toBe(active);
   });
 
   it('falls back to null when nothing is open and nothing is active', () => {

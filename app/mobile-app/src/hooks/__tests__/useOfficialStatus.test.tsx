@@ -1,6 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { OfficialStatusesDocument, RecordOfficialStatusViewDocument } from '@/graphql/official-status';
+import {
+  OfficialStatusesDocument,
+  RecordOfficialStatusViewDocument,
+} from '@/graphql/official-status';
 import { useOfficialStatus } from '@/hooks/useOfficialStatus';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -96,7 +99,7 @@ describe('useOfficialStatus', () => {
 
     mockLocationState.selectedId = 'loc2';
     mockRequest.mockResolvedValueOnce({ officialStatuses: [status] });
-    rerender();
+    rerender({});
     await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2));
     expect(mockRequest).toHaveBeenLastCalledWith(
       OfficialStatusesDocument,

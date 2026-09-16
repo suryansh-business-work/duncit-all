@@ -313,10 +313,25 @@ jobs:
       - name: Install Android SDK 35 + NDK 27
         # The runner ships an SDK but not NDK 27.1.12297006, which the
         # withNdkVersion plugin pins (RN 0.81 needs NDK 27's libc++).
+        #
+        # The NDK is a ~1 GB zip, and a transfer cut off part-way leaves a
+        # truncated archive that sdkmanager then fails to open ("Error on ZipFile
+        # unknown archive"), with one attempt and no retry. So it is retried, and
+        # the partial download is cleared first — a resumed corrupt file fails
+        # the same way. Packages already installed are a no-op on a retry.
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses > /dev/null || true
-          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.1.12297006"
+          for attempt in 1 2 3 4 5; do
+            if "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.1.12297006"; then
+              exit 0
+            fi
+            echo "::warning::Android SDK/NDK install failed (attempt $attempt/5)"
+            rm -rf "$ANDROID_HOME/.temp" "$ANDROID_HOME/.downloadIntermediates"
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not install the Android SDK/NDK after 5 attempts"
+          exit 1
 
       # Two caches, not one, because the two halves change on different clocks.
       # The distribution moves only when the Gradle version does; the build

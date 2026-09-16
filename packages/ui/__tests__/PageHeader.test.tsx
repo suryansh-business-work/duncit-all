@@ -7,7 +7,8 @@ describe('PageHeader', () => {
     render(<PageHeader title="Dashboard" />);
     const title = screen.getByText('Dashboard');
     expect(title).toHaveClass('MuiTypography-h5');
-    expect(title).toHaveStyle({ fontWeight: '800' });
+    // No weight passed: the theme's own heading weight applies (MUI's default h5 here).
+    expect(title).toHaveStyle({ fontWeight: '400' });
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 

@@ -7,18 +7,29 @@ import { useOnboardingDraftStore } from '@/stores/onboarding-draft.store';
 import {
   ActiveSurveyForDocument,
   MeetingSlotsDocument,
+  OnboardingIntroDocument,
   RequestMeetingDocument,
   SubmitSurveyResponseDocument,
   type ActiveSurvey,
   type ActiveSurveyResult,
   type MeetingSlot,
   type MeetingSlotsResult,
+  type OnboardingIntro,
+  type OnboardingIntroResult,
   type SurveyAnswerInput,
   type SurveyKind,
   type SurveyQuestion,
 } from '@/graphql/onboarding-survey';
 
-export type Phase = 'category' | 'survey' | 'meeting' | 'done';
+export type Phase = 'intro' | 'category' | 'survey' | 'meeting' | 'done';
+
+/** Which OnboardingIntro field a kind's intro copy is authored under. */
+function introFieldFor(kind: SurveyKind, intro: OnboardingIntro): string {
+  if (kind === 'HOST') return intro.host_intro_html;
+  if (kind === 'VENUE') return intro.venue_intro_html;
+  if (kind === 'ECOMM') return intro.ecomm_intro_html;
+  return intro.club_admin_intro_html;
+}
 export type Answer = { value: string; values: string[] };
 export interface Scope {
   super_category_id: string;
@@ -44,7 +55,9 @@ export function useOnboardingFlow(kind: SurveyKind) {
   const savedDraft = useOnboardingDraftStore.getState().getDraft(kind);
   const setDraft = useOnboardingDraftStore((s) => s.setDraft);
   const clearDraft = useOnboardingDraftStore((s) => s.clearDraft);
-  const [phase, setPhase] = useState<Phase>(savedDraft?.phase ?? 'category');
+  const [phase, setPhase] = useState<Phase>(savedDraft?.phase ?? 'intro');
+  const [introHtml, setIntroHtml] = useState('');
+  const [introLoading, setIntroLoading] = useState(true);
   const [scope, setScope] = useState<Scope>(
     savedDraft?.scope ?? {
       super_category_id: '',
@@ -90,6 +103,28 @@ export function useOnboardingFlow(kind: SurveyKind) {
       setDraft(kind, { phase, scope, labels, survey, answers });
     }
   }, [kind, phase, scope, labels, survey, answers, setDraft, clearDraft]);
+
+  // Fetch the admin-authored intro once; a blank field for this kind skips
+  // straight to the category picker instead of showing an empty screen.
+  useEffect(() => {
+    let alive = true;
+    graphqlRequest<OnboardingIntroResult>(OnboardingIntroDocument, undefined, { auth: true })
+      .then((res) => {
+        if (!alive) return;
+        const html = introFieldFor(kind, res.onboardingIntro);
+        setIntroHtml(html);
+        if (!html) setPhase((p) => (p === 'intro' ? 'category' : p));
+      })
+      .catch(() => {
+        if (alive) setPhase((p) => (p === 'intro' ? 'category' : p));
+      })
+      .finally(() => alive && setIntroLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [kind]);
+
+  const startCategory = () => setPhase('category');
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>
@@ -241,6 +276,9 @@ export function useOnboardingFlow(kind: SurveyKind) {
 
   return {
     phase,
+    introHtml,
+    introLoading,
+    startCategory,
     scope,
     labels,
     survey,

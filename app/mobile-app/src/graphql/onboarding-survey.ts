@@ -94,6 +94,15 @@ export interface SurveyAnswerInput {
   value?: string | null;
   values?: string[];
 }
+export interface OnboardingIntro {
+  host_intro_html: string;
+  venue_intro_html: string;
+  ecomm_intro_html: string;
+  club_admin_intro_html: string;
+}
+export interface OnboardingIntroResult {
+  onboardingIntro: OnboardingIntro;
+}
 
 export const CategoriesDocument = parse(`
   query SurveyOnboardingCategories($level: CategoryLevel!, $parent_id: ID) {
@@ -170,6 +179,17 @@ export const RescheduleMyMeetingDocument = parse(`
 export const CancelMyMeetingDocument = parse(`
   mutation CancelMyMeeting($kind: SurveyKind!, $reason: String) {
     cancelMyMeeting(kind: $kind, reason: $reason) { id status }
+  }
+`);
+
+export const OnboardingIntroDocument = parse(`
+  query OnboardingIntro {
+    onboardingIntro {
+      host_intro_html
+      venue_intro_html
+      ecomm_intro_html
+      club_admin_intro_html
+    }
   }
 `);
 

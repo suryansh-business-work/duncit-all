@@ -48,6 +48,7 @@ export const appConfig = {
         { label: 'Onboarded Club Admins', labelKey: 'shell.nav.onboardedClubAdmins', to: '/club-admins', icon: 'groups' },
       ],
     },
+    { label: 'Settings', labelKey: 'shell.nav.settings', to: '/settings', icon: 'settings' },
   ],
   modules: [],
 } satisfies AppConfig;

@@ -29,6 +29,7 @@
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/rich-text": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/table": "workspace:*",

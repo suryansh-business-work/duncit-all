@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useLazyQuery, useMutation } from '@apollo/client/react';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
 import { Box, CircularProgress } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
 import {
   ACTIVE_SURVEY_FOR,
+  ONBOARDING_INTRO,
   REQUEST_MEETING,
   SUBMIT_SURVEY_RESPONSE,
   type ActiveSurvey,
+  type OnboardingIntro,
   type SurveyKind,
 } from './queries';
 import CategoryStep, { type CategoryLabels, type CategoryScope } from './CategoryStep';
 import CategorySummaryBanner from './CategorySummaryBanner';
+import IntroStep from './IntroStep';
 import SurveyStepper, { type SurveyAnswerInput, type SurveyAnswerState } from './SurveyStepper';
 import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
@@ -21,7 +24,16 @@ import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
-type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'thanks';
+type Step = 'loading' | 'intro' | 'category' | 'survey' | 'meeting' | 'thanks';
+
+/** Which OnboardingIntro field a kind's intro copy is authored under. */
+const introFieldFor = (kind: SurveyKind, intro?: OnboardingIntro | null): string => {
+  if (!intro) return '';
+  if (kind === 'HOST') return intro.host_intro_html;
+  if (kind === 'VENUE') return intro.venue_intro_html;
+  if (kind === 'ECOMM') return intro.ecomm_intro_html;
+  return intro.club_admin_intro_html;
+};
 
 const KIND_HEADINGS: Record<SurveyKind, string> = {
   VENUE: 'Register your venue',
@@ -45,6 +57,9 @@ export default function SurveyGatePage() {
   // journey does not exist, so the gate treats ECOMM as an unknown kind rather
   // than booking an onboarding meeting for a feature nobody can reach.
   const { pending: productsPending, visible: productsVisible } = useProductVisibility();
+  const { data: introData, loading: introPending } = useQuery<{ onboardingIntro: OnboardingIntro }>(
+    ONBOARDING_INTRO,
+  );
   const knownKind = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
   const valid = knownKind && (kind !== 'ECOMM' || productsVisible);
   const [step, setStep] = useState<Step>('loading');
@@ -62,9 +77,10 @@ export default function SurveyGatePage() {
   const [requestMeeting, { loading: requesting }] = useMutation<any>(REQUEST_MEETING);
 
   useEffect(() => {
-    // Nothing is decided until the flag set lands — redirecting on the first
-    // paint would bounce a valid ECOMM gate that is merely still loading.
-    if (productsPending) return;
+    // Nothing is decided until the flag set + intro copy land — redirecting or
+    // skipping the intro on the first paint would bounce a valid gate that is
+    // merely still loading.
+    if (productsPending || introPending) return;
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
     // Restore an in-progress draft (category + survey answers + step) so a Back
     // navigation returns here instead of restarting. Always walk the full gate —
@@ -78,9 +94,10 @@ export default function SurveyGatePage() {
       setSubmittedAnswers(draft.submittedAnswers);
       setStep(draft.step);
     } else {
-      setStep('category');
+      // A blank intro field for this kind skips straight to the category picker.
+      setStep(introFieldFor(kind, introData?.onboardingIntro) ? 'intro' : 'category');
     }
-  }, [valid, productsPending]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [valid, productsPending, introPending]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist the draft while the user is inside the gate; clear it once booked.
   useEffect(() => {
@@ -103,6 +120,7 @@ export default function SurveyGatePage() {
       setStep('category');
       return;
     }
+    // 'category' and 'intro' are both first phases — either leaves the gate.
     navigate(-1);
   };
 
@@ -154,7 +172,7 @@ export default function SurveyGatePage() {
   // The phase names itself; the old subtitle under it restated the phase.
   const kindHeading = KIND_HEADINGS[kind];
   let heading: string;
-  if (step === 'category') heading = kindHeading;
+  if (step === 'intro' || step === 'category') heading = kindHeading;
   else if (step === 'survey') heading = survey?.title || kindHeading;
   else if (step === 'thanks') heading = t('mweb.surveyGate.youReBooked');
   else heading = t('mweb.surveyGate.bookYourOnboardingMeeting');
@@ -166,6 +184,9 @@ export default function SurveyGatePage() {
   return (
     <Box data-testid="survey-gate-page" sx={{ maxWidth: 680, mx: 'auto', px: 2, pt: 1.5, pb: { xs: 10, sm: 8 } }}>
       <GateHeader title={heading} onBack={goBackStep} />
+      {step === 'intro' && (
+        <IntroStep html={introFieldFor(kind, introData?.onboardingIntro)} onContinue={() => setStep('category')} />
+      )}
       {step === 'category' && (
         <CategoryStep
           submitting={resolving}

@@ -5269,6 +5269,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/rich-text':
+        specifier: workspace:*
+        version: link:../../packages/rich-text
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell

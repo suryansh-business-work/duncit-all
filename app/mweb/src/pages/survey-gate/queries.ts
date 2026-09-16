@@ -28,6 +28,24 @@ export interface CategoryOption {
   sort_order?: number;
 }
 
+export interface OnboardingIntro {
+  host_intro_html: string;
+  venue_intro_html: string;
+  ecomm_intro_html: string;
+  club_admin_intro_html: string;
+}
+
+export const ONBOARDING_INTRO = gql`
+  query SurveyGateOnboardingIntro {
+    onboardingIntro {
+      host_intro_html
+      venue_intro_html
+      ecomm_intro_html
+      club_admin_intro_html
+    }
+  }
+`;
+
 export const CATEGORIES = gql`
   query SurveyGateCategories($level: CategoryLevel!, $parent_id: ID) {
     categories(filter: { level: $level, parent_id: $parent_id }) {

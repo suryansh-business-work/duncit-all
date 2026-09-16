@@ -3,7 +3,7 @@ import type { CategoryLabels, CategoryScope } from './CategoryStep';
 import type { FieldAnswer } from './SurveyQuestionField';
 import type { SurveyAnswerInput } from './SurveyStepper';
 
-export type GateStep = 'category' | 'survey' | 'meeting';
+export type GateStep = 'intro' | 'category' | 'survey' | 'meeting';
 
 /** The in-progress Earn onboarding draft — category scope + survey answers +
  *  which step the user reached — so pressing Back and returning restores it. */

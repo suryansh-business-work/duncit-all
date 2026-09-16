@@ -8,6 +8,7 @@ import { useCategoryLevel } from '@/hooks/useCategoryLevel';
 import { type CategoryOption } from '@/graphql/onboarding-survey';
 import type { CategoryLabels, Scope } from './useOnboardingFlow';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { LoadingIndicator } from '@/components/LoadingIndicator/LoadingIndicator';
 
 const EMPTY_SCOPE: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 
@@ -35,9 +36,13 @@ export function CategoryPhase({
   const disabledSet = useMemo(() => new Set(disabledIds ?? []), [disabledIds]);
   const [scope, setScope] = useState<Scope>(initialScope ?? EMPTY_SCOPE);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const supers = useCategoryLevel('SUPER', '', true);
-  const cats = useCategoryLevel('CATEGORY', scope.super_category_id, !!scope.super_category_id);
-  const subs = useCategoryLevel('SUB', scope.category_id, !!scope.category_id);
+  const { options: supers, loading: supersLoading } = useCategoryLevel('SUPER', '', true);
+  const { options: cats } = useCategoryLevel(
+    'CATEGORY',
+    scope.super_category_id,
+    !!scope.super_category_id,
+  );
+  const { options: subs } = useCategoryLevel('SUB', scope.category_id, !!scope.category_id);
 
   const pick = (level: keyof Scope, id: string) => {
     setValidationError(null);
@@ -115,13 +120,15 @@ export function CategoryPhase({
     );
 
   const message = validationError || error;
+  const initialLoad = supersLoading && supers.length === 0;
   return (
     <RefreshScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
     >
-      {group('Super Category *', 'super_category_id', supers)}
-      {group('Category *', 'category_id', cats)}
-      {group('Sub-Category *', 'sub_category_id', subs)}
+      {initialLoad ? <LoadingIndicator testID="category-loading" /> : null}
+      {initialLoad ? null : group('Super Category *', 'super_category_id', supers)}
+      {initialLoad ? null : group('Category *', 'category_id', cats)}
+      {initialLoad ? null : group('Sub-Category *', 'sub_category_id', subs)}
       {message ? (
         <Text testID="category-error" role="alert" color="$danger">
           {message}

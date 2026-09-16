@@ -17,6 +17,7 @@ import SurveysListPage from './pages/surveys/SurveysListPage';
 import MeetingCalendarPage from './pages/meetings/MeetingCalendarPage';
 import MeetingSchedulePage from './pages/meetings/MeetingSchedulePage';
 import MeetingAvailabilityPage from './pages/meetings/MeetingAvailabilityPage';
+import OnboardingSettingsPage from './pages/settings/OnboardingSettingsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -57,6 +58,7 @@ export default function App() {
       <Route path="/meetings/calendar" element={authed(<MeetingCalendarPage />)} />
       <Route path="/meetings/availability" element={authed(<MeetingAvailabilityPage />)} />
       <Route path="/meetings/:kind" element={authed(<MeetingSchedulePage />)} />
+      <Route path="/settings" element={authed(<OnboardingSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

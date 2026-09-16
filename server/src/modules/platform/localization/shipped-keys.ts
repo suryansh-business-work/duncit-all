@@ -8184,6 +8184,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "partners.registerVenuePage.addVenueImage": "Add venue image",
   "partners.registerVenuePage.amenities": "Amenities",
   "partners.registerVenuePage.documentType": "Document type",
+  "partners.registerVenuePage.duplicateDocumentError": "This file is already uploaded as \"{{type}}\". The same document cannot be used more than once.",
   "partners.registerVenuePage.facilities": "Facilities",
   "partners.registerVenuePage.leavesAndHolidays": "Leaves & Holidays",
   "partners.registerVenuePage.noLeaveDatesYet": "No leave dates yet.",

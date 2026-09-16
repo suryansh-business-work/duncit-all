@@ -127,7 +127,9 @@ export function toStep1Input(values: RegisterVenueValues) {
 
 export function toStep2Input(values: RegisterVenueValues) {
   return {
-    documents: values.documents.filter((doc) => doc.type && doc.url),
+    documents: values.documents
+      .filter((doc) => doc.type && doc.url)
+      .map((doc) => ({ type: doc.type, url: doc.url })),
     gstin: values.gstin,
     pan: values.pan,
   };
@@ -155,7 +157,8 @@ export function toApprovedUpdateInput(
     return {
       add_documents: values.documents
         .slice(originalDocCount)
-        .filter((doc) => doc.type && doc.url),
+        .filter((doc) => doc.type && doc.url)
+        .map((doc) => ({ type: doc.type, url: doc.url })),
     };
   }
   return {

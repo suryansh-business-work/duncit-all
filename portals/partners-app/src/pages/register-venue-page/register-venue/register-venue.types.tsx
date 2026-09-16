@@ -21,6 +21,10 @@ export interface CapacityRow {
 export interface DocRow {
   type: string;
   url: string;
+  /** SHA-256 of the uploaded file, set by the picker — lets the form catch the
+   * same document being uploaded twice under different headings. Client-only:
+   * never sent to the server (see register-venue.mappers.ts). */
+  hash?: string;
 }
 
 export interface RegisterVenueValues extends VenueLocationValues {

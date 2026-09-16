@@ -22,7 +22,26 @@ const capacityItemSchema = z.object({
 const documentSchema = z.object({
   type: z.string().trim().min(1, 'Document type is required'),
   url: z.string().trim().min(1, 'Upload the document file'),
+  hash: z.string().optional(),
 });
+
+/** DocumentsSection already blocks a duplicate at pick time (comparing file
+ * hashes); this is the submit-time safety net so the same document can never
+ * reach the server twice — under the same heading or a different one. */
+const noDuplicateDocuments = (documents: z.infer<typeof documentSchema>[], ctx: z.RefinementCtx) => {
+  const seen = new Set<string>();
+  documents.forEach((doc, index) => {
+    if (!doc.hash) return;
+    if (seen.has(doc.hash)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [index, 'url'],
+        message: 'This document is already uploaded under another heading',
+      });
+    }
+    seen.add(doc.hash);
+  });
+};
 
 const requiredPattern = (pattern: RegExp, requiredMessage: string, formatMessage: string) =>
   z
@@ -63,7 +82,7 @@ export const registerVenueSchema = z.object({
   amenities: z.array(z.string().trim()),
   facilities: z.array(z.string().trim()),
   security: z.array(z.string().trim()),
-  documents: z.array(documentSchema).min(1, 'Upload at least one document'),
+  documents: z.array(documentSchema).min(1, 'Upload at least one document').superRefine(noDuplicateDocuments),
   gstin: requiredPattern(
     GSTIN_PATTERN,
     'GSTIN is required',

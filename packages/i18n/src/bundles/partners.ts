@@ -305,6 +305,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       addVenueImage: 'Add venue image',
       amenities: 'Amenities',
       documentType: 'Document type',
+      duplicateDocumentError:
+        'This file is already uploaded as "{{type}}". The same document cannot be used more than once.',
       facilities: 'Facilities',
       leavesAndHolidays: 'Leaves & Holidays',
       noLeaveDatesYet: 'No leave dates yet.',

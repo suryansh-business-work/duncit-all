@@ -26,6 +26,9 @@ export interface StatusSlide {
   /** Has the viewer liked this story, and the running like count (Bug 5). */
   likedByMe: boolean;
   likesCount: number;
+  /** Duncit's own status only — where its "See more" leads (an in-app path or
+   * an https URL). Absent on member, club and sponsored slides. */
+  linkUrl?: string | null;
 }
 
 export interface StatusGroup {

@@ -552,6 +552,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',
+      // Marketing > Status — the statuses Duncit publishes into the apps' rail.
+      // Distinct from `statusReports`, which is the incident page.
+      status: 'Status',
       statusReports: 'Status Reports',
       stressTesting: 'Stress Testing',
       accountDeletions: 'Account Deletions',

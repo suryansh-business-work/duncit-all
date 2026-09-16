@@ -196,6 +196,33 @@ export const SURFACES: readonly Surface[] = [
       'Every pod on Duncit, counted by where it is in its life — upcoming, running now, or already settled.',
   },
   {
+    key: 'communications',
+    name: 'Communications',
+    kind: 'PORTAL',
+    host: 'communications.duncit.com',
+    dev_port: 2035,
+    summary:
+      'The console for the messages Duncit sends its members. It holds the dashboard and your profile today; its screens are still being built.',
+  },
+  {
+    key: 'logs',
+    name: 'Logs',
+    kind: 'PORTAL',
+    host: 'logs.duncit.com',
+    dev_port: 2036,
+    summary:
+      'The console for what the server, the apps and every console log. It holds the dashboard and your profile today; its screens are still being built.',
+  },
+  {
+    key: 'analytics',
+    name: 'Analytics',
+    kind: 'PORTAL',
+    host: 'analytics.duncit.com',
+    dev_port: 2037,
+    summary:
+      'The console for bookings, revenue and growth numbers. It holds the dashboard and your profile today; its screens are still being built.',
+  },
+  {
     key: 'hosts',
     name: 'Hosts',
     kind: 'PORTAL',

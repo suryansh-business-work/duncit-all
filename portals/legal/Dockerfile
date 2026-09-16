@@ -36,6 +36,9 @@ COPY portals/clubs/package.json ./portals/clubs/
 COPY portals/club-admins/package.json ./portals/club-admins/
 COPY portals/hosts/package.json ./portals/hosts/
 COPY portals/pods/package.json ./portals/pods/
+COPY portals/communications/package.json ./portals/communications/
+COPY portals/logs/package.json ./portals/logs/
+COPY portals/analytics/package.json ./portals/analytics/
 COPY website/status-website/package.json ./website/status-website/
 COPY portals/challenge-portal/package.json ./portals/challenge-portal/
 COPY portals/developers/package.json ./portals/developers/

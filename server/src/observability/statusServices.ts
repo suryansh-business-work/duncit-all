@@ -54,6 +54,9 @@ const consoles: StatusService[] = [
   { key: 'club-admins', name: 'Club Admins', url: 'https://club-admins.duncit.com/', description: 'Every club admin on Duncit' },
   { key: 'hosts', name: 'Hosts', url: 'https://hosts.duncit.com/', description: 'Every host on Duncit' },
   { key: 'pods', name: 'Pods', url: 'https://pods.duncit.com/', description: 'Every pod on Duncit' },
+  { key: 'communications', name: 'Communications', url: 'https://communications.duncit.com/', description: 'Member messaging' },
+  { key: 'logs', name: 'Logs', url: 'https://logs.duncit.com/', description: 'Platform logs' },
+  { key: 'analytics', name: 'Analytics', url: 'https://analytics.duncit.com/', description: 'Business analytics' },
 ];
 
 const platform: StatusService[] = [

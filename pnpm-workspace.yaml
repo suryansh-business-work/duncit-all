@@ -28,6 +28,10 @@ packages:
   - portals/club-admins
   - portals/hosts
   - portals/pods
+  # Shell-only consoles, awaiting their first screens.
+  - portals/communications
+  - portals/logs
+  - portals/analytics
   - website/status-website
   - website/earnwith-website
   - docs-site

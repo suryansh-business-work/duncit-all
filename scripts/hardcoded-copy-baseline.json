@@ -368,7 +368,7 @@
   "packages/shell/src/staff-chat/export-chat.ts": 5,
   "packages/shell/src/staff-chat/LocationDialog.tsx": 1,
   "packages/shell/src/staff-chat/message-bubble/BubbleBody.tsx": 2,
-  "packages/shell/src/staff-chat/queries.ts": 14,
+  "packages/shell/src/staff-chat/queries.ts": 17,
   "packages/shell/src/staff-chat/useCallRecorder.ts": 6,
   "packages/shell/src/staff-chat/voice/useVoiceNote.ts": 2,
   "packages/shell/src/workspace/ClockTray.tsx": 1,

@@ -485,6 +485,24 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'pods', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Pods console.' },
 
+  // ---- Communications (communications) -------------------------------
+  { surface: 'communications', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Communications console has no other screens yet.' },
+  { surface: 'communications', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Communications console.' },
+
+  // ---- Logs (logs) ---------------------------------------------------
+  { surface: 'logs', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Logs console has no other screens yet.' },
+  { surface: 'logs', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Logs console.' },
+
+  // ---- Analytics (analytics) -----------------------------------------
+  { surface: 'analytics', path: '/', label: 'Dashboard',
+    description: 'A welcome page with your name, your access roles and your account details. The Analytics console has no other screens yet.' },
+  { surface: 'analytics', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Analytics console.' },
+
   // ---- Hosts (hosts) ---------------------------------------------------
   { surface: 'hosts', path: '/', label: 'Dashboard',
     description: 'A brief on every host on Duncit: how many there are, how many are approved, how many are awaiting review and how many were declined. Each tile opens the list already filtered to what it counted.' },

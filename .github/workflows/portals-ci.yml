@@ -62,6 +62,9 @@ jobs:
           - { name: club-admins, dir: portals/club-admins }
           - { name: hosts, dir: portals/hosts }
           - { name: pods, dir: portals/pods }
+          - { name: communications, dir: portals/communications }
+          - { name: logs-portal, dir: portals/logs }
+          - { name: analytics, dir: portals/analytics }
 
     steps:
       - name: Checkout

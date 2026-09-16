@@ -12,6 +12,12 @@
  * their existing `appConfig` values instead of carrying local copies.
  */
 export { mountPortal } from './mountPortal';
+export {
+  mountWelcomePortal,
+  resolvePortalGraphqlUrl,
+  type MountWelcomePortalOptions,
+  type PortalBuildEnv,
+} from './mountWelcomePortal';
 export { PortalBranding } from './PortalBranding';
 export type { MountPortalOptions, PortalBootConfig, AppConfig, AppModule, AppNavItem, SearchItem } from './types';
 export { useColorMode, type AccentColors } from '@duncit/theme';

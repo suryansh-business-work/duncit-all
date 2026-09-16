@@ -8,14 +8,17 @@
  * scripts/e2e-no-surface.mjs. Listing it here is what makes that honest: the
  * audit (scripts/verify-e2e-scripts.mjs) still refuses a portal or app that
  * runs neither Cypress nor an entry on this list. A workspace leaves this list
- * in the same commit that gives it a suite again.
+ * in the same commit that gives it a suite again. Consoles that shipped after
+ * the removal (communications, logs, analytics) wait here for their first one.
  */
 export const AWAITING_SUITE = new Set([
   'admin',
   'ads-portal',
   'ai',
+  'analytics',
   'challenge-portal',
   'club-admins',
+  'communications',
   'clubs',
   'crm',
   'developers-portal',
@@ -24,6 +27,7 @@ export const AWAITING_SUITE = new Set([
   'hosts',
   'hr',
   'legal',
+  'logs-portal',
   'marketing',
   'onboarding',
   'pods',

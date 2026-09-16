@@ -47,6 +47,9 @@ const PORTAL_ROLES: Record<string, string[]> = {
   onboarding: ['ONBOARDING_MANAGER'],
   support: ['SUPPORT_MANAGER'],
   ads: ['ADS_MANAGER'],
+  communications: ['COMMUNICATIONS_MANAGER'],
+  logs: ['LOGS_MANAGER'],
+  analytics: ['ANALYTICS_MANAGER'],
   partners: [],
   mweb: [],
 };

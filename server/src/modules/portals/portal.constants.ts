@@ -7,7 +7,9 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   admin: ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'FINANCE_USER'],
   ads: ['ADS_MANAGER'],
   ai: ['AI_MANAGER'],
+  analytics: ['ANALYTICS_MANAGER'],
   challenge: ['CHALLENGE_MANAGER'],
+  communications: ['COMMUNICATIONS_MANAGER'],
   // The directory consoles. An Onboarding Manager opens the venue and
   // host ones too: reviewing an application and managing the venue it becomes
   // are the same screen now (one console, union of both), so gating them apart
@@ -23,6 +25,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   finance: ['FINANCE_MANAGER'],
   hr: ['HR_MANAGER'],
   legal: ['LEGAL_MANAGER'],
+  logs: ['LOGS_MANAGER'],
   marketing: ['MARKETING_MANAGER'],
   onboarding: ['ONBOARDING_MANAGER'],
   products: ['PRODUCTS_MANAGER'],

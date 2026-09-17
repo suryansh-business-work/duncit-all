@@ -30,21 +30,6 @@ export const appConfig = {
     { label: 'Feature Flags', labelKey: 'shell.nav.featureFlags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', labelKey: 'shell.nav.authentication', to: '/authentication', icon: 'lock' },
     {
-      label: 'Emails', labelKey: 'shell.nav.emails',
-      icon: 'email',
-      children: [
-        // First, like Telemetry's: the board is where you look before you know
-        // which template or which row you are after.
-        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/emails/dashboard', icon: 'dashboard' },
-        { label: 'Templates', labelKey: 'shell.nav.templates', to: '/emails/templates', icon: 'description' },
-        { label: 'Fragments', labelKey: 'shell.nav.fragments', to: '/emails/fragments', icon: 'widgets' },
-        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/emails/logs', icon: 'article' },
-        // Connecting the mailbox only — the reply and the queue are Support's,
-        // so the rest of this feature is in the Support portal.
-        { label: 'Mail Automation', labelKey: 'shell.nav.mailAutomation', to: '/mail-automation', icon: 'markEmailRead' },
-      ],
-    },
-    {
       label: 'Telemetry', labelKey: 'shell.nav.telemetry',
       icon: 'insights',
       children: [
@@ -111,18 +96,6 @@ export const appConfig = {
         { label: 'Rules', labelKey: 'shell.nav.rules', to: '/rate-limiting/rules', icon: 'rule' },
         { label: 'Blocked', labelKey: 'shell.nav.blocked', to: '/rate-limiting/blocked', icon: 'block' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/rate-limiting/settings', icon: 'tune' },
-      ],
-    },
-    { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
-    {
-      // MSG91's own records of the OTP widget that carries every phone code —
-      // read live from MSG91, never copied here. The keys themselves are under
-      // Environment Variables → MSG91 (SMS OTP).
-      label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
-      icon: 'phone',
-      children: [
-        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
-        { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
       ],
     },
     // Sits beside Telemetry rather than inside it: those rows are written by

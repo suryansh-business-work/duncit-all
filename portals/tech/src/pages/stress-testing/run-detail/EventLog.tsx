@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../../server/format';
-import SectionCard from '../components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import type { StressEvent } from '../queries';
 
 const LEVEL_COLOR: Record<StressEvent['level'], 'default' | 'warning' | 'error'> = {

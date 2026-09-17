@@ -1,7 +1,7 @@
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from '@duncit/shell';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { seriesColor } from '../../stress-testing/run-detail/charts/chartSetup';
 import { formatMs } from '../../stress-testing/labels';
 import type { LatencyNumbers } from '../queries';

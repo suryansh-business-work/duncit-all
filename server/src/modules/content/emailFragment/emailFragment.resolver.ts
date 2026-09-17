@@ -3,7 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import { emailFragmentService } from './emailFragment.service';
 
 /** The same roles that guard the templates these fragments wrap. */
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
 
 export const emailFragmentResolvers = {
   Query: {

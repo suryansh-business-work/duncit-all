@@ -13,6 +13,7 @@ consumers:
   - 'portals/ads-portal'
   - 'portals/ai'
   - 'portals/challenge-portal'
+  - 'portals/communications'
   - 'portals/crm'
   - 'portals/finance'
   - 'portals/legal'
@@ -61,6 +62,16 @@ exports:
   - 'StatCardLayout'
   - 'InfoRowVariant'
   - 'LoaderVariant'
+  - 'SectionCard'
+  - 'DistributionCard'
+  - 'DistributionBucket'
+  - 'FillViewport'
+  - 'chartSeriesColor'
+  - 'SidebarList'
+  - 'SidebarItem'
+  - 'SidebarFilter'
+  - 'SidebarOption'
+  - 'countBadge'
 ---
 
 import Preview from '@docs/components/Preview.astro';
@@ -718,6 +729,53 @@ Test ids (the native twin in `app/mobile-app/src/components/create-pod/` uses th
 
 Hide the whole field on a FREE pod and send `ticketDiscountInput(values, true)` — a free pod
 never carries a discount, and the server clears one if it arrives.
+
+## Console panels — `SectionCard`, `DistributionCard`, `FillViewport`, `SidebarList`
+
+Four pieces the Tech and Communications consoles both build their report and editor pages from.
+They lived in the Tech portal until the email, Slack and MSG91 pages moved to Communications —
+two consoles is two copies, so they live here.
+
+```tsx
+import {
+  DistributionCard,
+  FillViewport,
+  SectionCard,
+  SidebarList,
+  chartSeriesColor,
+  countBadge,
+} from '@duncit/ui';
+
+<SectionCard title="Daily requests" subtitle="Last 7 days" action={<RefreshButton />}>
+  <Bar data={{ datasets: [{ data: [12, 9], backgroundColor: chartSeriesColor(theme, 0) }] }} />
+</SectionCard>
+
+<DistributionCard
+  title="Why nothing went out"
+  buckets={[{ key: 'TEMPLATE_DISABLED', count: 14 }, { key: 'NO_ADDRESS', count: 3 }]}
+/>
+
+<FillViewport>
+  <SidebarList
+    items={[{ key: 'pod-booked', primary: 'Pod booked', secondary: 'pod-booked', badge: countBadge(128, '128 sends') }]}
+    selected="pod-booked"
+    onSelect={setSlug}
+    searchPlaceholder="Search name or slug"
+    emptyText="No templates yet."
+  />
+</FillViewport>
+```
+
+| Export | What it does |
+| --- | --- |
+| `SectionCard` | An outlined card with a bold title, optional caption subtitle and an `action` slot at the right of the title row. |
+| `DistributionCard` | Horizontal bars for a set of `{ key, count }`, scaled to the largest; `emptyText` overrides `ui.distributionCard.empty`. |
+| `FillViewport` | A flex column that ends where the viewport ends (measured from its own top, floor 360px), so the panes inside scroll instead of the window. |
+| `chartSeriesColor(theme, index)` | The validated three-slot categorical palette for console charts, stepped per light/dark mode; index wraps after 3. |
+| `SidebarList` | A searchable, sortable master list: status filter, an optional page-owned `filter` select, row numbers, badges and an "off" chip. Sorts appear only when a row carries `count` / `updatedAt`. |
+| `countBadge(count, title)` | A row badge that stays visible — and muted — at zero. |
+
+The list's words are `ui.sidebarList.*` in `UI_BUNDLE`.
 
 ## Localization and coverage
 

@@ -23,8 +23,9 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
     },
   };
 });
-vi.mock('../../src/pages/telemetry-dashboard/DistributionCard', () => ({
-  default: (p: { title: string; buckets: unknown[] }) => (
+vi.mock('@duncit/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/ui')>()),
+  DistributionCard: (p: { title: string; buckets: readonly unknown[] }) => (
     <div>
       dist:{p.title}:{p.buckets.length}
     </div>

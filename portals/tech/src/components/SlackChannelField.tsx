@@ -2,7 +2,7 @@ import { Controller, type Control, type FieldValues, type Path } from 'react-hoo
 import { Autocomplete, Chip, Stack, TextField, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import TagIcon from '@mui/icons-material/Tag';
-import type { SlackChannel } from '../pages/slack/queries';
+import type { SlackChannel } from '../lib/slack-queries';
 
 /**
  * Picking the Slack channel a feature posts to.

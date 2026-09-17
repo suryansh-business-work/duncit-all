@@ -15,6 +15,7 @@ export { mountPortal } from './mountPortal';
 export {
   mountWelcomePortal,
   resolvePortalGraphqlUrl,
+  WelcomePage,
   type MountWelcomePortalOptions,
   type PortalBuildEnv,
 } from './mountWelcomePortal';

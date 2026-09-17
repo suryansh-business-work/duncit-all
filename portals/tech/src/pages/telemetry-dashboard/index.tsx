@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { StatCard, QueryGuard } from '@duncit/ui';
+import { DistributionCard, QueryGuard, StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
@@ -13,7 +13,6 @@ import {
   type TelemetryDashboardData,
   type TopBug,
 } from './queries';
-import DistributionCard from './DistributionCard';
 import RecentLogsTable from './RecentLogsTable';
 import { useTranslation } from '@duncit/app-settings';
 

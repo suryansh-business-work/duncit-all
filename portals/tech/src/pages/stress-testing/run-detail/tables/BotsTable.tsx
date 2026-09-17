@@ -4,7 +4,7 @@ import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import { formatTime } from '@duncit/app-settings';
 import LiveRowsTable from '../../components/LiveRowsTable';
-import SectionCard from '../../components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import type { StressBot, StressShard } from '../../queries';
 import { formatMs, journeyLabel } from '../../labels';
 

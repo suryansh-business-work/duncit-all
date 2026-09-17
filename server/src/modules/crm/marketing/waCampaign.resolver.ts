@@ -5,8 +5,8 @@ import type { ManualContact } from './waCampaign.recipients';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-// Same roles as the rest of the marketing console.
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+// WhatsApp sends are run from the Communications console.
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
 
 export const waCampaignResolvers = {
   Query: {

@@ -12,12 +12,12 @@ import { whatsappPreferenceService } from './whatsapp.preference.service';
 /**
  * Who may do what.
  *
- * The console is the same audience as the rest of the messaging tooling. The
+ * The Communications console is the audience for all of the messaging tooling. The
  * per-person switches need only a signed-in account — they are that person's
  * own settings, and the service resolves the number from the account rather
  * than trusting anything the client sends.
  */
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
 
 export const waAutomationResolvers = {
   Query: {

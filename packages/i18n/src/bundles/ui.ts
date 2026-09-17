@@ -79,6 +79,27 @@ export const UI_BUNDLE: NestedCatalogue = {
      * one namespace since the same rail renders on mWeb, every portal and the
      * native app (rule 27/40).
      */
+    /** The searchable master list down the left of a console page. */
+    sidebarList: {
+      activeOnly: 'Active only',
+      anyStatus: 'Any status',
+      listOrder: 'List order',
+      mostUsed: 'Most used',
+      nameAZ: 'Name A–Z',
+      nameZA: 'Name Z–A',
+      nothingMatchesSearch: 'Nothing matches “{needle}”.',
+      nothingMatchesTheFilters: 'Nothing matches the filters above.',
+      recentlyUpdated: 'Recently updated',
+      showingOfTotal: '{shown} of {total}',
+      sort: 'Sort',
+      status: 'Status',
+      switchedOffOnly: 'Switched off only',
+      totalCount: '{count} total',
+    },
+    /** A console's horizontal-bar breakdown, when the range holds nothing. */
+    distributionCard: {
+      empty: 'No data in this range.',
+    },
     scrollRail: {
       previous: 'Scroll left',
       next: 'Scroll right',

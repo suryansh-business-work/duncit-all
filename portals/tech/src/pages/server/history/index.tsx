@@ -1,6 +1,6 @@
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import HistoryCharts from './HistoryCharts';
 import HistorySummary from './HistorySummary';
 import { useServerHistory } from './useServerHistory';

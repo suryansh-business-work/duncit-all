@@ -31,6 +31,7 @@ exports:
   - 'mountPortal'
   - 'mountWelcomePortal'
   - 'resolvePortalGraphqlUrl'
+  - 'WelcomePage'
   - 'AppShell'
   - 'PortalAppShell'
   - 'AppHeader'
@@ -254,8 +255,7 @@ console shut for all non-super users.
 ### `mountWelcomePortal(options)` — `MountWelcomePortalOptions`
 
 A console that is only the shell: `/login`, the `WelcomeDashboard` at `/` and `/profile`. It is how a
-new subdomain ships before its first screen exists — the Communications, Logs and Analytics consoles
-are this one call:
+new subdomain ships before its first screen exists — the Logs and Analytics consoles are this one call:
 
 ```tsx
 import { mountWelcomePortal } from '@duncit/shell';
@@ -270,6 +270,10 @@ mountWelcomePortal({ appConfig, env: import.meta.env, logsPortal: logs.portal.an
 | `appConfig` | `AppConfig` | yes | The console's identity. `key` also names the dashboard layout (`analytics.overview`). |
 | `env` | `PortalBuildEnv` | yes | The portal's `import.meta.env` — `{ DEV, VITE_GRAPHQL_URL? }`. |
 | `logsPortal` | `LevelFns` | yes | The portal's `logs.portal.<x>` sink. |
+
+A console that outgrows it (Communications did) builds the same pieces itself —
+`createPortalRuntime(appConfig, resolvePortalGraphqlUrl(import.meta.env))` + `mountPortal` with its own
+`<App />` — and keeps `<WelcomePage config={appConfig} />` at `/`.
 
 `resolvePortalGraphqlUrl(env)` is the address rule it uses: `VITE_GRAPHQL_URL` when the build set a
 non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else

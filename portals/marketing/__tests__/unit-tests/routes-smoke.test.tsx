@@ -70,7 +70,6 @@ const ROUTES = [
   '/audience/smoke-id',
   '/campaigns/email',
   '/campaigns/email/new',
-  '/campaigns/whatsapp',
   '/campaigns/mail-preferences',
   '/coupons',
   '/short-links',

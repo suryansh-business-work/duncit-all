@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import LiveRowsTable from '../../components/LiveRowsTable';
-import SectionCard from '../../components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import type { StressEndpoint } from '../../queries';
 import { formatCount, formatMs, formatPct } from '../../labels';
 

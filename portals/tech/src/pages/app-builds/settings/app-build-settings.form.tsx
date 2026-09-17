@@ -5,7 +5,7 @@ import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import SlackChannelField from '../../../components/SlackChannelField';
-import type { SlackChannel } from '../../slack/queries';
+import type { SlackChannel } from '../../../lib/slack-queries';
 import type { AppBuildSettings } from '../queries';
 import { appBuildSettingsSchema, type AppBuildSettingsValues } from './app-build-settings.types';
 

@@ -4,7 +4,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
-import SectionCard from '../../components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { GENERATE_STRESS_VERDICT, isLiveRun, type StressRun } from '../../queries';
 import VerdictBody from './VerdictBody';
 

@@ -6,6 +6,8 @@ import { audienceService } from './audience.service';
 import { audienceListService } from './audienceList.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
+// A WhatsApp send in the Communications console picks one of these lists.
+const AUDIENCE_READ = [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER'];
 
 export const marketingResolvers = {
   Query: {
@@ -50,7 +52,7 @@ export const marketingResolvers = {
       return audienceListService.ownerOptions();
     },
     audienceLists: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, AUDIENCE_READ);
       return audienceListService.list();
     },
     marketingCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

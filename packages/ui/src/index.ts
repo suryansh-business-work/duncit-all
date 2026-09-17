@@ -45,5 +45,14 @@ export { SpotsStepper, buildSpotsLabels, mwebSpotsLabels, shellSpotsLabels } fro
 export type { SpotsStepperLabels, SpotsStepperProps, SpotsTranslate } from './spots';
 export { TicketDiscountField } from './ticket-discount';
 export type { TicketDiscountFieldErrors, TicketDiscountFieldProps } from './ticket-discount';
+export { SectionCard } from './SectionCard';
+export type { SectionCardProps } from './SectionCard';
+export { DistributionCard } from './DistributionCard';
+export type { DistributionBucket, DistributionCardProps } from './DistributionCard';
+export { FillViewport } from './FillViewport';
+export type { FillViewportProps } from './FillViewport';
+export { chartSeriesColor } from './chartSeriesColor';
+export { SidebarList, countBadge } from './sidebar-list';
+export type { SidebarFilter, SidebarItem, SidebarListProps, SidebarOption } from './sidebar-list';
 export { ScrollRail } from './ScrollRail';
 export type { ScrollRailProps } from './ScrollRail';

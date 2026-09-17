@@ -9,7 +9,8 @@ import {
 import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { GraphQLError } from 'graphql';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
+/** The Communications console manages the templates. */
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
 
 function parseVars(json?: string | null): Record<string, string> {
   if (!json) return {};

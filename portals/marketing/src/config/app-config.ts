@@ -33,7 +33,6 @@ export const appConfig = {
       icon: 'contactMail',
       children: [
         { label: 'Email', labelKey: 'shell.nav.email', to: '/campaigns/email', icon: 'email' },
-        { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
         { label: 'Notifications', labelKey: 'shell.nav.notifications', to: '/notifications', icon: 'notifications' },
         { label: 'App Popups', labelKey: 'shell.nav.appPopups', to: '/app-popups', icon: 'image' },
         // Under Campaigns, not under a reporting section: an opt-out is what a

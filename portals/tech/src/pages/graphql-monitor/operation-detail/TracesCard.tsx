@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import LiveRowsTable from '../../stress-testing/components/LiveRowsTable';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { formatMs } from '../../stress-testing/labels';
 import { formatDateTime } from '../../server/format';
 import TraceDialog from './TraceDialog';

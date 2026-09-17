@@ -37,8 +37,12 @@ export function resolvePortalGraphqlUrl(env: PortalBuildEnv): string {
   return env.DEV ? 'http://localhost:2001/graphql' : 'https://server.duncit.com/graphql';
 }
 
-/** The welcome dashboard, with the console's tagline in the reader's language. */
-function WelcomePage({ config }: Readonly<{ config: AppConfig }>) {
+/**
+ * The welcome dashboard, with the console's tagline in the reader's language.
+ * Exported for a console that has outgrown `mountWelcomePortal` but keeps this
+ * page at `/` in its own route table.
+ */
+export function WelcomePage({ config }: Readonly<{ config: AppConfig }>) {
   const { t } = useTranslation();
   const tagline = config.taglineKey ? t(config.taglineKey) : config.tagline;
   return (

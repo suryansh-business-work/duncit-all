@@ -85,7 +85,9 @@ describe('createTableOperations', () => {
     expect(text).toContain(
       'query TableApi_plainTable($query: TableQueryInput, $status: Status, $name: String, $id: ID, $n: Int, $ids: [ID!])'
     );
-    expect(text).toContain('plainTable(query: $query, status: $status, name: $name, id: $id, n: $n, ids: $ids)');
+    // graphql's printer breaks an argument list longer than 80 columns onto
+    // one line per argument, which the whitespace collapse above flattens.
+    expect(text).toContain('plainTable( query: $query status: $status name: $name id: $id n: $n ids: $ids )');
     expect(text).toContain('rows { id status since tags address { city geo { lat } } }');
     expect(text).toContain('total page page_size');
     expect(text).not.toMatch(/count|owner|thing|empty|deeper/);

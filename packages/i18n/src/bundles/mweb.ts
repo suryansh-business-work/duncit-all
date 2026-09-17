@@ -2028,6 +2028,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       categoryLabel: 'Select Category',
       categoryHint: 'In which you want to host your session',
       categoryEmpty: 'Assigned after host onboarding',
+      // The locality under the category: where the pod happens, found from the
+      // device, and what scopes the clubs offered on step 2.
+      localityHeading: 'Locality',
+      localityHint: 'The clubs on the next step come from this area',
+      editLocation: 'Edit location',
+      localityDetecting: 'Finding your locality…',
+      localityDetectFailed:
+        "We couldn't find your locality from this device. Use Edit location to choose it.",
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
       // mWeb only — the native title field carries no placeholder.
@@ -2129,6 +2137,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubSearchPlaceholder: 'Search your clubs',
       clubSearchAria: 'Search clubs',
       clubsEmpty: 'No clubs match your search.',
+      // A club option read aloud: its name, then where it operates.
+      clubOptionAria: '{club}, {place}',
       venueOne: '1 venue',
       venueMany: '{count} venues',
       viewClubDetails: 'View club details',

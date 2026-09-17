@@ -1469,6 +1469,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/tabs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/theme", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },

@@ -48,6 +48,11 @@ exports:
   - 'TableQuerySnapshot'
   - 'TableQueryState'
   - 'TablePage'
+  - 'TableBulkDeleteProvider'
+  - 'useTableBulkDeleteApi'
+  - 'TableBulkDeleteApi'
+  - 'BulkDeleteRequest'
+  - 'BulkDeleteMode'
 ---
 
 ## Why this exists
@@ -344,7 +349,7 @@ await fetchRows(payoutQuery);
 | `refetchRef` | `MutableRefObject<(() => void) \| null>` | no | — | Filled with the table's `refetch` so a parent can reload after a mutation. |
 | `updateRowRef` | `MutableRefObject<((row: T) => void) \| null>` | no | — | Filled with a "replace this one row" fn — see [Updating one row](#updating-one-row-instead-of-the-page). |
 | `externalFilters` | `ReadonlyArray<TableFilterValue>` | no | — | Page-driven filters (tab/URL/select). Compared by value, reset to page 1, **no chip**. |
-| `selection` | `{ onChange: (rows: T[]) => void; clearRef?: MutableRefObject<(() => void) \| null> }` | no | — | Opt in to a checkbox column. Absent means no selection config reaches AG Grid at all. `onChange` gets the rows ticked **right now** (and `[]` when a page change wipes them); `clearRef` is filled with a fn that unticks the grid. See [Selection is per page, and it is a mirror](#selection-is-per-page-and-it-is-a-mirror). |
+| `selection` | `{ onChange: (rows: T[]) => void; clearRef?: RefObject<(() => void) \| null> }` | no | — | Opt in to a checkbox column. Absent means no selection config reaches AG Grid at all — unless the grid offers [bulk delete](#bulk-delete-runs-on-the-server), which brings its own checkbox column. `onChange` gets the rows ticked **right now** (and `[]` when a page change wipes them); `clearRef` is filled with a fn that unticks the grid. See [Selection is per page, and it is a mirror](#selection-is-per-page-and-it-is-a-mirror). |
 | `onQueryChange` | `(snapshot: TableQuerySnapshot) => void` | no | — | Fires whenever the applied query or the server's total changes. The only way to name the rows selection cannot reach. Pass a `useCallback`. See [Acting on rows the grid does not have](#acting-on-rows-the-grid-does-not-have). |
 | `ariaLabel` | `string` | no | — | The grid's accessible name, e.g. the page heading (`'Pods'`). Applied when the grid is ready, so a screen reader announces which table it entered. Pass it on every page with more than one table. |
 
@@ -395,6 +400,10 @@ set when AG Grid creates the row. A spec that filed a ticket finds it as
 | `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |
 | `EM_DASH` | `'—'` | The empty-cell character every table uses, so blanks look identical across portals. |
 | `useTranslation` | `() => { t; has; locale; … }` | The grid's own translator, layered over `shell.*`. Chrome copy lives under `shell.table.*` (rule 38). |
+| `TableBulkDeleteProvider` | `Provider<TableBulkDeleteApi \| null>` | Mounted once by `@duncit/shell`'s `AppShell`. A portal never mounts it itself. |
+| `useTableBulkDeleteApi` | `() => TableBulkDeleteApi \| null` | What the grid reads to decide whether it offers bulk delete. |
+| `TableBulkDeleteApi` | `{ tables: ReadonlySet<string>; start(request: BulkDeleteRequest): Promise<boolean>; onSettled(table, listener): () => void }` | `tables` are the `<name>Table` queries this person may bulk delete from. |
+| `BulkDeleteRequest` | `{ table; mode: BulkDeleteMode; variables; ids; label; url }` | `variables` is the table query's variables for the view on screen, pinned filters included. `mode` is `'SELECTED'` or `'ALL'`. |
 | `fallbackT` | `Translate` | A provider-free translator for code that runs outside React — a `valueGetter` sorting or writing a CSV. |
 
 ## Live preview
@@ -603,6 +612,49 @@ click for cell focus and keyboard navigation, and a swallowed event breaks both.
 
 Note also that AG Grid 34 removed `rowSelection="multiple"`, `colDef.checkboxSelection` and
 `headerCheckboxSelection` — the object form is the only API left.
+
+## Bulk delete runs on the server
+
+A grid offers **Delete N selected** (while rows are ticked) and **Delete all matching rows**
+(always) when two things are true: it is fed by `makeApolloTableFetch`/`useApolloTableFetch`, so
+it knows the `<name>Table` query behind it, and the server lists that query in
+`bulkDeletableTables` for the signed-in person. No page opts in and no page passes anything —
+the checkbox column appears by itself.
+
+```tsx
+// portals/tech — nothing bulk-specific here. appBuildsTable is registered on the server,
+// so the grid shows the delete controls to SUPER_ADMIN and TECH_MANAGER.
+const fetchRows = useApolloTableFetch<AppBuildRow>(client, APP_BUILDS_TABLE, 'appBuildsTable', {
+  extraVariables: { platform: 'ANDROID' },
+});
+<DuncitTable<AppBuildRow>
+  tableId="tech-app-builds-android"
+  columns={columns}
+  fetchRows={fetchRows}
+  getRowId={(row) => row.id}
+/>;
+```
+
+Both buttons confirm first and name the count — "all matching" uses the server's total, because
+it reaches pages nobody has opened. The grid then hands a `BulkDeleteRequest` to the shell and
+clears its ticks; the shell starts a server job and the header shows its progress. The grid
+refetches by itself when a job on its table finishes.
+
+What the server does with it (`server/src/modules/platform/backgroundJob/`):
+
+- It re-runs the table's own `<name>Table` resolver with the same variables and captures the
+  collection and filter that read used — so "all matching" is exactly the rows this person was
+  shown, and the resolver's role check still applies.
+- It deletes the rows 25 at a time through the table's **own single-row delete mutation**, so
+  each entity keeps its guards, cascades (an app build takes its artifact files with it) and
+  change log.
+- Progress is a Mongo document. A page change, a refresh or a server restart does not lose it;
+  the job carries on from its cursor.
+
+A table joins by adding one line to `BULK_DELETE_TARGETS` in
+`server/src/modules/platform/backgroundJob/bulkDelete.targets.ts`: its query name, its delete
+mutation, the id argument and the roles offered the controls. It qualifies only when its rows
+come from `runTableQuery` and its delete takes the row `_id` alone.
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

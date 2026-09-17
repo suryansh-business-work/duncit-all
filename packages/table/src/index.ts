@@ -9,6 +9,9 @@ export type { Translate } from './i18n';
 export { makeApolloTableFetch, useApolloTableFetch } from './apolloFetch';
 export type { ApolloTableFetchOptions, TableGqlClient } from './apolloFetch';
 export { clientTableFetch } from './clientFetch';
+// The server-side bulk delete a console's shell provides to every grid.
+export { TableBulkDeleteProvider, useTableBulkDeleteApi } from './bulk/bulkDeleteContext';
+export type { BulkDeleteMode, BulkDeleteRequest, TableBulkDeleteApi } from './bulk/bulkDeleteContext';
 export {
   actionsColumn,
   activeChipColumn,

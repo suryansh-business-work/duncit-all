@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import {
   Autocomplete,
@@ -15,11 +14,13 @@ import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import { DuncitButton } from '@duncit/buttons';
+import { clubOptionLabel, clubPlaceLabel } from '@duncit/utils';
 import LocationDialog from '../../../../components/app-header/LocationDialog';
-import LocalityChip from '../../../../components/LocalityChip';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import ClubPreview from '../ClubPreview';
+import ClubOption from './ClubOption';
+import { usePodLocationPicker } from '../usePodLocationPicker';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
 
@@ -56,28 +57,8 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
   const locationId = watch('location_id');
   const locality = watch('locality');
   const location = locations.find((item) => item.id === locationId) ?? null;
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [draftLocationId, setDraftLocationId] = useState('');
-  const [draftZone, setDraftZone] = useState('');
-
-  const openPicker = () => {
-    setDraftLocationId(locationId);
-    setDraftZone(locality);
-    setPickerOpen(true);
-  };
-  const applyLocation = (nextId: string, zone: string) => {
-    if (nextId) {
-      if (nextId !== locationId) {
-        // Venue + slot belong to the old city — reselect them for the new one.
-        setValue('location_id', nextId, { shouldDirty: true, shouldValidate: true });
-        setValue('venue_id', '', { shouldDirty: true });
-        setValue('venue_slot_id', '', { shouldDirty: true });
-      }
-      // The picked locality narrows the clubs; changing city resets it too.
-      setValue('locality', zone ?? '', { shouldDirty: true, shouldValidate: true });
-    }
-    setPickerOpen(false);
-  };
+  const picker = usePodLocationPicker(form);
+  const placeOf = (club: CreatePodClub) => clubPlaceLabel(club, locations);
 
   return (
     <Stack spacing={2}>
@@ -101,7 +82,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
               </Typography>
             )}
           </Box>
-          <DuncitButton size="small" variant="outlined" onClick={openPicker} data-testid="create-pod-change-location" sx={{ minHeight: 36 }}>
+          <DuncitButton size="small" variant="outlined" onClick={picker.openPicker} data-testid="create-pod-change-location" sx={{ minHeight: 36 }}>
             {t('mweb.createPod.change')}
           </DuncitButton>
         </Stack>
@@ -153,23 +134,12 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
           render={({ field }) => (
             <Autocomplete
               options={clubs}
-              getOptionLabel={(option) => option.club_name}
+              getOptionLabel={(option) => clubOptionLabel(option.club_name, placeOf(option))}
               value={clubs.find((club) => club.id === field.value) ?? null}
               onChange={(_e, next) => field.onChange(next?.id ?? '')}
               isOptionEqualToValue={(option, selected) => option.id === selected.id}
               renderOption={(props, option) => (
-                <Box
-                  component="li"
-                  {...props}
-                  key={option.id}
-                  data-testid={`create-pod-club-option-${option.id}`}
-                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}
-                >
-                  <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
-                    {option.club_name}
-                  </Typography>
-                  <LocalityChip locality={option.locality} testId={`create-pod-club-option-${option.id}-locality`} />
-                </Box>
+                <ClubOption {...props} key={option.id} club={option} place={placeOf(option)} />
               )}
               renderInput={(params) => (
                 <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message} />
@@ -180,17 +150,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
         <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
       </Card>
 
-      <LocationDialog
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        locations={locations}
-        draftLocationId={draftLocationId}
-        setDraftLocationId={setDraftLocationId}
-        draftZone={draftZone}
-        setDraftZone={setDraftZone}
-        onApply={() => applyLocation(draftLocationId, draftZone)}
-        onAutoApply={(nextId, zoneName) => applyLocation(nextId, zoneName)}
-      />
+      <LocationDialog {...picker.dialog} locations={locations} />
     </Stack>
   );
 }

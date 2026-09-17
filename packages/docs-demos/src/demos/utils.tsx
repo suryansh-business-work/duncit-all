@@ -187,6 +187,8 @@ import {
   type PodAuditSource,
   type PodStatusFields,
   clubCityName,
+  clubOptionLabel,
+  clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
   type ClubCityLocation,
@@ -552,6 +554,9 @@ export default defineDemos('utils', [
           (group) => `${group.city} — ${group.clubs.length} clubs`,
         ),
         'Opened city': openCity ? clubCityName(openCity) : '(not a known city)',
+        'Create a Pod club picker': mock.clubs.map((club) =>
+          clubOptionLabel(club.club_name, clubPlaceLabel(club, mock.locations)),
+        ),
         'Its locality sections': groupClubsByLocality(cityClubs).map(
           (group) => `${group.locality || 'Other areas'}: ${group.clubs.map((club) => club.club_name).join(', ')}`,
         ),

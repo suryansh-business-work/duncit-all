@@ -132,6 +132,72 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       opLabelAtLeast: 'At least',
       opLabelAtMost: 'At most',
       opLabelBetween: 'Between',
+      // Bulk delete — the grid names the rows, the server deletes them in the
+      // background and the header shows how far it has got.
+      bulkDeleteSelected: 'Delete {count} selected',
+      bulkDeleteSelectedTitle: {
+        one: 'Delete 1 row?',
+        other: 'Delete {count} rows?',
+      },
+      bulkDeleteSelectedMessage: {
+        one: 'The selected row will be deleted on the server. You can keep working and follow the progress in the header.',
+        other: 'The {count} selected rows will be deleted on the server. You can keep working and follow the progress in the header.',
+      },
+      bulkDeleteAll: 'Delete all matching rows',
+      bulkDeleteAllTitle: {
+        one: 'Delete the 1 matching row?',
+        other: 'Delete all {count} matching rows?',
+      },
+      bulkDeleteAllMessage: {
+        one: 'The row matching the current search and filters will be deleted on the server. This cannot be undone.',
+        other: 'Every row matching the current search and filters will be deleted, including rows on pages you have not opened. This cannot be undone. The server works through them in the background; follow the progress in the header.',
+      },
+      bulkDeleteConfirm: 'Delete',
+    },
+
+    /** The header's background tasks: its progress control and the drawer behind it. */
+    jobs: {
+      title: 'Background tasks',
+      subtitle: 'These run on the server. You can change pages, refresh or close the tab — the progress is kept.',
+      close: 'Close background tasks',
+      empty: 'Nothing is running.',
+      clearFinished: 'Clear finished',
+      cancel: 'Stop this task',
+      dismiss: 'Remove from list',
+      deleting: {
+        one: 'Deleting {count} row',
+        other: 'Deleting {count} rows',
+      },
+      deleted: {
+        one: 'Deleted {count} row',
+        other: 'Deleted {count} rows',
+      },
+      stopped: 'Delete stopped',
+      cancelled: 'Delete cancelled',
+      statusRunning: 'Running',
+      statusCompleted: 'Done',
+      statusFailed: 'Failed',
+      statusCancelled: 'Cancelled',
+      progress: '{done} of {total} · {percent}%',
+      progressLabel: 'Progress {percent}%',
+      failedRows: {
+        one: '{count} row could not be deleted',
+        other: '{count} rows could not be deleted',
+      },
+      indicatorRunning: {
+        one: '1 background task running — {percent}% done',
+        other: '{count} background tasks running — {percent}% done',
+      },
+      indicatorDone: 'Background tasks finished — open the list',
+      percent: '{percent}%',
+      tasks: 'Tasks',
+      startedNotice: 'Deletion started. Follow it from the header.',
+      doneNotice: {
+        one: '{label}: 1 row deleted.',
+        other: '{label}: {count} rows deleted.',
+      },
+      partialNotice: '{label}: {deleted} deleted, {failed} could not be deleted.',
+      stoppedNotice: '{label}: the delete stopped — {reason}',
     },
 
     /** The layout's own copy — read by assistive technology rather than seen,

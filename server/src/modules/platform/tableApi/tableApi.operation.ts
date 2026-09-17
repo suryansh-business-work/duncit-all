@@ -46,6 +46,25 @@ export interface TableOperation {
   field: GraphQLField<unknown, unknown>;
 }
 
+/**
+ * A field called with every argument it declares, each passed as a variable of
+ * the same name: `($platform: AppBuildPlatform!, $query: TableQueryInput)` and
+ * `appBuildsTable(platform: $platform, query: $query)`. A variable the caller
+ * leaves out reads as an argument never given, so optional ones cost nothing —
+ * including a required argument with a default, whose variable is declared
+ * nullable so the default applies instead of the operation refusing to run.
+ */
+export function fieldInvocation(field: GraphQLField<unknown, unknown>): { signature: string; call: string } {
+  const typeOf = (arg: GraphQLField<unknown, unknown>['args'][number]) =>
+    arg.defaultValue === undefined ? arg.type : getNullableType(arg.type);
+  const variables = field.args.map((arg) => `$${arg.name}: ${typeOf(arg).toString()}`).join(', ');
+  const args = field.args.map((arg) => `${arg.name}: $${arg.name}`).join(', ');
+  return {
+    signature: variables ? `(${variables})` : '',
+    call: args ? `${field.name}(${args})` : field.name,
+  };
+}
+
 function hasRequiredArgs(field: GraphQLField<unknown, unknown>): boolean {
   return field.args.some((arg) => isNonNullType(arg.type) && arg.defaultValue === undefined);
 }
@@ -90,11 +109,8 @@ function buildOperation(
   const rowType = getNamedType(page.getFields().rows.type) as GraphQLObjectType;
   const pageFields = page.getFields();
   const leaves = PAGE_LEAVES.filter((name) => pageFields[name] && isLeafType(getNamedType(pageFields[name].type)));
-  const variables = field.args.map((arg) => `$${arg.name}: ${arg.type.toString()}`).join(', ');
-  const args = field.args.map((arg) => `${arg.name}: $${arg.name}`).join(', ');
   const operationName = `TableApi_${fieldName}`;
-  const signature = variables ? `(${variables})` : '';
-  const call = args ? `${fieldName}(${args})` : fieldName;
+  const { signature, call } = fieldInvocation(field);
   const rows = selectionOf(rowType, 1, hasResolver);
   const text = `query ${operationName}${signature} { ${call} { rows { ${rows} } ${leaves.join(' ')} } }`;
   return { document: parse(text), operationName, field };

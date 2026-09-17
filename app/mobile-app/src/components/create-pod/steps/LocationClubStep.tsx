@@ -11,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
+import { applyPodLocation } from '../create-pod.location';
 import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -42,17 +43,6 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
   const locality = watch('locality');
   const location = locations.find((item) => item.id === locationId);
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  // The header LocationDialog closes itself on apply; we just capture its pick.
-  const applyLocation = (nextId: string, zone: string) => {
-    if (nextId !== locationId) {
-      setValue('location_id', nextId, { shouldDirty: true, shouldValidate: true });
-      // Venue + slot belong to the old city — reselect them for the new one.
-      setValue('venue_id', '', { shouldDirty: true });
-      setValue('venue_slot_id', '', { shouldDirty: true });
-    }
-    setValue('locality', zone, { shouldDirty: true, shouldValidate: true });
-  };
 
   return (
     <YStack gap={16}>
@@ -143,6 +133,7 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
             render={({ field, fieldState }) => (
               <ClubSearchField
                 clubs={clubs}
+                locations={locations}
                 value={field.value}
                 onChange={field.onChange}
                 error={fieldState.error?.message}
@@ -159,7 +150,7 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
       <LocationDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
-        onApply={(loc, zone) => applyLocation(loc.id, zone)}
+        onApply={(loc, zone) => applyPodLocation(form, loc.id, zone)}
         initialLocationId={locationId}
       />
     </YStack>

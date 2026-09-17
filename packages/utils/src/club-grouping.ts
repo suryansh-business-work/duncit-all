@@ -44,6 +44,26 @@ export function clubCityName(location: ClubCityLocation): string {
   return text(location.city) || location.location_name;
 }
 
+/** 'Gomti Nagar, Lucknow' — an area and its city, or whichever of the two is known. */
+export function placeLabel(locality?: string | null, city?: string | null): string {
+  return [text(locality), text(city)].filter(Boolean).join(', ');
+}
+
+/**
+ * Where a club operates, as the create-pod club pickers show it beside the name.
+ * Two clubs can share a name, so the place is what tells them apart; a club
+ * whose city is not among `locations` still shows its area.
+ */
+export function clubPlaceLabel(club: GroupableClub, locations: readonly ClubCityLocation[]): string {
+  const location = locations.find((item) => item.id === club.location_id);
+  return placeLabel(club.locality, location ? clubCityName(location) : '');
+}
+
+/** 'Who Even Are We? | Gomti Nagar, Lucknow' — the text a club picker filters and shows once picked. */
+export function clubOptionLabel(clubName: string, place: string): string {
+  return place ? `${clubName} | ${place}` : clubName;
+}
+
 /**
  * One group per city that has at least one of `clubs`, A→Z by city name. A club
  * whose `location_id` is not among `locations` (an inactive city) is left out:

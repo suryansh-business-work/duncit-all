@@ -6,7 +6,7 @@ import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 /** A 36px choice pill — green when picked, the soft fill when not (native's
  * ChipSelectField). `minHeight` pins it against the coarse-pointer 44px rule. */
-const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
+export const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
 
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import * as Location from 'expo-location';
 
 import { useLocations } from '@/hooks/useLocations';
+import { detectDeviceLocation } from '@/utils/device-location';
 import { buildLocationTree } from '@/utils/location-tree';
-import { matchLocation, matchZone } from '@/utils/location-match';
 import type { LocationItem } from '@/stores/location.store';
 
 /** When the picker should write its result somewhere other than the global
@@ -90,24 +89,17 @@ export function useLocationDraft(open: boolean, onClose: () => void, opts?: Loca
     setError('');
     setBusy(true);
     try {
-      const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status !== 'granted') {
+      const result = await detectDeviceLocation(locations);
+      if (result.status === 'DENIED') {
         setError('Location permission is needed to detect your city.');
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({});
-      const [geo] = await Location.reverseGeocodeAsync({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      });
-      const city = geo?.city ?? geo?.subregion ?? '';
-      setDetected(city);
-      const match = matchLocation(locations, city, geo?.postalCode);
-      if (!match) {
-        setError(`Duncit isn't in ${city || 'your area'} yet. Pick a city below.`);
+      setDetected(result.city);
+      if (result.status === 'UNSERVED') {
+        setError(`Duncit isn't in ${result.city || 'your area'} yet. Pick a city below.`);
         return;
       }
-      const zone = matchZone(match, geo?.postalCode);
+      const { location: match, zone } = result;
       setCountry(match.country?.trim() || '');
       setState(match.state?.trim() || '');
       setDraftId(match.id);

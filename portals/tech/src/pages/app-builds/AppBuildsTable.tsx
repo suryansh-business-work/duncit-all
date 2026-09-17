@@ -13,6 +13,8 @@ interface Props {
   onRowClick: (row: AppBuildRow) => void;
   onDelete: (row: AppBuildRow) => void;
   onPush: PushToPlay;
+  /** The page heading — names the grid for screen readers and its bulk deletes in the header. */
+  ariaLabel: string;
 }
 
 export default function AppBuildsTable({
@@ -22,6 +24,7 @@ export default function AppBuildsTable({
   onRowClick,
   onDelete,
   onPush,
+  ariaLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
@@ -41,6 +44,7 @@ export default function AppBuildsTable({
       searchPlaceholder={t('tech.appBuilds.searchPlaceholder')}
       refetchRef={refetchRef}
       onRowClick={onRowClick}
+      ariaLabel={ariaLabel}
     />
   );
 }

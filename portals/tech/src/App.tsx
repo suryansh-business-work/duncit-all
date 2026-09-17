@@ -6,10 +6,6 @@ import EnvironmentPage from './pages/environment';
 import PortalModesPage from './pages/portal-modes';
 import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
 import AuthenticationPage from './pages/AuthenticationPage';
-import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage';
-import EmailFragmentsPage from './pages/email-fragments-page';
-import EmailLogsPage from './pages/email-logs-page';
-import EmailsDashboardPage from './pages/emails-dashboard';
 import PackagesDocsPage from './pages/packages-docs';
 import PackageUpdatesPage from './pages/package-updates';
 import TelemetryDashboardPage from './pages/telemetry-dashboard';
@@ -29,7 +25,6 @@ import RateLimitSystemsPage from './pages/rate-limiting/systems';
 import RateLimitRulesPage from './pages/rate-limiting/rules';
 import RateLimitBlockedPage from './pages/rate-limiting/blocked';
 import RateLimitSettingsPage from './pages/rate-limiting/settings';
-import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import E2eRunsPage from './pages/e2e';
@@ -39,7 +34,6 @@ import E2eFlowDetailPage from './pages/e2e/flows/detail';
 import StressRunsPage from './pages/stress-testing/runs';
 import StressRunDetailPage from './pages/stress-testing/run-detail';
 import StressSettingsPage from './pages/stress-testing/settings';
-import MailAutomationPage from './pages/mail-automation';
 import GraphqlMonitorOverviewPage from './pages/graphql-monitor/overview';
 import GraphqlOperationsPage from './pages/graphql-monitor/operations';
 import GraphqlOperationDetailPage from './pages/graphql-monitor/operation-detail';
@@ -49,8 +43,6 @@ import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
 import StatusReportsPage from './pages/status-reports-page';
-import Msg91LogsPage from './pages/msg91-otp/logs';
-import Msg91AnalyticsPage from './pages/msg91-otp/analytics';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -66,18 +58,10 @@ export default function App() {
         <Route path="/portal-modes" element={authed(<PortalModesPage />)} />
         <Route path="/feature-flags" element={authed(<FeatureFlagsPage />)} />
         <Route path="/authentication" element={authed(<AuthenticationPage />)} />
-        <Route path="/emails" element={<Navigate to="/emails/dashboard" replace />} />
-        <Route path="/emails/dashboard" element={authed(<EmailsDashboardPage />)} />
-        <Route path="/emails/templates" element={authed(<EmailTemplatesPage />)} />
-        <Route path="/emails/fragments" element={authed(<EmailFragmentsPage />)} />
-        <Route path="/emails/logs" element={authed(<EmailLogsPage />)} />
-        {/* Connecting a mailbox only. What it replies with lives in Support. */}
-        <Route path="/mail-automation" element={authed(<MailAutomationPage />)} />
         <Route path="/package-docs" element={authed(<PackagesDocsPage />)} />
         {/* What every package.json declares, beside what npm publishes today. */}
         <Route path="/package-updates" element={authed(<PackageUpdatesPage />)} />
         {/* The old path, kept working for bookmarks. */}
-        <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />
         <Route path="/emails/docs" element={<Navigate to="/package-docs" replace />} />
         <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />
         <Route path="/telemetry/dashboard" element={authed(<TelemetryDashboardPage />)} />
@@ -126,10 +110,6 @@ export default function App() {
         <Route path="/rate-limiting/rules" element={authed(<RateLimitRulesPage />)} />
         <Route path="/rate-limiting/blocked" element={authed(<RateLimitBlockedPage />)} />
         <Route path="/rate-limiting/settings" element={authed(<RateLimitSettingsPage />)} />
-        <Route path="/slack" element={authed(<SlackSettingsPage />)} />
-        <Route path="/msg91-otp" element={<Navigate to="/msg91-otp/logs" replace />} />
-        <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
-        <Route path="/msg91-otp/analytics" element={authed(<Msg91AnalyticsPage />)} />
         {/* What people reported by hand on status.duncit.com — the breakage the
             probes on that page cannot see. */}
         <Route path="/status-reports" element={authed(<StatusReportsPage />)} />

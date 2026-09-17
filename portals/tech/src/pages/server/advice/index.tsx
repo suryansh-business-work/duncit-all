@@ -4,7 +4,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { apiHost } from '../queries';
 import { GENERATE_SERVER_ADVICE, SERVER_ADVICE, type ServerAdvice } from '../history/queries';
 import AdviceBody from './AdviceBody';

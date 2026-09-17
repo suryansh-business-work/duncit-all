@@ -6,11 +6,12 @@ import { requireRole } from '@middleware/rbac';
  * Two audiences, two gates — this is rule 1 of the feature, not an accident.
  *
  * Connecting and disconnecting a mailbox is handing Duncit a Google grant, so
- * it is Tech's. Writing the reply and choosing the queue is a promise made to
- * whoever wrote in, so it is Support's. Both can READ the list, because Support
- * has to pick a mailbox and Tech has to see what its grant is being used for.
+ * it belongs to the Communications console. Writing the reply and choosing the
+ * queue is a promise made to whoever wrote in, so it is Support's. Both can READ
+ * the list, because Support has to pick a mailbox and Communications has to see
+ * what its grant is being used for.
  */
-const CONNECT_ROLES = ['SUPER_ADMIN', 'TECH_MANAGER'];
+const CONNECT_ROLES = ['SUPER_ADMIN', 'COMMUNICATIONS_MANAGER'];
 const RULE_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER'];
 const READ_ROLES = [...CONNECT_ROLES, ...RULE_ROLES];
 

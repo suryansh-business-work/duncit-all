@@ -1,0 +1,52 @@
+import { Controller, type Control } from 'react-hook-form';
+import { FormControlLabel, Stack, Switch } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import type { WaCampaignValues } from './wa-campaign.types';
+import { useTranslation } from '@duncit/app-settings';
+
+/** Switching the schedule on lands an hour from now — a sane, editable start
+ * rather than an empty picker. */
+const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+/** When this send goes out: now, or at an hour you pick. */
+export default function ScheduleField({
+  control,
+}: Readonly<{ control: Control<WaCampaignValues> }>) {
+  const { t } = useTranslation();
+  return (
+    <Controller
+      control={control}
+      name="scheduled_at"
+      render={({ field, fieldState }) => (
+        <Stack spacing={1}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!field.value}
+                // Turning it off clears the time — a hidden schedule is how a
+                // send goes out at the wrong hour.
+                onChange={(_, on) => field.onChange(on ? defaultScheduleIso() : '')}
+              />
+            }
+            label={t('marketing.whatsappCampaigns.scheduleForLater')}
+          />
+          {field.value ? (
+            <DateTimePicker
+              label={t('marketing.whatsappCampaigns.sendAt')}
+              value={new Date(field.value)}
+              onChange={(date) => field.onChange(date ? date.toISOString() : '')}
+              minDateTime={new Date()}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!fieldState.error,
+                  helperText: fieldState.error?.message ?? ' ',
+                },
+              }}
+            />
+          ) : null}
+        </Stack>
+      )}
+    />
+  );
+}

@@ -1,0 +1,13 @@
+# State holds the migration private key and provider tokens' results — never commit it.
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+crash.log
+crash.*.log
+
+# Real values live in terraform.tfvars; only the committed record list is tracked.
+*.tfvars
+!records.auto.tfvars
+
+# Keep .terraform.lock.hcl tracked: it pins provider checksums.

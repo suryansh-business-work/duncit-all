@@ -1,5 +1,5 @@
 import { List, ListItemButton, ListItemText, Typography } from '@mui/material';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import OperationTypeChip from '../components/OperationTypeChip';
 import type { OperationSummary } from '../queries';
 

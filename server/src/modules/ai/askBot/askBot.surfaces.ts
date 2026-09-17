@@ -220,7 +220,7 @@ export const SURFACES: readonly Surface[] = [
     host: 'analytics.duncit.com',
     dev_port: 2037,
     summary:
-      'The console for bookings, revenue and growth numbers. It holds the dashboard and your profile today; its screens are still being built.',
+      'The console for charts on pods, clubs, club admins and hosts — headline numbers against the previous period, trends, breakdowns and short top-ten rankings.',
   },
   {
     key: 'hosts',

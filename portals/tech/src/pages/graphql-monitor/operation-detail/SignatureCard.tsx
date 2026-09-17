@@ -4,7 +4,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import { copyToClipboard } from '@duncit/utils';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import type { OperationDetail } from '../queries';
 
 interface Props {

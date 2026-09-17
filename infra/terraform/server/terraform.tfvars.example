@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars (git-ignored) and adjust.
+# Secrets come from the shell only:
+#   export TF_VAR_old_server_password=...
+#   export MONGODB_ATLAS_CLIENT_ID=...  MONGODB_ATLAS_CLIENT_SECRET=...
+
+phase      = "prepare"
+sync_round = 1
+
+# terraform -chdir=../compute/hostinger output -raw server_ip
+new_server_ip                   = "<new-server-ip>"
+new_server_ssh_private_key_path = "~/.ssh/duncit_vps"
+
+old_server_ip = "148.135.136.107"
+
+# Atlas > Project settings > Project ID
+atlas_project_id = "<atlas-project-id>"

@@ -5,14 +5,83 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { sortBadgeProgress } from '@duncit/utils';
+import { Skeleton, useLoadingRegion } from '@/components/Skeleton';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { useBadges } from '@/hooks/useBadges';
+import { useBadges, type BadgeProgressRow } from '@/hooks/useBadges';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const ART_STYLE = { width: 56, height: 56, borderRadius: 28 };
+
+/** Stable keys for the placeholder tiles shown while the first read is out. */
+const PLACEHOLDER_IDS = ['first', 'second', 'third', 'fourth'];
+
+/** Placeholder tiles in the same size and spacing as the real badges, so the
+ * card does not jump when they arrive. Twin of mWeb's `BadgesStripSkeleton`. */
+function BadgesStripSkeleton() {
+  const region = useLoadingRegion();
+  return (
+    <XStack testID="profile-badges-loading" gap={12} flexWrap="wrap" {...region}>
+      {PLACEHOLDER_IDS.map((id) => (
+        <YStack key={id} width={72} alignItems="center" gap={6}>
+          <Skeleton width={56} height={56} radius={28} />
+          <Skeleton width={52} height={13} radius={4} />
+        </YStack>
+      ))}
+    </XStack>
+  );
+}
+
+interface StripBodyProps {
+  isLoading: boolean;
+  earned: BadgeProgressRow[];
+}
+
+function StripBody({ isLoading, earned }: Readonly<StripBodyProps>) {
+  const { t } = useTranslation();
+  const { accent } = useThemeColors();
+
+  if (isLoading) return <BadgesStripSkeleton />;
+  if (earned.length === 0) {
+    return (
+      <Text fontSize={14} color="$muted">
+        {t('mweb.badges.profileEmpty')}
+      </Text>
+    );
+  }
+  return (
+    <XStack gap={12} flexWrap="wrap">
+      {earned.map((row) => (
+        <YStack key={row.badge.id} width={72} alignItems="center" gap={6}>
+          {row.badge.image_url ? (
+            <Image
+              source={{ uri: row.badge.image_url }}
+              style={ART_STYLE}
+              accessible={false}
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <YStack
+              width={56}
+              height={56}
+              borderRadius={28}
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor="$soft"
+            >
+              <MaterialIcons name="emoji-events" size={26} color={accent} />
+            </YStack>
+          )}
+          <Text fontSize={13} fontWeight="600" color="$color" textAlign="center">
+            {row.badge.title}
+          </Text>
+        </YStack>
+      ))}
+    </XStack>
+  );
+}
 
 /**
  * The member's earned badges, shown on their own profile directly under the
@@ -24,9 +93,8 @@ const ART_STYLE = { width: 56, height: 56, borderRadius: 28 };
  */
 export function ProfileBadgesStrip() {
   const { t } = useTranslation();
-  const { accent } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { rows } = useBadges();
+  const { rows, isLoading } = useBadges();
   const earned = sortBadgeProgress(rows).filter((row) => row.achieved);
 
   return (
@@ -48,40 +116,7 @@ export function ProfileBadgesStrip() {
           {t('mweb.badges.viewAll')}
         </Text>
       </XStack>
-      {earned.length === 0 ? (
-        <Text fontSize={14} color="$muted">
-          {t('mweb.badges.profileEmpty')}
-        </Text>
-      ) : (
-        <XStack gap={12} flexWrap="wrap">
-          {earned.map((row) => (
-            <YStack key={row.badge.id} width={72} alignItems="center" gap={6}>
-              {row.badge.image_url ? (
-                <Image
-                  source={{ uri: row.badge.image_url }}
-                  style={ART_STYLE}
-                  accessible={false}
-                  accessibilityIgnoresInvertColors
-                />
-              ) : (
-                <YStack
-                  width={56}
-                  height={56}
-                  borderRadius={28}
-                  alignItems="center"
-                  justifyContent="center"
-                  backgroundColor="$soft"
-                >
-                  <MaterialIcons name="emoji-events" size={26} color={accent} />
-                </YStack>
-              )}
-              <Text fontSize={13} fontWeight="600" color="$color" textAlign="center">
-                {row.badge.title}
-              </Text>
-            </YStack>
-          ))}
-        </XStack>
-      )}
+      <StripBody isLoading={isLoading} earned={earned} />
     </SurfaceCard>
   );
 }

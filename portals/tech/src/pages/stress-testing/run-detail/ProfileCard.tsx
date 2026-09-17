@@ -1,7 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { formatDateTime } from '../../server/format';
-import SectionCard from '../components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import type { StressRun } from '../queries';
 import { formatMs, formatSeconds, journeyLabel } from '../labels';
 

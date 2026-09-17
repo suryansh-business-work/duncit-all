@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { formatPct } from '../../stress-testing/labels';
 import InfoList from '../InfoList';
 import { formatBytes } from '../format';

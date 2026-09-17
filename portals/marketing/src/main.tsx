@@ -1,11 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import {
-  flattenCatalogue,
-  MAIL_PREFERENCE_BUNDLE,
-  MARKETING_BUNDLE,
-  WHATSAPP_BUNDLE,
-} from '@duncit/app-settings';
+import { flattenCatalogue, MAIL_PREFERENCE_BUNDLE, MARKETING_BUNDLE } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
@@ -20,14 +15,11 @@ mountPortal({
   // This portal's OWN namespaces, layered over the shell's. The mail-category
   // names on the analytics page are the SAME sentences mWeb and the native app
   // render on Mail Preference (rule 40) — one bundle, three surfaces, so a
-  // category cannot be called two different things in two places. The WhatsApp
-  // bundle is here for the same reason: the template workshop and the admin
-  // console describe one AiSensy catalogue.
+  // category cannot be called two different things in two places.
   i18nFallback: {
     // This portal's OWN namespace, layered over the shell chrome's.
     ...flattenCatalogue(MARKETING_BUNDLE),
     ...flattenCatalogue(MAIL_PREFERENCE_BUNDLE),
-    ...flattenCatalogue(WHATSAPP_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,

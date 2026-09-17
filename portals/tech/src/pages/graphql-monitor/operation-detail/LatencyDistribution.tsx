@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import { BarElement, Chart as ChartJS, type ChartOptions } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { useTranslation } from '@duncit/shell';
-import SectionCard from '../../stress-testing/components/SectionCard';
+import { SectionCard } from '@duncit/ui';
 import { seriesColor } from '../../stress-testing/run-detail/charts/chartSetup';
 import { formatCount, formatMs } from '../../stress-testing/labels';
 

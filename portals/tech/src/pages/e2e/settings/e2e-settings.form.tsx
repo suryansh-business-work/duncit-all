@@ -5,7 +5,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import SlackChannelField from '../../../components/SlackChannelField';
 import SuitePicker from '../SuitePicker';
-import type { SlackChannel } from '../../slack/queries';
+import type { SlackChannel } from '../../../lib/slack-queries';
 import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';

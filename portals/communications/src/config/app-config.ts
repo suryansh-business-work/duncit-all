@@ -23,6 +23,36 @@ export const appConfig = {
   tokenKey: 'communications_token',
   colorModeKey: 'communications_color_mode',
   accent: { light: '#67e8f9', main: '#0891b2', hover: '#0e7490', active: '#155e75' },
-  nav: [{ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' }],
+  nav: [
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    {
+      label: 'Emails', labelKey: 'shell.nav.emails',
+      icon: 'email',
+      children: [
+        // First: the board is where you look before you know which template or
+        // which row you are after.
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/emails/dashboard', icon: 'dashboard' },
+        { label: 'Templates', labelKey: 'shell.nav.templates', to: '/emails/templates', icon: 'description' },
+        { label: 'Fragments', labelKey: 'shell.nav.fragments', to: '/emails/fragments', icon: 'widgets' },
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/emails/logs', icon: 'article' },
+        // Connecting the mailbox only — the reply and the queue are Support's,
+        // so the rest of this feature is in the Support portal.
+        { label: 'Mail Automation', labelKey: 'shell.nav.mailAutomation', to: '/mail-automation', icon: 'markEmailRead' },
+      ],
+    },
+    { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/whatsapp', icon: 'whatsapp' },
+    { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
+    {
+      // MSG91's own records of the OTP widget that carries every phone code —
+      // read live from MSG91, never copied here. The keys themselves are under
+      // Tech → Environment Variables → MSG91 (SMS OTP).
+      label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
+      icon: 'phone',
+      children: [
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
+        { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
+      ],
+    },
+  ],
   modules: [],
 } satisfies AppConfig;

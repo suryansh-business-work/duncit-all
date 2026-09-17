@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (git-ignored) and adjust.
+# Secret: export HOSTINGER_API_TOKEN=... — never put it in a file.
+
+hostname            = "vps2.duncit.com"
+plan_id             = "hostingercom-vps-kvm4-usd-1m"
+data_center_city    = "Mumbai"
+os_template_name    = "Debian 13"
+ssh_public_key_path = "~/.ssh/duncit_vps.pub"

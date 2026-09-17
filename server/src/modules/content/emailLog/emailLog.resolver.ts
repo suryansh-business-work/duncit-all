@@ -4,12 +4,10 @@ import { emailLogService } from './emailLog.service';
 import type { TableQueryInput } from '@utils/table-query';
 
 /**
- * The same roles that manage the templates and fragments these rows describe,
- * plus TECH_MANAGER — the only screen that reads any of this is /emails/logs in
- * the Tech portal, which admits TECH_MANAGER, so leaving it out meant that
- * account opened the page and got Access Denied from every query on it.
+ * The same roles that manage the templates and fragments these rows describe —
+ * the screens that read any of this live in the Communications console.
  */
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'TECH_MANAGER'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
 
 /**
  * Emptying the log is not a scoped mistake — it removes the only record of the

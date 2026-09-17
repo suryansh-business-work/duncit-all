@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
-import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from '../slack/queries';
+import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from '../../lib/slack-queries';
 import {
   AppBuildSettingsForm,
   CiCredentialsCard,

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
-import EmailSidebarList from '../../components/EmailSidebarList';
-import FillViewport from '../../components/FillViewport';
+import { FillViewport, SidebarList } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import PackageDocBody from './PackageDocBody';
 import PackageDocHeader from './PackageDocHeader';
@@ -55,7 +54,7 @@ export default function PackagesDocsPage() {
       </Box>
 
       <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-        <EmailSidebarList
+        <SidebarList
           items={PACKAGE_DOCS.map((p) => ({
             key: p.slug,
             primary: p.name,

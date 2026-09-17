@@ -37,7 +37,7 @@ describe('slackResolvers', () => {
   });
 
   it('sends a message, forwarding the input', async () => {
-    await slackResolvers.Mutation.sendSlackMessage({}, { input: { channel: 'C1', text: 'hi' } }, ctx(['SUPER_ADMIN']));
+    await slackResolvers.Mutation.sendSlackMessage({}, { input: { channel: 'C1', text: 'hi' } }, ctx(['COMMUNICATIONS_MANAGER']));
     expect(slackService.send).toHaveBeenCalledWith({ channel: 'C1', text: 'hi' });
   });
 
@@ -45,6 +45,8 @@ describe('slackResolvers', () => {
     expect(() => slackResolvers.Query.slackConfigured({}, {}, ctx(['USER']))).toThrow(GraphQLError);
     expect(() => slackResolvers.Query.slackChannels({}, {}, ctx(null))).toThrow(GraphQLError);
     expect(() => slackResolvers.Mutation.sendSlackMessage({}, { input: {} }, ctx(['USER']))).toThrow(GraphQLError);
+    // The channel picker's reads stay open to Tech; posting does not.
+    expect(() => slackResolvers.Mutation.sendSlackMessage({}, { input: {} }, ctx(['TECH_MANAGER']))).toThrow(GraphQLError);
     expect(slackService.send).not.toHaveBeenCalled();
   });
 

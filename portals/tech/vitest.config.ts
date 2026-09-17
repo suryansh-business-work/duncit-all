@@ -44,10 +44,9 @@ export default defineConfig({
         // holds host-parsing helpers, so it stays covered.)
         'src/pages/feature-flags-page/queries.ts',
         'src/pages/portal-modes/queries.ts',
-        'src/pages/email-templates-page/queries.ts',
         'src/pages/environment/queries.ts',
         'src/pages/environment/portal-env-queries.ts',
-        'src/pages/slack/queries.ts',
+        'src/lib/slack-queries.ts',
       ],
       thresholds: {
         lines: 100,

@@ -436,21 +436,6 @@ export const TECH_BUNDLE: NestedCatalogue = {
      * translator decides once what “Most used” means, rather than twice
      * under two page names that could drift apart (rule 40).
      */
-    emailSidebar: {
-      activeOnly: 'Active only',
-      anyStatus: 'Any status',
-      listOrder: 'List order',
-      mostUsed: 'Most used',
-      nameAZ: 'Name A–Z',
-      nameZA: 'Name Z–A',
-      nothingMatchesSearch: 'Nothing matches “{needle}”.',
-      nothingMatchesTheFilters: 'Nothing matches the filters above.',
-      recentlyUpdated: 'Recently updated',
-      showingOfTotal: '{shown} of {total}',
-      sort: 'Sort',
-      switchedOffOnly: 'Switched off only',
-      totalCount: '{count} total',
-    },
     emailsDashboard: {
       address: 'Address',
       deliveryAcrossEveryEmailTheProduct: 'Delivery across every email the product tried to send, including the attempts that never left.',

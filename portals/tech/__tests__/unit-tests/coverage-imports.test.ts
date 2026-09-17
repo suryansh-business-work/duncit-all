@@ -5,9 +5,6 @@ import * as envEntryBarrel from '../../src/pages/environment/env-entry';
 import * as flagQueries from '../../src/pages/feature-flags-page/queries';
 import * as flagBarrel from '../../src/pages/feature-flags-page/feature-flag';
 import * as portalModeQueries from '../../src/pages/portal-modes/queries';
-import * as emailTplQueries from '../../src/pages/email-templates-page/queries';
-import * as emailTplCreateBarrel from '../../src/pages/email-templates-page/email-template-create';
-import * as emailTplTestBarrel from '../../src/pages/email-templates-page/email-template-test';
 import * as theme from '../../src/theme';
 
 /**
@@ -47,21 +44,6 @@ describe('module barrels & GraphQL documents', () => {
   it('exposes portal-mode documents', () => {
     expect(portalModeQueries.PORTAL_MODES).toBeDefined();
     expect(portalModeQueries.SET_PORTAL_MODE).toBeDefined();
-  });
-
-  it('exposes email-template documents + form barrels', () => {
-    expect(emailTplQueries.TEMPLATES).toBeDefined();
-    expect(emailTplQueries.RENDER).toBeDefined();
-    expect(emailTplQueries.CREATE).toBeDefined();
-    expect(emailTplQueries.UPDATE).toBeDefined();
-    expect(emailTplQueries.DELETE).toBeDefined();
-    expect(emailTplQueries.SEND_TEST).toBeDefined();
-    expect(emailTplQueries.STARTER).toMatch(/<mjml>/);
-    expect(emailTplCreateBarrel.emailTemplateCreateSchema).toBeDefined();
-    expect(emailTplCreateBarrel.slugify).toBeTypeOf('function');
-    expect(emailTplCreateBarrel.toCreateTemplateInput).toBeTypeOf('function');
-    expect(emailTplTestBarrel.emailTemplateTestSchema).toBeDefined();
-    expect(emailTplTestBarrel.toSendTestInput).toBeTypeOf('function');
   });
 
   it('re-exports the shared theme builder', () => {

@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import DistributionCard from '../../telemetry-dashboard/DistributionCard';
+import { DistributionCard } from '@duncit/ui';
 import type { MonitorTally } from '../queries';
 
 interface Props {

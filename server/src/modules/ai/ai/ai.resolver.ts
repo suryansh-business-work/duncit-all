@@ -565,8 +565,9 @@ export const aiResolvers = {
       return adminAiChat(args.prompt);
     },
     aiCreateOrUpdateMjml: async (_: unknown, args: { input: AiMjmlTemplateInput }, ctx: GraphQLContext) => {
-      // CRM managers compose MJML email templates from the CRM portal too.
-      requireRole(ctx, [...ADMIN_ROLES, 'CRM_MANAGER']);
+      // Email templates are composed in the Communications console, and CRM
+      // managers compose their own from the CRM portal.
+      requireRole(ctx, [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER', 'CRM_MANAGER']);
       return createOrUpdateMjml(args.input);
     },
     aiImproveRichText: async (

@@ -27,7 +27,6 @@ vi.mock('../../src/pages/environment', () => ({ default: () => <div>environment-
 vi.mock('../../src/pages/portal-modes', () => ({ default: () => <div>portal-modes-page</div> }));
 vi.mock('../../src/pages/feature-flags-page/FeatureFlagsPage', () => ({ default: () => <div>feature-flags-page</div> }));
 vi.mock('../../src/pages/AuthenticationPage', () => ({ default: () => <div>authentication-page</div> }));
-vi.mock('../../src/pages/email-templates-page/EmailTemplatesPage', () => ({ default: () => <div>email-templates-page</div> }));
 vi.mock('../../src/pages/server/ServerInfoPage', () => ({ default: () => <div>server-info-page</div> }));
 vi.mock('../../src/pages/server/DockerPage', () => ({ default: () => <div>docker-page</div> }));
 
@@ -56,8 +55,6 @@ describe('App routing', () => {
     expect(screen.getByText('feature-flags-page')).toBeInTheDocument();
     at('/authentication');
     expect(screen.getByText('authentication-page')).toBeInTheDocument();
-    at('/email-templates');
-    expect(screen.getByText('email-templates-page')).toBeInTheDocument();
     at('/profile');
     expect(screen.getByText('profile-page')).toBeInTheDocument();
     at('/server/info');

@@ -338,12 +338,12 @@ describe('emailLog usage by template', () => {
 /* --------------------------------- rbac --------------------------------- */
 
 describe('emailLog access', () => {
-  it('lets a TECH_MANAGER read the page the Tech portal shows them', async () => {
+  it('lets a COMMUNICATIONS_MANAGER read the page the Communications portal shows them', async () => {
     await expect(
-      emailLogResolvers.Query.emailLogDashboard({}, { range_days: 7 }, ctx(['TECH_MANAGER']))
+      emailLogResolvers.Query.emailLogDashboard({}, { range_days: 7 }, ctx(['COMMUNICATIONS_MANAGER']))
     ).resolves.toMatchObject({ range_days: 7 });
     await expect(
-      emailLogResolvers.Query.emailLogStats({}, { days: 7 }, ctx(['TECH_MANAGER']))
+      emailLogResolvers.Query.emailLogStats({}, { days: 7 }, ctx(['COMMUNICATIONS_MANAGER']))
     ).resolves.toMatchObject({ days: 7 });
   });
 
@@ -368,13 +368,13 @@ describe('emailLog access', () => {
 
   it('passes the actor through to the delete so the audit line names them', async () => {
     const good = new Types.ObjectId().toString();
-    await emailLogResolvers.Mutation.deleteEmailLogs({}, { ids: [good] }, ctx(['TECH_MANAGER']));
+    await emailLogResolvers.Mutation.deleteEmailLogs({}, { ids: [good] }, ctx(['COMMUNICATIONS_MANAGER']));
     expect(warn).toHaveBeenCalledWith('emailLog', 'deleteMany', { userId: 'u1', requested: 1 });
   });
 
   it('holds clear-everything to SUPER_ADMIN, not to everyone who can read the log', async () => {
     expect(() =>
-      emailLogResolvers.Mutation.deleteAllEmailLogs({}, {}, ctx(['TECH_MANAGER']))
+      emailLogResolvers.Mutation.deleteAllEmailLogs({}, {}, ctx(['COMMUNICATIONS_MANAGER']))
     ).toThrow(/access denied/i);
     await emailLogResolvers.Mutation.deleteAllEmailLogs({}, {}, ctx(['SUPER_ADMIN']));
     expect(deleteMany).toHaveBeenCalledWith({});

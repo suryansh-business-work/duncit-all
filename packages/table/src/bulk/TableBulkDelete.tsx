@@ -1,4 +1,4 @@
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import Tooltip from '@mui/material/Tooltip';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';

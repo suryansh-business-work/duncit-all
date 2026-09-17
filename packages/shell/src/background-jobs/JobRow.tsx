@@ -44,6 +44,7 @@ export function JobRow({ job, onCancel, onDismiss }: Readonly<JobRowProps>) {
   const count = running ? job.total : job.succeeded;
   const reason = job.error_message || job.failures[0]?.message;
   const actionLabel = running ? t('shell.jobs.cancel') : t('shell.jobs.dismiss');
+  const actionTestId = running ? `background-job-cancel-${job.id}` : `background-job-dismiss-${job.id}`;
 
   return (
     <Box sx={{ py: 1.5, borderBottom: 1, borderColor: 'divider' }} data-testid={`background-job-${job.id}`}>
@@ -62,7 +63,7 @@ export function JobRow({ job, onCancel, onDismiss }: Readonly<JobRowProps>) {
             size="small"
             aria-label={actionLabel}
             onClick={() => (running ? onCancel(job.id) : onDismiss(job.id))}
-            data-testid={`background-job-${running ? 'cancel' : 'dismiss'}-${job.id}`}
+            data-testid={actionTestId}
           >
             {running ? <StopCircleOutlinedIcon fontSize="small" /> : <CloseIcon fontSize="small" />}
           </DuncitIconButton>

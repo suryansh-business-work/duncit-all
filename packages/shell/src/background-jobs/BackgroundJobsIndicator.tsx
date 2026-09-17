@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { CircularProgress, Tooltip } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';

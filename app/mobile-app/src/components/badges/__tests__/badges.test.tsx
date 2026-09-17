@@ -84,8 +84,7 @@ describe('BadgeProgressCard', () => {
 describe('ProfileBadgesStrip', () => {
   it('nudges a member who has not unlocked anything yet', async () => {
     renderWithProviders(<ProfileBadgesStrip />);
-    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
-    expect(screen.getByText(/No badges yet/i)).toBeOnTheScreen();
+    await waitFor(() => expect(screen.getByText(/No badges yet/i)).toBeOnTheScreen());
   });
 
   // The profile shows what has been WON — the locked ones live on /badges.

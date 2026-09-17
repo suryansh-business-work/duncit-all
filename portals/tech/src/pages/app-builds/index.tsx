@@ -140,6 +140,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
         onRowClick={openRow}
         onDelete={onDelete}
         onPush={onPush}
+        ariaLabel={title}
       />
       <BuildDetailsDialog build={selected} onClose={closeRow} />
       <CreateBuildDialog

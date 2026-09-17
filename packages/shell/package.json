@@ -18,6 +18,7 @@
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/table": "workspace:*",
     "@duncit/tabs": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",

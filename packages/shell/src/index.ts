@@ -46,6 +46,16 @@ export { getInFlightRequests, subscribeRequests, trackingFetch } from './lib/req
 // The apps drawer behind the header's nine dots, and the file manager it opens.
 export { AppsDrawer, useShellTools, type ShellTool } from './chrome/AppsDrawer';
 export { FileManagerDialog } from './file-manager';
+// Server-side background work (bulk deletes): the header's progress and the grids' delete controls.
+export {
+  BackgroundJobsIndicator,
+  BackgroundJobsProvider,
+  useBackgroundJobs,
+  type BackgroundJob,
+  type BackgroundJobsApi,
+  type BackgroundJobsProviderProps,
+  type BackgroundJobStatus,
+} from './background-jobs';
 export { StaffChatPanel } from './staff-chat';
 export { StaffChatButton } from './staff-chat/StaffChatButton';
 // The console taskbar and the per-user desk behind it. AppShell mounts both;

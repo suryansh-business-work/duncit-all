@@ -12,6 +12,8 @@
  * invalid coercions drop the filter rather than erroring.
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 export type TableSortDir = 'asc' | 'desc';
 export type TableFilterOp =
   | 'eq'
@@ -201,9 +203,40 @@ export function combineFilters(
   return built;
 }
 
-interface TableQueryModel {
+export interface TableQueryModel {
   find: (filter: Record<string, unknown>) => any;
   countDocuments: (filter: Record<string, unknown>) => any;
+}
+
+/**
+ * The collection a `<name>Table` read went to, and the exact filter it used —
+ * the resolver's own guard keys (a club admin's clubs, a platform tab) AND the
+ * client's search and filters, combined.
+ *
+ * Bulk delete needs precisely this: "every row matching this view" has to mean
+ * the rows this person was shown, and a second, hand-written filter per table
+ * would be a second place for that to drift. Capturing it from the one read
+ * that produced the view is the only way it cannot.
+ */
+export interface TableScope {
+  model: TableQueryModel;
+  filter: Record<string, unknown>;
+  includeDeleted: boolean;
+}
+
+const scopeCapture = new AsyncLocalStorage<{ scope?: TableScope }>();
+
+/**
+ * Run a table read and hand back the scope its `runTableQuery` used.
+ *
+ * Undefined when the read never reached `runTableQuery` — a table assembled by
+ * an aggregation or in memory has no single collection to act on. The first
+ * call wins, so a resolver's own follow-up read cannot replace the table's.
+ */
+export async function captureTableScope(run: () => Promise<unknown>): Promise<TableScope | undefined> {
+  const slot: { scope?: TableScope } = {};
+  await scopeCapture.run(slot, run);
+  return slot.scope;
 }
 
 export async function runTableQuery<TDoc>(
@@ -217,6 +250,10 @@ export async function runTableQuery<TDoc>(
 ): Promise<TablePageResult<TDoc>> {
   const q = input ?? {};
   const filter = combineFilters(baseFilter, buildTableFilter(q, config));
+  const slot = scopeCapture.getStore();
+  if (slot && !slot.scope) {
+    slot.scope = { model: Model, filter, includeDeleted: Boolean(options?.includeDeleted) };
+  }
   const { page, pageSize } = clampPage(q);
   const sort = resolveSort(q, config);
   const find = Model.find(filter)

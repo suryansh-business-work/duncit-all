@@ -28,7 +28,6 @@ import type {
   RowClickedEvent,
   RowSelectionOptions,
   RowStyle,
-  SelectionChangedEvent,
   SortChangedEvent,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
@@ -36,6 +35,8 @@ import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
 import { TableHeaderContext } from './header/headerState';
 import { useTranslation } from './i18n';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
+import { TableBulkDelete } from './bulk/TableBulkDelete';
+import { useBulkDelete } from './bulk/useBulkDelete';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
 import { TableDataActions } from './toolbar/TableDataActions';
@@ -46,6 +47,7 @@ import type {
   TableQuerySnapshot,
   TableSortDir,
 } from './types';
+import { useGridSelection, type DuncitTableSelection } from './useGridSelection';
 import { useTablePrefs } from './useTablePrefs';
 import { useTableQuery } from './useTableQuery';
 
@@ -150,18 +152,6 @@ function escapeHtml(text: string): string {
     .replaceAll("'", '&#39;');
 }
 
-/**
- * Opt-in checkbox multi-select. Selection is PER PAGE and what you get is a MIRROR of
- * the grid, never a running total — see the note on handleSelectionChanged for why an
- * accumulator across pages is a bug rather than a feature.
- */
-interface DuncitTableSelection<T> {
-  /** The rows ticked right now. Fires with `[]` when a page change wipes them. */
-  onChange: (rows: T[]) => void;
-  /** Filled with a "clear the ticks" fn, like refetchRef — call it after a bulk action. */
-  clearRef?: MutableRefObject<(() => void) | null>;
-}
-
 interface DuncitTableProps<T> {
   tableId: string; // REQUIRED unique key; persistence namespace
   columns: ReadonlyArray<DuncitColumn<T>>;
@@ -192,7 +182,7 @@ interface DuncitTableProps<T> {
   // Compared by value; a change resets to page 1 and refetches. Not shown as chips.
   externalFilters?: ReadonlyArray<TableFilterValue>;
   // Opt in to a checkbox column. Absent means no selection config reaches the grid at
-  // all, which is what every table that never asked for it keeps getting.
+  // all — unless the grid offers bulk delete, which brings its own checkbox column.
   selection?: DuncitTableSelection<T>;
   /**
    * The query the grid is showing, and how many rows match it server-side.
@@ -255,6 +245,13 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     () => ({ sortBy, sortDir, filters, setFilters }),
     [sortBy, sortDir, filters, setFilters],
   );
+  const bulk = useBulkDelete(fetchRows, refetch);
+  const { selectable, selectedIds, handleSelectionChanged, clearSelection } = useGridSelection({
+    gridRef,
+    selection,
+    bulk: bulk !== null,
+    getRowId,
+  });
 
   const agTheme = useMemo(() => buildAgTheme(muiTheme, prefs.density), [muiTheme, prefs.density]);
   const defaultColDef = useMemo(() => {
@@ -275,8 +272,8 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   }, [prefs.density]);
   const columnDefs = useMemo(() => {
     const defs = buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir, t);
-    return selection ? [SELECT_COLUMN, ...defs] : defs;
-  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selection, t]);
+    return selectable ? [SELECT_COLUMN, ...defs] : defs;
+  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selectable, t]);
 
   useEffect(() => {
     if (!refetchRef) return undefined;
@@ -313,50 +310,6 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   useEffect(() => {
     gridRef.current?.api?.refreshCells({ force: true });
   }, [dateSettings]);
-
-  const selectionOnChange = selection?.onChange;
-  const selectionClearRef = selection?.clearRef;
-
-  /**
-   * Selection is per page, and the parent gets a mirror of the grid.
-   *
-   * `getRowId` is always set here, so AG Grid runs its immutable update path, and
-   * retention is BY ID: on new row data it deletes the nodes whose ids are gone and
-   * deselects those, dispatching selectionChanged with source 'rowDataChanged'. A
-   * page turn drops the ticks and calls this again — with an empty array when nothing
-   * survived. A refetch that returns the same ids keeps them ticked and fires nothing
-   * at all, so the objects the parent is holding are the PRE-refetch ones: act on
-   * their ids, not on the rest of their fields.
-   *
-   * The parent must store what it is handed and nothing else. A Set of ids accumulated
-   * across pages would claim "47 selected" while the grid holds 25 rows, and would act
-   * on rows nobody saw.
-   *
-   * The header checkbox is not "select all" either. AG Grid's client-side row model
-   * only ever holds the rows the server returned for this page, so every SelectAllMode
-   * ticks this page. Say so on screen; do not imply otherwise.
-   */
-  const handleSelectionChanged = useMemo(() => {
-    if (!selectionOnChange) return undefined;
-    return (event: SelectionChangedEvent<T>) => {
-      selectionOnChange(event.api.getSelectedRows());
-    };
-  }, [selectionOnChange]);
-
-  // Clearing has to happen in the GRID: resetting only the parent's state leaves the
-  // checkboxes ticked. deselectAll fires selectionChanged, so the parent's own mirror
-  // empties through the handler above rather than needing a second reset.
-  const clearSelection = useCallback(() => {
-    gridRef.current?.api?.deselectAll();
-  }, []);
-
-  useEffect(() => {
-    if (!selectionClearRef) return undefined;
-    selectionClearRef.current = clearSelection;
-    return () => {
-      selectionClearRef.current = null;
-    };
-  }, [selectionClearRef, clearSelection]);
 
   // Defs carry the controlled sort, so the grid echoes our own updates back — only
   // forward header-click changes that actually differ from the current query state.
@@ -462,16 +415,29 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           density={prefs.density}
           toggleDensity={prefs.toggleDensity}
           dataActions={
-            <TableDataActions
-              tableId={tableId}
-              columns={columns}
-              hiddenOverrides={prefs.hiddenOverrides}
-              fetchRows={fetchRows}
-              query={appliedQuery}
-              rows={table.rows}
-              total={total}
-              loading={table.loading}
-            />
+            <>
+              {bulk && (
+                <TableBulkDelete
+                  binding={bulk}
+                  query={appliedQuery}
+                  total={total}
+                  selectedIds={selectedIds}
+                  loading={table.loading}
+                  label={ariaLabel}
+                  onStarted={clearSelection}
+                />
+              )}
+              <TableDataActions
+                tableId={tableId}
+                columns={columns}
+                hiddenOverrides={prefs.hiddenOverrides}
+                fetchRows={fetchRows}
+                query={appliedQuery}
+                rows={table.rows}
+                total={total}
+                loading={table.loading}
+              />
+            </>
           }
           onRefresh={refetch}
           loading={table.loading}
@@ -511,7 +477,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             getRowId={agGetRowId}
             getRowStyle={agGetRowStyle}
             processRowPostCreate={handleRowPostCreate}
-            rowSelection={selection ? MULTI_ROW_SELECTION : undefined}
+            rowSelection={selectable ? MULTI_ROW_SELECTION : undefined}
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}
             // Cells only take focus where there is something to do with it:

@@ -600,6 +600,12 @@ async function bootstrap() {
   });
 
   await apollo.start();
+  // Bulk deletes a previous process left RUNNING carry on from their cursor.
+  // Not before start: a job runs against the schema Apollo has just built.
+  await safeSeed('backgroundJobs', async () => {
+    const { backgroundJobService } = await import('@modules/platform/backgroundJob/backgroundJob.service');
+    await backgroundJobService.resume();
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     app.use(cors({ origin: true, credentials: true }));

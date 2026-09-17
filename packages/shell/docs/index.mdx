@@ -63,6 +63,9 @@ exports:
   - 'formatGmtOffset'
   - 'ABOVE_TASKBAR_HEIGHT'
   - 'SHELL_FALLBACK'
+  - 'BackgroundJobsProvider'
+  - 'BackgroundJobsIndicator'
+  - 'useBackgroundJobs'
 ---
 
 ## Why this exists
@@ -608,6 +611,32 @@ staff chat's state is: the shell renders in all seventeen consoles and each is i
 localStorage would mean "per portal you happen to have open". The position is stored as a fraction
 of the available travel, not a pixel offset, so a tab placed on a 4K monitor is still reachable on a
 laptop.
+## Background tasks in the header
+
+Work that outlives a page — a bulk delete today — runs on the server as a **background job**, and
+the header shows it. `AppShell` mounts `BackgroundJobsProvider` beside `WorkspaceProvider`; the
+header's `BackgroundJobsIndicator` renders nothing until the signed-in person has a job, then a
+ring with the percentage across every running job (rows done over rows in scope, so a 10-row job
+finishing does not claim half of a 10,000-row one). Once they are done it becomes a tick, or a
+warning when a job stopped or refused rows. Pressing it opens a drawer listing each job: what it
+is, the page it came from, a progress bar, why it stopped, and Stop / Remove / Clear finished.
+
+The jobs are Mongo documents, so the number is the same after a page change, a refresh, a server
+restart or in another console. The provider reads them once on mount, every 1.5s while one is
+running, and again when the tab comes back into view. When a job goes from running to finished it
+shows a snackbar and tells every grid on that table to refetch.
+
+The same provider hands `@duncit/table` its `TableBulkDeleteProvider` value, which is how every
+grid learns which tables it may bulk delete from — see "Bulk delete runs on the server" in the
+table docs. A portal adds nothing: a table registered on the server gets the controls in every
+console that renders it.
+
+```tsx
+// Anything rendered inside AppShell can read the jobs.
+const jobs = useBackgroundJobs();
+const running = jobs?.jobs.filter((job) => job.status === 'RUNNING').length ?? 0;
+```
+
 ## Coverage gate
 
 100% statements / functions / lines, with `branches: -3`. That negative threshold caps the number of

@@ -2598,6 +2598,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../media-picker
+      '@duncit/table':
+        specifier: workspace:*
+        version: link:../table
       '@duncit/tabs':
         specifier: workspace:*
         version: link:../tabs

@@ -11,6 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { DuncitIconButton } from '@duncit/buttons';
 import { tokens, useColorMode } from '@duncit/theme';
 import type { AppNavItem, SearchItem } from '../types';
+import { BackgroundJobsIndicator } from '../background-jobs';
 import { StaffChatButton } from '../staff-chat/StaffChatButton';
 import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppsDrawer } from './AppsDrawer';
@@ -114,6 +115,7 @@ export function AppHeader({
             >
               <SearchIcon fontSize="small" />
             </DuncitIconButton>
+            <BackgroundJobsIndicator />
             {showChat && onToggleChat && (
               <StaffChatButton meId={user?.user_id} open={chatOpen} onToggle={onToggleChat} />
             )}

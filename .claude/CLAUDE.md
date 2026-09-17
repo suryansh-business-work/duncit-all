@@ -509,3 +509,5 @@ The runbook is `infra/terraform/README.md`; read it before touching the host lay
   `TF_VAR_old_server_password`); state holds the migration key.
 
 Only Use staging for push no branch creation for any branch
+
+Make sure that anything you create follows WCAG 2.2 AA accessibility standards by default.

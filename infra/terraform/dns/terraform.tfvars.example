@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (git-ignored) and adjust.
+# Secret: export CLOUDFLARE_API_TOKEN=... — never put it in a file.
+
+cloudflare_account_id = "<cloudflare-account-id>"
+zone_name             = "duncit.com"
+
+# OLD server until cutover. At cutover, the new one:
+#   terraform -chdir=../compute/hostinger output -raw server_ip
+target_ip = "148.135.136.107"

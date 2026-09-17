@@ -485,4 +485,27 @@ After adding or renaming a demo run `node scripts/generate-demo-registry.mjs`;
 CI runs it with `--check` and fails on a registry that does not match the files
 on disk, exactly as `generate-shipped-keys.mjs` does for localization.
 
+43. Server migration as code (ENFORCED) — **`infra/terraform/` can rebuild the whole
+VPS on a new server** (prod + staging stacks, SignOz, SonarQube, coturn, nginx, TLS).
+The runbook is `infra/terraform/README.md`; read it before touching the host layout.
+
+- **Three stacks, three states:** `compute/<provider>` creates the host and outputs
+  `server_ip` (Hostinger today; another provider = a sibling folder with the same
+  output), `dns` owns the `duncit.com` zone on Cloudflare, `server` bootstraps the
+  host and migrates state in phases `prepare` → `cutover` → `finalize`.
+- **DNS hostnames are generated from `deploy/nginx/*` `server_name` lines** — a new
+  portal needs no Terraform edit, only a `dns` apply once DNS is on Cloudflare. A
+  non-server record (mail, verification) goes in `dns/records.auto.tfvars`.
+- **Host-level state must be added in the SAME change that creates it:** a directory
+  outside `/opt/duncit*`, a file under `/etc`, a systemd unit, a firewall port or a new
+  stack under `/opt` → `infra/terraform/scripts/bootstrap-host.sh` (install) or
+  `sync-from-old.sh` (state). Otherwise the next migration silently leaves it behind.
+- **A service that must never run on two hosts at once** (schedulers, a WhatsApp
+  session) goes into the `server` stack's `stateful_services` — the cutover is cold
+  for exactly those.
+- **Keep it out of `deploy/`:** every change under `deploy/**` rebuilds every image.
+- **Never commit state or `terraform.tfvars`.** Secrets are env vars only
+  (`HOSTINGER_API_TOKEN`, `CLOUDFLARE_API_TOKEN`, `MONGODB_ATLAS_CLIENT_ID/SECRET`,
+  `TF_VAR_old_server_password`); state holds the migration key.
+
 Only Use staging for push no branch creation for any branch

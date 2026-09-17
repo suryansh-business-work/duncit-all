@@ -115,6 +115,25 @@ describe('applySidebarView', () => {
     expect(byDate.at(-1)?.key).toBe('bare');
   });
 
+  it('handles bare rows — no slug, group, count or timestamp — on every narrowing and sort', () => {
+    // The Package Documentation list sends exactly these: a name and nothing else.
+    const bare: SidebarItem[] = [
+      { key: 'ui', primary: 'ui' },
+      { key: 'utils', primary: 'utils' },
+    ];
+    const run = (over: Partial<Parameters<typeof applySidebarView>[0]>) =>
+      applySidebarView({ items: bare, search: '', sort: 'list', status: 'all', group: '', ...over }).map(
+        (item) => item.key
+      );
+    // A search that misses the name falls through to the (absent) slug.
+    expect(run({ search: 'table' })).toEqual([]);
+    // A group filter never matches a row that belongs to no group.
+    expect(run({ group: 'transactional' })).toEqual([]);
+    // Two rows with nothing to compare keep the order they arrived in.
+    expect(run({ sort: 'used' })).toEqual(['ui', 'utils']);
+    expect(run({ sort: 'recent' })).toEqual(['ui', 'utils']);
+  });
+
   it('does not reorder the caller’s array', () => {
     view({ sort: 'name-asc' });
     expect(items.map((i) => i.key)).toEqual(['welcome', 'receipt', 'digest']);

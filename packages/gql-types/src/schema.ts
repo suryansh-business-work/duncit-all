@@ -835,10 +835,108 @@ export type AisensyTemplateDraft = {
   status: Scalars['String']['output'];
 };
 
+export type AnalyticsBreakdown = {
+  __typename?: 'AnalyticsBreakdown';
+  format: AnalyticsFormat;
+  key: Scalars['String']['output'];
+  /** True when the slices have a natural order that sorting would break. */
+  ordered: Scalars['Boolean']['output'];
+  scope: AnalyticsScope;
+  slices: Array<AnalyticsSlice>;
+};
+
+export type AnalyticsColumn = {
+  __typename?: 'AnalyticsColumn';
+  format: AnalyticsFormat;
+  key: Scalars['String']['output'];
+};
+
+/** The four subjects the Analytics console reports on. */
+export type AnalyticsEntity =
+  | 'CLUBS'
+  | 'CLUB_ADMINS'
+  | 'HOSTS'
+  | 'PODS';
+
+/** What kind of number a value is, so the console formats it. */
+export type AnalyticsFormat =
+  | 'COUNT'
+  | 'CURRENCY'
+  | 'DAYS'
+  | 'DECIMAL'
+  | 'PERCENT'
+  | 'RATING';
+
 export type AnalyticsGranularity =
   | 'DAY'
   | 'MONTH'
   | 'WEEK';
+
+/** One headline number, beside the same number for the period before. */
+export type AnalyticsKpi = {
+  __typename?: 'AnalyticsKpi';
+  format: AnalyticsFormat;
+  /** Whether a rise is good news — a rising cancellation rate is not. */
+  higher_is_better: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  /** Null for a live count, which has no period to compare with. */
+  previous?: Maybe<Scalars['Float']['output']>;
+  value: Scalars['Float']['output'];
+};
+
+export type AnalyticsLeaderRow = {
+  __typename?: 'AnalyticsLeaderRow';
+  caption?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** One value per column, in column order; null where there is nothing to show. */
+  values: Array<Maybe<Scalars['Float']['output']>>;
+};
+
+export type AnalyticsLeaderboard = {
+  __typename?: 'AnalyticsLeaderboard';
+  columns: Array<AnalyticsColumn>;
+  key: Scalars['String']['output'];
+  rows: Array<AnalyticsLeaderRow>;
+};
+
+export type AnalyticsPeriod = {
+  __typename?: 'AnalyticsPeriod';
+  days: Scalars['Int']['output'];
+  from: Scalars['String']['output'];
+  granularity: AnalyticsGranularity;
+  to: Scalars['String']['output'];
+};
+
+/** WINDOW follows the chosen period; ALL_TIME is the state of things right now. */
+export type AnalyticsScope =
+  | 'ALL_TIME'
+  | 'WINDOW';
+
+export type AnalyticsSeries = {
+  __typename?: 'AnalyticsSeries';
+  key: Scalars['String']['output'];
+  /** One value per bucket, aligned with the trend's buckets. */
+  values: Array<Scalars['Float']['output']>;
+};
+
+export type AnalyticsSlice = {
+  __typename?: 'AnalyticsSlice';
+  key: Scalars['String']['output'];
+  /** A name read from the data (a city, a category); null when the key is the label. */
+  label?: Maybe<Scalars['String']['output']>;
+  value: Scalars['Float']['output'];
+};
+
+export type AnalyticsTrend = {
+  __typename?: 'AnalyticsTrend';
+  /** The first calendar day (yyyy-MM-dd) of every bucket, oldest first. */
+  buckets: Array<Scalars['String']['output']>;
+  format: AnalyticsFormat;
+  granularity: AnalyticsGranularity;
+  key: Scalars['String']['output'];
+  series: Array<AnalyticsSeries>;
+};
 
 /** A developer API key for the public venue REST API. Only a hash is stored. */
 export type ApiKey = {
@@ -5606,6 +5704,17 @@ export type EmailTestResult = {
  * needs the same one-off pass for rows written before that id existed, and each
  * one answers the same single question: how many did it have to fix.
  */
+export type EntityAnalytics = {
+  __typename?: 'EntityAnalytics';
+  breakdowns: Array<AnalyticsBreakdown>;
+  entity: AnalyticsEntity;
+  kpis: Array<AnalyticsKpi>;
+  /** The period's top ten; null where a ranking would not add anything. */
+  leaderboard?: Maybe<AnalyticsLeaderboard>;
+  period: AnalyticsPeriod;
+  trends: Array<AnalyticsTrend>;
+};
+
 export type EntityIdBackfillResult = {
   __typename?: 'EntityIdBackfillResult';
   repaired: Scalars['Int']['output'];
@@ -17379,6 +17488,8 @@ export type Query = {
    */
   emailTemplateUsage: Array<EmailTemplateUsage>;
   emailTemplates: Array<EmailTemplate>;
+  /** One Analytics console page: tiles, trends, breakdowns and a ranking. days is clamped to 7-365. */
+  entityAnalytics: EntityAnalytics;
   envCategories: Array<EnvCategoryDef>;
   envEntries: Array<EnvEntry>;
   /** Entries currently assigned to a portal (by portal key). */
@@ -18986,6 +19097,12 @@ export type QueryEmailTemplateArgs = {
 
 export type QueryEmailTemplateBySlugArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryEntityAnalyticsArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  entity: AnalyticsEntity;
 };
 
 

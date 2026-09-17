@@ -501,7 +501,15 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
 
   // ---- Analytics (analytics) -----------------------------------------
   { surface: 'analytics', path: '/', label: 'Dashboard',
-    description: 'A welcome page with your name, your access roles and your account details. The Analytics console has no other screens yet.' },
+    description: 'A welcome page with your name, your access roles and your account details. The Pods, Clubs, Club Admins and Hosts pages in the sidebar hold the charts.' },
+  { surface: 'analytics', path: '/pods', label: 'Pods',
+    description: 'Charts for pods over 7 days, 30 days, 90 days or 12 months: pods held, created and cancelled, seats booked, unique and returning guests, fill rate, attendance, money collected, average booking, backout rate and rating — each against the previous period — with trends, and splits by category, city, weekday, start time, fill, ticket price, format, how far ahead people book, booking source, how attendance was marked and star rating.' },
+  { surface: 'analytics', path: '/clubs', label: 'Clubs',
+    description: 'Charts for clubs over a chosen period: total, new, active and dormant clubs, activity rate, pods and guests per active club, verified share, clubs without an admin, switched-off clubs and club ratings; new-versus-active and total-over-time trends; splits by category, city, pods per club, admins per club, status and stars; and a top-ten ranking of clubs by seats filled.' },
+  { surface: 'analytics', path: '/club-admins', label: 'Club Admins',
+    description: 'Charts for club admins over a chosen period: how many there are, applications waiting for review, new applications, approvals and days to approve, active admins, club coverage, clubs per admin, admins without a club, forced attendance marks and the club-admin rating; onboarding and activity trends; splits by status, clubs per admin, category, city and stars; and a top-ten ranking of admins by seats their clubs filled.' },
+  { surface: 'analytics', path: '/hosts', label: 'Hosts',
+    description: 'Charts for hosts over a chosen period: host records, approved hosts, applications waiting for review, new applications, approvals, approval rate, days to approve, active hosts, host activity, pods per active host, share of attendance scanned at the door and the host rating; onboarding and activity trends; splits by status, pods per host, category, city, how hosts marked attendance and stars; and a top-ten ranking of hosts by seats filled.' },
   { surface: 'analytics', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Analytics console.' },
 

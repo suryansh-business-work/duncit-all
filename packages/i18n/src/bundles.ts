@@ -1,6 +1,7 @@
 import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 import { ADMIN_BUNDLE } from './bundles/admin';
 import { ADS_BUNDLE } from './bundles/ads';
+import { ANALYTICS_BUNDLE } from './bundles/analytics';
 import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
 import { CAPTCHA_BUNDLE } from './bundles/captcha';
@@ -71,6 +72,7 @@ import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
 export {
   ADMIN_BUNDLE,
   ADS_BUNDLE,
+  ANALYTICS_BUNDLE,
   AI_BUNDLE,
   AI_MONITORING_BUNDLE,
   CAPTCHA_BUNDLE,
@@ -122,6 +124,7 @@ export {
 export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   admin: ADMIN_BUNDLE,
   ads: ADS_BUNDLE,
+  analytics: ANALYTICS_BUNDLE,
   ai: AI_BUNDLE,
   aiMonitoring: AI_MONITORING_BUNDLE,
   captcha: CAPTCHA_BUNDLE,

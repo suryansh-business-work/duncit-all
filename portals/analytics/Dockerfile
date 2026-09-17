@@ -73,6 +73,8 @@ COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+# Type-only, but `tsc -b` runs inside the image, so it must be linked at install.
+COPY packages/gql-types/package.json ./packages/gql-types/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile

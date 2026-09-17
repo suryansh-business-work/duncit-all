@@ -10,19 +10,21 @@ import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import HostCategoryField from './HostCategoryField';
+import LocalityField from './LocalityField';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
-import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+import type { CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   hostCategories: CreatePodHostCategory[];
+  locations: CreatePodLocation[];
 }
 
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks)
  * and an optional Pod Reel video that shows in Explore while the pod is live. */
-export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
+export default function BasicsStep({ form, hostCategories, locations }: Readonly<Props>) {
   const {
     register,
     control,
@@ -51,6 +53,10 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           (rule 27). */}
       <Box sx={{ ...SURFACE_SX, p: 2 }}>
         <HostCategoryField form={form} hostCategories={hostCategories} />
+      </Box>
+      {/* Right under the category: together they decide which clubs step 2 offers. */}
+      <Box sx={{ ...SURFACE_SX, p: 2 }}>
+        <LocalityField form={form} locations={locations} />
       </Box>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
         {/* The title field alone, matching native: this step is about the one

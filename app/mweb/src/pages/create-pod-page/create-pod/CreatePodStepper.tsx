@@ -258,7 +258,7 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
+    <BasicsStep key="basics" form={form} hostCategories={hostCategories} locations={locations} />,
     <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} />,

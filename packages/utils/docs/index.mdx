@@ -339,8 +339,11 @@ exports:
   - 'launchProgress'
   - 'showsWaitlist'
   - 'clubCityName'
+  - 'clubOptionLabel'
+  - 'clubPlaceLabel'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
+  - 'placeLabel'
   - 'ClubCityGroup'
   - 'ClubCityLocation'
   - 'ClubLocalityGroup'
@@ -2401,6 +2404,21 @@ groupClubsByLocality(clubs.filter((club) => club.location_id === 'loc-pune'));
 
 clubCityName({ id: 'loc-pune', location_name: 'Pune West', city: '' }); // 'Pune West'
 ```
+
+Create a Pod names a place the same way everywhere: the step-1 Locality chip, and each club in
+step 2's picker. Two clubs can share a name, so the place is what tells them apart.
+
+```ts
+placeLabel('Gomti Nagar', 'Lucknow'); // 'Gomti Nagar, Lucknow'
+placeLabel('', 'Lucknow'); // 'Lucknow'
+clubPlaceLabel(clubs[0], locations); // 'Kothrud, Pune'
+clubPlaceLabel(clubs[1], locations); // 'Pune' — the club names no area
+clubOptionLabel('Smashers United', 'Kothrud, Pune'); // 'Smashers United | Kothrud, Pune'
+clubOptionLabel('Smashers United', ''); // 'Smashers United'
+```
+
+`clubOptionLabel` is the text a picker filters on and shows once a club is picked; the option
+rows themselves draw a pin icon before the place instead of an emoji (rule 31).
 
 Cities and localities sort A→Z; the clubs inside a group keep the order they arrived in, so a
 list that was already searched and sorted stays that way. A city with no clubs gets no card,

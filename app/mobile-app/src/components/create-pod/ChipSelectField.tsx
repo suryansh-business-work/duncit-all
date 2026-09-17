@@ -1,15 +1,39 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
-import { LocalityChip } from '@/components/LocalityChip';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ChipOption {
   value: string;
   label: string;
-  /** Shown as a pin chip next to the label — only clubs set this today. */
-  locality?: string | null;
+  /** Where the option is, shown after the label as "| (pin) place" — only clubs set it. */
+  place?: string;
+}
+
+interface ChipPlaceProps {
+  place: string;
+  /** The chip's text token and the matching icon colour — computed once by the chip. */
+  ink: '$onPrimary' | '$muted';
+  iconColor: string;
+  testID: string;
+}
+
+/** "| (pin) Gomti Nagar, Lucknow" after a club's name. mWeb twin: steps/ClubOption. */
+function ChipPlace({ place, ink, iconColor, testID }: Readonly<ChipPlaceProps>) {
+  return (
+    <XStack alignItems="center" gap={4} flexShrink={1}>
+      <Text fontSize={13} color={ink}>
+        |
+      </Text>
+      <MaterialIcons name="place" size={14} color={iconColor} />
+      <Text testID={testID} fontSize={13} color={ink} numberOfLines={1} flexShrink={1}>
+        {place}
+      </Text>
+    </XStack>
+  );
 }
 
 interface Props {
@@ -40,6 +64,7 @@ export function ChipSelectField({
   testID,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { muted, onPrimary } = useThemeColors();
   return (
     <YStack gap={6}>
       <FieldLabel label={label} required={required} testID={testID} />
@@ -56,13 +81,18 @@ export function ChipSelectField({
         <XStack gap={8} flexWrap="wrap" role="radiogroup" aria-label={label}>
           {options.map((option) => {
             const selected = value === option.value;
+            const ariaLabel = option.place
+              ? t('mweb.createPod.clubOptionAria', {
+                  vars: { club: option.label, place: option.place },
+                })
+              : option.label;
             return (
               <XStack
                 key={option.value}
                 testID={`${testID}-${option.value}`}
                 tabIndex={0}
                 role="radio"
-                aria-label={option.label}
+                aria-label={ariaLabel}
                 aria-checked={selected}
                 onPress={() => onChange(option.value)}
                 minHeight={36}
@@ -76,10 +106,12 @@ export function ChipSelectField({
                 <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {option.label}
                 </Text>
-                {option.locality ? (
-                  <LocalityChip
-                    locality={option.locality}
-                    testID={`${testID}-${option.value}-locality`}
+                {option.place ? (
+                  <ChipPlace
+                    place={option.place}
+                    ink={selected ? '$onPrimary' : '$muted'}
+                    iconColor={selected ? onPrimary : muted}
+                    testID={`${testID}-${option.value}-place`}
                   />
                 ) : null}
               </XStack>

@@ -95,7 +95,13 @@ describe('ClubSearchField', () => {
   it('filters clubs by the search box and selects one', () => {
     const onChange = jest.fn();
     renderWithProviders(
-      <ClubSearchField clubs={clubs} value="" onChange={onChange} error="Pick one" />,
+      <ClubSearchField
+        clubs={clubs}
+        locations={[]}
+        value=""
+        onChange={onChange}
+        error="Pick one"
+      />,
     );
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
 

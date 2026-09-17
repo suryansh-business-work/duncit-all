@@ -13,19 +13,26 @@ import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelEngagementNotice } from '../ReelEngagementNotice';
 import { ReelUploadField } from '../ReelUploadField';
 import { HostCategoryField } from './HostCategoryField';
+import { LocalityField } from './LocalityField';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+import type { CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   hostCategories: CreatePodHostCategory[];
+  locations: CreatePodLocation[];
   /** Off in Club Admin mode — the pod's category is the pinned club's own. */
   showCategory?: boolean;
 }
 
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks). */
-export function BasicsStep({ form, hostCategories, showCategory = true }: Readonly<Props>) {
+export function BasicsStep({
+  form,
+  hostCategories,
+  locations,
+  showCategory = true,
+}: Readonly<Props>) {
   const { control, watch } = form;
   const { t } = useTranslation();
   // The host picks the category above the media field, and the server already
@@ -45,6 +52,13 @@ export function BasicsStep({ form, hostCategories, showCategory = true }: Readon
       {showCategory ? (
         <SurfaceCard>
           <HostCategoryField form={form} hostCategories={hostCategories} />
+        </SurfaceCard>
+      ) : null}
+      {/* Right under the category: together they decide which clubs step 2
+          offers. A Club Admin's pod is pinned to its club, so it has no pick. */}
+      {showCategory ? (
+        <SurfaceCard>
+          <LocalityField form={form} locations={locations} />
         </SurfaceCard>
       ) : null}
       <SurfaceCard gap={14}>

@@ -946,8 +946,11 @@ export {
 export { DEFAULT_LAUNCH_TARGET, launchProgress, showsWaitlist } from './city-launch';
 export {
   clubCityName,
+  clubOptionLabel,
+  clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  placeLabel,
   type ClubCityGroup,
   type ClubCityLocation,
   type ClubLocalityGroup,

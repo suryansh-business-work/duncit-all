@@ -42,7 +42,7 @@ function Harness({ withErrors = false }: { withErrors?: boolean }) {
   }, []);
   // The category picker is the step's first field now; these tests cover the
   // rest of Pod Basics, so it renders with nothing to choose from.
-  return <BasicsStep form={form as any} hostCategories={[]} />;
+  return <BasicsStep form={form as any} hostCategories={[]} locations={[]} />;
 }
 
 function renderStep(withErrors = false) {

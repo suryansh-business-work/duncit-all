@@ -292,6 +292,7 @@ export function CreatePodStepper({
       key="basics"
       form={form}
       hostCategories={hostCategories}
+      locations={locations}
       showCategory={!clubAdmin}
     />,
     <LocationClubStep

@@ -1,27 +1,45 @@
 import { useState } from 'react';
 import { Input, YStack } from 'tamagui';
+import { clubPlaceLabel } from '@duncit/utils';
 
 import { FieldLabel } from '@/components/Field';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from './ChipSelectField';
-import type { CreatePodClub } from './create-pod.types';
+import type { CreatePodClub, CreatePodLocation } from './create-pod.types';
 
 interface Props {
   clubs: CreatePodClub[];
+  /** The cities, so each club can show where it operates. */
+  locations: CreatePodLocation[];
   value: string;
   onChange: (clubId: string) => void;
   error?: string;
   required?: boolean;
 }
 
-/** Searchable club picker — a filter box over a chip list (host's own clubs). */
-export function ClubSearchField({ clubs, value, onChange, error, required }: Readonly<Props>) {
+/** Searchable club picker — a filter box over a chip list (host's own clubs),
+ * each chip reading "Name | (pin) Locality, City". The search matches either. */
+export function ClubSearchField({
+  clubs,
+  locations,
+  value,
+  onChange,
+  error,
+  required,
+}: Readonly<Props>) {
   const [query, setQuery] = useState('');
   const { t } = useTranslation();
   const term = query.trim().toLowerCase();
+  const options = clubs.map((club) => ({
+    value: club.id,
+    label: club.club_name,
+    place: clubPlaceLabel(club, locations),
+  }));
   const filtered = term
-    ? clubs.filter((club) => club.club_name.toLowerCase().includes(term))
-    : clubs;
+    ? options.filter((option) =>
+        [option.label, option.place].join(' ').toLowerCase().includes(term),
+      )
+    : options;
 
   return (
     <YStack gap={6}>
@@ -44,11 +62,7 @@ export function ClubSearchField({ clubs, value, onChange, error, required }: Rea
       />
       <ChipSelectField
         label=""
-        options={filtered.map((club) => ({
-          value: club.id,
-          label: club.club_name,
-          locality: club.locality,
-        }))}
+        options={filtered}
         value={value}
         onChange={onChange}
         error={error}

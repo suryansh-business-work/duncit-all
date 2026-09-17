@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { clubCityName, groupClubsByCity, groupClubsByLocality } from '../src/club-grouping';
+import {
+  clubCityName,
+  clubOptionLabel,
+  clubPlaceLabel,
+  groupClubsByCity,
+  groupClubsByLocality,
+  placeLabel,
+} from '../src/club-grouping';
 
 const locations = [
   { id: 'loc-pune', location_name: 'Pune West', city: 'Pune', location_image: ' https://ik.imagekit.io/pune.jpg ' },
@@ -13,6 +20,42 @@ describe('clubCityName', () => {
   it('prefers the city and falls back to the location name', () => {
     expect(clubCityName(locations[0])).toBe('Pune');
     expect(clubCityName({ id: 'x', location_name: 'Mumbai', city: '  ' })).toBe('Mumbai');
+  });
+});
+
+describe('placeLabel', () => {
+  it('joins a trimmed area and city', () => {
+    expect(placeLabel(' Gomti Nagar ', 'Lucknow ')).toBe('Gomti Nagar, Lucknow');
+  });
+
+  it('shows whichever of the two is known, and nothing when neither is', () => {
+    expect(placeLabel('Baner', null)).toBe('Baner');
+    expect(placeLabel('  ', 'Pune')).toBe('Pune');
+    expect(placeLabel()).toBe('');
+  });
+});
+
+describe('clubPlaceLabel', () => {
+  it("names the club's area and its city", () => {
+    expect(clubPlaceLabel(club('c1', 'loc-pune', 'Baner'), locations)).toBe('Baner, Pune');
+    expect(clubPlaceLabel(club('c2', 'loc-blr', null), locations)).toBe('Bengaluru');
+  });
+
+  it('still shows the area of a club whose city is not listed', () => {
+    expect(clubPlaceLabel(club('c3', 'loc-gone', 'Indiranagar'), locations)).toBe('Indiranagar');
+    expect(clubPlaceLabel(club('c4', null), locations)).toBe('');
+  });
+});
+
+describe('clubOptionLabel', () => {
+  it('puts the place after the club name', () => {
+    expect(clubOptionLabel('Who Even Are We?', 'Gomti Nagar, Lucknow')).toBe(
+      'Who Even Are We? | Gomti Nagar, Lucknow',
+    );
+  });
+
+  it('is just the name when the place is unknown', () => {
+    expect(clubOptionLabel('Sunrise Runners', '')).toBe('Sunrise Runners');
   });
 });
 

@@ -94,7 +94,8 @@ async function deleteBatch(job: LeanBackgroundJob): Promise<boolean> {
     .limit(BATCH_SIZE)
     .select('_id')
     .lean();
-  if (rows.length === 0) return false;
+  const last = rows.at(-1);
+  if (!last) return false;
   let succeeded = 0;
   const failures: JobRowFailure[] = [];
   for (const row of rows) {
@@ -112,7 +113,7 @@ async function deleteBatch(job: LeanBackgroundJob): Promise<boolean> {
     { _id: job._id },
     {
       $inc: { succeeded, failed: failures.length },
-      $set: { cursor: rows.at(-1)?._id },
+      $set: { cursor: last._id },
       $push: { failures: { $each: failures, $slice: FAILURES_KEPT } },
     }
   );

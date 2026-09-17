@@ -103,11 +103,12 @@ export const backgroundJobService = {
     const identity = requestIdentity.current() ?? { user: actor };
     const scope = await captureScope(ops, variables, actor, identity);
     const filter = scopeFilter(scope, { mode: input.mode, ids, cursor: null, max_id: null });
-    const [total, newest] = await Promise.all([
+    const [total, newest]: [number, Array<{ _id: unknown }>] = await Promise.all([
       findInScope(scope, filter).countDocuments(),
       findInScope(scope, filter).sort({ _id: -1 }).limit(1).select('_id').lean(),
     ]);
-    if (total === 0) throw badInput('No rows match — there is nothing to delete.');
+    const [newestRow] = newest;
+    if (!newestRow) throw badInput('No rows match — there is nothing to delete.');
     const job = await BackgroundJobModel.create({
       table: input.table,
       label: (input.label ?? '').slice(0, 200),
@@ -116,7 +117,7 @@ export const backgroundJobService = {
       variables,
       ids,
       total,
-      max_id: newest[0]?._id ?? null,
+      max_id: newestRow._id,
       actor,
       identity,
     });

@@ -42,6 +42,36 @@ describe('ChipSelectField', () => {
     );
     expect(screen.getByText('No options available.')).toBeOnTheScreen();
   });
+
+  it('reads a club chip as "Name | (pin) place", picked or not', () => {
+    renderWithProviders(
+      <ChipSelectField
+        label="Club"
+        options={[
+          { value: 'club-wea', label: 'Who Even Are We?', place: 'Gomti Nagar, Lucknow' },
+          { value: 'club-lrc', label: 'Lucknow Run Club', place: 'Lucknow' },
+          { value: 'club-bare', label: 'Book Nook' },
+        ]}
+        value="club-wea"
+        onChange={jest.fn()}
+        testID="chips"
+      />,
+    );
+
+    expect(screen.getByTestId('chips-club-wea-place')).toHaveTextContent('Gomti Nagar, Lucknow');
+    expect(screen.getByTestId('chips-club-wea')).toHaveProp(
+      'aria-label',
+      'Who Even Are We?, Gomti Nagar, Lucknow',
+    );
+    expect(screen.getByTestId('chips-club-lrc-place')).toHaveTextContent('Lucknow');
+    expect(screen.getByTestId('chips-club-lrc')).toHaveProp(
+      'aria-label',
+      'Lucknow Run Club, Lucknow',
+    );
+    // A chip with no place is named by its label alone and draws no divider.
+    expect(screen.queryByTestId('chips-club-bare-place')).toBeNull();
+    expect(screen.getByTestId('chips-club-bare')).toHaveProp('aria-label', 'Book Nook');
+  });
 });
 
 function ChipArrayHarness() {
@@ -110,6 +140,40 @@ describe('ClubSearchField', () => {
     fireEvent.press(screen.getByTestId('create-pod-club-c1'));
     expect(onChange).toHaveBeenCalledWith('c1');
     expect(screen.getByTestId('create-pod-club-error')).toBeOnTheScreen();
+  });
+
+  it('shows where each club operates and finds clubs by that place', () => {
+    const lucknowClubs = [
+      {
+        id: 'club-wea',
+        club_name: 'Who Even Are We?',
+        location_id: 'loc-lucknow',
+        locality: 'Gomti Nagar',
+      },
+      { id: 'club-lrc', club_name: 'Lucknow Run Club', location_id: 'loc-lucknow', locality: '' },
+      // A club whose city is not among the loaded ones still shows its area.
+      { id: 'club-baner', club_name: 'Baner Boarders', location_id: 'loc-pune', locality: 'Baner' },
+    ];
+    const cities = [{ id: 'loc-lucknow', location_name: 'Lucknow', city: 'Lucknow' }];
+    renderWithProviders(
+      <ClubSearchField clubs={lucknowClubs} locations={cities} value="" onChange={jest.fn()} />,
+    );
+
+    expect(screen.getByTestId('create-pod-club-club-wea-place')).toHaveTextContent(
+      'Gomti Nagar, Lucknow',
+    );
+    expect(screen.getByTestId('create-pod-club-club-lrc-place')).toHaveTextContent('Lucknow');
+    expect(screen.getByTestId('create-pod-club-club-baner-place')).toHaveTextContent('Baner');
+
+    fireEvent.changeText(screen.getByTestId('create-pod-club-search'), '  GOMTI ');
+    expect(screen.getByTestId('create-pod-club-club-wea')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-club-club-lrc')).toBeNull();
+    expect(screen.queryByTestId('create-pod-club-club-baner')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('create-pod-club-search'), 'Hazratganj');
+    expect(screen.getByTestId('create-pod-club-empty')).toHaveTextContent(
+      'No clubs match your search.',
+    );
   });
 });
 

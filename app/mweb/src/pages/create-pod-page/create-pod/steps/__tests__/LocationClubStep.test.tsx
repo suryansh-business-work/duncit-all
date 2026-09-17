@@ -15,7 +15,7 @@
 import '@testing-library/jest-dom/vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { MemoryRouter } from 'react-router';
@@ -146,6 +146,51 @@ describe('LocationClubStep', () => {
     // Scoping is the page's job — the category is chosen above the title, and
     // the list arrives narrowed. This step renders what it is given.
     expect(document.body.textContent).toContain('Sunset Club');
+  });
+
+  it('names each club by where it operates, so two same-named clubs differ', () => {
+    step({ values: { location_id: 'loc-1' } });
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+
+    // Bengaluru has no separate city name recorded, so its location name is used.
+    expect(screen.getByTestId('create-pod-club-option-club-1-place')).toHaveTextContent(
+      'Indiranagar, Bengaluru',
+    );
+    expect(screen.getByTestId('create-pod-club-option-club-1')).toHaveAccessibleName(
+      'Sunset Club, Indiranagar, Bengaluru',
+    );
+    // A club with no area still says which city it is in.
+    expect(screen.getByTestId('create-pod-club-option-club-3-place')).toHaveTextContent('Pune');
+  });
+
+  it('shows the picked club with its place in the field', () => {
+    step({ values: { location_id: 'loc-1', locality: 'Indiranagar', club_id: 'club-1' } });
+
+    expect(screen.getByRole('combobox')).toHaveValue('Sunset Club | Indiranagar, Bengaluru');
+  });
+
+  it('finds a club by typing its area', () => {
+    step({ values: { location_id: 'loc-1' } });
+    const search = screen.getByRole('combobox');
+
+    // Autocomplete resets the text of a field that is not focused.
+    act(() => search.focus());
+    fireEvent.change(search, { target: { value: 'indiranagar' } });
+
+    expect(screen.getByTestId('create-pod-club-option-club-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-club-option-club-2')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-club-option-club-3')).not.toBeInTheDocument();
+  });
+
+  it('picks a club from the list', () => {
+    step({ values: { location_id: 'loc-1' } });
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByTestId('create-pod-club-option-club-2'));
+
+    expect(formRef?.getValues('club_id')).toBe('club-2');
+    expect(screen.getByRole('combobox')).toHaveValue('Whitefield Club | Whitefield, Bengaluru');
   });
 
   it('renders a locality that has no clubs in it', () => {

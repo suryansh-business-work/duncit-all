@@ -50,10 +50,14 @@ export interface TableOperation {
  * A field called with every argument it declares, each passed as a variable of
  * the same name: `($platform: AppBuildPlatform!, $query: TableQueryInput)` and
  * `appBuildsTable(platform: $platform, query: $query)`. A variable the caller
- * leaves out reads as an argument never given, so optional ones cost nothing.
+ * leaves out reads as an argument never given, so optional ones cost nothing —
+ * including a required argument with a default, whose variable is declared
+ * nullable so the default applies instead of the operation refusing to run.
  */
 export function fieldInvocation(field: GraphQLField<unknown, unknown>): { signature: string; call: string } {
-  const variables = field.args.map((arg) => `$${arg.name}: ${arg.type.toString()}`).join(', ');
+  const typeOf = (arg: GraphQLField<unknown, unknown>['args'][number]) =>
+    arg.defaultValue === undefined ? arg.type : getNullableType(arg.type);
+  const variables = field.args.map((arg) => `$${arg.name}: ${typeOf(arg).toString()}`).join(', ');
   const args = field.args.map((arg) => `${arg.name}: $${arg.name}`).join(', ');
   return {
     signature: variables ? `(${variables})` : '',

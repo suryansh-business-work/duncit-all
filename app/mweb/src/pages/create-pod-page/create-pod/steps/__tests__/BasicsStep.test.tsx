@@ -23,6 +23,9 @@ vi.mock('@duncit/media-picker', () => ({
     ) : null,
   useImagekitDirectUpload: () => ({ upload: vi.fn(), uploading: false }),
   compressUploadedVideo: vi.fn(),
+  // PodReelAccordion sizes the reel from Admin > Upload Settings.
+  MB: 1024 * 1024,
+  useUploadCaps: () => ({ maxVideoBytes: 25 * 1024 * 1024 }),
 }));
 
 import BasicsStep from '../BasicsStep';
@@ -60,11 +63,19 @@ describe('BasicsStep', () => {
     expect(screen.getByText(/What is this pod about\? \(3–120 characters\)/)).toBeInTheDocument();
     expect(screen.getByText(/Tell people what to expect/)).toBeInTheDocument();
     // Cover media + offers + hashtags + optional settings + reel all mount.
-    expect(screen.getByText('Cover image')).toBeInTheDocument();
+    expect(screen.getByText(/Cover image \(at least one image\)/)).toBeInTheDocument();
     expect(screen.getByText('What this pod offers')).toBeInTheDocument();
     expect(screen.getByLabelText('Hashtags')).toBeInTheDocument();
-    expect(screen.getByText('OPTIONAL SETTINGS')).toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-optional-settings')).toHaveTextContent('Additional Info');
     expect(screen.getByRole('button', { name: /Pod Reel/ })).toBeInTheDocument();
+  });
+
+  it('shows the locality section under the category', () => {
+    renderStep();
+    // With no cities loaded there is nothing to place the device in yet.
+    expect(screen.getByRole('heading', { name: 'Locality' })).toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-locality-selected')).toHaveTextContent('No location selected');
+    expect(screen.getByTestId('create-pod-edit-location')).toBeInTheDocument();
   });
 
   it('updates form values as the user types the title and description', () => {

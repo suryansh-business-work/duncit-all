@@ -177,6 +177,7 @@ exports:
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
   - 'contactNumberIsCurrent'
+  - 'noteContactEdit'
   - 'contactSubmitAction'
   - 'contactValueStepView'
   - 'CONTACT_NUMBER_FIELDS'
@@ -1938,7 +1939,8 @@ contactValueStepView('WHATSAPP', labels, {
   isValid: true,
   numberStatus: 'TAKEN',
   phoneOtp: false,
-  isCurrent: false,
+  snapshot: account,
+  draft: { email: '', extension: '+91', number: '9845099999' },
   edited: true,
 });
 // { hint: 'We'll send a code to this number on WhatsApp…', buttonLabel: 'Send code',
@@ -1946,13 +1948,16 @@ contactValueStepView('WHATSAPP', labels, {
 //   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
 ```
 
-The box opens on the account's own number, which is never somebody else's.
-`contactNumberIsCurrent` says when the box holds it: the dialog then skips the availability check
-(`useSignupPhoneCheck`'s `skip`) and passes `isCurrent`, which keeps the button shut. The line
-under the box stays empty until the person has edited the box (`edited`). If they then type the
-same number back, it says this is their current number. Only the channel's OWN value counts: the
-WhatsApp number may also be the contact number, so typing the contact number into the WhatsApp
-box is a real change.
+The box opens on the account's own number, which is never somebody else's. The view reads
+`snapshot` and `draft` through `contactNumberIsCurrent`. While the box holds that number the
+button stays shut and the check's answer is ignored. The line under the box stays empty until the
+person has edited the box (`edited`). If they then type the same number back, it says this is
+their current number. Only the channel's OWN value counts: the WhatsApp number may also be the
+contact number, so typing the contact number into the WhatsApp box is a real change.
+
+`edited` lives in each dialog's state. `noteContactEdit` is the update every keystroke applies:
+it drops a refusal about the old value and records the edit, and returns the same object once
+neither changes, so typing does not re-render the dialog.
 
 ```ts
 contactNumberIsCurrent(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
@@ -1965,11 +1970,14 @@ contactValueStepView('PHONE', labels, {
   isValid: true,
   numberStatus: 'IDLE',
   phoneOtp: false,
-  isCurrent: true,
+  snapshot: account,
+  draft: { email: '', extension: '+91', number: '9845012345' },
   edited: true,
 });
 // { …, disabled: true,
 //   numberLines: { hint: '', error: 'This is your current phone number, enter a different number to make a change.' } }
+
+setState(noteContactEdit); // { …, error: null, edited: true }
 ```
 
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the

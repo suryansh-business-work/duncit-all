@@ -70,7 +70,6 @@ import {
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
-  contactNumberIsCurrent,
   currentContactValue,
   draftHoursLeft,
   earningsBodyFor,
@@ -1112,7 +1111,7 @@ export default defineDemos('utils', [
       'contact details are required before the profile form will save. Set `numberStatus` ' +
       'to AVAILABLE and `Button disabled` flips to false: TAKEN or CHECKING keep it shut, ' +
       "with the refusal under the box. Type the account's own phone_number into " +
-      '`draftNumber` and the button shuts again: that number is never checked, and with ' +
+      '`draftNumber` and the button shuts again whatever `numberStatus` says, and with ' +
       '`edited` on, `Under the box` says it is the current number.',
     mock: {
       email: 'ravi@duncit.com',
@@ -1147,7 +1146,8 @@ export default defineDemos('utils', [
         isValid: true,
         numberStatus: mock.numberStatus,
         phoneOtp: mock.phoneOtp,
-        isCurrent: contactNumberIsCurrent(account, mock.channel, draft),
+        snapshot: account,
+        draft,
         edited: mock.edited,
       });
       return {

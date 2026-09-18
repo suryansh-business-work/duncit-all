@@ -156,8 +156,8 @@ export function contactDraftIsUnchanged(
  * Whether the number box holds the number this channel already has.
  *
  * The box opens on the account's own number, and that number is never
- * "somebody else's" — so it is not sent for the availability check, and step
- * one says it is the current number instead. Only the channel's OWN value
+ * "somebody else's" — so step one says it is the current number instead,
+ * whatever the availability check answered. Only the channel's OWN value
  * counts: the WhatsApp number may be the contact number as well, or a
  * different one, and typing the contact number into the WhatsApp box is a
  * real change. An empty box is not a number at all.
@@ -170,6 +170,24 @@ export const contactNumberIsCurrent = (
   isPhoneChannel(channel) &&
   draft.number.trim() !== '' &&
   contactDraftIsUnchanged(snapshot, channel, draft);
+
+/** The part of each dialog's state an edit to step one's box touches. */
+export interface ContactEditState {
+  error: string | null;
+  /** The box has been changed since it opened. */
+  edited: boolean;
+}
+
+/**
+ * What an edit to step one's box does to the dialog's state. It drops a
+ * refusal about the old value and records that the box was edited. That is
+ * why a number typed back to the account's own reads "your current number",
+ * while the same number the box opened on says nothing. Returns the same
+ * object when nothing changes, so it can run on every keystroke without a
+ * re-render.
+ */
+export const noteContactEdit = <S extends ContactEditState>(state: S): S =>
+  state.error === null && state.edited ? state : { ...state, error: null, edited: true };
 
 /**
  * The account's contacts with one channel's stored value folded in.
@@ -238,9 +256,11 @@ export interface ContactValueStepInput {
   numberStatus: SignupContactStatus;
   /** `PHONE_OTP_FLAG` — whether the contact number is proved by a code. */
   phoneOtp: boolean;
-  /** `contactNumberIsCurrent` — the box holds the number the account already has. */
-  isCurrent: boolean;
-  /** The person has changed the box since it opened. */
+  /** What the account holds now — its own number is never "taken". */
+  snapshot: Readonly<ContactSnapshot>;
+  /** What the box holds now. */
+  draft: Readonly<ContactDraft>;
+  /** The box has been changed since it opened (`noteContactEdit`). */
   edited: boolean;
 }
 
@@ -254,16 +274,18 @@ export interface ContactValueStepView {
 }
 
 /**
- * The lines under the number box. The account's own number is never "taken":
- * opened on it, the box says nothing; typed back after an edit, it says this is
- * the current number, so the shut button has a reason beside it.
+ * The lines under the number box. The account's own number is never "taken",
+ * whatever the check answered for it: opened on it, the box says nothing;
+ * typed back after an edit, it says this is the current number, so the shut
+ * button has a reason beside it.
  */
 function contactNumberLines(
   channel: ContactChannel,
   labels: Readonly<ContactChangeLabels>,
   input: Readonly<ContactValueStepInput>,
+  isCurrent: boolean,
 ): SignupContactLines {
-  if (!input.isCurrent) return signupContactLines(input.numberStatus, labels.numberCopy);
+  if (!isCurrent) return signupContactLines(input.numberStatus, labels.numberCopy);
   const hint = labels.numberCopy.hint;
   return input.edited ? { hint, error: labels.channel(channel).currentValue } : { hint };
 }
@@ -287,6 +309,7 @@ export function contactValueStepView(
   const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
   const busyLabel = needsCode ? labels.sending : labels.savingNumber;
   const provedPhone = channel === 'PHONE' && needsCode;
+  const isCurrent = contactNumberIsCurrent(input.snapshot, channel, input.draft);
   return {
     hint: provedPhone ? labels.phoneCodeHint : labels.channel(channel).changeHint,
     buttonLabel: input.busy ? busyLabel : idleLabel,
@@ -294,9 +317,9 @@ export function contactValueStepView(
       input.busy ||
       input.blocked ||
       !input.isValid ||
-      input.isCurrent ||
+      isCurrent ||
       signupContactBlocksContinue(input.numberStatus),
-    numberLines: contactNumberLines(channel, labels, input),
+    numberLines: contactNumberLines(channel, labels, input, isCurrent),
   };
 }
 

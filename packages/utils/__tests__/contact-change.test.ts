@@ -15,6 +15,7 @@ import {
   emptyContactDraft,
   formatPhoneLine,
   isPhoneChannel,
+  noteContactEdit,
   type ContactChannel,
   type ContactChangeLabels,
   type ContactSnapshot,
@@ -235,6 +236,20 @@ describe('contactNumberIsCurrent', () => {
   });
 });
 
+describe('noteContactEdit', () => {
+  it('drops a refusal and records the edit', () => {
+    expect(noteContactEdit({ error: 'That is what your account already has.', edited: false })).toEqual({
+      error: null,
+      edited: true,
+    });
+  });
+
+  it('answers the same object once there is nothing left to change', () => {
+    const settled = { error: null, edited: true };
+    expect(noteContactEdit(settled)).toBe(settled);
+  });
+});
+
 describe('buildContactChangeLabels', () => {
   it('resolves every static label through the translator, under the mweb namespace', () => {
     const { t } = recorder();
@@ -441,16 +456,19 @@ describe('contactValueStepView', () => {
     isValid: true,
     numberStatus: 'IDLE',
     phoneOtp: false,
-    isCurrent: false,
+    snapshot,
+    draft: { email: '', extension: '+91', number: '9000000000' },
     edited: false,
   };
 
   it("says nothing under the account's own number until it is typed back, and stays shut", () => {
-    const opened = contactValueStepView('WHATSAPP', labels, { ...idle, isCurrent: true });
+    // Even a TAKEN answer for it is not shown: the account's own number is never somebody else's.
+    const own = { ...idle, draft: { email: '', extension: '+1', number: '4155551234' }, numberStatus: 'TAKEN' as const };
+    const opened = contactValueStepView('WHATSAPP', labels, own);
     expect(opened.disabled).toBe(true);
     expect(opened.numberLines).toEqual({ hint: labels.numberCopy.hint });
 
-    const retyped = contactValueStepView('WHATSAPP', labels, { ...idle, isCurrent: true, edited: true });
+    const retyped = contactValueStepView('WHATSAPP', labels, { ...own, edited: true });
     expect(retyped.disabled).toBe(true);
     expect(retyped.numberLines).toEqual({
       hint: labels.numberCopy.hint,

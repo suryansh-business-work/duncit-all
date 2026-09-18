@@ -2,6 +2,8 @@ export const couponTypeDefs = /* GraphQL */ `
   enum CouponScope {
     GLOBAL
     POD
+    "Only a pet-store checkout (ecomm.duncit.com)."
+    STORE
   }
 
   type Coupon {

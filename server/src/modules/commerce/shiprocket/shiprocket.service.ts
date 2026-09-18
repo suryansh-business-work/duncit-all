@@ -11,6 +11,12 @@ import {
 } from './shiprocket.gateway';
 import { mapShiprocketStatus } from './shiprocket.statusMap';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
+
+/** The shared post-status reaction, imported lazily — productOrder imports this module. */
+async function afterStatusChange(order: IProductOrder, previous: IProductOrder['fulfilment_status']) {
+  const { afterStatusChange: react } = await import('@modules/commerce/productOrder/productOrder.service');
+  await react(order, previous);
+}
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -267,8 +273,10 @@ function buildAdhocPayload(order: IProductOrder, pickup: string): Record<string,
       units: l.qty,
       selling_price: l.unit_cost,
     })),
-    payment_method: 'Prepaid',
-    sub_total: order.items_total,
+    // A pet-store Cash-on-Delivery order: the courier collects this order's
+    // share of the bill (goods + delivery + COD fee − discounts) at the door.
+    payment_method: order.payment_method === 'COD' ? 'COD' : 'Prepaid',
+    sub_total: order.payment_method === 'COD' ? order.cod_amount : order.items_total,
     length,
     breadth,
     height,
@@ -385,9 +393,11 @@ export const shiprocketService = {
    * unconfigured or no shipment exists yet. */
   async refreshTracking(order: IProductOrder): Promise<IProductOrder> {
     if (!(await isShiprocketConfigured()) || !order.shiprocket.shipment_id) return order;
+    const previous = order.fulfilment_status;
     const t = await trackByShipment(order.shiprocket.shipment_id);
     applyTracking(order, t);
     await order.save();
+    await afterStatusChange(order, previous);
     return order;
   },
 
@@ -398,9 +408,11 @@ export const shiprocketService = {
     const query = awb ? { 'shiprocket.awb': awb } : { 'shiprocket.order_id': orderId };
     const order = await ProductOrderModel.findOne(query);
     if (!order) return null;
+    const previous = order.fulfilment_status;
     const current = String(payload.current_status ?? payload.shipment_status ?? '');
     applyTracking(order, { current_status: current, activities: [] });
     await order.save();
+    await afterStatusChange(order, previous);
     return order;
   },
 };

@@ -52,6 +52,10 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.notes': 'Notes',
   'email.field.campaign': 'Placement',
   'email.field.resolution': 'Our response',
+  'email.field.status': 'Status',
+  'email.field.courier': 'Courier',
+  'email.field.trackingNo': 'Tracking number',
+  'email.field.returnNo': 'Return',
 
   // --- Shared callout captions --------------------------------------------
   'email.label.pod': 'Pod',
@@ -89,6 +93,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.cta.reviewSlot': 'Decide on the request',
   'email.cta.secureAccount': 'Review your account security',
   'email.cta.contactSupport': 'Contact support',
+  'email.cta.shopNow': 'Shop now',
+  'email.cta.viewCart': 'Return to your cart',
 
   // --- Shared footer sentences ---------------------------------------------
   'email.footer.account':
@@ -422,4 +428,18 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.orderRefund.title': 'Your refund is on its way',
   'email.orderRefund.body':
     'We have refunded the order below. Nothing is needed from you — the money goes back to the method you paid with.',
+
+  // --- Pet store (ecomm.duncit.com) --------------------------------------------------
+  'email.storeOrderUpdate.title': 'An update on your order',
+  'email.storeOrderUpdate.body':
+    'Your pet store order has moved along. Where it is now is below, and the button opens its full tracking.',
+  'email.storeReturnUpdate.title': 'An update on your return',
+  'email.storeReturnUpdate.body':
+    'We have looked at your return request. Its status and anything we need from you are below.',
+  'email.storeBackInStock.title': 'It is back in stock',
+  'email.storeBackInStock.body':
+    'You asked us to tell you when this was back. It is on the shelf again — stock is limited, so do not wait too long.',
+  'email.storeCartReminder.title': 'You left something in your cart',
+  'email.storeCartReminder.body':
+    'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
 };

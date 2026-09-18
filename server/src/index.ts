@@ -23,6 +23,7 @@ import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMo
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
@@ -443,6 +444,9 @@ async function bootstrap() {
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
+
+  // Pet store: email everyone waiting on a product that is back in stock.
+  startStoreScheduler();
 
   // Database backups: a one-minute tick that takes the archive when the
   // admin-configured window has passed (Tech > Database > Backups; off until

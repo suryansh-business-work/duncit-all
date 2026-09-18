@@ -50,6 +50,10 @@ export const FIELD = {
   notes: 'email.field.notes',
   campaign: 'email.field.campaign',
   resolution: 'email.field.resolution',
+  status: 'email.field.status',
+  courier: 'email.field.courier',
+  trackingNo: 'email.field.trackingNo',
+  returnNo: 'email.field.returnNo',
 } as const;
 
 /** The tinted callout's caption — what the strip beneath the heading names. */
@@ -91,6 +95,8 @@ export const CTA = {
   reviewSlot: 'email.cta.reviewSlot',
   secureAccount: 'email.cta.secureAccount',
   contactSupport: 'email.cta.contactSupport',
+  shopNow: 'email.cta.shopNow',
+  viewCart: 'email.cta.viewCart',
 } as const;
 
 /**

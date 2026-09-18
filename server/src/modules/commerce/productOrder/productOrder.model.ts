@@ -89,9 +89,25 @@ export interface ITrackingEvent {
   at: Date;
 }
 
+/** Which shop sold the order: the pod shop inside the apps, or the pet store. */
+export type OrderChannel = 'POD_SHOP' | 'PET_STORE';
+export const ORDER_CHANNELS: OrderChannel[] = ['POD_SHOP', 'PET_STORE'];
+
+/** Paid up front, or collected in cash by the courier on delivery. */
+export type OrderPaymentMethod = 'PREPAID' | 'COD';
+
+/** An operator's private note on an order — never shown to the buyer. */
+export interface IOrderNote {
+  text: string;
+  by_id: string;
+  by_name: string;
+  at: Date;
+}
+
 export interface IProductOrder extends Document {
   order_no: string;
-  buyer_id: Types.ObjectId;
+  /** Null for a pet-store GUEST checkout — the order then belongs to its email. */
+  buyer_id: Types.ObjectId | null;
   buyer_name: string;
   buyer_email: string;
   buyer_phone: string | null;
@@ -112,6 +128,21 @@ export interface IProductOrder extends Document {
   shiprocket: IShipRocketInfo;
   tracking_events: Types.DocumentArray<ITrackingEvent & Types.Subdocument>;
   last_error: string;
+  channel: OrderChannel;
+  payment_method: OrderPaymentMethod;
+  /** What the courier collects in cash — this order's share of a COD payment. */
+  cod_amount: number;
+  cod_collected_at: Date | null;
+  /** This order's share of the coupon + coins taken off the payment. */
+  discount_total: number;
+  /** The Duncit Coins within `discount_total` — what a cancellation gives back as coins. */
+  coins_share: number;
+  /** A secret that opens a guest's order page from the confirmation email. */
+  access_key: string;
+  cancelled_at: Date | null;
+  cancel_reason: string;
+  cancelled_by: string;
+  notes: Types.DocumentArray<IOrderNote & Types.Subdocument>;
   created_at: Date;
   updated_at: Date;
 }
@@ -182,10 +213,20 @@ const trackingEventSchema = new Schema<ITrackingEvent>(
   { _id: false }
 );
 
+const orderNoteSchema = new Schema<IOrderNote>(
+  {
+    text: { type: String, default: '', trim: true, maxlength: 2000 },
+    by_id: { type: String, default: '' },
+    by_name: { type: String, default: '' },
+    at: { type: Date, default: () => new Date() },
+  },
+  { _id: true }
+);
+
 const productOrderSchema = new Schema<IProductOrder>(
   {
     order_no: { type: String, required: true, unique: true, index: true },
-    buyer_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    buyer_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     buyer_name: { type: String, default: '' },
     buyer_email: { type: String, default: '' },
     buyer_phone: { type: String, default: null },
@@ -211,6 +252,17 @@ const productOrderSchema = new Schema<IProductOrder>(
     shiprocket: { type: shiprocketSchema, default: () => ({}) },
     tracking_events: { type: [trackingEventSchema], default: [] },
     last_error: { type: String, default: '' },
+    channel: { type: String, enum: ORDER_CHANNELS, default: 'POD_SHOP', index: true },
+    payment_method: { type: String, enum: ['PREPAID', 'COD'], default: 'PREPAID', index: true },
+    cod_amount: { type: Number, default: 0, min: 0 },
+    cod_collected_at: { type: Date, default: null },
+    discount_total: { type: Number, default: 0, min: 0 },
+    coins_share: { type: Number, default: 0, min: 0 },
+    access_key: { type: String, default: '', select: false },
+    cancelled_at: { type: Date, default: null },
+    cancel_reason: { type: String, default: '', trim: true, maxlength: 500 },
+    cancelled_by: { type: String, default: '' },
+    notes: { type: [orderNoteSchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -222,5 +274,8 @@ productOrderSchema.index(
   { unique: true }
 );
 productOrderSchema.index({ buyer_id: 1, created_at: -1 });
+// The pet store's order console and a guest's "track my order" lookup.
+productOrderSchema.index({ channel: 1, created_at: -1 });
+productOrderSchema.index({ buyer_email: 1, channel: 1, created_at: -1 });
 
 export const ProductOrderModel = model<IProductOrder>('ProductOrder', productOrderSchema);

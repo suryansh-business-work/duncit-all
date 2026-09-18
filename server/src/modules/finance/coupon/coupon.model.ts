@@ -1,10 +1,11 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type CouponScope = 'GLOBAL' | 'POD';
+export type CouponScope = 'GLOBAL' | 'POD' | 'STORE';
 
 /**
  * Discount coupon. `scope = POD` binds it to a single pod (per-pod offer codes);
- * `GLOBAL` applies to any paid pod. Discount is a percentage set in the backend.
+ * `GLOBAL` applies to any paid pod; `STORE` only to a pet-store checkout
+ * (ecomm.duncit.com). Discount is a percentage set in the backend.
  * Redemptions are tracked via `used_count` (total) + per-payment `coupon_code`
  * (for per-user limits).
  */
@@ -30,7 +31,7 @@ const couponSchema = new Schema<ICoupon>(
     code: { type: String, required: true, unique: true, uppercase: true, trim: true, index: true },
     description: { type: String, default: '' },
     discount_pct: { type: Number, required: true, min: 1, max: 100 },
-    scope: { type: String, enum: ['GLOBAL', 'POD'], default: 'GLOBAL', index: true },
+    scope: { type: String, enum: ['GLOBAL', 'POD', 'STORE'], default: 'GLOBAL', index: true },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
     valid_from: { type: Date, default: null },
     valid_until: { type: Date, default: null },

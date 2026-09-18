@@ -1,0 +1,65 @@
+# Self-hosted MongoDB for BOTH Duncit stacks — installed at /opt/duncit-mongo.
+#
+# Replaced Atlas M0 on 2026-09-18 (the free tier's 512 MB quota blocked every
+# write; it also sat ~250 ms from this VPS). Production uses database `test`,
+# staging `duncit-staging`, each through its own user (see README.md).
+#
+# Lives outside deploy/ on purpose: a change there rebuilds every image, and
+# neither stack's deploy may ever recreate the database. It joins each stack's
+# default network instead of the stacks joining a new one, so the deploy
+# compose files needed no change: both servers reach it as `duncit-mongo`.
+#
+# Single-node replica set, not a standalone: user.service.ts runs
+# session.withTransaction directly, which a standalone mongod refuses.
+name: duncit-mongo
+
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: duncit-mongo
+    restart: unless-stopped
+    command:
+      - --replSet
+      - rs0
+      - --keyFile
+      - /etc/mongo/keyfile
+      - --bind_ip_all
+      # The VPS has 8 GB shared by ~100 containers; the data set is ~0.5 GB.
+      - --wiredTigerCacheSizeGB
+      - "0.5"
+    # WiredTiger holds one file per collection and per index (~460 collections
+    # across both databases). The host's container default of 1024 ran out
+    # mid-restore and mongod panicked; 64000 is MongoDB's documented minimum.
+    ulimits:
+      nofile:
+        soft: 64000
+        hard: 64000
+    env_file:
+      # MONGO_INITDB_ROOT_USERNAME / MONGO_INITDB_ROOT_PASSWORD (chmod 600).
+      - /opt/duncit-mongo/mongo.env
+    ports:
+      # Loopback only — humans reach it through an SSH tunnel, never publicly.
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - /opt/duncit-mongo/data:/data/db
+      # The replica-set keyfile: owned by uid 999 (the image's mongodb user), 0400.
+      - /opt/duncit-mongo/keyfile:/etc/mongo/keyfile:ro
+      - /opt/duncit-mongo/dumps:/dumps
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - prod
+      - staging
+
+networks:
+  # Created by the stacks' own compose projects; start those first.
+  prod:
+    external: true
+    name: duncit_default
+  staging:
+    external: true
+    name: duncit-staging_default

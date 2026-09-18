@@ -13,7 +13,6 @@
 #   - redis-data: a response cache, it warms up again on its own
 #   - SignOz's docker volumes: telemetry restarts fresh (history stays on the
 #     old host until it is decommissioned; errors/warnings are also in Mongo)
-#   - MongoDB: it is Atlas, nothing to move
 set -euo pipefail
 
 OLD_HOST="${OLD_HOST:?OLD_HOST is required}"
@@ -66,6 +65,11 @@ for stack in duncit duncit-staging; do
   # Container-owned files: keep numeric uids, they have no user on the host.
   pull "/opt/${stack}/" "/opt/${stack}/" --numeric-ids --exclude 'redis-data/'
 done
+
+# Both stacks' databases. The live (prepare) copy of a running mongod is fuzzy;
+# the cutover delta runs after stop-stateful.sh stopped it, so that one is exact.
+log "MongoDB (/opt/duncit-mongo: data, keyfile, credentials)"
+pull /opt/duncit-mongo/ /opt/duncit-mongo/ --numeric-ids
 
 log "SonarQube and SignOz stack directories"
 pull /opt/sonarqube/ /opt/sonarqube/ --numeric-ids

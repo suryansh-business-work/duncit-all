@@ -110,6 +110,38 @@ describe('the Google door', () => {
     // Still held: the credential is spent by the LAST step, not this one.
     expect(state.pendingGoogle).toEqual(CREDENTIAL);
   });
+
+  it('writes a name the step had to ask onto the Apple credential that carried none', () => {
+    const apple = { ...CREDENTIAL, provider: 'APPLE' as const };
+    const asked = move(start(), { type: 'GOOGLE_ACCEPTED', credential: apple });
+    const state = move(asked, {
+      type: 'DETAILS_GIVEN',
+      values: {
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
+        whatsappIsMobile: true,
+        dob: '1998-04-23',
+        name: '  Riya Sharma ',
+      },
+    });
+
+    expect(state.pendingGoogle).toEqual({ ...apple, name: 'Riya Sharma' });
+  });
+
+  it('holds no credential when there was none to name', () => {
+    const state = move(start(), {
+      type: 'DETAILS_GIVEN',
+      values: {
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
+        whatsappIsMobile: true,
+        dob: '1998-04-23',
+        name: 'Riya Sharma',
+      },
+    });
+
+    expect(state.pendingGoogle).toBeNull();
+  });
 });
 
 describe('moving between the first three steps', () => {

@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import PolicyAcceptanceList from './PolicyAcceptanceList';
 import { toggleAccepted } from './acceptance';
@@ -15,10 +16,11 @@ import type { SignupPolicy } from './useSignupPolicies';
 interface Props {
   open: boolean;
   /**
-   * Swaps the intro for the post-Google wording. Google has proved who they
-   * are, but the account genuinely does not exist yet — saying so is the point.
+   * Swaps the intro for the post-Google (or post-Apple) wording. The provider
+   * has proved who they are, but the account genuinely does not exist yet —
+   * saying so is the point.
    */
-  afterGoogle?: boolean;
+  afterProvider?: SocialProvider;
   policies: readonly SignupPolicy[];
   loading: boolean;
   failed: boolean;
@@ -44,7 +46,7 @@ interface Props {
  */
 export default function PolicyAcceptanceDialog({
   open,
-  afterGoogle,
+  afterProvider,
   policies,
   loading,
   failed,
@@ -53,7 +55,9 @@ export default function PolicyAcceptanceDialog({
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const intro = afterGoogle ? t('policyAcceptance.googleIntro') : t('policyAcceptance.dialogIntro');
+  const intro = afterProvider
+    ? t(SOCIAL_AUTH_COPY[afterProvider].policyIntro)
+    : t('policyAcceptance.dialogIntro');
   const ticked = new Set(accepted);
   const done = policies.filter((policy) => ticked.has(policy.id)).length;
   const complete = done === policies.length;

@@ -41,6 +41,8 @@ const PUBLIC_CLIENT_CONFIG = gql`
     publicClientConfig {
       google_client_id
       google_maps_api_key
+      apple_services_id
+      apple_web_redirect_uri
     }
   }
 `;
@@ -125,7 +127,14 @@ const configReady = apolloClient
   .query<any>({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
   .then(({ data }) => {
     const c = data?.publicClientConfig;
-    if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });
+    if (c) {
+      setRuntimeConfig({
+        googleClientId: c.google_client_id,
+        googleMapsApiKey: c.google_maps_api_key,
+        appleServicesId: c.apple_services_id,
+        appleWebRedirectUri: c.apple_web_redirect_uri,
+      });
+    }
   })
   .catch(() => undefined);
 

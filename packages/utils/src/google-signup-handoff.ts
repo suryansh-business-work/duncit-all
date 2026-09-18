@@ -20,10 +20,24 @@
  * state, the native app in a navigation param, and both get identical
  * at-most-once semantics from the same three functions rather than from two
  * hand-written guards that would drift on exactly the part that matters.
+ *
+ * Apple rides the same handoff: `loginWithApple` refuses the same way, and its
+ * credential is carried the same way — with the provider beside it, and the
+ * name Apple shared on this (its first) authorisation, which is never in
+ * Apple's token and would otherwise have to be asked again.
  */
+import { isSocialProvider, type SocialProvider } from './social-auth';
 
-/** The credential a refused Google sign-in carries into signup. */
-export interface GoogleSignupHandoff {
+/** What a handoff carries besides the credential and the address. */
+export interface SocialHandoffExtras {
+  /** Which door refused. Absent means Google — the door every handoff came from before Apple. */
+  provider?: SocialProvider;
+  /** The name Apple shared with this credential. */
+  name?: string;
+}
+
+/** The credential a refused Google (or Apple) sign-in carries into signup. */
+export interface GoogleSignupHandoff extends SocialHandoffExtras {
   /**
    * The id_token `loginWithGoogle` just refused, still unspent.
    *
@@ -53,9 +67,10 @@ export function openGoogleSignup(
   current: GoogleSignupHandoff | null,
   idToken: string,
   email: string,
+  extras: Readonly<SocialHandoffExtras> = {},
 ): GoogleSignupHandoff {
   if (current && current.idToken === idToken) return current;
-  return { idToken, email };
+  return { idToken, email, ...extras };
 }
 
 /**
@@ -68,10 +83,17 @@ export function openGoogleSignup(
  */
 export function readGoogleSignupHandoff(carried: unknown): GoogleSignupHandoff | null {
   if (!carried || typeof carried !== 'object') return null;
-  const { idToken, email } = carried as Partial<GoogleSignupHandoff>;
+  const { idToken, email, provider, name } = carried as Partial<GoogleSignupHandoff>;
   if (typeof idToken !== 'string' || !idToken.trim()) return null;
   if (typeof email !== 'string') return null;
-  return { idToken, email };
+  // An unknown provider or a blank name is dropped rather than trusted: the
+  // credential still reads, as the door it most likely came through.
+  return {
+    idToken,
+    email,
+    ...(isSocialProvider(provider) ? { provider } : {}),
+    ...(typeof name === 'string' && name.trim() ? { name } : {}),
+  };
 }
 
 /**

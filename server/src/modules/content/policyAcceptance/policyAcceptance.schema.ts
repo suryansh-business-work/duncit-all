@@ -5,6 +5,8 @@ export const policyAcceptanceTypeDefs = /* GraphQL */ `
     SIGNUP_FORM
     "Ticked in the same dialog, after Google returned but before the account existed."
     GOOGLE_SIGNUP
+    "The same, after Apple returned."
+    APPLE_SIGNUP
     "Accepted later from inside the account — predates the gate, or a policy changed."
     ACCOUNT
   }

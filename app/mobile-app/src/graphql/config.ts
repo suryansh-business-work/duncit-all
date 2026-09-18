@@ -7,6 +7,9 @@ export const PublicClientConfigDocument = gql(`
     publicClientConfig {
       google_client_id
       google_maps_api_key
+      apple_bundle_id
+      apple_services_id
+      apple_relay_url
     }
   }
 `);

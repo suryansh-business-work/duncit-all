@@ -9,11 +9,14 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
-  /** The account address Google just authenticated — named so the user knows
+  /** Which door asked — the dialog names it. */
+  provider: SocialProvider;
+  /** The account address the provider just authenticated — named so the user knows
    * exactly which Duncit account they are granting access to. */
   email: string;
   busy: boolean;
@@ -23,10 +26,11 @@ interface Props {
 }
 
 /**
- * The consent step for granting Google sign-in to an email/password account.
+ * The consent step for granting Google (or Apple) sign-in to an email/password
+ * account.
  *
- * Reached when loginWithGoogle answers EMAIL_LOGIN_REQUIRED. The server has
- * already verified the Google token and matched its verified address to this
+ * Reached when the provider's login answers EMAIL_LOGIN_REQUIRED. The server has
+ * already verified the token and matched its verified address to this
  * account, so nothing here proves identity — it collects INTENT. Denying leaves
  * the account exactly as it was and returns to the login form with a warning.
  *
@@ -35,6 +39,7 @@ interface Props {
  */
 export default function GoogleLinkConsentDialog({
   open,
+  provider,
   email,
   busy,
   error,
@@ -42,6 +47,7 @@ export default function GoogleLinkConsentDialog({
   onDeny,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const copy = SOCIAL_AUTH_COPY[provider];
 
   return (
     <Dialog
@@ -59,18 +65,18 @@ export default function GoogleLinkConsentDialog({
           alignItems: "center"
         }}>
           <LinkRoundedIcon fontSize="small" sx={{ color: 'secondary.main' }} />
-          <span>{t('mweb.login.linkConsentTitle')}</span>
+          <span>{t(copy.linkTitle)}</span>
         </Stack>
       </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           <Typography variant="body2">
-            {t('mweb.login.linkConsentBody', { vars: { email } })}
+            {t(copy.linkBody, { vars: { email } })}
           </Typography>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {t('mweb.login.linkConsentDetail')}
+            {t(copy.linkDetail)}
           </Typography>
           {error && <Alert data-testid="google-link-consent-error" severity="error">{error}</Alert>}
         </Stack>

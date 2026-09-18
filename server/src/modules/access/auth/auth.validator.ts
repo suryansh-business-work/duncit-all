@@ -173,6 +173,17 @@ export const googleSignupSchema = yup.object({
   zone: yup.string().optional(),
 });
 
+/**
+ * The Apple door: everything the Google door asks, plus the name. Apple never
+ * puts a name in its token — the client is handed it once, on the first
+ * authorisation, and sends it here (or asks for it when Apple had already
+ * shared it before) — so the first name is as required as it is on the email
+ * form, with the email form's own rules.
+ */
+export const appleSignupSchema = googleSignupSchema.concat(
+  registerSchema.pick(['first_name', 'last_name'])
+);
+
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
 export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetSchema>;
@@ -184,3 +195,4 @@ export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
 export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
+export type AppleSignupDTO = yup.InferType<typeof appleSignupSchema>;

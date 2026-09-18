@@ -135,6 +135,10 @@ exports:
   - 'createGoogleSignupClaims'
   - 'readGoogleSignupHandoff'
   - 'claimGoogleSignupHandoff'
+  - 'isSocialProvider'
+  - 'SOCIAL_AUTH_COPY'
+  - 'SOCIAL_NOT_FOUND_CODE'
+  - 'socialSignupNeedsName'
   - 'REFERRAL_PARAM'
   - 'referralLink'
   - 'readReferralCode'
@@ -1493,6 +1497,35 @@ setInvite((current) => openGoogleSignup(current, idToken, verifiedEmail))
 const CLAIMS = createGoogleSignupClaims() // module scope: it must outlive the mount
 const carried = readGoogleSignupHandoff(location.state?.googleSignup)
 const claimed = claimGoogleSignupHandoff(CLAIMS, carried) // null on every call after the first
+```
+
+### Apple rides the same door
+
+`loginWithApple` refuses exactly as `loginWithGoogle` does, with `APPLE_ACCOUNT_NOT_FOUND` in
+place of `GOOGLE_ACCOUNT_NOT_FOUND`, so the same three functions carry an Apple credential too.
+The handoff takes two optional extras: which `provider` refused (absent means Google) and the
+`name` Apple shared — Apple never puts a name in its token and shares it only on the first
+authorisation, so it is carried rather than asked again.
+
+```ts
+setInvite((current) =>
+  openGoogleSignup(current, idToken, verifiedEmail, { provider: 'APPLE', name: 'Riya Sharma' }),
+);
+```
+
+The rest of what differs per provider lives in `social-auth`, once for both apps:
+
+| Export | What it answers |
+| --- | --- |
+| `SOCIAL_NOT_FOUND_CODE[provider]` | The refusal that opens the signup invite — `GOOGLE_ACCOUNT_NOT_FOUND` / `APPLE_ACCOUNT_NOT_FOUND` |
+| `SOCIAL_AUTH_COPY[provider]` | The copy keys that name the provider — invite detail, link consent, details subtitle, policy intro. Literal, so the translation gate sees them |
+| `socialSignupNeedsName(credential)` | `true` for an Apple credential that carried no name — the details step then asks it |
+| `isSocialProvider(value)` | Whether a value read off navigation is `'GOOGLE'` or `'APPLE'` |
+
+```ts
+socialSignupNeedsName({ provider: 'APPLE' }); // true — ask the name on the details step
+socialSignupNeedsName({ provider: 'APPLE', name: 'Riya Sharma' }); // false
+SOCIAL_AUTH_COPY.APPLE.linkTitle; // 'mweb.login.appleLinkConsentTitle'
 ```
 
 `readGoogleSignupHandoff` is deliberately strict about shape: router state survives a reload

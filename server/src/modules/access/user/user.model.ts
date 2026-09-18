@@ -83,7 +83,19 @@ const authSchema = new Schema(
      */
     google_email: { type: String },
     google_linked_at: { type: Date, default: null },
-    last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', 'OTP', null], default: null },
+    /**
+     * The linked Apple ID — Apple's stable `sub` — the address Apple vouched for
+     * (the person's own, or a private relay one under Hide My Email), and when
+     * it was linked. The same three fields Google has, for the same reasons.
+     */
+    apple_id: { type: String },
+    apple_email: { type: String },
+    apple_linked_at: { type: Date, default: null },
+    last_login_provider: {
+      type: String,
+      enum: ['EMAIL', 'GOOGLE', 'APPLE', 'OTP', null],
+      default: null,
+    },
     last_login_at: { type: Date, default: null },
     // Optional: phone is no longer collected at signup. When present, the
     // phoneSchema still requires number+extension. Absent docs are excluded
@@ -325,6 +337,13 @@ userSchema.index(
   {
     unique: true,
     partialFilterExpression: { 'auth.google_id': { $type: 'string' } },
+  }
+);
+userSchema.index(
+  { 'auth.apple_id': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { 'auth.apple_id': { $type: 'string' } },
   }
 );
 userSchema.index(

@@ -36,6 +36,7 @@ import type {
   LoginDTO,
   RegisterDTO,
   GoogleSignupDTO,
+  AppleSignupDTO,
   RequestPasswordResetDTO,
   ResetPasswordDTO,
   RequestPasswordChangeDTO,
@@ -47,6 +48,13 @@ import type {
   PolicyAcceptanceMethod,
 } from '@modules/content/policyAcceptance/policyAcceptance.model';
 import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
+import {
+  SOCIAL_PROVIDERS,
+  socialAccountNotFound,
+  type SocialIdentity,
+  type SocialProvider,
+  type SocialProviderSpec,
+} from '@modules/access/auth/auth.social';
 import { assertPortalLogin } from '@modules/portals';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { noteSignIn, type SignInContext } from './user.signin';
@@ -982,6 +990,7 @@ function shapeUserDoc(
   opts?: {
     passwordHash?: string;
     googleId?: string;
+    appleId?: string;
     emailVerified?: boolean;
     username?: string;
     /** Signup proved this number with a code before the document existed. */
@@ -998,6 +1007,7 @@ function shapeUserDoc(
       is_email_verified: !!opts?.emailVerified,
       password: opts?.passwordHash,
       google_id: opts?.googleId,
+      apple_id: opts?.appleId,
       // Only attach the phone subdocument when a number is supplied — the
       // schema requires number+extension when present, and omitting it keeps
       // the doc out of the unique phone index (partial on $type: string).
@@ -1048,28 +1058,28 @@ function registerDuplicateError(e: any): GraphQLError {
 }
 
 /**
- * The refusal a Google credential Duncit has never seen gets — and the offer
- * that goes with it.
+ * The name a provider signup is created under.
  *
- * Written once because it is thrown from three places that MUST stay
- * word-for-word identical: an unknown Google account, a sealed one, and a
- * sealed one reached through the link door. Told apart by so much as their
- * wording, they would be a way to ask whether a given address holds an account.
- *
- * The verified address travels in the extensions for the same reason it does on
- * EMAIL_LOGIN_REQUIRED: the caller supplied the token it came out of, so it
- * discloses nothing they did not already hold — and it lets the client's invite
- * name the account it is offering to create rather than talk about it in the
- * abstract.
+ * Apple never puts the name in its token — the client is handed it once and
+ * sends it, or asks for it — so a name the caller sent wins. Google's token
+ * names the person, and the fallbacks behind it keep an account nameable when
+ * it does not.
  */
-function googleAccountNotFound(email: string): GraphQLError {
-  return new GraphQLError('User is not in our system. Please sign up first.', {
-    extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND', email },
-  });
+function socialSignupName(
+  spec: SocialProviderSpec,
+  info: SocialIdentity,
+  input: { first_name?: string; last_name?: string }
+): { first: string; last: string } {
+  const sentFirst = input.first_name?.trim();
+  if (sentFirst) return { first: sentFirst, last: input.last_name?.trim() ?? '' };
+  return {
+    first: info.given_name || info.name?.split(' ')[0] || spec.label,
+    last: info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User',
+  };
 }
 
-/** Map an error raised by the signupWithGoogle transaction onto the error to rethrow. */
-function googleSignupError(e: any): any {
+/** Map an error raised by a provider signup transaction onto the error to rethrow. */
+function socialSignupError(e: any): any {
   if (e instanceof GraphQLError) return e;
   if (e?.code !== 11000) return e;
   const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
@@ -1079,7 +1089,7 @@ function googleSignupError(e: any): any {
       { extensions: { code: 'CONFLICT' } }
     );
   }
-  if (key.includes('email') || key.includes('google')) {
+  if (key.includes('email') || key.includes('google') || key.includes('apple')) {
     return new GraphQLError('Account already exists. Please login instead.', {
       extensions: { code: 'CONFLICT' },
     });
@@ -1664,43 +1674,65 @@ export const userService = {
   },
 
   async loginWithGoogle(idToken: string, portalKey?: string | null, signIn?: SignInContext) {
-    const info = await verifyGoogleIdToken(idToken);
-    const email = info.email.toLowerCase();
-    const user = await UserModel.findOne({ 'auth.google_id': info.sub });
+    return this.loginWithSocial('GOOGLE', idToken, portalKey, signIn);
+  },
+
+  async loginWithApple(idToken: string, portalKey?: string | null, signIn?: SignInContext) {
+    return this.loginWithSocial('APPLE', idToken, portalKey, signIn);
+  },
+
+  /**
+   * Sign in with a provider credential — Google or Apple, the same door.
+   *
+   * Three answers besides a session: the identity is linked to nobody but its
+   * verified address holds an email/password account (EMAIL_LOGIN_REQUIRED —
+   * the client offers to link), it is linked to nobody at all (the provider's
+   * not-found code — the client offers signup), or the account is not active.
+   */
+  async loginWithSocial(
+    provider: SocialProvider,
+    idToken: string,
+    portalKey?: string | null,
+    signIn?: SignInContext
+  ) {
+    const spec = SOCIAL_PROVIDERS[provider];
+    const info = await spec.verify(idToken);
+    const email = info.email;
+    const user = await UserModel.findOne({ [spec.idPath]: info.sub });
     if (!user) {
       const emailUser = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
       // A sealed account is not offered the link either — "you registered with
       // email" would confirm it exists, which is the one thing the refusal
       // below is careful not to say.
       if (emailUser && (emailUser as any).auth?.password && !isAccountLocked(String(emailUser._id))) {
-        // Not a dead end any more: the caller has proved control of a Google
-        // account whose email Google verified and which matches this account,
-        // so linking is offered. The client shows the consent step and, on
-        // "allow", calls linkGoogleAccount with this same id_token. `email` is
-        // echoed back so the consent screen can name the account — it is the
-        // address the caller just authenticated with, so it reveals nothing
-        // they did not supply.
+        // Not a dead end any more: the caller has proved control of a provider
+        // account whose email the provider verified and which matches this
+        // account, so linking is offered. The client shows the consent step
+        // and, on "allow", calls the link mutation with this same id_token.
+        // `email` is echoed back so the consent screen can name the account —
+        // it is the address the caller just authenticated with, so it reveals
+        // nothing they did not supply.
         throw new GraphQLError('Please login with email. You registered using email and password.', {
           extensions: { code: 'EMAIL_LOGIN_REQUIRED', email },
         });
       }
-      throw googleAccountNotFound(email);
+      throw socialAccountNotFound(provider, email);
     }
     /*
       A sealed account answers as if it had never existed here.
 
       Not `invalidCredentials()`: there is no password in this flow, so "invalid
-      email or password" would itself be a tell. The refusal a Google account
+      email or password" would itself be a tell. The refusal a provider account
       Duncit does not know gets is the one that reveals nothing.
     */
     if (isAccountLocked(String(user._id))) {
-      throw googleAccountNotFound(email);
+      throw socialAccountNotFound(provider, email);
     }
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
     const set: Record<string, any> = {
-      'auth.last_login_provider': 'GOOGLE',
+      'auth.last_login_provider': provider,
       'auth.last_login_at': new Date(),
     };
     if (!user.auth?.is_email_verified) set['auth.is_email_verified'] = true;
@@ -1713,58 +1745,64 @@ export const userService = {
     return payload;
   },
 
+  async linkGoogleAccount(idToken: string, portalKey?: string | null) {
+    return this.linkSocialAccount('GOOGLE', idToken, portalKey);
+  },
+
+  async linkAppleAccount(idToken: string, portalKey?: string | null) {
+    return this.linkSocialAccount('APPLE', idToken, portalKey);
+  },
+
   /**
    * The "allow" half of the login consent step.
    *
-   * Unauthenticated on purpose: `verifyGoogleIdToken` refuses any token whose
-   * email Google has not verified, so a verified Google address that matches an
-   * account IS proof of control — the same proof `loginWithGoogle` accepts for
+   * Unauthenticated on purpose: every provider's verify refuses a token whose
+   * email the provider has not verified, so a verified address that matches an
+   * account IS proof of control — the same proof `loginWithSocial` accepts for
    * an already-linked account. What the consent step adds is INTENT, which the
    * client collects before calling this.
    *
    * The password is never read or written: the account ends up with both ways
    * in, which is the whole point.
    */
-  async linkGoogleAccount(idToken: string, portalKey?: string | null) {
-    const info = await verifyGoogleIdToken(idToken);
-    const email = info.email.toLowerCase();
+  async linkSocialAccount(provider: SocialProvider, idToken: string, portalKey?: string | null) {
+    const spec = SOCIAL_PROVIDERS[provider];
+    const info = await spec.verify(idToken);
+    const email = info.email;
 
-    // Already linked to this Google identity — treat as a plain login so a
-    // double-tap on "Allow" (or a retry after a dropped response) signs in
-    // instead of failing on the uniqueness guard below.
-    const alreadyLinked = await UserModel.findOne({ 'auth.google_id': info.sub });
+    // Already linked to this identity — treat as a plain login so a double-tap
+    // on "Allow" (or a retry after a dropped response) signs in instead of
+    // failing on the uniqueness guard below.
+    const alreadyLinked = await UserModel.findOne({ [spec.idPath]: info.sub });
     if (alreadyLinked) {
-      return this.loginWithGoogle(idToken, portalKey);
+      return this.loginWithSocial(provider, idToken, portalKey);
     }
 
     const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
     // A sealed account is answered as an unknown one, for the same reason as in
-    // loginWithGoogle — and because linking would otherwise mint a session for
+    // loginWithSocial — and because linking would otherwise mint a session for
     // an account that is on its way out.
     if (!user || isAccountLocked(String(user._id))) {
-      throw googleAccountNotFound(email);
+      throw socialAccountNotFound(provider, email);
     }
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
-    if ((user as any).auth?.google_id) {
-      throw new GraphQLError(
-        'This account is already linked to a different Google account. Disconnect it from your profile first.',
-        { extensions: { code: 'CONFLICT' } }
-      );
+    if (user.get(spec.idPath)) {
+      throw new GraphQLError(spec.alreadyLinked, { extensions: { code: 'CONFLICT' } });
     }
 
     await UserModel.updateOne(
       { _id: user._id },
       {
         $set: {
-          'auth.google_id': info.sub,
-          'auth.google_email': email,
-          'auth.google_linked_at': new Date(),
-          // Google vouched for this address, which is the same address the
-          // account holds — so it is verified whether or not we had asked.
+          [spec.idPath]: info.sub,
+          [spec.emailPath]: email,
+          [spec.linkedAtPath]: new Date(),
+          // The provider vouched for this address, which is the same address
+          // the account holds — so it is verified whether or not we had asked.
           'auth.is_email_verified': true,
-          'auth.last_login_provider': 'GOOGLE',
+          'auth.last_login_provider': provider,
           'auth.last_login_at': new Date(),
           ...(user.profile?.profile_photo || !info.picture
             ? {}
@@ -1871,13 +1909,33 @@ export const userService = {
   },
 
   async signupWithGoogle(input: GoogleSignupDTO, acceptance?: PolicyAcceptanceIntent) {
-    const info = await verifyGoogleIdToken(input.id_token);
-    const email = info.email.toLowerCase();
+    return this.signupWithSocial('GOOGLE', input, acceptance);
+  },
+
+  async signupWithApple(input: AppleSignupDTO, acceptance?: PolicyAcceptanceIntent) {
+    return this.signupWithSocial('APPLE', input, acceptance);
+  },
+
+  /**
+   * Make an account from a provider credential — Google or Apple, the same door.
+   *
+   * New-account-only. The WhatsApp proof is spent before the transaction, and
+   * the account is made with the provider's id already linked, so it is never
+   * without a way in.
+   */
+  async signupWithSocial(
+    provider: SocialProvider,
+    input: GoogleSignupDTO & Partial<Pick<AppleSignupDTO, 'first_name' | 'last_name'>>,
+    acceptance?: PolicyAcceptanceIntent
+  ) {
+    const spec = SOCIAL_PROVIDERS[provider];
+    const info = await spec.verify(input.id_token);
+    const email = info.email;
     if (isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     /*
-      The same proof the email door spends, for the same reason: a Google
+      The same proof the email door spends, for the same reason: a provider
       credential says which mailbox somebody holds and nothing about how to
       reach them. Redeemed and spent BEFORE the transaction — an account whose
       number is verified afterwards is an account that can skip the step.
@@ -1897,14 +1955,14 @@ export const userService = {
     try {
       await session.withTransaction(async () => {
         const existing = await UserModel.findOne({
-          $or: [{ 'auth.google_id': info.sub }, { 'auth.email': email }],
+          $or: [{ [spec.idPath]: info.sub }, { 'auth.email': email }],
         })
           .select('+auth.password')
           .session(session);
         if (existing) {
           const message = (existing as any).auth?.password
             ? 'Please login with email. You registered using email and password.'
-            : 'Google account already exists. Please login with Google.';
+            : `${spec.label} account already exists. Please login with ${spec.label}.`;
           throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
         }
         // Both fields a number can live in, exactly as the email door checks:
@@ -1928,17 +1986,15 @@ export const userService = {
             { extensions: { code: 'CONFLICT' } }
           );
         }
-        const googleFirst = info.given_name || info.name?.split(' ')[0] || 'Google';
-        const googleLast =
-          info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User';
-        const googleUsername = await nextFreeUsername(googleFirst, googleLast);
+        const { first, last } = socialSignupName(spec, info, input);
+        const username = await nextFreeUsername(first, last);
         const docs = await UserModel.create(
           [
             {
               ...shapeUserDoc(
                 {
-                  first_name: googleFirst,
-                  last_name: googleLast,
+                  first_name: first,
+                  last_name: last,
                   email,
                   phone_number: alsoMobile ? input.phone_number : '',
                   phone_extension: input.phone_extension,
@@ -1948,9 +2004,9 @@ export const userService = {
                   profile_photo: info.picture || undefined,
                 },
                 {
-                  googleId: info.sub,
+                  ...(provider === 'GOOGLE' ? { googleId: info.sub } : { appleId: info.sub }),
                   emailVerified: true,
-                  username: googleUsername,
+                  username,
                   phoneVerified: alsoMobile,
                 }
               ),
@@ -1978,22 +2034,22 @@ export const userService = {
         );
       });
     } catch (e: any) {
-      throw googleSignupError(e);
+      throw socialSignupError(e);
     } finally {
       await session.endSession();
     }
     if (!created) {
-      throw new GraphQLError('Could not create Google account', {
+      throw new GraphQLError(`Could not create ${spec.label} account`, {
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
-    await welcomeNewAccount(created, 'signupWithGoogle');
-    await recordSignupAcceptance(created, 'GOOGLE_SIGNUP', acceptance);
+    await welcomeNewAccount(created, `signupWith${spec.label}`);
+    await recordSignupAcceptance(created, spec.acceptanceMethod, acceptance);
     await UserModel.updateOne(
       { _id: created._id },
       {
         $set: {
-          'auth.last_login_provider': 'GOOGLE',
+          'auth.last_login_provider': provider,
           'auth.last_login_at': new Date(),
         },
       }

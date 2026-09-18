@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import type { SocialCredential } from '@duncit/utils';
 import PolicyAcceptanceDialog from './PolicyAcceptanceDialog';
 import { isEveryPolicyAccepted } from './acceptance';
 import type { SignupPolicy } from './useSignupPolicies';
 
 interface Props {
-  /** The Google id_token waiting on acceptance, or null when nothing is pending. */
-  credential: string | null;
+  /** The Google or Apple credential waiting on acceptance, or null when nothing is pending. */
+  credential: SocialCredential | null;
   policies: readonly SignupPolicy[];
   loading: boolean;
   failed: boolean;
@@ -51,7 +52,7 @@ export default function GoogleSignupPolicyGate({
   return (
     <PolicyAcceptanceDialog
       open={!!credential}
-      afterGoogle
+      afterProvider={credential?.provider}
       policies={policies}
       loading={loading}
       failed={failed}

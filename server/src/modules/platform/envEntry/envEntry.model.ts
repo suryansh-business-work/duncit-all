@@ -26,6 +26,7 @@ export const ENV_CATEGORIES = [
   'GITHUB',
   'GOOGLE_PLAY',
   'MSG91',
+  'APPLE_SIGNIN',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

@@ -586,6 +586,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // and the token exchange after it are both slow enough to look broken
       // without it.
       googleConnecting: 'Connecting to Google…',
+      // Sign in with Apple. Both surfaces render their own Apple button, so
+      // its label is ours on both — one wording to sign in, one to sign up.
+      appleSignIn: 'Sign in with Apple',
+      appleSignUp: 'Sign up with Apple',
+      appleConnecting: 'Connecting to Apple…',
+      appleFailed: 'Apple sign-in failed. Please try again.',
       // The Terms & Privacy footer. The lead-in changes per screen and the two
       // links must stay tappable inside the sentence, so it is assembled from
       // parts rather than one template with markup in it.
@@ -665,6 +671,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       linkConsentDenied:
         'Google was not connected. Sign in with your email and password, or try Google again to allow it.',
       linkConsentFailed: 'Could not connect Google. Please try again.',
+      // The same invite and consent step, when the door was Apple. The title,
+      // body, actions and "Not now" above are the provider-free half.
+      appleNotFoundDetail:
+        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+      appleLinkConsentTitle: 'Also sign in with Apple?',
+      appleLinkConsentBody:
+        'You registered {email} with an email and password. Allow Apple to sign you in to this same account?',
+      appleLinkConsentDetail: 'Your email and password keep working as well.',
+      appleLinkConsentDenied:
+        'Apple was not connected. Sign in with your email and password, or try Apple again to allow it.',
+      appleLinkConsentFailed: 'Could not connect Apple. Please try again.',
     },
     signup: {
       title: 'Join',
@@ -749,6 +766,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // a code can be sent to, and the date of birth the joining age is checked on.
       detailsTitle: 'A few details',
       detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
+      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
       // The contact step asks the server about the email and the number as

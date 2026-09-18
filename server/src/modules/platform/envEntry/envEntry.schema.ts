@@ -34,6 +34,7 @@ const SDL_CATEGORIES = [
   'GITHUB',
   'GOOGLE_PLAY',
   'MSG91',
+  'APPLE_SIGNIN',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -62,6 +63,7 @@ export const envEntryTypeDefs = gql`
     GITHUB
     GOOGLE_PLAY
     MSG91
+    APPLE_SIGNIN
   }
 
   type EnvConfigPair {

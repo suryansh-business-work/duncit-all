@@ -527,6 +527,11 @@ const google = makeGoogleSignupSchema(t, 18);
 
 google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345' }); // dobRequired
 google.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1998-04-23' }); // passes
+
+// Apple rides the same step. Apple shares a name only on the first authorisation, so when
+// the credential carried none the third argument makes the name a real question.
+const apple = makeGoogleSignupSchema(t, 18, true);
+apple.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1998-04-23' }); // nameRequired
 ```
 
 Whether the number is already on another account is the server's answer, checked twice: before

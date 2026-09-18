@@ -48,6 +48,38 @@ export const LINK_GOOGLE_ACCOUNT = gql`
   }
 `;
 
+/** Sign in with Apple — the same answers as LOGIN_GOOGLE, from the Apple door. */
+export const LOGIN_APPLE = gql`
+  mutation LoginWithApple($input: AppleAuthInput!) {
+    loginWithApple(input: $input) {
+      token
+      user {
+        user_id
+        first_name
+        email
+        roles
+        onboarding_survey_completed
+      }
+    }
+  }
+`;
+
+/** The Apple half of the consent step, sent with the id_token loginWithApple refused. */
+export const LINK_APPLE_ACCOUNT = gql`
+  mutation LinkAppleAccount($input: AppleAuthInput!) {
+    linkAppleAccount(input: $input) {
+      token
+      user {
+        user_id
+        first_name
+        email
+        roles
+        onboarding_survey_completed
+      }
+    }
+  }
+`;
+
 /** Continue with OTP, step one — send a sign-in code to the chosen channel. */
 export const REQUEST_LOGIN_OTP = gql`
   mutation RequestLoginOtp($input: RequestLoginOtpInput!) {

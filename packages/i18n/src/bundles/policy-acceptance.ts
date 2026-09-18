@@ -35,6 +35,8 @@ export const POLICY_ACCEPTANCE_BUNDLE: NestedCatalogue = {
     // reader's name while they are still deciding.
     googleIntro:
       'Google has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.',
+    appleIntro:
+      'Apple has confirmed who you are, but your account is not created yet. Accept each policy below and we will finish signing you up.',
     readAction: 'Read',
     acceptAll: 'Accept all',
     // Shown while the submit button is disabled, so the button explains itself

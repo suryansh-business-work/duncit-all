@@ -2,7 +2,9 @@ import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
+import type { SocialCredential } from '@duncit/utils';
 
+import { AppleAuthButton } from '@/components/AppleAuthButton';
 import { AuthDivider } from '@/components/AuthDivider';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -21,7 +23,7 @@ interface MethodButtonProps {
 
 /**
  * One "continue with…" choice: a surface pill with a hairline, ink label and
- * icon — the same look as the Google pill above it, because all three are a
+ * icon — the same look as the Google pill above it, because all of them are a
  * choice of door, not the action itself. The green pill waits one step in, on
  * the button that actually signs you in. mWeb twin: METHOD_SX in
  * pages/login-page/LoginMethodStep.tsx. Hoisted, never nested (S6478).
@@ -55,10 +57,10 @@ function MethodButton({ testID, label, icon, ink, onPress }: Readonly<MethodButt
 }
 
 interface Props {
-  /** True while the screen is spending the id_token on the server. */
-  googleLoading?: boolean;
-  onGoogle: (idToken: string) => void;
-  onGoogleError: (message: string) => void;
+  /** True while the screen is spending a Google or Apple id_token on the server. */
+  socialLoading?: boolean;
+  onSocialCredential: (credential: SocialCredential) => void;
+  onSocialError: (message: string) => void;
   onChoosePassword: () => void;
   onChooseOtp: () => void;
   onSignup: () => void;
@@ -74,9 +76,9 @@ interface Props {
  * belongs, since it is only ever about the password.
  */
 export function LoginMethodStep({
-  googleLoading,
-  onGoogle,
-  onGoogleError,
+  socialLoading,
+  onSocialCredential,
+  onSocialError,
   onChoosePassword,
   onChooseOtp,
   onSignup,
@@ -88,9 +90,15 @@ export function LoginMethodStep({
     <YStack gap={16}>
       <GoogleAuthButton
         label={t('mweb.login.googleSignIn')}
-        loading={googleLoading}
-        onIdToken={onGoogle}
-        onError={onGoogleError}
+        loading={socialLoading}
+        onIdToken={(idToken) => onSocialCredential({ provider: 'GOOGLE', idToken })}
+        onError={onSocialError}
+      />
+      <AppleAuthButton
+        label={t('mweb.auth.appleSignIn')}
+        loading={socialLoading}
+        onCredential={onSocialCredential}
+        onError={onSocialError}
       />
       <AuthDivider />
       <MethodButton

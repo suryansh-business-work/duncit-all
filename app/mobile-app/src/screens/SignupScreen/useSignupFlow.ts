@@ -2,17 +2,20 @@ import { useReducer, useState, type Reducer } from 'react';
 import {
   initialSignupFlowState,
   signupFlowReducer,
+  socialSignupNeedsName,
   type SignupFlowAction,
   type SignupFlowState,
   type SignupGoogleCredential,
   type SignupNumber,
   type SignupStep,
+  type SocialCredential,
+  type SocialProvider,
 } from '@duncit/utils';
 import type { GoogleSignupValues } from '@duncit/forms/schemas';
 
 import { type SignupFormValues } from '@/forms/signup';
 import { useTranslation } from '@/hooks/useTranslation';
-import { register, signupWithGoogle } from '@/services/auth.service';
+import { register, signupWithApple, signupWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -59,14 +62,14 @@ export function useSignupFlow() {
   };
 
   /*
-    Google proves an address and nothing else, so its credential is held —
-    unspent — while its own step (number and date of birth) and the code step
-    run. There is no account to back out of until both have answered, which is
-    what the acceptance sheet's Google wording promises.
+    Google (and Apple) prove an address and nothing else, so the credential is
+    held — unspent — while its own step (number and date of birth) and the code
+    step run. There is no account to back out of until both have answered,
+    which is what the acceptance sheet's wording promises.
   */
-  const googleAccepted = (idToken: string, policyIds: string[]) => {
+  const googleAccepted = (credential: SocialCredential, policyIds: string[]) => {
     setError(null);
-    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
+    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { ...credential, policyIds } });
   };
 
   /** The Google step's answer: from here the two doors run the same code step. */
@@ -93,18 +96,22 @@ export function useSignupFlow() {
     number: SignupNumber,
     dob: string,
     whatsappToken: string,
-  ) =>
-    signupWithGoogle(
-      google.idToken,
-      [...google.policyIds],
-      {
-        extension: number.extension,
-        number: number.number,
-        alsoMobile: number.alsoMobile,
-        whatsappToken,
-      },
-      dob,
-    );
+  ) => {
+    const proven = {
+      extension: number.extension,
+      number: number.number,
+      alsoMobile: number.alsoMobile,
+      whatsappToken,
+    };
+    // Apple's token names nobody: the name is the one Apple shared, or the one
+    // the details step asked.
+    if (google.provider === 'APPLE') {
+      return signupWithApple(google.idToken, google.name ?? '', [...google.policyIds], proven, dob);
+    }
+    return signupWithGoogle(google.idToken, [...google.policyIds], proven, dob);
+  };
+
+  const detailsProvider: SocialProvider = flow.pendingGoogle?.provider ?? 'GOOGLE';
 
   /**
    * The code answered: spend its proof on the account it was asked for, then
@@ -147,6 +154,9 @@ export function useSignupFlow() {
     setStep,
     verifying: flow.verifying,
     askingNumber: flow.askingNumber,
+    /** Which door the details step is for, and whether it must ask the name. */
+    detailsProvider,
+    askName: socialSignupNeedsName(flow.pendingGoogle),
     /* Checked alongside the number before a code goes out, so "email already in
        use" is a correction on the form rather than a dead end after the code.
        Google has no form to have asked it — the credential carries it. */

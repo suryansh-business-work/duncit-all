@@ -490,6 +490,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       active: 'Active',
       allCategories: 'All categories',
       apiDocs: 'API documentation',
+      appleConnectionHint:
+        'Signs a client secret with this key and asks Apple to redeem a code it never issued. Apple checks the key before the code, so this proves the Team ID, Key ID, private key and Services ID belong together. Nobody is signed in.',
       assignedConfigs: 'Assigned configs',
       assignedPortals: 'Assigned portals',
       callNow: 'Call now',

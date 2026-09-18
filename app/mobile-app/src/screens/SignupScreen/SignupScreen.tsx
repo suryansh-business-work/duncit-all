@@ -6,8 +6,10 @@ import {
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
   readGoogleSignupHandoff,
+  type SocialCredential,
 } from '@duncit/utils';
 
+import { AppleAuthButton } from '@/components/AppleAuthButton';
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
@@ -40,10 +42,10 @@ export function SignupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { policies, loaded } = useSignupPolicies();
   const flow = useSignupFlow();
-  // The Google token waiting on the acceptance sheet. Holding it here is what
-  // keeps the account uncreated while the person decides: Google has proved who
-  // they are, and nothing else has happened yet.
-  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  // The Google or Apple credential waiting on the acceptance sheet. Holding it
+  // here is what keeps the account uncreated while the person decides: the
+  // provider has proved who they are, and nothing else has happened yet.
+  const [pending, setPending] = useState<SocialCredential | null>(null);
   const [googleAccepted, setGoogleAccepted] = useState<string[]>([]);
 
   /*
@@ -52,14 +54,14 @@ export function SignupScreen() {
     only moment a refusal can still leave nothing behind. Nothing gating signup
     means no dialog worth showing.
   */
-  const handleGoogle = (idToken: string) => {
+  const handleCredential = (credential: SocialCredential) => {
     flow.setError(null);
     setGoogleAccepted([]);
     if (loaded && policies.length === 0) {
-      flow.googleAccepted(idToken, []);
+      flow.googleAccepted(credential, []);
       return;
     }
-    setGoogleToken(idToken);
+    setPending(credential);
   };
 
   /*
@@ -68,7 +70,7 @@ export function SignupScreen() {
     acceptance sheet with it in hand rather than on a Google button they have
     just pressed.
 
-    Waits for `loaded`, because `handleGoogle` branches on whether there is
+    Waits for `loaded`, because `handleCredential` branches on whether there is
     anything to accept: run before the policies land and a signup with nothing
     to gate would open an empty sheet instead of going straight through.
 
@@ -84,16 +86,22 @@ export function SignupScreen() {
   useEffect(() => {
     if (!loaded) return;
     const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
-    if (claimed) handleGoogle(claimed.idToken);
+    if (claimed) {
+      handleCredential({
+        provider: claimed.provider ?? 'GOOGLE',
+        idToken: claimed.idToken,
+        name: claimed.name,
+      });
+    }
     // Keyed by the credential itself; the claim guards the rest.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carriedToken, loaded]);
 
   const handleGooglePolicies = (ids: string[]) => {
     setGoogleAccepted(ids);
-    if (googleToken && loaded && allPoliciesAccepted(policies, ids)) {
-      setGoogleToken(null);
-      flow.googleAccepted(googleToken, ids);
+    if (pending && loaded && allPoliciesAccepted(policies, ids)) {
+      setPending(null);
+      flow.googleAccepted(pending, ids);
     }
   };
 
@@ -110,7 +118,13 @@ export function SignupScreen() {
       accentWord={t('mweb.signup.titleAccent')}
     >
       <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
-      {onNumberStep ? <GoogleDetailsStep onSubmit={flow.submitDetails} /> : null}
+      {onNumberStep ? (
+        <GoogleDetailsStep
+          provider={flow.detailsProvider}
+          askName={flow.askName}
+          onSubmit={flow.submitDetails}
+        />
+      ) : null}
       {onVerifyStep && flow.verifying ? (
         <VerifyWhatsappStep
           extension={flow.verifying.extension}
@@ -125,7 +139,13 @@ export function SignupScreen() {
         <>
           <GoogleAuthButton
             loading={flow.creating}
-            onIdToken={handleGoogle}
+            onIdToken={(idToken) => handleCredential({ provider: 'GOOGLE', idToken })}
+            onError={flow.setError}
+          />
+          <AppleAuthButton
+            label={t('mweb.auth.appleSignUp')}
+            loading={flow.creating}
+            onCredential={handleCredential}
             onError={flow.setError}
           />
           <AuthDivider label={t('mweb.auth.orEmail')} />
@@ -154,11 +174,11 @@ export function SignupScreen() {
         </Text>
       </XStack>
       <PolicyAcceptanceSheet
-        open={!!googleToken}
-        variant="google"
+        open={!!pending}
+        afterProvider={pending?.provider}
         acceptedIds={googleAccepted}
         onChange={handleGooglePolicies}
-        onClose={() => setGoogleToken(null)}
+        onClose={() => setPending(null)}
       />
       <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
     </AuthScaffold>

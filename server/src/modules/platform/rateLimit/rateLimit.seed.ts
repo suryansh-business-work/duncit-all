@@ -128,6 +128,7 @@ const SEED_RULES = [
       '*WithOtp',
       'verify*Otp',
       'linkGoogleAccount',
+      'linkAppleAccount',
     ],
     key_by: 'IP',
     algorithm: 'SLIDING_WINDOW',

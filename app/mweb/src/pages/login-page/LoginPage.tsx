@@ -1,10 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
-import { openGoogleSignup, type GoogleSignupHandoff } from '@duncit/utils';
 import AuthBackground from '../../components/AuthBackground';
 import { type LoginSubmitValues } from '../../forms/login';
-import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
 import {
   getSafeRedirectPath,
@@ -12,15 +10,15 @@ import {
   redirectPathFromLocation,
   type RedirectLocation,
 } from '../../utils/redirect';
-import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
+import { LOGIN } from './queries';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
 import GoogleSignupInviteDialog from './GoogleSignupInviteDialog';
 import LoginCard, { type LoginStep } from './LoginCard';
 import { useOtpLogin } from './useOtpLogin';
+import { useSocialLogin } from './useSocialLogin';
 import { useStartSession } from '../../user-info/useStartSession';
 
 export default function LoginPage() {
-  const { t } = useTranslation();
   // Which half of the sign-in screen is showing. Kept in state rather than the
   // URL: it is a choice of method, not a place — a shared /login link should
   // always open on the options.
@@ -28,30 +26,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
-  const [loginGoogle, { loading: gLoading }] = useMutation<any>(LOGIN_GOOGLE);
-  const [linkGoogle, { loading: linking }] = useMutation<any>(LINK_GOOGLE_ACCOUNT);
-  const [gError, setGError] = useState<string | null>(null);
-  /*
-    A Google credential Duncit has no account for. Held — unspent — so accepting
-    the invite carries it into signup rather than asking Google for a second
-    one, and kept through `openGoogleSignup` so a repeat of the SAME credential
-    lands on the invite already open instead of swapping it underneath.
-  */
-  const [invite, setInvite] = useState<GoogleSignupHandoff | null>(null);
-  /*
-    Google renders its own button, and it stays pressable underneath our
-    spinner overlay. A second press during the exchange would put two
-    loginWithGoogle calls in the air, and for a brand-new account that is two
-    invites — and, if both are answered, two runs at making one account. One
-    exchange at a time; a ref rather than state because the guard has to hold
-    within the tick, before any re-render.
-  */
-  const exchanging = useRef(false);
-  // The pending consent grant. Holds the id_token loginWithGoogle just refused
-  // so "Allow" can spend it on linkGoogleAccount without a second Google round
-  // trip — Google id tokens stay valid for an hour, far longer than this step.
-  const [consent, setConsent] = useState<{ idToken: string; email: string } | null>(null);
-  const [consentError, setConsentError] = useState<string | null>(null);
   const { start: startSession, starting } = useStartSession();
 
   const finishLogin = async (token: string, user: any) => {
@@ -67,6 +41,9 @@ export default function LoginPage() {
   // Continue with OTP shares the same landing: a correct code hands its token
   // to the same finishLogin every other method spends.
   const otp = useOtpLogin(finishLogin);
+  // Google and Apple: one door, the same consent step and signup invite.
+  const social = useSocialLogin(finishLogin);
+
   const handleSubmit = async (values: LoginSubmitValues) => {
     try {
       /*
@@ -95,75 +72,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogle = async (idToken: string) => {
-    if (exchanging.current) return;
-    exchanging.current = true;
-    setGError(null);
-    try {
-      const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
-      const token = res.data?.loginWithGoogle?.token;
-      if (token) await finishLogin(token, res.data?.loginWithGoogle?.user);
-    } catch (e: any) {
-      const code = e.graphQLErrors?.[0]?.extensions?.code;
-      if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
-        // Not a dead end either — Google has verified this address and nobody
-        // holds it here, so we offer to make the account rather than turning
-        // them away with a credential we are about to throw out.
-        const verified = e.graphQLErrors?.[0]?.extensions?.email as string | undefined;
-        setInvite((current) => openGoogleSignup(current, idToken, verified ?? ''));
-      } else if (code === 'EMAIL_LOGIN_REQUIRED') {
-        // Not a dead end any more — the account exists and Google has verified
-        // this address, so we ask whether to grant Google sign-in to it.
-        const matched = e.graphQLErrors?.[0]?.extensions?.email as string | undefined;
-        setConsentError(null);
-        setConsent({ idToken, email: matched ?? '' });
-      } else {
-        setGError(parseApiError(e));
-      }
-    } finally {
-      exchanging.current = false;
-    }
-  };
-
-  /*
-    Yes to the invite: carry the credential into signup.
-
-    In router state rather than the query string — an id_token in the URL is an
-    id_token in the history, in the referrer of everything the page loads, and
-    in every access log the address reaches. Clearing the invite first is what
-    makes a double press idempotent here; the signup screen claims what arrives
-    exactly once, which is what makes it idempotent there too.
-  */
-  const acceptGoogleInvite = () => {
-    if (!invite) return;
-    setInvite(null);
-    navigate('/register', { state: { googleSignup: invite } });
-  };
-
-  const allowGoogleLink = async () => {
-    if (!consent) return;
-    setConsentError(null);
-    try {
-      const res = await linkGoogle({ variables: { input: { id_token: consent.idToken } } });
-      const token = res.data?.linkGoogleAccount?.token;
-      if (token) {
-        setConsent(null);
-        await finishLogin(token, res.data?.linkGoogleAccount?.user);
-      }
-    } catch (e) {
-      // Kept open with the reason: closing would look like the grant worked.
-      setConsentError(parseApiError(e));
-    }
-  };
-
-  // Denying changes nothing about the account. Back to the form with a warning
-  // that says both what happened and how to get here again.
-  const denyGoogleLink = () => {
-    setConsent(null);
-    setConsentError(null);
-    setGError(t('mweb.login.linkConsentDenied'));
-  };
-
   return (
     <AuthBackground>
       <LoginCard
@@ -173,27 +81,32 @@ export default function LoginPage() {
         loading={loading || starting}
         errorMessage={error ? parseApiError(error) : null}
         onSubmit={handleSubmit}
-        gLoading={gLoading || starting}
-        gError={gError}
-        onGoogleCredential={handleGoogle}
+        socialLoading={social.busy || starting}
+        socialError={social.error}
+        onSocialCredential={(credential) => {
+          social.start(credential).catch(() => undefined);
+        }}
+        onSocialError={social.setError}
       />
 
       <GoogleLinkConsentDialog
-        open={!!consent}
-        email={consent?.email ?? ''}
-        busy={linking}
-        error={consentError}
+        open={!!social.consent}
+        provider={social.consent?.credential.provider ?? 'GOOGLE'}
+        email={social.consent?.email ?? ''}
+        busy={social.linking}
+        error={social.consentError}
         onAllow={() => {
-          allowGoogleLink().catch(() => undefined);
+          social.allowLink().catch(() => undefined);
         }}
-        onDeny={denyGoogleLink}
+        onDeny={social.denyLink}
       />
 
       <GoogleSignupInviteDialog
-        open={!!invite}
-        email={invite?.email ?? ''}
-        onAccept={acceptGoogleInvite}
-        onDismiss={() => setInvite(null)}
+        open={!!social.invite}
+        provider={social.invite?.provider ?? 'GOOGLE'}
+        email={social.invite?.email ?? ''}
+        onAccept={social.acceptInvite}
+        onDismiss={social.dismissInvite}
       />
     </AuthBackground>
   );

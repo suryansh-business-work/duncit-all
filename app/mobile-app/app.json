@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.79.177",
+    "version": "1.79.178",
     "orientation": "default",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
@@ -13,6 +13,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.duncit.mobile",
+      "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:mweb.duncit.com"
       ],
@@ -67,6 +68,7 @@
         }
       ],
       "expo-secure-store",
+      "expo-apple-authentication",
       [
         "expo-image-picker",
         {

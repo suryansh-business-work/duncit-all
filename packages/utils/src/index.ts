@@ -11,7 +11,17 @@ export {
   readGoogleSignupHandoff,
   type GoogleSignupClaims,
   type GoogleSignupHandoff,
+  type SocialHandoffExtras,
 } from './google-signup-handoff';
+export {
+  isSocialProvider,
+  SOCIAL_AUTH_COPY,
+  SOCIAL_NOT_FOUND_CODE,
+  socialSignupNeedsName,
+  type SocialAuthCopy,
+  type SocialCredential,
+  type SocialProvider,
+} from './social-auth';
 export {
   backoutAttemptsLeft,
   buildPodParticipationTimeline,

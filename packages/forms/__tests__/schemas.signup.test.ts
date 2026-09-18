@@ -114,6 +114,18 @@ describe("the Google door's own step", () => {
         .success,
     ).toBe(true);
   });
+
+  it('asks the name too when Apple carried none, with the email form’s own rule', () => {
+    const apple = makeGoogleSignupSchema(t, 18, true);
+    const filled = { ...googleSignupDefaults, phoneNumber: '9845012345', dob: ELIGIBLE_DOB };
+
+    const blank = apple.safeParse(filled);
+    expect(blank.success).toBe(false);
+    expect(blank.error?.issues.map((i) => i.message)).toContain(
+      'mweb.signup.validation.nameRequired',
+    );
+    expect(apple.safeParse({ ...filled, name: 'Riya Sharma' }).success).toBe(true);
+  });
 });
 
 describe('the contact details', () => {

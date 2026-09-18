@@ -14,6 +14,7 @@ import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useGoogleSignup } from '../../hooks/useGoogleSignup';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
+import { AppleSignInButton } from '../../components/apple-sign-in';
 import { GoogleSignupPolicyGate, useSignupPolicies } from '../../components/policy-acceptance';
 import { RegisterForm, registerDefaults } from '../../forms/register';
 import SignupStepperRail from './SignupStepperRail';
@@ -90,7 +91,13 @@ export default function RegisterPage() {
   const carriedToken = carried?.idToken ?? '';
   useEffect(() => {
     const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
-    if (claimed) google.start(claimed.idToken);
+    if (claimed) {
+      google.start({
+        provider: claimed.provider ?? 'GOOGLE',
+        idToken: claimed.idToken,
+        name: claimed.name,
+      });
+    }
     // Keyed by the credential itself; the claim guards the rest.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carriedToken]);
@@ -110,7 +117,13 @@ export default function RegisterPage() {
           <Stack spacing={2}>
             <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
 
-            {onNumberStep && <GoogleDetailsStep onSubmit={flow.submitDetails} />}
+            {onNumberStep && (
+              <GoogleDetailsStep
+                provider={flow.detailsProvider}
+                askName={flow.askName}
+                onSubmit={flow.submitDetails}
+              />
+            )}
 
             {onVerifyStep && flow.verifying && (
               <VerifyWhatsappStep
@@ -125,11 +138,19 @@ export default function RegisterPage() {
 
             {showForm && (
               <>
-                <GoogleSignInButton
-                  onCredential={google.start}
-                  loading={flow.creating}
-                  text="signup_with"
-                />
+                <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
+                  <GoogleSignInButton
+                    onCredential={(idToken) => google.start({ provider: 'GOOGLE', idToken })}
+                    loading={flow.creating}
+                    text="signup_with"
+                  />
+                  <AppleSignInButton
+                    label={t('mweb.auth.appleSignUp')}
+                    loading={flow.creating}
+                    onCredential={google.start}
+                    onError={google.setError}
+                  />
+                </Stack>
                 <GoogleSignupPolicyGate
                   credential={google.credential}
                   policies={policies}

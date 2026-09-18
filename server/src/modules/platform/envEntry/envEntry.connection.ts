@@ -14,6 +14,7 @@ import {
   type PlayServiceAccount,
 } from '@modules/platform/appBuild/googlePlay.gateway';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
+import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -459,6 +460,77 @@ export async function msg91Connection(str: EnvConfigReader): Promise<EnvConnecti
   }
 }
 
+// --- Sign in with Apple -------------------------------------------------------
+
+/** A code Apple never issued. The token endpoint judges the client before the code. */
+const APPLE_PROBE_CODE = 'duncit-connection-check';
+
+/**
+ * Ask Apple's token endpoint to redeem a code it never issued, with a client
+ * secret signed by this entry's key. Apple authenticates the CLIENT first, so
+ * `invalid_grant` means the Team ID, Key ID, private key and Services ID all
+ * belong together and only the (deliberately bogus) code was refused, while
+ * `invalid_client` means one of them does not. Nobody is signed in and nothing
+ * is created.
+ */
+export async function appleSignInConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const creds = {
+    teamId: str('team_id').trim(),
+    keyId: str('key_id').trim(),
+    clientId: str('services_id').trim(),
+    privateKey: str('private_key'),
+  };
+  if (!creds.teamId || !creds.keyId || !creds.clientId || !creds.privateKey) {
+    return {
+      ok: false,
+      message: 'Team ID, Services ID, Key ID and private key are all required',
+      details: [],
+    };
+  }
+  let clientSecret: string;
+  try {
+    clientSecret = appleClientSecret(creds);
+  } catch {
+    return {
+      ok: false,
+      message: 'This private key cannot sign. Paste the whole .p8 file, BEGIN and END lines included',
+      details: [],
+    };
+  }
+  const res = await fetchJson(APPLE_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: creds.clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      code: APPLE_PROBE_CODE,
+    }).toString(),
+  });
+  const error = typeof res.data.error === 'string' ? res.data.error : '';
+  if (error === 'invalid_grant') {
+    return {
+      ok: true,
+      message: `Apple accepted this key for ${creds.clientId}`,
+      details: [
+        'The Team ID, Key ID, private key and Services ID belong together.',
+        'The App ID is only proven by signing in on the iOS app, and the Return URLs by signing in on mWeb and Android.',
+      ],
+    };
+  }
+  if (error === 'invalid_client') {
+    return {
+      ok: false,
+      message: 'Apple rejected this client',
+      details: [
+        'The Team ID, Key ID, private key and Services ID must all come from the same Apple Developer account, and the key must have Sign in with Apple enabled for the App ID the Services ID is grouped with.',
+      ],
+    };
+  }
+  const answer = error || `HTTP ${res.status}`;
+  return { ok: false, message: `Apple answered ${answer}`, details: [] };
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -474,6 +546,7 @@ const CONNECTION_CHECKS = {
   GITHUB: githubConnection,
   GOOGLE_PLAY: googlePlayConnection,
   MSG91: msg91Connection,
+  APPLE_SIGNIN: appleSignInConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

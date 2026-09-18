@@ -8,10 +8,13 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   open: boolean;
+  /** Which door refused — the detail line names it. */
+  provider: SocialProvider;
   /** The address Google verified — named so the invite is about THEIR account
    * rather than about accounts in general. */
   email: string;
@@ -39,6 +42,7 @@ interface Props {
  */
 export default function GoogleSignupInviteDialog({
   open,
+  provider,
   email,
   onAccept,
   onDismiss,
@@ -59,7 +63,7 @@ export default function GoogleSignupInviteDialog({
             {t('mweb.login.googleNotFoundBody', { vars: { email } })}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {t('mweb.login.googleNotFoundDetail')}
+            {t(SOCIAL_AUTH_COPY[provider].notFoundDetail)}
           </Typography>
         </Stack>
       </DialogContent>

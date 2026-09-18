@@ -85,6 +85,13 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     dashboardId: 'analytics.shop',
   },
   {
+    path: '/pet-store',
+    entity: 'PET_STORE',
+    title: 'analytics.page.petStore.title',
+    subtitle: 'analytics.page.petStore.subtitle',
+    dashboardId: 'analytics.petStore',
+  },
+  {
     path: '/growth/funnel',
     entity: 'FUNNEL',
     title: 'analytics.page.funnel.title',

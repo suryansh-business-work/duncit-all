@@ -101,6 +101,8 @@ export interface StoreSearchInput {
   max_price?: number | null;
   in_stock_only?: boolean | null;
   on_sale?: boolean | null;
+  /** At least this much off MRP — a flash sale's "30% and more" tab. */
+  min_discount_pct?: number | null;
   sort?: StoreSort | null;
   page?: number | null;
   page_size?: number | null;
@@ -275,6 +277,8 @@ function postFilter(input: StoreSearchInput, collectionPost: Record<string, unkn
   if (Object.keys(price).length) post._price = price;
   if (input.in_stock_only) post._in_stock = true;
   if (input.on_sale) post._discount = { $gt: 0 };
+  const minDiscount = Math.min(95, Math.max(0, Number(input.min_discount_pct) || 0));
+  if (minDiscount > 0) post._discount = { $gte: minDiscount };
   return post;
 }
 

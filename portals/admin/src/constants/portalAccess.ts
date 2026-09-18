@@ -83,6 +83,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'communications', name: 'Communications', url: url('communications'), roles: [{ key: 'COMMUNICATIONS_MANAGER', name: 'Communications Manager' }] },
   { key: 'logs', name: 'Logs', url: url('logs'), roles: [{ key: 'LOGS_MANAGER', name: 'Logs Manager' }] },
   { key: 'analytics', name: 'Analytics', url: url('analytics'), roles: [{ key: 'ANALYTICS_MANAGER', name: 'Analytics Manager' }] },
+  { key: 'ecomm-portal', name: 'E-commerce', url: url('ecomm-portal'), roles: [{ key: 'ECOMM_MANAGER', name: 'E-commerce Manager' }] },
 ];
 
 export interface RolePortalInfo {

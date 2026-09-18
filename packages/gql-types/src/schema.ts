@@ -934,6 +934,7 @@ export type AnalyticsEntity =
   | 'HOSTS'
   | 'LEGAL'
   | 'MARKETING'
+  | 'PET_STORE'
   | 'PODS'
   | 'REVENUE'
   | 'REWARDS'

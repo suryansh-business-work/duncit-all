@@ -33,6 +33,10 @@ export const storeTypeDefs = /* GraphQL */ `
     min_order_value: Float!
     free_shipping_above: Float!
     max_qty_per_line: Int!
+    autoship_enabled: Boolean!
+    autoship_discount_pct: Float!
+    "Delivery intervals a subscription may choose, in weeks."
+    autoship_frequencies: [Int!]!
     returns_enabled: Boolean!
     return_window_days: Int!
     return_reasons: [String!]!
@@ -194,6 +198,8 @@ export const storeTypeDefs = /* GraphQL */ `
     max_price: Float
     in_stock_only: Boolean
     on_sale: Boolean
+    "At least this much off MRP (a flash sale tab)."
+    min_discount_pct: Int
     sort: StoreSort
     page: Int
     page_size: Int
@@ -318,6 +324,12 @@ export const storeTypeDefs = /* GraphQL */ `
     BRANDS
     USP_STRIP
     NEWSLETTER
+    "A countdown sale: ends_at is the deadline, discount_tiers the tabs."
+    FLASH_SALE
+    "A product carousel from a collection, a category, hand-picked products or a best-seller/newest/discount list."
+    PRODUCT_SLIDER
+    "A row of round category icons."
+    CATEGORY_ICONS
   }
 
   type StoreSectionItem {
@@ -341,6 +353,10 @@ export const storeTypeDefs = /* GraphQL */ `
     categories: [StoreCategory!]!
     pet_types: [StorePetType!]!
     brands: [StoreBrandInfo!]!
+    "FLASH_SALE: the discount tabs, in percent."
+    discount_tiers: [Int!]!
+    "When the block stops showing; a FLASH_SALE counts down to it."
+    ends_at: String
   }
 
   type StorePetTypePage {
@@ -472,6 +488,8 @@ export const storeTypeDefs = /* GraphQL */ `
     coupon_code: String
     redeem_coins: Int
     email: String
+    "When checkout came from an Autoship Order now — earns the autoship discount."
+    autoship_id: ID
   }
 
   type StoreCheckoutQuote {
@@ -483,6 +501,7 @@ export const storeTypeDefs = /* GraphQL */ `
     coupon_discount: Float!
     coupon_error: String
     prepaid_discount: Float!
+    autoship_discount: Float!
     shipping_total: Float!
     "True when every parcel was rated live by the courier."
     shipping_quoted: Boolean!
@@ -533,6 +552,7 @@ export const storeTypeDefs = /* GraphQL */ `
     "From storeRequestCodOtp + storeVerifyCodOtp, when COD needs a verified phone."
     cod_challenge_id: ID
     checkout_url: String
+    autoship_id: ID
   }
 
   enum StoreOrderResultStatus {
@@ -725,6 +745,68 @@ export const storeTypeDefs = /* GraphQL */ `
     images: [String!]
   }
 
+  enum StoreSubscriptionStatus {
+    ACTIVE
+    PAUSED
+    CANCELLED
+  }
+
+  enum StoreSubscriptionMode {
+    "We place a Cash-on-Delivery order automatically each cycle."
+    COD_AUTO
+    "We remind the buyer when it is due; they order it in one tap."
+    REMIND
+  }
+
+  type StoreSubscriptionEvent {
+    action: String!
+    note: String!
+    at: String!
+  }
+
+  "An Autoship subscription — one product every N weeks."
+  type StoreSubscription {
+    id: ID!
+    "Null when the product is no longer on the shelf."
+    product: StoreProductCard
+    product_id: ID!
+    variant_id: String!
+    variant_label: String!
+    qty: Int!
+    frequency_weeks: Int!
+    mode: StoreSubscriptionMode!
+    status: StoreSubscriptionStatus!
+    next_run_at: String
+    last_run_at: String
+    last_order_no: String!
+    run_count: Int!
+    unit_price: Float!
+    discount_pct: Float!
+    shipping_address: StoreOrderAddress
+    events: [StoreSubscriptionEvent!]!
+    created_at: String!
+  }
+
+  input StoreSubscriptionInput {
+    product_id: ID!
+    variant_id: String
+    qty: Int!
+    frequency_weeks: Int!
+    mode: StoreSubscriptionMode!
+    contact: StoreContactInput!
+    shipping_address: StoreAddressInput!
+    "COD_AUTO with cod_requires_otp: the verified phone challenge."
+    cod_challenge_id: ID
+  }
+
+  input StoreSubscriptionUpdateInput {
+    qty: Int
+    frequency_weeks: Int
+    mode: StoreSubscriptionMode
+    shipping_address: StoreAddressInput
+    cod_challenge_id: ID
+  }
+
   extend type Query {
     storeSettings: StorePublicSettings!
     storeNavigation: StoreNavigation!
@@ -756,6 +838,8 @@ export const storeTypeDefs = /* GraphQL */ `
     storeOrderReturns(order_no: String!, access_key: String): [StoreReturn!]!
     "The order's tax invoice as base64 PDF."
     storeInvoicePdf(order_no: String!, access_key: String): String!
+    "The signed-in buyer's Autoship subscriptions."
+    storeMySubscriptions: [StoreSubscription!]!
   }
 
   extend type Mutation {
@@ -779,5 +863,13 @@ export const storeTypeDefs = /* GraphQL */ `
     storeRequestReturn(input: StoreReturnRequestInput!): StoreReturn!
     "A signed-in buyer's review of a product they received."
     storeSubmitReview(input: StoreReviewInput!): ProductReview!
+    storeCreateSubscription(input: StoreSubscriptionInput!): StoreSubscription!
+    storeUpdateSubscription(id: ID!, input: StoreSubscriptionUpdateInput!): StoreSubscription!
+    storePauseSubscription(id: ID!, paused: Boolean!): StoreSubscription!
+    "Push the next delivery back by one cycle."
+    storeSkipSubscription(id: ID!): StoreSubscription!
+    storeCancelSubscription(id: ID!): StoreSubscription!
+    "Put this delivery in the cart; check out with autoship_id for the discount."
+    storeSubscriptionOrderNow(id: ID!, cart_token: String): StoreCart!
   }
 `;

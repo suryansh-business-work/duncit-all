@@ -25,6 +25,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     SERVER
     APP_RELEASES
     FUNNEL
+    "The Duncit Pet Store (ecomm.duncit.com)."
+    PET_STORE
   }
 
   "What kind of number a value is, so the console formats it."

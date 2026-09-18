@@ -81,7 +81,10 @@ export type StoreHomeSectionKind =
   | 'PROMO_BANNERS'
   | 'BRANDS'
   | 'USP_STRIP'
-  | 'NEWSLETTER';
+  | 'NEWSLETTER'
+  | 'FLASH_SALE'
+  | 'PRODUCT_SLIDER'
+  | 'CATEGORY_ICONS';
 
 export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'HERO_SLIDER',
@@ -92,6 +95,29 @@ export const STORE_HOME_SECTION_KINDS: StoreHomeSectionKind[] = [
   'BRANDS',
   'USP_STRIP',
   'NEWSLETTER',
+  'FLASH_SALE',
+  'PRODUCT_SLIDER',
+  'CATEGORY_ICONS',
+];
+
+/** Where a PRODUCT_SLIDER takes its products from. */
+export type StoreSectionProductSource =
+  | 'MANUAL'
+  | 'COLLECTION'
+  | 'CATEGORY'
+  | 'BESTSELLING'
+  | 'NEWEST'
+  | 'DISCOUNT'
+  | 'FEATURED';
+
+export const STORE_SECTION_PRODUCT_SOURCES: StoreSectionProductSource[] = [
+  'MANUAL',
+  'COLLECTION',
+  'CATEGORY',
+  'BESTSELLING',
+  'NEWEST',
+  'DISCOUNT',
+  'FEATURED',
 ];
 
 /** One slide / tile / badge inside a block. */
@@ -112,6 +138,11 @@ export interface IStoreHomeSection extends Document {
   collection_id: Types.ObjectId | null;
   category_ids: Types.ObjectId[];
   product_limit: number;
+  /** A FLASH_SALE's discount tabs (10, 20, 30…): each shows products at least that much off. */
+  discount_tiers: number[];
+  product_source: StoreSectionProductSource;
+  /** Hand-picked products for a MANUAL slider, in the order they show. */
+  product_ids: Types.ObjectId[];
   sort_order: number;
   is_active: boolean;
   starts_at: Date | null;
@@ -141,6 +172,9 @@ const homeSectionSchema = new Schema<IStoreHomeSection>(
     collection_id: { type: Schema.Types.ObjectId, ref: 'StoreCollection', default: null },
     category_ids: { type: [Schema.Types.ObjectId], ref: 'StoreCategory', default: [] },
     product_limit: { type: Number, default: 12, min: 1, max: 48 },
+    discount_tiers: { type: [Number], default: [] },
+    product_source: { type: String, enum: STORE_SECTION_PRODUCT_SOURCES, default: 'COLLECTION' },
+    product_ids: { type: [Schema.Types.ObjectId], ref: 'InventoryProduct', default: [] },
     sort_order: { type: Number, default: 0, index: true },
     is_active: { type: Boolean, default: true },
     starts_at: { type: Date, default: null },

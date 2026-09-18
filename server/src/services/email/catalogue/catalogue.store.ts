@@ -11,6 +11,42 @@ import { defineEmail, v, type EmailDef } from './catalogue.types';
  */
 export const STORE_EMAILS: readonly EmailDef[] = [
   defineEmail({
+    slug: 'store-order-cod',
+    name: 'Pet Store — Cash on Delivery Order Confirmed',
+    description:
+      'The buyer of a pet-store Cash-on-Delivery order, the moment it is booked — in place of the paid receipt, because nothing has been paid yet. The invoice PDF is attached.',
+    audience: 'USER',
+    category: 'transactional',
+    fires: 'A pet-store COD order is placed',
+    subject: 'Order confirmed — pay on delivery ({{order_no}})',
+    footerNote: FOOTER.purchase,
+    vars: [
+      v('name', 'Who ordered.', 'Aarav Sharma'),
+      v('order_no', 'The order number(s), comma-joined when the parcel is split.', 'ord_m2x8k1c4f3a91b2'),
+      v('items', 'What was ordered, with quantities.', 'Grain-free Puppy Food 3 kg × 1'),
+      v('invoice_no', 'The invoice reference, and the PDF attached beside it.', 'DUN-INV-2026-000412'),
+      v('payment_id', 'The payment record id, for support.', 'pay_QK2f81ZzX9'),
+      v('amount', 'What to pay the courier, pre-formatted with its currency.', '₹649.00'),
+      v('orders_url', 'Where the buyer tracks the order.', 'https://ecomm.duncit.com/account/orders'),
+    ],
+    body: {
+      copyKey: 'email.storeOrderCod',
+      nameVar: 'name',
+      tone: CALM,
+      calloutLabelKey: LABEL.order,
+      calloutVar: 'order_no',
+      rows: [
+        { labelKey: FIELD.items, valueVar: 'items' },
+        { labelKey: FIELD.amount, valueVar: 'amount' },
+        { labelKey: FIELD.invoiceNo, valueVar: 'invoice_no' },
+        { labelKey: FIELD.paymentId, valueVar: 'payment_id' },
+      ],
+      ctaKey: CTA.viewOrder,
+      ctaVar: 'orders_url',
+    },
+  }),
+
+  defineEmail({
     slug: 'store-order-update',
     name: 'Pet Store — Order Update',
     description:
@@ -104,6 +140,38 @@ export const STORE_EMAILS: readonly EmailDef[] = [
       ctaKey: CTA.shopNow,
       ctaVar: 'product_url',
       helpKey: HELP.noAction,
+    },
+  }),
+
+  defineEmail({
+    slug: 'store-autoship-due',
+    name: 'Pet Store — Autoship Due',
+    description:
+      'A buyer whose reminder-style Autoship subscription has come due, so they can order this delivery in one tap.',
+    audience: 'USER',
+    category: 'transactional',
+    fires: 'A REMIND Autoship subscription reaches its next date',
+    subject: 'Time for your next {{product_name}}',
+    footerNote: FOOTER.account,
+    vars: [
+      v('name', 'The buyer’s first name.', 'Aarav'),
+      v('product_name', 'What the subscription is for.', 'Grain-free Puppy Food 3 kg'),
+      v('qty', 'How many each delivery.', '2'),
+      v('frequency', 'Every how many weeks.', '4'),
+      v('autoship_url', 'The store’s Autoship page.', 'https://ecomm.duncit.com/autoship'),
+    ],
+    body: {
+      copyKey: 'email.storeAutoshipDue',
+      nameVar: 'name',
+      tone: CALM,
+      calloutLabelKey: LABEL.product,
+      calloutVar: 'product_name',
+      rows: [
+        { labelKey: FIELD.eachDelivery, valueVar: 'qty' },
+        { labelKey: FIELD.autoshipEvery, valueVar: 'frequency' },
+      ],
+      ctaKey: CTA.orderNow,
+      ctaVar: 'autoship_url',
     },
   }),
 

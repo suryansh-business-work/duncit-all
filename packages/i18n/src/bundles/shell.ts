@@ -324,6 +324,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Every number, one console',
         promoText: 'Bookings, revenue and growth across Duncit, read from one place.',
       },
+      ecommPortal: {
+        tagline: 'Run the Duncit Pet Store — shelves, orders and customers in one place.',
+        promoTitle: 'Everything your pet store needs',
+        promoText: 'List products, build the home page, ship orders and settle returns.',
+      },
       hosts: {
         tagline: 'Every host on Duncit, in one place.',
         promoTitle: 'Every host, one list',
@@ -510,6 +515,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       createAd: 'Create Ad',
       createAds: 'Create Ads',
       clubAdmins: 'Club Admins',
+      petStore: 'Pet Store',
       dashboard: 'Dashboard',
       data: 'Data',
       database: 'Database',

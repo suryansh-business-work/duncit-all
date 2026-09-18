@@ -32,6 +32,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     return_reasons: [String!]!
     cancel_reasons: [String!]!
     restock_on_cancel: Boolean!
+    autoship_enabled: Boolean!
+    autoship_discount_pct: Float!
+    autoship_frequencies: [Int!]!
     seo_title: String!
     seo_description: String!
     og_image_url: String!
@@ -78,6 +81,10 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     return_reasons: [String!]
     cancel_reasons: [String!]
     restock_on_cancel: Boolean
+    autoship_enabled: Boolean
+    autoship_discount_pct: Float
+    "Weeks, 1-26."
+    autoship_frequencies: [Int!]
     seo_title: String
     seo_description: String
     og_image_url: String
@@ -223,6 +230,17 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     seo_description: String
   }
 
+  "Where a PRODUCT_SLIDER takes its products from."
+  enum StoreSectionProductSource {
+    MANUAL
+    COLLECTION
+    CATEGORY
+    BESTSELLING
+    NEWEST
+    DISCOUNT
+    FEATURED
+  }
+
   type StoreAdminSection {
     id: ID!
     kind: StoreHomeSectionKind!
@@ -232,6 +250,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     collection_id: ID
     category_ids: [ID!]!
     product_limit: Int!
+    discount_tiers: [Int!]!
+    product_source: StoreSectionProductSource!
+    product_ids: [ID!]!
     sort_order: Int!
     is_active: Boolean!
     starts_at: String
@@ -255,6 +276,11 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     collection_id: ID
     category_ids: [ID!]
     product_limit: Int
+    "FLASH_SALE tabs, 1-90 percent."
+    discount_tiers: [Int!]
+    product_source: StoreSectionProductSource
+    "MANUAL slider: the picked products, in order."
+    product_ids: [ID!]
     is_active: Boolean
     starts_at: String
     ends_at: String
@@ -569,6 +595,34 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     listed_products: Int!
   }
 
+  "An Autoship subscription as the console lists it."
+  type StoreAdminSubscriptionRow {
+    id: ID!
+    buyer_name: String!
+    buyer_email: String!
+    product_id: ID!
+    product_name: String!
+    variant_label: String!
+    qty: Int!
+    frequency_weeks: Int!
+    mode: StoreSubscriptionMode!
+    status: StoreSubscriptionStatus!
+    next_run_at: String
+    last_run_at: String
+    last_order_no: String!
+    run_count: Int!
+    "Consecutive automatic cycles that could not be booked."
+    failures: Int!
+    created_at: String!
+  }
+
+  type StoreSubscriptionTablePage {
+    rows: [StoreAdminSubscriptionRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     storeAdminSettings: StoreSettings!
     storeAdminPetTypes: [StoreAdminPetType!]!
@@ -595,6 +649,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeReviewsTable(query: TableQueryInput): StoreReviewTablePage!
     storeCouponsTable(query: TableQueryInput): CouponTablePage!
     storeDashboard(days: Int): StoreDashboard!
+    storeSubscriptionsTable(query: TableQueryInput): StoreSubscriptionTablePage!
   }
 
   extend type Mutation {
@@ -634,5 +689,6 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Create (no id) or update a STORE-scoped coupon."
     storeSaveCoupon(id: ID, input: CreateCouponInput!): Coupon!
     storeDeleteCoupon(id: ID!): Boolean!
+    storeAdminSetSubscriptionStatus(id: ID!, status: StoreSubscriptionStatus!): StoreAdminSubscriptionRow!
   }
 `;

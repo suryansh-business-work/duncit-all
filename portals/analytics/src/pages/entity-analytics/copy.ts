@@ -26,6 +26,20 @@ export interface LeaderboardCopy extends TitledCopy {
 }
 
 export const KPI_COPY: CopyMap<TitledCopy> = {
+  store_revenue: { title: 'analytics.kpi.storeRevenue', hint: 'analytics.kpi.storeRevenueHint' },
+  store_orders: { title: 'analytics.kpi.storeOrders', hint: 'analytics.kpi.storeOrdersHint' },
+  store_aov: { title: 'analytics.kpi.storeAov', hint: 'analytics.kpi.storeAovHint' },
+  store_units: { title: 'analytics.kpi.storeUnits', hint: 'analytics.kpi.storeUnitsHint' },
+  store_customers: { title: 'analytics.kpi.storeCustomers', hint: 'analytics.kpi.storeCustomersHint' },
+  store_new_customers: { title: 'analytics.kpi.storeNewCustomers', hint: 'analytics.kpi.storeNewCustomersHint' },
+  store_returning_rate: { title: 'analytics.kpi.storeReturningRate', hint: 'analytics.kpi.storeReturningRateHint' },
+  store_cancel_rate: { title: 'analytics.kpi.storeCancelRate', hint: 'analytics.kpi.storeCancelRateHint' },
+  store_return_rate: { title: 'analytics.kpi.storeReturnRate', hint: 'analytics.kpi.storeReturnRateHint' },
+  store_cod_share: { title: 'analytics.kpi.storeCodShare', hint: 'analytics.kpi.storeCodShareHint' },
+  store_guest_share: { title: 'analytics.kpi.storeGuestShare', hint: 'analytics.kpi.storeGuestShareHint' },
+  store_abandoned_carts: { title: 'analytics.kpi.storeAbandonedCarts', hint: 'analytics.kpi.storeAbandonedCartsHint' },
+  store_listed_products: { title: 'analytics.kpi.storeListedProducts', hint: 'analytics.kpi.storeListedProductsHint' },
+  store_active_subscriptions: { title: 'analytics.kpi.storeActiveSubscriptions', hint: 'analytics.kpi.storeActiveSubscriptionsHint' },
   users_total: { title: 'analytics.kpi.usersTotal', hint: 'analytics.kpi.usersTotalHint' },
   new_signups: { title: 'analytics.kpi.newSignups', hint: 'analytics.kpi.newSignupsHint' },
   active_users: { title: 'analytics.kpi.activeUsers', hint: 'analytics.kpi.activeUsersHint' },
@@ -86,6 +100,9 @@ export const KPI_COPY: CopyMap<TitledCopy> = {
 };
 
 export const TREND_COPY: CopyMap<TitledCopy> = {
+  store_revenue: { title: 'analytics.trend.storeRevenue', hint: 'analytics.trend.storeRevenueHint' },
+  store_orders: { title: 'analytics.trend.storeOrders', hint: 'analytics.trend.storeOrdersHint' },
+  store_customers: { title: 'analytics.trend.storeCustomers', hint: 'analytics.trend.storeCustomersHint' },
   user_activity: { title: 'analytics.trend.userActivity', hint: 'analytics.trend.userActivityHint' },
   signups: { title: 'analytics.trend.signups', hint: 'analytics.trend.signupsHint' },
   accounts_total: { title: 'analytics.trend.accountsTotal', hint: 'analytics.trend.accountsTotalHint' },
@@ -103,6 +120,8 @@ export const TREND_COPY: CopyMap<TitledCopy> = {
 
 /** A series reads like the tile it shares a key with; these have no tile. */
 export const SERIES_COPY: CopyMap<string> = {
+  store_cancelled: 'analytics.series.storeCancelled',
+  store_orders_returning: 'analytics.series.storeOrdersReturning',
   accounts_total: 'analytics.series.accountsTotal',
   pods_cancelled: 'analytics.series.podsCancelled',
   backouts: 'analytics.series.backouts',
@@ -117,6 +136,15 @@ export const GRANULARITY_COPY: Record<AnalyticsGranularity, string> = {
 };
 
 export const BREAKDOWN_COPY: CopyMap<string> = {
+  store_orders_by_status: 'analytics.breakdown.storeOrdersByStatus',
+  store_payment_method: 'analytics.breakdown.storePaymentMethod',
+  store_buyer_type: 'analytics.breakdown.storeBuyerType',
+  store_revenue_by_pet: 'analytics.breakdown.storeRevenueByPet',
+  store_revenue_by_category: 'analytics.breakdown.storeRevenueByCategory',
+  store_revenue_by_brand: 'analytics.breakdown.storeRevenueByBrand',
+  store_orders_by_city: 'analytics.breakdown.storeOrdersByCity',
+  store_basket_value: 'analytics.breakdown.storeBasketValue',
+  store_order_hour: 'analytics.breakdown.storeOrderHour',
   activity_frequency: 'analytics.breakdown.activityFrequency',
   top_screens: 'analytics.breakdown.topScreens',
   users_by_city: 'analytics.breakdown.usersByCity',
@@ -157,6 +185,11 @@ export const BREAKDOWN_COPY: CopyMap<string> = {
 };
 
 export const LEADERBOARD_COPY: CopyMap<LeaderboardCopy> = {
+  top_store_products: {
+    title: 'analytics.leaderboard.topStoreProducts',
+    hint: 'analytics.leaderboard.topStoreProductsHint',
+    name: 'analytics.leaderboard.storeProduct',
+  },
   top_clubs: {
     title: 'analytics.leaderboard.topClubs',
     hint: 'analytics.leaderboard.topClubsHint',
@@ -176,6 +209,7 @@ export const LEADERBOARD_COPY: CopyMap<LeaderboardCopy> = {
 };
 
 export const COLUMN_COPY: CopyMap<string> = {
+  units: 'analytics.leaderboard.units',
   clubs: 'analytics.leaderboard.clubs',
   pods_held: 'analytics.leaderboard.podsHeld',
   seats_filled: 'analytics.leaderboard.seatsFilled',

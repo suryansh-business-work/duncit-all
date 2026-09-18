@@ -14,7 +14,7 @@ describe('config identifier lists', () => {
   });
 
   it('includes the marketing websites and no duplicates', () => {
-    expect(WEBSITES).toEqual(['duncit', 'partners', 'ads', 'status', 'earnwith']);
+    expect(WEBSITES).toEqual(['duncit', 'partners', 'ads', 'status', 'earnwith', 'ecomm']);
     expect(new Set(WEBSITES).size).toBe(WEBSITES.length);
   });
 });

@@ -668,6 +668,20 @@ async function productReceiptMail(p: IPayment, appUrl: string): Promise<ReceiptM
   };
 }
 
+/**
+ * A pet-store Cash-on-Delivery order: nothing has been paid yet, so it is an
+ * order CONFIRMATION — the amount is what the courier will collect — rather
+ * than the "your order is paid" receipt.
+ */
+async function codOrderMail(p: IPayment, appUrl: string): Promise<ReceiptMail> {
+  const receipt = await productReceiptMail(p, appUrl);
+  return {
+    ...receipt,
+    template: 'store-order-cod',
+    subject: `Order confirmed — pay on delivery (${receipt.vars.order_no})`,
+  };
+}
+
 /** Where a pet-store receipt sends its reader. */
 async function storeOrdersUrl(p: IPayment, orderNo: string): Promise<string> {
   const { ecommUrl } = await getUrlConfigs();
@@ -731,6 +745,7 @@ async function receiptMailFor(
   currencySymbol: string
 ): Promise<ReceiptMail> {
   if (p.target_type === 'POD') return podReceiptMail(p, bookingUrl);
+  if (p.gateway === COD_GATEWAY) return codOrderMail(p, appUrl);
   if (p.target_type === 'PRODUCT') return productReceiptMail(p, appUrl);
   if (p.target_type === 'GIFT_CARD') return giftCardReceiptMail(p, appUrl, currencySymbol);
   return otherReceiptMail(p, bookingUrl);

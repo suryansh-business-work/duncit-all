@@ -44,6 +44,9 @@ env:
   ADS_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads.duncit.com' || 'https://ads.duncit.com' }}
   ADS_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads-portal.duncit.com' || 'https://ads-portal.duncit.com' }}
   EARNWITH_URL: ${{ github.ref_name == 'staging' && 'https://staging.earnwith.duncit.com' || 'https://earnwith.duncit.com' }}
+  # The pet store: its storefront (canonical URLs, sitemap, email links) and
+  # the console that runs it.
+  ECOMM_URL: ${{ github.ref_name == 'staging' && 'https://staging.ecomm.duncit.com' || 'https://ecomm.duncit.com' }}
   # Build-time Google creds baked into the frontend bundles. Staging builds
   # prefer the STAGING_-prefixed secret and fall back to the production one
   # when it is not set. (Runtime service creds — SMTP/ImageKit/OpenAI/... —
@@ -190,6 +193,8 @@ jobs:
       communications: ${{ steps.filter.outputs.communications }}
       logs: ${{ steps.filter.outputs.logs }}
       analytics: ${{ steps.filter.outputs.analytics }}
+      ecomm_portal: ${{ steps.filter.outputs.ecomm_portal }}
+      ecomm_store: ${{ steps.filter.outputs.ecomm_store }}
       earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
       - uses: actions/checkout@v5
@@ -493,6 +498,24 @@ jobs:
               - '.github/workflows/deploy.yml'
             analytics:
               - 'portals/analytics/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            ecomm_portal:
+              - 'portals/ecomm-portal/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            ecomm_store:
+              - 'website/ecomm-store/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -1729,6 +1752,76 @@ jobs:
           command: |
             docker buildx build               --file portals/analytics/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=ANALYTICS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }},mode=max               --push .
 
+  build-ecomm-portal:
+    needs: changes
+    if: needs.changes.outputs.ecomm_portal == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ecomm-portal
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push ecomm-portal
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file portals/ecomm-portal/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg VITE_REQUIRED_ROLES=ECOMM_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_STORE_URL=${{ env.ECOMM_URL }} \
+              --cache-from type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }},mode=max \
+              --push .
+
+  build-ecomm-store:
+    needs: changes
+    if: needs.changes.outputs.ecomm_store == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ecomm-store
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push ecomm-store
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file website/ecomm-store/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-store:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-store:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_MWEB_URL=${{ env.MWEB_URL }} \
+              --build-arg VITE_SITE_URL=${{ env.ECOMM_URL }} \
+              --cache-from type=gha,scope=duncit-ecomm-store${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-ecomm-store${{ env.SCOPE_SUFFIX }},mode=max \
+              --push .
+
   build-earnwith:
     needs: changes
     if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
@@ -1769,8 +1862,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-earnwith]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-earnwith.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-ecomm-portal, build-ecomm-store, build-earnwith]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-ecomm-portal.result == 'success' || needs.build-ecomm-store.result == 'success' || needs.build-earnwith.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Branch-aware deploy target: the staging stack lives side-by-side with
@@ -1844,6 +1937,8 @@ jobs:
           [ "${{ needs.build-communications.result }}" = "success" ] && PARTS+=("communications")
           [ "${{ needs.build-logs.result }}" = "success" ] && PARTS+=("logs")
           [ "${{ needs.build-analytics.result }}" = "success" ] && PARTS+=("analytics")
+          [ "${{ needs.build-ecomm-portal.result }}" = "success" ] && PARTS+=("ecomm-portal")
+          [ "${{ needs.build-ecomm-store.result }}" = "success" ] && PARTS+=("ecomm-store")
           [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
@@ -1896,6 +1991,7 @@ jobs:
           MWEB_BASE_URL=${{ env.MWEB_URL }}
           PUBLIC_SITE_URL=${{ env.MAIN_SITE_URL }}
           SERVER_URL=${{ env.SERVER_URL }}
+          ECOMM_URL=${{ env.ECOMM_URL }}
           REDIS_URL=redis://redis:6379
           RUN_POD_TYPE_MIGRATION=1
           RUN_CLUB_ADMIN_BACKFILL=1
@@ -2027,7 +2123,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com ecomm.duncit.com ecomm-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -2084,7 +2180,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else

@@ -17,6 +17,7 @@ export type AnalyticsEntity =
   | 'CLUBS'
   | 'CLUB_ADMINS'
   | 'HOSTS'
+  | 'PET_STORE'
   | 'DATABASE'
   | 'ENV_KEYS'
   | 'SONARQUBE'

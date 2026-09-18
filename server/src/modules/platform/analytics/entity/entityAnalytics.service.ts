@@ -23,6 +23,7 @@ import { apiPerformanceAnalytics } from './apiPerformance.analytics';
 import { serverAnalytics } from './server.analytics';
 import { appReleaseAnalytics } from './appReleases.analytics';
 import { funnelAnalytics } from './funnel.analytics';
+import { petStoreAnalytics } from './petStore.analytics';
 import type { Environment } from '@modules/ai/askBot/askBot.links';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
@@ -53,6 +54,7 @@ const LOADERS: Record<AnalyticsEntity, (window: AnalyticsWindow) => Promise<Enti
   SERVER: serverAnalytics,
   APP_RELEASES: appReleaseAnalytics,
   FUNNEL: funnelAnalytics,
+  PET_STORE: petStoreAnalytics,
 };
 
 /**
@@ -71,6 +73,7 @@ const PAGE_LINKS: Partial<Record<AnalyticsEntity, ConsoleLink>> = {
   ENV_KEYS: consoleLink('tech', '/'),
   STRESS_TESTS: consoleLink('tech', '/stress-testing/runs'),
   E2E_TESTS: consoleLink('tech', '/e2e/runs'),
+  PET_STORE: consoleLink('ecomm-portal', '/'),
 };
 
 /** The pages whose every number can be narrowed to one city (see city.ts). */

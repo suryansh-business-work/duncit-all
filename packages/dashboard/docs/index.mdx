@@ -42,6 +42,10 @@ exports:
   - 'CELL_HEIGHT'
   - 'BREAKPOINTS'
   - 'DRAG_HANDLE_CLASS'
+  - 'arrangeLayout'
+  - 'ARRANGE_ACTIONS'
+  - 'ArrangeAction'
+  - 'DashboardArrange'
 ---
 
 ## Why this exists
@@ -154,3 +158,26 @@ is also what keeps `headerActions` buttons clickable while their header drags.
 
 **Save** writes the arrangement, **Cancel** puts back what was there when editing began, and
 **Reset to default** (behind a confirm) deletes the stored row.
+
+### Without dragging (WCAG 2.2 AA)
+
+Dragging can never be the only way in: 2.5.7 Dragging Movements asks for a single-pointer
+alternative, and 2.1.1 Keyboard for one that works with no pointer at all. So in edit mode every
+widget also carries an **Arrange** button (the four-way arrow, named "Move or resize {title}"). It
+opens a menu of six moves:
+
+| Move | What it does |
+| --- | --- |
+| Move earlier / Move later | Trades slots with the previous / next widget in reading order (top to bottom, then left to right). Each keeps its own size. |
+| Make wider / narrower | One column more or less, never below the widget's minimum. |
+| Make taller / shorter | One row more or less. Never offered on a `fitContent` widget — its height is measured. |
+
+A move that would change nothing right now is shown disabled — what is possible is read off the
+live grid when the menu opens, because GridStack, not React, owns where the widgets sit. A move
+goes through the same path as a drag: the grid pushes and packs neighbours, **Save** lights up,
+and **Cancel** undoes it.
+
+The maths is `arrangeLayout(items, id, action, min)`, a pure function over the stored layout —
+exported so a test can assert a move without mounting a grid. `DashboardGrid` and
+`DashboardWidgetCard` take the menu as an optional `arrange` prop (`DashboardArrange`);
+`DuncitDashboard` always passes it.

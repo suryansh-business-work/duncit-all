@@ -78,6 +78,20 @@ export function DuncitDashboard({ dashboardId, widgets, header, cellHeight }: Du
         editing={controller.editing}
         dragLabel={t('shell.dashboard.dragHandle')}
         containerRef={controller.containerRef}
+        arrange={{
+          available: controller.availableMoves,
+          apply: controller.arrangeWidget,
+          buttonLabel: (name) =>
+            name ? t('shell.dashboard.arrangeNamed', { vars: { name } }) : t('shell.dashboard.arrange'),
+          labels: {
+            earlier: t('shell.dashboard.moveEarlier'),
+            later: t('shell.dashboard.moveLater'),
+            wider: t('shell.dashboard.wider'),
+            narrower: t('shell.dashboard.narrower'),
+            taller: t('shell.dashboard.taller'),
+            shorter: t('shell.dashboard.shorter'),
+          },
+        }}
       />
 
       <ConfirmDialog

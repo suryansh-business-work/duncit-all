@@ -78,6 +78,7 @@ export function VenueSlotRequestsScreen() {
 
         {slots.feedback && (
           <Text
+            role="button"
             hitSlop={12}
             pressStyle={PRESS_STYLE.inline}
             fontSize={13}

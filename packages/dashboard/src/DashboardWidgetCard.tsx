@@ -1,9 +1,10 @@
 import { Box, Card, Stack, Tooltip, Typography } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { ArrangeMenu } from './ArrangeMenu';
 import { DRAG_HANDLE_CLASS } from './useGridStack';
-import type { DashboardWidget } from './types';
+import type { DashboardArrange, DashboardWidget } from './types';
 
-type GripProps = Readonly<{ label: string; floating?: boolean }>;
+type GripProps = Readonly<{ label: string }>;
 
 /**
  * The visible "drag me" affordance.
@@ -14,7 +15,7 @@ type GripProps = Readonly<{ label: string; floating?: boolean }>;
  * targets the <svg> inside it, never the button. Rendered as an IconButton this
  * grip looks draggable while every drag on it silently dies.
  */
-function DragGrip({ label, floating }: GripProps) {
+function DragGrip({ label }: GripProps) {
   return (
     <Tooltip title={label}>
       <Box
@@ -31,14 +32,6 @@ function DragGrip({ label, floating }: GripProps) {
           touchAction: 'none',
           color: 'text.secondary',
           '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
-          ...(floating && {
-            position: 'absolute',
-            top: 4,
-            right: 4,
-            zIndex: 2,
-            bgcolor: 'background.paper',
-            boxShadow: 1,
-          }),
         }}
       >
         <DragIndicatorIcon fontSize="small" />
@@ -47,14 +40,31 @@ function DragGrip({ label, floating }: GripProps) {
   );
 }
 
-type HeaderProps = Readonly<{ widget: DashboardWidget; editing: boolean; dragLabel: string }>;
+/** A bare section has no header, so its edit controls float over its corner. */
+const FLOATING_SX = {
+  position: 'absolute',
+  top: 4,
+  right: 4,
+  zIndex: 2,
+  alignItems: 'center',
+  borderRadius: 1,
+  bgcolor: 'background.paper',
+  boxShadow: 1,
+} as const;
+
+type HeaderProps = Readonly<{
+  widget: DashboardWidget;
+  editing: boolean;
+  dragLabel: string;
+  arrange?: DashboardArrange;
+}>;
 
 /**
  * While editing, the whole header row is a drag handle, not just the grip — a
  * 24px grip is a miserable drag target. Buttons inside `headerActions` stay
  * clickable: GridStack's skip list refuses drags that start on them.
  */
-function WidgetHeader({ widget, editing, dragLabel }: HeaderProps) {
+function WidgetHeader({ widget, editing, dragLabel, arrange }: HeaderProps) {
   return (
     <Stack
       direction="row"
@@ -88,6 +98,7 @@ function WidgetHeader({ widget, editing, dragLabel }: HeaderProps) {
         ) : null}
       </Box>
       {widget.headerActions}
+      {editing && arrange ? <ArrangeMenu widget={widget} arrange={arrange} /> : null}
     </Stack>
   );
 }
@@ -97,6 +108,8 @@ export type DashboardWidgetCardProps = Readonly<{
   editing: boolean;
   /** Localised label for the grip, so the package holds no literal copy. */
   dragLabel: string;
+  /** The non-drag way to move and resize — offered while editing when given. */
+  arrange?: DashboardArrange;
 }>;
 
 /**
@@ -109,7 +122,7 @@ export type DashboardWidgetCardProps = Readonly<{
  * the card must be its natural size — nothing here may stretch or scroll, or
  * the measurement reads back the very height it is supposed to produce.
  */
-export function DashboardWidgetCard({ widget, editing, dragLabel }: DashboardWidgetCardProps) {
+export function DashboardWidgetCard({ widget, editing, dragLabel, arrange }: DashboardWidgetCardProps) {
   const fit = !!widget.fitContent;
 
   const body = (
@@ -132,7 +145,12 @@ export function DashboardWidgetCard({ widget, editing, dragLabel }: DashboardWid
           ...(!fit && { height: '100%', display: 'flex', flexDirection: 'column' }),
         }}
       >
-        {editing ? <DragGrip label={dragLabel} floating /> : null}
+        {editing ? (
+          <Stack direction="row" sx={FLOATING_SX}>
+            <DragGrip label={dragLabel} />
+            {arrange ? <ArrangeMenu widget={widget} arrange={arrange} /> : null}
+          </Stack>
+        ) : null}
         {body}
       </Box>
     );
@@ -153,7 +171,9 @@ export function DashboardWidgetCard({ widget, editing, dragLabel }: DashboardWid
         ...(!fit && { height: '100%' }),
       }}
     >
-      {hasHeader ? <WidgetHeader widget={widget} editing={editing} dragLabel={dragLabel} /> : null}
+      {hasHeader ? (
+        <WidgetHeader widget={widget} editing={editing} dragLabel={dragLabel} arrange={arrange} />
+      ) : null}
       {body}
     </Card>
   );

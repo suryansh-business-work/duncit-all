@@ -1,5 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { defaultLayout, layoutsEqual, resolveLayout } from './layout';
+import {
+  arrangeLayout,
+  availableArrangeActions,
+  defaultLayout,
+  layoutsEqual,
+  minSizeOf,
+  resolveLayout,
+  type ArrangeAction,
+} from './layout';
 import { useDashboardLayout } from './useDashboardLayout';
 import { useGridStack } from './useGridStack';
 import type { DashboardLayoutItem, DashboardWidget } from './types';
@@ -27,6 +35,10 @@ export interface DashboardController {
   askReset: () => void;
   closeReset: () => void;
   confirmReset: () => void;
+  /** The Arrange menu's moves that would change something for a widget right now. */
+  availableMoves: (widget: DashboardWidget) => ArrangeAction[];
+  /** One Arrange move — lands in the same dirty / Save / Cancel flow as a drag. */
+  arrangeWidget: (widget: DashboardWidget, action: ArrangeAction) => void;
 }
 
 /**
@@ -130,6 +142,21 @@ export function useDashboardController(
       .catch(() => setError(labels.resetFailed));
   }, [grid, reset, finishEditing, labels.resetFailed]);
 
+  const availableMoves = useCallback(
+    (widget: DashboardWidget) => availableArrangeActions(grid.read(), widget),
+    [grid]
+  );
+
+  // `apply` moves widgets as a programmatic layout, which the grid's change
+  // handler deliberately ignores — so the edit is reported here instead.
+  const arrangeWidget = useCallback(
+    (widget: DashboardWidget, action: ArrangeAction) => {
+      grid.apply(arrangeLayout(grid.read(), widget.id, action, minSizeOf(widget)));
+      handleChange(grid.read());
+    },
+    [grid, handleChange]
+  );
+
   return {
     containerRef,
     layout,
@@ -144,5 +171,7 @@ export function useDashboardController(
     askReset,
     closeReset,
     confirmReset,
+    availableMoves,
+    arrangeWidget,
   };
 }

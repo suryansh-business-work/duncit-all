@@ -1834,6 +1834,15 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       customiseHint: 'Drag widgets by their handle, or drag a corner to resize.',
       editing: 'Editing layout',
       dragHandle: 'Drag to move this widget',
+      // The Arrange menu: moving and resizing without dragging (WCAG 2.5.7).
+      arrange: 'Move or resize widget',
+      arrangeNamed: 'Move or resize {name}',
+      moveEarlier: 'Move earlier',
+      moveLater: 'Move later',
+      wider: 'Make wider',
+      narrower: 'Make narrower',
+      taller: 'Make taller',
+      shorter: 'Make shorter',
       save: 'Save layout',
       saving: 'Saving…',
       // Success is silent by design: the grid leaves edit mode, which is the

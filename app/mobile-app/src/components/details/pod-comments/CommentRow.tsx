@@ -2,6 +2,7 @@ import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
+import type { AccessibilityActionEvent } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
@@ -36,12 +37,18 @@ export function CommentRow({
   const { t } = useTranslation();
   const liked = comment.liked_by_me;
   const authorName = comment.author_name || t('mweb.podDetails.anon');
+  const deleteActions = canDelete
+    ? [{ name: 'delete', label: t('mweb.podDetails.deleteComment') }]
+    : undefined;
   return (
     <XStack
       testID={`comment-row-${comment.id}`}
       gap={10}
       paddingVertical={10}
       alignItems="flex-start"
+      // Not one accessible element: the avatar, name and like inside stay
+      // separately reachable, and the delete rides on the text below.
+      accessible={false}
       onLongPress={canDelete ? onRequestDelete : undefined}
     >
       <PressScale
@@ -94,7 +101,17 @@ export function CommentRow({
             {relativeTime(comment.created_at)}
           </Text>
         </XStack>
-        <Text fontSize={13.5} color="$color">
+        <Text
+          fontSize={13.5}
+          color="$color"
+          // The long-press delete has no screen-reader gesture of its own, so
+          // an own comment carries it as a named action — mWeb's twin shows a
+          // delete button (2.1.1, 4.1.2).
+          accessibilityActions={deleteActions}
+          onAccessibilityAction={(event: AccessibilityActionEvent) => {
+            if (event.nativeEvent.actionName === 'delete') onRequestDelete();
+          }}
+        >
           {comment.text}
         </Text>
       </YStack>

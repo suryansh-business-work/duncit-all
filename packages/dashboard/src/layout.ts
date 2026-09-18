@@ -129,3 +129,88 @@ export function layoutsEqual(
     return other.h === item.h || !!ignoreHeightFor?.has(item.id);
   });
 }
+
+/**
+ * The moves the Arrange menu offers — the way to lay a dashboard out without
+ * dragging (WCAG 2.5.7 Dragging Movements, 2.1.1 Keyboard). Earlier / later
+ * walk the reading order; the rest grow or shrink the widget one cell.
+ */
+export const ARRANGE_ACTIONS = ['earlier', 'later', 'wider', 'narrower', 'taller', 'shorter'] as const;
+
+export type ArrangeAction = (typeof ARRANGE_ACTIONS)[number];
+
+/** The smallest a widget may be made — its own minimum, else its declared size capped at 3×2. */
+export function minSizeOf(widget: DashboardWidget): { w: number; h: number } {
+  const size = normalisePosition(widget.defaultLayout);
+  return { w: widget.minW ?? Math.min(size.w, 3), h: widget.minH ?? Math.min(size.h, 2) };
+}
+
+/** Top to bottom, then left to right — the order a sighted reader meets the widgets. */
+const byReadingOrder = (a: DashboardLayoutItem, b: DashboardLayoutItem): number => a.y - b.y || a.x - b.x;
+
+/** The widget trades places with its neighbour in reading order, each keeping its own size. */
+function swapWithNeighbour(
+  items: readonly DashboardLayoutItem[],
+  id: string,
+  step: 1 | -1
+): DashboardLayoutItem[] {
+  const ordered = [...items].sort(byReadingOrder);
+  const index = ordered.findIndex((item) => item.id === id);
+  const target = ordered[index];
+  const neighbour = ordered[index + step];
+  if (!target || !neighbour) return [...items];
+  const moveTo = (item: DashboardLayoutItem, to: DashboardLayoutItem): DashboardLayoutItem => ({
+    id: item.id,
+    ...normalisePosition({ x: to.x, y: to.y, w: item.w, h: item.h }),
+  });
+  return items.map((item) => {
+    if (item.id === target.id) return moveTo(item, neighbour);
+    if (item.id === neighbour.id) return moveTo(item, target);
+    return item;
+  });
+}
+
+/** One cell of growth per resize move; the minimum clamps the shrinking ones. */
+const RESIZE_STEP: Readonly<Record<Exclude<ArrangeAction, 'earlier' | 'later'>, { w: number; h: number }>> = {
+  wider: { w: 1, h: 0 },
+  narrower: { w: -1, h: 0 },
+  taller: { w: 0, h: 1 },
+  shorter: { w: 0, h: -1 },
+};
+
+/**
+ * The layout after one Arrange move. The result may overlap — the grid pushes
+ * and packs widgets as it applies it, exactly as it does after a drag.
+ */
+export function arrangeLayout(
+  items: readonly DashboardLayoutItem[],
+  id: string,
+  action: ArrangeAction,
+  min: { w: number; h: number }
+): DashboardLayoutItem[] {
+  if (action === 'earlier') return swapWithNeighbour(items, id, -1);
+  if (action === 'later') return swapWithNeighbour(items, id, 1);
+  const step = RESIZE_STEP[action];
+  return items.map((item) => {
+    if (item.id !== id) return item;
+    const w = Math.max(min.w, item.w + step.w);
+    const h = Math.max(min.h, item.h + step.h);
+    return { id, ...normalisePosition({ x: item.x, y: item.y, w, h }) };
+  });
+}
+
+/**
+ * The moves that would change something for this widget right now — the rest
+ * are shown disabled. A content-sized widget's height is measured, not chosen,
+ * so it never offers taller / shorter.
+ */
+export function availableArrangeActions(
+  items: readonly DashboardLayoutItem[],
+  widget: DashboardWidget
+): ArrangeAction[] {
+  const min = minSizeOf(widget);
+  return ARRANGE_ACTIONS.filter((action) => {
+    if (widget.fitContent && (action === 'taller' || action === 'shorter')) return false;
+    return !layoutsEqual(arrangeLayout(items, widget.id, action, min), items);
+  });
+}

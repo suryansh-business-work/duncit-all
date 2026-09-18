@@ -194,6 +194,7 @@ import {
   type ClubCityLocation,
   resolveThemeTokens,
   DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
   formatCount,
   launchProgress,
   showsWaitlist,
@@ -259,6 +260,8 @@ interface ContactChangeMock {
   numberStatus: SignupContactStatus;
   /** The `phone_otp_verification` feature flag (PHONE_OTP_FLAG). */
   phoneOtp: boolean;
+  /** Whether the box was changed since the dialog opened on the account's value. */
+  edited: boolean;
 }
 
 interface SignupStepMock {
@@ -512,7 +515,7 @@ export default defineDemos('utils', [
     id: 'city-launch',
     title: 'A city that has not launched yet',
     note:
-      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0.',
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front.',
     mock: {
       location_name: 'Ahmedabad',
       is_launched: false,
@@ -525,6 +528,14 @@ export default defineDemos('utils', [
       'Hero number': formatCount(mock.subscriber_count),
       'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
       'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+      'Picker order': [
+        { location_name: 'Surat', is_launched: true },
+        { location_name: 'Rajkot', is_launched: true },
+        mock,
+      ]
+        .sort(compareCitiesLaunchedFirst)
+        .map((city) => city.location_name)
+        .join(', '),
     }),
   }),
 
@@ -1108,7 +1119,9 @@ export default defineDemos('utils', [
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
       'contact details are required before the profile form will save. Set `numberStatus` ' +
       'to AVAILABLE and `Button disabled` flips to false: TAKEN or CHECKING keep it shut, ' +
-      'with the refusal under the box.',
+      "with the refusal under the box. Type the account's own phone_number into " +
+      '`draftNumber` and the button shuts again whatever `numberStatus` says, and with ' +
+      '`edited` on, `Under the box` says it is the current number.',
     mock: {
       email: 'ravi@duncit.com',
       phone_extension: '+91',
@@ -1120,6 +1133,7 @@ export default defineDemos('utils', [
       draftNumber: '9845099999',
       numberStatus: 'TAKEN',
       phoneOtp: false,
+      edited: true,
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1141,6 +1155,9 @@ export default defineDemos('utils', [
         isValid: true,
         numberStatus: mock.numberStatus,
         phoneOtp: mock.phoneOtp,
+        snapshot: account,
+        draft,
+        edited: mock.edited,
       });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,

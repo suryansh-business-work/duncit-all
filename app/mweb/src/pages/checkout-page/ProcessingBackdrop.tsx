@@ -29,7 +29,12 @@ export default function ProcessingBackdrop({ open, message }: Readonly<Props>) {
         p: 2,
       })}
     >
+      {/* A status region, so a screen reader hears that the payment is being
+          processed — and hears it change to "confirming" (WCAG 4.1.3). */}
       <Box
+        role="status"
+        aria-live="polite"
+        aria-busy
         sx={{
           width: 'min(360px, calc(100vw - 32px))',
           px: 3,

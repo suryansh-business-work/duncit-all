@@ -8,8 +8,8 @@
  *     --out=<markdown file>
  *
  * Reads what the three checks already produced; runs nothing itself. Node
- * built-ins only. Always exits 0 — the contrast gate in shared-gates.yml is what
- * blocks a merge, and the lint findings are report-only (docs/accessibility.md).
+ * built-ins only. Always exits 0 — the contrast gate in shared-gates.yml and the
+ * workflow's own "Enforce" step are what fail a run (docs/accessibility.md).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { relative, sep } from 'node:path';
@@ -103,7 +103,7 @@ function lintSection(title, summary) {
     return [...lines, `✅ No findings across ${summary.files} files.`, ''];
   }
   lines.push(
-    `${summary.findings} finding(s) across ${summary.files} files — report only, nothing blocks.`,
+    `${summary.findings} finding(s) across ${summary.files} files — blocking: the A11Y check fails until they are fixed.`,
     '',
     '| Rule | WCAG 2.2 | Count |',
     '| --- | --- | ---: |',
@@ -135,7 +135,7 @@ function contrastStatus(contrast) {
 function lintStatus(label, summary) {
   if (!summary) return statusRow(label, false, 'did not run');
   const ok = summary.findings === 0;
-  const detail = ok ? `clean (${summary.files} files)` : `${summary.findings} finding(s) in ${summary.files} files (report only)`;
+  const detail = ok ? `clean (${summary.files} files)` : `${summary.findings} finding(s) in ${summary.files} files — blocking`;
   return statusRow(label, ok, detail);
 }
 

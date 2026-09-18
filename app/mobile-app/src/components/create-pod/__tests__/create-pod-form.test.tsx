@@ -58,8 +58,8 @@ describe('createPodSchema', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
     expect(STEP_TITLES).toEqual([
-      'Pod Basics',
       'Location, Category & Club',
+      'Pod Basics',
       'Venue & Slot',
       'Pricing & Publish',
     ]);

@@ -4,18 +4,20 @@ import { useNavigate } from 'react-router';
 import {
   initialSignupFlowState,
   signupFlowReducer,
+  socialSignupNeedsName,
   type SignupFlowAction,
   type SignupFlowState,
   type SignupGoogleCredential,
   type SignupNumber,
   type SignupStep,
+  type SocialCredential,
 } from '@duncit/utils';
 import type { GoogleSignupValues } from '@duncit/forms/schemas';
 import { ACCEPTANCE_SURFACE } from '../../components/policy-acceptance';
 import type { RegisterFormValues } from '../../forms/register';
 import { parseApiError } from '../../utils/parseApiError';
 import { useStartSession } from '../../user-info/useStartSession';
-import { REGISTER, SIGNUP_GOOGLE } from './queries';
+import { REGISTER, SIGNUP_APPLE, SIGNUP_GOOGLE } from './queries';
 
 /*
   The machine itself is `@duncit/utils`' — it was written twice, identically,
@@ -52,6 +54,7 @@ export function useSignupFlow(linkedCode: string) {
   const navigate = useNavigate();
   const [registerMutation, { loading: registering }] = useMutation<any>(REGISTER);
   const [signupGoogle, { loading: creatingGoogle }] = useMutation<any>(SIGNUP_GOOGLE);
+  const [signupApple, { loading: creatingApple }] = useMutation<any>(SIGNUP_APPLE);
   const [error, setError] = useState<string | null>(null);
   const [flow, dispatch] = useReducer(
     signupFlowReducer as FlowReducer,
@@ -77,14 +80,14 @@ export function useSignupFlow(linkedCode: string) {
   };
 
   /*
-    Google proves an address and nothing else, so its credential is held —
-    unspent — while its own step (number and date of birth) and the code step
-    run. There is no account to back out of until both have answered, which is
-    what the acceptance dialog's Google wording promises.
+    Google (and Apple) prove an address and nothing else, so the credential is
+    held — unspent — while its own step (number and date of birth) and the code
+    step run. There is no account to back out of until both have answered,
+    which is what the acceptance dialog's wording promises.
   */
-  const googleAccepted = (idToken: string, policyIds: string[]) => {
+  const googleAccepted = (credential: SocialCredential, policyIds: string[]) => {
     setError(null);
-    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
+    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { ...credential, policyIds } });
   };
 
   /** The Google step's answer: from here the two doors run the same code step. */
@@ -123,21 +126,26 @@ export function useSignupFlow(linkedCode: string) {
     dob: string,
     whatsappToken: string,
   ) => {
-    const res = await signupGoogle({
-      variables: {
-        input: {
-          id_token: google.idToken,
-          phone_number: number.number,
-          phone_extension: number.extension,
-          whatsapp_is_mobile: number.alsoMobile,
-          whatsapp_token: whatsappToken,
-          // Google carried no birthday; the step beside the number asked it.
-          dob: new Date(dob).toISOString(),
-          accepted_policy_ids: google.policyIds,
-          accepted_policy_surface: ACCEPTANCE_SURFACE,
-        },
-      },
-    });
+    const input = {
+      id_token: google.idToken,
+      phone_number: number.number,
+      phone_extension: number.extension,
+      whatsapp_is_mobile: number.alsoMobile,
+      whatsapp_token: whatsappToken,
+      // The provider carried no birthday; the step beside the number asked it.
+      dob: new Date(dob).toISOString(),
+      accepted_policy_ids: google.policyIds,
+      accepted_policy_surface: ACCEPTANCE_SURFACE,
+    };
+    if (google.provider === 'APPLE') {
+      // Apple's token names nobody: the name is the one Apple shared, or the
+      // one the details step asked.
+      const res = await signupApple({
+        variables: { input: { ...input, ...splitName(google.name ?? '') } },
+      });
+      return res.data?.signupWithApple?.token as string | undefined;
+    }
+    const res = await signupGoogle({ variables: { input } });
     return res.data?.signupWithGoogle?.token as string | undefined;
   };
 
@@ -170,11 +178,14 @@ export function useSignupFlow(linkedCode: string) {
   return {
     error,
     setError,
-    creating: registering || creatingGoogle || starting,
+    creating: registering || creatingGoogle || creatingApple || starting,
     step: flow.step,
     setStep,
     verifying: flow.verifying,
     askingNumber: flow.askingNumber,
+    /** Which door the details step is for, and whether it must ask the name. */
+    detailsProvider: flow.pendingGoogle?.provider ?? 'GOOGLE',
+    askName: socialSignupNeedsName(flow.pendingGoogle),
     /* Checked alongside the number before a code goes out, so "email already in
        use" is a correction on the form rather than a dead end after the code.
        Google has no form to have asked it — the credential carries it. */

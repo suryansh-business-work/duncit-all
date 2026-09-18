@@ -1,4 +1,5 @@
 import { Stack } from '@mui/material';
+import type { SocialCredential } from '@duncit/utils';
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { type LoginSubmitValues } from '../../forms/login';
@@ -17,9 +18,11 @@ interface Props {
   loading: boolean;
   errorMessage: string | null;
   onSubmit: (values: LoginSubmitValues) => Promise<void>;
-  gLoading: boolean;
-  gError: string | null;
-  onGoogleCredential: (idToken: string) => Promise<void> | void;
+  /** True while a Google or Apple credential is being spent. */
+  socialLoading: boolean;
+  socialError: string | null;
+  onSocialCredential: (credential: SocialCredential) => void;
+  onSocialError: (message: string) => void;
   otp: OtpLogin;
 }
 
@@ -29,9 +32,10 @@ export default function LoginCard({
   loading,
   errorMessage,
   onSubmit,
-  gLoading,
-  gError,
-  onGoogleCredential,
+  socialLoading,
+  socialError,
+  onSocialCredential,
+  onSocialError,
   otp,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -54,9 +58,10 @@ export default function LoginCard({
 
         {step === 'CHOOSE' && (
           <LoginMethodStep
-            gLoading={gLoading}
-            gError={gError}
-            onGoogleCredential={onGoogleCredential}
+            socialLoading={socialLoading}
+            socialError={socialError}
+            onSocialCredential={onSocialCredential}
+            onSocialError={onSocialError}
             onChoosePassword={() => onStep('PASSWORD')}
             onChooseOtp={() => onStep('OTP')}
           />

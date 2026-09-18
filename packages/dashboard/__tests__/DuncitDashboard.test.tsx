@@ -147,6 +147,18 @@ describe('DuncitDashboard', () => {
     expect(screen.getByRole('button', { name: 'View all' })).toBeInTheDocument();
   });
 
+  it('offers every widget a way to move and resize without dragging while editing', async () => {
+    mount([widget('a'), widget('kpis', { bare: true, title: undefined })]);
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Customise layout' }));
+    await settle();
+
+    expect(screen.getByRole('button', { name: 'Move or resize Widget a' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Move or resize widget' }));
+    expect(screen.getByRole('menuitem', { name: 'Make wider' })).toBeInTheDocument();
+  });
+
   it('survives every toolbar control being pressed with the mutations answering nothing', async () => {
     const { container } = mount();
     await settle();

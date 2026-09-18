@@ -1,100 +1,46 @@
 import { Controller } from 'react-hook-form';
-import {
-  Autocomplete,
-  Box,
-  Card,
-  FormHelperText,
-  Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material';
-import PlaceIcon from '@mui/icons-material/Place';
+import { Box, Card, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import { DuncitButton } from '@duncit/buttons';
-import { clubOptionLabel, clubPlaceLabel } from '@duncit/utils';
-import LocationDialog from '../../../../components/app-header/LocationDialog';
-import VenueMapPreview from '../../../../components/VenueMapPreview';
-import { requiredLabel } from '../../../../forms/components/requiredLabel';
+import { clubCityName } from '@duncit/utils';
+import { SURFACE_SX } from '../../../../theme';
 import ClubPreview from '../ClubPreview';
-import ClubOption from './ClubOption';
-import { usePodLocationPicker } from '../usePodLocationPicker';
+import ClubField from './ClubField';
+import HostCategoryField from './HostCategoryField';
+import LocalityField from './LocalityField';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
+import type { CreatePodClub, CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
+  hostCategories: CreatePodHostCategory[];
+  /** Clubs scoped to the category, the city and the picked locality. */
   clubs: CreatePodClub[];
+  /** The same clubs before the locality narrows them — the per-locality counts. */
+  cityClubs: CreatePodClub[];
   locations: CreatePodLocation[];
 }
 
-/** 40px round soft disc carrying the accent place glyph (native twin: same disc). */
-const ICON_DISC_SX = {
-  display: 'grid',
-  placeItems: 'center',
-  width: 40,
-  height: 40,
-  flexShrink: 0,
-  borderRadius: '50%',
-  bgcolor: 'action.hover',
-  color: 'secondary.main',
-} as const;
-
-/** Step 2 — pod location + locality (chosen in the header-style location picker,
- * which shows the club count per locality), the pod mode and the club. The
- * category moved above the page title, so the club list arrives already scoped
- * to it. */
-export default function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
-  const {
-    control,
-    setValue,
-    watch,
-    formState: { errors },
-  } = form;
+/** Step 1 — category, pod mode, then the locality (a searchable dropdown of the
+ * city the header has selected) and the club, which opens once a locality is
+ * picked. Together they decide which club, venues and products the pod gets. */
+export default function LocationClubStep({ form, hostCategories, clubs, cityClubs, locations }: Readonly<Props>) {
+  const { control, setValue, watch } = form;
   const { t } = useTranslation();
-  const locationId = watch('location_id');
-  const locality = watch('locality');
-  const location = locations.find((item) => item.id === locationId) ?? null;
-  const picker = usePodLocationPicker(form);
-  const placeOf = (club: CreatePodClub) => clubPlaceLabel(club, locations);
+  const location = locations.find((item) => item.id === watch('location_id')) ?? null;
+  const zones = location?.location_zones ?? [];
+  const physical = watch('pod_mode') === 'PHYSICAL';
+  // A virtual pod has no area; a city with no localities offers all its clubs.
+  const pickLocality = physical && zones.length > 0;
+  const locality = pickLocality ? watch('locality') : '';
 
   return (
-    <Stack spacing={2}>
-      <Card sx={{ p: 2 }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-          <Box sx={ICON_DISC_SX}>
-            <PlaceIcon />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-              {t('mweb.createPod.podLocation')}
-            </Typography>
-            <Typography variant="subtitle2" noWrap data-testid="create-pod-location-label" sx={{ fontSize: '0.95rem' }}>
-              {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : t('mweb.createPod.noLocationSelected')}
-            </Typography>
-            {locality && (
-              <Typography variant="caption" noWrap data-testid="create-pod-locality-label" sx={{
-                color: "text.secondary"
-              }}>
-                {t('mweb.createPod.localityLabel', { vars: { locality } })}
-              </Typography>
-            )}
-          </Box>
-          <DuncitButton size="small" variant="outlined" onClick={picker.openPicker} data-testid="create-pod-change-location" sx={{ minHeight: 36 }}>
-            {t('mweb.createPod.change')}
-          </DuncitButton>
-        </Stack>
-        {errors.location_id && <FormHelperText error>{errors.location_id.message}</FormHelperText>}
-      </Card>
-
-      {location && (
-        <VenueMapPreview
-          title={location.location_name || location.city || t('mweb.createPod.podLocation')}
-          parts={[location.location_name, location.city, location.state, location.country]}
-        />
-      )}
+    <Box sx={{ display: 'grid', gap: 2 }}>
+      {/* First field: the category scopes the clubs here AND the products on
+          step 4. Native twin (rule 27). */}
+      <Box data-tour="create-pod-club" sx={{ ...SURFACE_SX, p: 2 }}>
+        <HostCategoryField form={form} hostCategories={hostCategories} />
+      </Box>
 
       <Card sx={{ p: 2 }}>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('mweb.createPod.podMode')}</Typography>
@@ -111,6 +57,8 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
               onChange={(_e, next) => {
                 if (!next) return;
                 field.onChange(next);
+                // The club list depends on the mode, so the old pick may not be in it.
+                setValue('club_id', '', { shouldDirty: true });
                 // Physical pods can only be Paid — a Free virtual pod switching
                 // to Physical must not carry FREE to submit.
                 if (next === 'PHYSICAL' && watch('pod_type') === 'FREE') {
@@ -127,30 +75,19 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
         />
       </Card>
 
-      <Card sx={{ p: 2, display: 'grid', gap: 1.5 }}>
-        <Controller
-          control={control}
-          name="club_id"
-          render={({ field }) => (
-            <Autocomplete
-              options={clubs}
-              getOptionLabel={(option) => clubOptionLabel(option.club_name, placeOf(option))}
-              value={clubs.find((club) => club.id === field.value) ?? null}
-              onChange={(_e, next) => field.onChange(next?.id ?? '')}
-              isOptionEqualToValue={(option, selected) => option.id === selected.id}
-              renderOption={(props, option) => (
-                <ClubOption {...props} key={option.id} club={option} place={placeOf(option)} />
-              )}
-              renderInput={(params) => (
-                <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message} />
-              )}
-            />
-          )}
+      <Card sx={{ p: 2, display: 'grid', gap: 2 }}>
+        {pickLocality && location && (
+          <LocalityField form={form} zones={zones} cityClubs={cityClubs} cityName={clubCityName(location)} />
+        )}
+        <ClubField
+          form={form}
+          clubs={clubs}
+          locations={locations}
+          locality={locality}
+          locked={pickLocality && !locality}
         />
         <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
       </Card>
-
-      <LocationDialog {...picker.dialog} locations={locations} />
-    </Stack>
+    </Box>
   );
 }

@@ -25,6 +25,8 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   GITHUB: 'GitHub (app builds)',
   GOOGLE_PLAY: 'Google Play (store releases)',
   MSG91: 'MSG91 (SMS OTP)',
+  APPLE_SIGNIN: 'Sign in with Apple',
+  APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

@@ -18,6 +18,7 @@
   "dependencies": {
     "@apollo/client": "^4.2.12",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/dashboard": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",

@@ -73,8 +73,8 @@ interface Props {
   clubAdmin?: ClubAdminStepperMode;
 }
 
-/** 4-step host Create Pod stepper (mobile twin of mWeb): Basics →
- * Location/Category/Club → Venue & Slot → Pricing. Per-step validation gates
+/** 4-step host Create Pod stepper (mobile twin of mWeb): Category/Locality/Club
+ * → Basics → Venue & Slot → Pricing. Per-step validation gates
  * Next; tapping "Create Pod" runs the AI + rules moderation preflight and only
  * publishes when the content is clean. */
 export function CreatePodStepper({
@@ -162,7 +162,7 @@ export function CreatePodStepper({
     persistSafely(target);
   };
   const next = async () => {
-    // The category sits above the title, so it gates the FIRST step — enforced
+    // The category is on the FIRST step, so it gates it — enforced
     // by the schema (host_category_key is in STEP_FIELDS[0]) rather than by a
     // second hand-written check here, which only ran when the host already had
     // categories and so let a category-less host straight through.
@@ -231,17 +231,19 @@ export function CreatePodStepper({
   };
 
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
-  // city and locality (helper shared with mWeb + covered by unit tests).
-  // A pinned club is the only club, whatever city the admin picks for the pod.
+  // city and locality (helper shared with mWeb + covered by unit tests). The
+  // city-wide list is what the Locality dropdown counts per area.
+  // A pinned club is the only club, whatever area the admin picks for the pod.
+  const clubFilter = {
+    hostCategories,
+    selectedCategoryKey: form.watch('host_category_key'),
+    locationId: form.watch('location_id'),
+    podMode: form.watch('pod_mode'),
+  };
+  const clubsInCity = clubAdmin ? clubs : filterClubs(clubs, { ...clubFilter, locality: '' });
   const clubsForLocation = clubAdmin
     ? clubs
-    : filterClubs(clubs, {
-        hostCategories,
-        selectedCategoryKey: form.watch('host_category_key'),
-        locationId: form.watch('location_id'),
-        locality: form.watch('locality'),
-        podMode: form.watch('pod_mode'),
-      });
+    : filterClubs(clubs, { ...clubFilter, locality: form.watch('locality') });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
   const clubId = form.watch('club_id');
@@ -288,20 +290,16 @@ export function CreatePodStepper({
   });
 
   const steps = [
-    <BasicsStep
-      key="basics"
-      form={form}
-      hostCategories={hostCategories}
-      locations={locations}
-      showCategory={!clubAdmin}
-    />,
     <LocationClubStep
       key="location"
       form={form}
+      hostCategories={hostCategories}
       clubs={clubsForLocation}
+      cityClubs={clubsInCity}
       locations={locations}
       pinnedClub={clubAdmin?.club ?? null}
     />,
+    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <VenueSlotStep
       key="venue"
       form={form}
@@ -329,7 +327,7 @@ export function CreatePodStepper({
         <StepHeader step={step} podMode={podMode} />
       </TourAnchor>
       {steps[step]}
-      {clubAdmin && step === 0 ? (
+      {clubAdmin && step === 1 ? (
         <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
       ) : null}
       {error ? (

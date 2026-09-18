@@ -2,12 +2,16 @@ import type { NestedCatalogue } from '../catalogue';
 
 /**
  * The Analytics console's own namespace, layered over the shell's by
- * `mountPortal`. Every tile, chart and ranking on its four pages is named here:
+ * `mountPortal`. Every tile, chart and ranking on its dashboards is named here:
  * the server sends a key, and the console reads the words from this bundle.
  */
 export const ANALYTICS_BUNDLE: NestedCatalogue = {
   analytics: {
     page: {
+      users: {
+        title: 'Users analytics',
+        subtitle: 'How many members Duncit has, how many come back, how many of them book, and who they are.',
+      },
       pods: {
         title: 'Pods analytics',
         subtitle: 'How many pods ran, how full they were, who came back and what they earned.',
@@ -38,11 +42,32 @@ export const ANALYTICS_BUNDLE: NestedCatalogue = {
       deltaPercent: '{value}%',
       vsPrevious: 'vs previous {days} days',
       liveCount: 'Right now',
-      overview: 'At a glance',
-      trends: 'Over time',
-      breakdowns: 'Breakdowns',
     },
     kpi: {
+      usersTotal: 'Members',
+      usersTotalHint: 'Every account that has not been deleted.',
+      newSignups: 'New sign-ups',
+      newSignupsHint: 'Accounts created in this period.',
+      activeUsers: 'Active members',
+      activeUsersHint: 'Signed-in members the app saw on at least one day of this period.',
+      activeDevices: 'Active devices',
+      activeDevicesHint: 'Devices that opened the app in this period, signed in or not.',
+      avgDailyActive: 'Daily active members',
+      avgDailyActiveHint: 'The average number of signed-in members seen per day.',
+      stickiness: 'Stickiness',
+      stickinessHint: 'Daily active members as a share of everyone active in the period — how often people return.',
+      retentionRate: 'Retention',
+      retentionRateHint: 'Of the members active in the previous period, the share seen again in this one.',
+      bookingUsers: 'Members who booked',
+      bookingUsersHint: 'Different members who booked at least one seat in this period.',
+      bookingConversion: 'Booking conversion',
+      bookingConversionHint: 'Active members who also booked a seat in this period.',
+      newUserActivation: 'New member activation',
+      newUserActivationHint: 'New sign-ups of this period who booked a seat within it.',
+      phoneVerifiedShare: 'Verified phone numbers',
+      phoneVerifiedShareHint: 'Members whose phone number answered a one-time code.',
+      inactiveAccounts: 'Inactive or suspended',
+      inactiveAccountsHint: 'Accounts switched off or suspended by an admin.',
       podsHeld: 'Pods held',
       podsHeldHint: 'Pods that started in this period and were not cancelled.',
       podsCreated: 'Pods created',
@@ -133,11 +158,18 @@ export const ANALYTICS_BUNDLE: NestedCatalogue = {
       hostRatingHint: 'What guests scored the host in this period.',
     },
     series: {
+      accountsTotal: 'Accounts',
       podsCancelled: 'Pods cancelled',
       backouts: 'Backouts',
       rejections: 'Rejections',
     },
     trend: {
+      userActivity: 'Active members and devices',
+      userActivityHint: 'Different signed-in members, and different devices, seen in each step.',
+      signups: 'New sign-ups',
+      signupsHint: 'Accounts created in each step.',
+      accountsTotal: 'Accounts over time',
+      accountsTotalHint: 'Every account created up to each step, including ones deleted since.',
       pods: 'Pods held and cancelled',
       podsHint: 'Held by start date, cancelled by the day they were cancelled.',
       bookings: 'Bookings and backouts',
@@ -161,6 +193,14 @@ export const ANALYTICS_BUNDLE: NestedCatalogue = {
       perMonth: 'Per month',
     },
     breakdown: {
+      activityFrequency: 'How often members come back',
+      topScreens: 'Most opened screens',
+      usersByCity: 'Members by city',
+      userAge: 'Members by age',
+      userGender: 'Members by gender',
+      petOwners: 'Pet owners',
+      userLanguage: 'Members by language',
+      signInMethod: 'How members sign in',
       podsByCategory: 'Pods by category',
       podsByCity: 'Pods by city',
       weekday: 'Pods by weekday',
@@ -193,6 +233,25 @@ export const ANALYTICS_BUNDLE: NestedCatalogue = {
     },
     slice: {
       none: 'Not set',
+      days1: '1 day',
+      days2To3: '2–3 days',
+      days4To7: '4–7 days',
+      days8To14: '8–14 days',
+      days15Plus: '15+ days',
+      ageUnder18: 'Under 18',
+      age18To24: '18–24',
+      age25To34: '25–34',
+      age35To44: '35–44',
+      age45To54: '45–54',
+      age55Plus: '55+',
+      female: 'Female',
+      male: 'Male',
+      otherGender: 'Other',
+      petOwner: 'Has a pet',
+      notPetOwner: 'No pet',
+      signInGoogle: 'Google',
+      signInEmail: 'Email and password',
+      signInOtp: 'One-time code',
       mon: 'Mon',
       tue: 'Tue',
       wed: 'Wed',

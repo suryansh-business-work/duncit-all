@@ -1,105 +1,70 @@
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
+import { clubCityName } from '@duncit/utils';
 
-import { LocationDialog } from '@/components/LocationDialog';
-import { MapEmbed } from '@/components/MapEmbed';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
-import { applyPodLocation } from '../create-pod.location';
-import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import type {
+  CreatePodClub,
+  CreatePodForm,
+  CreatePodHostCategory,
+  CreatePodLocation,
+} from '../create-pod.types';
+import { HostCategoryField } from './HostCategoryField';
+import { LocalityField } from './LocalityField';
 
 interface Props {
   form: CreatePodForm;
+  hostCategories: CreatePodHostCategory[];
+  /** Clubs scoped to the category, the city and the picked locality. */
   clubs: CreatePodClub[];
+  /** The same clubs before the locality narrows them — the per-locality counts. */
+  cityClubs: CreatePodClub[];
   locations: CreatePodLocation[];
-  /** Club Admin mode: the pod's club, fixed — the club search is not shown. */
+  /** Club Admin mode: the pod's club, fixed — no category and no club search. */
   pinnedClub?: CreatePodClub | null;
 }
 
-const locationLabel = (location: CreatePodLocation) =>
-  location.city && location.city !== location.location_name
-    ? `${location.location_name} (${location.city})`
-    : location.location_name;
-
-/** Step 2 — pod city + locality (chosen in the header location picker, which
- * shows the club count per locality), the pod mode and the club. The category
- * moved above the page title, so the club list arrives already scoped to it. */
-export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: Readonly<Props>) {
+/** Step 1 — category, pod mode, then the locality (a searchable dropdown of the
+ * city the header has selected) and the club, which opens once a locality is
+ * picked. Together they decide which club, venues and products the pod gets. */
+export function LocationClubStep({
+  form,
+  hostCategories,
+  clubs,
+  cityClubs,
+  locations,
+  pinnedClub = null,
+}: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
-  const { accent } = useThemeColors();
   const { t } = useTranslation();
   const modes = [
     { value: 'PHYSICAL', label: t('mweb.createPod.modePhysical') },
     { value: 'VIRTUAL', label: t('mweb.createPod.modeVirtual') },
   ];
-  const locationId = watch('location_id');
-  const locality = watch('locality');
-  const location = locations.find((item) => item.id === locationId);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const location = locations.find((item) => item.id === watch('location_id')) ?? null;
+  const zones = location?.location_zones ?? [];
+  const physical = watch('pod_mode') === 'PHYSICAL';
+  // A virtual pod has no area; a city with no localities offers all its clubs.
+  const pickLocality = physical && zones.length > 0;
+  const locality = pickLocality ? watch('locality') : '';
 
   return (
     <YStack gap={16}>
-      <SurfaceCard>
-        <XStack alignItems="center" gap={12}>
-          <YStack
-            width={40}
-            height={40}
-            borderRadius={20}
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor="$soft"
-          >
-            <MaterialIcons name="place" size={20} color={accent} />
-          </YStack>
-          <YStack flex={1}>
-            <Text fontSize={12} fontWeight="500" color="$muted">
-              {t('mweb.createPod.podLocation')}
-            </Text>
-            <Text testID="create-pod-location-label" fontSize={15} fontWeight="600" color="$color">
-              {location
-                ? [locationLabel(location), location.state].filter(Boolean).join(', ')
-                : t('mweb.createPod.noLocationSelected')}
-            </Text>
-            {locality ? (
-              <Text testID="create-pod-locality-label" fontSize={12} color="$muted">
-                {t('mweb.createPod.localityLabel', { vars: { locality } })}
-              </Text>
-            ) : null}
-          </YStack>
-          <XStack
-            testID="create-pod-change-location"
-            tabIndex={0}
-            role="button"
-            aria-label={t('mweb.createPod.changeLocation')}
-            onPress={() => setPickerOpen(true)}
-            height={36}
-            alignItems="center"
-            paddingHorizontal={14}
-            borderWidth={1}
-            borderColor="$primary"
-            borderRadius={999}
-            pressStyle={PRESS_STYLE.control}
-          >
-            <Text fontSize={13} fontWeight="600" color="$accent">
-              {t('mweb.createPod.change')}
-            </Text>
-          </XStack>
-        </XStack>
-      </SurfaceCard>
-
-      {location ? (
-        <MapEmbed
-          query={[locationLabel(location), location.state].filter(Boolean).join(', ')}
-          height={170}
-        />
-      ) : null}
+      {/* First field: the category scopes the clubs here AND the products on
+          step 4. A Club Admin's pod is pinned to its club, so it has no pick.
+          mWeb twin (rule 27). */}
+      {pinnedClub ? null : (
+        <TourAnchor tour="create-pod" anchor="create-pod-club">
+          <SurfaceCard>
+            <HostCategoryField form={form} hostCategories={hostCategories} />
+          </SurfaceCard>
+        </TourAnchor>
+      )}
 
       <SurfaceCard>
         <Controller
@@ -112,6 +77,8 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
               value={field.value}
               onChange={(next) => {
                 field.onChange(next);
+                // The club list depends on the mode, so the old pick may not be in it.
+                if (!pinnedClub) setValue('club_id', '', { shouldDirty: true });
                 // FREE is virtual-only — a VIRTUAL+FREE pick must not survive
                 // the switch to PHYSICAL.
                 if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
@@ -125,7 +92,16 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
           )}
         />
       </SurfaceCard>
-      <SurfaceCard gap={12}>
+
+      <SurfaceCard gap={16}>
+        {pickLocality && location ? (
+          <LocalityField
+            form={form}
+            zones={zones}
+            cityClubs={cityClubs}
+            cityName={clubCityName(location)}
+          />
+        ) : null}
         {pinnedClub ? null : (
           <Controller
             control={control}
@@ -138,6 +114,8 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
                 onChange={field.onChange}
                 error={fieldState.error?.message}
                 required
+                locality={locality}
+                locked={pickLocality && !locality}
               />
             )}
           />
@@ -146,13 +124,6 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
           club={pinnedClub ?? clubs.find((club) => club.id === watch('club_id')) ?? null}
         />
       </SurfaceCard>
-
-      <LocationDialog
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onApply={(loc, zone) => applyPodLocation(form, loc.id, zone)}
-        initialLocationId={locationId}
-      />
     </YStack>
   );
 }

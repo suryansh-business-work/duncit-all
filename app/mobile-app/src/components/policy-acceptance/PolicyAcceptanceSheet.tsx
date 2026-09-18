@@ -14,15 +14,16 @@ import { PolicyAcceptanceBody } from './PolicyAcceptanceBody';
 import { PolicyAcceptanceFooter } from './PolicyAcceptanceFooter';
 import { PolicyAcceptanceReader } from './PolicyAcceptanceReader';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 
 export interface PolicyAcceptanceSheetProps {
   open: boolean;
   /**
-   * 'google' after Google has returned its token: it has confirmed who the
-   * person is, but the account genuinely does not exist yet, and the intro has
-   * to say so — nothing has been created in their name while they decide.
+   * Set after Google (or Apple) has returned its token: it has confirmed who
+   * the person is, but the account genuinely does not exist yet, and the intro
+   * has to say so — nothing has been created in their name while they decide.
    */
-  variant?: 'form' | 'google';
+  afterProvider?: SocialProvider;
   acceptedIds: string[];
   onChange: (ids: string[]) => void;
   onClose: () => void;
@@ -40,7 +41,7 @@ export interface PolicyAcceptanceSheetProps {
  */
 export function PolicyAcceptanceSheet({
   open,
-  variant = 'form',
+  afterProvider,
   acceptedIds,
   onChange,
   onClose,
@@ -53,8 +54,9 @@ export function PolicyAcceptanceSheet({
   const reading = policies.find((policy) => policy.id === readingId) ?? null;
   const done = policies.filter((policy) => acceptedIds.includes(policy.id)).length;
   const canAcceptAll = policies.length > 0 && !allPoliciesAccepted(policies, acceptedIds);
-  const intro =
-    variant === 'google' ? t('policyAcceptance.googleIntro') : t('policyAcceptance.dialogIntro');
+  const intro = afterProvider
+    ? t(SOCIAL_AUTH_COPY[afterProvider].policyIntro)
+    : t('policyAcceptance.dialogIntro');
 
   // Backing out of a policy comes before backing out of the sheet, so reading
   // one is never a way to lose the ticks already made.

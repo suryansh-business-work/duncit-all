@@ -1,4 +1,5 @@
 import type { LocationItem } from '@/stores/location.store';
+import { compareCitiesLaunchedFirst } from '@duncit/utils';
 
 /** A country → state → city tree built from the flat `locations` payload, so the
  * picker can drill down. Mirrors mWeb's util 1:1 so both apps behave identically. */
@@ -35,7 +36,8 @@ function upsert<T>(list: T[], match: (item: T) => boolean, create: () => T): T {
   return created;
 }
 
-/** Groups active locations into a sorted country → state → city tree. */
+/** Groups active locations into a sorted country → state → city tree; a state's launched
+ * cities come before the ones still waiting on launch. */
 export function buildLocationTree(locations: LocationItem[]): CountryNode[] {
   const countries: CountryNode[] = [];
   for (const loc of locations) {
@@ -60,7 +62,7 @@ export function buildLocationTree(locations: LocationItem[]): CountryNode[] {
   for (const c of countries) {
     c.states.sort((a, b) => a.state.localeCompare(b.state));
     for (const s of c.states) {
-      s.cities.sort((a, b) => a.location_name.localeCompare(b.location_name));
+      s.cities.sort(compareCitiesLaunchedFirst);
     }
   }
   return countries;

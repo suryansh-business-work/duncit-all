@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LAUNCH_TARGET, launchProgress, showsWaitlist } from '../src/city-launch';
+import {
+  DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
+  launchProgress,
+  showsWaitlist,
+} from '../src/city-launch';
 
 describe('DEFAULT_LAUNCH_TARGET', () => {
   it('is the 2000-person goal a city gets when an admin sets none', () => {
@@ -37,5 +42,22 @@ describe('showsWaitlist', () => {
     expect(showsWaitlist({ is_launched: true })).toBe(false);
     expect(showsWaitlist({ is_launched: null })).toBe(false);
     expect(showsWaitlist({})).toBe(false);
+  });
+});
+
+describe('compareCitiesLaunchedFirst', () => {
+  it('lists launched cities before the ones waiting on launch, alphabetical within each', () => {
+    const cities = [
+      { location_name: 'Ahmedabad', is_launched: false },
+      { location_name: 'Surat', is_launched: true },
+      { location_name: 'Anand', is_launched: false },
+      { location_name: 'Rajkot' },
+    ];
+    expect(cities.toSorted(compareCitiesLaunchedFirst).map((c) => c.location_name)).toEqual([
+      'Rajkot',
+      'Surat',
+      'Ahmedabad',
+      'Anand',
+    ]);
   });
 });

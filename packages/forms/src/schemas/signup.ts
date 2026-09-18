@@ -127,6 +127,24 @@ function dobShape(t: Translate, minAge: number) {
 }
 
 /**
+ * A person's name — the email form's first box, and the Apple door's when Apple
+ * carried none.
+ *
+ * Two length rules on purpose: the first reports an EMPTY box as required, the
+ * second reports a one-letter name as too short. Zod stops at the first
+ * failure, so each says the thing that is actually wrong.
+ */
+function nameRule(t: Translate) {
+  return z
+    .string()
+    .trim()
+    .min(1, t('mweb.signup.validation.nameRequired'))
+    .min(2, t('mweb.signup.validation.nameMin'))
+    .max(80, t('mweb.signup.validation.nameTooLong'))
+    .regex(PERSON_NAME, t('mweb.signup.validation.namePattern'));
+}
+
+/**
  * The Google door's own step: the WhatsApp row and the date of birth.
  *
  * Google proves an address and nothing else — no number to send a code to, and
@@ -134,18 +152,29 @@ function dobShape(t: Translate, minAge: number) {
  * its first two steps are asked here on one step of their own, before
  * `signupWithGoogle` is called: that mutation needs the number, the code that
  * proved it, and the date of birth, and refuses without any of them.
+ *
+ * Apple rides the same step. It also never puts a name in its token — it shares
+ * one once, on the first authorisation — so `askName` makes the name a real
+ * question when the credential arrived without one. Otherwise the box is not
+ * shown and anything in it passes.
  */
 export function makeGoogleSignupSchema(
   t: Translate,
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  askName = false,
 ) {
-  return z.object({ ...whatsappNumberShape(t), ...dobShape(t, minAge) });
+  return z.object({
+    name: askName ? nameRule(t) : z.string(),
+    ...whatsappNumberShape(t),
+    ...dobShape(t, minAge),
+  });
 }
 
 export type GoogleSignupValues = z.infer<ReturnType<typeof makeGoogleSignupSchema>>;
 
 export const googleSignupDefaults: GoogleSignupValues = {
   ...whatsappNumberDefaults,
+  name: '',
   dob: '',
 };
 
@@ -156,18 +185,7 @@ export function makeSignupSchema(
 ) {
   return z
     .object({
-      /*
-        Two length rules on purpose: the first reports an EMPTY box as required,
-        the second reports a one-letter name as too short. Zod stops at the
-        first failure, so each says the thing that is actually wrong.
-      */
-      name: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.nameRequired'))
-        .min(2, t('mweb.signup.validation.nameMin'))
-        .max(80, t('mweb.signup.validation.nameTooLong'))
-        .regex(PERSON_NAME, t('mweb.signup.validation.namePattern')),
+      name: nameRule(t),
       // The full date of birth — the same rule the Google door's step runs.
       ...dobShape(t, minAge),
       email: z

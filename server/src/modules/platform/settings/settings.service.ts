@@ -7,6 +7,7 @@ import {
   DEFAULT_TERMS_URL,
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
+import { getUrlConfigs } from "@config/url-configs";
 import {
   runTableQuery,
   type TableEntityConfig,
@@ -859,18 +860,34 @@ export const settingsService = {
 
   /**
    * Public, non-secret client config the web/native apps need before login
-   * (Google OAuth client id + Maps key). Sourced from the Tech portal's
-   * GOOGLE_OAUTH / GOOGLE_MAPS env categories so nothing is hardcoded in the
-   * frontends. Both values are inherently public (already exposed to browsers).
+   * (Google OAuth client id, Maps key, and the Sign in with Apple identifiers).
+   * Sourced from the Tech portal's GOOGLE_OAUTH / GOOGLE_MAPS / APPLE_SIGNIN env
+   * categories so nothing is hardcoded in the frontends. Every value is
+   * inherently public (already exposed to browsers) — the Apple key never is.
    */
   async getPublicClientConfig() {
-    const [googleClientId, googleMapsApiKey] = await Promise.all([
+    const [
+      googleClientId,
+      googleMapsApiKey,
+      appleBundleId,
+      appleServicesId,
+      appleWebRedirectUri,
+      { serverUrl },
+    ] = await Promise.all([
       getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
       getRuntimeEnvValue("GOOGLE_MAP_API"),
+      getRuntimeEnvValue("APPLE_BUNDLE_ID"),
+      getRuntimeEnvValue("APPLE_SERVICES_ID"),
+      getRuntimeEnvValue("APPLE_WEB_REDIRECT_URI"),
+      getUrlConfigs(),
     ]);
     return {
       google_client_id: googleClientId ?? "",
       google_maps_api_key: googleMapsApiKey ?? "",
+      apple_bundle_id: appleBundleId.trim(),
+      apple_services_id: appleServicesId.trim(),
+      apple_web_redirect_uri: appleWebRedirectUri.trim(),
+      apple_relay_url: `${serverUrl.replace(/\/+$/, "")}/apple/callback`,
     };
   },
 

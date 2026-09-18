@@ -3,7 +3,6 @@ import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { SurfaceCard } from '@/components/SurfaceCard';
-import { TourAnchor } from '@/tours/TourAnchor';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
 import { MAX_COVER_IMAGES, coverCategoryName } from '@duncit/utils';
@@ -12,30 +11,20 @@ import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelEngagementNotice } from '../ReelEngagementNotice';
 import { ReelUploadField } from '../ReelUploadField';
-import { HostCategoryField } from './HostCategoryField';
-import { LocalityField } from './LocalityField';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
+import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   hostCategories: CreatePodHostCategory[];
-  locations: CreatePodLocation[];
-  /** Off in Club Admin mode — the pod's category is the pinned club's own. */
-  showCategory?: boolean;
 }
 
-/** Step 1 — Pod Basics: title, description, cover media, hashtags and the
+/** Step 2 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks). */
-export function BasicsStep({
-  form,
-  hostCategories,
-  locations,
-  showCategory = true,
-}: Readonly<Props>) {
+export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const { control, watch } = form;
   const { t } = useTranslation();
-  // The host picks the category above the media field, and the server already
+  // The host picked the category on step 1, and the server already
   // denormalised its name onto the host record — so the cover picker can open on
   // a search for it without another query. `coverCategoryName` falls back to the
   // parent levels, because a host whose sub-category name was never denormalised
@@ -46,34 +35,14 @@ export function BasicsStep({
   );
   return (
     <YStack gap={16}>
-      {/* First field of the form: the category scopes the clubs on step 2 AND
-          the products on step 4, so it is picked before the title. mWeb twin
-          (rule 27). */}
-      {showCategory ? (
-        <SurfaceCard>
-          <HostCategoryField form={form} hostCategories={hostCategories} />
-        </SurfaceCard>
-      ) : null}
-      {/* Right under the category: together they decide which clubs step 2
-          offers. A Club Admin's pod is pinned to its club, so it has no pick. */}
-      {showCategory ? (
-        <SurfaceCard>
-          <LocalityField form={form} locations={locations} />
-        </SurfaceCard>
-      ) : null}
       <SurfaceCard gap={14}>
-        {/* The title field alone, not the title/description/photo group: the
-            native overlay cannot scroll a target into view, so a highlight
-            taller than the viewport is one the host never sees. */}
-        <TourAnchor tour="create-pod" anchor="create-pod-basics">
-          <FormTextField
-            control={control}
-            name="pod_title"
-            label={t('mweb.createPod.podTitleLabel')}
-            required
-            hint={t('mweb.createPod.podTitleHint')}
-          />
-        </TourAnchor>
+        <FormTextField
+          control={control}
+          name="pod_title"
+          label={t('mweb.createPod.podTitleLabel')}
+          required
+          hint={t('mweb.createPod.podTitleHint')}
+        />
         <FormTextField
           control={control}
           name="pod_description"

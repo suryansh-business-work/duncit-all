@@ -4,28 +4,16 @@ import { useTheme } from '@mui/material/styles';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
-import { SectionCard, chartSeriesColor } from '@duncit/ui';
-import { BREAKDOWN_COPY } from './copy';
-import { NONE_KEY, SLICE_COPY } from './slice-copy';
+import { chartSeriesColor } from '@duncit/ui';
+import { sliceLabel } from './slice-label';
 import { formatValue } from './format';
 import { categoryAxis, chartTooltip, valueAxis } from './chart-theme';
 import type { AnalyticsBreakdown } from './queries';
 
-type Translate = ReturnType<typeof useTranslation>['t'];
 type Slice = AnalyticsBreakdown['slices'][number];
 
-const HOUR_BREAKDOWN = 'hour_of_day';
-
-/** A slice's words: the data's own name, a start time, or the bundle's label for its key. */
-function sliceLabel(breakdownKey: string, slice: Slice, t: Translate, formatClock: (value: string) => string) {
-  if (slice.label) return slice.label;
-  if (slice.key === 'none') return t(NONE_KEY);
-  if (breakdownKey === HOUR_BREAKDOWN) return formatClock(`${slice.key.padStart(2, '0')}:00`);
-  const key = SLICE_COPY[breakdownKey]?.[slice.key];
-  return key ? t(key) : slice.key;
-}
-
-function ScopeChip({ breakdown }: Readonly<{ breakdown: AnalyticsBreakdown }>) {
+/** Says what a breakdown counts over: everything so far, or its top ten. Nothing for the period itself. */
+export function ScopeChip({ breakdown }: Readonly<{ breakdown: AnalyticsBreakdown }>) {
   const { t } = useTranslation();
   if (breakdown.scope === 'ALL_TIME') return <Chip size="small" variant="outlined" label={t('analytics.page.allTime')} />;
   if (breakdown.slices.some((slice) => slice.label)) {
@@ -37,13 +25,13 @@ function ScopeChip({ breakdown }: Readonly<{ breakdown: AnalyticsBreakdown }>) {
 /**
  * One number split by something about it. Slices with a natural order (hours,
  * bands, stars) stand as columns in that order; everything else lies as
- * horizontal bars, largest first, so long names stay readable.
+ * horizontal bars, largest first, so long names stay readable. The widget
+ * around it carries the title.
  */
-export default function BreakdownChart({ breakdown }: Readonly<{ breakdown: AnalyticsBreakdown }>) {
-  const { t } = useTranslation();
+export default function BreakdownChart({ breakdown, label }: Readonly<{ breakdown: AnalyticsBreakdown; label: string }>) {
+  const { t, locale } = useTranslation();
   const { formatClock } = useDateFormat();
   const theme = useTheme();
-  const title = t(BREAKDOWN_COPY[breakdown.key] ?? breakdown.key);
   const horizontal = !breakdown.ordered;
 
   const slices = useMemo<Slice[]>(() => {
@@ -57,10 +45,10 @@ export default function BreakdownChart({ breakdown }: Readonly<{ breakdown: Anal
 
   const data = useMemo<ChartData<'bar'>>(
     () => ({
-      labels: slices.map((slice) => sliceLabel(breakdown.key, slice, t, formatClock)),
+      labels: slices.map((slice) => sliceLabel(breakdown.key, slice, { t, formatClock, locale })),
       datasets: [
         {
-          label: title,
+          label,
           data: slices.map((slice) => slice.value),
           backgroundColor: chartSeriesColor(theme, 0),
           borderRadius: 4,
@@ -69,7 +57,7 @@ export default function BreakdownChart({ breakdown }: Readonly<{ breakdown: Anal
         },
       ],
     }),
-    [slices, breakdown.key, t, formatClock, title, theme]
+    [slices, breakdown.key, t, formatClock, locale, label, theme]
   );
 
   const options = useMemo<ChartOptions<'bar'>>(() => {
@@ -96,16 +84,14 @@ export default function BreakdownChart({ breakdown }: Readonly<{ breakdown: Anal
   const height = horizontal ? Math.max(160, slices.length * 30 + 40) : 240;
 
   return (
-    <SectionCard title={title} action={<ScopeChip breakdown={breakdown} />}>
-      <Box sx={{ height, position: 'relative' }} data-testid={`analytics-breakdown-${breakdown.key}`}>
-        {empty ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary', pt: 2 }}>
-            {t('analytics.page.noData')}
-          </Typography>
-        ) : (
-          <Bar data={data} options={options} role="img" aria-label={title} />
-        )}
-      </Box>
-    </SectionCard>
+    <Box sx={{ height, position: 'relative' }} data-testid={`analytics-breakdown-${breakdown.key}`}>
+      {empty ? (
+        <Typography variant="body2" sx={{ color: 'text.secondary', pt: 2 }}>
+          {t('analytics.page.noData')}
+        </Typography>
+      ) : (
+        <Bar data={data} options={options} role="img" aria-label={label} />
+      )}
+    </Box>
   );
 }

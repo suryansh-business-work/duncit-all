@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 import type { EnvEntry } from '../queries';
 import EmailTestPanel from './EmailTestPanel';
 import ImagekitTestPanel from './ImagekitTestPanel';
@@ -12,6 +13,7 @@ import ConnectionTestPanel from './ConnectionTestPanel';
 import Msg91TestPanel from './msg91';
 
 function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
+  const { t } = useTranslation();
   switch (entry.category) {
     case 'EMAIL':
       return <EmailTestPanel entry={entry} />;
@@ -43,6 +45,12 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     // them, and the connection check above is only the first of them.
     case 'MSG91':
       return <Msg91TestPanel entry={entry} />;
+    // A free, harmless probe: Apple judges the key before the (bogus) code.
+    case 'APPLE_SIGNIN':
+      return <ConnectionTestPanel entry={entry} description={t('tech.environment.appleConnectionHint')} />;
+    // Reads only: the app lookup proves the key, the certificate list proves Admin.
+    case 'APP_STORE_CONNECT':
+      return <ConnectionTestPanel entry={entry} description={t('tech.environment.appStoreConnectHint')} />;
     default:
       return null;
   }

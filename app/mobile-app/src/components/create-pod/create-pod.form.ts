@@ -320,9 +320,9 @@ export const createPodSchema = makeCreatePodSchema();
 
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
+  // Step 1 picks the category, then the locality and the club it narrows to.
+  ['host_category_key', 'location_id', 'locality', 'pod_mode', 'club_id'],
   [
-    // The category picker sits above the title now, so it belongs to step 1.
-    'host_category_key',
     'pod_title',
     'pod_description',
     'media_text',
@@ -332,7 +332,6 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'what_this_pod_offers',
     'available_perks',
   ],
-  ['location_id', 'locality', 'pod_mode', 'club_id'],
   [
     'venue_id',
     'venue_slot_id',
@@ -359,18 +358,20 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
 
 /** Catalogue keys for the four step titles, in step order. Components translate
  * these with their own `t`; the arrays below are the English resolution for
- * callers outside the stepper (the Host Management draft cards). */
+ * callers outside the stepper (the Host Management draft cards). The club step
+ * now comes first, so its `step2*` keys lead: the keys keep their names because
+ * every locale's translation is stored against them. */
 export const STEP_TITLE_KEYS = [
-  'mweb.createPod.step1Title',
   'mweb.createPod.step2Title',
+  'mweb.createPod.step1Title',
   'mweb.createPod.step3Title',
   'mweb.createPod.step4Title',
 ];
 
 /** One-line intro under each step title — mirrors the mWeb stepper. */
 export const STEP_SUBTITLE_KEYS = [
-  'mweb.createPod.step1Subtitle',
   'mweb.createPod.step2Subtitle',
+  'mweb.createPod.step1Subtitle',
   'mweb.createPod.step3Subtitle',
   'mweb.createPod.step4Subtitle',
 ];

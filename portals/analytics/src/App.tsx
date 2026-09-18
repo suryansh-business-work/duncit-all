@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
-import { createAuthed, ProfilePage, WelcomePage } from '@duncit/shell';
+import { createAuthed, ProfilePage } from '@duncit/shell';
 import EntityAnalyticsPage from './pages/entity-analytics/EntityAnalyticsPage';
 import { ANALYTICS_PAGES } from './pages/entity-analytics/pages';
-import { appConfig } from './config/app-config';
 import { runtime } from './runtime';
 
 const authed = createAuthed({
@@ -12,12 +11,11 @@ const authed = createAuthed({
 });
 
 /**
- * Every signed-in route: the welcome page, the profile, and one page per
- * subject. Each subject page is keyed by its path, so moving between them
- * starts the next one at its own default period.
+ * Every signed-in route: the profile and one dashboard per subject. Each
+ * dashboard is keyed by its path, so moving between them starts the next one
+ * at its own default period.
  */
 const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
-  { path: '/', element: <WelcomePage config={appConfig} /> },
   { path: '/profile', element: <ProfilePage /> },
   ...ANALYTICS_PAGES.map((page) => ({
     path: page.path,
@@ -25,7 +23,10 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   })),
 ];
 
-/** Charts and short rankings for pods, clubs, club admins and hosts. */
+/** The console has no welcome page: its home is the first dashboard in the sidebar. */
+const HOME = ANALYTICS_PAGES[0].path;
+
+/** One dashboard each for users, pods, clubs, club admins and hosts. */
 export default function App() {
   return (
     <Routes>
@@ -33,7 +34,7 @@ export default function App() {
       {SIGNED_IN.map(({ path, element }) => (
         <Route key={path} path={path} element={authed(element)} />
       ))}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to={HOME} replace />} />
     </Routes>
   );
 }

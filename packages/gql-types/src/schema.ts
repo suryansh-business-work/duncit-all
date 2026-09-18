@@ -851,12 +851,13 @@ export type AnalyticsColumn = {
   key: Scalars['String']['output'];
 };
 
-/** The four subjects the Analytics console reports on. */
+/** The subjects the Analytics console reports on. */
 export type AnalyticsEntity =
   | 'CLUBS'
   | 'CLUB_ADMINS'
   | 'HOSTS'
-  | 'PODS';
+  | 'PODS'
+  | 'USERS';
 
 /** What kind of number a value is, so the console formats it. */
 export type AnalyticsFormat =
@@ -1462,6 +1463,34 @@ export type ApprovalRequestTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** An Apple id_token, from the iOS app's native sheet or the web flow. */
+export type AppleAuthInput = {
+  id_token: Scalars['String']['input'];
+  portal_key?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The Apple door's signup: the Google door's fields, plus the name.
+ *
+ * Apple never puts the name in its token. It hands it to the client once, on
+ * the first authorisation, and the client sends it here — or asks for it, when
+ * Apple had already shared it on an earlier attempt that never became an account.
+ */
+export type AppleSignupInput = {
+  accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  dob: Scalars['String']['input'];
+  first_name: Scalars['String']['input'];
+  id_token: Scalars['String']['input'];
+  last_name?: InputMaybe<Scalars['String']['input']>;
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  whatsapp_token: Scalars['String']['input'];
+  zone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ApprovalStatus =
   | 'APPROVED'
   | 'DENIED'
@@ -1697,6 +1726,7 @@ export type AuthPayload = {
 };
 
 export type AuthProvider =
+  | 'APPLE'
   | 'EMAIL'
   | 'GOOGLE'
   | 'OTP';
@@ -5722,6 +5752,7 @@ export type EntityIdBackfillResult = {
 
 export type EnvCategory =
   | 'AISENSY'
+  | 'APPLE_SIGNIN'
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
@@ -9252,8 +9283,24 @@ export type Mutation = {
    * an account IS the proof. The password is never touched; the account keeps
    * both ways in.
    */
+  /**
+   * Grant Apple sign-in to an existing email/password account, then sign in —
+   * the "allow" half of the consent step loginWithApple triggers with
+   * EMAIL_LOGIN_REQUIRED. Unauthenticated for the same reason as
+   * linkGoogleAccount: a verified Apple address matching the account IS the proof.
+   */
+  linkAppleAccount: AuthPayload;
   linkGoogleAccount: AuthPayload;
   login: AuthPayload;
+  /**
+   * Sign in with an Apple credential — from the iOS app's native sheet, or the
+   * web flow mWeb and the Android app use.
+   *
+   * Answers exactly as loginWithGoogle does, with APPLE_ACCOUNT_NOT_FOUND in
+   * place of GOOGLE_ACCOUNT_NOT_FOUND: that one offers signup and carries this
+   * same id_token — unspent — into signupWithApple.
+   */
+  loginWithApple: AuthPayload;
   loginWithGoogle: AuthPayload;
   /**
    * Continue with OTP, step two: trade a correct code for the same session a
@@ -9754,6 +9801,7 @@ export type Mutation = {
   signContract: Contract;
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
+  signupWithApple: AuthPayload;
   signupWithGoogle: AuthPayload;
   /**
    * Translate the default language's text into this locale with OpenAI, in the
@@ -11719,6 +11767,11 @@ export type MutationJoinSlackChannelArgs = {
 };
 
 
+export type MutationLinkAppleAccountArgs = {
+  input: AppleAuthInput;
+};
+
+
 export type MutationLinkGoogleAccountArgs = {
   input: GoogleAuthInput;
 };
@@ -11726,6 +11779,11 @@ export type MutationLinkGoogleAccountArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationLoginWithAppleArgs = {
+  input: AppleAuthInput;
 };
 
 
@@ -12730,6 +12788,11 @@ export type MutationSignContractArgs = {
 export type MutationSignLegalDocumentArgs = {
   id: Scalars['ID']['input'];
   input: SignLegalDocumentInput;
+};
+
+
+export type MutationSignupWithAppleArgs = {
+  input: AppleSignupInput;
 };
 
 
@@ -16407,6 +16470,8 @@ export type PolicyAcceptanceDetail = {
 export type PolicyAcceptanceMethod =
   /** Accepted later from inside the account — predates the gate, or a policy changed. */
   | 'ACCOUNT'
+  /** The same, after Apple returned. */
+  | 'APPLE_SIGNUP'
   /** Ticked in the same dialog, after Google returned but before the account existed. */
   | 'GOOGLE_SIGNUP'
   /** Ticked on the email/password signup form. */
@@ -16985,6 +17050,14 @@ export type PublicAppSettings = {
 
 export type PublicClientConfig = {
   __typename?: 'PublicClientConfig';
+  /** Sign in with Apple on the iOS app — its App ID. Blank: the iOS app offers no Apple button. */
+  apple_bundle_id: Scalars['String']['output'];
+  /** Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback. */
+  apple_relay_url: Scalars['String']['output'];
+  /** Sign in with Apple on the web flow (mWeb, Android, native web) — its Services ID. Blank: those doors offer no Apple button. */
+  apple_services_id: Scalars['String']['output'];
+  /** The Return URL mWeb hands Apple's web SDK, as registered under the Services ID. */
+  apple_web_redirect_uri: Scalars['String']['output'];
   google_client_id: Scalars['String']['output'];
   google_maps_api_key: Scalars['String']['output'];
 };

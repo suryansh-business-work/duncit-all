@@ -138,6 +138,47 @@ export const LinkGoogleAccountDocument = gql(`
   }
 `);
 
+/** Sign in with Apple — the same answers as MobileLoginWithGoogle, from the Apple door. */
+export const LoginWithAppleDocument = gql(`
+  mutation MobileLoginWithApple($input: AppleAuthInput!) {
+    loginWithApple(input: $input) {
+      token
+      user {
+        user_id
+        email
+        onboarding_survey_completed
+      }
+    }
+  }
+`);
+
+/** The Apple half of the consent step, sent with the id_token loginWithApple refused. */
+export const LinkAppleAccountDocument = gql(`
+  mutation MobileLinkAppleAccount($input: AppleAuthInput!) {
+    linkAppleAccount(input: $input) {
+      token
+      user {
+        user_id
+        email
+        onboarding_survey_completed
+      }
+    }
+  }
+`);
+
+export const SignupWithAppleDocument = gql(`
+  mutation MobileSignupWithApple($input: AppleSignupInput!) {
+    signupWithApple(input: $input) {
+      token
+      user {
+        user_id
+        email
+        onboarding_survey_completed
+      }
+    }
+  }
+`);
+
 /**
  * Signup step four — proving the WhatsApp number BEFORE the account exists.
  *

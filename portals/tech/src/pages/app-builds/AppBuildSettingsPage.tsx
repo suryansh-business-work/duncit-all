@@ -6,6 +6,7 @@ import { notify, notifyError } from '@duncit/dialogs';
 import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from '../../lib/slack-queries';
 import {
   AppBuildSettingsForm,
+  AppStoreCard,
   CiCredentialsCard,
   PlayStoreCard,
   type AppBuildSettingsValues,
@@ -79,6 +80,7 @@ export default function AppBuildSettingsPage() {
       </Card>
       {settings && <CiCredentialsCard settings={settings} />}
       {settings && <PlayStoreCard settings={settings} />}
+      {settings && <AppStoreCard settings={settings} onGenerated={settingsQuery.refetch} />}
     </Box>
   );
 }

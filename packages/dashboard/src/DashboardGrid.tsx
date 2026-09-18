@@ -1,7 +1,7 @@
 import { Box, Skeleton, Stack } from '@mui/material';
-import { normalisePosition } from './layout';
+import { minSizeOf, normalisePosition } from './layout';
 import { DashboardWidgetCard } from './DashboardWidgetCard';
-import type { DashboardLayoutItem, DashboardPosition, DashboardWidget } from './types';
+import type { DashboardArrange, DashboardLayoutItem, DashboardPosition, DashboardWidget } from './types';
 
 /**
  * How GridStack's own chrome is themed. gridstack.css addresses these elements
@@ -55,16 +55,16 @@ const GRID_SX = {
 function gridAttributes(
   widget: DashboardWidget,
   slot: DashboardPosition,
-  size: DashboardPosition,
 ): Record<string, string | number | undefined> {
+  const min = minSizeOf(widget);
   return {
     'gs-id': widget.id,
     'gs-x': slot.x,
     'gs-y': slot.y,
     'gs-w': slot.w,
     'gs-h': slot.h,
-    'gs-min-w': widget.minW ?? Math.min(size.w, 3),
-    'gs-min-h': widget.minH ?? Math.min(size.h, 2),
+    'gs-min-w': min.w,
+    'gs-min-h': min.h,
     'gs-size-to-content': widget.fitContent ? 'true' : undefined,
   };
 }
@@ -76,6 +76,8 @@ export type DashboardGridProps = Readonly<{
   editing: boolean;
   dragLabel: string;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  /** The non-drag way to move and resize, shown on every widget while editing. */
+  arrange?: DashboardArrange;
 }>;
 
 /** Placeholder cards in the dashboard's default shape while the layout loads. */
@@ -104,6 +106,7 @@ export function DashboardGrid({
   editing,
   dragLabel,
   containerRef,
+  arrange,
 }: DashboardGridProps) {
   if (!layout) return <GridSkeleton widgets={widgets} />;
 
@@ -113,11 +116,10 @@ export function DashboardGrid({
     <Box ref={containerRef} className="grid-stack" sx={GRID_SX}>
       {widgets.map((widget) => {
         const slot = slots.get(widget.id) ?? normalisePosition(widget.defaultLayout);
-        const size = normalisePosition(widget.defaultLayout);
         return (
-          <div key={widget.id} className="grid-stack-item" {...gridAttributes(widget, slot, size)}>
+          <div key={widget.id} className="grid-stack-item" {...gridAttributes(widget, slot)}>
             <div className="grid-stack-item-content">
-              <DashboardWidgetCard widget={widget} editing={editing} dragLabel={dragLabel} />
+              <DashboardWidgetCard widget={widget} editing={editing} dragLabel={dragLabel} arrange={arrange} />
             </div>
           </div>
         );

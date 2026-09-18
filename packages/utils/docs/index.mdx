@@ -135,6 +135,10 @@ exports:
   - 'createGoogleSignupClaims'
   - 'readGoogleSignupHandoff'
   - 'claimGoogleSignupHandoff'
+  - 'isSocialProvider'
+  - 'SOCIAL_AUTH_COPY'
+  - 'SOCIAL_NOT_FOUND_CODE'
+  - 'socialSignupNeedsName'
   - 'REFERRAL_PARAM'
   - 'referralLink'
   - 'readReferralCode'
@@ -176,6 +180,8 @@ exports:
   - 'contactDraftFrom'
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
+  - 'contactNumberIsCurrent'
+  - 'noteContactEdit'
   - 'contactSubmitAction'
   - 'contactValueStepView'
   - 'CONTACT_NUMBER_FIELDS'
@@ -336,6 +342,7 @@ exports:
   - 'LocationMismatch'
   - 'LocationPick'
   - 'DEFAULT_LAUNCH_TARGET'
+  - 'compareCitiesLaunchedFirst'
   - 'launchProgress'
   - 'showsWaitlist'
   - 'clubCityName'
@@ -1492,6 +1499,35 @@ const carried = readGoogleSignupHandoff(location.state?.googleSignup)
 const claimed = claimGoogleSignupHandoff(CLAIMS, carried) // null on every call after the first
 ```
 
+### Apple rides the same door
+
+`loginWithApple` refuses exactly as `loginWithGoogle` does, with `APPLE_ACCOUNT_NOT_FOUND` in
+place of `GOOGLE_ACCOUNT_NOT_FOUND`, so the same three functions carry an Apple credential too.
+The handoff takes two optional extras: which `provider` refused (absent means Google) and the
+`name` Apple shared — Apple never puts a name in its token and shares it only on the first
+authorisation, so it is carried rather than asked again.
+
+```ts
+setInvite((current) =>
+  openGoogleSignup(current, idToken, verifiedEmail, { provider: 'APPLE', name: 'Riya Sharma' }),
+);
+```
+
+The rest of what differs per provider lives in `social-auth`, once for both apps:
+
+| Export | What it answers |
+| --- | --- |
+| `SOCIAL_NOT_FOUND_CODE[provider]` | The refusal that opens the signup invite — `GOOGLE_ACCOUNT_NOT_FOUND` / `APPLE_ACCOUNT_NOT_FOUND` |
+| `SOCIAL_AUTH_COPY[provider]` | The copy keys that name the provider — invite detail, link consent, details subtitle, policy intro. Literal, so the translation gate sees them |
+| `socialSignupNeedsName(credential)` | `true` for an Apple credential that carried no name — the details step then asks it |
+| `isSocialProvider(value)` | Whether a value read off navigation is `'GOOGLE'` or `'APPLE'` |
+
+```ts
+socialSignupNeedsName({ provider: 'APPLE' }); // true — ask the name on the details step
+socialSignupNeedsName({ provider: 'APPLE', name: 'Riya Sharma' }); // false
+SOCIAL_AUTH_COPY.APPLE.linkTitle; // 'mweb.login.appleLinkConsentTitle'
+```
+
 `readGoogleSignupHandoff` is deliberately strict about shape: router state survives a reload
 and a navigation param survives a remount, so it is reading something possibly stale. Anything
 that is not a complete, non-blank pair reads as `null` — signup opened normally, which is the
@@ -1937,10 +1973,45 @@ contactValueStepView('WHATSAPP', labels, {
   isValid: true,
   numberStatus: 'TAKEN',
   phoneOtp: false,
+  snapshot: account,
+  draft: { email: '', extension: '+91', number: '9845099999' },
+  edited: true,
 });
 // { hint: 'We'll send a code to this number on WhatsApp…', buttonLabel: 'Send code',
 //   disabled: true,
 //   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
+```
+
+The box opens on the account's own number, which is never somebody else's. The view reads
+`snapshot` and `draft` through `contactNumberIsCurrent`. While the box holds that number the
+button stays shut and the check's answer is ignored. The line under the box stays empty until the
+person has edited the box (`edited`). If they then type the same number back, it says this is
+their current number. Only the channel's OWN value counts: the WhatsApp number may also be the
+contact number, so typing the contact number into the WhatsApp box is a real change.
+
+`edited` lives in each dialog's state. `noteContactEdit` is the update every keystroke applies:
+it drops a refusal about the old value and records the edit, and returns the same object once
+neither changes, so typing does not re-render the dialog.
+
+```ts
+contactNumberIsCurrent(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
+// true — the number the phone row already holds
+contactNumberIsCurrent(account, 'WHATSAPP', { email: '', extension: '+91', number: '9845012345' });
+// false — the contact number, offered as the WhatsApp number too
+contactValueStepView('PHONE', labels, {
+  busy: false,
+  blocked: false,
+  isValid: true,
+  numberStatus: 'IDLE',
+  phoneOtp: false,
+  snapshot: account,
+  draft: { email: '', extension: '+91', number: '9845012345' },
+  edited: true,
+});
+// { …, disabled: true,
+//   numberLines: { hint: '', error: 'This is your current phone number, enter a different number to make a change.' } }
+
+setState(noteContactEdit); // { …, error: null, edited: true }
 ```
 
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the
@@ -2356,7 +2427,13 @@ soon badge instead of its club count — and choosing it opens the launch waitli
 home feed. mWeb's `CityLaunchView` and the native `CityLaunch` screen render it.
 
 ```ts
-import { DEFAULT_LAUNCH_TARGET, formatCount, launchProgress, showsWaitlist } from '@duncit/utils';
+import {
+  DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
+  formatCount,
+  launchProgress,
+  showsWaitlist,
+} from '@duncit/utils';
 
 showsWaitlist({ is_launched: false }); // true  — Ahmedabad, not launched: "1,252 people are in"
 showsWaitlist({ is_launched: true }); // false — Pune, live: "18 clubs"
@@ -2366,6 +2443,13 @@ launchProgress(1252, DEFAULT_LAUNCH_TARGET); // 63 — the progress bar's value
 launchProgress(2600, 2000); // 100 — never past full
 launchProgress(40, 0); // 0 — a non-positive target never divides by zero
 formatCount(1252); // '1,252' — the hero's big number
+
+// Gujarat in the picker: live cities first, then the ones still waiting
+[
+  { location_name: 'Ahmedabad', is_launched: false },
+  { location_name: 'Surat', is_launched: true },
+  { location_name: 'Rajkot', is_launched: true },
+].sort(compareCitiesLaunchedFirst); // Rajkot, Surat, Ahmedabad
 ```
 
 `showsWaitlist` is `false` for anything but an explicit `false`, so a stale cached location
@@ -2374,6 +2458,7 @@ without the field keeps its feed.
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `DEFAULT_LAUNCH_TARGET` | `2000` | The launch goal a city gets when an admin sets none; the server's default too. |
+| `compareCitiesLaunchedFirst` | `(a, b: Readonly<{ location_name: string; is_launched?: boolean \| null }>) => number` | The picker's city order within a state: launched first, then not launched, alphabetical within each. |
 | `launchProgress` | `(count: number, target: number) => number` | Whole percent of the way to the target, clamped to 0–100; 0 for a non-positive target. |
 | `showsWaitlist` | `(city: Readonly<{ is_launched?: boolean \| null }>) => boolean` | Whether the picker tile and home show the waitlist rather than clubs and the feed. |
 

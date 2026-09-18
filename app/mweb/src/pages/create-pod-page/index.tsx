@@ -15,11 +15,12 @@ import {
   type CreatePodFormValues,
 } from './create-pod';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useAppLocation } from '../../app/AppLocationContext';
 import StudioPageHeader from '../../components/StudioPageHeader';
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
-    me { user_id roles selected_location_id }
+    me { user_id roles }
     clubs(filter: { is_active: true }) {
       id
       club_name
@@ -120,6 +121,7 @@ export default function CreatePodPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { draftId } = useParams<{ draftId?: string }>();
+  const { locationId: globalLocationId } = useAppLocation();
   const options = useQuery<any>(CREATE_POD_OPTIONS, { fetchPolicy: 'cache-and-network' });
   const draftQuery = useQuery<any>(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
   const [saveMut] = useMutation<any>(SAVE_POD_DRAFT);
@@ -145,14 +147,11 @@ export default function CreatePodPage() {
   const viewerUserId = options.data?.me?.user_id ?? '';
 
   const draft = draftQuery.data?.myPodDraft;
-  // Pod location defaults to the host's selected location (header pick).
-  const defaultLocationId =
-    locations.find((item: any) => item.id === options.data?.me?.selected_location_id)?.id ??
-    locations[0]?.id ??
-    '';
+  // A new pod is in the city the header has selected — step 1 lists that city's
+  // localities. The page re-mounts when the header's pick changes.
   const initialValues: CreatePodFormValues = draft
     ? hydrateDraft(draft.payload)
-    : { ...blankCreatePodForm, location_id: defaultLocationId };
+    : { ...blankCreatePodForm, location_id: globalLocationId };
   const initialStep = draft ? Math.min(Math.max(draft.step ?? 0, 0), STEP_TITLES.length - 1) : 0;
 
   const saveDraft = async (id: string | null, payload: DraftPayload) => {

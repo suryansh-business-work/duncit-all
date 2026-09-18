@@ -6,10 +6,13 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 
 interface Props {
   open: boolean;
-  /** The account address Google just authenticated — named so the user knows
+  /** Which door asked — the modal names it. */
+  provider: SocialProvider;
+  /** The account address the provider just authenticated — named so the user knows
    * exactly which Duncit account they are granting access to. */
   email: string;
   busy: boolean;
@@ -19,10 +22,11 @@ interface Props {
 }
 
 /**
- * The consent step for granting Google sign-in to an email/password account.
+ * The consent step for granting Google (or Apple) sign-in to an email/password
+ * account.
  *
- * Reached when loginWithGoogle answers EMAIL_LOGIN_REQUIRED. The server has
- * already verified the Google token and matched its verified address to this
+ * Reached when the provider's login answers EMAIL_LOGIN_REQUIRED. The server has
+ * already verified the token and matched its verified address to this
  * account, so nothing here proves identity — it collects INTENT. Denying leaves
  * the account exactly as it was and returns to the login form with a warning.
  *
@@ -31,6 +35,7 @@ interface Props {
  */
 export function GoogleLinkConsentModal({
   open,
+  provider,
   email,
   busy,
   error,
@@ -39,6 +44,7 @@ export function GoogleLinkConsentModal({
 }: Readonly<Props>) {
   const { accent } = useThemeColors();
   const { t } = useTranslation();
+  const copy = SOCIAL_AUTH_COPY[provider];
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onDeny}>
@@ -72,15 +78,15 @@ export function GoogleLinkConsentModal({
                 color="$color"
                 flexShrink={1}
               >
-                {t('mweb.login.linkConsentTitle')}
+                {t(copy.linkTitle)}
               </Text>
             </XStack>
 
             <Text fontSize={14} color="$color">
-              {t('mweb.login.linkConsentBody', { vars: { email } })}
+              {t(copy.linkBody, { vars: { email } })}
             </Text>
             <Text fontSize={12} color="$muted">
-              {t('mweb.login.linkConsentDetail')}
+              {t(copy.linkDetail)}
             </Text>
 
             {error ? (

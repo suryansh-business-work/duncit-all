@@ -25,6 +25,7 @@ import {
   type PlayStoreTrack,
 } from './appBuild.model';
 import { playStoreSettings, pushBuildToPlayStore } from './playRelease.service';
+import { appStoreSettings } from './iosSigning.service';
 import {
   dispatchWorkflow,
   githubRepoConfig,
@@ -760,6 +761,7 @@ export const appBuildService = {
       .sort({ created_at: -1 })
       .lean();
     const play = await playStoreSettings();
+    const appStore = await appStoreSettings();
     return {
       android_channel: optionalStr(await getRuntimeEnvValue('SLACK_ANDROID_BUILDS_CHANNEL')) || null,
       ios_channel: optionalStr(await getRuntimeEnvValue('SLACK_IOS_BUILDS_CHANNEL')) || null,
@@ -767,6 +769,9 @@ export const appBuildService = {
       last_reported_by: optionalStr(latest?.reported_by) || null,
       play_store_configured: play.configured,
       play_package_name: play.packageName,
+      app_store_configured: appStore.configured,
+      app_store_bundle_id: appStore.bundleId,
+      ios_signing: appStore.signing,
     };
   },
 

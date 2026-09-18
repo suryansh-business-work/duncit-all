@@ -105,6 +105,14 @@ export const settingsTypeDefs = gql`
   type PublicClientConfig {
     google_client_id: String!
     google_maps_api_key: String!
+    "Sign in with Apple on the iOS app — its App ID. Blank: the iOS app offers no Apple button."
+    apple_bundle_id: String!
+    "Sign in with Apple on the web flow (mWeb, Android, native web) — its Services ID. Blank: those doors offer no Apple button."
+    apple_services_id: String!
+    "The Return URL mWeb hands Apple's web SDK, as registered under the Services ID."
+    apple_web_redirect_uri: String!
+    "Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback."
+    apple_relay_url: String!
   }
 
   input UpdateAppSettingsInput {

@@ -129,7 +129,7 @@
     "dup": "node scripts/verify-duplication.mjs",
     "dup:report": "node scripts/verify-duplication.mjs --summary=duplication-report.md",
     "dup:update": "node scripts/verify-duplication.mjs --update",
-    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored app/mweb/src portals packages"
+    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 app/mweb/src portals packages"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

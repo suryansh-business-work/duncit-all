@@ -15,8 +15,8 @@ VoiceOver / TalkBack and a zoomed browser — they catch the mechanical part.
 | Check | What it covers | Blocks CI? |
 | --- | --- | --- |
 | `node scripts/verify-contrast.mjs` | Theme colour tokens clear their contrast ratios | **Yes** — Shared gates › Contrast tokens |
-| `pnpm lint:a11y` (web) | `eslint-plugin-jsx-a11y` over mWeb, portals, packages | No — warnings, report only |
-| `npm run lint:a11y` (native) | `eslint-plugin-react-native-a11y` over `app/mobile-app/src` | No — warnings, report only |
+| `pnpm lint:a11y` (web) | `eslint-plugin-jsx-a11y` over mWeb, portals, packages | **Yes** — errors, `--max-warnings 0` (A11Y Report) |
+| `npm run lint:a11y` (native) | `eslint-plugin-react-native-a11y` + the pressable-role rule over `app/mobile-app/src` | **Yes** — errors, `--max-warnings 0` (A11Y Report) |
 
 ---
 
@@ -71,6 +71,10 @@ Rules that follow from this:
   replacement; a focused element is never hidden under a sticky header.
 - **2.5.3 / 2.5.8** An `aria-label` starts with the visible text; targets are at
   least 24 × 24 CSS px.
+- **2.5.7** Nothing is drag-only. Every drag has a single-pointer, keyboard-reachable
+  alternative: the dashboard's **Arrange** menu (`@duncit/dashboard`), move up / down
+  buttons on a reorderable list, an attach button beside a drop zone, minimise /
+  maximise on a floating window.
 - **3.1.1** `<html lang>` follows the active locale.
 - **3.3.1–3.3.3** Errors in text, `aria-invalid` on invalid fields, `required`
   marked, helper text linked (MUI does this when `error` / `helperText` are passed).
@@ -85,7 +89,7 @@ Every new accessible name, hint or live-region text is a localization key
 
 ## Native checklist (React Native + Tamagui)
 
-- Every pressable has `accessibilityRole`, an `accessibilityLabel` when it has
+- Every pressable has `accessibilityRole` (or `role`), an `accessibilityLabel` when it has
   no text or ambiguous text, and `accessibilityState` (`disabled`, `selected`,
   `checked`, `expanded`, `busy`) that matches reality. `accessibilityHint` only
   where the result is not obvious.
@@ -106,6 +110,8 @@ Every new accessible name, hint or live-region text is a localization key
   Loaders: `progressbar` + a label.
 - Tamagui's web build drops some RN-only props — pair them with the web
   equivalents, as `FormTextField` does.
+- A long-press action has a screen-reader route too: a named
+  `accessibilityActions` entry on an accessible element (see `CommentRow`).
 - mWeb and native are twins (rule 27): a fix on one screen lands on its twin
   with the same keys and the same test ids.
 
@@ -132,7 +138,7 @@ node scripts/verify-contrast.mjs
 - Config: `eslint.a11y.config.mjs` (ESLint 9 flat config). It runs **only**
   jsx-a11y: the `strict` preset, plus `anchor-ambiguous-text`,
   `control-has-associated-label`, `no-aria-hidden-on-focusable` and `lang`, all
-  at `warn`. Tests (`__tests__`, `*.cy.*`, `*.test.*`) and
+  at `error`. Tests (`__tests__`, `*.cy.*`, `*.test.*`) and
   `portals/crm/open-wa-server/**` are ignored.
 - Parser: `@babel/eslint-parser` with the `typescript` + `jsx` syntax plugins.
   `@typescript-eslint/parser` cannot run at the root, because it needs the
@@ -151,21 +157,29 @@ node scripts/verify-contrast.mjs
 
 - Config: `app/mobile-app/.eslintrc.a11y.js`, run with `--no-eslintrc`, so it is
   independent of `.eslintrc.js` and its zero-warning `npm run lint` gate.
-- Rules: `eslint-plugin-react-native-a11y`'s `all` preset, every rule at `warn`
-  except `has-accessibility-hint`, which is off (see the plan below).
+- Rules: `eslint-plugin-react-native-a11y`'s `all` preset, every rule at `error`
+  except `has-accessibility-hint`, which is off: it asks for a hint on every
+  labelled element, which contradicts the checklist above (hints only where the
+  result is not obvious).
 - The plugin recognises React Native's own touchables (`Pressable`,
-  `Touchable*`). A Tamagui `XStack` / `YStack` with `onPress` is not a touchable
-  to it — those are covered by review against the checklist above.
+  `Touchable*`) only. A raw Tamagui / RN primitive (`XStack`, `YStack`, `View`,
+  `Text`, `Image`, …) with `onPress` / `onLongPress` is caught by the config's
+  own `no-restricted-syntax` rule instead: it must carry `role` /
+  `accessibilityRole`, or `accessible={false}` when it only blocks or forwards
+  touches. Wrapper components (`DuncitButton`, `PressScale`, …) set the role
+  inside, and a `{...spread}` is trusted to carry it.
 
 ### In CI
 
 - **Shared gates › Contrast tokens** — blocking.
-- **A11Y Report** (`.github/workflows/a11y-report.yml`) — never blocks. Runs the
+- **A11Y Report** (`.github/workflows/a11y-report.yml`) — **blocking**. Runs the
   contrast check, the web lint and the native lint, and `scripts/a11y-report.mjs`
   turns them into one table: status per check, findings per rule with the WCAG
   criterion it stands for, and findings per surface. On a pull request it is
   posted as ONE sticky comment (marker `<!-- duncit-a11y-status -->`, rewritten
-  on every push); on a push to staging it lands on the run summary.
+  on every push); on a push to staging it lands on the run summary. The lint
+  steps continue on error so the report always lands; the last step then fails
+  the run if either lint found anything.
 
 ---
 
@@ -197,26 +211,30 @@ Native — 32 warnings across 1,344 files: `has-accessibility-hint` 21,
 `has-valid-accessibility-descriptors` 8,
 `has-valid-accessibility-ignores-invert-colors` 3.
 
-## Plan: warnings to errors
+## Enforcement (2026-09-18)
 
-The lint reports today so the backlog is visible without turning CI red. Each
-surface flips on its own, as soon as it is clean, rather than the whole repo
-waiting on the slowest one:
+Every surface reached zero (web 0 findings across 3,026 files, native 0 across
+1,395, contrast 173 / 173 pairs), so both lints flipped from warnings to errors
+in one step rather than surface by surface. A new finding now fails the A11Y
+Report run instead of joining a backlog. An intentional exception (for example
+`autoFocus` on the only field of a dialog that just opened) is an inline
+`// eslint-disable-next-line jsx-a11y/no-autofocus -- reason`, never a rule change.
 
-1. **Fix a surface to zero** — the per-surface table in the A11Y status comment
-   says which ones are closest. Intentional exceptions (for example
-   `autoFocus` on the only field of a dialog that just opened) get a
-   `// eslint-disable-next-line jsx-a11y/no-autofocus -- reason` rather than a
-   rule change.
-2. **Flip it** — add a config block to `eslint.a11y.config.mjs` whose `files`
-   cover only that surface and sets its rules to `error`, and add a blocking
-   step (no `continue-on-error`) that lints only that path with
-   `--max-warnings 0`. A surface that is flipped can never regress while the
-   others are still reporting.
-3. **Native** — `has-accessibility-hint` is turned off (done, in
-   `app/mobile-app/.eslintrc.a11y.js`): it asks for a hint on every labelled
-   element, which contradicts the checklist above (hints only where the result
-   is not obvious). What is left is to set the rest to `error` and add
-   `--max-warnings 0` to `npm run lint:a11y`.
-4. **Finish** — once every surface is flipped, drop `continue-on-error` from
-   the two lint steps in `a11y-report.yml` and fold the per-surface blocks into one.
+The same pass closed the gaps the lints could not see:
+
+- **Native pressables without a role** — the `no-restricted-syntax` rule above,
+  which surfaced the last two (a comment row and a dismissable status line).
+- **2.5.7 Dragging Movements** — `@duncit/dashboard` could only be rearranged by
+  dragging; every widget now has an Arrange menu.
+- **4.1.3 Status Messages** — the checkout processing overlay (mWeb and native)
+  announces "processing" and "confirming", and on native keeps a screen reader
+  out of the form beneath it.
+
+### Known gap
+
+- **1.1.1 Non-text Content — the captcha** (`@duncit/captcha`, on the grievance,
+  contact and newsletter forms) is a code drawn as an image with no second way
+  to answer it. The WCAG CAPTCHA exception still requires an alternative in a
+  different modality (audio, or a non-visual check), so a screen-reader user
+  cannot submit those forms today. Open: it needs a product decision on the
+  alternative.

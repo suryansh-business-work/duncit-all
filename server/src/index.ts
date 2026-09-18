@@ -36,6 +36,7 @@ import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
+import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
@@ -655,6 +656,10 @@ async function bootstrap() {
   // Google's OAuth redirect after an operator connects a Gmail mailbox in the
   // Tech portal. A browser navigation, so it lives here and not in GraphQL.
   app.use('/gmail', buildGmailOAuthRouter());
+
+  // Sign in with Apple's form_post for the Android app and native web, handed
+  // back to the app with one redirect. Apple posts a form, so it lives here.
+  app.use('/apple', buildAppleRelayRouter());
 
   // Public developer REST API — approved venues + slot booking, x-api-key auth
   // (parses its own JSON, carries its own CORS for the Developers portal).

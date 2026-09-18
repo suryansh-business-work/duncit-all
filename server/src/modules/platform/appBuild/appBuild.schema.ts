@@ -247,6 +247,72 @@ export const appBuildTypeDefs = gql`
     play_store_configured: Boolean!
     "The package name releases go to. Empty when not configured."
     play_package_name: String!
+    """
+    Whether an App Store Connect API key and bundle ID are configured
+    (Environment Variables → App Store Connect). Generating iOS signing files
+    needs it.
+    """
+    app_store_configured: Boolean!
+    "The bundle ID iOS signing files are made for. Empty when not configured."
+    app_store_bundle_id: String!
+    "The newest iOS signing identity — what the next iOS build signs with. Null until one is generated."
+    ios_signing: IosSigning
+  }
+
+  """
+  An iOS signing identity the server made through the App Store Connect API: an
+  Apple Distribution certificate for a key pair generated on the server, and the
+  App Store provisioning profile built on it. Identities are kept, never
+  replaced, so an older build's files stay downloadable.
+  """
+  type IosSigning {
+    id: ID!
+    bundle_id: String!
+    team_id: String!
+    certificate_serial: String!
+    profile_name: String!
+    "When the certificate, and the profile built on it, stop signing."
+    expires_at: String
+    "Who generated it."
+    created_by: String!
+    created_at: String
+  }
+
+  "The files an iOS signing identity can be downloaded as."
+  enum IosSigningFileKind {
+    "The Apple Distribution certificate (.cer) — public, no key."
+    CERTIFICATE
+    "The App Store provisioning profile (.mobileprovision)."
+    PROFILE
+    "The certificate with its private key (.p12), under a password made for this download."
+    P12
+    "The App Store Connect API key (.p8) the identity was made with."
+    API_KEY
+  }
+
+  type IosSigningFile {
+    file_name: String!
+    content_base64: String!
+    "The .p12's password. Empty for every other kind."
+    password: String!
+  }
+
+  """
+  Everything the ios-build workflow signs and uploads with. CI only — it carries
+  private keys, and every read is logged.
+  """
+  type IosSigningBundle {
+    team_id: String!
+    bundle_id: String!
+    profile_uuid: String!
+    profile_name: String!
+    profile_base64: String!
+    p12_base64: String!
+    p12_password: String!
+    asc_key_id: String!
+    asc_issuer_id: String!
+    "The .p8 as PEM."
+    asc_private_key: String!
   }
 
   """
@@ -399,6 +465,10 @@ export const appBuildTypeDefs = gql`
     appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput): AppBuildTablePage!
     appBuildSettings: AppBuildSettings!
     appBuildTriggerConfig: AppBuildTriggerConfig!
+    "The iOS signing identity a build was signed with. Null on Android and on builds from before one existed."
+    iosSigningForBuild(id: ID!): IosSigning
+    "The newest iOS signing identity with its files and the upload key, for the ios-build workflow."
+    iosSigningBundle: IosSigningBundle!
   }
 
   extend type Mutation {
@@ -455,5 +525,18 @@ export const appBuildTypeDefs = gql`
     ended.
     """
     pushAppBuildToPlayStore(id: ID!, track: PlayStoreTrack!): AppBuild!
+    """
+    Make a new iOS signing identity at Apple with the App Store Connect key:
+    registers the bundle ID and its capabilities if missing, then creates an
+    Apple Distribution certificate and an App Store profile. The previous
+    identity is kept and not revoked. Tech/Super admin only.
+    """
+    generateIosSigning: IosSigning!
+    """
+    One file of an iOS signing identity, for download. A mutation rather than a
+    query so private keys never sit in a client cache; every call is logged.
+    Tech/Super admin only.
+    """
+    downloadIosSigningFile(id: ID!, kind: IosSigningFileKind!): IosSigningFile!
   }
 `;

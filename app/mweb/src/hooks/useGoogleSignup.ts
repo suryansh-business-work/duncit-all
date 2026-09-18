@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import type { SocialCredential } from '@duncit/utils';
 import { useTranslation } from '../i18n/useTranslation';
 
 /**
- * Google signup, held open across the policy gate AND the WhatsApp code.
+ * Google (or Apple) signup, held open across the policy gate AND the WhatsApp code.
  *
  * `signupWithGoogle` is new-account-only, so the credential Google returns is
  * kept unspent — first while the acceptance dialog runs, then while the number
@@ -14,20 +15,22 @@ import { useTranslation } from '../i18n/useTranslation';
  * SIGNUP FLOW, which is the only thing that knows the number the code proved —
  * and a Google account with no proven number is exactly what must not exist.
  */
-export function useGoogleSignup(onAccepted: (idToken: string, policyIds: string[]) => void) {
+export function useGoogleSignup(
+  onAccepted: (credential: SocialCredential, policyIds: string[]) => void,
+) {
   const { t } = useTranslation();
-  const [credential, setCredential] = useState<string | null>(null);
+  const [credential, setCredential] = useState<SocialCredential | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const start = (idToken: string) => {
+  const start = (next: SocialCredential) => {
     setError(null);
-    setCredential(idToken);
+    setCredential(next);
   };
 
   const accept = (acceptedPolicyIds: string[]) => {
-    const idToken = credential;
+    const held = credential;
     setCredential(null);
-    if (idToken) onAccepted(idToken, acceptedPolicyIds);
+    if (held) onAccepted(held, acceptedPolicyIds);
   };
 
   // Backing out drops the credential: they can press Google again, and until
@@ -37,5 +40,5 @@ export function useGoogleSignup(onAccepted: (idToken: string, policyIds: string[
     setError(t('policyAcceptance.mustAcceptHint'));
   };
 
-  return { credential, error, start, accept, cancel };
+  return { credential, error, setError, start, accept, cancel };
 }

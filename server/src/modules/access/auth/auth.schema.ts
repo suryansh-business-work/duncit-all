@@ -245,6 +245,34 @@ export const authTypeDefs = gql`
     accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
   }
 
+  "An Apple id_token, from the iOS app's native sheet or the web flow."
+  input AppleAuthInput {
+    id_token: String!
+    portal_key: String
+  }
+
+  """
+  The Apple door's signup: the Google door's fields, plus the name.
+
+  Apple never puts the name in its token. It hands it to the client once, on
+  the first authorisation, and the client sends it here — or asks for it, when
+  Apple had already shared it on an earlier attempt that never became an account.
+  """
+  input AppleSignupInput {
+    id_token: String!
+    first_name: String!
+    last_name: String
+    phone_number: String!
+    phone_extension: String!
+    whatsapp_is_mobile: Boolean = true
+    whatsapp_token: String!
+    dob: String!
+    city: String
+    zone: String
+    accepted_policy_ids: [ID!]
+    accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
+  }
+
   "The Google account currently linked to a Duncit account."
   type ConnectedGoogleAccount {
     "The Gmail address the user is prompted with. Falls back to the account email for accounts created by Google signup, which predate the stored field."
@@ -347,6 +375,23 @@ export const authTypeDefs = gql`
     and unlinking it would lock the user out of their own account.
     """
     disconnectGoogleAccount: ConnectedAccounts!
+    """
+    Sign in with an Apple credential — from the iOS app's native sheet, or the
+    web flow mWeb and the Android app use.
+
+    Answers exactly as loginWithGoogle does, with APPLE_ACCOUNT_NOT_FOUND in
+    place of GOOGLE_ACCOUNT_NOT_FOUND: that one offers signup and carries this
+    same id_token — unspent — into signupWithApple.
+    """
+    loginWithApple(input: AppleAuthInput!): AuthPayload!
+    """
+    Grant Apple sign-in to an existing email/password account, then sign in —
+    the "allow" half of the consent step loginWithApple triggers with
+    EMAIL_LOGIN_REQUIRED. Unauthenticated for the same reason as
+    linkGoogleAccount: a verified Apple address matching the account IS the proof.
+    """
+    linkAppleAccount(input: AppleAuthInput!): AuthPayload!
+    signupWithApple(input: AppleSignupInput!): AuthPayload!
     """
     Continue with OTP, step one: send a sign-in code to the chosen channel.
 

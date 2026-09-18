@@ -4,9 +4,10 @@ name: A11Y Report
 # comment on the pull request (rewritten on every push, never stacked) and on
 # the run summary for a push to staging, where there is no PR to comment on.
 #
-# It REPORTS. The blocking contrast gate lives in shared-gates.yml; the lint
-# findings are warnings until a surface is clean (docs/accessibility.md), so no
-# step here can turn a PR red.
+# The lints are BLOCKING: both run as errors with --max-warnings 0. Each lint
+# step still continues on error so the report is written and posted either way,
+# and the last step fails the run when either lint found anything. The contrast
+# gate blocks separately, in shared-gates.yml (docs/accessibility.md).
 on:
   pull_request:
     branches: [main, master, develop, staging]
@@ -54,10 +55,12 @@ jobs:
           echo "$status" > "$RUNNER_TEMP/contrast.exit"
 
       - name: Web lint (jsx-a11y)
+        id: web_lint
         continue-on-error: true
         run: pnpm lint:a11y --format json --output-file "$RUNNER_TEMP/a11y-web.json"
 
       - name: Native lint (react-native-a11y)
+        id: native_lint
         continue-on-error: true
         working-directory: app/mobile-app
         run: npm run lint:a11y -- --format json --output-file "$RUNNER_TEMP/a11y-native.json"
@@ -104,3 +107,10 @@ jobs:
       - name: A11Y report on the run summary
         if: always()
         run: cat "$RUNNER_TEMP/a11y.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      # Last, so the comment and summary above always land first.
+      - name: Enforce WCAG 2.2 AA lint
+        if: always() && (steps.web_lint.outcome == 'failure' || steps.native_lint.outcome == 'failure')
+        run: |
+          echo "::error::The a11y lint found WCAG 2.2 AA issues (web: ${{ steps.web_lint.outcome }}, native: ${{ steps.native_lint.outcome }}). See the A11Y status table and docs/accessibility.md."
+          exit 1

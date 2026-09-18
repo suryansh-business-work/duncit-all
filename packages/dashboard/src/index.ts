@@ -10,19 +10,22 @@ export { DuncitDashboard, type DuncitDashboardProps } from './DuncitDashboard';
 export { DashboardWidgetCard, type DashboardWidgetCardProps } from './DashboardWidgetCard';
 export { DashboardToolbar, type DashboardToolbarProps } from './DashboardToolbar';
 export { DashboardGrid, type DashboardGridProps } from './DashboardGrid';
-export type { DashboardLayoutItem, DashboardPosition, DashboardWidget } from './types';
+export type { DashboardArrange, DashboardLayoutItem, DashboardPosition, DashboardWidget } from './types';
 
 // The pure layout maths, exported so a portal can compute a default arrangement
 // (or a test can assert one) without mounting a grid.
 export {
+  ARRANGE_ACTIONS,
   BREAKPOINTS,
   CELL_HEIGHT,
   GRID_COLUMNS,
+  arrangeLayout,
   defaultLayout,
   layoutsEqual,
   normalisePosition,
   resolveLayout,
   serialiseNodes,
+  type ArrangeAction,
   type GridNodeLike,
 } from './layout';
 

@@ -4,6 +4,8 @@ import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   aisensyConnection,
+  appleSignInConnection,
+  appStoreConnectConnection,
   githubConnection,
   googlePlayConnection,
   msg91Connection,
@@ -202,6 +204,8 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   GITHUB: githubConnection,
   GOOGLE_PLAY: googlePlayConnection,
   MSG91: msg91Connection,
+  APPLE_SIGNIN: appleSignInConnection,
+  APP_STORE_CONNECT: appStoreConnectConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

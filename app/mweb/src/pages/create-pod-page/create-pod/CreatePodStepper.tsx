@@ -61,7 +61,7 @@ interface Props {
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
 }
 
-/** 4-step host Create Pod stepper: Basics → Location/Category/Club →
+/** 4-step host Create Pod stepper: Category/Locality/Club → Basics →
  * Venue & Slot (from the venue partner's availability calendar) → Pricing.
  * Per-step validation gates Next, the draft autosaves on a timer + every step
  * change, and the last step publishes the pod. */
@@ -148,8 +148,8 @@ export default function CreatePodStepper({
   };
   const next = async () => {
     if (!(await form.trigger(STEP_FIELDS[step]))) return;
-    // The category now sits above the title, so it gates the FIRST step — a host
-    // should not fill a whole pod out and only then be told to pick one.
+    // The category, locality and club are the FIRST step — a host should not
+    // fill a whole pod out and only then be told to pick them.
     goTo(step + 1);
   };
 
@@ -199,15 +199,17 @@ export default function CreatePodStepper({
   };
 
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
-  // city and locality (helper shared with mobile + covered by unit tests).
+  // city and locality (helper shared with mobile + covered by unit tests). The
+  // city-wide list is what the Locality dropdown counts per area.
   const podMode = form.watch('pod_mode');
-  const clubsForLocation = filterClubs(clubs, {
+  const clubFilter = {
     hostCategories,
     selectedCategoryKey: form.watch('host_category_key'),
     locationId: form.watch('location_id'),
-    locality: form.watch('locality'),
     podMode,
-  });
+  };
+  const clubsInCity = filterClubs(clubs, { ...clubFilter, locality: '' });
+  const clubsForLocation = filterClubs(clubs, { ...clubFilter, locality: form.watch('locality') });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
   const clubId = form.watch('club_id');
@@ -258,8 +260,15 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <BasicsStep key="basics" form={form} hostCategories={hostCategories} locations={locations} />,
-    <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
+    <LocationClubStep
+      key="location"
+      form={form}
+      hostCategories={hostCategories}
+      clubs={clubsForLocation}
+      cityClubs={clubsInCity}
+      locations={locations}
+    />,
+    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} />,
   ];

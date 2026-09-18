@@ -6,7 +6,7 @@ import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 /** A 36px choice pill — green when picked, the soft fill when not (native's
  * ChipSelectField). `minHeight` pins it against the coarse-pointer 44px rule. */
-export const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
+const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
 
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
@@ -18,7 +18,7 @@ interface Props {
   hostCategories: CreatePodHostCategory[];
 }
 
-/** Step-2 category picker — the host chooses which of their onboarded categories
+/** Step-1 category picker — the host chooses which of their onboarded categories
  * this pod is for. Changing it resets the club/venue/slot picks. */
 export default function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
   const {

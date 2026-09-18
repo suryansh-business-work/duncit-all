@@ -43,9 +43,7 @@ function Harness({ withErrors = false }: { withErrors?: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // The category picker is the step's first field now; these tests cover the
-  // rest of Pod Basics, so it renders with nothing to choose from.
-  return <BasicsStep form={form as any} hostCategories={[]} locations={[]} />;
+  return <BasicsStep form={form as any} hostCategories={[]} />;
 }
 
 function renderStep(withErrors = false) {
@@ -68,14 +66,6 @@ describe('BasicsStep', () => {
     expect(screen.getByLabelText('Hashtags')).toBeInTheDocument();
     expect(screen.getByTestId('create-pod-optional-settings')).toHaveTextContent('Additional Info');
     expect(screen.getByRole('button', { name: /Pod Reel/ })).toBeInTheDocument();
-  });
-
-  it('shows the locality section under the category', () => {
-    renderStep();
-    // With no cities loaded there is nothing to place the device in yet.
-    expect(screen.getByRole('heading', { name: 'Locality' })).toBeInTheDocument();
-    expect(screen.getByTestId('create-pod-locality-selected')).toHaveTextContent('No location selected');
-    expect(screen.getByTestId('create-pod-edit-location')).toBeInTheDocument();
   });
 
   it('updates form values as the user types the title and description', () => {

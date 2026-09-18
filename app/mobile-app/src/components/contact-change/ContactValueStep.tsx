@@ -9,6 +9,7 @@ import {
   type ContactChangeLabels,
   type ContactChannel,
   type ContactDraft,
+  type ContactSnapshot,
 } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -25,6 +26,10 @@ interface Props {
   channel: ContactChannel;
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
+  /** What the account holds now — its own number is never "taken". */
+  snapshot: ContactSnapshot;
+  /** The box has been changed since it opened (`noteContactEdit`). */
+  edited: boolean;
   busy: boolean;
   /** A refusal of the typed value is showing — resending it would only repeat it. */
   blocked: boolean;
@@ -50,6 +55,8 @@ export function ContactValueStep({
   channel,
   labels,
   defaultValues,
+  snapshot,
+  edited,
   busy,
   blocked,
   phoneOtp,
@@ -84,6 +91,9 @@ export function ContactValueStep({
     isValid,
     numberStatus,
     phoneOtp,
+    snapshot,
+    draft: watch(),
+    edited,
   });
   const submit = handleSubmit(onSend);
 
@@ -93,7 +103,9 @@ export function ContactValueStep({
         {view.hint}
       </Text>
       {isPhoneChannel(channel) ? (
-        <XStack gap={12} alignItems="flex-end">
+        // Top-aligned, so a line under the number never pushes the two boxes
+        // out of line.
+        <XStack gap={12} alignItems="flex-start">
           <YStack width={120}>
             <CountryCodeField
               control={control}

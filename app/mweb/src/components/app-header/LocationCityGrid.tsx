@@ -17,7 +17,7 @@ export default function LocationCityGrid({ cities, draftLocationId, onSelect }: 
         sx={{
           display: 'grid',
           gridAutoFlow: 'column',
-          gridAutoColumns: '110px',
+          gridAutoColumns: '132px',
           gap: 1,
           pb: 0.5,
           overflowX: 'auto',

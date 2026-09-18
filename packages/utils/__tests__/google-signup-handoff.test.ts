@@ -28,6 +28,20 @@ describe('openGoogleSignup', () => {
 
     expect(openGoogleSignup(open, ARJUN.idToken, ARJUN.email)).toEqual(ARJUN);
   });
+
+  it('carries the provider and the name Apple shared beside the credential', () => {
+    expect(
+      openGoogleSignup(null, 'apple-id-token-riya', RIYA.email, {
+        provider: 'APPLE',
+        name: 'Riya Sharma',
+      }),
+    ).toEqual({
+      idToken: 'apple-id-token-riya',
+      email: RIYA.email,
+      provider: 'APPLE',
+      name: 'Riya Sharma',
+    });
+  });
 });
 
 describe('readGoogleSignupHandoff', () => {
@@ -49,6 +63,17 @@ describe('readGoogleSignupHandoff', () => {
 
   it('is null without an email', () => {
     expect(readGoogleSignupHandoff({ idToken: RIYA.idToken })).toBeNull();
+  });
+
+  it('reads the provider and the shared name back', () => {
+    const apple = { ...RIYA, provider: 'APPLE', name: 'Riya Sharma' };
+
+    expect(readGoogleSignupHandoff(apple)).toEqual(apple);
+  });
+
+  it('drops a provider it does not know and a blank name', () => {
+    expect(readGoogleSignupHandoff({ ...RIYA, provider: 'FACEBOOK', name: '   ' })).toEqual(RIYA);
+    expect(readGoogleSignupHandoff({ ...RIYA, name: 7 })).toEqual(RIYA);
   });
 });
 

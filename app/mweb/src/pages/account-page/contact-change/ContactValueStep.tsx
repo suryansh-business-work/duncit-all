@@ -10,6 +10,7 @@ import {
   type ContactChangeLabels,
   type ContactChannel,
   type ContactDraft,
+  type ContactSnapshot,
 } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import CountryCodeField from '../../../forms/components/CountryCodeField';
@@ -21,6 +22,10 @@ interface Props {
   channel: ContactChannel;
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
+  /** What the account holds now — its own number is never "taken". */
+  snapshot: ContactSnapshot;
+  /** The box has been changed since it opened (`noteContactEdit`). */
+  edited: boolean;
   busy: boolean;
   /** A refusal of the typed value is showing — resending it would only repeat it. */
   blocked: boolean;
@@ -47,6 +52,8 @@ export default function ContactValueStep({
   channel,
   labels,
   defaultValues,
+  snapshot,
+  edited,
   busy,
   blocked,
   phoneOtp,
@@ -75,7 +82,7 @@ export default function ContactValueStep({
   // a warning beside the box and a shut button — not a refusal after the press.
   // The EMAIL box leaves `number` blank, which never leaves the device.
   const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS);
-  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus, phoneOtp });
+  const view = contactValueStepView(channel, labels, { busy, blocked, isValid, numberStatus, phoneOtp, snapshot, draft: watch(), edited });
   const submit = handleSubmit(onSend);
 
   return (
@@ -85,7 +92,9 @@ export default function ContactValueStep({
           {view.hint}
         </Typography>
         {isPhoneChannel(channel) ? (
-          <Stack direction="row" spacing={1}>
+          // Top-aligned and the same box size as the code, so a line under the
+          // number never pushes the two boxes out of line.
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
             <CountryCodeField
               control={control}
               name="extension"
@@ -96,7 +105,6 @@ export default function ContactValueStep({
               control={control}
               name="number"
               label={copy.fieldLabel}
-              size="small"
               required
               hint={view.numberLines.hint}
               errorText={view.numberLines.error}

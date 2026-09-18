@@ -11,7 +11,17 @@ export {
   readGoogleSignupHandoff,
   type GoogleSignupClaims,
   type GoogleSignupHandoff,
+  type SocialHandoffExtras,
 } from './google-signup-handoff';
+export {
+  isSocialProvider,
+  SOCIAL_AUTH_COPY,
+  SOCIAL_NOT_FOUND_CODE,
+  socialSignupNeedsName,
+  type SocialAuthCopy,
+  type SocialCredential,
+  type SocialProvider,
+} from './social-auth';
 export {
   backoutAttemptsLeft,
   buildPodParticipationTimeline,
@@ -501,17 +511,20 @@ export {
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
   isPhoneChannel,
+  noteContactEdit,
   type ContactChangeLabels,
   type ContactChangeStep,
   type ContactChannel,
   type ContactChannelLabels,
   type ContactDraft,
+  type ContactEditState,
   type ContactPhoneField,
   type ContactSnapshot,
   type ContactSubmitAction,
@@ -943,7 +956,12 @@ export {
   type LocationMismatch,
   type LocationPick,
 } from './location-mismatch';
-export { DEFAULT_LAUNCH_TARGET, launchProgress, showsWaitlist } from './city-launch';
+export {
+  DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
+  launchProgress,
+  showsWaitlist,
+} from './city-launch';
 export {
   clubCityName,
   clubOptionLabel,

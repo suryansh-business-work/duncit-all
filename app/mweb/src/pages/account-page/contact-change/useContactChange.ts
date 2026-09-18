@@ -3,10 +3,12 @@ import { useMutation } from '@apollo/client/react';
 import {
   contactDraftValue,
   isPhoneChannel,
+  noteContactEdit,
   parseApiError,
   type ContactChangeStep,
   type ContactChannel,
   type ContactDraft,
+  type ContactEditState,
 } from '@duncit/utils';
 import {
   CONFIRM_EMAIL_CHANGE,
@@ -17,13 +19,12 @@ import {
 } from './queries';
 
 /** What the dialog needs to render, however the change is going. */
-export interface ContactChangeState {
+export interface ContactChangeState extends ContactEditState {
   step: ContactChangeStep;
   /** The value the live code was sent to, for the "we sent a code to …" line. */
   sentTo: string;
   /** Echoed back only while no SMS/WhatsApp transport is wired. */
   testCode: string | null;
-  error: string | null;
   sending: boolean;
   verifying: boolean;
 }
@@ -33,6 +34,7 @@ const INITIAL: ContactChangeState = {
   sentTo: '',
   testCode: null,
   error: null,
+  edited: false,
   sending: false,
   verifying: false,
 };
@@ -60,12 +62,8 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [],
   );
 
-  /** Drops a refusal once the value it was about is edited. A no-op while none
-   * is shown, so it can run on every keystroke without re-rendering. */
-  const clearError = useCallback(
-    () => setState((p) => (p.error ? { ...p, error: null } : p)),
-    [],
-  );
+  /** Told on every edit of the value box — see `noteContactEdit`. */
+  const noteEdit = useCallback(() => setState(noteContactEdit), []);
 
   /** Back to the value box, with the code already sent forgotten. */
   const editValue = useCallback(
@@ -143,5 +141,5 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel, confirmEmail, confirmPhone, onSaved],
   );
 
-  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError, clearError };
+  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError, noteEdit };
 }

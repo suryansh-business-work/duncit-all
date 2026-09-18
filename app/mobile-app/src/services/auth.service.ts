@@ -12,6 +12,9 @@ import {
   SignupWithGoogleDocument,
   LinkGoogleAccountDocument,
   LoginWithGoogleDocument,
+  SignupWithAppleDocument,
+  LinkAppleAccountDocument,
+  LoginWithAppleDocument,
 } from '@/graphql/auth';
 // The enum is not re-exported through the generated index, so it is imported
 // from the module codegen writes it into — the surface is a server value, and
@@ -314,6 +317,59 @@ export async function linkGoogleAccount(idToken: string): Promise<AuthOutcome> {
   return {
     token: data.linkGoogleAccount.token,
     surveyCompleted: data.linkGoogleAccount.user.onboarding_survey_completed,
+  };
+}
+
+/**
+ * Apple signup — the Google door's twin, plus the name: Apple never puts it in
+ * its token, so it is the one Apple shared on its first authorisation, or the
+ * one the details step asked.
+ */
+export async function signupWithApple(
+  idToken: string,
+  name: string,
+  acceptedPolicyIds: string[],
+  proven: ProvenNumber,
+  /** YYYY-MM-DD, asked on the same step as the number — Apple carries no birthday. */
+  dob: string,
+): Promise<AuthOutcome> {
+  const data = await graphqlRequest(SignupWithAppleDocument, {
+    input: {
+      id_token: idToken,
+      ...splitName(name),
+      phone_number: proven.number.trim(),
+      phone_extension: proven.extension.trim(),
+      whatsapp_is_mobile: proven.alsoMobile,
+      whatsapp_token: proven.whatsappToken,
+      dob: dobToIso(dob),
+      accepted_policy_ids: acceptedPolicyIds,
+      accepted_policy_surface: PolicyAcceptanceSurface.App,
+    },
+  });
+  await setAuthToken(data.signupWithApple.token);
+  return {
+    token: data.signupWithApple.token,
+    surveyCompleted: data.signupWithApple.user.onboarding_survey_completed,
+  };
+}
+
+/** Token-only Apple login for existing accounts (mirrors mWeb LOGIN_APPLE). */
+export async function loginWithApple(idToken: string): Promise<AuthOutcome> {
+  const data = await graphqlRequest(LoginWithAppleDocument, { input: { id_token: idToken } });
+  await setAuthToken(data.loginWithApple.token);
+  return {
+    token: data.loginWithApple.token,
+    surveyCompleted: data.loginWithApple.user.onboarding_survey_completed,
+  };
+}
+
+/** The Apple half of the login consent step. mWeb twin. */
+export async function linkAppleAccount(idToken: string): Promise<AuthOutcome> {
+  const data = await graphqlRequest(LinkAppleAccountDocument, { input: { id_token: idToken } });
+  await setAuthToken(data.linkAppleAccount.token);
+  return {
+    token: data.linkAppleAccount.token,
+    surveyCompleted: data.linkAppleAccount.user.onboarding_survey_completed,
   };
 }
 

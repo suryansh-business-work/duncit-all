@@ -3,9 +3,11 @@ import { podAnalytics } from './pods.analytics';
 import { clubAnalytics } from './clubs.analytics';
 import { clubAdminAnalytics } from './clubAdmins.analytics';
 import { hostAnalytics } from './hosts.analytics';
+import { userAnalytics } from './users.analytics';
 import type { AnalyticsEntity, EntityAnalyticsSections } from './shapes';
 
 const LOADERS: Record<AnalyticsEntity, (window: AnalyticsWindow) => Promise<EntityAnalyticsSections>> = {
+  USERS: userAnalytics,
   PODS: podAnalytics,
   CLUBS: clubAnalytics,
   CLUB_ADMINS: clubAdminAnalytics,

@@ -586,6 +586,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // and the token exchange after it are both slow enough to look broken
       // without it.
       googleConnecting: 'Connecting to Google…',
+      // Sign in with Apple. Both surfaces render their own Apple button, so
+      // its label is ours on both — one wording to sign in, one to sign up.
+      appleSignIn: 'Sign in with Apple',
+      appleSignUp: 'Sign up with Apple',
+      appleConnecting: 'Connecting to Apple…',
+      appleFailed: 'Apple sign-in failed. Please try again.',
       // The Terms & Privacy footer. The lead-in changes per screen and the two
       // links must stay tappable inside the sentence, so it is assembled from
       // parts rather than one template with markup in it.
@@ -665,6 +671,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       linkConsentDenied:
         'Google was not connected. Sign in with your email and password, or try Google again to allow it.',
       linkConsentFailed: 'Could not connect Google. Please try again.',
+      // The same invite and consent step, when the door was Apple. The title,
+      // body, actions and "Not now" above are the provider-free half.
+      appleNotFoundDetail:
+        'We will carry this Apple sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+      appleLinkConsentTitle: 'Also sign in with Apple?',
+      appleLinkConsentBody:
+        'You registered {email} with an email and password. Allow Apple to sign you in to this same account?',
+      appleLinkConsentDetail: 'Your email and password keep working as well.',
+      appleLinkConsentDenied:
+        'Apple was not connected. Sign in with your email and password, or try Apple again to allow it.',
+      appleLinkConsentFailed: 'Could not connect Apple. Please try again.',
     },
     signup: {
       title: 'Join',
@@ -749,6 +766,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // a code can be sent to, and the date of birth the joining age is checked on.
       detailsTitle: 'A few details',
       detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
+      appleDetailsSubtitle: 'Apple doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
       // The contact step asks the server about the email and the number as
@@ -1992,7 +2010,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       cancel: 'Cancel',
       done: 'Done',
       remove: 'Remove',
-      change: 'Change',
       search: 'Search',
       loading: 'Loading…',
       // The AI content check: the chip on every step, and the guidelines dialog
@@ -2024,18 +2041,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // Native only — mWeb's dialog is the shared @duncit/ui one, which writes
       // this line itself.
       moderationFixIn: 'Fix in {step}',
-      // Step 1 — Pod Basics.
+      // Step 1 — Location, Category & Club.
       categoryLabel: 'Select Category',
       categoryHint: 'In which you want to host your session',
       categoryEmpty: 'Assigned after host onboarding',
-      // The locality under the category: where the pod happens, found from the
-      // device, and what scopes the clubs offered on step 2.
+      // The Locality dropdown: the areas of the city the header has selected,
+      // each with its club count. Picking one opens the club list under it.
       localityHeading: 'Locality',
-      localityHint: 'The clubs on the next step come from this area',
-      editLocation: 'Edit location',
-      localityDetecting: 'Finding your locality…',
-      localityDetectFailed:
-        "We couldn't find your locality from this device. Use Edit location to choose it.",
+      localityCityHint: 'Localities in {city}, your selected city',
+      localityPlaceholder: 'Search your locality',
+      localitiesEmpty: 'No matching localities',
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
       // mWeb only — the native title field carries no placeholder.
@@ -2118,15 +2133,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       compressing: 'Compressing…',
       uploadingPct: 'Uploading… {pct}%',
       compressingPct: 'Compressing… {pct}%',
-      // Step 2 — Location, Category & Club.
-      podLocation: 'Pod location',
-      noLocationSelected: 'No location selected',
-      localityLabel: 'Locality: {locality}',
-      // Native only — its change control is a pressable stack.
-      changeLocation: 'Change location',
-      // Native only — mWeb's card has no explanatory line under it.
-      locationPickerHint:
-        'Pick your city and locality — the picker shows how many clubs each locality has.',
       podMode: 'Pod mode',
       modePhysical: 'Physical',
       modeVirtual: 'Virtual',
@@ -2137,6 +2143,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubSearchPlaceholder: 'Search your clubs',
       clubSearchAria: 'Search clubs',
       clubsEmpty: 'No clubs match your search.',
+      // Under the club field: locked until a locality is picked, then its count.
+      clubPickLocalityFirst: 'Pick a locality to see its clubs',
+      clubsInLocality: {
+        one: '{count} club in {locality}',
+        other: '{count} clubs in {locality}',
+      },
       // A club option read aloud: its name, then where it operates.
       clubOptionAria: '{club}, {place}',
       venueOne: '1 venue',
@@ -3791,8 +3803,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'This is the number Duncit will reach you on. It is saved as soon as you enter it.',
       // While the phone_otp_verification flag is on, the number is proved first.
       phoneCodeHint: 'We will text a 6-digit code to this number to confirm it is yours.',
+      // Under a number box typed back to the number the account already has.
+      phoneCurrent: 'This is your current phone number, enter a different number to make a change.',
       whatsappName: 'WhatsApp number',
-      whatsappField: 'New WhatsApp number',
+      whatsappEnterField: 'Enter WhatsApp number',
+      whatsappCurrent:
+        'This is your current WhatsApp number, enter a different number to make a change.',
       whatsappEmpty: 'No WhatsApp number yet',
       whatsappTitle: 'Change WhatsApp number',
       whatsappHint: 'We will send a 6-digit code on WhatsApp to confirm the new number is yours.',
@@ -4151,17 +4167,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       close: 'Close',
       createPod: {
-        basics: {
-          body: 'This is the line people read first. A description and a cover photo follow it, and both are checked before your pod goes live.',
-          title: 'Name it well',
-        },
         caption: 'Hosting your own pod, step by step',
+        club: {
+          body: 'Pick your category, then a locality in your city. Its clubs open below with a count, so choose the one this pod belongs to.',
+          title: 'Start with your club',
+        },
         publish: {
           body: 'This carries you through to the last step, where you set a ticket price and see what you take home after fees. Nothing is published until you press Create Pod.',
           title: 'Pricing, then publish',
         },
         steps: {
-          body: 'The basics, then where it happens, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+          journey: {
+            body: 'Where it happens and its club, then the basics, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+          },
           title: 'Four steps',
         },
         title: 'Create Pod',

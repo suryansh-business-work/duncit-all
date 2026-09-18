@@ -15,10 +15,11 @@ import { Schema, model, Types, type Document } from 'mongoose';
  */
 
 /** How the acceptance was given. */
-export type PolicyAcceptanceMethod = 'SIGNUP_FORM' | 'GOOGLE_SIGNUP' | 'ACCOUNT';
+export type PolicyAcceptanceMethod = 'SIGNUP_FORM' | 'GOOGLE_SIGNUP' | 'APPLE_SIGNUP' | 'ACCOUNT';
 export const POLICY_ACCEPTANCE_METHODS: PolicyAcceptanceMethod[] = [
   'SIGNUP_FORM',
   'GOOGLE_SIGNUP',
+  'APPLE_SIGNUP',
   'ACCOUNT',
 ];
 

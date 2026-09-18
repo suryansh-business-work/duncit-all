@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ArrangeAction } from './layout';
 
 /** A slot on the grid, in GridStack column/row units. */
 export interface DashboardPosition {
@@ -57,4 +58,19 @@ export interface DashboardWidget {
    * them to their minimum.
    */
   fitContent?: boolean;
+}
+
+/**
+ * The Arrange menu: moving and resizing a widget without dragging it (WCAG 2.5.7
+ * Dragging Movements, 2.1.1 Keyboard). Offered on every widget while editing,
+ * and it feeds the same Save / Cancel as a drag does.
+ */
+export interface DashboardArrange {
+  /** The moves that would change something for this widget right now. */
+  available: (widget: DashboardWidget) => readonly ArrangeAction[];
+  apply: (widget: DashboardWidget, action: ArrangeAction) => void;
+  /** The menu button's accessible name — names the widget when it has a title. */
+  buttonLabel: (title?: string) => string;
+  /** One menu label per move. */
+  labels: Readonly<Record<ArrangeAction, string>>;
 }

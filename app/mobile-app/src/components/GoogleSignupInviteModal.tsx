@@ -6,9 +6,12 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SOCIAL_AUTH_COPY, type SocialProvider } from '@duncit/utils';
 
 interface Props {
   open: boolean;
+  /** Which door refused — the detail line names it. */
+  provider: SocialProvider;
   /** The address Google verified — named so the invite is about THEIR account
    * rather than about accounts in general. */
   email: string;
@@ -33,7 +36,13 @@ interface Props {
  * this answer, so closing it really is "not now". mWeb twin
  * (GoogleSignupInviteDialog).
  */
-export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Readonly<Props>) {
+export function GoogleSignupInviteModal({
+  open,
+  provider,
+  email,
+  onAccept,
+  onDismiss,
+}: Readonly<Props>) {
   const { accent } = useThemeColors();
   const { t } = useTranslation();
 
@@ -78,7 +87,7 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
               {t('mweb.login.googleNotFoundBody', { vars: { email } })}
             </Text>
             <Text fontSize={12} color="$muted">
-              {t('mweb.login.googleNotFoundDetail')}
+              {t(SOCIAL_AUTH_COPY[provider].notFoundDetail)}
             </Text>
 
             <XStack gap={10} marginTop={4}>

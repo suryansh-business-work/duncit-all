@@ -184,6 +184,63 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'MSG91 → Settings → Security → Auth Key. Also reads the widget logs and analytics',
     },
   ],
+  // Sign in with Apple, on every door that offers it. The iOS app signs in as
+  // the App ID; mWeb and the Android app sign in as the Services ID, so an
+  // Apple token is accepted when its audience is either. The key signs the
+  // client secret Apple's token endpoint asks for — the connection test uses
+  // it today, and revoking a deleted account's Apple tokens will.
+  APPLE_SIGNIN: [
+    { name: 'team_id', label: 'Team ID', hint: 'Apple Developer → Membership details → Team ID (10 characters), e.g. A1B2C3D4E5' },
+    {
+      name: 'bundle_id',
+      label: 'App ID (iOS bundle identifier)',
+      hint: 'Identifiers → App IDs, with Sign in with Apple enabled — e.g. com.duncit.mobile. The iOS app signs in with this',
+    },
+    {
+      name: 'services_id',
+      label: 'Services ID (web client ID)',
+      hint: 'Identifiers → Services IDs, e.g. com.duncit.signin. mWeb and the Android app sign in with this',
+    },
+    {
+      name: 'web_redirect_uri',
+      label: 'mWeb Return URL',
+      hint: 'e.g. https://mweb.duncit.com/login. Register it under the Services ID → Return URLs, together with <server URL>/apple/callback',
+    },
+    { name: 'key_id', label: 'Key ID', hint: 'Keys → your Sign in with Apple key → Key ID (10 characters)' },
+    {
+      name: 'private_key',
+      label: 'Private Key (.p8)',
+      secret: true,
+      hint: 'Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once',
+    },
+  ],
+  // Signs the iOS app with no Mac. This API key is the one thing Apple makes
+  // only by hand; with it, Tech → App Builds → Settings generates the Apple
+  // Distribution certificate and App Store profile, and the ios-build workflow
+  // signs and uploads with them. A different key from Sign in with Apple's.
+  APP_STORE_CONNECT: [
+    {
+      name: 'issuer_id',
+      label: 'Issuer ID',
+      hint: 'App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys: the Issuer ID shown above the key list (a UUID)',
+    },
+    {
+      name: 'key_id',
+      label: 'Key ID',
+      hint: 'Generate a Team Key with Access "Admin" — only Admin may create certificates — and copy its Key ID (10 characters), e.g. 2X9R4HXF34',
+    },
+    {
+      name: 'private_key',
+      label: 'Private Key (.p8)',
+      secret: true,
+      hint: 'Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once',
+    },
+    {
+      name: 'bundle_id',
+      label: 'Bundle ID',
+      hint: 'The iOS app’s bundle identifier (app.json → ios.bundleIdentifier), e.g. com.duncit.mobile. Registered with its capabilities on Generate if Apple has not seen it',
+    },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -205,6 +262,8 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   GITHUB: 'https://github.com/settings/personal-access-tokens',
   GOOGLE_PLAY: 'https://play.google.com/console/developers',
   MSG91: 'https://control.msg91.com/app/m/l/settings/security/authkey',
+  APPLE_SIGNIN: 'https://developer.apple.com/account/resources/identifiers/list',
+  APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
 };
 
 /**
@@ -213,6 +272,9 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
  */
 export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
   MSG91: 'https://docs.msg91.com/otp-widget',
+  APPLE_SIGNIN: 'https://developer.apple.com/documentation/signinwithapple/configuring-your-environment-for-sign-in-with-apple',
+  APP_STORE_CONNECT:
+    'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
 };
 
 const secretSet = new Set<string>();
@@ -284,6 +346,16 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
   MSG91_WIDGET_ID: { category: 'MSG91', field: 'widget_id' },
   MSG91_AUTH_KEY: { category: 'MSG91', field: 'auth_key' },
+  APPLE_TEAM_ID: { category: 'APPLE_SIGNIN', field: 'team_id' },
+  APPLE_BUNDLE_ID: { category: 'APPLE_SIGNIN', field: 'bundle_id' },
+  APPLE_SERVICES_ID: { category: 'APPLE_SIGNIN', field: 'services_id' },
+  APPLE_WEB_REDIRECT_URI: { category: 'APPLE_SIGNIN', field: 'web_redirect_uri' },
+  APPLE_KEY_ID: { category: 'APPLE_SIGNIN', field: 'key_id' },
+  APPLE_PRIVATE_KEY: { category: 'APPLE_SIGNIN', field: 'private_key' },
+  APP_STORE_CONNECT_ISSUER_ID: { category: 'APP_STORE_CONNECT', field: 'issuer_id' },
+  APP_STORE_CONNECT_KEY_ID: { category: 'APP_STORE_CONNECT', field: 'key_id' },
+  APP_STORE_CONNECT_PRIVATE_KEY: { category: 'APP_STORE_CONNECT', field: 'private_key' },
+  APP_STORE_CONNECT_BUNDLE_ID: { category: 'APP_STORE_CONNECT', field: 'bundle_id' },
 };
 
 export function maskSecret(value: string) {

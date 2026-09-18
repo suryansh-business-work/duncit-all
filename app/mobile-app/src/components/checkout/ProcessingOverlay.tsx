@@ -41,10 +41,18 @@ export function ProcessingOverlay({ open, message }: Readonly<ProcessingOverlayP
       justifyContent="center"
       padding={24}
       backgroundColor="rgba(0,0,0,0.5)"
-      // No-op press keeps touches from reaching the form beneath.
+      // No-op press keeps touches from reaching the form beneath; the modal
+      // flags keep a screen reader from reaching it too. Not one accessible
+      // element, so the status inside is read on its own.
       onPress={() => {}}
+      accessible={false}
+      aria-modal
+      accessibilityViewIsModal
     >
+      {/* Announced when it changes from "processing" to "confirming" (4.1.3). */}
       <YStack
+        role="status"
+        aria-live="polite"
         width={300}
         maxWidth="100%"
         alignItems="center"

@@ -52,7 +52,7 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
     if (active && draft) onSaved(active, draft);
     onClose();
   });
-  const { reset, clearError } = change;
+  const { reset, noteEdit } = change;
 
   // A sheet opened for a second channel must not inherit the first one's
   // half-finished code.
@@ -107,11 +107,13 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
             // exists to fix a typo, and reseeding from the account would throw
             // away the number they came back to correct.
             defaultValues={draft ?? contactDraftFrom(snapshot, active)}
+            snapshot={snapshot}
+            edited={state.edited}
             busy={state.sending}
             blocked={!!state.error}
             phoneOtp={phoneOtp}
             onSend={handleSend}
-            onEdit={clearError}
+            onEdit={noteEdit}
           />
         ) : (
           <ContactOtpStep

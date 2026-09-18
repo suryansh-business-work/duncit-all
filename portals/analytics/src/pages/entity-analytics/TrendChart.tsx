@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { formatDay, useTranslation } from '@duncit/app-settings';
-import { SectionCard, chartSeriesColor } from '@duncit/ui';
-import { GRANULARITY_COPY, KPI_COPY, SERIES_COPY, TREND_COPY } from './copy';
+import { chartSeriesColor } from '@duncit/ui';
+import { KPI_COPY, SERIES_COPY } from './copy';
 import { formatValue } from './format';
 import { categoryAxis, chartTooltip, valueAxis } from './chart-theme';
 import type { AnalyticsTrend } from './queries';
@@ -23,13 +23,11 @@ function seriesLabel(key: string, t: Translate): string {
  * One measure over the period, up to three series on a single value axis — a
  * second measure with its own scale gets its own chart instead. A lone series
  * is filled so its shape reads at a glance; several stay as lines so they can
- * cross without hiding each other.
+ * cross without hiding each other. The widget around it carries the title.
  */
-export default function TrendChart({ trend }: Readonly<{ trend: AnalyticsTrend }>) {
+export default function TrendChart({ trend, label }: Readonly<{ trend: AnalyticsTrend; label: string }>) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const copy = TREND_COPY[trend.key];
-  const title = copy ? t(copy.title) : trend.key;
   const single = trend.series.length === 1;
 
   const data = useMemo<ChartData<'line'>>(
@@ -83,14 +81,8 @@ export default function TrendChart({ trend }: Readonly<{ trend: AnalyticsTrend }
   );
 
   return (
-    <SectionCard
-      title={title}
-      subtitle={copy ? t(copy.hint) : undefined}
-      action={<Chip size="small" variant="outlined" label={t(GRANULARITY_COPY[trend.granularity])} />}
-    >
-      <Box sx={{ height: 260, position: 'relative' }} data-testid={`analytics-trend-${trend.key}`}>
-        <Line data={data} options={options} role="img" aria-label={title} />
-      </Box>
-    </SectionCard>
+    <Box sx={{ height: 260, position: 'relative' }} data-testid={`analytics-trend-${trend.key}`}>
+      <Line data={data} options={options} role="img" aria-label={label} />
+    </Box>
   );
 }

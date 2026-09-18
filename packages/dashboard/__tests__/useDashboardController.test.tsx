@@ -182,3 +182,19 @@ describe('useDashboardController', () => {
     await waitFor(() => expect(result.current.error).toBe(labels.saveFailed));
   });
 });
+
+describe('the Arrange menu', () => {
+  it('offers the moves the live grid allows', () => {
+    const { result } = startEditing();
+    expect(result.current.availableMoves(widget('pods', 0))).toEqual(['later', 'wider', 'narrower', 'taller']);
+  });
+
+  it('applies a move to the grid and lights Save, as a drag would', () => {
+    const { result } = startEditing();
+    grid.read.mockReturnValueOnce(DEFAULTS).mockReturnValueOnce(MOVED);
+    act(() => result.current.arrangeWidget(widget('pods', 0), 'later'));
+
+    expect(grid.apply).toHaveBeenCalledWith(MOVED);
+    expect(result.current.dirty).toBe(true);
+  });
+});

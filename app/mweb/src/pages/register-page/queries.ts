@@ -41,6 +41,19 @@ export const REGISTER = gql`
   }
 `;
 
+export const SIGNUP_APPLE = gql`
+  mutation SignupWithApple($input: AppleSignupInput!) {
+    signupWithApple(input: $input) {
+      token
+      user {
+        user_id
+        email
+        onboarding_survey_completed
+      }
+    }
+  }
+`;
+
 export const SIGNUP_GOOGLE = gql`
   mutation SignupWithGoogle($input: GoogleSignupInput!) {
     signupWithGoogle(input: $input) {

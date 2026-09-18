@@ -13,6 +13,7 @@ import {
   requestPasswordChangeSchema,
   changePasswordSchema,
   googleSignupSchema,
+  appleSignupSchema,
   verifyPasswordResetCodeSchema,
 } from './auth.validator';
 import {
@@ -204,6 +205,31 @@ export const authResolvers = {
       await assertEligibleDob(data.dob);
       await assertPoliciesAccepted(args.input?.accepted_policy_ids);
       return userService.signupWithGoogle(data, acceptanceIntent(args.input));
+    },
+    loginWithApple: async (
+      _p: unknown,
+      args: { input: { id_token: string; portal_key?: string | null } },
+      ctx: GraphQLContext
+    ) => {
+      return userService.loginWithApple(
+        args.input?.id_token,
+        args.input?.portal_key,
+        signInContext(ctx)
+      );
+    },
+    // Unauthenticated by design, as linkGoogleAccount: the verified Apple
+    // token IS the proof, the consent step supplies the intent.
+    linkAppleAccount: async (
+      _p: unknown,
+      args: { input: { id_token: string; portal_key?: string | null } }
+    ) => {
+      return userService.linkAppleAccount(args.input?.id_token, args.input?.portal_key);
+    },
+    signupWithApple: async (_p: unknown, args: { input: SignupPolicyInput }) => {
+      const data = await validate(appleSignupSchema, args.input);
+      await assertEligibleDob(data.dob);
+      await assertPoliciesAccepted(args.input?.accepted_policy_ids);
+      return userService.signupWithApple(data, acceptanceIntent(args.input));
     },
     connectGoogleAccount: async (
       _p: unknown,

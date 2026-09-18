@@ -220,7 +220,7 @@ export const SURFACES: readonly Surface[] = [
     host: 'analytics.duncit.com',
     dev_port: 2037,
     summary:
-      'The console for charts on pods, clubs, club admins and hosts — headline numbers against the previous period, trends, breakdowns and short top-ten rankings.',
+      'The console for charts on users, pods, clubs, club admins and hosts — one rearrangeable dashboard each, with headline numbers against the previous period, trends, breakdowns and short top-ten rankings.',
   },
   {
     key: 'hosts',

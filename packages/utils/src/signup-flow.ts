@@ -21,6 +21,7 @@
  * identically because they come from one shared schema.
  */
 import { type SignupStep } from './signup-steps';
+import { type SocialProvider } from './social-auth';
 
 /** The number a code goes to, and what a proven one is written to. */
 export interface SignupNumber {
@@ -45,12 +46,24 @@ export interface SignupNumberFields {
 export interface SignupGoogleDetails extends SignupNumberFields {
   /** A 'YYYY-MM-DD' calendar day, exactly as the form field holds it. */
   dob: string;
+  /**
+   * The name, when the step had to ask it — an Apple credential that carried
+   * none. Blank otherwise.
+   */
+  name?: string;
 }
 
-/** Google's credential and the policies ticked beside it, both unspent. */
+/**
+ * The provider's credential and the policies ticked beside it, both unspent.
+ * Google's door, which Apple rides too: `provider` says which, absent meaning
+ * Google.
+ */
 export interface SignupGoogleCredential {
   idToken: string;
   policyIds: readonly string[];
+  provider?: SocialProvider;
+  /** The name the account is made under — Apple's, shared once or asked for. */
+  name?: string;
 }
 
 /**
@@ -96,6 +109,16 @@ export function initialSignupFlowState<
   };
 }
 
+/** The name the details step asked for, onto the credential that carried none. */
+function withAskedName(
+  credential: SignupGoogleCredential | null,
+  name: string | undefined,
+): SignupGoogleCredential | null {
+  const asked = name?.trim();
+  if (!credential || !asked) return credential;
+  return { ...credential, name: asked };
+}
+
 /** The three number boxes, as the thing a code is addressed to. */
 export const signupNumberOf = (values: Readonly<SignupNumberFields>): SignupNumber => ({
   extension: values.phoneExtension,
@@ -139,6 +162,7 @@ export function signupFlowReducer<TForm extends SignupNumberFields>(
         askingNumber: false,
         verifying: signupNumberOf(action.values),
         googleDob: action.values.dob,
+        pendingGoogle: withAskedName(state.pendingGoogle, action.values.name),
       };
     default:
       return state;

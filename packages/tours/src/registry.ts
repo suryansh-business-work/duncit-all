@@ -124,7 +124,7 @@ export const TOURS: readonly TourDefinition[] = [
       Every step lives on the FIRST page of the wizard, and that is deliberate.
       Create Pod renders one page at a time (`{steps[step]}`), so an anchor on
       the venue page or the pricing page is never on screen at the same time as
-      one on the basics page. Both runners resolve a tour against what is
+      one on the first (club) page. Both runners resolve a tour against what is
       rendered and then freeze — so steps pointing at later pages did not merely
       arrive late, they could never resolve, and the tour would open on its one
       reachable step and mark itself as shown. The walkthrough therefore explains
@@ -134,12 +134,12 @@ export const TOURS: readonly TourDefinition[] = [
       {
         anchor: 'create-pod-steps',
         titleKey: 'mweb.tours.createPod.steps.title',
-        bodyKey: 'mweb.tours.createPod.steps.body',
+        bodyKey: 'mweb.tours.createPod.steps.journey.body',
       },
       {
-        anchor: 'create-pod-basics',
-        titleKey: 'mweb.tours.createPod.basics.title',
-        bodyKey: 'mweb.tours.createPod.basics.body',
+        anchor: 'create-pod-club',
+        titleKey: 'mweb.tours.createPod.club.title',
+        bodyKey: 'mweb.tours.createPod.club.body',
       },
       {
         anchor: 'create-pod-publish',

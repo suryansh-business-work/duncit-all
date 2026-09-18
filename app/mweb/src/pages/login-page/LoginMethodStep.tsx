@@ -3,21 +3,25 @@ import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import { DuncitButton } from '@duncit/buttons';
+import type { SocialCredential } from '@duncit/utils';
+import { AppleSignInButton } from '../../components/apple-sign-in';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
-  gLoading: boolean;
-  gError: string | null;
-  onGoogleCredential: (idToken: string) => Promise<void> | void;
+  /** True while a Google or Apple credential is being spent. */
+  socialLoading: boolean;
+  socialError: string | null;
+  onSocialCredential: (credential: SocialCredential) => void;
+  onSocialError: (message: string) => void;
   onChoosePassword: () => void;
   onChooseOtp: () => void;
 }
 
 /**
  * The two "continue with…" choices: surface pills with a hairline, ink label
- * and icon — the same weight as the Google pill above them, because all three
+ * and icon — the same weight as the Google and Apple pills above them, because all four
  * are a choice of door, not the action itself. The green pill waits one step
  * in, on the button that actually signs you in. Native twin: MethodButton in
  * screens/LoginScreen/LoginMethodStep.tsx.
@@ -38,9 +42,10 @@ const METHOD_SX = {
  * offering to recover something half the visitors never use.
  */
 export default function LoginMethodStep({
-  gLoading,
-  gError,
-  onGoogleCredential,
+  socialLoading,
+  socialError,
+  onSocialCredential,
+  onSocialError,
   onChoosePassword,
   onChooseOtp,
 }: Readonly<Props>) {
@@ -50,13 +55,19 @@ export default function LoginMethodStep({
     <Stack spacing={2}>
       <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
         <GoogleSignInButton
-          onCredential={onGoogleCredential}
-          loading={gLoading}
+          onCredential={(idToken) => onSocialCredential({ provider: 'GOOGLE', idToken })}
+          loading={socialLoading}
           text="signin_with"
         />
-        {gError && (
+        <AppleSignInButton
+          label={t('mweb.auth.appleSignIn')}
+          loading={socialLoading}
+          onCredential={onSocialCredential}
+          onError={onSocialError}
+        />
+        {socialError && (
           <Alert severity="error" sx={{ width: '100%' }}>
-            {gError}
+            {socialError}
           </Alert>
         )}
       </Stack>

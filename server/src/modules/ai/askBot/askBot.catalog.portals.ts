@@ -500,8 +500,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Logs console.' },
 
   // ---- Analytics (analytics) -----------------------------------------
-  { surface: 'analytics', path: '/', label: 'Dashboard',
-    description: 'A welcome page with your name, your access roles and your account details. The Pods, Clubs, Club Admins and Hosts pages in the sidebar hold the charts.' },
+  { surface: 'analytics', path: '/users', label: 'Users',
+    description: 'The console opens here. Charts for members over 7 days, 30 days, 90 days or 12 months: members, new sign-ups, active members and devices, daily active members, stickiness, retention, members who booked, booking conversion, new-member activation, verified phone numbers and inactive accounts — each against the previous period — with activity, sign-up and account-total trends, and splits by how often members come back, most opened screens, city, age, gender, pet owners, language and sign-in method. Every panel can be rearranged with Customise.' },
   { surface: 'analytics', path: '/pods', label: 'Pods',
     description: 'Charts for pods over 7 days, 30 days, 90 days or 12 months: pods held, created and cancelled, seats booked, unique and returning guests, fill rate, attendance, money collected, average booking, backout rate and rating — each against the previous period — with trends, and splits by category, city, weekday, start time, fill, ticket price, format, how far ahead people book, booking source, how attendance was marked and star rating.' },
   { surface: 'analytics', path: '/clubs', label: 'Clubs',

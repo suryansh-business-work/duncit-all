@@ -27,7 +27,14 @@ export function HeaderGreeting({ tagline, firstName, onOpenLocation }: Readonly<
   // The greeting also opens the location picker — a bigger tap target than
   // the location pill alone (user ask).
   return (
-    <YStack marginTop={16} minWidth={0} onPress={onOpenLocation} pressStyle={PRESS_STYLE.inline}>
+    <YStack
+      role="button"
+      tabIndex={0}
+      marginTop={16}
+      minWidth={0}
+      onPress={onOpenLocation}
+      pressStyle={PRESS_STYLE.inline}
+    >
       <TwoToneHeading testID="header-greeting-title" lead={lead} trail={trail} stacked />
     </YStack>
   );

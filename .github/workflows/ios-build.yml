@@ -3,29 +3,33 @@
 # server and recorded via reportAppBuild, which also announces it on the
 # configured Slack channel (Tech portal → App Builds → Settings).
 #
-# There is no artifact choice here, unlike Android: an unsigned IPA is the only
-# thing this can produce, so the only build-time question is `app_env` — what
-# the BUILT APP talks to, baked in at compile time. `report_url` is a separate
-# question: where the build records itself, always the portal that started it.
+# There is no artifact choice here, unlike Android: an App Store-signed IPA is
+# the only thing this produces, so the only build-time question is `app_env` —
+# what the BUILT APP talks to, baked in at compile time. `report_url` is a
+# separate question: where the build records itself, always the portal that
+# started it.
 #
-# UNSIGNED by necessity: no Apple signing certificates exist in this repo (store
-# builds go through EAS-managed credentials). The archive builds with code
-# signing off and is zipped into an .ipa — installable after signing (EAS,
-# Xcode, or a resign tool), and exactly what the App Builds table tracks per
-# merge. When Apple certs land as secrets, this workflow is where they plug in.
+# SIGNED for the App Store, on this runner and nowhere else — no Mac and no EAS
+# involved. The signing identity is the server's: Tech → App Builds → Settings
+# generates the Apple Distribution certificate and App Store profile through the
+# App Store Connect API (key on the APP_STORE_CONNECT env entry), and the job
+# fetches them — plus that key — from the server it reports to. They exist here
+# only in a throwaway keychain the job deletes. An opted-in dispatch then
+# uploads the IPA to App Store Connect (TestFlight) with the same key.
 #
 # Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
-# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. Add DUNCIT_RELEASE_TOKEN_STAGING
-# as well to let the staging portal start builds — each server signs its own
-# tokens, so production's is not valid there.
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD — reports the build AND fetches
+# the signing identity. Add DUNCIT_RELEASE_TOKEN_STAGING as well to let the
+# staging portal start builds — each server signs its own tokens, so
+# production's is not valid there, and each keeps its own signing identity.
 name: iOS Build
 
 on:
   push:
     branches: [main]
-  # No artifact choice here, unlike Android: an unsigned IPA is the only thing
-  # this workflow can produce, so the only build-time question is which stack
-  # the app talks to.
+  # No artifact choice here, unlike Android: a signed IPA is the only thing this
+  # workflow produces, so the build-time questions are which stack the app
+  # talks to and whether it goes on to App Store Connect.
   workflow_dispatch:
     inputs:
       app_env:
@@ -33,6 +37,10 @@ on:
         type: choice
         options: [production, staging]
         default: production
+      submit_to_app_store:
+        description: Upload the IPA to App Store Connect (TestFlight) after it builds
+        type: boolean
+        default: false
       dispatch_id:
         description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
         type: string
@@ -77,7 +85,7 @@ env:
 
 jobs:
   build:
-    name: Build & publish IPA (unsigned)
+    name: Build & publish IPA
     runs-on: macos-26
     timeout-minutes: 120
     env:
@@ -125,7 +133,24 @@ jobs:
           "$DEVELOPER_DIR/usr/bin/xcodebuild" -version
 
       - name: Record build start
-        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+        run: |
+          NOW=$(date +%s)
+          {
+            echo "BUILD_STARTED_AT=$NOW"
+            # App Store Connect refuses a build number it has already seen.
+            # Seconds since 2020 are monotonic and replace the CFBundleVersion 1
+            # that Expo prebuild otherwise writes every run — the same clock
+            # the Android versionCode uses.
+            echo "IOS_BUILD_NUMBER=$((NOW - 1577836800))"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate App Store request
+        if: inputs.submit_to_app_store
+        run: |
+          if [ "${{ inputs.app_env }}" != "production" ]; then
+            echo "::error::App Store submission requires a production build"
+            exit 1
+          fi
 
       - uses: actions/setup-node@v5
         with:
@@ -152,6 +177,61 @@ jobs:
           GIT_BEFORE: ${{ github.event.before }}
           RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
+
+      - name: 'Stage: signing identity'
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing the signing identity
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
+
+      - name: Fetch the signing identity
+        # First, before any compiling: missing or expired signing files should
+        # cost a minute here, not the hour it takes to reach the archive. The
+        # identity comes from the server the build reports to — generated in
+        # Tech → App Builds → Settings with the App Store Connect key on the
+        # APP_STORE_CONNECT env entry — so nothing Apple-issued lives in GitHub.
+        working-directory: .
+        env:
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
+        run: node scripts/fetch-ios-signing.mjs
+
+      - name: Install the signing identity
+        run: |
+          APP_BUNDLE_ID=$(node -p "require('./app.json').expo.ios.bundleIdentifier")
+          if [ "$IOS_BUNDLE_ID" != "$APP_BUNDLE_ID" ]; then
+            echo "::error::The signing files are for $IOS_BUNDLE_ID but app.json builds $APP_BUNDLE_ID — fix the bundle ID on the App Store Connect env entry and generate again"
+            exit 1
+          fi
+
+          KEYCHAIN="$RUNNER_TEMP/duncit-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$IOS_P12_PATH" -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          rm -f "$IOS_P12_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN"
+          echo "IOS_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          if ! security find-identity -v -p codesigning "$KEYCHAIN" | grep -q '"Apple Distribution'; then
+            security find-identity -v -p codesigning "$KEYCHAIN"
+            echo "::error::The fetched .p12 holds no valid Apple Distribution identity — generate new signing files in Tech → App Builds → Settings"
+            exit 1
+          fi
+
+          # Xcode 16 and later read profiles from UserData, not MobileDevice.
+          PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          cp "$IOS_PROFILE_PATH" "$PROFILES_DIR/$IOS_PROFILE_UUID.mobileprovision"
 
       - name: 'Stage: install dependencies'
         uses: ./.github/actions/build-stage
@@ -215,6 +295,30 @@ jobs:
       - name: Install CocoaPods dependencies
         run: npx pod-install ios
 
+      - name: Sign the app target for the App Store
+        # ios/ is regenerated every run, so signing is set here rather than in a
+        # committed project. Only the APP target changes: the same settings as
+        # xcodebuild arguments would reach every Pods target too, and those
+        # refuse a provisioning profile ("does not support provisioning
+        # profiles"). xcodeproj is the gem CocoaPods itself edits projects with.
+        run: |
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          ruby -rxcodeproj -e '
+            project = Xcodeproj::Project.open(ARGV[0])
+            app = project.targets.find { |t| t.product_type == "com.apple.product-type.application" }
+            abort("No application target in #{ARGV[0]}") unless app
+            release = app.build_configurations.find { |c| c.name == "Release" }
+            abort("No Release configuration on #{app.name}") unless release
+            release.build_settings["CODE_SIGN_STYLE"] = "Manual"
+            release.build_settings["DEVELOPMENT_TEAM"] = ENV.fetch("IOS_TEAM_ID")
+            release.build_settings["CODE_SIGN_IDENTITY"] = "Apple Distribution"
+            release.build_settings["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = "Apple Distribution"
+            release.build_settings["PROVISIONING_PROFILE_SPECIFIER"] = ENV.fetch("IOS_PROFILE_NAME")
+            project.save
+          ' "ios/$SCHEME.xcodeproj"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $IOS_BUILD_NUMBER" "ios/$SCHEME/Info.plist"
+
       - name: 'Stage: archive'
         uses: ./.github/actions/build-stage
         with:
@@ -227,7 +331,7 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
-      - name: Archive (unsigned)
+      - name: Archive
         run: |
           # -d is load-bearing: an .xcworkspace is a DIRECTORY, and plain `ls`
           # on a directory lists what is inside it. That resolved the workspace
@@ -238,8 +342,7 @@ jobs:
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$PWD/build/duncit.xcarchive" archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+            -archivePath "$PWD/build/duncit.xcarchive" archive
 
       - name: 'Stage: package'
         uses: ./.github/actions/build-stage
@@ -253,16 +356,36 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
+      - name: Export the App Store IPA
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>teamID</key><string>$IOS_TEAM_ID</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$IOS_BUNDLE_ID</key><string>$IOS_PROFILE_UUID</string>
+            </dict>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$PWD/build/duncit.xcarchive" \
+            -exportPath "$PWD/build/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
       - name: Package the IPA
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           ARTIFACT="duncit-ios-v${APP_VERSION}-${SHORT_SHA}.ipa"
-          APP_PATH=$(find build/duncit.xcarchive/Products/Applications -maxdepth 1 -name '*.app' | head -1)
-          STAGE=$(mktemp -d)
-          mkdir -p "$STAGE/Payload"
-          cp -R "$APP_PATH" "$STAGE/Payload/"
-          (cd "$STAGE" && zip -qry "$RUNNER_TEMP/$ARTIFACT" Payload)
+          IPA=$(find build/export -maxdepth 1 -name '*.ipa' | head -1)
+          cp "$IPA" "$RUNNER_TEMP/$ARTIFACT"
           echo "ARTIFACT_PATHS=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
 
       - name: Keep a copy on the run
@@ -305,6 +428,24 @@ jobs:
           GIT_BEFORE: ${{ github.event.before }}
           RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
+
+      - name: Upload the IPA to App Store Connect
+        # LAST, after the build is recorded and the IPA kept twice: Apple
+        # refusing an upload must not cost the build itself. It turns the
+        # workflow red; the row stays the honest record of what was built.
+        # altool finds the key by name under ~/.appstoreconnect/private_keys,
+        # where the signing fetch already wrote it with the key and issuer ids.
+        if: inputs.submit_to_app_store
+        run: |
+          xcrun altool --upload-app --type ios --file "$ARTIFACT_PATHS" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Remove the signing identity from the runner
+        if: always()
+        run: |
+          if [ -n "$IOS_KEYCHAIN" ]; then security delete-keychain "$IOS_KEYCHAIN"; fi
+          rm -rf "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/.appstoreconnect" \
+            "$RUNNER_TEMP/duncit-signing.p12" "$RUNNER_TEMP/duncit.mobileprovision"
 
       - name: Record the failure
         # Only when no IPA was produced (ARTIFACT_PATHS is set right after the

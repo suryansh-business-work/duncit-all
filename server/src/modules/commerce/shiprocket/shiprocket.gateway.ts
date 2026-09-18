@@ -164,6 +164,13 @@ export async function assignAwb(shipmentId: string): Promise<AwbResult> {
   };
 }
 
+/** Cancel ShipRocket orders (by ShipRocket order id) before they are picked up. */
+export async function cancelOrders(orderIds: string[]): Promise<void> {
+  const ids = orderIds.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0);
+  if (ids.length === 0) return;
+  await srRequest('/orders/cancel', { method: 'POST', body: JSON.stringify({ ids }) });
+}
+
 /** Generate a shipping label for a shipment. */
 export async function generateLabel(shipmentId: string): Promise<string> {
   const data = await srRequest('/courier/generate/label', {

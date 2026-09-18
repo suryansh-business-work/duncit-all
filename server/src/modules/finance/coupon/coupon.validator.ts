@@ -16,7 +16,7 @@ export const createCouponSchema = yup.object({
     .min(1, 'Min 1%')
     .max(100, 'Max 100%')
     .required('Discount is required'),
-  scope: yup.string().oneOf(['GLOBAL', 'POD']).required(),
+  scope: yup.string().oneOf(['GLOBAL', 'POD', 'STORE']).required(),
   pod_id: yup
     .string()
     .trim()

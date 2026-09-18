@@ -55,7 +55,8 @@ export const toPub = (p: IPayment) => ({
   id: String(p._id),
   payment_id: p.payment_id,
   invoice_no: p.invoice_no,
-  user_id: String(p.user_id),
+  // Empty for a pet-store guest checkout, which has no account behind it.
+  user_id: p.user_id ? String(p.user_id) : '',
   user_name: p.user_name,
   user_email: p.user_email,
   user_phone: p.user_phone,
@@ -175,7 +176,7 @@ export async function computeQuote(amount: number, opts?: { inclusive?: boolean 
   };
 }
 
-const newPaymentId = () =>
+export const newPaymentId = () =>
   `pay_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
 /** One resolved, invoice-ready checkout line per product+variant selection. */
@@ -363,7 +364,7 @@ const userDisplayName = (user: any) =>
  * line1) so older clients keep working. Composes the flat `billing_address`
  * string from the structured parts for legacy readers + compact displays.
  */
-function buildBuyerFields(input: any, user: any) {
+export function buildBuyerFields(input: any, user: any) {
   // The phone is optional at checkout: without a number there is no phone at
   // all, so the dialling code alone is never recorded.
   const phoneNumber = String(input.contact_phone_number ?? '').trim();
@@ -488,7 +489,7 @@ const MIN_GATEWAY_CHARGE = 1;
  * here — that happens on payment success, the same way a coupon's redemption is
  * only recorded once the money actually lands.
  */
-async function applyCoins(requested: unknown, userId: string, quote: QuoteBreakup) {
+export async function applyCoins(requested: unknown, userId: string, quote: QuoteBreakup) {
   const wanted = Math.floor(Number(requested) || 0);
   if (wanted <= 0) return { quote, coinsRedeemed: 0 };
   const balance = await coinService.balanceOf(userId);
@@ -507,7 +508,7 @@ async function applyCoins(requested: unknown, userId: string, quote: QuoteBreaku
 
 /** How a zero-charge order was settled. It skips the gateway either way, but the
  * invoice still has to name what actually paid for it. */
-const freeSettlement = (couponCode: string | null) =>
+export const freeSettlement = (couponCode: string | null) =>
   couponCode
     ? { gateway: 'COUPON', label: 'Coupon (100% off)' }
     : { gateway: 'COINS', label: 'Duncit Coins' };
@@ -726,7 +727,7 @@ async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
 const giftCardDescription = (facts: GiftCardPurchaseFacts) =>
   facts.scope_name ? `Gift card · ${facts.scope_name}` : 'Gift card · Pod Shop';
 
-interface RazorpaySheetArgs {
+export interface RazorpaySheetArgs {
   paymentDocId: string;
   keyId: string;
   orderId: string;
@@ -742,7 +743,7 @@ interface RazorpaySheetArgs {
 
 /** Build the RazorpayOrder sheet payload the client opens (shared by the pod +
  * product live-checkout flows). */
-function razorpaySheet(a: RazorpaySheetArgs) {
+export function razorpaySheet(a: RazorpaySheetArgs) {
   return {
     payment_doc_id: a.paymentDocId,
     key_id: a.keyId,
@@ -785,10 +786,47 @@ async function reloadPub(paymentDocId: string) {
 }
 
 /** Capture + phase 1, then hand phase 2 off. Every gateway funnels through here. */
-async function settle(paymentDocId: string, methodLabel: string, component: string) {
+export async function settle(paymentDocId: string, methodLabel: string, component: string) {
   await paymentFinalizer.finalizePayment(paymentDocId, methodLabel);
   deferSideEffects(paymentDocId, component);
   return reloadPub(paymentDocId);
+}
+
+/**
+ * Check a Razorpay checkout's signature and, when it holds, hand the payment to
+ * the finalizer. The caller has already decided the payment is theirs to verify
+ * — an account's own payment, or a pet-store guest's by its cart — because the
+ * signature proves the money moved, not who is asking.
+ */
+export async function verifyRazorpayAndSettle(doc: IPayment, input: any, component: string) {
+  if (doc.gateway !== 'RAZORPAY' || doc.gateway_ref !== input.razorpay_order_id)
+    throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (doc.status === 'SUCCESS') return toPub(doc);
+
+  const ok = await verifyRazorpaySignature({
+    orderId: input.razorpay_order_id,
+    paymentId: input.razorpay_payment_id,
+    signature: input.razorpay_signature,
+  });
+  if (!ok) {
+    doc.status = 'FAILED';
+    await doc.save();
+    throw new GraphQLError('Payment signature verification failed', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  // Only the gateway's own facts are written here — the status, paid_at and
+  // invoice number all belong to the finalizer, which is the single place a
+  // payment is ever promoted.
+  doc.gateway_ref = input.razorpay_payment_id;
+  (doc as any).metadata = {
+    ...(doc as any).metadata,
+    razorpay_order_id: input.razorpay_order_id,
+    razorpay_payment_id: input.razorpay_payment_id,
+  };
+  await doc.save();
+  return settle(String(doc._id), 'Razorpay', component);
 }
 
 type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };
@@ -1157,34 +1195,7 @@ export const paymentService = {
     if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
     if (String(doc.user_id) !== String(userId))
       throw new GraphQLError('Not your payment', { extensions: { code: 'FORBIDDEN' } });
-    if (doc.gateway !== 'RAZORPAY' || doc.gateway_ref !== input.razorpay_order_id)
-      throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
-    if (doc.status === 'SUCCESS') return toPub(doc);
-
-    const ok = await verifyRazorpaySignature({
-      orderId: input.razorpay_order_id,
-      paymentId: input.razorpay_payment_id,
-      signature: input.razorpay_signature,
-    });
-    if (!ok) {
-      doc.status = 'FAILED';
-      await doc.save();
-      throw new GraphQLError('Payment signature verification failed', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-
-    // Only the gateway's own facts are written here — the status, paid_at and
-    // invoice number all belong to the finalizer, which is the single place a
-    // payment is ever promoted.
-    doc.gateway_ref = input.razorpay_payment_id;
-    (doc as any).metadata = {
-      ...(doc as any).metadata,
-      razorpay_order_id: input.razorpay_order_id,
-      razorpay_payment_id: input.razorpay_payment_id,
-    };
-    await doc.save();
-    return settle(String(doc._id), 'Razorpay', 'verifyRazorpayCheckout');
+    return verifyRazorpayAndSettle(doc, input, 'verifyRazorpayCheckout');
   },
 
   /** Live ShipRocket delivery estimate for a product cart (preview only). The

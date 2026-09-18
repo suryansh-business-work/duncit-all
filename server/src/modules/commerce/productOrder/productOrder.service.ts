@@ -7,6 +7,8 @@ import {
   type FulfilmentMethod,
   type FulfilmentStatus,
   type IProductOrder,
+  type OrderChannel,
+  type OrderPaymentMethod,
 } from './productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { availableOf, notifyStockCrossings } from '@modules/venues/inventory/inventory.service';
@@ -29,7 +31,8 @@ const asMethod = (v: any): FulfilmentMethod => (String(v).toUpperCase() === 'SHI
 const toPub = (d: IProductOrder) => ({
   id: String(d._id),
   order_no: d.order_no,
-  buyer_id: String(d.buyer_id),
+  // A pet-store guest order has no account behind it.
+  buyer_id: d.buyer_id ? String(d.buyer_id) : null,
   buyer_name: d.buyer_name,
   buyer_email: d.buyer_email,
   buyer_phone: d.buyer_phone,
@@ -94,6 +97,21 @@ const toPub = (d: IProductOrder) => ({
     at: e.at?.toISOString?.() ?? '',
   })),
   last_error: d.last_error,
+  channel: d.channel ?? 'POD_SHOP',
+  payment_method: d.payment_method ?? 'PREPAID',
+  cod_amount: d.cod_amount ?? 0,
+  cod_collected_at: d.cod_collected_at?.toISOString?.() ?? null,
+  discount_total: d.discount_total ?? 0,
+  coins_share: d.coins_share ?? 0,
+  cancelled_at: d.cancelled_at?.toISOString?.() ?? null,
+  cancel_reason: d.cancel_reason ?? '',
+  cancelled_by: d.cancelled_by ?? '',
+  notes: (d.notes ?? []).map((n) => ({
+    id: String(n._id),
+    text: n.text,
+    by_name: n.by_name,
+    at: n.at?.toISOString?.() ?? '',
+  })),
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
@@ -189,6 +207,8 @@ async function recordStockForOrder(order: IProductOrder, session?: ClientSession
     if (reservationReleased) {
       inc.requested_count = -reservationReleased;
     }
+    // The pet store sorts its "bestsellers" by what it actually sold.
+    if (order.channel === 'PET_STORE') inc['store.sold_count'] = qty;
     // findOneAndUpdate rather than updateOne so the post-decrement counts come
     // back with the write that caused them — a crossing needs both sides.
     const product = await InventoryProductModel.findOneAndUpdate(
@@ -351,6 +371,7 @@ interface CreateOrderInput {
   shippingAddress: any;
   pickupVenueId: any;
   shippingCharge: number;
+  share: StoreOrderShare;
   session?: ClientSession;
 }
 
@@ -400,9 +421,108 @@ async function requestBrandFeedback(order: IProductOrder) {
   );
 }
 
+/**
+ * What a pet-store payment froze for the orders it creates, or null for the pod
+ * shop. Written by the store checkout (`store.checkout.service.ts`); read only
+ * here, so an order carries its channel, how it is paid and its share of the
+ * discount without the finalizer knowing the store exists.
+ */
+interface StoreOrderFacts {
+  payment_method: OrderPaymentMethod;
+  discount_total: number;
+  access_key: string;
+}
+
+function storeFactsOf(payment: IPayment): StoreOrderFacts | null {
+  const facts = (payment.metadata ?? {}).store;
+  if (!facts || typeof facts !== 'object') return null;
+  return {
+    payment_method: facts.payment_method === 'COD' ? 'COD' : 'PREPAID',
+    discount_total: Math.max(0, Number(facts.discount_total) || 0),
+    access_key: String(facts.access_key ?? ''),
+  };
+}
+
+/** Split `amount` across groups in proportion to `weights`. The last group takes
+ * the rounding remainder, so the shares always add back up to the amount. */
+function splitAcross(amount: number, weights: number[]): number[] {
+  const sum = weights.reduce((s, w) => s + w, 0);
+  if (weights.length === 0) return [];
+  let allocated = 0;
+  return weights.map((w, i) => {
+    if (i === weights.length - 1) return round2(amount - allocated);
+    const share = sum > 0 ? round2((amount * w) / sum) : 0;
+    allocated = round2(allocated + share);
+    return share;
+  });
+}
+
+/** One order group's goods + its own shipping charge — the weight its share of a
+ * COD collection or a discount is split by. */
+const groupGross = (group: OrderGroup, shippingCharge: number) =>
+  round2(
+    group.lines.reduce((s, l) => s + (Number(l.gross) || 0), 0) +
+      (group.method === 'SHIP' ? shippingCharge : 0)
+  );
+
+/** The pet-store columns of one order: channel, payment method and its shares. */
+interface StoreOrderShare {
+  channel: OrderChannel;
+  payment_method: OrderPaymentMethod;
+  cod_amount: number;
+  discount_total: number;
+  coins_share: number;
+  access_key: string;
+}
+
+const POD_SHOP_SHARE: StoreOrderShare = {
+  channel: 'POD_SHOP',
+  payment_method: 'PREPAID',
+  cod_amount: 0,
+  discount_total: 0,
+  coins_share: 0,
+  access_key: '',
+};
+
+function storeSharesFor(
+  payment: IPayment,
+  groups: OrderGroup[],
+  charges: Map<string, number>
+): StoreOrderShare[] {
+  const facts = storeFactsOf(payment);
+  if (!facts) return groups.map(() => POD_SHOP_SHARE);
+  const weights = groups.map((g) => groupGross(g, shippingChargeForGroup(charges, g)));
+  const cod = facts.payment_method === 'COD' ? splitAcross(payment.total, weights) : [];
+  const discounts = splitAcross(facts.discount_total, weights);
+  // Coins are whole, so the split is floored and the last order takes the rest.
+  const coinsTotal = Math.max(0, Math.floor(payment.coins_redeemed ?? 0));
+  const coins = splitAcross(coinsTotal, weights).map(Math.floor);
+  coins[coins.length - 1] = coinsTotal - coins.slice(0, -1).reduce((s, c) => s + c, 0);
+  return groups.map((_g, i) => ({
+    channel: 'PET_STORE',
+    payment_method: facts.payment_method,
+    cod_amount: cod[i] ?? 0,
+    discount_total: discounts[i] ?? 0,
+    coins_share: coins[i] ?? 0,
+    access_key: facts.access_key,
+  }));
+}
+
+/**
+ * Every path that moves an order's status ends here once it is saved — the
+ * operator's button, the courier's webhook and a tracking pull. The pet store
+ * settles a delivered COD order and tells its buyer; the pod shop has no
+ * reaction of its own yet. Imported lazily: the store module imports this one.
+ */
+export async function afterStatusChange(order: IProductOrder, previous: FulfilmentStatus) {
+  if (order.channel !== 'PET_STORE') return;
+  const { afterStoreStatusChange } = await import('@modules/commerce/store/store.order.service');
+  await afterStoreStatusChange(order, previous);
+}
+
 /** Persist the order doc for one (pod, method, warehouse) group. */
 async function createOrderForGroup(payment: IPayment, input: CreateOrderInput) {
-  const { group, shippingAddress, pickupVenueId, shippingCharge, session } = input;
+  const { group, shippingAddress, pickupVenueId, shippingCharge, share, session } = input;
   const line_items = await Promise.all(group.lines.map((l) => buildLineItem(l, session)));
   const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
   const isShip = group.method === 'SHIP';
@@ -412,8 +532,9 @@ async function createOrderForGroup(payment: IPayment, input: CreateOrderInput) {
   const [doc] = await ProductOrderModel.create(
     [
       {
+        ...share,
         order_no: newOrderNo(),
-        buyer_id: payment.user_id,
+        buyer_id: payment.user_id ?? null,
         buyer_name: payment.user_name,
         buyer_email: payment.user_email,
         buyer_phone: payment.user_phone,
@@ -464,9 +585,10 @@ export const productOrderService = {
     const groups = groupOrderLines(lines, topMethod, warehouseMap, fallbackPodId);
     const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id), session);
     const shippingAddress = meta.shipping_address ?? null;
+    const shares = storeSharesFor(payment, groups, shippingCharges);
 
     const created: IProductOrder[] = [];
-    for (const group of groups) {
+    for (const [index, group] of groups.entries()) {
       const podObjId = Types.ObjectId.isValid(group.pod_id) ? new Types.ObjectId(group.pod_id) : null;
       const pickupLocationId = group.method === 'SHIP' ? group.warehouse.nickname : '';
       const existing = await ProductOrderModel.findOne({
@@ -484,6 +606,7 @@ export const productOrderService = {
         shippingAddress,
         pickupVenueId: venueByPod.get(group.pod_id) ?? null,
         shippingCharge: shippingChargeForGroup(shippingCharges, group),
+        share: shares[index],
         session,
       });
       created.push(doc);
@@ -569,6 +692,7 @@ export const productOrderService = {
     if (DELIVERED_STATUSES.has(status) && !DELIVERED_STATUSES.has(previous)) {
       await requestBrandFeedback(doc);
     }
+    await afterStatusChange(doc, previous);
     return toPub(doc);
   },
 

@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
-import { CouponModel, type ICoupon } from './coupon.model';
+import { CouponModel, type CouponScope, type ICoupon } from './coupon.model';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -137,11 +137,38 @@ export interface CouponEvaluation {
  * selected products) which equals the user-facing total. Returns the discount
  * breakdown, or ok:false with a reason. Pure read — no mutation.
  */
+/**
+ * Where a coupon is being redeemed. The pet store passes `channel: 'STORE'` —
+ * the only checkout a STORE-scoped coupon opens — and, for a guest with no
+ * account, the email the per-person limit is counted against.
+ */
+export interface CouponRedeemContext {
+  channel?: 'STORE';
+  email?: string | null;
+}
+
+/** Payments that consumed a coupon: the captured ones, plus pet-store COD
+ * orders that are booked but whose cash is only collected on delivery. */
+const CONSUMED_REDEMPTION = {
+  $or: [
+    { status: 'SUCCESS' },
+    { gateway: 'COD', finalize_state: { $in: ['CORE_DONE', 'COMPLETE'] } },
+  ],
+};
+
+/** Who the per-person limit is counted against: the account, else a guest's email. */
+function redeemerFilter(userId: string | null | undefined, email: string | null | undefined) {
+  if (userId) return { user_id: new Types.ObjectId(userId) };
+  const address = String(email ?? '').trim().toLowerCase();
+  return address ? { user_email: address } : null;
+}
+
 async function evaluate(
   code: string,
   podId: string | null,
   amount: number,
-  userId?: string | null
+  userId?: string | null,
+  redeem?: CouponRedeemContext
 ): Promise<CouponEvaluation> {
   const original = round2(Math.max(0, Number(amount) || 0));
   const fail = (message: string): CouponEvaluation => ({
@@ -158,6 +185,8 @@ async function evaluate(
   if (!coupon?.is_active) return fail('Invalid or inactive coupon code');
   if (coupon.scope === 'POD' && String(coupon.pod_id) !== String(podId))
     return fail('This coupon is not valid for this pod');
+  if (coupon.scope === 'STORE' && redeem?.channel !== 'STORE')
+    return fail('This coupon is only valid on the Duncit Pet Store');
 
   const now = Date.now();
   if (coupon.valid_from && now < coupon.valid_from.getTime()) return fail('Coupon is not active yet');
@@ -166,11 +195,12 @@ async function evaluate(
     return fail(`Minimum order of ₹${coupon.min_order_amount} required`);
   if (coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
     return fail('Coupon usage limit reached');
-  if (coupon.per_user_limit != null && userId) {
+  const redeemer = redeemerFilter(userId, redeem?.email);
+  if (coupon.per_user_limit != null && redeemer) {
     const used = await PaymentModel.countDocuments({
-      user_id: new Types.ObjectId(userId),
+      ...redeemer,
       coupon_code: coupon.code,
-      status: 'SUCCESS',
+      ...CONSUMED_REDEMPTION,
     });
     if (used >= coupon.per_user_limit) return fail('You have already used this coupon');
   }
@@ -235,6 +265,18 @@ export const couponService = {
     const { docs, total, page, page_size } = await runTableQuery<ICoupon>(
       CouponModel,
       base,
+      input,
+      COUPON_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /** Table of one scope's coupons — the pet store's console lists only STORE codes,
+   * and the base filter keeps a client filter from ever widening it. */
+  async tableForScope(scope: CouponScope, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<ICoupon>(
+      CouponModel,
+      { scope },
       input,
       COUPON_TABLE_CONFIG
     );

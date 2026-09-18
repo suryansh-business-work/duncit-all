@@ -69,6 +69,9 @@ const SIDE_EFFECT_LEASE_MS = 5 * 60_000;
 
 const NO_POD_DETAIL = 'This payment has no pod';
 const NO_PRODUCTS_DETAIL = 'This payment has no products';
+const GUEST_DETAIL = 'A pet-store guest checkout has no Duncit account';
+/** The gateway a pet-store Cash-on-Delivery payment is recorded under. */
+export const COD_GATEWAY = 'COD';
 
 function messageOf(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -137,7 +140,11 @@ function step(
  * opened, for the reason `allocateInvoiceNumber` sets out. */
 function runCaptureLeg(ctx: CoreContext, methodLabel: string): void {
   const p = ctx.payment;
-  if (p.status !== 'SUCCESS') {
+  // A pet-store Cash-on-Delivery order is booked WITHOUT money: the orders and
+  // the stock commit now, and the payment stays PENDING until the courier
+  // reports it delivered (`storeCodService.markCollected`). Everything else
+  // arriving here has already been charged.
+  if (p.status !== 'SUCCESS' && p.gateway !== COD_GATEWAY) {
     p.status = 'SUCCESS';
     p.paid_at = new Date();
   }
@@ -275,6 +282,12 @@ async function runGiftCardLeg(ctx: CoreContext): Promise<void> {
 
 async function runCoinLeg(ctx: CoreContext): Promise<void> {
   const p = ctx.payment;
+  // A pet-store guest has no account, so no balance to spend from or earn into.
+  if (!p.user_id) {
+    step(ctx, 'COINS_REDEEMED', 'SKIPPED', GUEST_DETAIL);
+    step(ctx, 'COINS_EARNED', 'SKIPPED', GUEST_DETAIL);
+    return;
+  }
   const reason = p.description || 'Purchase';
   const spent = p.coins_redeemed ?? 0;
   if (spent > 0) {
@@ -514,6 +527,7 @@ async function fillBackouts(ctx: DeferredContext): Promise<StepOutcome> {
  * the majority who never followed one. */
 async function attributeShortLink(ctx: DeferredContext): Promise<StepOutcome> {
   const p = ctx.payment;
+  if (!p.user_id) return { status: 'SKIPPED', detail: GUEST_DETAIL };
   const { shortLinkJourneyService } = await import('@modules/crm/marketing/shortLinkJourney.service');
   await shortLinkJourneyService.attributePayment({
     userId: String(p.user_id),
@@ -640,15 +654,27 @@ async function podReceiptMail(p: IPayment, bookingUrl: string): Promise<ReceiptM
  */
 async function productReceiptMail(p: IPayment, appUrl: string): Promise<ReceiptMail> {
   const orders = await ProductOrderModel.find({ payment_id: p._id });
+  // A pet-store order is read back on the store, not in the apps — and a guest,
+  // with no account to sign into, opens it with the key the checkout minted.
+  const storeUrl = p.metadata?.store ? await storeOrdersUrl(p, orders[0]?.order_no ?? '') : '';
   return {
     template: 'payment-receipt-product',
     subject: `Order receipt — ${p.invoice_no}`,
     vars: {
       order_no: orders.map((o) => o.order_no).join(', '),
       items: orders.flatMap((o) => o.line_items.map((i) => `${i.name} × ${i.qty}`)).join(', '),
-      orders_url: `${appUrl}/orders`,
+      orders_url: storeUrl || `${appUrl}/orders`,
     },
   };
+}
+
+/** Where a pet-store receipt sends its reader. */
+async function storeOrdersUrl(p: IPayment, orderNo: string): Promise<string> {
+  const { ecommUrl } = await getUrlConfigs();
+  const base = ecommUrl.replace(/\/+$/, '');
+  if (p.user_id) return `${base}/account/orders`;
+  const key = String(p.metadata?.store?.access_key ?? '');
+  return `${base}/track?order=${encodeURIComponent(orderNo)}&key=${encodeURIComponent(key)}`;
 }
 
 /**

@@ -75,10 +75,31 @@ export const productOrderTypeDefs = /* GraphQL */ `
     at: String!
   }
 
+  "Which shop sold an order."
+  enum OrderChannel {
+    POD_SHOP
+    PET_STORE
+  }
+
+  "Paid up front, or collected by the courier on delivery."
+  enum OrderPaymentMethod {
+    PREPAID
+    COD
+  }
+
+  "An operator's private note on an order."
+  type OrderNote {
+    id: ID!
+    text: String!
+    by_name: String!
+    at: String!
+  }
+
   type ProductOrder {
     id: ID!
     order_no: String!
-    buyer_id: ID!
+    "Null for a pet-store guest checkout."
+    buyer_id: ID
     buyer_name: String!
     buyer_email: String!
     buyer_phone: String
@@ -100,6 +121,18 @@ export const productOrderTypeDefs = /* GraphQL */ `
     shiprocket: ShipRocketInfo!
     tracking_events: [OrderTrackingEvent!]!
     last_error: String!
+    channel: OrderChannel!
+    payment_method: OrderPaymentMethod!
+    "What the courier collects in cash (COD only)."
+    cod_amount: Float!
+    cod_collected_at: String
+    "This order's share of the coupon, prepaid discount and coins."
+    discount_total: Float!
+    coins_share: Int!
+    cancelled_at: String
+    cancel_reason: String!
+    cancelled_by: String!
+    notes: [OrderNote!]!
     created_at: String!
     updated_at: String!
   }

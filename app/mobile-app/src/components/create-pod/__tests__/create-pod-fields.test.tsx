@@ -131,6 +131,8 @@ describe('ClubSearchField', () => {
         value=""
         onChange={onChange}
         error="Pick one"
+        locality=""
+        locked={false}
       />,
     );
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
@@ -156,7 +158,14 @@ describe('ClubSearchField', () => {
     ];
     const cities = [{ id: 'loc-lucknow', location_name: 'Lucknow', city: 'Lucknow' }];
     renderWithProviders(
-      <ClubSearchField clubs={lucknowClubs} locations={cities} value="" onChange={jest.fn()} />,
+      <ClubSearchField
+        clubs={lucknowClubs}
+        locations={cities}
+        value=""
+        onChange={jest.fn()}
+        locality=""
+        locked={false}
+      />,
     );
 
     expect(screen.getByTestId('create-pod-club-club-wea-place')).toHaveTextContent(

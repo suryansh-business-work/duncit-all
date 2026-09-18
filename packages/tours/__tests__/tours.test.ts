@@ -99,7 +99,7 @@ describe('TOURS registry', () => {
   it('keeps every tour’s steps on one screen', () => {
     expect(findTour('create-pod')!.steps.map((s) => s.anchor)).toEqual([
       'create-pod-steps',
-      'create-pod-basics',
+      'create-pod-club',
       'create-pod-publish',
     ]);
     expect(findTour('booking')!.steps.map((s) => s.anchor)).toEqual([

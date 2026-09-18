@@ -1,21 +1,15 @@
 /**
- * Step 2 of creating a pod: where it happens and which club it hangs off.
+ * Step 1 of creating a pod: the category, the locality and the club.
  *
- * The two fields are not independent, and the dependency is the point. Changing
- * the CITY invalidates everything downstream — the locality belongs to the old
- * city, and so do the venue and the slot that was booked in it. A step that
- * kept them would let a host create a pod in Bengaluru at a court in Pune, and
- * the venue would find out on the day.
- *
- * The locality picker shows how many clubs each locality has, so a host is not
- * sent to one with nothing in it. The club list itself arrives already scoped —
- * the category is chosen above the page title — so this step renders what it is
- * handed rather than filtering again and risking a second, disagreeing rule.
+ * The city is the one the header has selected, so the step only picks an area of
+ * it, and the club list stays locked until it has one. The club list itself
+ * arrives already scoped, so this step renders what it is handed rather than
+ * filtering again and risking a second, disagreeing rule.
  */
 import '@testing-library/jest-dom/vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { MemoryRouter } from 'react-router';
@@ -89,7 +83,9 @@ function Harness({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <LocationClubStep form={form} clubs={CLUBS} locations={LOCATIONS} />;
+  return (
+    <LocationClubStep form={form} hostCategories={[]} clubs={CLUBS} cityClubs={CLUBS} locations={LOCATIONS} />
+  );
 }
 
 const step = (over: Parameters<typeof Harness>[0] = {}) =>
@@ -103,6 +99,8 @@ const step = (over: Parameters<typeof Harness>[0] = {}) =>
     </MockedProvider>
   );
 
+const clubInput = () => within(screen.getByTestId('create-pod-club')).getByRole('combobox');
+
 afterEach(() => {
   formRef = null;
   vi.clearAllMocks();
@@ -113,22 +111,6 @@ describe('LocationClubStep', () => {
     const { container } = step({ values: { location_id: 'loc-1' } });
 
     expect(container.textContent).toContain('Bengaluru');
-  });
-
-  it('offers a way to change the city', () => {
-    const { container } = step({ values: { location_id: 'loc-1' } });
-
-    expect(container.querySelector('[data-testid="create-pod-change-location"]')).not.toBeNull();
-  });
-
-  it('opens the location picker rather than a bare select', () => {
-    const { container } = step({ values: { location_id: 'loc-1' } });
-
-    fireEvent.click(container.querySelector('[data-testid="create-pod-change-location"]') as HTMLElement);
-
-    // The picker is what shows the club count per locality, so nobody is sent
-    // to a locality with nothing in it.
-    expect(document.body.innerHTML).not.toBe('');
   });
 
   it('renders before a city has been chosen at all', () => {
@@ -149,9 +131,9 @@ describe('LocationClubStep', () => {
   });
 
   it('names each club by where it operates, so two same-named clubs differ', () => {
-    step({ values: { location_id: 'loc-1' } });
+    step({ values: { location_id: 'loc-1', locality: 'Indiranagar' } });
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.mouseDown(clubInput());
 
     // Bengaluru has no separate city name recorded, so its location name is used.
     expect(screen.getByTestId('create-pod-club-option-club-1-place')).toHaveTextContent(
@@ -167,12 +149,12 @@ describe('LocationClubStep', () => {
   it('shows the picked club with its place in the field', () => {
     step({ values: { location_id: 'loc-1', locality: 'Indiranagar', club_id: 'club-1' } });
 
-    expect(screen.getByRole('combobox')).toHaveValue('Sunset Club | Indiranagar, Bengaluru');
+    expect(clubInput()).toHaveValue('Sunset Club | Indiranagar, Bengaluru');
   });
 
   it('finds a club by typing its area', () => {
-    step({ values: { location_id: 'loc-1' } });
-    const search = screen.getByRole('combobox');
+    step({ values: { location_id: 'loc-1', locality: 'Indiranagar' } });
+    const search = clubInput();
 
     // Autocomplete resets the text of a field that is not focused.
     act(() => search.focus());
@@ -184,13 +166,13 @@ describe('LocationClubStep', () => {
   });
 
   it('picks a club from the list', () => {
-    step({ values: { location_id: 'loc-1' } });
+    step({ values: { location_id: 'loc-1', locality: 'Whitefield' } });
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.mouseDown(clubInput());
     fireEvent.click(screen.getByTestId('create-pod-club-option-club-2'));
 
     expect(formRef?.getValues('club_id')).toBe('club-2');
-    expect(screen.getByRole('combobox')).toHaveValue('Whitefield Club | Whitefield, Bengaluru');
+    expect(clubInput()).toHaveValue('Whitefield Club | Whitefield, Bengaluru');
   });
 
   it('renders a locality that has no clubs in it', () => {
@@ -200,9 +182,10 @@ describe('LocationClubStep', () => {
   });
 
   it('renders a city with no localities recorded', () => {
-    const { container } = step({ values: { location_id: 'loc-2' } });
+    step({ values: { location_id: 'loc-2' } });
 
-    expect(container.textContent).toContain('Pune');
+    // Nothing to narrow by, so the city's clubs are open straight away.
+    expect(clubInput()).not.toBeDisabled();
   });
 
   it('offers both pod modes', () => {
@@ -224,12 +207,6 @@ describe('LocationClubStep', () => {
     });
 
     expect(container.textContent).toContain('Pick a club for this pod');
-  });
-
-  it('reports a missing city on the city field', () => {
-    const { container } = step({ errors: { location_id: 'Pick where this pod happens' } });
-
-    expect(container.textContent).toContain('Pick where this pod happens');
   });
 
   it('survives every control on it being pressed', () => {

@@ -130,9 +130,14 @@ export interface CreatePodLocation {
   location_image?: string | null;
   location_pincode?: string | null;
   active_club_count?: number | null;
-  location_zones?:
-    | { zone_name: string; pincode?: string | null; active_club_count?: number | null }[]
-    | null;
+  location_zones?: CreatePodLocationZone[] | null;
+}
+
+/** A city's locality/zone — what step 1's Locality dropdown lists. */
+export interface CreatePodLocationZone {
+  zone_name: string;
+  pincode?: string | null;
+  active_club_count?: number | null;
 }
 
 /** A venue partner whose published slots the host can book. */

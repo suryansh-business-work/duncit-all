@@ -1,29 +1,21 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
 import type {
   AnalyticsCity,
-  AnalyticsCompare,
-  AnalyticsBreakdown,
-  AnalyticsEntity,
-  AnalyticsFormat,
-  AnalyticsKpi,
-  AnalyticsLeaderboard,
-  AnalyticsTrend,
   EntityAnalytics,
   MutationSetAnalyticsTargetArgs,
   QueryEntityAnalyticsArgs,
 } from '@duncit/gql-types';
 
+export type { AnalyticsCity, EntityAnalytics };
 export type {
-  AnalyticsCity,
-  AnalyticsCompare,
   AnalyticsBreakdown,
+  AnalyticsCompare,
   AnalyticsEntity,
   AnalyticsFormat,
   AnalyticsKpi,
   AnalyticsLeaderboard,
   AnalyticsTrend,
-  EntityAnalytics,
-};
+} from '@duncit/gql-types';
 
 /** The periods a page can report on. The server clamps anything else to 7–365. */
 export const PERIOD_OPTIONS = [

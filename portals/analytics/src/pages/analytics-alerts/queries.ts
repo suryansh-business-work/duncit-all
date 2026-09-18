@@ -2,14 +2,14 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 import type {
   AnalyticsAlert,
   AnalyticsAlertCheckResult,
-  AnalyticsAlertCondition,
   MutationCheckAnalyticsAlertNowArgs,
   MutationCreateAnalyticsAlertArgs,
   MutationDeleteAnalyticsAlertArgs,
   MutationUpdateAnalyticsAlertArgs,
 } from '@duncit/gql-types';
 
-export type { AnalyticsAlert, AnalyticsAlertCondition };
+export type { AnalyticsAlert };
+export type { AnalyticsAlertCondition } from '@duncit/gql-types';
 
 const ALERT_FIELDS = `
   id

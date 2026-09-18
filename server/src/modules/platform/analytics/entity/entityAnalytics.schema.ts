@@ -12,6 +12,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     TEST_COVERAGE
     STRESS_TESTS
     E2E_TESTS
+    "The Duncit Pet Store (ecomm.duncit.com)."
+    PET_STORE
   }
 
   "What kind of number a value is, so the console formats it."

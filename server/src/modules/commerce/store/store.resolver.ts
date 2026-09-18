@@ -14,6 +14,7 @@ import {
 } from './store.checkout.service';
 import { storeOrderService } from './store.order.service';
 import { storeReturnService, type ReturnRequestInput } from './store.return.service';
+import { storeAutoshipService } from './store.autoship.service';
 import { badInput, forbidden, notFound, sameSecret, toObjectId } from './store.shared';
 
 /**
@@ -91,6 +92,7 @@ export const storeResolvers = {
       // Ownership is settled above, so the payment read runs as an operator's.
       return paymentService.invoicePdfBase64(String(order.payment_id), '', true);
     },
+    storeMySubscriptions: (_p: unknown, _a: Args, ctx: Ctx) => storeAutoshipService.mine(ctx),
   },
   Mutation: {
     storeAddToCart: (_p: unknown, a: Args, ctx: Ctx) =>
@@ -120,5 +122,12 @@ export const storeResolvers = {
       await assertPurchased(user.id, a.input?.product_id);
       return productReviewService.create(user.id, a.input);
     },
+    storeCreateSubscription: (_p: unknown, a: Args, ctx: Ctx) => storeAutoshipService.create(ctx, a.input),
+    storeUpdateSubscription: (_p: unknown, a: Args, ctx: Ctx) => storeAutoshipService.update(ctx, a.id, a.input ?? {}),
+    storePauseSubscription: (_p: unknown, a: Args, ctx: Ctx) => storeAutoshipService.pause(ctx, a.id, a.paused),
+    storeSkipSubscription: (_p: unknown, a: Args, ctx: Ctx) => storeAutoshipService.skip(ctx, a.id),
+    storeCancelSubscription: (_p: unknown, a: Args, ctx: Ctx) => storeAutoshipService.cancel(ctx, a.id),
+    storeSubscriptionOrderNow: (_p: unknown, a: Args, ctx: Ctx) =>
+      storeAutoshipService.orderNow(ctx, a.id, a.cart_token),
   },
 };

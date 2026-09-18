@@ -53,6 +53,13 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     dashboardId: 'analytics.hosts',
   },
   {
+    path: '/pet-store',
+    entity: 'PET_STORE',
+    title: 'analytics.page.petStore.title',
+    subtitle: 'analytics.page.petStore.subtitle',
+    dashboardId: 'analytics.petStore',
+  },
+  {
     path: '/tech/database',
     entity: 'DATABASE',
     title: 'analytics.page.database.title',

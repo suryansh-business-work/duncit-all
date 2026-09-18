@@ -43,6 +43,9 @@ export interface IStoreSettings extends Document {
   return_reasons: string[];
   cancel_reasons: string[];
   restock_on_cancel: boolean;
+  autoship_enabled: boolean;
+  autoship_discount_pct: number;
+  autoship_frequencies: number[];
   seo_title: string;
   seo_description: string;
   og_image_url: string;
@@ -95,6 +98,9 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
     return_reasons: { type: [String], default: [] },
     cancel_reasons: { type: [String], default: [] },
     restock_on_cancel: { type: Boolean, default: true },
+    autoship_enabled: { type: Boolean, default: false },
+    autoship_discount_pct: { type: Number, default: 0, min: 0, max: 50 },
+    autoship_frequencies: { type: [Number], default: [] },
     seo_title: { type: String, default: '', trim: true, maxlength: 160 },
     seo_description: { type: String, default: '', trim: true, maxlength: 320 },
     og_image_url: { type: String, default: '', trim: true },

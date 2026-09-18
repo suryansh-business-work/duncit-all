@@ -308,6 +308,14 @@ export interface StoreQuoteInput {
   redeemCoins?: number | null;
   userId?: string | null;
   email?: string | null;
+  /** An Autoship cycle (or its "Order now"): this product line earns `pct` off. */
+  autoship?: AutoshipDiscount | null;
+}
+
+export interface AutoshipDiscount {
+  product_id: string;
+  variant_id: string;
+  pct: number;
 }
 
 export interface StoreQuote {
@@ -319,6 +327,7 @@ export interface StoreQuote {
   coupon_discount: number;
   coupon_error: string | null;
   prepaid_discount: number;
+  autoship_discount: number;
   shipping: StoreShipQuote;
   cod_fee: number;
   coins_redeemed: number;
@@ -352,6 +361,15 @@ async function couponOn(input: StoreQuoteInput, itemsTotal: number) {
   return { code: result.coupon!.code, discount: round2(itemsTotal - result.final_total), error: null };
 }
 
+/** Whole rupees off the subscribed line(s) of an Autoship basket. */
+function autoshipDiscountOn(lines: StoreLine[], autoship: AutoshipDiscount | null | undefined): number {
+  if (!autoship || autoship.pct <= 0) return 0;
+  const gross = lines
+    .filter((l) => l.product_id === autoship.product_id && l.variant_id === autoship.variant_id)
+    .reduce((sum, l) => sum + l.gross, 0);
+  return Math.floor((gross * autoship.pct) / 100);
+}
+
 export async function priceStoreCart(input: StoreQuoteInput): Promise<StoreQuote> {
   const s = input.settings;
   const buyable = input.lines.filter((l) => l.quantity > 0 && l.issue !== 'UNAVAILABLE' && l.issue !== 'VARIANT_GONE');
@@ -362,9 +380,14 @@ export async function priceStoreCart(input: StoreQuoteInput): Promise<StoreQuote
   const cod = input.paymentMethod === 'COD';
   const prepaidDiscount =
     !cod && s.prepaid_discount_pct > 0 ? Math.floor((afterCoupon * s.prepaid_discount_pct) / 100) : 0;
+  // Never more than what is left of the goods after the other two.
+  const autoshipDiscount = Math.min(
+    autoshipDiscountOn(buyable, input.autoship),
+    Math.max(0, Math.floor(afterCoupon - prepaidDiscount))
+  );
   const shipping = await quoteStoreShipping(buyable, input.pincode, s, { goodsTotal: itemsTotal, cod });
   const codFee = cod ? round2(s.cod_fee) : 0;
-  const payable = round2(afterCoupon - prepaidDiscount + shipping.total + codFee);
+  const payable = round2(afterCoupon - prepaidDiscount - autoshipDiscount + shipping.total + codFee);
   const baseQuote = await computeQuote(payable);
   const coins =
     input.userId && Number(input.redeemCoins) > 0
@@ -380,10 +403,11 @@ export async function priceStoreCart(input: StoreQuoteInput): Promise<StoreQuote
     coupon_discount: coupon.discount,
     coupon_error: coupon.error,
     prepaid_discount: prepaidDiscount,
+    autoship_discount: autoshipDiscount,
     shipping,
     cod_fee: codFee,
     coins_redeemed: coins.coinsRedeemed,
-    discount_total: round2(coupon.discount + prepaidDiscount + coins.coinsRedeemed),
+    discount_total: round2(coupon.discount + prepaidDiscount + autoshipDiscount + coins.coinsRedeemed),
     original_total: original,
     quote: coins.quote,
     cod_block: codBlockFor(input, payable, shipping),

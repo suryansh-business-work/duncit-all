@@ -10,6 +10,8 @@ import { CHANGE_REQUEST_BUNDLE } from './bundles/change-request';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { CRM_BUNDLE } from './bundles/crm';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
+import { ECOMM_PORTAL_BUNDLE } from './bundles/ecomm-portal';
+import { ECOMM_STORE_BUNDLE } from './bundles/ecomm-store';
 import { EARNINGS_BUNDLE } from './bundles/earnings';
 import { EMPLOYEE_EXPENSE_BUNDLE } from './bundles/employee-expense';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
@@ -82,6 +84,8 @@ export {
   CRM_BUNDLE,
   CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
+  ECOMM_PORTAL_BUNDLE,
+  ECOMM_STORE_BUNDLE,
   EARNINGS_BUNDLE,
   EMPLOYEE_EXPENSE_BUNDLE,
   POD_TIMELINE_BUNDLE,
@@ -133,6 +137,8 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   contentReport: CONTENT_REPORT_BUNDLE,
   crm: CRM_BUNDLE,
   developers: DEVELOPERS_BUNDLE,
+  ecommPortal: ECOMM_PORTAL_BUNDLE,
+  ecommStore: ECOMM_STORE_BUNDLE,
   earnings: EARNINGS_BUNDLE,
   employeeExpense: EMPLOYEE_EXPENSE_BUNDLE,
   podTimeline: POD_TIMELINE_BUNDLE,

@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { escapeRegExp } from '@utils/regex';
 
 /**
  * Small pieces every part of the pet store shares: who may run it, how a
@@ -36,8 +37,9 @@ export function slugify(value: string): string {
     .normalize('NFKD')
     .replaceAll(/[̀-ͯ]/g, '')
     .toLowerCase()
-    .replaceAll(/[^a-z\d]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '')
+    .split(/[^a-z\d]+/)
+    .filter(Boolean)
+    .join('-')
     .slice(0, 120);
 }
 
@@ -90,7 +92,7 @@ export function sameSecret(a: string, b: string): boolean {
 
 /** Escape user text for a case-insensitive `RegExp`. */
 export function searchRegex(text: string): RegExp {
-  return new RegExp(String(text ?? '').replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
+  return new RegExp(escapeRegExp(String(text ?? '')), 'i');
 }
 
 /** Clean a list of free-text strings: trimmed, non-empty, de-duplicated, capped. */

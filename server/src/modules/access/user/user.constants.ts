@@ -65,7 +65,7 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'USER', name: 'User', description: 'Standard Duncit app member.' },
   { key: 'HOST', name: 'Host', description: 'Hosts pods on the Duncit app.' },
   { key: 'VENUE_OWNER', name: 'Venue Owner', description: 'Owns and manages venues.' },
-  { key: 'ECOMM_MANAGER', name: 'E-commerce Manager', description: 'Manages e-commerce operations.' },
+  { key: 'ECOMM_MANAGER', name: 'E-commerce Manager', description: 'E-commerce console — ecomm-portal.duncit.com (runs the Duncit Pet Store).' },
   { key: 'CLUB_ADMIN', name: 'Club Admin', description: 'Manages assigned clubs and their pods from the Partners portal.' },
   { key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin', description: 'Oversees a region of Club Admins from the Partners portal. Granted directly — there is no onboarding application for it.' },
   { key: 'SUPPORT_USER', name: 'Support Agent', description: 'Support console access (agent level).' },

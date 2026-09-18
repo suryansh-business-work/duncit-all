@@ -859,6 +859,7 @@ export type AnalyticsEntity =
   | 'E2E_TESTS'
   | 'ENV_KEYS'
   | 'HOSTS'
+  | 'PET_STORE'
   | 'PODS'
   | 'SONARQUBE'
   | 'STRESS_TESTS'

@@ -913,6 +913,51 @@ server {
     }
 }
 
+# --- E-commerce console: ecomm-portal.duncit.com (SPA on :2038) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name ecomm-portal.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2038;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Pet store: ecomm.duncit.com (Node HTML server on :2039) ---
+# Node rather than nginx inside the image: every product, category and
+# collection page gets its own title, social card and JSON-LD written into the
+# head before the HTML leaves, which is what search engines and link previews read.
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name ecomm.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2039;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: open-wa-server.duncit.com (NestJS + WhatsApp on :2024) ---
 # The CRM "WhatsApp Lead Generator" gateway (portals/crm/open-wa-server). Serves
 # the bundled dashboard + REST API + live QR/session WebSocket. Larger body for

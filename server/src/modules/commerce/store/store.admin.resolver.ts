@@ -5,6 +5,7 @@ import { storeAdminCatalogService } from './store.admin.catalog.service';
 import { storeOrderService } from './store.order.service';
 import { storeReturnService } from './store.return.service';
 import { storeDashboardService } from './store.dashboard.service';
+import { storeAutoshipService } from './store.autoship.service';
 import { requireStoreAdmin, iso } from './store.shared';
 
 /**
@@ -58,6 +59,7 @@ export const storeAdminResolvers = {
     storeReviewsTable: admin((a) => storeAdminCatalogService.reviewsTable(a.query)),
     storeCouponsTable: admin((a) => storeAdminCatalogService.couponsTable(a.query)),
     storeDashboard: admin((a) => storeDashboardService.overview(Number(a.days) || 30)),
+    storeSubscriptionsTable: admin((a) => storeAutoshipService.table(a.query)),
   },
   Mutation: {
     storeSaveSettings: admin(async (a, ctx) => settingsOut(await storeAdminMerchService.saveSettings(ctx, a.input))),
@@ -94,5 +96,6 @@ export const storeAdminResolvers = {
     storeReplyReview: admin((a) => storeAdminCatalogService.replyReview(a.id, a.reply)),
     storeSaveCoupon: admin((a) => storeAdminCatalogService.saveCoupon(a.id, a.input)),
     storeDeleteCoupon: admin((a) => storeAdminCatalogService.deleteCoupon(a.id)),
+    storeAdminSetSubscriptionStatus: admin((a) => storeAutoshipService.adminSetStatus(a.id, a.status)),
   },
 };

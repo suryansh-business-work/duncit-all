@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
+import { isEmailAddress } from '@utils/email';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { StoreCartModel, StoreWishlistModel, type IStoreCart } from './storeCart.model';
 import { StoreStockAlertModel } from './storeReturn.model';
@@ -19,7 +20,6 @@ import { badInput, guestKeyOf, resolveOwner, round2, toObjectId, type StoreOwner
 
 const MAX_CART_LINES = 50;
 const MAX_WISHLIST = 200;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function cartOf(owner: StoreOwner): Promise<IStoreCart> {
   return StoreCartModel.findOneAndUpdate(
@@ -160,13 +160,20 @@ export const storeCartService = {
       }
       if (guest?.coupon_code && !cart.coupon_code) cart.coupon_code = guest.coupon_code;
       await StoreCartModel.deleteOne({ owner_key: guestKey });
-      const guestWish = await StoreWishlistModel.findOne({ owner_key: guestKey });
-      if (guestWish?.items.length) {
+      const [guestWish, ownWish] = await Promise.all([
+        StoreWishlistModel.findOne({ owner_key: guestKey }).lean(),
+        StoreWishlistModel.findOne({ owner_key: owner.owner_key }).select('items.product_id').lean(),
+      ]);
+      // Saved on both sides = one entry; `$addToSet` alone would keep both,
+      // because the two rows differ in when they were saved.
+      const held = new Set((ownWish?.items ?? []).map((i) => String(i.product_id)));
+      const fresh = (guestWish?.items ?? []).filter((i) => !held.has(String(i.product_id)));
+      if (fresh.length) {
         await StoreWishlistModel.updateOne(
           { owner_key: owner.owner_key },
           {
             $setOnInsert: { owner_key: owner.owner_key, user_id: new Types.ObjectId(user.id) },
-            $addToSet: { items: { $each: guestWish.items } },
+            $push: { items: { $each: fresh } },
           },
           { upsert: true }
         );
@@ -227,7 +234,7 @@ export const storeCartService = {
   async subscribeStockAlert(ctx: GraphQLContext, productId: string, variantId: string | null, email: string) {
     const id = assertProductId(productId);
     const address = String(email ?? ctx.user?.email ?? '').trim().toLowerCase();
-    if (!EMAIL.test(address)) badInput('Enter a valid email address');
+    if (!isEmailAddress(address)) badInput('Enter a valid email address');
     await StoreStockAlertModel.updateOne(
       { product_id: id, variant_id: String(variantId ?? ''), email: address },
       {

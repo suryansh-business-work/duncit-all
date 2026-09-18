@@ -17,6 +17,7 @@ export const ANALYTICS_MAIL_PAGES: Readonly<Record<AnalyticsEntity, { path: stri
   CLUBS: { path: '/clubs', copy: 'clubs' },
   CLUB_ADMINS: { path: '/club-admins', copy: 'clubAdmins' },
   HOSTS: { path: '/hosts', copy: 'hosts' },
+  PET_STORE: { path: '/pet-store', copy: 'petStore' },
   DATABASE: { path: '/tech/database', copy: 'database' },
   ENV_KEYS: { path: '/tech/env-keys', copy: 'envKeys' },
   SONARQUBE: { path: '/security/sonarqube', copy: 'sonarqube' },

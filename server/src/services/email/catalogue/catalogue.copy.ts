@@ -54,6 +54,8 @@ export const FIELD = {
   courier: 'email.field.courier',
   trackingNo: 'email.field.trackingNo',
   returnNo: 'email.field.returnNo',
+  autoshipEvery: 'email.field.autoshipEvery',
+  eachDelivery: 'email.field.eachDelivery',
 } as const;
 
 /** The tinted callout's caption — what the strip beneath the heading names. */
@@ -97,6 +99,7 @@ export const CTA = {
   contactSupport: 'email.cta.contactSupport',
   shopNow: 'email.cta.shopNow',
   viewCart: 'email.cta.viewCart',
+  orderNow: 'email.cta.orderNow',
 } as const;
 
 /**

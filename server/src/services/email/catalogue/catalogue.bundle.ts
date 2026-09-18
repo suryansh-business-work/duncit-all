@@ -56,6 +56,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.courier': 'Courier',
   'email.field.trackingNo': 'Tracking number',
   'email.field.returnNo': 'Return',
+  'email.field.autoshipEvery': 'Every (weeks)',
+  'email.field.eachDelivery': 'Each delivery',
 
   // --- Shared callout captions --------------------------------------------
   'email.label.pod': 'Pod',
@@ -95,6 +97,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.cta.contactSupport': 'Contact support',
   'email.cta.shopNow': 'Shop now',
   'email.cta.viewCart': 'Return to your cart',
+  'email.cta.orderNow': 'Order this delivery',
 
   // --- Shared footer sentences ---------------------------------------------
   'email.footer.account':
@@ -430,6 +433,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'We have refunded the order below. Nothing is needed from you — the money goes back to the method you paid with.',
 
   // --- Pet store (ecomm.duncit.com) --------------------------------------------------
+  'email.storeOrderCod.title': 'Your order is confirmed',
+  'email.storeOrderCod.body':
+    'Thank you for your order. You pay when it arrives — keep the amount below ready for the courier. We will write again when it ships.',
   'email.storeOrderUpdate.title': 'An update on your order',
   'email.storeOrderUpdate.body':
     'Your pet store order has moved along. Where it is now is below, and the button opens its full tracking.',
@@ -439,6 +445,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.storeBackInStock.title': 'It is back in stock',
   'email.storeBackInStock.body':
     'You asked us to tell you when this was back. It is on the shelf again — stock is limited, so do not wait too long.',
+  'email.storeAutoshipDue.title': 'Your next delivery is due',
+  'email.storeAutoshipDue.body':
+    'Your Autoship subscription says it is time for the next one. Order it in one tap — your autoship discount is applied at checkout.',
   'email.storeCartReminder.title': 'You left something in your cart',
   'email.storeCartReminder.body':
     'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',

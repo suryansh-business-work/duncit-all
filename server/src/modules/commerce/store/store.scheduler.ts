@@ -1,11 +1,12 @@
 import { logs } from '@observability/log';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
+import { storeAutoshipService } from './store.autoship.service';
 
 /**
- * The pet store's one background job: every half hour, email the people who
- * asked to be told when a sold-out product came back. Stock moves through many
- * doors (the products portal, a cancellation, a return), so a sweep is the one
- * place that never misses one.
+ * The pet store's background sweep, every half hour: email the people who
+ * asked to be told when a sold-out product came back (stock moves through many
+ * doors — the products portal, a cancellation, a return — so a sweep is the one
+ * place that never misses one), then book or remind every Autoship cycle due.
  */
 const INTERVAL_MS = 30 * 60 * 1000;
 const FIRST_RUN_DELAY_MS = 2 * 60 * 1000;
@@ -20,6 +21,12 @@ async function tick() {
     if (sent > 0) logs.server.info('store', 'backInStock', { sent });
   } catch (error) {
     logs.server.error('store', 'backInStock', { error, msg: 'back-in-stock sweep failed' });
+  }
+  try {
+    const cycles = await storeAutoshipService.runDue();
+    if (cycles > 0) logs.server.info('store', 'autoship', { cycles });
+  } catch (error) {
+    logs.server.error('store', 'autoship', { error, msg: 'autoship sweep failed' });
   } finally {
     running = false;
   }

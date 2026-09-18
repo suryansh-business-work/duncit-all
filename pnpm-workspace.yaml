@@ -32,6 +32,9 @@ packages:
   - portals/communications
   - portals/logs
   - portals/analytics
+  # The pet store: its console and its storefront.
+  - portals/ecomm-portal
+  - website/ecomm-store
   - website/status-website
   - website/earnwith-website
   - docs-site

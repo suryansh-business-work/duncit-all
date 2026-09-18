@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
+import { isEmailAddress } from '@utils/email';
 import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
@@ -21,6 +22,7 @@ import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
 import { storeCartService } from './store.cart.service';
 import { assertBuyable, lineOut, priceStoreCart, resolveStoreLines, type StoreQuote } from './store.pricing';
 import { toStoreOrder } from './store.order.mapper';
+import { autoshipDiscountFor } from './store.autoship.discount';
 import { badInput, forbidden, notFound, resolveOwner, sameSecret, secretKey, type StoreOwner } from './store.shared';
 
 /**
@@ -67,6 +69,8 @@ export interface StoreQuoteArgs {
   coupon_code?: string | null;
   redeem_coins?: number | null;
   email?: string | null;
+  /** Checkout that came from an Autoship "Order now" — earns the autoship discount. */
+  autoship_id?: string | null;
 }
 
 export interface StorePlaceOrderArgs extends StoreQuoteArgs {
@@ -79,7 +83,6 @@ export interface StorePlaceOrderArgs extends StoreQuoteArgs {
   checkout_url?: string | null;
 }
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\d{10}$/;
 const PINCODE = /^\d{6}$/;
 
@@ -96,7 +99,7 @@ function assertCheckoutAllowed(ctx: GraphQLContext, settings: IStoreSettings) {
   throw new GraphQLError('Sign in to check out', { extensions: { code: 'UNAUTHENTICATED' } });
 }
 
-function cleanAddress(a: AddressInput) {
+export function cleanAddress(a: AddressInput) {
   const out = {
     name: String(a?.name ?? '').trim(),
     phone: String(a?.phone ?? '').replaceAll(/\D/g, '').slice(-10),
@@ -117,7 +120,7 @@ function cleanAddress(a: AddressInput) {
   return out;
 }
 
-function cleanContact(c: ContactInput) {
+export function cleanContact(c: ContactInput) {
   const out = {
     name: String(c?.name ?? '').trim(),
     email: String(c?.email ?? '').trim().toLowerCase(),
@@ -125,7 +128,7 @@ function cleanContact(c: ContactInput) {
     phone_number: String(c?.phone_number ?? '').replaceAll(/\D/g, ''),
   };
   if (!out.name) badInput('Enter your name');
-  if (!EMAIL.test(out.email)) badInput('Enter a valid email address');
+  if (!isEmailAddress(out.email)) badInput('Enter a valid email address');
   if (!PHONE.test(out.phone_number)) badInput('Enter a valid 10-digit mobile number');
   return out;
 }
@@ -150,6 +153,7 @@ async function priceFor(ctx: GraphQLContext, args: StoreQuoteArgs, settings: ISt
     redeemCoins: args.redeem_coins,
     userId: ctx.user?.id ?? null,
     email: args.email ?? cart.email,
+    autoship: await autoshipDiscountFor(ctx.user?.id ?? null, args.autoship_id, settings),
   });
   return { owner, cart, quote };
 }
@@ -163,6 +167,7 @@ const quoteOut = (q: StoreQuote, currencySymbol: string) => ({
   coupon_discount: q.coupon_discount,
   coupon_error: q.coupon_error,
   prepaid_discount: q.prepaid_discount,
+  autoship_discount: q.autoship_discount,
   shipping_total: q.shipping.total,
   shipping_quoted: q.shipping.all_quoted,
   serviceable: q.shipping.serviceable,
@@ -180,7 +185,7 @@ const quoteOut = (q: StoreQuote, currencySymbol: string) => ({
 });
 
 /** Spend the COD phone proof: verified, unused, and for THIS number. */
-async function consumeCodProof(challengeId: string | null | undefined, phone: string) {
+export async function consumeCodProof(challengeId: string | null | undefined, phone: string) {
   if (!challengeId) badInput('Verify your phone number to place a Cash on Delivery order');
   await otpService.consume(challengeId, {
     purpose: 'STORE_COD',
@@ -189,10 +194,14 @@ async function consumeCodProof(challengeId: string | null | undefined, phone: st
 }
 
 /** Everything the finalizer and the order split need, frozen on the payment. */
-function storeMetadata(args: StorePlaceOrderArgs, quote: StoreQuote, extra: Record<string, unknown>) {
+function storeMetadata(
+  quote: StoreQuote,
+  where: { checkoutUrl: string; pincode: string },
+  extra: Record<string, unknown>
+) {
   return {
     source: 'store_checkout',
-    checkout_url: args.checkout_url ?? '',
+    checkout_url: where.checkoutUrl,
     pod_id: null,
     ticket_amount: null,
     product_cost_total: quote.items_total,
@@ -203,7 +212,7 @@ function storeMetadata(args: StorePlaceOrderArgs, quote: StoreQuote, extra: Reco
     })),
     product_lines: quote.lines,
     fulfilment_method: 'SHIP',
-    delivery_pincode: args.shipping_address?.pincode ?? '',
+    delivery_pincode: where.pincode,
     shipping: { total: quote.shipping.total, breakup: quote.shipping.breakup, all_quoted: quote.shipping.all_quoted },
     original_total: quote.original_total,
     ...extra,
@@ -238,6 +247,162 @@ async function buyerFor(ctx: GraphQLContext, contact: ReturnType<typeof cleanCon
       user ?? {}
     ),
   };
+}
+
+export type CleanAddress = ReturnType<typeof cleanAddress>;
+
+/** Everything a store payment document is created from, before a gateway is chosen. */
+export interface StorePaymentDraft {
+  base: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+  accessKey: string;
+  ownerKey: string;
+}
+
+/**
+ * The payment row for a priced basket: who pays, the quote's money, and the
+ * `metadata.store` facts the finalizer's order split reads. Shared by the
+ * checkout and by an Autoship cycle, so both write the same shape.
+ */
+export function draftStorePayment(input: {
+  userId: unknown;
+  buyerFields: Record<string, unknown>;
+  quote: StoreQuote;
+  method: StoreCheckoutMethod;
+  ownerKey: string;
+  address: CleanAddress;
+  checkoutUrl: string;
+  description: string;
+  extraFacts?: Record<string, unknown>;
+}): StorePaymentDraft {
+  const { quote } = input;
+  const q = quote.quote;
+  const accessKey = secretKey();
+  const base = {
+    payment_id: newPaymentId(),
+    invoice_no: null,
+    user_id: input.userId ?? null,
+    ...input.buyerFields,
+    checkout_url: input.checkoutUrl,
+    target_type: 'PRODUCT',
+    pod_id: null,
+    description: input.description,
+    subtotal: q.subtotal,
+    platform_fee_pct: q.platform_fee_pct,
+    platform_fee_amount: q.platform_fee_amount,
+    gst_pct: q.gst_pct,
+    gst_amount: q.gst_amount,
+    total: q.total,
+    currency_symbol: q.currency_symbol,
+    coupon_code: quote.coupon_code,
+    coupon_discount: quote.coupon_discount,
+    coins_redeemed: quote.coins_redeemed,
+    paid_at: null,
+  };
+  const store = {
+    channel: 'PET_STORE',
+    payment_method: input.method === 'COD' ? 'COD' : 'PREPAID',
+    discount_total: quote.discount_total,
+    coupon_discount: quote.coupon_discount,
+    prepaid_discount: quote.prepaid_discount,
+    autoship_discount: quote.autoship_discount,
+    cod_fee: quote.cod_fee,
+    mrp_total: quote.mrp_total,
+    access_key: accessKey,
+    cart_owner_key: input.ownerKey,
+    ...input.extraFacts,
+  };
+  const metadata = storeMetadata(
+    quote,
+    { checkoutUrl: input.checkoutUrl, pincode: input.address.pincode },
+    { shipping_address: input.address, store }
+  );
+  return { base, metadata, accessKey, ownerKey: input.ownerKey };
+}
+
+/** Book a Cash-on-Delivery order: no money moves, the finalizer creates the orders. */
+export async function bookCodPayment(draft: StorePaymentDraft, component: string) {
+  const doc = await PaymentModel.create({
+    ...draft.base,
+    status: 'PENDING',
+    gateway: COD_GATEWAY,
+    gateway_ref: `cod_${Date.now()}`,
+    metadata: draft.metadata,
+  });
+  await settle(String(doc._id), 'Cash on delivery', component);
+  return (await PaymentModel.findById(doc._id))!;
+}
+
+export const describeBasket = (count: number) => `Pet store order · ${count} item${count === 1 ? '' : 's'}`;
+
+/** The checks a priced basket must pass before any payment row is written. */
+async function assertPlaceable(
+  settings: IStoreSettings,
+  quote: StoreQuote,
+  args: StorePlaceOrderArgs,
+  method: StoreCheckoutMethod,
+  phone: string
+) {
+  if (quote.below_minimum) badInput(`The minimum order value is ${settings.min_order_value}`);
+  if (!quote.shipping.serviceable) badInput('We cannot deliver to this pincode yet');
+  if (quote.coupon_error && (args.coupon_code ?? '').trim()) badInput(quote.coupon_error);
+  if (method !== 'COD') return;
+  if (quote.cod_block) badInput('Cash on Delivery is not available for this order');
+  if (settings.cod_requires_otp) await consumeCodProof(args.cod_challenge_id, phone);
+}
+
+/** Captured on the spot: a zero-charge basket, or Finance's dummy mode. */
+async function settleInstantly(draft: StorePaymentDraft, quote: StoreQuote) {
+  const settlement =
+    quote.quote.total <= 0 ? freeSettlement(quote.coupon_code) : { gateway: 'DUMMY', label: 'Dummy Gateway' };
+  const doc = await PaymentModel.create({
+    ...draft.base,
+    status: 'PENDING',
+    gateway: settlement.gateway,
+    gateway_ref: `${settlement.gateway.toLowerCase()}_${Date.now()}`,
+    metadata: draft.metadata,
+  });
+  await settle(String(doc._id), settlement.label, 'storePlaceOrder');
+  return (await PaymentModel.findById(doc._id))!;
+}
+
+/** A PENDING payment plus the Razorpay sheet the storefront opens. */
+async function openRazorpay(
+  draft: StorePaymentDraft,
+  quote: StoreQuote,
+  contact: ReturnType<typeof cleanContact>,
+  businessName: string
+) {
+  const { keyId } = await getRazorpayKeys();
+  const q = quote.quote;
+  const amountPaise = Math.round(q.total * 100);
+  const order = await createRazorpayOrder({
+    amountPaise,
+    currency: 'INR',
+    receipt: String(draft.base.payment_id),
+    notes: { kind: 'pet_store', user_id: draft.base.user_id ? String(draft.base.user_id) : 'guest' },
+  });
+  const doc = await PaymentModel.create({
+    ...draft.base,
+    status: 'PENDING',
+    gateway: 'RAZORPAY',
+    gateway_ref: order.id,
+    metadata: { ...draft.metadata, razorpay_order_id: order.id },
+  });
+  const sheet = razorpaySheet({
+    paymentDocId: String(doc._id),
+    keyId,
+    orderId: order.id,
+    amountPaise,
+    businessName,
+    description: String(draft.base.description),
+    input: { contact_email: contact.email, contact_phone_number: contact.phone_number },
+    currencySymbol: q.currency_symbol,
+    total: q.total,
+    free: false,
+    payment: null,
+  });
+  return { doc, sheet };
 }
 
 async function ordersFor(payment: IPayment) {
@@ -294,7 +459,9 @@ export const storeCheckoutService = {
     assertStoreOpen(settings);
     if (!settings.cod_enabled) badInput('Cash on Delivery is not available');
     const owner = resolveOwner(ctx, cartToken);
-    await loadCart(owner);
+    // A guest must hold a cart to be texted a code; a signed-in buyer may be
+    // proving the phone for an Autoship subscription instead.
+    if (!ctx.user) await loadCart(owner);
     const number = String(phone ?? '').replaceAll(/\D/g, '');
     if (!PHONE.test(number)) badInput('Enter a valid 10-digit mobile number');
     const result = await otpService.request({
@@ -331,112 +498,35 @@ export const storeCheckoutService = {
       settings,
       true
     );
-    if (quote.below_minimum) badInput(`The minimum order value is ${settings.min_order_value}`);
-    if (!quote.shipping.serviceable) badInput('We cannot deliver to this pincode yet');
-    if (quote.coupon_error && (args.coupon_code ?? '').trim()) badInput(quote.coupon_error);
+    await assertPlaceable(settings, quote, args, method, contact.phone_number);
     await storeCartService.rememberContact(owner, contact.email, contact.phone_number);
-    if (method === 'COD') {
-      if (quote.cod_block) badInput('Cash on Delivery is not available for this order');
-      if (settings.cod_requires_otp) await consumeCodProof(args.cod_challenge_id, contact.phone_number);
-    }
 
     const { user, fields } = await buyerFor(ctx, contact, { ...args, shipping_address: address });
-    const accessKey = secretKey();
-    const q = quote.quote;
-    const base = {
-      payment_id: newPaymentId(),
-      invoice_no: null,
-      user_id: user?._id ?? null,
-      ...fields,
-      checkout_url: args.checkout_url ?? '',
-      target_type: 'PRODUCT',
-      pod_id: null,
-      description: `Pet store order · ${quote.lines.length} item${quote.lines.length === 1 ? '' : 's'}`,
-      subtotal: q.subtotal,
-      platform_fee_pct: q.platform_fee_pct,
-      platform_fee_amount: q.platform_fee_amount,
-      gst_pct: q.gst_pct,
-      gst_amount: q.gst_amount,
-      total: q.total,
-      currency_symbol: q.currency_symbol,
-      coupon_code: quote.coupon_code,
-      coupon_discount: quote.coupon_discount,
-      coins_redeemed: quote.coins_redeemed,
-      paid_at: null,
-    };
-    const storeFacts = {
-      channel: 'PET_STORE',
-      payment_method: method === 'COD' ? 'COD' : 'PREPAID',
-      discount_total: quote.discount_total,
-      coupon_discount: quote.coupon_discount,
-      prepaid_discount: quote.prepaid_discount,
-      cod_fee: quote.cod_fee,
-      mrp_total: quote.mrp_total,
-      access_key: accessKey,
-      cart_owner_key: owner.owner_key,
-    };
-    const metadata = storeMetadata({ ...args, shipping_address: address }, quote, {
-      shipping_address: address,
-      store: storeFacts,
+    const draft = draftStorePayment({
+      userId: user?._id ?? null,
+      buyerFields: fields,
+      quote,
+      method,
+      ownerKey: owner.owner_key,
+      address,
+      checkoutUrl: args.checkout_url ?? '',
+      description: describeBasket(quote.lines.length),
+      extraFacts: args.autoship_id ? { autoship_id: String(args.autoship_id) } : {},
     });
 
     if (method === 'COD') {
-      const doc = await PaymentModel.create({
-        ...base,
-        status: 'PENDING',
-        gateway: COD_GATEWAY,
-        gateway_ref: `cod_${Date.now()}`,
-        metadata,
-      });
-      await settle(String(doc._id), 'Cash on delivery', 'storePlaceOrder');
+      const doc = await bookCodPayment(draft, 'storePlaceOrder');
       await markConverted(owner.owner_key, doc._id);
-      return resultFor((await PaymentModel.findById(doc._id))!, 'COD_CONFIRMED', accessKey);
+      return resultFor(doc, 'COD_CONFIRMED', draft.accessKey);
     }
-
     const fs = await getFinanceSettings();
-    if (q.total <= 0 || fs.dummy_mode) {
-      const settlement = q.total <= 0 ? freeSettlement(quote.coupon_code) : { gateway: 'DUMMY', label: 'Dummy Gateway' };
-      const doc = await PaymentModel.create({
-        ...base,
-        status: 'PENDING',
-        gateway: settlement.gateway,
-        gateway_ref: `${settlement.gateway.toLowerCase()}_${Date.now()}`,
-        metadata,
-      });
-      await settle(String(doc._id), settlement.label, 'storePlaceOrder');
+    if (quote.quote.total <= 0 || fs.dummy_mode) {
+      const doc = await settleInstantly(draft, quote);
       await markConverted(owner.owner_key, doc._id);
-      return resultFor((await PaymentModel.findById(doc._id))!, 'PAID', accessKey);
+      return resultFor(doc, 'PAID', draft.accessKey);
     }
-
-    const { keyId } = await getRazorpayKeys();
-    const amountPaise = Math.round(q.total * 100);
-    const order = await createRazorpayOrder({
-      amountPaise,
-      currency: 'INR',
-      receipt: base.payment_id,
-      notes: { kind: 'pet_store', user_id: user ? String(user._id) : 'guest' },
-    });
-    const doc = await PaymentModel.create({
-      ...base,
-      status: 'PENDING',
-      gateway: 'RAZORPAY',
-      gateway_ref: order.id,
-      metadata: { ...metadata, razorpay_order_id: order.id },
-    });
-    const sheet = razorpaySheet({
-      paymentDocId: String(doc._id),
-      keyId,
-      orderId: order.id,
-      amountPaise,
-      businessName: settings.store_name || fs.business_name,
-      description: base.description,
-      input: { contact_email: contact.email, contact_phone_number: contact.phone_number },
-      currencySymbol: q.currency_symbol,
-      total: q.total,
-      free: false,
-      payment: null,
-    });
-    return resultFor(doc, 'PENDING_PAYMENT', accessKey, sheet);
+    const { doc, sheet } = await openRazorpay(draft, quote, contact, settings.store_name || fs.business_name);
+    return resultFor(doc, 'PENDING_PAYMENT', draft.accessKey, sheet);
   },
 
   /** Step 2 of an online payment: the Razorpay sheet came back with a signature. */

@@ -5,6 +5,7 @@ import { StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeT
 import {
   STORE_COLLECTION_MODES,
   STORE_HOME_SECTION_KINDS,
+  STORE_SECTION_PRODUCT_SOURCES,
   StoreCollectionModel,
   StoreHomeSectionModel,
 } from './storeMerch.model';
@@ -133,6 +134,9 @@ export const sectionOut = (s: Doc) => ({
   collection_id: s.collection_id ? String(s.collection_id) : null,
   category_ids: (s.category_ids ?? []).map(String),
   product_limit: s.product_limit ?? 12,
+  discount_tiers: s.discount_tiers ?? [],
+  product_source: s.product_source ?? 'COLLECTION',
+  product_ids: (s.product_ids ?? []).map(String),
   sort_order: s.sort_order ?? 0,
   is_active: s.is_active !== false,
   starts_at: iso(s.starts_at),
@@ -166,6 +170,7 @@ const SETTINGS_FLAGS = [
   'cod_requires_otp',
   'returns_enabled',
   'restock_on_cancel',
+  'autoship_enabled',
 ] as const;
 
 const SETTINGS_NUMBERS = [
@@ -178,15 +183,33 @@ const SETTINGS_NUMBERS = [
   'flat_shipping_fee',
   'max_qty_per_line',
   'return_window_days',
+  'autoship_discount_pct',
 ] as const;
 
-function settingsPatch(input: Doc) {
+/** Whole numbers within [min, max], de-duplicated and ascending — autoship
+ * frequencies in weeks, flash-sale discount tiers in percent. */
+function intList(values: unknown, min: number, max: number, cap: number): number[] {
+  const list = Array.isArray(values) ? values : [];
+  const whole = list.map((n) => Math.floor(Number(n))).filter((n) => n >= min && n <= max);
+  return [...new Set(whole)].sort((a, b) => a - b).slice(0, cap);
+}
+
+const present = (value: unknown) => value !== undefined && value !== null;
+
+function scalarPatch(input: Doc) {
   const patch: Doc = {};
-  for (const key of SETTINGS_STRINGS) if (input[key] !== undefined && input[key] !== null) patch[key] = String(input[key]).trim();
+  for (const key of SETTINGS_STRINGS) if (present(input[key])) patch[key] = String(input[key]).trim();
   for (const key of SETTINGS_FLAGS) if (typeof input[key] === 'boolean') patch[key] = input[key];
-  for (const key of SETTINGS_NUMBERS) if (input[key] !== undefined && input[key] !== null) patch[key] = nonNegative(input[key]);
+  for (const key of SETTINGS_NUMBERS) if (present(input[key])) patch[key] = nonNegative(input[key]);
+  return patch;
+}
+
+function settingsPatch(input: Doc) {
+  const patch = scalarPatch(input);
   if (patch.prepaid_discount_pct > 50) badInput('The prepaid discount can be at most 50%');
-  if (patch.max_qty_per_line !== undefined && patch.max_qty_per_line < 1) badInput('Allow at least 1 unit per item');
+  if (patch.autoship_discount_pct > 50) badInput('The autoship discount can be at most 50%');
+  if (present(patch.max_qty_per_line) && Number(patch.max_qty_per_line) < 1) badInput('Allow at least 1 unit per item');
+  if (input.autoship_frequencies) patch.autoship_frequencies = intList(input.autoship_frequencies, 1, 26, 8);
   if (input.cod_blocked_pincodes) {
     patch.cod_blocked_pincodes = cleanList(input.cod_blocked_pincodes, 5000)
       .map((p) => p.replaceAll(/\D/g, ''))
@@ -402,6 +425,9 @@ export const storeAdminMerchService = {
   },
   async saveSection(id: string | null | undefined, input: Doc) {
     if (!STORE_HOME_SECTION_KINDS.includes(input.kind)) badInput('Choose what this section shows');
+    const endsAt = dateOrNull(input.ends_at);
+    if (input.kind === 'FLASH_SALE' && !endsAt) badInput('A flash sale needs an end time to count down to');
+    const tiers = intList(input.discount_tiers, 1, 90, 8);
     const doc = await upsert(StoreHomeSectionModel, id, {
       kind: input.kind,
       title: String(input.title ?? '').trim(),
@@ -410,9 +436,12 @@ export const storeAdminMerchService = {
       collection_id: toObjectId(input.collection_id),
       category_ids: toObjectIds(input.category_ids),
       product_limit: Math.min(48, Math.max(1, Math.floor(nonNegative(input.product_limit, 12)) || 12)),
+      discount_tiers: tiers,
+      product_source: STORE_SECTION_PRODUCT_SOURCES.includes(input.product_source) ? input.product_source : 'COLLECTION',
+      product_ids: toObjectIds(input.product_ids).slice(0, 48),
       is_active: input.is_active !== false,
       starts_at: dateOrNull(input.starts_at),
-      ends_at: dateOrNull(input.ends_at),
+      ends_at: endsAt,
       ...(id ? {} : { sort_order: await StoreHomeSectionModel.countDocuments() }),
     });
     return sectionOut(doc);

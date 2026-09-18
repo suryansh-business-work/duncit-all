@@ -36,6 +36,7 @@ export const appConfig = {
         { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'groups' },
         { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/club-admins', icon: 'verified-user' },
         { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'host-request' },
+        { label: 'Pet Store', labelKey: 'shell.nav.petStore', to: '/pet-store', icon: 'storefront' },
       ],
     },
     {

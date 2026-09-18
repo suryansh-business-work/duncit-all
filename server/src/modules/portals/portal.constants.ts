@@ -8,6 +8,7 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   ads: ['ADS_MANAGER'],
   ai: ['AI_MANAGER'],
   analytics: ['ANALYTICS_MANAGER'],
+  'ecomm-portal': ['ECOMM_MANAGER'],
   challenge: ['CHALLENGE_MANAGER'],
   communications: ['COMMUNICATIONS_MANAGER'],
   // The directory consoles. An Onboarding Manager opens the venue and

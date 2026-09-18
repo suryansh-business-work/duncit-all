@@ -4,21 +4,15 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { logs } from '@observability/log';
-import {
-  StoreCategoryModel,
-  StorePetTypeModel,
-  type IStoreCategory,
-  type IStorePetType,
-} from './storeTaxonomy.model';
-import {
-  StoreCollectionModel,
-  StoreHomeSectionModel,
-  type IStoreHomeSection,
-} from './storeMerch.model';
+import { StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
+import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model';
 import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
-import { cardsFor, listedFilter, storeCatalogService } from './store.catalog.service';
+import { cardsFor, listedFilter, storeCatalogService, type StoreSort } from './store.catalog.service';
 import { findVariant, listingOf } from './store.product';
 import { iso, toObjectId } from './store.shared';
+
+/** A lean document of any store collection — only its public fields are read. */
+type Doc = Record<string, any>;
 
 /**
  * Everything the storefront frames a shelf with: the header menu, the home
@@ -26,7 +20,7 @@ import { iso, toObjectId } from './store.shared';
  * the pincode check and the sitemap. Public reads.
  */
 
-const petOut = (p: IStorePetType | any) => ({
+const petOut = (p: Doc) => ({
   id: String(p._id),
   name: p.name,
   slug: p.slug,
@@ -35,7 +29,7 @@ const petOut = (p: IStorePetType | any) => ({
   description: p.description ?? '',
 });
 
-const categoryOut = (c: IStoreCategory | any) => ({
+const categoryOut = (c: Doc) => ({
   id: String(c._id),
   name: c.name,
   slug: c.slug,
@@ -71,6 +65,9 @@ export async function publicSettingsOut(s: IStoreSettings) {
     min_order_value: s.min_order_value,
     free_shipping_above: s.free_shipping_above,
     max_qty_per_line: s.max_qty_per_line,
+    autoship_enabled: s.autoship_enabled,
+    autoship_discount_pct: s.autoship_discount_pct,
+    autoship_frequencies: s.autoship_frequencies,
     returns_enabled: s.returns_enabled,
     return_window_days: s.return_window_days,
     return_reasons: s.return_reasons,
@@ -116,8 +113,59 @@ async function shelfBrands(limit = 40) {
   }));
 }
 
+/** The shelf sort a source-driven slider reads its products in. */
+const SOURCE_SORT: Record<string, StoreSort> = {
+  BESTSELLING: 'BESTSELLING',
+  NEWEST: 'NEWEST',
+  DISCOUNT: 'DISCOUNT',
+  FEATURED: 'RELEVANCE',
+};
+
+const refOut = (d: { _id: unknown; name: string; slug: string }) => ({ id: String(d._id), name: d.name, slug: d.slug });
+
+/** A PRODUCT_SLIDER's cards, from wherever its source points. */
+async function sliderProducts(section: Doc) {
+  const limit = section.product_limit ?? 12;
+  const source = section.product_source ?? 'COLLECTION';
+  if (source === 'MANUAL') {
+    const cards = await storeCatalogService.productsByIds((section.product_ids ?? []).map(String));
+    return { products: cards.slice(0, limit), collection: null, category: null };
+  }
+  if (source === 'COLLECTION') {
+    const c = section.collection_id
+      ? await StoreCollectionModel.findOne({ _id: section.collection_id, is_active: true }).lean()
+      : null;
+    if (!c) return { products: [], collection: null, category: null };
+    const page = await storeCatalogService.search({ collection: c.slug, page_size: limit });
+    return { products: page.items, collection: refOut(c), category: null };
+  }
+  if (source === 'CATEGORY') {
+    const c = section.category_ids?.[0]
+      ? await StoreCategoryModel.findOne({ _id: section.category_ids[0], is_active: true }).lean()
+      : null;
+    if (!c) return { products: [], collection: null, category: null };
+    const page = await storeCatalogService.search({ category: c.slug, page_size: limit, sort: 'BESTSELLING' });
+    return { products: page.items, collection: null, category: categoryOut(c) };
+  }
+  const page = await storeCatalogService.search({
+    sort: SOURCE_SORT[source] ?? 'RELEVANCE',
+    on_sale: source === 'DISCOUNT',
+    page_size: limit,
+  });
+  return { products: page.items, collection: null, category: null };
+}
+
+/** The categories a CATEGORY_GRID or CATEGORY_ICONS block shows: the picked ones, else the top level. */
+async function sectionCategories(section: Doc) {
+  const filter = section.category_ids?.length
+    ? { _id: { $in: section.category_ids }, is_active: true }
+    : { parent_id: null, is_active: true };
+  const categories = await StoreCategoryModel.find(filter).sort({ sort_order: 1, name: 1 }).limit(24).lean();
+  return categories.map(categoryOut);
+}
+
 /** A home-page block with whatever it points at resolved. */
-async function resolveSection(section: IStoreHomeSection | any) {
+async function resolveSection(section: Doc) {
   const base = {
     id: String(section._id),
     kind: section.kind,
@@ -137,8 +185,20 @@ async function resolveSection(section: IStoreHomeSection | any) {
     categories: [] as any[],
     pet_types: [] as any[],
     brands: [] as any[],
+    discount_tiers: (section.discount_tiers ?? []) as number[],
+    ends_at: iso(section.ends_at),
   };
   switch (section.kind) {
+    case 'FLASH_SALE': {
+      // The storefront asks for each tab's products itself (storeSearch with
+      // on_sale + min_discount_pct), so only the scope travels here.
+      const collection = section.collection_id
+        ? await StoreCollectionModel.findOne({ _id: section.collection_id, is_active: true }).lean()
+        : null;
+      return collection
+        ? { ...base, collection: { id: String(collection._id), name: collection.name, slug: collection.slug } }
+        : base;
+    }
     case 'COLLECTION_CAROUSEL': {
       const collection = section.collection_id
         ? await StoreCollectionModel.findOne({ _id: section.collection_id, is_active: true }).lean()
@@ -154,12 +214,17 @@ async function resolveSection(section: IStoreHomeSection | any) {
         products: page.items,
       };
     }
-    case 'CATEGORY_GRID': {
-      const filter = section.category_ids?.length
-        ? { _id: { $in: section.category_ids }, is_active: true }
-        : { parent_id: null, is_active: true };
-      const categories = await StoreCategoryModel.find(filter).sort({ sort_order: 1, name: 1 }).limit(24).lean();
-      return { ...base, categories: categories.map(categoryOut) };
+    case 'CATEGORY_GRID':
+    case 'CATEGORY_ICONS':
+      return { ...base, categories: await sectionCategories(section) };
+    case 'PRODUCT_SLIDER': {
+      const slider = await sliderProducts(section);
+      return {
+        ...base,
+        products: slider.products,
+        collection: slider.collection,
+        categories: slider.category ? [slider.category] : [],
+      };
     }
     case 'PET_TYPES': {
       const pets = await StorePetTypeModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }).lean();

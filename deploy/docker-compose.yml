@@ -313,6 +313,23 @@ services:
     ports:
       - "127.0.0.1:2037:80"
 
+  # The pet store's console (ecomm-portal.duncit.com).
+  ecomm-portal:
+    image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-latest}
+    container_name: duncit-ecomm-portal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2038:80"
+
+  # The pet store itself (ecomm.duncit.com).
+  ecomm-store:
+    image: ${DOCKERHUB_USERNAME}/duncit-ecomm-store:${IMAGE_TAG:-latest}
+    container_name: duncit-ecomm-store
+    restart: unless-stopped
+    ports:
+      # 8080, not 80: the store runs its non-root Node HTML server (per-page SEO).
+      - "127.0.0.1:2039:8080"
+
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this
   # network reach it; humans go through the redis-ui below. Infra service, not

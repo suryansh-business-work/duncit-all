@@ -28,6 +28,7 @@ import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin'
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
+import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
 import { startServerHistorySampler } from '@modules/platform/tech/tech.history.sampler';
 import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
@@ -458,6 +459,11 @@ async function bootstrap() {
   // nightly at 03:00 by default). The workflow declares no cron of its own, so
   // this is the only thing that starts a scheduled run.
   startE2eRunScheduler();
+
+  // Analytics reports: a one-minute tick that mails each subscriber their
+  // dashboards, with the PDF attached, when their daily or weekly slot has
+  // passed (Analytics > Settings > Analytics Mails; off until turned on).
+  startAnalyticsMailScheduler();
 
   // The live pulse (requests/s, real users online, event-loop lag) the Tech
   // portal reads, and the five-second sampler that records a stress run's time

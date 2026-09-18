@@ -62,6 +62,13 @@ export const appConfig = {
         { label: 'E2E Tests', labelKey: 'shell.nav.e2eTests', to: '/testing/e2e', icon: 'bug' },
       ],
     },
+    {
+      label: 'Settings', labelKey: 'shell.nav.settings',
+      icon: 'settings',
+      children: [
+        { label: 'Analytics Mails', labelKey: 'shell.nav.analyticsMails', to: '/settings/analytics-mails', icon: 'email' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

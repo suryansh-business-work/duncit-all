@@ -522,6 +522,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Charts for the stress runs started from Tech > Stress Testing over a chosen period: runs, completion rate, peak virtual users and requests per second, p95 response time, error rate, requests sent and the latest safe number of concurrent users; run, latency and load trends; splits by outcome, verdict and run size; and the ten endpoints that were slowest under load.' },
   { surface: 'analytics', path: '/testing/e2e', label: 'E2E Tests', group: 'Testing',
     description: 'Charts for the E2E runs recorded in Tech > E2E Tests over a chosen period: runs and their pass rate, tests run and their pass rate, failed and skipped tests, average run time and failed suites; run, test-result and duration trends; splits by outcome, trigger, branch and which suites failed; and a table of every suite, least reliable first.' },
+  { surface: 'analytics', path: '/settings/analytics-mails', label: 'Analytics Mails', group: 'Settings',
+    description: 'Email the dashboards to people: add a subscriber by name and address (no Duncit login needed), pick their dashboards, daily or weekly, and the period each report covers; set the one send time and the weekly day; pause or remove someone; and press Send now to mail the real report on the spot. Each report carries every figure against the period before, a PDF of the full report with the rankings, and a link back to the console; new subscribers are told by email.' },
   { surface: 'analytics', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Analytics console.' },
 

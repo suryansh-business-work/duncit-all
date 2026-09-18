@@ -455,6 +455,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       allPods: 'All Pods',
       allUsers: 'All Users',
       amenitiesManagement: 'Amenities management',
+      analyticsMails: 'Analytics Mails',
       analytics: 'Analytics',
       android: 'Android',
       appFaqs: 'App FAQs',

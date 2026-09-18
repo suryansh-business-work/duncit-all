@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import EntityAnalyticsPage from './pages/entity-analytics/EntityAnalyticsPage';
 import { ANALYTICS_PAGES } from './pages/entity-analytics/pages';
+import AnalyticsMailsPage from './pages/analytics-mails/AnalyticsMailsPage';
 import { runtime } from './runtime';
 
 const authed = createAuthed({
@@ -11,12 +12,13 @@ const authed = createAuthed({
 });
 
 /**
- * Every signed-in route: the profile and one dashboard per subject. Each
- * dashboard is keyed by its path, so moving between them starts the next one
- * at its own default period.
+ * Every signed-in route: the profile, the analytics mails settings and one
+ * dashboard per subject. Each dashboard is keyed by its path, so moving
+ * between them starts the next one at its own default period.
  */
 const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/profile', element: <ProfilePage /> },
+  { path: '/settings/analytics-mails', element: <AnalyticsMailsPage /> },
   ...ANALYTICS_PAGES.map((page) => ({
     path: page.path,
     element: <EntityAnalyticsPage key={page.path} page={page} />,

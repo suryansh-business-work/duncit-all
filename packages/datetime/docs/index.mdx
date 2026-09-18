@@ -25,6 +25,8 @@ exports:
   - 'toTimeSource'
   - 'toEpochMs'
   - 'resolveActiveOccasion'
+  - 'timeOfDayToDate'
+  - 'dateToTimeOfDay'
   - 'FALLBACK_DATE_FORMAT'
   - 'FALLBACK_TIME_FORMAT'
   - 'FALLBACK_TIME_ZONE'
@@ -349,6 +351,13 @@ elsewhere.
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `resolveActiveOccasion` | `<T extends OccasionWindow>(occasions, nowMs: number) => T \| null` | Highest `sort_order` among the windows covering `nowMs`. |
+
+### Schedule times
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `timeOfDayToDate` | `(value: string, fallback: string) => Date` | A stored `HH:mm` on today's date, for a MUI `TimePicker`; `fallback` when blank. |
+| `dateToTimeOfDay` | `(date: Date \| null, fallback: string) => string` | The picker's value back to zero-padded `HH:mm`; `fallback` when cleared or invalid. |
 
 `OccasionWindow`: `slug` (required), `label?`, `starts_at?`, `ends_at?`, `is_active?`,
 `sort_order?`. Windows with `is_active: false` or an unusable date are skipped; the generic

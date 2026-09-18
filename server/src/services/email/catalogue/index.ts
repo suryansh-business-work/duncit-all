@@ -8,6 +8,7 @@ import { COMMERCE_EMAILS, SECURITY_EMAILS, SUPPORT_EMAILS } from './catalogue.su
 import { RECEIPT_EMAILS } from './catalogue.receipts';
 import { GRIEVANCE_EMAILS } from './catalogue.grievance';
 import { STORE_EMAILS } from './catalogue.store';
+import { ANALYTICS_EMAILS } from './catalogue.analytics';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -35,6 +36,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...RECEIPT_EMAILS,
   ...STORE_EMAILS,
   ...GRIEVANCE_EMAILS,
+  ...ANALYTICS_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

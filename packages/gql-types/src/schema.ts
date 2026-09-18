@@ -910,6 +910,55 @@ export type AnalyticsLeaderboard = {
   rows: Array<AnalyticsLeaderRow>;
 };
 
+export type AnalyticsMailFrequency =
+  | 'DAILY'
+  | 'WEEKLY';
+
+export type AnalyticsMailSendResult = {
+  __typename?: 'AnalyticsMailSendResult';
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+};
+
+export type AnalyticsMailSettings = {
+  __typename?: 'AnalyticsMailSettings';
+  enabled: Scalars['Boolean']['output'];
+  time_of_day: Scalars['String']['output'];
+  time_zone: Scalars['String']['output'];
+  weekday: Scalars['Int']['output'];
+};
+
+export type AnalyticsMailSettingsInput = {
+  enabled: Scalars['Boolean']['input'];
+  time_of_day: Scalars['String']['input'];
+  weekday: Scalars['Int']['input'];
+};
+
+export type AnalyticsMailSubscription = {
+  __typename?: 'AnalyticsMailSubscription';
+  created_at: Scalars['String']['output'];
+  days: Scalars['Int']['output'];
+  email: Scalars['String']['output'];
+  frequency: AnalyticsMailFrequency;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_sent_at?: Maybe<Scalars['String']['output']>;
+  last_status?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  next_send_at?: Maybe<Scalars['String']['output']>;
+  pages: Array<AnalyticsEntity>;
+};
+
+export type AnalyticsMailSubscriptionInput = {
+  days: Scalars['Int']['input'];
+  email: Scalars['String']['input'];
+  frequency: AnalyticsMailFrequency;
+  is_active: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  pages: Array<AnalyticsEntity>;
+};
+
 export type AnalyticsPeriod = {
   __typename?: 'AnalyticsPeriod';
   days: Scalars['Int']['output'];
@@ -10715,6 +10764,11 @@ export type MutationCreateAisensyTemplateArgs = {
 };
 
 
+export type MutationCreateAnalyticsMailSubscriptionArgs = {
+  input: AnalyticsMailSubscriptionInput;
+};
+
+
 export type MutationCreateApiKeyArgs = {
   name: Scalars['String']['input'];
 };
@@ -11084,6 +11138,11 @@ export type MutationDeleteAiPromptArgs = {
 
 export type MutationDeleteAisensyTemplateArgs = {
   template_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAnalyticsMailSubscriptionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -12461,6 +12520,11 @@ export type MutationSendAisensyCampaignArgs = {
 };
 
 
+export type MutationSendAnalyticsMailNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSendAppReleaseEmailArgs = {
   input: SendAppReleaseEmailInput;
 };
@@ -13176,6 +13240,17 @@ export type MutationUpdateAiMonitoringSettingsArgs = {
 export type MutationUpdateAiPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateAiPromptInput;
+};
+
+
+export type MutationUpdateAnalyticsMailSettingsArgs = {
+  input: AnalyticsMailSettingsInput;
+};
+
+
+export type MutationUpdateAnalyticsMailSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+  input: AnalyticsMailSubscriptionInput;
 };
 
 

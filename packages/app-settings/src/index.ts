@@ -59,6 +59,8 @@ export {
   resetServerTimeStamp,
   stampServerTime,
   resolveActiveOccasion,
+  dateToTimeOfDay,
+  timeOfDayToDate,
   resolveNow,
   toEpochMs,
   toTimeSource,

@@ -442,4 +442,34 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.storeCartReminder.title': 'You left something in your cart',
   'email.storeCartReminder.body':
     'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
+  // --- Analytics reports (catalogue.analytics) --------------------------------
+  'email.analyticsReport.title': 'Your analytics report',
+  'email.analyticsReport.body':
+    'Here are the numbers from the Duncit Analytics dashboards you follow, each beside the period before. The full report, rankings included, is attached as a PDF.',
+  'email.analyticsReport.periodLabel': 'Period',
+  'email.analyticsReport.periodValue': 'Last {days} days · {from} – {to}',
+  'email.analyticsReport.dailyTitle': 'Daily analytics report',
+  'email.analyticsReport.weeklyTitle': 'Weekly analytics report',
+  'email.analyticsReport.openDashboard': 'Open this dashboard',
+  'email.analyticsReport.openAnalytics': 'Open Analytics',
+  'email.analyticsReport.pdfNote':
+    'The attached PDF carries every figure above and each dashboard’s ranking. The dashboards themselves are live: open them for the charts, or to read another period.',
+  'email.analyticsReport.pdfHeading': 'ANALYTICS REPORT',
+  'email.analyticsReport.generatedLabel': 'Generated',
+  'email.analyticsReport.preparedFor': 'Prepared for',
+  'email.analyticsReport.nameColumn': 'Name',
+  'email.analyticsReport.pdfClosing': 'Open the live dashboards for the charts, and to read any other period:',
+  'email.analyticsReport.footer':
+    'You are receiving this because an Analytics manager subscribed you to Duncit analytics reports. Ask them to change or stop it.',
+  'email.analyticsSubscribed.title': 'You’re subscribed to Duncit analytics',
+  'email.analyticsSubscribed.body':
+    'An Analytics manager has added you to the Duncit analytics reports. Each report brings the dashboards below to your inbox, with a PDF of the full numbers attached.',
+  'email.analyticsSubscribed.scheduleLabel': 'When it arrives',
+  'email.analyticsSubscribed.scheduleDaily': 'Every day at {time} ({zone})',
+  'email.analyticsSubscribed.scheduleWeekly': 'Every {day} at {time} ({zone})',
+  'email.analyticsSubscribed.schedulePaused': 'Sending is paused for now. Your first report arrives once it is switched on.',
+  'email.analyticsSubscribed.dashboardsLabel': 'Dashboards',
+  'email.analyticsSubscribed.periodLabel': 'Each report covers',
+  'email.analyticsSubscribed.periodValue': 'The last {days} days',
+  'email.analyticsSubscribed.help': 'Not expecting this? Write to {{support_email}} and you will be taken off the list.',
 };

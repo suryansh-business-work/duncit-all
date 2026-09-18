@@ -13,9 +13,9 @@ import type {
   QueryEntityAnalyticsArgs,
 } from '@duncit/gql-types';
 
+export type { AnalyticsCompare } from '@duncit/gql-types';
 export type {
   AnalyticsCity,
-  AnalyticsCompare,
   AnalyticsBreakdown,
   AnalyticsEntity,
   AnalyticsFormat,

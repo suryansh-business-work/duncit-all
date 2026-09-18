@@ -27,6 +27,7 @@ export const ENV_CATEGORIES = [
   'GOOGLE_PLAY',
   'MSG91',
   'APPLE_SIGNIN',
+  'APP_STORE_CONNECT',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

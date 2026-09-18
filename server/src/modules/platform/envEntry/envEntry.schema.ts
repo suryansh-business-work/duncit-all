@@ -35,6 +35,7 @@ const SDL_CATEGORIES = [
   'GOOGLE_PLAY',
   'MSG91',
   'APPLE_SIGNIN',
+  'APP_STORE_CONNECT',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -64,6 +65,7 @@ export const envEntryTypeDefs = gql`
     GOOGLE_PLAY
     MSG91
     APPLE_SIGNIN
+    APP_STORE_CONNECT
   }
 
   type EnvConfigPair {

@@ -10,19 +10,18 @@
 # started it.
 #
 # SIGNED for the App Store, on this runner and nowhere else — no Mac and no EAS
-# involved. The Apple Distribution certificate and the App Store provisioning
-# profile are made once in the Apple developer portal and held in encrypted
-# repository secrets; they exist here only in a throwaway keychain the job
-# deletes. An opted-in dispatch then uploads the IPA to App Store Connect
-# (TestFlight) with an App Store Connect API key.
+# involved. The signing identity is the server's: Tech → App Builds → Settings
+# generates the Apple Distribution certificate and App Store profile through the
+# App Store Connect API (key on the APP_STORE_CONNECT env entry), and the job
+# fetches them — plus that key — from the server it reports to. They exist here
+# only in a throwaway keychain the job deletes. An opted-in dispatch then
+# uploads the IPA to App Store Connect (TestFlight) with the same key.
 #
-# Secrets: IOS_DIST_CERT_P12_BASE64, IOS_DIST_CERT_PASSWORD and
-# IOS_PROVISIONING_PROFILE_BASE64 sign every build. APP_STORE_CONNECT_KEY_ID,
-# APP_STORE_CONNECT_ISSUER_ID and APP_STORE_CONNECT_KEY_P8 (the .p8 file's text)
-# upload an opted-in one. DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER
-# JWT) or DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD reports it. Add
-# DUNCIT_RELEASE_TOKEN_STAGING as well to let the staging portal start builds —
-# each server signs its own tokens, so production's is not valid there.
+# Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
+# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD — reports the build AND fetches
+# the signing identity. Add DUNCIT_RELEASE_TOKEN_STAGING as well to let the
+# staging portal start builds — each server signs its own tokens, so
+# production's is not valid there, and each keeps its own signing identity.
 name: iOS Build
 
 on:
@@ -147,21 +146,11 @@ jobs:
 
       - name: Validate App Store request
         if: inputs.submit_to_app_store
-        env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
         run: |
           if [ "${{ inputs.app_env }}" != "production" ]; then
             echo "::error::App Store submission requires a production build"
             exit 1
           fi
-          for name in APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_P8; do
-            if [ -z "${!name}" ]; then
-              echo "::error::Required App Store Connect secret $name is missing"
-              exit 1
-            fi
-          done
 
       - uses: actions/setup-node@v5
         with:
@@ -201,67 +190,48 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
-      - name: Install the signing identity
-        # First, before any compiling: a wrong certificate or profile is a
-        # mistake made by hand in the developer portal, and it should cost a
-        # minute here, not the hour it takes to reach the archive.
+      - name: Fetch the signing identity
+        # First, before any compiling: missing or expired signing files should
+        # cost a minute here, not the hour it takes to reach the archive. The
+        # identity comes from the server the build reports to — generated in
+        # Tech → App Builds → Settings with the App Store Connect key on the
+        # APP_STORE_CONNECT env entry — so nothing Apple-issued lives in GitHub.
+        working-directory: .
         env:
-          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
+        run: node scripts/fetch-ios-signing.mjs
+
+      - name: Install the signing identity
         run: |
-          for name in IOS_DIST_CERT_P12_BASE64 IOS_DIST_CERT_PASSWORD IOS_PROVISIONING_PROFILE_BASE64; do
-            if [ -z "${!name}" ]; then
-              echo "::error::Required iOS signing secret $name is missing"
-              exit 1
-            fi
-          done
+          APP_BUNDLE_ID=$(node -p "require('./app.json').expo.ios.bundleIdentifier")
+          if [ "$IOS_BUNDLE_ID" != "$APP_BUNDLE_ID" ]; then
+            echo "::error::The signing files are for $IOS_BUNDLE_ID but app.json builds $APP_BUNDLE_ID — fix the bundle ID on the App Store Connect env entry and generate again"
+            exit 1
+          fi
 
           KEYCHAIN="$RUNNER_TEMP/duncit-signing.keychain-db"
           KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
-          printf '%s' "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security import "$RUNNER_TEMP/dist.p12" -P "$IOS_DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
-          rm -f "$RUNNER_TEMP/dist.p12"
+          security import "$IOS_P12_PATH" -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          rm -f "$IOS_P12_PATH"
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
           security list-keychains -d user -s "$KEYCHAIN"
+          echo "IOS_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
           if ! security find-identity -v -p codesigning "$KEYCHAIN" | grep -q '"Apple Distribution'; then
             security find-identity -v -p codesigning "$KEYCHAIN"
-            echo "::error::The .p12 holds no valid Apple Distribution identity — export the Apple Distribution certificate WITH its private key"
+            echo "::error::The fetched .p12 holds no valid Apple Distribution identity — generate new signing files in Tech → App Builds → Settings"
             exit 1
           fi
 
-          BUNDLE_ID=$(node -p "require('./app.json').expo.ios.bundleIdentifier")
-          PROFILE="$RUNNER_TEMP/duncit.mobileprovision"
-          PROFILE_PLIST="$RUNNER_TEMP/duncit-profile.plist"
-          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE"
-          security cms -D -i "$PROFILE" > "$PROFILE_PLIST"
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST")
-          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$PROFILE_PLIST")
-          TEAM_ID=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$PROFILE_PLIST")
-          PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$PROFILE_PLIST")
-          if [ "$PROFILE_APP_ID" != "$TEAM_ID.$BUNDLE_ID" ]; then
-            echo "::error::The provisioning profile is for $PROFILE_APP_ID, not $TEAM_ID.$BUNDLE_ID"
-            exit 1
-          fi
-          # A development or ad hoc profile lists devices; an App Store one never does.
-          if /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$PROFILE_PLIST" > /dev/null 2>&1; then
-            echo "::error::'$PROFILE_NAME' is not an App Store profile — create one under Profiles → Distribution → App Store Connect"
-            exit 1
-          fi
           # Xcode 16 and later read profiles from UserData, not MobileDevice.
           PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
           mkdir -p "$PROFILES_DIR"
-          cp "$PROFILE" "$PROFILES_DIR/$PROFILE_UUID.mobileprovision"
-          {
-            echo "IOS_KEYCHAIN=$KEYCHAIN"
-            echo "IOS_BUNDLE_ID=$BUNDLE_ID"
-            echo "IOS_TEAM_ID=$TEAM_ID"
-            echo "IOS_PROFILE_UUID=$PROFILE_UUID"
-            echo "IOS_PROFILE_NAME=$PROFILE_NAME"
-          } >> "$GITHUB_ENV"
+          cp "$IOS_PROFILE_PATH" "$PROFILES_DIR/$IOS_PROFILE_UUID.mobileprovision"
 
       - name: 'Stage: install dependencies'
         uses: ./.github/actions/build-stage
@@ -463,16 +433,10 @@ jobs:
         # LAST, after the build is recorded and the IPA kept twice: Apple
         # refusing an upload must not cost the build itself. It turns the
         # workflow red; the row stays the honest record of what was built.
-        # altool finds the key by name under ~/.appstoreconnect/private_keys.
+        # altool finds the key by name under ~/.appstoreconnect/private_keys,
+        # where the signing fetch already wrote it with the key and issuer ids.
         if: inputs.submit_to_app_store
-        env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
         run: |
-          KEY_DIR="$HOME/.appstoreconnect/private_keys"
-          mkdir -p "$KEY_DIR"
-          printf '%s\n' "$APP_STORE_CONNECT_KEY_P8" > "$KEY_DIR/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8"
           xcrun altool --upload-app --type ios --file "$ARTIFACT_PATHS" \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
 
@@ -480,7 +444,8 @@ jobs:
         if: always()
         run: |
           if [ -n "$IOS_KEYCHAIN" ]; then security delete-keychain "$IOS_KEYCHAIN"; fi
-          rm -rf "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/.appstoreconnect"
+          rm -rf "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/.appstoreconnect" \
+            "$RUNNER_TEMP/duncit-signing.p12" "$RUNNER_TEMP/duncit.mobileprovision"
 
       - name: Record the failure
         # Only when no IPA was produced (ARTIFACT_PATHS is set right after the

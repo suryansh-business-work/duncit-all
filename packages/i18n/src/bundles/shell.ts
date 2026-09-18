@@ -2353,6 +2353,28 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       playSettingsHint:
         'Test the key from the Environment page. The app must already exist on Play Console with a first release made by hand — Google does not let the API create the listing — and a track never accepts a version code lower than the one it already has.',
       playOpenEnvironment: 'Open Environment Variables',
+      appStoreTitle: 'App Store Connect',
+      appStoreNotConfigured:
+        'App Store Connect is not connected. Add the API key (Issuer ID, Key ID, .p8) and the bundle ID in Environment Variables → App Store Connect — until then, iOS builds cannot be signed.',
+      appStoreHint:
+        'Apple only lets a person make the .p8 API key (App Store Connect → Users and Access → Integrations → Team Keys, Access: Admin). Everything else — the Distribution certificate, the App Store profile and the .p12 — is generated here, and every iOS build fetches it from this server.',
+      iosSigningNone: 'Connected for {bundle}. No signing files yet — generate them, or iOS builds stop at the signing step.',
+      iosSigningCurrent:
+        'iOS builds sign with certificate {serial} (team {team}) and profile “{profile}”, valid until {expires}.',
+      iosSigningGenerate: 'Generate signing files',
+      iosSigningRegenerate: 'Generate new signing files',
+      iosSigningConfirmTitle: 'Generate iOS signing files?',
+      iosSigningConfirmMessage:
+        'Apple creates a new Distribution certificate and App Store profile for {bundle}, and the next iOS build signs with them. Earlier ones are kept and not revoked — Apple allows a team only a few Distribution certificates, so revoke unused ones in the Apple developer portal if Apple refuses.',
+      iosSigningGenerated: 'Signing files generated. The next iOS build signs with them.',
+      iosSigningFilesTitle: 'Signing files',
+      iosSigningFilesNone: 'This build was not signed with signing files from this server.',
+      iosSigningFilesCaption: 'Certificate {serial} · valid until {expires}',
+      iosSigningFileCertificate: 'Certificate (.cer)',
+      iosSigningFileProfile: 'Profile (.mobileprovision)',
+      iosSigningFileP12: 'Certificate + key (.p12)',
+      iosSigningFileApiKey: 'API key (.p8)',
+      iosSigningP12Password: 'Password for {file}: {password} — it is made for this download only; keep it with the file.',
     },
     mailAutomation: {
       title: 'Mail Automation',

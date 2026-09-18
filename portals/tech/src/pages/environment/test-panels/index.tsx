@@ -48,6 +48,9 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     // A free, harmless probe: Apple judges the key before the (bogus) code.
     case 'APPLE_SIGNIN':
       return <ConnectionTestPanel entry={entry} description={t('tech.environment.appleConnectionHint')} />;
+    // Reads only: the app lookup proves the key, the certificate list proves Admin.
+    case 'APP_STORE_CONNECT':
+      return <ConnectionTestPanel entry={entry} description={t('tech.environment.appStoreConnectHint')} />;
     default:
       return null;
   }

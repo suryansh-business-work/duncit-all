@@ -2,6 +2,13 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { appBuildService } from './appBuild.service';
 import type { AppBuildPlatform, PlayStoreTrack } from './appBuild.model';
+import {
+  generateIosSigning,
+  iosSigningBundle,
+  iosSigningFile,
+  iosSigningForBuild,
+  type IosSigningFileKind,
+} from './iosSigning.service';
 import type { TableQueryInput } from '@utils/table-query';
 
 // App builds are a Tech-portal capability. The CI workflows authenticate with
@@ -26,6 +33,14 @@ export const appBuildResolvers = {
     appBuildTriggerConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.triggerConfig();
+    },
+    iosSigningForBuild: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, BUILDS_MANAGE);
+      return iosSigningForBuild(args.id);
+    },
+    iosSigningBundle: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return iosSigningBundle(user.email ?? user.id);
     },
   },
   Mutation: {
@@ -60,6 +75,18 @@ export const appBuildResolvers = {
     ) => {
       const user = requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.pushToPlayStore(args.id, args.track, user);
+    },
+    generateIosSigning: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return generateIosSigning(user.email ?? user.id);
+    },
+    downloadIosSigningFile: (
+      _p: unknown,
+      args: { id: string; kind: IosSigningFileKind },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return iosSigningFile(args.id, args.kind, user.email ?? user.id);
     },
   },
 };

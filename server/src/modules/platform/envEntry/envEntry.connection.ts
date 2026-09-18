@@ -13,6 +13,7 @@ import {
   playAccessToken,
   type PlayServiceAccount,
 } from '@modules/platform/appBuild/googlePlay.gateway';
+import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/appBuild/appStoreConnect.gateway';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 
@@ -531,6 +532,64 @@ export async function appleSignInConnection(str: EnvConfigReader): Promise<EnvCo
   return { ok: false, message: `Apple answered ${answer}`, details: [] };
 }
 
+// --- App Store Connect --------------------------------------------------------
+
+/**
+ * Sign in with the API key, look the app up by its bundle ID, then list one
+ * certificate. The first call proves the Issuer ID, Key ID and .p8 belong
+ * together; the second fails for the mistake people actually make — a key
+ * made without the Admin role, which may read apps but not create the
+ * certificate Generate needs. Nothing is created.
+ */
+export async function appStoreConnectConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const creds = { issuerId: str('issuer_id').trim(), keyId: str('key_id').trim(), privateKey: str('private_key') };
+  const bundleId = str('bundle_id').trim();
+  if (!creds.issuerId || !creds.keyId || !creds.privateKey || !bundleId) {
+    return { ok: false, message: 'Issuer ID, Key ID, private key and bundle ID are all required', details: [] };
+  }
+  let token: string;
+  try {
+    token = ascToken(creds);
+  } catch {
+    return {
+      ok: false,
+      message: 'This private key cannot sign. Paste the whole .p8 file, BEGIN and END lines included',
+      details: [],
+    };
+  }
+  let app: Awaited<ReturnType<typeof findApp>>;
+  try {
+    app = await findApp(token, bundleId);
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+      details: ['The Issuer ID, Key ID and .p8 must all be from the same App Store Connect team key.'],
+    };
+  }
+  const appLine = app
+    ? `App Store Connect has the app "${app.name}" for ${bundleId}.`
+    : `No App Store Connect app uses ${bundleId} yet — create it under Apps → New App before uploading a build.`;
+  try {
+    await assertCertificateAccess(token);
+  } catch (err) {
+    return {
+      ok: false,
+      message: 'This key cannot manage certificates',
+      details: [
+        appLine,
+        err instanceof Error ? err.message : String(err),
+        'Generate a new Team Key with Access "Admin" — only Admin may create the signing certificate.',
+      ],
+    };
+  }
+  return {
+    ok: true,
+    message: `Apple accepted this key for ${bundleId}`,
+    details: [appLine, 'The key may create certificates and profiles, which Generate signing files needs.'],
+  };
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -547,6 +606,7 @@ const CONNECTION_CHECKS = {
   GOOGLE_PLAY: googlePlayConnection,
   MSG91: msg91Connection,
   APPLE_SIGNIN: appleSignInConnection,
+  APP_STORE_CONNECT: appStoreConnectConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

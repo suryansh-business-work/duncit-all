@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
 
 export type AppBuildPlatform = 'ANDROID' | 'IOS';
 export type AppBuildStatus = 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED';
@@ -86,6 +86,31 @@ export interface AppBuildRow {
   created_at: string | null;
 }
 
+/**
+ * An iOS signing identity the server made through the App Store Connect API —
+ * a Distribution certificate and the App Store profile built on it. Never
+ * carries a key or a file; those are downloaded one at a time.
+ */
+export interface IosSigning {
+  id: string;
+  bundle_id: string;
+  team_id: string;
+  certificate_serial: string;
+  profile_name: string;
+  expires_at: string | null;
+  created_by: string;
+  created_at: string | null;
+}
+
+export type IosSigningFileKind = 'CERTIFICATE' | 'PROFILE' | 'P12' | 'API_KEY';
+
+export interface IosSigningFile {
+  file_name: string;
+  content_base64: string;
+  /** The .p12's password. Empty for every other kind. */
+  password: string;
+}
+
 export interface AppBuildSettings {
   android_channel: string | null;
   ios_channel: string | null;
@@ -93,6 +118,11 @@ export interface AppBuildSettings {
   last_reported_by: string | null;
   play_store_configured: boolean;
   play_package_name: string;
+  /** Whether the App Store Connect env entry holds a key and bundle ID. */
+  app_store_configured: boolean;
+  app_store_bundle_id: string;
+  /** What the next iOS build signs with. Null until one is generated. */
+  ios_signing: IosSigning | null;
 }
 
 export interface AppBuildCiToken {
@@ -175,6 +205,18 @@ export const APP_BUILD_SETTINGS = gql`
       last_reported_by
       play_store_configured
       play_package_name
+      app_store_configured
+      app_store_bundle_id
+      ios_signing {
+        id
+        bundle_id
+        team_id
+        certificate_serial
+        profile_name
+        expires_at
+        created_by
+        created_at
+      }
     }
   }
 `;
@@ -188,6 +230,64 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
       last_reported_by
       play_store_configured
       play_package_name
+      app_store_configured
+      app_store_bundle_id
+      ios_signing {
+        id
+        bundle_id
+        team_id
+        certificate_serial
+        profile_name
+        expires_at
+        created_by
+        created_at
+      }
+    }
+  }
+`;
+
+export const GENERATE_IOS_SIGNING: TypedDocumentNode<
+  { generateIosSigning: Pick<IosSigning, 'id' | 'certificate_serial' | 'profile_name' | 'expires_at'> },
+  Record<string, never>
+> = gql`
+  mutation GenerateIosSigning {
+    generateIosSigning {
+      id
+      certificate_serial
+      profile_name
+      expires_at
+    }
+  }
+`;
+
+export const IOS_SIGNING_FOR_BUILD: TypedDocumentNode<
+  { iosSigningForBuild: IosSigning | null },
+  { id: string }
+> = gql`
+  query IosSigningForBuild($id: ID!) {
+    iosSigningForBuild(id: $id) {
+      id
+      bundle_id
+      team_id
+      certificate_serial
+      profile_name
+      expires_at
+      created_by
+      created_at
+    }
+  }
+`;
+
+/** A mutation, not a query: the .p12 and .p8 carry private keys and must not sit in the cache. */
+export const DOWNLOAD_IOS_SIGNING_FILE: TypedDocumentNode<
+  { downloadIosSigningFile: IosSigningFile },
+  { id: string; kind: IosSigningFileKind }
+> = gql`
+  mutation DownloadIosSigningFile($id: ID!, $kind: IosSigningFileKind!) {
+    downloadIosSigningFile(id: $id, kind: $kind) {
+      file_name
+      content_base64
+      password
     }
   }
 `;

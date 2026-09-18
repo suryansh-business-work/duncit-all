@@ -12,8 +12,14 @@ jest.mock('../../tech.service', () => ({
   },
 }));
 
+jest.mock('../../tech.database', () => ({
+  databaseInfo: jest.fn().mockResolvedValue({ kind: 'database' }),
+  databaseCollectionsTable: jest.fn().mockResolvedValue({ kind: 'collections' }),
+}));
+
 import { techResolvers } from '../../tech.resolver';
 import { techService } from '../../tech.service';
+import { databaseCollectionsTable, databaseInfo } from '../../tech.database';
 
 const ctxWith = (roles: string[] | null): GraphQLContext =>
   ({ user: roles ? { id: 'u1', roles } : null }) as unknown as GraphQLContext;
@@ -41,6 +47,36 @@ describe('techResolvers.techServerInfo', () => {
       techResolvers.Query.techServerInfo({}, {}, ctxWith(['USER'])),
     ).rejects.toBeInstanceOf(GraphQLError);
     expect(techService.serverInfo).not.toHaveBeenCalled();
+  });
+});
+
+describe('techResolvers.techDatabaseInfo', () => {
+  it('returns the live database info for an authorized caller', async () => {
+    const res = await techResolvers.Query.techDatabaseInfo({}, {}, tech);
+    expect(res).toEqual({ kind: 'database' });
+    expect(databaseInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it('denies callers without a tech role', async () => {
+    await expect(techResolvers.Query.techDatabaseInfo({}, {}, ctxWith(['USER']))).rejects.toBeInstanceOf(
+      GraphQLError,
+    );
+    expect(databaseInfo).not.toHaveBeenCalled();
+  });
+});
+
+describe('techResolvers.techDatabaseCollectionsTable', () => {
+  it('returns the collections page and forwards the query', async () => {
+    const res = await techResolvers.Query.techDatabaseCollectionsTable({}, { query: { search: 'pods' } }, tech);
+    expect(res).toEqual({ kind: 'collections' });
+    expect(databaseCollectionsTable).toHaveBeenCalledWith({ search: 'pods' });
+  });
+
+  it('rejects an unauthenticated caller', async () => {
+    await expect(
+      techResolvers.Query.techDatabaseCollectionsTable({}, {}, ctxWith(null)),
+    ).rejects.toBeInstanceOf(GraphQLError);
+    expect(databaseCollectionsTable).not.toHaveBeenCalled();
   });
 });
 

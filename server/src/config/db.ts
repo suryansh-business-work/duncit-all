@@ -1,6 +1,7 @@
 import dns from 'node:dns';
 import mongoose, { type ConnectOptions } from 'mongoose';
 import { logs } from '@observability/log';
+import { recordDbEvent, watchDbConnection } from './dbConnectionLog';
 
 /**
  * Documented default for MONGO_DNS_SERVERS: the Google + Cloudflare public
@@ -76,7 +77,7 @@ function overrideMongoDns(reason: string): void {
  * driver cursors (the database backup / restore streams) do not go through
  * Mongoose queries and are deliberately unaffected.
  */
-const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 30_000;
+export const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 30_000;
 
 /**
  * Warm connections to keep open.
@@ -87,9 +88,9 @@ const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 30_000;
  * path of the first requests in — which is exactly when the site is least able
  * to afford it. Holding a floor of warm sockets moves that cost to startup.
  */
-const MONGO_MIN_POOL_SIZE = Number(process.env.MONGO_MIN_POOL_SIZE) || 10;
+export const MONGO_MIN_POOL_SIZE = Number(process.env.MONGO_MIN_POOL_SIZE) || 10;
 /** Explicit rather than inherited: the driver's default is 100 and silent. */
-const MONGO_MAX_POOL_SIZE = Number(process.env.MONGO_MAX_POOL_SIZE) || 100;
+export const MONGO_MAX_POOL_SIZE = Number(process.env.MONGO_MAX_POOL_SIZE) || 100;
 
 function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
   return {
@@ -175,6 +176,7 @@ export async function connectDB(): Promise<void> {
   // because a global that has to be remembered at 289 call sites is a global
   // that will be missed at one of them — and the one missed is the runaway.
   mongoose.set('maxTimeMS', MONGO_MAX_TIME_MS);
+  watchDbConnection(mongoose.connection);
 
   let attempt = 0;
   // Backoff: 3s, 6s, 9s, … capped at 30s.
@@ -186,6 +188,7 @@ export async function connectDB(): Promise<void> {
     try {
       await mongoose.connect(uri, mongoConnectOptions(dbName));
       console.info('✅ MongoDB connected');
+      recordDbEvent('CONNECTED', null, attempt);
       logs.server.info('db', 'connectDB', {
         attempt,
         msg: '✅ MongoDB connected',
@@ -194,6 +197,7 @@ export async function connectDB(): Promise<void> {
     } catch (err) {
       const message = (err as Error).message;
       console.warn(`⚠️  MongoDB connect attempt ${attempt} failed: ${message}`);
+      recordDbEvent('CONNECT_FAILED', message, attempt);
       logs.server.warn('db', 'connectDB', {
         error: err,
         attempt,

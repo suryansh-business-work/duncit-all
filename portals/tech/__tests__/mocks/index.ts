@@ -9,5 +9,6 @@
 export * from './feature-flag.mock';
 export * from './portal-mode.mock';
 export * from './server.mock';
+export * from './database.mock';
 export * from './env-entry.mock';
 export * from './auth.mock';

@@ -45,6 +45,11 @@ for stack in /opt/duncit /opt/duncit-staging; do
 done
 
 if [ "${MODE}" = "all" ]; then
+  # Stateful, so cutover only; after the stacks because it joins their networks.
+  # The servers above retry their Mongo connection until it answers.
+  log "MongoDB"
+  compose_in /opt/duncit-mongo up -d
+
   log "SonarQube"
   compose_in /opt/sonarqube up -d
 fi

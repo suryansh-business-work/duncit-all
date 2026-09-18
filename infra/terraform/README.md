@@ -28,14 +28,15 @@ and sequences it.
 | SonarQube (`/opt/sonarqube` + its Postgres/data volumes) | rsync + volume stream at cutover (it is stopped first) — CI's `SONAR_TOKEN` keeps working |
 | SignOz (`/opt/signoz`, same version and port edits) | rsync of the directory; **telemetry data starts fresh** |
 | Docker Hub login, `authorized_keys` (includes the GitHub Actions deploy key) | copied |
-| MongoDB | nothing to move — Atlas. The new IP is added to the access list |
+| MongoDB (`/opt/duncit-mongo`: both databases, keyfile, credentials — see `infra/mongo/README.md`) | rsync, twice; stopped on the old host before the final delta, so that copy is exact. Atlas is only a frozen 2026-09-18 fallback now — its access-list entry is no longer needed by the servers |
 | Redis | not copied — it is a response cache |
 | Other projects sharing the old VPS, root crontab, custom systemd units | **not** copied — review `inventory.txt` (below) |
 
-The cutover is **cold** for the API servers and WhatsApp gateways: two servers
-against one Atlas database would fire every scheduler twice (emails, coin
-expiry, settlements, backups), and one WhatsApp session cannot live in two
-places. Expect roughly 5–10 minutes of API downtime.
+The cutover is **cold** for the API servers, MongoDB and WhatsApp gateways: two
+live servers would fire every scheduler twice (emails, coin expiry,
+settlements, backups), a running database cannot be copied consistently, and
+one WhatsApp session cannot live in two places. Expect roughly 5–10 minutes of
+API downtime.
 
 ## Prerequisites
 

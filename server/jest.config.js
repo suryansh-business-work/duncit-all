@@ -46,6 +46,8 @@ module.exports = {
     'src/modules/**/*.ts',
     'src/services/**/*.ts',
     'src/utils/**/*.ts',
+    // The one config file with logic of its own (Tech > Database > Info's log).
+    'src/config/dbConnectionLog.ts',
     '!src/**/*.schema.ts',
     '!src/**/*.model.ts',
     '!src/**/index.ts',

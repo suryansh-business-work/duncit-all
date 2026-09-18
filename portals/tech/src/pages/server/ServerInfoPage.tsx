@@ -3,9 +3,9 @@ import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import DnsIcon from '@mui/icons-material/Dns';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DuncitButton } from '@duncit/buttons';
-import { StatCard } from '@duncit/ui';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import ServerInfoDetails from './ServerInfoDetails';
+import ServerStatCard from './ServerStatCard';
 import ServerHistoryPanel from './history';
 import ContainerUsage from './history/ContainerUsage';
 import ServerAdviceCard from './advice';
@@ -14,21 +14,7 @@ import { formatBytes, formatUptime } from './format';
 import { SERVER_INFO, apiHost, type ServerInfo } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
-/** The shared StatCard styled exactly like the old local server tile. */
 type Translate = ReturnType<typeof useTranslation>['t'];
-
-function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: string; percent?: number }>) {
-  return (
-    <StatCard
-      {...props}
-      labelVariant="caption"
-      labelWeight={700}
-      labelSx={{ letterSpacing: 0.3 }}
-      valueNoWrap
-      sx={{ height: '100%' }}
-    />
-  );
-}
 
 /** A full-width card that sizes itself to its content. */
 const panel = (id: string, y: number, content: DashboardWidget['content']): DashboardWidget => ({

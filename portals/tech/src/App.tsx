@@ -21,6 +21,7 @@ import TerminalPage from './pages/server/TerminalPage';
 import DataClonePage from './pages/data-clone';
 import AccountDeletionsPage from './pages/account-deletions';
 import DbBackupsPage from './pages/database/backups';
+import DbInfoPage from './pages/database/info';
 import RateLimitSystemsPage from './pages/rate-limiting/systems';
 import RateLimitRulesPage from './pages/rate-limiting/rules';
 import RateLimitBlockedPage from './pages/rate-limiting/blocked';
@@ -99,7 +100,8 @@ export default function App() {
         <Route path="/server/terminal" element={authed(<TerminalPage />)} />
         {/* Database. Data Clone moved here from /server; the old path still
             resolves so a bookmark or a pasted link keeps working. */}
-        <Route path="/database" element={<Navigate to="/database/backups" replace />} />
+        <Route path="/database" element={<Navigate to="/database/info" replace />} />
+        <Route path="/database/info" element={authed(<DbInfoPage />)} />
         <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
         <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />

@@ -73,12 +73,14 @@ export const appConfig = {
       ],
     },
     {
-      // Both entries move a whole database: one takes a copy of it, the other
-      // overwrites staging with production. They belong beside each other
-      // rather than filed under Server next to a log viewer and a terminal.
+      // Info says which database is live; Backups and Data Clone both move a
+      // whole one: one takes a copy of it, the other overwrites staging with
+      // production. They belong beside each other rather than filed under
+      // Server next to a log viewer and a terminal.
       label: 'Database', labelKey: 'shell.nav.database',
       icon: 'storage',
       children: [
+        { label: 'Info', labelKey: 'shell.nav.info', to: '/database/info', icon: 'info' },
         { label: 'Backups', labelKey: 'shell.nav.backups', to: '/database/backups', icon: 'backup' },
         { label: 'Data Clone', labelKey: 'shell.nav.dataClone', to: '/database/data-clone', icon: 'warehouse' },
       ],

@@ -851,12 +851,13 @@ export type AnalyticsColumn = {
   key: Scalars['String']['output'];
 };
 
-/** The four subjects the Analytics console reports on. */
+/** The subjects the Analytics console reports on. */
 export type AnalyticsEntity =
   | 'CLUBS'
   | 'CLUB_ADMINS'
   | 'HOSTS'
-  | 'PODS';
+  | 'PODS'
+  | 'USERS';
 
 /** What kind of number a value is, so the console formats it. */
 export type AnalyticsFormat =

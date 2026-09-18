@@ -1,4 +1,4 @@
-import { Box, Grid, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -46,7 +46,8 @@ function DeltaLine({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>)
   );
 }
 
-function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>) {
+/** One headline number beside how it moved since the period before — a widget of its own. */
+export default function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>) {
   const { t } = useTranslation();
   const copy = KPI_COPY[kpi.key];
   const title = copy ? t(copy.title) : kpi.key;
@@ -69,23 +70,5 @@ function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>) {
       testId={`analytics-kpi-${kpi.key}`}
       sx={{ height: '100%' }}
     />
-  );
-}
-
-interface Props {
-  kpis: readonly AnalyticsKpi[];
-  days: number;
-}
-
-/** The page's headline numbers, each beside how it moved since the period before. */
-export default function KpiTiles({ kpis, days }: Readonly<Props>) {
-  return (
-    <Grid container spacing={1.5}>
-      {kpis.map((kpi) => (
-        <Grid key={kpi.key} size={{ xs: 6, sm: 4, md: 3, xl: 2 }}>
-          <KpiTile kpi={kpi} days={days} />
-        </Grid>
-      ))}
-    </Grid>
   );
 }

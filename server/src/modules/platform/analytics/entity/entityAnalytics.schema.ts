@@ -1,6 +1,7 @@
 export const entityAnalyticsTypeDefs = /* GraphQL */ `
-  "The four subjects the Analytics console reports on."
+  "The subjects the Analytics console reports on."
   enum AnalyticsEntity {
+    USERS
     PODS
     CLUBS
     CLUB_ADMINS

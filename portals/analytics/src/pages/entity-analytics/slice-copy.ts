@@ -38,6 +38,35 @@ const REVIEW: Record<string, string> = {
 };
 
 export const SLICE_COPY: Partial<Record<string, Partial<Record<string, string>>>> = {
+  activity_frequency: {
+    days_1: 'analytics.slice.days1',
+    days_2_3: 'analytics.slice.days2To3',
+    days_4_7: 'analytics.slice.days4To7',
+    days_8_14: 'analytics.slice.days8To14',
+    days_15_plus: 'analytics.slice.days15Plus',
+  },
+  user_age: {
+    age_under_18: 'analytics.slice.ageUnder18',
+    age_18_24: 'analytics.slice.age18To24',
+    age_25_34: 'analytics.slice.age25To34',
+    age_35_44: 'analytics.slice.age35To44',
+    age_45_54: 'analytics.slice.age45To54',
+    age_55_plus: 'analytics.slice.age55Plus',
+  },
+  user_gender: {
+    FEMALE: 'analytics.slice.female',
+    MALE: 'analytics.slice.male',
+    OTHER: 'analytics.slice.otherGender',
+  },
+  pet_owners: {
+    yes: 'analytics.slice.petOwner',
+    no: 'analytics.slice.notPetOwner',
+  },
+  sign_in_method: {
+    GOOGLE: 'analytics.slice.signInGoogle',
+    EMAIL: 'analytics.slice.signInEmail',
+    OTP: 'analytics.slice.signInOtp',
+  },
   weekday: {
     mon: 'analytics.slice.mon',
     tue: 'analytics.slice.tue',

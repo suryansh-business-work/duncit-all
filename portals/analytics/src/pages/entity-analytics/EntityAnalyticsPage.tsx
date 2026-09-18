@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, AlertTitle, Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
+import { DuncitDashboard } from '@duncit/dashboard';
 import { Loader, PageHeader, TopProgressBar } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
-import AnalyticsSections from './AnalyticsSections';
+import { buildAnalyticsWidgets } from './widgets';
 import { DEFAULT_PERIOD, ENTITY_ANALYTICS, PERIOD_OPTIONS } from './queries';
 import type { AnalyticsPageSpec } from './pages';
 
@@ -30,9 +31,11 @@ function PeriodToggle({ value, onChange }: Readonly<{ value: number; onChange: (
 }
 
 /**
- * One Analytics page — Pods, Clubs, Club Admins or Hosts. Changing the period
- * keeps the last numbers on screen under a progress bar rather than blanking
- * the page, so the charts never jump back to a spinner.
+ * One Analytics dashboard — Users, Pods, Clubs, Club Admins or Hosts — on the
+ * shared dashboard grid. The title and the period sit above the grid and never
+ * move; every number, chart and ranking below is a widget the reader can
+ * rearrange. Changing the period keeps the last numbers on screen under a
+ * progress bar rather than blanking the grid.
  */
 export default function EntityAnalyticsPage({ page }: Readonly<{ page: AnalyticsPageSpec }>) {
   const { t } = useTranslation();
@@ -42,12 +45,13 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
     fetchPolicy: 'cache-and-network',
   });
   const board = data?.entityAnalytics ?? previousData?.entityAnalytics;
+  const widgets = useMemo(() => (board ? buildAnalyticsWidgets(board, t) : []), [board, t]);
   const retry = () => {
     refetch().catch(() => undefined);
   };
 
-  return (
-    <Stack spacing={3} data-testid={`analytics-page-${page.path.slice(1)}`}>
+  const header = (
+    <Stack spacing={2}>
       <TopProgressBar busy={loading && Boolean(board)} />
       <PageHeader
         title={t(page.title)}
@@ -67,8 +71,21 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
           {parseApiError(error)}
         </Alert>
       )}
-      {!board && loading && <Loader variant="page" />}
-      {board && <AnalyticsSections board={board} />}
+    </Stack>
+  );
+
+  if (!board) {
+    return (
+      <Stack spacing={3} data-testid={`analytics-page-${page.path.slice(1)}`}>
+        {header}
+        {loading && <Loader variant="page" />}
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack data-testid={`analytics-page-${page.path.slice(1)}`}>
+      <DuncitDashboard dashboardId={page.dashboardId} header={header} widgets={widgets} />
     </Stack>
   );
 }

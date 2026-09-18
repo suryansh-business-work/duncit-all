@@ -23,13 +23,13 @@ export const appConfig = {
   tokenKey: 'analytics_token',
   colorModeKey: 'analytics_color_mode',
   accent: { light: '#f0abfc', main: '#c026d3', hover: '#a21caf', active: '#86198f' },
+  // One dashboard per subject and nothing else — `/` opens the first of them.
   nav: [
-    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
-    // One page per subject — charts first, and only a short top-ten table each.
+    { label: 'Users', labelKey: 'shell.nav.users', to: '/users', icon: 'people' },
     { label: 'Pods', labelKey: 'shell.nav.pods', to: '/pods', icon: 'calendar' },
     { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'groups' },
     { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/club-admins', icon: 'verified-user' },
-    { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'people' },
+    { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'host-request' },
   ],
   modules: [],
 } satisfies AppConfig;

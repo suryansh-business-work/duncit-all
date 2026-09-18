@@ -18,6 +18,18 @@ export interface TitledCopy {
 }
 
 export const KPI_COPY: CopyMap<TitledCopy> = {
+  users_total: { title: 'analytics.kpi.usersTotal', hint: 'analytics.kpi.usersTotalHint' },
+  new_signups: { title: 'analytics.kpi.newSignups', hint: 'analytics.kpi.newSignupsHint' },
+  active_users: { title: 'analytics.kpi.activeUsers', hint: 'analytics.kpi.activeUsersHint' },
+  active_devices: { title: 'analytics.kpi.activeDevices', hint: 'analytics.kpi.activeDevicesHint' },
+  avg_daily_active: { title: 'analytics.kpi.avgDailyActive', hint: 'analytics.kpi.avgDailyActiveHint' },
+  stickiness: { title: 'analytics.kpi.stickiness', hint: 'analytics.kpi.stickinessHint' },
+  retention_rate: { title: 'analytics.kpi.retentionRate', hint: 'analytics.kpi.retentionRateHint' },
+  booking_users: { title: 'analytics.kpi.bookingUsers', hint: 'analytics.kpi.bookingUsersHint' },
+  booking_conversion: { title: 'analytics.kpi.bookingConversion', hint: 'analytics.kpi.bookingConversionHint' },
+  new_user_activation: { title: 'analytics.kpi.newUserActivation', hint: 'analytics.kpi.newUserActivationHint' },
+  phone_verified_share: { title: 'analytics.kpi.phoneVerifiedShare', hint: 'analytics.kpi.phoneVerifiedShareHint' },
+  inactive_accounts: { title: 'analytics.kpi.inactiveAccounts', hint: 'analytics.kpi.inactiveAccountsHint' },
   pods_held: { title: 'analytics.kpi.podsHeld', hint: 'analytics.kpi.podsHeldHint' },
   pods_created: { title: 'analytics.kpi.podsCreated', hint: 'analytics.kpi.podsCreatedHint' },
   seats_booked: { title: 'analytics.kpi.seatsBooked', hint: 'analytics.kpi.seatsBookedHint' },
@@ -65,6 +77,9 @@ export const KPI_COPY: CopyMap<TitledCopy> = {
 };
 
 export const TREND_COPY: CopyMap<TitledCopy> = {
+  user_activity: { title: 'analytics.trend.userActivity', hint: 'analytics.trend.userActivityHint' },
+  signups: { title: 'analytics.trend.signups', hint: 'analytics.trend.signupsHint' },
+  accounts_total: { title: 'analytics.trend.accountsTotal', hint: 'analytics.trend.accountsTotalHint' },
   pods: { title: 'analytics.trend.pods', hint: 'analytics.trend.podsHint' },
   bookings: { title: 'analytics.trend.bookings', hint: 'analytics.trend.bookingsHint' },
   revenue: { title: 'analytics.trend.revenue', hint: 'analytics.trend.revenueHint' },
@@ -76,8 +91,9 @@ export const TREND_COPY: CopyMap<TitledCopy> = {
   host_activity: { title: 'analytics.trend.hostActivity', hint: 'analytics.trend.hostActivityHint' },
 };
 
-/** A series reads like the tile it shares a key with; these three have no tile. */
+/** A series reads like the tile it shares a key with; these have no tile. */
 export const SERIES_COPY: CopyMap<string> = {
+  accounts_total: 'analytics.series.accountsTotal',
   pods_cancelled: 'analytics.series.podsCancelled',
   backouts: 'analytics.series.backouts',
   rejections: 'analytics.series.rejections',
@@ -90,6 +106,14 @@ export const GRANULARITY_COPY: Record<AnalyticsGranularity, string> = {
 };
 
 export const BREAKDOWN_COPY: CopyMap<string> = {
+  activity_frequency: 'analytics.breakdown.activityFrequency',
+  top_screens: 'analytics.breakdown.topScreens',
+  users_by_city: 'analytics.breakdown.usersByCity',
+  user_age: 'analytics.breakdown.userAge',
+  user_gender: 'analytics.breakdown.userGender',
+  pet_owners: 'analytics.breakdown.petOwners',
+  user_language: 'analytics.breakdown.userLanguage',
+  sign_in_method: 'analytics.breakdown.signInMethod',
   pods_by_category: 'analytics.breakdown.podsByCategory',
   pods_by_city: 'analytics.breakdown.podsByCity',
   weekday: 'analytics.breakdown.weekday',

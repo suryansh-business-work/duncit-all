@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import { SectionCard } from '@duncit/ui';
 import { COLUMN_COPY, LEADERBOARD_COPY } from './copy';
 import { formatValue } from './format';
 import type { AnalyticsLeaderboard } from './queries';
@@ -28,7 +27,7 @@ const renderName = (row: LeaderRow) => (
 /**
  * The period's top ten, as a short ranking — the one table on an Analytics
  * page. It is a summary, not a list to work through: the full records live in
- * the Clubs, Club Admins and Hosts consoles.
+ * the Clubs, Club Admins and Hosts consoles. The widget around it carries the title.
  */
 export default function LeaderboardTable({ leaderboard }: Readonly<{ leaderboard: AnalyticsLeaderboard }>) {
   const { t } = useTranslation();
@@ -63,16 +62,14 @@ export default function LeaderboardTable({ leaderboard }: Readonly<{ leaderboard
   const fetchRows = useMemo(() => clientTableFetch<LeaderRow>(rows, searchOf, columns), [rows, columns]);
 
   return (
-    <SectionCard title={copy ? t(copy.title) : leaderboard.key} subtitle={copy ? t(copy.hint) : undefined}>
-      <DuncitTable<LeaderRow>
-        tableId={`analytics-${leaderboard.key}`}
-        columns={columns}
-        fetchRows={fetchRows}
-        getRowId={getRowId}
-        emptyText={t('analytics.leaderboard.empty')}
-        defaultSort={{ field: 'rank', dir: 'asc' }}
-        searchPlaceholder={t('analytics.leaderboard.search')}
-      />
-    </SectionCard>
+    <DuncitTable<LeaderRow>
+      tableId={`analytics-${leaderboard.key}`}
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getRowId}
+      emptyText={t('analytics.leaderboard.empty')}
+      defaultSort={{ field: 'rank', dir: 'asc' }}
+      searchPlaceholder={t('analytics.leaderboard.search')}
+    />
   );
 }

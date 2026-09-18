@@ -4,13 +4,13 @@ import type { AnalyticsGranularity, AnalyticsWindow } from './window';
  * The one payload every Analytics console page renders.
  *
  * It is deliberately generic — a list of tiles, trends, breakdowns and one
- * ranking — so the console draws all four pages with one set of components,
+ * ranking — so the console draws every page with one set of components,
  * and a new data point is a server change plus one line of copy rather than a
  * new card. Every entry carries a `key` the console translates, and a `format`
  * saying what kind of number it is.
  */
 
-export type AnalyticsEntity = 'PODS' | 'CLUBS' | 'CLUB_ADMINS' | 'HOSTS';
+export type AnalyticsEntity = 'USERS' | 'PODS' | 'CLUBS' | 'CLUB_ADMINS' | 'HOSTS';
 export type AnalyticsFormat = 'COUNT' | 'PERCENT' | 'CURRENCY' | 'RATING' | 'DAYS' | 'DECIMAL';
 /** WINDOW follows the chosen period; ALL_TIME is the state of things right now. */
 export type AnalyticsScope = 'WINDOW' | 'ALL_TIME';

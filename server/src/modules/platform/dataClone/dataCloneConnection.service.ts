@@ -144,7 +144,7 @@ function passwordOf(uri: string): string {
  * never returning the URI. Both the string and its password are replaced by
  * the same masked spelling a read gets.
  */
-function scrubUri(message: string, uri: string): string {
+export function scrubUri(message: string, uri: string): string {
   const withoutUri = message.replaceAll(uri, maskUri(uri));
   const password = passwordOf(uri);
   return password ? withoutUri.replaceAll(password, '••••') : withoutUri;

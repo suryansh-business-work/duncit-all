@@ -1,6 +1,7 @@
 import { techService } from './tech.service';
 import { serverHistory } from './tech.history.service';
 import { generateServerAdvice, latestServerAdvice } from './tech.advice';
+import { databaseCollectionsTable, databaseInfo } from './tech.database';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -24,6 +25,14 @@ export const techResolvers = {
     techServerAdvice: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return latestServerAdvice();
+    },
+    techDatabaseInfo: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return databaseInfo();
+    },
+    techDatabaseCollectionsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return databaseCollectionsTable(args.query);
     },
     techDockerInfo: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);

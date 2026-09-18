@@ -197,7 +197,107 @@ export const techTypeDefs = gql`
     generatedAt: String!
   }
 
+  "The MongoDB this API is connected to. The connection string is masked; the password never leaves the server."
+  type TechDatabaseConnection {
+    "ATLAS | SELF_HOSTED"
+    provider: String!
+    maskedUri: String!
+    username: String
+    authSource: String
+    hosts: [String!]!
+    replicaSet: String
+    tls: Boolean!
+    databaseName: String!
+    "False when MONGO_DB_NAME is unset and Mongo fell back to the URI's default database."
+    databaseNamePinned: Boolean!
+    "production | staging | localhost"
+    environment: String!
+    "The GitHub Actions secret the deploy writes MONGO_URI from; null on a local server (server/.env)."
+    secretName: String
+    "The branch whose push deploys this environment."
+    deployBranch: String
+    secretsUrl: String
+    deployRunsUrl: String
+    "disconnected | connected | connecting | disconnecting | uninitialized"
+    state: String!
+    minPoolSize: Int!
+    maxPoolSize: Int!
+    maxTimeMs: Int!
+  }
+
+  type TechDatabaseServer {
+    version: String!
+    setName: String
+    isWritablePrimary: Boolean
+    members: [String!]!
+    uptimeSeconds: Float
+    connectionsCurrent: Int
+    connectionsAvailable: Int
+    connectionsTotalCreated: Float
+    storageEngine: String
+    "Why the serverStatus fields are empty — usually the database user lacks the clusterMonitor role."
+    statusError: String
+  }
+
+  type TechDatabaseStorage {
+    collections: Int!
+    views: Int!
+    documents: Float!
+    avgDocumentBytes: Float!
+    dataBytes: Float!
+    storageBytes: Float!
+    indexes: Int!
+    indexBytes: Float!
+    totalBytes: Float!
+    "The filesystem mongod keeps its data on; null where the server does not report it."
+    fsUsedBytes: Float
+    fsTotalBytes: Float
+  }
+
+  "One thing that happened to the API's database connection, kept in memory since the process started."
+  type TechDatabaseEvent {
+    at: String!
+    "CONNECTED | CONNECT_FAILED | DISCONNECTED | RECONNECTED | ERROR | CLOSED"
+    kind: String!
+    message: String
+    attempt: Int
+  }
+
+  type TechDatabaseInfo {
+    connection: TechDatabaseConnection!
+    "Null while the connection is down."
+    server: TechDatabaseServer
+    storage: TechDatabaseStorage
+    pingMs: Float
+    "The driver's reason the stats could not be read (scrubbed of the connection string)."
+    statsError: String
+    "Newest first."
+    events: [TechDatabaseEvent!]!
+    collectedAt: String!
+  }
+
+  type TechDatabaseCollection {
+    name: String!
+    documents: Float!
+    dataBytes: Float!
+    storageBytes: Float!
+    indexBytes: Float!
+    indexes: Int!
+    avgDocumentBytes: Float!
+  }
+
+  type TechDatabaseCollectionTablePage {
+    rows: [TechDatabaseCollection!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
+    "Tech > Database > Info: which database is live, its size, and the connection's recent events."
+    techDatabaseInfo: TechDatabaseInfo!
+    "Per-collection storage of the live database, for the shared table engine."
+    techDatabaseCollectionsTable(query: TableQueryInput): TechDatabaseCollectionTablePage!
     "Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate."
     techServerInfo(sslHost: String): TechServerInfo!
     "Per-day server readings for the last month (at most 30 days), recorded every five minutes by this environment's API."

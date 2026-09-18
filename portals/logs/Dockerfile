@@ -23,6 +23,8 @@ COPY portals/finance/package.json ./portals/finance/
 COPY portals/tech/package.json ./portals/tech/
 COPY portals/support/package.json ./portals/support/
 COPY portals/website-app/package.json ./portals/website-app/
+# Its Policy Acceptance Logs page is mounted here, so its dependencies must install.
+COPY portals/legal/package.json ./portals/legal/
 COPY portals/pods/package.json ./portals/pods/
 COPY portals/ai/package.json ./portals/ai/
 COPY portals/products/package.json ./portals/products/

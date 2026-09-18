@@ -562,7 +562,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       growth: 'Growth',
       marketing: 'Marketing',
       revenueFinance: 'Revenue & Finance',
-      shop: 'Shop',
+      shop: 'Pod Shop',
       supportDesk: 'Support Desk',
       tableApi: 'Table API',
       graphqlQueryMutation: 'Query & Mutation',

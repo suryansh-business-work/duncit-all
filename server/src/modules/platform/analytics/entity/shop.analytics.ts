@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import { FULFILMENT_STATUSES, ORDER_CHANNELS } from '@modules/commerce/productOrder/productOrder.model';
+import { FULFILMENT_STATUSES } from '@modules/commerce/productOrder/productOrder.model';
 import { consoleLink } from './links';
 import { seriesFromDays, type AnalyticsWindow } from './window';
 import { column } from './aggregates';
@@ -10,7 +10,6 @@ import {
   linkEverything,
   mean,
   pct,
-  rankedSlices,
   topSlices,
   trend,
   type AnalyticsBreakdown,
@@ -20,7 +19,6 @@ import {
 } from './shapes';
 import {
   loadOrderMix,
-  loadReturnReasons,
   loadShopDays,
   loadShopLive,
   loadShopPeriod,
@@ -32,10 +30,11 @@ import {
 } from './shop.data';
 
 /**
- * Analytics > Money > Shop — what both shops sold, how it was paid for, how it
- * travelled and what came back, beside the state of the catalogue. Orders
- * count by when they were placed; stock is as it stands now. The pet store has
- * no console of its own yet, so every link opens the Products console.
+ * Analytics > Business > Pod Shop — what the shop inside the apps sold, how it
+ * was paid for and how it travelled, beside the state of the catalogue. Orders
+ * count by when they were placed; stock is as it stands now. Pet store orders
+ * are on the Pet Store dashboard, not here. Links open the Products console,
+ * where pod shop orders and stock are worked.
  */
 
 const DASHBOARD = consoleLink('products', '/');
@@ -53,7 +52,6 @@ const shopFigures = (period: ShopPeriod) => ({
   avg_order: mean(period.value, period.orders - period.cancelled),
   cod_share: pct(period.cod, period.orders),
   cancellation_rate: pct(period.cancelled, period.orders),
-  returns: period.returns,
   fulfilment_days: mean(period.done_ms / DAY_MS, period.done),
 });
 
@@ -68,11 +66,9 @@ function shopKpis(current: ShopPeriod, previous: ShopPeriod, live: Awaited<Retur
     kpi('shop_avg_order', now.avg_order, was.avg_order, { format: 'CURRENCY', link: ORDERS }),
     kpi('shop_cod_share', now.cod_share, was.cod_share, { ...worse, format: 'PERCENT' }),
     kpi('shop_cancellation_rate', now.cancellation_rate, was.cancellation_rate, { ...worse, format: 'PERCENT' }),
-    kpi('shop_returns', now.returns, was.returns, worse),
     kpi('shop_fulfilment_days', now.fulfilment_days, was.fulfilment_days, { ...worse, format: 'DAYS' }),
     kpi('shop_open_orders', live.open, null, worse),
     kpi('shop_products_on_sale', live.products, null, { link: INVENTORY }),
-    kpi('shop_store_listed', live.listed, null, { link: INVENTORY }),
     kpi('shop_low_stock', live.low, null, stock),
     kpi('shop_out_of_stock', live.out, null, stock),
   ];
@@ -81,7 +77,7 @@ function shopKpis(current: ShopPeriod, previous: ShopPeriod, live: Awaited<Retur
 /** A courier not assigned yet has no name; it files under "not set". */
 const courierKey = (name: string) => (name === '' ? 'none' : name);
 
-function orderBreakdowns(mix: readonly OrderMixRow[], reasons: Awaited<ReturnType<typeof loadReturnReasons>>): AnalyticsBreakdown[] {
+function orderBreakdowns(mix: readonly OrderMixRow[]): AnalyticsBreakdown[] {
   const countBy = (keyOf: (id: OrderMixRow['_id']) => string | null) => {
     const counts = new Map<string, number>();
     for (const row of mix) {
@@ -94,7 +90,6 @@ function orderBreakdowns(mix: readonly OrderMixRow[], reasons: Awaited<ReturnTyp
   const couriers = countBy((id) => (id.fulfilment === 'SHIP' ? courierKey(id.courier) : null));
   const courierNames = new Map([...couriers.keys()].filter((key) => key !== 'none').map((key) => [key, key]));
   return [
-    breakdown('shop_by_channel', fixedSlices(ORDER_CHANNELS, countBy((id) => id.channel)), { link: ORDERS }),
     breakdown('shop_payment_method', fixedSlices(PAYMENT_METHODS, countBy((id) => id.method)), { link: ORDERS }),
     breakdown('shop_fulfilment_status', fixedSlices(FULFILMENT_STATUSES, countBy((id) => id.status)), {
       ordered: true,
@@ -102,7 +97,6 @@ function orderBreakdowns(mix: readonly OrderMixRow[], reasons: Awaited<ReturnTyp
     }),
     breakdown('shop_fulfilment_method', fixedSlices(FULFILMENT_METHODS, countBy((id) => id.fulfilment)), { link: ORDERS }),
     breakdown('shop_by_courier', topSlices(couriers, courierNames), { link: ORDERS }),
-    breakdown('shop_return_reasons', rankedSlices(reasons, (row) => row._id, (row) => row.count), { link: ORDERS }),
   ];
 }
 
@@ -137,25 +131,18 @@ async function productLeaderboard(rows: ProductSales[]): Promise<AnalyticsLeader
 }
 
 export async function shopAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
-  const [current, previous, live, mix, reasons, days, top] = await Promise.all([
+  const [current, previous, live, mix, days, top] = await Promise.all([
     loadShopPeriod(window.from, window.to),
     loadShopPeriod(window.prevFrom, window.prevTo),
     loadShopLive(),
     loadOrderMix(window.from, window.to),
-    loadReturnReasons(window.from, window.to),
     loadShopDays(window.from, window.to, window.zone),
     loadTopProducts(window.from, window.to),
   ]);
   const series = (rows: Array<{ _id: string; value: number }>) => seriesFromDays(rows, window);
-  const orderTrend = [
-    { key: 'shop_pod_shop', values: series(column(days.orders, 'pod_shop')) },
-    { key: 'shop_pet_store', values: series(column(days.orders, 'pet_store')) },
-  ];
-  const valueTrend = [{ key: 'shop_order_value', values: series(column(days.orders, 'value')) }];
-  const troubleTrend = [
-    { key: 'shop_cancelled', values: series(column(days.orders, 'cancelled')) },
-    { key: 'shop_returns', values: series(column(days.returns, 'value')) },
-  ];
+  const orderTrend = [{ key: 'shop_orders', values: series(column(days, 'orders')) }];
+  const valueTrend = [{ key: 'shop_order_value', values: series(column(days, 'value')) }];
+  const cancelTrend = [{ key: 'shop_cancelled', values: series(column(days, 'cancelled')) }];
 
   return linkEverything(
     {
@@ -163,9 +150,9 @@ export async function shopAnalytics(window: AnalyticsWindow): Promise<EntityAnal
       trends: [
         trend('shop_orders', window, orderTrend, 'COUNT', ORDERS),
         trend('shop_order_value', window, valueTrend, 'CURRENCY', ORDERS),
-        trend('shop_cancellations', window, troubleTrend, 'COUNT', ORDERS),
+        trend('shop_cancellations', window, cancelTrend, 'COUNT', ORDERS),
       ],
-      breakdowns: orderBreakdowns(mix, reasons),
+      breakdowns: orderBreakdowns(mix),
       leaderboard: await productLeaderboard(top),
     },
     DASHBOARD

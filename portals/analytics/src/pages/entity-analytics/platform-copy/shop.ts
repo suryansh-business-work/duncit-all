@@ -1,6 +1,6 @@
 import type { PageCopy } from './types';
 
-/** Money > Shop. */
+/** Business > Pod Shop. */
 export const SHOP_COPY: PageCopy = {
   kpis: {
     shop_orders: { title: 'analytics.kpi.shopOrders', hint: 'analytics.kpi.shopOrdersHint' },
@@ -8,11 +8,9 @@ export const SHOP_COPY: PageCopy = {
     shop_avg_order: { title: 'analytics.kpi.shopAvgOrder', hint: 'analytics.kpi.shopAvgOrderHint' },
     shop_cod_share: { title: 'analytics.kpi.shopCodShare', hint: 'analytics.kpi.shopCodShareHint' },
     shop_cancellation_rate: { title: 'analytics.kpi.shopCancellationRate', hint: 'analytics.kpi.shopCancellationRateHint' },
-    shop_returns: { title: 'analytics.kpi.shopReturns', hint: 'analytics.kpi.shopReturnsHint' },
     shop_fulfilment_days: { title: 'analytics.kpi.shopFulfilmentDays', hint: 'analytics.kpi.shopFulfilmentDaysHint' },
     shop_open_orders: { title: 'analytics.kpi.shopOpenOrders', hint: 'analytics.kpi.shopOpenOrdersHint' },
     shop_products_on_sale: { title: 'analytics.kpi.shopProductsOnSale', hint: 'analytics.kpi.shopProductsOnSaleHint' },
-    shop_store_listed: { title: 'analytics.kpi.shopStoreListed', hint: 'analytics.kpi.shopStoreListedHint' },
     shop_low_stock: { title: 'analytics.kpi.shopLowStock', hint: 'analytics.kpi.shopLowStockHint' },
     shop_out_of_stock: { title: 'analytics.kpi.shopOutOfStock', hint: 'analytics.kpi.shopOutOfStockHint' },
   },
@@ -22,23 +20,15 @@ export const SHOP_COPY: PageCopy = {
     shop_cancellations: { title: 'analytics.trend.shopCancellations', hint: 'analytics.trend.shopCancellationsHint' },
   },
   series: {
-    shop_pod_shop: 'analytics.series.shopPodShop',
-    shop_pet_store: 'analytics.series.shopPetStore',
     shop_cancelled: 'analytics.series.shopCancelled',
   },
   breakdowns: {
-    shop_by_channel: 'analytics.breakdown.shopByChannel',
     shop_payment_method: 'analytics.breakdown.shopPaymentMethod',
     shop_fulfilment_status: 'analytics.breakdown.shopFulfilmentStatus',
     shop_fulfilment_method: 'analytics.breakdown.shopFulfilmentMethod',
     shop_by_courier: 'analytics.breakdown.shopByCourier',
-    shop_return_reasons: 'analytics.breakdown.shopReturnReasons',
   },
   slices: {
-    shop_by_channel: {
-      POD_SHOP: 'analytics.slice.shopPodShop',
-      PET_STORE: 'analytics.slice.shopPetStore',
-    },
     shop_payment_method: {
       PREPAID: 'analytics.slice.shopPrepaid',
       COD: 'analytics.slice.shopCod',

@@ -1,32 +1,27 @@
 import type { Types } from 'mongoose';
-import {
-  ORDER_CHANNELS,
-  ProductOrderModel,
-  type FulfilmentStatus,
-} from '@modules/commerce/productOrder/productOrder.model';
-import { StoreReturnModel } from '@modules/commerce/store/storeReturn.model';
+import { ProductOrderModel, type FulfilmentStatus } from '@modules/commerce/productOrder/productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { dayKeyExpr, inRange } from './window';
 import type { Keyed } from './aggregates';
 
 /**
- * Everything Analytics > Money > Shop reads: the orders from both shops — the
- * pod shop inside the apps and the pet store — their returns, and the
- * catalogue they sell from. Order amounts are rupees, as stored.
+ * Everything Analytics > Business > Pod Shop reads: the orders placed in the
+ * shop inside the apps, and the catalogue it sells from. The pet store has a
+ * dashboard of its own (Pet Store), so its orders are left out here rather
+ * than counted twice. Order amounts are rupees, as stored.
  */
 
 /**
  * Orders written before the pet store existed carry no channel and belong to
- * the pod shop. Listing `null` keeps them, and lets the (channel, created_at)
- * index serve a read that is really about dates.
+ * the pod shop, so `null` is listed with it; matching on channel also lets the
+ * (channel, created_at) index serve the date read.
  */
-const ANY_CHANNEL = { $in: [...ORDER_CHANNELS, null] };
-const ordersIn = (from: Date, to: Date) => ({ channel: ANY_CHANNEL, created_at: inRange(from, to) });
+const POD_SHOP = { $in: ['POD_SHOP', null] };
+const ordersIn = (from: Date, to: Date) => ({ channel: POD_SHOP, created_at: inRange(from, to) });
 
 const IS_LIVE = { $eq: [{ $ifNull: ['$cancelled_at', null] }, null] };
 /** What the buyer paid for an order: goods and delivery, less its share of every discount — the pet store's own rule. */
 const NET = { $subtract: ['$total', { $ifNull: ['$discount_total', 0] }] };
-const IS_PET_STORE = { $eq: ['$channel', 'PET_STORE'] };
 const DONE_STATUSES = ['DELIVERED', 'PICKED_UP'];
 const IS_DONE = { $in: ['$fulfilment_status', DONE_STATUSES] };
 /**
@@ -68,35 +63,31 @@ export interface ShopPeriod {
   cod: number;
   done: number;
   done_ms: number;
-  returns: number;
 }
 
 /** Each tile's raw totals for one period — loaded identically for the period before. */
 export async function loadShopPeriod(from: Date, to: Date): Promise<ShopPeriod> {
-  const [totals, returns] = await Promise.all([
-    ProductOrderModel.aggregate<Omit<ShopPeriod, 'returns'>>([
-      { $match: ordersIn(from, to) },
-      {
-        $group: {
-          _id: null,
-          orders: { $sum: 1 },
-          cancelled: { $sum: { $cond: [IS_LIVE, 0, 1] } },
-          value: { $sum: { $cond: [IS_LIVE, NET, 0] } },
-          cod: { $sum: { $cond: [{ $eq: ['$payment_method', 'COD'] }, 1, 0] } },
-          done: { $sum: { $cond: [IS_DONE, 1, 0] } },
-          done_ms: { $sum: { $cond: [IS_DONE, { $subtract: [DONE_AT, '$created_at'] }, 0] } },
-        },
+  const totals = await ProductOrderModel.aggregate<ShopPeriod>([
+    { $match: ordersIn(from, to) },
+    {
+      $group: {
+        _id: null,
+        orders: { $sum: 1 },
+        cancelled: { $sum: { $cond: [IS_LIVE, 0, 1] } },
+        value: { $sum: { $cond: [IS_LIVE, NET, 0] } },
+        cod: { $sum: { $cond: [{ $eq: ['$payment_method', 'COD'] }, 1, 0] } },
+        done: { $sum: { $cond: [IS_DONE, 1, 0] } },
+        done_ms: { $sum: { $cond: [IS_DONE, { $subtract: [DONE_AT, '$created_at'] }, 0] } },
       },
-    ]),
-    StoreReturnModel.countDocuments({ created_at: inRange(from, to) }),
+    },
   ]);
-  return { ...(totals[0] ?? { orders: 0, cancelled: 0, value: 0, cod: 0, done: 0, done_ms: 0 }), returns };
+  return totals[0] ?? { orders: 0, cancelled: 0, value: 0, cod: 0, done: 0, done_ms: 0 };
 }
 
 /** Orders in flight and the state of the catalogue, right now. */
 export async function loadShopLive() {
-  const [open, stock, listed] = await Promise.all([
-    ProductOrderModel.countDocuments({ cancelled_at: null, fulfilment_status: { $in: IN_FLIGHT } }),
+  const [open, stock] = await Promise.all([
+    ProductOrderModel.countDocuments({ channel: POD_SHOP, cancelled_at: null, fulfilment_status: { $in: IN_FLIGHT } }),
     InventoryProductModel.aggregate<{ products: number; low: number; out: number }>([
       { $match: ON_SALE },
       {
@@ -108,13 +99,12 @@ export async function loadShopLive() {
         },
       },
     ]),
-    InventoryProductModel.countDocuments({ 'store.listed': true, is_active: true }),
   ]);
-  return { open, listed, ...(stock[0] ?? { products: 0, low: 0, out: 0 }) };
+  return { open, ...(stock[0] ?? { products: 0, low: 0, out: 0 }) };
 }
 
 export interface OrderMixRow {
-  _id: { channel: string; method: string; status: string; fulfilment: string; courier: string };
+  _id: { method: string; status: string; fulfilment: string; courier: string };
   count: number;
 }
 
@@ -125,7 +115,6 @@ export const loadOrderMix = (from: Date, to: Date) =>
     {
       $group: {
         _id: {
-          channel: { $ifNull: ['$channel', 'POD_SHOP'] },
           method: { $ifNull: ['$payment_method', 'PREPAID'] },
           status: '$fulfilment_status',
           fulfilment: '$fulfilment_method',
@@ -136,39 +125,23 @@ export const loadOrderMix = (from: Date, to: Date) =>
     },
   ]);
 
-/** Pet store return requests in the period, by the reason the buyer picked. */
-export const loadReturnReasons = (from: Date, to: Date) =>
-  StoreReturnModel.aggregate<{ _id: string; count: number }>([
-    { $match: { created_at: inRange(from, to) } },
-    { $group: { _id: '$reason', count: { $sum: 1 } } },
-  ]);
-
 /** Per-day totals for the trends, in the admin's time zone. */
-export async function loadShopDays(from: Date, to: Date, zone: string) {
-  const [orders, returns] = await Promise.all([
-    ProductOrderModel.aggregate<Keyed & { pod_shop: number; pet_store: number; value: number; cancelled: number }>([
-      { $match: ordersIn(from, to) },
-      {
-        $group: {
-          _id: dayKeyExpr('created_at', zone),
-          pod_shop: { $sum: { $cond: [IS_PET_STORE, 0, 1] } },
-          pet_store: { $sum: { $cond: [IS_PET_STORE, 1, 0] } },
-          value: { $sum: { $cond: [IS_LIVE, NET, 0] } },
-          cancelled: { $sum: { $cond: [IS_LIVE, 0, 1] } },
-        },
+export const loadShopDays = (from: Date, to: Date, zone: string) =>
+  ProductOrderModel.aggregate<Keyed & { orders: number; value: number; cancelled: number }>([
+    { $match: ordersIn(from, to) },
+    {
+      $group: {
+        _id: dayKeyExpr('created_at', zone),
+        orders: { $sum: 1 },
+        value: { $sum: { $cond: [IS_LIVE, NET, 0] } },
+        cancelled: { $sum: { $cond: [IS_LIVE, 0, 1] } },
       },
-    ]),
-    StoreReturnModel.aggregate<Keyed & { value: number }>([
-      { $match: { created_at: inRange(from, to) } },
-      { $group: { _id: dayKeyExpr('created_at', zone), value: { $sum: 1 } } },
-    ]),
+    },
   ]);
-  return { orders, returns };
-}
 
 export interface ProductSales { _id: Types.ObjectId; name: string; units: number; revenue: number; orders: number }
 
-/** The ten products that sold the most units in the period, across both shops. */
+/** The ten products that sold the most units in the pod shop in the period. */
 export const loadTopProducts = (from: Date, to: Date) =>
   ProductOrderModel.aggregate<ProductSales>([
     { $match: { ...ordersIn(from, to), cancelled_at: null } },

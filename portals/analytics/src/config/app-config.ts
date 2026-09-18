@@ -39,7 +39,7 @@ export const appConfig = {
         { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'location' },
         { label: 'Revenue & Finance', labelKey: 'shell.nav.revenueFinance', to: '/revenue', icon: 'revenue' },
         { label: 'Coins & Rewards', labelKey: 'shell.nav.coinsRewards', to: '/rewards', icon: 'wallet' },
-        { label: 'Shop', labelKey: 'shell.nav.shop', to: '/shop', icon: 'storefront' },
+        { label: 'Pod Shop', labelKey: 'shell.nav.shop', to: '/shop', icon: 'storefront' },
         { label: 'Pet Store', labelKey: 'shell.nav.petStore', to: '/pet-store', icon: 'storefront' },
       ],
     },

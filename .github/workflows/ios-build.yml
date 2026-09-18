@@ -3,29 +3,34 @@
 # server and recorded via reportAppBuild, which also announces it on the
 # configured Slack channel (Tech portal → App Builds → Settings).
 #
-# There is no artifact choice here, unlike Android: an unsigned IPA is the only
-# thing this can produce, so the only build-time question is `app_env` — what
-# the BUILT APP talks to, baked in at compile time. `report_url` is a separate
-# question: where the build records itself, always the portal that started it.
+# There is no artifact choice here, unlike Android: an App Store-signed IPA is
+# the only thing this produces, so the only build-time question is `app_env` —
+# what the BUILT APP talks to, baked in at compile time. `report_url` is a
+# separate question: where the build records itself, always the portal that
+# started it.
 #
-# UNSIGNED by necessity: no Apple signing certificates exist in this repo (store
-# builds go through EAS-managed credentials). The archive builds with code
-# signing off and is zipped into an .ipa — installable after signing (EAS,
-# Xcode, or a resign tool), and exactly what the App Builds table tracks per
-# merge. When Apple certs land as secrets, this workflow is where they plug in.
+# SIGNED for the App Store, on this runner and nowhere else — no Mac and no EAS
+# involved. The Apple Distribution certificate and the App Store provisioning
+# profile are made once in the Apple developer portal and held in encrypted
+# repository secrets; they exist here only in a throwaway keychain the job
+# deletes. An opted-in dispatch then uploads the IPA to App Store Connect
+# (TestFlight) with an App Store Connect API key.
 #
-# Secrets: DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER JWT) or
-# DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD. Add DUNCIT_RELEASE_TOKEN_STAGING
-# as well to let the staging portal start builds — each server signs its own
-# tokens, so production's is not valid there.
+# Secrets: IOS_DIST_CERT_P12_BASE64, IOS_DIST_CERT_PASSWORD and
+# IOS_PROVISIONING_PROFILE_BASE64 sign every build. APP_STORE_CONNECT_KEY_ID,
+# APP_STORE_CONNECT_ISSUER_ID and APP_STORE_CONNECT_KEY_P8 (the .p8 file's text)
+# upload an opted-in one. DUNCIT_RELEASE_TOKEN (a SUPER_ADMIN / TECH_MANAGER
+# JWT) or DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD reports it. Add
+# DUNCIT_RELEASE_TOKEN_STAGING as well to let the staging portal start builds —
+# each server signs its own tokens, so production's is not valid there.
 name: iOS Build
 
 on:
   push:
     branches: [main]
-  # No artifact choice here, unlike Android: an unsigned IPA is the only thing
-  # this workflow can produce, so the only build-time question is which stack
-  # the app talks to.
+  # No artifact choice here, unlike Android: a signed IPA is the only thing this
+  # workflow produces, so the build-time questions are which stack the app
+  # talks to and whether it goes on to App Store Connect.
   workflow_dispatch:
     inputs:
       app_env:
@@ -33,6 +38,10 @@ on:
         type: choice
         options: [production, staging]
         default: production
+      submit_to_app_store:
+        description: Upload the IPA to App Store Connect (TestFlight) after it builds
+        type: boolean
+        default: false
       dispatch_id:
         description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
         type: string
@@ -77,7 +86,7 @@ env:
 
 jobs:
   build:
-    name: Build & publish IPA (unsigned)
+    name: Build & publish IPA
     runs-on: macos-26
     timeout-minutes: 120
     env:
@@ -125,7 +134,34 @@ jobs:
           "$DEVELOPER_DIR/usr/bin/xcodebuild" -version
 
       - name: Record build start
-        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+        run: |
+          NOW=$(date +%s)
+          {
+            echo "BUILD_STARTED_AT=$NOW"
+            # App Store Connect refuses a build number it has already seen.
+            # Seconds since 2020 are monotonic and replace the CFBundleVersion 1
+            # that Expo prebuild otherwise writes every run — the same clock
+            # the Android versionCode uses.
+            echo "IOS_BUILD_NUMBER=$((NOW - 1577836800))"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate App Store request
+        if: inputs.submit_to_app_store
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+        run: |
+          if [ "${{ inputs.app_env }}" != "production" ]; then
+            echo "::error::App Store submission requires a production build"
+            exit 1
+          fi
+          for name in APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_P8; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required App Store Connect secret $name is missing"
+              exit 1
+            fi
+          done
 
       - uses: actions/setup-node@v5
         with:
@@ -152,6 +188,80 @@ jobs:
           GIT_BEFORE: ${{ github.event.before }}
           RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
+
+      - name: 'Stage: signing identity'
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Installing the signing identity
+          platform: IOS
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
+
+      - name: Install the signing identity
+        # First, before any compiling: a wrong certificate or profile is a
+        # mistake made by hand in the developer portal, and it should cost a
+        # minute here, not the hour it takes to reach the archive.
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          for name in IOS_DIST_CERT_P12_BASE64 IOS_DIST_CERT_PASSWORD IOS_PROVISIONING_PROFILE_BASE64; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required iOS signing secret $name is missing"
+              exit 1
+            fi
+          done
+
+          KEYCHAIN="$RUNNER_TEMP/duncit-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
+          printf '%s' "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/dist.p12" -P "$IOS_DIST_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/dist.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN"
+          if ! security find-identity -v -p codesigning "$KEYCHAIN" | grep -q '"Apple Distribution'; then
+            security find-identity -v -p codesigning "$KEYCHAIN"
+            echo "::error::The .p12 holds no valid Apple Distribution identity — export the Apple Distribution certificate WITH its private key"
+            exit 1
+          fi
+
+          BUNDLE_ID=$(node -p "require('./app.json').expo.ios.bundleIdentifier")
+          PROFILE="$RUNNER_TEMP/duncit.mobileprovision"
+          PROFILE_PLIST="$RUNNER_TEMP/duncit-profile.plist"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE"
+          security cms -D -i "$PROFILE" > "$PROFILE_PLIST"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST")
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$PROFILE_PLIST")
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$PROFILE_PLIST")
+          PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$PROFILE_PLIST")
+          if [ "$PROFILE_APP_ID" != "$TEAM_ID.$BUNDLE_ID" ]; then
+            echo "::error::The provisioning profile is for $PROFILE_APP_ID, not $TEAM_ID.$BUNDLE_ID"
+            exit 1
+          fi
+          # A development or ad hoc profile lists devices; an App Store one never does.
+          if /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$PROFILE_PLIST" > /dev/null 2>&1; then
+            echo "::error::'$PROFILE_NAME' is not an App Store profile — create one under Profiles → Distribution → App Store Connect"
+            exit 1
+          fi
+          # Xcode 16 and later read profiles from UserData, not MobileDevice.
+          PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          cp "$PROFILE" "$PROFILES_DIR/$PROFILE_UUID.mobileprovision"
+          {
+            echo "IOS_KEYCHAIN=$KEYCHAIN"
+            echo "IOS_BUNDLE_ID=$BUNDLE_ID"
+            echo "IOS_TEAM_ID=$TEAM_ID"
+            echo "IOS_PROFILE_UUID=$PROFILE_UUID"
+            echo "IOS_PROFILE_NAME=$PROFILE_NAME"
+          } >> "$GITHUB_ENV"
 
       - name: 'Stage: install dependencies'
         uses: ./.github/actions/build-stage
@@ -215,6 +325,30 @@ jobs:
       - name: Install CocoaPods dependencies
         run: npx pod-install ios
 
+      - name: Sign the app target for the App Store
+        # ios/ is regenerated every run, so signing is set here rather than in a
+        # committed project. Only the APP target changes: the same settings as
+        # xcodebuild arguments would reach every Pods target too, and those
+        # refuse a provisioning profile ("does not support provisioning
+        # profiles"). xcodeproj is the gem CocoaPods itself edits projects with.
+        run: |
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          ruby -rxcodeproj -e '
+            project = Xcodeproj::Project.open(ARGV[0])
+            app = project.targets.find { |t| t.product_type == "com.apple.product-type.application" }
+            abort("No application target in #{ARGV[0]}") unless app
+            release = app.build_configurations.find { |c| c.name == "Release" }
+            abort("No Release configuration on #{app.name}") unless release
+            release.build_settings["CODE_SIGN_STYLE"] = "Manual"
+            release.build_settings["DEVELOPMENT_TEAM"] = ENV.fetch("IOS_TEAM_ID")
+            release.build_settings["CODE_SIGN_IDENTITY"] = "Apple Distribution"
+            release.build_settings["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = "Apple Distribution"
+            release.build_settings["PROVISIONING_PROFILE_SPECIFIER"] = ENV.fetch("IOS_PROFILE_NAME")
+            project.save
+          ' "ios/$SCHEME.xcodeproj"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $IOS_BUILD_NUMBER" "ios/$SCHEME/Info.plist"
+
       - name: 'Stage: archive'
         uses: ./.github/actions/build-stage
         with:
@@ -227,7 +361,7 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
-      - name: Archive (unsigned)
+      - name: Archive
         run: |
           # -d is load-bearing: an .xcworkspace is a DIRECTORY, and plain `ls`
           # on a directory lists what is inside it. That resolved the workspace
@@ -238,8 +372,7 @@ jobs:
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$PWD/build/duncit.xcarchive" archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+            -archivePath "$PWD/build/duncit.xcarchive" archive
 
       - name: 'Stage: package'
         uses: ./.github/actions/build-stage
@@ -253,16 +386,36 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
+      - name: Export the App Store IPA
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>teamID</key><string>$IOS_TEAM_ID</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$IOS_BUNDLE_ID</key><string>$IOS_PROFILE_UUID</string>
+            </dict>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$PWD/build/duncit.xcarchive" \
+            -exportPath "$PWD/build/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
       - name: Package the IPA
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           ARTIFACT="duncit-ios-v${APP_VERSION}-${SHORT_SHA}.ipa"
-          APP_PATH=$(find build/duncit.xcarchive/Products/Applications -maxdepth 1 -name '*.app' | head -1)
-          STAGE=$(mktemp -d)
-          mkdir -p "$STAGE/Payload"
-          cp -R "$APP_PATH" "$STAGE/Payload/"
-          (cd "$STAGE" && zip -qry "$RUNNER_TEMP/$ARTIFACT" Payload)
+          IPA=$(find build/export -maxdepth 1 -name '*.ipa' | head -1)
+          cp "$IPA" "$RUNNER_TEMP/$ARTIFACT"
           echo "ARTIFACT_PATHS=$RUNNER_TEMP/$ARTIFACT" >> "$GITHUB_ENV"
 
       - name: Keep a copy on the run
@@ -305,6 +458,29 @@ jobs:
           GIT_BEFORE: ${{ github.event.before }}
           RUN_URL: ${{ env.RUN_URL }}
         run: node scripts/report-app-build.mjs
+
+      - name: Upload the IPA to App Store Connect
+        # LAST, after the build is recorded and the IPA kept twice: Apple
+        # refusing an upload must not cost the build itself. It turns the
+        # workflow red; the row stays the honest record of what was built.
+        # altool finds the key by name under ~/.appstoreconnect/private_keys.
+        if: inputs.submit_to_app_store
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+        run: |
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$KEY_DIR"
+          printf '%s\n' "$APP_STORE_CONNECT_KEY_P8" > "$KEY_DIR/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8"
+          xcrun altool --upload-app --type ios --file "$ARTIFACT_PATHS" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Remove the signing identity from the runner
+        if: always()
+        run: |
+          if [ -n "$IOS_KEYCHAIN" ]; then security delete-keychain "$IOS_KEYCHAIN"; fi
+          rm -rf "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles" "$HOME/.appstoreconnect"
 
       - name: Record the failure
         # Only when no IPA was produced (ARTIFACT_PATHS is set right after the

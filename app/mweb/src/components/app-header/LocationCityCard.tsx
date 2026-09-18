@@ -8,16 +8,15 @@ import { useTranslation } from '../../i18n/useTranslation';
 /** Dark scrim over the city photo so its name reads in either theme. */
 const PHOTO_SCRIM = 'linear-gradient(180deg, rgba(9, 9, 15, 0.08), rgba(9, 9, 15, 0.78))';
 
-/** The small badge in a not-yet-launched city's top-left corner. */
+/** The badge above a not-yet-launched city's name: in the tile's flow rather
+ * than a corner, so it has the whole width and never runs under the check. */
 const COMING_SOON_SX = {
-  position: 'absolute',
-  top: 8,
-  left: 8,
   height: 20,
-  maxWidth: 'calc(100% - 40px)',
-  fontSize: 10,
+  maxWidth: '100%',
+  mb: 0.75,
+  fontSize: 11,
   fontWeight: 600,
-  '& .MuiChip-label': { px: 0.75 },
+  '& .MuiChip-label': { px: 1 },
 } as const;
 
 interface LocationCityCardProps {
@@ -63,7 +62,7 @@ export default function LocationCityCard({ location, active, onSelect }: Readonl
         onClick={onSelect}
         sx={{
           position: 'relative',
-          height: 108,
+          height: 120,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
@@ -75,18 +74,9 @@ export default function LocationCityCard({ location, active, onSelect }: Readonl
           backgroundPosition: 'center',
         }}
       >
-        {photo || waitlist ? null : (
+        {photo ? null : (
           <LocationCityIcon
             sx={{ position: 'absolute', top: 10, left: 10, fontSize: 24, color: 'secondary.main' }}
-          />
-        )}
-        {waitlist && (
-          <Chip
-            data-testid="city-tile-coming-soon"
-            size="small"
-            color="primary"
-            label={t('mweb.cityLaunch.comingSoon')}
-            sx={COMING_SOON_SX}
           />
         )}
         {active && (
@@ -100,6 +90,15 @@ export default function LocationCityCard({ location, active, onSelect }: Readonl
               bgcolor: 'background.paper',
               borderRadius: '50%',
             }}
+          />
+        )}
+        {waitlist && (
+          <Chip
+            data-testid="city-tile-coming-soon"
+            size="small"
+            color="primary"
+            label={t('mweb.cityLaunch.comingSoon')}
+            sx={COMING_SOON_SX}
           />
         )}
         <Typography noWrap sx={{ width: '100%', fontSize: 14, fontWeight: 600, lineHeight: 1.25 }}>

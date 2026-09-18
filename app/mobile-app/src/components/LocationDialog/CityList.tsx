@@ -51,8 +51,8 @@ function CityTile({
       accessibilityHint={caption}
       tabIndex={0}
       onPress={onPress}
-      width={110}
-      height={112}
+      width={132}
+      height={124}
       padding={10}
       justifyContent="flex-end"
       borderRadius={18}
@@ -68,35 +68,35 @@ function CityTile({
           <LinearGradient colors={PHOTO_SCRIM} style={StyleSheet.absoluteFill} />
         </>
       ) : null}
-      {/* The badge takes the glyph's corner on a city that is not live yet. */}
-      {photo || waitlist ? null : (
+      {photo ? null : (
         <YStack position="absolute" top={10} left={10}>
           <MaterialIcons name="location-city" size={24} color={accent} />
         </YStack>
       )}
-      {waitlist ? (
-        <XStack
-          testID="city-tile-coming-soon"
-          position="absolute"
-          top={8}
-          left={8}
-          zIndex={1}
-          maxWidth={70}
-          height={20}
-          alignItems="center"
-          paddingHorizontal={6}
-          borderRadius={999}
-          backgroundColor="$primary"
-        >
-          <Text fontSize={10} fontWeight="600" color="$onPrimary" numberOfLines={1}>
-            {t('mweb.cityLaunch.comingSoon')}
-          </Text>
-        </XStack>
-      ) : null}
       {active ? (
         <YStack position="absolute" top={8} right={8} borderRadius={999} backgroundColor="$surface">
           <MaterialIcons name="check-circle" size={20} color={primary} />
         </YStack>
+      ) : null}
+      {/* Above the name rather than in a corner, so the badge has the tile's
+          whole width and never runs under the check. */}
+      {waitlist ? (
+        <XStack
+          testID="city-tile-coming-soon"
+          zIndex={1}
+          alignSelf="flex-start"
+          maxWidth="100%"
+          minHeight={20}
+          marginBottom={6}
+          alignItems="center"
+          paddingHorizontal={8}
+          borderRadius={999}
+          backgroundColor="$primary"
+        >
+          <Text fontSize={11} fontWeight="600" color="$onPrimary" numberOfLines={1}>
+            {t('mweb.cityLaunch.comingSoon')}
+          </Text>
+        </XStack>
       ) : null}
       {/* Above the absolute photo: web paints positioned nodes last. */}
       <Text zIndex={1} fontSize={14} fontWeight="600" color={ink} numberOfLines={1}>

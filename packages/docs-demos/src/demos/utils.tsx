@@ -194,6 +194,7 @@ import {
   type ClubCityLocation,
   resolveThemeTokens,
   DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
   formatCount,
   launchProgress,
   showsWaitlist,
@@ -514,7 +515,7 @@ export default defineDemos('utils', [
     id: 'city-launch',
     title: 'A city that has not launched yet',
     note:
-      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0.',
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front.',
     mock: {
       location_name: 'Ahmedabad',
       is_launched: false,
@@ -527,6 +528,14 @@ export default defineDemos('utils', [
       'Hero number': formatCount(mock.subscriber_count),
       'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
       'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+      'Picker order': [
+        { location_name: 'Surat', is_launched: true },
+        { location_name: 'Rajkot', is_launched: true },
+        mock,
+      ]
+        .sort(compareCitiesLaunchedFirst)
+        .map((city) => city.location_name)
+        .join(', '),
     }),
   }),
 

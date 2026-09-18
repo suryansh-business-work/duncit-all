@@ -946,7 +946,12 @@ export {
   type LocationMismatch,
   type LocationPick,
 } from './location-mismatch';
-export { DEFAULT_LAUNCH_TARGET, launchProgress, showsWaitlist } from './city-launch';
+export {
+  DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
+  launchProgress,
+  showsWaitlist,
+} from './city-launch';
 export {
   clubCityName,
   clubOptionLabel,

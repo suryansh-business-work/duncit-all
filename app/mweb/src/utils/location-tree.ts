@@ -2,6 +2,8 @@
 // picker can drill down. Pure data helpers (no React) — mirrored 1:1 in the
 // mobile app so both experiences stay identical.
 
+import { compareCitiesLaunchedFirst } from '@duncit/utils';
+
 export interface LocationLike {
   id: string;
   location_name: string;
@@ -55,7 +57,8 @@ function upsert<T>(list: T[], match: (item: T) => boolean, create: () => T): T {
   return created;
 }
 
-/** Groups active locations into a sorted country → state → city tree. */
+/** Groups active locations into a sorted country → state → city tree; a state's launched
+ * cities come before the ones still waiting on launch. */
 export function buildLocationTree(locations: LocationLike[]): CountryNode[] {
   const countries: CountryNode[] = [];
   for (const loc of locations) {
@@ -82,7 +85,7 @@ export function buildLocationTree(locations: LocationLike[]): CountryNode[] {
   for (const c of countries) {
     c.states.sort(byName);
     for (const s of c.states) {
-      s.cities.sort((a, b) => a.location_name.localeCompare(b.location_name));
+      s.cities.sort(compareCitiesLaunchedFirst);
     }
   }
   return countries;

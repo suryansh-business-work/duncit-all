@@ -19,3 +19,13 @@ export function launchProgress(count: number, target: number): number {
 export function showsWaitlist(city: Readonly<{ is_launched?: boolean | null }>): boolean {
   return city.is_launched === false;
 }
+
+/** A city as the location picker orders it. */
+type PickerCity = Readonly<{ location_name: string; is_launched?: boolean | null }>;
+
+/** Orders a state's cities in the location picker: launched cities first, then the ones still
+ * waiting on launch, alphabetical within each group. Pass it straight to `sort`. */
+export function compareCitiesLaunchedFirst(a: PickerCity, b: PickerCity): number {
+  const waitlistOrder = Number(showsWaitlist(a)) - Number(showsWaitlist(b));
+  return waitlistOrder || a.location_name.localeCompare(b.location_name);
+}

@@ -338,6 +338,7 @@ exports:
   - 'LocationMismatch'
   - 'LocationPick'
   - 'DEFAULT_LAUNCH_TARGET'
+  - 'compareCitiesLaunchedFirst'
   - 'launchProgress'
   - 'showsWaitlist'
   - 'clubCityName'
@@ -2393,7 +2394,13 @@ soon badge instead of its club count — and choosing it opens the launch waitli
 home feed. mWeb's `CityLaunchView` and the native `CityLaunch` screen render it.
 
 ```ts
-import { DEFAULT_LAUNCH_TARGET, formatCount, launchProgress, showsWaitlist } from '@duncit/utils';
+import {
+  DEFAULT_LAUNCH_TARGET,
+  compareCitiesLaunchedFirst,
+  formatCount,
+  launchProgress,
+  showsWaitlist,
+} from '@duncit/utils';
 
 showsWaitlist({ is_launched: false }); // true  — Ahmedabad, not launched: "1,252 people are in"
 showsWaitlist({ is_launched: true }); // false — Pune, live: "18 clubs"
@@ -2403,6 +2410,13 @@ launchProgress(1252, DEFAULT_LAUNCH_TARGET); // 63 — the progress bar's value
 launchProgress(2600, 2000); // 100 — never past full
 launchProgress(40, 0); // 0 — a non-positive target never divides by zero
 formatCount(1252); // '1,252' — the hero's big number
+
+// Gujarat in the picker: live cities first, then the ones still waiting
+[
+  { location_name: 'Ahmedabad', is_launched: false },
+  { location_name: 'Surat', is_launched: true },
+  { location_name: 'Rajkot', is_launched: true },
+].sort(compareCitiesLaunchedFirst); // Rajkot, Surat, Ahmedabad
 ```
 
 `showsWaitlist` is `false` for anything but an explicit `false`, so a stale cached location
@@ -2411,6 +2425,7 @@ without the field keeps its feed.
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `DEFAULT_LAUNCH_TARGET` | `2000` | The launch goal a city gets when an admin sets none; the server's default too. |
+| `compareCitiesLaunchedFirst` | `(a, b: Readonly<{ location_name: string; is_launched?: boolean \| null }>) => number` | The picker's city order within a state: launched first, then not launched, alphabetical within each. |
 | `launchProgress` | `(count: number, target: number) => number` | Whole percent of the way to the target, clamped to 0–100; 0 for a non-positive target. |
 | `showsWaitlist` | `(city: Readonly<{ is_launched?: boolean \| null }>) => boolean` | Whether the picker tile and home show the waitlist rather than clubs and the feed. |
 

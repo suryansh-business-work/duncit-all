@@ -7,13 +7,15 @@ export const GRID_COLUMNS = 12;
 export const CELL_HEIGHT = 76;
 
 /**
- * Below this window width the grid collapses to a single column, so a widget's
- * `w` stops mattering and everything stacks in `y` order. Above the second, the
- * full twelve columns apply.
+ * Column counts by the GRID's own width, not the window's: the sidebar and the
+ * Agent dock take a different share of every window, so a window breakpoint
+ * crammed twelve columns into a laptop's leftover pane. At or below 600px the
+ * grid is one stacked column (a phone), at or below 900px six (a tablet, a
+ * narrow pane), and above that the full twelve.
  */
 export const BREAKPOINTS: ReadonlyArray<{ w: number; c: number }> = [
-  { w: 700, c: 1 },
-  { w: 1100, c: 6 },
+  { w: 600, c: 1 },
+  { w: 900, c: 6 },
 ];
 
 const clampInt = (value: number, min: number, max: number): number => {
@@ -145,8 +147,57 @@ export function minSizeOf(widget: DashboardWidget): { w: number; h: number } {
   return { w: widget.minW ?? Math.min(size.w, 3), h: widget.minH ?? Math.min(size.h, 2) };
 }
 
+/**
+ * A widget's minimum width on a grid that is currently `column` columns wide.
+ *
+ * `minW` is declared in twelve-column terms, but GridStack reads it as an
+ * absolute column count — handed over as-is, a "at least a third" minimum of 4
+ * would force a half-width tablet slot (3 of 6) up to two thirds.
+ */
+export function minWidthFor(minW: number, column: number): number {
+  return Math.min(column, Math.max(1, Math.ceil((minW * column) / GRID_COLUMNS)));
+}
+
 /** Top to bottom, then left to right — the order a sighted reader meets the widgets. */
-const byReadingOrder = (a: DashboardLayoutItem, b: DashboardLayoutItem): number => a.y - b.y || a.x - b.x;
+const byReadingOrder = (a: DashboardPosition, b: DashboardPosition): number => a.y - b.y || a.x - b.x;
+
+/**
+ * A twelve-column layout re-flowed for a grid `column` columns wide, in the
+ * order it reads on a wide screen. Returned in that reading order, each input
+ * paired with its new slot.
+ *
+ * Scaling every widget by the column ratio (GridStack's default) keeps the wide
+ * proportions, which is what a narrow grid cannot afford: four quarter-width
+ * tiles round to widths that no longer share a row and wrap three-and-one.
+ * Instead a widget half the row wide or narrower takes half the row, and a
+ * wider one the whole row — a tablet reads as tidy pairs, a phone as a single
+ * column. At twelve columns nothing moves.
+ */
+export function reflowLayout<T extends DashboardPosition>(
+  items: readonly T[],
+  column: number
+): Array<{ item: T; slot: DashboardPosition }> {
+  const ordered = [...items].sort(byReadingOrder);
+  if (column >= GRID_COLUMNS) {
+    return ordered.map((item) => ({ item, slot: { x: item.x, y: item.y, w: item.w, h: item.h } }));
+  }
+
+  const half = Math.max(1, Math.floor(column / 2));
+  let x = 0;
+  let rowTop = 0;
+  let rowBottom = 0;
+  return ordered.map((item) => {
+    const w = item.w * 2 > GRID_COLUMNS ? column : half;
+    if (x + w > column) {
+      x = 0;
+      rowTop = rowBottom;
+    }
+    const slot = { x, y: rowTop, w, h: item.h };
+    rowBottom = Math.max(rowBottom, rowTop + item.h);
+    x += w;
+    return { item, slot };
+  });
+}
 
 /** The widget trades places with its neighbour in reading order, each keeping its own size. */
 function swapWithNeighbour(

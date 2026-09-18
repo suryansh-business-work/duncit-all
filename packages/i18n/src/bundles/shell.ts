@@ -1857,6 +1857,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       resetConfirm: 'Reset layout',
       resetFailed: 'Could not reset your layout. Please try again.',
       loadFailed: 'Could not load your saved layout — showing the default arrangement.',
+      // Download saves the dashboard as it is arranged, as a PNG. The file is
+      // the success signal; only a failure gets copy (inline, as above).
+      download: 'Download',
+      downloading: 'Preparing download…',
+      downloadFailed: 'Could not download this dashboard. Please try again.',
     },
   },
   /**

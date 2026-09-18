@@ -51,7 +51,7 @@ export default defineDemos('dashboard', [
       const resolved = resolveLayout(widgets, mock.saved);
       return {
         'Grid': `${GRID_COLUMNS} columns, ${CELL_HEIGHT}px a row`,
-        'Collapses at': BREAKPOINTS.map((point) => `< ${point.w}px → ${point.c} column(s)`),
+        'Collapses at': BREAKPOINTS.map((point) => `grid ≤ ${point.w}px → ${point.c} column(s)`),
         'Layout actually rendered': resolved,
         'Widgets with no saved row': resolved
           .filter((item) => !mock.saved.some((row) => row.id === item.id))

@@ -24,7 +24,10 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/dialogs": "workspace:*",
-    "gridstack": "^13.2.0"
+    "@duncit/logs": "workspace:*",
+    "@duncit/utils": "workspace:*",
+    "gridstack": "^13.2.0",
+    "modern-screenshot": "^4.7.0"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",

@@ -1,6 +1,20 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { GridStack, type GridStackWidget } from 'gridstack';
-import { BREAKPOINTS, CELL_HEIGHT, GRID_COLUMNS, layoutsEqual, serialiseNodes } from './layout';
+import {
+  GridStack,
+  type GridItemHTMLElement,
+  type GridStackNode,
+  type GridStackWidget,
+  type Responsive,
+} from 'gridstack';
+import {
+  BREAKPOINTS,
+  CELL_HEIGHT,
+  GRID_COLUMNS,
+  layoutsEqual,
+  minWidthFor,
+  reflowLayout,
+  serialiseNodes,
+} from './layout';
 import type { DashboardLayoutItem } from './types';
 
 /** The handle class the widget header puts on its grip — dragging starts there only. */
@@ -44,19 +58,69 @@ const readGrid = (grid: GridStack): DashboardLayoutItem[] =>
   serialiseNodes(grid.save(false) as GridStackWidget[]);
 
 /**
+ * GridStack's hook for a column change: re-flow the widgets it hands over
+ * (see `reflowLayout`) and hand them back placed.
+ */
+function reflowNodes(column: number, _previous: number, placed: GridStackNode[], pending: GridStackNode[]): void {
+  const positions = pending.map((node) => ({
+    node,
+    x: node.x ?? 0,
+    y: node.y ?? 0,
+    w: node.w ?? 1,
+    h: node.h ?? 1,
+  }));
+  for (const { item, slot } of reflowLayout(positions, column)) {
+    item.node.x = slot.x;
+    item.node.y = slot.y;
+    item.node.w = slot.w;
+    placed.push(item.node);
+  }
+}
+
+/** Breakpoints by the grid's own width, widest first — the order GridStack walks them. */
+const responsiveColumns = (): Responsive => ({
+  breakpointForWindow: false,
+  // Without it GridStack answers "undefined" above the widest breakpoint and
+  // never climbs back to twelve once the grid has been narrowed.
+  columnMax: GRID_COLUMNS,
+  breakpoints: [...BREAKPOINTS].sort((a, b) => b.w - a.w),
+  layout: reflowNodes,
+});
+
+/**
  * Move every widget to the given slots.
  *
  * `load` rather than a loop of `update` calls: it is the documented inverse of
- * `save`, and it is the one that copes with pushing a twelve-column layout into
- * a grid currently rendering at six or one — it caches the wide layout instead
- * of clamping every widget to the narrow column count. `addRemove: false`
- * because React owns the item elements; GridStack must only move them.
+ * `save`. Stored slots are twelve-column, and loaded into a narrower grid
+ * GridStack clamps each one rather than re-flowing them, so the load happens
+ * at twelve and the grid then steps back down through the same re-flow a
+ * resize uses. `addRemove: false` because React owns the item elements;
+ * GridStack must only move them.
  */
 function applyLayout(grid: GridStack, items: readonly DashboardLayoutItem[]): void {
+  const column = grid.getColumn();
+  if (column !== GRID_COLUMNS) grid.column(GRID_COLUMNS, 'none');
   grid.load(
     items.map((item) => ({ id: item.id, x: item.x, y: item.y, w: item.w, h: item.h })),
     false
   );
+  if (column !== GRID_COLUMNS) grid.column(column, reflowNodes);
+}
+
+/**
+ * Minimum widths live on the item as `data-min-w` (twelve-column terms), not
+ * as `gs-min-w`: GridStack enforces a node's minW on every column change too,
+ * which would force a re-flowed half-width slot wider. So the minimum is only
+ * handed to GridStack for the length of a resize, scaled to the grid's current
+ * column count.
+ */
+function holdMinWidth(grid: GridStack, el: GridItemHTMLElement): void {
+  const node = el.gridstackNode;
+  if (node) node.minW = minWidthFor(Number(el.dataset.minW) || 1, grid.getColumn());
+}
+
+function releaseMinWidth(el: GridItemHTMLElement): void {
+  if (el.gridstackNode) delete el.gridstackNode.minW;
 }
 
 /**
@@ -94,11 +158,11 @@ export function useGridStack({
     const grid = GridStack.init(
       {
         column: GRID_COLUMNS,
-        columnOpts: { breakpointForWindow: true, breakpoints: [...BREAKPOINTS] },
         cellHeight,
         margin: 8,
         float: false,
-        animate: true,
+        // Turned on below, once the responsive re-flow is committed to style.
+        animate: false,
         handle: `.${DRAG_HANDLE_CLASS}`,
         // Corners plus the bottom and side edges — the default is the one
         // south-east corner, which makes resizing feel broken.
@@ -117,6 +181,17 @@ export function useGridStack({
     // happen here — the effect owns this element's whole lifecycle.
     if (!grid) return undefined;
     gridRef.current = grid;
+
+    // Built at twelve columns first, so every widget lands exactly on its
+    // stored slot and GridStack caches that full layout; only then made
+    // responsive. Given the breakpoints up front, a phone would place each
+    // widget by clamping its twelve-column slot, and nothing would remember the
+    // wide arrangement that Save has to write back.
+    grid.updateOptions({ columnOpts: responsiveColumns() });
+    // Commit the re-flowed positions to style before animation comes on, or
+    // the first paint would fly every widget in from its twelve-column slot.
+    el.getBoundingClientRect();
+    grid.setAnimation(true);
 
     grid.on('change', () => {
       if (applyingRef.current) return;
@@ -157,9 +232,15 @@ export function useGridStack({
       }, 0);
     };
     grid.on('dragstart', beginGesture);
-    grid.on('resizestart', beginGesture);
+    grid.on('resizestart', (_event, item) => {
+      holdMinWidth(grid, item);
+      beginGesture();
+    });
     grid.on('dragstop', endGesture);
-    grid.on('resizestop', endGesture);
+    grid.on('resizestop', (_event, item) => {
+      releaseMinWidth(item);
+      endGesture();
+    });
     if (typeof ResizeObserver !== 'undefined') {
       contentObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {

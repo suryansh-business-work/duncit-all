@@ -141,10 +141,47 @@ That is why the widget catalogue is code and only positions are data.
 
 ## Responsiveness
 
-Twelve columns above 1100px, six between 700 and 1100, and a single stacked column below —
-GridStack's `breakpointForWindow`, so it follows the window rather than the container. In the
-one-column mode `w` stops mattering and widgets stack in `y` order, which is why a dashboard's
-default `y` values should read the way the page should read on a phone.
+The column count follows the **grid's own width**, not the window's — the sidebar and the Agent
+dock take a different share of every window, so a window breakpoint used to cram twelve columns into
+a laptop's leftover pane:
+
+| Grid width | Columns | How the twelve-column layout re-flows |
+| --- | --- | --- |
+| above 900px | 12 | Exactly as stored. |
+| 601–900px | 6 | In reading order, a widget half the row wide or narrower takes **half** the row, a wider one the **whole** row — tidy pairs. |
+| 600px and below | 1 | One stacked column, in reading order. |
+
+Reading order is top to bottom, then left to right, so a dashboard's default `y` values should read
+the way the page should read on a phone. The re-flow is `reflowLayout(items, column)` in
+`layout.ts`, handed to GridStack as its column-change layout; GridStack's own default scaled every
+widget by the column ratio, which rounds four quarter-width tiles to widths that wrap three-and-one.
+
+Three things keep the stored layout honest at every width:
+
+- The grid is built at twelve columns and only then made responsive, so GridStack caches the full
+  layout and **Save always writes twelve-column slots**, whatever width the person edited at.
+- A saved layout, a Reset or an Arrange move is loaded at twelve columns and re-flowed back down,
+  never clamped into the narrow grid.
+- `minW` is declared in twelve-column terms, so it is handed to GridStack only for the length of a
+  resize, scaled to the current column count (`minWidthFor`) — a standing minimum of 4 would force a
+  half-width tablet slot (3 of 6) up to two thirds.
+
+Widget headers wrap: on a narrow card the `headerActions` drop under the title instead of being
+clipped.
+
+## Download
+
+Every dashboard has a **Download** button beside **Customise layout**. It saves the dashboard
+exactly as it is arranged on screen — header and widgets, without the toolbar or inline errors —
+as `<dashboardId>.png` (e.g. `admin.overview.png`). No page wires anything: it is part of
+`DuncitDashboard`.
+
+The rasteriser (`modern-screenshot`) is imported on demand, so it loads the first time someone
+downloads rather than with the page. The image is 2x for sharp text, scaled down for a dashboard so
+tall that 2x would pass iOS Safari's canvas limit. Download is offered only at rest, so the picture
+never carries edit handles; a failure renders inline above the grid, like a failed save.
+
+Chrome that belongs on screen but not in the picture spreads `SKIP_IN_DOWNLOAD` from `download.ts`.
 
 ## Editing
 

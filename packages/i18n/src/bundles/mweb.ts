@@ -4159,8 +4159,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
           title: 'Pricing, then publish',
         },
         steps: {
-          journey:
-            'Where it happens and its club, then the basics, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+          journey: {
+            body: 'Where it happens and its club, then the basics, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.',
+          },
           title: 'Four steps',
         },
         title: 'Create Pod',

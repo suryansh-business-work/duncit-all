@@ -134,7 +134,7 @@ export const TOURS: readonly TourDefinition[] = [
       {
         anchor: 'create-pod-steps',
         titleKey: 'mweb.tours.createPod.steps.title',
-        bodyKey: 'mweb.tours.createPod.steps.journey',
+        bodyKey: 'mweb.tours.createPod.steps.journey.body',
       },
       {
         anchor: 'create-pod-club',

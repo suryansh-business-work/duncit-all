@@ -7750,7 +7750,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.tours.createPod.club.title": "Start with your club",
   "mweb.tours.createPod.publish.body": "This carries you through to the last step, where you set a ticket price and see what you take home after fees. Nothing is published until you press Create Pod.",
   "mweb.tours.createPod.publish.title": "Pricing, then publish",
-  "mweb.tours.createPod.steps.journey": "Where it happens and its club, then the basics, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.",
+  "mweb.tours.createPod.steps.journey.body": "Where it happens and its club, then the basics, then a venue slot — the slot you pick sets your pod’s date and time. What you type is saved as a draft as you go.",
   "mweb.tours.createPod.steps.title": "Four steps",
   "mweb.tours.createPod.title": "Create Pod",
   "mweb.tours.finish": "Finish",

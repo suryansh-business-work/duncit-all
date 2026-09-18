@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import {
   createCampaign,
   createTemplate,
@@ -18,6 +18,8 @@ import { whatsappPreferenceService } from './whatsapp.preference.service';
  * than trusting anything the client sends.
  */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
+// One automatic message, as the WhatsApp log opens it — the Logs console too.
+const LOG_READ = [...ADMIN_ROLES, LOGS_READER];
 
 export const waAutomationResolvers = {
   Query: {
@@ -26,7 +28,7 @@ export const waAutomationResolvers = {
       return whatsappAdminService.scenarios();
     },
     whatsappMessageLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return whatsappAdminService.logById(args.id);
     },
     whatsappDefaultMedia: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

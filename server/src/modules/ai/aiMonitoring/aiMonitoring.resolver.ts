@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { aiMonitoringSettingService, mediaScanService } from './aiMonitoring.service';
 
@@ -7,6 +7,8 @@ import { aiMonitoringSettingService, mediaScanService } from './aiMonitoring.ser
 // upload complaint can be traced without an AI seat.
 const MONITORING_READ = ['SUPER_ADMIN', 'AI_MANAGER', 'TECH_MANAGER'];
 const MONITORING_WRITE = ['SUPER_ADMIN', 'AI_MANAGER'];
+// The scan log is also read from the Logs console; the settings are not.
+const SCAN_LOG_READ = [...MONITORING_READ, LOGS_READER];
 
 export const aiMonitoringResolvers = {
   Query: {
@@ -23,7 +25,7 @@ export const aiMonitoringResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext,
     ) => {
-      requireRole(ctx, MONITORING_READ);
+      requireRole(ctx, SCAN_LOG_READ);
       return mediaScanService.table(args.query);
     },
   },

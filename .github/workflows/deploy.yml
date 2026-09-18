@@ -478,6 +478,12 @@ jobs:
               - '.github/workflows/deploy.yml'
             logs:
               - 'portals/logs/**'
+              # The log pages it mounts are read from these consoles' source.
+              - 'portals/tech/src/**'
+              - 'portals/ai/src/**'
+              - 'portals/communications/src/**'
+              - 'portals/finance/src/**'
+              - 'portals/legal/src/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'

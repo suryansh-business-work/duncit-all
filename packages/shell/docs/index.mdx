@@ -257,22 +257,39 @@ console shut for all non-super users.
 
 ### `mountWelcomePortal(options)` — `MountWelcomePortalOptions`
 
-A console that is only the shell: `/login`, the `WelcomeDashboard` at `/` and `/profile`. It is how a
-new subdomain ships before its first screen exists — the Logs and Analytics consoles are this one call:
+A console built on the shell: `/login`, the `WelcomeDashboard` at `/` and `/profile`, plus any screens
+the console hands in as `routes`. It is how a new subdomain ships before its first screen exists, and it
+keeps working once the screens are only routes — the Logs console is this one call with its log pages:
 
 ```tsx
-import { mountWelcomePortal } from '@duncit/shell';
+import { Route } from 'react-router';
+import { mountWelcomePortal, type createAuthed } from '@duncit/shell';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
 
-mountWelcomePortal({ appConfig, env: import.meta.env, logsPortal: logs.portal.analytics });
+const logRoutes = (authed: ReturnType<typeof createAuthed>) => (
+  <>
+    <Route path="/telemetry/logs" element={authed(<TelemetryLogsPage />)} />
+    <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
+  </>
+);
+
+mountWelcomePortal({
+  appConfig,
+  env: import.meta.env,
+  logsPortal: logs.portal.logs,
+  routes: logRoutes,
+  i18nFallback: flattenCatalogue(TECH_BUNDLE),
+});
 ```
 
 | Option | Type | Required | Meaning |
 | --- | --- | --- | --- |
-| `appConfig` | `AppConfig` | yes | The console's identity. `key` also names the dashboard layout (`analytics.overview`). |
+| `appConfig` | `AppConfig` | yes | The console's identity. `key` also names the dashboard layout (`logs.overview`). |
 | `env` | `PortalBuildEnv` | yes | The portal's `import.meta.env` — `{ DEV, VITE_GRAPHQL_URL? }`. |
 | `logsPortal` | `LevelFns` | yes | The portal's `logs.portal.<x>` sink. |
+| `routes` | `(authed) => ReactNode` | no | The console's own `<Route>`s. `authed(<Page />)` puts a page behind the login gate and inside the chrome. They sit before the catch-all, so an unknown path still opens `/`. |
+| `i18nFallback` | `FlatCatalogue` | no | The copy those screens read, compiled in — passed straight to `mountPortal`. |
 
 A console that outgrows it (Communications did) builds the same pieces itself —
 `createPortalRuntime(appConfig, resolvePortalGraphqlUrl(import.meta.env))` + `mountPortal` with its own

@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { rateLimitService } from './rateLimit.service';
 
@@ -10,6 +10,9 @@ import { rateLimitService } from './rateLimit.service';
  * addresses are being refused, and no reason to raise a ceiling.
  */
 const MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// The breach log (and the stats + filter options its page reads) is a log, so
+// the Logs console reads it too. Rules, systems and every write stay here.
+const EVENTS_READ = [...MANAGE, LOGS_READER];
 
 /**
  * Every timestamp on these types is declared `String` in the schema, and the
@@ -71,16 +74,16 @@ export const rateLimitResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext,
     ) => {
-      requireRole(ctx, MANAGE);
+      requireRole(ctx, EVENTS_READ);
       const page = await rateLimitService.eventsTable(args.query);
       return { total: page.total, rows: page.rows.map((row) => withId(row)) };
     },
     rateLimitStats: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, MANAGE);
+      requireRole(ctx, EVENTS_READ);
       return rateLimitService.stats();
     },
     rateLimitOptions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, MANAGE);
+      requireRole(ctx, EVENTS_READ);
       return rateLimitService.options();
     },
   },

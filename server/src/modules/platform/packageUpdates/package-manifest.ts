@@ -2600,6 +2600,8 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@apollo/client", range: "^4.2.12", kind: "dependencies" },
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/entity-consoles", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
       { name: "@emotion/react", range: "^11.14.0", kind: "dependencies" },

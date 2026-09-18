@@ -73,12 +73,23 @@ COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+# Read by the Tech and Communications pages this console mounts (below).
+COPY packages/errors/package.json ./packages/errors/
+COPY packages/gql-types/package.json ./packages/gql-types/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
 COPY portals/logs ./portals/logs
+# The log pages are the owning consoles' own (src/log-pages.ts imports them from
+# their source), so their src folders are part of this build. Their
+# package.json files are copied above, so their dependencies are installed.
+COPY portals/tech/src ./portals/tech/src
+COPY portals/ai/src ./portals/ai/src
+COPY portals/communications/src ./portals/communications/src
+COPY portals/finance/src ./portals/finance/src
+COPY portals/legal/src ./portals/legal/src
 RUN pnpm --filter logs-portal build
 
 # --- runner ---

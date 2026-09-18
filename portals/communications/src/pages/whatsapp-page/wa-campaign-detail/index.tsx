@@ -41,8 +41,8 @@ interface Props {
   onCancel: (campaign: WaCampaignRow) => void;
   /** Hands the campaign to the confirmation the page owns. */
   onDelete: (campaign: WaCampaignRow) => void;
-  /** Start a new send prefilled from this one. */
-  onDuplicate: (campaign: WaCampaignRow) => void;
+  /** Start a new send prefilled from this one. Absent: no Duplicate button. */
+  onDuplicate?: (campaign: WaCampaignRow) => void;
   onClose: () => void;
 }
 

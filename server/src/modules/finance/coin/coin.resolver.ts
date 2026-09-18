@@ -2,7 +2,7 @@ import { coinService } from './coin.service';
 import { coinAdminService } from './coin.admin.service';
 import { coinSettingsService } from './coin.settings.service';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 
 // Coin liability is a platform-wide money figure, not a zone-scoped one, so it
@@ -16,6 +16,10 @@ const COIN_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 // future payment pays out, and a manual adjustment mints value out of nothing —
 // so neither is offered to the read-only audience.
 const COIN_ADMIN_WRITE = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
+
+// The transaction ledger is mounted in the Logs console too; the stats,
+// settings and manual adjustments are not.
+const COIN_LOG_READ = [...COIN_ADMIN_READ, LOGS_READER];
 
 // No role gate on the `my*` queries: every signed-in account earns coins on what
 // it spends. Showing the section only in User studio mode is a presentation
@@ -44,7 +48,7 @@ export const coinResolvers = {
       args: { query?: TableQueryInput | null; pod_doc_id?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, COIN_ADMIN_READ);
+      requireRole(ctx, COIN_LOG_READ);
       return coinAdminService.table(args.query, args.pod_doc_id);
     },
     coinSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

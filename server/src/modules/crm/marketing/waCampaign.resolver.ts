@@ -3,10 +3,14 @@ import { waLogService } from './waLog.service';
 import type { WaCampaignAudience } from './waCampaign.model';
 import type { ManualContact } from './waCampaign.recipients';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 
 // WhatsApp sends are run from the Communications console.
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
+// What the send log and the detail a row opens read — the rows, one send, its
+// recipients, the rate card's currency and the AiSensy template the message was
+// drawn from — are read from the Logs console too. Sending never is.
+const LOG_READ = [...ADMIN_ROLES, LOGS_READER];
 
 export const waCampaignResolvers = {
   Query: {
@@ -44,7 +48,7 @@ export const waCampaignResolvers = {
       return waCampaignService.userSearch(args.search);
     },
     waPricing: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.pricing();
     },
     waCampaignDashboard: (
@@ -60,7 +64,7 @@ export const waCampaignResolvers = {
       return waCampaignService.table(args.query);
     },
     waLogs: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waLogService.table(args.query);
     },
     waSendCounts: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
@@ -68,7 +72,7 @@ export const waCampaignResolvers = {
       return waLogService.counts();
     },
     waCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.byId(args.campaign_id);
     },
     waCampaignRecipients: (
@@ -76,23 +80,23 @@ export const waCampaignResolvers = {
       args: { campaign_id: string; query?: any },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.recipients(args.campaign_id, args.query);
     },
     waCampaignRecipientsCsv: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.recipientsCsv(args.campaign_id);
     },
     aisensyProjectConfigured: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.projectConfigured();
     },
     aisensyCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.aisensyCampaigns();
     },
     aisensyTemplates: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return waCampaignService.aisensyTemplates();
     },
   },

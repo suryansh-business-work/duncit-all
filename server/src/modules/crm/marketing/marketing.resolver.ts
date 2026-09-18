@@ -1,13 +1,14 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 import { marketingService } from './marketing.service';
 import { marketingDashboardService } from './marketingDashboard.service';
 import { audienceService } from './audience.service';
 import { audienceListService } from './audienceList.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
-// A WhatsApp send in the Communications console picks one of these lists.
-const AUDIENCE_READ = [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER'];
+// A WhatsApp send in the Communications console picks one of these lists, and
+// the WhatsApp log (there and in the Logs console) names the one a send used.
+const AUDIENCE_READ = [...ADMIN_ROLES, 'COMMUNICATIONS_MANAGER', LOGS_READER];
 
 export const marketingResolvers = {
   Query: {

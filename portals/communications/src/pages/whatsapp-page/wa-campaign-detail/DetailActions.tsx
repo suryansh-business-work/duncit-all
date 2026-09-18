@@ -18,7 +18,8 @@ interface Props {
   onRetry: (campaign: WaCampaignRow) => void;
   onCancel: (campaign: WaCampaignRow) => void;
   onDelete: (campaign: WaCampaignRow) => void;
-  onDuplicate: (campaign: WaCampaignRow) => void;
+  /** Absent where no send can be started (the Logs console): no button then. */
+  onDuplicate?: (campaign: WaCampaignRow) => void;
   onExportCsv: () => void;
 }
 
@@ -75,13 +76,15 @@ export default function DetailActions({
           ? t('marketingWhatsapp.logs.building')
           : t('marketingWhatsapp.logs.downloadCsv')}
       </DuncitButton>
-      <DuncitButton
-        startIcon={<ContentCopyIcon />}
-        disabled={!campaign}
-        onClick={() => campaign && onDuplicate(campaign)}
-      >
-        {t('marketingWhatsapp.logs.duplicate')}
-      </DuncitButton>
+      {onDuplicate && (
+        <DuncitButton
+          startIcon={<ContentCopyIcon />}
+          disabled={!campaign}
+          onClick={() => campaign && onDuplicate(campaign)}
+        >
+          {t('marketingWhatsapp.logs.duplicate')}
+        </DuncitButton>
+      )}
       <Tooltip title={cancellable ? '' : t('marketingWhatsapp.logs.cancelOnlyScheduled')}>
         <span>
           <DuncitButton

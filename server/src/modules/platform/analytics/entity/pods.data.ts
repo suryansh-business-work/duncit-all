@@ -5,6 +5,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { BouncerFeedbackModel } from '@modules/support/bouncer/bouncer.model';
 import { dayKeyExpr, inRange } from './window';
 import { loadHeldPods, loadOutcomes, sumPods, type HeldPod, type PodTotals } from './held-pods';
+import { NO_CITY, type CityScope } from './city';
 
 /**
  * Everything the Pods page reads for ONE period. The page loads it twice —
@@ -35,8 +36,8 @@ export interface PodPeriod {
 }
 
 /** Every booking made in the period, whatever became of it later. */
-const loadBookings = (from: Date, to: Date) =>
-  PodMemberModel.find({ joined_at: inRange(from, to) })
+const loadBookings = (from: Date, to: Date, scope: CityScope) =>
+  PodMemberModel.find({ joined_at: inRange(from, to), ...scope.pods })
     .select('pod_id user_id joined_at seats source')
     .lean<BookingRow[]>();
 
@@ -58,20 +59,20 @@ interface SumRow {
 
 const firstSum = (rows: SumRow[]) => rows[0] ?? { total: 0, count: 0 };
 
-export async function loadPodPeriod(from: Date, to: Date): Promise<PodPeriod> {
+export async function loadPodPeriod(from: Date, to: Date, scope: CityScope = NO_CITY): Promise<PodPeriod> {
   const [held, bookings, created, cancelled, backouts, money, ratings] = await Promise.all([
-    loadHeldPods(from, to),
-    loadBookings(from, to),
+    loadHeldPods(from, to, scope.location),
+    loadBookings(from, to, scope),
     // Created counts every pod made in the period, including ones cancelled since.
-    PodModel.countDocuments({ created_at: inRange(from, to) }).setOptions({ includeDeleted: true }),
-    PodModel.countDocuments({ deleted_at: inRange(from, to) }),
-    PodMemberModel.countDocuments({ backed_out_at: inRange(from, to) }),
+    PodModel.countDocuments({ created_at: inRange(from, to), ...scope.location }).setOptions({ includeDeleted: true }),
+    PodModel.countDocuments({ deleted_at: inRange(from, to), ...scope.location }),
+    PodMemberModel.countDocuments({ backed_out_at: inRange(from, to), ...scope.pods }),
     PaymentModel.aggregate<SumRow>([
-      { $match: { target_type: 'POD', status: 'SUCCESS', created_at: inRange(from, to) } },
+      { $match: { target_type: 'POD', status: 'SUCCESS', created_at: inRange(from, to), ...scope.pods } },
       { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
     ]),
     BouncerFeedbackModel.aggregate<SumRow>([
-      { $match: { created_at: inRange(from, to) } },
+      { $match: { created_at: inRange(from, to), ...scope.pods } },
       { $group: { _id: null, total: { $sum: '$rating' }, count: { $sum: 1 } } },
     ]),
   ]);
@@ -100,18 +101,18 @@ export interface DayRow {
 }
 
 /** Per-day totals the trends need beyond what the period rows already hold. */
-export async function loadPodDays(from: Date, to: Date, zone: string) {
+export async function loadPodDays(from: Date, to: Date, zone: string, scope: CityScope = NO_CITY) {
   const [cancelled, backouts, revenue] = await Promise.all([
     PodModel.aggregate<DayRow>([
-      { $match: { deleted_at: inRange(from, to) } },
+      { $match: { deleted_at: inRange(from, to), ...scope.location } },
       { $group: { _id: dayKeyExpr('deleted_at', zone), value: { $sum: 1 } } },
     ]).option({ includeDeleted: true }),
     PodMemberModel.aggregate<DayRow>([
-      { $match: { backed_out_at: inRange(from, to) } },
+      { $match: { backed_out_at: inRange(from, to), ...scope.pods } },
       { $group: { _id: dayKeyExpr('backed_out_at', zone), value: { $sum: 1 } } },
     ]),
     PaymentModel.aggregate<DayRow>([
-      { $match: { target_type: 'POD', status: 'SUCCESS', created_at: inRange(from, to) } },
+      { $match: { target_type: 'POD', status: 'SUCCESS', created_at: inRange(from, to), ...scope.pods } },
       { $group: { _id: dayKeyExpr('created_at', zone), value: { $sum: '$total' } } },
     ]),
   ]);

@@ -10,6 +10,14 @@ export function requireAuth(ctx: GraphQLContext): AuthUser {
   return ctx.user;
 }
 
+/**
+ * The Logs console (logs.duncit.com) mounts the log pages of the other consoles
+ * as they are. Every query one of those pages READS adds this role to its gate,
+ * so a Logs seat reads every log without being handed the console it came from.
+ * Writes never take it: acting on a row stays with the console that owns it.
+ */
+export const LOGS_READER = 'LOGS_MANAGER';
+
 export function hasRole(user: AuthUser, allowed: readonly string[]): boolean {
   return user.roles.some((r) => allowed.includes(r));
 }

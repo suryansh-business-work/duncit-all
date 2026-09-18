@@ -16,6 +16,8 @@ export const AWAITING_SUITE = new Set([
   'ads-portal',
   'ai',
   'analytics',
+  'ecomm-portal',
+  'ecomm-store',
   'challenge-portal',
   'club-admins',
   'communications',

@@ -114,13 +114,13 @@ async function connectionOf(uri: string) {
   };
 }
 
-async function pingMs(db: mongo.Db): Promise<number> {
+export async function pingMs(db: mongo.Db): Promise<number> {
   const started = performance.now();
   await db.admin().ping();
   return Math.round((performance.now() - started) * 10) / 10;
 }
 
-async function storageOf(db: mongo.Db) {
+export async function storageOf(db: mongo.Db) {
   const s: mongo.Document = await db.stats();
   return {
     collections: s.collections,
@@ -190,7 +190,7 @@ async function collectionOf(db: mongo.Db, name: string): Promise<TechDatabaseCol
   };
 }
 
-async function collectionsOf(db: mongo.Db): Promise<TechDatabaseCollection[]> {
+export async function collectionsOf(db: mongo.Db): Promise<TechDatabaseCollection[]> {
   const listed = await db.listCollections({ type: 'collection' }, { nameOnly: true }).toArray();
   const names = listed.map((c) => c.name).filter((name) => !name.startsWith('system.'));
   const rows: TechDatabaseCollection[] = [];

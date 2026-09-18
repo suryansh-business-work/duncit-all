@@ -23,6 +23,61 @@ export const appConfig = {
   tokenKey: 'logs_token',
   colorModeKey: 'logs_color_mode',
   accent: { light: '#cbd5e1', main: '#475569', hover: '#334155', active: '#1e293b' },
-  nav: [{ label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' }],
+  // Every log the other consoles keep, grouped by the console it belongs to.
+  // Each entry is that console's own page at that console's own path — copied
+  // here, not moved — so a link pasted from one opens the same view in the other.
+  nav: [
+    { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    {
+      label: 'Tech', labelKey: 'shell.nav.tech',
+      icon: 'dns',
+      children: [
+        { label: 'Telemetry Logs', labelKey: 'shell.nav.telemetryLogs', to: '/telemetry/logs', icon: 'article' },
+        { label: 'Error Logs', labelKey: 'shell.nav.errorLogs', to: '/telemetry/error-logs', icon: 'bug' },
+        { label: 'Rate Limit Blocks', labelKey: 'shell.nav.rateLimitBlocks', to: '/rate-limiting/blocked', icon: 'block' },
+      ],
+    },
+    {
+      label: 'AI', labelKey: 'shell.nav.ai',
+      icon: 'ai',
+      children: [
+        { label: 'OpenAI Logs', labelKey: 'shell.nav.openAiLogs', to: '/openai/logs', icon: 'article' },
+        { label: 'AI Monitoring Logs', labelKey: 'shell.nav.aiMonitoringLogs', to: '/monitoring', icon: 'image' },
+      ],
+    },
+    {
+      label: 'Communications', labelKey: 'shell.nav.communications',
+      icon: 'forum',
+      children: [
+        { label: 'Email Logs', labelKey: 'shell.nav.emailLogs', to: '/emails/logs', icon: 'email' },
+        { label: 'WhatsApp Logs', labelKey: 'shell.nav.whatsappLogs', to: '/whatsapp/logs', icon: 'whatsapp' },
+        { label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs', to: '/msg91-otp/logs', icon: 'phone' },
+      ],
+    },
+    {
+      label: 'Finance', labelKey: 'shell.nav.finance',
+      icon: 'payments',
+      children: [
+        { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
+        { label: 'User Refund Logs', labelKey: 'shell.nav.userRefundLogs', to: '/user-refund-logs', icon: 'quote' },
+        { label: 'Gift Card Logs', labelKey: 'shell.nav.giftCardLogs', to: '/gift-cards/logs', icon: 'ticket' },
+        { label: 'Coin Transactions', labelKey: 'shell.nav.coinTransactions', to: '/duncit-coin/transactions', icon: 'wallet' },
+      ],
+    },
+    {
+      label: 'Legal', labelKey: 'shell.nav.legal',
+      icon: 'policy',
+      children: [
+        { label: 'Policy Acceptance Logs', labelKey: 'shell.nav.policyAcceptanceLogs', to: '/policy-acceptance-logs', icon: 'verified-user' },
+      ],
+    },
+    {
+      label: 'Pods', labelKey: 'shell.nav.pods',
+      icon: 'calendar',
+      children: [
+        { label: 'Pod Monitoring (AI)', labelKey: 'shell.nav.podMonitoringAi', to: '/pod-monitoring', icon: 'insights' },
+      ],
+    },
+  ],
   modules: [],
 } satisfies AppConfig;

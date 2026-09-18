@@ -9,6 +9,7 @@ import {
   GSTIN_PATTERN,
   OTP_PATTERN,
   POSTAL_CODE_PATTERN,
+  TIME_OF_DAY_PATTERN,
 } from '../src/patterns';
 
 describe('validation patterns', () => {
@@ -51,6 +52,13 @@ describe('validation patterns', () => {
   it('OTP_PATTERN matches 4-8 digits', () => {
     expect(OTP_PATTERN.test('1234')).toBe(true);
     expect(OTP_PATTERN.test('123')).toBe(false);
+  });
+
+  it('TIME_OF_DAY_PATTERN matches zero-padded 24-hour HH:mm only', () => {
+    expect(TIME_OF_DAY_PATTERN.test('09:30')).toBe(true);
+    expect(TIME_OF_DAY_PATTERN.test('23:59')).toBe(true);
+    expect(TIME_OF_DAY_PATTERN.test('9:30')).toBe(false);
+    expect(TIME_OF_DAY_PATTERN.test('24:00')).toBe(false);
   });
 
   it('POSTAL_CODE_PATTERN matches alphanumeric postal codes', () => {

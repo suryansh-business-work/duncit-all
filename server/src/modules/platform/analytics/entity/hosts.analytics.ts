@@ -40,7 +40,7 @@ export async function hostAnalytics(window: AnalyticsWindow): Promise<EntityAnal
   const hosts = await loadHosts();
   const [now, before] = await Promise.all([
     periodFigures(hosts, window.from, window.to),
-    periodFigures(hosts, window.prevFrom, window.from),
+    periodFigures(hosts, window.prevFrom, window.prevTo),
   ]);
   const approvedIds = new Set(hosts.filter(isApproved).map((row) => row.user_id.toHexString()));
   const activeApproved = [...now.active].filter((id) => approvedIds.has(id)).length;

@@ -51,7 +51,7 @@ export async function clubAdminAnalytics(window: AnalyticsWindow): Promise<Entit
   const directory = await loadDirectory();
   const [now, before, forcedDays] = await Promise.all([
     periodFigures(directory, window.from, window.to),
-    periodFigures(directory, window.prevFrom, window.from),
+    periodFigures(directory, window.prevFrom, window.prevTo),
     markDays('CLUB_ADMIN_FORCE', window.from, window.to, window.zone),
   ]);
   const live = liveFigures(directory);

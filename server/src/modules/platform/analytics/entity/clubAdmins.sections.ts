@@ -1,3 +1,4 @@
+import { consoleLink } from './links';
 import { categoryNames, locationNames, refKey, userNames } from './lookups';
 import { groupPods, loadOutcomes, sumPods, type HeldPod } from './held-pods';
 import { adminsOfPod, type AdminDirectory, type ProfileRow } from './clubAdmins.data';
@@ -91,6 +92,7 @@ export async function adminLeaderboard(
         id: adminId,
         name: profile?.full_name || names.get(adminId) || '',
         caption: profile?.club_admin_no ?? null,
+        link: profile ? consoleLink('club-admins', `/club-admins/${profile._id.toHexString()}`) : null,
         values: [
           directory.clubsByAdmin.get(adminId)?.length ?? 0,
           totals.pods,

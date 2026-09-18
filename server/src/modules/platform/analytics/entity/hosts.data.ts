@@ -4,6 +4,8 @@ import { HostModel } from '@modules/venues/host/host.model';
 /** Every host record, with just what the Hosts analytics page reads. */
 
 export interface HostRow {
+  /** The host record — what the Hosts console opens at /hosts/:hostId. */
+  _id: Types.ObjectId;
   user_id: Types.ObjectId;
   full_name?: string;
   host_no?: string | null;

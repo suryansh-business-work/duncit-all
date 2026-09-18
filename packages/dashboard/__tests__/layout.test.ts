@@ -6,7 +6,9 @@ import {
   GRID_COLUMNS,
   defaultLayout,
   layoutsEqual,
+  minWidthFor,
   normalisePosition,
+  reflowLayout,
   resolveLayout,
   serialiseNodes,
 } from '../src/layout';
@@ -173,5 +175,81 @@ describe('layoutsEqual', () => {
     const measured = [item('a', 0, 0, 6, 9), base[1] as DashboardLayoutItem];
 
     expect(layoutsEqual(base, measured, new Set(['b']))).toBe(false);
+  });
+});
+
+describe('minWidthFor', () => {
+  it('keeps a twelve-column minimum as declared on the full grid', () => {
+    expect(minWidthFor(4, GRID_COLUMNS)).toBe(4);
+  });
+
+  it('scales the minimum to a six-column grid, rounding up so it never undershoots', () => {
+    expect(minWidthFor(4, 6)).toBe(2);
+    expect(minWidthFor(3, 6)).toBe(2);
+  });
+
+  it('is one column on a one-column grid, however wide it was declared', () => {
+    expect(minWidthFor(12, 1)).toBe(1);
+  });
+
+  it('never asks for less than one column', () => {
+    expect(minWidthFor(0, 6)).toBe(1);
+  });
+});
+
+describe('reflowLayout', () => {
+  const slotsOf = (items: DashboardLayoutItem[], column: number) =>
+    reflowLayout(items, column).map(({ item: placed, slot }) => ({ id: placed.id, ...slot }));
+
+  it('leaves a twelve-column grid exactly as stored, in reading order', () => {
+    const items = [item('right', 6, 0, 6, 2), item('left', 0, 0, 6, 3)];
+
+    expect(slotsOf(items, GRID_COLUMNS)).toEqual([
+      { id: 'left', x: 0, y: 0, w: 6, h: 3 },
+      { id: 'right', x: 6, y: 0, w: 6, h: 2 },
+    ]);
+  });
+
+  it('pairs four quarter-width tiles two by two on a six-column grid', () => {
+    const tiles = [item('a', 0, 0, 3, 2), item('b', 3, 0, 3, 2), item('c', 6, 0, 3, 2), item('d', 9, 0, 3, 2)];
+
+    expect(slotsOf(tiles, 6)).toEqual([
+      { id: 'a', x: 0, y: 0, w: 3, h: 2 },
+      { id: 'b', x: 3, y: 0, w: 3, h: 2 },
+      { id: 'c', x: 0, y: 2, w: 3, h: 2 },
+      { id: 'd', x: 3, y: 2, w: 3, h: 2 },
+    ]);
+  });
+
+  it('gives a wider-than-half widget the whole row, starting it on a fresh one', () => {
+    const items = [item('kpi', 0, 0, 4, 2), item('chart', 4, 0, 8, 4), item('table', 0, 4, 12, 5)];
+
+    expect(slotsOf(items, 6)).toEqual([
+      { id: 'kpi', x: 0, y: 0, w: 3, h: 2 },
+      { id: 'chart', x: 0, y: 2, w: 6, h: 4 },
+      { id: 'table', x: 0, y: 6, w: 6, h: 5 },
+    ]);
+  });
+
+  it('starts the next row under the taller of a pair', () => {
+    const items = [item('short', 0, 0, 6, 2), item('tall', 6, 0, 6, 5), item('next', 0, 5, 6, 2)];
+
+    expect(slotsOf(items, 6)).toContainEqual({ id: 'next', x: 0, y: 5, w: 3, h: 2 });
+  });
+
+  it('stacks everything in reading order on a one-column grid', () => {
+    const items = [item('b', 6, 0, 6, 2), item('c', 0, 3, 12, 1), item('a', 0, 0, 6, 3)];
+
+    expect(slotsOf(items, 1)).toEqual([
+      { id: 'a', x: 0, y: 0, w: 1, h: 3 },
+      { id: 'b', x: 0, y: 3, w: 1, h: 2 },
+      { id: 'c', x: 0, y: 5, w: 1, h: 1 },
+    ]);
+  });
+
+  it('hands back the very objects it was given, so a caller can move them', () => {
+    const tile = item('a', 0, 0, 3, 2);
+
+    expect(reflowLayout([tile], 6)[0]?.item).toBe(tile);
   });
 });

@@ -6,10 +6,15 @@ import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import { StatCard } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
 import { KPI_COPY } from './copy';
+import DetailsLink from './DetailsLink';
+import { TargetButton, TargetLine } from './KpiTarget';
 import { deltaOf, formatValue, type Delta } from './format';
-import type { AnalyticsKpi } from './queries';
+import type { AnalyticsEntity, AnalyticsKpi, EntityAnalytics } from './queries';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** What a tile's change line needs: how long the period is and what it is compared with. */
+export type TilePeriod = Pick<EntityAnalytics['period'], 'days' | 'compare'>;
 
 const DELTA_ICONS = {
   up: TrendingUpIcon,
@@ -30,10 +35,12 @@ function deltaColor(delta: Delta): string {
 }
 
 /** The change line under a tile — an arrow and words, so it never rests on colour alone. */
-function DeltaLine({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>) {
+function DeltaLine({ kpi, period }: Readonly<{ kpi: AnalyticsKpi; period: TilePeriod }>) {
   const { t } = useTranslation();
   const delta = deltaOf(kpi.value, kpi.previous, kpi.format, kpi.higher_is_better);
   if (!delta) return <>{t('analytics.page.liveCount')}</>;
+  const since =
+    period.compare === 'YEAR' ? t('analytics.page.vsLastYear') : t('analytics.page.vsPrevious', { vars: { days: period.days } });
   const Icon = DELTA_ICONS[delta.direction];
   return (
     <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
@@ -41,13 +48,19 @@ function DeltaLine({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>)
         <Icon sx={{ fontSize: 16 }} aria-hidden />
         {deltaText(delta, t)}
       </Box>
-      <span>{t('analytics.page.vsPrevious', { vars: { days } })}</span>
+      <span>{since}</span>
     </Box>
   );
 }
 
-/** One headline number beside how it moved since the period before — a widget of its own. */
-export default function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; days: number }>) {
+interface Props {
+  kpi: AnalyticsKpi;
+  period: TilePeriod;
+  entity: AnalyticsEntity;
+}
+
+/** One headline number beside how it moved since the period before, and its goal when it has one. */
+export default function KpiTile({ kpi, period, entity }: Readonly<Props>) {
   const { t } = useTranslation();
   const copy = KPI_COPY[kpi.key];
   const title = copy ? t(copy.title) : kpi.key;
@@ -58,6 +71,13 @@ export default function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; day
       </IconButton>
     </Tooltip>
   ) : undefined;
+  const actions = (
+    <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+      {info}
+      <TargetButton entity={entity} kpi={kpi} title={title} />
+      <DetailsLink url={kpi.url} testId={`analytics-kpi-details-${kpi.key.replaceAll('_', '-')}`} />
+    </Box>
+  );
   return (
     <StatCard
       label={title}
@@ -65,8 +85,13 @@ export default function KpiTile({ kpi, days }: Readonly<{ kpi: AnalyticsKpi; day
       labelWeight={600}
       value={formatValue(kpi.value, kpi.format)}
       valueVariant="h5"
-      hint={<DeltaLine kpi={kpi} days={days} />}
-      icon={info}
+      hint={
+        <>
+          <DeltaLine kpi={kpi} period={period} />
+          <TargetLine kpi={kpi} />
+        </>
+      }
+      icon={actions}
       testId={`analytics-kpi-${kpi.key}`}
       sx={{ height: '100%' }}
     />

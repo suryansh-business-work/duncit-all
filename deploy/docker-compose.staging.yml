@@ -308,6 +308,20 @@ services:
     ports:
       - "127.0.0.1:2137:80"
 
+  ecomm-portal:
+    image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-ecomm-portal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2138:80"
+
+  ecomm-store:
+    image: ${DOCKERHUB_USERNAME}/duncit-ecomm-store:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-ecomm-store
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2139:8080"
+
   # Staging Redis — same shape as production's, isolated on the staging
   # network with its own data dir, so a staging cache flush never touches
   # production's cache (and vice versa).

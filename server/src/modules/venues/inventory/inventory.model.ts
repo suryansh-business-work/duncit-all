@@ -1,4 +1,5 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
+import { storeListingSchema, type IStoreListing } from '@modules/commerce/store/store.listing.model';
 
 export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
@@ -41,6 +42,8 @@ export interface IProductVariant {
   size_label: string;
   description: string;
   unit_cost: number;
+  /** Compare-at price (MRP) the pet store strikes through. 0 = none. */
+  mrp: number;
   inventory_count: number;
   images: string[];
   height_cm: number;
@@ -145,6 +148,8 @@ export interface IInventoryProduct extends Document {
    * ships from. Required for Duncit-owned products (enforced in the service);
    * the warehouse pincode is the ShipRocket rate/shipment origin. */
   pickup_location_id: Types.ObjectId | null;
+  /** The pet-store listing (ecomm.duncit.com). Unlisted by default. */
+  store: IStoreListing;
 
   is_active: boolean;
 
@@ -171,6 +176,7 @@ const variantSchema = new Schema<IProductVariant>(
     size_label: { type: String, default: '', trim: true, maxlength: 120 },
     description: { type: String, default: '', trim: true, maxlength: 4000 },
     unit_cost: { type: Number, default: 0, min: 0, max: 1000000 },
+    mrp: { type: Number, default: 0, min: 0, max: 1000000 },
     inventory_count: { type: Number, default: 0, min: 0 },
     images: { type: [String], default: [] },
     height_cm: { type: Number, default: 0, min: 0 },
@@ -300,6 +306,7 @@ const productSchema = new Schema<IInventoryProduct>(
     commission_pct: { type: Number, default: 5, min: 5, max: 50 },
     delivery_target: { type: String, enum: ['HOST', 'VENUE', 'SHIPROCKET'], default: 'HOST' },
     pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null, index: true },
+    store: { type: storeListingSchema, default: () => ({}) },
 
     is_active: { type: Boolean, default: true },
 
@@ -317,6 +324,14 @@ productSchema.index({
   'categories.category_id': 1,
   'categories.sub_category_id': 1,
 });
+
+// The pet store's shelf reads: listed products by slug, by pet and by category.
+productSchema.index(
+  { 'store.slug': 1 },
+  { unique: true, partialFilterExpression: { 'store.listed': true } }
+);
+productSchema.index({ 'store.listed': 1, 'store.pet_type_ids': 1, 'store.sort_rank': -1 });
+productSchema.index({ 'store.listed': 1, 'store.category_ids': 1 });
 
 export const InventoryProductModel = model<IInventoryProduct>(
   'InventoryProduct',

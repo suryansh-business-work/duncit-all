@@ -2,11 +2,13 @@ import { policyAcceptanceService } from './policyAcceptance.service';
 import type { PolicyAcceptanceSurface } from './policyAcceptance.model';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 
 // The acceptance log is the other half of the Legal portal's policy screen, so
 // it is gated to the same roles policy.resolver already uses for its writes.
 const LEGAL_RW = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
+// Reading it is also open to the Logs console, which mounts the same page.
+const ACCEPTANCE_LOG_READ = [...LEGAL_RW, LOGS_READER];
 
 export const policyAcceptanceResolvers = {
   Query: {
@@ -18,7 +20,7 @@ export const policyAcceptanceResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, LEGAL_RW);
+      requireRole(ctx, ACCEPTANCE_LOG_READ);
       return policyAcceptanceService.table(args.query);
     },
     policyAcceptanceDetail: (
@@ -26,7 +28,7 @@ export const policyAcceptanceResolvers = {
       args: { acceptance_id: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, LEGAL_RW);
+      requireRole(ctx, ACCEPTANCE_LOG_READ);
       return policyAcceptanceService.detail(args.acceptance_id);
     },
   },

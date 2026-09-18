@@ -52,6 +52,12 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.field.notes': 'Notes',
   'email.field.campaign': 'Placement',
   'email.field.resolution': 'Our response',
+  'email.field.status': 'Status',
+  'email.field.courier': 'Courier',
+  'email.field.trackingNo': 'Tracking number',
+  'email.field.returnNo': 'Return',
+  'email.field.autoshipEvery': 'Every (weeks)',
+  'email.field.eachDelivery': 'Each delivery',
 
   // --- Shared callout captions --------------------------------------------
   'email.label.pod': 'Pod',
@@ -89,6 +95,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.cta.reviewSlot': 'Decide on the request',
   'email.cta.secureAccount': 'Review your account security',
   'email.cta.contactSupport': 'Contact support',
+  'email.cta.shopNow': 'Shop now',
+  'email.cta.viewCart': 'Return to your cart',
+  'email.cta.orderNow': 'Order this delivery',
 
   // --- Shared footer sentences ---------------------------------------------
   'email.footer.account':
@@ -422,4 +431,79 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.orderRefund.title': 'Your refund is on its way',
   'email.orderRefund.body':
     'We have refunded the order below. Nothing is needed from you — the money goes back to the method you paid with.',
+
+  // --- Pet store (ecomm.duncit.com) --------------------------------------------------
+  'email.storeOrderCod.title': 'Your order is confirmed',
+  'email.storeOrderCod.body':
+    'Thank you for your order. You pay when it arrives — keep the amount below ready for the courier. We will write again when it ships.',
+  'email.storeOrderUpdate.title': 'An update on your order',
+  'email.storeOrderUpdate.body':
+    'Your pet store order has moved along. Where it is now is below, and the button opens its full tracking.',
+  'email.storeReturnUpdate.title': 'An update on your return',
+  'email.storeReturnUpdate.body':
+    'We have looked at your return request. Its status and anything we need from you are below.',
+  'email.storeBackInStock.title': 'It is back in stock',
+  'email.storeBackInStock.body':
+    'You asked us to tell you when this was back. It is on the shelf again — stock is limited, so do not wait too long.',
+  'email.storeAutoshipDue.title': 'Your next delivery is due',
+  'email.storeAutoshipDue.body':
+    'Your Autoship subscription says it is time for the next one. Order it in one tap — your autoship discount is applied at checkout.',
+  'email.storeCartReminder.title': 'You left something in your cart',
+  'email.storeCartReminder.body':
+    'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
+  // --- Analytics reports (catalogue.analytics) --------------------------------
+  'email.analyticsReport.title': 'Your analytics report',
+  'email.analyticsReport.body':
+    'Here are the numbers from the Duncit Analytics dashboards you follow, each beside the period before. The full report, rankings included, is attached as a PDF.',
+  'email.analyticsReport.periodLabel': 'Period',
+  'email.analyticsReport.periodValue': 'Last {days} days · {from} – {to}',
+  'email.analyticsReport.dailyTitle': 'Daily analytics report',
+  'email.analyticsReport.weeklyTitle': 'Weekly analytics report',
+  'email.analyticsReport.openDashboard': 'Open this dashboard',
+  'email.analyticsReport.openAnalytics': 'Open Analytics',
+  'email.analyticsReport.pdfNote':
+    'The attached PDF carries every figure above and each dashboard’s ranking. The dashboards themselves are live: open them for the charts, or to read another period.',
+  'email.analyticsReport.pdfHeading': 'ANALYTICS REPORT',
+  'email.analyticsReport.generatedLabel': 'Generated',
+  'email.analyticsReport.preparedFor': 'Prepared for',
+  'email.analyticsReport.nameColumn': 'Name',
+  'email.analyticsReport.aiHeading': 'What stands out',
+  'email.analyticsReport.aiHighlights': 'Going well',
+  'email.analyticsReport.aiConcerns': 'Needs attention',
+  'email.analyticsReport.aiWatch': 'Keep an eye on',
+  'email.analyticsReport.aiNote': 'Written by AI from the numbers below. Check the figures before acting on it.',
+  'email.analyticsReport.pdfClosing': 'Open the live dashboards for the charts, and to read any other period:',
+  'email.analyticsReport.footer':
+    'You are receiving this because an Analytics manager subscribed you to Duncit analytics reports. Ask them to change or stop it.',
+  'email.analyticsSubscribed.title': 'You’re subscribed to Duncit analytics',
+  'email.analyticsSubscribed.body':
+    'An Analytics manager has added you to the Duncit analytics reports. Each report brings the dashboards below to your inbox, with a PDF of the full numbers attached.',
+  'email.analyticsSubscribed.scheduleLabel': 'When it arrives',
+  'email.analyticsSubscribed.scheduleDaily': 'Every day at {time} ({zone})',
+  'email.analyticsSubscribed.scheduleWeekly': 'Every {day} at {time} ({zone})',
+  'email.analyticsSubscribed.schedulePaused': 'Sending is paused for now. Your first report arrives once it is switched on.',
+  'email.analyticsSubscribed.dashboardsLabel': 'Dashboards',
+  'email.analyticsSubscribed.periodLabel': 'Each report covers',
+  'email.analyticsSubscribed.periodValue': 'The last {days} days',
+  'email.analyticsSubscribed.help': 'Not expecting this? Write to {{support_email}} and you will be taken off the list.',
+  'email.analyticsAlert.title': 'An analytics alert tripped',
+  'email.analyticsAlert.body': 'The tile this alert watches has crossed the line you set. The number and the rule are below, with a link to the records behind it.',
+  'email.analyticsAlert.valueLabel': 'The number now',
+  'email.analyticsAlert.nameLabel': 'Alert',
+  'email.analyticsAlert.tileLabel': 'Tile',
+  'email.analyticsAlert.ruleLabel': 'Alert when it',
+  'email.analyticsAlert.changeLabel': 'Against the period before',
+  'email.analyticsAlert.periodLabel': 'Period',
+  'email.analyticsAlert.openDetails': 'See the details',
+  'email.analyticsAlert.help': 'While the number stays past the line you will hear once a day. Change or pause the alert in Analytics > Settings > Alerts.',
+  'email.analyticsAlert.footer': 'You are receiving this because you are on an alert in the Duncit Analytics console.',
+  'email.analyticsAlert.subject': 'Analytics alert: {name}',
+  'email.analyticsAlert.tile': '{tile} · {dashboard}',
+  'email.analyticsAlert.ruleAbove': 'Goes above {threshold}',
+  'email.analyticsAlert.ruleBelow': 'Drops below {threshold}',
+  'email.analyticsAlert.ruleRisesBy': 'Rises by {threshold} or more against the period before',
+  'email.analyticsAlert.ruleFallsBy': 'Falls by {threshold} or more against the period before',
+  'email.analyticsAlert.change': '{change} against the period before',
+  'email.analyticsAlert.noChange': 'No earlier period to compare with',
+  'email.analyticsAlert.slack': 'Analytics alert — *{name}*: {tile} is {value} ({rule}; {period}). {url}',
 };

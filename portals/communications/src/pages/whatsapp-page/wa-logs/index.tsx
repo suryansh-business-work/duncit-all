@@ -19,8 +19,11 @@ const getRowId = (row: WaLogRow) => `${row.kind}-${row.id}`;
 interface Props {
   audienceLists: WaAudienceList[];
   actions: ReturnType<typeof useWaCampaignActions>;
-  /** Start a new send prefilled from a past one. */
-  onDuplicate: (campaign: WaCampaignRow) => void;
+  /**
+   * Start a new send prefilled from a past one. Left out where no send can be
+   * started — the Logs console mounts this log to read it, not to send.
+   */
+  onDuplicate?: (campaign: WaCampaignRow) => void;
   /** Filled with a "reload the table" fn so a send elsewhere refreshes it. */
   refetchRef: MutableRefObject<(() => void) | null>;
   /**
@@ -85,10 +88,12 @@ export default function WaLogs({
     setTarget(null);
   };
 
-  const duplicate = (campaign: WaCampaignRow) => {
-    setOpened(null);
-    onDuplicate(campaign);
-  };
+  const duplicate = onDuplicate
+    ? (campaign: WaCampaignRow) => {
+        setOpened(null);
+        onDuplicate(campaign);
+      }
+    : undefined;
 
   const campaignId = opened?.kind === 'CAMPAIGN' ? opened.id : null;
   const automaticId = opened?.kind === 'AUTOMATIC' ? opened.id : null;

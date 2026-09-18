@@ -23,6 +23,8 @@ COPY portals/finance/package.json ./portals/finance/
 COPY portals/tech/package.json ./portals/tech/
 COPY portals/support/package.json ./portals/support/
 COPY portals/website-app/package.json ./portals/website-app/
+# Its Policy Acceptance Logs page is mounted here, so its dependencies must install.
+COPY portals/legal/package.json ./portals/legal/
 COPY portals/pods/package.json ./portals/pods/
 COPY portals/ai/package.json ./portals/ai/
 COPY portals/products/package.json ./portals/products/
@@ -38,6 +40,8 @@ COPY portals/hosts/package.json ./portals/hosts/
 COPY portals/communications/package.json ./portals/communications/
 COPY portals/logs/package.json ./portals/logs/
 COPY portals/analytics/package.json ./portals/analytics/
+COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
+COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
 COPY portals/challenge-portal/package.json ./portals/challenge-portal/
 COPY portals/developers/package.json ./portals/developers/
@@ -73,12 +77,23 @@ COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+# Read by the Tech and Communications pages this console mounts (below).
+COPY packages/errors/package.json ./packages/errors/
+COPY packages/gql-types/package.json ./packages/gql-types/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
 COPY portals/logs ./portals/logs
+# The log pages are the owning consoles' own (src/log-pages.ts imports them from
+# their source), so their src folders are part of this build. Their
+# package.json files are copied above, so their dependencies are installed.
+COPY portals/tech/src ./portals/tech/src
+COPY portals/ai/src ./portals/ai/src
+COPY portals/communications/src ./portals/communications/src
+COPY portals/finance/src ./portals/finance/src
+COPY portals/legal/src ./portals/legal/src
 RUN pnpm --filter logs-portal build
 
 # --- runner ---

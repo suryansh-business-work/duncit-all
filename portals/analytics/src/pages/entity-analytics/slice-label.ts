@@ -31,7 +31,7 @@ function languageName(code: string, locale: string): string {
 export function sliceLabel(breakdownKey: string, slice: Slice, context: SliceLabelContext): string {
   if (slice.label) return slice.label;
   if (slice.key === 'none') return context.t(NONE_KEY);
-  if (breakdownKey === 'hour_of_day') return context.formatClock(`${slice.key.padStart(2, '0')}:00`);
+  if (breakdownKey === 'hour_of_day' || breakdownKey === 'store_order_hour') return context.formatClock(`${slice.key.padStart(2, '0')}:00`);
   if (breakdownKey === 'user_language') return languageName(slice.key, context.locale);
   const key = SLICE_COPY[breakdownKey]?.[slice.key];
   return key ? context.t(key) : slice.key;

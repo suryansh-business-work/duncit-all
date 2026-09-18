@@ -1,10 +1,12 @@
-import { Chip } from '@mui/material';
+import type { ReactNode } from 'react';
+import { Chip, Stack } from '@mui/material';
 import type { DashboardWidget } from '@duncit/dashboard';
 import type { useTranslation } from '@duncit/app-settings';
 import KpiTile from './KpiTile';
 import TrendChart from './TrendChart';
 import BreakdownChart, { ScopeChip } from './BreakdownChart';
 import LeaderboardTable from './LeaderboardTable';
+import DetailsLink from './DetailsLink';
 import { BREAKDOWN_COPY, GRANULARITY_COPY, LEADERBOARD_COPY, TREND_COPY } from './copy';
 import type { EntityAnalytics } from './queries';
 
@@ -26,6 +28,16 @@ const TREND = { perRow: 2, w: 6, h: 5 } as const;
 const BREAKDOWN = { perRow: 3, w: 4, h: 5 } as const;
 const LEADERBOARD_H = 8;
 
+/** A widget's header controls: its own chip (period, scope) and the jump to the records behind it. */
+function headerActions(chip: ReactNode, url: string | null | undefined, id: string) {
+  return (
+    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+      {chip}
+      <DetailsLink url={url} testId={`analytics-details-${id.replaceAll('_', '-')}`} />
+    </Stack>
+  );
+}
+
 const rowsOf = (count: number, perRow: number, height: number) => Math.ceil(count / perRow) * height;
 
 function kpiWidgets(board: EntityAnalytics): DashboardWidget[] {
@@ -40,7 +52,7 @@ function kpiWidgets(board: EntityAnalytics): DashboardWidget[] {
     },
     minW: 2,
     minH: 2,
-    content: <KpiTile kpi={kpi} days={board.period.days} />,
+    content: <KpiTile kpi={kpi} period={board.period} entity={board.entity} />,
   }));
 }
 
@@ -55,7 +67,11 @@ function trendWidgets(board: EntityAnalytics, t: Translate, top: number): Dashbo
       id: `trend-${trend.key}`,
       title,
       subtitle: copy ? t(copy.hint) : undefined,
-      headerActions: <Chip size="small" variant="outlined" label={t(GRANULARITY_COPY[trend.granularity])} />,
+      headerActions: headerActions(
+        <Chip size="small" variant="outlined" label={t(GRANULARITY_COPY[trend.granularity])} />,
+        trend.url,
+        trend.key
+      ),
       fitContent: true,
       defaultLayout: {
         x: alone ? 0 : (index % TREND.perRow) * TREND.w,
@@ -76,7 +92,7 @@ function breakdownWidgets(board: EntityAnalytics, t: Translate, top: number): Da
     return {
       id: `breakdown-${breakdown.key}`,
       title,
-      headerActions: <ScopeChip breakdown={breakdown} />,
+      headerActions: headerActions(<ScopeChip breakdown={breakdown} />, breakdown.url, breakdown.key),
       fitContent: true,
       defaultLayout: {
         x: (index % BREAKDOWN.perRow) * BREAKDOWN.w,
@@ -100,6 +116,7 @@ function leaderboardWidget(board: EntityAnalytics, t: Translate, top: number): D
       id: `leaderboard-${leaderboard.key}`,
       title: copy ? t(copy.title) : leaderboard.key,
       subtitle: copy ? t(copy.hint) : undefined,
+      headerActions: headerActions(null, leaderboard.url, leaderboard.key),
       // A table fills the slot it is given and scrolls inside it, so it gets a fixed height.
       disablePadding: true,
       defaultLayout: { x: 0, y: top, w: 12, h: LEADERBOARD_H },

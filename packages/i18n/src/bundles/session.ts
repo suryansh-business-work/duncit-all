@@ -76,6 +76,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         communications: 'Email, SMS, WhatsApp and push messages to members.',
         logs: 'Server, app and console logs in one place.',
         analytics: 'Bookings, revenue and growth across Duncit.',
+        ecommPortal: 'The Duncit Pet Store — listings, orders, returns and customers.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import EntityAnalyticsPage from './pages/entity-analytics/EntityAnalyticsPage';
 import { ANALYTICS_PAGES } from './pages/entity-analytics/pages';
+import AnalyticsMailsPage from './pages/analytics-mails/AnalyticsMailsPage';
+import AnalyticsAlertsPage from './pages/analytics-alerts/AnalyticsAlertsPage';
 import { runtime } from './runtime';
 
 const authed = createAuthed({
@@ -11,12 +13,14 @@ const authed = createAuthed({
 });
 
 /**
- * Every signed-in route: the profile and one dashboard per subject. Each
- * dashboard is keyed by its path, so moving between them starts the next one
- * at its own default period.
+ * Every signed-in route: the profile, the two Settings pages and one
+ * dashboard per subject. Each dashboard is keyed by its path, so moving
+ * between them starts the next one at its own default period.
  */
 const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/profile', element: <ProfilePage /> },
+  { path: '/settings/analytics-mails', element: <AnalyticsMailsPage /> },
+  { path: '/settings/alerts', element: <AnalyticsAlertsPage /> },
   ...ANALYTICS_PAGES.map((page) => ({
     path: page.path,
     element: <EntityAnalyticsPage key={page.path} page={page} />,
@@ -26,7 +30,7 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
 /** The console has no welcome page: its home is the first dashboard in the sidebar. */
 const HOME = ANALYTICS_PAGES[0].path;
 
-/** One dashboard each for users, pods, clubs, club admins and hosts. */
+/** One dashboard per subject, grouped in the sidebar: Business, Growth, Support, Tech, Security and Testing. */
 export default function App() {
   return (
     <Routes>

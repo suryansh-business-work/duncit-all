@@ -33,11 +33,13 @@ export const PORTALS = [
   'communications',
   'logs',
   'analytics',
+  // The pet store's console.
+  'ecomm-portal',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 
 // Public/marketing static sites (Astro). logs.website.<name>.
-export const WEBSITES = ['duncit', 'partners', 'ads', 'status', 'earnwith'] as const;
+export const WEBSITES = ['duncit', 'partners', 'ads', 'status', 'earnwith', 'ecomm'] as const;
 export type WebsiteKey = (typeof WEBSITES)[number];
 
 import type { Environment } from './types';

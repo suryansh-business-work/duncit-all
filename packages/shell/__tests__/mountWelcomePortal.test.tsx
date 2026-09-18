@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactElement, ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route } from 'react-router';
 
 /**
  * The helper wires shared pieces into one route table, so the test asserts the
@@ -79,19 +79,27 @@ const config: AppConfig = {
 
 const logsPortal = { info: vi.fn() } as unknown as MountPortalOptions['logsPortal'];
 
-function mount(appConfig: AppConfig = config) {
+type ExtraOptions = Pick<Parameters<typeof mountWelcomePortal>[0], 'routes' | 'i18nFallback'>;
+
+function mount(appConfig: AppConfig = config, extra: ExtraOptions = {}) {
   mountWelcomePortal({
     appConfig,
     env: { DEV: false, VITE_GRAPHQL_URL: 'https://staging.server.duncit.com/graphql' },
     logsPortal,
+    ...extra,
   });
   return mocks.mountOptions as Record<string, unknown>;
 }
 
-function renderAt(path: string, appConfig: AppConfig = config) {
-  const routes = mount(appConfig).children as ReactElement;
+function renderAt(path: string, appConfig: AppConfig = config, extra: ExtraOptions = {}) {
+  const routes = mount(appConfig, extra).children as ReactElement;
   return render(<MemoryRouter initialEntries={[path]}>{routes}</MemoryRouter>);
 }
+
+// A console's own screen, as the Logs console hands its log pages in.
+const logRoutes: ExtraOptions['routes'] = (authed) => (
+  <Route path="/telemetry/logs" element={authed(<div data-testid="telemetry-logs" />)} />
+);
 
 describe('resolvePortalGraphqlUrl', () => {
   it('uses the address the build baked in', () => {
@@ -175,5 +183,36 @@ describe('mountWelcomePortal', () => {
 
     expect(screen.getByTestId('login')).toBeInTheDocument();
     expect(screen.queryByTestId('welcome')).not.toBeInTheDocument();
+  });
+
+  it('passes no copy of its own when the console hands none in', () => {
+    expect(mount().i18nFallback).toBeUndefined();
+  });
+
+  it('hands the console copy it was given to the provider stack', () => {
+    const i18nFallback = { 'tech.telemetryLogs.telemetryLogs': 'Telemetry Logs' };
+
+    expect(mount(config, { i18nFallback }).i18nFallback).toBe(i18nFallback);
+  });
+
+  it("renders a console's own screen inside the chrome", () => {
+    renderAt('/telemetry/logs', config, { routes: logRoutes });
+
+    expect(screen.getByTestId('chrome')).toContainElement(screen.getByTestId('telemetry-logs'));
+  });
+
+  it("keeps the console's own screens behind the login gate", () => {
+    mocks.token = null;
+    renderAt('/telemetry/logs', config, { routes: logRoutes });
+
+    expect(screen.getByTestId('login')).toBeInTheDocument();
+    expect(screen.queryByTestId('telemetry-logs')).not.toBeInTheDocument();
+  });
+
+  it('still sends an unknown path to the dashboard beside those screens', () => {
+    renderAt('/reports/weekly', config, { routes: logRoutes });
+
+    expect(screen.getByTestId('welcome')).toBeInTheDocument();
+    expect(screen.queryByTestId('telemetry-logs')).not.toBeInTheDocument();
   });
 });

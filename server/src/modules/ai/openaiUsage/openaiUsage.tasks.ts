@@ -39,6 +39,7 @@ export const OPENAI_TASKS = {
   'platform.release_notes': { label: 'Release changelog', module: 'Platform' },
   'platform.stress_verdict': { label: 'Stress test verdict', module: 'Platform' },
   'platform.server_advice': { label: 'Server recommendations', module: 'Platform' },
+  'platform.analytics_summary': { label: 'Analytics report summary', module: 'Platform' },
   'localization.auto_translate': { label: 'Locale auto-translation', module: 'Platform' },
   'askbot.navigation': { label: 'Navigation bot answer', module: 'Ask Bot' },
   'agent.console': { label: 'Agent console turn', module: 'Agent' },

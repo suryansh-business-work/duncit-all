@@ -16,6 +16,7 @@ import {
 import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/appBuild/appStoreConnect.gateway';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
+import { sonarGet } from '@utils/sonarqube';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -590,6 +591,37 @@ export async function appStoreConnectConnection(str: EnvConfigReader): Promise<E
   };
 }
 
+// --- SonarQube ----------------------------------------------------------------
+
+interface SonarGateStatus {
+  projectStatus: { status: string; conditions?: Array<{ status: string }> };
+}
+
+/**
+ * Reads the project's quality gate — the cheapest call that proves all three
+ * values at once: the URL answers, the token is accepted, and it may browse
+ * the project the key names. Nothing is written.
+ */
+export async function sonarqubeConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const cfg = { hostUrl: str('host_url').trim(), token: str('token').trim(), projectKey: str('project_key').trim() };
+  if (!cfg.hostUrl || !cfg.token || !cfg.projectKey) {
+    return { ok: false, message: 'Server URL, user token and project key are all required', details: [] };
+  }
+  try {
+    const { projectStatus } = await sonarGet<SonarGateStatus>(cfg, '/api/qualitygates/project_status', {
+      projectKey: cfg.projectKey,
+    });
+    const failing = (projectStatus.conditions ?? []).filter((condition) => condition.status === 'ERROR').length;
+    return {
+      ok: true,
+      message: `Connected to ${cfg.projectKey}`,
+      details: [`Quality gate: ${projectStatus.status}, ${failing} failing condition(s).`],
+    };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+  }
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -607,6 +639,7 @@ const CONNECTION_CHECKS = {
   MSG91: msg91Connection,
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,
+  SONARQUBE: sonarqubeConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

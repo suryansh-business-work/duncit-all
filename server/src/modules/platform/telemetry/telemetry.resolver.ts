@@ -6,11 +6,14 @@ import {
 } from './telemetry.service';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 
 // Telemetry is managed from the Tech portal.
 const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER'];
 const TELEMETRY_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// The Logs console reads the log tables too (plus the settings its GET API
+// button takes the feed key from). Bugs and the dashboard stay Tech's.
+const LOG_READ = [...TELEMETRY_READ, LOGS_READER];
 
 /**
  * Emptying a whole telemetry collection is not a scoped mistake — nothing
@@ -22,7 +25,7 @@ const DELETE_ALL_ROLES = ['SUPER_ADMIN'];
 export const telemetryResolvers = {
   Query: {
     telemetrySettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, TELEMETRY_READ);
+      requireRole(ctx, LOG_READ);
       return telemetryService.getSettings();
     },
     telemetryDashboard: (_p: unknown, args: { range_days?: number | null }, ctx: GraphQLContext) => {
@@ -34,11 +37,11 @@ export const telemetryResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext,
     ) => {
-      requireRole(ctx, TELEMETRY_READ);
+      requireRole(ctx, LOG_READ);
       return telemetryService.logsTable(args.query);
     },
     telemetryLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TELEMETRY_READ);
+      requireRole(ctx, LOG_READ);
       return telemetryService.telemetryLog(args.id);
     },
     bugsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
@@ -66,7 +69,7 @@ export const telemetryResolvers = {
       args: { level?: string | null; limit?: number | null },
       ctx: GraphQLContext,
     ) => {
-      requireRole(ctx, TELEMETRY_READ);
+      requireRole(ctx, LOG_READ);
       return telemetryService.logsExport(args.level, args.limit);
     },
     telemetryDeleteCount: (

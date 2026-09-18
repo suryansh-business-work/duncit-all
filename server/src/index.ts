@@ -23,10 +23,13 @@ import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMo
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
+import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
+import { startAnalyticsAlertScheduler } from '@modules/platform/analytics/alerts/analyticsAlert.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
 import { startServerHistorySampler } from '@modules/platform/tech/tech.history.sampler';
 import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
@@ -444,6 +447,9 @@ async function bootstrap() {
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
 
+  // Pet store: email everyone waiting on a product that is back in stock.
+  startStoreScheduler();
+
   // Database backups: a one-minute tick that takes the archive when the
   // admin-configured window has passed (Tech > Database > Backups; off until
   // an operator turns it on) and prunes past the keep-last count.
@@ -454,6 +460,14 @@ async function bootstrap() {
   // nightly at 03:00 by default). The workflow declares no cron of its own, so
   // this is the only thing that starts a scheduled run.
   startE2eRunScheduler();
+
+  // Analytics reports: a one-minute tick that mails each subscriber their
+  // dashboards, with the PDF attached, when their daily or weekly slot has
+  // passed (Analytics > Settings > Analytics Mails; off until turned on).
+  startAnalyticsMailScheduler();
+  // Analytics alerts: every active alert's tile, read once an hour; a tripped one
+  // mails its people (Analytics > Settings > Alerts).
+  startAnalyticsAlertScheduler();
 
   // The live pulse (requests/s, real users online, event-loop lag) the Tech
   // portal reads, and the five-second sampler that records a stress run's time

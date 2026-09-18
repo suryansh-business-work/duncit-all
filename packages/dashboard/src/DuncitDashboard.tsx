@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react';
-import { Alert, Stack } from '@mui/material';
+import { Alert, Stack, useTheme } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog } from '@duncit/dialogs';
 import 'gridstack/dist/gridstack.min.css';
+import { SKIP_IN_DOWNLOAD } from './download';
 import { DASHBOARD_FALLBACK_FLAT } from './i18n';
 import { DashboardGrid } from './DashboardGrid';
 import { DashboardToolbar } from './DashboardToolbar';
 import { useDashboardController } from './useDashboardController';
+import { useDashboardDownload } from './useDashboardDownload';
 import type { DashboardWidget } from './types';
 
 export type DuncitDashboardProps = Readonly<{
@@ -31,10 +33,17 @@ export type DuncitDashboardProps = Readonly<{
  * and a minimum size — and this owns everything about WHERE: the responsive
  * twelve-column grid, drag and resize behind an explicit edit mode, and the
  * per-user layout that is saved server-side so it follows the person from one
- * machine to the next rather than living in one browser.
+ * machine to the next rather than living in one browser. Every dashboard can
+ * also be downloaded as a picture of exactly what is on screen.
  */
 export function DuncitDashboard({ dashboardId, widgets, header, cellHeight }: DuncitDashboardProps) {
   const { t } = useTranslation(DASHBOARD_FALLBACK_FLAT);
+  const theme = useTheme();
+  const download = useDashboardDownload(
+    dashboardId,
+    theme.palette.background.default,
+    t('shell.dashboard.downloadFailed')
+  );
 
   const controller = useDashboardController(
     dashboardId,
@@ -48,13 +57,14 @@ export function DuncitDashboard({ dashboardId, widgets, header, cellHeight }: Du
   );
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} ref={download.targetRef}>
       {header}
 
       <DashboardToolbar
         editing={controller.editing}
         saving={controller.saving}
         dirty={controller.dirty}
+        downloading={download.downloading}
         labels={{
           customise: t('shell.dashboard.customise'),
           editing: t('shell.dashboard.editing'),
@@ -63,14 +73,26 @@ export function DuncitDashboard({ dashboardId, widgets, header, cellHeight }: Du
           saving: t('shell.dashboard.saving'),
           cancel: t('shell.dashboard.cancel'),
           reset: t('shell.dashboard.reset'),
+          download: t('shell.dashboard.download'),
+          downloading: t('shell.dashboard.downloading'),
         }}
         onStart={controller.startEditing}
         onSave={controller.saveLayout}
         onCancel={controller.cancelEditing}
         onReset={controller.askReset}
+        onDownload={download.download}
       />
 
-      {controller.error ? <Alert severity="warning">{controller.error}</Alert> : null}
+      {controller.error ? (
+        <Alert severity="warning" {...SKIP_IN_DOWNLOAD}>
+          {controller.error}
+        </Alert>
+      ) : null}
+      {download.error ? (
+        <Alert severity="error" {...SKIP_IN_DOWNLOAD}>
+          {download.error}
+        </Alert>
+      ) : null}
 
       <DashboardGrid
         widgets={widgets}

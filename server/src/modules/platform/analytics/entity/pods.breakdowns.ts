@@ -1,3 +1,4 @@
+import type { CityScope } from './city';
 import { Types } from 'mongoose';
 import { formatInTimeZone } from 'date-fns-tz';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -95,15 +96,15 @@ async function leadTimes(bookings: readonly BookingRow[]) {
   return bandSlices(hours, LEAD_BANDS);
 }
 
-async function doorAndScores(window: AnalyticsWindow) {
+async function doorAndScores(window: AnalyticsWindow, scope: CityScope) {
   const range = inRange(window.from, window.to);
   const [methods, stars] = await Promise.all([
     TicketModel.aggregate<{ _id: string | null; count: number }>([
-      { $match: { status: 'CHECKED_IN', checked_in_at: range } },
+      { $match: { status: 'CHECKED_IN', checked_in_at: range, ...scope.pods } },
       { $group: { _id: { $ifNull: ['$checked_in_method', 'UNRECORDED'] }, count: { $sum: 1 } } },
     ]),
     BouncerFeedbackModel.aggregate<{ _id: number; count: number }>([
-      { $match: { created_at: range } },
+      { $match: { created_at: range, ...scope.pods } },
       { $group: { _id: '$rating', count: { $sum: 1 } } },
     ]),
   ]);
@@ -116,13 +117,14 @@ async function doorAndScores(window: AnalyticsWindow) {
 export async function podBreakdowns(
   window: AnalyticsWindow,
   held: readonly HeldPod[],
-  bookings: readonly BookingRow[]
+  bookings: readonly BookingRow[],
+  scope: CityScope
 ): Promise<AnalyticsBreakdown[]> {
   const inZone = (date: Date, token: string) => formatInTimeZone(date, window.zone, token);
   // 'i' is the ISO weekday (Monday = 1), 'H' the 24-hour clock, both in the admin's zone.
   const weekdays = tally(held.map((pod) => WEEKDAYS[Number(inZone(pod.starts_at, 'i')) - 1]));
   const hours = tally(held.map((pod) => inZone(pod.starts_at, 'H')));
-  const [places, lead, door] = await Promise.all([placeBreakdowns(held), leadTimes(bookings), doorAndScores(window)]);
+  const [places, lead, door] = await Promise.all([placeBreakdowns(held), leadTimes(bookings), doorAndScores(window, scope)]);
   return [
     ...places,
     breakdown('weekday', fixedSlices(WEEKDAYS, weekdays), { ordered: true }),

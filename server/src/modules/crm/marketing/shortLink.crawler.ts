@@ -1,3 +1,4 @@
+import { escapeHtml } from '@utils/html';
 import type { ShortLinkCard } from './shortLink.preview';
 
 /**
@@ -65,17 +66,6 @@ export function isLinkPreviewCrawler(userAgent: string | undefined): boolean {
   const agent = userAgent.toLowerCase();
   return CRAWLER_TOKENS.some((token) => agent.includes(token));
 }
-
-const ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-const escapeHtml = (value: string): string =>
-  value.replaceAll(/[&<>"']/g, (char) => ESCAPES[char] ?? char);
 
 /**
  * The card document.

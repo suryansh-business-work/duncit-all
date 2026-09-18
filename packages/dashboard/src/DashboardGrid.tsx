@@ -51,6 +51,11 @@ const GRID_SX = {
  * GridStack reads a tile's placement off `gs-*` DOM attributes, which are not
  * known JSX props (Sonar S6747). Building them as one record and spreading it
  * renders exactly the same attributes without writing each one inline.
+ *
+ * The minimum width is `data-min-w`, not `gs-min-w`: useGridStack hands it to
+ * GridStack only while a resize is under way, scaled to the current column
+ * count, because a standing minW would stop a narrow grid re-flowing the
+ * widget to half its row.
  */
 function gridAttributes(
   widget: DashboardWidget,
@@ -63,7 +68,7 @@ function gridAttributes(
     'gs-y': slot.y,
     'gs-w': slot.w,
     'gs-h': slot.h,
-    'gs-min-w': min.w,
+    'data-min-w': min.w,
     'gs-min-h': min.h,
     'gs-size-to-content': widget.fitContent ? 'true' : undefined,
   };

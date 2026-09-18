@@ -68,7 +68,8 @@ export interface IBillingDetails {
 export interface IPayment extends Document {
   payment_id: string;
   invoice_no: string | null;
-  user_id: Types.ObjectId;
+  /** Null only for a pet-store GUEST checkout — the payer is then its email. */
+  user_id: Types.ObjectId | null;
   user_name: string;
   user_email: string;
   user_phone: string | null;
@@ -164,7 +165,7 @@ const paymentSchema = new Schema<IPayment>(
   {
     payment_id: { type: String, required: true, unique: true, index: true },
     invoice_no: { type: String, default: null, index: true },
-    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     user_name: { type: String, required: true },
     user_email: { type: String, required: true },
     user_phone: { type: String, default: null },

@@ -2,13 +2,15 @@ import { giftcardService } from './giftcard.service';
 import { giftCardAdminService } from './giftcard.admin.service';
 import { giftCardSettingsService } from './giftcard.settings.service';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 
 // Gift card liability is a platform-wide money figure — same read triple as the
 // coin console. Writing policy (amounts, validity) is the narrower door.
 const GIFT_CARD_ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const GIFT_CARD_ADMIN_WRITE = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
+// The ledger (Gift Cards > Logs) is mounted in the Logs console too.
+const GIFT_CARD_LOG_READ = [...GIFT_CARD_ADMIN_READ, LOGS_READER];
 
 // No role gate on the buyer-facing queries: every signed-in account may buy,
 // hold and redeem a gift card — partners included.
@@ -47,7 +49,7 @@ export const giftCardResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, GIFT_CARD_ADMIN_READ);
+      requireRole(ctx, GIFT_CARD_LOG_READ);
       return giftCardAdminService.transactionsTable(args.query);
     },
   },

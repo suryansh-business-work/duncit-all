@@ -223,6 +223,24 @@ export const SURFACES: readonly Surface[] = [
       'The console for charts on users, pods, clubs, club admins and hosts — one rearrangeable dashboard each, with headline numbers against the previous period, trends, breakdowns and short top-ten rankings.',
   },
   {
+    key: 'ecomm-portal',
+    name: 'E-commerce',
+    kind: 'PORTAL',
+    host: 'ecomm-portal.duncit.com',
+    dev_port: 2038,
+    summary:
+      'The console that runs the Duncit Pet Store: which catalogue products are on the shelf and how they read there, pet types, categories, filters, collections, the store home page, orders, returns, customers, reviews, store coupons, abandoned carts, back-in-stock alerts and the store settings.',
+  },
+  {
+    key: 'ecomm',
+    name: 'Duncit Pet Store',
+    kind: 'WEBSITE',
+    host: 'ecomm.duncit.com',
+    dev_port: 2039,
+    summary:
+      'The online pet store: shop by pet, category or collection, product pages with delivery checks and reviews, a cart, checkout by UPI/card/net banking or Cash on Delivery (as a Duncit member or a guest), order tracking, cancellations and returns.',
+  },
+  {
     key: 'hosts',
     name: 'Hosts',
     kind: 'PORTAL',

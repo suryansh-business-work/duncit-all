@@ -31,6 +31,7 @@ exports:
   - 'PERSON_NAME_PATTERN'
   - 'PHONE_NUMBER_PATTERN'
   - 'PUBLIC_URL_PATTERN'
+  - 'TIME_OF_DAY_PATTERN'
   - 'GSTIN_PATTERN'
   - 'makeLoginSchema'
   - 'makeForgotPasswordSchema'
@@ -273,6 +274,7 @@ zodRules.optionalPhoneNumber('Phone number').safeParse('98450');      // fails â
 | `PUBLIC_URL_PATTERN` | `/^https?:\/\/\S+$/i` | An absolute http(s) link a vendor can fetch â€” a WhatsApp header asset. Narrower than `optionalUrl`, which also takes `mailto:` and `tel:`. |
 | `OTP_PATTERN` | `/^\d{4,8}$/` | OTP codes. |
 | `POSTAL_CODE_PATTERN` | `/^[\dA-Za-z -]{3,12}$/` | Postal / ZIP codes. |
+| `TIME_OF_DAY_PATTERN` | `/^([01]\d\|2[0-3]):[0-5]\d$/` | A scheduled job's wall-clock `HH:mm`, 24-hour and zero-padded. |
 
 ## Live preview
 

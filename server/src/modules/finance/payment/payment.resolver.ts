@@ -5,7 +5,7 @@ import { paymentRefundService } from './payment.refund.service';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
-import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
+import { hasRole, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import {
   dummyCheckoutSchema,
@@ -23,6 +23,9 @@ const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 // Payments section lists a pod's transactions — same read scope it already has
 // on podFinanceBreakdown and adminPodAttendees. Mutations stay on ADMIN_RW.
 const ADMIN_READ = [...ADMIN_RW, 'ZONAL_ADMIN'];
+// Payment Logs, one payment's detail and User Refund Logs are also mounted in
+// the Logs console. Refunds, retries and invoices stay with Finance.
+const LOG_READ = [...ADMIN_READ, LOGS_READER];
 
 export const paymentResolvers = {
   Payment: {
@@ -45,15 +48,15 @@ export const paymentResolvers = {
       return paymentService.list(args.filter, args.limit ?? 200);
     },
     paymentTotals: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
+      requireRole(ctx, LOG_READ);
       return paymentService.totals(args.filter);
     },
     paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
+      requireRole(ctx, LOG_READ);
       return paymentService.table(args.query);
     },
     userRefundsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
+      requireRole(ctx, LOG_READ);
       return paymentRefundService.table(args.query);
     },
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
@@ -61,7 +64,7 @@ export const paymentResolvers = {
       return paymentService.getById(args.payment_doc_id);
     },
     paymentDetail: async (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
+      requireRole(ctx, LOG_READ);
       const detail = await paymentDetailService.detail(args.payment_doc_id);
       if (!detail) {
         throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });

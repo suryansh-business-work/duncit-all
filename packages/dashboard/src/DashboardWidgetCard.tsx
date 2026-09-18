@@ -63,22 +63,27 @@ type HeaderProps = Readonly<{
  * While editing, the whole header row is a drag handle, not just the grip — a
  * 24px grip is a miserable drag target. Buttons inside `headerActions` stay
  * clickable: GridStack's skip list refuses drags that start on them.
+ *
+ * On a narrow card the actions (a filter, a total) wrap under the title rather
+ * than squeezing it to nothing or being clipped off the card's edge.
  */
 function WidgetHeader({ widget, editing, dragLabel, arrange }: HeaderProps) {
   return (
     <Stack
       direction="row"
       spacing={1}
+      useFlexGap
       className={editing ? DRAG_HANDLE_CLASS : undefined}
       sx={{
         alignItems: "center",
+        flexWrap: 'wrap',
         px: 2,
         pt: 1.5,
         pb: widget.subtitle ? 0.5 : 1,
         ...(editing && { cursor: 'move', touchAction: 'none', userSelect: 'none' })
       }}>
       {editing ? <DragGrip label={dragLabel} /> : null}
-      <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Box sx={{ minWidth: 0, flex: '1 1 160px' }}>
         {widget.title ? (
           <Typography variant="subtitle1" component="h2" noWrap sx={{
             fontWeight: 800

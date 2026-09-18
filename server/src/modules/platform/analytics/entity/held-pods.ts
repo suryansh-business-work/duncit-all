@@ -43,8 +43,9 @@ interface RawPod {
   pod_type?: string;
 }
 
-export async function loadHeldPods(from: Date, to: Date): Promise<HeldPod[]> {
-  const pods = await PodModel.find({ pod_date_time: inRange(from, to) })
+/** `location` narrows it to one city (see city.ts); empty reads every city. */
+export async function loadHeldPods(from: Date, to: Date, location: Record<string, unknown> = {}): Promise<HeldPod[]> {
+  const pods = await PodModel.find({ pod_date_time: inRange(from, to), ...location })
     .select('club_id pod_hosts_id location_id pod_date_time no_of_spots pod_attendees extra_seats pod_amount pod_mode pod_type')
     .lean<RawPod[]>();
   return pods.map((pod) => ({

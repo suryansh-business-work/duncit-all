@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 import { emailLogService } from './emailLog.service';
 import type { TableQueryInput } from '@utils/table-query';
 
@@ -8,6 +8,8 @@ import type { TableQueryInput } from '@utils/table-query';
  * the screens that read any of this live in the Communications console.
  */
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'COMMUNICATIONS_MANAGER'];
+/** The Logs page reads the table, one row and the header counts — nothing else. */
+const LOG_READ = [...ADMIN_ROLES, LOGS_READER];
 
 /**
  * Emptying the log is not a scoped mistake — it removes the only record of the
@@ -24,15 +26,15 @@ export const emailLogResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return emailLogService.table(args.query);
     },
     emailLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return emailLogService.byId(args.id);
     },
     emailLogStats: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, LOG_READ);
       return emailLogService.stats(args.days ?? 7);
     },
     emailLogDashboard: (

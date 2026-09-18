@@ -14,6 +14,12 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// jsdom has no canvas, so a real rasterise could only fail — which is exactly
+// the path the inline-error test below wants, made explicit rather than luck.
+vi.mock('modern-screenshot', () => ({
+  domToBlob: vi.fn(() => Promise.reject(new Error('no canvas in jsdom'))),
+}));
+
 import { DashboardToolbar } from '../src/DashboardToolbar';
 import { DashboardWidgetCard } from '../src/DashboardWidgetCard';
 import { DuncitDashboard } from '../src/DuncitDashboard';
@@ -159,6 +165,17 @@ describe('DuncitDashboard', () => {
     expect(screen.getByRole('menuitem', { name: 'Make wider' })).toBeInTheDocument();
   });
 
+  it('says so inline when the dashboard cannot be downloaded, and leaves it standing', async () => {
+    mount();
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+
+    expect(await screen.findByText('Could not download this dashboard. Please try again.')).toBeInTheDocument();
+    expect(screen.getByTestId('body-a')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+  });
+
   it('survives every toolbar control being pressed with the mutations answering nothing', async () => {
     const { container } = mount();
     await settle();
@@ -222,6 +239,8 @@ describe('DashboardToolbar', () => {
     saving: 'Saving…',
     cancel: 'Cancel',
     reset: 'Reset',
+    download: 'Download',
+    downloading: 'Preparing download…',
   };
 
   const toolbar = (over: Record<string, unknown> = {}) =>
@@ -230,23 +249,46 @@ describe('DashboardToolbar', () => {
         editing={false}
         saving={false}
         dirty={false}
+        downloading={false}
         labels={labels}
         onStart={vi.fn()}
         onSave={vi.fn()}
         onCancel={vi.fn()}
         onReset={vi.fn()}
+        onDownload={vi.fn()}
         {...(over as never)}
       />
     );
 
-  it('offers only Customise while the dashboard is at rest', () => {
+  it('offers Download and Customise while the dashboard is at rest', () => {
     const onStart = vi.fn();
-    toolbar({ onStart });
+    const onDownload = vi.fn();
+    toolbar({ onStart, onDownload });
 
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('button')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Customise' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }));
 
     expect(onStart).toHaveBeenCalled();
+    expect(onDownload).toHaveBeenCalled();
+  });
+
+  it('keeps Download busy while the image is being made', () => {
+    toolbar({ downloading: true });
+
+    expect(screen.getByRole('button', { name: 'Preparing download…' })).toBeDisabled();
+  });
+
+  it('keeps the toolbar itself out of the downloaded picture', () => {
+    const { container } = toolbar();
+
+    expect(container.firstElementChild).toHaveAttribute('data-dashboard-skip');
+  });
+
+  it('offers no Download while editing, so the picture never carries edit handles', () => {
+    toolbar({ editing: true, dirty: true });
+
+    expect(screen.queryByRole('button', { name: 'Download' })).toBeNull();
   });
 
   it('offers save, cancel and reset once editing starts', () => {

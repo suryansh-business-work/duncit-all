@@ -13,6 +13,8 @@ export const AADHAR_PATTERN = /^\d{12}$/;
 export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 export const OTP_PATTERN = /^\d{4,8}$/;
 export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
+/** Wall-clock `HH:mm` on a 24-hour clock, zero-padded — the time a scheduled job stores. */
+export const TIME_OF_DAY_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 /**
  * An absolute http(s) link — the only shape a third party can fetch.
  *

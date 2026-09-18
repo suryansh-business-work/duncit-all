@@ -36,6 +36,10 @@ export const OTP_PURPOSES = [
   // membership, so sharing the purpose would let it be spent as the buyer's own
   // attendance proof.
   'POD_COMPANION',
+  // Proving the phone on a pet-store Cash-on-Delivery order before it is
+  // booked. Its own purpose so a code minted for any sign-in or account change
+  // can never place an order, and the other way round.
+  'STORE_COD',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 

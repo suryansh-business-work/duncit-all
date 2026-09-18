@@ -1,4 +1,4 @@
-import { formatMoney } from '@duncit/utils';
+import { formatBytes, formatMoney } from '@duncit/utils';
 import type { AnalyticsFormat } from './queries';
 
 /**
@@ -10,6 +10,23 @@ import type { AnalyticsFormat } from './queries';
 const COUNT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 const ONE_DECIMAL = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 });
 const EM_DASH = '—';
+
+/** `Intl` writes the unit, so a duration needs no copy of its own. */
+const unitFormat = (unit: string, digits: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'unit', unit, unitDisplay: 'short', maximumFractionDigits: digits });
+const MILLISECONDS = unitFormat('millisecond', 0);
+const SECONDS = unitFormat('second', 1);
+const MINUTES = unitFormat('minute', 1);
+
+/** Milliseconds in the largest unit that keeps the number short: 850 ms, 12.4 sec, 38.5 min. */
+function formatDuration(ms: number): string {
+  if (ms < 1000) return MILLISECONDS.format(ms);
+  if (ms < 60_000) return SECONDS.format(ms / 1000);
+  return MINUTES.format(ms / 60_000);
+}
+
+/** SonarQube's rating: 1 is A, 5 is E. */
+const formatGrade = (value: number) => (value >= 1 ? String.fromCodePoint(64 + Math.round(value)) : EM_DASH);
 
 export function formatValue(value: number | null | undefined, format: AnalyticsFormat): string {
   if (value === null || value === undefined) return EM_DASH;
@@ -23,6 +40,12 @@ export function formatValue(value: number | null | undefined, format: AnalyticsF
     case 'DAYS':
     case 'DECIMAL':
       return ONE_DECIMAL.format(value);
+    case 'BYTES':
+      return formatBytes(value);
+    case 'DURATION':
+      return formatDuration(value);
+    case 'GRADE':
+      return formatGrade(value);
     default:
       return COUNT.format(value);
   }
@@ -45,6 +68,8 @@ export interface Delta {
 
 function deltaUnit(format: AnalyticsFormat, previous: number): Delta['unit'] {
   if (format === 'PERCENT') return 'points';
+  // A grade moves in whole steps (B to C is one), never in percent of itself.
+  if (format === 'GRADE') return 'plain';
   return previous === 0 ? 'plain' : 'percent';
 }
 

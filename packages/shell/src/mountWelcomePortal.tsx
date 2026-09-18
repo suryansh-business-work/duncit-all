@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { createAuthed } from './auth/RequireAuth';
@@ -24,6 +25,14 @@ export interface MountWelcomePortalOptions {
   env: PortalBuildEnv;
   /** This console's logger from `logs.portal.<key>`. */
   logsPortal: MountPortalOptions['logsPortal'];
+  /**
+   * The console's own screens, beside the three every console has. Handed the
+   * `authed` wrapper (login gate + this console's chrome); what it returns sits
+   * before the catch-all, so an unknown path still lands on the dashboard.
+   */
+  routes?: (authed: ReturnType<typeof createAuthed>) => ReactNode;
+  /** The copy those screens read, compiled into the build — as on `mountPortal`. */
+  i18nFallback?: MountPortalOptions['i18nFallback'];
 }
 
 /**
@@ -56,16 +65,15 @@ export function WelcomePage({ config }: Readonly<{ config: AppConfig }>) {
 }
 
 /**
- * A console that is only the shell: login, the welcome dashboard at `/`, and
- * the profile page.
+ * A console built on the shell: login, the welcome dashboard at `/`, and the
+ * profile page — plus whatever screens the console hands in as `routes`.
  *
- * This is what a new subdomain ships before its first screen exists. The
- * portal hands over its config and nothing else, so standing one up adds no
- * copied bootstrap — and its screens are added to its own route table later,
- * when it outgrows this.
+ * This is what a new subdomain ships before its first screen exists, and what
+ * it keeps shipping while its screens are only routes: the portal hands over
+ * its config (and those routes), so standing one up adds no copied bootstrap.
  */
 export function mountWelcomePortal(options: Readonly<MountWelcomePortalOptions>): void {
-  const { appConfig, env, logsPortal } = options;
+  const { appConfig, env, logsPortal, routes, i18nFallback } = options;
   const graphqlUrl = resolvePortalGraphqlUrl(env);
   const { AppShell, LoginPage, session, apolloClient } = createPortalRuntime(appConfig, graphqlUrl);
   const authed = createAuthed({
@@ -78,12 +86,14 @@ export function mountWelcomePortal(options: Readonly<MountWelcomePortalOptions>)
     apolloClient,
     graphqlUrl,
     logsPortal,
+    i18nFallback,
     loadUser: createSessionUserLoader(apolloClient),
     children: (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<WelcomePage config={appConfig} />)} />
         <Route path="/profile" element={authed(<ProfilePage />)} />
+        {routes?.(authed)}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     ),

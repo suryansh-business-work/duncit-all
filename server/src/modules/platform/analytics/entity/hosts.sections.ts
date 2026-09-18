@@ -1,3 +1,4 @@
+import { consoleLink } from './links';
 import { locationNames, refKey, userNames } from './lookups';
 import { groupPods, loadOutcomes, rankingValues, RANKING_COLUMNS, sumPods, type HeldPod } from './held-pods';
 import type { AspectRatings } from './signals';
@@ -86,6 +87,7 @@ export async function hostLeaderboard(hosts: readonly HostRow[], held: readonly 
         id: hostId,
         name: host?.full_name || names.get(hostId) || '',
         caption: host?.host_no ?? null,
+        link: host ? consoleLink('hosts', `/hosts/${host._id.toHexString()}`) : null,
         values: rankingValues(totals, { sum: totals.host_rating_sum, count: totals.host_rating_count }),
       };
     }),

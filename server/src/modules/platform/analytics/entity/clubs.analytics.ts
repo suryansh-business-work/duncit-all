@@ -1,3 +1,5 @@
+import { consoleLink } from './links';
+import { cityLocation } from './city';
 import { Types } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { ClubRatingModel } from '@modules/clubs/club/clubRating.model';
@@ -58,9 +60,9 @@ const clubStatus = (club: ClubRow) => {
   return club.is_verified ? 'ACTIVE_VERIFIED' : 'ACTIVE_UNVERIFIED';
 };
 
-async function ratingsIn(from: Date, to: Date) {
+async function ratingsIn(from: Date, to: Date, clubFilter: Record<string, unknown>) {
   const [row] = await ClubRatingModel.aggregate<{ total: number; count: number }>([
-    { $match: { created_at: inRange(from, to) } },
+    { $match: { created_at: inRange(from, to), ...clubFilter } },
     { $group: { _id: null, total: { $sum: '$stars' }, count: { $sum: 1 } } },
   ]);
   return row ?? { total: 0, count: 0 };
@@ -100,13 +102,19 @@ async function clubLeaderboard(clubs: readonly ClubRow[], held: readonly HeldPod
         id: clubId,
         name: club?.club_name ?? '',
         caption: cities.get(refKey(club?.location_id)) ?? null,
+        link: consoleLink('clubs', `/clubs/${clubId}`),
         values: rankingValues(totals, { sum: totals.rating_sum, count: totals.rating_count }),
       };
     }),
   };
 }
 
-async function clubBreakdowns(clubs: readonly ClubRow[], held: readonly HeldPod[], window: AnalyticsWindow) {
+async function clubBreakdowns(
+  clubs: readonly ClubRow[],
+  held: readonly HeldPod[],
+  window: AnalyticsWindow,
+  clubFilter: Record<string, unknown>
+) {
   const categories = tally(clubs.map((club) => refKey(club.category_id)));
   const cities = tally(clubs.map((club) => refKey(club.location_id)));
   const podsByClub = tally(held.map((pod) => pod.club_id));
@@ -115,7 +123,7 @@ async function clubBreakdowns(clubs: readonly ClubRow[], held: readonly HeldPod[
     categoryNames(categories.keys()),
     locationNames(cities.keys()),
     ClubRatingModel.aggregate<{ _id: number; count: number }>([
-      { $match: { created_at: inRange(window.from, window.to) } },
+      { $match: { created_at: inRange(window.from, window.to), ...clubFilter } },
       { $group: { _id: '$stars', count: { $sum: 1 } } },
     ]),
   ]);
@@ -145,17 +153,20 @@ async function clubBreakdowns(clubs: readonly ClubRow[], held: readonly HeldPod[
 }
 
 export async function clubAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
-  const [clubs, held, prevHeld, rating, prevRating] = await Promise.all([
-    ClubModel.find({})
-      .select('club_name created_at is_active is_verified location_id category_id admin_user_ids')
-      .lean<ClubRow[]>(),
-    loadHeldPods(window.from, window.to),
-    loadHeldPods(window.prevFrom, window.from),
-    ratingsIn(window.from, window.to),
-    ratingsIn(window.prevFrom, window.from),
+  const location = cityLocation(window.city);
+  const clubs = await ClubModel.find(location)
+    .select('club_name created_at is_active is_verified location_id category_id admin_user_ids')
+    .lean<ClubRow[]>();
+  // Ratings point at a club, so a city's ratings are its clubs' ratings.
+  const clubFilter = window.city ? { club_id: { $in: clubs.map((club) => club._id) } } : {};
+  const [held, prevHeld, rating, prevRating] = await Promise.all([
+    loadHeldPods(window.from, window.to, location),
+    loadHeldPods(window.prevFrom, window.prevTo, location),
+    ratingsIn(window.from, window.to, clubFilter),
+    ratingsIn(window.prevFrom, window.prevTo, clubFilter),
   ]);
   const now = periodFigures(clubs, held, window.from, window.to);
-  const before = periodFigures(clubs, prevHeld, window.prevFrom, window.from);
+  const before = periodFigures(clubs, prevHeld, window.prevFrom, window.prevTo);
   const live = clubs.filter((club) => club.is_active !== false);
 
   const createdInWindow = clubs.filter((club) => club.created_at >= window.from);
@@ -185,7 +196,7 @@ export async function clubAnalytics(window: AnalyticsWindow): Promise<EntityAnal
       ]),
       trend('club_total', window, [{ key: 'clubs_total', values: totalPerBucket }]),
     ],
-    breakdowns: await clubBreakdowns(clubs, held, window),
+    breakdowns: await clubBreakdowns(clubs, held, window, clubFilter),
     leaderboard: await clubLeaderboard(clubs, held),
   };
 }

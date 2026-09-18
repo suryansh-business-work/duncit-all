@@ -1,3 +1,5 @@
+import { PLATFORM_COPY } from './platform-copy';
+
 /**
  * The words for a breakdown's slices, per breakdown — the same key can mean
  * different things in two charts (a DRAFT host is still filling the form in, a
@@ -38,6 +40,35 @@ const REVIEW: Record<string, string> = {
 };
 
 export const SLICE_COPY: Partial<Record<string, Partial<Record<string, string>>>> = {
+  store_orders_by_status: {
+    PENDING: 'analytics.slice.orderPending',
+    AWAITING_SHIPMENT: 'analytics.slice.orderAwaitingShipment',
+    AWB_ASSIGNED: 'analytics.slice.orderAwbAssigned',
+    PICKUP_SCHEDULED: 'analytics.slice.orderPickupScheduled',
+    SHIPPED: 'analytics.slice.orderShipped',
+    OUT_FOR_DELIVERY: 'analytics.slice.orderOutForDelivery',
+    DELIVERED: 'analytics.slice.orderDelivered',
+    READY_FOR_PICKUP: 'analytics.slice.orderReadyForPickup',
+    PICKED_UP: 'analytics.slice.orderPickedUp',
+    CANCELLED: 'analytics.slice.orderCancelled',
+    RTO: 'analytics.slice.orderRto',
+    FAILED: 'analytics.slice.orderFailed',
+  },
+  store_payment_method: {
+    PREPAID: 'analytics.slice.paidOnline',
+    COD: 'analytics.slice.cashOnDelivery',
+  },
+  store_buyer_type: {
+    MEMBER: 'analytics.slice.duncitMembers',
+    GUEST: 'analytics.slice.guestBuyers',
+  },
+  store_basket_value: {
+    basket_under_500: 'analytics.slice.basketUnder500',
+    basket_500_999: 'analytics.slice.basket500To999',
+    basket_1000_1999: 'analytics.slice.basket1000To1999',
+    basket_2000_4999: 'analytics.slice.basket2000To4999',
+    basket_5000_plus: 'analytics.slice.basket5000Plus',
+  },
   activity_frequency: {
     days_1: 'analytics.slice.days1',
     days_2_3: 'analytics.slice.days2To3',
@@ -138,6 +169,7 @@ export const SLICE_COPY: Partial<Record<string, Partial<Record<string, string>>>
   // A club admin record is drafted when the meeting is approved, so DRAFT is the review queue.
   admin_status: { ...REVIEW, DRAFT: 'analytics.slice.awaitingReview' },
   host_status: { ...REVIEW, DRAFT: 'analytics.slice.draft' },
+  ...PLATFORM_COPY.slices,
 };
 
 /** What a slice with no name of its own (an unset city or category) is called. */

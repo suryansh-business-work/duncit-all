@@ -64,6 +64,12 @@ export const EXCLUDED_COLLECTIONS: readonly string[] = [
   //     can resend/retry from, which would reach those people from staging ---
   'emaillogs',
   'communicationlogs',
+  // Analytics report subscribers and their schedule: a cloned list would have
+  // staging mail real people staging's numbers on production's timetable.
+  'analyticsmailsubscriptions',
+  'analyticsmailsettings',
+  // Analytics alerts mail and post to Slack when production's numbers trip them.
+  'analyticsalerts',
 
   // --- Observability: machine-generated, enormous, and meaningless once it is
   //     attributed to the wrong environment ---

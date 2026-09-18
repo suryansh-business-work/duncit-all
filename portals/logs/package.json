@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",
+    "@duncit/app-settings": "workspace:*",
+    "@duncit/entity-consoles": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@emotion/react": "^11.14.0",

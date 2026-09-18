@@ -835,6 +835,65 @@ export type AisensyTemplateDraft = {
   status: Scalars['String']['output'];
 };
 
+/** A watch on one Analytics tile, checked every hour (Analytics > Settings > Alerts). */
+export type AnalyticsAlert = {
+  __typename?: 'AnalyticsAlert';
+  condition: AnalyticsAlertCondition;
+  created_at: Scalars['String']['output'];
+  /** The period the tile is read over: 7, 30, 90 or 365 days. */
+  days: Scalars['Int']['output'];
+  emails: Array<Scalars['String']['output']>;
+  entity: AnalyticsEntity;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** The tile's server key, as entityAnalytics names it. */
+  kpi_key: Scalars['String']['output'];
+  last_checked_at?: Maybe<Scalars['String']['output']>;
+  /** Why the last check could not judge it: TILE_GONE, NO_COMPARISON or LOAD_FAILED. */
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_notified_at?: Maybe<Scalars['String']['output']>;
+  last_status?: Maybe<AnalyticsAlertStatus>;
+  last_value?: Maybe<Scalars['Float']['output']>;
+  name: Scalars['String']['output'];
+  /** Also post to the default Slack channel. */
+  slack: Scalars['Boolean']['output'];
+  /** In the tile's own units for ABOVE/BELOW, in percent for RISES_BY/FALLS_BY. */
+  threshold: Scalars['Float']['output'];
+};
+
+export type AnalyticsAlertCheckResult = {
+  __typename?: 'AnalyticsAlertCheckResult';
+  error?: Maybe<Scalars['String']['output']>;
+  /** Whether anyone was told — only a tripped alert tells anyone. */
+  notified: Scalars['Boolean']['output'];
+  status: AnalyticsAlertStatus;
+  value?: Maybe<Scalars['Float']['output']>;
+};
+
+/** When an alert trips: the tile's value above or below a number, or its change against the period before rising or falling by a percentage. */
+export type AnalyticsAlertCondition =
+  | 'ABOVE'
+  | 'BELOW'
+  | 'FALLS_BY'
+  | 'RISES_BY';
+
+export type AnalyticsAlertInput = {
+  condition: AnalyticsAlertCondition;
+  days: Scalars['Int']['input'];
+  emails: Array<Scalars['String']['input']>;
+  entity: AnalyticsEntity;
+  is_active: Scalars['Boolean']['input'];
+  kpi_key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  slack: Scalars['Boolean']['input'];
+  threshold: Scalars['Float']['input'];
+};
+
+export type AnalyticsAlertStatus =
+  | 'ERROR'
+  | 'OK'
+  | 'TRIGGERED';
+
 export type AnalyticsBreakdown = {
   __typename?: 'AnalyticsBreakdown';
   format: AnalyticsFormat;
@@ -843,6 +902,15 @@ export type AnalyticsBreakdown = {
   ordered: Scalars['Boolean']['output'];
   scope: AnalyticsScope;
   slices: Array<AnalyticsSlice>;
+  /** The console page with the records behind this, for more details. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+/** A city a page can be narrowed to. */
+export type AnalyticsCity = {
+  __typename?: 'AnalyticsCity';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type AnalyticsColumn = {
@@ -853,18 +921,46 @@ export type AnalyticsColumn = {
 
 /** The subjects the Analytics console reports on. */
 export type AnalyticsEntity =
+  | 'AI_USAGE'
+  | 'API_PERFORMANCE'
+  | 'APP_RELEASES'
   | 'CLUBS'
   | 'CLUB_ADMINS'
+  | 'COMMUNICATIONS'
+  | 'DATABASE'
+  | 'E2E_TESTS'
+  | 'ENV_KEYS'
+  | 'FUNNEL'
   | 'HOSTS'
+  | 'LEGAL'
+  | 'MARKETING'
+  | 'PET_STORE'
   | 'PODS'
-  | 'USERS';
+  | 'REVENUE'
+  | 'REWARDS'
+  | 'SERVER'
+  | 'SHOP'
+  | 'SONARQUBE'
+  | 'STRESS_TESTS'
+  | 'SUPPORT'
+  | 'TEST_COVERAGE'
+  | 'USERS'
+  | 'VENUES';
+
+/** What the tiles are compared with: the period just before, or the same dates a year earlier. */
+export type AnalyticsCompare =
+  | 'PREVIOUS'
+  | 'YEAR';
 
 /** What kind of number a value is, so the console formats it. */
 export type AnalyticsFormat =
+  | 'BYTES'
   | 'COUNT'
   | 'CURRENCY'
   | 'DAYS'
   | 'DECIMAL'
+  | 'DURATION'
+  | 'GRADE'
   | 'PERCENT'
   | 'RATING';
 
@@ -882,7 +978,13 @@ export type AnalyticsKpi = {
   key: Scalars['String']['output'];
   /** Null for a live count, which has no period to compare with. */
   previous?: Maybe<Scalars['Float']['output']>;
+  /** The goal this tile is judged against over the period shown; null when none is set. */
+  target?: Maybe<Scalars['Float']['output']>;
+  /** The goal as it was set — monthly for a count or an amount, which target scales to the period. */
+  target_goal?: Maybe<Scalars['Float']['output']>;
   value: Scalars['Float']['output'];
+  /** The console page with the records behind this, for more details. */
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 export type AnalyticsLeaderRow = {
@@ -892,6 +994,8 @@ export type AnalyticsLeaderRow = {
   name: Scalars['String']['output'];
   /** One value per column, in column order; null where there is nothing to show. */
   values: Array<Maybe<Scalars['Float']['output']>>;
+  /** The console page with the records behind this, for more details. */
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 export type AnalyticsLeaderboard = {
@@ -899,13 +1003,72 @@ export type AnalyticsLeaderboard = {
   columns: Array<AnalyticsColumn>;
   key: Scalars['String']['output'];
   rows: Array<AnalyticsLeaderRow>;
+  /** The console page with the records behind this, for more details. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+export type AnalyticsMailFrequency =
+  | 'DAILY'
+  | 'WEEKLY';
+
+export type AnalyticsMailSendResult = {
+  __typename?: 'AnalyticsMailSendResult';
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+};
+
+export type AnalyticsMailSettings = {
+  __typename?: 'AnalyticsMailSettings';
+  enabled: Scalars['Boolean']['output'];
+  time_of_day: Scalars['String']['output'];
+  time_zone: Scalars['String']['output'];
+  weekday: Scalars['Int']['output'];
+};
+
+export type AnalyticsMailSettingsInput = {
+  enabled: Scalars['Boolean']['input'];
+  time_of_day: Scalars['String']['input'];
+  weekday: Scalars['Int']['input'];
+};
+
+export type AnalyticsMailSubscription = {
+  __typename?: 'AnalyticsMailSubscription';
+  ai_summary: Scalars['Boolean']['output'];
+  created_at: Scalars['String']['output'];
+  days: Scalars['Int']['output'];
+  email: Scalars['String']['output'];
+  frequency: AnalyticsMailFrequency;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_sent_at?: Maybe<Scalars['String']['output']>;
+  last_status?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  next_send_at?: Maybe<Scalars['String']['output']>;
+  pages: Array<AnalyticsEntity>;
+};
+
+export type AnalyticsMailSubscriptionInput = {
+  ai_summary: Scalars['Boolean']['input'];
+  days: Scalars['Int']['input'];
+  email: Scalars['String']['input'];
+  frequency: AnalyticsMailFrequency;
+  is_active: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  pages: Array<AnalyticsEntity>;
 };
 
 export type AnalyticsPeriod = {
   __typename?: 'AnalyticsPeriod';
+  /** The location the page was narrowed to; null for every city. */
+  city?: Maybe<Scalars['ID']['output']>;
+  compare: AnalyticsCompare;
   days: Scalars['Int']['output'];
   from: Scalars['String']['output'];
   granularity: AnalyticsGranularity;
+  /** The comparison period the previous values were read over. */
+  previous_from: Scalars['String']['output'];
+  previous_to: Scalars['String']['output'];
   to: Scalars['String']['output'];
 };
 
@@ -937,6 +1100,8 @@ export type AnalyticsTrend = {
   granularity: AnalyticsGranularity;
   key: Scalars['String']['output'];
   series: Array<AnalyticsSeries>;
+  /** The console page with the records behind this, for more details. */
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 /** A developer API key for the public venue REST API. Only a hash is stored. */
@@ -5737,6 +5902,8 @@ export type EmailTestResult = {
 export type EntityAnalytics = {
   __typename?: 'EntityAnalytics';
   breakdowns: Array<AnalyticsBreakdown>;
+  /** The console this page is about, for more details. */
+  details_url?: Maybe<Scalars['String']['output']>;
   entity: AnalyticsEntity;
   kpis: Array<AnalyticsKpi>;
   /** The period's top ten; null where a ranking would not add anything. */
@@ -5766,6 +5933,7 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
+  | 'SONARQUBE'
   | 'TURN'
   | 'TWILIO';
 
@@ -10705,6 +10873,11 @@ export type MutationCreateAisensyTemplateArgs = {
 };
 
 
+export type MutationCreateAnalyticsMailSubscriptionArgs = {
+  input: AnalyticsMailSubscriptionInput;
+};
+
+
 export type MutationCreateApiKeyArgs = {
   name: Scalars['String']['input'];
 };
@@ -11074,6 +11247,11 @@ export type MutationDeleteAiPromptArgs = {
 
 export type MutationDeleteAisensyTemplateArgs = {
   template_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAnalyticsMailSubscriptionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -12451,6 +12629,39 @@ export type MutationSendAisensyCampaignArgs = {
 };
 
 
+export type MutationCheckAnalyticsAlertNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateAnalyticsAlertArgs = {
+  input: AnalyticsAlertInput;
+};
+
+
+export type MutationDeleteAnalyticsAlertArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetAnalyticsTargetArgs = {
+  entity: AnalyticsEntity;
+  key: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationUpdateAnalyticsAlertArgs = {
+  id: Scalars['ID']['input'];
+  input: AnalyticsAlertInput;
+};
+
+
+export type MutationSendAnalyticsMailNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSendAppReleaseEmailArgs = {
   input: SendAppReleaseEmailInput;
 };
@@ -13166,6 +13377,17 @@ export type MutationUpdateAiMonitoringSettingsArgs = {
 export type MutationUpdateAiPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateAiPromptInput;
+};
+
+
+export type MutationUpdateAnalyticsMailSettingsArgs = {
+  input: AnalyticsMailSettingsInput;
+};
+
+
+export type MutationUpdateAnalyticsMailSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+  input: AnalyticsMailSubscriptionInput;
 };
 
 
@@ -19174,8 +19396,12 @@ export type QueryEmailTemplateBySlugArgs = {
 
 
 export type QueryEntityAnalyticsArgs = {
+  city?: InputMaybe<Scalars['ID']['input']>;
+  compare?: InputMaybe<AnalyticsCompare>;
   days?: InputMaybe<Scalars['Int']['input']>;
   entity: AnalyticsEntity;
+  from?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['String']['input']>;
 };
 
 

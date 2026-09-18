@@ -32,6 +32,8 @@ export const analyticsMailTypeDefs = /* GraphQL */ `
     frequency: AnalyticsMailFrequency!
     "The reporting period in days: 7, 30, 90 or 365."
     days: Int!
+    "An AI-written summary of the numbers heads the mail and the PDF."
+    ai_summary: Boolean!
     is_active: Boolean!
     last_sent_at: String
     "SENT, FAILED or SKIPPED."
@@ -48,6 +50,7 @@ export const analyticsMailTypeDefs = /* GraphQL */ `
     pages: [AnalyticsEntity!]!
     frequency: AnalyticsMailFrequency!
     days: Int!
+    ai_summary: Boolean!
     is_active: Boolean!
   }
 

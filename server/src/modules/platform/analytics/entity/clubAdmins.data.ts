@@ -12,6 +12,8 @@ import type { HeldPod } from './held-pods';
  */
 
 export interface ProfileRow {
+  /** The Club Admin record — what the Club Admins console opens at /club-admins/:clubAdminId. */
+  _id: Types.ObjectId;
   user_id: Types.ObjectId;
   full_name?: string;
   club_admin_no?: string | null;

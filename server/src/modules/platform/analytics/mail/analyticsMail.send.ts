@@ -11,6 +11,7 @@ import { reportCopy, type ReportCopy } from './analyticsMail.copy';
 import { buildReport, cachedBoards, type BoardLoader } from './analyticsMail.report';
 import { reportHtml } from './analyticsMail.html';
 import { analyticsReportPdf } from './analyticsMail.pdf';
+import { summarizeReport, type ReportSummary } from './analyticsMail.summary';
 
 /**
  * One analytics report, from the numbers to the inbox: the dashboards the
@@ -22,12 +23,15 @@ import { analyticsReportPdf } from './analyticsMail.pdf';
 export interface SendContext {
   load: BoardLoader;
   copies: Map<string, Promise<ReportCopy>>;
+  /** One AI summary per identical report — same dashboards, period, schedule and language. */
+  summaries: Map<string, Promise<ReportSummary | null>>;
   finance: ReturnType<typeof getFinanceSettings>;
 }
 
 export const sendContext = (): SendContext => ({
   load: cachedBoards(),
   copies: new Map(),
+  summaries: new Map(),
   finance: getFinanceSettings(),
 });
 
@@ -35,6 +39,18 @@ function copyFor(ctx: SendContext, locale: string | null): Promise<ReportCopy> {
   const key = locale ?? '';
   const hit = ctx.copies.get(key) ?? reportCopy(locale);
   ctx.copies.set(key, hit);
+  return hit;
+}
+
+function summaryFor(
+  ctx: SendContext,
+  sub: IAnalyticsMailSubscription,
+  report: Awaited<ReturnType<typeof buildReport>>,
+  copy: ReportCopy
+): Promise<ReportSummary | null> {
+  const key = [sub.pages.join(','), sub.days, sub.frequency, copy.locale].join('|');
+  const hit = ctx.summaries.get(key) ?? summarizeReport(report, copy.locale);
+  ctx.summaries.set(key, hit);
   return hit;
 }
 
@@ -56,14 +72,16 @@ async function compose(sub: IAnalyticsMailSubscription, ctx: SendContext, now: D
     load: ctx.load,
     now,
   });
+  const summary = sub.ai_summary ? await summaryFor(ctx, sub, report, copy) : null;
   const pdf = await analyticsReportPdf({
     report,
+    summary,
     copy,
     recipient: sub.name,
     brandName: finance.business_name,
     logoUrl: finance.invoice_logo_url,
   });
-  return { locale, copy, report, pdf };
+  return { locale, copy, report, summary, pdf };
 }
 
 /** Send one subscriber their report now, and write down how it went. Never throws. */
@@ -74,7 +92,7 @@ export async function sendAnalyticsReport(
 ): Promise<SendOutcome> {
   let outcome: SendOutcome;
   try {
-    const { locale, copy, report, pdf } = await compose(sub, ctx, now);
+    const { locale, copy, report, summary, pdf } = await compose(sub, ctx, now);
     const result = await sendEmail({
       to: sub.email,
       subject: `${report.title} — ${report.period}`,
@@ -86,7 +104,7 @@ export async function sendAnalyticsReport(
         report_title: report.title,
         period_label: report.period,
         dashboards_count: String(report.sections.length),
-        analytics_html: reportHtml(report, copy),
+        analytics_html: reportHtml(report, copy, summary),
         analytics_url: report.url,
       },
       attachments: [

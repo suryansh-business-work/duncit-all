@@ -12,6 +12,19 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     TEST_COVERAGE
     STRESS_TESTS
     E2E_TESTS
+    REVENUE
+    REWARDS
+    SHOP
+    VENUES
+    MARKETING
+    COMMUNICATIONS
+    SUPPORT
+    LEGAL
+    AI_USAGE
+    API_PERFORMANCE
+    SERVER
+    APP_RELEASES
+    FUNNEL
   }
 
   "What kind of number a value is, so the console formats it."
@@ -36,11 +49,29 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     ALL_TIME
   }
 
+  "What the tiles are compared with: the period just before, or the same dates a year earlier."
+  enum AnalyticsCompare {
+    PREVIOUS
+    YEAR
+  }
+
   type AnalyticsPeriod {
     days: Int!
     from: String!
     to: String!
     granularity: AnalyticsGranularity!
+    compare: AnalyticsCompare!
+    "The comparison period the previous values were read over."
+    previous_from: String!
+    previous_to: String!
+    "The location the page was narrowed to; null for every city."
+    city: ID
+  }
+
+  "A city a page can be narrowed to."
+  type AnalyticsCity {
+    id: ID!
+    name: String!
   }
 
   "One headline number, beside the same number for the period before."
@@ -52,6 +83,12 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     format: AnalyticsFormat!
     "Whether a rise is good news — a rising cancellation rate is not."
     higher_is_better: Boolean!
+    "The console page with the records behind this, for more details."
+    url: String
+    "The goal this tile is judged against over the period shown; null when none is set."
+    target: Float
+    "The goal as it was set — monthly for a count or an amount, which target scales to the period."
+    target_goal: Float
   }
 
   type AnalyticsSeries {
@@ -67,6 +104,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     "The first calendar day (yyyy-MM-dd) of every bucket, oldest first."
     buckets: [String!]!
     series: [AnalyticsSeries!]!
+    "The console page with the records behind this, for more details."
+    url: String
   }
 
   type AnalyticsSlice {
@@ -83,6 +122,8 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     "True when the slices have a natural order that sorting would break."
     ordered: Boolean!
     slices: [AnalyticsSlice!]!
+    "The console page with the records behind this, for more details."
+    url: String
   }
 
   type AnalyticsColumn {
@@ -96,12 +137,16 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     caption: String
     "One value per column, in column order; null where there is nothing to show."
     values: [Float]!
+    "The console page with the records behind this, for more details."
+    url: String
   }
 
   type AnalyticsLeaderboard {
     key: String!
     columns: [AnalyticsColumn!]!
     rows: [AnalyticsLeaderRow!]!
+    "The console page with the records behind this, for more details."
+    url: String
   }
 
   type EntityAnalytics {
@@ -112,10 +157,25 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     breakdowns: [AnalyticsBreakdown!]!
     "The period's top ten; null where a ranking would not add anything."
     leaderboard: AnalyticsLeaderboard
+    "The console this page is about, for more details."
+    details_url: String
   }
 
   extend type Query {
-    "One Analytics console page: tiles, trends, breakdowns and a ranking. days is clamped to 7-365."
-    entityAnalytics(entity: AnalyticsEntity!, days: Int): EntityAnalytics!
+    """
+    One Analytics console page: tiles, trends, breakdowns and a ranking. Either a preset days
+    (clamped to 7-365) or a calendar range from-to (yyyy-MM-dd in the admin zone, inclusive,
+    at most a year); city narrows the pages that can be narrowed (Pods, Clubs).
+    """
+    entityAnalytics(
+      entity: AnalyticsEntity!
+      days: Int
+      from: String
+      to: String
+      compare: AnalyticsCompare
+      city: ID
+    ): EntityAnalytics!
+    "The cities an Analytics page can be narrowed to."
+    analyticsCities: [AnalyticsCity!]!
   }
 `;

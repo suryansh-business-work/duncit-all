@@ -26,6 +26,12 @@ const SERVER_ADVICE_SITE = {
   trigger: 'Someone presses "Generate recommendations" on the server info page',
 } as const;
 
+const ANALYTICS_SUMMARY_SITE = {
+  file: 'server/src/modules/platform/analytics/mail/analyticsMail.summary.ts',
+  surface: 'Analytics · Settings > Analytics Mails',
+  trigger: 'An analytics report is sent to a subscriber with "AI summary" switched on',
+} as const;
+
 const CHANGELOG_SITE = {
   file: 'server/src/modules/platform/appRelease/appRelease.changelog.ts',
   surface: 'Tech · App Builds',
@@ -215,6 +221,53 @@ export const PLATFORM_PROMPTS = [
     ],
     usage: [SERVER_ADVICE_SITE],
     content: 'Review this server month:\n{{server_data}}',
+  },
+  {
+    key: 'analytics.report_summary',
+    name: 'Analytics report summary',
+    description: 'Reads an analytics report — every tile with its change — and writes what moved, what needs attention and what is going well.',
+    category: PLATFORM,
+    role: 'SYSTEM',
+    tasks: ['platform.analytics_summary'],
+    target_model: '',
+    variables: [],
+    usage: [ANALYTICS_SUMMARY_SITE],
+    content: [
+      'You are the analyst who writes the top of Duncit\'s analytics report. Duncit is a social-events platform: members book seats in "pods" run by hosts, grouped into clubs, held at venues.',
+      'The data is JSON: the reporting period, then one object per dashboard with its tiles. Each tile has a title, its value as displayed, and "change" — how it moved against the comparison period, already worded (for example "+12% vs previous 30 days"), and "tone": good, bad, flat or null (a live count with no comparison).',
+      'A dashboard may carry an "error" instead of tiles (a service not connected); mention it once in watch, never guess its numbers.',
+      '',
+      'Write for a busy founder: the three to five things that matter most, not a list of every number.',
+      '1. headline: one sentence, the single most important movement, with its number.',
+      '2. highlights: what went well — each cites the tile and its number.',
+      '3. concerns: what got worse or needs a decision — each cites the tile and its number, most serious first.',
+      '4. watch: things to keep an eye on next period (a small sample, a trend just starting, a missing dashboard).',
+      'Only use numbers present in the data. Do not invent causes; you may suggest a likely one when the data clearly supports it, saying "likely".',
+      'Write in the language named by "language" (a locale code such as en-IN or hi-IN); keep numbers exactly as given.',
+      'Plain words, short sentences, no markdown.',
+      'Return STRICT JSON only, exactly this shape:',
+      '{ "headline": string, "highlights": [string], "concerns": [string], "watch": [string] }',
+      'At most 4 highlights, 4 concerns and 3 watch items.',
+    ].join('\n'),
+  },
+  {
+    key: 'analytics.report_summary.user',
+    name: 'Analytics report summary — the report',
+    description: 'Hands over the report being summarised: the period and every dashboard\'s tiles with their changes, as one JSON object.',
+    category: PLATFORM,
+    role: 'USER',
+    tasks: ['platform.analytics_summary'],
+    target_model: '',
+    variables: [
+      required(
+        'report_data',
+        'Report data',
+        'The reporting period and, per dashboard, each tile\'s title, value, change and tone.',
+        '{"period":"Last 7 days","dashboards":[{"title":"Pods analytics","tiles":[{"title":"Pods held","value":"48","change":"+12% vs previous 7 days","tone":"good"}]}]}',
+      ),
+    ],
+    usage: [ANALYTICS_SUMMARY_SITE],
+    content: 'Summarise this analytics report:\n{{report_data}}',
   },
   {
     key: 'askbot.navigation',

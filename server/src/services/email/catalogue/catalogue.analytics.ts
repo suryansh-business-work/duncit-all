@@ -1,4 +1,4 @@
-import { CALM, LIVE, callout, closing, cta, intro, shell } from './mjml';
+import { CALM, LIVE, STOPPED, callout, closing, cta, intro, shell } from './mjml';
 import { defineEmail, v, type EmailDef, type EmailVar } from './catalogue.types';
 
 /**
@@ -8,8 +8,9 @@ import { defineEmail, v, type EmailDef, type EmailVar } from './catalogue.types'
  * subscriber follows, drawn by the server into `{{analytics_html}}`, with the
  * same report attached as a PDF and a button back to the live console.
  * `analytics-subscribed` tells somebody they were added, before the first
- * report arrives. Both are seeded into Tech > Email Templates, where the MJML
- * is edited (rule 28).
+ * report arrives. `analytics-alert` is Analytics > Settings > Alerts telling
+ * someone a tile crossed the line they set. All are seeded into Tech > Email
+ * Templates, where the MJML is edited (rule 28).
  */
 
 const FOOTER_NOTE = '{{t:email.analyticsReport.footer}}';
@@ -92,6 +93,43 @@ export const ANALYTICS_EMAILS: readonly EmailDef[] = [
       ctaKey: 'email.analyticsReport.openAnalytics',
       ctaVar: 'analytics_url',
       helpKey: 'email.analyticsSubscribed.help',
+    },
+  }),
+  defineEmail({
+    slug: 'analytics-alert',
+    name: 'Analytics Alert',
+    description: 'Tells the people on an analytics alert that the tile it watches crossed the line they set, with the number and a link to the records behind it.',
+    audience: 'ADMIN',
+    category: 'internal',
+    fires: 'The hourly check finds an alert from Analytics > Settings > Alerts tripped, then once a day while it stays tripped',
+    subject: 'Analytics alert: {{alert_name}}',
+    footerNote: '{{t:email.analyticsAlert.footer}}',
+    vars: [
+      v('recipient_name', 'Who the mail is for: their first name on Duncit, else their address.', 'Aarav'),
+      v('alert_name', 'The name the alert was given.', 'Cancellations spiking'),
+      v('tile_label', 'The tile it watches, with its dashboard.', 'Cancellation rate · Pods analytics'),
+      v('value_label', 'The tile’s number now.', '9.4%'),
+      v('rule_label', 'The line that was crossed.', 'Goes above 8%'),
+      v('change_label', 'How the number moved against the period before.', '+3.1% against the period before'),
+      v('period_label', 'The period the number covers.', 'The last 7 days'),
+      v('details_url', 'The console page with the records behind the number.', 'https://finance.duncit.com/cancellations'),
+    ],
+    body: {
+      copyKey: 'email.analyticsAlert',
+      nameVar: 'recipient_name',
+      tone: STOPPED,
+      calloutLabelKey: 'email.analyticsAlert.valueLabel',
+      calloutVar: 'value_label',
+      rows: [
+        { labelKey: 'email.analyticsAlert.nameLabel', valueVar: 'alert_name' },
+        { labelKey: 'email.analyticsAlert.tileLabel', valueVar: 'tile_label' },
+        { labelKey: 'email.analyticsAlert.ruleLabel', valueVar: 'rule_label' },
+        { labelKey: 'email.analyticsAlert.changeLabel', valueVar: 'change_label' },
+        { labelKey: 'email.analyticsAlert.periodLabel', valueVar: 'period_label' },
+      ],
+      ctaKey: 'email.analyticsAlert.openDetails',
+      ctaVar: 'details_url',
+      helpKey: 'email.analyticsAlert.help',
     },
   }),
 ];

@@ -26,6 +26,7 @@ const SUBSCRIPTION_FIELDS = `
   pages
   frequency
   days
+  ai_summary
   is_active
   last_sent_at
   last_status

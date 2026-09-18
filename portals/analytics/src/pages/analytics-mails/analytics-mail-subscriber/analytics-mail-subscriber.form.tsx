@@ -92,6 +92,16 @@ export default function AnalyticsMailSubscriberForm({ defaultValues, busy, onCan
             )}
           />
           <Controller
+            name="ai_summary"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch checked={field.value} onChange={(event) => field.onChange(event.target.checked)} />}
+                label={t('analytics.mails.aiSummary')}
+              />
+            )}
+          />
+          <Controller
             name="is_active"
             control={control}
             render={({ field }) => (

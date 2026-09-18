@@ -24,6 +24,8 @@ export interface IAnalyticsMailSubscription extends Document {
   frequency: AnalyticsMailFrequency;
   /** The reporting period, the same 7 / 30 / 90 / 365 the dashboards offer. */
   days: number;
+  /** Put an AI-written summary of the numbers at the top of the mail and the PDF. */
+  ai_summary: boolean;
   is_active: boolean;
   last_sent_at: Date | null;
   last_status: AnalyticsMailOutcome | null;
@@ -40,6 +42,7 @@ const subscriptionSchema = new Schema<IAnalyticsMailSubscription>(
     pages: { type: [String], default: [] },
     frequency: { type: String, enum: ANALYTICS_MAIL_FREQUENCIES, default: 'WEEKLY' },
     days: { type: Number, default: 7 },
+    ai_summary: { type: Boolean, default: true },
     is_active: { type: Boolean, default: true },
     last_sent_at: { type: Date, default: null },
     last_status: { type: String, enum: ['SENT', 'FAILED', 'SKIPPED', null], default: null },

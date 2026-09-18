@@ -3,22 +3,30 @@ import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table'
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { ANALYTICS_PAGES } from '../entity-analytics/pages';
 import { PERIOD_OPTIONS } from '../entity-analytics/queries';
+import SendIcon from '@mui/icons-material/Send';
+import type { StatusColorMap } from '@duncit/ui';
 import {
-  makeRenderActions,
-  makeRenderLastSent,
-  makeRenderName,
-  makeRenderState,
-  type RowActions,
-} from './subscriber-cells';
+  makeRenderActive,
+  makeRenderLastRun,
+  makeRenderRowButtons,
+  makeRenderTwoLine,
+} from '../settings-cells';
 import type { AnalyticsMailSubscription } from './queries';
 
-interface Props extends RowActions {
+interface Props {
   rows: AnalyticsMailSubscription[];
+  onSend: (row: AnalyticsMailSubscription) => void;
+  onEdit: (row: AnalyticsMailSubscription) => void;
+  onDelete: (row: AnalyticsMailSubscription) => void;
+  /** The row whose report is being sent right now, so its button can wait. */
+  sendingId: string | null;
 }
 
 const getRowId = (row: AnalyticsMailSubscription) => row.id;
 const searchOf = (row: AnalyticsMailSubscription) => `${row.name} ${row.email}`;
 const PERIOD_LABELS = new Map<number, string>(PERIOD_OPTIONS.map((option) => [option.days, option.label]));
+const LAST_STATUS_COLORS: StatusColorMap = { SENT: 'success', FAILED: 'error', SKIPPED: 'warning' };
+const lastRunOf = (row: AnalyticsMailSubscription) => ({ status: row.last_status, at: row.last_sent_at, detail: row.last_error });
 
 /** Everyone who receives the report, with what they get, when it last went and when it goes next. */
 export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendingId }: Readonly<Props>) {
@@ -35,7 +43,7 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
       SKIPPED: t('analytics.mails.statusSkipped'),
     };
     const actionLabels = {
-      send: t('analytics.mails.sendNow'),
+      run: t('analytics.mails.sendNow'),
       edit: t('analytics.mails.edit'),
       remove: t('analytics.mails.remove'),
     };
@@ -50,7 +58,7 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
         flex: 1,
         minWidth: 220,
         type: 'text',
-        cellRenderer: makeRenderName(),
+        cellRenderer: makeRenderTwoLine<AnalyticsMailSubscription>((row) => row.name, (row) => row.email),
         valueGetter: (row) => row.name,
       },
       {
@@ -80,7 +88,10 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
         headerName: t('analytics.mails.state'),
         width: 120,
         type: 'text',
-        cellRenderer: makeRenderState({ active: t('analytics.mails.active'), paused: t('analytics.mails.paused') }),
+        cellRenderer: makeRenderActive<AnalyticsMailSubscription>({
+          active: t('analytics.mails.active'),
+          paused: t('analytics.mails.paused'),
+        }),
         valueGetter: (row) => (row.is_active ? t('analytics.mails.active') : t('analytics.mails.paused')),
       },
       {
@@ -88,7 +99,12 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
         headerName: t('analytics.mails.lastSent'),
         width: 230,
         type: 'text',
-        cellRenderer: makeRenderLastSent(statusLabels, formatDateTime, t('analytics.mails.never')),
+        cellRenderer: makeRenderLastRun(lastRunOf, {
+          status: statusLabels,
+          colors: LAST_STATUS_COLORS,
+          never: t('analytics.mails.never'),
+          formatWhen: formatDateTime,
+        }),
         valueGetter: (row) => row.last_sent_at ?? '',
       },
       {
@@ -105,7 +121,12 @@ export default function SubscribersTable({ rows, onSend, onEdit, onDelete, sendi
         type: 'actions',
         sortable: false,
         filterable: false,
-        cellRenderer: makeRenderActions(actionLabels, { onSend, onEdit, onDelete, sendingId }),
+        cellRenderer: makeRenderRowButtons<AnalyticsMailSubscription>(actionLabels, <SendIcon fontSize="small" />, 'analytics-mail-send', {
+          onRun: onSend,
+          onEdit,
+          onDelete,
+          runningId: sendingId,
+        }),
       },
     ];
   }, [t, onSend, onEdit, onDelete, sendingId]);

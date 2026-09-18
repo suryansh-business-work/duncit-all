@@ -93,6 +93,14 @@ export async function sonarGet<T>(cfg: SonarConfig, path: string, params: SonarP
   return (await res.json()) as T;
 }
 
+/** A page of this project in SonarQube's own UI — where a reader goes for "more details". */
+export function sonarPageUrl(cfg: SonarConfig, path: string, params: SonarParams = {}): string {
+  const url = new URL(path, cfg.hostUrl);
+  url.searchParams.set('id', cfg.projectKey);
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, String(value));
+  return url.toString();
+}
+
 /** Measures as numbers by metric. A metric SonarQube has no value for is simply absent. */
 export function measureMap(measures: readonly SonarMeasure[]): Map<string, number> {
   const out = new Map<string, number>();

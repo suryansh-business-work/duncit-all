@@ -61,7 +61,7 @@ function e2eBreakdowns(rows: readonly E2eRow[], failures: ReadonlyMap<string, nu
 export async function e2eAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
   const [current, previous] = await Promise.all([
     loadE2eRuns(window.from, window.to),
-    loadE2eRuns(window.prevFrom, window.from),
+    loadE2eRuns(window.prevFrom, window.prevTo),
   ]);
   const suites = suiteTotals(current);
   const failures = new Map([...suites.entries()].map(([key, sums]) => [key, sums.failedRuns]));

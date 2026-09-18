@@ -24,8 +24,8 @@ export const appConfig = {
   colorModeKey: 'analytics_color_mode',
   accent: { light: '#f0abfc', main: '#c026d3', hover: '#a21caf', active: '#86198f' },
   // One dashboard per subject and nothing else — `/` opens the first of them.
-  // Tech, Security and Testing only READ what the Tech console runs; every
-  // action (backups, test runs, credentials) stays there.
+  // Every page only READS; the work itself (refunds, test runs, credentials)
+  // stays in the console its "more details" links open.
   nav: [
     {
       label: 'Business', labelKey: 'shell.nav.business',
@@ -36,6 +36,27 @@ export const appConfig = {
         { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'groups' },
         { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/club-admins', icon: 'verified-user' },
         { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'host-request' },
+        { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'location' },
+        { label: 'Revenue & Finance', labelKey: 'shell.nav.revenueFinance', to: '/revenue', icon: 'revenue' },
+        { label: 'Coins & Rewards', labelKey: 'shell.nav.coinsRewards', to: '/rewards', icon: 'wallet' },
+        { label: 'Shop', labelKey: 'shell.nav.shop', to: '/shop', icon: 'storefront' },
+      ],
+    },
+    {
+      label: 'Growth', labelKey: 'shell.nav.growth',
+      icon: 'timeline',
+      children: [
+        { label: 'Funnel & Retention', labelKey: 'shell.nav.funnelRetention', to: '/growth/funnel', icon: 'northstar' },
+        { label: 'Marketing', labelKey: 'shell.nav.marketing', to: '/growth/marketing', icon: 'marketing' },
+        { label: 'Communications', labelKey: 'shell.nav.communications', to: '/growth/communications', icon: 'campaign' },
+      ],
+    },
+    {
+      label: 'Support', labelKey: 'shell.nav.support',
+      icon: 'support',
+      children: [
+        { label: 'Support Desk', labelKey: 'shell.nav.supportDesk', to: '/support/desk', icon: 'ticket' },
+        { label: 'Legal', labelKey: 'shell.nav.legal', to: '/support/legal', icon: 'document' },
       ],
     },
     {
@@ -44,6 +65,10 @@ export const appConfig = {
       children: [
         { label: 'Database', labelKey: 'shell.nav.database', to: '/tech/database', icon: 'storage' },
         { label: 'Environment Variables', labelKey: 'shell.nav.environmentVariables', to: '/tech/env-keys', icon: 'settings' },
+        { label: 'API Performance', labelKey: 'shell.nav.apiPerformance', to: '/tech/api', icon: 'hub' },
+        { label: 'Server', labelKey: 'shell.nav.server', to: '/tech/server', icon: 'dns' },
+        { label: 'AI Usage', labelKey: 'shell.nav.aiUsage', to: '/tech/ai-usage', icon: 'ai' },
+        { label: 'App Releases', labelKey: 'shell.nav.appReleases', to: '/tech/app-releases', icon: 'android' },
       ],
     },
     {
@@ -67,6 +92,7 @@ export const appConfig = {
       icon: 'settings',
       children: [
         { label: 'Analytics Mails', labelKey: 'shell.nav.analyticsMails', to: '/settings/analytics-mails', icon: 'email' },
+        { label: 'Alerts', labelKey: 'shell.nav.analyticsAlerts', to: '/settings/alerts', icon: 'notifications' },
       ],
     },
   ],

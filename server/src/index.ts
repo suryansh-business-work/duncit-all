@@ -29,6 +29,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
+import { startAnalyticsAlertScheduler } from '@modules/platform/analytics/alerts/analyticsAlert.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
 import { startServerHistorySampler } from '@modules/platform/tech/tech.history.sampler';
 import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
@@ -464,6 +465,9 @@ async function bootstrap() {
   // dashboards, with the PDF attached, when their daily or weekly slot has
   // passed (Analytics > Settings > Analytics Mails; off until turned on).
   startAnalyticsMailScheduler();
+  // Analytics alerts: every active alert's tile, read once an hour; a tripped one
+  // mails its people (Analytics > Settings > Alerts).
+  startAnalyticsAlertScheduler();
 
   // The live pulse (requests/s, real users online, event-loop lag) the Tech
   // portal reads, and the five-second sampler that records a stress run's time

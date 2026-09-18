@@ -1,4 +1,5 @@
 import { requireSonarConfig } from '@utils/sonarqube';
+import { linkToSonar } from './sonar.links';
 import type { AnalyticsWindow } from './window';
 import {
   failingGateConditions,
@@ -104,7 +105,7 @@ export async function sonarAnalytics(window: AnalyticsWindow): Promise<EntityAna
   const rules = facets.get('rules') ?? new Map<string, number>();
   const series = (key: string, metric: string) => ({ key, values: standingSeries(history.get(metric), window) });
 
-  return {
+  const sections: EntityAnalyticsSections = {
     kpis: [
       ...metricKpis(now, history, window.from),
       kpi('sonar_gate_failing', failing, null, { higherIsBetter: false }),
@@ -137,4 +138,5 @@ export async function sonarAnalytics(window: AnalyticsWindow): Promise<EntityAna
     ],
     leaderboard: workspaceLeaderboard(workspaces),
   };
+  return linkToSonar(sections, cfg);
 }

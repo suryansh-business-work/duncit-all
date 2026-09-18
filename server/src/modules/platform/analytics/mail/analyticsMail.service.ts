@@ -29,6 +29,7 @@ export interface AnalyticsMailSubscriptionInput {
   pages: string[];
   frequency: AnalyticsMailFrequency;
   days: number;
+  ai_summary: boolean;
   is_active: boolean;
 }
 
@@ -62,6 +63,7 @@ function present(sub: IAnalyticsMailSubscription, settings: IAnalyticsMailSettin
     pages: sub.pages,
     frequency: sub.frequency,
     days: sub.days,
+    ai_summary: sub.ai_summary,
     is_active: sub.is_active,
     last_sent_at: sub.last_sent_at?.toISOString() ?? null,
     last_status: sub.last_status,
@@ -89,6 +91,7 @@ function cleanInput(input: AnalyticsMailSubscriptionInput) {
     pages: ANALYTICS_ENTITIES.filter((entity) => pages.has(entity)),
     frequency: input.frequency,
     days: input.days,
+    ai_summary: Boolean(input.ai_summary),
     is_active: Boolean(input.is_active),
   };
 }

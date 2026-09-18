@@ -73,7 +73,7 @@ function stressBreakdowns(rows: readonly StressRow[]): AnalyticsBreakdown[] {
 export async function stressAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
   const [current, previous] = await Promise.all([
     loadStressRuns(window.from, window.to),
-    loadStressRuns(window.prevFrom, window.from),
+    loadStressRuns(window.prevFrom, window.prevTo),
   ]);
   const startedAt = (row: StressRow) => row.created_at;
   const count = (status: string) =>

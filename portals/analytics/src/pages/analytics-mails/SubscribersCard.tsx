@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Button, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
-import { Loader, SectionCard } from '@duncit/ui';
-import { parseApiError } from '@duncit/utils';
+import { SectionCard } from '@duncit/ui';
+import ListBody from '../ListBody';
 import SubscribersTable from './SubscribersTable';
 import SubscriberDialog from './SubscriberDialog';
 import { useSubscriberActions } from './useSubscriberActions';
@@ -33,35 +33,19 @@ export default function SubscribersCard() {
     </DuncitButton>
   );
 
-  let body = <Loader variant="block" />;
-  if (rows) {
-    body = (
-      <SubscribersTable
-        rows={rows}
-        onSend={onSend}
-        onEdit={(subscriber) => setEditing({ subscriber })}
-        onDelete={onDelete}
-        sendingId={sendingId}
-      />
-    );
-  } else if (error && !loading) {
-    body = (
-      <Alert
-        severity="error"
-        action={
-          <Button color="inherit" size="small" onClick={() => refetch().catch(() => undefined)}>
-            {t('analytics.page.retry')}
-          </Button>
-        }
-      >
-        {parseApiError(error)}
-      </Alert>
-    );
-  }
-
   return (
     <SectionCard title={t('analytics.mails.subscribersTitle')} subtitle={t('analytics.mails.subscribersHint')} action={add}>
-      <Stack spacing={2}>{body}</Stack>
+      <Stack spacing={2}>
+        <ListBody ready={Boolean(rows)} loading={loading} error={error} onRetry={() => refetch().catch(() => undefined)}>
+          <SubscribersTable
+            rows={rows ?? []}
+            onSend={onSend}
+            onEdit={(subscriber) => setEditing({ subscriber })}
+            onDelete={onDelete}
+            sendingId={sendingId}
+          />
+        </ListBody>
+      </Stack>
       {editing && <SubscriberDialog subscriber={editing.subscriber} onClose={() => setEditing(null)} />}
     </SectionCard>
   );

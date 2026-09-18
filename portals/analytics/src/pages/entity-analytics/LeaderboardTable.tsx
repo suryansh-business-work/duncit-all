@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { COLUMN_COPY, LEADERBOARD_COPY } from './copy';
@@ -11,10 +11,20 @@ type LeaderRow = AnalyticsLeaderboard['rows'][number] & { rank: number };
 const getRowId = (row: LeaderRow) => row.id;
 const searchOf = (row: LeaderRow) => `${row.name} ${row.caption ?? ''}`;
 
+/** A row with a record page of its own (a club, a host) opens it in a new tab. */
+function RowName({ row }: Readonly<{ row: LeaderRow }>) {
+  if (!row.url) return <>{row.name}</>;
+  return (
+    <Link href={row.url} target="_blank" rel="noopener noreferrer" underline="hover" color="inherit">
+      {row.name}
+    </Link>
+  );
+}
+
 const renderName = (row: LeaderRow) => (
   <Box sx={{ minWidth: 0 }}>
     <Typography variant="body2" noWrap title={row.name} sx={{ fontWeight: 600 }}>
-      {row.name}
+      <RowName row={row} />
     </Typography>
     {row.caption && (
       <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>

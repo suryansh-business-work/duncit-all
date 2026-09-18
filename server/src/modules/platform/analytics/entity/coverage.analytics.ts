@@ -1,4 +1,5 @@
 import { requireSonarConfig } from '@utils/sonarqube';
+import { linkToSonar } from './sonar.links';
 import type { AnalyticsWindow } from './window';
 import { measureHistory, projectMeasures, standingSeries, valueAt } from './sonar.data';
 import {
@@ -101,7 +102,7 @@ export async function coverageAnalytics(window: AnalyticsWindow): Promise<Entity
   };
   const series = (key: TileKey) => ({ key, values: standingSeries(history.get(METRIC_OF[key]), window) });
 
-  return {
+  const sections: EntityAnalyticsSections = {
     kpis: [
       ...tile('cov_overall', PERCENT),
       ...tile('cov_lines', PERCENT),
@@ -133,4 +134,5 @@ export async function coverageAnalytics(window: AnalyticsWindow): Promise<Entity
     ],
     leaderboard: coverageLeaderboard(workspaces),
   };
+  return linkToSonar(sections, cfg);
 }

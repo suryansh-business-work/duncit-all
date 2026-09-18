@@ -2,6 +2,7 @@ import { escapeHtml } from '@utils/html';
 import type { ReportCopy } from './analyticsMail.copy';
 import type { AnalyticsReport, ReportKpi, ReportSection } from './analyticsMail.report';
 import type { DeltaTone } from './analyticsMail.format';
+import type { ReportSummary } from './analyticsMail.summary';
 
 /**
  * The report as the block the `analytics-report` template drops into its body
@@ -40,7 +41,28 @@ function sectionHtml(section: ReportSection, openLabel: string): string {
   return `<div style="margin:0 0 28px 0">${heading}${sectionBody(section)}<p style="margin:10px 0 0 0;font-size:13px">${link}</p></div>`;
 }
 
-export function reportHtml(report: AnalyticsReport, copy: ReportCopy): string {
+/** One labelled list of the summary — omitted when the AI had nothing for it. */
+function summaryList(label: string, items: readonly string[]): string {
+  if (items.length === 0) return '';
+  const lines = items.map((item) => `<li style="margin:0 0 4px 0">${escapeHtml(item)}</li>`).join('');
+  return `<p style="margin:12px 0 4px 0;font-size:13px;font-weight:700;color:#111827">${escapeHtml(label)}</p><ul style="margin:0;padding-left:18px;font-size:14px;color:#374151">${lines}</ul>`;
+}
+
+/** The AI's reading, above the numbers, marked as AI-written so nobody mistakes it for a figure. */
+function summaryHtml(summary: ReportSummary, copy: ReportCopy): string {
+  const heading = `<p style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:#111827">${escapeHtml(copy.t('email.analyticsReport.aiHeading'))}</p>`;
+  const headline = `<p style="margin:0;font-size:15px;color:#111827">${escapeHtml(summary.headline)}</p>`;
+  const lists = [
+    summaryList(copy.t('email.analyticsReport.aiHighlights'), summary.highlights),
+    summaryList(copy.t('email.analyticsReport.aiConcerns'), summary.concerns),
+    summaryList(copy.t('email.analyticsReport.aiWatch'), summary.watch),
+  ].join('');
+  const note = `<p style="margin:10px 0 0 0;font-size:12px;color:${MUTED}">${escapeHtml(copy.t('email.analyticsReport.aiNote'))}</p>`;
+  return `<div style="margin:0 0 28px 0;padding:14px 16px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb">${heading}${headline}${lists}${note}</div>`;
+}
+
+export function reportHtml(report: AnalyticsReport, copy: ReportCopy, summary: ReportSummary | null = null): string {
   const openLabel = copy.t('email.analyticsReport.openDashboard');
-  return report.sections.map((section) => sectionHtml(section, openLabel)).join('');
+  const top = summary ? summaryHtml(summary, copy) : '';
+  return top + report.sections.map((section) => sectionHtml(section, openLabel)).join('');
 }

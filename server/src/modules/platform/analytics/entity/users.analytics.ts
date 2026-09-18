@@ -21,8 +21,6 @@ import { kpi, pct, trend, type EntityAnalyticsSections } from './shapes';
  * member on at least one day of the period.
  */
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 const overlap = (left: ReadonlySet<string> | ReadonlyMap<string, unknown>, right: ReadonlySet<string>) =>
   [...left.keys()].filter((id) => right.has(id)).length;
 
@@ -72,12 +70,18 @@ async function liveFigures() {
 }
 
 export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnalyticsSections> {
-  const { from, to, prevFrom, days, zone, granularity } = window;
-  const beforeFrom = new Date(prevFrom.getTime() - days * DAY_MS);
-  const [now, before, earliest, live, signupsPerDay, users, devices, createdBefore] = await Promise.all([
+  const { from, to, prevFrom, prevTo, days, zone, granularity } = window;
+  // Retention always reads "of the people active in the period just before,
+  // how many came back" — even when the tiles compare with last year, so the
+  // period right before each side is loaded on its own.
+  const span = to.getTime() - from.getTime();
+  const beforeFrom = new Date(prevFrom.getTime() - (prevTo.getTime() - prevFrom.getTime()));
+  const comparedWithLastPeriod = prevTo.getTime() === from.getTime();
+  const [now, before, earliest, precedingNow, live, signupsPerDay, users, devices, createdBefore] = await Promise.all([
     periodFigures(from, to, days),
-    periodFigures(prevFrom, from, days),
+    periodFigures(prevFrom, prevTo, days),
     activeUserDays(beforeFrom, prevFrom),
+    comparedWithLastPeriod ? null : activeUserDays(new Date(from.getTime() - span), from),
     liveFigures(),
     signupDays(from, to, zone),
     distinctPerBucket(from, to, granularity, 'user_id'),
@@ -86,6 +90,7 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
   ]);
   const signups = seriesFromDays(signupsPerDay, window);
   const earliestIds = new Set(earliest.keys());
+  const precedingIds = precedingNow ? new Set(precedingNow.keys()) : before.activeIds;
 
   return {
     kpis: [
@@ -95,7 +100,7 @@ export async function userAnalytics(window: AnalyticsWindow): Promise<EntityAnal
       kpi('active_devices', now.devices, before.devices),
       kpi('avg_daily_active', now.averageDaily, before.averageDaily, { format: 'DECIMAL' }),
       kpi('stickiness', now.stickiness, before.stickiness, { format: 'PERCENT' }),
-      kpi('retention_rate', retention(before.activeIds, now.activeIds), retention(earliestIds, before.activeIds), {
+      kpi('retention_rate', retention(precedingIds, now.activeIds), retention(earliestIds, before.activeIds), {
         format: 'PERCENT',
       }),
       kpi('booking_users', now.bookers, before.bookers),

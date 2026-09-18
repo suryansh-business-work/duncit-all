@@ -19,6 +19,7 @@ export const subscriberSchema = (messages: SubscriberMessages) =>
     pages: z.array(z.custom<AnalyticsEntity>((value) => typeof value === 'string')).min(1, messages.pagesRequired),
     frequency: z.enum(FREQUENCIES),
     days: z.number().int(),
+    ai_summary: z.boolean(),
     is_active: z.boolean(),
   });
 
@@ -31,6 +32,7 @@ export const emptySubscriber = (): SubscriberValues => ({
   pages: ANALYTICS_PAGES.map((page) => page.entity),
   frequency: 'WEEKLY',
   days: 7,
+  ai_summary: true,
   is_active: true,
 });
 
@@ -40,6 +42,7 @@ export const toSubscriberValues = (sub: AnalyticsMailSubscription): SubscriberVa
   pages: sub.pages,
   frequency: sub.frequency,
   days: sub.days,
+  ai_summary: sub.ai_summary,
   is_active: sub.is_active,
 });
 

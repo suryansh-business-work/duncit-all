@@ -2,6 +2,7 @@ import { loadPdfImage, renderPdf } from '@services/pdf/document';
 import type { ReportCopy } from './analyticsMail.copy';
 import type { AnalyticsReport, ReportKpi, ReportSection, ReportTable } from './analyticsMail.report';
 import type { DeltaTone } from './analyticsMail.format';
+import type { ReportSummary } from './analyticsMail.summary';
 
 /**
  * The report as the PDF attached to every analytics mail: a cover band, the
@@ -33,6 +34,8 @@ const RANK_W = 22;
 
 export interface ReportPdfInput {
   report: AnalyticsReport;
+  /** The AI's reading, drawn above the dashboards when the subscriber asked for one. */
+  summary?: ReportSummary | null;
   copy: ReportCopy;
   recipient: string;
   brandName: string;
@@ -75,6 +78,35 @@ function drawMeta(doc: PDFKit.PDFDocument, input: ReportPdfInput, y: number): nu
   ];
   doc.fillColor(MUTED).fontSize(9).font('Helvetica');
   for (const line of lines) doc.text(line, L, doc.y + 3, { width: R - L });
+  return doc.y + 18;
+}
+
+function drawSummaryList(doc: PDFKit.PDFDocument, label: string, items: readonly string[], y: number): number {
+  if (items.length === 0) return y;
+  let top = room(doc, y, 30);
+  doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(label, L + PAD, top, { width: R - L - PAD * 2 });
+  top = doc.y + 2;
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica');
+  for (const item of items) {
+    top = room(doc, top, 14);
+    doc.text(`- ${item}`, L + PAD, top, { width: R - L - PAD * 2 });
+    top = doc.y + 2;
+  }
+  return top + 4;
+}
+
+/** The AI's reading, above the numbers, labelled as AI-written. */
+function drawSummary(doc: PDFKit.PDFDocument, input: ReportPdfInput, y: number): number {
+  const { summary, copy } = input;
+  if (!summary) return y;
+  let top = room(doc, y, 60);
+  doc.fillColor(ACCENT).fontSize(11).font('Helvetica-Bold').text(copy.t('email.analyticsReport.aiHeading'), L, top);
+  doc.fillColor(INK).fontSize(10).font('Helvetica').text(summary.headline, L, doc.y + 4, { width: R - L });
+  top = doc.y + 6;
+  top = drawSummaryList(doc, copy.t('email.analyticsReport.aiHighlights'), summary.highlights, top);
+  top = drawSummaryList(doc, copy.t('email.analyticsReport.aiConcerns'), summary.concerns, top);
+  top = drawSummaryList(doc, copy.t('email.analyticsReport.aiWatch'), summary.watch, top);
+  doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(copy.t('email.analyticsReport.aiNote'), L, top, { width: R - L });
   return doc.y + 18;
 }
 
@@ -170,7 +202,7 @@ export async function analyticsReportPdf(input: ReportPdfInput): Promise<Buffer>
   const logo = await loadPdfImage(input.logoUrl);
   return renderPdf((doc) => {
     drawHeader(doc, input, logo);
-    let y = drawMeta(doc, input, 112);
+    let y = drawSummary(doc, input, drawMeta(doc, input, 112));
     for (const section of input.report.sections) y = drawSection(doc, section, input, y);
     drawClosing(doc, input, y);
   });

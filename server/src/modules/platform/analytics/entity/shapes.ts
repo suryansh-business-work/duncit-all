@@ -1,4 +1,5 @@
 import type { AnalyticsGranularity, AnalyticsWindow } from './window';
+import type { ConsoleLink } from './links';
 
 /**
  * The one payload every Analytics console page renders.
@@ -21,7 +22,20 @@ export type AnalyticsEntity =
   | 'SONARQUBE'
   | 'TEST_COVERAGE'
   | 'STRESS_TESTS'
-  | 'E2E_TESTS';
+  | 'E2E_TESTS'
+  | 'REVENUE'
+  | 'REWARDS'
+  | 'SHOP'
+  | 'VENUES'
+  | 'MARKETING'
+  | 'COMMUNICATIONS'
+  | 'SUPPORT'
+  | 'LEGAL'
+  | 'AI_USAGE'
+  | 'API_PERFORMANCE'
+  | 'SERVER'
+  | 'APP_RELEASES'
+  | 'FUNNEL';
 /**
  * BYTES is a size, DURATION is milliseconds, GRADE is SonarQube's 1-5 rating
  * (1 is A) — the console writes each in the reader's units.
@@ -47,6 +61,8 @@ export interface AnalyticsKpi {
   format: AnalyticsFormat;
   /** Whether a rise is good news — a rising cancellation rate is not. */
   higher_is_better: boolean;
+  /** The console page with the records behind this number ("more details"). */
+  link?: ConsoleLink | null;
 }
 
 export interface AnalyticsSeries {
@@ -60,6 +76,7 @@ export interface AnalyticsTrend {
   granularity: AnalyticsGranularity;
   buckets: string[];
   series: AnalyticsSeries[];
+  link?: ConsoleLink | null;
 }
 
 export interface AnalyticsSlice {
@@ -76,6 +93,7 @@ export interface AnalyticsBreakdown {
   /** True when the slices have a natural order (hours, bands) that sorting would break. */
   ordered: boolean;
   slices: AnalyticsSlice[];
+  link?: ConsoleLink | null;
 }
 
 export interface AnalyticsColumn {
@@ -88,12 +106,15 @@ export interface AnalyticsLeaderRow {
   name: string;
   caption: string | null;
   values: Array<number | null>;
+  /** The row's own record page (a club, a host), when it has one. */
+  link?: ConsoleLink | null;
 }
 
 export interface AnalyticsLeaderboard {
   key: string;
   columns: AnalyticsColumn[];
   rows: AnalyticsLeaderRow[];
+  link?: ConsoleLink | null;
 }
 
 export interface EntityAnalyticsSections {
@@ -101,6 +122,8 @@ export interface EntityAnalyticsSections {
   trends: AnalyticsTrend[];
   breakdowns: AnalyticsBreakdown[];
   leaderboard: AnalyticsLeaderboard | null;
+  /** The console this whole page is about — the page header's "more details". */
+  link?: ConsoleLink | null;
 }
 
 export const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -123,38 +146,76 @@ export const peak = (values: readonly number[]) => values.reduce((top, value) =>
 interface KpiOptions {
   format?: AnalyticsFormat;
   higherIsBetter?: boolean;
+  link?: ConsoleLink | null;
 }
 
 export function kpi(
   key: string,
   value: number,
   previous: number | null,
-  { format = 'COUNT', higherIsBetter = true }: KpiOptions = {}
+  { format = 'COUNT', higherIsBetter = true, link = null }: KpiOptions = {}
 ): AnalyticsKpi {
-  return { key, value, previous, format, higher_is_better: higherIsBetter };
+  return { key, value, previous, format, higher_is_better: higherIsBetter, link };
 }
 
 export function trend(
   key: string,
   window: AnalyticsWindow,
   series: AnalyticsSeries[],
-  format: AnalyticsFormat = 'COUNT'
+  format: AnalyticsFormat = 'COUNT',
+  link: ConsoleLink | null = null
 ): AnalyticsTrend {
-  return { key, format, granularity: window.granularity, buckets: window.buckets, series };
+  return { key, format, granularity: window.granularity, buckets: window.buckets, series, link };
 }
 
 interface BreakdownOptions {
   format?: AnalyticsFormat;
   scope?: AnalyticsScope;
   ordered?: boolean;
+  link?: ConsoleLink | null;
 }
 
 export function breakdown(
   key: string,
   slices: AnalyticsSlice[],
-  { format = 'COUNT', scope = 'WINDOW', ordered = false }: BreakdownOptions = {}
+  { format = 'COUNT', scope = 'WINDOW', ordered = false, link = null }: BreakdownOptions = {}
 ): AnalyticsBreakdown {
-  return { key, format, scope, ordered, slices };
+  return { key, format, scope, ordered, slices, link };
+}
+
+/** Links widgets by their key — for a page whose links are a table of key → page. Own links win. */
+export function linkWidgets(
+  sections: EntityAnalyticsSections,
+  linkOf: (key: string) => ConsoleLink | null
+): EntityAnalyticsSections {
+  const own = <T extends { key: string; link?: ConsoleLink | null }>(item: T): T => ({
+    ...item,
+    link: item.link ?? linkOf(item.key),
+  });
+  return {
+    ...sections,
+    kpis: sections.kpis.map(own),
+    trends: sections.trends.map(own),
+    breakdowns: sections.breakdowns.map(own),
+    leaderboard: sections.leaderboard ? own(sections.leaderboard) : null,
+  };
+}
+
+/**
+ * Every widget on a page that has no link of its own points at `link` — the
+ * one console page all of it comes from. A loader names its specific pages
+ * where they exist and lets this fill the rest, so no number is ever a dead end.
+ */
+export function linkEverything(sections: EntityAnalyticsSections, link: ConsoleLink): EntityAnalyticsSections {
+  const own = <T extends { link?: ConsoleLink | null }>(item: T): T => ({ ...item, link: item.link ?? link });
+  return {
+    ...sections,
+    link: sections.link ?? link,
+    kpis: sections.kpis.map(own),
+    trends: sections.trends.map(own),
+    breakdowns: sections.breakdowns.map(own),
+    leaderboard: sections.leaderboard ? own(sections.leaderboard) : null,
+  };
 }
 
 /** Slices in a fixed key order, zeroes kept — a status nobody is in still exists. */

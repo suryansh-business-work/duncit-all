@@ -86,7 +86,7 @@ export async function envKeyAnalytics(window: AnalyticsWindow): Promise<EntityAn
   const serving = new Set(rows.filter(isServing).map((row) => row.category));
   const inWindow = (at: Date | null): at is Date => at !== null && at >= window.from && at < window.to;
   const created = rows.filter((row) => inWindow(row.created_at));
-  const createdBefore = rows.filter((row) => row.created_at >= window.prevFrom && row.created_at < window.from);
+  const createdBefore = rows.filter((row) => row.created_at >= window.prevFrom && row.created_at < window.prevTo);
   const testedAt = active.map((row) => row.last_tested_at).filter(inWindow);
   const newPerBucket = seriesFromDays(dayTotals(created, (row) => row.created_at, window.zone), window);
   const health = tally(active.map(healthOf));

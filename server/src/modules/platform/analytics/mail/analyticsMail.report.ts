@@ -21,7 +21,7 @@ export function cachedBoards(): BoardLoader {
   const cache = new Map<string, Promise<Board>>();
   return (entity, days) => {
     const key = `${entity}:${days}`;
-    const hit = cache.get(key) ?? entityAnalyticsService.load(entity, days);
+    const hit = cache.get(key) ?? entityAnalyticsService.load(entity, { days });
     cache.set(key, hit);
     return hit;
   };

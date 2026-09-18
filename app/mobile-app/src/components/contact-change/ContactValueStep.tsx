@@ -1,14 +1,16 @@
 import { formResolver } from '../../utils/form-resolver';
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
   CONTACT_NUMBER_FIELDS,
+  contactNumberIsCurrent,
   contactValueStepView,
   isPhoneChannel,
   type ContactChangeLabels,
   type ContactChannel,
   type ContactDraft,
+  type ContactSnapshot,
 } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -25,6 +27,8 @@ interface Props {
   channel: ContactChannel;
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
+  /** What the account holds now — its own number is never "taken". */
+  snapshot: ContactSnapshot;
   busy: boolean;
   /** A refusal of the typed value is showing — resending it would only repeat it. */
   blocked: boolean;
@@ -50,6 +54,7 @@ export function ContactValueStep({
   channel,
   labels,
   defaultValues,
+  snapshot,
   busy,
   blocked,
   phoneOtp,
@@ -58,6 +63,7 @@ export function ContactValueStep({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const copy = labels.channel(channel);
+  const [edited, setEdited] = useState(false);
   const {
     control,
     handleSubmit,
@@ -70,20 +76,28 @@ export function ContactValueStep({
   });
 
   useEffect(() => {
-    const sub = watch(onEdit);
+    const sub = watch(() => {
+      setEdited(true);
+      onEdit();
+    });
     return () => sub.unsubscribe();
   }, [watch, onEdit]);
 
   // Asked as the number is typed, so a number another account already holds is
   // a warning beside the box and a shut button — not a refusal after the press.
-  // The EMAIL box leaves `number` blank, which never leaves the device.
-  const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS);
+  // The EMAIL box leaves `number` blank, which never leaves the device, and the
+  // account's own number is never asked about at all.
+  const [extension, number] = useWatch({ control, name: ['extension', 'number'] });
+  const isCurrent = contactNumberIsCurrent(snapshot, channel, { email: '', extension, number });
+  const numberStatus = useSignupPhoneCheck(control, CONTACT_NUMBER_FIELDS, isCurrent);
   const view = contactValueStepView(channel, labels, {
     busy,
     blocked,
     isValid,
     numberStatus,
     phoneOtp,
+    isCurrent,
+    edited,
   });
   const submit = handleSubmit(onSend);
 
@@ -93,7 +107,9 @@ export function ContactValueStep({
         {view.hint}
       </Text>
       {isPhoneChannel(channel) ? (
-        <XStack gap={12} alignItems="flex-end">
+        // Top-aligned, so a line under the number never pushes the two boxes
+        // out of line.
+        <XStack gap={12} alignItems="flex-start">
           <YStack width={120}>
             <CountryCodeField
               control={control}

@@ -8,6 +8,7 @@ import {
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
   currentContactValue,
@@ -216,6 +217,24 @@ describe('contactDraftIsUnchanged', () => {
   });
 });
 
+describe('contactNumberIsCurrent', () => {
+  const draft = (extension: string, number: string) => ({ email: '', extension, number });
+
+  it('is the number this channel already holds, country code included', () => {
+    expect(contactNumberIsCurrent(snapshot, 'WHATSAPP', draft('+1', '4155551234'))).toBe(true);
+    expect(contactNumberIsCurrent(snapshot, 'WHATSAPP', draft('+91', '4155551234'))).toBe(false);
+  });
+
+  it('lets the WhatsApp number be the contact number too — that is a real change', () => {
+    expect(contactNumberIsCurrent(snapshot, 'WHATSAPP', draft('+91', '9876543210'))).toBe(false);
+  });
+
+  it('is never true for an empty box or for the email channel', () => {
+    expect(contactNumberIsCurrent({}, 'PHONE', draft('+91', ''))).toBe(false);
+    expect(contactNumberIsCurrent({}, 'EMAIL', draft('+91', ''))).toBe(false);
+  });
+});
+
 describe('buildContactChangeLabels', () => {
   it('resolves every static label through the translator, under the mweb namespace', () => {
     const { t } = recorder();
@@ -251,14 +270,27 @@ describe('buildContactChangeLabels', () => {
       PHONE: 'phoneDirectHint',
       WHATSAPP: 'whatsappHint',
     };
+    // The WhatsApp box asks to "Enter" a number, and only the two numbers can
+    // be typed back to the value already held.
+    const fieldKey: Record<ContactChannel, string> = {
+      EMAIL: 'emailField',
+      PHONE: 'phoneField',
+      WHATSAPP: 'whatsappEnterField',
+    };
+    const currentKey: Record<ContactChannel, string | undefined> = {
+      EMAIL: undefined,
+      PHONE: 't:mweb.contactChange.phoneCurrent',
+      WHATSAPP: 't:mweb.contactChange.whatsappCurrent',
+    };
 
     for (const channel of CONTACT_CHANNELS) {
       expect(built.channel(channel)).toEqual({
         name: `t:mweb.contactChange.${prefix[channel]}Name`,
-        fieldLabel: `t:mweb.contactChange.${prefix[channel]}Field`,
+        fieldLabel: `t:mweb.contactChange.${fieldKey[channel]}`,
         emptyValue: `t:mweb.contactChange.${prefix[channel]}Empty`,
         changeTitle: `t:mweb.contactChange.${prefix[channel]}Title`,
         changeHint: `t:mweb.contactChange.${hintKey[channel]}`,
+        currentValue: currentKey[channel],
       });
     }
   });
@@ -409,7 +441,22 @@ describe('contactValueStepView', () => {
     isValid: true,
     numberStatus: 'IDLE',
     phoneOtp: false,
+    isCurrent: false,
+    edited: false,
   };
+
+  it("says nothing under the account's own number until it is typed back, and stays shut", () => {
+    const opened = contactValueStepView('WHATSAPP', labels, { ...idle, isCurrent: true });
+    expect(opened.disabled).toBe(true);
+    expect(opened.numberLines).toEqual({ hint: labels.numberCopy.hint });
+
+    const retyped = contactValueStepView('WHATSAPP', labels, { ...idle, isCurrent: true, edited: true });
+    expect(retyped.disabled).toBe(true);
+    expect(retyped.numberLines).toEqual({
+      hint: labels.numberCopy.hint,
+      error: labels.channel('WHATSAPP').currentValue,
+    });
+  });
 
   it('promises a code on the two channels a code proves, idle and busy', () => {
     expect(contactValueStepView('EMAIL', labels, idle).buttonLabel).toBe(labels.sendCode);

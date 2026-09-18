@@ -501,6 +501,7 @@ export {
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
   currentContactValue,

@@ -153,6 +153,25 @@ export function contactDraftIsUnchanged(
 }
 
 /**
+ * Whether the number box holds the number this channel already has.
+ *
+ * The box opens on the account's own number, and that number is never
+ * "somebody else's" — so it is not sent for the availability check, and step
+ * one says it is the current number instead. Only the channel's OWN value
+ * counts: the WhatsApp number may be the contact number as well, or a
+ * different one, and typing the contact number into the WhatsApp box is a
+ * real change. An empty box is not a number at all.
+ */
+export const contactNumberIsCurrent = (
+  snapshot: Readonly<ContactSnapshot>,
+  channel: ContactChannel,
+  draft: Readonly<ContactDraft>,
+): boolean =>
+  isPhoneChannel(channel) &&
+  draft.number.trim() !== '' &&
+  contactDraftIsUnchanged(snapshot, channel, draft);
+
+/**
  * The account's contacts with one channel's stored value folded in.
  *
  * The dialog closes onto the rows it just changed, and a row still showing the
@@ -219,6 +238,10 @@ export interface ContactValueStepInput {
   numberStatus: SignupContactStatus;
   /** `PHONE_OTP_FLAG` — whether the contact number is proved by a code. */
   phoneOtp: boolean;
+  /** `contactNumberIsCurrent` — the box holds the number the account already has. */
+  isCurrent: boolean;
+  /** The person has changed the box since it opened. */
+  edited: boolean;
 }
 
 export interface ContactValueStepView {
@@ -231,13 +254,29 @@ export interface ContactValueStepView {
 }
 
 /**
+ * The lines under the number box. The account's own number is never "taken":
+ * opened on it, the box says nothing; typed back after an edit, it says this is
+ * the current number, so the shut button has a reason beside it.
+ */
+function contactNumberLines(
+  channel: ContactChannel,
+  labels: Readonly<ContactChangeLabels>,
+  input: Readonly<ContactValueStepInput>,
+): SignupContactLines {
+  if (!input.isCurrent) return signupContactLines(input.numberStatus, labels.numberCopy);
+  const hint = labels.numberCopy.hint;
+  return input.edited ? { hint, error: labels.channel(channel).currentValue } : { hint };
+}
+
+/**
  * Step one's button and the lines under its number box, decided once for the
  * dialog and its native twin (rule 40).
  *
  * While the contact number is stored straight, its button may not promise a
  * code; while it is proved by one, its hint says a code will be texted. A
  * number another account already holds — or one whose check is still in
- * flight — keeps the button shut, with the refusal written under the box.
+ * flight — keeps the button shut, with the refusal written under the box. So
+ * does the account's own number: there is nothing to change.
  */
 export function contactValueStepView(
   channel: ContactChannel,
@@ -255,8 +294,9 @@ export function contactValueStepView(
       input.busy ||
       input.blocked ||
       !input.isValid ||
+      input.isCurrent ||
       signupContactBlocksContinue(input.numberStatus),
-    numberLines: signupContactLines(input.numberStatus, labels.numberCopy),
+    numberLines: contactNumberLines(channel, labels, input),
   };
 }
 
@@ -277,6 +317,8 @@ export interface ContactChannelLabels {
   changeTitle: string;
   /** The sentence above the box, naming where the code will go. */
   changeHint: string;
+  /** Under a number box typed back to the number already held. Numbers only. */
+  currentValue?: string;
 }
 
 export interface ContactChangeLabels {
@@ -346,13 +388,15 @@ const CHANNEL_LABELS: Record<
     emptyValue: t('mweb.contactChange.phoneEmpty'),
     changeTitle: t('mweb.contactChange.phoneTitle'),
     changeHint: t('mweb.contactChange.phoneDirectHint'),
+    currentValue: t('mweb.contactChange.phoneCurrent'),
   }),
   WHATSAPP: (t) => ({
     name: t('mweb.contactChange.whatsappName'),
-    fieldLabel: t('mweb.contactChange.whatsappField'),
+    fieldLabel: t('mweb.contactChange.whatsappEnterField'),
     emptyValue: t('mweb.contactChange.whatsappEmpty'),
     changeTitle: t('mweb.contactChange.whatsappTitle'),
     changeHint: t('mweb.contactChange.whatsappHint'),
+    currentValue: t('mweb.contactChange.whatsappCurrent'),
   }),
 };
 

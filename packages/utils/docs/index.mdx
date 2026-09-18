@@ -176,6 +176,7 @@ exports:
   - 'contactDraftFrom'
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
+  - 'contactNumberIsCurrent'
   - 'contactSubmitAction'
   - 'contactValueStepView'
   - 'CONTACT_NUMBER_FIELDS'
@@ -1937,10 +1938,38 @@ contactValueStepView('WHATSAPP', labels, {
   isValid: true,
   numberStatus: 'TAKEN',
   phoneOtp: false,
+  isCurrent: false,
+  edited: true,
 });
 // { hint: 'We'll send a code to this number on WhatsApp…', buttonLabel: 'Send code',
 //   disabled: true,
 //   numberLines: { hint: '', error: 'This number already exists on another account. …' } }
+```
+
+The box opens on the account's own number, which is never somebody else's.
+`contactNumberIsCurrent` says when the box holds it: the dialog then skips the availability check
+(`useSignupPhoneCheck`'s `skip`) and passes `isCurrent`, which keeps the button shut. The line
+under the box stays empty until the person has edited the box (`edited`). If they then type the
+same number back, it says this is their current number. Only the channel's OWN value counts: the
+WhatsApp number may also be the contact number, so typing the contact number into the WhatsApp
+box is a real change.
+
+```ts
+contactNumberIsCurrent(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
+// true — the number the phone row already holds
+contactNumberIsCurrent(account, 'WHATSAPP', { email: '', extension: '+91', number: '9845012345' });
+// false — the contact number, offered as the WhatsApp number too
+contactValueStepView('PHONE', labels, {
+  busy: false,
+  blocked: false,
+  isValid: true,
+  numberStatus: 'IDLE',
+  phoneOtp: false,
+  isCurrent: true,
+  edited: true,
+});
+// { …, disabled: true,
+//   numberLines: { hint: '', error: 'This is your current phone number, enter a different number to make a change.' } }
 ```
 
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the

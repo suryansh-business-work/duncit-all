@@ -107,6 +107,7 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
             // exists to fix a typo, and reseeding from the account would throw
             // away the number they came back to correct.
             defaultValues={draft ?? contactDraftFrom(snapshot, active)}
+            snapshot={snapshot}
             busy={state.sending}
             blocked={!!state.error}
             phoneOtp={phoneOtp}

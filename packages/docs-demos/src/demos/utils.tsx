@@ -70,6 +70,7 @@ import {
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactNumberIsCurrent,
   currentContactValue,
   draftHoursLeft,
   earningsBodyFor,
@@ -259,6 +260,8 @@ interface ContactChangeMock {
   numberStatus: SignupContactStatus;
   /** The `phone_otp_verification` feature flag (PHONE_OTP_FLAG). */
   phoneOtp: boolean;
+  /** Whether the box was changed since the dialog opened on the account's value. */
+  edited: boolean;
 }
 
 interface SignupStepMock {
@@ -1108,7 +1111,9 @@ export default defineDemos('utils', [
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
       'contact details are required before the profile form will save. Set `numberStatus` ' +
       'to AVAILABLE and `Button disabled` flips to false: TAKEN or CHECKING keep it shut, ' +
-      'with the refusal under the box.',
+      "with the refusal under the box. Type the account's own phone_number into " +
+      '`draftNumber` and the button shuts again: that number is never checked, and with ' +
+      '`edited` on, `Under the box` says it is the current number.',
     mock: {
       email: 'ravi@duncit.com',
       phone_extension: '+91',
@@ -1120,6 +1125,7 @@ export default defineDemos('utils', [
       draftNumber: '9845099999',
       numberStatus: 'TAKEN',
       phoneOtp: false,
+      edited: true,
     },
     compute: (mock) => {
       const account: ContactSnapshot = {
@@ -1141,6 +1147,8 @@ export default defineDemos('utils', [
         isValid: true,
         numberStatus: mock.numberStatus,
         phoneOtp: mock.phoneOtp,
+        isCurrent: contactNumberIsCurrent(account, mock.channel, draft),
+        edited: mock.edited,
       });
       return {
         'Email row': currentContactValue(account, 'EMAIL') || nothingYet,

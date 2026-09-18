@@ -104,16 +104,21 @@ export function useSignupEmailCheck<T extends FieldValues>(
   return signupContactStatus(candidate, check);
 }
 
-/** The WhatsApp row's twin of `useSignupEmailCheck`: both boxes, one ask. */
+/**
+ * The WhatsApp row's twin of `useSignupEmailCheck`: both boxes, one ask.
+ * `skip` asks nothing — the profile's number box passes it while the box holds
+ * the account's own number, which is never somebody else's.
+ */
 export function useSignupPhoneCheck<T extends FieldValues>(
   control: Control<T>,
   names: { extension: Path<T>; number: Path<T> },
+  skip = false,
 ): SignupContactStatus {
   const client = useApolloClient();
   const [check, setCheck] = useState(IDLE_SIGNUP_CONTACT_CHECK);
   const extension = String(useWatch({ control, name: names.extension }) ?? '');
   const number = String(useWatch({ control, name: names.number }) ?? '');
-  const candidate = signupPhoneCandidate(extension, number, PHONE_SHAPES);
+  const candidate = skip ? null : signupPhoneCandidate(extension, number, PHONE_SHAPES);
 
   useEffect(
     () =>

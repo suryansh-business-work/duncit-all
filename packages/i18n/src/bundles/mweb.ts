@@ -3791,8 +3791,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'This is the number Duncit will reach you on. It is saved as soon as you enter it.',
       // While the phone_otp_verification flag is on, the number is proved first.
       phoneCodeHint: 'We will text a 6-digit code to this number to confirm it is yours.',
+      // Under a number box typed back to the number the account already has.
+      phoneCurrent: 'This is your current phone number, enter a different number to make a change.',
       whatsappName: 'WhatsApp number',
-      whatsappField: 'New WhatsApp number',
+      whatsappEnterField: 'Enter WhatsApp number',
+      whatsappCurrent:
+        'This is your current WhatsApp number, enter a different number to make a change.',
       whatsappEmpty: 'No WhatsApp number yet',
       whatsappTitle: 'Change WhatsApp number',
       whatsappHint: 'We will send a 6-digit code on WhatsApp to confirm the new number is yours.',

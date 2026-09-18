@@ -214,10 +214,20 @@ export const officialStatusService = {
     return true;
   },
 
-  /** How many people have watched one status. */
+  /**
+   * How many people have watched one status.
+   *
+   * `exec()` hands the field resolver a real Promise. A bare Query is only a
+   * thenable that runs once per `.then`, and Apollo's field instrumentation
+   * (the GraphQL Monitor's willResolveField) calls `.then` before graphql-js
+   * does — so the second call threw "Query was already executed" and failed
+   * the whole Marketing > Status table.
+   */
   viewCount(statusId: string) {
     if (!Types.ObjectId.isValid(statusId)) return Promise.resolve(0);
-    return OfficialStatusSeenModel.countDocuments({ status_doc_id: new Types.ObjectId(statusId) });
+    return OfficialStatusSeenModel.countDocuments({
+      status_doc_id: new Types.ObjectId(statusId),
+    }).exec();
   },
 
   /** The chosen cities by name, in the order they were saved. A city deleted

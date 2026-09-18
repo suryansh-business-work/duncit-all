@@ -26,7 +26,7 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
 /** The console has no welcome page: its home is the first dashboard in the sidebar. */
 const HOME = ANALYTICS_PAGES[0].path;
 
-/** One dashboard each for users, pods, clubs, club admins and hosts. */
+/** One dashboard per subject: the business ones, and the Tech, Security and Testing ones. */
 export default function App() {
   return (
     <Routes>

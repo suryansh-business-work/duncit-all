@@ -855,16 +855,25 @@ export type AnalyticsColumn = {
 export type AnalyticsEntity =
   | 'CLUBS'
   | 'CLUB_ADMINS'
+  | 'DATABASE'
+  | 'E2E_TESTS'
+  | 'ENV_KEYS'
   | 'HOSTS'
   | 'PODS'
+  | 'SONARQUBE'
+  | 'STRESS_TESTS'
+  | 'TEST_COVERAGE'
   | 'USERS';
 
 /** What kind of number a value is, so the console formats it. */
 export type AnalyticsFormat =
+  | 'BYTES'
   | 'COUNT'
   | 'CURRENCY'
   | 'DAYS'
   | 'DECIMAL'
+  | 'DURATION'
+  | 'GRADE'
   | 'PERCENT'
   | 'RATING';
 
@@ -5766,6 +5775,7 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
+  | 'SONARQUBE'
   | 'TURN'
   | 'TWILIO';
 

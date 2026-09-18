@@ -10,8 +10,32 @@ import type { AnalyticsGranularity, AnalyticsWindow } from './window';
  * saying what kind of number it is.
  */
 
-export type AnalyticsEntity = 'USERS' | 'PODS' | 'CLUBS' | 'CLUB_ADMINS' | 'HOSTS';
-export type AnalyticsFormat = 'COUNT' | 'PERCENT' | 'CURRENCY' | 'RATING' | 'DAYS' | 'DECIMAL';
+export type AnalyticsEntity =
+  | 'USERS'
+  | 'PODS'
+  | 'CLUBS'
+  | 'CLUB_ADMINS'
+  | 'HOSTS'
+  | 'DATABASE'
+  | 'ENV_KEYS'
+  | 'SONARQUBE'
+  | 'TEST_COVERAGE'
+  | 'STRESS_TESTS'
+  | 'E2E_TESTS';
+/**
+ * BYTES is a size, DURATION is milliseconds, GRADE is SonarQube's 1-5 rating
+ * (1 is A) — the console writes each in the reader's units.
+ */
+export type AnalyticsFormat =
+  | 'COUNT'
+  | 'PERCENT'
+  | 'CURRENCY'
+  | 'RATING'
+  | 'DAYS'
+  | 'DECIMAL'
+  | 'BYTES'
+  | 'DURATION'
+  | 'GRADE';
 /** WINDOW follows the chosen period; ALL_TIME is the state of things right now. */
 export type AnalyticsScope = 'WINDOW' | 'ALL_TIME';
 
@@ -87,6 +111,15 @@ export const pct = (part: number, whole: number) => (whole > 0 ? round1((part / 
 /** `total / count`, one decimal; 0 when nothing was counted. */
 export const mean = (total: number, count: number) => (count > 0 ? round1(total / count) : 0);
 
+/** The sum of a list of numbers. */
+export const total = (values: readonly number[]) => values.reduce((sum, value) => sum + value, 0);
+
+/** The mean of a list of numbers, one decimal; 0 for an empty list. */
+export const average = (values: readonly number[]) => mean(total(values), values.length);
+
+/** The largest of a list of numbers; 0 for an empty list. */
+export const peak = (values: readonly number[]) => values.reduce((top, value) => Math.max(top, value), 0);
+
 interface KpiOptions {
   format?: AnalyticsFormat;
   higherIsBetter?: boolean;
@@ -137,6 +170,19 @@ export function topSlices(
 ): AnalyticsSlice[] {
   return [...counts.entries()]
     .map(([key, value]) => ({ key, label: names.get(key) ?? null, value }))
+    .sort((a, b) => b.value - a.value || a.key.localeCompare(b.key))
+    .slice(0, limit);
+}
+
+/** Rows as slices each named by itself (a collection, a workspace, a rule), largest first, capped. */
+export function rankedSlices<T>(
+  rows: Iterable<T>,
+  nameOf: (row: T) => string,
+  valueOf: (row: T) => number,
+  limit = 10
+): AnalyticsSlice[] {
+  return [...rows]
+    .map((row) => ({ key: nameOf(row), label: nameOf(row), value: valueOf(row) }))
     .sort((a, b) => b.value - a.value || a.key.localeCompare(b.key))
     .slice(0, limit);
 }

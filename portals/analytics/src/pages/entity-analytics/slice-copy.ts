@@ -1,3 +1,5 @@
+import { PLATFORM_COPY } from './platform-copy';
+
 /**
  * The words for a breakdown's slices, per breakdown — the same key can mean
  * different things in two charts (a DRAFT host is still filling the form in, a
@@ -138,6 +140,7 @@ export const SLICE_COPY: Partial<Record<string, Partial<Record<string, string>>>
   // A club admin record is drafted when the meeting is approved, so DRAFT is the review queue.
   admin_status: { ...REVIEW, DRAFT: 'analytics.slice.awaitingReview' },
   host_status: { ...REVIEW, DRAFT: 'analytics.slice.draft' },
+  ...PLATFORM_COPY.slices,
 };
 
 /** What a slice with no name of its own (an unset city or category) is called. */

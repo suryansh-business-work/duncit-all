@@ -54,6 +54,7 @@ exports:
   - 'GENERIC_ERROR_MESSAGE'
   - 'formatMoney'
   - 'formatINR'
+  - 'formatBytes'
   - 'base64ToBlob'
   - 'downloadBlob'
   - 'downloadBase64File'
@@ -715,6 +716,7 @@ Four things to read off that output:
 | --- | --- | --- | --- |
 | `formatINR` | `(value: number) => string` | — | Whole-rupee INR via `Intl`, `en-IN` grouping. |
 | `formatMoney` | `(value: number, options?: FormatMoneyOptions) => string` | `{}` | Superset formatter covering every portal variant. |
+| `formatBytes` | `(bytes: number) => string` | — | Human-readable size, `8589934592` → `'8 GB'`; zero or less reads `'0 B'`. |
 | `FormatMoneyOptions.symbol` | `string` | `'₹'` | Currency prefix; pass a server-provided symbol. |
 | `FormatMoneyOptions.decimals` | `number` | `0` | Fixed fraction digits. |
 | `FormatMoneyOptions.grouping` | `boolean` | `true` | `false` reproduces the plain `toFixed` family. |

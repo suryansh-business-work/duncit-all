@@ -28,6 +28,7 @@ export const ENV_CATEGORIES = [
   'MSG91',
   'APPLE_SIGNIN',
   'APP_STORE_CONNECT',
+  'SONARQUBE',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

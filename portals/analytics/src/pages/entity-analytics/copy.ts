@@ -8,6 +8,7 @@
  */
 
 import type { AnalyticsGranularity } from '@duncit/gql-types';
+import { PLATFORM_COPY } from './platform-copy';
 
 /** A lookup by server key — a key the console has no words for yet reads as undefined. */
 export type CopyMap<T> = Partial<Record<string, T>>;
@@ -15,6 +16,13 @@ export type CopyMap<T> = Partial<Record<string, T>>;
 export interface TitledCopy {
   title: string;
   hint: string;
+}
+
+export interface LeaderboardCopy extends TitledCopy {
+  /** The name column's heading. */
+  name: string;
+  /** What the table says with nothing to rank; the pod pages' own line when left out. */
+  empty?: string;
 }
 
 export const KPI_COPY: CopyMap<TitledCopy> = {
@@ -74,6 +82,7 @@ export const KPI_COPY: CopyMap<TitledCopy> = {
   pods_per_active_host: { title: 'analytics.kpi.podsPerActiveHost', hint: 'analytics.kpi.podsPerActiveHostHint' },
   scan_share: { title: 'analytics.kpi.scanShare', hint: 'analytics.kpi.scanShareHint' },
   host_rating: { title: 'analytics.kpi.hostRating', hint: 'analytics.kpi.hostRatingHint' },
+  ...PLATFORM_COPY.kpis,
 };
 
 export const TREND_COPY: CopyMap<TitledCopy> = {
@@ -89,6 +98,7 @@ export const TREND_COPY: CopyMap<TitledCopy> = {
   admin_activity: { title: 'analytics.trend.adminActivity', hint: 'analytics.trend.adminActivityHint' },
   host_onboarding: { title: 'analytics.trend.hostOnboarding', hint: 'analytics.trend.hostOnboardingHint' },
   host_activity: { title: 'analytics.trend.hostActivity', hint: 'analytics.trend.hostActivityHint' },
+  ...PLATFORM_COPY.trends,
 };
 
 /** A series reads like the tile it shares a key with; these have no tile. */
@@ -97,6 +107,7 @@ export const SERIES_COPY: CopyMap<string> = {
   pods_cancelled: 'analytics.series.podsCancelled',
   backouts: 'analytics.series.backouts',
   rejections: 'analytics.series.rejections',
+  ...PLATFORM_COPY.series,
 };
 
 export const GRANULARITY_COPY: Record<AnalyticsGranularity, string> = {
@@ -142,9 +153,10 @@ export const BREAKDOWN_COPY: CopyMap<string> = {
   hosts_by_city: 'analytics.breakdown.hostsByCity',
   host_marks: 'analytics.breakdown.hostMarks',
   host_rating_stars: 'analytics.breakdown.hostRatingStars',
+  ...PLATFORM_COPY.breakdowns,
 };
 
-export const LEADERBOARD_COPY: CopyMap<TitledCopy & { name: string }> = {
+export const LEADERBOARD_COPY: CopyMap<LeaderboardCopy> = {
   top_clubs: {
     title: 'analytics.leaderboard.topClubs',
     hint: 'analytics.leaderboard.topClubsHint',
@@ -160,6 +172,7 @@ export const LEADERBOARD_COPY: CopyMap<TitledCopy & { name: string }> = {
     hint: 'analytics.leaderboard.topHostsHint',
     name: 'analytics.leaderboard.host',
   },
+  ...PLATFORM_COPY.leaderboards,
 };
 
 export const COLUMN_COPY: CopyMap<string> = {
@@ -172,4 +185,5 @@ export const COLUMN_COPY: CopyMap<string> = {
   avg_rating: 'analytics.leaderboard.avgRating',
   forced_marks: 'analytics.leaderboard.forcedMarks',
   admin_rating: 'analytics.leaderboard.adminRating',
+  ...PLATFORM_COPY.columns,
 };

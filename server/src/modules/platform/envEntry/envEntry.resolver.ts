@@ -1,33 +1,11 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
 import { envEntryTests, type Msg91TestInput } from './envEntry.tests';
-import { CATEGORY_API_DOCS, CATEGORY_FIELDS, CATEGORY_DOCS } from './envEntry.fields';
+import { CATEGORY_API_DOCS, CATEGORY_FIELDS, CATEGORY_DOCS, CATEGORY_LABELS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
 const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
-
-const CATEGORY_LABELS: Record<EnvCategory, string> = {
-  EMAIL: 'Email (SMTP)',
-  IMAGEKIT: 'ImageKit',
-  PEXELS: 'Pexels',
-  GOOGLE_OAUTH: 'Google OAuth',
-  GOOGLE_MAPS: 'Google Map',
-  TWILIO: 'Twilio',
-  OPENAI: 'OpenAI',
-  GEMINI: 'Gemini',
-  SERVAM: 'Servam AI (Sarvam)',
-  RAZORPAY: 'Razorpay',
-  SHIPROCKET: 'ShipRocket',
-  SLACK: 'Slack',
-  AISENSY: 'AiSensy (WhatsApp)',
-  TURN: 'TURN relay (staff calls)',
-  GITHUB: 'GitHub (app builds)',
-  GOOGLE_PLAY: 'Google Play (store releases)',
-  MSG91: 'MSG91 (SMS OTP)',
-  APPLE_SIGNIN: 'Sign in with Apple',
-  APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
-};
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */
 function pairsToConfig(category: EnvCategory, pairs?: { key: string; value: string }[] | null): EnvEntryConfig {

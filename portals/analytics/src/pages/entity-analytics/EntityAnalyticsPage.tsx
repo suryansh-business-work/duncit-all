@@ -49,15 +49,13 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
   const retry = () => {
     refetch().catch(() => undefined);
   };
+  const testId = `analytics-page-${page.path.slice(1).replaceAll('/', '-')}`;
+  const periodToggle = page.periodless ? undefined : <PeriodToggle value={days} onChange={setDays} />;
 
   const header = (
     <Stack spacing={2}>
       <TopProgressBar busy={loading && Boolean(board)} />
-      <PageHeader
-        title={t(page.title)}
-        subtitle={t(page.subtitle)}
-        actions={<PeriodToggle value={days} onChange={setDays} />}
-      />
+      <PageHeader title={t(page.title)} subtitle={t(page.subtitle)} actions={periodToggle} />
       {error && (
         <Alert
           severity="error"
@@ -76,7 +74,7 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
 
   if (!board) {
     return (
-      <Stack spacing={3} data-testid={`analytics-page-${page.path.slice(1)}`}>
+      <Stack spacing={3} data-testid={testId}>
         {header}
         {loading && <Loader variant="page" />}
       </Stack>
@@ -84,7 +82,7 @@ export default function EntityAnalyticsPage({ page }: Readonly<{ page: Analytics
   }
 
   return (
-    <Stack data-testid={`analytics-page-${page.path.slice(1)}`}>
+    <Stack data-testid={testId}>
       <DuncitDashboard dashboardId={page.dashboardId} header={header} widgets={widgets} />
     </Stack>
   );

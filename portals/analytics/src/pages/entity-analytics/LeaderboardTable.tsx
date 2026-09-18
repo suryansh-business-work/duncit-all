@@ -67,7 +67,7 @@ export default function LeaderboardTable({ leaderboard }: Readonly<{ leaderboard
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
-      emptyText={t('analytics.leaderboard.empty')}
+      emptyText={t(copy?.empty ?? 'analytics.leaderboard.empty')}
       defaultSort={{ field: 'rank', dir: 'asc' }}
       searchPlaceholder={t('analytics.leaderboard.search')}
     />

@@ -6,6 +6,12 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     CLUBS
     CLUB_ADMINS
     HOSTS
+    DATABASE
+    ENV_KEYS
+    SONARQUBE
+    TEST_COVERAGE
+    STRESS_TESTS
+    E2E_TESTS
   }
 
   "What kind of number a value is, so the console formats it."
@@ -16,6 +22,12 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     RATING
     DAYS
     DECIMAL
+    "A size in bytes."
+    BYTES
+    "A length of time in milliseconds."
+    DURATION
+    "SonarQube's rating, 1 (A) to 5 (E)."
+    GRADE
   }
 
   "WINDOW follows the chosen period; ALL_TIME is the state of things right now."

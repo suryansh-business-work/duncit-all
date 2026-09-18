@@ -24,12 +24,44 @@ export const appConfig = {
   colorModeKey: 'analytics_color_mode',
   accent: { light: '#f0abfc', main: '#c026d3', hover: '#a21caf', active: '#86198f' },
   // One dashboard per subject and nothing else — `/` opens the first of them.
+  // Tech, Security and Testing only READ what the Tech console runs; every
+  // action (backups, test runs, credentials) stays there.
   nav: [
-    { label: 'Users', labelKey: 'shell.nav.users', to: '/users', icon: 'people' },
-    { label: 'Pods', labelKey: 'shell.nav.pods', to: '/pods', icon: 'calendar' },
-    { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'groups' },
-    { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/club-admins', icon: 'verified-user' },
-    { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'host-request' },
+    {
+      label: 'Business', labelKey: 'shell.nav.business',
+      icon: 'insights',
+      children: [
+        { label: 'Users', labelKey: 'shell.nav.users', to: '/users', icon: 'people' },
+        { label: 'Pods', labelKey: 'shell.nav.pods', to: '/pods', icon: 'calendar' },
+        { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'groups' },
+        { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/club-admins', icon: 'verified-user' },
+        { label: 'Hosts', labelKey: 'shell.nav.hosts', to: '/hosts', icon: 'host-request' },
+      ],
+    },
+    {
+      label: 'Tech', labelKey: 'shell.nav.tech',
+      icon: 'dns',
+      children: [
+        { label: 'Database', labelKey: 'shell.nav.database', to: '/tech/database', icon: 'storage' },
+        { label: 'Environment Variables', labelKey: 'shell.nav.environmentVariables', to: '/tech/env-keys', icon: 'settings' },
+      ],
+    },
+    {
+      label: 'Security', labelKey: 'shell.nav.security',
+      icon: 'shield',
+      children: [
+        { label: 'SonarQube', labelKey: 'shell.nav.sonarqube', to: '/security/sonarqube', icon: 'policy' },
+      ],
+    },
+    {
+      label: 'Testing', labelKey: 'shell.nav.testing',
+      icon: 'rule',
+      children: [
+        { label: 'Unit Test Coverage', labelKey: 'shell.nav.unitTestCoverage', to: '/testing/unit-coverage', icon: 'percent' },
+        { label: 'Stress Testing', labelKey: 'shell.nav.stressTesting', to: '/testing/stress', icon: 'speed' },
+        { label: 'E2E Tests', labelKey: 'shell.nav.e2eTests', to: '/testing/e2e', icon: 'bug' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

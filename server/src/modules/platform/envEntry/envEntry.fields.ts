@@ -241,6 +241,47 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'The iOS app’s bundle identifier (app.json → ios.bundleIdentifier), e.g. com.duncit.mobile. Registered with its capabilities on Generate if Apple has not seen it',
     },
   ],
+  // What the Analytics console's Security and Unit Test Coverage pages read.
+  // Read-only: a user token with Browse on the project is all it needs, and it
+  // is a different token from the CI scan's SONAR_TOKEN secret.
+  SONARQUBE: [
+    { name: 'host_url', label: 'Server URL', hint: 'e.g. https://sonarqube.duncit.com' },
+    {
+      name: 'token',
+      label: 'User Token',
+      secret: true,
+      hint: 'SonarQube → My Account → Security → Generate a User token (squ_…) for a user with Browse on the project',
+    },
+    {
+      name: 'project_key',
+      label: 'Project Key',
+      hint: 'sonar.projectKey in sonar-project.properties — SonarQube → the project → Project Information',
+    },
+  ],
+};
+
+/** How each category is named in the Tech portal and on the Analytics console. */
+export const CATEGORY_LABELS: Record<EnvCategory, string> = {
+  EMAIL: 'Email (SMTP)',
+  IMAGEKIT: 'ImageKit',
+  PEXELS: 'Pexels',
+  GOOGLE_OAUTH: 'Google OAuth',
+  GOOGLE_MAPS: 'Google Map',
+  TWILIO: 'Twilio',
+  OPENAI: 'OpenAI',
+  GEMINI: 'Gemini',
+  SERVAM: 'Servam AI (Sarvam)',
+  RAZORPAY: 'Razorpay',
+  SHIPROCKET: 'ShipRocket',
+  SLACK: 'Slack',
+  AISENSY: 'AiSensy (WhatsApp)',
+  TURN: 'TURN relay (staff calls)',
+  GITHUB: 'GitHub (app builds)',
+  GOOGLE_PLAY: 'Google Play (store releases)',
+  MSG91: 'MSG91 (SMS OTP)',
+  APPLE_SIGNIN: 'Sign in with Apple',
+  APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
+  SONARQUBE: 'SonarQube (code analysis)',
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -264,6 +305,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   MSG91: 'https://control.msg91.com/app/m/l/settings/security/authkey',
   APPLE_SIGNIN: 'https://developer.apple.com/account/resources/identifiers/list',
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
+  SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
 };
 
 /**
@@ -356,6 +398,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   APP_STORE_CONNECT_KEY_ID: { category: 'APP_STORE_CONNECT', field: 'key_id' },
   APP_STORE_CONNECT_PRIVATE_KEY: { category: 'APP_STORE_CONNECT', field: 'private_key' },
   APP_STORE_CONNECT_BUNDLE_ID: { category: 'APP_STORE_CONNECT', field: 'bundle_id' },
+  SONAR_HOST_URL: { category: 'SONARQUBE', field: 'host_url' },
+  SONAR_TOKEN: { category: 'SONARQUBE', field: 'token' },
+  SONAR_PROJECT_KEY: { category: 'SONARQUBE', field: 'project_key' },
 };
 
 export function maskSecret(value: string) {

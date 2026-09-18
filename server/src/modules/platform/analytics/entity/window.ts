@@ -138,4 +138,27 @@ export function distinctSeries(
   return window.buckets.map((bucket) => sets.get(bucket)?.size ?? 0);
 }
 
+/**
+ * One number per bucket from the rows that fall in it — an average, a peak,
+ * a count of one status. A bucket with no rows reads 0.
+ */
+export function bucketSeries<T>(
+  rows: readonly T[],
+  dateOf: (row: T) => Date,
+  window: AnalyticsWindow,
+  reduce: (inBucket: T[]) => number
+): number[] {
+  const groups = new Map<string, T[]>();
+  for (const row of rows) {
+    const bucket = bucketOfDay(dayKeyIn(dateOf(row), window.zone), window.granularity);
+    const inBucket = groups.get(bucket) ?? [];
+    inBucket.push(row);
+    groups.set(bucket, inBucket);
+  }
+  return window.buckets.map((bucket) => {
+    const inBucket = groups.get(bucket);
+    return inBucket ? reduce(inBucket) : 0;
+  });
+}
+
 export const inRange = (from: Date, to: Date) => ({ $gte: from, $lt: to });

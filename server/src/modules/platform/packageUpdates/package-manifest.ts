@@ -72,6 +72,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "date-fns", range: "^4.4.0", kind: "dependencies" },
       { name: "date-fns-tz", range: "^3.2.0", kind: "dependencies" },
       { name: "expo", range: "~57.0.18", kind: "dependencies" },
+      { name: "expo-apple-authentication", range: "~57.0.2", kind: "dependencies" },
       { name: "expo-asset", range: "~57.0.15", kind: "dependencies" },
       { name: "expo-auth-session", range: "~57.0.10", kind: "dependencies" },
       { name: "expo-build-properties", range: "~57.0.15", kind: "dependencies" },

@@ -44,6 +44,10 @@ env:
   ADS_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads.duncit.com' || 'https://ads.duncit.com' }}
   ADS_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads-portal.duncit.com' || 'https://ads-portal.duncit.com' }}
   EARNWITH_URL: ${{ github.ref_name == 'staging' && 'https://staging.earnwith.duncit.com' || 'https://earnwith.duncit.com' }}
+  # Google Analytics for the Astro websites — production only, so staging
+  # traffic never lands in the live property. (Written `!= … && id || ''`
+  # because `== … && '' || id` always yields the id: '' is falsy.)
+  GA_MEASUREMENT_ID: ${{ github.ref_name != 'staging' && 'G-V0CTVZFGM0' || '' }}
   # The pet store: its storefront (canonical URLs, sitemap, email links) and
   # the console that runs it.
   ECOMM_URL: ${{ github.ref_name == 'staging' && 'https://staging.ecomm.duncit.com' || 'https://ecomm.duncit.com' }}
@@ -690,6 +694,7 @@ jobs:
               --build-arg PUBLIC_PARTNERS_SITE_URL=${{ env.PARTNERS_SITE_URL }} \
               --build-arg PUBLIC_ADS_SITE_URL=${{ env.ADS_SITE_URL }} \
               --build-arg PUBLIC_EARNWITH_URL=${{ env.EARNWITH_URL }} \
+              --build-arg PUBLIC_GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }} \
               --cache-from type=gha,scope=duncit-website${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -760,6 +765,7 @@ jobs:
               --build-arg PUBLIC_PARTNERS_SITE_URL=${{ env.PARTNERS_SITE_URL }} \
               --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
               --build-arg PUBLIC_PARTNERS_APP_URL=${{ env.PARTNERS_APP_URL }} \
+              --build-arg PUBLIC_GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }} \
               --cache-from type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -829,6 +835,7 @@ jobs:
               --build-arg PUBLIC_ADS_PORTAL_URL=${{ env.ADS_PORTAL_URL }} \
               --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
               --build-arg PUBLIC_ADS_SITE_URL=${{ env.ADS_SITE_URL }} \
+              --build-arg PUBLIC_GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }} \
               --cache-from type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1901,6 +1908,7 @@ jobs:
               --build-arg PUBLIC_MWEB_URL=${{ env.MWEB_URL }} \
               --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
               --build-arg PUBLIC_EARNWITH_URL=${{ env.EARNWITH_URL }} \
+              --build-arg PUBLIC_GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }} \
               --cache-from type=gha,scope=duncit-earnwith${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-earnwith${{ env.SCOPE_SUFFIX }},mode=max \
               --push .

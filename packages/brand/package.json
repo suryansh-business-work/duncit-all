@@ -15,6 +15,7 @@
     "./AppPhone.astro": "./src/AppPhone.astro",
     "./site-i18n": "./src/site-i18n.ts",
     "./SiteMeta.astro": "./src/SiteMeta.astro",
+    "./GoogleAnalytics.astro": "./src/GoogleAnalytics.astro",
     "./site-meta": "./src/site-meta.ts"
   },
   "files": [

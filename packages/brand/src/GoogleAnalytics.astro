@@ -1,0 +1,37 @@
+---
+/**
+ * Google Analytics (gtag.js) for every Duncit website, drawn one way in one place.
+ *
+ * The measurement id is baked in at build time from PUBLIC_GA_MEASUREMENT_ID,
+ * which only the production deploy passes. A local or staging build renders
+ * nothing, so neither sends its traffic into the production property.
+ *
+ * `gtag` pushes the `arguments` object itself: gtag.js ignores a rest-parameter
+ * array, so the snippet stays exactly as Google ships it.
+ */
+interface Props {
+  measurementId?: string;
+}
+
+const { measurementId } = Astro.props;
+---
+
+{
+  measurementId && (
+    <>
+      <script
+        is:inline
+        async
+        src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`}
+      ></script>
+      <script is:inline define:vars={{ measurementId }}>
+        globalThis.dataLayer ??= [];
+        globalThis.gtag = function gtag() {
+          globalThis.dataLayer.push(arguments);
+        };
+        globalThis.gtag('js', new Date());
+        globalThis.gtag('config', measurementId);
+      </script>
+    </>
+  )
+}

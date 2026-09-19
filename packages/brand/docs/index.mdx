@@ -19,6 +19,7 @@ exports:
   - 'SiteMenu.astro'
   - 'SiteMeta.astro'
   - 'site-meta'
+  - 'GoogleAnalytics.astro'
 ---
 
 ## Why this exists
@@ -179,6 +180,28 @@ markers, and `site-meta` exports the same builder as a plain function
 (`buildSiteMetaTags`, `injectSiteMeta`, `META_START`, `META_END`). That is what lets the
 sites' HTML server recompose the block per request for the pages whose card is not
 knowable at build time — one builder, so a card cannot drift from the page it describes.
+
+### `GoogleAnalytics.astro`
+
+The Google Analytics (gtag.js) tag, rendered in each site's `<head>` right after the
+viewport meta, where Google asks for it.
+
+```astro
+---
+import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
+---
+
+<GoogleAnalytics measurementId={import.meta.env.PUBLIC_GA_MEASUREMENT_ID} />
+```
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `measurementId` | `string` | — | The `G-…` id. Empty renders nothing at all. |
+
+The id is baked in at build time. `deploy.yml` passes `PUBLIC_GA_MEASUREMENT_ID` to
+production builds only, so a local or staging build ships no tag and its traffic never
+lands in the live property. `gtag` is kept on `globalThis` so a page can send its own
+events with `gtag('event', …)`.
 
 ## The wordmark is plain CSS on purpose
 

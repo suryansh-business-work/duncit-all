@@ -77,6 +77,8 @@ COPY packages/i18n ./packages/i18n
 COPY packages/forms ./packages/forms
 # @duncit/captcha — the human check on the report form.
 COPY packages/captcha ./packages/captcha
+# @duncit/brand — main.tsx loads the Google Analytics tag set in Tech.
+COPY packages/brand ./packages/brand
 ARG VITE_SERVER_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build

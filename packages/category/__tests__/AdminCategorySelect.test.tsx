@@ -86,6 +86,18 @@ describe('AdminCategorySelect', () => {
     expect(screen.getByRole('combobox', { name: /Sub Category/i })).toBeDisabled();
   });
 
+  it('strict keeps sub disabled until the middle category is chosen', () => {
+    setCategories(CATEGORIES);
+    render(<Wrapper strict initialValue={{ ...EMPTY_CATEGORY, super_id: 's1', super_name: 'Arts' }} />);
+    expect(screen.getByRole('combobox', { name: /^Category/i })).toBeEnabled();
+    expect(screen.getByRole('combobox', { name: /Sub Category/i })).toBeDisabled();
+  });
+
+  it('strict unlocks sub once a category is chosen', () => {
+    setCategories(CATEGORIES);
+    render(<Wrapper strict initialValue={FULL_VALUE} />);
+    expect(screen.getByRole('combobox', { name: /Sub Category/i })).toBeEnabled();
+  });
   it('disables every field, including super, when disabled is set', () => {
     setCategories(CATEGORIES);
     render(<Wrapper disabled />);

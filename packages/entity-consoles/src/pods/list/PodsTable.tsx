@@ -2,24 +2,17 @@ import { useCallback, useMemo, type MutableRefObject, type ReactNode } from 'rea
 import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import { useFeatureFlag } from '@duncit/app-settings';
-import { buildPodsColumns } from './podsColumns';
+import { buildPodsColumns, type PodsColumnDeps } from './podsColumns';
 import { isBelowMinPax } from './podsColumns.values';
 import type { PodRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
-interface Props {
+/** The column deps are the page's own callbacks; the table adds only what
+ *  it wires itself (the translator and the product flag come from hooks). */
+interface Props extends Omit<PodsColumnDeps, 't' | 'showProducts'> {
   fetchRows: TableFetch<PodRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
-  clubName: (id: string) => string;
-  venueName: (id: string) => string;
-  locName: (id: string) => string;
-  minPax: (clubId: string) => number;
-  onEdit: (p: PodRow) => void;
-  onQuickEdit: (p: PodRow) => void;
-  onDelete: (p: PodRow) => void;
-  onComplete: (p: PodRow) => void;
-  onMonitor: (p: PodRow) => void;
   onView: (p: PodRow) => void;
 }
 

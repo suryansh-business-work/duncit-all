@@ -21,6 +21,8 @@ import {
   categoryAxis,
   chartSeriesColor,
   chartTooltip,
+  lineTrendDataset,
+  lineTrendOptions,
   valueAxis,
   type LoaderVariant,
   type SpotsStepperLabels,
@@ -375,9 +377,9 @@ export default defineDemos('ui', [
 
   defineDemo<ChartFrameMock>({
     id: 'chart-frame',
-    title: 'chartTooltip, valueAxis, categoryAxis — the frame every console chart shares',
+    title: 'chartTooltip, valueAxis, categoryAxis, lineTrend* — the frame every console chart shares',
     note:
-      'Switch mode to dark and every colour follows the theme. host_payouts runs through the value axis tick formatter exactly as a ₹ axis prints it; max_ticks is how many day labels the category axis keeps before thinning.',
+      'Switch mode to dark and every colour follows the theme. host_payouts runs through the value axis tick formatter exactly as a ₹ axis prints it; max_ticks is how many day labels the category axis keeps before thinning. loneLine is how a single trend line is drawn, filled in the first series colour; legendForSeveral is whether a legend appears once lines can cross.',
     mock: { mode: 'light', host_payouts: 482150, max_ticks: 10 },
     compute: (mock) => {
       const theme = createTheme({ palette: { mode: mock.mode } });
@@ -386,6 +388,8 @@ export default defineDemos('ui', [
         valueTick: valueAxis(theme, formatMoney).ticks.callback(mock.host_payouts),
         categoryAxis: categoryAxis(theme, mock.max_ticks),
         firstSeriesColor: chartSeriesColor(theme, 0),
+        loneLine: lineTrendDataset(theme, 0, true),
+        legendForSeveral: lineTrendOptions(theme, false).plugins.legend.display,
       };
     },
   }),

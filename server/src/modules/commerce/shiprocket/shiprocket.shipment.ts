@@ -47,6 +47,23 @@ const addEvent = (order: IProductOrder, status: string, note: string) => {
 const lineLabel = (line: { name: string; variant_label?: string }) =>
   line.variant_label ? `${line.name} (${line.variant_label})` : line.name;
 
+/**
+ * The ship-to address as the courier check reads it. Read field by field: the
+ * order's address is a Mongoose subdocument, and spreading one copies none of
+ * its fields — every address would read as empty and every booking refused.
+ */
+const shipToOf = (order: IProductOrder) => {
+  const a = order.shipping_address;
+  return {
+    line1: a?.line1,
+    city: a?.city,
+    state: a?.state,
+    pincode: a?.pincode,
+    country: a?.country,
+    phone: a?.phone || order.buyer_phone,
+  };
+};
+
 const complete = (d: ParcelDims) =>
   d.weight_kg >= PACKAGING_LIMITS.minWeightKg &&
   d.length_cm >= PACKAGING_LIMITS.minSideCm &&
@@ -139,7 +156,7 @@ function adhocPayload(order: IProductOrder, pickup: string, parcel: Parcel, hsn:
 /** Step 1 — the ShipRocket order. Re-uses one a lost answer already created. */
 async function book(order: IProductOrder) {
   if (order.shiprocket.order_id) return;
-  const problems = addressProblems({ ...order.shipping_address, phone: order.shipping_address?.phone || order.buyer_phone });
+  const problems = addressProblems(shipToOf(order));
   if (problems.length > 0) {
     throw shiprocketError(`The ship-to address needs ${problems.join(' and ')} — correct it on this order, then retry`);
   }
@@ -277,7 +294,7 @@ export function shipmentView(order: IProductOrder) {
     packaging_missing: order.line_items
       .filter((l) => !complete(l))
       .map(lineLabel),
-    address_problems: addressProblems({ ...order.shipping_address, phone: order.shipping_address?.phone || order.buyer_phone }),
+    address_problems: addressProblems(shipToOf(order)),
   };
 }
 

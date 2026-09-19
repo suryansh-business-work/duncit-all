@@ -59,7 +59,9 @@ export const seedProduct = (over: Record<string, unknown> = {}) =>
     unit_cost: 349,
     inventory_count: 40,
     // A pet-store product: its own catalogue, published, shipped by ShipRocket.
+    // A published product always has its own URL key — the index is unique on it.
     status: 'PUBLISHED',
+    store: { slug: `drools-chicken-jerky-${next()}` },
     hsn_code: '2309',
     weight_kg: 0.25,
     length_cm: 20,

@@ -192,7 +192,8 @@ describe('quoteStoreShipping', () => {
       [jerky(noida._id), jerky(blr._id), jerky(blr._id, { quantity: 0 })],
       GURUGRAM_PIN,
       settings(),
-      { goodsTotal: 1396, cod: false }
+      // Under the ₹999 free-shipping threshold, so both parcels are charged.
+      { goodsTotal: 698, cod: false }
     );
     expect(quote.breakup.map((l) => l.pickup_pincode)).toEqual(['201301', '560068']);
     expect(quote.total).toBe(136);

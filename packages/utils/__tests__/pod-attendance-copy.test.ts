@@ -58,6 +58,7 @@ const STATIC_PROPS = [
   'otpVerifying', 'otpVerified', 'otpCancel', 'forceTitle', 'forceWarning', 'forceConfirm', 'forceCancel',
   'chooseBody', 'chooseOtpTitle', 'chooseOtpBody', 'chooseDirectTitle', 'chooseDirectBody', 'chooseCancel',
   'forceCompanionsTitle', 'forceCompanionName', 'forceCompanionPhone',
+  'directCta', 'directTitle', 'directBody', 'directSearchLabel', 'directNoMatch',
 ] as const satisfies readonly (keyof PodAttendanceLabels)[];
 
 /**

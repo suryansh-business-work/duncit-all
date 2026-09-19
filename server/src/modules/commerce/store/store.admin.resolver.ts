@@ -3,6 +3,7 @@ import type { IStoreSettings } from './storeSettings.model';
 import { storeAdminMerchService } from './store.admin.merch.service';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
 import { storeAdminProductsService } from './store.admin.products.service';
+import { storeAdminPackagingService } from './store.admin.packaging.service';
 import { storeOrderService } from './store.order.service';
 import { storeReturnService } from './store.return.service';
 import { storeDashboardService } from './store.dashboard.service';
@@ -51,6 +52,7 @@ export const storeAdminResolvers = {
     storeAdminWarehouses: admin(() => storeAdminProductsService.warehouses()),
     storeAdminBrands: admin(() => storeAdminMerchService.brands()),
     storeAdminRazorpayAccounts: admin(() => storeAdminMerchService.razorpayAccounts()),
+    storePackagingExport: admin((a) => storeAdminPackagingService.exportRows(a.product_ids)),
     storeOrdersTable: admin((a) => storeOrderService.table(a.query)),
     storeAdminOrder: admin((a) => storeOrderService.adminDetail(a.id)),
     storeCustomerOrders: admin((a) => storeOrderService.forCustomer(a.email)),
@@ -84,6 +86,8 @@ export const storeAdminResolvers = {
     storeReorderSections: admin((a) => storeAdminMerchService.reorderSections(a.ids)),
     storeSaveProduct: admin((a, ctx) => storeAdminProductsService.save(String(ctx.user?.id), a.id, a.input, a.status)),
     storeSetProductStatus: admin((a) => storeAdminProductsService.setStatus(a.ids, a.status)),
+    storeBulkSetPackaging: admin((a) => storeAdminPackagingService.bulkSet(a.product_ids, a.input)),
+    storeImportPackaging: admin((a) => storeAdminPackagingService.importRows(a.rows)),
     storeBulkFile: admin((a) =>
       storeAdminProductsService.bulkFile(a.product_ids, a.pet_type_ids ?? [], a.category_ids ?? [])
     ),

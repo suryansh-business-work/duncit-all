@@ -34,6 +34,13 @@ export const inventoryTypeDefs = /* GraphQL */ `
     METER
     OTHER
   }
+  "How a unit is packed for the courier."
+  enum PackageType {
+    BOX
+    POLYBAG
+    ENVELOPE
+    OTHER
+  }
   enum StockMovementType {
     IN
     OUT
@@ -88,6 +95,12 @@ export const inventoryTypeDefs = /* GraphQL */ `
     breadth_cm: Float!
     length_cm: Float!
     weight_kg: Float!
+    "Compare-at price the pet store strikes through. 0 = none."
+    mrp: Float!
+    "L x B x H / 5000 of this variant's packed parcel (falls back to the product's dimensions)."
+    volumetric_weight_kg: Float!
+    "What a courier bills: the higher of the packed weight and the volumetric weight."
+    chargeable_weight_kg: Float!
   }
 
   input ProductVariantInput {
@@ -104,6 +117,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     breadth_cm: Float
     length_cm: Float
     weight_kg: Float
+    "Compare-at price; omitted keeps the saved one. Must not be below the variant's price."
+    mrp: Float
   }
 
   "One Super/Category/Sub taxonomy row a product is sold in (a product may have several)."
@@ -198,6 +213,19 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float!
     breadth_cm: Float!
     weight_kg: Float!
+    package_type: PackageType!
+    hsn_code: String!
+    is_fragile: Boolean!
+    is_liquid: Boolean!
+    shelf_life_days: Int
+    "Compare-at price of a product without variants. 0 = none."
+    mrp: Float!
+    "L x B x H / 5000 of the packed parcel."
+    volumetric_weight_kg: Float!
+    "What a courier bills: the higher of the packed weight and the volumetric weight."
+    chargeable_weight_kg: Float!
+    "Packaging values still missing before this product can ship with ShipRocket (empty = ready)."
+    packaging_missing: [String!]!
     color: String!
     commission_pct: Float!
     delivery_target: ProductListingDeliveryTarget!
@@ -341,6 +369,16 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "How a unit is packed for the courier (default BOX)."
+    package_type: PackageType
+    "HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503)."
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    "Days a sealed unit stays good (food, medicine); null when it doesn't expire."
+    shelf_life_days: Int
+    "Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none."
+    mrp: Float
     "How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted."
     delivery_target: ProductListingDeliveryTarget
     "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
@@ -390,6 +428,16 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "How a unit is packed for the courier (default BOX)."
+    package_type: PackageType
+    "HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503)."
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    "Days a sealed unit stays good (food, medicine); null when it doesn't expire."
+    shelf_life_days: Int
+    "Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none."
+    mrp: Float
     "How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted."
     delivery_target: ProductListingDeliveryTarget
     "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
@@ -430,6 +478,16 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "How a unit is packed for the courier (default BOX)."
+    package_type: PackageType
+    "HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503)."
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    "Days a sealed unit stays good (food, medicine); null when it doesn't expire."
+    shelf_life_days: Int
+    "Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none."
+    mrp: Float
     color: String
     inventory_count: Int!
     unit_cost: Float!

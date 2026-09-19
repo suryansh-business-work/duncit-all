@@ -6,6 +6,9 @@ export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
 export type ProductListingReviewStatus = 'PENDING' | 'APPROVED' | 'DENIED';
 export type ProductListingDeliveryTarget = 'HOST' | 'VENUE' | 'SHIPROCKET';
 export type ProductOwnership = 'DUNCIT' | 'BRAND';
+/** How a unit is packed for the courier. */
+export type PackageType = 'BOX' | 'POLYBAG' | 'ENVELOPE' | 'OTHER';
+export const PACKAGE_TYPES: PackageType[] = ['BOX', 'POLYBAG', 'ENVELOPE', 'OTHER'];
 export type UnitType =
   | 'BOTTLE'
   | 'PIECE'
@@ -136,10 +139,21 @@ export interface IInventoryProduct extends Document {
   view_count: number;
   click_count: number;
   size_label: string;
+  /** The PACKED parcel of one unit (box included) — what ShipRocket rates and
+   * bills. A variant's own values win; a variant left at 0 falls back to these. */
   height_cm: number;
   length_cm: number;
   breadth_cm: number;
   weight_kg: number;
+  package_type: PackageType;
+  /** HSN code on the GST invoice (pet food 2309, toys 9503). */
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  /** Days a sealed unit stays good (food, medicine); null when it doesn't expire. */
+  shelf_life_days: number | null;
+  /** Compare-at price (MRP) of a product without variants; each variant carries its own. 0 = none. */
+  mrp: number;
   color: string;
   commission_pct: number;
   delivery_target: ProductListingDeliveryTarget;
@@ -299,6 +313,12 @@ const productSchema = new Schema<IInventoryProduct>(
     length_cm: { type: Number, default: 0, min: 0 },
     breadth_cm: { type: Number, default: 0, min: 0 },
     weight_kg: { type: Number, default: 0, min: 0 },
+    package_type: { type: String, enum: PACKAGE_TYPES, default: 'BOX' },
+    hsn_code: { type: String, default: '', trim: true, maxlength: 8 },
+    is_fragile: { type: Boolean, default: false },
+    is_liquid: { type: Boolean, default: false },
+    shelf_life_days: { type: Number, default: null, min: 0 },
+    mrp: { type: Number, default: 0, min: 0, max: 1000000 },
     color: { type: String, default: '', trim: true, maxlength: 80 },
     commission_pct: { type: Number, default: 5, min: 5, max: 50 },
     delivery_target: { type: String, enum: ['HOST', 'VENUE', 'SHIPROCKET'], default: 'HOST' },

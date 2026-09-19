@@ -305,8 +305,13 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     brand_name: String!
     image_url: String!
     price: Float!
+    "The lead variant's MRP, else the product's (0 = none)."
     mrp: Float!
     available: Int!
+    "Packaging values still missing before this product can ship with ShipRocket (empty = ready)."
+    packaging_missing: [String!]!
+    "What a courier bills for one unit: the higher of packed and volumetric weight."
+    chargeable_weight_kg: Float!
     variant_count: Int!
     status: StoreProductStatus!
     "False until a Duncit warehouse is picked — a product cannot be published without one."
@@ -748,9 +753,76 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeCouponsTable(query: TableQueryInput): CouponTablePage!
     storeDashboard(days: Int): StoreDashboard!
     storeSubscriptionsTable(query: TableQueryInput): StoreSubscriptionTablePage!
+    "Packaging of every approved product and variant (or just product_ids), for the CSV export."
+    storePackagingExport(product_ids: [ID!]): [StorePackagingRow!]!
+  }
+
+  "A product's (or one variant's) packaging, as the CSV export carries it."
+  type StorePackagingRow {
+    product_id: ID!
+    "Empty on the product's own row."
+    variant_id: String!
+    sku: String!
+    product_name: String!
+    variant_label: String!
+    weight_kg: Float!
+    length_cm: Float!
+    breadth_cm: Float!
+    height_cm: Float!
+    package_type: PackageType!
+    hsn_code: String!
+    is_fragile: Boolean!
+    is_liquid: Boolean!
+    shelf_life_days: Int
+    volumetric_weight_kg: Float!
+    chargeable_weight_kg: Float!
+    missing: [String!]!
+  }
+
+  "Packaging values to set on many products at once; a value left out keeps the saved one."
+  input StorePackagingInput {
+    weight_kg: Float
+    length_cm: Float
+    breadth_cm: Float
+    height_cm: Float
+    package_type: PackageType
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    shelf_life_days: Int
+  }
+
+  "One CSV row: a product or variant SKU and the values to set on it."
+  input StorePackagingImportRow {
+    sku: String!
+    weight_kg: Float
+    length_cm: Float
+    breadth_cm: Float
+    height_cm: Float
+    package_type: PackageType
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    shelf_life_days: Int
+  }
+
+  type StorePackagingImportError {
+    "The CSV line (1 is the header)."
+    row: Int!
+    sku: String!
+    message: String!
+  }
+
+  type StorePackagingImportResult {
+    updated: Int!
+    errors: [StorePackagingImportError!]!
   }
 
   extend type Mutation {
+    "Set the same packaging on many products. Answers how many changed."
+    storeBulkSetPackaging(product_ids: [ID!]!, input: StorePackagingInput!): Int!
+    "Apply a packaging CSV, matched by product or variant SKU."
+    storeImportPackaging(rows: [StorePackagingImportRow!]!): StorePackagingImportResult!
     storeSaveSettings(input: StoreSettingsInput!): StoreSettings!
     storeSavePetType(id: ID, input: StorePetTypeInput!): StoreAdminPetType!
     storeDeletePetType(id: ID!): Boolean!

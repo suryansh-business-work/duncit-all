@@ -330,7 +330,7 @@ services:
       # 8080, not 80: the store runs its non-root Node HTML server (per-page SEO).
       - "127.0.0.1:2039:8080"
 
-  # Duncit Lite (luma.duncit.com + luma-portal.duncit.com): ONE process is its
+  # Duncit Lite (lite.duncit.com + lite-portal.duncit.com): ONE process is its
   # GraphQL API, its upload/calendar routes and the HTML server for both
   # hostnames — nginx sends both to this port. Its OWN database (lite.env:
   # LITE_MONGO_DB_NAME=duncit-lite); nothing here reads the main stack's data.

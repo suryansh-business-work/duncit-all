@@ -322,7 +322,7 @@ services:
     ports:
       - "127.0.0.1:2139:8080"
 
-  # Duncit Lite — staging twin (staging.luma.* + staging.luma-portal.*), on
+  # Duncit Lite — staging twin (staging.lite.* + staging.lite-portal.*), on
   # its own staging database (lite.env: LITE_MONGO_DB_NAME=duncit-lite-staging).
   lite:
     image: ${DOCKERHUB_USERNAME}/duncit-lite:${IMAGE_TAG:-staging}

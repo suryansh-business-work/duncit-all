@@ -49,8 +49,8 @@ env:
   ECOMM_URL: ${{ github.ref_name == 'staging' && 'https://staging.ecomm.duncit.com' || 'https://ecomm.duncit.com' }}
   # Duncit Lite: the web app and its console. Both are served by ONE
   # container; the URLs are compiled into the bundles for links and canonicals.
-  LITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.luma.duncit.com' || 'https://luma.duncit.com' }}
-  LITE_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.luma-portal.duncit.com' || 'https://luma-portal.duncit.com' }}
+  LITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.lite.duncit.com' || 'https://lite.duncit.com' }}
+  LITE_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.lite-portal.duncit.com' || 'https://lite-portal.duncit.com' }}
   # Build-time Google creds baked into the frontend bundles. Staging builds
   # prefer the STAGING_-prefixed secret and fall back to the production one
   # when it is not set. (Runtime service creds — SMTP/ImageKit/OpenAI/... —
@@ -2012,7 +2012,9 @@ jobs:
           STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
           # Duncit Lite's OWN database. With no LITE_MONGO_URI secret it uses
           # the same Mongo host as the main stack but a separate database name
-          # (duncit-lite / duncit-lite-staging) — never the main data. Its JWT
+          # (duncit-lite / duncit-lite-staging) — never the main data. That
+          # user needs readWrite on the Lite database (infra/mongo/README.md),
+          # or the container crash-loops at boot. Its JWT
           # secret is its own too; the main one is only the first-deploy fallback.
           LITE_MONGO_URI:        ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_MONGO_URI || secrets.LITE_MONGO_URI }}
           LITE_JWT_SECRET:       ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_JWT_SECRET || secrets.LITE_JWT_SECRET }}
@@ -2201,7 +2203,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com ecomm.duncit.com ecomm-portal.duncit.com luma.duncit.com luma-portal.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com ecomm.duncit.com ecomm-portal.duncit.com lite.duncit.com lite-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -2258,7 +2260,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com staging.luma.duncit.com staging.luma-portal.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com staging.lite.duncit.com staging.lite-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else

@@ -7,8 +7,18 @@ stacks from `/opt/duncit-mongo`, installed from `docker-compose.yml` here.
 
 | Stack | Database | User | Roles |
 | --- | --- | --- | --- |
-| production | `test` (the name the old Atlas URI defaulted to) | `duncit_prod` | `readWrite` on `test` and `duncit-staging` (Data Clone writes staging) |
-| staging | `duncit-staging` | `duncit_staging` | `readWrite` on `duncit-staging` |
+| production | `test` (the name the old Atlas URI defaulted to) | `duncit_prod` | `readWrite` on `test`, `duncit-staging` (Data Clone writes staging) and `duncit-lite` |
+| staging | `duncit-staging` | `duncit_staging` | `readWrite` on `duncit-staging` and `duncit-lite-staging` |
+
+Without a `LITE_MONGO_URI` secret, Duncit Lite logs in as the stack's user above.
+That user needs the grant on the Lite database, or the container crash-loops at
+boot with `not authorized on duncit-lite`:
+
+```js
+// mongosh as root, in the admin database
+db.grantRolesToUser("duncit_prod", [{ role: "readWrite", db: "duncit-lite" }])
+db.grantRolesToUser("duncit_staging", [{ role: "readWrite", db: "duncit-lite-staging" }])
+```
 
 ## Layout on the host
 

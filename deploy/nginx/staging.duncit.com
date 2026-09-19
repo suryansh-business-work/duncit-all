@@ -867,12 +867,12 @@ server {
     }
 }
 
-# --- Duncit Lite: staging.luma.duncit.com (Node API + HTML server on :2140) ---
+# --- Duncit Lite: staging.lite.duncit.com (Node API + HTML server on :2140) ---
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name staging.luma.duncit.com;
+    server_name staging.lite.duncit.com;
     client_max_body_size 12m;
 
     location / {
@@ -888,12 +888,12 @@ server {
     }
 }
 
-# --- Duncit Lite console: staging.luma-portal.duncit.com (same process, :2140) ---
+# --- Duncit Lite console: staging.lite-portal.duncit.com (same process, :2140) ---
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name staging.luma-portal.duncit.com;
+    server_name staging.lite-portal.duncit.com;
     client_max_body_size 12m;
 
     location / {

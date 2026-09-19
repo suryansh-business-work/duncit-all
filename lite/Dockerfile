@@ -115,7 +115,7 @@ RUN pnpm --filter duncit-lite build
 # --- runner ---
 # Node, not nginx: this one process is the GraphQL API, the upload and calendar
 # routes, and the HTML server for BOTH hostnames (the console shell for
-# luma-portal.*, the web app with per-page head tags for luma.*).
+# lite-portal.*, the web app with per-page head tags for lite.*).
 FROM public.ecr.aws/docker/library/node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

@@ -1,6 +1,6 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
 
-/** A city on Discover's "Explore local events" and behind luma.duncit.com/<city>. */
+/** A city on Discover's "Explore local events" and behind lite.duncit.com/<city>. */
 const citySchema = new Schema(
   {
     name: { type: String, required: true, trim: true },

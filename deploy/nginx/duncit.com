@@ -958,7 +958,7 @@ server {
     }
 }
 
-# --- Duncit Lite: luma.duncit.com (Node API + HTML server on :2040) ---
+# --- Duncit Lite: lite.duncit.com (Node API + HTML server on :2040) ---
 # One process serves the web app, its same-origin /graphql, /upload and the
 # calendar feeds. Node rather than nginx inside the image: every event, calendar
 # and city page gets its own title, social card and JSON-LD written into the
@@ -967,7 +967,7 @@ server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name luma.duncit.com;
+    server_name lite.duncit.com;
     client_max_body_size 12m;
 
     location / {
@@ -983,13 +983,13 @@ server {
     }
 }
 
-# --- Duncit Lite console: luma-portal.duncit.com (same process, :2040) ---
+# --- Duncit Lite console: lite-portal.duncit.com (same process, :2040) ---
 # The Host header is what picks the console shell over the web app.
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name luma-portal.duncit.com;
+    server_name lite-portal.duncit.com;
     client_max_body_size 12m;
 
     location / {

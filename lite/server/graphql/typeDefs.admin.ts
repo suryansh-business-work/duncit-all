@@ -1,7 +1,7 @@
 import gql from 'graphql-tag';
 
 /**
- * The console at luma-portal.duncit.com, plus the three queries the shared
+ * The console at lite-portal.duncit.com, plus the three queries the shared
  * `@duncit/app-settings` providers ask every Duncit API for (locales,
  * translations, display settings) so the same LocaleProvider and date
  * formatter run here unchanged.

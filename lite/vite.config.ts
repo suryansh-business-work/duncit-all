@@ -6,7 +6,7 @@ const ASSET_PREFIXES = ['/@', '/node_modules', '/web/', '/portal/', '/shared/', 
 const HAS_EXTENSION = /\.[a-z0-9]+(\?.*)?$/i;
 
 /**
- * In production the Node server picks the page by Host (luma-portal.* gets the
+ * In production the Node server picks the page by Host (lite-portal.* gets the
  * console). `vite dev` does the same for any host that starts with `portal.`,
  * so http://portal.localhost:2041 is the console and http://localhost:2041 the app.
  */

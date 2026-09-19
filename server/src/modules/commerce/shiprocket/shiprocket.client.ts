@@ -51,7 +51,7 @@ function reasonOf(data: Json, status: number): string {
 
 function refusal(message: string): GraphQLError {
   return shiprocketError(
-    `ShipRocket login failed: ${message}. Update the credentials in the Tech portal — they are not retried until they change.`
+    `ShipRocket login failed: ${message}. Fix the API user in the Tech portal or in ShipRocket, then press Retry login on E-commerce → Shipping → ShipRocket.`
   );
 }
 
@@ -117,6 +117,23 @@ export async function shiprocketLoginState() {
   const session = await ShiprocketSessionModel.findOne({ key: SESSION_KEY }).lean();
   const refused = session?.refused_hash === account.hash;
   return { configured: true, refused, message: refused ? session!.refused_message : '' };
+}
+
+/**
+ * One deliberate login with the saved credentials, clearing a refusal first.
+ * The refusal is keyed on the credentials, so it would otherwise last until
+ * they change — even when the fix was made in ShipRocket (the API user created
+ * or unlocked after the credentials were saved). An operator presses this
+ * once; it is never looped, so it cannot lock the account. Throws the refusal
+ * again when ShipRocket still says no.
+ */
+export async function retryShiprocketLogin(): Promise<void> {
+  const acc = await account();
+  await ShiprocketSessionModel.updateOne(
+    { key: SESSION_KEY },
+    { $set: { refused_hash: '', refused_message: '', refused_at: null } }
+  );
+  await token(acc, true);
 }
 
 export interface RequestOptions {

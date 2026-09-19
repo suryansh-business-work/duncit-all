@@ -2,6 +2,7 @@ import { gql, type TypedDocumentNode } from '@apollo/client';
 
 export interface ShiprocketStatus {
   configured: boolean;
+  account_email: string;
   login_refused: boolean;
   login_message: string;
   wallet_balance: number | null;
@@ -10,31 +11,58 @@ export interface ShiprocketStatus {
   webhook_path: string;
 }
 
+const STATUS_FIELDS = `
+  configured
+  account_email
+  login_refused
+  login_message
+  wallet_balance
+  webhook_key_set
+  default_pickup
+  webhook_path
+`;
+
 export const STORE_SHIPROCKET_STATUS: TypedDocumentNode<{ storeShiprocketStatus: ShiprocketStatus }> = gql`
   query StoreShiprocketStatus {
     storeShiprocketStatus {
-      configured
-      login_refused
-      login_message
-      wallet_balance
-      webhook_key_set
-      default_pickup
-      webhook_path
+      ${STATUS_FIELDS}
     }
   }
 `;
 
-/** READY, AWAITING_VERIFICATION or NOT_IN_SHIPROCKET. */
-export type PickupState = 'READY' | 'AWAITING_VERIFICATION' | 'NOT_IN_SHIPROCKET';
+export const SHIPROCKET_RECONNECT: TypedDocumentNode<{ storeShiprocketReconnect: ShiprocketStatus }> = gql`
+  mutation StoreShiprocketReconnect {
+    storeShiprocketReconnect {
+      ${STATUS_FIELDS}
+    }
+  }
+`;
 
-export interface PickupSyncRow {
-  warehouse_id: string;
+/** UNKNOWN: ShipRocket could not be read, so nothing is said about it. */
+export type PickupState = 'READY' | 'AWAITING_VERIFICATION' | 'NOT_IN_SHIPROCKET' | 'UNKNOWN';
+
+export interface Warehouse {
+  id: string;
+  owner_kind: 'DUNCIT' | 'BRAND';
+  review_status: string;
   nickname: string;
-  owner_kind: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  address_line1: string;
+  address_line2: string;
   city: string;
+  state: string;
   pincode: string;
-  state: PickupState;
-  shiprocket_id: string;
+  is_default: boolean;
+  shiprocket_registered: boolean;
+  shiprocket_error: string;
+}
+
+export interface PickupRow {
+  warehouse: Warehouse;
+  shiprocket_state: PickupState;
+  product_count: number;
 }
 
 export interface ShiprocketOnlyPickup {
@@ -44,24 +72,42 @@ export interface ShiprocketOnlyPickup {
   verified: boolean;
 }
 
-export interface PickupSync {
-  warehouses: PickupSyncRow[];
+export interface PickupLocations {
+  warehouses: PickupRow[];
   shiprocket_only: ShiprocketOnlyPickup[];
+  shiprocket_error: string;
   synced_at: string;
 }
 
-export const SYNC_PICKUP_LOCATIONS: TypedDocumentNode<{ storeSyncPickupLocations: PickupSync }> = gql`
-  mutation StoreSyncPickupLocations {
-    storeSyncPickupLocations {
+const WAREHOUSE_FIELDS = `
+  id
+  owner_kind
+  review_status
+  nickname
+  contact_name
+  phone
+  email
+  address_line1
+  address_line2
+  city
+  state
+  pincode
+  is_default
+  shiprocket_registered
+  shiprocket_error
+`;
+
+export const STORE_PICKUP_LOCATIONS: TypedDocumentNode<{ storePickupLocations: PickupLocations }> = gql`
+  query StorePickupLocations {
+    storePickupLocations {
       synced_at
+      shiprocket_error
       warehouses {
-        warehouse_id
-        nickname
-        owner_kind
-        city
-        pincode
-        state
-        shiprocket_id
+        shiprocket_state
+        product_count
+        warehouse {
+          ${WAREHOUSE_FIELDS}
+        }
       }
       shiprocket_only {
         nickname
@@ -69,6 +115,52 @@ export const SYNC_PICKUP_LOCATIONS: TypedDocumentNode<{ storeSyncPickupLocations
         pincode
         verified
       }
+    }
+  }
+`;
+
+export interface WarehouseInput {
+  nickname: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: boolean;
+}
+
+export const SAVE_WAREHOUSE: TypedDocumentNode<
+  { storeSaveWarehouse: Warehouse },
+  { id: string | null; input: WarehouseInput }
+> = gql`
+  mutation StoreSaveWarehouse($id: ID, $input: StoreWarehouseInput!) {
+    storeSaveWarehouse(id: $id, input: $input) {
+      ${WAREHOUSE_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_WAREHOUSE: TypedDocumentNode<{ storeDeleteWarehouse: boolean }, { id: string }> = gql`
+  mutation StoreDeleteWarehouse($id: ID!) {
+    storeDeleteWarehouse(id: $id)
+  }
+`;
+
+export const REGISTER_WAREHOUSE: TypedDocumentNode<{ storeRegisterWarehouse: Warehouse }, { id: string }> = gql`
+  mutation StoreRegisterWarehouse($id: ID!) {
+    storeRegisterWarehouse(id: $id) {
+      ${WAREHOUSE_FIELDS}
+    }
+  }
+`;
+
+export const IMPORT_PICKUP: TypedDocumentNode<{ storeImportPickup: Warehouse }, { nickname: string }> = gql`
+  mutation StoreImportPickup($nickname: String!) {
+    storeImportPickup(nickname: $nickname) {
+      ${WAREHOUSE_FIELDS}
     }
   }
 `;

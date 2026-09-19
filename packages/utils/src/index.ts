@@ -134,7 +134,7 @@ export {
 } from './parse-api-error';
 export { formatINR, formatMoney, type FormatMoneyOptions } from './format-money';
 export { formatBytes } from './format-bytes';
-export { base64ToBlob, downloadBase64File, downloadBlob, downloadTextFile } from './download';
+export { base64ToBlob, downloadBase64File, downloadBlob, downloadTextFile, printBase64File, printBlob } from './download';
 export { fileToBase64, fileToDataUrl } from './file-to-base64';
 export { formatMjml } from './mjml-format';
 export { nationalPhoneDigits } from './phone';

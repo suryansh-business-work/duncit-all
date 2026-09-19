@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { BrandPickupLocationModel, type IBrandPickupLocation } from './brandPickupLocation.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { pickupProblems } from '@modules/commerce/shiprocket/shiprocket.address';
 
 const notFound = () =>
   new GraphQLError('Pickup location not found', { extensions: { code: 'NOT_FOUND' } });
@@ -256,8 +257,12 @@ export const brandPickupLocationService = {
   async registerWithShiprocket(id: string) {
     const doc = await BrandPickupLocationModel.findById(id);
     if (!doc) throw notFound();
-    const { addPickupLocation } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
-    const result = await addPickupLocation({
+    if (doc.review_status !== 'APPROVED') {
+      throw new GraphQLError('Approve this warehouse before adding it to ShipRocket', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const payload = {
       pickup_location: doc.nickname,
       name: doc.contact_name || doc.nickname,
       email: doc.email,
@@ -268,7 +273,27 @@ export const brandPickupLocationService = {
       state: doc.state,
       country: doc.country || 'India',
       pin_code: doc.pincode,
-    });
+    };
+    const problems = pickupProblems({ ...payload, line1: payload.address, pincode: payload.pin_code });
+    if (problems.length > 0) {
+      doc.shiprocket_error = `ShipRocket needs ${problems.join(' and ')} for this pickup address`;
+      await doc.save();
+      throw new GraphQLError(doc.shiprocket_error, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const { addPickupLocation } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
+    let result: { registered: boolean; pickup_id: string };
+    try {
+      result = await addPickupLocation(payload);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'ShipRocket refused the pickup address';
+      // The nickname is on the account already — it IS registered; a sync says whether it is verified.
+      if (!/already/i.test(message)) {
+        doc.shiprocket_error = message.slice(0, 500);
+        await doc.save();
+        throw error;
+      }
+      result = { registered: true, pickup_id: doc.shiprocket_pickup_id };
+    }
     doc.shiprocket_registered = result.registered;
     doc.shiprocket_pickup_id = result.pickup_id;
     // A 200 that still says "not registered" used to look identical to never

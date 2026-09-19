@@ -70,6 +70,8 @@ exports:
   - 'downloadBlob'
   - 'downloadBase64File'
   - 'downloadTextFile'
+  - 'printBlob'
+  - 'printBase64File'
   - 'fileToBase64'
   - 'fileToDataUrl'
   - 'formatMjml'
@@ -878,6 +880,7 @@ because native's codegen refuses an interpolated one.
 | `fileToDataUrl` | `(file: Blob) => Promise<string>` | — | Full `data:<mime>;base64,…` URL. |
 | `fileToBase64` | `(file: Blob) => Promise<string>` | — | Bare base64, prefix stripped. |
 | `base64ToBlob` / `downloadBlob` / `downloadBase64File` / `downloadTextFile` | see source | — | The browser download flow, once. |
+| `printBlob` / `printBase64File` | `(blob, title)` / `(base64, mime, title)` | `void` | Opens the print dialog for a fetched file (a courier label PDF) in a hidden same-origin frame — a cross-origin link cannot be printed in place. |
 | `clubCategoryKey` | `(club) => ClubCategoryKey \| null` | — | Super+Sub pair, `null` for legacy clubs. |
 | `productMatchesClub` | `(product, key) => boolean` | — | Fails closed: `false` when `key` is `null` or the product has no category data. |
 | `filterProductsForClub` | `(products, club) => products` | — | The product-picker filter. |

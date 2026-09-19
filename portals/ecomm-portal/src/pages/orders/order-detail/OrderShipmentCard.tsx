@@ -10,8 +10,8 @@ import { useShipmentActions } from './useShipmentActions';
 
 /**
  * The shipment desk for one order: book it (the recommended courier, or one
- * picked here), fix the parcel or the ship-to address before booking, print
- * its documents, pull tracking and answer a failed delivery. Every alert the
+ * picked here), fix the parcel or the ship-to address before booking, print or
+ * save its documents, pull tracking and answer a failed delivery. Every alert the
  * server raised — a refused booking, a low wallet, an NDR — is said here with
  * the button that resolves it.
  */
@@ -25,7 +25,7 @@ export default function OrderShipmentCard({ detail }: Readonly<{ detail: StoreAd
   return (
     <SectionCard title={t('ecommPortal.orders.shipment')}>
       <Stack spacing={1.5}>
-        <ShipmentAlerts detail={detail} state={state} />
+        <ShipmentAlerts detail={detail} state={state} onFixAddress={workable ? () => setDialog('address') : null} />
         <ShipmentFacts detail={detail} />
       </Stack>
       {workable ? (
@@ -34,7 +34,7 @@ export default function OrderShipmentCard({ detail }: Readonly<{ detail: StoreAd
           <ShipmentButtons state={state} actions={actions} onDialog={setDialog} />
         </>
       ) : null}
-      {state.booked ? <ShipmentDocuments hasAwb={state.hasAwb} busy={actions.busy} onDocument={actions.document} /> : null}
+      {state.booked ? <ShipmentDocuments orderId={order.id} hasAwb={state.hasAwb} busy={actions.busy} /> : null}
       <ShipmentDialogs detail={detail} dialog={dialog} actions={actions} onClose={() => setDialog(null)} />
     </SectionCard>
   );

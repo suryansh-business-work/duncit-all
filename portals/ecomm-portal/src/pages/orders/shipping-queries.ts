@@ -78,12 +78,39 @@ export const UPDATE_SHIPPING_ADDRESS: TypedDocumentNode<
   }
 `;
 
-export const SHIPMENT_DOCUMENT: TypedDocumentNode<
-  { storeShipmentDocument: string },
+/** A ShipRocket PDF itself, so the console can print it in place or save it under this name. */
+export interface ShipmentFile {
+  filename: string;
+  mime: string;
+  content_base64: string;
+}
+
+export const SHIPMENT_FILE: TypedDocumentNode<
+  { storeShipmentFile: ShipmentFile },
   { ids: string[]; kind: ShipmentDocument }
 > = gql`
-  mutation StoreShipmentDocument($ids: [ID!]!, $kind: StoreShipmentDocument!) {
-    storeShipmentDocument(ids: $ids, kind: $kind)
+  mutation StoreShipmentFile($ids: [ID!]!, $kind: ShipmentDocumentKind!) {
+    storeShipmentFile(ids: $ids, kind: $kind) {
+      filename
+      mime
+      content_base64
+    }
+  }
+`;
+
+export interface BookingRetry {
+  attempted: number;
+  booked: number;
+  failed: number;
+}
+
+export const RETRY_FAILED_BOOKINGS: TypedDocumentNode<{ storeRetryFailedBookings: BookingRetry }> = gql`
+  mutation StoreRetryFailedBookings {
+    storeRetryFailedBookings {
+      attempted
+      booked
+      failed
+    }
   }
 `;
 

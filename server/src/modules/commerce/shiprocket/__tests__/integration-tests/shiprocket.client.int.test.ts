@@ -99,7 +99,7 @@ describe('a refused login', () => {
     sr.state.loginStatus = 403;
 
     await expect(walletBalance()).rejects.toThrow(
-      'ShipRocket login failed: Invalid email and password combination. Update the credentials in the Tech portal — they are not retried until they change.'
+      'ShipRocket login failed: Invalid email and password combination. Fix the API user in the Tech portal or in ShipRocket, then press Retry login on E-commerce → Shipping → ShipRocket.'
     );
     await expect(walletBalance()).rejects.toThrow('not retried until they change');
     await expect(createOrderAdhoc({})).rejects.toThrow('Invalid email and password combination');

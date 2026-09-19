@@ -177,3 +177,14 @@ export const REFRESH_PRODUCT_ORDER_TRACKING = gql`
     }
   }
 `;
+
+/** A ShipRocket PDF (label, invoice, manifest) itself — printed in place or saved under this name. */
+export const PRODUCT_ORDER_SHIPMENT_FILE = gql`
+  mutation ProductOrderShipmentFile($ids: [ID!]!, $kind: ShipmentDocumentKind!) {
+    productOrderShipmentFile(ids: $ids, kind: $kind) {
+      filename
+      mime
+      content_base64
+    }
+  }
+`;

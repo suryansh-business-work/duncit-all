@@ -44,8 +44,7 @@ export default function FontsSection({ form, setForm }: Readonly<Props>) {
     items: list.map((p) => ({ value: p.field, label: p.label })),
     fallback: 'mobile_font_family',
   });
-  // useTabParam only ever answers one of `list`'s own values (or the fallback, which is one too).
-  const platform = list.find((p) => p.field === tabs.value) as (typeof list)[number];
+  const platform = list.find((p) => p.field === tabs.value) ?? list[0];
   const value = form[platform.field];
   useFontPreview(value);
 

@@ -86,9 +86,8 @@ function rowsOf(nodes: RegionTreeNode[], byId: Map<string, RegionTreeNode>, chil
         for (const child of [...children].reverse()) stack.push({ id: child, expanded: false });
         continue;
       }
-      // Post-order: every child was popped, and so placed, before this frame.
-      const first = row.get(children[0]) as number;
-      const last = row.get(children[children.length - 1]) as number;
+      const first = row.get(children[0]) ?? 0;
+      const last = row.get(children[children.length - 1]) ?? 0;
       row.set(frame.id, (first + last) / 2);
     }
   };

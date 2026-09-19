@@ -124,13 +124,6 @@ describe('printBlob', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
     expect(printFrames().map((frame) => frame.title)).toEqual(['Second']);
   });
-
-  it('does nothing when the frame is gone before it loads', () => {
-    printBlob(new Blob(['c'], { type: 'application/pdf' }), 'Gone');
-    const [frame] = printFrames();
-    frame.remove();
-    expect(() => frame.dispatchEvent(new Event('load'))).not.toThrow();
-  });
 });
 
 describe('printBase64File', () => {

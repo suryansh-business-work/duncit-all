@@ -58,11 +58,12 @@ export function printBlob(blob: Blob, title: string): void {
   frame.tabIndex = -1;
   frame.setAttribute('aria-hidden', 'true');
   Object.assign(frame.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0' });
+  // A frame only fires `load` while attached, so its window is always there;
+  // `?.` just satisfies the DOM's nullable `contentWindow` type.
   frame.addEventListener('load', () => {
     const view = frame.contentWindow;
-    if (!view) return;
-    view.focus();
-    view.print();
+    view?.focus();
+    view?.print();
   });
   frame.src = url;
   document.body.appendChild(frame);

@@ -35,7 +35,7 @@ export default function JourneyTimelineDialog({
   const paid = journey.converted_amount;
   // The timeline stamps PAID once — it answers how FAR they got. This answers
   // how many times they paid, which the single stamp cannot.
-  const payments = journey.conversions ?? [];
+  const payments = journey.conversions;
 
   return (
     <Dialog open fullWidth maxWidth="sm" onClose={onClose}>

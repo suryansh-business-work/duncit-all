@@ -57,7 +57,7 @@ export default function ReportDetailDialog({
   useEffect(() => {
     if (!report) return;
     setStatus(report.status);
-    setResolution(report.resolution ?? '');
+    setResolution(report.resolution);
     setError('');
   }, [report]);
 

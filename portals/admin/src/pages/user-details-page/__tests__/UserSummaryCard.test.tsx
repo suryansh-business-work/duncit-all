@@ -41,11 +41,11 @@ const user = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-/** Finds the value cell for the row whose label cell reads `label`. */
+/** The value cell of the row whose header cell (a `th`, role rowheader) reads `label`. */
 const rowValue = (label: string) => {
-  const cell = screen.getByText(label).closest('tr');
-  if (!cell) throw new Error(`No row for ${label}`);
-  return within(cell).getAllByRole('cell')[1];
+  const row = screen.getByRole('rowheader', { name: label }).closest('tr');
+  if (!row) throw new Error(`No row for ${label}`);
+  return within(row).getByRole('cell');
 };
 
 describe('UserSummaryCard — name and photo', () => {
@@ -84,17 +84,15 @@ describe('UserSummaryCard — name and photo', () => {
 });
 
 describe('UserSummaryCard — status chip and verified badge', () => {
-  it('shows the human status label for each status', () => {
-    const { rerender } = renderWithProviders(
-      <UserSummaryCard user={user()} form={form({ status: 'ACTIVE' })} busy={false} onPhotoChange={vi.fn()} />,
+  it.each([
+    ['ACTIVE', 'Active'],
+    ['INACTIVE', 'Inactive'],
+    ['SUSPENDED', 'Blocked'],
+  ] as const)('shows the human status label for %s', (status, label) => {
+    renderWithProviders(
+      <UserSummaryCard user={user()} form={form({ status })} busy={false} onPhotoChange={vi.fn()} />,
     );
-    expect(screen.getByText('Active')).toBeInTheDocument();
-
-    rerender(<UserSummaryCard user={user()} form={form({ status: 'INACTIVE' })} busy={false} onPhotoChange={vi.fn()} />);
-    expect(screen.getByText('Inactive')).toBeInTheDocument();
-
-    rerender(<UserSummaryCard user={user()} form={form({ status: 'SUSPENDED' })} busy={false} onPhotoChange={vi.fn()} />);
-    expect(screen.getByText('Blocked')).toBeInTheDocument();
+    expect(screen.getByText(label)).toBeInTheDocument();
   });
 
   it('shows a Verified badge only when the email is verified', () => {

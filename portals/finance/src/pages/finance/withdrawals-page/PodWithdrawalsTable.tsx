@@ -64,7 +64,7 @@ function RequestedFromCell({ roles, t }: Readonly<{ roles: WithdrawerRole[]; t: 
           key={role}
           size="small"
           variant="outlined"
-          color={ROLE_COLOR[role] ?? 'default'}
+          color={ROLE_COLOR[role]}
           label={translatedRoleLabel(t, role)}
         />
       ))}

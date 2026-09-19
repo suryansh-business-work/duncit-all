@@ -167,7 +167,10 @@ describe('BackoutRefundDetailPage', () => {
     // from what.
     expect(screen.getByText('Pod Joined')).toBeInTheDocument();
     expect(screen.getByText('Pod Backout Requested')).toBeInTheDocument();
-    expect(screen.getByText('Spot Filled')).toBeInTheDocument();
+    // "Spot Filled" is also this request's own status chip, so the timeline's
+    // step is picked out by its heading.
+    expect(screen.getByText('Spot Filled', { selector: 'h6' })).toBeInTheDocument();
+    expect(screen.getByText('Spot Filled', { selector: '[data-testid="status-chip"]' })).toBeInTheDocument();
     // The DUN-BKO id is what ties this branch to the row Finance opened it
     // from, so it is marked on the request being looked at.
     expect(screen.getAllByText('DUN-BKO-000001').length).toBeGreaterThan(1);

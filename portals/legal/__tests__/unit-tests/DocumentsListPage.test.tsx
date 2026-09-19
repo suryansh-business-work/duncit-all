@@ -7,11 +7,6 @@ import { createLegalDocumentMock, makeLegalDocumentRow } from '../mocks';
 import { __setTableRows } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
-vi.mock('react-quill', () => ({
-  default: ({ value, onChange, placeholder }: any) => (
-    <textarea data-testid="quill" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
 
 describe('DocumentsListPage', () => {
   it('shows an empty state', async () => {
@@ -36,7 +31,11 @@ describe('DocumentsListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Master NDA')).toBeInTheDocument());
     // The no-editor row falls back to an em-dash in the Updated-by column.
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // (The Document ID column shows its own dash for these id-less rows, so
+    // the assertion is scoped to the column that is under test.)
+    const updatedBy = screen.getAllByTestId('cell-updated_by_name');
+    expect(updatedBy[0]).toHaveTextContent('Sam');
+    expect(updatedBy[1]).toHaveTextContent('—');
     fireEvent.click(screen.getByText('Master NDA'));
     await waitFor(() => expect(screen.getByText('DOC DETAIL')).toBeInTheDocument());
   });
@@ -59,7 +58,6 @@ describe('DocumentsListPage', () => {
     fireEvent.change(within(dialog).getByLabelText(/^Document name/), { target: { value: 'Vendor Agreement' } });
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(screen.getByText('Vendor Agreement'));
-    fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Body</p>' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('DOC DETAIL')).toBeInTheDocument());
   });

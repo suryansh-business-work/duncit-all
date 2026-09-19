@@ -6,13 +6,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs are
-    // discovered separately by Cypress, never by vitest.
+    setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Vitest specs live under __tests__/unit-tests (mocks under __tests__/mocks,
+    // the render helper is __tests__/testkit); Cypress e2e specs are discovered
+    // separately by Cypress, never by vitest.
     include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
-    // This console ships no vitest suites yet — the console's own behaviour is
-    // driven end-to-end by its Cypress spec. An empty run must be a pass, not a
-    // failure that reads as "the tests broke".
     passWithNoTests: true,
     css: false,
     server: { deps: { inline: [/@mui/] } },
@@ -28,12 +27,6 @@ export default defineConfig({
       exclude: [
         // App bootstrap — mounts the portal into the DOM (window.google + live frame).
         'src/main.tsx',
-        // Thin Apollo client factory (graphqlUrl + getToken wiring only).
-        'src/apollo.ts',
-        // Runtime URL config tied to import.meta.env.DEV — no unit-testable logic.
-        'src/config/url-configs.ts',
-        // Static per-portal config data (no business logic).
-        'src/config/app-config.ts',
         // Ambient type-declaration + type-only files.
         'src/**/*.d.ts',
         'src/**/*.types.{ts,tsx}',

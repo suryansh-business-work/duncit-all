@@ -140,6 +140,18 @@ describe('emptyBrandingForm', () => {
     expect(emptyBrandingForm.home_all_vibe_icon_layout).toBeNull();
   });
 
+  it('keeps both login backgrounds off, so the apps keep their built-in gradient', () => {
+    expect(emptyBrandingForm.login_background_image_enabled).toBe(false);
+    expect(emptyBrandingForm.login_background_video_enabled).toBe(false);
+  });
+
+  it('keeps the bundled (LOCAL) theme tokens with every server token blank', () => {
+    expect(emptyBrandingForm.theme_token_source).toBe('LOCAL');
+    expect(Object.values(emptyBrandingForm.theme_tokens_light).every((value) => value === '')).toBe(true);
+    expect(Object.values(emptyBrandingForm.theme_tokens_dark).every((value) => value === '')).toBe(true);
+    expect(Object.keys(emptyBrandingForm.theme_tokens_light)).toHaveLength(19);
+  });
+
   it('blanks every other field, so a fresh form never saves stray defaults', () => {
     const seeded = new Set([
       'primary_color',
@@ -148,6 +160,11 @@ describe('emptyBrandingForm', () => {
       'mobile_splash_type',
       'portals_splash_type',
       'home_all_vibe_icon_layout',
+      'login_background_image_enabled',
+      'login_background_video_enabled',
+      'theme_token_source',
+      'theme_tokens_light',
+      'theme_tokens_dark',
     ]);
     const stray = formKeys.filter((key) => !seeded.has(key) && emptyBrandingForm[key] !== '');
     expect(stray).toEqual([]);

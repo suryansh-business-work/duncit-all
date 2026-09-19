@@ -69,16 +69,19 @@ export default function ExpenseDrawer({
     }
   };
 
-  const refund = async (input: { date: string; amount: number; note: string }) => {
-    if (!current) return;
-    const res = await addRefund({ variables: { id: current.id, input } });
-    setCurrent(res.data?.addExpenseRefund ?? current);
+  // Both take the expense rather than reading `current`: the timeline only
+  // renders for a saved expense, so there is never a null one to guard against.
+  const refund = async (
+    row: ExpenseRecord,
+    input: { date: string; amount: number; note: string },
+  ) => {
+    const res = await addRefund({ variables: { id: row.id, input } });
+    setCurrent(res.data?.addExpenseRefund ?? row);
     onSaved();
   };
-  const dropRefund = async (refund_id: string) => {
-    if (!current) return;
-    const res = await removeRefund({ variables: { id: current.id, refund_id } });
-    setCurrent(res.data?.removeExpenseRefund ?? current);
+  const dropRefund = async (row: ExpenseRecord, refund_id: string) => {
+    const res = await removeRefund({ variables: { id: row.id, refund_id } });
+    setCurrent(res.data?.removeExpenseRefund ?? row);
     onSaved();
   };
   const remove = async (row: ExpenseRecord) => {
@@ -137,7 +140,11 @@ export default function ExpenseDrawer({
       {current && (
         <Box sx={{ mt: 3 }}>
           <Divider sx={{ mb: 2 }} />
-          <RefundTimeline expense={current} onAdd={refund} onRemove={dropRefund} />
+          <RefundTimeline
+            expense={current}
+            onAdd={(input) => refund(current, input)}
+            onRemove={(refundId) => dropRefund(current, refundId)}
+          />
         </Box>
       )}
 

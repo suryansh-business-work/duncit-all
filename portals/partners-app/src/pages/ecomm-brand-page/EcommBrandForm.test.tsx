@@ -190,6 +190,20 @@ describe('EcommBrandForm media and documents', () => {
     await waitFor(() => expect(screen.queryByAltText('Logo')).toBeNull());
   });
 
+  it('clears the cover image without touching the logo', async () => {
+    renderForm({
+      ...blankBrand,
+      logo_url: 'https://cdn.test/logo.png',
+      cover_image_url: 'https://cdn.test/cover.png',
+    });
+    expect(screen.getByAltText('Cover image')).toBeTruthy();
+
+    // Logo slot first, cover slot second.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[1]);
+    await waitFor(() => expect(screen.queryByAltText('Cover image')).toBeNull());
+    expect(screen.getByAltText('Logo')).toBeTruthy();
+  });
+
   it('leaves the media untouched when the picker is dismissed', async () => {
     const { onPickImage } = renderForm(blankBrand, false, false, handlers(null));
     fireEvent.click(screen.getAllByRole('button', { name: 'Upload' })[1]);

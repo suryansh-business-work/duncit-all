@@ -22,7 +22,7 @@ const cleanServices = (services: CrmServiceOffered[]) =>
       description: (s.description ?? '').trim(),
     }));
 
-const cleanList = (items: string[]) => (items ?? []).map((t) => t.trim()).filter(Boolean);
+const cleanList = (items: string[]) => items.map((t) => t.trim()).filter(Boolean);
 
 /** Form values → GraphQL EcommLeadInput. */
 export function toEcommLeadInput(v: EcommLeadFormValues) {
@@ -66,13 +66,13 @@ export function fromEcommLead(lead: EcommLead): EcommLeadFormValues {
     super_category_id: lead.super_category_id ?? '',
     category_ids: lead.category_ids ?? [],
     sub_category_ids: lead.sub_category_ids ?? [],
-    seller_name: lead.seller_name ?? '',
+    seller_name: lead.seller_name,
     brand_name: lead.brand_name ?? '',
     business_type: lead.business_type ?? '',
     city: lead.city ?? '',
     area: lead.area ?? '',
     contacts: lead.contacts?.length ? lead.contacts.map((c) => ({ ...emptyContact, ...c })) : [{ ...emptyContact }],
-    product_categories: lead.product_categories ?? [],
+    product_categories: lead.product_categories,
     catalog_size: lead.catalog_size ?? '',
     price_range: lead.price_range ?? '',
     fulfilment_mode: lead.fulfilment_mode ?? '',
@@ -81,19 +81,19 @@ export function fromEcommLead(lead: EcommLead): EcommLeadFormValues {
     gst_applicable: !!lead.gst_applicable,
     website: lead.website ?? '',
     instagram_link: lead.instagram_link ?? '',
-    marketplace_links: lead.marketplace_links ?? [],
-    services_offered: (lead.services_offered ?? []).map((s) => ({
-      service: s.service ?? '',
+    marketplace_links: lead.marketplace_links,
+    services_offered: lead.services_offered.map((s) => ({
+      service: s.service,
       custom_name: s.custom_name ?? '',
       description: s.description ?? '',
     })),
-    tags: lead.tags ?? [],
+    tags: lead.tags,
     profile_photo_url: lead.profile_photo_url ?? '',
-    dynamic_values_json: lead.dynamic_values_json ?? '{}',
+    dynamic_values_json: lead.dynamic_values_json,
     lead_source: lead.lead_source ?? '',
     assigned_to: lead.assigned_to ?? '',
-    lead_status: lead.lead_status ?? 'New',
-    priority: lead.priority ?? 'Medium',
+    lead_status: lead.lead_status,
+    priority: lead.priority,
     next_follow_up_date: lead.next_follow_up_date ? new Date(lead.next_follow_up_date) : null,
     notes: lead.notes ?? '',
   };

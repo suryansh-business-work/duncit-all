@@ -13,7 +13,7 @@
  *    actual delete) never runs.
  */
 import type { MockedResponse } from '@apollo/client/testing';
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from './testkit';
@@ -180,8 +180,8 @@ describe('HealthScoreCard — deleting an adjustment through the real confirm di
 
     expect(onDeleteVars).toHaveBeenCalledWith({ id: 'adj-1' });
     expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ total_score: 70 }));
-    await settle();
-    expect(screen.queryByRole('dialog')).toBeNull();
+    // The confirm dialog fades out before it unmounts.
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   it('leaves the adjustment in place when the confirm dialog is cancelled', async () => {
@@ -194,7 +194,7 @@ describe('HealthScoreCard — deleting an adjustment through the real confirm di
     await settle();
 
     expect(onUpdated).not.toHaveBeenCalled();
-    expect(screen.queryByRole('dialog')).toBeNull();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     // Both adjustments are still listed — nothing was removed.
     expect(screen.getByText('No-showed twice in a month')).toBeInTheDocument();
     expect(screen.getByText('Hosted a full pod')).toBeInTheDocument();

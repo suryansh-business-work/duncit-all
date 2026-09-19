@@ -136,8 +136,8 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
           <TextField
             label={t('admin.localization.englishName')}
             placeholder={t('admin.localization.englishNamePlaceholder')}
-            error={!!errors.english_label}
-            helperText={errors.english_label?.message ?? t('admin.localization.englishNameHint')}
+            // Optional free text: the schema never rejects it, so it has no error state.
+            helperText={t('admin.localization.englishNameHint')}
             fullWidth
             slotProps={{ inputLabel: { shrink: !!watch('english_label') } }}
             {...register('english_label')}

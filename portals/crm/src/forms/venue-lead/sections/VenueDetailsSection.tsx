@@ -12,7 +12,8 @@ import { useTranslation } from '@duncit/shell';
 export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const { t } = useTranslation();
   const { control } = useFormContext();
-  const venueTypes = (useWatch({ control, name: 'venue_types' }) as string[]) ?? [];
+  // The venue form always seeds `venue_types` (an empty list for a new lead).
+  const venueTypes = useWatch({ control, name: 'venue_types' }) as string[];
   const showOther = venueTypes.includes('Other');
   return (
     <Stack spacing={1.5}>

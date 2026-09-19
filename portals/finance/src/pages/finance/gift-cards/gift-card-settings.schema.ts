@@ -59,10 +59,10 @@ export const BLANK_GIFT_CARD_SETTINGS: GiftCardSettingsForm = {
 /** Server payload -> form strings. */
 export function toGiftCardSettingsForm(settings: GiftCardSettings): GiftCardSettingsForm {
   return {
-    denominations: (settings.denominations ?? []).join(', '),
-    min_amount: String(settings.min_amount ?? 0),
-    max_amount: String(settings.max_amount ?? 0),
-    validity_months: String(settings.validity_months ?? 0),
+    denominations: settings.denominations.join(', '),
+    min_amount: String(settings.min_amount),
+    max_amount: String(settings.max_amount),
+    validity_months: String(settings.validity_months),
   };
 }
 

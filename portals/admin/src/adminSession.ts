@@ -65,13 +65,3 @@ export function getAdminDisplayName(user?: AdminSessionUser | null) {
   const fullName = user?.full_name || `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim();
   return fullName || user?.email || 'Admin';
 }
-
-export function getAdminInitials(user?: AdminSessionUser | null) {
-  const name = getAdminDisplayName(user);
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('') || 'A';
-}

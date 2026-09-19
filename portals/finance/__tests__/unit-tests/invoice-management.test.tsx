@@ -54,7 +54,10 @@ describe('InvoiceManagementPage', () => {
 
     fireEvent.change(email, { target: { value: 'help@duncit.com' } });
     fireEvent.change(screen.getByLabelText(/legal \/ business name/i), { target: { value: 'Acme' } });
-    fireEvent.click(screen.getByRole('checkbox'));
+    // MUI's Switch is announced as a switch, not a checkbox.
+    expect(screen.getByText('Live payment mode (Razorpay)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('switch'));
+    expect(screen.getByText('Dummy payment mode (no live charges)')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Invoice settings saved'));

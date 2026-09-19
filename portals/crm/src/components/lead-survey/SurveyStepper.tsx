@@ -23,7 +23,7 @@ interface Props {
 type State = Record<string, FieldAnswer>;
 const seed = (initial?: LeadSurveyAnswer[]): State => {
   const s: State = {};
-  for (const a of initial ?? []) s[a.qid] = { value: a.value ?? '', values: a.values ?? [] };
+  for (const a of initial ?? []) s[a.qid] = { value: a.value ?? '', values: a.values };
   return s;
 };
 
@@ -40,10 +40,10 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
   const set = (qid: string, patch: Partial<FieldAnswer>) => setAnswers((a) => ({ ...a, [qid]: { ...get(qid), ...patch } }));
 
   const validate = (idx: number) => {
-    for (const q of sections[idx]?.questions ?? []) {
+    for (const q of sections[idx].questions) {
       if (!q.required) continue;
       const a = get(q.qid);
-      const filled = q.type === 'MCQ' && q.multi ? a.values.length > 0 : (a.value ?? '').trim() !== '';
+      const filled = q.type === 'MCQ' && q.multi ? a.values.length > 0 : a.value.trim() !== '';
       if (!filled) { setError(`Please answer: ${q.label}`); return false; }
     }
     setError(null);

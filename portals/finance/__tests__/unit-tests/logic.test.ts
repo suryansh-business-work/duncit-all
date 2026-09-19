@@ -15,7 +15,6 @@ import {
   tableStateToExpenseFilter,
 } from '../../src/pages/finance/expense-management-page/queries';
 import {
-  applyPodFinanceQuery,
   groupReleasesByPod,
   money as podMoney,
   type PodReleaseRow,
@@ -99,6 +98,33 @@ describe('backout-refund queries logic', () => {
     expect(lines.find((l) => l.key === 'deduction')?.value).toBe('- ₹100.00');
     expect(lines.find((l) => l.key === 'refund')?.value).toBe('₹900.00');
     expect(lines.find((l) => l.key === 'backout-status')?.value).toBe('Spot Filled');
+  });
+
+  it('adds the coin half of the refund only when the booking spent coins', () => {
+    const row = {
+      payment_amount: 1000,
+      backout_status: 'SPOT_FILLED',
+      deduction_pct: 10,
+      refund_amount: 900,
+      coins_paid: 50,
+      coins_refunded: 45,
+    } as BackoutRefundRequest;
+    const lines = buildRefundBreakup(row, '₹', 25);
+    expect(lines.find((l) => l.key === 'coins-paid')?.value).toBe('50');
+    expect(lines.find((l) => l.key === 'coins-deduction')).toMatchObject({
+      label: 'Coin deduction (10%)',
+      value: '- 5',
+    });
+    expect(lines.find((l) => l.key === 'coins-refund')?.value).toBe('45');
+
+    // A full deduction hands no coins back: every coin paid is deducted.
+    const kept = buildRefundBreakup({ ...row, deduction_pct: 100, coins_refunded: 0 }, '₹', 25);
+    expect(kept.find((l) => l.key === 'coins-deduction')?.value).toBe('- 50');
+    expect(kept.find((l) => l.key === 'coins-refund')?.value).toBe('0');
+
+    // No coins spent → no coin rows at all.
+    const cashOnly = buildRefundBreakup({ ...row, coins_paid: 0, coins_refunded: 0 }, '₹', 25);
+    expect(cashOnly.some((l) => l.key.startsWith('coins-'))).toBe(false);
   });
 
   it('clamps deduction pct and defaults a null amount', () => {
@@ -215,25 +241,12 @@ describe('pod-finance queries logic', () => {
     expect(alpha.status_counts).toEqual({ PENDING: 1, APPROVED: 1 });
   });
 
-  it('searches, sorts and pages the grouped rows', () => {
-    const groups = groupReleasesByPod(rows);
-    const searched = applyPodFinanceQuery(groups, { search: 'beta', filters: [], page: 1, pageSize: 25, sortBy: undefined, sortDir: 'asc' } as any);
-    expect(searched.total).toBe(1);
-    expect(searched.rows[0].pod_title).toBe('Beta');
-
-    const sortedAsc = applyPodFinanceQuery(groups, { search: '', filters: [], page: 1, pageSize: 25, sortBy: 'pod_title', sortDir: 'asc' } as any);
-    expect(sortedAsc.rows.map((g) => g.pod_title)).toEqual(['Alpha', 'Beta']);
-
-    const sortedDesc = applyPodFinanceQuery(groups, { search: '', filters: [], page: 1, pageSize: 25, sortBy: 'requested_total', sortDir: 'desc' } as any);
-    expect(sortedDesc.rows[0].pod_title).toBe('Alpha');
-
-    const paged = applyPodFinanceQuery(groups, { search: '', filters: [], page: 2, pageSize: 1, sortBy: 'releases_count', sortDir: 'asc' } as any);
-    expect(paged.rows).toHaveLength(1);
-    expect(paged.total).toBe(2);
-
-    // last_requested_at comparator branch
-    const byActivity = applyPodFinanceQuery(groups, { search: '', filters: [], page: 1, pageSize: 25, sortBy: 'last_requested_at', sortDir: 'asc' } as any);
-    expect(byActivity.rows).toHaveLength(2);
+  it('orders the grouped pods newest activity first', () => {
+    // The in-memory search/sort/paging the old applyPodFinanceQuery did is now
+    // the shared clientTableFetch, driven through PodFinancePage in
+    // pod-finance.test.tsx; what stays here is the grouping's own order.
+    expect(groupReleasesByPod(rows).map((g) => g.pod_title)).toEqual(['Alpha', 'Beta']);
+    expect(groupReleasesByPod([...rows].reverse()).map((g) => g.pod_id)).toEqual(['p1', 'p2']);
   });
 });
 

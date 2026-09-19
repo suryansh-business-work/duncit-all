@@ -25,7 +25,7 @@ const renderValues = (r: BenefitRow) => (
   <Typography variant="caption" sx={{
     color: "text.secondary"
   }}>
-    {(r.values ?? [])
+    {r.values
       .map((v) => `${v.plan_key}: ${v.value || '—'}`)
       .join('  ·  ')}
   </Typography>

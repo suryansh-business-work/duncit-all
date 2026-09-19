@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import DashboardPage from '../../src/pages/DashboardPage';
+import { CHALLENGE_STATS } from '../../src/graphql/challenges';
 import { renderWithProviders } from '../testkit';
 import { makeChallengeStats } from '../mocks';
 
@@ -17,12 +18,32 @@ vi.mock('react-router', async (importOriginal) => ({
 }));
 vi.mock('@duncit/ui', () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
-  StatCard: ({ label, value, onClick }: { label: string; value: number; onClick: () => void }) => (
-    <button type="button" data-testid={`stat-${label}`} onClick={onClick}>
+  StatCard: ({
+    label,
+    value,
+    loading,
+    onClick,
+  }: {
+    label: string;
+    value: number;
+    loading: boolean;
+    onClick: () => void;
+  }) => (
+    <button type="button" data-testid={`stat-${label}`} data-loading={String(loading)} onClick={onClick}>
       {label}:{String(value)}
     </button>
   ),
 }));
+
+/** The dashboard's own layout query answers "never customised", so the grid
+ * paints its default slots; only the stats query is what each test varies. */
+const NO_SAVED_LAYOUT = { data: { myDashboardLayout: null }, error: undefined, refetch: vi.fn() };
+
+const answerStats = (stats: { data?: unknown; loading: boolean }) => {
+  useQueryMock.mockImplementation((query: unknown) =>
+    query === CHALLENGE_STATS ? stats : NO_SAVED_LAYOUT,
+  );
+};
 
 describe('DashboardPage', () => {
   beforeEach(() => {
@@ -30,15 +51,15 @@ describe('DashboardPage', () => {
     navigateSpy.mockReset();
   });
 
-  it('shows a spinner while loading with no cached stats', () => {
-    useQueryMock.mockReturnValue({ data: undefined, loading: true });
+  it('shows the cards loading while there are no cached stats', () => {
+    answerStats({ data: undefined, loading: true });
     renderWithProviders(<DashboardPage />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.queryByTestId('stat-Total challenges')).not.toBeInTheDocument();
+    expect(screen.getByTestId('stat-Total challenges')).toHaveAttribute('data-loading', 'true');
+    expect(screen.getByTestId('stat-Active challenges')).toHaveAttribute('data-loading', 'true');
   });
 
   it('renders stat cards and navigates to /challenges on click', () => {
-    useQueryMock.mockReturnValue({
+    answerStats({
       data: { challengeStats: makeChallengeStats({ total: 5, active: 2 }) },
       loading: false,
     });
@@ -53,19 +74,20 @@ describe('DashboardPage', () => {
 
   it('falls back to 0 when the query resolves with no stats', () => {
     // loading=false + no data → cards render with the `stats?.[key] ?? 0` guard.
-    useQueryMock.mockReturnValue({ data: undefined, loading: false });
+    answerStats({ data: undefined, loading: false });
     renderWithProviders(<DashboardPage />);
     expect(screen.getByTestId('stat-Total challenges')).toHaveTextContent('Total challenges:0');
     expect(screen.getByTestId('stat-Active challenges')).toHaveTextContent('Active challenges:0');
+    expect(screen.getByTestId('stat-Total challenges')).toHaveAttribute('data-loading', 'false');
   });
 
-  it('keeps the cards visible when refetching with cached stats present', () => {
-    useQueryMock.mockReturnValue({
+  it('keeps the cards showing numbers when refetching with cached stats present', () => {
+    answerStats({
       data: { challengeStats: makeChallengeStats({ total: 8, active: 3 }) },
       loading: true,
     });
     renderWithProviders(<DashboardPage />);
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.getByTestId('stat-Active challenges')).toHaveAttribute('data-loading', 'false');
     expect(screen.getByTestId('stat-Active challenges')).toHaveTextContent('Active challenges:3');
   });
 });

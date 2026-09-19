@@ -101,15 +101,19 @@ describe('TemplatesTable', () => {
     const { fetchRows } = renderTable([template]);
     await screen.findByText('Venue Welcome');
 
-    fireEvent.click(screen.getByRole('button', { name: /Filters/ }));
-    fireEvent.mouseDown(screen.getByLabelText('For'));
-    const listbox = await screen.findByRole('listbox');
-    fireEvent.click(within(listbox).getByText('Host'));
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    fireEvent.click(screen.getByTestId('table-filter-target'));
+    const popover = within(await screen.findByRole('dialog', { name: 'Filter For' }));
+    fireEvent.mouseDown(popover.getByRole('combobox', { name: /For/ }));
+    const listbox = within(await screen.findByRole('listbox'));
+    fireEvent.click(listbox.getByRole('option', { name: 'Host' }));
+    // The multi-select menu stays open until it is dismissed; while it (or its
+    // exit transition) is up the popover behind it is aria-hidden.
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    fireEvent.click(popover.getByRole('button', { name: 'Apply', hidden: true }));
 
     await vi.waitFor(() =>
       expect(fetchRows).toHaveBeenCalledWith(
-        expect.objectContaining({ filters: [{ field: 'target', op: 'eq', value: 'HOST' }] }),
+        expect.objectContaining({ filters: [{ field: 'target', op: 'in', values: ['HOST'] }] }),
       ),
     );
   });

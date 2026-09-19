@@ -86,8 +86,9 @@ function rowsOf(nodes: RegionTreeNode[], byId: Map<string, RegionTreeNode>, chil
         for (const child of [...children].reverse()) stack.push({ id: child, expanded: false });
         continue;
       }
-      const first = row.get(children[0]) ?? 0;
-      const last = row.get(children[children.length - 1]) ?? 0;
+      // Post-order: every child was popped, and so placed, before this frame.
+      const first = row.get(children[0]) as number;
+      const last = row.get(children[children.length - 1]) as number;
       row.set(frame.id, (first + last) / 2);
     }
   };
@@ -122,8 +123,8 @@ export function layoutTree(
   const rowStep = direction === 'LR' ? NODE_HEIGHT + ROW_GAP.LR : NODE_WIDTH + ROW_GAP.TB;
 
   return nodes.map((node) => {
-    const alongDepth = (depth.get(node.id) ?? 0) * depthStep;
-    const alongRow = (row.get(node.id) ?? 0) * rowStep;
+    const alongDepth = (depth.get(node.id) as number) * depthStep;
+    const alongRow = (row.get(node.id) as number) * rowStep;
     const horizontal = direction === 'LR';
     return {
       ...node,

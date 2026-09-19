@@ -17,7 +17,7 @@ interface Props {
   onChange: (podDocId: string) => void;
 }
 
-const podLabel = (pod: PodOption) => pod.pod_title || pod.pod_id || pod.id;
+const podLabel = (pod: PodOption) => pod.pod_title;
 
 /** `pod_id` is unique only within a club, so two clubs can both own a
  * "morning-run". The club qualifies it. */

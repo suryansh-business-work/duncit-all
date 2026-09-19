@@ -95,10 +95,12 @@ export const moneyTooltip = (theme: Theme) => ({
     ...baseOptions(theme).plugins.tooltip,
     callbacks: {
       label: (ctx: TooltipItem<'bar'> | TooltipItem<'doughnut'>) => {
-        // A bar's y is nullable (a gap in the data); a missing value is ₹0
-        // rather than a tooltip reading "NaN".
-        const value = typeof ctx.parsed === 'number' ? ctx.parsed : (ctx.parsed.y ?? 0);
-        const name = ctx.dataset?.label ?? ctx.label ?? '';
+        // A bar's y is typed nullable (a gap in the data). These charts never
+        // plot a gap, and `Number` would still read one as ₹0, not "NaN".
+        const value = typeof ctx.parsed === 'number' ? ctx.parsed : Number(ctx.parsed.y);
+        // A bar series carries its own label; a doughnut slice is named by
+        // the category it sits on.
+        const name = ctx.dataset?.label ?? ctx.label;
         return `${name}: ${formatRupees(value)}`;
       },
     },

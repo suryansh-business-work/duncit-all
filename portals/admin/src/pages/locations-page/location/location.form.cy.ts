@@ -43,4 +43,19 @@ describe('toLocationInput', () => {
     const input = toLocationInput(base);
     expect(input.location_zones).toHaveLength(1);
   });
+
+  it('keeps a zone that has only a code, or only a PIN code', () => {
+    const input = toLocationInput({
+      ...base,
+      zones: [
+        { zone_name: '', zone_code: 'KRM', pincode: '' },
+        { zone_name: '', zone_code: '', pincode: '560034' },
+        { zone_name: '', zone_code: '', pincode: '' },
+      ],
+    });
+    expect(input.location_zones).toEqual([
+      { zone_name: '', zone_code: 'KRM', pincode: '' },
+      { zone_name: '', zone_code: '', pincode: '560034' },
+    ]);
+  });
 });

@@ -20,8 +20,8 @@ describe('HardDeleteDialog', () => {
     const del = screen.getByRole('button', { name: /delete permanently/i });
     expect(del).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('Your email'), { target: { value: 'a@b.com' } });
-    fireEvent.change(screen.getByLabelText('Your password'), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText(/^Your email/), { target: { value: 'a@b.com' } });
+    fireEvent.change(screen.getByLabelText(/^Your password/), { target: { value: 'secret' } });
     expect(del).toBeEnabled();
 
     fireEvent.click(del);
@@ -54,8 +54,27 @@ describe('HardDeleteDialog', () => {
       />,
     );
     expect(screen.getByRole('button', { name: /deleting/i })).toBeDisabled();
-    expect(screen.getByLabelText('Your email')).toBeDisabled();
-    expect(screen.getByLabelText('Your password')).toBeDisabled();
+    expect(screen.getByLabelText(/^Your email/)).toBeDisabled();
+    expect(screen.getByLabelText(/^Your password/)).toBeDisabled();
+  });
+
+  // Filled in, then submitted: the parent flips to loading and the button must
+  // not take a second press while the delete is in flight.
+  it('locks a filled-in form once the delete is in flight', () => {
+    const props = {
+      open: true,
+      entityLabel: 'venue',
+      entityName: 'The Loft',
+      onClose: vi.fn(),
+      onConfirm: vi.fn(),
+    };
+    const { rerender } = render(<HardDeleteDialog {...props} />);
+    fireEvent.change(screen.getByLabelText(/^Your email/), { target: { value: 'a@b.com' } });
+    fireEvent.change(screen.getByLabelText(/^Your password/), { target: { value: 'secret' } });
+    expect(screen.getByRole('button', { name: /delete permanently/i })).toBeEnabled();
+
+    rerender(<HardDeleteDialog {...props} loading />);
+    expect(screen.getByRole('button', { name: /deleting/i })).toBeDisabled();
   });
 
   it('falls back to a generic name and cancels/clears', () => {

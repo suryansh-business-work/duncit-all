@@ -8,9 +8,11 @@
  * drawer's header reading the pod back from the server rather than trusting the
  * snapshot the list opened it with.
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { logs } from '@duncit/logs';
 import PodExpensePage from '../../src/pages/finance/pod-expense-page';
+import { POD_EXPENSE_POD_SUMMARY } from '../../src/pages/finance/pod-expense-page/queries';
 import { renderWithProviders } from '../testkit';
 import { resetTableControls, tableControls } from './mocks/table';
 import {
@@ -242,13 +244,48 @@ describe('PodExpenseDrawer — one pod’s ledger', () => {
       ),
     ).toBeInTheDocument();
 
+    // The drawer is itself a dialog (named after the pod), so it is the
+    // confirmation — named "Delete expense" — that has to go away.
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Delete expense' })).toBeNull(),
+    );
+    expect(screen.getByRole('dialog', { name: 'Sunday Badminton' })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]!);
-    const confirm = await screen.findByRole('dialog');
+    const confirm = await screen.findByRole('dialog', { name: 'Delete expense' });
     fireEvent.click(within(confirm).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Delete expense' })).toBeNull(),
+    );
+    expect(screen.getByRole('dialog', { name: 'Sunday Badminton' })).toBeInTheDocument();
+  });
+
+  it('keeps the entry deleted and says why when the header cannot re-read the pod', async () => {
+    const warn = vi.spyOn(logs.portal.finance, 'warn').mockImplementation(() => undefined);
+    renderWithProviders(<PodExpensePage />, {
+      mocks: [
+        podExpenseSummaryMock(),
+        // The header answers once, then fails the re-read after the delete.
+        { ...podExpensePodSummaryMock(), maxUsageCount: 1 },
+        { ...podExpenseSummaryErrorMock(), request: { query: POD_EXPENSE_POD_SUMMARY, variables: () => true } },
+        deletePodExpenseMock(),
+      ],
+    });
+    await openFirstPod();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]!);
+    const confirm = await screen.findByRole('dialog', { name: 'Delete expense' });
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(warn).toHaveBeenCalledWith('PodExpenseDrawer', 'afterWrite', {
+        error: expect.any(Error),
+        msg: 'Pod expense header refresh failed',
+      }),
+    );
+    expect(screen.queryByRole('dialog', { name: 'Delete expense' })).toBeNull();
+    warn.mockRestore();
   });
 
   it('surfaces what the server refused, on a write and on a delete', async () => {

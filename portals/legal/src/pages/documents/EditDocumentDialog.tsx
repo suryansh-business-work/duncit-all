@@ -51,17 +51,15 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
   const locked = doc?.is_locked ?? false;
   const trimmed = title.trim();
 
+  // No blank-title check: Apply stays disabled until the title has text.
   const apply = async () => {
-    if (!trimmed) {
-      setError(t('legal.documents.titleRequired'));
-      return;
-    }
     try {
       await save({ variables: { id: doc?.id, input: { name: trimmed } } });
       onSaved();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('legal.documents.saveFailed'));
+      // Apollo rejects a mutation with an Error subclass, never a bare value.
+      setError((e as Error).message);
     }
   };
 

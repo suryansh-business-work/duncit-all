@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { Route, useParams } from 'react-router';
 import { downloadBase64File } from '@duncit/utils';
 import PaymentLogsPage from '../../src/pages/finance/PaymentLogsPage';
 import { resetTableControls, tableControls } from './mocks/table';
@@ -9,6 +10,7 @@ import {
   makePayment,
   paymentFailed,
   paymentSuccess,
+  paymentTotalsForStatusMock,
   paymentTotalsMock,
   paymentsTableMock,
   refundPaymentMock,
@@ -22,6 +24,15 @@ vi.mock('@duncit/utils', async (orig) => {
 });
 
 const listItems = [paymentSuccess(), makePayment({ id: 'x', status: 'PENDING' })];
+
+/** Stands in for the audit page, echoing the payment it was opened for. */
+function PaymentProbe() {
+  const { id } = useParams();
+  return <div data-testid="payment-probe">{id}</div>;
+}
+
+/** The figure under the "Successful Payments" caption. */
+const successfulCount = () => screen.getByText('Successful Payments').nextElementSibling;
 
 const enabledButtonFor = (iconTestId: string) =>
   screen
@@ -108,6 +119,46 @@ describe('PaymentLogsPage', () => {
     });
     await waitFor(() => expect(screen.getByText('No payments yet.')).toBeInTheDocument());
     expect(screen.getByText('Successful Payments')).toBeInTheDocument();
+  });
+
+  it('opens a payment’s audit page from its row', async () => {
+    renderWithProviders(<PaymentLogsPage />, {
+      path: '/payment-logs',
+      entry: '/payment-logs',
+      mocks: [paymentTotalsMock(listItems), paymentsTableMock([paymentSuccess()])],
+      extra: <Route path="/payment-logs/:id" element={<PaymentProbe />} />,
+    });
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('row-open'));
+    expect(screen.getByTestId('payment-probe')).toHaveTextContent('p1');
+  });
+
+  it('narrows the KPI cards to a single status picked in the status filter', async () => {
+    const [base] = tableControls.queries;
+    tableControls.queries = [{ ...base, filters: [{ field: 'status', op: 'in', values: ['SUCCESS'] }] }];
+    renderWithProviders(<PaymentLogsPage />, {
+      mocks: [
+        paymentTotalsForStatusMock('SUCCESS', [paymentSuccess()]),
+        paymentTotalsMock(listItems),
+        paymentsTableMock([paymentSuccess()]),
+      ],
+    });
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    await waitFor(() => expect(successfulCount()).toHaveTextContent(/^1$/));
+  });
+
+  it('leaves the KPI cards unfiltered when several statuses are picked', async () => {
+    const [base] = tableControls.queries;
+    tableControls.queries = [{ ...base, filters: [{ field: 'status', op: 'in', values: ['SUCCESS', 'FAILED'] }] }];
+    renderWithProviders(<PaymentLogsPage />, {
+      mocks: [
+        paymentTotalsForStatusMock('SUCCESS', [paymentSuccess()]),
+        paymentTotalsMock(listItems),
+        paymentsTableMock([paymentSuccess(), paymentFailed()]),
+      ],
+    });
+    await waitFor(() => expect(screen.getByText('Ravi')).toBeInTheDocument());
+    await waitFor(() => expect(successfulCount()).toHaveTextContent(/^2$/));
   });
 
   it('shows the refund loading label', async () => {

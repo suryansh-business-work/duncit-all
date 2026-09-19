@@ -7,7 +7,7 @@ import PodBookingCard from './PodBookingCard';
 import ProductOrdersTable from './ProductOrdersTable';
 import GiftCardBlock from './GiftCardBlock';
 import { inSegment, segmentApplies, type CheckoutTab } from './checkout-segments';
-import type { PaymentDetail, PaymentSegment } from './queries';
+import type { PaymentDetail, PaymentPodBooking, PaymentSegment } from './queries';
 
 interface DomainProps {
   detail: PaymentDetail;
@@ -21,10 +21,11 @@ interface DomainProps {
 function DomainBlock({ detail, segment, formatDateTime }: Readonly<DomainProps>) {
   const symbol = detail.payment.currency_symbol;
   if (segment === 'POD') {
-    if (!detail.pod_booking) return null;
-    return (
-      <PodBookingCard booking={detail.pod_booking} payment={detail.payment} formatDateTime={formatDateTime} />
-    );
+    // The POD panel only renders once a POD artifact applies, and the server
+    // marks every one of them not-applicable unless the payment carries a pod —
+    // exactly when it builds the booking.
+    const booking = detail.pod_booking as PaymentPodBooking;
+    return <PodBookingCard booking={booking} payment={detail.payment} formatDateTime={formatDateTime} />;
   }
   if (segment === 'PRODUCT') {
     if (detail.product_orders.length === 0) return null;

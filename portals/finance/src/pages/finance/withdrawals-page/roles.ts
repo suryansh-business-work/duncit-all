@@ -39,11 +39,9 @@ export const ROLE_LABEL_KEYS = {
   CLUB_ADMIN: 'finance.withdrawals.roleClubAdmin',
 } as const satisfies Record<WithdrawerRole, string>;
 
-/** Localized role label, falling back to the English map for an unknown role. */
-export const translatedRoleLabel = (t: (key: string) => string, role: string): string => {
-  const key = ROLE_LABEL_KEYS[role as WithdrawerRole];
-  return key ? t(key) : roleLabel(role);
-};
+/** Localized role label. Every role the server can stamp has a key. */
+export const translatedRoleLabel = (t: (key: string) => string, role: WithdrawerRole): string =>
+  t(ROLE_LABEL_KEYS[role]);
 
 /** Role -> the matching field on `WithdrawalMinimums` / `UpdateWithdrawalMinimumsInput`. */
 export const ROLE_MINIMUM_FIELD = {
@@ -66,5 +64,4 @@ export const ROLE_HINTS: Record<WithdrawerRole, string> = {
   CLUB_ADMIN: 'The club admin cut taken off each pod in their club.',
 };
 
-export const roleLabel = (role: string): string =>
-  ROLE_LABELS[role as WithdrawerRole] ?? role;
+export const roleLabel = (role: WithdrawerRole): string => ROLE_LABELS[role];

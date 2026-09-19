@@ -82,29 +82,30 @@ export default function CategoriesPage() {
         min_pax: item.min_pax ?? 0,
         icon_layout_mweb: item.icon_layout_mweb ?? null,
         icon_layout_native: item.icon_layout_native ?? null,
-        gift_card_image_front: item.gift_card_image_front ?? '',
-        gift_card_image_back: item.gift_card_image_back ?? '',
+        gift_card_image_front: item.gift_card_image_front,
+        gift_card_image_back: item.gift_card_image_back,
       },
     });
   };
 
+  // Only the dialog's Save calls this, and Save is disabled once `dialog` is null.
   const submit = async () => {
-    if (!dialog) return;
+    const { form, level, parentId } = dialog as DialogState;
     setBusy(true);
     setOpError(null);
     try {
-      const media = buildMediaFromText(dialog.form.mediaText);
-      if (dialog.form.id) {
+      const media = buildMediaFromText(form.mediaText);
+      if (form.id) {
         await updateMut({
           variables: {
-            category_id: dialog.form.id,
-            input: buildUpdateInput(dialog.form, media, dialog.level),
+            category_id: form.id,
+            input: buildUpdateInput(form, media, level),
           },
           refetchQueries,
         });
       } else {
         await createMut({
-          variables: { input: buildCreateInput(dialog.form, dialog.level, dialog.parentId, media) },
+          variables: { input: buildCreateInput(form, level, parentId, media) },
           refetchQueries,
         });
       }

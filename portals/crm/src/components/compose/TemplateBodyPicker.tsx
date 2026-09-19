@@ -71,8 +71,8 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
 
   const onPick = (id: string) => {
     setSelectedId(id);
-    const tpl = templates.find((t) => t.template_id === id);
-    if (!tpl) { setKeys([]); setVars({}); return; }
+    // The menu only offers ids from this same list, so a pick always resolves.
+    const tpl = templates.find((t) => t.template_id === id)!;
     // Cover EVERY placeholder in the MJML + subject — not just declared ones —
     // so a {{ venue_name }} the author forgot to "declare" still binds.
     const allKeys = [...new Set([...placeholders(tpl.mjml), ...placeholders(tpl.subject)])];
@@ -83,15 +83,15 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
 
   useEffect(() => {
     if (!selected) { onChange({ subject: '', html: '', ready: false, attachments: [] }); return; }
-    const attachments = selected.attachments ?? [];
+    const attachments = selected.attachments;
     const id = setTimeout(async () => {
       // Merge lead values under the edited values so every matching slug binds.
       const merged = { ...variableValues, ...vars };
       try {
         const res = await client.query<any>({ query: RENDER, variables: { mjml: selected.mjml, vars: JSON.stringify(merged) }, fetchPolicy: 'network-only' });
-        const renderedHtml = stripLeftover(res.data?.renderEmailTemplate?.html ?? '');
+        const renderedHtml = stripLeftover(res.data?.renderEmailTemplate?.html);
         setHtml(renderedHtml);
-        setErrors(res.data?.renderEmailTemplate?.errors ?? []);
+        setErrors(res.data?.renderEmailTemplate?.errors);
         onChange({ subject: interpolate(selected.subject, merged), html: renderedHtml, ready: !!renderedHtml, attachments });
       } catch (e) {
         setErrors([parseApiError(e)]);

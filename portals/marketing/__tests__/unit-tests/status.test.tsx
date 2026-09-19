@@ -30,7 +30,15 @@ vi.mock('@duncit/media-picker', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@duncit/media-picker')>();
   return {
     ...actual,
-    default: ({ open, onPicked }: { open: boolean; onPicked: (url: string) => void }) =>
+    default: ({
+      open,
+      onPicked,
+      onClose,
+    }: {
+      open: boolean;
+      onPicked: (url: string) => void;
+      onClose: () => void;
+    }) =>
       open ? (
         <div>
           <button type="button" onClick={() => onPicked('https://cdn.duncit.com/status/pick.jpg')}>
@@ -38,6 +46,9 @@ vi.mock('@duncit/media-picker', async (importOriginal) => {
           </button>
           <button type="button" onClick={() => onPicked('https://cdn.duncit.com/status/pick.mp4')}>
             pick-video
+          </button>
+          <button type="button" onClick={onClose}>
+            close-picker
           </button>
         </div>
       ) : null,
@@ -193,25 +204,46 @@ describe('StatusPage', () => {
     expect(screen.getByTestId('form-actions-row-submit')).toHaveTextContent('Create status');
   });
 
-  it('creates a global status and shows the created toast', async () => {
+  it('creates a global status, switched off, and shows the created toast', async () => {
     renderPage([...pageMocks(), createOfficialStatusMock()]);
     fireEvent.click(await screen.findByTestId('status-new'));
 
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Diwali sale is live' } });
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Diwali sale is live' } });
     await pickImage();
+    expect(screen.getByTestId('status-media-image')).toBeInTheDocument();
+    expect(screen.getByText('Image')).toBeInTheDocument();
+    expect(screen.getByTestId('status-media-pick')).toHaveTextContent('Replace media');
+
+    const active = screen.getByRole('switch', { name: 'Active' });
+    expect(active).toBeChecked();
+    fireEvent.click(active);
+    expect(active).not.toBeChecked();
 
     await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
     fireEvent.click(screen.getByTestId('form-actions-row-submit'));
 
     expect(await screen.findByText('Status created')).toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('dismisses the toast with Escape', async () => {
+    renderPage([...pageMocks(), createOfficialStatusMock()]);
+    fireEvent.click(await screen.findByTestId('status-new'));
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Diwali sale is live' } });
+    await pickImage();
+    await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
+    fireEvent.click(screen.getByTestId('form-actions-row-submit'));
+    expect(await screen.findByText('Status created')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByText('Status created')).not.toBeInTheDocument());
   });
 
   it('previews a picked video and disables Cancel while the create request is in flight', async () => {
-    renderPage([...pageMocks(), createOfficialStatusMock()]);
+    renderPage([...pageMocks(), { ...createOfficialStatusMock(), delay: 200 }]);
     fireEvent.click(await screen.findByTestId('status-new'));
 
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New pods every Friday' } });
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'New pods every Friday' } });
     fireEvent.click(screen.getByTestId('status-media-pick'));
     fireEvent.click(await screen.findByText('pick-video'));
     expect(screen.getByTestId('status-media-video')).toBeInTheDocument();
@@ -219,22 +251,36 @@ describe('StatusPage', () => {
 
     await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
     fireEvent.click(screen.getByTestId('form-actions-row-submit'));
-    expect(screen.getByTestId('status-form-cancel')).toBeDisabled();
+    await waitFor(() => expect(screen.getByTestId('status-form-cancel')).toBeDisabled());
 
     expect(await screen.findByText('Status created')).toBeInTheDocument();
   });
 
-  it('reveals the city select for a LOCATION scope, flags a missing pick, and accepts one', async () => {
+  it('closes the media picker without changing the media', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByTestId('status-new'));
+    fireEvent.click(screen.getByTestId('status-media-pick'));
+    fireEvent.click(await screen.findByText('close-picker'));
+
+    await waitFor(() => expect(screen.queryByText('pick-image')).not.toBeInTheDocument());
+    expect(screen.getByTestId('status-media-pick')).toHaveTextContent('Choose image or video');
+  });
+
+  it('reveals the city select for a LOCATION scope, flags an emptied pick, and accepts one', async () => {
     renderPage([locationsForStatusMock(STATUS_LOCATIONS)]);
     fireEvent.click(await screen.findByTestId('status-new'));
 
     fireEvent.click(screen.getByTestId('status-scope-location'));
+    expect(await screen.findByText('Only people browsing one of these cities see it')).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Cities/ }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
     expect(await screen.findByText('Pick at least one city')).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByLabelText('Cities'));
-    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
-
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Pune'));
     await waitFor(() => expect(screen.queryByText('Pick at least one city')).not.toBeInTheDocument());
+    expect(screen.getByText('Only people browsing one of these cities see it')).toBeInTheDocument();
   });
 
   it('reveals the date field for a Custom expiry and requires a future date', async () => {
@@ -242,15 +288,37 @@ describe('StatusPage', () => {
     fireEvent.click(await screen.findByTestId('status-new'));
 
     fireEvent.click(screen.getByTestId('status-expiry-custom'));
-    expect(await screen.findByText('Pick the date and time it expires')).toBeInTheDocument();
+    expect(await screen.findByText('When it leaves the rail on its own')).toBeInTheDocument();
 
     const dateInput = screen.getByLabelText('Expires at');
     fireEvent.change(dateInput, { target: { value: new Date(Date.now() - 60_000).toISOString() } });
     expect(await screen.findByText('The expiry has to be in the future')).toBeInTheDocument();
 
+    fireEvent.change(dateInput, { target: { value: '' } });
+    expect(await screen.findByText('Pick the date and time it expires')).toBeInTheDocument();
+
     fireEvent.change(dateInput, { target: { value: new Date(Date.now() + 3_600_000).toISOString() } });
     await waitFor(() =>
-      expect(screen.queryByText('The expiry has to be in the future')).not.toBeInTheDocument(),
+      expect(screen.queryByText('Pick the date and time it expires')).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText('The expiry has to be in the future')).not.toBeInTheDocument();
+  });
+
+  it('refuses a tap-through link that is neither https nor an in-app path', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByTestId('status-new'));
+
+    const link = screen.getByLabelText('Tap-through link');
+    fireEvent.change(link, { target: { value: 'not a link' } });
+    expect(
+      await screen.findByText('Use an https:// link or an in-app path like /pod-ideas'),
+    ).toBeInTheDocument();
+
+    fireEvent.change(link, { target: { value: 'https://duncit.com/pod-ideas' } });
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Use an https:// link or an in-app path like /pod-ideas'),
+      ).not.toBeInTheDocument(),
     );
   });
 
@@ -258,17 +326,17 @@ describe('StatusPage', () => {
     renderPage([locationsForStatusMock(STATUS_LOCATIONS), createOfficialStatusMock()]);
     fireEvent.click(await screen.findByTestId('status-new'));
 
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Pune weekend meetup' } });
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Pune weekend meetup' } });
     await pickImage();
-
-    fireEvent.click(screen.getByTestId('status-scope-location'));
-    fireEvent.mouseDown(screen.getByLabelText('Cities'));
-    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
 
     fireEvent.click(screen.getByTestId('status-expiry-custom'));
     fireEvent.change(screen.getByLabelText('Expires at'), {
       target: { value: new Date(Date.now() + 3_600_000).toISOString() },
     });
+
+    fireEvent.click(screen.getByTestId('status-scope-location'));
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: /Cities/ }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
 
     await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
     fireEvent.click(screen.getByTestId('form-actions-row-submit'));
@@ -280,7 +348,7 @@ describe('StatusPage', () => {
     renderPage([...pageMocks(), createOfficialStatusMock({}, { failWith: 'Media host not allowed' })]);
     fireEvent.click(await screen.findByTestId('status-new'));
 
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Diwali sale is live' } });
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Diwali sale is live' } });
     await pickImage();
 
     await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
@@ -297,6 +365,13 @@ describe('StatusPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('closes the dialog on Escape while nothing is being saved', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByTestId('status-new'));
+    fireEvent.keyDown(await screen.findByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('opens the edit dialog pre-filled from an existing row and saves the change', async () => {
     __setTableRows([makeOfficialStatusRow({ title: 'Old title' })]);
     renderPage([...pageMocks(), updateOfficialStatusMock()]);
@@ -305,12 +380,26 @@ describe('StatusPage', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Edit status')).toBeInTheDocument();
     expect(screen.getByTestId('form-actions-row-submit')).toHaveTextContent('Save changes');
-    expect(screen.getByLabelText('Title')).toHaveValue('Old title');
+    expect(screen.getByLabelText(/^Title/)).toHaveValue('Old title');
 
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New title' } });
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'New title' } });
+    await waitFor(() => expect(screen.getByTestId('form-actions-row-submit')).toBeEnabled());
     fireEvent.click(screen.getByTestId('form-actions-row-submit'));
 
     expect(await screen.findByText('Status updated')).toBeInTheDocument();
+  });
+
+  // A city can be retired after a status was published to it; the edit dialog
+  // still has to show that pick rather than drop it silently.
+  it('shows a picked city the locations list no longer has by its id', async () => {
+    __setTableRows([
+      makeOfficialStatusRow({ scope: 'LOCATION', location_ids: ['loc1', 'loc-retired'] }),
+    ]);
+    renderPage([locationsForStatusMock(STATUS_LOCATIONS)]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    expect(await screen.findByText('Mumbai')).toBeInTheDocument();
+    expect(screen.getByText('loc-retired')).toBeInTheDocument();
   });
 
   it('deletes a status after confirming, with the right warning copy, and toasts', async () => {

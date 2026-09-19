@@ -113,7 +113,7 @@ describe('VenueDetailsSection — editable identity fields', () => {
     const formRef = mount({ mode: 'register' });
 
     fireEvent.change(screen.getByLabelText(/Venue name/), { target: { value: 'Cafe Mocha' } });
-    fireEvent.change(screen.getByLabelText('Venue description'), { target: { value: 'A cosy corner cafe' } });
+    fireEvent.change(screen.getByLabelText(/Venue description/), { target: { value: 'A cosy corner cafe' } });
 
     await waitFor(() => expect(formRef.current?.getValues('venue_name')).toBe('Cafe Mocha'));
     expect(formRef.current?.getValues('description')).toBe('A cosy corner cafe');
@@ -139,7 +139,7 @@ describe('VenueDetailsSection — edit-approved mode', () => {
     expect(screen.getByLabelText(/Venue name/)).toHaveProperty('disabled', true);
     expect(screen.getByLabelText(/Address line 1/)).toHaveProperty('disabled', true);
     expect(screen.getByLabelText('Address line 2')).toHaveProperty('disabled', true);
-    expect(screen.getByLabelText('Venue description')).toHaveProperty('disabled', false);
+    expect(screen.getByLabelText(/Venue description/)).toHaveProperty('disabled', false);
     expect(screen.getAllByText('Locked after approval')).toHaveLength(3);
     expect(screen.queryByText('Public name shown to hosts and guests')).toBeNull();
   });
@@ -252,5 +252,38 @@ describe('VenueDetailsSection — images', () => {
     fireEvent.click(screen.getByRole('button', { name: 'pick from Add venue image' }));
 
     await waitFor(() => expect(formRef.current?.getValues('gallery')).toEqual([existing, PICKED_IMAGE]));
+  });
+});
+
+describe('VenueDetailsSection — field messages replace the hints', () => {
+  it('shows the description and address errors once the section is validated', async () => {
+    const formRef = mount({ mode: 'register', defaults: { address_line2: 'x'.repeat(201) } });
+
+    await act(async () => {
+      await formRef.current?.trigger(['description', 'address_line1', 'address_line2', 'cover_image_url']);
+    });
+
+    expect(await screen.findByText('Venue description is required')).toBeTruthy();
+    expect(screen.getByText('Address line 1 must be at least 3 characters')).toBeTruthy();
+    expect(screen.getByText('Upload a cover image')).toBeTruthy();
+    expect(screen.queryByText('Tell hosts what makes your space great (max 2000 characters)')).toBeNull();
+    expect(screen.queryByText('Building / street — shown on the venue page')).toBeNull();
+    expect(screen.queryByText('Landmark or floor (optional)')).toBeNull();
+  });
+
+  it('re-validates the category triple as it is picked once it has failed', async () => {
+    const formRef = mount({ mode: 'register', defaults: { super_category_id: 'sup-1', category_id: 'cat-1' } });
+
+    await act(async () => {
+      await formRef.current?.trigger(['super_category_id', 'category_id', 'sub_category_id']);
+    });
+    expect(await screen.findByText('Select the super category, category and sub category.')).toBeTruthy();
+
+    fireEvent.keyDown(screen.getByRole('combobox', { name: /Sub Category/ }), { key: 'ArrowDown' });
+    fireEvent.click(await screen.findByText('Coffee'));
+
+    await waitFor(() =>
+      expect(screen.queryByText('Select the super category, category and sub category.')).toBeNull()
+    );
   });
 });

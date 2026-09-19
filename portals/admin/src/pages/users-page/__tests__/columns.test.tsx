@@ -131,13 +131,18 @@ describe('getUsersColumns / value getters', () => {
   });
 
   it('derives the login provider label from auth_providers when none was recorded', () => {
-    expect(valueOf('last_login_provider', makeUser({ last_login_provider: 'GOOGLE' }))).toBe('Google');
+    // The suite injects an identity `t`, so labels read back as their keys.
+    expect(valueOf('last_login_provider', makeUser({ last_login_provider: 'GOOGLE' }))).toBe('admin.users.google');
     expect(
       valueOf('last_login_provider', makeUser({ last_login_provider: null, auth_providers: ['GOOGLE'] })),
-    ).toBe('Google');
+    ).toBe('admin.users.google');
     expect(valueOf('last_login_provider', makeUser({ last_login_provider: null, auth_providers: [] }))).toBe(
-      'Email',
+      'shell.common.email',
     );
+    expect(valueOf('last_login_provider', makeUser({ last_login_provider: null, auth_providers: null }))).toBe(
+      'shell.common.email',
+    );
+    expect(valueOf('last_login_provider', makeUser({ last_login_provider: 'OTP' }))).toBe('admin.users.phoneOtp');
   });
 
   it('defaults a missing status to ACTIVE', () => {
@@ -218,13 +223,13 @@ describe('getUsersColumns / cell renderers', () => {
 
   it('renders the login chip with the formatted last-login date', () => {
     renderCell('last_login_provider', makeUser({ last_login_provider: 'GOOGLE', last_login_at: '2026-03-01T09:00:00.000Z' }));
-    expect(screen.getByText('Google')).toBeInTheDocument();
+    expect(screen.getByText('admin.users.google')).toBeInTheDocument();
     expect(screen.getByText('D(2026-03-01T09:00:00.000Z)')).toBeInTheDocument();
   });
 
   it('says the last login is not tracked yet when the user never signed in', () => {
     renderCell('last_login_provider', makeUser({ last_login_provider: null, auth_providers: [], last_login_at: null }));
-    expect(screen.getByText('Email')).toBeInTheDocument();
+    expect(screen.getByText('shell.common.email')).toBeInTheDocument();
     expect(screen.getByText('Not tracked yet')).toBeInTheDocument();
   });
 

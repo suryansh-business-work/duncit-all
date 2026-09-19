@@ -7,6 +7,10 @@ import { allFallbackEntries } from '@duncit/app-settings';
 import { IMPORT_TRANSLATION_KEYS, SERVER_TRANSLATION_SEED } from './queries';
 import { useTranslation } from '@duncit/shell';
 
+interface SeedResult {
+  serverTranslationSeed: { key: string; value: string }[];
+}
+
 interface Props {
   /** Locale the bundled English text is stored against — the default one. */
   defaultLocale: string | null;
@@ -26,25 +30,29 @@ export default function ImportKeysButton({ defaultLocale, onDone, onError }: Rea
   const [importKeys] = useMutation<any>(IMPORT_TRANSLATION_KEYS);
   const [busy, setBusy] = useState(false);
 
+  // Only the button calls this, and it stays disabled until there is a default locale.
   const run = async () => {
-    if (!defaultLocale) return;
     setBusy(true);
     try {
       // The client surfaces' bundles come from the shared package; the MJML
       // email copy lives on the server, which reports its own keys.
-      const { data } = await client.query<{
-        serverTranslationSeed: { key: string; value: string }[];
-      }>({ query: SERVER_TRANSLATION_SEED, fetchPolicy: 'network-only' });
+      const { data } = await client.query<SeedResult>({
+        query: SERVER_TRANSLATION_SEED,
+        fetchPolicy: 'network-only',
+      });
 
       const merged: Record<string, string> = { ...allFallbackEntries() };
-      for (const row of data?.serverTranslationSeed ?? []) merged[row.key] = row.value;
+      // Both fields are non-null in the schema, and a failed request throws
+      // rather than resolving without data.
+      for (const row of (data as SeedResult).serverTranslationSeed) merged[row.key] = row.value;
 
       const entries = Object.entries(merged).map(([key, value]) => ({ key, value }));
       const res = await importKeys({ variables: { locale: defaultLocale, entries } });
-      const added = res.data?.importTranslationKeys ?? 0;
+      const added: number = res.data.importTranslationKeys;
       onDone(added > 0 ? `${added} new key(s) imported` : 'Already up to date');
     } catch (e) {
-      onError(e instanceof Error ? e.message : t('admin.localization.importFailed'));
+      // A rejected query or mutation is always an Error — Apollo wraps anything else.
+      onError((e as Error).message);
     } finally {
       setBusy(false);
     }

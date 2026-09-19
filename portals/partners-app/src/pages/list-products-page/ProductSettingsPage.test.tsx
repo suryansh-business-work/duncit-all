@@ -102,7 +102,7 @@ describe('ProductSettingsPage', () => {
     expect(screen.getByText('Currently 3 units available.')).toBeTruthy();
     expect((screen.getByLabelText('Low-stock threshold') as HTMLInputElement).value).toBe('4');
     expect(
-      (screen.getByRole('checkbox', {
+      (screen.getByRole('switch', {
         name: 'Notify me when this product hits the low-stock threshold',
       }) as HTMLInputElement).checked,
     ).toBe(true);
@@ -119,7 +119,7 @@ describe('ProductSettingsPage', () => {
     expect(screen.getByText('Currently 1 unit available.')).toBeTruthy();
     expect((screen.getByLabelText('Low-stock threshold') as HTMLInputElement).value).toBe('0');
     expect(
-      (screen.getByRole('checkbox', {
+      (screen.getByRole('switch', {
         name: 'Notify me when this product hits the low-stock threshold',
       }) as HTMLInputElement).checked,
     ).toBe(false);
@@ -134,7 +134,7 @@ describe('ProductSettingsPage', () => {
     expect(await screen.findByText('Currently 0 units available.')).toBeTruthy();
     expect((screen.getByLabelText('Low-stock threshold') as HTMLInputElement).value).toBe('5');
     expect(
-      (screen.getByRole('checkbox', {
+      (screen.getByRole('switch', {
         name: 'Notify me when this product hits the low-stock threshold',
       }) as HTMLInputElement).checked,
     ).toBe(false);
@@ -161,7 +161,7 @@ describe('ProductSettingsPage', () => {
 
     fireEvent.change(await screen.findByLabelText('Low-stock threshold'), { target: { value: '12' } });
     fireEvent.click(
-      screen.getByRole('checkbox', {
+      screen.getByRole('switch', {
         name: 'Notify me when this product hits the low-stock threshold',
       }),
     );
@@ -193,7 +193,7 @@ describe('ProductSettingsPage', () => {
     fireEvent.change(await screen.findByLabelText('Low-stock threshold'), { target: { value: '1000001' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
 
-    expect(await screen.findByText('Number must be less than or equal to 1000000')).toBeTruthy();
+    expect(await screen.findByText('Enter a whole number')).toBeTruthy();
     expect(called).toBe(false);
     expect(screen.queryByText('Settings saved.')).toBeNull();
   });

@@ -32,7 +32,7 @@ export default function PolicyTypeSelect({
       groupBy={(o) => o.group}
       getOptionLabel={(o) => (typeof o === 'string' ? o : o.label)}
       isOptionEqualToValue={(o, v) => o.label === (typeof v === 'string' ? v : v.label)}
-      value={selected ?? value ?? ''}
+      value={selected ?? value}
       onChange={(_e, v) => onChange(typeof v === 'string' ? v : (v?.label ?? ''))}
       onInputChange={(_e, v, reason) => {
         if (reason === 'input') onChange(v);

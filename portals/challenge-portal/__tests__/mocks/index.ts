@@ -7,3 +7,4 @@
  */
 export * from './challenge.mock';
 export * from './category.mock';
+export * from './leaderboard.mock';

@@ -15,6 +15,6 @@ const kindChips = (t: Translate): Record<ReleaseKind, { label: string; color: Ki
 
 export function ReleaseKindChip({ kind }: Readonly<{ kind: ReleaseKind }>) {
   const { t } = useTranslation();
-  const chip = kindChips(t)[kind] ?? kindChips(t).HOST_PAYMENT;
+  const chip = kindChips(t)[kind];
   return <Chip size="small" label={chip.label} color={chip.color} />;
 }

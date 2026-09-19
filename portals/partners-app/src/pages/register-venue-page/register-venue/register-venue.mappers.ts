@@ -10,7 +10,7 @@ const findSelectedLocation = (locations: any[], values: RegisterVenueValues) =>
     (item) =>
       cityName(item) === values.city &&
       (!values.state || item.state === values.state) &&
-      (!values.country_code || item.country_code === values.country_code)
+      item.country_code === values.country_code
   ) ??
   null;
 

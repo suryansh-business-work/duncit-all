@@ -224,7 +224,7 @@ describe('NotificationFormDialog', () => {
     renderWithProviders(<NotificationFormDialog {...baseProps} form={blankForm} onSubmit={onSubmit} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('switch', { name: /Silent/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0][0].scope).toBe('GLOBAL');

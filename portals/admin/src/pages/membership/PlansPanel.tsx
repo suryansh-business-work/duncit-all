@@ -49,7 +49,7 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
       setEditing(null);
       afterWrite();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not save tier');
+      notifyError(e.message);
     }
   };
 
@@ -66,7 +66,7 @@ export default function PlansPanel({ onChanged }: Readonly<{ onChanged: () => vo
       notifySuccess('Tier deleted');
       afterWrite();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not delete tier');
+      notifyError(e.message);
     }
   };
 

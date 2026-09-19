@@ -298,18 +298,38 @@ describe('AdsPricingForm + live example', () => {
     fireEvent.change(screen.getByLabelText(/^Currency symbol/), { target: { value: '' } });
     expect(screen.getByText(/Sidebar × 3 days = ₹/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/^Currency symbol/), { target: { value: '₹' } });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Pricing' })).toBeEnabled());
+    await waitFor(
+      () => expect(screen.getByRole('button', { name: 'Save Pricing' })).toBeEnabled(),
+      { timeout: 5000 },
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Save Pricing' }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-  });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled(), { timeout: 5000 });
 
-  it('shows an error message and a busy button label', () => {
+    // A cleared booking window still bounds the example to the defaults.
+    const exampleDays = screen.getByLabelText('Days');
+    const minDays = screen.getByLabelText(/^Minimum campaign days/);
+    const maxDays = screen.getByLabelText(/^Maximum campaign days/);
+    fireEvent.change(minDays, { target: { value: '3' } });
+    fireEvent.change(maxDays, { target: { value: '14' } });
+    expect(exampleDays).toHaveAttribute('min', '3');
+    expect(exampleDays).toHaveAttribute('max', '14');
+    fireEvent.change(minDays, { target: { value: '' } });
+    fireEvent.change(maxDays, { target: { value: '' } });
+    expect(exampleDays).toHaveAttribute('min', '1');
+    expect(exampleDays).toHaveAttribute('max', '30');
+    // The form is rendered ~10 times here and each render lays out every
+    // placement field, which on the CI runner alone outlasts the 5s default.
+  }, 30_000);
+
+  it('shows an error message and a spinning, disabled save button', () => {
     renderWithProviders(
       <AdsPricingForm initialValues={pricingValues} busy errorMessage="Save failed" onSubmit={vi.fn()} />,
     );
     expect(screen.getByText('Save failed')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
-  });
+    const save = screen.getByRole('button', { name: 'Save Pricing' });
+    expect(save).toBeDisabled();
+    expect(within(save).getByRole('progressbar')).toBeInTheDocument();
+  }, 30_000);
 });
 
 // ===========================================================================

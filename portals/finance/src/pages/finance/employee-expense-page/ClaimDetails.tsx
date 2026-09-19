@@ -85,7 +85,7 @@ export default function ClaimDetails({
       {claim.status !== 'PENDING' && (
         <InfoRow
           label={t('employeeExpense.review.decidedBy', {
-            vars: { when: formatDate(claim.reviewed_at ?? '') },
+            vars: { when: formatDate(claim.reviewed_at) },
           })}
           value={claim.review_note || '—'}
         />

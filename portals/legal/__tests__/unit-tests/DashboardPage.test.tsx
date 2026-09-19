@@ -21,7 +21,9 @@ describe('DashboardPage', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
     expect(screen.getByText('NDA')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    // The stubbed table hands the same rows to BOTH by-type sections (documents
+    // and policies), so each count renders once per table.
+    expect(screen.getAllByText('3')).toHaveLength(2);
   });
 
   it('shows an empty hint when there are no documents', async () => {

@@ -44,8 +44,9 @@ export default function ReportActions({ calculatorId, calculatorName, disabled }
   const onDownload = () => {
     fetchPdf({ variables: { calculator_doc_id: calculatorId } })
       .then((res) => {
-        const base64 = res.data?.podCalculatorPdfBase64;
-        if (!base64) throw new Error(t('finance.calculators.reportUnavailable'));
+        // `podCalculatorPdfBase64` is `String!` and always a rendered PDF: a
+        // failed render is a GraphQL error, which lands in the catch below.
+        const base64: string = res.data?.podCalculatorPdfBase64;
         downloadBase64File(base64, fileNameFor(calculatorName), 'application/pdf');
         return undefined;
       })

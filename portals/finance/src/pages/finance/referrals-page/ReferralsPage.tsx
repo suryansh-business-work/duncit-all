@@ -58,7 +58,7 @@ export default function ReferralsPage() {
   */
   const draftMessage = useWatch({ control, name: 'share_message' });
   const coinsPerReferral = settings?.coins_per_referral ?? 0;
-  const preview = renderReferralMessage(draftMessage ?? '', {
+  const preview = renderReferralMessage(draftMessage, {
     code: SAMPLE_CODE,
     link: referralLink(SAMPLE_CODE, urlConfigs.mwebUrl),
     coins: coinsPerReferral,

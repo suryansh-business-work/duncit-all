@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import type { OperationVariables } from '@apollo/client';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -18,6 +19,10 @@ import {
   tableStateToExpenseFilter,
   type ExpenseSummaryFilter,
 } from './queries';
+
+interface ExpensesTableData {
+  expensesTable: { rows: ExpenseRecord[]; total: number };
+}
 
 interface SummaryData {
   expenseSummary: {
@@ -64,14 +69,16 @@ export default function ExpenseManagementPage() {
         summaryKeyRef.current = key;
         setSummaryFilter(filter);
       }
-      const { data } = await client.query<{
-        expensesTable: { rows: ExpenseRecord[]; total: number };
-      }>({
+      // `errorPolicy: 'none'` is the client's default, stated so the type says
+      // it too: a failed read throws into the table's error state, so a
+      // resolved read always carries its page.
+      const { data } = await client.query<ExpensesTableData, OperationVariables, 'none'>({
         query: EXPENSES_TABLE,
         variables: tableQueryToGql(q),
         fetchPolicy: 'network-only',
+        errorPolicy: 'none',
       });
-      return { rows: data?.expensesTable.rows ?? [], total: data?.expensesTable.total ?? 0 };
+      return { rows: data.expensesTable.rows, total: data.expensesTable.total };
     },
     [client],
   );

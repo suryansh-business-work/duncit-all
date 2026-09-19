@@ -62,7 +62,8 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
     }
     try {
       const res = await createTpl({ variables: { input: { slug: effectiveSlug, name: name.trim(), subject: subject.trim(), target, mjml } } });
-      onCreated(res.data?.createEmailTemplate?.template_id ?? null);
+      // createCrmEmailTemplate is non-null and always carries its template_id.
+      onCreated(res.data?.createEmailTemplate?.template_id);
       reset();
     } catch (e) {
       setError(parseApiError(e));

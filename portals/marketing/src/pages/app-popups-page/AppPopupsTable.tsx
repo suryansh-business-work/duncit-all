@@ -88,7 +88,7 @@ const renderPlatform = (popup: AppPopupRow, t: Translate) => (
   <Chip
     size="small"
     variant="outlined"
-    label={platformLabels(t).get(popup.platform) ?? popup.platform}
+    label={platformLabels(t).get(popup.platform)}
   />
 );
 
@@ -147,7 +147,7 @@ export default function AppPopupsTable({
         type: 'enum',
         options: selectPlatforms(t),
         cellRenderer: (popup: AppPopupRow) => renderPlatform(popup, t),
-        valueGetter: (popup) => platformLabels(t).get(popup.platform) ?? popup.platform,
+        valueGetter: (popup) => platformLabels(t).get(popup.platform),
       },
       {
         field: 'audience_type',

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { gql } from '@apollo/client';
@@ -90,18 +91,24 @@ interface Handlers {
   canManageProducts?: boolean;
 }
 
+// The ad dialog's media picker reads the theme's breakpoints, and MUI's
+// useTheme() is null outside a provider — the portal chrome supplies one.
+const theme = createTheme();
+
 const renderTable = (mocks: MockedResponse[], handlers: Handlers = {}) => {
   const { onEdit = vi.fn(), canManageProducts = true, ...rest } = handlers;
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <ProductListingsTable
-          brandId="b1"
-          canManageProducts={canManageProducts}
-          onEdit={onEdit}
-          {...rest}
-        />
-      </LocalizationProvider>
+      <ThemeProvider theme={theme}>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <ProductListingsTable
+            brandId="b1"
+            canManageProducts={canManageProducts}
+            onEdit={onEdit}
+            {...rest}
+          />
+        </LocalizationProvider>
+      </ThemeProvider>
     </MockedProvider>,
   );
 };
@@ -120,6 +127,8 @@ const AD_PRICING = gql`
       pod_list_per_day
       pod_details_per_day
       currency_symbol
+      min_days
+      max_days
     }
   }
 `;
@@ -149,6 +158,8 @@ const pricingMock: MockedResponse = {
         pod_list_per_day: 200,
         pod_details_per_day: 200,
         currency_symbol: '₹',
+        min_days: 1,
+        max_days: 30,
       },
     },
   },

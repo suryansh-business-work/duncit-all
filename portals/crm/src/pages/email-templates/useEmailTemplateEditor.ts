@@ -54,10 +54,11 @@ export function useEmailTemplateEditor(templateId: string) {
     if (!draft) return [];
     try {
       const res = await client.query<any>({ query: RENDER, variables: { mjml: draft.mjml, vars: varsJson }, fetchPolicy: 'network-only' });
-      const errors = res.data?.renderEmailTemplate?.errors ?? [];
-      setPreviewHtml(res.data?.renderEmailTemplate?.html ?? '');
+      // renderCrmEmailTemplate is non-null, as are its html / errors / detected_variables.
+      const errors: string[] = res.data?.renderEmailTemplate?.errors;
+      setPreviewHtml(res.data?.renderEmailTemplate?.html);
       setPreviewErrors(errors);
-      setDetected(res.data?.renderEmailTemplate?.detected_variables ?? []);
+      setDetected(res.data?.renderEmailTemplate?.detected_variables);
       return errors;
     } catch (e) {
       const errors = [parseApiError(e)];

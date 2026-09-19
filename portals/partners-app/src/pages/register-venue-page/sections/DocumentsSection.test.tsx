@@ -61,7 +61,11 @@ const mount = (props: Omit<HarnessProps, 'formRef'>) => {
   return formRef;
 };
 
-const typeAndBlur = (label: string, value: string) => {
+// Both tax ids are required now, so their labels carry MUI's required asterisk.
+const GSTIN_LABEL = /^GSTIN/;
+const PAN_LABEL = /^PAN/;
+
+const typeAndBlur = (label: RegExp, value: string) => {
   const input = screen.getByLabelText(label);
   fireEvent.change(input, { target: { value } });
   fireEvent.blur(input);
@@ -74,32 +78,33 @@ describe('DocumentsSection — GSTIN rule', () => {
     mount({ mode: 'register' });
 
     // 14 characters — accepted by the checkout GSTIN pattern, rejected here.
-    typeAndBlur('GSTIN (optional)', '22ABCDE1234F1Z');
+    typeAndBlur(GSTIN_LABEL, '22ABCDE1234F1Z');
     expect(await screen.findByText(GSTIN_ERROR)).toBeTruthy();
 
     // 15 characters but the 14th is not the literal Z this form insists on.
-    typeAndBlur('GSTIN (optional)', '22ABCDE1234F1A5');
+    typeAndBlur(GSTIN_LABEL, '22ABCDE1234F1A5');
     expect(await screen.findByText(GSTIN_ERROR)).toBeTruthy();
 
     // The canonical 15-character GSTIN clears the error.
-    typeAndBlur('GSTIN (optional)', '22ABCDE1234F1Z5');
+    typeAndBlur(GSTIN_LABEL, '22ABCDE1234F1Z5');
     await waitFor(() => expect(screen.queryByText(GSTIN_ERROR)).toBeNull());
     expect(screen.getByText('15-character GST number, e.g. 22ABCDE1234F1Z5')).toBeTruthy();
   });
 
-  it('accepts a lowercase GSTIN and an empty GSTIN, and rejects a malformed PAN', async () => {
+  it('accepts a lowercase GSTIN, requires one, and rejects a malformed PAN', async () => {
     mount({ mode: 'register' });
 
-    typeAndBlur('GSTIN (optional)', '22abcde1234f1z5');
+    typeAndBlur(GSTIN_LABEL, '22abcde1234f1z5');
     await waitFor(() => expect(screen.queryByText(GSTIN_ERROR)).toBeNull());
 
-    typeAndBlur('GSTIN (optional)', '');
-    await waitFor(() => expect(screen.queryByText(GSTIN_ERROR)).toBeNull());
+    typeAndBlur(GSTIN_LABEL, '');
+    expect(await screen.findByText('GSTIN is required')).toBeTruthy();
+    expect(screen.queryByText(GSTIN_ERROR)).toBeNull();
 
-    typeAndBlur('PAN (optional)', 'ABCD12345F');
+    typeAndBlur(PAN_LABEL, 'ABCD12345F');
     expect(await screen.findByText('PAN must follow format ABCDE1234F')).toBeTruthy();
 
-    typeAndBlur('PAN (optional)', 'ABCDE1234F');
+    typeAndBlur(PAN_LABEL, 'ABCDE1234F');
     await waitFor(() => expect(screen.queryByText('PAN must follow format ABCDE1234F')).toBeNull());
   });
 });
@@ -208,8 +213,8 @@ describe('DocumentsSection — edit-approved mode', () => {
     // Only the appended row can be removed.
     expect(screen.getAllByRole('button', { name: 'Remove document' })).toHaveLength(1);
 
-    expect(screen.getByLabelText('GSTIN (optional)')).toHaveProperty('disabled', true);
-    expect(screen.getByLabelText('PAN (optional)')).toHaveProperty('disabled', true);
+    expect(screen.getByLabelText(GSTIN_LABEL)).toHaveProperty('disabled', true);
+    expect(screen.getByLabelText(PAN_LABEL)).toHaveProperty('disabled', true);
     expect(screen.getAllByText('Locked after approval')).toHaveLength(2);
     expect(
       screen.getByText(
@@ -223,7 +228,7 @@ describe('DocumentsSection — edit-approved mode', () => {
 
     expect(screen.getAllByRole('button', { name: 'Remove document' })).toHaveLength(2);
     expect(screen.queryByText('Verified document')).toBeNull();
-    expect(screen.getByLabelText('GSTIN (optional)')).toHaveProperty('disabled', false);
+    expect(screen.getByLabelText(GSTIN_LABEL)).toHaveProperty('disabled', false);
     expect(
       screen.getByText('Upload at least one document with its type. PDF only, max 50 MB.')
     ).toBeTruthy();

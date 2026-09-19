@@ -96,12 +96,11 @@ export const KIND_COLORS: StatusColorMap = {
   SYSTEM: 'default',
 };
 
-export const money = (sym: string, value?: number | null) =>
-  `${sym}${(value ?? 0).toLocaleString('en-IN')}`;
+export const money = (sym: string, value: number) => `${sym}${value.toLocaleString('en-IN')}`;
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';
-  return formatDateTime(iso) || '—';
+  return formatDateTime(iso);
 };
 
 /** The text a row is searched by — podCancellations is a bounded, hydrated

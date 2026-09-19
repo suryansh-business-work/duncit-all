@@ -28,6 +28,8 @@ export default defineConfig({
       exclude: [
         // Test files + type-only declarations + barrel re-exports.
         'src/**/*.{cy,test,spec}.{ts,tsx}',
+        // Test helpers (the route-smoke schema mock) — not product code.
+        'src/**/__tests__/**',
         'src/**/*.d.ts',
         'src/**/index.{ts,tsx}',
         'src/vite-env.d.ts',

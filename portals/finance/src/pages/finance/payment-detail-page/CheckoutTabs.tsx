@@ -8,6 +8,7 @@ import {
   CHECKOUT_TABS,
   defaultCheckoutTab,
   segmentHasFailure,
+  type CheckoutTab,
   type CheckoutTabValue,
 } from './checkout-segments';
 import type { PaymentArtifact, PaymentDetail } from './queries';
@@ -48,7 +49,8 @@ export default function CheckoutTabs({
   // Open on what this payment actually bought rather than always on the pod tab.
   const fallback = useMemo(() => defaultCheckoutTab(detail.artifacts), [detail.artifacts]);
   const tabs = useTabParam<CheckoutTabValue>({ items, fallback });
-  const active = CHECKOUT_TABS.find((tab) => tab.value === tabs.value) ?? CHECKOUT_TABS[0];
+  // useTabParam only answers with an item's value or `fallback`, both drawn from CHECKOUT_TABS.
+  const active = CHECKOUT_TABS.find((tab) => tab.value === tabs.value) as CheckoutTab;
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%' }}>

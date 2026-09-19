@@ -45,7 +45,7 @@ export const BLANK_MINIMUMS: WithdrawalMinimumsForm = {
 export function toFormValues(minimums: WithdrawalMinimums): WithdrawalMinimumsForm {
   const values = { ...BLANK_MINIMUMS };
   for (const field of FIELDS) {
-    values[field] = String(minimums[field] ?? DEFAULT_MIN_WITHDRAWAL);
+    values[field] = String(minimums[field]);
   }
   return values;
 }

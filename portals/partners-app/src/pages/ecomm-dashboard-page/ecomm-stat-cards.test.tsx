@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import { fallbackT } from '@duncit/shell';
+import { formatINR } from '@duncit/utils';
 import EcommStatCards, { ecommStatCards, emptyEcommStats } from './EcommStatCards';
 import type { PartnerEcommStats } from './ecomm-dashboard.queries';
 
@@ -22,8 +24,8 @@ const stats: PartnerEcommStats = {
 };
 
 describe('ecommStatCards', () => {
-  it('maps the stats payload into six labelled cards with approved captions', () => {
-    const cards = ecommStatCards(stats, (key: string) => key);
+  it('maps the stats payload into seven labelled cards with approved captions', () => {
+    const cards = ecommStatCards(stats, fallbackT);
     expect(cards.map((card) => card.label)).toEqual([
       'Total Brands',
       'Total Products',
@@ -31,10 +33,14 @@ describe('ecommStatCards', () => {
       'Total Orders',
       'Total Items Sold',
       'Total Revenue',
+      'Total Earnings',
     ]);
     expect(cards[0]).toMatchObject({ value: '3', caption: '2 approved' });
     expect(cards[1]).toMatchObject({ value: '14', caption: '9 approved' });
-    expect(cards[5].value).toBe('₹1,25,000');
+    expect(cards[2].caption).toBeUndefined();
+    expect(cards[5].value).toBe(formatINR(125000));
+    // Earnings are what the partner keeps after commission, not the gross.
+    expect(cards[6].value).toBe(formatINR(106250));
   });
 });
 
@@ -48,12 +54,15 @@ describe('EcommStatCards', () => {
     expect(screen.getByText('4')).toBeTruthy();
     expect(screen.getByText('27')).toBeTruthy();
     expect(screen.getByText('61')).toBeTruthy();
-    expect(screen.getByText('₹1,25,000')).toBeTruthy();
+    expect(screen.getByText(formatINR(125000))).toBeTruthy();
+    expect(screen.getByText(formatINR(106250))).toBeTruthy();
   });
 
   it('falls back to zeroed stats while loading', () => {
     render(<EcommStatCards stats={null} />);
     expect(screen.getByText('Total Revenue')).toBeTruthy();
-    expect(screen.getByText(`₹${emptyEcommStats.gross_revenue}`)).toBeTruthy();
+    // Revenue and earnings both read zero rupees until the stats land.
+    expect(screen.getAllByText(formatINR(emptyEcommStats.gross_revenue))).toHaveLength(2);
+    expect(screen.getAllByText('0 approved')).toHaveLength(2);
   });
 });

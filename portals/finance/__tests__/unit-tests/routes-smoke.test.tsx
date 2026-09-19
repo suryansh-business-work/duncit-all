@@ -197,7 +197,9 @@ beforeAll(() => {
     }
   }
 
-  globalThis.ResizeObserver ??= SizedResizeObserver as unknown as typeof ResizeObserver;
+  // Assigned, not `??=`: the setup file already installs a silent no-op
+  // observer for every suite, and this one has to replace it.
+  globalThis.ResizeObserver = SizedResizeObserver as unknown as typeof ResizeObserver;
   globalThis.IntersectionObserver ??= SeenIntersectionObserver as unknown as typeof IntersectionObserver;
   Element.prototype.scrollTo ??= () => undefined;
   Element.prototype.scrollIntoView ??= () => undefined;

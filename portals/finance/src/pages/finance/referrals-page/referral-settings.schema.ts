@@ -41,7 +41,7 @@ export const BLANK_SETTINGS: ReferralSettingsForm = {
 /** Server payload -> form strings. */
 export function toFormValues(settings: ReferralSettings): ReferralSettingsForm {
   return {
-    gift_description: settings.gift_description ?? '',
-    share_message: settings.share_message ?? '',
+    gift_description: settings.gift_description,
+    share_message: settings.share_message,
   };
 }

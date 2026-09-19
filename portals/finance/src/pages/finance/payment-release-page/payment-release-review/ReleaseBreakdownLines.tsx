@@ -38,7 +38,7 @@ const buildV2Lines = (b: any, kind: string, sym: string, t: Translate): Breakdow
           {
             key: 'attendance',
             label: t('finance.paymentRelease.attendanceAtCompletion'),
-            value: `${Number(b.attended_seats || 0)} of ${Number(b.booked_seats || 0)} seats`,
+            value: `${Number(b.attended_seats || 0)} of ${Number(b.booked_seats)} seats`,
           },
           { key: 'attended-total', label: t('finance.paymentRelease.settledOnAttendedSeats'), value: money(b.attended_total) },
         ]

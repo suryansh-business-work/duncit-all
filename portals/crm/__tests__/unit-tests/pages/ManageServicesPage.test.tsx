@@ -81,7 +81,7 @@ describe('ManageServicesPage', () => {
       listMock(),
       {
         request: { query: CREATE_CRM_SERVICE, variables: { input: createInput } },
-        newData: createCalled,
+        result: createCalled,
       },
       listMock(),
       configMock(),
@@ -118,7 +118,7 @@ describe('ManageServicesPage', () => {
             input: { name: 'Catering', kind: 'VENUE', sort_order: 1, is_active: false },
           },
         },
-        newData: updateCalled,
+        result: updateCalled,
       },
       listMock(),
       configMock(),
@@ -136,7 +136,7 @@ describe('ManageServicesPage', () => {
       listMock(),
       {
         request: { query: DELETE_CRM_SERVICE, variables: { id: 'svc-1' } },
-        newData: deleteCalled,
+        result: deleteCalled,
       },
       listMock(),
       configMock(),

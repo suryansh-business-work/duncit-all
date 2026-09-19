@@ -14,7 +14,6 @@ import {
   type TranslationGroupRow,
   type TranslationRow,
 } from './queries';
-import { useTranslation } from '@duncit/shell';
 
 /**
  * Translations, two levels deep: the namespaces first, then one namespace's
@@ -22,7 +21,6 @@ import { useTranslation } from '@duncit/shell';
  * catalogue passed a few hundred rows, and translators work a page at a time.
  */
 export default function TranslationsPage() {
-  const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { data: localeData } = useQuery<any>(LOCALES, { fetchPolicy: 'cache-and-network' });
   const [upsert] = useMutation<any>(UPSERT_TRANSLATION);
@@ -75,7 +73,8 @@ export default function TranslationsPage() {
       setOpen(false);
       refetchRef.current?.();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : t('admin.localization.saveTranslationFailed'));
+      // A rejected mutation is always an Error — Apollo wraps anything else.
+      setOpError((e as Error).message);
     } finally {
       setSaving(false);
     }

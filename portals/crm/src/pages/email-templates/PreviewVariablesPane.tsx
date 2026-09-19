@@ -77,8 +77,10 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
   const toggle = (slug: string) => (declared.has(slug) ? onRemoveVariable(slug) : onAddVariable(slug));
 
   const sampleValues = Object.fromEntries(draft.variables.map((v) => [v.key, v.sample ?? '']));
+  // The values editor hands back `sampleValues` with one field changed, so every
+  // declared key is always present in `next`.
   const setSampleValues = (next: Record<string, string>) =>
-    setDraft({ ...draft, variables: draft.variables.map((v) => ({ ...v, sample: next[v.key] ?? '' })) });
+    setDraft({ ...draft, variables: draft.variables.map((v) => ({ ...v, sample: next[v.key] })) });
 
   // Available list + "known" slugs follow the template's target.
   const hostVarsForTarget = draft.target === 'HOST' ? HOST_VARIABLES : [];

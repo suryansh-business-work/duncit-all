@@ -59,7 +59,8 @@ export default function MultiPodEditor({ saved, defaults, onClose, onSaved }: Re
 
   // Leaving with unsaved edits throws them away, so it asks first. A clean
   // editor closes straight away — a confirmation nobody ever needs is one
-  // people learn to click through.
+  // people learn to click through. The confirm resolves true/false and never
+  // rejects, so neither chain below needs an outer catch.
   const onBack = () => {
     if (!editor.dirty) {
       onClose();
@@ -70,12 +71,10 @@ export default function MultiPodEditor({ saved, defaults, onClose, onSaved }: Re
       message: t('finance.calculators.discardChangesBody'),
       confirmLabel: t('finance.calculators.discardChanges'),
       destructive: true,
-    })
-      .then((ok) => {
-        if (ok) onClose();
-        return undefined;
-      })
-      .catch(() => undefined);
+    }).then((ok) => {
+      if (ok) onClose();
+      return undefined;
+    });
   };
 
   const onDelete = () => {
@@ -84,18 +83,16 @@ export default function MultiPodEditor({ saved, defaults, onClose, onSaved }: Re
       message: t('finance.calculators.deleteComparisonBody'),
       confirmLabel: t('shell.common.delete'),
       destructive: true,
-    })
-      .then((ok) => {
-        if (!ok) return undefined;
-        return remove({ variables: { calculator_doc_id: saved.id } })
-          .then(() => {
-            notifySuccess(t('finance.calculators.comparisonDeleted'));
-            onClose();
-            return undefined;
-          })
-          .catch((error: Error) => notifyError(error.message));
-      })
-      .catch(() => undefined);
+    }).then((ok) => {
+      if (!ok) return undefined;
+      return remove({ variables: { calculator_doc_id: saved.id } })
+        .then(() => {
+          notifySuccess(t('finance.calculators.comparisonDeleted'));
+          onClose();
+          return undefined;
+        })
+        .catch((error: Error) => notifyError(error.message));
+    });
   };
 
   return (

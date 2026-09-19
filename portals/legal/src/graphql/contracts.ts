@@ -148,5 +148,6 @@ export const CONTRACT_STATUS_OPTIONS: { value: ContractStatus; label: string }[]
   { value: 'ARCHIVED', label: 'Archived' },
 ];
 
+// Every ContractStatus the server can send has an option above.
 export const contractStatusLabel = (status: ContractStatus): string =>
-  CONTRACT_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+  CONTRACT_STATUS_OPTIONS.find((o) => o.value === status)!.label;

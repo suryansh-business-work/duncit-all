@@ -115,7 +115,7 @@ function RegionCanvasInner({
     // The node id ends in `/host:<userId>` or `/admin:<userId>` — the tree
     // builder's path encoding, and the only place the raw id survives.
     const marker = data.kind === 'HOST' ? '/host:' : '/admin:';
-    const refId = node.id.split(marker)[1] ?? '';
+    const refId = node.id.split(marker)[1];
     if (refId) onOpenNode(data.kind, refId, data.label);
   };
   const handleNodeClick: NodeMouseHandler = (_event, node) => openFlowNode(node);
@@ -135,7 +135,7 @@ function RegionCanvasInner({
     (node: Node) => {
       const tone = NODE_TONE[(node.data as RegionNodeData).kind];
       const palette = theme.palette as unknown as Record<string, { main: string }>;
-      return palette[tone]?.main ?? theme.palette.text.secondary;
+      return palette[tone].main;
     },
     [theme],
   );

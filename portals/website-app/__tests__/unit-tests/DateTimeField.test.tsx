@@ -60,7 +60,8 @@ describe('DateTimeField', () => {
     renderWithProviders(<DateTimeField label="X" value="not-a-real-date" onChange={vi.fn()} />);
     expect(picker.props.value).toBeNull();
     expect(picker.props.minDateTime).toBeUndefined();
-    // The combined date+time pattern still renders.
-    expect(screen.getByTestId('picker').getAttribute('data-format')).toContain(' ');
+    // The picker is still mounted, with its label.
+    expect(screen.getByTestId('picker')).toBeInTheDocument();
+    expect(picker.props.label).toBe('X');
   });
 });

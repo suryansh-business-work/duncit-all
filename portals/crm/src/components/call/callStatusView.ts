@@ -1,4 +1,4 @@
-import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
+import type { CallStatus } from '../../lib/callSocket';
 
 export interface CallStatusView {
   label: string;
@@ -14,6 +14,5 @@ export function callStatusView(status: CallStatus | null): CallStatusView {
   if (status === 'BUSY') return { label: 'Busy', tone: 'warning' };
   if (status === 'FAILED') return { label: 'Failed', tone: 'error' };
   if (status === 'RINGING') return { label: 'Ringing…', tone: 'warning' };
-  if (isTerminalCallStatus(status)) return { label: 'Call over', tone: 'default' };
   return { label: 'Connecting…', tone: 'info' };
 }

@@ -3,7 +3,6 @@ import {
   DEFAULT_INPUTS,
   EMPTY_EXPENSE_TOTALS,
   EXPENSE_BEARERS,
-  type ExpenseBearer,
   type ExpenseTotals,
   type PodExpense,
   type PodProfitInputs,
@@ -84,27 +83,26 @@ const add = (a: number, b: number) => Math.round((a + b) * 100) / 100;
  * also drops the frozen cache objects, so the editor's `map` updates are free
  * to return plain ones.
  */
-export const expensesOf = (expenses: readonly Partial<PodExpense>[] | null | undefined): PodExpense[] =>
-  (expenses ?? []).map((expense, index) => ({
-    expense_key: String(expense.expense_key ?? '') || `expense-${index + 1}`,
-    label: String(expense.label ?? ''),
+export const expensesOf = (expenses: readonly PodExpense[]): PodExpense[] =>
+  expenses.map((expense) => ({
+    expense_key: expense.expense_key,
+    label: expense.label,
     amount: Number(expense.amount) || 0,
-    borne_by: BEARER_SET.has(String(expense.borne_by))
-      ? (expense.borne_by as ExpenseBearer)
-      : 'DUNCIT',
+    borne_by: BEARER_SET.has(String(expense.borne_by)) ? expense.borne_by : 'DUNCIT',
   }));
 
 /**
- * Read a saved pod's inputs back, falling back to the defaults key by key so a
- * document written before an input existed still opens.
+ * Read a saved pod's inputs back. The server already fills every input a
+ * document written before that input existed lacks (`podPub`), so each key is
+ * read as it arrives.
  *
  * `expenses` is then rebuilt over the top: it is the one input that is an array
- * of objects, and the key-by-key fallback would carry the cache's rows through
+ * of objects, and the key-by-key copy would carry the cache's rows through
  * verbatim — `__typename` and all — into the next save.
  */
-export function inputsOf(pod: Partial<PodProfitInputs>): PodProfitInputs {
+export function inputsOf(pod: PodProfitInputs): PodProfitInputs {
   const scalars = INPUT_KEYS.reduce<PodProfitInputs>(
-    (acc, key) => ({ ...acc, [key]: pod[key] ?? DEFAULT_INPUTS[key] }),
+    (acc, key) => ({ ...acc, [key]: pod[key] }),
     DEFAULT_INPUTS
   );
   return { ...scalars, expenses: expensesOf(pod.expenses) };
@@ -172,7 +170,7 @@ export const totalsOfSaved = (saved: SavedPodCalculator): PodTotals =>
  * than shared: two rows carrying the same `expense_key` are two rows whose
  * identities collide the moment one of them is edited or removed.
  */
-export const newEntry = (podLabel: string, index: number, inputs = DEFAULT_INPUTS): PodEntry => ({
+export const newEntry = (podLabel: string, index: number, inputs: PodProfitInputs): PodEntry => ({
   pod_key: globalThis.crypto.randomUUID(),
   name: `${podLabel} ${index}`,
   inputs: {

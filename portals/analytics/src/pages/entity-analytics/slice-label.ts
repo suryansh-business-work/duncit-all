@@ -16,7 +16,8 @@ export interface SliceLabelContext {
 /** A locale code (`hi-IN`) named in the reader's own language, or the code if it is not one. */
 function languageName(code: string, locale: string): string {
   try {
-    return new Intl.DisplayNames([locale], { type: 'language' }).of(code) ?? code;
+    // The default `fallback: 'code'` hands back the code itself for a tag it cannot name.
+    return new Intl.DisplayNames([locale], { type: 'language' }).of(code) as string;
   } catch {
     // Intl rejects a malformed tag; the stored code is still the honest label.
     return code;

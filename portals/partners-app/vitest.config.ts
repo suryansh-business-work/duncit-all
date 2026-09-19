@@ -14,7 +14,9 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts'],
+      // Test harnesses (schema mock, render helpers) are not product code —
+      // SonarQube already excludes **/__tests__/** for the same reason.
+      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts', 'src/**/__tests__/**'],
     },
     environment: 'jsdom',
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],

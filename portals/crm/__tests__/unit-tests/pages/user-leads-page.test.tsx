@@ -52,7 +52,7 @@ const leadsMock = (): MockedResponse => ({
   request: {
     query: WA_USER_LEADS,
     variables: {
-      input: { search: null, page: 1, page_size: 25, sort_by: 'imported_at', sort_dir: 'desc' },
+      input: { search: null, page: 1, page_size: 25, sort_by: 'imported_at', sort_dir: 'desc', filters: [] },
     },
   },
   result: { data: { waUserLeads: { total: 1, page: 1, page_size: 25, items: [lead] } } },
@@ -137,6 +137,7 @@ describe('UserLeadsPage', () => {
                   page_size: 25,
                   sort_by: 'imported_at',
                   sort_dir: 'desc',
+                  filters: [],
                 },
               },
             },

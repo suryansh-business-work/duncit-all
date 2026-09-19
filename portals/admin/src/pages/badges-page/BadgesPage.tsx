@@ -47,8 +47,9 @@ export default function BadgesPage() {
       condition_type: b.condition_type,
       threshold: b.threshold,
       category_id: b.category_id ?? '',
-      role_key: b.role_key ?? '',
-      sort_order: b.sort_order ?? 0,
+      // role_key and sort_order are non-null on the Badge type.
+      role_key: b.role_key,
+      sort_order: b.sort_order,
       is_active: b.is_active,
     });
     setOpen(true);

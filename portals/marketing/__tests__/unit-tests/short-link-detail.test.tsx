@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
   makeShortLinkClickRow,
@@ -170,8 +171,9 @@ describe('ClicksOverTime', () => {
 
 // ===========================================================================
 describe('click columns', () => {
+  const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
   const value = (field: string, row: ShortLinkClickRow) =>
-    getClickColumns().find((column) => column.field === field)?.valueGetter?.(row);
+    getClickColumns(t).find((column) => column.field === field)?.valueGetter?.(row);
 
   it('reads platform, location and device off a click', () => {
     const row = makeShortLinkClickRow();

@@ -20,7 +20,7 @@ describe('JobApplicationsPage', () => {
     });
     expect(await screen.findByText('Job Applications')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'View' })[0]);
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
@@ -41,7 +41,7 @@ describe('JobApplicationsPage', () => {
       mocks: [jobApplicationsTableMock(rows)],
     });
     await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'View' })[0]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

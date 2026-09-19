@@ -50,10 +50,16 @@ describe('SurveyAnswers', () => {
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
-  it('renders the default heading, and none when title is blank', async () => {
-    const { unmount } = renderAnswers(responses);
-    expect(await screen.findByText('Survey answers')).toBeInTheDocument();
+  // The heading is the caller's: omitted (or blank) renders the list bare.
+  it('renders the heading it is given, and none when it is omitted or blank', async () => {
+    const { unmount } = renderAnswers(responses, { title: 'Host survey' });
+    expect(await screen.findByText('Host survey')).toBeInTheDocument();
     unmount();
+
+    const bare = renderAnswers(responses);
+    expect(await screen.findByText('How often will you host?')).toBeInTheDocument();
+    expect(screen.queryByText('Survey answers')).not.toBeInTheDocument();
+    bare.unmount();
 
     renderAnswers(responses, { title: '' });
     expect(await screen.findByText('How often will you host?')).toBeInTheDocument();

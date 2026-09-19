@@ -30,9 +30,9 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
   const isReminder = event?.kind === 'reminder';
   const done = event?.status === 'DONE';
 
-  const openLead = () => {
-    if (!event?.leadId) return;
-    navigate(event.entity === 'VENUE_LEAD' ? `/venue-leads/${event.leadId}/view` : `/host-leads/${event.leadId}/view`);
+  // Only offered for an event that links a lead (see the button below).
+  const openLead = (linked: CalEvent) => {
+    navigate(linked.entity === 'VENUE_LEAD' ? `/venue-leads/${linked.leadId}/view` : `/host-leads/${linked.leadId}/view`);
     onClose();
   };
 
@@ -72,7 +72,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
               flexWrap: "wrap"
             }}>
               <Chip size="small" label={formatDateTime(event.date)} />
-              <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity] ?? event.entity} />
+              <Chip size="small" variant="outlined" label={ENTITY_LABEL[event.entity]} />
               {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
             </Stack>
 
@@ -106,7 +106,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
           <Stack spacing={1} sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
             {event.leadId && (
-              <DuncitButton variant="contained" startIcon={<OpenInNewIcon />} onClick={openLead}>
+              <DuncitButton variant="contained" startIcon={<OpenInNewIcon />} onClick={() => openLead(event)}>
                 Open {event.entity === 'VENUE_LEAD' ? 'venue' : 'host'} lead
               </DuncitButton>
             )}

@@ -19,10 +19,10 @@ export const expiryOptions = (t: Translate) =>
 
 /**
  * The server's link rule, verbatim: empty, an in-app path, or an https URL.
- * Plain `http://` is refused there, so it is refused here too.
+ * Plain `http://` is refused there, so it is refused here too. An empty link
+ * never reaches this check — `refineStatus` only asks about a non-empty one.
  */
 const isUsableLink = (value: string) => {
-  if (!value) return true;
   if (value.startsWith('/')) return true;
   try {
     return new URL(value).protocol === 'https:';

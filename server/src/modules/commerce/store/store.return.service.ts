@@ -4,7 +4,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { getStoreSettings } from './storeSettings.model';
 import {
@@ -144,7 +144,7 @@ export const storeReturnService = {
     if (!reason) badInput('Choose why you are returning it');
     const left = await claimable(order._id as Types.ObjectId, order.line_items);
     const productIds = (input.items ?? []).map((i) => toObjectId(i.product_id)).filter(Boolean);
-    const products = await InventoryProductModel.find({ _id: { $in: productIds } }).select('store').lean();
+    const products = await StoreProductModel.find({ _id: { $in: productIds } }).select('store').lean();
     const returnable = new Map(products.map((p) => [String(p._id), listingOf(p).returnable]));
     const items = (input.items ?? [])
       .filter((i) => Number(i.qty) > 0)

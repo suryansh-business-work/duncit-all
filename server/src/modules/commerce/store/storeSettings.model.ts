@@ -27,6 +27,8 @@ export interface IStoreSettings extends Document {
   announcement_text: string;
   announcement_link: string;
   guest_checkout_enabled: boolean;
+  /** The Tech-portal RAZORPAY entry online payments use; '' = the default entry. */
+  razorpay_account: string;
   cod_enabled: boolean;
   cod_fee: number;
   cod_min_order: number;
@@ -82,6 +84,7 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
     announcement_text: { type: String, default: '', trim: true, maxlength: 200 },
     announcement_link: { type: String, default: '', trim: true, maxlength: 500 },
     guest_checkout_enabled: { type: Boolean, default: true },
+    razorpay_account: { type: String, default: '', trim: true },
     cod_enabled: { type: Boolean, default: false },
     cod_fee: { type: Number, default: 0, min: 0, max: 10000 },
     cod_min_order: { type: Number, default: 0, min: 0 },

@@ -62,7 +62,7 @@ async function recoverOneCapture(doc: HydratedDocument<IPayment>): Promise<void>
   // handle Razorpay files its captures under.
   const orderId = doc.gateway_ref;
   if (!orderId) return;
-  const captured = await findCapturedPaymentForOrder(orderId);
+  const captured = await findCapturedPaymentForOrder(orderId, doc.metadata?.razorpay_account);
   if (!captured) return;
 
   // From here on the payment id is what Finance (and any refund) needs, so it

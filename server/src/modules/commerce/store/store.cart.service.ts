@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import { isEmailAddress } from '@utils/email';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
 import { StoreCartModel, StoreWishlistModel, type IStoreCart } from './storeCart.model';
 import { StoreStockAlertModel } from './storeReturn.model';
 import { getStoreSettings } from './storeSettings.model';
@@ -69,7 +69,7 @@ function assertProductId(productId: string) {
 
 /** Validate an add: the product is on the shelf and the variant exists. */
 async function assertAddable(productId: Types.ObjectId, variantId: string) {
-  const product = await InventoryProductModel.findOne(await listedFilter({ _id: productId })).lean();
+  const product = await StoreProductModel.findOne(listedFilter({ _id: productId })).lean();
   if (!product) badInput('This product is not available right now');
   const hasVariants = (product.variants ?? []).length > 0;
   if (hasVariants && !findVariant(product as any, variantId)) badInput('Choose an option first');
@@ -192,7 +192,7 @@ export const storeCartService = {
     const newestFirst = [...(list?.items ?? [])];
     newestFirst.sort((a, b) => b.added_at.getTime() - a.added_at.getTime());
     const ids = newestFirst.map((i) => i.product_id);
-    const docs = await InventoryProductModel.find(await listedFilter({ _id: { $in: ids } })).lean();
+    const docs = await StoreProductModel.find(listedFilter({ _id: { $in: ids } })).lean();
     const byId = new Map(docs.map((d) => [String(d._id), d]));
     return cardsFor(ids.map((id) => byId.get(String(id))).filter(Boolean));
   },
@@ -211,7 +211,7 @@ export const storeCartService = {
     const saved = list?.items.some((i) => String(i.product_id) === String(id)) ?? false;
     if (saved) {
       await StoreWishlistModel.updateOne({ owner_key: owner.owner_key }, { $pull: { items: { product_id: id } } });
-      await InventoryProductModel.updateOne(
+      await StoreProductModel.updateOne(
         { _id: id, 'store.wishlist_count': { $gt: 0 } },
         { $inc: { 'store.wishlist_count': -1 } }
       );
@@ -225,7 +225,7 @@ export const storeCartService = {
         },
         { upsert: true }
       );
-      await InventoryProductModel.updateOne({ _id: id }, { $inc: { 'store.wishlist_count': 1 } });
+      await StoreProductModel.updateOne({ _id: id }, { $inc: { 'store.wishlist_count': 1 } });
     }
     return this.wishlistIds(ctx, token);
   },

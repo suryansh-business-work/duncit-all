@@ -1,11 +1,10 @@
 import { Types, type PipelineStage } from 'mongoose';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { ProductReviewModel } from '@modules/venues/productReview/productReview.model';
 import { productReviewService } from '@modules/venues/productReview/productReview.service';
-import { StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
+import { StoreBrandModel, StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
 import { StoreCollectionModel, type IStoreCollection } from './storeMerch.model';
 import { getStoreSettings } from './storeSettings.model';
+import { StoreProductModel } from './storeProduct.model';
 import {
   discountPct,
   listingOf,
@@ -13,6 +12,7 @@ import {
   toStoreVariant,
   totalAvailable,
   unitPriceOf,
+  variantOptionsOf,
   type RatingSummary,
 } from './store.product';
 import { round2, searchRegex, toObjectIds } from './store.shared';
@@ -24,19 +24,9 @@ import { round2, searchRegex, toObjectIds } from './store.shared';
  * product's own public fields do not already say.
  */
 
-/** Listed, live and approved: the only products a shopper may ever see. */
-const LISTED_MATCH = {
-  'store.listed': true,
-  is_active: true,
-  status: { $in: ['ACTIVE', 'OUT_OF_STOCK'] },
-  listing_review_status: 'APPROVED',
-};
-
-/** A paused brand takes its products off the shelf with it. */
-export async function listedFilter(extra: Record<string, unknown> = {}) {
-  const paused = await EcommBrandModel.find({ is_active: false }).select('_id').lean();
-  const brandGate = paused.length ? { brand_id: { $nin: paused.map((b) => b._id) } } : {};
-  return { ...LISTED_MATCH, ...brandGate, ...extra };
+/** Published: the only products a shopper may ever see. */
+export function listedFilter(extra: Record<string, unknown> = {}) {
+  return { status: 'PUBLISHED', ...extra };
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -129,17 +119,7 @@ const DERIVED_STAGES: PipelineStage[] = [
       _mrp: {
         $cond: [{ $gt: ['$store.mrp', 0] }, '$store.mrp', { $ifNull: [{ $max: '$variants.mrp' }, 0] }],
       },
-      _available: {
-        $max: [
-          0,
-          {
-            $subtract: [
-              { $ifNull: ['$inventory_count', 0] },
-              { $add: [{ $ifNull: ['$requested_count', 0] }, { $ifNull: ['$reserved_count', 0] }] },
-            ],
-          },
-        ],
-      },
+      _available: { $max: [0, '$inventory_count'] },
       _variant_stock: { $sum: '$variants.inventory_count' },
     },
   },
@@ -203,7 +183,7 @@ async function collectionFilters(collection: IStoreCollection) {
   if (rules.pet_type_ids?.length) match['store.pet_type_ids'] = { $in: rules.pet_type_ids };
   if (rules.category_ids?.length) match['store.category_ids'] = { $in: rules.category_ids };
   if (rules.brand_ids?.length) match.brand_id = { $in: rules.brand_ids };
-  if (rules.tags?.length) match.tags = { $in: rules.tags };
+  if (rules.tags?.length) match['store.search_keywords'] = { $in: rules.tags };
   if (rules.featured_only) match['store.featured'] = true;
   const post: Record<string, unknown> = {};
   if (rules.min_discount_pct > 0) post._discount = { $gte: rules.min_discount_pct };
@@ -224,7 +204,6 @@ async function preFilter(input: StoreSearchInput) {
         { product_name: r },
         { 'store.title': r },
         { brand_name: r },
-        { tags: r },
         { 'store.search_keywords': r },
         { short_description: r },
       ],
@@ -252,7 +231,7 @@ async function preFilter(input: StoreSearchInput) {
   const brands = toObjectIds(input.brand_ids);
   if (brands.length) and.push({ brand_id: { $in: brands } });
   for (const f of await facetClauses(input.facets)) and.push(f);
-  return { match: await listedFilter(and.length ? { $and: and } : {}), post };
+  return { match: listedFilter(and.length ? { $and: and } : {}), post };
 }
 
 /** One `$elemMatch` per chosen facet: a product must carry one of the values. */
@@ -366,7 +345,7 @@ export const storeCatalogService = {
         pets: [{ $unwind: '$store.pet_type_ids' }, { $group: { _id: '$store.pet_type_ids', count: { $sum: 1 } } }],
       },
     });
-    const [rows] = await InventoryProductModel.aggregate<SearchFacetRows>(pipeline);
+    const [rows] = await StoreProductModel.aggregate<SearchFacetRows>(pipeline);
     const selectedBrands = new Set((input.brand_ids ?? []).map(String));
     return {
       items: await cardsFor(rows.items),
@@ -377,10 +356,10 @@ export const storeCatalogService = {
       price_min: round2(rows.price[0]?.min ?? 0),
       price_max: round2(rows.price[0]?.max ?? 0),
       brands: rows.brands.map((b) => ({
-        id: String(b._id),
+        id: b._id.toHexString(),
         name: b.name,
         count: b.count,
-        selected: selectedBrands.has(String(b._id)),
+        selected: selectedBrands.has(b._id.toHexString()),
       })),
       facets: await facetPanel(rows.facets, input.facets ?? []),
       pet_types: await petPanel(rows.pets, input.pet_type),
@@ -389,8 +368,8 @@ export const storeCatalogService = {
 
   /** A product page by its public slug. Null when it is not (or no longer) on the shelf. */
   async productBySlug(slug: string) {
-    const doc = await InventoryProductModel.findOne(
-      await listedFilter({ 'store.slug': String(slug ?? '').toLowerCase().trim() })
+    const doc = await StoreProductModel.findOne(
+      listedFilter({ 'store.slug': String(slug ?? '').toLowerCase().trim() })
     ).lean();
     if (!doc) return null;
     return productDetail(doc);
@@ -399,7 +378,7 @@ export const storeCatalogService = {
   /** Cards for ids the storefront remembers (recently viewed), in the order asked. */
   async productsByIds(ids: string[]) {
     const objectIds = toObjectIds(ids).slice(0, 24);
-    const docs = await InventoryProductModel.find(await listedFilter({ _id: { $in: objectIds } })).lean();
+    const docs = await StoreProductModel.find(listedFilter({ _id: { $in: objectIds } })).lean();
     const byId = new Map(docs.map((d) => [String(d._id), d]));
     return cardsFor(objectIds.map((id) => byId.get(String(id))).filter(Boolean));
   },
@@ -408,13 +387,13 @@ export const storeCatalogService = {
   async related(productId: string, limit = 12) {
     const [self] = toObjectIds([productId]);
     if (!self) return [];
-    const doc = await InventoryProductModel.findById(self).select('store').lean();
+    const doc = await StoreProductModel.findById(self).select('store').lean();
     const listing = listingOf(doc ?? {});
     const or: Record<string, unknown>[] = [];
     if (listing.category_ids.length) or.push({ 'store.category_ids': { $in: listing.category_ids } });
     if (listing.pet_type_ids.length) or.push({ 'store.pet_type_ids': { $in: listing.pet_type_ids } });
     if (or.length === 0) return [];
-    const docs = await InventoryProductModel.find(await listedFilter({ _id: { $ne: self }, $or: or }))
+    const docs = await StoreProductModel.find(listedFilter({ _id: { $ne: self }, $or: or }))
       .sort({ 'store.sold_count': -1, 'store.sort_rank': -1 })
       .limit(Math.min(24, Math.max(1, limit)))
       .lean();
@@ -427,19 +406,19 @@ export const storeCatalogService = {
     if (text.length < 2) return { products: [], categories: [], brands: [] };
     const r = searchRegex(text);
     const [docs, categories, brands] = await Promise.all([
-      InventoryProductModel.find(
-        await listedFilter({ $or: [{ product_name: r }, { 'store.title': r }, { 'store.search_keywords': r }] })
+      StoreProductModel.find(
+        listedFilter({ $or: [{ product_name: r }, { 'store.title': r }, { 'store.search_keywords': r }] })
       )
         .sort({ 'store.sold_count': -1 })
         .limit(6)
         .lean(),
       StoreCategoryModel.find({ is_active: true, name: r }).limit(5).lean(),
-      EcommBrandModel.find({ is_active: true, status: 'APPROVED', brand_name: r }).limit(5).lean(),
+      StoreBrandModel.find({ is_active: true, name: r }).sort({ sort_order: 1, name: 1 }).limit(5).lean(),
     ]);
     return {
       products: await cardsFor(docs),
       categories: categories.map((c) => ({ id: String(c._id), name: c.name, slug: c.slug })),
-      brands: brands.map((b) => ({ id: String(b._id), name: b.brand_name, logo_url: b.logo_url ?? '' })),
+      brands: brands.map((b) => ({ id: String(b._id), name: b.name, logo_url: b.logo_url })),
     };
   },
 
@@ -447,10 +426,7 @@ export const storeCatalogService = {
   async recordView(productId: string) {
     const [id] = toObjectIds([productId]);
     if (!id) return false;
-    const res = await InventoryProductModel.updateOne(
-      { _id: id, 'store.listed': true },
-      { $inc: { 'store.view_count': 1 } }
-    );
+    const res = await StoreProductModel.updateOne(listedFilter({ _id: id }), { $inc: { 'store.view_count': 1 } });
     return res.modifiedCount > 0;
   },
 };
@@ -473,7 +449,7 @@ async function breadcrumbsFor(categoryId: Types.ObjectId | undefined) {
 
 /** Every image a product page can show, product first, no duplicates. */
 function galleryOf(doc: any): string[] {
-  const all = [doc.image_url, ...(doc.images ?? []), ...(doc.variants ?? []).flatMap((v: any) => v.images ?? [])];
+  const all = [...(doc.images ?? []), ...(doc.variants ?? []).flatMap((v: any) => v.images ?? [])];
   return [...new Set(all.filter(Boolean))];
 }
 
@@ -484,7 +460,7 @@ async function productDetail(doc: any) {
     StorePetTypeModel.find({ _id: { $in: listing.pet_type_ids } }).lean(),
     StoreCategoryModel.find({ _id: { $in: listing.category_ids } }).lean(),
     StoreFacetModel.find({ _id: { $in: listing.facet_values.map((f) => f.facet_id) } }).lean(),
-    doc.brand_id ? EcommBrandModel.findById(doc.brand_id).lean() : null,
+    doc.brand_id ? StoreBrandModel.findOne({ _id: doc.brand_id, is_active: true }).lean() : null,
     productReviewService.summary(String(doc._id)),
   ]);
   const variants = (doc.variants ?? []).map((v: any) => toStoreVariant(doc, v));
@@ -507,12 +483,10 @@ async function productDetail(doc: any) {
     ingredients: listing.ingredients,
     feeding_guide: listing.feeding_guide,
     care_instructions: listing.care_instructions,
-    options: (doc.options ?? []).map((o: any) => ({ name: o.name, values: o.values ?? [] })),
+    options: variantOptionsOf(doc),
     variants,
     default_variant_id: lead?.id ?? null,
-    brand: brand
-      ? { id: String(brand._id), name: brand.brand_name, logo_url: brand.logo_url ?? '', tagline: brand.tagline ?? '' }
-      : null,
+    brand: brand ? { id: String(brand._id), name: brand.name, logo_url: brand.logo_url, tagline: brand.tagline } : null,
     pet_types: pets.map((p) => ({ id: String(p._id), name: p.name, slug: p.slug })),
     categories: categories.map((c) => ({ id: String(c._id), name: c.name, slug: c.slug })),
     breadcrumbs: await breadcrumbsFor(listing.category_ids[0]),
@@ -527,10 +501,10 @@ async function productDetail(doc: any) {
     cod_available: settings.cod_enabled && listing.cod_available,
     returnable: settings.returns_enabled && listing.returnable,
     return_window_days: listing.return_window_days ?? settings.return_window_days,
-    max_per_order: listing.max_per_order || Number(doc.max_order_qty) || settings.max_qty_per_line,
-    min_order_qty: Math.max(1, Number(doc.min_order_qty) || 1),
-    weight_volume: doc.weight_volume ?? '',
-    tags: doc.tags ?? [],
+    max_per_order: listing.max_per_order || settings.max_qty_per_line,
+    min_order_qty: 1,
+    weight_volume: '',
+    tags: [],
     seo_title: listing.seo_title,
     seo_description: listing.seo_description,
     star_counts: summary.star_counts,

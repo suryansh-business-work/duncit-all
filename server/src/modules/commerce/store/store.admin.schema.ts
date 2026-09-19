@@ -16,6 +16,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     announcement_text: String!
     announcement_link: String!
     guest_checkout_enabled: Boolean!
+    "The Tech-portal Razorpay account online payments use; empty = the default one."
+    razorpay_account: String!
     cod_enabled: Boolean!
     cod_fee: Float!
     cod_min_order: Float!
@@ -65,6 +67,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     announcement_text: String
     announcement_link: String
     guest_checkout_enabled: Boolean
+    "A Tech-portal Razorpay entry id, or empty for the default one."
+    razorpay_account: String
     cod_enabled: Boolean
     cod_fee: Float
     cod_min_order: Float
@@ -286,23 +290,27 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     ends_at: String
   }
 
-  "One catalogue product as the listings table shows it."
-  type StoreListingRow {
+  "DRAFT is saved but not on the store; PUBLISHED is on sale; ARCHIVED is retired."
+  enum StoreProductStatus {
+    DRAFT
+    PUBLISHED
+    ARCHIVED
+  }
+
+  type StoreAdminProductRow {
     id: ID!
     product_name: String!
     sku: String!
+    brand_id: ID
     brand_name: String!
     image_url: String!
     price: Float!
     mrp: Float!
     available: Int!
     variant_count: Int!
-    status: String!
-    is_active: Boolean!
-    review_status: String!
-    "False when no Duncit warehouse is set — the parcel ships from the default pickup."
+    status: StoreProductStatus!
+    "False until a Duncit warehouse is picked — a product cannot be published without one."
     has_warehouse: Boolean!
-    listed: Boolean!
     slug: String!
     title: String!
     badge: String!
@@ -313,24 +321,29 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     sold_count: Int!
     view_count: Int!
     wishlist_count: Int!
-    listed_at: String
+    published_at: String
     updated_at: String!
   }
 
-  type StoreListingTablePage {
-    rows: [StoreListingRow!]!
+  type StoreAdminProductTablePage {
+    rows: [StoreAdminProductRow!]!
     total: Int!
     page: Int!
     page_size: Int!
   }
 
-  type StoreListingVariant {
+  type StoreAdminProductVariant {
     id: ID!
-    label: String!
+    option_label: String!
     sku: String!
     price: Float!
     mrp: Float!
-    available: Int!
+    stock: Int!
+    images: [String!]!
+    weight_kg: Float!
+    length_cm: Float!
+    breadth_cm: Float!
+    height_cm: Float!
   }
 
   type StoreFacetValue {
@@ -338,22 +351,20 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     values: [String!]!
   }
 
-  "The full editable listing, with the product facts shown beside it."
-  type StoreListing {
+  "One ecomm product, everything the editor page shows and saves back."
+  type StoreAdminProduct {
     id: ID!
     product_name: String!
     sku: String!
+    brand_id: ID
     brand_name: String!
     image_url: String!
     price: Float!
     mrp: Float!
     available: Int!
     variant_count: Int!
-    status: String!
-    is_active: Boolean!
-    review_status: String!
+    status: StoreProductStatus!
     has_warehouse: Boolean!
-    listed: Boolean!
     slug: String!
     title: String!
     badge: String!
@@ -364,12 +375,21 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     sold_count: Int!
     view_count: Int!
     wishlist_count: Int!
-    listed_at: String
+    published_at: String
     updated_at: String!
     short_description: String!
     description: String!
     images: [String!]!
-    variants: [StoreListingVariant!]!
+    stock: Int!
+    low_stock_alert: Int!
+    weight_kg: Float!
+    length_cm: Float!
+    breadth_cm: Float!
+    height_cm: Float!
+    warehouse_id: ID
+    "What the variants differ by, e.g. Size."
+    variant_option: String!
+    variants: [StoreAdminProductVariant!]!
     facet_values: [StoreFacetValue!]!
     highlights: [String!]!
     specifications: [StoreSpec!]!
@@ -396,20 +416,46 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     value: String!
   }
 
-  input StoreVariantMrpInput {
-    variant_id: ID!
-    mrp: Float!
+  input StoreAdminVariantInput {
+    "An existing variant's id — omitted for a new one."
+    id: ID
+    option_label: String!
+    sku: String
+    price: Float!
+    mrp: Float
+    stock: Int!
+    images: [String!]
+    weight_kg: Float
+    length_cm: Float
+    breadth_cm: Float
+    height_cm: Float
   }
 
-  input StoreListingInput {
-    listed: Boolean
+  input StoreAdminProductInput {
+    product_name: String!
+    "Blank mints a PET-XXXXXX code."
+    sku: String
+    brand_id: ID
+    short_description: String
+    description: String
+    images: [String!]
+    "Ignored when there are variants — each variant carries its own price."
+    price: Float
+    stock: Int
+    low_stock_alert: Int
+    weight_kg: Float
+    length_cm: Float
+    breadth_cm: Float
+    height_cm: Float
+    warehouse_id: ID
+    variant_option: String
+    variants: [StoreAdminVariantInput!]
     slug: String
     title: String
     pet_type_ids: [ID!]
     category_ids: [ID!]
     facet_values: [StoreFacetValueInput!]
     mrp: Float
-    variant_mrps: [StoreVariantMrpInput!]
     highlights: [String!]
     specifications: [StoreSpecInput!]
     ingredients: String
@@ -427,6 +473,54 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Null uses the store default."
     return_window_days: Int
     max_per_order: Int
+  }
+
+  "One of Duncit's own warehouses — where a store product ships from."
+  type StoreWarehouse {
+    id: ID!
+    nickname: String!
+    city: String!
+    pincode: String!
+    is_default: Boolean!
+    "Registered with ShipRocket, so parcels can be picked up from it."
+    shiprocket_ready: Boolean!
+  }
+
+  enum StoreRazorpayMode {
+    LIVE
+    TEST
+    UNKNOWN
+  }
+
+  "A Razorpay account from the Tech portal's RAZORPAY entries. Never carries a secret."
+  type StoreRazorpayAccount {
+    id: ID!
+    name: String!
+    "The key id, shortened — which account this is at a glance."
+    key_hint: String!
+    mode: StoreRazorpayMode!
+    is_default: Boolean!
+    is_active: Boolean!
+  }
+
+  type StoreAdminBrand {
+    id: ID!
+    name: String!
+    slug: String!
+    logo_url: String!
+    tagline: String!
+    description: String!
+    sort_order: Int!
+    is_active: Boolean!
+  }
+
+  input StoreBrandInput {
+    name: String!
+    slug: String
+    logo_url: String
+    tagline: String
+    description: String
+    is_active: Boolean
   }
 
   type StoreOrderTablePage {
@@ -635,8 +729,12 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Cards for picked product ids, in the order given."
     storeAdminPickerProducts(ids: [ID!]!): [StoreProductCard!]!
     storeAdminSections: [StoreAdminSection!]!
-    storeListingsTable(query: TableQueryInput): StoreListingTablePage!
-    storeListing(product_id: ID!): StoreListing!
+    storeAdminProductsTable(query: TableQueryInput): StoreAdminProductTablePage!
+    storeAdminProduct(id: ID!): StoreAdminProduct!
+    storeAdminWarehouses: [StoreWarehouse!]!
+    storeAdminBrands: [StoreAdminBrand!]!
+    "The Razorpay accounts the store can take online payments with."
+    storeAdminRazorpayAccounts: [StoreRazorpayAccount!]!
     storeOrdersTable(query: TableQueryInput): StoreOrderTablePage!
     storeAdminOrder(id: ID!): StoreAdminOrder!
     storeCustomerOrders(email: String!): [ProductOrder!]!
@@ -669,9 +767,13 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeSaveSection(id: ID, input: StoreSectionInput!): StoreAdminSection!
     storeDeleteSection(id: ID!): Boolean!
     storeReorderSections(ids: [ID!]!): Boolean!
-    storeSaveListing(product_id: ID!, input: StoreListingInput!): StoreListing!
-    "Put products on / take them off the shelf. Answers how many changed."
-    storeSetListed(product_ids: [ID!]!, listed: Boolean!): Int!
+    "Create (no id) or update an ecomm product. DRAFT saves what is filled in; PUBLISHED first checks it can be sold, then puts it on the store."
+    storeSaveProduct(id: ID, input: StoreAdminProductInput!, status: StoreProductStatus!): StoreAdminProduct!
+    "Publish, move to draft or archive many at once. Answers how many changed — a product not ready to publish is skipped."
+    storeSetProductStatus(ids: [ID!]!, status: StoreProductStatus!): Int!
+    storeSaveBrand(id: ID, input: StoreBrandInput!): StoreAdminBrand!
+    storeDeleteBrand(id: ID!): Boolean!
+    storeReorderBrands(ids: [ID!]!): Boolean!
     "Add pet types / categories to many products at once."
     storeBulkFile(product_ids: [ID!]!, pet_type_ids: [ID!], category_ids: [ID!]): Int!
     storeUpdateOrderStatus(id: ID!, status: FulfilmentStatus!, note: String): ProductOrder!

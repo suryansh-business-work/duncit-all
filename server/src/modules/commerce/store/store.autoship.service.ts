@@ -6,7 +6,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { sendEmail } from '@services/email/email.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { UserModel } from '@modules/access/user/user.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { buildBuyerFields } from '@modules/finance/payment/payment.service';
 import {
@@ -86,8 +86,8 @@ async function ownSub(ctx: GraphQLContext, id: string) {
 
 /** The subscription as its buyer reads it, product card and live price included. */
 async function subsOut(subs: IStoreSubscription[], settings: IStoreSettings) {
-  const products = await InventoryProductModel.find({ _id: { $in: subs.map((s) => s.product_id) } }).lean();
-  const listed = await InventoryProductModel.find(await listedFilter({ _id: { $in: subs.map((s) => s.product_id) } }))
+  const products = await StoreProductModel.find({ _id: { $in: subs.map((s) => s.product_id) } }).lean();
+  const listed = await StoreProductModel.find(listedFilter({ _id: { $in: subs.map((s) => s.product_id) } }))
     .select('_id')
     .lean();
   const listedIds = new Set(listed.map((p) => String(p._id)));
@@ -162,7 +162,7 @@ const SUBSCRIPTION_TABLE: TableEntityConfig = {
 
 /** The product a subscription may be for: on the shelf, with its variant. */
 async function sellableProduct(productId: string, variantId: string) {
-  const product = await InventoryProductModel.findOne(await listedFilter({ _id: toObjectId(productId) })).lean();
+  const product = await StoreProductModel.findOne(listedFilter({ _id: toObjectId(productId) })).lean();
   if (!product) badInput('This product is not available for Autoship');
   const variant = findVariant(product as any, variantId);
   if ((product.variants ?? []).length > 0 && !variant) badInput('Choose an option first');

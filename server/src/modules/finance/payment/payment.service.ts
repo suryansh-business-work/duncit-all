@@ -807,6 +807,8 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
     orderId: input.razorpay_order_id,
     paymentId: input.razorpay_payment_id,
     signature: input.razorpay_signature,
+    // The account that opened the order — a surface may choose one other than the default.
+    account: doc.metadata?.razorpay_account,
   });
   if (!ok) {
     doc.status = 'FAILED';

@@ -1,12 +1,12 @@
 import { Types } from 'mongoose';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { getServiceability, isShiprocketConfigured } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { applyCoins, computeQuote, type QuoteBreakup } from '@modules/finance/payment/payment.service';
 import { logs } from '@observability/log';
 import type { IStoreSettings } from './storeSettings.model';
+import { StoreProductModel } from './storeProduct.model';
+import { listedFilter } from './store.catalog.service';
 import {
   availableFor,
   discountPct,
@@ -64,26 +64,11 @@ export interface StoreLine {
   issue: StoreLineIssue | null;
 }
 
+/** The asked-for products that are on the shelf right now (published), by id. */
 async function loadProducts(ids: string[]) {
   const valid = [...new Set(ids)].filter((id) => Types.ObjectId.isValid(id));
-  const products = await InventoryProductModel.find({ _id: { $in: valid } }).lean();
-  const brandIds = [...new Set(products.map((p) => (p.brand_id ? String(p.brand_id) : '')).filter(Boolean))];
-  const paused = brandIds.length
-    ? await EcommBrandModel.find({ _id: { $in: brandIds }, is_active: false }).select('_id').lean()
-    : [];
-  const pausedSet = new Set(paused.map((b) => String(b._id)));
-  return new Map(products.map((p) => [String(p._id), { product: p, brandPaused: p.brand_id ? pausedSet.has(String(p.brand_id)) : false }]));
-}
-
-/** On the shelf right now: listed, live, approved, with its brand trading. */
-function isSellable(p: any, brandPaused: boolean) {
-  return (
-    p.store?.listed === true &&
-    p.is_active !== false &&
-    (p.status === 'ACTIVE' || p.status === 'OUT_OF_STOCK') &&
-    p.listing_review_status === 'APPROVED' &&
-    !brandPaused
-  );
+  const products = await StoreProductModel.find(listedFilter({ _id: { $in: valid } })).lean();
+  return new Map(products.map((p) => [String(p._id), p]));
 }
 
 function blankLine(input: StoreLineInput, issue: StoreLineIssue): StoreLine {
@@ -127,7 +112,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
   let issue: StoreLineIssue | null = null;
   if (available <= 0) issue = 'OUT_OF_STOCK';
   else if (quantity < requested) issue = 'QTY_REDUCED';
-  const images = [...(variant?.images ?? []), ...(p.images ?? []), p.image_url].filter(Boolean);
+  const images = [...(variant?.images ?? []), ...(p.images ?? [])].filter(Boolean);
   return {
     product_id: String(p._id),
     pod_id: '',
@@ -159,9 +144,9 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
 export async function resolveStoreLines(items: StoreLineInput[], settings: IStoreSettings): Promise<StoreLine[]> {
   const byId = await loadProducts(items.map((i) => String(i.product_id)));
   return items.map((item) => {
-    const hit = byId.get(String(item.product_id));
-    if (!hit || !isSellable(hit.product, hit.brandPaused)) return blankLine(item, 'UNAVAILABLE');
-    return buildLine(item, hit.product, settings);
+    const product = byId.get(String(item.product_id));
+    if (!product) return blankLine(item, 'UNAVAILABLE');
+    return buildLine(item, product, settings);
   });
 }
 

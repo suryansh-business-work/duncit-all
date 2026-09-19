@@ -1,4 +1,5 @@
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
+import { listedFilter } from './store.catalog.service';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { getAppTimeZone } from '@utils/app-time';
 import { StoreCartModel } from './storeCart.model';
@@ -102,13 +103,7 @@ async function newCustomers(from: Date) {
 
 /** What needs someone today, whatever the period. */
 async function workQueue() {
-  const listed = { 'store.listed': true, is_active: true };
-  const available = {
-    $subtract: [
-      { $ifNull: ['$inventory_count', 0] },
-      { $add: [{ $ifNull: ['$requested_count', 0] }, { $ifNull: ['$reserved_count', 0] }] },
-    ],
-  };
+  const listed = listedFilter();
   const [toShip, returnsOpen, stock, abandoned, listedCount] = await Promise.all([
     ProductOrderModel.countDocuments({
       channel: 'PET_STORE',
@@ -116,9 +111,9 @@ async function workQueue() {
       fulfilment_status: { $in: ['PENDING', 'AWAITING_SHIPMENT', 'FAILED'] },
     }),
     StoreReturnModel.countDocuments({ status: { $in: ['REQUESTED', 'APPROVED', 'PICKUP_SCHEDULED', 'RECEIVED'] } }),
-    InventoryProductModel.aggregate<Doc>([
+    StoreProductModel.aggregate<Doc>([
       { $match: listed },
-      { $project: { available, alert: { $ifNull: ['$low_stock_alert', 0] } } },
+      { $project: { available: '$inventory_count', alert: '$low_stock_alert' } },
       {
         $group: {
           _id: null,
@@ -133,7 +128,7 @@ async function workQueue() {
       'items.0': { $exists: true },
       last_activity_at: { $lt: new Date(Date.now() - 60 * 60 * 1000), $gt: new Date(Date.now() - 7 * DAY_MS) },
     }),
-    InventoryProductModel.countDocuments(listed),
+    StoreProductModel.countDocuments(listed),
   ]);
   return {
     to_ship: toShip,

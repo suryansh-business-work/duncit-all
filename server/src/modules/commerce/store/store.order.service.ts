@@ -11,7 +11,7 @@ import { productOrderService } from '@modules/commerce/productOrder/productOrder
 import { cancelOrders } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { coinService } from '@modules/finance/coin/coin.service';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { getStoreSettings } from './storeSettings.model';
@@ -127,9 +127,9 @@ export async function restock(items: { product_id: unknown; variant_id?: string;
       inc['variants.$[v].inventory_count'] = qty;
       options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
     }
-    await InventoryProductModel.updateOne({ _id: productId }, { $inc: inc }, options);
+    await StoreProductModel.updateOne({ _id: productId }, { $inc: inc }, options);
   }
-  await InventoryProductModel.updateMany({ 'store.sold_count': { $lt: 0 } }, { $set: { 'store.sold_count': 0 } });
+  await StoreProductModel.updateMany({ 'store.sold_count': { $lt: 0 } }, { $set: { 'store.sold_count': 0 } });
 }
 
 interface CancelOptions {

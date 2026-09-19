@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { Types, type ClientSession } from 'mongoose';
+import { Types, type ClientSession, type Model } from 'mongoose';
 import { GraphQLError } from 'graphql';
 
 import {
@@ -11,6 +11,7 @@ import {
   type OrderPaymentMethod,
 } from './productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { availableOf, notifyStockCrossings } from '@modules/venues/inventory/inventory.service';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -27,6 +28,9 @@ const newOrderNo = () =>
 const newPickupRef = () => `PU-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
 const asMethod = (v: any): FulfilmentMethod => (String(v).toUpperCase() === 'SHIP' ? 'SHIP' : 'PICKUP');
+
+/** Where an order's products live: the pet store's own catalogue, or the pod shop's inventory. */
+const catalogFor = (petStore: boolean): Model<any> => (petStore ? StoreProductModel : InventoryProductModel);
 
 const toPub = (d: IProductOrder) => ({
   id: String(d._id),
@@ -147,12 +151,12 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
  * ownership/dimensions so the order carries everything ShipRocket needs even if
  * the product is later edited or deleted. When the buyer chose a variant, the
  * variant's sku/image/dimensions win (correct parcel data per combination). */
-async function buildLineItem(line: any, session?: ClientSession) {
+async function buildLineItem(line: any, petStore: boolean, session?: ClientSession) {
   const productId = String(line.product_id || '');
   const qty = Number(line.quantity ?? line.qty) || 0;
   const unit_cost = Number(line.unit_cost) || 0;
   const product = Types.ObjectId.isValid(productId)
-    ? await InventoryProductModel.findById(productId).session(session ?? null)
+    ? await catalogFor(petStore).findById(productId).session(session ?? null)
     : null;
   const variantId = line.variant_id ? String(line.variant_id) : '';
   const variant = variantId
@@ -171,7 +175,8 @@ async function buildLineItem(line: any, session?: ClientSession) {
     unit_cost,
     gross: round2(Number(line.gross) || unit_cost * qty),
     ownership: ((product as any)?.ownership ?? 'DUNCIT') as 'DUNCIT' | 'BRAND',
-    brand_id: (product as any)?.brand_id ?? null,
+    // A pet-store product's brand is the store's own, never a partner brand's.
+    brand_id: petStore ? null : ((product as any)?.brand_id ?? null),
     weight_kg: Number(variant?.weight_kg || (product as any)?.weight_kg || 0),
     length_cm: Number(variant?.length_cm || (product as any)?.length_cm || 0),
     breadth_cm: Number(variant?.breadth_cm || (product as any)?.breadth_cm || 0),
@@ -211,12 +216,14 @@ async function recordStockForOrder(order: IProductOrder, session?: ClientSession
     if (order.channel === 'PET_STORE') inc['store.sold_count'] = qty;
     // findOneAndUpdate rather than updateOne so the post-decrement counts come
     // back with the write that caused them — a crossing needs both sides.
-    const product = await InventoryProductModel.findOneAndUpdate(
+    const petStore = order.channel === 'PET_STORE';
+    const product = await catalogFor(petStore).findOneAndUpdate(
       { _id: item.product_id },
       { $inc: inc },
       { ...options, new: true }
     );
-    if (product) {
+    // Partner low-stock alerts are about the pod shop's inventory, not the store's.
+    if (product && !petStore) {
       // `$inc` is atomic, so this decrement IS the difference: adding it back
       // to the returned doc is the state before the sale, and no second read
       // can disagree with it. A pod-channel sale drops inventory and
@@ -273,6 +280,7 @@ const EMPTY_WAREHOUSE: Warehouse = { id: '', nickname: '' };
  * carry the right pickup origin (nickname = the ShipRocket-registered pickup). */
 async function buildWarehouseMap(
   lines: any[],
+  petStore: boolean,
   session?: ClientSession
 ): Promise<Map<string, Warehouse>> {
   const map = new Map<string, Warehouse>();
@@ -280,7 +288,8 @@ async function buildWarehouseMap(
     new Set(lines.map((l) => String(l.product_id || '')).filter((id) => Types.ObjectId.isValid(id)))
   );
   if (productIds.length === 0) return map;
-  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+  const products = await catalogFor(petStore)
+    .find({ _id: { $in: productIds } })
     .select('pickup_location_id')
     .session(session ?? null)
     .lean();
@@ -384,6 +393,8 @@ const DELIVERED_STATUSES = new Set<FulfilmentStatus>(['DELIVERED', 'PICKED_UP'])
  * brand with two products on the same order hears once rather than twice.
  */
 async function requestBrandFeedback(order: IProductOrder) {
+  // The pet store sells its own catalogue: there is no partner brand to ask.
+  if (order.channel === 'PET_STORE') return;
   const productIds = order.line_items.map((line) => line.product_id);
   if (productIds.length === 0) return;
   const products = await InventoryProductModel.find({ _id: { $in: productIds } })
@@ -523,7 +534,8 @@ export async function afterStatusChange(order: IProductOrder, previous: Fulfilme
 /** Persist the order doc for one (pod, method, warehouse) group. */
 async function createOrderForGroup(payment: IPayment, input: CreateOrderInput) {
   const { group, shippingAddress, pickupVenueId, shippingCharge, share, session } = input;
-  const line_items = await Promise.all(group.lines.map((l) => buildLineItem(l, session)));
+  const petStore = share.channel === 'PET_STORE';
+  const line_items = await Promise.all(group.lines.map((l) => buildLineItem(l, petStore, session)));
   const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
   const isShip = group.method === 'SHIP';
   const charge = isShip ? round2(shippingCharge) : 0;
@@ -577,10 +589,12 @@ export const productOrderService = {
     const lines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
     if (lines.length === 0) return [];
 
-    await applyProductDeliveryOverrides(lines, session);
+    // A pet-store payment ships every line already; the delivery override is the pod shop's.
+    const petStore = storeFactsOf(payment) !== null;
+    if (!petStore) await applyProductDeliveryOverrides(lines, session);
     const topMethod = asMethod(meta.fulfilment_method ?? 'PICKUP');
     const fallbackPodId = payment.pod_id ? String(payment.pod_id) : '';
-    const warehouseMap = await buildWarehouseMap(lines, session);
+    const warehouseMap = await buildWarehouseMap(lines, petStore, session);
     const shippingCharges = buildShippingChargeMap(meta.shipping);
     const groups = groupOrderLines(lines, topMethod, warehouseMap, fallbackPodId);
     const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id), session);
@@ -612,12 +626,15 @@ export const productOrderService = {
       created.push(doc);
       // Point of sale: stock moves only when this order doc is first created.
       await recordStockForOrder(doc, session);
-      // Leaderboard points for the brand owner(s) behind this order's lines.
+      // Leaderboard points for the brand owner(s) behind this order's lines —
+      // partner brands only, so none for the pet store's own catalogue.
       // Idempotent inside the service, so a replayed finalize re-inserts nothing.
-      const { leaderboardService } = await import(
-        '@modules/engagement/leaderboard/leaderboard.service'
-      );
-      await leaderboardService.awardProductSales(doc, session);
+      if (!petStore) {
+        const { leaderboardService } = await import(
+          '@modules/engagement/leaderboard/leaderboard.service'
+        );
+        await leaderboardService.awardProductSales(doc, session);
+      }
     }
     return created.map(toPub);
   },

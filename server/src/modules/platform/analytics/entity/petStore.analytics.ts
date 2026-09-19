@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FULFILMENT_STATUSES } from '@modules/commerce/productOrder/productOrder.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { StoreCartModel } from '@modules/commerce/store/storeCart.model';
 import { StoreReturnModel } from '@modules/commerce/store/storeReturn.model';
 import { StoreSubscriptionModel } from '@modules/commerce/store/storeSubscription.model';
@@ -69,7 +69,7 @@ async function liveCounts(window: AnalyticsWindow) {
   const [returnsNow, returnsBefore, listed, subscriptions, cartsNow, cartsBefore] = await Promise.all([
     StoreReturnModel.countDocuments({ created_at: { $gte: window.from, $lt: window.to } }),
     StoreReturnModel.countDocuments({ created_at: { $gte: window.prevFrom, $lt: window.prevTo } }),
-    InventoryProductModel.countDocuments({ 'store.listed': true, is_active: true }),
+    StoreProductModel.countDocuments({ status: 'PUBLISHED' }),
     StoreSubscriptionModel.countDocuments({ status: 'ACTIVE' }),
     StoreCartModel.countDocuments({
       'items.0': { $exists: true },

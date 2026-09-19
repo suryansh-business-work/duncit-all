@@ -70,7 +70,7 @@ export interface IStoreReturn extends Document {
 
 const returnItemSchema = new Schema<IStoreReturnItem>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     name: { type: String, default: '' },
     variant_label: { type: String, default: '' },
@@ -132,7 +132,7 @@ export interface IStoreStockAlert extends Document {
 
 const stockAlertSchema = new Schema<IStoreStockAlert>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },

@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import type { IStoreSettings } from './storeSettings.model';
 import { storeAdminMerchService } from './store.admin.merch.service';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
+import { storeAdminProductsService } from './store.admin.products.service';
 import { storeOrderService } from './store.order.service';
 import { storeReturnService } from './store.return.service';
 import { storeDashboardService } from './store.dashboard.service';
@@ -45,8 +46,11 @@ export const storeAdminResolvers = {
     storeAdminCollectionPreview: admin((a) => storeAdminMerchService.previewCollection(a.slug)),
     storeAdminPickerProducts: admin((a) => storeAdminMerchService.productsForPicker(a.ids ?? [])),
     storeAdminSections: admin(() => storeAdminMerchService.sections()),
-    storeListingsTable: admin((a) => storeAdminCatalogService.listingsTable(a.query)),
-    storeListing: admin((a) => storeAdminCatalogService.listing(a.product_id)),
+    storeAdminProductsTable: admin((a) => storeAdminProductsService.table(a.query)),
+    storeAdminProduct: admin((a) => storeAdminProductsService.get(a.id)),
+    storeAdminWarehouses: admin(() => storeAdminProductsService.warehouses()),
+    storeAdminBrands: admin(() => storeAdminMerchService.brands()),
+    storeAdminRazorpayAccounts: admin(() => storeAdminMerchService.razorpayAccounts()),
     storeOrdersTable: admin((a) => storeOrderService.table(a.query)),
     storeAdminOrder: admin((a) => storeOrderService.adminDetail(a.id)),
     storeCustomerOrders: admin((a) => storeOrderService.forCustomer(a.email)),
@@ -78,11 +82,14 @@ export const storeAdminResolvers = {
     storeSaveSection: admin((a) => storeAdminMerchService.saveSection(a.id, a.input)),
     storeDeleteSection: admin((a) => storeAdminMerchService.deleteSection(a.id)),
     storeReorderSections: admin((a) => storeAdminMerchService.reorderSections(a.ids)),
-    storeSaveListing: admin((a) => storeAdminCatalogService.saveListing(a.product_id, a.input)),
-    storeSetListed: admin((a) => storeAdminCatalogService.setListed(a.product_ids, a.listed)),
+    storeSaveProduct: admin((a, ctx) => storeAdminProductsService.save(String(ctx.user?.id), a.id, a.input, a.status)),
+    storeSetProductStatus: admin((a) => storeAdminProductsService.setStatus(a.ids, a.status)),
     storeBulkFile: admin((a) =>
-      storeAdminCatalogService.bulkFile(a.product_ids, a.pet_type_ids ?? [], a.category_ids ?? [])
+      storeAdminProductsService.bulkFile(a.product_ids, a.pet_type_ids ?? [], a.category_ids ?? [])
     ),
+    storeSaveBrand: admin((a) => storeAdminMerchService.saveBrand(a.id, a.input)),
+    storeDeleteBrand: admin((a) => storeAdminMerchService.deleteBrand(a.id)),
+    storeReorderBrands: admin((a) => storeAdminMerchService.reorderBrands(a.ids)),
     storeUpdateOrderStatus: admin((a) => storeOrderService.updateStatus(a.id, a.status, a.note ?? '')),
     storeAddOrderNote: admin((a, ctx) => storeOrderService.addNote(ctx, a.id, a.text)),
     storeAdminCancelOrder: admin((a, ctx) => storeOrderService.adminCancel(ctx, a.id, a.reason, a.refund_mode)),

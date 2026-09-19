@@ -1,12 +1,11 @@
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { logs } from '@observability/log';
-import { StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
+import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
 import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model';
 import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
+import { StoreProductModel } from './storeProduct.model';
 import { cardsFor, listedFilter, storeCatalogService, type StoreSort } from './store.catalog.service';
 import { findVariant, listingOf } from './store.product';
 import { iso, toObjectId } from './store.shared';
@@ -100,17 +99,12 @@ function categoryTree(all: any[]) {
 
 /** Brands that actually have something on the shelf. */
 async function shelfBrands(limit = 40) {
-  const ids = await InventoryProductModel.distinct('brand_id', await listedFilter({ brand_id: { $ne: null } }));
-  const brands = await EcommBrandModel.find({ _id: { $in: ids }, is_active: true })
-    .sort({ brand_name: 1 })
+  const ids = await StoreProductModel.distinct('brand_id', listedFilter({ brand_id: { $ne: null } }));
+  const brands = await StoreBrandModel.find({ _id: { $in: ids }, is_active: true })
+    .sort({ sort_order: 1, name: 1 })
     .limit(limit)
     .lean();
-  return brands.map((b) => ({
-    id: String(b._id),
-    name: b.brand_name,
-    logo_url: b.logo_url ?? '',
-    tagline: b.tagline ?? '',
-  }));
+  return brands.map((b) => ({ id: String(b._id), name: b.name, logo_url: b.logo_url, tagline: b.tagline }));
 }
 
 /** The shelf sort a source-driven slider reads its products in. */
@@ -325,7 +319,7 @@ export const storeStorefrontService = {
     };
     if (!/^\d{6}$/.test(clean)) return empty;
     const id = toObjectId(productId);
-    const product = id ? await InventoryProductModel.findById(id).lean() : null;
+    const product = id ? await StoreProductModel.findById(id).lean() : null;
     if (!product) return empty;
     const warehouse = product.pickup_location_id
       ? await BrandPickupLocationModel.findById(product.pickup_location_id).select('pincode').lean()
@@ -359,7 +353,7 @@ export const storeStorefrontService = {
   /** Every public URL key, for the storefront's sitemap.xml. */
   async sitemap() {
     const [products, categories, collections, pets] = await Promise.all([
-      InventoryProductModel.find(await listedFilter()).select('store.slug updated_at').lean(),
+      StoreProductModel.find(listedFilter()).select('store.slug updated_at').lean(),
       StoreCategoryModel.find({ is_active: true }).select('slug updated_at').lean(),
       StoreCollectionModel.find({ is_active: true }).select('slug updated_at').lean(),
       StorePetTypeModel.find({ is_active: true }).select('slug updated_at').lean(),

@@ -91,7 +91,7 @@ const subscriptionSchema = new Schema<IStoreSubscription>(
     buyer_email: { type: String, default: '', lowercase: true },
     phone_extension: { type: String, default: '+91' },
     phone_number: { type: String, default: '' },
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     variant_label: { type: String, default: '' },
     product_name: { type: String, default: '' },

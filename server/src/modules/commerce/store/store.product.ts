@@ -1,44 +1,37 @@
-import type { IInventoryProduct, IProductVariant } from '@modules/venues/inventory/inventory.model';
-import { availableOf } from '@modules/venues/inventory/inventory.service';
 import { EMPTY_STORE_LISTING, type IStoreListing } from './store.listing.model';
+import type { IStoreProduct, IStoreProductVariant } from './storeProduct.model';
 import { round2 } from './store.shared';
 
 /**
- * The one reading of a catalogue product as a pet-store item: its price, its
- * stock, and the shapes the storefront renders. Cart, checkout and the shelves
- * all price through here, so a card, a cart line and the charge can never
- * disagree about what something costs or whether it is in stock.
+ * The one reading of a store product as something a shopper buys: its price,
+ * its stock, and the shapes the storefront renders. Cart, checkout and the
+ * shelves all price through here, so a card, a cart line and the charge can
+ * never disagree about what something costs or whether it is in stock.
  */
 
-type ProductLike = Pick<
-  IInventoryProduct,
-  | 'product_name'
-  | 'unit_cost'
-  | 'variants'
-  | 'inventory_count'
-  | 'requested_count'
-  | 'reserved_count'
-  | 'max_order_qty'
-  | 'min_order_qty'
-> & { _id: unknown; store?: IStoreListing | null };
+type ProductLike = Pick<IStoreProduct, 'product_name' | 'unit_cost' | 'inventory_count'> & {
+  _id: unknown;
+  variants?: readonly IStoreProductVariant[] | null;
+  store?: IStoreListing | null;
+};
 
 export const listingOf = (p: { store?: IStoreListing | null }): IStoreListing => ({
   ...EMPTY_STORE_LISTING,
   ...((p.store as any)?.toObject?.() ?? p.store ?? {}),
 });
 
-/** The product-level units free to sell (net of pod reservations). */
-export const productAvailable = (p: ProductLike) => availableOf(p);
+/** The product-level units free to sell. */
+export const productAvailable = (p: ProductLike) => Math.max(0, Number(p.inventory_count) || 0);
 
 /** A variant's sellable units: its own count, capped by the product's pool. */
-export const variantAvailable = (p: ProductLike, v: Pick<IProductVariant, 'inventory_count'>) =>
+export const variantAvailable = (p: ProductLike, v: Pick<IStoreProductVariant, 'inventory_count'>) =>
   Math.max(0, Math.min(Number(v.inventory_count) || 0, productAvailable(p)));
 
 export const findVariant = (p: ProductLike, variantId: string) =>
   variantId ? ((p.variants ?? []).find((v) => String(v._id) === variantId) ?? null) : null;
 
 /** What one unit costs and what it is struck through from, for a variant or the product. */
-export function unitPriceOf(p: ProductLike, variant: IProductVariant | null) {
+export function unitPriceOf(p: ProductLike, variant: IStoreProductVariant | null) {
   const listing = listingOf(p);
   const price = round2(Number(variant ? variant.unit_cost : p.unit_cost) || 0);
   const ownMrp = Number(variant?.mrp) || 0;
@@ -50,20 +43,19 @@ export const discountPct = (price: number, mrp: number) =>
   mrp > price && mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
 /** Units available for one line: the variant's, else the product's. */
-export function availableFor(p: ProductLike, variant: IProductVariant | null) {
+export function availableFor(p: ProductLike, variant: IStoreProductVariant | null) {
   return variant ? variantAvailable(p, variant) : productAvailable(p);
 }
 
-/** Most units one order may carry: the listing cap, else the product's own. */
+/** Most units one order may carry: the listing cap, else the store-wide one. */
 export function maxPerOrder(p: ProductLike, settingsCap: number) {
   const listingCap = Number(listingOf(p).max_per_order) || 0;
-  const productCap = Number(p.max_order_qty) || 0;
-  const caps = [listingCap, productCap, settingsCap].filter((n) => n > 0);
+  const caps = [listingCap, settingsCap].filter((n) => n > 0);
   return caps.length ? Math.min(...caps) : settingsCap;
 }
 
 /** The cheapest in-stock variant — what a card leads with. Falls back to any. */
-function leadVariant(p: ProductLike): IProductVariant | null {
+function leadVariant(p: ProductLike): IStoreProductVariant | null {
   const variants = p.variants ?? [];
   if (variants.length === 0) return null;
   const inStock = variants.filter((v) => variantAvailable(p, v) > 0);
@@ -93,7 +85,7 @@ export function toStoreCard(p: any, rating?: RatingSummary) {
   const listing = listingOf(p);
   const lead = leadVariant(p);
   const { price, mrp } = unitPriceOf(p, lead);
-  const images: string[] = [...(lead?.images ?? []), ...(p.images ?? []), p.image_url].filter(Boolean);
+  const images: string[] = [...(lead?.images ?? []), ...(p.images ?? [])].filter(Boolean);
   const available = totalAvailable(p);
   return {
     id: String(p._id),
@@ -117,14 +109,21 @@ export function toStoreCard(p: any, rating?: RatingSummary) {
   };
 }
 
+/** The one option a store product's variants differ by, as the picker lists it. */
+export function variantOptionsOf(p: any) {
+  const variants: IStoreProductVariant[] = p.variants ?? [];
+  if (variants.length === 0) return [];
+  return [{ name: p.variant_option, values: variants.map((v) => v.option_label) }];
+}
+
 /** One purchasable variant as the product page lists it. */
-export function toStoreVariant(p: any, v: IProductVariant) {
+export function toStoreVariant(p: any, v: IStoreProductVariant) {
   const { price, mrp } = unitPriceOf(p, v);
   const available = variantAvailable(p, v);
   return {
     id: String(v._id),
-    label: v.option_label || [v.color, v.size_label].filter(Boolean).join(' / '),
-    option_values: (v.option_values ?? []).map((o) => ({ name: o.name, value: o.value })),
+    label: v.option_label,
+    option_values: [{ name: p.variant_option, value: v.option_label }],
     sku: v.sku,
     price,
     mrp,

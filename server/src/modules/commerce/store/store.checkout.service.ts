@@ -371,9 +371,10 @@ async function openRazorpay(
   draft: StorePaymentDraft,
   quote: StoreQuote,
   contact: ReturnType<typeof cleanContact>,
-  businessName: string
+  businessName: string,
+  account: string
 ) {
-  const { keyId } = await getRazorpayKeys();
+  const { keyId } = await getRazorpayKeys(account);
   const q = quote.quote;
   const amountPaise = Math.round(q.total * 100);
   const order = await createRazorpayOrder({
@@ -381,13 +382,15 @@ async function openRazorpay(
     currency: 'INR',
     receipt: String(draft.base.payment_id),
     notes: { kind: 'pet_store', user_id: draft.base.user_id ? String(draft.base.user_id) : 'guest' },
+    account,
   });
   const doc = await PaymentModel.create({
     ...draft.base,
     status: 'PENDING',
     gateway: 'RAZORPAY',
     gateway_ref: order.id,
-    metadata: { ...draft.metadata, razorpay_order_id: order.id },
+    // The account is frozen on the payment: verification and the reconciler use the same one.
+    metadata: { ...draft.metadata, razorpay_order_id: order.id, razorpay_account: account },
   });
   const sheet = razorpaySheet({
     paymentDocId: String(doc._id),
@@ -525,7 +528,13 @@ export const storeCheckoutService = {
       await markConverted(owner.owner_key, doc._id);
       return resultFor(doc, 'PAID', draft.accessKey);
     }
-    const { doc, sheet } = await openRazorpay(draft, quote, contact, settings.store_name || fs.business_name);
+    const { doc, sheet } = await openRazorpay(
+      draft,
+      quote,
+      contact,
+      settings.store_name || fs.business_name,
+      settings.razorpay_account
+    );
     return resultFor(doc, 'PENDING_PAYMENT', draft.accessKey, sheet);
   },
 

@@ -1,8 +1,9 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { ProductStatus } from '../lib/status';
 
 /**
  * Products as shelf cards — what a collection, a home slider or a picker
- * shows — and the catalogue search a picker adds from.
+ * shows — and the store-product search a picker adds from.
  */
 
 export interface StoreProductCard {
@@ -18,7 +19,7 @@ export interface StoreProductCard {
   featured: boolean;
 }
 
-/** A catalogue product a picker can add. */
+/** A store product a picker can add. */
 export interface PickerSearchRow {
   id: string;
   product_name: string;
@@ -27,7 +28,7 @@ export interface PickerSearchRow {
   brand_name: string;
   image_url: string;
   price: number;
-  listed: boolean;
+  status: ProductStatus;
 }
 
 const CARD_FIELDS = `
@@ -63,11 +64,11 @@ export const COLLECTION_PREVIEW: TypedDocumentNode<
 `;
 
 export const PICKER_SEARCH: TypedDocumentNode<
-  { storeListingsTable: { rows: PickerSearchRow[]; total: number } },
+  { storeAdminProductsTable: { rows: PickerSearchRow[]; total: number } },
   { query: { search: string; page: number; page_size: number } }
 > = gql`
   query StorePickerSearch($query: TableQueryInput) {
-    storeListingsTable(query: $query) {
+    storeAdminProductsTable(query: $query) {
       total
       rows {
         id
@@ -77,7 +78,7 @@ export const PICKER_SEARCH: TypedDocumentNode<
         brand_name
         image_url
         price
-        listed
+        status
       }
     }
   }

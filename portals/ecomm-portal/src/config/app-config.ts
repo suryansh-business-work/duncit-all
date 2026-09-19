@@ -36,6 +36,7 @@ export const appConfig = {
         { label: 'Products', labelKey: 'ecommPortal.nav.products', to: '/products', icon: 'product' },
         { label: 'Pet types', labelKey: 'ecommPortal.nav.petTypes', to: '/pet-types', icon: 'volunteer-activism' },
         { label: 'Categories', labelKey: 'ecommPortal.nav.categories', to: '/categories', icon: 'widgets' },
+        { label: 'Brands', labelKey: 'ecommPortal.nav.brands', to: '/brands', icon: 'flag' },
         { label: 'Filters', labelKey: 'ecommPortal.nav.filters', to: '/filters', icon: 'tune' },
         { label: 'Collections', labelKey: 'ecommPortal.nav.collections', to: '/collections', icon: 'storefront' },
       ],

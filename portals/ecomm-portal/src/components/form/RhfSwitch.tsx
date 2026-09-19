@@ -7,17 +7,19 @@ interface RhfSwitchProps<T extends FieldValues> {
   label: string;
   hint?: string;
   disabled?: boolean;
+  /** Stable hook for tests on the switch's row. */
+  testId?: string;
 }
 
 /** An on/off setting bound to the form, its hint read out as the switch's description. */
-export default function RhfSwitch<T extends FieldValues>({ control, name, label, hint, disabled }: Readonly<RhfSwitchProps<T>>) {
+export default function RhfSwitch<T extends FieldValues>({ control, name, label, hint, disabled, testId }: Readonly<RhfSwitchProps<T>>) {
   const hintId = hint ? `${name}-hint` : undefined;
   return (
     <Controller
       control={control}
       name={name}
       render={({ field }) => (
-        <Stack>
+        <Stack data-testid={testId}>
           <FormControlLabel
             label={label}
             disabled={disabled}

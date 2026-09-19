@@ -10,8 +10,9 @@ import ReturnDetailPage from './pages/returns/return-detail';
 import CustomersPage from './pages/customers/CustomersPage';
 import CustomerDetailPage from './pages/customers/CustomerDetailPage';
 import ProductsPage from './pages/products/ProductsPage';
-import ListingPage from './pages/products/listing-page';
+import ProductEditorPage from './pages/products/product-editor';
 import PetTypesPage from './pages/pet-types/PetTypesPage';
+import BrandsPage from './pages/brands/BrandsPage';
 import CategoriesPage from './pages/categories/CategoriesPage';
 import FiltersPage from './pages/filters/FiltersPage';
 import CollectionsPage from './pages/collections/CollectionsPage';
@@ -39,9 +40,11 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/customers', element: <CustomersPage /> },
   { path: '/customers/:email', element: <CustomerDetailPage /> },
   { path: '/products', element: <ProductsPage /> },
-  { path: '/products/:id', element: <ListingPage /> },
+  { path: '/products/new', element: <ProductEditorPage /> },
+  { path: '/products/:id', element: <ProductEditorPage /> },
   { path: '/pet-types', element: <PetTypesPage /> },
   { path: '/categories', element: <CategoriesPage /> },
+  { path: '/brands', element: <BrandsPage /> },
   { path: '/filters', element: <FiltersPage /> },
   { path: '/collections', element: <CollectionsPage /> },
   { path: '/collections/new', element: <CollectionEditorPage /> },

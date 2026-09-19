@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
-import LinkList from './LinkList';
+import LinkList from './link-list';
 
 /** Every duncit.com/<code> link, what it was made for, and how often it has
  * been followed. */

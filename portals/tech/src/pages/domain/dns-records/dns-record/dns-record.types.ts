@@ -65,9 +65,18 @@ export const dnsRecordSchema = (rules: DnsRecordRules, messages: DnsRecordMessag
 
 export type DnsRecordForm = z.infer<ReturnType<typeof dnsRecordSchema>>;
 
-/** A new record: the first type the server writes, at the shortest TTL GoDaddy allows. */
-export const blankRecord = (rules: Readonly<Pick<DnsZone, 'writable_types' | 'min_ttl'>>): DnsRecordForm => ({
-  type: rules.writable_types[0] ?? '',
+/**
+ * A new record, at the shortest TTL GoDaddy allows.
+ *
+ * `seedType` is the record type tab the Add button was pressed on, so adding
+ * from the TXT tab opens the form on TXT. A read-only tab (NS, SOA) seeds
+ * nothing and the form falls back to the first type the server writes.
+ */
+export const blankRecord = (
+  rules: Readonly<Pick<DnsZone, 'writable_types' | 'min_ttl'>>,
+  seedType?: string | null,
+): DnsRecordForm => ({
+  type: (seedType && rules.writable_types.includes(seedType) ? seedType : rules.writable_types[0]) ?? '',
   name: '',
   data: '',
   ttl: rules.min_ttl,

@@ -1,4 +1,4 @@
-import LinkList from '../short-links-page/LinkList';
+import LinkList from '../short-links-page/link-list';
 
 /**
  * Marketing → External Links → Links.

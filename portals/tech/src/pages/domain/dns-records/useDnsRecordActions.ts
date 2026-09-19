@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client/react';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import type { DnsRecord, DnsRecordInput, DnsRecordRef } from '@duncit/gql-types';
-import { ADD_DNS_RECORD, DELETE_DNS_RECORD, DNS_ZONE, UPDATE_DNS_RECORD, recordHost } from './queries';
+import { ADD_DNS_RECORD, DELETE_DNS_RECORD, DNS_ZONE, UPDATE_DNS_RECORD, recordHost } from '../queries';
 
 /** GoDaddy has no record id: a record is addressed by the values the listing showed. */
 const refOf = (row: Readonly<DnsRecord>): DnsRecordRef => ({ type: row.type, name: row.name, data: row.data });
@@ -21,11 +21,14 @@ export function useDnsRecordActions(domain: string) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<DnsRecord | null>(null);
+  // The record type tab Add was pressed on, so the new-record form opens on it.
+  const [seedType, setSeedType] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
 
-  const openCreate = useCallback(() => {
+  const openCreate = useCallback((type: string | null) => {
     setEditing(null);
+    setSeedType(type);
     setOpError(null);
     setDialogOpen(true);
   }, []);
@@ -74,5 +77,5 @@ export function useDnsRecordActions(domain: string) {
     [confirm, deleteRecord, domain, t],
   );
 
-  return { dialogOpen, editing, saving, opError, openCreate, openEdit, close, submit, remove };
+  return { dialogOpen, editing, seedType, saving, opError, openCreate, openEdit, close, submit, remove };
 }

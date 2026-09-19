@@ -50,3 +50,8 @@ duplication-report.md
 # accident; Sonar scans every .mjs it finds, so a throwaway rewriter becomes
 # real issues and real duplication against the code it was written to edit.
 .tmp-loc/
+
+# The resolved SDL `scripts/verify-gql-schema.mjs --emit` writes for codegen.
+# Generated on every `pnpm codegen:types`; the schema it is printed from is the
+# committed source, so a copy of it here would only ever be stale.
+.codegen/

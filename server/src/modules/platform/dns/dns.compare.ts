@@ -72,7 +72,8 @@ export interface DnsTypeGroup {
 }
 
 /** Sorted so two sets holding the same values in a different order still match. */
-const valuesOf = (records: readonly GodaddyRecord[]): string[] => records.map((r) => r.data).toSorted((a, b) => a.localeCompare(b));
+const valuesOf = (records: readonly GodaddyRecord[]): string[] =>
+  [...records.map((record) => record.data)].sort((a, b) => a.localeCompare(b));
 
 const same = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((value, i) => value === b[i]);
 
@@ -86,7 +87,7 @@ export function typeGroups(records: readonly GodaddyRecord[]): DnsTypeGroup[] {
     else group.production += 1;
     groups.set(record.type, group);
   }
-  return [...groups.values()].toSorted((a, b) => a.type.localeCompare(b.type));
+  return [...groups.values()].sort((a, b) => a.type.localeCompare(b.type));
 }
 
 /** The production name a record is filed under, whichever stack it belongs to. */
@@ -149,7 +150,7 @@ export function hostPairs(records: readonly GodaddyRecord[], domain: string): Dn
       fixable: production.length > 0,
     };
   });
-  return rows.toSorted((a, b) => a.host.localeCompare(b.host) || a.type.localeCompare(b.type));
+  return rows.sort((a, b) => a.host.localeCompare(b.host) || a.type.localeCompare(b.type));
 }
 
 export interface DnsStagingCompare {

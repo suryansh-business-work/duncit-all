@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { flattenCatalogue, PACKAGING_BUNDLE } from '@duncit/i18n';
-import type { ContactChannel } from '@duncit/utils';
+import { mwebAttendanceLabels, type ContactChannel } from '@duncit/utils';
 import {
   AADHAR_PATTERN,
   GSTIN_PATTERN,
@@ -29,6 +29,7 @@ import {
   buildWithdrawInput,
   blankWithdrawValues,
   makeCancellationPolicySchema,
+  makeForceMarkSchema,
   makeVenueCancelPodSchema,
   toPolicyInput,
   type CancellationPolicyValues,
@@ -68,6 +69,9 @@ interface SchemaMock {
   recipient_phone: string;
   /** A profile bio, as typed into Edit profile. */
   bio: string;
+  /** One name a Club Admin was read for a multi-seat booking. Blank it: the
+   * mark still goes through, because "I was not told" is a real answer. */
+  companion_name: string;
 }
 
 interface FieldMock {
@@ -176,6 +180,7 @@ export default defineDemos('forms', [
       recipient_name: 'Ravi Kumar',
       recipient_phone: '+91 98450 12345',
       bio: 'Weekend trail runner in Bengaluru — hosting DUN-POD-4821 on Saturdays.',
+      companion_name: 'Rohan Mehta',
     },
     compute: (mock) => {
       // Messages are keys here so the demo shows WHICH sentence fires without
@@ -251,6 +256,19 @@ export default defineDemos('forms', [
         ),
         // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
         'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
+        // The Club Admin's by-name mark. Blank the name and it still passes —
+        // the admin records what the call told them; a one-letter name does not.
+        'Club Admin marks by name': say(
+          makeForceMarkSchema(mwebAttendanceLabels(t)).safeParse({
+            companions: [
+              {
+                name: mock.companion_name,
+                phone_extension: mock.extension,
+                phone_number: '',
+              },
+            ],
+          }),
+        ),
         // `current` is what the account holds: its own number typed back is
         // refused as the current number BEFORE its shape is looked at.
         [`Contact change (${mock.channel})`]: say(

@@ -1,9 +1,5 @@
 import { Text, YStack } from 'tamagui';
-import type {
-  PodAttendanceLabels,
-  PodAttendanceRow,
-  PodAttendanceViewer,
-} from '@duncit/utils';
+import type { PodAttendanceLabels, PodAttendanceRow, PodAttendanceViewer } from '@duncit/utils';
 
 import { AttendanceRow } from '@/components/attendance/AttendanceRow';
 

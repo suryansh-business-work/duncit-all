@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import type { DnsRecord } from '@duncit/gql-types';
-import { recordHost } from './queries';
+import type { DnsRecord, DnsScope } from '@duncit/gql-types';
+import { recordHost } from '../queries';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -15,6 +15,22 @@ const searchOf = (row: DnsRecord) => `${row.type} ${row.name} ${row.data}`;
 /** Outlined for the types GoDaddy's nameservers own, so the read-only rows read as different. */
 const renderType = (row: DnsRecord) => (
   <Chip size="small" label={row.type} variant={row.editable ? 'filled' : 'outlined'} />
+);
+
+const scopeLabel = (scope: DnsScope, t: Translate) =>
+  scope === 'STAGING' ? t('tech.dns.scopeStaging') : t('tech.dns.scopeProduction');
+
+/**
+ * Which stack the record answers for. Staging is the quieter chip: a zone is
+ * mostly production, and the replica is the exception worth spotting.
+ */
+const renderScope = (row: DnsRecord, t: Translate) => (
+  <Chip
+    size="small"
+    label={scopeLabel(row.scope, t)}
+    color={row.scope === 'STAGING' ? 'default' : 'primary'}
+    variant="outlined"
+  />
 );
 
 const renderHost = (row: DnsRecord, domain: string) => (
@@ -61,6 +77,13 @@ export default function DnsRecordsTable({ records, domain, toolbarActions, onEdi
     () => [...new Set(records.map((row) => row.type))].map((type) => ({ value: type, label: type })),
     [records],
   );
+  const scopes = useMemo(
+    () => [
+      { value: 'PRODUCTION', label: t('tech.dns.scopeProduction') },
+      { value: 'STAGING', label: t('tech.dns.scopeStaging') },
+    ],
+    [t],
+  );
 
   const columns = useMemo<DuncitColumn<DnsRecord>[]>(
     () => [
@@ -71,6 +94,15 @@ export default function DnsRecordsTable({ records, domain, toolbarActions, onEdi
         type: 'enum',
         options: types,
         cellRenderer: renderType,
+      },
+      {
+        field: 'scope',
+        headerName: t('tech.dns.colScope'),
+        width: 130,
+        type: 'enum',
+        options: scopes,
+        cellRenderer: (row) => renderScope(row, t),
+        valueGetter: (row) => scopeLabel(row.scope, t),
       },
       {
         field: 'name',
@@ -98,7 +130,7 @@ export default function DnsRecordsTable({ records, domain, toolbarActions, onEdi
         delete: readOnlyAction(t),
       }),
     ],
-    [domain, onDelete, onEdit, t, types],
+    [domain, onDelete, onEdit, scopes, t, types],
   );
   const fetchRows = useMemo(() => clientTableFetch(records, searchOf, columns), [records, columns]);
 

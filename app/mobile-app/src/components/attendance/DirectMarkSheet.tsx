@@ -140,12 +140,7 @@ export function DirectMarkSheet({ open, rows, labels, onClose, onPick }: Readonl
         </Field>
         <YStack gap={8} testID="attendance-direct-results">
           {results.map((row) => (
-            <DirectMarkResult
-              key={row.membership_id}
-              row={row}
-              labels={labels}
-              onPick={onPick}
-            />
+            <DirectMarkResult key={row.membership_id} row={row} labels={labels} onPick={onPick} />
           ))}
           {results.length === 0 ? (
             <Text fontSize={13} color="$muted" testID="attendance-direct-no-match">

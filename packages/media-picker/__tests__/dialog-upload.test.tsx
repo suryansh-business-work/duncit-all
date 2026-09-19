@@ -212,6 +212,13 @@ describe('MediaPickerDialog upload flows', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
   });
 
+  it('names a picked document on the finish button rather than calling it an image', async () => {
+    mount({ accept: 'application/pdf' });
+    chooseFile(new File(['x'], 'roster.pdf', { type: 'application/pdf' }));
+
+    await screen.findByRole('button', { name: 'Upload document' });
+    expect(screen.queryByRole('button', { name: 'Use this image' })).toBeNull();
+  });
   it('offers only the device tab when the caller says deviceOnly', async () => {
     mount({ deviceOnly: true });
 

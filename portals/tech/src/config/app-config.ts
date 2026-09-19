@@ -100,6 +100,19 @@ export const appConfig = {
     // one where its name points, the other where its traffic is reported.
     { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },
     {
+      // Beside Google Analytics: another outside service this console holds the
+      // keys for. Logs and Analytics are the Communications console's own
+      // pages, mounted here too; Settings is the MSG91 category of Environment
+      // Variables on a page of its own, so the keys sit beside what they read.
+      label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
+      icon: 'phone',
+      children: [
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
+        { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
+        { label: 'MSG91 Settings', labelKey: 'shell.nav.msg91Settings', to: '/msg91-otp/settings', icon: 'tune' },
+      ],
+    },
+    {
       // Beside Server rather than under it: a ceiling is a platform-wide
       // policy, and the systems it governs are the portals, the two apps and
       // the websites — not the box any of it happens to run on.

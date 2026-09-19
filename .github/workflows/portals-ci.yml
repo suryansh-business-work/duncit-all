@@ -66,6 +66,7 @@ jobs:
           - { name: logs-portal, dir: portals/logs }
           - { name: analytics, dir: portals/analytics }
           - { name: ecomm-portal, dir: portals/ecomm-portal }
+          - { name: localization, dir: portals/localization }
 
     steps:
       - name: Checkout

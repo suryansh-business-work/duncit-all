@@ -18,6 +18,8 @@ export { default as TelemetryLogsPage } from '../../tech/src/pages/telemetry-log
 export { default as TelemetryLogDetailPage } from '../../tech/src/pages/telemetry-log-detail-page';
 export { default as ErrorLogsPage } from '../../tech/src/pages/error-logs-page';
 export { default as RateLimitBlockedPage } from '../../tech/src/pages/rate-limiting/blocked';
+// The keys behind the MSG91 log below, on the page Tech and Communications share.
+export { default as Msg91SettingsPage } from '../../tech/src/pages/msg91-settings';
 
 // AI
 export { default as OpenAiLogsPage } from '../../ai/src/pages/openai-logs';
@@ -44,3 +46,7 @@ export { default as PolicyAcceptanceLogsPage } from '../../legal/src/pages/polic
 
 // Pods
 export { PodMonitoringPage } from '@duncit/entity-consoles';
+
+// Analytics — the Logs dashboard at `/` is Analytics' own Logs page (Tech > Logs there).
+export { default as EntityAnalyticsPage } from '../../analytics/src/pages/entity-analytics/EntityAnalyticsPage';
+export { LOGS_PAGE } from '../../analytics/src/pages/entity-analytics/pages';

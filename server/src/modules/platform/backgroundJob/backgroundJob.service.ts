@@ -5,7 +5,8 @@ import { hasRole } from '@middleware/rbac';
 import { requestIdentity } from '@observability/requestIdentity';
 import { BULK_DELETE_TARGETS } from './bulkDelete.targets';
 import { bulkDeleteOperations, captureScope } from './bulkDelete.operations';
-import { findInScope, resumeBackgroundJobs, scheduleJob, scopeFilter } from './bulkDelete.runner';
+import { findInScope, scopeFilter } from './bulkDelete.runner';
+import { resumeBackgroundJobs, scheduleJob } from './backgroundJob.runner';
 import {
   BackgroundJobModel,
   type BackgroundJobFields,
@@ -55,14 +56,15 @@ function selectedIds(mode: BulkDeleteMode, ids: readonly string[] | null | undef
   return unique;
 }
 
-function actorOf(user: AuthUser): JobActor {
+export function actorOf(user: AuthUser): JobActor {
   return { id: user.id, email: user.email ?? '', roles: [...user.roles] };
 }
 
 /** The job as the drawer reads it. */
-function toJob(doc: BackgroundJobFields & { _id: unknown }) {
+export function toJob(doc: BackgroundJobFields & { _id: unknown }) {
   return {
     id: String(doc._id),
+    kind: doc.kind,
     table: doc.table,
     label: doc.label,
     url: doc.url,

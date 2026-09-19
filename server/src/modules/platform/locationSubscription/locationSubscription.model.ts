@@ -18,6 +18,8 @@ export interface ILocationSubscription extends Document {
   name: string;
   /** Country code + number, digits only — what `destinationFor` returns. */
   whatsapp: string;
+  /** Whether they agreed to share their current location when they added their name. */
+  location_shared: boolean;
   status: LocationSubscriptionStatus;
   /** Why the launch message was skipped or failed; '' otherwise. */
   reason: string;
@@ -32,6 +34,7 @@ const locationSubscriptionSchema = new Schema<ILocationSubscription>(
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
     name: { type: String, default: '', trim: true },
     whatsapp: { type: String, required: true, trim: true },
+    location_shared: { type: Boolean, default: false },
     status: { type: String, enum: LOCATION_SUBSCRIPTION_STATUSES, default: 'PENDING' },
     reason: { type: String, default: '' },
     notified_at: { type: Date, default: null },

@@ -1,6 +1,11 @@
 import { GraphQLError } from 'graphql';
-import { DEFAULT_LAUNCH_TARGET, LocationModel } from './location.model';
-import { locationLaunchSchema, type LocationLaunchInput } from './location.validator';
+import { isObjectIdOrHexString } from 'mongoose';
+import { DEFAULT_LAUNCH_TARGET, LocationModel, launchMediaOf } from './location.model';
+import {
+  locationLaunchSchema,
+  type LaunchMediaInput,
+  type LocationLaunchInput,
+} from './location.validator';
 import { validate } from '@utils/validate';
 import {
   escapedSearchRegex,
@@ -42,6 +47,7 @@ const toPub = (d: any) => {
     is_launched: d.is_launched ?? true,
     launch_target: d.launch_target ?? DEFAULT_LAUNCH_TARGET,
     whatsapp_group_url: d.whatsapp_group_url ?? '',
+    launch_media: launchMediaOf(d.launch_media),
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -52,13 +58,16 @@ function notFound(): never {
 }
 
 /** The launch fields the caller actually sent, validated. A null or missing
- * field is left out, so an update never resets what it did not mention. */
+ * field is left out, so an update never resets what it did not mention. The
+ * media set is the one exception: sent at all, it replaces the whole set. */
 async function launchFields(
   input: Record<string, unknown>
 ): Promise<{ [K in keyof LocationLaunchInput]?: NonNullable<LocationLaunchInput[K]> }> {
   const data = await validate<LocationLaunchInput>(locationLaunchSchema, input);
   return Object.fromEntries(
-    Object.entries(data).filter(([, value]) => value !== null && value !== undefined)
+    Object.entries(data)
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([key, value]) => [key, key === 'launch_media' ? launchMediaOf(value as LaunchMediaInput) : value])
   );
 }
 
@@ -83,14 +92,14 @@ const LOCATION_TABLE_CONFIG: TableEntityConfig = {
     zones: 'location_zones.zone_name',
     country: 'country',
     is_active: 'is_active',
-    // Sortable but not filterable: cities saved before the switch existed have
-    // no stored value, so a "launched = yes" match would miss them.
     is_launched: 'is_launched',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },
   filterFields: {
     is_active: { type: 'boolean' },
+    // Exact because `backfillLaunched` stamps the cities saved before the switch existed.
+    is_launched: { type: 'boolean' },
     image: { path: 'location_image', type: 'string' },
     country: { type: 'string' },
     state: { type: 'string' },
@@ -125,6 +134,16 @@ export const locationService = {
     return docs.map(toPub);
   },
 
+  /**
+   * Stamps `is_launched: true` on cities saved before the switch existed — they
+   * already read as launched (`toPub`), and without a stored value the admin's
+   * Launch Status filter would leave them out. Idempotent: it only looks for the missing.
+   */
+  async backfillLaunched(): Promise<{ repaired: number }> {
+    const r = await LocationModel.updateMany({ is_launched: { $exists: false } }, { $set: { is_launched: true } });
+    return { repaired: r.modifiedCount ?? 0 };
+  },
+
   /** Server-side table page (search/filter/sort/paginate) for the locationsTable query. */
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery(
@@ -138,6 +157,18 @@ export const locationService = {
 
   async getById(id: string) {
     const d = await LocationModel.findById(id);
+    return toPub(d);
+  },
+
+  /**
+   * A city by its slug (`location_id`, e.g. "agra") — what its public links
+   * carry — or by its doc id, which in-app screens and links shared before the
+   * slug still pass. A slug is never 24 hex characters, so the two cannot collide.
+   */
+  async getBySlugOrId(key: string) {
+    const d = isObjectIdOrHexString(key)
+      ? await LocationModel.findById(key)
+      : await LocationModel.findOne({ location_id: key.trim().toLowerCase() });
     return toPub(d);
   },
 
@@ -162,6 +193,7 @@ export const locationService = {
     is_launched?: boolean | null;
     launch_target?: number | null;
     whatsapp_group_url?: string | null;
+    launch_media?: LaunchMediaInput | null;
   }) {
     const launch = await launchFields(input);
     const location_id = (input.location_id?.trim() || slugify(input.location_name));
@@ -203,9 +235,10 @@ export const locationService = {
       is_launched?: boolean | null;
       launch_target?: number | null;
       whatsapp_group_url?: string | null;
+      launch_media?: LaunchMediaInput | null;
     }
   ) {
-    const { is_launched, launch_target, whatsapp_group_url } = await launchFields(input);
+    const { is_launched, launch_target, whatsapp_group_url, launch_media } = await launchFields(input);
     const doc = await LocationModel.findById(id);
     if (!doc) notFound();
     if (input.location_name !== undefined) doc.location_name = input.location_name.trim();
@@ -221,6 +254,7 @@ export const locationService = {
     if (is_launched !== undefined) doc.is_launched = is_launched;
     if (launch_target !== undefined) doc.launch_target = launch_target;
     if (whatsapp_group_url !== undefined) doc.whatsapp_group_url = whatsapp_group_url;
+    if (launch_media !== undefined) doc.launch_media = launchMediaOf(launch_media);
     await doc.save();
     return toPub(doc);
   },

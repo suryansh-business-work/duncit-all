@@ -15,58 +15,83 @@ export const LISTING_LIMITS = {
 } as const;
 
 export interface StoreListingMessages {
+  required: string;
   tooLong: (max: number) => string;
+  copyrightNoUrl: string;
   invalidUrl: string;
   invalidEmail: string;
+  tooFewImages: (min: number) => string;
   tooManyImages: (max: number) => string;
 }
+
+/** Google Play wants at least this many phone screenshots; Apple wants one of each set. */
+const MIN_PLAY_PHONE_SCREENSHOTS = 2;
+
+/**
+ * Anything Apple reads as a web address in the copyright line: a scheme, a
+ * www. host or a bare domain like duncit.com. The server refuses the same.
+ */
+const URL_LIKE = /https?:\/\/|www\.|\b[\w-]+\.[a-z]{2,}\b/i;
 
 const EMAIL = z.email();
 
 const text = (max: number, m: StoreListingMessages) => z.string().trim().max(max, m.tooLong(max));
+const needed = (max: number, m: StoreListingMessages) => text(max, m).min(1, m.required);
 const plain = () => z.string().trim();
+const neededPlain = (m: StoreListingMessages) => plain().min(1, m.required);
 const httpsUrl = (m: StoreListingMessages) =>
   z.string().trim().refine((v) => v === '' || v.startsWith('https://'), m.invalidUrl);
+const neededHttpsUrl = (m: StoreListingMessages) => httpsUrl(m).refine((v) => v !== '', m.required);
 const images = (max: number, m: StoreListingMessages) =>
   z.array(z.string()).max(max, m.tooManyImages(max));
+const neededImages = (min: number, max: number, m: StoreListingMessages) =>
+  images(max, m).min(min, m.tooFewImages(min));
+
+const DEMO_ACCOUNT_FIELDS = ['demo_account_name', 'demo_account_password'] as const;
 
 /**
- * Nothing is required to SAVE: the listing is filled in over time. What a push
- * needs is checked by the server at the click, naming every missing field.
+ * Required here is what a push needs — the same fields the server names when
+ * it refuses a push — so the gap shows on the field, at save, rather than as
+ * a list twenty minutes into a push. The demo account is required only while
+ * App Review is told it needs one.
  */
 export const storeListingSchema = (m: StoreListingMessages) =>
-  z.object({
-    locale: plain(),
-    name: text(LISTING_LIMITS.name, m),
-    subtitle: text(LISTING_LIMITS.subtitle, m),
-    short_description: text(LISTING_LIMITS.short_description, m),
-    description: text(LISTING_LIMITS.description, m),
-    keywords: text(LISTING_LIMITS.keywords, m),
-    whats_new: text(LISTING_LIMITS.whats_new, m),
-    copyright: text(LISTING_LIMITS.copyright, m),
-    primary_category: plain(),
-    privacy_policy_url: httpsUrl(m),
-    support_url: httpsUrl(m),
-    marketing_url: httpsUrl(m),
-    contact_email: z
-      .string()
-      .trim()
-      .refine((v) => v === '' || EMAIL.safeParse(v).success, m.invalidEmail),
-    contact_phone: plain(),
-    review_first_name: plain(),
-    review_last_name: plain(),
-    demo_account_name: plain(),
-    demo_account_password: plain(),
-    demo_account_required: z.boolean(),
-    review_notes: text(LISTING_LIMITS.review_notes, m),
-    iphone_screenshots: images(LISTING_LIMITS.screenshots, m),
-    ipad_screenshots: images(LISTING_LIMITS.screenshots, m),
-    android_phone_screenshots: images(LISTING_LIMITS.play_screenshots, m),
-    android_tablet_7_screenshots: images(LISTING_LIMITS.play_screenshots, m),
-    android_tablet_10_screenshots: images(LISTING_LIMITS.play_screenshots, m),
-    android_feature_graphic: httpsUrl(m),
-    android_icon: httpsUrl(m),
-  });
+  z
+    .object({
+      locale: plain(),
+      name: needed(LISTING_LIMITS.name, m),
+      subtitle: text(LISTING_LIMITS.subtitle, m),
+      short_description: needed(LISTING_LIMITS.short_description, m),
+      description: needed(LISTING_LIMITS.description, m),
+      keywords: text(LISTING_LIMITS.keywords, m),
+      whats_new: text(LISTING_LIMITS.whats_new, m),
+      copyright: needed(LISTING_LIMITS.copyright, m).refine((v) => !URL_LIKE.test(v), m.copyrightNoUrl),
+      primary_category: neededPlain(m),
+      privacy_policy_url: neededHttpsUrl(m),
+      support_url: neededHttpsUrl(m),
+      marketing_url: httpsUrl(m),
+      contact_email: neededPlain(m).refine((v) => EMAIL.safeParse(v).success, m.invalidEmail),
+      contact_phone: neededPlain(m),
+      review_first_name: neededPlain(m),
+      review_last_name: neededPlain(m),
+      demo_account_name: plain(),
+      demo_account_password: plain(),
+      demo_account_required: z.boolean(),
+      review_notes: text(LISTING_LIMITS.review_notes, m),
+      iphone_screenshots: neededImages(1, LISTING_LIMITS.screenshots, m),
+      ipad_screenshots: neededImages(1, LISTING_LIMITS.screenshots, m),
+      android_phone_screenshots: neededImages(MIN_PLAY_PHONE_SCREENSHOTS, LISTING_LIMITS.play_screenshots, m),
+      android_tablet_7_screenshots: images(LISTING_LIMITS.play_screenshots, m),
+      android_tablet_10_screenshots: images(LISTING_LIMITS.play_screenshots, m),
+      android_feature_graphic: neededHttpsUrl(m),
+      android_icon: neededHttpsUrl(m),
+    })
+    .superRefine((values, ctx) => {
+      if (!values.demo_account_required) return;
+      for (const field of DEMO_ACCOUNT_FIELDS) {
+        if (values[field] === '') ctx.addIssue({ code: 'custom', path: [field], message: m.required });
+      }
+    });
 
 export type StoreListingSchema = ReturnType<typeof storeListingSchema>;
 export type StoreListingValues = z.infer<StoreListingSchema>;

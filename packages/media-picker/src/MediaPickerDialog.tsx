@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react';
-import { useTranslation } from './i18n/useTranslation';
+import { useTranslation, type Translate } from './i18n/useTranslation';
 import {
   Alert,
   Box,
@@ -33,6 +33,17 @@ const PANEL_MIN_HEIGHT = { xs: 220, sm: 380 };
 /** Own query key — this dialog opens over pages that own `selectedtab`. */
 const PICKER_TABS = ['device', 'photos', 'videos'] as const;
 type PickerTab = (typeof PICKER_TABS)[number];
+
+/** What the finishing button says: the upload in flight, how many picks, or
+ * — for a single pick — whether it is a document or an image. */
+function doneLabel(
+  t: Translate,
+  { count, uploading, pendingDocument }: Readonly<{ count: number; uploading: boolean; pendingDocument: boolean }>,
+): string {
+  if (uploading) return t('media.picker.uploading');
+  if (count > 1) return t('media.picker.useTheseCount', { vars: { count } });
+  return pendingDocument ? t('media.picker.uploadDocument') : t('media.picker.useThis');
+}
 
 export default function MediaPickerDialog({
   open,
@@ -112,6 +123,8 @@ export default function MediaPickerDialog({
   // on the way out, so "chose a picture but never sent it" stops being a state
   // the reader can leave the dialog in.
   const pendingFile = tab === 'device' && Boolean(device.picked);
+  // A PDF is not an image — the button names what the reader actually chose.
+  const pendingDocument = pendingFile && device.picked?.type === 'application/pdf';
 
   const done = async () => {
     const uploaded = pendingFile ? await device.uploadFromDevice() : null;
@@ -128,11 +141,7 @@ export default function MediaPickerDialog({
   // not in the tray yet, hence the +1.
   const pickCount = selection.urls.length + (pendingFile ? 1 : 0);
 
-  // Named above the return: three answers inside the JSX would be the nested
-  // ternary S3358 rejects.
-  const pluralLabel = t('media.picker.useTheseCount', { vars: { count: pickCount } });
-  const pickLabel = pickCount > 1 ? pluralLabel : t('media.picker.useThis');
-  const buttonLabel = device.uploading ? t('media.picker.uploading') : pickLabel;
+  const buttonLabel = doneLabel(t, { count: pickCount, uploading: device.uploading, pendingDocument });
 
   useEffect(() => {
     if (!open) return;

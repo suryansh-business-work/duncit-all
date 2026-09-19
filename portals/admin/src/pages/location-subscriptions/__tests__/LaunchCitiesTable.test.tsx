@@ -55,7 +55,9 @@ afterEach(() => {
 
 describe('LaunchCitiesTable — rows', () => {
   it('only lets a launched city with people still waiting be messaged, and says why otherwise', async () => {
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE, GOA, NAGPUR]} onSent={vi.fn()} />);
+    renderWithProviders(
+      <LaunchCitiesTable rows={[PUNE, GOA, NAGPUR]} onSent={vi.fn()} selectedId={null} onSelect={vi.fn()} />
+    );
 
     await rowsShown(3);
     expect(within(rowOf('Pune')).getByTestId('location-subscriptions-send')).toBeEnabled();
@@ -70,7 +72,9 @@ describe('LaunchCitiesTable — rows', () => {
   });
 
   it('shows a city’s picture, or its initial when it has none', async () => {
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE, NAGPUR]} onSent={vi.fn()} />);
+    renderWithProviders(
+      <LaunchCitiesTable rows={[PUNE, NAGPUR]} onSent={vi.fn()} selectedId={null} onSelect={vi.fn()} />
+    );
 
     await rowsShown(2);
     expect(rowOf('Nagpur').querySelector('img')).toHaveAttribute('src', 'https://cdn.duncit.com/cities/nagpur.jpg');
@@ -80,7 +84,9 @@ describe('LaunchCitiesTable — rows', () => {
 
   it('narrows the list to the cities matching the search', async () => {
     tableSearch.value = 'go';
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE, GOA, NAGPUR]} onSent={vi.fn()} />);
+    renderWithProviders(
+      <LaunchCitiesTable rows={[PUNE, GOA, NAGPUR]} onSent={vi.fn()} selectedId={null} onSelect={vi.fn()} />
+    );
 
     await rowsShown(1);
     expect(rowOf('Goa')).toBeDefined();
@@ -91,7 +97,9 @@ describe('LaunchCitiesTable — sending', () => {
   it('confirms with the waiting count, queues the send and tells the page', async () => {
     const onSend = vi.fn();
     const onSent = vi.fn();
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} />, { mocks: [sendMock(3, onSend)] });
+    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} selectedId={null} onSelect={vi.fn()} />, {
+      mocks: [sendMock(3, onSend)],
+    });
 
     fireEvent.click(await screen.findByTestId('location-subscriptions-send'));
     const dialog = await screen.findByRole('dialog');
@@ -108,7 +116,9 @@ describe('LaunchCitiesTable — sending', () => {
   it('sends nothing when the confirmation is cancelled', async () => {
     const onSend = vi.fn();
     const onSent = vi.fn();
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} />, { mocks: [sendMock(3, onSend)] });
+    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} selectedId={null} onSelect={vi.fn()} />, {
+      mocks: [sendMock(3, onSend)],
+    });
 
     fireEvent.click(await screen.findByTestId('location-subscriptions-send'));
     fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel' }));
@@ -120,7 +130,7 @@ describe('LaunchCitiesTable — sending', () => {
 
   it('shows why a send failed', async () => {
     const onSent = vi.fn();
-    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} />, {
+    renderWithProviders(<LaunchCitiesTable rows={[PUNE]} onSent={onSent} selectedId={null} onSelect={vi.fn()} />, {
       mocks: [
         {
           request: { query: SEND_LOCATION_LAUNCH_MESSAGE, variables: { location_doc_id: 'loc-pune' } },

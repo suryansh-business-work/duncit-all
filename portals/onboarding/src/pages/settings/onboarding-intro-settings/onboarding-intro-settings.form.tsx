@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { useTranslation } from '@duncit/app-settings';
+import SocialHandlesFields from './SocialHandlesFields';
 import {
   onboardingIntroSettingsSchema,
   type OnboardingIntroSettingsValues,
@@ -16,8 +17,10 @@ interface Props {
   onSubmit: (values: OnboardingIntroSettingsValues) => void;
 }
 
+type IntroField = Exclude<keyof OnboardingIntroSettingsValues, 'social_handles'>;
+
 interface Section {
-  field: keyof OnboardingIntroSettingsValues;
+  field: IntroField;
   labelKey: string;
   aiContext: string;
 }
@@ -35,7 +38,8 @@ const SECTIONS: Section[] = [
 
 /** The four per-kind rich-text fields shown first on each onboarding flow
  * (native + mWeb), authored here. A section left blank skips straight to the
- * category picker on the client. */
+ * category picker on the client. Beside them: Duncit's social media handles,
+ * shown on the survey pages. */
 export default function OnboardingIntroSettingsForm({ defaultValues, saving, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const {
@@ -55,24 +59,36 @@ export default function OnboardingIntroSettingsForm({ defaultValues, saving, onS
   return (
     <Stack spacing={3} component="form" onSubmit={handleSubmit(onSubmit)}>
       <Alert severity="info">{t('onboarding.settingsPage.hint')}</Alert>
-      {SECTIONS.map((section) => (
-        <Stack key={section.field} spacing={1}>
-          <Typography variant="subtitle1">{t(section.labelKey)}</Typography>
-          <Controller
-            name={section.field}
-            control={control}
-            render={({ field }) => (
-              <DuncitRichTextInput
-                value={field.value}
-                onChange={(html) => field.onChange(html)}
-                minHeight={200}
-                aiContext={section.aiContext}
-                ariaLabel={t(section.labelKey)}
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 3,
+          alignItems: 'start',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 360px' },
+        }}
+      >
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+          {SECTIONS.map((section) => (
+            <Stack key={section.field} spacing={1}>
+              <Typography variant="subtitle1">{t(section.labelKey)}</Typography>
+              <Controller
+                name={section.field}
+                control={control}
+                render={({ field }) => (
+                  <DuncitRichTextInput
+                    value={field.value}
+                    onChange={(html) => field.onChange(html)}
+                    minHeight={200}
+                    aiContext={section.aiContext}
+                    ariaLabel={t(section.labelKey)}
+                  />
+                )}
               />
-            )}
-          />
+            </Stack>
+          ))}
         </Stack>
-      ))}
+        <SocialHandlesFields control={control} />
+      </Box>
       <DuncitButton type="submit" variant="contained" disabled={saving || !isDirty} sx={{ alignSelf: 'flex-start' }}>
         {saving ? t('shell.common.saving') : t('shell.common.save')}
       </DuncitButton>

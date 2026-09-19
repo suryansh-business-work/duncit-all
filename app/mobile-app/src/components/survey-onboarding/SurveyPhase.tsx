@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Input, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
@@ -22,10 +22,11 @@ interface Props {
   busy: boolean;
   error: string | null;
   onSubmit: () => void;
+  footer?: ReactNode;
 }
 
 /** Section-stepped survey — one step per SECTION; final step submits. */
-export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<Props>) {
+export function SurveyPhase({ survey, answer, busy, error, onSubmit, footer }: Readonly<Props>) {
   const { t } = useTranslation();
   // The Next/Continue button is the last row of this scroll and nothing floats
   // over it, so it only has to clear the Android navigation bar the edge-to-edge
@@ -183,6 +184,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
           />
         </YStack>
       </XStack>
+      {footer}
     </RefreshScrollView>
   );
 }

@@ -46,6 +46,12 @@ import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
 import DnsRecordsPage from './pages/dns';
 import GoogleAnalyticsPage from './pages/google-analytics';
+import Msg91SettingsPage from './pages/msg91-settings';
+// The Communications console's own pages, mounted here as they are — one
+// implementation, two doors (rules 34/40). The Dockerfile copies that console's
+// src for the build, and the deploy filter rebuilds this console when it changes.
+import Msg91LogsPage from '../../communications/src/pages/msg91-otp/logs';
+import Msg91AnalyticsPage from '../../communications/src/pages/msg91-otp/analytics';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -113,6 +119,13 @@ export default function App() {
         <Route path="/dns/records" element={authed(<DnsRecordsPage />)} />
         {/* The GA4 tag each Duncit website loads, one per website. */}
         <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
+        {/* MSG91 OTP Logs: the widget's records, read live from MSG91, beside
+            the keys that read them — Settings is the MSG91 category of
+            Environment Variables on a page of its own. */}
+        <Route path="/msg91-otp" element={<Navigate to="/msg91-otp/logs" replace />} />
+        <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
+        <Route path="/msg91-otp/analytics" element={authed(<Msg91AnalyticsPage />)} />
+        <Route path="/msg91-otp/settings" element={authed(<Msg91SettingsPage />)} />
         {/* Rate limiting. Systems is the landing page: which callers exist and
             what they spend is what a limit has to be written against. */}
         <Route path="/rate-limiting" element={<Navigate to="/rate-limiting/systems" replace />} />

@@ -7,6 +7,7 @@ import {
   ErrorLogsPage,
   GiftCardLogsPage,
   Msg91LogsPage,
+  Msg91SettingsPage,
   OpenAiLogsPage,
   PaymentDetailPage,
   PaymentLogsPage,
@@ -38,6 +39,7 @@ export function logRoutes(authed: ReturnType<typeof createAuthed>) {
       <Route path="/emails/logs" element={authed(<EmailLogsPage />)} />
       <Route path="/whatsapp/logs" element={authed(<WhatsappLogsPage />)} />
       <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
+      <Route path="/msg91-otp/settings" element={authed(<Msg91SettingsPage />)} />
 
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-logs/:id" element={authed(<PaymentDetailPage />)} />

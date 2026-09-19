@@ -40,6 +40,14 @@ export default function GrievanceForm({
   // Rebuilt when the language changes so the messages follow it.
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
   const noTickets = !ticketsLoading && tickets.length === 0;
+  // What the account already answered is shown, not asked again: the person
+  // the officer writes back to has to be the one signed in. A field the
+  // account left blank (no phone or address on file yet) stays typeable, so a
+  // required field is never a dead end.
+  const fromAccount = (field: keyof GrievanceValues) =>
+    prefill?.[field]
+      ? { hint: t('grievance.fromAccount'), slotProps: { input: { readOnly: true } } }
+      : {};
 
   const { control, handleSubmit } = useForm<GrievanceValues, any, GrievanceValues>({
     defaultValues: grievanceDefaults,
@@ -63,9 +71,30 @@ export default function GrievanceForm({
     <form data-testid="grievance-form" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         <SupportTicketField control={control} options={tickets} loading={ticketsLoading} />
-        <RhfTextField control={control} name="name" label={t('grievance.field.name')} required autoComplete="name" />
-        <RhfTextField control={control} name="email" label={t('grievance.field.email')} required autoComplete="email" />
-        <RhfTextField control={control} name="phone" label={t('grievance.field.phone')} required autoComplete="tel" />
+        <RhfTextField
+          control={control}
+          name="name"
+          label={t('grievance.field.name')}
+          required
+          autoComplete="name"
+          {...fromAccount('name')}
+        />
+        <RhfTextField
+          control={control}
+          name="email"
+          label={t('grievance.field.email')}
+          required
+          autoComplete="email"
+          {...fromAccount('email')}
+        />
+        <RhfTextField
+          control={control}
+          name="phone"
+          label={t('grievance.field.phone')}
+          required
+          autoComplete="tel"
+          {...fromAccount('phone')}
+        />
         <RhfTextField
           control={control}
           name="address"
@@ -74,6 +103,7 @@ export default function GrievanceForm({
           hint={t('grievance.optional')}
           multiline
           minRows={2}
+          {...fromAccount('address')}
         />
         <RhfTextField
           control={control}

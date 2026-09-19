@@ -27,6 +27,12 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     FUNNEL
     "The Duncit Pet Store (ecomm.duncit.com)."
     PET_STORE
+    "Every log the Logs console lists (logs.duncit.com)."
+    LOGS
+    "What WhatsApp messages cost, in rupees."
+    WHATSAPP_COSTS
+    "What OpenAI requests cost, in US dollars."
+    OPENAI_COSTS
   }
 
   "What kind of number a value is, so the console formats it."
@@ -43,6 +49,10 @@ export const entityAnalyticsTypeDefs = /* GraphQL */ `
     DURATION
     "SonarQube's rating, 1 (A) to 5 (E)."
     GRADE
+    "An amount in US dollars, which is what OpenAI bills in."
+    USD
+    "A check's result: 1 passed, 0 failed, null never run."
+    OUTCOME
   }
 
   "WINDOW follows the chosen period; ALL_TIME is the state of things right now."

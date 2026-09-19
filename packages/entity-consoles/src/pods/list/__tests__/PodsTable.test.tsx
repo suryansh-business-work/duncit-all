@@ -85,6 +85,7 @@ const makeProps = (rows: PodRow[]) => ({
   clubName: (id: string) => `Club<${id}>`,
   venueName: (id: string) => `Venue<${id}>`,
   locName: (id: string) => `Loc<${id}>`,
+  minPax: () => 0,
   onEdit: vi.fn(),
   onQuickEdit: vi.fn(),
   onDelete: vi.fn(),

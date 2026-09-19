@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { AnalyticsEntity } from '../entity/shapes';
+import { entityReaders } from '../entity/entityAnalytics.resolver';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { analyticsAlertService, type AnalyticsAlertInput } from './analyticsAlert.service';
 
@@ -37,7 +38,8 @@ export const analyticsAlertResolvers = {
       return analyticsAlertService.checkNow(args.id);
     },
     setAnalyticsTarget: (_p: unknown, args: TargetArgs, ctx: GraphQLContext) => {
-      const user = requireRole(ctx, ANALYTICS_ROLES);
+      // A tile's goal is set by whoever reads that page — the Logs console's staff on the Logs dashboard.
+      const user = requireRole(ctx, entityReaders(args.entity));
       return analyticsTargetService.set(args.entity, args.key, args.value ?? null, user.email ?? user.id);
     },
   },

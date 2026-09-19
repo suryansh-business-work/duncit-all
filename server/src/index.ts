@@ -22,6 +22,7 @@ import { rateLimitMiddleware, rateLimitPlugin } from '@modules/platform/rateLimi
 import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMonitor.plugin';
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
+import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
@@ -41,6 +42,7 @@ import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
+import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
@@ -225,15 +227,34 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'policySignupFlag', { repaired });
     }
   });
-  // Every key the platform ships copy for, into Admin > Localization.
+  // Stamp the launched flag onto cities saved before it existed, so Admin >
+  // Locations' Launch Status filter matches every city the app treats as launched.
+  await safeSeed('locationLaunched', async () => {
+    const { locationService } = await import('@modules/platform/location/location.service');
+    const { repaired } = await locationService.backfillLaunched();
+    if (repaired > 0) {
+      logs.server.info('bootstrap', 'locationLaunched', { repaired });
+    }
+  });
+  // What every existing translation was written against, recorded once so it
+  // can be seen to fall out of date with English. Must run BEFORE the shipped
+  // English below is revised, or a reword in this boot would read as in sync.
+  await safeSeed('localizationSyncBaseline', async () => {
+    const { aiTranslateService } = await import('@modules/platform/localization/aiTranslate.service');
+    const stamped = await aiTranslateService.baselineSync();
+    if (stamped > 0) logs.server.info('bootstrap', 'localizationSyncBaseline', { stamped });
+  });
+  // Every key the platform ships copy for, into Localization.
   // This used to happen only when somebody opened that page and pressed
   // "Import app keys", so a fresh environment — or any key added since the
   // last time anyone pressed it — sat untranslatable. Create-only: an
-  // existing row keeps its translations.
+  // existing row keeps its translations, except English that was reworded in
+  // code and never edited here (copy-revisions.ts).
   await safeSeed('localization', async () => {
     const { localizationService } = await import('@modules/platform/localization/localization.service');
     const created = await localizationService.seedDefaults();
-    if (created > 0) logs.server.info('bootstrap', 'localization', { created });
+    const revised = await localizationService.reviseShippedCopy();
+    if (created > 0 || revised > 0) logs.server.info('bootstrap', 'localization', { created, revised });
   });
   // Every AI feature reads its system prompt from the AI portal's Prompt
   // Library; this puts the shipped defaults there on first boot.
@@ -451,6 +472,11 @@ async function bootstrap() {
   // Mail automation: read each connected Gmail mailbox forward from its cursor,
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
+
+  // Social Accounts (Marketing): re-read each connected Page, channel and
+  // profile every few hours — posts, numbers, new comments — and send the new
+  // comments through the AI review.
+  startSocialAccountsScheduler();
 
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
@@ -687,6 +713,10 @@ async function bootstrap() {
   // Google's OAuth redirect after an operator connects a Gmail mailbox in the
   // Tech portal. A browser navigation, so it lives here and not in GraphQL.
   app.use('/gmail', buildGmailOAuthRouter());
+
+  // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a
+  // social account in the Marketing portal. A browser navigation, like Gmail's.
+  app.use('/social', buildSocialOAuthRouter());
 
   // Sign in with Apple's form_post for the Android app and native web, handed
   // back to the app with one redirect. Apple posts a form, so it lives here.

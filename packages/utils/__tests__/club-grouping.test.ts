@@ -5,6 +5,7 @@ import {
   clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  localitiesByClubCount,
   placeLabel,
 } from '../src/club-grouping';
 
@@ -71,6 +72,18 @@ describe('groupClubsByCity', () => {
     expect(groupClubsByCity(clubs, locations)).toEqual([
       { locationId: 'loc-blr', city: 'Bengaluru', image: '', clubs: [clubs[1]] },
       { locationId: 'loc-pune', city: 'Pune', image: 'https://ik.imagekit.io/pune.jpg', clubs: [clubs[0], clubs[2]] },
+    ]);
+  });
+});
+
+describe('localitiesByClubCount', () => {
+  it('lists localities with clubs first and the empty ones last, each in zone order', () => {
+    const clubs = [club('c1', 'loc-pune', 'Kothrud'), club('c2', 'loc-pune', null), club('c3', 'loc-pune', 'Baner')];
+    expect(localitiesByClubCount(['Aundh', 'Baner', 'Viman Nagar', 'Kothrud'], clubs)).toEqual([
+      { locality: 'Baner', count: 1 },
+      { locality: 'Kothrud', count: 1 },
+      { locality: 'Aundh', count: 0 },
+      { locality: 'Viman Nagar', count: 0 },
     ]);
   });
 });

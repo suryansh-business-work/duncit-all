@@ -24,7 +24,7 @@ jest.mock('../../bulkDelete.targets', () => ({
 import { BackgroundJobModel } from '../../backgroundJob.model';
 import { backgroundJobResolvers } from '../../backgroundJob.resolver';
 import { backgroundJobService } from '../../backgroundJob.service';
-import { resumeBackgroundJobs, scheduleJob } from '../../bulkDelete.runner';
+import { resumeBackgroundJobs, scheduleJob } from '../../backgroundJob.runner';
 
 interface ILead {
   name: string;

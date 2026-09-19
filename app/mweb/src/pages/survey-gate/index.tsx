@@ -20,6 +20,7 @@ import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
 import GateHeader from './GateHeader';
 import GateThanks from './GateThanks';
+import SocialHandlesSection from './SocialHandlesSection';
 import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -214,6 +215,7 @@ export default function SurveyGatePage() {
         </>
       )}
       {step === 'thanks' && <GateThanks slotLabel={slotLabel} />}
+      {step !== 'thanks' && <SocialHandlesSection handles={introData?.onboardingIntro.social_handles} />}
     </Box>
   );
 }

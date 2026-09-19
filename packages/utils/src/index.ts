@@ -515,6 +515,7 @@ export {
   contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
+  contactValueVerified,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -972,9 +973,21 @@ export {
 } from './location-mismatch';
 export {
   DEFAULT_LAUNCH_TARGET,
+  EMPTY_LAUNCH_MEDIA,
+  LAUNCH_HERO_FEATURES,
+  LAUNCH_HERO_TRUST,
+  LAUNCH_ROLE_SECTIONS,
+  LAUNCH_SECTIONS,
   compareCitiesLaunchedFirst,
   launchProgress,
+  launchSectionMedia,
   showsWaitlist,
+  type LaunchIconKey,
+  type LaunchItem,
+  type LaunchPageMedia,
+  type LaunchRoleDefinition,
+  type LaunchRoleKind,
+  type LaunchSection,
 } from './city-launch';
 export {
   clubCityName,
@@ -982,11 +995,13 @@ export {
   clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  localitiesByClubCount,
   placeLabel,
   type ClubCityGroup,
   type ClubCityLocation,
   type ClubLocalityGroup,
   type GroupableClub,
+  type LocalityClubCount,
 } from './club-grouping';
 export {
   E2E_GOOGLE_CREDENTIAL_QUERY,

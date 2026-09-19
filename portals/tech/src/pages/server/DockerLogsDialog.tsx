@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client/react';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import LogPane from './LogPane';
 import { TECH_CONTAINER_LOGS } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -27,24 +28,7 @@ export default function DockerLogsDialog({ name, onClose }: Readonly<Props>) {
     <Dialog open={!!name} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Logs · {name}</DialogTitle>
       <DialogContent>
-        <Box
-          component="pre"
-          sx={{
-            bgcolor: '#0b0e14',
-            color: '#c9d1d9',
-            p: 2,
-            m: 0,
-            borderRadius: 1,
-            fontFamily: 'monospace',
-            fontSize: 13,
-            lineHeight: 1.5,
-            maxHeight: 440,
-            overflow: 'auto',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {logs}
-        </Box>
+        <LogPane text={logs} label={`Logs · ${name}`} />
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>

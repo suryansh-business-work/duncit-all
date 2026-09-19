@@ -1,4 +1,5 @@
 import { parse } from 'graphql';
+import type { SocialHandles } from '@duncit/onboarding';
 
 /**
  * Venue/Host onboarding survey shown before "Be a host" / "Register a venue".
@@ -99,6 +100,7 @@ export interface OnboardingIntro {
   venue_intro_html: string;
   ecomm_intro_html: string;
   club_admin_intro_html: string;
+  social_handles: SocialHandles;
 }
 export interface OnboardingIntroResult {
   onboardingIntro: OnboardingIntro;
@@ -189,6 +191,13 @@ export const OnboardingIntroDocument = parse(`
       venue_intro_html
       ecomm_intro_html
       club_admin_intro_html
+      social_handles {
+        x_url
+        instagram_url
+        youtube_url
+        facebook_url
+        website_url
+      }
     }
   }
 `);

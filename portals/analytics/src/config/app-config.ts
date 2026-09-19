@@ -70,6 +70,15 @@ export const appConfig = {
         { label: 'Server', labelKey: 'shell.nav.server', to: '/tech/server', icon: 'dns' },
         { label: 'AI Usage', labelKey: 'shell.nav.aiUsage', to: '/tech/ai-usage', icon: 'ai' },
         { label: 'App Releases', labelKey: 'shell.nav.appReleases', to: '/tech/app-releases', icon: 'android' },
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/tech/logs', icon: 'article' },
+      ],
+    },
+    {
+      label: 'Costing', labelKey: 'shell.nav.costing',
+      icon: 'expenses',
+      children: [
+        { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/costing/whatsapp', icon: 'whatsapp' },
+        { label: 'OpenAI', labelKey: 'shell.nav.openai', to: '/costing/openai', icon: 'ai' },
       ],
     },
     {

@@ -28,6 +28,12 @@ function formatDuration(ms: number): string {
 /** SonarQube's rating: 1 is A, 5 is E. */
 const formatGrade = (value: number) => (value >= 1 ? String.fromCodePoint(64 + Math.round(value)) : EM_DASH);
 
+/** US dollars to the cent — and to a hundredth of a cent under a dollar, where OpenAI spend usually sits. */
+function formatUsd(value: number): string {
+  const digits = Math.abs(value) < 1 ? 4 : 2;
+  return `$${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: digits }).format(value)}`;
+}
+
 export function formatValue(value: number | null | undefined, format: AnalyticsFormat): string {
   if (value === null || value === undefined) return EM_DASH;
   switch (format) {
@@ -46,6 +52,8 @@ export function formatValue(value: number | null | undefined, format: AnalyticsF
       return formatDuration(value);
     case 'GRADE':
       return formatGrade(value);
+    case 'USD':
+      return formatUsd(value);
     default:
       return COUNT.format(value);
   }

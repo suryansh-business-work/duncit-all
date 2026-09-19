@@ -289,6 +289,7 @@ mountWelcomePortal({
 | `env` | `PortalBuildEnv` | yes | The portal's `import.meta.env` — `{ DEV, VITE_GRAPHQL_URL? }`. |
 | `logsPortal` | `LevelFns` | yes | The portal's `logs.portal.<x>` sink. |
 | `routes` | `(authed) => ReactNode` | no | The console's own `<Route>`s. `authed(<Page />)` puts a page behind the login gate and inside the chrome. They sit before the catch-all, so an unknown path still opens `/`. |
+| `home` | `ReactElement` | no | The console's own page at `/` in place of the welcome dashboard, behind the same login gate and chrome. The Logs console passes its Logs dashboard here. |
 | `i18nFallback` | `FlatCatalogue` | no | The copy those screens read, compiled in — passed straight to `mountPortal`. |
 
 A console that outgrows it (Communications did) builds the same pieces itself —

@@ -18,6 +18,7 @@ import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
 import { LEGAL_BUNDLE } from './bundles/legal';
+import { LOCALIZATION_BUNDLE } from './bundles/localization';
 import { MAIL_PREFERENCE_BUNDLE } from './bundles/mail-preference';
 import { MEDIA_BUNDLE } from './bundles/media';
 import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
@@ -93,6 +94,7 @@ export {
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
   LEGAL_BUNDLE,
+  LOCALIZATION_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MEDIA_BUNDLE,
   LOCATION_BUNDLE,
@@ -147,6 +149,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,
   legal: LEGAL_BUNDLE,
+  localization: LOCALIZATION_BUNDLE,
   mailPreference: MAIL_PREFERENCE_BUNDLE,
   media: MEDIA_BUNDLE,
   adRequest: AD_REQUEST_BUNDLE,

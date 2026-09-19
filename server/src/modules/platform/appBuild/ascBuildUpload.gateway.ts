@@ -1,5 +1,6 @@
 import fs from 'node:fs';
-import { asc } from './appStoreConnect.gateway';
+import { outboundFetch } from '@utils/outboundFetch';
+import { asc, AscError, isTransientAscError } from './appStoreConnect.gateway';
 
 /**
  * Uploading a build to App Store Connect over the API alone — what Transporter
@@ -35,6 +36,16 @@ export type BuildProcessingState = 'PROCESSING' | 'FAILED' | 'INVALID' | 'VALID'
 /** A part is tens of megabytes at most; this is generous even on a slow link. */
 const PART_TIMEOUT_MS = 10 * 60_000;
 
+/**
+ * A part that did not land is sent again at once, up to this many times. The
+ * PUT of one byte range to a presigned URL repeats harmlessly, and the
+ * alternative — the release service discarding the whole reservation and
+ * starting the IPA over — costs minutes for a dropped socket.
+ */
+const PART_ATTEMPTS = 3;
+
+const UPLOAD_STORE = "Apple's upload store";
+
 /** The upload operations as Apple sends them, on any asset reservation. */
 export function parseOperations(raw: unknown): UploadOperation[] {
   const list = Array.isArray(raw) ? raw : [];
@@ -53,14 +64,19 @@ export function parseOperations(raw: unknown): UploadOperation[] {
 export async function putOperation(op: UploadOperation, bytes: Buffer): Promise<void> {
   const headers: Record<string, string> = {};
   for (const h of op.requestHeaders) headers[h.name] = h.value;
-  const res = await fetch(op.url, {
-    method: op.method,
-    headers,
-    body: bytes,
-    signal: AbortSignal.timeout(PART_TIMEOUT_MS),
-  });
-  if (!res.ok) {
-    throw new Error(`Apple's upload store refused the part at offset ${op.offset} (HTTP ${res.status})`);
+  for (let attempt = 1; attempt <= PART_ATTEMPTS; attempt++) {
+    try {
+      const res = await outboundFetch(UPLOAD_STORE, op.url, {
+        method: op.method,
+        headers,
+        body: bytes,
+        signal: AbortSignal.timeout(PART_TIMEOUT_MS),
+      });
+      if (res.ok) return;
+      throw new AscError(res.status, `the upload store refused the part at offset ${op.offset}`);
+    } catch (err) {
+      if (attempt === PART_ATTEMPTS || !isTransientAscError(err)) throw err;
+    }
   }
 }
 

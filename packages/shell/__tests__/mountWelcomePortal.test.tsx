@@ -79,7 +79,7 @@ const config: AppConfig = {
 
 const logsPortal = { info: vi.fn() } as unknown as MountPortalOptions['logsPortal'];
 
-type ExtraOptions = Pick<Parameters<typeof mountWelcomePortal>[0], 'routes' | 'i18nFallback'>;
+type ExtraOptions = Pick<Parameters<typeof mountWelcomePortal>[0], 'routes' | 'home' | 'i18nFallback'>;
 
 function mount(appConfig: AppConfig = config, extra: ExtraOptions = {}) {
   mountWelcomePortal({
@@ -150,6 +150,13 @@ describe('mountWelcomePortal', () => {
       tagline: 'translated shell.portal.analytics.tagline',
       modules: [],
     });
+  });
+
+  it("renders the console's own home at / inside the chrome, in place of the welcome dashboard", () => {
+    renderAt('/', config, { home: <div data-testid="logs-dashboard" /> });
+
+    expect(screen.getByTestId('chrome')).toContainElement(screen.getByTestId('logs-dashboard'));
+    expect(screen.queryByTestId('welcome')).not.toBeInTheDocument();
   });
 
   it('shows the literal tagline when the console has no key for it', () => {

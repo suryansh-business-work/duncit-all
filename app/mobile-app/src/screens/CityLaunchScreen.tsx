@@ -18,7 +18,10 @@ const STACK_BOTTOM_SPACE = 40;
 export function CityLaunchScreen() {
   const { params } = useRoute<RouteProp<RootStackParamList, 'CityLaunch'>>();
   const { locations } = useLocations();
-  const city = locations.find((loc) => loc.id === params.locationId)?.location_name ?? '';
+  // A shared link carries the city's slug; links shared before it carry the id.
+  const city =
+    locations.find((loc) => loc.location_id === params.locationId || loc.id === params.locationId)
+      ?.location_name ?? '';
 
   return (
     <YStack flex={1} testID="city-launch-page">

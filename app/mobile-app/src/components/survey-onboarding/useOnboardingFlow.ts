@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { SocialHandles } from '@duncit/onboarding';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
 import { toErrorMessage } from '@/utils/errors';
@@ -58,6 +59,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
   const [phase, setPhase] = useState<Phase>(savedDraft?.phase ?? 'intro');
   const [introHtml, setIntroHtml] = useState('');
   const [introLoading, setIntroLoading] = useState(true);
+  const [socialHandles, setSocialHandles] = useState<SocialHandles | null>(null);
   const [scope, setScope] = useState<Scope>(
     savedDraft?.scope ?? {
       super_category_id: '',
@@ -105,7 +107,8 @@ export function useOnboardingFlow(kind: SurveyKind) {
   }, [kind, phase, scope, labels, survey, answers, setDraft, clearDraft]);
 
   // Fetch the admin-authored intro once; a blank field for this kind skips
-  // straight to the category picker instead of showing an empty screen.
+  // straight to the category picker instead of showing an empty screen. The
+  // same row carries the social handles every phase shows at its foot.
   useEffect(() => {
     let alive = true;
     graphqlRequest<OnboardingIntroResult>(OnboardingIntroDocument, undefined, { auth: true })
@@ -113,6 +116,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
         if (!alive) return;
         const html = introFieldFor(kind, res.onboardingIntro);
         setIntroHtml(html);
+        setSocialHandles(res.onboardingIntro.social_handles);
         if (!html) setPhase((p) => (p === 'intro' ? 'category' : p));
       })
       .catch(() => {
@@ -278,6 +282,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
     phase,
     introHtml,
     introLoading,
+    socialHandles,
     startCategory,
     scope,
     labels,

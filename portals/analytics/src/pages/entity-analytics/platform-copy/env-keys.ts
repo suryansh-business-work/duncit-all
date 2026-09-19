@@ -8,6 +8,7 @@ export const ENV_KEYS_COPY: PageCopy = {
     env_active: { title: 'analytics.kpi.envActive', hint: 'analytics.kpi.envActiveHint' },
     env_services_ready: { title: 'analytics.kpi.envServicesReady', hint: 'analytics.kpi.envServicesReadyHint' },
     env_services_missing: { title: 'analytics.kpi.envServicesMissing', hint: 'analytics.kpi.envServicesMissingHint' },
+    env_passing: { title: 'analytics.kpi.envPassing', hint: 'analytics.kpi.envPassingHint' },
     env_failing: { title: 'analytics.kpi.envFailing', hint: 'analytics.kpi.envFailingHint' },
     env_untested: { title: 'analytics.kpi.envUntested', hint: 'analytics.kpi.envUntestedHint' },
     env_tested: { title: 'analytics.kpi.envTested', hint: 'analytics.kpi.envTestedHint' },
@@ -46,18 +47,16 @@ export const ENV_KEYS_COPY: PageCopy = {
     },
   },
   leaderboards: {
-    env_categories: {
-      title: 'analytics.leaderboard.envCategories',
-      hint: 'analytics.leaderboard.envCategoriesHint',
-      name: 'analytics.leaderboard.service',
-      empty: 'analytics.page.noData',
+    env_entry_health: {
+      title: 'analytics.leaderboard.envEntryHealth',
+      hint: 'analytics.leaderboard.envEntryHealthHint',
+      name: 'analytics.leaderboard.envEntry',
+      empty: 'analytics.leaderboard.envEntryHealthEmpty',
     },
   },
   columns: {
-    entries: 'analytics.leaderboard.entries',
-    active: 'analytics.leaderboard.active',
-    passing: 'analytics.leaderboard.passing',
-    failing: 'analytics.leaderboard.failing',
-    untested: 'analytics.leaderboard.untested',
+    env_result: 'analytics.leaderboard.envResult',
+    env_tested_days_ago: 'analytics.leaderboard.envTestedDaysAgo',
+    env_portals: 'analytics.leaderboard.envPortals',
   },
 };

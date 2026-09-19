@@ -452,6 +452,7 @@ export const ROLE_FILTERS = [
   { value: 'LOGS_MANAGER', label: 'Logs' },
   { value: 'ANALYTICS_MANAGER', label: 'Analytics' },
   { value: 'ECOMM_MANAGER', label: 'E-commerce' },
+  { value: 'LOCALIZATION_MANAGER', label: 'Localization' },
 ];
 
 /** Human labels for the chips under a coworker's name. */

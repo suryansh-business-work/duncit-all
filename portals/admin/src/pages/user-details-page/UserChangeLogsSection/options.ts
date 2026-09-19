@@ -1,4 +1,4 @@
-import type { UserChangeLogRow } from '../queries';
+import type { UserChangeLogRow, UserChangeLogScope } from '../queries';
 
 /**
  * How the enum columns of the change log read and filter.
@@ -46,4 +46,10 @@ export const ACTOR_COLORS: Record<UserChangeLogRow['actor_type'], 'primary' | 'w
   USER: 'primary',
   ADMIN: 'warning',
   SYSTEM: 'default',
+};
+
+/** The actor types each scope lists — the server applies the same split. */
+export const SCOPE_ACTOR_TYPES: Record<UserChangeLogScope, UserChangeLogRow['actor_type'][]> = {
+  USER: ['USER', 'SYSTEM'],
+  ADMIN: ['ADMIN'],
 };

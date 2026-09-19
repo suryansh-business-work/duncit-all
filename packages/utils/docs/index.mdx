@@ -191,6 +191,7 @@ exports:
   - 'formatPhoneLine'
   - 'currentContactValue'
   - 'contactDetailsComplete'
+  - 'contactValueVerified'
   - 'contactDraftFrom'
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
@@ -356,19 +357,33 @@ exports:
   - 'LocationMismatch'
   - 'LocationPick'
   - 'DEFAULT_LAUNCH_TARGET'
+  - 'EMPTY_LAUNCH_MEDIA'
+  - 'LAUNCH_HERO_FEATURES'
+  - 'LAUNCH_HERO_TRUST'
+  - 'LAUNCH_ROLE_SECTIONS'
+  - 'LAUNCH_SECTIONS'
+  - 'LaunchIconKey'
+  - 'LaunchItem'
+  - 'LaunchPageMedia'
+  - 'LaunchRoleDefinition'
+  - 'LaunchRoleKind'
+  - 'LaunchSection'
   - 'compareCitiesLaunchedFirst'
   - 'launchProgress'
+  - 'launchSectionMedia'
   - 'showsWaitlist'
   - 'clubCityName'
   - 'clubOptionLabel'
   - 'clubPlaceLabel'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
+  - 'localitiesByClubCount'
   - 'placeLabel'
   - 'ClubCityGroup'
   - 'ClubCityLocation'
   - 'ClubLocalityGroup'
   - 'GroupableClub'
+  - 'LocalityClubCount'
   - 'namedCompanionEntries'
   - 'needsOtp'
   - 'canScanTickets'
@@ -1923,6 +1938,18 @@ contactDetailsComplete(account);                              // false — no Wh
 contactDetailsComplete({ ...account, whatsapp_number: '9845012345' }); // true
 ```
 
+`contactValueVerified` is the "Verified" badge beside a number. The server stamps a number
+verified only when a code sent to it came back (`is_phone_verified`, `whatsapp_verified_at`)
+and clears the stamp when the number moves, so a number with no stamp was typed but never
+answered. The email row never carries one, and an empty row has nothing to vouch for:
+
+```ts
+contactValueVerified({ ...account, is_phone_verified: true }, 'PHONE');    // true
+contactValueVerified({ ...account, is_phone_verified: false }, 'PHONE');   // false — typed, never answered
+contactValueVerified({ ...account, whatsapp_verified_at: '2026-09-18T10:30:00.000Z' }, 'WHATSAPP');
+// false — the stamp outlived the number; this account has no WhatsApp number
+```
+
 `contactChangeNeedsOtp` is which of the three still has to be PROVED before it is stored.
 The address and the WhatsApp number always are — both are delivery channels whose whole
 worth is that a message arrives, and a typo in either goes unnoticed until something
@@ -1958,7 +1985,8 @@ contactDraftValue({ email: 'Ravi@Duncit.com', extension: '', number: '' }, 'EMAI
 
 `contactSubmitAction` is the one answer both dialogs act on, and `applyContactDraft` is what
 they fold into the rows afterwards — the dialog closes onto those rows, and one still showing
-the old number while the refetch is in flight reads as a change that failed:
+the old number while the refetch is in flight reads as a change that failed. Its last argument
+is whether a code proved the value, so a number saved straight never keeps the old badge:
 
 ```ts
 contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' }, false);
@@ -1970,8 +1998,8 @@ contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '98
 contactSubmitAction(account, 'EMAIL', { email: 'ravi@duncit.in', extension: '', number: '' }, false);
 // 'SEND_CODE' — a code goes to the new address first
 
-applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
-// { …account, phone_extension: '+91', phone_number: '9845099999' }
+applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' }, false);
+// { …account, phone_extension: '+91', phone_number: '9845099999', is_phone_verified: false }
 ```
 
 The new number is checked as it is typed. Each dialog runs signup's `useSignupPhoneCheck` on
@@ -2494,6 +2522,28 @@ formatCount(1252); // '1,252' — the hero's big number
 ].sort(compareCitiesLaunchedFirst); // Rajkot, Surat, Ahmedabad
 ```
 
+The waitlist page itself is four full-height sections — `LAUNCH_SECTIONS`: the live count
+(`hero`), then `host`, `venue` and `club_admin`. Each plays an admin-set video behind its copy
+(Admin > Locations > Launch page media, or a city's own override) and draws an image when the
+video cannot play or none is set. `locationLaunchStatus` answers the resolved set as
+`launch_media`; `launchSectionMedia` picks one section's pair out of it. The copy lists
+(`LAUNCH_HERO_FEATURES`, `LAUNCH_HERO_TRUST`, `LAUNCH_ROLE_SECTIONS`) name a pictogram and a
+full translation key per item, and each app maps the pictogram to its own icon set.
+
+```ts
+import { EMPTY_LAUNCH_MEDIA, LAUNCH_ROLE_SECTIONS, launchSectionMedia } from '@duncit/utils';
+
+const media = {
+  ...EMPTY_LAUNCH_MEDIA,
+  hero_video_url: 'https://ik.imagekit.io/esdata1/launch/delhi-rooftop.mp4',
+  hero_image_url: 'https://ik.imagekit.io/esdata1/launch/delhi-rooftop.jpg',
+};
+launchSectionMedia(media, 'hero'); // { videoUrl: '…delhi-rooftop.mp4', imageUrl: '…delhi-rooftop.jpg' }
+launchSectionMedia(media, 'venue'); // { videoUrl: '', imageUrl: '' } — the dark ground alone
+
+LAUNCH_ROLE_SECTIONS.map((role) => role.kind); // ['HOST', 'VENUE', 'CLUB_ADMIN'] — each opens its Earn journey
+```
+
 `showsWaitlist` is `false` for anything but an explicit `false`, so a stale cached location
 without the field keeps its feed.
 
@@ -2546,6 +2596,15 @@ clubOptionLabel('Smashers United', ''); // 'Smashers United'
 
 `clubOptionLabel` is the text a picker filters on and shows once a club is picked; the option
 rows themselves draw a pin icon before the place instead of an emoji (rule 31).
+
+The step-1 Locality dropdown lists the localities that hold the host's clubs first, then the
+empty ones, which both apps render disabled (a Club Admin's pinned club keeps every area
+pickable on native). Each half keeps the admin's zone order.
+
+```ts
+localitiesByClubCount(['Baner', 'Kothrud', 'Aundh'], clubs);
+// [{ locality: 'Kothrud', count: 1 }, { locality: 'Baner', count: 0 }, { locality: 'Aundh', count: 0 }]
+```
 
 Cities and localities sort A→Z; the clubs inside a group keep the order they arrived in, so a
 list that was already searched and sorted stays that way. A city with no clubs gets no card,

@@ -31,6 +31,7 @@ export const AWAITING_SUITE = new Set([
   'hosts',
   'hr',
   'legal',
+  'localization',
   'logs-portal',
   'marketing',
   'onboarding',

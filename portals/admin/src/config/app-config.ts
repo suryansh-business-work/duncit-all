@@ -87,14 +87,6 @@ export const appConfig = {
       ],
     },
     {
-      label: 'Localization', labelKey: 'shell.nav.localization',
-      icon: 'translate',
-      children: [
-        { label: 'Locales', labelKey: 'shell.nav.locales', to: '/localization/locales', icon: 'language' },
-        { label: 'Translations', labelKey: 'shell.nav.translations', to: '/localization/translations', icon: 'spellcheck' },
-      ],
-    },
-    {
       label: 'System', labelKey: 'shell.nav.system',
       icon: 'settings',
       children: [

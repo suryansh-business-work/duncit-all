@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { outboundFetch } from '@utils/outboundFetch';
 
 /**
  * A listing image, fetched from where the portal uploaded it (ImageKit) so it
@@ -30,7 +31,7 @@ function assetFileName(url: string, contentType: string, index: number): string 
 
 /** Fetch one image. Refuses anything but PNG or JPEG — the stores would too, later and less clearly. */
 export async function fetchStoreAsset(url: string, index = 0): Promise<StoreAsset> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  const res = await outboundFetch('ImageKit', url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`Could not fetch listing image (HTTP ${res.status}): ${url}`);
   const contentType = (res.headers.get('content-type') ?? '').split(';')[0]?.trim() ?? '';
   if (!EXTENSION_BY_TYPE[contentType]) {

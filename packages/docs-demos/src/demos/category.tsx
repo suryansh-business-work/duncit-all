@@ -21,7 +21,7 @@ export default defineDemos('category', [
     id: 'cascade',
     title: 'Super → Category → Sub, and what a form finally stores',
     note:
-      'Clear category_id and the sub list widens to every sub under the chosen super — which is the behaviour that lets a host pick a sub-category without first naming the middle tier.',
+      'Clear category_id and the sub list widens to every sub under the chosen super — which is the behaviour that lets a host pick a sub-category without first naming the middle tier. The picker\'s `strict` prop turns that off (Sub waits for a Category), which is what the Admin > Pods filter row uses.',
     mock: {
       categories: [
         { id: 'sup-1', name: 'Human', slug: 'human', level: 'SUPER', parent_id: null },

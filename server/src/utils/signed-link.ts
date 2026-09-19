@@ -37,6 +37,16 @@ export interface SignedLink {
   verify(token: string, now?: number): string | null;
 }
 
+/**
+ * A keyed digest of `value` for one purpose — a secret only this server can
+ * recompute. The social connect flow derives its PKCE verifier from the nonce
+ * in its signed state this way, so the verifier is never stored and never
+ * leaves the server before the token exchange.
+ */
+export function purposeDigest(purpose: string, value: string): string {
+  return createHmac('sha256', signingKey()).update(`${purpose}:${value}`).digest('base64url');
+}
+
 /** A signer/verifier pair for one route. `ttlMs` is how long its links live. */
 export function signedLink(purpose: string, ttlMs: number): SignedLink {
   const signature = (body: string) =>

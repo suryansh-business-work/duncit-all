@@ -5,7 +5,7 @@
  * keys in packages/i18n (rule 38). Dynamic rows name the `linkPreview` kind
  * that hydrates them; static rows just name their copy.
  */
-export type PreviewKind = 'POD' | 'CLUB' | 'USER' | 'POST' | 'VENUE' | 'PRODUCT';
+export type PreviewKind = 'POD' | 'CLUB' | 'USER' | 'POST' | 'VENUE' | 'PRODUCT' | 'LOCATION';
 
 export interface StaticRoute {
   pattern: string;
@@ -82,6 +82,17 @@ export const DYNAMIC_ROUTES: DynamicRoute[] = [
     kind: 'PRODUCT',
     idParams: ['productId'],
     descriptionKey: 'mweb.meta.product.description',
+  },
+  {
+    // What "Send this to your friends" hands out, so the card names the city.
+    // No twin row in the API's shortLink.preview.ts on purpose: that card shows
+    // the bare entity title ("Agra"), while with no row a short link 302s here
+    // and gets this templated one.
+    pattern: '/city-launch/:citySlug',
+    kind: 'LOCATION',
+    idParams: ['citySlug'],
+    titleTemplateKey: 'mweb.meta.cityLaunch.title',
+    descriptionKey: 'mweb.meta.cityLaunch.description',
   },
 ];
 

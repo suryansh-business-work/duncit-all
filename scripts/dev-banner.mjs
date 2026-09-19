@@ -46,6 +46,7 @@ const projects = [
   { label: 'ecomm-portal',             port: 2038 },
   { label: 'ecomm-store',              port: 2039 },
   { label: 'lite (web + console)',     port: 2041 },
+  { label: 'localization',             port: 2042 },
   // External: not a pnpm workspace, so `pnpm --recursive dev` doesn't start it.
   // Listed for reference; excluded from the "all ready" gate. Run via `pnpm dev:mobile`.
   { label: 'native (mobile web)',      port: 2022, external: true },

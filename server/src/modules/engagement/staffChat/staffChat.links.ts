@@ -51,6 +51,7 @@ const PORTAL_ROLES: Record<string, string[]> = {
   logs: ['LOGS_MANAGER'],
   analytics: ['ANALYTICS_MANAGER'],
   'ecomm-portal': ['ECOMM_MANAGER'],
+  localization: ['LOCALIZATION_MANAGER'],
   partners: [],
   mweb: [],
 };

@@ -191,13 +191,18 @@ import {
   clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  localitiesByClubCount,
   type ClubCityLocation,
   resolveThemeTokens,
   DEFAULT_LAUNCH_TARGET,
+  EMPTY_LAUNCH_MEDIA,
+  LAUNCH_ROLE_SECTIONS,
   compareCitiesLaunchedFirst,
   formatCount,
   launchProgress,
+  launchSectionMedia,
   showsWaitlist,
+  type LaunchPageMedia,
   buildOfficialStatusSlides,
   hasUnseenOfficialStatus,
   isOfficialStatusLive,
@@ -467,6 +472,8 @@ interface ClubGroupingMock {
   locations: ClubCityLocation[];
   clubs: { club_name: string; location_id: string; locality: string }[];
   openCityId: string;
+  /** The opened city's zones, in the admin's order — the Create a Pod Locality dropdown. */
+  zones: string[];
 }
 
 /** One packed unit as the product form holds it. */
@@ -478,6 +485,8 @@ interface CityLaunchMock {
   is_launched: boolean | null;
   subscriber_count: number;
   launch_target: number;
+  /** As locationLaunchStatus answers it: the city's own file where set, else the global one. */
+  launch_media: LaunchPageMedia;
 }
 
 /** Marketing > Status, as the apps' `officialStatuses` query answers it. */
@@ -538,12 +547,17 @@ export default defineDemos('utils', [
     id: 'city-launch',
     title: 'A city that has not launched yet',
     note:
-      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front.',
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front. The page is four full-height sections: blank hero_video_url and the top section falls back to its image; blank both and it draws the dark ground alone.',
     mock: {
       location_name: 'Ahmedabad',
       is_launched: false,
       subscriber_count: 1252,
       launch_target: DEFAULT_LAUNCH_TARGET,
+      launch_media: {
+        ...EMPTY_LAUNCH_MEDIA,
+        hero_video_url: 'https://ik.imagekit.io/esdata1/launch/ahmedabad-riverfront.mp4',
+        hero_image_url: 'https://ik.imagekit.io/esdata1/launch/ahmedabad-riverfront.jpg',
+      },
     },
     compute: (mock) => ({
       'Shows the waitlist': showsWaitlist(mock),
@@ -551,6 +565,9 @@ export default defineDemos('utils', [
       'Hero number': formatCount(mock.subscriber_count),
       'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
       'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+      'Top section backdrop': launchSectionMedia(mock.launch_media, 'hero'),
+      'Host section backdrop': launchSectionMedia(mock.launch_media, 'host'),
+      'Role sections': LAUNCH_ROLE_SECTIONS.map((role) => `${role.section} → ${role.kind}`).join(', '),
       'Picker order': [
         { location_name: 'Surat', is_launched: true },
         { location_name: 'Rajkot', is_launched: true },
@@ -566,7 +583,7 @@ export default defineDemos('utils', [
     id: 'club-grouping',
     title: 'The Clubs tab, grouped by city and then by locality',
     note:
-      'Change a club\'s location_id to loc-blr and it moves to the Bengaluru card. Blank its locality and it drops into the last, no-area section. Point openCityId at another city to see that city\'s sections.',
+      'Change a club\'s location_id to loc-blr and it moves to the Bengaluru card. Blank its locality and it drops into the last, no-area section. Point openCityId at another city to see that city\'s sections. Give Aundh a club and it climbs out of the disabled tail of the Locality dropdown.',
     mock: {
       locations: [
         { id: 'loc-pune', location_name: 'Pune', city: 'Pune', location_image: '' },
@@ -579,6 +596,7 @@ export default defineDemos('utils', [
         { club_name: 'Indiranagar Runners', location_id: 'loc-blr', locality: 'Indiranagar' },
       ],
       openCityId: 'loc-pune',
+      zones: ['Aundh', 'Baner', 'Kothrud', 'Viman Nagar'],
     },
     compute: (mock) => {
       const openCity = mock.locations.find((location) => location.id === mock.openCityId);
@@ -593,6 +611,9 @@ export default defineDemos('utils', [
         ),
         'Its locality sections': groupClubsByLocality(cityClubs).map(
           (group) => `${group.locality || 'Other areas'}: ${group.clubs.map((club) => club.club_name).join(', ')}`,
+        ),
+        'Create a Pod Locality dropdown': localitiesByClubCount(mock.zones, cityClubs).map(
+          (item) => `${item.locality} — ${item.count} clubs${item.count === 0 ? ' (disabled)' : ''}`,
         ),
       };
     },

@@ -313,6 +313,14 @@ services:
     ports:
       - "127.0.0.1:2037:80"
 
+  # The Localization console (localization.duncit.com).
+  localization:
+    image: ${DOCKERHUB_USERNAME}/duncit-localization:${IMAGE_TAG:-latest}
+    container_name: duncit-localization
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2042:80"
+
   # The pet store's console (ecomm-portal.duncit.com).
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-latest}

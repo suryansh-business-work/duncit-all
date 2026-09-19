@@ -22,8 +22,8 @@ interface Props {
   /** What the account holds now, so the box opens on the current value. */
   snapshot: ContactSnapshot;
   onClose: () => void;
-  /** Called with the value that was just proved and stored. */
-  onSaved: (channel: ContactChannel, draft: ContactDraft) => void;
+  /** Called with the value just stored, and whether a code proved it. */
+  onSaved: (channel: ContactChannel, draft: ContactDraft, verified: boolean) => void;
 }
 
 const stopSubmitBubbling = (e: FormEvent) => e.stopPropagation();
@@ -55,7 +55,7 @@ export default function ChangeContactDialog({
 
   const active = channel;
   const change = useContactChange(active ?? 'EMAIL', () => {
-    if (active && draft) onSaved(active, draft);
+    if (active && draft) onSaved(active, draft, true);
     onClose();
   });
   const { reset, noteEdit } = change;
@@ -86,7 +86,7 @@ export default function ChangeContactDialog({
     }
     // Closed here, not from the hook: only this dialog holds what was stored.
     if (await change.saveWithoutCode(next)) {
-      onSaved(active, next);
+      onSaved(active, next, false);
       onClose();
     }
   };

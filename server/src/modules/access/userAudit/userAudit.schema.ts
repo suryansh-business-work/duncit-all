@@ -17,6 +17,16 @@ export const userAuditTypeDefs = /* GraphQL */ `
     SYSTEM
   }
 
+  """
+  Which half of a user's history to read. USER is what the account changed
+  itself, plus system writes such as signup; ADMIN is every change an admin
+  made to it. An admin's change is only ever listed under ADMIN.
+  """
+  enum UserChangeLogScope {
+    USER
+    ADMIN
+  }
+
   "Which surface the change was made from."
   enum UserChangeSource {
     NATIVE
@@ -56,7 +66,11 @@ export const userAuditTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    "Admin: the complete profile change history of one user, newest first."
-    userChangeLogsTable(user_id: ID!, query: TableQueryInput): UserChangeLogTablePage!
+    "Admin: one half of a user's profile change history, newest first."
+    userChangeLogsTable(
+      user_id: ID!
+      scope: UserChangeLogScope!
+      query: TableQueryInput
+    ): UserChangeLogTablePage!
   }
 `;

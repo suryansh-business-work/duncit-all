@@ -157,9 +157,30 @@ export const dbBackupTypeDefs = gql`
     expiresInSeconds: Int!
   }
 
+  """
+  Where this server keeps its archives: a directory on its own disk, read off
+  the filesystem so it says what is still there rather than what was written.
+  There is no copy on another host — the page says so, and "latest" is the
+  archive to download for one.
+  """
+  type DbBackupStore {
+    directory: String!
+    "Archives still on disk, and their bytes together."
+    archives: Int!
+    archiveBytes: Float!
+    newestArchiveAt: String
+    "Room left on the volume the directory sits on."
+    fsFreeBytes: Float!
+    fsTotalBytes: Float!
+    "The newest completed backup that still has its file, or null."
+    latest: DbBackup
+  }
+
   extend type Query {
     "Every backup run, paged for the table."
     dbBackupsTable(query: TableQueryInput): DbBackupTablePage!
+    "The archive directory on this server and its newest downloadable backup."
+    dbBackupStore: DbBackupStore!
     "The automatic backup schedule, created with defaults on first read."
     dbBackupSettings: DbBackupSettings!
     "One restore by id, or the most recent one. Polled for progress."

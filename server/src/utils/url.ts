@@ -22,6 +22,25 @@ export function joinUrl(base: string, path: string): string {
   return path.startsWith('/') ? `${root}${path}` : `${root}/${path}`;
 }
 
+/**
+ * The media hosts the server will fetch from on someone's say-so: our CDN and
+ * the two stock libraries the media picker imports from. Anything else is a
+ * request the server could be pointed at its own network with (SSRF).
+ */
+const TRUSTED_MEDIA_HOSTS = [/(^|\.)pexels\.com$/i, /(^|\.)imagekit\.io$/i, /(^|\.)unsplash\.com$/i];
+
+export const isTrustedMediaHost = (hostname: string): boolean => TRUSTED_MEDIA_HOSTS.some((re) => re.test(hostname));
+
+/** An https address on a trusted media host. */
+export function isTrustedMediaUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && isTrustedMediaHost(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** An address served by our ImageKit CDN — nothing else is rewritten. */
 const IMAGEKIT_URL = /^https?:\/\/([^/?#]*\.)?imagekit\.io(:\d+)?[/?#]/i;
 
@@ -40,6 +59,19 @@ const IMAGEKIT_URL = /^https?:\/\/([^/?#]*\.)?imagekit\.io(:\d+)?[/?#]/i;
  * server keeps its own copy because `server/src` imports no `@duncit/*`.
  */
 export function videoSourceUrl(url: string): string {
+  return withImageKitTr(url, 'orig-true');
+}
+
+/**
+ * The URL of a stored image as a JPEG — Instagram's publishing API refuses
+ * anything else, and ImageKit converts on delivery. A non-ImageKit address,
+ * or one already carrying a transformation, is returned untouched.
+ */
+export function jpegSourceUrl(url: string): string {
+  return withImageKitTr(url, 'f-jpg');
+}
+
+function withImageKitTr(url: string, tr: string): string {
   const raw = url.trim();
   if (!IMAGEKIT_URL.test(raw)) return raw;
   const hashAt = raw.indexOf('#');
@@ -48,5 +80,5 @@ export function videoSourceUrl(url: string): string {
   // An explicit transformation is somebody's deliberate choice — leave it.
   if (/[?&]tr=/i.test(address)) return raw;
   const separator = address.includes('?') ? '&' : '?';
-  return `${address}${separator}tr=orig-true${hash}`;
+  return `${address}${separator}tr=${tr}${hash}`;
 }

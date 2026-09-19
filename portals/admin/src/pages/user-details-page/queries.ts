@@ -287,6 +287,9 @@ export const STATUS_META: Record<
   SUSPENDED: { color: 'error', label: 'Blocked' },
 };
 
+/** Which half of a user's history a section lists. Mirrors the server's UserChangeLogScope. */
+export type UserChangeLogScope = 'USER' | 'ADMIN';
+
 /** One field of one user, changed once. Mirrors the server's UserChangeLog. */
 export interface UserChangeLogRow {
   id: string;
@@ -303,8 +306,8 @@ export interface UserChangeLogRow {
 }
 
 export const USER_CHANGE_LOGS_TABLE = gql`
-  query UserChangeLogsTable($user_id: ID!, $query: TableQueryInput) {
-    userChangeLogsTable(user_id: $user_id, query: $query) {
+  query UserChangeLogsTable($user_id: ID!, $scope: UserChangeLogScope!, $query: TableQueryInput) {
+    userChangeLogsTable(user_id: $user_id, scope: $scope, query: $query) {
       total
       rows {
         id

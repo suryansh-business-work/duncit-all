@@ -5,6 +5,7 @@ export const LocationsDocument = gql(`
   query MobileLocations {
     locations(filter: { is_active: true }) {
       id
+      location_id
       location_name
       city
       state

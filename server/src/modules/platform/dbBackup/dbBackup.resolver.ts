@@ -5,7 +5,7 @@ import type { TableQueryInput } from '@utils/table-query';
 // Same guard as the Tech web terminal and the data clone: an archive is every
 // record the platform holds, and a restore rewrites the live database. Both sit
 // at the portal's top role.
-import { TECH_EXEC } from '../tech/tech.resolver';
+import { TECH_EXEC, TECH_MANAGE } from '../tech/tech.resolver';
 import { dbRestoreService } from './dbBackup.restore';
 import { dbBackupUploadService } from './dbBackup.upload';
 import { dbBackupService, type SaveBackupSettingsInput } from './dbBackup.service';
@@ -47,6 +47,12 @@ export const dbBackupResolvers = {
     dbRestoreJob: (_p: unknown, args: { id?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_EXEC);
       return dbRestoreService.restoreJob(args.id);
+    },
+    // Metadata only — a path, counts and the newest row — so it sits at the
+    // Database > Info gate. The download itself stays behind TECH_EXEC.
+    dbBackupStore: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return dbBackupService.store();
     },
   },
   Mutation: {

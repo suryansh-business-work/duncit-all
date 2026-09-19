@@ -44,13 +44,15 @@ export const appConfig = {
     { label: 'Slack', labelKey: 'shell.nav.slack', to: '/slack', icon: 'chat' },
     {
       // MSG91's own records of the OTP widget that carries every phone code —
-      // read live from MSG91, never copied here. The keys themselves are under
-      // Tech → Environment Variables → MSG91 (SMS OTP).
+      // read live from MSG91, never copied here. Settings is the keys behind
+      // them: the MSG91 category of Tech's Environment Variables, mounted here
+      // as a page of its own.
       label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
       icon: 'phone',
       children: [
         { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
         { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
+        { label: 'MSG91 Settings', labelKey: 'shell.nav.msg91Settings', to: '/msg91-otp/settings', icon: 'tune' },
       ],
     },
   ],

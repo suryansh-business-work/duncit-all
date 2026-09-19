@@ -12,10 +12,12 @@ import {
 import { auditActorName, sourceFromDeclared } from '@utils/audit-actor';
 import { TRACKED_USER_FIELDS } from './userAudit.fields';
 import {
+  USER_CHANGE_LOG_SCOPE_ACTORS,
   UserChangeLogModel,
   type IUserChangeLog,
   type UserChangeAction,
   type UserChangeActorType,
+  type UserChangeLogScope,
 } from './userAudit.model';
 
 /**
@@ -141,12 +143,20 @@ export const userAuditService = {
     await userAuditService.record({ userId, before: null, after: created, action: 'CREATE' });
   },
 
-  /** Admin: server-side table page over one user's history. */
-  async table(userId: string, input?: TableQueryInput | null) {
+  /**
+   * Admin: server-side table page over one half of a user's history.
+   *
+   * The scope is applied here, beneath the caller's own filters, so the User
+   * tab cannot be widened into showing an admin's changes from the client.
+   */
+  async table(userId: string, scope: UserChangeLogScope, input?: TableQueryInput | null) {
     if (!Types.ObjectId.isValid(userId)) return { rows: [], total: 0, page: 1, page_size: 0 };
     const { docs, total, page, page_size } = await runTableQuery<IUserChangeLog>(
       UserChangeLogModel,
-      { user_id: new Types.ObjectId(userId) },
+      {
+        user_id: new Types.ObjectId(userId),
+        actor_type: { $in: USER_CHANGE_LOG_SCOPE_ACTORS[scope] },
+      },
       input,
       USER_CHANGE_LOG_TABLE_CONFIG
     );

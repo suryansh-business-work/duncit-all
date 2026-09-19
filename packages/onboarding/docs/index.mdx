@@ -19,6 +19,11 @@ exports:
   - 'IN_PROCESS_LABEL'
   - 'ALREADY_ENABLED_LABEL'
   - 'MEETING_SCHEDULED_LABEL'
+  - 'SOCIAL_HANDLE_KEYS'
+  - 'socialHandleLinks'
+  - 'SocialHandleKey'
+  - 'SocialHandleLink'
+  - 'SocialHandles'
 ---
 
 Everything about *which* Earn With Duncit journeys a user may start, and *why* a
@@ -90,6 +95,27 @@ earnBoxState(EARN_JOURNEYS[0], [], [{ id: 'm1', kind: 'HOST', status: 'SCHEDULED
 
 A rejected record deliberately re-opens the journey — that is how a user
 re-applies after being turned down.
+
+## Social media handles
+
+Onboarding Portal > Onboarding Intro holds Duncit's own links beside the intro
+copy: X, Instagram, YouTube, Facebook and the Duncit website. The survey pages
+behind each "Tell me more" (mWeb `SurveyGatePage`, native `OnboardingSurvey`)
+show the filled ones with their icons. `socialHandleLinks` decides which, and in
+what order; each surface maps `key` to its own icon, as with `iconKey` above.
+
+```js
+socialHandleLinks({
+  x_url: '',
+  instagram_url: 'https://www.instagram.com/duncit_app/',
+  website_url: ' https://duncit.com ',
+});
+// → [{ key: 'instagram_url', url: 'https://www.instagram.com/duncit_app/' },
+//    { key: 'website_url', url: 'https://duncit.com' }]
+```
+
+`SOCIAL_HANDLE_KEYS` is the display order and matches the
+`OnboardingSocialHandles` GraphQL fields one for one.
 
 ## What is NOT here
 

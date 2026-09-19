@@ -194,6 +194,9 @@ export const CLUBS = gql`
       club_name
       super_category_id
       category_id
+      # The Club filter names each club with where it runs (locality, city).
+      location_id
+      locality
       matched_venues {
         id
       }

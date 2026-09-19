@@ -116,6 +116,11 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
       }
     }
   }
+  // Every amenity group is optional, so the schema passes a blank section —
+  // only tick it once the owner has actually picked something.
+  if (values.amenities.length + values.facilities.length + values.security.length === 0) {
+    sectionState.amenities = 'incomplete';
+  }
 
   const persistStep1 = async () => {
     const res = await saveStep1({

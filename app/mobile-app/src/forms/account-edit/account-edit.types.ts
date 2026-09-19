@@ -8,6 +8,7 @@ import {
   normalizeUsername,
   toGenderValue,
   toPetOwnerValue,
+  type ContactSnapshot,
 } from '@duncit/utils';
 import { makeProfileBioSchema } from '@duncit/forms/schemas';
 import {
@@ -143,6 +144,19 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
     address_state: me?.address?.state ?? '',
     address_pincode: me?.address?.pincode ?? '',
     address_country: me?.address?.country ?? '',
+  };
+}
+
+/** Email, phone and WhatsApp as the account holds them — the read-only rows. */
+export function accountEditContacts(me: AccountMe | null): ContactSnapshot {
+  return {
+    email: me?.email,
+    phone_extension: me?.phone_extension,
+    phone_number: me?.phone_number,
+    is_phone_verified: me?.is_phone_verified,
+    whatsapp_extension: me?.whatsapp_extension,
+    whatsapp_number: me?.whatsapp_number,
+    whatsapp_verified_at: me?.whatsapp_verified_at,
   };
 }
 

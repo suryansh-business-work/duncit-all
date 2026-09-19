@@ -33,6 +33,7 @@ import {
   deleteBackupFile,
   ensureBackupsDir,
   newBackupName,
+  scanBackupsDir,
 } from './dbBackup.store';
 import { signDownloadToken } from './dbBackup.token';
 
@@ -477,6 +478,22 @@ export const dbBackupService = {
 
   /** What the download route resolves a token to: the row, or nothing. */
   fileFor: (id: string) => findBackup(id),
+
+  /**
+   * Where the archives live and what is there: the directory on this server's
+   * disk, the room left beside it, and the newest completed backup that still
+   * has its file — the one a "download latest" button hands out.
+   */
+  async store() {
+    const [scan, latest] = await Promise.all([
+      scanBackupsDir(),
+      DbBackupModel.findOne({ status: 'SUCCEEDED', file_name: { $ne: null } })
+        .sort({ started_at: -1 })
+        .lean<DbBackupDoc>()
+        .exec(),
+    ]);
+    return { ...scan, latest: latest ? toPublicBackup(latest) : null };
+  },
 
   /**
    * The scheduler's whole decision, kept here so the loop stays a timer.

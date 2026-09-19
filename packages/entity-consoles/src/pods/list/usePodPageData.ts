@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery } from '@apollo/client/react';
+import { ADMIN_CATEGORIES, type CategoryDoc } from '@duncit/category';
 import {
   APPROVED_HOSTS,
   APPROVED_VENUES,
@@ -19,6 +20,9 @@ export default function usePodPageData() {
   const { data: usersData } = useQuery<any>(USERS);
   const { data: approvedHostsData } = useQuery<any>(APPROVED_HOSTS);
   const { data: financeData } = useQuery<any>(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
+  const { data: categoriesData } = useQuery<{ categories: CategoryDoc[] }>(ADMIN_CATEGORIES, {
+    fetchPolicy: 'cache-first',
+  });
 
   const clubs = clubsData?.clubs ?? [];
   const locations = locsData?.locations ?? [];
@@ -36,10 +40,20 @@ export default function usePodPageData() {
     (id: string) => (venuesData?.venues ?? []).find((v: any) => v.id === id)?.venue_name ?? '—',
     [venuesData],
   );
+  /** The club's activity floor: its sub-category's `min_pax` (0 = none). */
+  const minPax = useCallback(
+    (clubId: string) => {
+      const subId = (clubsData?.clubs ?? []).find((c: any) => c.id === clubId)?.category_id;
+      return (categoriesData?.categories ?? []).find((c) => c.id === subId)?.min_pax ?? 0;
+    },
+    [clubsData, categoriesData],
+  );
 
   return {
     clubs,
     locations,
+    /** The admin category tree — the All Pods category filter resolves clubs from it. */
+    categories: categoriesData?.categories ?? [],
     approvedVenues,
     inventoryProducts: inventoryData?.inventoryProducts ?? [],
     users: usersData?.users ?? [],
@@ -50,5 +64,6 @@ export default function usePodPageData() {
     clubName,
     locName,
     venueName,
+    minPax,
   };
 }

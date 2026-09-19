@@ -3,13 +3,19 @@ import {
   earnBoxState,
   meetingNotice,
   partnerPortalUrl,
+  socialHandleLinks,
   type EarnMeeting,
+  type SocialHandles,
 } from '@duncit/onboarding';
 import { defineDemo, defineDemos } from '../types';
 
 interface EarnMock {
   roles: string[];
   meetings: EarnMeeting[];
+}
+
+interface SocialMock {
+  social_handles: SocialHandles;
 }
 
 export default defineDemos('onboarding', [
@@ -49,5 +55,22 @@ export default defineDemos('onboarding', [
         'Where a partner card sends you': partnerPortalUrl('/verification'),
       };
     },
+  }),
+  defineDemo<SocialMock>({
+    id: 'social-handles',
+    title: 'Which social links the survey pages show',
+    note: 'Fill in x_url and an X icon joins the row, first. Blank a link and its icon drops out — nothing is shown for a link the admin left empty.',
+    mock: {
+      social_handles: {
+        x_url: '',
+        instagram_url: 'https://www.instagram.com/duncit_app/',
+        youtube_url: 'https://www.youtube.com/@duncit',
+        facebook_url: 'https://facebook.com/duncitapp',
+        website_url: 'https://duncit.com',
+      },
+    },
+    compute: (mock) => ({
+      'Links shown, in order': socialHandleLinks(mock.social_handles).map((link) => `${link.key} → ${link.url}`),
+    }),
   }),
 ]);

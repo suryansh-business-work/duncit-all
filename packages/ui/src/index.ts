@@ -60,6 +60,7 @@ export type { DistributionBucket, DistributionCardProps } from './DistributionCa
 export { FillViewport } from './FillViewport';
 export type { FillViewportProps } from './FillViewport';
 export { chartSeriesColor } from './chartSeriesColor';
+export { categoryAxis, chartTooltip, valueAxis } from './chartFrame';
 export { SidebarList, countBadge } from './sidebar-list';
 export type { SidebarFilter, SidebarItem, SidebarListProps, SidebarOption } from './sidebar-list';
 export { ScrollRail } from './ScrollRail';

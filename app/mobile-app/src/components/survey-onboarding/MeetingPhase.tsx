@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Input, Spinner, Text, TextArea, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
@@ -32,6 +33,8 @@ interface Props {
   busy: boolean;
   error: string | null;
   onSubmit: () => void;
+  /** The last row of the scroll, under the booking button — the social media handles. */
+  footer?: ReactNode;
 }
 
 /** Slot booking — shown after the survey; recaps the submitted answers on top.
@@ -55,6 +58,7 @@ export function MeetingPhase({
   busy,
   error,
   onSubmit,
+  footer,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
@@ -159,6 +163,7 @@ export function MeetingPhase({
         disabled={busy}
         onPress={onSubmit}
       />
+      {footer}
     </RefreshScrollView>
   );
 }

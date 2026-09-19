@@ -9,6 +9,10 @@ import WhatsappPage from './pages/whatsapp-page';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import Msg91LogsPage from './pages/msg91-otp/logs';
 import Msg91AnalyticsPage from './pages/msg91-otp/analytics';
+// The Tech console's own page, mounted here as it is — one editor for the keys,
+// two doors (rules 34/40). The Dockerfile copies that console's src for the
+// build, and the deploy filter rebuilds this console when it changes.
+import Msg91SettingsPage from '../../tech/src/pages/msg91-settings';
 import { appConfig } from './config/app-config';
 import { runtime } from './runtime';
 
@@ -34,6 +38,7 @@ export default function App() {
       <Route path="/msg91-otp" element={<Navigate to="/msg91-otp/logs" replace />} />
       <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
       <Route path="/msg91-otp/analytics" element={authed(<Msg91AnalyticsPage />)} />
+      <Route path="/msg91-otp/settings" element={authed(<Msg91SettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

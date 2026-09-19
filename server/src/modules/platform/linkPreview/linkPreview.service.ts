@@ -4,8 +4,9 @@ import { userService } from '@modules/access/user/user.service';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { inventoryService } from '@modules/venues/inventory/inventory.service';
 import { postService } from '@modules/engagement/post/post.service';
+import { locationService } from '@modules/platform/location/location.service';
 
-export type LinkPreviewKind = 'POD' | 'CLUB' | 'USER' | 'POST' | 'VENUE' | 'PRODUCT';
+export type LinkPreviewKind = 'POD' | 'CLUB' | 'USER' | 'POST' | 'VENUE' | 'PRODUCT' | 'LOCATION';
 
 export interface LinkPreview {
   title: string;
@@ -133,6 +134,21 @@ async function productPreview(id: string): Promise<LinkPreview | null> {
   return preview(product.product_name, product.short_description || product.description, image);
 }
 
+/**
+ * A not-yet-launched city's waitlist page. Title is the city's name — the
+ * surface wraps it in its own "coming to {name}" copy — and the picture is the
+ * city's own. It names the slug URL as canonical, so a link shared by id is
+ * indexed as the same page. A launched or hidden city is no longer "coming",
+ * so it gets the default card.
+ */
+async function locationPreview(id: string): Promise<LinkPreview | null> {
+  const location = await locationService.getBySlugOrId(id);
+  if (!location?.is_active || location.is_launched) return null;
+  const card = preview(location.location_name, null, location.location_image);
+  if (!card) return card;
+  return { ...card, canonical_path: `/city-launch/${location.location_id}` };
+}
+
 const RESOLVERS: Record<LinkPreviewKind, (id: string, secondaryId: string | null) => Promise<LinkPreview | null>> = {
   POD: podPreview,
   CLUB: clubPreview,
@@ -140,6 +156,7 @@ const RESOLVERS: Record<LinkPreviewKind, (id: string, secondaryId: string | null
   POST: postPreview,
   VENUE: venuePreview,
   PRODUCT: productPreview,
+  LOCATION: locationPreview,
 };
 
 export const linkPreviewService = {

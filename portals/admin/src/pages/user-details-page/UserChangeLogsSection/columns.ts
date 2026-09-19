@@ -1,6 +1,6 @@
 import type { DuncitColumn } from '@duncit/table';
-import type { UserChangeLogRow } from '../queries';
-import { ACTION_OPTIONS, ACTOR_OPTIONS, SOURCE_OPTIONS } from './options';
+import type { UserChangeLogRow, UserChangeLogScope } from '../queries';
+import { ACTION_OPTIONS, ACTOR_OPTIONS, SCOPE_ACTOR_TYPES, SOURCE_OPTIONS } from './options';
 import {
   actorValue,
   renderAction,
@@ -99,3 +99,20 @@ export const CHANGE_LOG_COLUMNS: DuncitColumn<UserChangeLogRow>[] = [
     valueGetter: (row) => row.source,
   },
 ];
+
+/**
+ * The columns one scope shows.
+ *
+ * "Updated By" only offers the actor types that scope can hold, so a filter
+ * never names a value the tab cannot list — and a scope with a single actor
+ * type (Admin) drops the column, since every row would carry the same chip.
+ */
+export function changeLogColumns(scope: UserChangeLogScope): DuncitColumn<UserChangeLogRow>[] {
+  const actorTypes = new Set<string>(SCOPE_ACTOR_TYPES[scope]);
+  const actorOptions = ACTOR_OPTIONS.filter((option) => actorTypes.has(option.value));
+  return CHANGE_LOG_COLUMNS.flatMap((column) => {
+    if (column.field !== 'actor_type') return [column];
+    if (actorOptions.length === 1) return [];
+    return [{ ...column, options: actorOptions }];
+  });
+}

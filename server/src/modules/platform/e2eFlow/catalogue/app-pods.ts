@@ -1569,8 +1569,8 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         name: 'Add your name to a city waitlist',
         description: 'A signed-in member with a WhatsApp number subscribes.',
         steps: [
-          ['Open Home with an unlaunched city selected', 'The hero shows the city image, "Live count", the subscriber number, "people are in for {city}", "We\'ll launch once {target} people have added their names." and a progress bar'],
-          ['Tap "Notify me when {city} launches"', 'The page flips to "Your name has been added" with "We\'ll notify you on WhatsApp when we launch in {city}."'],
+          ['Open Home with an unlaunched city selected', 'The first screen shows "{city}, are you in?" over the launch video (its backup image when the video cannot play), "Live count", the subscriber number in red, "People are in for" with the city under it, a progress bar from that number to the target and "We\'ll launch once {target} people have added their names."'],
+          ['Tap "Join the waitlist!"', 'The page flips to "Your name has been added" with "We\'ll notify you on WhatsApp when we launch in {city}."'],
           ['Reload the page', 'The count went up by one and the added state stays'],
           ['Tap notify again via the API', 'No second subscription is created; the count is unchanged'],
         ],
@@ -1579,7 +1579,7 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         name: 'Subscribe without a WhatsApp number',
         description: 'The launch message needs a WhatsApp number on the profile.',
         steps: [
-          ['As a member with no WhatsApp or phone number tap "Notify me when {city} launches"', 'A card says "Add your WhatsApp number to your profile so we can tell you when {city} launches." with "Go to profile"'],
+          ['As a member with no WhatsApp or phone number tap "Join the waitlist!"', 'A card says "Add your WhatsApp number to your profile so we can tell you when {city} launches." with "Go to profile"'],
           ['Tap "Go to profile"', 'The account screen opens where the WhatsApp number is edited'],
           ['Add a WhatsApp number, come back and tap notify', 'The added state shows'],
         ],
@@ -1602,11 +1602,12 @@ export const APP_POD_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
-        name: 'What else can you do cards',
-        description: 'Three cards send people to the Earn journeys.',
+        name: 'Host, Venue Partner and Club Admin screens',
+        description: 'Three full-height screens send people to the Earn journeys.',
         steps: [
-          ['Scroll to "What else can you do?"', 'Cards "Want to host your own meet-ups?", "Have a space people can hang out in?" and "Want to help get this going?" show, each with "Tell me more"'],
-          ['Tap "Tell me more" on each card', 'They open the Earn host, venue and club admin journeys respectively'],
+          ['Scroll past the first screen', 'Three full-height screens follow, each over its own video: "Want to host your own Pods?" with a HOST badge and "Hobbies hit different", "Turn your space into a community" with a VENUE PARTNER badge, and "Run your own Club." with a CLUB ADMIN badge — each with "Tell me more"'],
+          ['Tap "Tell me more" on each screen', 'They open the Earn host, venue and club admin journeys respectively'],
+          ['Turn on Reduce Motion on the device and reopen the page', 'Every screen shows its backup image instead of the video'],
         ],
       },
       {

@@ -3,8 +3,9 @@ import { LOGS_READER, requireRole } from '@middleware/rbac';
 import { msg91Service } from './msg91.service';
 
 // The widget's records name every number that asked for a code, so only the
-// Communications console reads them (the keys themselves stay in Tech).
-const MSG91_READ = ['SUPER_ADMIN', 'COMMUNICATIONS_MANAGER'];
+// consoles that own the channel read them: Communications, and Tech, which
+// holds the auth key that reads the same records straight from MSG91.
+const MSG91_READ = ['SUPER_ADMIN', 'COMMUNICATIONS_MANAGER', 'TECH_MANAGER'];
 // ...and the Logs console, which mounts the same Logs page.
 const MSG91_LOG_READ = [...MSG91_READ, LOGS_READER];
 

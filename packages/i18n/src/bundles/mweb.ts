@@ -247,6 +247,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       venue: { description: 'See photos, capacity and upcoming pods at this venue.' },
       product: { description: 'Shop this product on Duncit.' },
+      // A not-yet-launched city's waitlist link, as "Send this to your friends" shares it.
+      cityLaunch: {
+        title: 'Duncit is coming to {name}',
+        description:
+          'Share it with your friends and be among the first to experience Duncit when we launch.',
+      },
       home: {
         title: 'Discover pods near you',
         description: 'Find clubs, pods, and meetups happening around you.',
@@ -3404,37 +3410,94 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       clubNotFound: 'Club not found.',
     },
     // A city that is not launched yet: its location-picker tile and the
-    // subscribe-for-launch page (mWeb CityLaunchView, native CityLaunchView).
+    // launch waitlist page (mWeb CityLaunchView, native CityLaunchView) — four
+    // full-height sections: the live count, then Host, Venue Partner and Club Admin.
     cityLaunch: {
       comingSoon: 'Coming soon',
       peopleIn: {
         one: '{count} person is in',
         other: '{count} people are in',
       },
+      // The live-count section.
+      tagline: 'Same city. New people.',
+      headline: '{city}, are you in?',
+      features: {
+        conversations: 'Candid Conversations',
+        friends: 'New Friends',
+        plans: 'Spontaneous Plans',
+        weekends: 'Better Weekends',
+      },
       liveCount: 'Live count',
-      peopleInFor: 'people are in for {city}',
+      peopleInFor: 'People are in for',
       launchGoal: "We'll launch once {target} people have added their names.",
-      notifyCta: 'Notify me when {city} launches',
+      notifyCta: 'Join the waitlist!',
       signInCta: 'Sign in to get notified',
+      // Asked as the name is added (CityLaunchLocationDialog on both apps);
+      // the ✕ and the backdrop answer No.
+      shareLocation: {
+        title: 'Are you willing to share your current location?',
+        yes: 'Yes',
+        no: 'No',
+      },
+      trust: {
+        circle: 'A bigger, kinder social circle',
+        verified: 'Verified & safe community',
+        events: 'City-based events & meetups',
+      },
+      footer: 'Be part of a more social {city}',
       addedTitle: 'Your name has been added',
       addedBody: "We'll notify you on WhatsApp when we launch in {city}.",
       shareFriends: 'Send this to your friends',
-      shareText: 'Duncit is coming to {city}. Add your name so it launches sooner: {url}',
+      shareText:
+        'Duncit is coming to {city}! Share it with your friends and be among the first to experience Duncit when we launch: {url}',
       linkCopied: 'Link copied',
       joinWhatsapp: "Join {city}'s WhatsApp for launch updates",
-      whatElse: 'What else can you do?',
-      hostEyebrow: 'Club leader',
-      hostTitle: 'Want to host your own meet-ups?',
+      // The Host section.
+      hostTagline: 'Same Interests. New Friends.',
+      hostEyebrow: 'Host',
+      hostTitle: 'Want to host your own Pods?',
+      hostPoints: {
+        people: 'Find your people',
+        plans: 'Plan meet-ups',
+        hobbies: 'Turn hobbies into real connections',
+      },
+      hostCardTitle: 'Hobbies hit different',
       hostBody:
-        'Super passionate about your hobby? Love getting people together? Create your own club on Duncit.',
+        "Whether it's badminton, book clubs, coffee meetups or house parties — create a space for your people.",
+      hostTrust: {
+        verified: 'A safe & verified community',
+        safePods: 'Safe Pods',
+        friendships: 'Passions turn into friendships.',
+      },
+      // The Venue Partner section.
+      venueTagline: 'Same people. New possibilities.',
       venueEyebrow: 'Venue partner',
-      venueTitle: 'Have a space people can hang out in?',
-      venueBody:
-        'Looking for more footfall at your cafe, studio, turf or ground? Make your space a community home.',
-      volunteerEyebrow: 'Volunteer',
-      volunteerTitle: 'Want to help get this going?',
-      volunteerBody:
-        'Help kick-start Duncit in your city, from spreading the word to setting up meet-ups.',
+      venueTitle: 'Turn your space into a community',
+      venueBody: 'Host Pods for workshops, game nights and more at your cafe, studio, turf or ground.',
+      venueStats: {
+        footfalls: 'More Footfalls',
+        communities: 'Engaged Communities',
+        experiences: 'Memorable Experiences',
+        growth: 'Growth Opportunities',
+      },
+      venueFooter: 'Good spaces bring good people together',
+      // The Club Admin section. The keys keep their first-version `volunteer`
+      // name (a reworded key keeps its key, rule 44); the copy is Club Admin's.
+      volunteerTagline: 'Good People Brighter Days',
+      volunteerEyebrow: 'Club Admin',
+      volunteerTitle: 'Run your own Club.',
+      volunteerBody: 'Manage and grow a community around what you love.',
+      volunteerChips: {
+        pods: 'Pods',
+        interests: 'Interests',
+        people: 'Real People',
+      },
+      volunteerStats: {
+        pods: 'Manage Your Pods',
+        members: 'Grow Your Members',
+        engagement: 'Track Engagement',
+      },
+      volunteerFooter: 'Good people. Brighter days.',
       tellMeMore: 'Tell me more',
       needWhatsapp: 'Add your WhatsApp number to your profile so we can tell you when {city} launches.',
       goToProfile: 'Go to profile',
@@ -3808,7 +3871,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       whatsappName: 'WhatsApp number',
       whatsappEnterField: 'Enter WhatsApp number',
       whatsappCurrent:
-        'This is your current WhatsApp number, enter a different number to make a change.',
+        'Please enter a different WhatsApp Number to request a change. The entered number is same as the current WhatsApp Number',
       whatsappEmpty: 'No WhatsApp number yet',
       whatsappTitle: 'Change WhatsApp number',
       whatsappHint: 'We will send a 6-digit code on WhatsApp to confirm the new number is yours.',
@@ -3841,6 +3904,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // rather than three times beside them.
       allRequired:
         'Your email address, phone number and WhatsApp number are all required.',
+      // Beside a phone or WhatsApp number a one-time code has proved.
+      verified: 'Verified',
       saved: '{channelName} updated',
     },
     smsPreference: {
@@ -4113,6 +4178,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       goToProfile: 'Go To Profile',
       notes: 'Notes',
       okay: 'Okay',
+    },
+    // Duncit's links on the Host / Venue / Club Admin survey pages (mWeb
+    // SurveyGatePage, native OnboardingSurvey), set in Onboarding > Onboarding Intro.
+    socialHandles: {
+      title: 'Social Media Handles',
+      x: 'X',
+      instagram: 'Instagram',
+      youtube: 'YouTube',
+      facebook: 'Facebook',
+      website: 'Duncit Website',
+      opensInNewTab: '{name}, opens in a new tab',
     },
     ticketDetails: {
       markResolved: 'Mark resolved',

@@ -1,8 +1,9 @@
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { AttendanceChip, PodSeatsCell } from '@duncit/ui';
+import { AttendanceChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import PodActionButtons from './PodActionButtons';
+import PodSpotsCell from './PodSpotsCell';
 import AiMonitorPill from '../monitoring/AiMonitorPill';
 import type { Translate } from '@duncit/shell';
 import type { PodRow } from './queries';
@@ -11,7 +12,6 @@ import {
   POD_TYPE_OPTIONS,
   dateValue,
   modeLabel,
-  podSpotCounts,
   productLines,
   productsValue,
   spotsValue,
@@ -75,12 +75,6 @@ const renderHits = (p: PodRow) => (
   </Stack>
 );
 
-/** Both counts, from the one component admin and Partners share (rule 40). */
-const renderSpots = (p: PodRow) => {
-  const { seats, people, total } = podSpotCounts(p);
-  return <PodSeatsCell seats={seats} bookings={people} total={total} />;
-};
-
 const renderStatus = (p: PodRow, t: PodsColumnDeps['t']) => {
   if (p.is_deleted) return <Chip size="small" label={t('admin.eventTickets.cancelled')} color="error" />;
   if (p.completed_at) return <Chip size="small" label={t('admin.podsDashboard.completed')} color="info" />;
@@ -120,6 +114,8 @@ export interface PodsColumnDeps {
   clubName: (id: string) => string;
   venueName: (id: string) => string;
   locName: (id: string) => string;
+  /** The club's sub-category minimum people (0 = none). */
+  minPax: (clubId: string) => number;
   onEdit: (p: PodRow) => void;
   onQuickEdit: (p: PodRow) => void;
   onDelete: (p: PodRow) => void;
@@ -128,7 +124,8 @@ export interface PodsColumnDeps {
 }
 
 export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<PodRow>[] {
-  const { showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } = deps;
+  const { showProducts, clubName, venueName, locName, minPax, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } =
+    deps;
   const placeValue = (p: PodRow) => {
     if (p.pod_mode === 'VIRTUAL') return p.meeting_platform ?? 'Virtual';
     if (p.venue_id) return venueName(p.venue_id);
@@ -204,7 +201,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       headerName: t('admin.pods.colSpots'),
       type: 'number',
       width: 120,
-      cellRenderer: renderSpots,
+      cellRenderer: (p: PodRow) => <PodSpotsCell pod={p} minPax={minPax(p.club_id)} t={t} />,
       valueGetter: spotsValue,
     },
     {

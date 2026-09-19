@@ -33,6 +33,7 @@ const makeDeps = (over: Partial<PodsColumnDeps> = {}): PodsColumnDeps => ({
   clubName: (id) => `Club<${id}>`,
   venueName: (id) => `Venue<${id}>`,
   locName: (id) => `Loc<${id}>`,
+  minPax: () => 0,
   onEdit: vi.fn(),
   onQuickEdit: vi.fn(),
   onDelete: vi.fn(),

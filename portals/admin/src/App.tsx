@@ -17,8 +17,6 @@ import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSetti
 import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSettingPage';
 import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage';
 import BrandingPage from './pages/BrandingPage';
-import LocalesPage from './pages/localization-page/LocalesPage';
-import TranslationsPage from './pages/localization-page/TranslationsPage';
 import BadgesPage from './pages/BadgesPage';
 import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
 import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membership';
@@ -58,8 +56,6 @@ export default function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/portal-app-settings" element={<PortalAppSettingsPage />} />
-                <Route path="/localization/locales" element={<LocalesPage />} />
-                <Route path="/localization/translations" element={<TranslationsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AppShell>

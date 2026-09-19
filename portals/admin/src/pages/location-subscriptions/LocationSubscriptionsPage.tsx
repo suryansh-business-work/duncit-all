@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { notifyError } from '@duncit/dialogs';
@@ -40,6 +40,8 @@ export default function LocationSubscriptionsPage() {
   });
 
   const cities = useMemo(() => (data?.locationSubscriptionCities ?? []).map(toCityRow), [data]);
+  // The Subscribers table only exists for a picked city; nothing is listed before that.
+  const [selectedCity, setSelectedCity] = useState<LaunchCityRow | null>(null);
 
   const onSent = useCallback(() => {
     refetch().catch((e: Error) => notifyError(e.message));
@@ -66,15 +68,37 @@ export default function LocationSubscriptionsPage() {
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {t('admin.locationSubscriptions.scenarioHint')}
         </Typography>
-        <LaunchCitiesTable rows={cities} onSent={onSent} />
+        <LaunchCitiesTable
+          rows={cities}
+          onSent={onSent}
+          selectedId={selectedCity?.id ?? null}
+          onSelect={setSelectedCity}
+        />
       </Stack>
 
-      <Stack spacing={1}>
-        <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600 }}>
-          {t('admin.locationSubscriptions.subscribersTitle')}
+      {selectedCity ? (
+        <Stack spacing={1}>
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600 }}>
+            {t('admin.locationSubscriptions.subscribersTitle')}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary' }}
+            data-testid="location-subscriptions-selected-city"
+          >
+            {t('admin.locationSubscriptions.subscribersFor', { vars: { city: selectedCity.city } })}
+          </Typography>
+          <SubscribersTable city={selectedCity} refetchRef={subscribersRefetchRef} />
+        </Stack>
+      ) : (
+        <Typography
+          variant="body2"
+          sx={{ color: 'text.secondary' }}
+          data-testid="location-subscriptions-pick-city"
+        >
+          {t('admin.locationSubscriptions.pickCity')}
         </Typography>
-        <SubscribersTable cities={cities} refetchRef={subscribersRefetchRef} />
-      </Stack>
+      )}
     </Stack>
   );
 }

@@ -23,6 +23,7 @@ export const MobileUserInfoDocument = gql(`
       phone_extension
       whatsapp_number
       whatsapp_extension
+      whatsapp_verified_at
       profile_photo
       bio
       gender

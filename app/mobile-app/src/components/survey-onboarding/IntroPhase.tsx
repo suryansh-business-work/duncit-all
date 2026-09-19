@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { WebView } from 'react-native-webview';
 import { YStack } from 'tamagui';
 
@@ -11,6 +12,8 @@ interface Props {
   html: string;
   loading: boolean;
   onContinue: () => void;
+  /** Shown under the Continue button — the social media handles. */
+  footer?: ReactNode;
 }
 
 /** Minimal page around the admin-authored HTML fragment, themed to match the
@@ -31,7 +34,7 @@ function wrapIntroHtml(html: string, background: string, color: string, primary:
 /** First screen of each onboarding flow — the admin-authored intro copy
  * (Onboarding Portal > Settings), shown before the category picker. Skipped
  * entirely by the caller when a kind's intro field is blank. */
-export function IntroPhase({ html, loading, onContinue }: Readonly<Props>) {
+export function IntroPhase({ html, loading, onContinue, footer }: Readonly<Props>) {
   const { t } = useTranslation();
   const bottomInset = useBottomInset();
   const { background, color, primary } = useThemeColors();
@@ -54,7 +57,7 @@ export function IntroPhase({ html, loading, onContinue }: Readonly<Props>) {
           style={{ flex: 1, backgroundColor: 'transparent' }}
         />
       </YStack>
-      <YStack padding={16} paddingBottom={bottomInset + 16}>
+      <YStack padding={16} paddingBottom={bottomInset + 16} gap={16}>
         <DuncitButton
           testID="primary-action"
           label={t('mweb.common.continue')}
@@ -62,6 +65,7 @@ export function IntroPhase({ html, loading, onContinue }: Readonly<Props>) {
           fullWidth
           onPress={onContinue}
         />
+        {footer}
       </YStack>
     </YStack>
   );

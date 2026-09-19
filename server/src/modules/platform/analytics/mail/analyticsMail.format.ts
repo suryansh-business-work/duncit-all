@@ -48,6 +48,12 @@ function formatDuration(ms: number): string {
   return step.format.format(ms / step.atLeast);
 }
 
+/** US dollars to the cent — and to a hundredth of a cent under a dollar, where OpenAI spend usually sits. */
+function formatUsd(value: number): string {
+  const digits = Math.abs(value) < 1 ? 4 : 2;
+  return `$${new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: digits }).format(value)}`;
+}
+
 /** One value as the dashboards write it. `currency` is the symbol a money figure is prefixed with. */
 export function formatAnalyticsValue(
   value: number | null | undefined,
@@ -71,9 +77,23 @@ export function formatAnalyticsValue(
       return formatDuration(value);
     case 'GRADE':
       return value >= 1 ? String.fromCodePoint(64 + Math.round(value)) : EM_DASH;
+    case 'USD':
+      return formatUsd(value);
     default:
       return COUNT.format(value);
   }
+}
+
+/** A ranking cell: a check's result in words, anything else as `formatAnalyticsValue` writes it. */
+export function formatCell(
+  value: number | null | undefined,
+  format: AnalyticsFormat,
+  currency: string,
+  copy: ReportCopy
+): string {
+  if (format !== 'OUTCOME') return formatAnalyticsValue(value, format, currency);
+  if (value === null || value === undefined) return copy.t('analytics.outcome.untested');
+  return copy.t(value === 1 ? 'analytics.outcome.passed' : 'analytics.outcome.failed');
 }
 
 export type DeltaTone = 'good' | 'bad' | 'flat';

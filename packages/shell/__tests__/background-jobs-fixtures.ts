@@ -7,6 +7,7 @@ import type { BackgroundJob } from '../src/background-jobs/queries';
 export function makeJob(overrides: Partial<BackgroundJob> = {}): BackgroundJob {
   return {
     id: 'DUN-JOB-7001',
+    kind: 'BULK_DELETE',
     table: 'couponsTable',
     label: 'Coupons',
     url: 'https://finance.duncit.com/coupons',

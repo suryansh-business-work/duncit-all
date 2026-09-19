@@ -1751,15 +1751,26 @@ export const ADMIN_FLOWS: readonly CatalogueFlow[] = [
   },
   {
     name: 'Admin: City Launch Settings',
-    description: 'The Launched switch, launch target and city WhatsApp group link on Catalog > Locations add/edit.',
+    description: 'The Launch Settings group (Launched switch, launch target, city WhatsApp group link, launch page media) on Catalog > Locations add/edit.',
     sub_flows: [
       {
         name: 'Add a city that is not launched yet',
         description: 'A new city starts as a waitlist.',
         steps: [
-          ['Open /locations and add a location', 'The dialog shows a Launched switch (on), Launch target (2000) with its hint, and City WhatsApp group link'],
-          ['Turn Launched off, set the target to 1500, fill the rest and save', 'The table shows the city with a "Not launched" chip'],
+          ['Open /locations and add a location', 'The dialog groups a Launched switch, Launch target (2000) and City WhatsApp group link under "Launch Settings"; the switch is OFF and reads "Not launched", and the target and link sit in two equal columns with their hints level'],
+          ['Set the target to 1500, fill the rest and save', 'The table shows the city with a "Not launched" chip on a yellow-tinted row; launched cities sit on green-tinted rows'],
           ['Open the app location picker', 'The city tile shows "0 people are in" with "Coming soon"'],
+        ],
+      },
+      {
+        name: 'Launch page media',
+        description: 'The video and backup image behind each screen of the waitlist page, global and per city.',
+        steps: [
+          ['Click "Launch page media" beside "New Location"', 'A dialog lists Top (live count), Host, Venue Partner and Club Admin, each with a Video and a Backup image picker'],
+          ['Pick a video and an image for Top (live count) and save', '"Saved" shows; reopening the dialog shows the picked files'],
+          ['Open a not-launched city in the app', 'The first screen plays that video behind "{city}, are you in?"; the image draws while it loads or when it cannot play'],
+          ['Edit a city, expand "Override launch page media for this city", pick a different Top video and save', 'That city plays its own video on the first screen; the other screens still play the global media; other cities are unchanged'],
+          ['Clear the override and save', 'The city plays the global video again'],
         ],
       },
       {

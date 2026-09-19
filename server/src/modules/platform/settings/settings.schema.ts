@@ -371,6 +371,8 @@ export const settingsTypeDefs = gql`
     login_background_image_url: String!
     login_background_video_enabled: Boolean!
     login_background_video_url: String!
+    "The global backdrops behind the launch waitlist page of every city not launched yet; a city can override any field."
+    launch_media: LaunchPageMedia!
     mobile_font_family: String!
     mweb_font_family: String!
     portals_font_family: String!
@@ -448,6 +450,7 @@ export const settingsTypeDefs = gql`
     login_background_image_url: String
     login_background_video_enabled: Boolean
     login_background_video_url: String
+    launch_media: LaunchPageMediaInput
     mobile_font_family: String
     mweb_font_family: String
     portals_font_family: String

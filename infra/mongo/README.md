@@ -20,6 +20,24 @@ db.grantRolesToUser("duncit_prod", [{ role: "readWrite", db: "duncit-lite" }])
 db.grantRolesToUser("duncit_staging", [{ role: "readWrite", db: "duncit-lite-staging" }])
 ```
 
+## Monitoring role for Tech → Database → Info
+
+The Info page lists every database the user can read, its stats and the
+mongod's container log with nothing beyond the grants above. Three parts need
+the read-only `clusterMonitor` role, which neither app user has by default:
+`serverStatus` (uptime, connections, operation counters, cache), `replSetGetStatus`
+/ `replSetGetConfig` (members, lag, priority) and `local.oplog.rs` (the oplog
+window). Until it is granted the page shows the server's refusal and this
+command in their place:
+
+```js
+// mongosh as root, in the admin database. No restart; the next page load fills in.
+db.grantRolesToUser("duncit_prod", [{ role: "clusterMonitor", db: "admin" }])
+db.grantRolesToUser("duncit_staging", [{ role: "clusterMonitor", db: "admin" }])
+```
+
+`clusterMonitor` cannot write, step a member down or change the config.
+
 ## Layout on the host
 
 ```text

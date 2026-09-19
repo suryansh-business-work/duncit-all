@@ -1,6 +1,17 @@
-import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
-import { launchTargetError, whatsappGroupUrlError, type LocForm } from './types';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslation } from '@duncit/shell';
+import LaunchMediaFields from './LaunchMediaFields';
+import { hasLaunchMediaOverride, launchTargetError, whatsappGroupUrlError, type LocForm } from './types';
 
 interface Props {
   form: LocForm;
@@ -8,9 +19,10 @@ interface Props {
 }
 
 /**
- * Whether the city is live in the app, and what its launch waitlist page shows
- * while it is not: the goal ("We'll launch once X people…") and an optional
- * city WhatsApp group.
+ * The Launch Settings group of the location dialog: whether the city is live
+ * in the app, and what its launch waitlist page shows while it is not — the
+ * goal ("We'll launch once X people…"), an optional city WhatsApp group, and
+ * the city's own backdrops over the global launch page media.
  */
 export default function LocationLaunchFields({ form, setForm }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -19,11 +31,30 @@ export default function LocationLaunchFields({ form, setForm }: Readonly<Props>)
   const launchedLabel = form.is_launched ? t('admin.locations.launched') : t('admin.locations.notLaunched');
 
   return (
-    <Stack spacing={2}>
+    <Stack
+      component="fieldset"
+      spacing={2}
+      data-testid="location-form-launch-settings"
+      sx={{ m: 0, p: 2, border: 1, borderColor: 'divider', borderRadius: 2, minWidth: 0 }}
+    >
+      <Box component="legend" sx={{ px: 0.5 }}>
+        <Typography component="span" variant="subtitle1" sx={{ fontWeight: 600 }}>
+          {t('admin.locations.launchSettings')}
+        </Typography>
+      </Box>
+      <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }}>
+        {t('admin.locations.launchSettingsHint')}
+      </Typography>
+
       <Box>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Switch
-            slotProps={{ input: { 'aria-label': t('admin.locations.launched'), 'data-testid': 'location-form-launched' } as Record<string, string> }}
+            slotProps={{
+              input: {
+                'aria-label': t('admin.locations.launched'),
+                'data-testid': 'location-form-launched',
+              } as Record<string, string>,
+            }}
             checked={form.is_launched}
             onChange={(_, v) => setForm((prev) => ({ ...prev, is_launched: v }))}
           />
@@ -33,7 +64,10 @@ export default function LocationLaunchFields({ form, setForm }: Readonly<Props>)
           {t('admin.locations.launchedHint')}
         </Typography>
       </Box>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+
+      {/* Two equal columns from the same top edge, so the two helper lines
+          start level however long either one runs. */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, alignItems: 'start' }}>
         <TextField
           type="number"
           label={t('admin.locations.launchTarget')}
@@ -42,8 +76,10 @@ export default function LocationLaunchFields({ form, setForm }: Readonly<Props>)
           error={Boolean(targetError)}
           helperText={targetError ? t(targetError) : t('admin.locations.launchTargetHint')}
           required
-          slotProps={{ htmlInput: { min: 1, step: 1, inputMode: 'numeric', 'data-testid': 'location-form-launch-target' } }}
-          sx={{ width: { xs: '100%', sm: 260 } }}
+          fullWidth
+          slotProps={{
+            htmlInput: { min: 1, step: 1, inputMode: 'numeric', 'data-testid': 'location-form-launch-target' },
+          }}
         />
         <TextField
           type="url"
@@ -52,10 +88,34 @@ export default function LocationLaunchFields({ form, setForm }: Readonly<Props>)
           onChange={(e) => setForm((prev) => ({ ...prev, whatsapp_group_url: e.target.value }))}
           error={Boolean(groupError)}
           helperText={groupError ? t(groupError) : t('admin.locations.whatsappGroupUrlHint')}
-          slotProps={{ htmlInput: { 'data-testid': 'location-form-whatsapp-group-url' } }}
           fullWidth
+          slotProps={{ htmlInput: { 'data-testid': 'location-form-whatsapp-group-url' } }}
         />
-      </Stack>
+      </Box>
+
+      <Accordion
+        disableGutters
+        defaultExpanded={hasLaunchMediaOverride(form.launch_media)}
+        data-testid="location-form-launch-media"
+        sx={{ '&::before': { display: 'none' }, border: 1, borderColor: 'divider', boxShadow: 'none' }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box>
+            <Typography variant="subtitle2">{t('admin.locations.launchMediaOverride')}</Typography>
+            <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }}>
+              {t('admin.locations.launchMediaOverrideHint')}
+            </Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <LaunchMediaFields
+            value={form.launch_media}
+            onChange={(launch_media) => setForm((prev) => ({ ...prev, launch_media }))}
+            folder="/locations/launch"
+            testIdPrefix="location-form-launch-media"
+          />
+        </AccordionDetails>
+      </Accordion>
     </Stack>
   );
 }

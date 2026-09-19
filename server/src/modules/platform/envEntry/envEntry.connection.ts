@@ -18,6 +18,7 @@ import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
 import { godaddyConfigOf, godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
+import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -658,6 +659,13 @@ export async function godaddyConnection(str: EnvConfigReader): Promise<EnvConnec
   }
 }
 
+/**
+ * Social apps: every provider app with both keys is put in front of its
+ * provider. It lives with the social module, which owns the four providers;
+ * this file only dispatches to it.
+ */
+export const socialAppsConnection = probeSocialApps;
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -677,6 +685,7 @@ const CONNECTION_CHECKS = {
   APP_STORE_CONNECT: appStoreConnectConnection,
   SONARQUBE: sonarqubeConnection,
   GODADDY: godaddyConnection,
+  SOCIAL_APPS: socialAppsConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

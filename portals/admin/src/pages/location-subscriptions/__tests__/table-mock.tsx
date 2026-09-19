@@ -13,7 +13,20 @@ import { DuncitTable as GridStub } from '../../../__tests__/table-mock';
  * `useApolloTableFetch` round-trips through the real Apollo client, so the
  * server-paged subscribers table is answered by the suite's MockedProvider.
  */
-export { useApolloTableFetch } from '../../localization-page/__tests__/translation-table-mock';
+interface MockGqlClient {
+  query(options: { query: unknown; variables?: Record<string, unknown>; fetchPolicy?: string }): Promise<{
+    data: unknown;
+  }>;
+}
+
+/** Passthrough that still round-trips through the real Apollo client's `query`. */
+export function useApolloTableFetch<Row>(client: MockGqlClient, query: unknown, resultKey: string) {
+  return async () => {
+    const { data } = await client.query({ query, variables: {}, fetchPolicy: 'network-only' });
+    const payload = (data as Record<string, { rows: Row[]; total: number }>)[resultKey];
+    return { rows: payload.rows, total: payload.total };
+  };
+}
 
 export const tableSearch = { value: '' };
 

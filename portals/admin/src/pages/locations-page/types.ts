@@ -1,4 +1,4 @@
-import { DEFAULT_LAUNCH_TARGET } from '@duncit/utils';
+import { DEFAULT_LAUNCH_TARGET, EMPTY_LAUNCH_MEDIA, type LaunchPageMedia } from '@duncit/utils';
 
 export interface ZoneEdit {
   zone_name: string;
@@ -23,12 +23,31 @@ export interface LocForm {
   /** Kept as typed, so a half-edited number is not coerced mid-keystroke. */
   launch_target: string;
   whatsapp_group_url: string;
+  /** This city's own launch page backdrops; an empty field plays the global one. */
+  launch_media: LaunchPageMedia;
   zones: ZoneEdit[];
 }
 
 /** The launch target range the server accepts. */
 const MAX_LAUNCH_TARGET = 1_000_000;
 const WHATSAPP_GROUP_LINK = /^https:\/\/chat\.whatsapp\.com\/\S+$/;
+
+const LAUNCH_MEDIA_KEYS = Object.keys(EMPTY_LAUNCH_MEDIA) as (keyof LaunchPageMedia)[];
+
+/**
+ * The eight media fields as a mutation input, picked by name: a set read from
+ * a query carries `__typename`, which a `*Input` type rejects outright.
+ */
+export function toLaunchMediaInput(media?: Partial<LaunchPageMedia> | null): LaunchPageMedia {
+  const out = { ...EMPTY_LAUNCH_MEDIA };
+  for (const key of LAUNCH_MEDIA_KEYS) out[key] = media?.[key] ?? '';
+  return out;
+}
+
+/** Whether a city overrides any of the global launch page media. */
+export function hasLaunchMediaOverride(media: LaunchPageMedia): boolean {
+  return LAUNCH_MEDIA_KEYS.some((key) => media[key].trim() !== '');
+}
 
 /** Translation key for why the launch target cannot be saved; null when it can. */
 export function launchTargetError(value: string): string | null {
@@ -82,9 +101,12 @@ export function buildLocationInput(form: LocForm) {
     is_launched: form.is_launched,
     launch_target: Number(form.launch_target),
     whatsapp_group_url: form.whatsapp_group_url.trim(),
+    launch_media: toLaunchMediaInput(form.launch_media),
   };
 }
 
+/** A new city starts NOT launched: it opens its waitlist until an admin flips
+ * the switch, so a city added ahead of its launch never shows an empty feed. */
 export const blankForm: LocForm = {
   location_id: '',
   location_name: '',
@@ -96,8 +118,9 @@ export const blankForm: LocForm = {
   location_image: '',
   location_pincode: '',
   is_active: true,
-  is_launched: true,
+  is_launched: false,
   launch_target: String(DEFAULT_LAUNCH_TARGET),
   whatsapp_group_url: '',
+  launch_media: EMPTY_LAUNCH_MEDIA,
   zones: [{ zone_name: '', zone_code: '', pincode: '' }],
 };

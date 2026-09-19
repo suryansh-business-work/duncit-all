@@ -17,6 +17,18 @@ export interface AnalyticsPageSpec {
   cityFilter?: boolean;
 }
 
+/**
+ * Every log Duncit keeps. Also the Logs console's home, which mounts this same
+ * spec — so a layout saved in one console is the layout in the other.
+ */
+export const LOGS_PAGE: AnalyticsPageSpec = {
+  path: '/tech/logs',
+  entity: 'LOGS',
+  title: 'analytics.page.logs.title',
+  subtitle: 'analytics.page.logs.subtitle',
+  dashboardId: 'analytics.logs',
+};
+
 /** The console's dashboards, in sidebar order. The first is where `/` lands. */
 export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
   {
@@ -168,6 +180,21 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     title: 'analytics.page.appReleases.title',
     subtitle: 'analytics.page.appReleases.subtitle',
     dashboardId: 'analytics.appReleases',
+  },
+  LOGS_PAGE,
+  {
+    path: '/costing/whatsapp',
+    entity: 'WHATSAPP_COSTS',
+    title: 'analytics.page.whatsappCosts.title',
+    subtitle: 'analytics.page.whatsappCosts.subtitle',
+    dashboardId: 'analytics.whatsappCosts',
+  },
+  {
+    path: '/costing/openai',
+    entity: 'OPENAI_COSTS',
+    title: 'analytics.page.openaiCosts.title',
+    subtitle: 'analytics.page.openaiCosts.subtitle',
+    dashboardId: 'analytics.openaiCosts',
   },
   {
     path: '/security/sonarqube',

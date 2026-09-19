@@ -308,6 +308,13 @@ services:
     ports:
       - "127.0.0.1:2137:80"
 
+  localization:
+    image: ${DOCKERHUB_USERNAME}/duncit-localization:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-localization
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2142:80"
+
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ecomm-portal

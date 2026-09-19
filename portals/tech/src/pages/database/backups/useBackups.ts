@@ -8,7 +8,6 @@ import {
   DB_BACKUP_SETTINGS,
   DB_RESTORE_JOB,
   DELETE_DB_BACKUP,
-  REQUEST_DB_BACKUP_DOWNLOAD,
   RESTORE_DB_BACKUP,
   RUN_DB_BACKUP,
   SAVE_DB_BACKUP_SETTINGS,
@@ -18,6 +17,7 @@ import {
   type RestoreJob,
 } from './queries';
 import type { BackupSettingsForm } from './schema';
+import { useBackupDownload } from './useBackupDownload';
 
 /**
  * How often the page refreshes while something is moving. A backup of a real
@@ -54,8 +54,8 @@ export function useBackups() {
   const [runBackup, runState] = useMutation<any>(RUN_DB_BACKUP);
   const [saveSettings, saveState] = useMutation<any>(SAVE_DB_BACKUP_SETTINGS);
   const [removeBackup] = useMutation<any>(DELETE_DB_BACKUP);
-  const [requestDownload] = useMutation<any>(REQUEST_DB_BACKUP_DOWNLOAD);
   const [startRestore, restoreState] = useMutation<any>(RESTORE_DB_BACKUP);
+  const onDownload = useBackupDownload();
 
   const baseFetch = useApolloTableFetch<BackupRow>(client, DB_BACKUPS_TABLE, 'dbBackupsTable');
 
@@ -109,24 +109,6 @@ export function useBackups() {
       }
     },
     [saveSettings, settingsQuery, t],
-  );
-
-  /**
-   * A link is minted per click and lives for minutes, so it is opened straight
-   * away rather than rendered into the row as an href that would go stale
-   * sitting on screen.
-   */
-  const onDownload = useCallback(
-    async (row: BackupRow) => {
-      try {
-        const result = await requestDownload({ variables: { id: row.id } });
-        const url = result.data?.requestDbBackupDownload?.url;
-        if (url) globalThis.open(url, '_blank', 'noopener');
-      } catch (err) {
-        notifyError(messageOf(err, t('tech.dbBackup.downloadFailed')));
-      }
-    },
-    [requestDownload, t],
   );
 
   const onDelete = useCallback(

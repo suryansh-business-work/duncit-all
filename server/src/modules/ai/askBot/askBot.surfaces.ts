@@ -32,7 +32,7 @@ export const SURFACES: readonly Surface[] = [
     host: 'admin.duncit.com',
     dev_port: 2002,
     summary:
-      'The platform control room: users, roles, clubs, pods, venues, hosts, categories, cities, settings, localization and the approval inboxes.',
+      'The platform control room: users, roles, clubs, pods, venues, hosts, categories, cities, settings and the approval inboxes.',
   },
   {
     key: 'tech',
@@ -230,6 +230,15 @@ export const SURFACES: readonly Surface[] = [
     dev_port: 2038,
     summary:
       'The console that runs the Duncit Pet Store: which catalogue products are on the shelf and how they read there, pet types, categories, filters, collections, the store home page, orders, returns, customers, reviews, store coupons, abandoned carts, back-in-stock alerts and the store settings.',
+  },
+  {
+    key: 'localization',
+    name: 'Localization',
+    kind: 'PORTAL',
+    host: 'localization.duncit.com',
+    dev_port: 2042,
+    summary:
+      'The console for the languages Duncit ships in (Locales) and every user-facing string (Translations) — add a language, see how complete and up to date each one is, edit entries page by page, and have AI translate a language from English as a background job.',
   },
   {
     key: 'ecomm',

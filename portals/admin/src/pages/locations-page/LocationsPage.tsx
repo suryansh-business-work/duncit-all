@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import VideoSettingsIcon from '@mui/icons-material/VideoSettings';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError } from '@duncit/dialogs';
@@ -12,10 +13,12 @@ import {
   UPDATE_LOCATION,
   type LocationRow,
 } from './queries';
-import { blankForm, buildLocationInput, type LocForm, type ZoneEdit } from './types';
+import { blankForm, buildLocationInput, toLaunchMediaInput, type LocForm, type ZoneEdit } from './types';
 import LocationsTable from './LocationsTable';
 import LocationFormDialog from './LocationFormDialog';
+import LaunchMediaDialog from './LaunchMediaDialog';
 import LocationsToolbar from './LocationsToolbar';
+import { withLaunchFilter } from './launchFilter';
 import { useTranslation } from '@duncit/shell';
 
 export default function LocationsPage() {
@@ -28,12 +31,14 @@ export default function LocationsPage() {
   const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mediaOpen, setMediaOpen] = useState(false);
   const [form, setForm] = useState<LocForm>(blankForm);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const fetchRows = useApolloTableFetch<LocationRow>(client, LOCATIONS_TABLE, 'locationsTable');
+  const fetchPage = useApolloTableFetch<LocationRow>(client, LOCATIONS_TABLE, 'locationsTable');
+  const fetchRows = useMemo(() => withLaunchFilter(fetchPage), [fetchPage]);
 
   const openCreate = () => {
     setForm({ ...blankForm, zones: [{ zone_name: '', zone_code: '', pincode: '' }] });
@@ -57,6 +62,8 @@ export default function LocationsPage() {
       is_launched: loc.is_launched,
       launch_target: String(loc.launch_target),
       whatsapp_group_url: loc.whatsapp_group_url,
+      // Picked by name at hydration, so form state never carries __typename.
+      launch_media: toLaunchMediaInput(loc.launch_media),
       zones:
         loc.location_zones.length > 0
           ? loc.location_zones.map((z) => ({
@@ -129,9 +136,20 @@ export default function LocationsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New Location
-          </DuncitButton>
+          <Stack direction="row" spacing={1}>
+            <DuncitButton
+              size="small"
+              variant="outlined"
+              startIcon={<VideoSettingsIcon />}
+              onClick={() => setMediaOpen(true)}
+              data-testid="locations-launch-media"
+            >
+              {t('admin.locations.launchMedia')}
+            </DuncitButton>
+            <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+              New Location
+            </DuncitButton>
+          </Stack>
         }
         onEdit={openEdit}
         onDelete={remove}
@@ -148,6 +166,12 @@ export default function LocationsPage() {
         updateZone={updateZone}
         addZone={addZone}
         removeZone={removeZone}
+      />
+
+      <LaunchMediaDialog
+        open={mediaOpen}
+        onClose={() => setMediaOpen(false)}
+        onSaved={() => setToast(t('shell.common.saved'))}
       />
 
       <Snackbar

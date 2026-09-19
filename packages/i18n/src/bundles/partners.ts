@@ -322,6 +322,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       accountNumberRequired: 'Account number is required',
       addALeaveDate: 'Add a leave date',
       addVenueImage: 'Add venue image',
+      allDocumentTypesAdded: 'Every document type has a document. Remove one to add a different file.',
       amenities: 'Amenities',
       bankAccountDetails: 'Bank account details',
       documentType: 'Document type',

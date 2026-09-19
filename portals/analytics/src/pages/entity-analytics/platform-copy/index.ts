@@ -17,6 +17,9 @@ import { API_PERFORMANCE_COPY } from './api-performance';
 import { SERVER_COPY } from './server';
 import { AI_USAGE_COPY } from './ai-usage';
 import { APP_RELEASES_COPY } from './app-releases';
+import { LOGS_COPY } from './logs';
+import { WHATSAPP_COSTS_COPY } from './whatsapp-costs';
+import { OPENAI_COSTS_COPY } from './openai-costs';
 import type { PageCopy } from './types';
 
 /**
@@ -46,6 +49,9 @@ const PAGES: readonly PageCopy[] = [
   SERVER_COPY,
   AI_USAGE_COPY,
   APP_RELEASES_COPY,
+  LOGS_COPY,
+  WHATSAPP_COSTS_COPY,
+  OPENAI_COSTS_COPY,
 ];
 
 const merged = <K extends keyof PageCopy>(part: K): PageCopy[K] =>

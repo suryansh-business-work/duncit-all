@@ -13,6 +13,7 @@ import {
   razorpayConnection,
   shiprocketConnection,
   slackConnection,
+  socialAppsConnection,
   type EnvConfigReader,
 } from './envEntry.connection';
 
@@ -208,6 +209,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,
   GODADDY: godaddyConnection,
+  SOCIAL_APPS: socialAppsConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */
@@ -237,10 +239,10 @@ export const envEntryService = {
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the envEntriesTable query. */
-  async table(input?: TableQueryInput | null) {
+  async table(input?: TableQueryInput | null, baseFilter: Record<string, unknown> = {}) {
     const { docs, total, page, page_size } = await runTableQuery(
       EnvEntryModel,
-      {},
+      baseFilter,
       input,
       ENV_ENTRY_TABLE_CONFIG
     );

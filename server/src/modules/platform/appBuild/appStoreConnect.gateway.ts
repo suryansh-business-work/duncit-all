@@ -1,5 +1,7 @@
+import { GraphQLError } from 'graphql';
 import jwt from 'jsonwebtoken';
 import { applePrivateKeyPem } from '@modules/access/auth/auth.apple';
+import { outboundFetch } from '@utils/outboundFetch';
 
 /**
  * The App Store Connect API, as far as signing an iOS build goes.
@@ -77,22 +79,42 @@ export function ascToken(creds: AscCredentials): string {
   });
 }
 
-/** What Apple said, in one line, without the credential. */
-function ascError(status: number, data: any): Error {
-  const first = Array.isArray(data?.errors) ? data.errors[0] : null;
-  const reason = String(first?.detail ?? first?.title ?? 'no reason given');
-  return new Error(`App Store Connect refused the request (HTTP ${status}): ${reason}`);
+const STORE = 'App Store Connect';
+
+/** What Apple said, in one line, without the credential — with the status kept, so a retry can tell busy from wrong. */
+export class AscError extends Error {
+  constructor(
+    readonly status: number,
+    reason: string
+  ) {
+    super(`${STORE} refused the request (HTTP ${status}): ${reason}`);
+    this.name = 'AscError';
+  }
+}
+
+/**
+ * Whether a failed call is worth making again. The connection never landed or
+ * broke (`outboundFetch` throws those as BAD_GATEWAY, whatever the host), or
+ * Apple answered that it is busy or broken (429, 5xx). Any other refusal would
+ * be refused the same way a second time.
+ */
+export function isTransientAscError(err: unknown): boolean {
+  if (err instanceof AscError) return err.status === 429 || err.status >= 500;
+  return err instanceof GraphQLError && err.extensions?.code === 'BAD_GATEWAY';
 }
 
 async function call(token: string, path: string, init: RequestInit = {}): Promise<any> {
-  const res = await fetch(`${API}${path}`, {
+  const res = await outboundFetch(STORE, `${API}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (res.status === 204) return {};
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw ascError(res.status, data);
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const first = Array.isArray(data?.errors) ? data.errors[0] : null;
+    throw new AscError(res.status, String(first?.detail ?? first?.title ?? 'no reason given'));
+  }
   return data;
 }
 

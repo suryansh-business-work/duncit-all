@@ -13,6 +13,35 @@ export const locationTypeDefs = /* GraphQL */ `
     pincode: String
   }
 
+  """
+  The backdrop behind each of the four full-page sections of a city's launch
+  waitlist page: the top (live count), Host, Venue Partner and Club Admin. A
+  section plays its video and draws its image when the video cannot play or
+  none is set. An empty string means not set.
+  """
+  type LaunchPageMedia {
+    hero_video_url: String!
+    hero_image_url: String!
+    host_video_url: String!
+    host_image_url: String!
+    venue_video_url: String!
+    venue_image_url: String!
+    club_admin_video_url: String!
+    club_admin_image_url: String!
+  }
+
+  "Replaces the whole set. A field left null or empty is unset: on a city it then falls back to the global media."
+  input LaunchPageMediaInput {
+    hero_video_url: String
+    hero_image_url: String
+    host_video_url: String
+    host_image_url: String
+    venue_video_url: String
+    venue_image_url: String
+    club_admin_video_url: String
+    club_admin_image_url: String
+  }
+
   type Location {
     id: ID!
     location_id: String!
@@ -37,6 +66,8 @@ export const locationTypeDefs = /* GraphQL */ `
     launch_target: Int!
     "Optional chat.whatsapp.com invite link shown on the subscribe page; empty when unset."
     whatsapp_group_url: String!
+    "This city's own launch page media; an empty field falls back to the global set on Branding."
+    launch_media: LaunchPageMedia!
     "Signed-in members who asked to be told when this city launches."
     subscriber_count: Int!
     created_at: String!
@@ -73,6 +104,7 @@ export const locationTypeDefs = /* GraphQL */ `
     "Defaults to 2000."
     launch_target: Int
     whatsapp_group_url: String
+    launch_media: LaunchPageMediaInput
   }
 
   input UpdateLocationInput {
@@ -89,6 +121,7 @@ export const locationTypeDefs = /* GraphQL */ `
     is_launched: Boolean
     launch_target: Int
     whatsapp_group_url: String
+    launch_media: LaunchPageMediaInput
   }
 
   extend type Query {

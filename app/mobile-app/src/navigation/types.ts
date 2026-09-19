@@ -155,7 +155,7 @@ export type RootStackParamList = {
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
-  /** /city-launch/:locationId — a not-yet-launched city's waitlist (Location.id). */
+  /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;
 };

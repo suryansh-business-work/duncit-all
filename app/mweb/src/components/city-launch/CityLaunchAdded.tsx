@@ -7,28 +7,31 @@ import { copyToClipboard } from '@duncit/utils';
 import { notifySuccess } from '../notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import CityLaunchActionTile from './CityLaunchActionTile';
+import { LaunchGlass } from './LaunchGlass';
 
 interface Props {
-  locationId: string;
+  /** The city's slug (`Location.location_id`, e.g. "agra"). */
+  citySlug: string;
   city: string;
   /** The city's WhatsApp group; '' hides the tile. */
   whatsappGroupUrl: string;
 }
 
-/** The link a friend opens — the standalone waitlist route for this city. */
-const cityLaunchLink = (locationId: string) => `${globalThis.location.origin}/city-launch/${locationId}`;
+/** The link a friend opens — the standalone waitlist route, named for the city
+ * so the address itself reads (and ranks) as that city's page. */
+const cityLaunchLink = (citySlug: string) => `${globalThis.location.origin}/city-launch/${citySlug}`;
 
 /**
  * Once a name is added: the confirmation, a tile to pass the page on (the
  * browser's share sheet, or the link copied where there is none) and, when the
- * admin set one, the city's WhatsApp group. Native twin:
- * components/city-launch/CityLaunchAdded.
+ * admin set one, the city's WhatsApp group — all in one glass panel over the
+ * first screen's video. Native twin: components/city-launch/CityLaunchAdded.
  */
-export default function CityLaunchAdded({ locationId, city, whatsappGroupUrl }: Readonly<Props>) {
+export default function CityLaunchAdded({ citySlug, city, whatsappGroupUrl }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const onShare = async () => {
-    const url = cityLaunchLink(locationId);
+    const url = cityLaunchLink(citySlug);
     if (navigator.share) {
       try {
         await navigator.share({ text: t('mweb.cityLaunch.shareText', { vars: { city, url } }) });
@@ -50,30 +53,32 @@ export default function CityLaunchAdded({ locationId, city, whatsappGroupUrl }: 
   };
 
   return (
-    <Stack data-testid="city-launch-added" spacing={1.5}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        <CheckCircleIcon aria-hidden sx={{ color: 'success.main' }} />
-        <Typography component="h2" sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>
-          {t('mweb.cityLaunch.addedTitle')}
+    <LaunchGlass testId="city-launch-added">
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <CheckCircleIcon aria-hidden sx={{ color: 'success.main' }} />
+          <Typography component="h3" sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.3 }}>
+            {t('mweb.cityLaunch.addedTitle')}
+          </Typography>
+        </Stack>
+        <Typography sx={{ fontSize: 15, lineHeight: 1.4, opacity: 0.9 }}>
+          {t('mweb.cityLaunch.addedBody', { vars: { city } })}
         </Typography>
-      </Stack>
-      <Typography sx={{ fontSize: 15, lineHeight: 1.4, color: 'text.secondary' }}>
-        {t('mweb.cityLaunch.addedBody', { vars: { city } })}
-      </Typography>
-      <CityLaunchActionTile
-        testId="city-launch-share"
-        icon={<ShareIcon />}
-        label={t('mweb.cityLaunch.shareFriends')}
-        onClick={onShare}
-      />
-      {whatsappGroupUrl ? (
         <CityLaunchActionTile
-          testId="city-launch-join-whatsapp"
-          icon={<WhatsAppIcon />}
-          label={t('mweb.cityLaunch.joinWhatsapp', { vars: { city } })}
-          onClick={onJoinWhatsapp}
+          testId="city-launch-share"
+          icon={<ShareIcon />}
+          label={t('mweb.cityLaunch.shareFriends')}
+          onClick={onShare}
         />
-      ) : null}
-    </Stack>
+        {whatsappGroupUrl ? (
+          <CityLaunchActionTile
+            testId="city-launch-join-whatsapp"
+            icon={<WhatsAppIcon />}
+            label={t('mweb.cityLaunch.joinWhatsapp', { vars: { city } })}
+            onClick={onJoinWhatsapp}
+          />
+        ) : null}
+      </Stack>
+    </LaunchGlass>
   );
 }

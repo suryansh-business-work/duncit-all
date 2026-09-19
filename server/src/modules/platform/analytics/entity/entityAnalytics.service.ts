@@ -24,6 +24,9 @@ import { serverAnalytics } from './server.analytics';
 import { appReleaseAnalytics } from './appReleases.analytics';
 import { funnelAnalytics } from './funnel.analytics';
 import { petStoreAnalytics } from './petStore.analytics';
+import { logsAnalytics } from './logs.analytics';
+import { whatsappCostAnalytics } from './whatsappCosts.analytics';
+import { openaiCostAnalytics } from './openaiCosts.analytics';
 import type { Environment } from '@modules/ai/askBot/askBot.links';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
@@ -55,6 +58,9 @@ const LOADERS: Record<AnalyticsEntity, (window: AnalyticsWindow) => Promise<Enti
   APP_RELEASES: appReleaseAnalytics,
   FUNNEL: funnelAnalytics,
   PET_STORE: petStoreAnalytics,
+  LOGS: logsAnalytics,
+  WHATSAPP_COSTS: whatsappCostAnalytics,
+  OPENAI_COSTS: openaiCostAnalytics,
 };
 
 /**

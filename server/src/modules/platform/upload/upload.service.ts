@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { outboundFetch } from '@utils/outboundFetch';
+import { isTrustedMediaHost } from '@utils/url';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
@@ -495,17 +496,6 @@ export async function uploadBase64Image(opts: {
   return uploaded;
 }
 
-const ALLOWED_REMOTE_HOSTS = [
-  /(^|\.)pexels\.com$/i,
-  /(^|\.)imagekit\.io$/i,
-  /(^|\.)unsplash\.com$/i,
-];
-
-const ALLOWED_REMOTE_MEDIA_HOSTS = [
-  /(^|\.)pexels\.com$/i,
-  /(^|\.)imagekit\.io$/i,
-  /(^|\.)unsplash\.com$/i,
-];
 
 /**
  * Fetch a remote image (whitelisted hosts only) and upload it to ImageKit.
@@ -542,7 +532,7 @@ export async function importRemoteImage(opts: {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  if (!ALLOWED_REMOTE_HOSTS.some((re) => re.test(parsed.hostname))) {
+  if (!isTrustedMediaHost(parsed.hostname)) {
     throw new GraphQLError(
       `Only Pexels / Unsplash / ImageKit URLs may be imported (got ${parsed.hostname})`,
       { extensions: { code: 'BAD_USER_INPUT' } }
@@ -759,7 +749,7 @@ export async function importRemoteMedia(opts: {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  if (!ALLOWED_REMOTE_MEDIA_HOSTS.some((re) => re.test(parsed.hostname))) {
+  if (!isTrustedMediaHost(parsed.hostname)) {
     throw new GraphQLError(
       `Only Pexels / Unsplash / ImageKit URLs may be imported (got ${parsed.hostname})`,
       { extensions: { code: 'BAD_USER_INPUT' } }

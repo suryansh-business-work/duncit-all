@@ -100,6 +100,7 @@ export function LocationClubStep({
             zones={zones}
             cityClubs={cityClubs}
             cityName={clubCityName(location)}
+            anyArea={!!pinnedClub}
           />
         ) : null}
         {pinnedClub ? null : (

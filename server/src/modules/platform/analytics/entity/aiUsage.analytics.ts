@@ -50,7 +50,7 @@ const TASK_COLUMNS = [
 ] as const;
 
 /** Slices named by the data, with "not recorded" left for the console to word. */
-function namedSlices(rows: readonly Tally[]): AnalyticsSlice[] {
+export function namedSlices(rows: readonly Tally[]): AnalyticsSlice[] {
   const names = new Map(rows.filter((row) => row._id !== 'none').map((row) => [row._id, row._id]));
   return topSlices(countMap(rows), names);
 }

@@ -933,7 +933,9 @@ export type AnalyticsEntity =
   | 'FUNNEL'
   | 'HOSTS'
   | 'LEGAL'
+  | 'LOGS'
   | 'MARKETING'
+  | 'OPENAI_COSTS'
   | 'PET_STORE'
   | 'PODS'
   | 'REVENUE'
@@ -945,7 +947,8 @@ export type AnalyticsEntity =
   | 'SUPPORT'
   | 'TEST_COVERAGE'
   | 'USERS'
-  | 'VENUES';
+  | 'VENUES'
+  | 'WHATSAPP_COSTS';
 
 /** What the tiles are compared with: the period just before, or the same dates a year earlier. */
 export type AnalyticsCompare =
@@ -961,8 +964,10 @@ export type AnalyticsFormat =
   | 'DECIMAL'
   | 'DURATION'
   | 'GRADE'
+  | 'OUTCOME'
   | 'PERCENT'
-  | 'RATING';
+  | 'RATING'
+  | 'USD';
 
 export type AnalyticsGranularity =
   | 'DAY'
@@ -8042,6 +8047,7 @@ export type LinkPreview = {
 /** Which kind of page a shared mWeb link points at. */
 export type LinkPreviewKind =
   | 'CLUB'
+  | 'LOCATION'
   | 'POD'
   | 'POST'
   | 'PRODUCT'
@@ -21011,6 +21017,7 @@ export type QueryUserBadgesArgs = {
 
 export type QueryUserChangeLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  scope: UserChangeLogScope;
   user_id: Scalars['ID']['input'];
 };
 
@@ -24946,6 +24953,15 @@ export type UserChangeLog = {
   /** The account the change was made TO. */
   user_id: Scalars['ID']['output'];
 };
+
+/**
+ * Which half of a user's history to read. USER is what the account changed
+ * itself, plus system writes such as signup; ADMIN is every change an admin
+ * made to it. An admin's change is only ever listed under ADMIN.
+ */
+export type UserChangeLogScope =
+  | 'ADMIN'
+  | 'USER';
 
 /** Server-side table page for the shared table engine. */
 export type UserChangeLogTablePage = {

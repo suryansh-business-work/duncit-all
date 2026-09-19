@@ -45,7 +45,9 @@ export default function ContactSection({ snapshot, onChanged }: Readonly<Props>)
         channel={channel}
         snapshot={snapshot}
         onClose={() => setChannel(null)}
-        onSaved={(saved, draft) => onChanged(saved, applyContactDraft(snapshot, saved, draft))}
+        onSaved={(saved, draft, verified) =>
+          onChanged(saved, applyContactDraft(snapshot, saved, draft, verified))
+        }
       />
     </Stack>
   );

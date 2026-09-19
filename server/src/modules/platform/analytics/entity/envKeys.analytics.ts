@@ -23,6 +23,7 @@ import {
   statusOf,
   TEST_HEALTH,
   type EnvRow,
+  type TestHealth,
 } from './envKeys.data';
 
 /**
@@ -61,22 +62,37 @@ function envBreakdowns(rows: readonly EnvRow[], active: readonly EnvRow[], now: 
   ];
 }
 
-/** Every category, worst first: a failing or untested credential is the row to read. */
-function categoryLeaderboard(rows: readonly EnvRow[]): AnalyticsLeaderboard {
-  const tallies = ENV_CATEGORIES.map((category) => {
-    const own = rows.filter((row) => row.category === category);
-    const active = own.filter((row) => row.is_active);
-    const health = tally(active.map(healthOf));
-    return {
-      category,
-      values: [own.length, active.length, health.get('PASSING') ?? 0, health.get('FAILING') ?? 0, health.get('UNTESTED') ?? 0],
-    };
-  });
-  tallies.sort((a, b) => b.values[3] - a.values[3] || b.values[4] - a.values[4] || b.values[0] - a.values[0]);
+/** Failing first, then never tested — the rows someone has to act on. */
+const HEALTH_ORDER: Record<TestHealth, number> = { FAILING: 0, UNTESTED: 1, PASSING: 2 };
+/** The OUTCOME format's value: 1 passed, 0 failed, null never tested. */
+const OUTCOME: Record<TestHealth, number | null> = { PASSING: 1, FAILING: 0, UNTESTED: null };
+
+/** Every active credential by name — which ones work, when that was last checked, and how many portals lean on it. */
+function entryLeaderboard(active: readonly EnvRow[], now: Date): AnalyticsLeaderboard {
+  const entries = active.map((row) => ({ row, health: healthOf(row), service: CATEGORY_LABELS[row.category] }));
+  entries.sort(
+    (a, b) =>
+      HEALTH_ORDER[a.health] - HEALTH_ORDER[b.health] ||
+      a.service.localeCompare(b.service) ||
+      a.row.name.localeCompare(b.row.name)
+  );
   return {
-    key: 'env_categories',
-    columns: ['entries', 'active', 'passing', 'failing', 'untested'].map((key) => ({ key, format: 'COUNT' as const })),
-    rows: tallies.map(({ category, values }) => ({ id: category, name: CATEGORY_LABELS[category], caption: null, values })),
+    key: 'env_entry_health',
+    columns: [
+      { key: 'env_result', format: 'OUTCOME' },
+      { key: 'env_tested_days_ago', format: 'DAYS' },
+      { key: 'env_portals', format: 'COUNT' },
+    ],
+    rows: entries.map(({ row, health, service }) => ({
+      id: row._id.toHexString(),
+      name: row.name,
+      caption: service,
+      values: [
+        OUTCOME[health],
+        row.last_tested_at ? Math.floor((now.getTime() - row.last_tested_at.getTime()) / DAY_MS) : null,
+        row.assigned_portals.length,
+      ],
+    })),
   };
 }
 
@@ -98,6 +114,7 @@ export async function envKeyAnalytics(window: AnalyticsWindow): Promise<EntityAn
       kpi('env_active', active.length, null),
       kpi('env_services_ready', serving.size, null),
       kpi('env_services_missing', ENV_CATEGORIES.length - serving.size, null, { higherIsBetter: false }),
+      kpi('env_passing', health.get('PASSING') ?? 0, null),
       kpi('env_failing', health.get('FAILING') ?? 0, null, { higherIsBetter: false }),
       kpi('env_untested', health.get('UNTESTED') ?? 0, null, { higherIsBetter: false }),
       kpi('env_tested', testedAt.length, null),
@@ -110,6 +127,7 @@ export async function envKeyAnalytics(window: AnalyticsWindow): Promise<EntityAn
       trend('env_growth', window, [{ key: 'env_entries', values: cumulative(rows.length - created.length, newPerBucket) }]),
     ],
     breakdowns: envBreakdowns(rows, active, window.to),
-    leaderboard: categoryLeaderboard(rows),
+    // A live list, so "days since tested" counts to now whatever period is chosen.
+    leaderboard: entryLeaderboard(active, new Date()),
   };
 }

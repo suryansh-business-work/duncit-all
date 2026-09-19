@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { createAuthed } from './auth/RequireAuth';
@@ -31,6 +31,11 @@ export interface MountWelcomePortalOptions {
    * before the catch-all, so an unknown path still lands on the dashboard.
    */
   routes?: (authed: ReturnType<typeof createAuthed>) => ReactNode;
+  /**
+   * The console's own page at `/`, in place of the welcome dashboard — behind
+   * the same login gate and chrome. The Logs console's dashboard lives here.
+   */
+  home?: ReactElement;
   /** The copy those screens read, compiled into the build — as on `mountPortal`. */
   i18nFallback?: MountPortalOptions['i18nFallback'];
 }
@@ -73,7 +78,7 @@ export function WelcomePage({ config }: Readonly<{ config: AppConfig }>) {
  * its config (and those routes), so standing one up adds no copied bootstrap.
  */
 export function mountWelcomePortal(options: Readonly<MountWelcomePortalOptions>): void {
-  const { appConfig, env, logsPortal, routes, i18nFallback } = options;
+  const { appConfig, env, logsPortal, routes, home, i18nFallback } = options;
   const graphqlUrl = resolvePortalGraphqlUrl(env);
   const { AppShell, LoginPage, session, apolloClient } = createPortalRuntime(appConfig, graphqlUrl);
   const authed = createAuthed({
@@ -91,7 +96,7 @@ export function mountWelcomePortal(options: Readonly<MountWelcomePortalOptions>)
     children: (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={authed(<WelcomePage config={appConfig} />)} />
+        <Route path="/" element={authed(home ?? <WelcomePage config={appConfig} />)} />
         <Route path="/profile" element={authed(<ProfilePage />)} />
         {routes?.(authed)}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,7 +3,7 @@ import { entityAnalyticsService } from '../entity/entityAnalytics.service';
 import type { AnalyticsEntity, AnalyticsLeaderboard } from '../entity/shapes';
 import { ANALYTICS_ENTITIES, ANALYTICS_MAIL_PAGES, analyticsConsoleUrl } from './analyticsMail.pages';
 import { copySegment, type ReportCopy } from './analyticsMail.copy';
-import { formatAnalyticsValue, kpiDelta, type DeltaTone } from './analyticsMail.format';
+import { formatAnalyticsValue, formatCell, kpiDelta, type DeltaTone } from './analyticsMail.format';
 
 /**
  * One subscriber's report, already in words: every tile of every dashboard
@@ -79,7 +79,7 @@ function tableOf(board: AnalyticsLeaderboard, input: ReportInput): ReportTable {
       id: row.id,
       name: row.name,
       values: board.columns.map((column, index) =>
-        formatAnalyticsValue(row.values[index], column.format, input.currency)
+        formatCell(row.values[index], column.format, input.currency, input.copy)
       ),
     })),
   };

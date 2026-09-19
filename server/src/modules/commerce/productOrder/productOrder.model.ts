@@ -16,7 +16,14 @@ export type FulfilmentStatus =
   | 'READY_FOR_PICKUP'
   | 'PICKED_UP'
   | 'CANCELLED'
+  /** Returning to origin — the courier is bringing it back. */
   | 'RTO'
+  /** Back at our warehouse after a return to origin. */
+  | 'RTO_DELIVERED'
+  /** A delivery attempt failed and needs an answer (re-attempt or return). */
+  | 'NDR'
+  /** The courier lost or destroyed the parcel. */
+  | 'LOST'
   | 'FAILED';
 
 export const FULFILMENT_STATUSES: FulfilmentStatus[] = [
@@ -31,6 +38,9 @@ export const FULFILMENT_STATUSES: FulfilmentStatus[] = [
   'PICKED_UP',
   'CANCELLED',
   'RTO',
+  'RTO_DELIVERED',
+  'NDR',
+  'LOST',
   'FAILED',
 ];
 
@@ -79,6 +89,36 @@ export interface IShipRocketInfo {
   manifest_url: string;
   invoice_url: string;
   last_synced_at: Date | null;
+  /** Courier pickup booked for this shipment. */
+  pickup_token: string;
+  pickup_scheduled_date: string;
+  /** Courier's estimated delivery date, as ShipRocket phrased it. */
+  etd: string;
+  /** What an operator must act on: LOW_WALLET (AWB not assigned), NDR (failed delivery). '' = nothing. */
+  alert: ShipmentAlert;
+  alert_message: string;
+  /** The operator's answer to a failed delivery. */
+  ndr_action: string;
+  ndr_actioned_at: Date | null;
+}
+
+export type ShipmentAlert = '' | 'LOW_WALLET' | 'NDR';
+
+/**
+ * The parcel we declared to ShipRocket — kept so a weight dispute can be
+ * checked against what we actually sent. OVERRIDE is an operator's correction
+ * made before the shipment was created; AUTO is buildParcel over the lines.
+ */
+export interface IOrderParcel {
+  weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
+  volumetric_weight_kg: number;
+  chargeable_weight_kg: number;
+  source: 'AUTO' | 'OVERRIDE';
+  /** When it was sent with the order; null while it is only an override waiting to be used. */
+  sent_at: Date | null;
 }
 
 export interface ITrackingEvent {
@@ -126,6 +166,7 @@ export interface IProductOrder extends Document {
   pickup_ref: string;
   pickup_location_id: string;
   shiprocket: IShipRocketInfo;
+  parcel: IOrderParcel | null;
   tracking_events: Types.DocumentArray<ITrackingEvent & Types.Subdocument>;
   last_error: string;
   channel: OrderChannel;
@@ -198,6 +239,27 @@ const shiprocketSchema = new Schema<IShipRocketInfo>(
     manifest_url: { type: String, default: '' },
     invoice_url: { type: String, default: '' },
     last_synced_at: { type: Date, default: null },
+    pickup_token: { type: String, default: '' },
+    pickup_scheduled_date: { type: String, default: '' },
+    etd: { type: String, default: '' },
+    alert: { type: String, enum: ['', 'LOW_WALLET', 'NDR'], default: '' },
+    alert_message: { type: String, default: '' },
+    ndr_action: { type: String, default: '' },
+    ndr_actioned_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const parcelSchema = new Schema<IOrderParcel>(
+  {
+    weight_kg: { type: Number, default: 0, min: 0 },
+    length_cm: { type: Number, default: 0, min: 0 },
+    breadth_cm: { type: Number, default: 0, min: 0 },
+    height_cm: { type: Number, default: 0, min: 0 },
+    volumetric_weight_kg: { type: Number, default: 0, min: 0 },
+    chargeable_weight_kg: { type: Number, default: 0, min: 0 },
+    source: { type: String, enum: ['AUTO', 'OVERRIDE'], default: 'AUTO' },
+    sent_at: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -250,6 +312,7 @@ const productOrderSchema = new Schema<IProductOrder>(
     pickup_ref: { type: String, default: '' },
     pickup_location_id: { type: String, default: '' },
     shiprocket: { type: shiprocketSchema, default: () => ({}) },
+    parcel: { type: parcelSchema, default: null },
     tracking_events: { type: [trackingEventSchema], default: [] },
     last_error: { type: String, default: '' },
     channel: { type: String, enum: ORDER_CHANNELS, default: 'POD_SHOP', index: true },
@@ -277,5 +340,8 @@ productOrderSchema.index({ buyer_id: 1, created_at: -1 });
 // The pet store's order console and a guest's "track my order" lookup.
 productOrderSchema.index({ channel: 1, created_at: -1 });
 productOrderSchema.index({ buyer_email: 1, channel: 1, created_at: -1 });
+// The tracking fallback sweep: shipments with an AWB that tracking has not touched lately.
+productOrderSchema.index({ fulfilment_status: 1, 'shiprocket.last_synced_at': 1 });
+productOrderSchema.index({ 'shiprocket.awb': 1 });
 
 export const ProductOrderModel = model<IProductOrder>('ProductOrder', productOrderSchema);

@@ -191,10 +191,16 @@ export async function shiprocketConnection(str: EnvConfigReader): Promise<EnvCon
   const token = typeof res.data.token === 'string' ? res.data.token : '';
   if (!res.ok || !token) {
     const reason = res.data.message ? `: ${String(res.data.message)}` : '';
+    // ShipRocket answers 403 for a wrong password, a blocked user and a login
+    // that is not an API user — all three look the same from here.
+    const hint =
+      res.status === 403
+        ? ['Use an API user (ShipRocket → Settings → API), not the account login, and check its password. Repeated failures lock the user for a while.']
+        : [];
     return {
       ok: false,
       message: `ShipRocket rejected the credentials (HTTP ${res.status})${reason}`,
-      details: [],
+      details: hint,
     };
   }
   const details = [tokenLifetime(token)];

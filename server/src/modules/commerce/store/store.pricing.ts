@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { getServiceability, isShiprocketConfigured } from '@modules/commerce/shiprocket/shiprocket.gateway';
+import { buildParcel, type ParcelLine } from '@modules/commerce/shiprocket/shiprocket.parcel';
+import { effectiveDims } from '@modules/venues/inventory/inventory.packaging';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { applyCoins, computeQuote, type QuoteBreakup } from '@modules/finance/payment/payment.service';
 import { logs } from '@observability/log';
@@ -59,7 +61,11 @@ export interface StoreLine {
   cod_available: boolean;
   returnable: boolean;
   warehouse_id: string;
+  /** One unit's packed parcel (variant, else product) — what the courier rates. */
   weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
   fulfilment_method: 'SHIP';
   issue: StoreLineIssue | null;
 }
@@ -93,6 +99,9 @@ function blankLine(input: StoreLineInput, issue: StoreLineIssue): StoreLine {
     returnable: false,
     warehouse_id: '',
     weight_kg: 0,
+    length_cm: 0,
+    breadth_cm: 0,
+    height_cm: 0,
     fulfilment_method: 'SHIP',
     issue,
   };
@@ -133,7 +142,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
     cod_available: listing.cod_available,
     returnable: listing.returnable,
     warehouse_id: p.pickup_location_id ? String(p.pickup_location_id) : '',
-    weight_kg: Number(variant?.weight_kg) || Number(p.weight_kg) || 0,
+    ...effectiveDims(p, variant),
     fulfilment_method: 'SHIP',
     issue,
   };
@@ -182,8 +191,15 @@ export interface StoreShipQuote {
   etd: string;
 }
 
+/** One warehouse's parcel and the value of the goods in it. */
+interface ShipGroup {
+  warehouse_id: string;
+  lines: ParcelLine[];
+  value: number;
+}
+
 async function quoteGroup(
-  group: { warehouse_id: string; weight: number },
+  group: ShipGroup,
   pickup: string,
   pincode: string,
   opts: { free: boolean; cod: boolean; flatFee: number; configured: boolean }
@@ -202,10 +218,19 @@ async function quoteGroup(
   };
   if (!opts.configured || !pickup || !/^\d{6}$/.test(pincode)) return base;
   try {
-    const weightKg = Math.max(0.1, group.weight);
+    const parcel = buildParcel(group.lines);
+    const lane = {
+      pickupPincode: pickup,
+      deliveryPincode: pincode,
+      weightKg: parcel.weight_kg,
+      lengthCm: parcel.length_cm,
+      breadthCm: parcel.breadth_cm,
+      heightCm: parcel.height_cm,
+      declaredValue: group.value,
+    };
     const [prepaid, cod] = await Promise.all([
-      getServiceability({ pickupPincode: pickup, deliveryPincode: pincode, weightKg }),
-      opts.cod ? getServiceability({ pickupPincode: pickup, deliveryPincode: pincode, weightKg, cod: true }) : null,
+      getServiceability(lane),
+      opts.cod ? getServiceability({ ...lane, cod: true }) : null,
     ]);
     if (!prepaid) return { ...base, reachable: false, codReachable: false };
     return {
@@ -233,10 +258,11 @@ export async function quoteStoreShipping(
   settings: IStoreSettings,
   opts: { goodsTotal: number; cod: boolean }
 ): Promise<StoreShipQuote> {
-  const groups = new Map<string, { warehouse_id: string; weight: number }>();
+  const groups = new Map<string, ShipGroup>();
   for (const line of lines.filter((l) => l.quantity > 0)) {
-    const g = groups.get(line.warehouse_id) ?? { warehouse_id: line.warehouse_id, weight: 0 };
-    g.weight += line.weight_kg * line.quantity;
+    const g = groups.get(line.warehouse_id) ?? { warehouse_id: line.warehouse_id, lines: [], value: 0 };
+    g.lines.push({ qty: line.quantity, weight_kg: line.weight_kg, length_cm: line.length_cm, breadth_cm: line.breadth_cm, height_cm: line.height_cm });
+    g.value = round2(g.value + line.gross);
     groups.set(line.warehouse_id, g);
   }
   if (groups.size === 0) {

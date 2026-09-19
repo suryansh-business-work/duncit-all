@@ -20,7 +20,14 @@ export const productOrderTypeDefs = /* GraphQL */ `
     READY_FOR_PICKUP
     PICKED_UP
     CANCELLED
+    "Returning to origin."
     RTO
+    "Back at the warehouse after a return to origin."
+    RTO_DELIVERED
+    "A delivery attempt failed and needs an answer (re-attempt or return)."
+    NDR
+    "Lost or destroyed by the courier."
+    LOST
     FAILED
   }
 
@@ -64,6 +71,11 @@ export const productOrderTypeDefs = /* GraphQL */ `
     courier_name: String!
     tracking_status: String!
     label_url: String!
+    invoice_url: String!
+    manifest_url: String!
+    "The courier's estimated delivery date, as ShipRocket phrased it."
+    etd: String!
+    pickup_scheduled_date: String!
     last_synced_at: String
   }
 

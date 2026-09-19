@@ -24,6 +24,7 @@ import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/gra
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
+import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
@@ -456,6 +457,7 @@ async function bootstrap() {
 
   // Pet store: email everyone waiting on a product that is back in stock.
   startStoreScheduler();
+  startShiprocketScheduler();
 
   // Database backups: a one-minute tick that takes the archive when the
   // admin-configured window has passed (Tech > Database > Backups; off until
@@ -671,8 +673,10 @@ async function bootstrap() {
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
 
-  // ShipRocket shipment-status webhook (parses its own JSON, self-verifies x-api-key).
-  app.use('/shiprocket', buildShiprocketWebhookRouter());
+  // ShipRocket tracking webhook at /webhooks/courier-updates (parses its own
+  // JSON, verifies the Tech portal's x-api-key). ShipRocket refuses a URL that
+  // names it, hence the neutral path.
+  app.use('/webhooks', buildShiprocketWebhookRouter());
 
   // Google's OAuth redirect after an operator connects a Gmail mailbox in the
   // Tech portal. A browser navigation, so it lives here and not in GraphQL.

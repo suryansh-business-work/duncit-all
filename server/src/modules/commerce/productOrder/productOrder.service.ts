@@ -91,6 +91,10 @@ const toPub = (d: IProductOrder) => ({
     courier_name: d.shiprocket?.courier_name ?? '',
     tracking_status: d.shiprocket?.tracking_status ?? '',
     label_url: d.shiprocket?.label_url ?? '',
+    invoice_url: d.shiprocket?.invoice_url ?? '',
+    manifest_url: d.shiprocket?.manifest_url ?? '',
+    etd: d.shiprocket?.etd ?? '',
+    pickup_scheduled_date: d.shiprocket?.pickup_scheduled_date ?? '',
     last_synced_at: d.shiprocket?.last_synced_at?.toISOString?.() ?? null,
   },
   tracking_events: (d.tracking_events ?? []).map((e) => ({

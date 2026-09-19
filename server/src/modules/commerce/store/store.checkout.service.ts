@@ -21,6 +21,7 @@ import { StoreCartModel } from './storeCart.model';
 import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
 import { storeCartService } from './store.cart.service';
 import { assertBuyable, lineOut, priceStoreCart, resolveStoreLines, type StoreQuote } from './store.pricing';
+import { addressProblems } from '@modules/commerce/shiprocket/shiprocket.address';
 import { toStoreOrder } from './store.order.mapper';
 import { autoshipDiscountFor } from './store.autoship.discount';
 import { badInput, forbidden, notFound, resolveOwner, sameSecret, secretKey, type StoreOwner } from './store.shared';
@@ -117,6 +118,9 @@ export function cleanAddress(a: AddressInput) {
   if (!out.line1) badInput('Enter the delivery address');
   if (!out.city || !out.state) badInput('Enter the city and state');
   if (!PINCODE.test(out.pincode)) badInput('Enter a valid 6-digit pincode');
+  // The courier's own bar: a street that is only "India" passes "not empty" and fails ShipRocket.
+  const problems = addressProblems(out);
+  if (problems.length > 0) badInput(`Enter ${problems.join(' and ')} of the delivery address`);
   return out;
 }
 

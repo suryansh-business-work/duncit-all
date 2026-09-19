@@ -7,7 +7,8 @@ import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model'
 import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
 import { StoreProductModel } from './storeProduct.model';
 import { cardsFor, listedFilter, storeCatalogService, type StoreSort } from './store.catalog.service';
-import { findVariant, listingOf } from './store.product';
+import { findVariant, listingOf, unitPriceOf } from './store.product';
+import { parcelOf } from '@modules/venues/inventory/inventory.packaging';
 import { iso, toObjectId } from './store.shared';
 
 /** A lean document of any store collection — only its public fields are read. */
@@ -326,15 +327,22 @@ export const storeStorefrontService = {
       : null;
     if (!warehouse?.pincode) return empty;
     const variant = findVariant(product as any, variantId ?? '');
-    const weightKg = Math.max(0.1, Number(variant?.weight_kg) || Number(product.weight_kg) || 0.5);
+    const parcel = parcelOf(product, variant);
+    const lane = {
+      pickupPincode: String(warehouse.pincode),
+      deliveryPincode: clean,
+      weightKg: parcel.weight_kg,
+      lengthCm: parcel.length_cm,
+      breadthCm: parcel.breadth_cm,
+      heightCm: parcel.height_cm,
+      declaredValue: unitPriceOf(product as any, variant).price,
+    };
     const codAllowed =
       settings.cod_enabled && listingOf(product).cod_available && !settings.cod_blocked_pincodes.includes(clean);
     try {
       const [prepaid, cod] = await Promise.all([
-        getServiceability({ pickupPincode: warehouse.pincode, deliveryPincode: clean, weightKg }),
-        codAllowed
-          ? getServiceability({ pickupPincode: warehouse.pincode, deliveryPincode: clean, weightKg, cod: true })
-          : null,
+        getServiceability(lane),
+        codAllowed ? getServiceability({ ...lane, cod: true }) : null,
       ]);
       return {
         pincode: clean,

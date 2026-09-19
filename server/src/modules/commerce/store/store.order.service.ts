@@ -15,8 +15,10 @@ import { StoreProductModel } from './storeProduct.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { getStoreSettings } from './storeSettings.model';
+import { shipmentView } from '@modules/commerce/shiprocket/shiprocket.shipment';
 import { StoreReturnModel } from './storeReturn.model';
 import { mailOrderUpdate } from './store.emails';
+import { whatsappOrderUpdate } from './store.whatsapp';
 import { CANCELLABLE, toStoreOrder } from './store.order.mapper';
 import { badInput, forbidden, notFound, round2, sameSecret, toObjectId } from './store.shared';
 
@@ -210,10 +212,29 @@ export async function afterStoreStatusChange(order: IProductOrder, previous: Ful
     if (order.fulfilment_status === 'DELIVERED' && order.payment_method === 'COD' && !order.cod_collected_at) {
       await markCodCollected(order);
     }
+    if (order.fulfilment_status === 'RTO_DELIVERED' && !order.cancelled_at) await settleReturnToOrigin(order);
     await mailOrderUpdate(order);
+    await whatsappOrderUpdate(order);
   } catch (error) {
     logs.server.error('store', 'afterStoreStatusChange', { error, order_no: order.order_no });
   }
+}
+
+/**
+ * The parcel came back to the warehouse undelivered: the goods go back on the
+ * shelf and the order is settled like a cancellation — a prepaid buyer is
+ * refunded to the original payment, a COD order (never paid) is closed out.
+ */
+async function settleReturnToOrigin(order: IProductOrder) {
+  order.cancelled_at = new Date();
+  order.cancel_reason = 'Returned to origin — the courier could not deliver it';
+  order.cancelled_by = 'COURIER_RTO';
+  await ProductOrderModel.updateOne(
+    { _id: order._id },
+    { $set: { cancelled_at: order.cancelled_at, cancel_reason: order.cancel_reason, cancelled_by: order.cancelled_by } }
+  );
+  await restock(order.line_items);
+  await settleCancellationMoney(order, { by: 'ADMIN', byName: 'Courier RTO', reason: order.cancel_reason, refundMode: 'ORIGINAL' });
 }
 
 /** Cash in hand for a COD order; the payment is captured once every order on it is. */
@@ -339,6 +360,7 @@ export const storeOrderService = {
       return_ids: returns.map((r) => String(r._id)),
       customer_order_count: orderCount,
       is_guest: !order.buyer_id,
+      shipment: shipmentView(order),
     };
   },
 

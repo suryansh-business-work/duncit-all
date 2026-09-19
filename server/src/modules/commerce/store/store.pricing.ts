@@ -121,7 +121,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
   let issue: StoreLineIssue | null = null;
   if (available <= 0) issue = 'OUT_OF_STOCK';
   else if (quantity < requested) issue = 'QTY_REDUCED';
-  const images = [...(variant?.images ?? []), ...(p.images ?? [])].filter(Boolean);
+  const image = [...(variant?.images ?? []), ...(p.images ?? [])].find(Boolean) ?? '';
   return {
     product_id: String(p._id),
     pod_id: '',
@@ -130,7 +130,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
     variant_sku: variant?.sku ?? '',
     name: listing.title || p.product_name,
     slug: listing.slug,
-    image_url: images[0] ?? '',
+    image_url: image,
     brand_name: p.brand_name ?? '',
     quantity,
     requested_qty: requested,

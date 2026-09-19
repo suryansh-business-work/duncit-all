@@ -200,7 +200,7 @@ const SETTINGS_NUMBERS = [
 
 /** A Razorpay account the store may use: '' (the default), or an active Tech-portal RAZORPAY entry. */
 async function razorpayAccountOf(value: unknown) {
-  const id = String(value ?? '').trim();
+  const id = typeof value === 'string' ? value.trim() : '';
   if (!id) return '';
   const oid = toObjectId(id);
   const found = oid ? await EnvEntryModel.exists({ _id: oid, category: 'RAZORPAY', is_active: true }) : null;
@@ -209,6 +209,12 @@ async function razorpayAccountOf(value: unknown) {
 }
 
 type RazorpayMode = 'LIVE' | 'TEST' | 'UNKNOWN';
+
+/** One text value of an env entry's config ('' when it is missing or not text). */
+const configText = (config: unknown, key: string) => {
+  const value = (config as Record<string, unknown> | null | undefined)?.[key];
+  return typeof value === 'string' ? value : '';
+};
 
 /** Razorpay key ids say which mode they belong to. */
 function razorpayModeOf(keyId: string): RazorpayMode {
@@ -297,7 +303,7 @@ export const storeAdminMerchService = {
   async razorpayAccounts() {
     const rows = await EnvEntryModel.find({ category: 'RAZORPAY' }).sort({ is_default: -1, name: 1 }).lean();
     return rows.map((row) => {
-      const keyId = String((row.config as Record<string, unknown> | undefined)?.key_id ?? '');
+      const keyId = configText(row.config, 'key_id');
       return {
         id: String(row._id),
         name: row.name,

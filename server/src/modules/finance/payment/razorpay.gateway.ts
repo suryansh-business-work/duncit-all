@@ -32,8 +32,8 @@ async function accountKeys(account: string): Promise<RazorpayKeys> {
     ? await EnvEntryModel.findOne({ _id: account, category: 'RAZORPAY', is_active: true }).lean()
     : null;
   const config = (entry?.config ?? {}) as Record<string, unknown>;
-  const keyId = String(config.key_id ?? '');
-  const keySecret = String(config.key_secret ?? '');
+  const keyId = typeof config.key_id === 'string' ? config.key_id : '';
+  const keySecret = typeof config.key_secret === 'string' ? config.key_secret : '';
   if (!keyId || !keySecret) {
     throw new GraphQLError('The Razorpay account chosen for this payment is missing or switched off in the Tech portal.', {
       extensions: { code: 'BAD_REQUEST' },

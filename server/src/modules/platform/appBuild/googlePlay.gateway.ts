@@ -19,8 +19,8 @@ import jwt from 'jsonwebtoken';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SCOPE = 'https://www.googleapis.com/auth/androidpublisher';
-const API = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
-const UPLOAD_API = 'https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications';
+export const API = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
+export const UPLOAD_API = 'https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications';
 
 /** Google gets no longer than this per call. The bundle upload is the long one. */
 const TIMEOUT_MS = 120_000;
@@ -67,7 +67,7 @@ function googleError(status: number, data: any): Error {
   return new Error(`Google Play refused the request (HTTP ${status}): ${message}`);
 }
 
-async function call(url: string, init: RequestInit): Promise<any> {
+export async function call(url: string, init: RequestInit): Promise<any> {
   const res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw googleError(res.status, data);
@@ -95,7 +95,7 @@ export async function playAccessToken(account: PlayServiceAccount): Promise<stri
   return token;
 }
 
-const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+export const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
 /** Open an edit: the transaction every change to the store happens inside. */
 export async function openEdit(token: string, packageName: string): Promise<string> {
@@ -143,6 +143,12 @@ export async function uploadBundle(
   return { versionCode: Number(data.versionCode), sha256: String(data.sha256 ?? '') };
 }
 
+/** What users read under "What's new" for one language. */
+export interface PlayReleaseNote {
+  language: string;
+  text: string;
+}
+
 /** Point a track at one version code as a completed (full) rollout. */
 export async function setTrackRelease(
   token: string,
@@ -150,16 +156,31 @@ export async function setTrackRelease(
   editId: string,
   track: PlayTrack,
   versionCode: number,
-  releaseName: string
+  releaseName: string,
+  releaseNotes: PlayReleaseNote[] = []
 ): Promise<void> {
   await call(`${API}/${packageName}/edits/${editId}/tracks/${track}`, {
     method: 'PUT',
     headers: { ...auth(token), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       track,
-      releases: [{ name: releaseName, versionCodes: [String(versionCode)], status: 'completed' }],
+      releases: [
+        {
+          name: releaseName,
+          versionCodes: [String(versionCode)],
+          status: 'completed',
+          ...(releaseNotes.length ? { releaseNotes } : {}),
+        },
+      ],
     }),
   });
+}
+
+/** What a release carries besides the bundle: the listing, and the notes on the track. */
+export interface ReleaseExtras {
+  /** Runs inside the edit, before the track is pointed at the bundle. */
+  applyListing?: (token: string, editId: string) => Promise<void>;
+  releaseNotes?: PlayReleaseNote[];
 }
 
 /** Make the edit real. Everything before this was a draft Google had not applied. */
@@ -180,7 +201,8 @@ export async function releaseBundle(
   cfg: PlayConfig,
   aabPath: string,
   track: PlayTrack,
-  releaseName: string
+  releaseName: string,
+  extras: ReleaseExtras = {}
 ): Promise<number> {
   const token = await playAccessToken(cfg.account);
   const editId = await openEdit(token, cfg.packageName);
@@ -188,7 +210,16 @@ export async function releaseBundle(
     const sha256 = await fileSha256(aabPath);
     const known = (await listBundles(token, cfg.packageName, editId)).find((b) => b.sha256 === sha256);
     const bundle = known ?? (await uploadBundle(token, cfg.packageName, editId, aabPath));
-    await setTrackRelease(token, cfg.packageName, editId, track, bundle.versionCode, releaseName);
+    await extras.applyListing?.(token, editId);
+    await setTrackRelease(
+      token,
+      cfg.packageName,
+      editId,
+      track,
+      bundle.versionCode,
+      releaseName,
+      extras.releaseNotes ?? []
+    );
     await commitEdit(token, cfg.packageName, editId);
     return bundle.versionCode;
   } catch (err) {

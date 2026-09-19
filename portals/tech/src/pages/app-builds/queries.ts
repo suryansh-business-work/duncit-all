@@ -34,6 +34,27 @@ export interface AppBuildPlayRelease {
   finished_at: string | null;
 }
 
+export type AppStoreTrack = 'TESTFLIGHT' | 'APP_STORE';
+export type AppStoreReleaseStatus = 'PUSHING' | 'RELEASED' | 'FAILED';
+export type AppStoreReleaseStep = 'UPLOAD' | 'PROCESSING' | 'LISTING' | 'SUBMIT' | 'DONE';
+
+/** One push of the build's IPA to TestFlight or App Review. A build keeps every one it had. */
+export interface AppBuildAppStoreRelease {
+  track: AppStoreTrack;
+  status: AppStoreReleaseStatus;
+  step: AppStoreReleaseStep;
+  /** What the push is doing right now. Empty once it is over. */
+  stage: string;
+  /** Apple's id for the processed build. Empty until processing finished. */
+  asc_build_id: string;
+  version_id: string;
+  /** Why it FAILED. Empty otherwise. */
+  error: string;
+  by: string;
+  started_at: string;
+  finished_at: string | null;
+}
+
 /** One file a build produced — Android makes an APK and an AAB from one compile. */
 export interface AppBuildArtifact {
   kind: AppBuildArtifactKind;
@@ -51,6 +72,8 @@ export interface AppBuildRow {
   platform: AppBuildPlatform;
   status: AppBuildStatus;
   version: string;
+  /** CFBundleVersion / versionCode. Empty on rows from before the runner reported it. */
+  build_number: string;
   bundle_id: string;
   artifacts: AppBuildArtifact[];
   build_name: string;
@@ -80,6 +103,8 @@ export interface AppBuildRow {
   stages: AppBuildStage[];
   /** Every push of this build's AAB to Google Play, oldest first. */
   play_releases: AppBuildPlayRelease[];
+  /** Every push of this build's IPA to TestFlight or the App Store, oldest first. */
+  app_store_releases: AppBuildAppStoreRelease[];
   slack_channel: string | null;
   slack_ts: string | null;
   slack_error: string | null;
@@ -141,6 +166,7 @@ export const APP_BUILDS_TABLE = gql`
         platform
         status
         version
+        build_number
         bundle_id
         artifacts {
           kind
@@ -182,6 +208,18 @@ export const APP_BUILDS_TABLE = gql`
           track
           status
           version_code
+          error
+          by
+          started_at
+          finished_at
+        }
+        app_store_releases {
+          track
+          status
+          step
+          stage
+          asc_build_id
+          version_id
           error
           by
           started_at
@@ -316,6 +354,23 @@ export const PUSH_APP_BUILD_TO_PLAY_STORE = gql`
   }
 `;
 
+export const PUSH_APP_BUILD_TO_APP_STORE = gql`
+  mutation PushAppBuildToAppStore($id: ID!, $track: AppStoreTrack!) {
+    pushAppBuildToAppStore(id: $id, track: $track) {
+      id
+      build_no
+      app_store_releases {
+        track
+        status
+        step
+        stage
+        error
+        finished_at
+      }
+    }
+  }
+`;
+
 export interface AppBuildTriggerConfig {
   configured: boolean;
   repository: string;
@@ -432,6 +487,40 @@ export const canPushToPlay = (row: AppBuildRow): boolean =>
   row.app_env === 'PRODUCTION' &&
   row.artifacts.some((a) => a.kind === 'AAB' && a.url) &&
   !hasPushInFlight(row);
+
+export const APP_STORE_TRACKS: readonly AppStoreTrack[] = ['TESTFLIGHT', 'APP_STORE'];
+
+/**
+ * No time rule here, unlike a Play push: the server's scheduler carries a
+ * PUSHING entry on across restarts and gives up on its own after three hours,
+ * so PUSHING always means something is still happening to it.
+ */
+export const isAppStorePushInFlight = (r: AppBuildAppStoreRelease): boolean => r.status === 'PUSHING';
+
+export const hasAppStorePushInFlight = (row: AppBuildRow): boolean =>
+  row.app_store_releases.some(isAppStorePushInFlight);
+
+/** The newest push to one App Store track — the one that says where that track stands. */
+export const latestAppStoreRelease = (row: AppBuildRow, track: AppStoreTrack): AppBuildAppStoreRelease | null => {
+  for (let i = row.app_store_releases.length - 1; i >= 0; i -= 1) {
+    const r = row.app_store_releases[i];
+    if (r?.track === track) return r;
+  }
+  return null;
+};
+
+/**
+ * Whether the App Store buttons do anything on this row. The server enforces
+ * the same list; this only keeps a button from promising what it cannot do. A
+ * build number is on the list because Apple wants it before the first byte.
+ */
+export const canPushToAppStore = (row: AppBuildRow): boolean =>
+  row.platform === 'IOS' &&
+  row.status === 'SUCCESS' &&
+  row.app_env === 'PRODUCTION' &&
+  row.build_number !== '' &&
+  row.artifacts.some((a) => a.kind === 'IPA' && a.url) &&
+  !hasAppStorePushInFlight(row);
 
 /** `62.4 MB` for one file; `APK 62.4 MB · AAB 48.1 MB` when a build made several. */
 export const sizeLabel = (row: AppBuildRow): string => {

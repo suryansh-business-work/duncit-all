@@ -1,7 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { appBuildService } from './appBuild.service';
-import type { AppBuildPlatform, PlayStoreTrack } from './appBuild.model';
+import type { AppBuildPlatform, AppStoreTrack, PlayStoreTrack } from './appBuild.model';
 import {
   generateIosSigning,
   iosSigningBundle,
@@ -75,6 +75,14 @@ export const appBuildResolvers = {
     ) => {
       const user = requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.pushToPlayStore(args.id, args.track, user);
+    },
+    pushAppBuildToAppStore: (
+      _p: unknown,
+      args: { id: string; track: AppStoreTrack },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.pushToAppStore(args.id, args.track, user);
     },
     generateIosSigning: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, BUILDS_MANAGE);

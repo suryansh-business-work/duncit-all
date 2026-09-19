@@ -28,6 +28,7 @@ import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocke
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
+import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
 import { startAnalyticsAlertScheduler } from '@modules/platform/analytics/alerts/analyticsAlert.scheduler';
@@ -463,6 +464,11 @@ async function bootstrap() {
   // admin-configured window has passed (Tech > Database > Backups; off until
   // an operator turns it on) and prunes past the keep-last count.
   startDbBackupScheduler();
+
+  // App Store pushes: an upload, then Apple's processing, then the listing and
+  // the review submission — longer than any request, and longer than a deploy.
+  // The row records each step; this carries on whatever a restart interrupted.
+  startAppStoreReleaseScheduler();
 
   // End-to-end tests: a one-minute tick that dispatches the E2E workflow when
   // the admin-configured window has passed (Tech > E2E Tests > Settings,

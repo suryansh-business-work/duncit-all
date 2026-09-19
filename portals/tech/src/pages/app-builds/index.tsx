@@ -10,9 +10,11 @@ import AppBuildsTable from './AppBuildsTable';
 import BuildDetailsDialog from './BuildDetailsDialog';
 import { CreateBuildDialog } from './create-build';
 import { usePlayStorePush } from './usePlayStorePush';
+import { useAppStorePush } from './useAppStorePush';
 import {
   APP_BUILDS_TABLE,
   DELETE_APP_BUILD,
+  hasAppStorePushInFlight,
   hasPushInFlight,
   isLive,
   isStaleRunning,
@@ -57,11 +59,16 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   // The page it just fetched is what decides whether to keep polling: no live
   // build on screen, no timer. A stale RUNNING row does not count — nothing is
   // coming to update it, so refreshing for it would spin forever. A push to
-  // Google Play in flight counts the same way: its outcome lands on the row.
+  // Google Play or App Store Connect in flight counts the same way: its outcome
+  // lands on the row.
   const fetchRows = useCallback<TableFetch<AppBuildRow>>(
     async (query) => {
       const page = await baseFetch(query);
-      setHasLiveBuild(page.rows.some((r) => (isLive(r) && !isStaleRunning(r)) || hasPushInFlight(r)));
+      setHasLiveBuild(
+        page.rows.some(
+          (r) => (isLive(r) && !isStaleRunning(r)) || hasPushInFlight(r) || hasAppStorePushInFlight(r)
+        )
+      );
       return page;
     },
     [baseFetch]
@@ -69,6 +76,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
 
   const refetch = useCallback(() => refetchRef.current?.(), []);
   const onPush = usePlayStorePush(refetch);
+  const onPushAppStore = useAppStorePush(refetch);
 
   useEffect(() => {
     if (!hasLiveBuild) return undefined;
@@ -140,6 +148,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
         onRowClick={openRow}
         onDelete={onDelete}
         onPush={onPush}
+        onPushAppStore={onPushAppStore}
         ariaLabel={title}
       />
       <BuildDetailsDialog build={selected} onClose={closeRow} />

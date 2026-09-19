@@ -1,12 +1,17 @@
-import fs from 'node:fs';
-import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import { postMessage } from '@modules/platform/slack/slack.gateway';
-import { artifactPath } from '@modules/platform/upload/buildArtifactStore';
-import { clip, escapeMrkdwn } from '@utils/slack-blocks';
+import { clip } from '@utils/slack-blocks';
 import { AppBuildModel, type IAppBuild, type PlayStoreTrack } from './appBuild.model';
-import { parseServiceAccount, releaseBundle, type PlayConfig, type PlayTrack } from './googlePlay.gateway';
+import {
+  parseServiceAccount,
+  releaseBundle,
+  type PlayConfig,
+  type PlayTrack,
+  type ReleaseExtras,
+} from './googlePlay.gateway';
+import { applyPlayListing, playListingOf, type PlayListing } from './googlePlayListing';
+import { getStoreListing, requirePlayListing } from './storeListing.service';
+import { announceRelease, badInput, releasableBuild, storedArtifactPath } from './releaseGuards';
 
 /**
  * Pushing a build's stored AAB to Google Play from the Tech portal.
@@ -20,7 +25,7 @@ import { parseServiceAccount, releaseBundle, type PlayConfig, type PlayTrack } f
  * "version code already used".
  */
 
-const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
+const STORE = 'Google Play';
 
 /**
  * A PUSHING entry older than this belongs to a server that died mid-push —
@@ -65,49 +70,17 @@ async function requirePlayConfig(): Promise<PlayConfig> {
 const isInFlight = (r: IAppBuild['play_releases'][number]): boolean =>
   r.status === 'PUSHING' && Date.now() - r.started_at.getTime() < PUSH_STALE_MS;
 
-/** The stored AAB's path on disk, or the reason there is none. */
-async function storedAabPath(build: IAppBuild): Promise<string> {
-  const aab = (build.artifacts ?? []).find((a) => a.kind === 'AAB' && a.file_id);
-  if (!aab) throw badInput('Only a build with a stored AAB can go to Google Play — this one has none.');
-  const path = artifactPath(aab.file_id);
-  if (!path) throw badInput('This build’s AAB has an unusable file name and cannot be read back.');
-  await fs.promises.access(path).catch(() => {
-    throw badInput('This build’s AAB is no longer in the build store.');
-  });
-  return path;
-}
-
-/** Everything that has to be true before Google is asked anything. */
-async function releasableBuild(id: string): Promise<{ build: IAppBuild; aabPath: string }> {
-  const build = await AppBuildModel.findById(id);
-  if (!build) throw badInput('That build no longer exists');
-  if (build.platform !== 'ANDROID') throw badInput('Only Android builds can go to Google Play.');
-  if (build.status !== 'SUCCESS') throw badInput('Only a finished, successful build can go to Google Play.');
-  // Compiled in, not configurable: a staging-pointed app on the store would
-  // talk to the staging database from every phone that installed it.
-  if (build.app_env !== 'PRODUCTION') {
-    throw badInput('Only a production build can go to Google Play — this one talks to staging.');
-  }
-  if ((build.play_releases ?? []).some(isInFlight)) {
-    throw badInput(`A push to Google Play is already in progress for ${build.build_no}.`);
-  }
-  const aabPath = await storedAabPath(build);
-  return { build, aabPath };
-}
-
-/** Best-effort: the row already holds the outcome, Slack only repeats it. */
-async function announce(build: IAppBuild, track: PlayStoreTrack, by: string, error: string, versionCode: string) {
-  const channel = (await getRuntimeEnvValue('SLACK_ANDROID_BUILDS_CHANNEL')).trim();
-  if (!channel) return;
-  const where = `Google Play ${TRACK_LABEL[track]}`;
-  const text = error
-    ? `:x: Android v${build.version} (${build.build_no}) could not be pushed to ${where} — ${clip(error, 300)}`
-    : `:rocket: Android v${build.version} (${build.build_no}) is on ${where} as version code ${versionCode} — pushed by ${by}`;
-  try {
-    await postMessage({ channel, text: escapeMrkdwn(text) });
-  } catch (err) {
-    logs.server.error('appBuild', 'playAnnounce', { error: err, build_no: build.build_no });
-  }
+/**
+ * A production release carries the Store Listing with it, inside the same edit
+ * — copy, images and the release notes on the track. Internal testing is only
+ * for testers, and the listing is store-wide, so it is left alone there.
+ */
+function releaseExtras(cfg: PlayConfig, listing: PlayListing | null): ReleaseExtras {
+  if (!listing) return {};
+  return {
+    applyListing: (token, editId) => applyPlayListing(token, cfg.packageName, editId, listing),
+    releaseNotes: listing.releaseNotes ? [{ language: listing.language, text: listing.releaseNotes }] : [],
+  };
 }
 
 /**
@@ -121,13 +94,16 @@ async function runRelease(
   cfg: PlayConfig,
   aabPath: string,
   track: PlayStoreTrack,
-  by: string
+  by: string,
+  listing: PlayListing | null
 ): Promise<void> {
   const releaseName = `v${build.version} (${build.commit_sha.slice(0, 7)})`;
   let versionCode = '';
   let error = '';
   try {
-    versionCode = String(await releaseBundle(cfg, aabPath, API_TRACK[track], releaseName));
+    versionCode = String(
+      await releaseBundle(cfg, aabPath, API_TRACK[track], releaseName, releaseExtras(cfg, listing))
+    );
   } catch (err) {
     error = clip(err instanceof Error ? err.message : String(err), 500);
   }
@@ -149,7 +125,11 @@ async function runRelease(
     version_code: versionCode,
     error,
   });
-  await announce(build, track, by, error, versionCode);
+  const where = `${STORE} ${TRACK_LABEL[track]}`;
+  const text = error
+    ? `:x: Android v${build.version} (${build.build_no}) could not be pushed to ${where} — ${clip(error, 300)}`
+    : `:rocket: Android v${build.version} (${build.build_no}) is on ${where} as version code ${versionCode} — pushed by ${by}`;
+  await announceRelease('SLACK_ANDROID_BUILDS_CHANNEL', text, build.build_no);
 }
 
 /**
@@ -157,8 +137,14 @@ async function runRelease(
  * the outcome arrives on the row, not on this promise.
  */
 export async function pushBuildToPlayStore(id: string, track: PlayStoreTrack, by: string): Promise<IAppBuild> {
-  const { build, aabPath } = await releasableBuild(id);
+  const build = await releasableBuild(id, 'ANDROID', STORE);
+  if ((build.play_releases ?? []).some(isInFlight)) {
+    throw badInput(`A push to ${STORE} is already in progress for ${build.build_no}.`);
+  }
+  const aabPath = await storedArtifactPath(build, 'AAB', STORE);
   const cfg = await requirePlayConfig();
+  // What Store Listing still lacks is refused here, at the click, not in the background.
+  const listing = track === 'PRODUCTION' ? playListingOf(requirePlayListing(await getStoreListing())) : null;
   build.play_releases.push({
     track,
     status: 'PUSHING',
@@ -170,7 +156,7 @@ export async function pushBuildToPlayStore(id: string, track: PlayStoreTrack, by
   });
   await build.save();
   const index = build.play_releases.length - 1;
-  runRelease(build, index, cfg, aabPath, track, by).catch((err) =>
+  runRelease(build, index, cfg, aabPath, track, by, listing).catch((err) =>
     logs.server.error('appBuild', 'playRelease', { error: err, build_no: build.build_no })
   );
   return build;

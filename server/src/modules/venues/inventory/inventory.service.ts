@@ -665,9 +665,15 @@ async function ensureBrandName(doc: IInventoryProduct) {
   }
 }
 
-/** The checks every catalogue save ends with: brand and MRP against price. */
-async function assertProductSaveable(doc: IInventoryProduct) {
-  await ensureBrandName(doc);
+/**
+ * The checks a catalogue save ends with: MRP against price, and the brand —
+ * required on a new product and whenever an edit sets it (it may not be
+ * cleared). An older product saved without one stays editable (a stock
+ * change must not demand a brand); it still gets the brand record's name.
+ */
+async function assertProductSaveable(doc: IInventoryProduct, brandRequired: boolean) {
+  if (brandRequired) await ensureBrandName(doc);
+  else if (!String(doc.brand_name ?? '').trim() && doc.brand_id) doc.brand_name = await brandNameOf(doc.brand_id);
   assertMrp(doc.unit_cost, doc.mrp);
 }
 
@@ -1530,7 +1536,7 @@ export const inventoryService = {
     // products; external brand products come exclusively via submitProductListing.
     doc.ownership = 'DUNCIT';
     doc.brand_id = null;
-    await assertProductSaveable(doc);
+    await assertProductSaveable(doc, true);
     await doc.save();
     await logActivity(doc._id, user, 'CREATE', ['*']);
     if (doc.inventory_count > 0) {
@@ -1577,7 +1583,7 @@ export const inventoryService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    await assertProductSaveable(doc);
+    await assertProductSaveable(doc, input.brand_name !== undefined);
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
     await doc.save();

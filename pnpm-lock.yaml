@@ -2086,6 +2086,9 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
+      '@duncit/forms':
+        specifier: workspace:*
+        version: link:../forms
       '@duncit/slots':
         specifier: workspace:*
         version: link:../slots

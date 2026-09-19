@@ -1161,6 +1161,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slots", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
@@ -1663,6 +1664,10 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/tabs/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
+      { name: "@mui/icons-material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@testing-library/dom", range: "^10.4.1", kind: "devDependencies" },
       { name: "@testing-library/jest-dom", range: "^7.0.1", kind: "devDependencies" },
@@ -1677,6 +1682,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "react-router", range: "^8.3.1", kind: "devDependencies" },
       { name: "typescript", range: "^7.0.2", kind: "devDependencies" },
       { name: "vitest", range: "^4.1.11", kind: "devDependencies" },
+      { name: "@mui/icons-material", range: ">=5", kind: "peerDependencies" },
       { name: "@mui/material", range: ">=5", kind: "peerDependencies" },
       { name: "react", range: ">=18", kind: "peerDependencies" },
       { name: "react-dom", range: ">=18", kind: "peerDependencies" },

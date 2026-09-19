@@ -11,7 +11,7 @@
     "start:dev": "node --watch --env-file=.env dist-server/index.mjs",
     "build": "tsc -b --noEmit && tsc --noEmit -p tsconfig.server.json && vite build && vite build --config vite.config.server.ts && node ../scripts/verify-fallback-icons.mjs shared/fallback-icons",
     "typecheck": "tsc -b --noEmit && tsc --noEmit -p tsconfig.server.json",
-    "lint": "eslint -c ../eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 web portal shared",
+    "lint": "cd .. && eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 lite/web lite/portal lite/shared",
     "preview": "vite preview",
     "start": "node dist-server/index.mjs",
     "e2e": "node ../scripts/e2e-no-surface.mjs duncit-lite"

@@ -1,9 +1,8 @@
+// The pod-shop quote reads only these two; the shipment and tracking halves of
+// the service have their own suites (shipment / flow / aftercare / webhook).
 jest.mock('../../shiprocket.gateway', () => ({
   isShiprocketConfigured: jest.fn(),
   getServiceability: jest.fn(),
-  createOrderAdhoc: jest.fn(),
-  assignAwb: jest.fn(),
-  trackByShipment: jest.fn(),
 }));
 
 import { Types } from 'mongoose';
@@ -372,5 +371,13 @@ describe('shiprocketService.quoteShipping edge shapes', () => {
     expect(mockServ).not.toHaveBeenCalled();
     expect(quote.breakup[0]).toMatchObject({ warehouse_id: '', pickup_pincode: '', charge: 0, quoted: false, free: false });
     expect(quote.all_quoted).toBe(false);
+  });
+});
+
+describe('shiprocketService facade', () => {
+  it('hands a webhook body to the tracking code, which reports what it updated', async () => {
+    await expect(
+      shiprocketService.applyWebhookEvent({ awb: '14339999999', current_status: 'DELIVERED' })
+    ).resolves.toBe('nothing');
   });
 });

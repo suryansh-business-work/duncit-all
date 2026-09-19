@@ -1,377 +1,244 @@
 jest.mock('../../shiprocket.gateway', () => ({
-  isShiprocketConfigured: jest.fn(),
-  getServiceability: jest.fn(),
-  createOrderAdhoc: jest.fn(),
   assignAwb: jest.fn(),
-  trackByShipment: jest.fn(),
+  couriersForOrder: jest.fn(),
+  createOrderAdhoc: jest.fn(),
+  findOrderByChannelId: jest.fn(),
+  generateLabel: jest.fn(),
+  generatePickup: jest.fn(),
+  manifestFor: jest.fn(),
+  printInvoice: jest.fn(),
+  walletBalance: jest.fn(),
 }));
 
-import { Types } from 'mongoose';
-import { shiprocketService } from '../../shiprocket.service';
+import { shiprocketError } from '../../shiprocket.client';
 import {
-  isShiprocketConfigured,
-  createOrderAdhoc,
   assignAwb,
-  trackByShipment,
+  couriersForOrder,
+  createOrderAdhoc,
+  findOrderByChannelId,
+  generatePickup,
+  walletBalance,
+  type CourierOption,
 } from '../../shiprocket.gateway';
-import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
-import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import { createShipment, setParcelOverride } from '../../shiprocket.shipment';
+import { seedShiprocketAccount, WAREHOUSE } from './fake-shiprocket';
+import { GURUGRAM, reloadOrder, seedPaidOrder, seedProduct } from './order-fixtures';
 
 /**
- * The shipment WRITE path — the half of shiprocketService that spends money.
- * Every call here books a courier and none of it can be undone, so the guards
- * deciding whether to call at all are tested as carefully as the payload sent.
- * The read/quote half lives in shiprocket.service.int.test.ts.
+ * The shipment pipeline's decisions — book, courier + wallet, pickup — with
+ * the ShipRocket endpoints stubbed one by one. Each guard below is a parcel
+ * that would otherwise have been booked wrong, or booked twice, with money
+ * that cannot be taken back. The same pipeline against a fake ShipRocket is in
+ * shiprocket.flow.int.test.ts.
  */
-const mockConfigured = isShiprocketConfigured as jest.Mock;
-const mockAdhoc = createOrderAdhoc as jest.Mock;
-const mockAwb = assignAwb as jest.Mock;
-const mockTrack = trackByShipment as jest.Mock;
+const mockFind = jest.mocked(findOrderByChannelId);
+const mockCreate = jest.mocked(createOrderAdhoc);
+const mockCouriers = jest.mocked(couriersForOrder);
+const mockWallet = jest.mocked(walletBalance);
+const mockAwb = jest.mocked(assignAwb);
+const mockPickup = jest.mocked(generatePickup);
 
-let seq = 0;
-const seedOrder = (over: Record<string, unknown> = {}) =>
-  ProductOrderModel.create({
-    order_no: `DUN-ORD-SHIP-${++seq}`,
-    buyer_id: new Types.ObjectId(),
-    payment_id: new Types.ObjectId(),
-    items_total: 400,
-    total: 400,
-    fulfilment_method: 'SHIP',
-    line_items: [
-      { product_id: new Types.ObjectId(), name: 'Tee', qty: 2, unit_cost: 200, gross: 400, weight_kg: 0.4 },
-    ],
-    ...over,
-  });
-
-/** The payload handed to ShipRocket on the most recent ad-hoc order call. */
-const sentPayload = () => mockAdhoc.mock.calls.at(-1)?.[0] as Record<string, any>;
-
-const okAdhoc = (over: Record<string, unknown> = {}) => ({
-  order_id: 'SR-1',
-  shipment_id: 'SH-1',
-  status: 'NEW',
-  ...over,
+const courier = (id: string, name: string, rate: number, recommended = false): CourierOption => ({
+  courier_company_id: id,
+  courier_name: name,
+  rate,
+  etd: 'Sep 23, 2026',
+  cod: true,
+  rating: 4.2,
+  recommended,
 });
 
-describe('shiprocketService.createShipment', () => {
-  beforeEach(() => {
-    mockConfigured.mockResolvedValue(true);
-    mockAdhoc.mockResolvedValue(okAdhoc());
-    mockAwb.mockResolvedValue({
-      awb: 'AWB-1',
-      courier_name: 'Delhivery',
-      courier_company_id: '7',
-      label_url: 'https://labels.example/1.pdf',
-    });
+beforeEach(() => {
+  mockFind.mockResolvedValue(null);
+  mockCreate.mockResolvedValue({ order_id: '7300001', shipment_id: '6300001', status: 'NEW' });
+  mockCouriers.mockResolvedValue([courier('12', 'Delhivery Surface', 68, true), courier('24', 'Xpressbees Surface', 74)]);
+  mockWallet.mockResolvedValue(1500);
+  mockAwb.mockImplementation(async (shipmentId, courierId) => ({
+    awb: `1433${shipmentId}`,
+    courier_name: '',
+    courier_company_id: String(courierId ?? ''),
+    label_url: 'https://labels.example/6300001.pdf',
+  }));
+  mockPickup.mockResolvedValue({ token: 'Reference No: 19461', scheduled_date: '2026-09-20 11:00:00' });
+});
+
+/** The ad-hoc order payload the most recent booking sent. */
+const sentPayload = () => mockCreate.mock.calls.at(-1)?.[0] ?? {};
+
+async function paidOrder(over: Record<string, unknown> = {}, productOver: Record<string, unknown> = {}) {
+  await seedShiprocketAccount();
+  const { order } = await seedPaidOrder({ product: await seedProduct(productOver), over });
+  return order;
+}
+
+describe('createShipment — what it will not ship', () => {
+  it('leaves a pickup order and a cancelled order alone', async () => {
+    const pickup = await paidOrder({ fulfilment_method: 'PICKUP', fulfilment_status: 'PENDING', pickup_location_id: '' });
+    const { order: cancelled } = await seedPaidOrder({ product: await seedProduct(), over: { cancelled_at: new Date() } });
+    await createShipment(pickup);
+    await createShipment(cancelled);
+    expect(mockFind).not.toHaveBeenCalled();
+    expect((await reloadOrder(pickup._id)).fulfilment_status).toBe('PENDING');
   });
 
-  it('ignores a PICKUP order — nothing ships, so nothing is ordered', async () => {
-    const order = await seedOrder({ fulfilment_method: 'PICKUP' });
-    const result = await shiprocketService.createShipment(order);
-    expect(mockAdhoc).not.toHaveBeenCalled();
-    expect(result.fulfilment_status).toBe('PENDING');
+  it('does nothing while ShipRocket is not configured', async () => {
+    const { order } = await seedPaidOrder({ product: await seedProduct() });
+    const result = await createShipment(order);
+    expect(result.fulfilment_status).toBe('AWAITING_SHIPMENT');
+    expect(mockFind).not.toHaveBeenCalled();
   });
 
-  // A second ad-hoc order ships a second parcel and pays a second courier
-  // charge, with no undo — a retry has to stop at the guard, not at the API.
-  it('never re-orders a shipment that already has a ShipRocket order id', async () => {
-    const order = await seedOrder({ shiprocket: { order_id: 'SR-EXISTING' } });
-    await shiprocketService.createShipment(order);
-    expect(mockAdhoc).not.toHaveBeenCalled();
-  });
-
-  it('does nothing while ShipRocket is unconfigured', async () => {
-    mockConfigured.mockResolvedValue(false);
-    const result = await shiprocketService.createShipment(await seedOrder());
-    expect(mockAdhoc).not.toHaveBeenCalled();
-    expect(result.fulfilment_status).toBe('PENDING');
-  });
-
-  it('orders the parcel, assigns an AWB and records the courier', async () => {
-    const result = await shiprocketService.createShipment(
-      await seedOrder({ pickup_location_id: 'North Hub' }),
+  it('refuses an autofilled "India" address before calling ShipRocket, saying what to fix', async () => {
+    const order = await paidOrder({ shipping_address: { ...GURUGRAM, line1: 'India', city: 'India' } });
+    await createShipment(order);
+    const failed = await reloadOrder(order._id);
+    expect(failed.fulfilment_status).toBe('FAILED');
+    expect(failed.last_error).toBe(
+      'The ship-to address needs the house number and street and the city — correct it on this order, then retry'
     );
-    expect(mockAwb).toHaveBeenCalledWith('SH-1');
-    expect(result.fulfilment_status).toBe('AWB_ASSIGNED');
-    expect(result.shiprocket).toMatchObject({
-      order_id: 'SR-1',
-      shipment_id: 'SH-1',
-      awb: 'AWB-1',
-      courier_name: 'Delhivery',
-      courier_company_id: '7',
-      label_url: 'https://labels.example/1.pdf',
+    expect(mockFind).not.toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('names the item whose packaging is missing', async () => {
+    const product = await seedProduct();
+    const line = { product_id: product._id, name: product.product_name, qty: 1, unit_cost: 349, gross: 349 };
+    const packed = { weight_kg: 0.25, length_cm: 20, breadth_cm: 14, height_cm: 5 };
+    const order = await paidOrder({
+      line_items: [
+        { ...line, ...packed },
+        { ...line, ...packed, variant_label: '1 kg pack', weight_kg: 0 },
+      ],
     });
-    expect(result.shiprocket.last_synced_at).toBeInstanceOf(Date);
-    expect(result.last_error).toBe('');
-    expect(result.tracking_events.at(-1)).toMatchObject({
-      status: 'AWB_ASSIGNED',
-      note: 'ShipRocket shipment created',
-    });
+    await createShipment(order);
+    expect((await reloadOrder(order._id)).last_error).toBe(
+      'Packaging is missing for Drools Chicken Jerky 200g (1 kg pack) — add it on the product, or set the parcel on this order, then retry'
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it('stays AWAITING_SHIPMENT when ShipRocket returns no shipment to assign', async () => {
-    mockAdhoc.mockResolvedValue(okAdhoc({ order_id: 'SR-2', shipment_id: '' }));
-    const result = await shiprocketService.createShipment(await seedOrder());
-    expect(mockAwb).not.toHaveBeenCalled();
-    expect(result.fulfilment_status).toBe('AWAITING_SHIPMENT');
+  it('refuses an incomplete parcel an operator set', async () => {
+    const parcel = { weight_kg: 1.2, length_cm: 30, breadth_cm: 0, height_cm: 15, source: 'OVERRIDE' };
+    const order = await paidOrder({ parcel });
+    await createShipment(order);
+    expect((await reloadOrder(order._id)).last_error).toBe(
+      'The parcel set on this order is incomplete — enter its weight, length, breadth and height'
+    );
   });
 
-  it('stays AWAITING_SHIPMENT when the AWB call comes back without a waybill', async () => {
-    mockAwb.mockResolvedValue({ awb: '', courier_name: '', courier_company_id: '', label_url: '' });
-    const result = await shiprocketService.createShipment(await seedOrder());
-    expect(result.fulfilment_status).toBe('AWAITING_SHIPMENT');
-    expect(result.shiprocket.awb).toBe('');
-  });
-
-  // A fulfilment hiccup must never fail a checkout that is already paid for.
-  it('records FAILED and the reason instead of throwing', async () => {
-    mockAdhoc.mockRejectedValue(new Error('SR 500'));
-    const result = await shiprocketService.createShipment(await seedOrder());
-    expect(result.fulfilment_status).toBe('FAILED');
-    expect(result.last_error).toBe('SR 500');
-  });
-
-  // Losing the database on the way to writing FAILED still must not throw:
-  // the payment is already taken and the caller has nothing to undo.
-  it('swallows a save that fails while recording the failure', async () => {
-    mockAdhoc.mockRejectedValue(new Error('SR 500'));
-    const order = await seedOrder();
-    jest.spyOn(order, 'save').mockRejectedValue(new Error('mongo down'));
-    const result = await shiprocketService.createShipment(order);
-    expect(result.fulfilment_status).toBe('FAILED');
+  it('never guesses a pickup location', async () => {
+    await seedShiprocketAccount({ pickup_location: '' });
+    const { order } = await seedPaidOrder({ product: await seedProduct(), over: { pickup_location_id: '' } });
+    await createShipment(order);
+    expect((await reloadOrder(order._id)).last_error).toBe(
+      'This order has no pickup location — give the product a warehouse, or set a default pickup nickname in the Tech portal'
+    );
   });
 });
 
-describe('shiprocketService pickup origin', () => {
-  beforeEach(() => {
-    mockConfigured.mockResolvedValue(true);
-    mockAdhoc.mockResolvedValue(okAdhoc({ order_id: 'SR-P', shipment_id: '' }));
-  });
-
-  afterEach(async () => {
-    await EnvEntryModel.deleteMany({});
-  });
-
-  it("ships from the order's own warehouse nickname when it has one", async () => {
-    await shiprocketService.createShipment(await seedOrder({ pickup_location_id: 'South Hub' }));
-    expect(sentPayload()).toMatchObject({ pickup_location: 'South Hub' });
-  });
-
-  it('falls back to the default pickup location configured in the Tech portal', async () => {
-    await EnvEntryModel.create({
-      name: 'ShipRocket',
-      category: 'SHIPROCKET',
-      is_active: true,
-      is_default: true,
-      config: { pickup_location: 'Central Hub' },
+describe('createShipment — booking', () => {
+  it('sends a prepaid order with its variant names, SKUs, HSN and the packed parcel', async () => {
+    const product = await seedProduct({ hsn_code: '9503' });
+    const line = { product_id: product._id, name: 'KONG Classic', unit_cost: 899, weight_kg: 0.3, length_cm: 12, breadth_cm: 9, height_cm: 9 };
+    const order = await paidOrder({
+      items_total: 2697,
+      line_items: [
+        { ...line, variant_label: 'Medium', variant_sku: 'KONG-CL-M', sku: 'KONG-CL', qty: 3, gross: 2697 },
+      ],
     });
-    await shiprocketService.createShipment(await seedOrder());
-    expect(sentPayload()).toMatchObject({ pickup_location: 'Central Hub' });
-  });
-
-  it('falls back to Primary when neither the order nor the config names one', async () => {
-    await shiprocketService.createShipment(await seedOrder());
-    expect(sentPayload()).toMatchObject({ pickup_location: 'Primary' });
-  });
-});
-
-describe('shiprocketService ad-hoc order payload', () => {
-  beforeEach(() => {
-    mockConfigured.mockResolvedValue(true);
-    mockAdhoc.mockResolvedValue(okAdhoc({ order_id: 'SR-B', shipment_id: '' }));
-  });
-
-  it('splits the shipping name, keeps its address and sends a 10-digit phone', async () => {
-    const order = await seedOrder({
-      shipping_address: {
-        name: 'Asha Rani Devi',
-        phone: '+91 98765-43210',
-        email: 'asha@example.com',
-        line1: '12 MG Rd',
-        line2: 'Flat 3',
-        city: 'Pune',
-        state: 'MH',
-        pincode: '411001',
-      },
-    });
-    await shiprocketService.createShipment(order);
+    await createShipment(order);
     expect(sentPayload()).toMatchObject({
       order_id: order.order_no,
-      billing_customer_name: 'Asha',
-      billing_last_name: 'Rani Devi',
-      billing_address: '12 MG Rd',
-      billing_address_2: 'Flat 3',
-      billing_city: 'Pune',
-      billing_state: 'MH',
-      billing_pincode: '411001',
-      billing_country: 'India',
-      billing_email: 'asha@example.com',
-      billing_phone: '9876543210',
-      shipping_is_billing: true,
+      pickup_location: WAREHOUSE,
+      billing_address: 'Flat 402, Tower C, DLF Park Place',
+      billing_address_2: 'Sector 54, Opp. Golf Course Road',
       payment_method: 'Prepaid',
-      sub_total: 400,
+      sub_total: 2697,
+      order_items: [{ name: 'KONG Classic - Medium', sku: 'KONG-CL-M', units: 3, selling_price: 899, hsn: '9503' }],
+      // Three 9 cm units stacked on a 12 × 9 footprint.
+      weight: 0.9,
+      length: 12,
+      breadth: 9,
+      height: 27,
     });
   });
 
-  // ShipRocket rejects a blank surname, so a one-word name still needs one.
-  it('gives a single-word name a placeholder surname', async () => {
-    await shiprocketService.createShipment(await seedOrder({ shipping_address: { name: 'Asha' } }));
-    expect(sentPayload()).toMatchObject({ billing_customer_name: 'Asha', billing_last_name: '.' });
+  it('ships from the Tech portal default pickup when the order names no warehouse', async () => {
+    const order = await paidOrder({ pickup_location_id: '' });
+    await createShipment(order);
+    expect(sentPayload()).toMatchObject({ pickup_location: WAREHOUSE });
+    expect((await reloadOrder(order._id)).pickup_location_id).toBe(WAREHOUSE);
   });
 
-  it("falls back to the buyer's own name, email and phone with no shipping address", async () => {
-    await shiprocketService.createShipment(
-      await seedOrder({
-        buyer_name: 'Ravi Kumar',
-        buyer_email: 'ravi@example.com',
-        buyer_phone: '09812345678',
-      }),
-    );
-    expect(sentPayload()).toMatchObject({
-      billing_customer_name: 'Ravi',
-      billing_last_name: 'Kumar',
-      billing_email: 'ravi@example.com',
-      billing_phone: '9812345678',
-      billing_address: '',
-      billing_address_2: '',
-      billing_city: '',
-      billing_pincode: '',
-      billing_state: '',
+  it("declares the operator's parcel instead of the computed one", async () => {
+    const order = await paidOrder();
+    setParcelOverride(order, { weight_kg: 1.2, length_cm: 30, breadth_cm: 20, height_cm: 15 });
+    await order.save();
+    await createShipment(order);
+    expect(sentPayload()).toMatchObject({ weight: 1.2, length: 30, breadth: 20, height: 15 });
+    const booked = await reloadOrder(order._id);
+    expect(booked.parcel).toMatchObject({ source: 'OVERRIDE', chargeable_weight_kg: 1.8 });
+    expect(booked.parcel?.sent_at).toBeInstanceOf(Date);
+  });
+
+  it("assigns the courier the operator picked, and records ShipRocket's courier name fallback", async () => {
+    const order = await paidOrder();
+    await createShipment(order, '24');
+    expect(mockAwb).toHaveBeenCalledWith('6300001', '24');
+    const booked = await reloadOrder(order._id);
+    expect(booked.shiprocket).toMatchObject({
+      awb: '14336300001',
+      courier_name: 'Xpressbees Surface',
+      courier_company_id: '24',
+      label_url: 'https://labels.example/6300001.pdf',
+      etd: 'Sep 23, 2026',
     });
   });
 
-  it('calls a nameless, phoneless order Customer and sends no phone', async () => {
-    await shiprocketService.createShipment(await seedOrder({ buyer_name: '', buyer_phone: null }));
-    expect(sentPayload()).toMatchObject({ billing_customer_name: 'Customer', billing_phone: '' });
+  it('fails readably when the picked courier is no longer offered — keeping the ShipRocket order', async () => {
+    const order = await paidOrder();
+    await createShipment(order, '99');
+    const failed = await reloadOrder(order._id);
+    expect(failed.fulfilment_status).toBe('FAILED');
+    expect(failed.last_error).toBe('That courier is no longer offered for this shipment — pick another');
+    expect(failed.shiprocket.order_id).toBe('7300001');
+    expect(mockAwb).not.toHaveBeenCalled();
   });
 
-  it('sums the parcel weight over quantities and floors the box at its minimum', async () => {
-    await shiprocketService.createShipment(await seedOrder());
-    // 2 x 0.4 kg, and no line carries dimensions -> the 10/10/5 cm floor.
-    expect(sentPayload()).toMatchObject({ weight: 0.8, length: 10, breadth: 10, height: 5 });
-  });
-
-  it('takes the largest dimension across the lines and floors a weightless order', async () => {
-    await shiprocketService.createShipment(
-      await seedOrder({
-        line_items: [
-          {
-            product_id: new Types.ObjectId(),
-            name: 'Box',
-            sku: 'BX-1',
-            qty: 1,
-            unit_cost: 10,
-            gross: 10,
-            length_cm: 40,
-            breadth_cm: 6,
-            height_cm: 30,
-          },
-          {
-            product_id: new Types.ObjectId(),
-            name: 'Pin',
-            qty: 1,
-            unit_cost: 5,
-            gross: 5,
-            length_cm: 2,
-            breadth_cm: 22,
-            height_cm: 1,
-          },
-        ],
-      }),
+  it('fails readably when no courier can carry the parcel', async () => {
+    mockCouriers.mockResolvedValue([]);
+    const order = await paidOrder();
+    await createShipment(order);
+    expect((await reloadOrder(order._id)).last_error).toBe(
+      'No courier can carry this shipment right now — check the pincode and parcel, then retry'
     );
-    expect(sentPayload()).toMatchObject({ length: 40, breadth: 22, height: 30, weight: 0.1 });
-    // ShipRocket requires a SKU per line, so a line without one is sent under
-    // its own name rather than an empty string.
-    expect(sentPayload().order_items).toEqual([
-      { name: 'Box', sku: 'BX-1', units: 1, selling_price: 10 },
-      { name: 'Pin', sku: 'Pin', units: 1, selling_price: 5 },
-    ]);
   });
 });
 
-describe('shiprocketService.refreshTracking', () => {
-  it('does not call ShipRocket while it is unconfigured', async () => {
-    mockConfigured.mockResolvedValue(false);
-    await shiprocketService.refreshTracking(await seedOrder({ shiprocket: { shipment_id: 'SH-9' } }));
-    expect(mockTrack).not.toHaveBeenCalled();
+describe('createShipment — pickup', () => {
+  it('takes a pickup ShipRocket already queued as scheduled', async () => {
+    mockPickup.mockRejectedValue(shiprocketError('ShipRocket: Pickup already generated for this shipment', 400));
+    const order = await paidOrder();
+    await createShipment(order);
+    const booked = await reloadOrder(order._id);
+    expect(booked.fulfilment_status).toBe('PICKUP_SCHEDULED');
+    expect(booked.shiprocket.pickup_token).toBe('SCHEDULED');
+    expect(booked.last_error).toBe('');
   });
 
-  it('does not call ShipRocket before a shipment exists', async () => {
-    mockConfigured.mockResolvedValue(true);
-    await shiprocketService.refreshTracking(await seedOrder());
-    expect(mockTrack).not.toHaveBeenCalled();
-  });
+  it('keeps the AWB — not FAILED — when the pickup request fails, so Retry only asks for the pickup', async () => {
+    mockPickup.mockRejectedValueOnce(shiprocketError('ShipRocket: Pickup location not verified', 400));
+    const order = await paidOrder();
+    await createShipment(order);
+    const stuck = await reloadOrder(order._id);
+    expect(stuck.fulfilment_status).toBe('AWB_ASSIGNED');
+    expect(stuck.last_error).toBe('ShipRocket: Pickup location not verified');
 
-  it('maps the live status onto the order and logs the latest activity', async () => {
-    mockConfigured.mockResolvedValue(true);
-    mockTrack.mockResolvedValue({
-      current_status: 'OUT FOR DELIVERY',
-      // A blank activity status falls back to the shipment-level one.
-      activities: [{ status: '', location: 'Pune Hub', note: 'Out with rider', date: '' }],
-    });
-    const result = await shiprocketService.refreshTracking(
-      await seedOrder({ shiprocket: { shipment_id: 'SH-9' } }),
-    );
-    expect(mockTrack).toHaveBeenCalledWith('SH-9');
-    expect(result.fulfilment_status).toBe('OUT_FOR_DELIVERY');
-    expect(result.shiprocket.tracking_status).toBe('OUT FOR DELIVERY');
-    expect(result.shiprocket.last_synced_at).toBeInstanceOf(Date);
-    expect(result.tracking_events.at(-1)).toMatchObject({
-      status: 'OUT FOR DELIVERY',
-      location: 'Pune Hub',
-      note: 'Out with rider',
-    });
-  });
-
-  it('keeps the activity label when the activity carries one of its own', async () => {
-    mockConfigured.mockResolvedValue(true);
-    mockTrack.mockResolvedValue({
-      current_status: 'IN TRANSIT',
-      activities: [{ status: 'Reached destination hub', location: 'Delhi', note: '', date: '' }],
-    });
-    const result = await shiprocketService.refreshTracking(
-      await seedOrder({ shiprocket: { shipment_id: 'SH-10' } }),
-    );
-    expect(result.fulfilment_status).toBe('SHIPPED');
-    expect(result.tracking_events.at(-1)?.status).toBe('Reached destination hub');
-  });
-});
-
-describe('shiprocketService.applyWebhookEvent', () => {
-  beforeEach(() => {
-    mockConfigured.mockResolvedValue(true);
-  });
-
-  it('matches the order by AWB and applies the status', async () => {
-    await seedOrder({ shiprocket: { awb: 'AWB-HOOK', shipment_id: 'SH-H' } });
-    const result = await shiprocketService.applyWebhookEvent({
-      awb: 'AWB-HOOK',
-      current_status: 'DELIVERED',
-    });
-    expect(result?.fulfilment_status).toBe('DELIVERED');
-    // The hook carries no activity list, so no timeline row is invented.
-    expect(result?.tracking_events).toHaveLength(0);
-  });
-
-  it('matches on the ShipRocket order id when the hook carries no AWB', async () => {
-    await seedOrder({ shiprocket: { order_id: 'SR-HOOK' } });
-    const result = await shiprocketService.applyWebhookEvent({
-      channel_order_id: 'SR-HOOK',
-      shipment_status: 'IN TRANSIT',
-    });
-    expect(result?.fulfilment_status).toBe('SHIPPED');
-  });
-
-  it('answers null for an event about an order we do not have', async () => {
-    expect(await shiprocketService.applyWebhookEvent({ awb: 'AWB-UNKNOWN' })).toBeNull();
-  });
-
-  // An empty status maps to AWAITING_SHIPMENT rather than crashing, so a hook
-  // shape we have not seen never loses the order.
-  it('parks the order at AWAITING_SHIPMENT when the hook names no status', async () => {
-    await seedOrder({ shiprocket: { awb: 'AWB-BARE' }, fulfilment_status: 'SHIPPED' });
-    const result = await shiprocketService.applyWebhookEvent({ awb: 'AWB-BARE' });
-    expect(result?.fulfilment_status).toBe('AWAITING_SHIPMENT');
-    expect(result?.shiprocket.tracking_status).toBe('');
+    await createShipment(stuck);
+    const scheduled = await reloadOrder(order._id);
+    expect(scheduled.fulfilment_status).toBe('PICKUP_SCHEDULED');
+    expect(scheduled.last_error).toBe('');
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockAwb).toHaveBeenCalledTimes(1);
   });
 });

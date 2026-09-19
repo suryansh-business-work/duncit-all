@@ -114,6 +114,9 @@ export const appConfig = {
       children: [
         { label: 'Android', labelKey: 'shell.nav.android', to: '/app-builds/android', icon: 'android' },
         { label: 'iOS', labelKey: 'shell.nav.ios', to: '/app-builds/ios', icon: 'apple' },
+        // What the stores show — name, descriptions, screenshots, review contact —
+        // kept once and applied by every push from the two tables above.
+        { label: 'Store Listing', labelKey: 'shell.nav.storeListing', to: '/app-builds/store-listing', icon: 'storefront' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },

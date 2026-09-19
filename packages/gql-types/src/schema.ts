@@ -4065,6 +4065,8 @@ export type Coupon = {
   per_user_limit?: Maybe<Scalars['Int']['output']>;
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** STORE coupons only: the products the code applies to. Empty = the whole store. */
+  product_ids: Array<Scalars['ID']['output']>;
   scope: CouponScope;
   updated_at: Scalars['String']['output'];
   used_count: Scalars['Int']['output'];
@@ -4277,6 +4279,7 @@ export type CreateCouponInput = {
   min_order_amount?: InputMaybe<Scalars['Float']['input']>;
   per_user_limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   scope: CouponScope;
   valid_from?: InputMaybe<Scalars['String']['input']>;
   valid_until?: InputMaybe<Scalars['String']['input']>;
@@ -23698,6 +23701,7 @@ export type TicketPriority =
 export type TicketSource =
   | 'APP'
   | 'EMAIL'
+  | 'STORE'
   | 'WEBSITE';
 
 export type TicketStatus =
@@ -24156,6 +24160,7 @@ export type UpdateCouponInput = {
   min_order_amount?: InputMaybe<Scalars['Float']['input']>;
   per_user_limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   scope?: InputMaybe<CouponScope>;
   valid_from?: InputMaybe<Scalars['String']['input']>;
   valid_until?: InputMaybe<Scalars['String']['input']>;

@@ -3,7 +3,7 @@ import { extname } from 'node:path';
 import { buildSiteMetaTags, injectSiteMeta } from '@duncit/brand/site-meta';
 
 import { PORT } from './config';
-import { robotsTxt, sitemapXml } from './crawl';
+import { escapeXml, robotsTxt, sitemapXml } from './crawl';
 import { distFile, indexHtml, sendBody, sendStatic } from './files';
 import { headFor } from './pages';
 import { jsonLdTag } from './structured';
@@ -11,12 +11,24 @@ import { jsonLdTag } from './structured';
 /**
  * ecomm.duncit.com's HTML server. It serves the built storefront and, for the
  * pages a crawler or a link preview reads — home, a product, a category, a
- * collection, a pet — writes that page's own title, description, social card
- * and JSON-LD into the head before the HTML leaves. A crawler never runs the
- * SPA's JavaScript, so without this every shared link would look the same.
+ * collection, a pet, a brand, a page — writes that page's own title,
+ * description, social card, JSON-LD and favicon into the head before the HTML
+ * leaves. A crawler never runs the SPA's JavaScript, so without this every
+ * shared link would look the same.
  */
 const HTML_TYPE = 'text/html; charset=utf-8';
 const NO_CACHE = 'no-cache';
+
+const ICON_TYPES: Record<string, string> = { png: 'image/png', svg: 'image/svg+xml', ico: 'image/x-icon' };
+
+/** `<link rel="icon">` for the store's favicon; '' when it has none. */
+function faviconTag(url: string): string {
+  if (!url) return '';
+  const path = url.split(/[?#]/)[0] ?? '';
+  const type = ICON_TYPES[extname(path).slice(1).toLowerCase()] ?? '';
+  const typeAttr = type ? ` type="${type}"` : '';
+  return `<link rel="icon" href="${escapeXml(url)}"${typeAttr}>`;
+}
 
 /** The SPA shell with this path's head written in; the plain shell if the API cannot say. */
 async function renderPage(path: string): Promise<string> {
@@ -24,7 +36,7 @@ async function renderPage(path: string): Promise<string> {
   try {
     const head = await headFor(path);
     if (!head) return html;
-    const tags = [buildSiteMetaTags(head.meta), ...head.structured.map(jsonLdTag)].join('\n    ');
+    const tags = [buildSiteMetaTags(head.meta), ...head.structured.map(jsonLdTag), faviconTag(head.favicon)].filter(Boolean).join('\n    ');
     return injectSiteMeta(html, tags);
   } catch {
     return html;

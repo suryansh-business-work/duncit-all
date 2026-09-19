@@ -43,7 +43,8 @@ interface AscConfig {
   bundleId: string;
 }
 
-async function readAscConfig(): Promise<AscConfig | null> {
+/** The App Store Connect key and bundle ID, or null while any part is missing. Shared with the release and listing services. */
+export async function readAscConfig(): Promise<AscConfig | null> {
   const [issuerId, keyId, privateKey, bundleId] = await Promise.all([
     getRuntimeEnvValue('APP_STORE_CONNECT_ISSUER_ID'),
     getRuntimeEnvValue('APP_STORE_CONNECT_KEY_ID'),
@@ -55,7 +56,8 @@ async function readAscConfig(): Promise<AscConfig | null> {
   return { creds, bundleId: bundleId.trim() };
 }
 
-async function requireAscConfig(): Promise<AscConfig> {
+/** The App Store Connect key and bundle ID, or a thrown error naming where to configure them. */
+export async function requireAscConfig(): Promise<AscConfig> {
   const config = await readAscConfig();
   if (!config) throw notConfigured();
   return config;

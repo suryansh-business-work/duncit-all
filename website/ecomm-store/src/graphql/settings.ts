@@ -7,11 +7,24 @@ export interface StoreSocialLink {
   url: string;
 }
 
+/** The festive window open right now: the look the store swaps to while it lasts. */
+export interface StoreActiveOccasion {
+  slug: string;
+  label: string;
+  logo_url: string;
+  favicon_url: string;
+  background_url: string;
+  background_color: string;
+  announcement_text: string;
+  ends_at: string;
+}
+
 export interface StoreSettings {
   store_enabled: boolean;
   store_name: string;
   tagline: string;
   logo_url: string;
+  favicon_url: string;
   support_email: string;
   support_phone: string;
   whatsapp_number: string;
@@ -42,6 +55,9 @@ export interface StoreSettings {
   autoship_discount_pct: number;
   /** Delivery intervals a subscription may choose, in weeks. */
   autoship_frequencies: number[];
+  /** On: delivery is limited to the operator's pincode list (storePincodeServiceable says which). */
+  serviceable_pincodes_enabled: boolean;
+  active_occasion: StoreActiveOccasion | null;
 }
 
 export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings }, NoVars> = gql`
@@ -51,6 +67,7 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
       store_name
       tagline
       logo_url
+      favicon_url
       support_email
       support_phone
       whatsapp_number
@@ -83,6 +100,17 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
       autoship_enabled
       autoship_discount_pct
       autoship_frequencies
+      serviceable_pincodes_enabled
+      active_occasion {
+        slug
+        label
+        logo_url
+        favicon_url
+        background_url
+        background_color
+        announcement_text
+        ends_at
+      }
     }
   }
 `;
@@ -113,10 +141,18 @@ export interface StoreCollectionLink {
   image_url: string;
 }
 
+/** One of the store's own pages, as the footer and menu link it. */
+export interface StorePageLink {
+  id: string;
+  title: string;
+  slug: string;
+}
+
 export interface StoreNavigation {
   pet_types: StorePetType[];
   categories: StoreCategoryNode[];
   collections: StoreCollectionLink[];
+  pages: StorePageLink[];
 }
 
 export const STORE_NAVIGATION: TypedDocumentNode<{ storeNavigation: StoreNavigation }, NoVars> = gql`
@@ -157,6 +193,61 @@ export const STORE_NAVIGATION: TypedDocumentNode<{ storeNavigation: StoreNavigat
         slug
         image_url
       }
+      pages {
+        id
+        title
+        slug
+      }
+    }
+  }
+`;
+
+export interface StorePage {
+  id: string;
+  title: string;
+  slug: string;
+  content_html: string;
+  seo_title: string;
+  seo_description: string;
+  updated_at: string;
+}
+
+export const STORE_PAGE: TypedDocumentNode<{ storePage: StorePage | null }, { slug: string }> = gql`
+  query EcommStorePage($slug: String!) {
+    storePage(slug: $slug) {
+      id
+      title
+      slug
+      content_html
+      seo_title
+      seo_description
+      updated_at
+    }
+  }
+`;
+
+/** Whether the store delivers to a pincode by the operator's list alone; the courier is asked at checkout. */
+export interface StorePincodeCheck {
+  pincode: string;
+  serviceable: boolean;
+  /** False when the store serves every pincode the courier can reach. */
+  restricted: boolean;
+}
+
+export const STORE_PINCODE_SERVICEABLE: TypedDocumentNode<{ storePincodeServiceable: StorePincodeCheck }, { pincode: string }> = gql`
+  query EcommStorePincodeServiceable($pincode: String!) {
+    storePincodeServiceable(pincode: $pincode) {
+      pincode
+      serviceable
+      restricted
+    }
+  }
+`;
+
+export const PUBLIC_CLIENT_CONFIG: TypedDocumentNode<{ publicClientConfig: { google_maps_api_key: string } }, NoVars> = gql`
+  query EcommStorePublicClientConfig {
+    publicClientConfig {
+      google_maps_api_key
     }
   }
 `;

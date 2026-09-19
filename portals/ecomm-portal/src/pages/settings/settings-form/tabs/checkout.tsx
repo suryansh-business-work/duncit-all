@@ -6,6 +6,7 @@ import { z } from 'zod';
 import RhfNumberField from '../../../../components/form/RhfNumberField';
 import RhfSwitch from '../../../../components/form/RhfSwitch';
 import { numberText, splitLines, toNumber, toOptionalInt } from '../../../../lib/format';
+import { TWO_COLUMNS } from '../../../../lib/layout';
 import { makeRules } from '../../../../lib/rules';
 import type { Translate } from '../../../../lib/translate';
 import type { SettingsTabSpec, StoreSettings } from '../settings.types';
@@ -63,15 +64,13 @@ const toInput = (v: CheckoutValues) => ({
   cod_blocked_pincodes: splitLines(v.cod_blocked_pincodes),
 });
 
-const twoColumns = { display: 'grid', columnGap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } };
-
 function CheckoutFields({ control }: Readonly<{ control: Control<CheckoutValues> }>) {
   const { t } = useTranslation();
   const noLimit = t('ecommPortal.settings.zeroNoLimit');
   return (
     <Stack spacing={1}>
       <RhfSwitch control={control} name="guest_checkout_enabled" label={t('ecommPortal.settings.guestCheckout')} hint={t('ecommPortal.settings.guestCheckoutHint')} />
-      <Box sx={twoColumns}>
+      <Box sx={TWO_COLUMNS}>
         <RhfNumberField control={control} name="min_order_value" label={t('ecommPortal.settings.minOrder')} hint={noLimit} />
         <RhfNumberField control={control} name="max_qty_per_line" label={t('ecommPortal.settings.maxQty')} whole required />
         <RhfNumberField
@@ -86,7 +85,7 @@ function CheckoutFields({ control }: Readonly<{ control: Control<CheckoutValues>
       <RazorpayAccountField control={control} name="razorpay_account" />
       <Divider />
       <RhfSwitch control={control} name="cod_enabled" label={t('ecommPortal.settings.codEnabled')} />
-      <Box sx={twoColumns}>
+      <Box sx={TWO_COLUMNS}>
         <RhfNumberField control={control} name="cod_fee" label={t('ecommPortal.orders.codFee')} />
         <RhfNumberField control={control} name="cod_min_order" label={t('ecommPortal.settings.codMin')} hint={noLimit} />
         <RhfNumberField control={control} name="cod_max_order" label={t('ecommPortal.settings.codMax')} hint={noLimit} />

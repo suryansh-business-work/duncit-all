@@ -1,7 +1,9 @@
+import type { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { StoreProductModel } from './storeProduct.model';
-import { getStoreSettings, StoreSettingsModel } from './storeSettings.model';
+import { getStoreSettings, StoreSettingsModel, type IStoreOccasion } from './storeSettings.model';
+import { StorePageModel } from './storePage.model';
 import { StoreBrandModel, StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
 import {
   STORE_COLLECTION_MODES,
@@ -57,7 +59,7 @@ async function reorder(Model: any, ids: string[]) {
   return true;
 }
 
-export const petTypeOut = (p: Doc) => ({
+export const petTypeOut = (p: Doc, categoryIds: string[] = []) => ({
   id: String(p._id),
   name: p.name,
   slug: p.slug,
@@ -66,6 +68,58 @@ export const petTypeOut = (p: Doc) => ({
   description: p.description ?? '',
   sort_order: p.sort_order ?? 0,
   is_active: p.is_active !== false,
+  category_ids: categoryIds,
+});
+
+/** Which categories are filed under each pet, in the categories' own order. */
+async function categoryIdsByPet(): Promise<Map<string, string[]>> {
+  const categories = await StoreCategoryModel.find({}).select('pet_type_ids').sort({ sort_order: 1, name: 1 }).lean();
+  const byPet = new Map<string, string[]>();
+  for (const category of categories) {
+    for (const petId of category.pet_type_ids ?? []) {
+      const key = String(petId);
+      byPet.set(key, [...(byPet.get(key) ?? []), String(category._id)]);
+    }
+  }
+  return byPet;
+}
+
+/** File exactly `categoryIds` under the pet: added where missing, removed everywhere else. */
+async function syncPetCategories(petId: Types.ObjectId, categoryIds: Types.ObjectId[]) {
+  await StoreCategoryModel.updateMany(
+    { pet_type_ids: petId, _id: { $nin: categoryIds } },
+    { $pull: { pet_type_ids: petId } }
+  );
+  if (categoryIds.length > 0) {
+    await StoreCategoryModel.updateMany({ _id: { $in: categoryIds } }, { $addToSet: { pet_type_ids: petId } });
+  }
+}
+
+export const pageOut = (p: Doc) => ({
+  id: String(p._id),
+  title: p.title,
+  slug: p.slug,
+  content_html: p.content_html ?? '',
+  show_in_footer: p.show_in_footer !== false,
+  is_active: p.is_active !== false,
+  sort_order: p.sort_order ?? 0,
+  seo_title: p.seo_title ?? '',
+  seo_description: p.seo_description ?? '',
+  updated_at: iso(p.updated_at) ?? '',
+});
+
+export const occasionOut = (o: IStoreOccasion) => ({
+  slug: o.slug,
+  label: o.label,
+  starts_at: iso(o.starts_at) ?? '',
+  ends_at: iso(o.ends_at) ?? '',
+  logo_url: o.logo_url ?? '',
+  favicon_url: o.favicon_url ?? '',
+  background_url: o.background_url ?? '',
+  background_color: o.background_color ?? '',
+  announcement_text: o.announcement_text ?? '',
+  is_active: o.is_active !== false,
+  sort_order: o.sort_order ?? 0,
 });
 
 export const brandOut = (b: Doc) => ({
@@ -183,7 +237,48 @@ const SETTINGS_FLAGS = [
   'returns_enabled',
   'restock_on_cancel',
   'autoship_enabled',
+  'serviceable_pincodes_enabled',
 ] as const;
+
+/** A CSS hex colour, the one form the storefront paints without parsing. */
+const HEX_COLOUR = /^#(?:[\da-f]{3}|[\da-f]{6})$/i;
+
+/** Six digits, whatever was pasted around them. */
+const pincodesOf = (values: unknown) =>
+  cleanList(Array.isArray(values) ? values : [], 20000)
+    .map((p) => p.replaceAll(/\D/g, ''))
+    .filter((p) => p.length === 6);
+
+/** The festive windows as saved: named, dated in order, slugged uniquely, colours well-formed. */
+function occasionsOf(input: Doc[]): IStoreOccasion[] {
+  const seen = new Set<string>();
+  return input.slice(0, 24).map((o, index) => {
+    const label = String(o.label ?? '').trim();
+    if (!label) badInput(`Give occasion ${index + 1} a name`);
+    const starts = dateOrNull(o.starts_at);
+    const ends = dateOrNull(o.ends_at);
+    if (!starts || !ends) badInput(`Set when "${label}" starts and ends`);
+    if (ends.getTime() <= starts.getTime()) badInput(`"${label}" must end after it starts`);
+    const colour = String(o.background_color ?? '').trim();
+    if (colour && !HEX_COLOUR.test(colour)) badInput(`The background colour of "${label}" must be a hex colour like #FFF4E5`);
+    let slug = slugify(o.slug || label) || `occasion-${index + 1}`;
+    while (seen.has(slug)) slug = `${slug}-2`;
+    seen.add(slug);
+    return {
+      slug,
+      label,
+      starts_at: starts,
+      ends_at: ends,
+      logo_url: String(o.logo_url ?? '').trim(),
+      favicon_url: String(o.favicon_url ?? '').trim(),
+      background_url: String(o.background_url ?? '').trim(),
+      background_color: colour,
+      announcement_text: String(o.announcement_text ?? '').trim().slice(0, 200),
+      is_active: o.is_active !== false,
+      sort_order: Math.floor(Number(o.sort_order) || 0),
+    };
+  });
+}
 
 const SETTINGS_NUMBERS = [
   'cod_fee',
@@ -257,6 +352,8 @@ function settingsPatch(input: Doc) {
   }
   if (input.return_reasons) patch.return_reasons = cleanList(input.return_reasons, 30);
   if (input.cancel_reasons) patch.cancel_reasons = cleanList(input.cancel_reasons, 30);
+  if (input.serviceable_pincodes) patch.serviceable_pincodes = pincodesOf(input.serviceable_pincodes);
+  if (input.occasions) patch.occasions = occasionsOf(input.occasions as Doc[]);
   if (input.social_links) {
     patch.social_links = (input.social_links as Doc[])
       .map((l) => ({ label: String(l.label ?? '').trim(), url: String(l.url ?? '').trim() }))
@@ -317,8 +414,11 @@ export const storeAdminMerchService = {
 
   /* --- pet types ------------------------------------------------------ */
   async petTypes() {
-    const rows = await StorePetTypeModel.find({}).sort({ sort_order: 1, name: 1 }).lean();
-    return rows.map(petTypeOut);
+    const [rows, byPet] = await Promise.all([
+      StorePetTypeModel.find({}).sort({ sort_order: 1, name: 1 }).lean(),
+      categoryIdsByPet(),
+    ]);
+    return rows.map((row) => petTypeOut(row, byPet.get(String(row._id)) ?? []));
   },
   async savePetType(id: string | null | undefined, input: Doc) {
     const name = String(input.name ?? '').trim();
@@ -332,7 +432,11 @@ export const storeAdminMerchService = {
       is_active: input.is_active !== false,
       ...(id ? {} : { sort_order: await StorePetTypeModel.countDocuments() }),
     });
-    return petTypeOut(doc);
+    // The categories under a pet live on the categories (`pet_type_ids`); the
+    // form edits them from the pet's side, so the list sent is made exact here.
+    if (Array.isArray(input.category_ids)) await syncPetCategories(doc._id, toObjectIds(input.category_ids));
+    const byPet = await categoryIdsByPet();
+    return petTypeOut(doc, byPet.get(String(doc._id)) ?? []);
   },
   async deletePetType(id: string) {
     const oid = toObjectId(id);
@@ -373,6 +477,32 @@ export const storeAdminMerchService = {
     return true;
   },
   reorderBrands: (ids: string[]) => reorder(StoreBrandModel, ids),
+
+  /* --- pages (policies, guides, about) -------------------------------- */
+  async pages() {
+    const rows = await StorePageModel.find({}).sort({ sort_order: 1, title: 1 }).lean();
+    return rows.map(pageOut);
+  },
+  async savePage(id: string | null | undefined, input: Doc) {
+    const title = String(input.title ?? '').trim();
+    if (!title) badInput('Give the page a title');
+    const doc = await upsert(StorePageModel, id, {
+      title,
+      slug: await uniqueSlug(StorePageModel, input.slug, title, toObjectId(id)),
+      content_html: String(input.content_html ?? ''),
+      show_in_footer: input.show_in_footer !== false,
+      is_active: input.is_active !== false,
+      seo_title: String(input.seo_title ?? '').trim(),
+      seo_description: String(input.seo_description ?? '').trim(),
+      ...(id ? {} : { sort_order: await StorePageModel.countDocuments() }),
+    });
+    return pageOut(doc);
+  },
+  async deletePage(id: string) {
+    await StorePageModel.deleteOne({ _id: toObjectId(id) });
+    return true;
+  },
+  reorderPages: (ids: string[]) => reorder(StorePageModel, ids),
 
   /* --- categories ----------------------------------------------------- */
   async categories() {

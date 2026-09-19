@@ -7,6 +7,7 @@ import { useTranslation } from '@duncit/shell';
 import RhfMultiSelect from '../../../components/form/RhfMultiSelect';
 import RhfNumberField from '../../../components/form/RhfNumberField';
 import RhfSwitch from '../../../components/form/RhfSwitch';
+import { TWO_COLUMNS } from '../../../lib/layout';
 import { STORE_BRANDS } from '../../../queries/taxonomy';
 import { useTaxonomyOptions } from '../../../queries/useTaxonomyOptions';
 import type { CollectionValues } from './collection-form';
@@ -39,7 +40,7 @@ export default function SmartRules({ control }: Readonly<{ control: Control<Coll
       />
       <RhfMultiSelect control={control} name="rules.brand_ids" label={t('ecommPortal.collections.brands')} options={brandOptions} />
       <RhfTextField control={control} name="rules.tags" label={t('ecommPortal.collections.tags')} hint={t('ecommPortal.form.commaHint')} />
-      <Box sx={{ display: 'grid', columnGap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+      <Box sx={TWO_COLUMNS}>
         <RhfNumberField control={control} name="rules.min_discount_pct" label={t('ecommPortal.collections.minDiscount')} hint={noLimit} unit="%" />
         <RhfNumberField control={control} name="rules.max_price" label={t('ecommPortal.collections.maxPrice')} hint={noLimit} />
       </Box>

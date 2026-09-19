@@ -4,6 +4,7 @@ import { DuncitTable, type TableFetch } from '@duncit/table';
 import { getRowId } from './cells';
 import { makeAppBuildColumns } from './appBuildColumns';
 import type { PushToPlay } from './usePlayStorePush';
+import type { PushToAppStore } from './useAppStorePush';
 import type { AppBuildPlatform, AppBuildRow } from './queries';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   onRowClick: (row: AppBuildRow) => void;
   onDelete: (row: AppBuildRow) => void;
   onPush: PushToPlay;
+  onPushAppStore: PushToAppStore;
   /** The page heading — names the grid for screen readers and its bulk deletes in the header. */
   ariaLabel: string;
 }
@@ -24,13 +26,14 @@ export default function AppBuildsTable({
   onRowClick,
   onDelete,
   onPush,
+  onPushAppStore,
   ariaLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
   const columns = useMemo(
-    () => makeAppBuildColumns(t, platform, onDelete, onPush),
-    [t, onDelete, onPush, platform]
+    () => makeAppBuildColumns(t, platform, onDelete, onPush, onPushAppStore),
+    [t, onDelete, onPush, onPushAppStore, platform]
   );
 
   return (

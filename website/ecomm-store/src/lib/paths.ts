@@ -6,7 +6,7 @@ export const paths = {
   category: (slug: string) => `/c/${encodeURIComponent(slug)}`,
   petType: (slug: string) => `/pet/${encodeURIComponent(slug)}`,
   collection: (slug: string) => `/collections/${encodeURIComponent(slug)}`,
-  brand: (id: string) => `/brand/${encodeURIComponent(id)}`,
+  brand: (slug: string) => `/brand/${encodeURIComponent(slug)}`,
   brands: '/brands',
   search: (q: string) => `/search?q=${encodeURIComponent(q)}`,
   cart: '/cart',

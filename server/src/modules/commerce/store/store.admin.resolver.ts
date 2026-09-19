@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import type { IStoreSettings } from './storeSettings.model';
-import { storeAdminMerchService } from './store.admin.merch.service';
+import { occasionOut, storeAdminMerchService } from './store.admin.merch.service';
+import { paymentService } from '@modules/finance/payment/payment.service';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
 import { storeAdminProductsService } from './store.admin.products.service';
 import { storeAdminPackagingService } from './store.admin.packaging.service';
@@ -32,6 +33,8 @@ const settingsOut = (s: IStoreSettings | null) => {
   return {
     ...plain,
     social_links: (plain.social_links ?? []).map((l: Args) => ({ label: l.label, url: l.url })),
+    serviceable_pincodes: plain.serviceable_pincodes ?? [],
+    occasions: (plain.occasions ?? []).map(occasionOut),
     updated_at: iso(plain.updated_at) ?? '',
   };
 };
@@ -51,7 +54,9 @@ export const storeAdminResolvers = {
     storeAdminProduct: admin((a) => storeAdminProductsService.get(a.id)),
     storeAdminWarehouses: admin(() => storeAdminProductsService.warehouses()),
     storeAdminBrands: admin(() => storeAdminMerchService.brands()),
+    storeAdminPages: admin(() => storeAdminMerchService.pages()),
     storeAdminRazorpayAccounts: admin(() => storeAdminMerchService.razorpayAccounts()),
+    storePaymentsTable: admin((a) => paymentService.tableForStore(a.query)),
     storePackagingExport: admin((a) => storeAdminPackagingService.exportRows(a.product_ids)),
     storeOrdersTable: admin((a) => storeOrderService.table(a.query)),
     storeAdminOrder: admin((a) => storeOrderService.adminDetail(a.id)),
@@ -94,6 +99,9 @@ export const storeAdminResolvers = {
     storeSaveBrand: admin((a) => storeAdminMerchService.saveBrand(a.id, a.input)),
     storeDeleteBrand: admin((a) => storeAdminMerchService.deleteBrand(a.id)),
     storeReorderBrands: admin((a) => storeAdminMerchService.reorderBrands(a.ids)),
+    storeSavePage: admin((a) => storeAdminMerchService.savePage(a.id, a.input)),
+    storeDeletePage: admin((a) => storeAdminMerchService.deletePage(a.id)),
+    storeReorderPages: admin((a) => storeAdminMerchService.reorderPages(a.ids)),
     storeUpdateOrderStatus: admin((a) => storeOrderService.updateStatus(a.id, a.status, a.note ?? '')),
     storeAddOrderNote: admin((a, ctx) => storeOrderService.addNote(ctx, a.id, a.text)),
     storeAdminCancelOrder: admin((a, ctx) => storeOrderService.adminCancel(ctx, a.id, a.reason, a.refund_mode)),

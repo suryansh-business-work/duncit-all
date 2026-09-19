@@ -1,5 +1,6 @@
 import type { Control } from 'react-hook-form';
-import { Stack } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+import { Link, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { z } from 'zod';
 import RhfRichText from '../../../../components/form/RhfRichText';
@@ -22,6 +23,24 @@ const toValues = (s: StoreSettings): PagesValues => ({
   about_html: s.about_html,
 });
 
+/** Any page beyond the four built-in ones is made under Storefront › Policies & pages. */
+function CustomPagesNote() {
+  const { t } = useTranslation();
+  return (
+    <Stack spacing={0.25} data-testid="settings-custom-pages">
+      <Typography component="h3" variant="subtitle2">
+        {t('ecommPortal.settings.customPages')}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {t('ecommPortal.settings.customPagesHint')}{' '}
+        <Link component={RouterLink} to="/pages" data-testid="settings-custom-pages-link">
+          {t('ecommPortal.nav.pages')}
+        </Link>
+      </Typography>
+    </Stack>
+  );
+}
+
 function PagesFields({ control }: Readonly<{ control: Control<PagesValues> }>) {
   const { t } = useTranslation();
   return (
@@ -40,6 +59,7 @@ function PagesFields({ control }: Readonly<{ control: Control<PagesValues> }>) {
       />
       <RhfRichText control={control} name="terms_html" label={t('ecommPortal.settings.terms')} aiContext="pet store terms of sale" />
       <RhfRichText control={control} name="about_html" label={t('ecommPortal.settings.about')} aiContext="pet store about page" />
+      <CustomPagesNote />
     </Stack>
   );
 }

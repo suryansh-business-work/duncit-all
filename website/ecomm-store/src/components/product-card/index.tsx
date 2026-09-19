@@ -48,6 +48,11 @@ function CardStatus({ product }: Readonly<{ product: StoreProductCard }>) {
           </Typography>
         ) : null}
       </Stack>
+      {product.offer_text ? (
+        <Typography variant="caption" sx={{ fontWeight: 700 }} data-testid="product-card-offer">
+          {product.offer_text}
+        </Typography>
+      ) : null}
       {product.in_stock ? null : (
         <Typography variant="caption" sx={{ fontWeight: 800 }}>
           {t('ecommStore.card.outOfStock')}

@@ -10,6 +10,7 @@ import SettingsTabForm, {
   AUTOSHIP_TAB,
   CHECKOUT_TAB,
   GENERAL_TAB,
+  OCCASIONS_TAB,
   PAGES_TAB,
   RETURNS_TAB,
   SEO_TAB,
@@ -26,6 +27,7 @@ const TAB_KEYS: Record<SettingsTab, string> = {
   autoship: 'ecommPortal.settings.tabAutoship',
   seo: 'ecommPortal.common.seo',
   pages: 'ecommPortal.settings.tabPages',
+  occasions: 'ecommPortal.settings.tabOccasions',
 };
 
 const TABS = Object.keys(TAB_KEYS) as SettingsTab[];
@@ -51,6 +53,8 @@ function SettingsPanel({ tab, ...props }: Readonly<PanelProps & { tab: SettingsT
       return <SettingsTabForm key={tab} spec={SEO_TAB} {...props} />;
     case 'pages':
       return <SettingsTabForm key={tab} spec={PAGES_TAB} {...props} />;
+    case 'occasions':
+      return <SettingsTabForm key={tab} spec={OCCASIONS_TAB} {...props} />;
     default:
       return <SettingsTabForm key={tab} spec={GENERAL_TAB} {...props} />;
   }

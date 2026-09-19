@@ -15,7 +15,10 @@ const cap = vi.hoisted(() => ({
   fromArg: null as unknown[] | null,
 }));
 
-vi.mock('@apollo/client', () => ({
+vi.mock('@apollo/client', async (importOriginal) => ({
+  // Partial on purpose: `trackingFetch` is re-exported from @duncit/ui, whose
+  // index reaches @duncit/app-settings and its module-scope `gql` documents.
+  ...(await importOriginal<typeof import('@apollo/client')>()),
   ApolloClient: vi.fn(function (args: unknown) {
     cap.clientArgs = args;
     return { __client: true };

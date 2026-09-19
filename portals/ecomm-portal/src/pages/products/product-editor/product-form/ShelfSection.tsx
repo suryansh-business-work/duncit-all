@@ -30,6 +30,8 @@ function FacetFields({ control }: Readonly<{ control: ProductControl }>) {
           name={`facet_values.${facet.id}`}
           label={facet.name}
           options={facet.options.map((option) => ({ value: option.slug, label: option.label }))}
+          hint={t('ecommPortal.productEditor.facetNewOption')}
+          freeSolo
           testId="product-facet"
         />
       ))}

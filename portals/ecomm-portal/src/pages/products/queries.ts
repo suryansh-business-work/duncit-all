@@ -84,6 +84,9 @@ export interface StoreProduct extends StoreProductRow {
   /** Null uses the store's default window. */
   return_window_days: number | null;
   max_per_order: number;
+  /** A short offer line shown beside the price, e.g. Buy 2, get 1 free. */
+  offer_text: string;
+  faqs: { question: string; answer: string }[];
 }
 
 /** One of Duncit's own warehouses — where a store product ships from. */
@@ -177,6 +180,11 @@ const PRODUCT_FIELDS = `
   returnable
   return_window_days
   max_per_order
+  offer_text
+  faqs {
+    question
+    answer
+  }
 `;
 
 export const STORE_PRODUCTS_TABLE = gql`

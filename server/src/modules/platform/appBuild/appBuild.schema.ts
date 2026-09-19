@@ -91,6 +91,58 @@ export const appBuildTypeDefs = gql`
     finished_at: String
   }
 
+  "Where a stored IPA can go from the portal."
+  enum AppStoreTrack {
+    "Uploaded to App Store Connect and processed for TestFlight testers."
+    TESTFLIGHT
+    "Uploaded, the store listing applied from Store Listing, and submitted to App Review."
+    APP_STORE
+  }
+
+  """
+  PUSHING for the whole journey — upload, Apple's processing (minutes to half an
+  hour), listing, submission — then RELEASED or FAILED. Unlike a Play push there
+  is no stale timeout: the server's scheduler carries a PUSHING entry on across
+  restarts, and gives up only after three hours.
+  """
+  enum AppStoreReleaseStatus {
+    PUSHING
+    RELEASED
+    FAILED
+  }
+
+  "Which part of an App Store push is next."
+  enum AppStoreReleaseStep {
+    UPLOAD
+    PROCESSING
+    LISTING
+    SUBMIT
+    DONE
+  }
+
+  """
+  One push of a build's IPA to TestFlight or App Review. A build keeps every one,
+  oldest first. RELEASED on the TESTFLIGHT track means Apple finished processing
+  the build; on APP_STORE it means the version was submitted for review — the
+  review's outcome is Apple's to report, in App Store Connect.
+  """
+  type AppBuildAppStoreRelease {
+    track: AppStoreTrack!
+    status: AppStoreReleaseStatus!
+    step: AppStoreReleaseStep!
+    "What the push is doing right now."
+    stage: String!
+    "Apple's id for the processed build. Empty until processing finished."
+    asc_build_id: String!
+    "Apple's id for the App Store version this build was attached to. APP_STORE track only."
+    version_id: String!
+    "Why it FAILED. Empty otherwise."
+    error: String!
+    by: String!
+    started_at: String!
+    finished_at: String
+  }
+
   """
   What one build produced. Android emits two — an APK to sideload and an AAB to
   upload to Play — and they are ONE build, so they share a row rather than
@@ -127,6 +179,12 @@ export const appBuildTypeDefs = gql`
     platform: AppBuildPlatform!
     status: AppBuildStatus!
     version: String!
+    """
+    The store's build identifier — CFBundleVersion on iOS, versionCode on
+    Android — minted by the runner. Empty on builds reported before it was sent;
+    those cannot be pushed to App Store Connect, which needs it up front.
+    """
+    build_number: String!
     "The store identifier this build shipped under (iOS bundleIdentifier / Android package)."
     bundle_id: String!
     """
@@ -199,6 +257,8 @@ export const appBuildTypeDefs = gql`
     stages: [AppBuildStage!]!
     "Every push of this build's AAB to Google Play, oldest first."
     play_releases: [AppBuildPlayRelease!]!
+    "Every push of this build's IPA to TestFlight or the App Store, oldest first."
+    app_store_releases: [AppBuildAppStoreRelease!]!
     slack_channel: String
     slack_ts: String
     "Why the Slack post did not happen, when it did not."
@@ -353,6 +413,8 @@ export const appBuildTypeDefs = gql`
     "Defaults to SUCCESS. FAILED rows carry no artifact."
     status: AppBuildStatus
     version: String!
+    "CFBundleVersion / versionCode the runner built with. Needed to upload the build to Apple."
+    build_number: String
     bundle_id: String
     """
     The dispatch this run is fulfilling, when the portal started it. Claims the
@@ -525,6 +587,18 @@ export const appBuildTypeDefs = gql`
     ended.
     """
     pushAppBuildToPlayStore(id: ID!, track: PlayStoreTrack!): AppBuild!
+    """
+    Upload a build's stored IPA to App Store Connect from this server — no Mac,
+    no Transporter: the App Store Connect API's build upload, with the key on
+    the APP_STORE_CONNECT env entry. TESTFLIGHT stops once Apple has processed
+    the build. APP_STORE goes on to apply Store Listing (name, description,
+    keywords, screenshots, review contact), attach the build to the App Store
+    version and submit it for review. Tech/Super admin only.
+
+    Answers as soon as the push is recorded as PUSHING; the scheduler drives it
+    to RELEASED or FAILED and the row says how far it is.
+    """
+    pushAppBuildToAppStore(id: ID!, track: AppStoreTrack!): AppBuild!
     """
     Make a new iOS signing identity at Apple with the App Store Connect key:
     registers the bundle ID and its capabilities if missing, then creates an

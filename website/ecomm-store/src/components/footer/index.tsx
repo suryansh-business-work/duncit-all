@@ -8,8 +8,10 @@ import { useStoreT } from '../../i18n';
 import { useNavigationData } from '../header/navigation';
 import { NewsletterForm } from '../newsletter-form';
 import { FooterColumn } from './FooterColumn';
+import { SocialLinks } from './SocialLinks';
 
-const POLICY_LINKS = [
+/** The four pages every store has; the phone menu lists the same four. */
+export const POLICY_LINKS = [
   { slug: 'shipping', labelKey: 'ecommStore.pages.shipping' },
   { slug: 'returns', labelKey: 'ecommStore.pages.returns' },
   { slug: 'terms', labelKey: 'ecommStore.pages.terms' },
@@ -41,7 +43,7 @@ function SupportColumn() {
 export function Footer() {
   const { t } = useStoreT();
   const s = useStoreSettings();
-  const { categories } = useNavigationData();
+  const { categories, pages } = useNavigationData();
   const dates = useDateFormat();
   const aisles = categories.filter((c) => c.show_in_menu).slice(0, 8);
   return (
@@ -64,6 +66,11 @@ export function Footer() {
                 {t(p.labelKey)}
               </Link>
             ))}
+            {pages.map((page) => (
+              <Link key={page.id} component={RouterLink} to={paths.page(page.slug)} data-testid={`footer-page-${page.id}`}>
+                {page.title}
+              </Link>
+            ))}
           </FooterColumn>
           <SupportColumn />
           <FooterColumn title={t('ecommStore.footer.newsletter')}>
@@ -74,19 +81,11 @@ export function Footer() {
           </FooterColumn>
         </Box>
         <Divider sx={{ my: 3 }} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
           <Typography variant="body2" color="text.secondary">
             {t('ecommStore.footer.copyright', { vars: { year: dates.now().getFullYear(), name: s.store_name } })}
           </Typography>
-          <Stack direction="row" spacing={2} component="ul" aria-label={t('ecommStore.footer.social')} sx={{ listStyle: 'none', p: 0, m: 0 }}>
-            {s.social_links.map((l) => (
-              <Box component="li" key={l.url}>
-                <Link href={l.url} target="_blank" rel="noopener noreferrer">
-                  {l.label}
-                </Link>
-              </Box>
-            ))}
-          </Stack>
+          <SocialLinks links={s.social_links} />
         </Stack>
       </Container>
     </Box>

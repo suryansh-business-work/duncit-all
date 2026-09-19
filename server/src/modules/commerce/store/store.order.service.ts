@@ -169,6 +169,7 @@ async function cancelOrder(order: IProductOrder, opts: CancelOptions) {
   if (settings.restock_on_cancel) await restock(order.line_items);
   await settleCancellationMoney(order, opts);
   await mailOrderUpdate(order);
+  await whatsappOrderUpdate(order);
 }
 
 async function settleCancellationMoney(order: IProductOrder, opts: CancelOptions) {

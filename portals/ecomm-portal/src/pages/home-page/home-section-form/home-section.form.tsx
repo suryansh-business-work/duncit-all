@@ -8,6 +8,7 @@ import RhfSwitch from '../../../components/form/RhfSwitch';
 import { useSchemaForm } from '../../../components/form/useSchemaForm';
 import type { Option } from '../../../lib/translate';
 import type { SectionKind, StoreSection } from '../queries';
+import { TWO_COLUMNS } from '../../../lib/layout';
 import { SECTION_KINDS, SECTION_KIND_HINT_KEYS, SECTION_KIND_KEYS } from '../section-kinds';
 import SectionKindFields from './SectionKindFields';
 import { makeHomeSectionSchema, toHomeSectionInput, toHomeSectionValues, type HomeSectionValues } from './home-section.types';
@@ -56,7 +57,7 @@ export default function HomeSectionForm({
         </RhfTextField>
         <RhfTextField control={control} name="title" label={t('shell.common.title')} />
         <RhfTextField control={control} name="subtitle" label={t('ecommPortal.homePage.subtitleField')} />
-        <Box sx={{ display: 'grid', columnGap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+        <Box sx={TWO_COLUMNS}>
           <RhfDateTimeField control={control} name="starts_at" label={t('ecommPortal.homePage.startsAt')} hint={t('ecommPortal.homePage.blankNow')} />
           <RhfDateTimeField control={control} name="ends_at" label={t('ecommPortal.homePage.endsAt')} hint={endsHint} />
         </Box>

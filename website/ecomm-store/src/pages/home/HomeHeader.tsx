@@ -6,14 +6,16 @@ import { CircleButton } from '../../components/CircleButton';
 import { DeliverToPill } from '../../components/DeliverToPill';
 import { CartButton } from '../../components/header';
 import { AnnouncementBar } from '../../components/header/AnnouncementBar';
+import { MobileMenuButton } from '../../components/header/mobile-menu';
 import { SearchForm } from '../../components/header/search-form';
 import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T } from '../../theme/tokens';
 
 /**
- * The phone home's top: delivery pincode, cart and order updates, then the
- * brand-tinted block greeting the shopper's pet by name, with the search pill.
+ * The phone home's top: the menu, delivery pincode, cart and order updates,
+ * then the brand-tinted block greeting the shopper's pet by name, with the
+ * search pill.
  */
 export function HomeHeader() {
   const { t } = useStoreT();
@@ -24,7 +26,10 @@ export function HomeHeader() {
     <Box sx={{ display: { xs: 'block', md: 'none' } }}>
       <AnnouncementBar />
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', py: 1 }}>
-        <DeliverToPill />
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+          <MobileMenuButton />
+          <DeliverToPill />
+        </Stack>
         <Stack direction="row" spacing={1}>
           <CartButton />
           {signedIn ? (

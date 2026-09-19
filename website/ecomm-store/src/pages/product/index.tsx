@@ -17,6 +17,7 @@ import { ShelfHeading } from '../shelf/ShelfHeading';
 import { BuyBox } from './buy-box';
 import { RecentlyViewed, RelatedProducts } from './MoreProducts';
 import { ProductDetails } from './ProductDetails';
+import { ProductFaqs } from './ProductFaqs';
 import { ProductGallery } from './product-gallery';
 import { ProductReviews } from './reviews';
 import { ProductTitleBlock } from './ProductTitleBlock';
@@ -59,6 +60,7 @@ function ProductView({ product }: Readonly<{ product: StoreProduct }>) {
         </Box>
       </Box>
       <ProductDetails product={product} />
+      {product.faqs.length > 0 ? <ProductFaqs faqs={product.faqs} /> : null}
       <ProductReviews product={product} />
       <RelatedProducts productId={product.id} />
       <RecentlyViewed currentId={product.id} />

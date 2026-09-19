@@ -11,7 +11,7 @@ import { useSchemaForm } from '../../../components/form/useSchemaForm';
 import { parentOptions } from '../../../lib/taxonomy';
 import type { Option } from '../../../lib/translate';
 import type { StoreCategory } from '../../../queries/taxonomy';
-import { makeCategorySchema, toCategoryInput, toCategoryValues, type CategoryValues } from './category.types';
+import { makeCategorySchema, ROOT_PARENT, toCategoryInput, toCategoryValues, type CategoryValues } from './category.types';
 
 interface CategoryFormProps extends ListFormProps<StoreCategory> {
   categories: readonly StoreCategory[];
@@ -39,10 +39,10 @@ export default function CategoryForm({
       onSubmit={handleSubmit((values) => onSubmit(toCategoryInput(values)))}
       maxWidth="md"
     >
-      <Stack spacing={1}>
+      <Stack spacing={1} data-testid="category-form">
         <IdentityFields control={control} />
-        <RhfTextField control={control} name="parent_id" label={t('ecommPortal.categories.parent')} select>
-          <MenuItem value="">{t('ecommPortal.categories.topLevel')}</MenuItem>
+        <RhfTextField control={control} name="parent_id" label={t('ecommPortal.categories.parent')} select required data-testid="category-parent">
+          <MenuItem value={ROOT_PARENT}>{t('ecommPortal.categories.topLevel')}</MenuItem>
           {parents.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -55,13 +55,26 @@ export default function CategoryForm({
           label={t('ecommPortal.nav.petTypes')}
           options={petTypeOptions}
           hint={t('ecommPortal.categories.petTypesHint')}
+          testId="category-pet-types"
         />
-        <RhfImageField control={control} name="image_url" label={t('ecommPortal.form.image')} />
-        <RhfImageField control={control} name="banner_url" label={t('ecommPortal.form.banner')} />
-        <RhfSwitch control={control} name="is_active" label={t('shell.common.active')} hint={t('ecommPortal.form.activeHint')} />
-        <RhfSwitch control={control} name="show_in_menu" label={t('ecommPortal.categories.showInMenu')} />
+        <RhfImageField
+          control={control}
+          name="image_url"
+          label={t('ecommPortal.form.image')}
+          hint={t('ecommPortal.categories.imageHint')}
+          testId="category-image"
+        />
+        <RhfImageField
+          control={control}
+          name="banner_url"
+          label={t('ecommPortal.form.banner')}
+          hint={t('ecommPortal.categories.bannerHint')}
+          testId="category-banner"
+        />
+        <RhfSwitch control={control} name="is_active" label={t('shell.common.active')} hint={t('ecommPortal.form.activeHint')} testId="category-active" />
+        <RhfSwitch control={control} name="show_in_menu" label={t('ecommPortal.categories.showInMenu')} testId="category-show-in-menu" />
         <Divider />
-        <SeoFields control={control} />
+        <SeoFields control={control} required />
       </Stack>
     </FormDialog>
   );

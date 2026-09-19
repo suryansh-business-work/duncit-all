@@ -23,8 +23,10 @@ import {
   type IAppBuildArtifact,
   type IAppBuildStage,
   type PlayStoreTrack,
+  type AppStoreTrack,
 } from './appBuild.model';
 import { playStoreSettings, pushBuildToPlayStore } from './playRelease.service';
+import { pushBuildToAppStore } from './appStoreRelease.service';
 import { appStoreSettings } from './iosSigning.service';
 import {
   dispatchWorkflow,
@@ -164,6 +166,7 @@ const pub = (doc: IAppBuild) => ({
   platform: doc.platform,
   status: doc.status,
   version: doc.version,
+  build_number: doc.build_number ?? '',
   bundle_id: doc.bundle_id ?? '',
   artifacts: artifactsOf(doc).map((a) => ({
     kind: a.kind,
@@ -201,6 +204,18 @@ const pub = (doc: IAppBuild) => ({
     track: r.track,
     status: r.status,
     version_code: r.version_code ?? '',
+    error: r.error ?? '',
+    by: r.by ?? '',
+    started_at: r.started_at?.toISOString() ?? '',
+    finished_at: r.finished_at?.toISOString() ?? null,
+  })),
+  app_store_releases: (doc.app_store_releases ?? []).map((r) => ({
+    track: r.track,
+    status: r.status,
+    step: r.step ?? 'UPLOAD',
+    stage: r.stage ?? '',
+    asc_build_id: r.asc_build_id ?? '',
+    version_id: r.version_id ?? '',
     error: r.error ?? '',
     by: r.by ?? '',
     started_at: r.started_at?.toISOString() ?? '',
@@ -538,6 +553,9 @@ async function upsertBuild(
     platform: input.platform,
     status,
     version,
+    // Minted once per run, so a report that lacks it (an older reporter) must
+    // not blank the one an earlier report of the same run carried.
+    ...(optionalStr(input.build_number) ? { build_number: optionalStr(input.build_number) } : {}),
     bundle_id: optionalStr(input.bundle_id),
     stage: liveStage,
     ...nextStages(existing, stage),
@@ -778,6 +796,11 @@ export const appBuildService = {
   /** Release a stored AAB to a Play track; the row carries the outcome. */
   async pushToPlayStore(id: string, track: PlayStoreTrack, user: AuthUser) {
     return pub(await pushBuildToPlayStore(id, track, user.email ?? user.id));
+  },
+
+  /** Upload a stored IPA to App Store Connect; the row carries the outcome. */
+  async pushToAppStore(id: string, track: AppStoreTrack, user: AuthUser) {
+    return pub(await pushBuildToAppStore(id, track, user.email ?? user.id));
   },
 
   /**

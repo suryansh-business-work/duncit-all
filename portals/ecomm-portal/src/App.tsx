@@ -27,6 +27,9 @@ import CartsPage from './pages/carts/CartsPage';
 import StockAlertsPage from './pages/stock-alerts/StockAlertsPage';
 import AutoshipPage from './pages/autoship/AutoshipPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import PagesPage from './pages/pages/PagesPage';
+import PaymentLogsPage from './pages/logs/PaymentLogsPage';
+import SupportPage from './pages/support/SupportPage';
 
 const authed = createAuthed({
   getToken: runtime.session.getToken,
@@ -61,6 +64,9 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/carts', element: <CartsPage /> },
   { path: '/stock-alerts', element: <StockAlertsPage /> },
   { path: '/autoship', element: <AutoshipPage /> },
+  { path: '/pages', element: <PagesPage /> },
+  { path: '/logs/payments', element: <PaymentLogsPage /> },
+  { path: '/support', element: <SupportPage /> },
   { path: '/settings', element: <SettingsPage /> },
   { path: '/profile', element: <ProfilePage /> },
 ];

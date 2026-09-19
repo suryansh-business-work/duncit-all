@@ -809,6 +809,23 @@ async function emailReceipt(ctx: DeferredContext): Promise<void> {
   } catch (error) {
     markStepFailed(ctx, 'RECEIPT_EMAIL', error);
   }
+  await whatsappStoreOrderPlaced(ctx.payment);
+}
+
+/**
+ * The pet store's "your order is placed" WhatsApp, beside the receipt email.
+ * Best effort and outside the step ledger: a template not yet approved at
+ * AiSensy must never mark a paid, booked order as a failed checkout. Imported
+ * lazily — the store module imports this one.
+ */
+async function whatsappStoreOrderPlaced(payment: IPayment): Promise<void> {
+  if (!payment.metadata?.store) return;
+  try {
+    const { whatsappStoreOrdersPlaced } = await import('@modules/commerce/store/store.whatsapp');
+    await whatsappStoreOrdersPlaced(payment);
+  } catch (error) {
+    logs.server.warn('payment', 'whatsappStoreOrderPlaced', { error, payment_id: payment.payment_id });
+  }
 }
 
 /* ------------------------------------------------------------------ *

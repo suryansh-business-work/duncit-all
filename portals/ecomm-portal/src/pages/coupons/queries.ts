@@ -13,6 +13,8 @@ export interface StoreCoupon {
   min_order_amount: number;
   used_count: number;
   is_active: boolean;
+  /** The products the code applies to; empty = the whole store. */
+  product_ids: string[];
   created_at: string;
 }
 
@@ -28,6 +30,7 @@ const COUPON_FIELDS = `
   min_order_amount
   used_count
   is_active
+  product_ids
   created_at
 `;
 

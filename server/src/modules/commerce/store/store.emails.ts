@@ -22,6 +22,9 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
   DELIVERED: 'Delivered',
   CANCELLED: 'Cancelled',
   RTO: 'Returning to us',
+  RTO_DELIVERED: 'Returned to us',
+  NDR: 'Delivery attempt failed',
+  LOST: 'Lost in transit',
   FAILED: 'Needs attention',
   READY_FOR_PICKUP: 'Ready for pickup',
   PICKED_UP: 'Picked up',
@@ -37,8 +40,13 @@ export const RETURN_STATUS_LABEL: Record<string, string> = {
   CLOSED: 'Closed',
 };
 
-/** The statuses a buyer is written to about. The rest are internal steps. */
-const NOTIFY_STATUSES = new Set(['SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'RTO']);
+/**
+ * Every status a buyer can read on their order page is one they are written
+ * to about — placed, packed, ready, picked up, shipped, out for delivery,
+ * delivered, and the ones that go wrong. Only a status the label table does
+ * not know is skipped, because there would be nothing to tell them.
+ */
+const NOTIFY_STATUSES = new Set(Object.keys(ORDER_STATUS_LABEL));
 
 const firstName = (name: string) => String(name ?? '').trim().split(/\s+/)[0] || 'there';
 

@@ -2,6 +2,7 @@ import { Alert, Box, Stack } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import FormDialog from '../../../../components/FormDialog';
 import { useSchemaForm } from '../../../../components/form/useSchemaForm';
+import { TWO_COLUMNS } from '../../../../lib/layout';
 import type { OrderAddress } from '../../queries';
 import type { ShippingAddressInput } from '../../shipping-queries';
 import { addressDefaults, makeOrderAddressSchema, toAddressInput, type OrderAddressValues } from './order-address.types';
@@ -44,7 +45,7 @@ export default function OrderAddressForm({ address, problems, busy, onClose, onS
         {problems.length > 0 ? (
           <Alert severity="warning">{t('ecommPortal.shipping.addressNeeds', { vars: { needs: problems.join(', ') } })}</Alert>
         ) : null}
-        <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+        <Box sx={TWO_COLUMNS}>
           {FIELDS.map((field) => (
             <Box key={field.name} sx={{ gridColumn: field.wide ? '1 / -1' : 'auto' }}>
               <RhfTextField

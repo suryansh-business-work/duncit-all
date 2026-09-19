@@ -12,7 +12,9 @@ import {
   renderCommit,
 } from './cells';
 import { makePlayStoreColumn } from './playStoreCells';
+import { makeAppStoreColumn } from './appStoreCells';
 import type { PushToPlay } from './usePlayStorePush';
+import type { PushToAppStore } from './useAppStorePush';
 import {
   changesLabel,
   durationLabel,
@@ -28,7 +30,8 @@ export function makeAppBuildColumns(
   t: Translate,
   platform: AppBuildPlatform,
   onDelete: (row: AppBuildRow) => void,
-  onPush: PushToPlay
+  onPush: PushToPlay,
+  onPushAppStore: PushToAppStore
 ): DuncitColumn<AppBuildRow>[] {
   const statusLabels = {
     QUEUED: t('tech.appBuilds.statusQueued'),
@@ -155,8 +158,9 @@ export function makeAppBuildColumns(
       ),
       valueGetter: (row) => (row.slack_ts ? 'posted' : 'skipped'),
     },
-    // Only an AAB can go to Google Play, so only the Android table offers it.
-    ...(platform === 'ANDROID' ? [makePlayStoreColumn(t, onPush)] : []),
+    // Only an AAB can go to Google Play and only an IPA to App Store Connect,
+    // so each table offers its own store.
+    platform === 'ANDROID' ? makePlayStoreColumn(t, onPush) : makeAppStoreColumn(t, onPushAppStore),
     {
       field: 'artifact_url',
       headerName: t('tech.appBuilds.colLinks'),

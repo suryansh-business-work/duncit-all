@@ -314,6 +314,16 @@ function readVersion() {
   }
 }
 
+/**
+ * The store's build identifier the workflow minted at its start — CFBundleVersion
+ * on iOS, versionCode on Android (both are seconds since 2020). Uploading the
+ * build to App Store Connect from the Tech portal has to name it first, and only
+ * the runner ever knew it.
+ */
+function buildNumber() {
+  return (process.env.IOS_BUILD_NUMBER || process.env.ANDROID_VERSION_CODE || '').trim();
+}
+
 /** The identifier the store lists this build under — `ios.bundleIdentifier`
  * on iOS, `android.package` on Android. */
 function readBundleId(platform) {
@@ -372,6 +382,7 @@ async function reportProgress(platform, token) {
       ...reportIdentity(platform),
       status: 'RUNNING',
       version: readVersion(),
+      build_number: buildNumber(),
       bundle_id: readBundleId(platform),
       stage,
       duration_seconds: durationSeconds(),
@@ -442,6 +453,7 @@ try {
     ...reportIdentity(platform),
     status,
     version: readVersion(),
+    build_number: buildNumber(),
     bundle_id: readBundleId(platform),
     // The stage is the answer on a RUNNING report and part of the reason on a
     // FAILED one, where failureMessage() already names it. A finished build is

@@ -973,6 +973,22 @@ export const paymentService = {
    * input the way `table` allows. Used by the club-admin pod detail, whose
    * reader is trusted with their own club and nothing else.
    */
+  /**
+   * The same table page, narrowed to the pet store's own payments — the base
+   * filter is the store channel frozen on every store payment, so the ecomm
+   * console (ECOMM_MANAGER, not a Finance role) can never widen it to a pod's
+   * money through the query input.
+   */
+  async tableForStore(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPayment>(
+      PaymentModel,
+      { 'metadata.store.channel': 'PET_STORE' },
+      input,
+      PAYMENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
   async tableForPod(podDocId: string, input?: TableQueryInput | null) {
     if (!Types.ObjectId.isValid(podDocId)) {
       return { rows: [], total: 0, page: 1, page_size: 0 };

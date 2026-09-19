@@ -18,6 +18,7 @@ export const TICKET_SOURCE_COLORS: StatusColorMap = {
   'Duncit App': 'primary',
   'Duncit Website': 'info',
   'Connected Mailbox': 'secondary',
+  'Pet Store': 'warning',
 };
 
 export const TICKET_PRIORITY_COLORS: StatusColorMap = {

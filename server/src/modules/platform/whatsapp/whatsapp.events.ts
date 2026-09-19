@@ -518,6 +518,22 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Product', 'Feedback Link'],
   },
   {
+    key: 'STORE_ORDER_PLACED',
+    campaign: 'store_order_placed',
+    audience: 'USER',
+    category: 'transactional',
+    fires: 'A pet-store order is placed — paid online, or booked as cash on delivery',
+    params: ['Recipient name', 'Order number', 'Order total', 'Order link'],
+  },
+  {
+    key: 'STORE_ORDER_CANCELLED',
+    campaign: 'store_order_cancelled',
+    audience: 'USER',
+    category: 'transactional',
+    fires: 'A pet-store order is cancelled — by the buyer, an operator, or a return to origin',
+    params: ['Recipient name', 'Order number', 'Reason', 'Order link'],
+  },
+  {
     key: 'STORE_ORDER_SHIPPED',
     campaign: 'store_order_shipped',
     audience: 'USER',

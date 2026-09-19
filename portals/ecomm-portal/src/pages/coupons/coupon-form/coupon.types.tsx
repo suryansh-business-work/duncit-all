@@ -6,6 +6,9 @@ import type { StoreCoupon } from '../queries';
 
 const CODE = /^[A-Za-z\d_-]{3,30}$/;
 
+/** A code limited to a list of products holds at most this many. */
+export const MAX_COUPON_PRODUCTS = 100;
+
 /** Mirrors `CreateCouponInput`; the scope is always the store's own. */
 export const makeCouponSchema = (t: Translate) => {
   const r = makeRules(t);
@@ -20,6 +23,9 @@ export const makeCouponSchema = (t: Translate) => {
       per_user_limit: r.whole(),
       min_order_amount: r.amount(),
       is_active: z.boolean(),
+      product_ids: z
+        .array(z.string())
+        .max(MAX_COUPON_PRODUCTS, t('ecommPortal.coupons.productsMax', { vars: { max: MAX_COUPON_PRODUCTS } })),
     })
     .superRefine((values, ctx) => {
       if (values.valid_from && values.valid_until && values.valid_until < values.valid_from) {
@@ -40,9 +46,10 @@ export const toCouponValues = (coupon: StoreCoupon | null): CouponValues => ({
   per_user_limit: numberText(coupon?.per_user_limit),
   min_order_amount: numberText(coupon?.min_order_amount),
   is_active: coupon?.is_active ?? true,
+  product_ids: coupon?.product_ids ?? [],
 });
 
-/** The server input — codes are stored upper-case; a blank limit means none. */
+/** The server input — codes are stored upper-case; a blank limit means none; no products means the whole store. */
 export const toCouponInput = (values: CouponValues) => ({
   code: values.code.toUpperCase(),
   description: values.description,
@@ -54,4 +61,5 @@ export const toCouponInput = (values: CouponValues) => ({
   per_user_limit: toOptionalInt(values.per_user_limit),
   min_order_amount: toNumber(values.min_order_amount),
   is_active: values.is_active,
+  product_ids: values.product_ids,
 });

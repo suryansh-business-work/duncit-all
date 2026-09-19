@@ -24,8 +24,8 @@ export type TicketAuthorRole = 'USER' | 'AGENT' | 'SYSTEM';
  * one more: the sender is holding an email thread, so a reply typed here has
  * to reach them there rather than only in an app they may not have.
  */
-export type TicketSource = 'APP' | 'WEBSITE' | 'EMAIL';
-export const TICKET_SOURCES: TicketSource[] = ['APP', 'WEBSITE', 'EMAIL'];
+export type TicketSource = 'APP' | 'WEBSITE' | 'EMAIL' | 'STORE';
+export const TICKET_SOURCES: TicketSource[] = ['APP', 'WEBSITE', 'EMAIL', 'STORE'];
 
 export interface ITicketMessage {
   _id: Types.ObjectId;

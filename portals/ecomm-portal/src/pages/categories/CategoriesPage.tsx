@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Chip } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import ListEditorPage from '../../components/ListEditorPage';
+import ProductThumb from '../../components/ProductThumb';
 import RowMeta from '../../components/RowMeta';
 import { useListEditor } from '../../components/useListEditor';
 import { flattenCategories, siblingIds } from '../../lib/taxonomy';
@@ -42,6 +43,7 @@ export default function CategoriesPage() {
       getName={(category) => category.name}
       getDepth={(category) => depthOf.get(category.id) ?? 0}
       siblingsOf={(category) => siblingIds(categories, category)}
+      renderLeading={(category) => <ProductThumb src={category.image_url || category.banner_url} />}
       renderSecondary={(category) => (
         <RowMeta slug={category.slug} active={category.is_active}>
           {!category.show_in_menu && <Chip size="small" variant="outlined" label={t('ecommPortal.categories.notInMenu')} />}

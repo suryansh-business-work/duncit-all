@@ -96,6 +96,6 @@ export function useLocatePincode() {
     }
   };
 
-  const available = apiKey !== '' && typeof globalThis.navigator !== 'undefined' && 'geolocation' in globalThis.navigator;
+  const available = apiKey !== '' && globalThis.navigator !== undefined && 'geolocation' in globalThis.navigator;
   return { available, state, locate };
 }

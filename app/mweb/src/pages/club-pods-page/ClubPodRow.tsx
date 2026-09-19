@@ -2,6 +2,8 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import EventRoundedIcon from '@mui/icons-material/EventRounded';
 import { POD_ROW_STATUS_COLORS, podRowStatus, podRowStatusLabel } from '@duncit/utils';
 import FactLine from '../../components/club-admin/FactLine';
+import { podPriceLabel } from '../../components/studio-pods/summary';
+import { usePricing } from '../../hooks/usePricing';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import ClubPodActions from './ClubPodActions';
@@ -29,14 +31,14 @@ export default function ClubPodRow({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
-  const currencySymbol = useCurrencySymbol();
+  const { currency } = usePricing();
   const status = podRowStatus(pod);
   // "Nobody scanned" is not "nobody came", so an unrecorded pod says so rather
   // than reporting a confident 0 — the same distinction the native twin draws.
   const attended = pod.attendance.recorded
     ? [pod.attendance.attended_seats, pod.attendance.booked_seats].join(' / ')
     : t('mweb.studioPods.attendedNone');
-  const price = podPriceLabel(pod, currencySymbol, t('mweb.podDetails.free'));
+  const price = podPriceLabel(pod, currency, t('mweb.podDetails.free'));
 
   return (
     <Box data-testid={`club-pod-row-${pod.id}`} sx={{ px: 2, pt: 1.75, pb: 0.75 }}>

@@ -105,11 +105,7 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
           label={t('mweb.studioPods.attended')}
           value={attended}
         />
-        <MetricCell
-          testID={`${testID}-ticket`}
-          label={t('mweb.studioPods.ticket')}
-          value={price}
-        />
+        <MetricCell testID={`${testID}-ticket`} label={t('mweb.studioPods.ticket')} value={price} />
       </XStack>
       <XStack gap={10}>
         <MetricCell

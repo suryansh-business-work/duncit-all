@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { podRowStatusOptions, type PodRowStatusFilter } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { Field } from '@/components/Field';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
@@ -13,8 +14,10 @@ import { RowDivider } from '@/components/club-admin/NavRow';
 import { ClubPodRow } from '@/components/club-admin/pods/ClubPodRow';
 import { useClubPodSheets } from '@/components/club-admin/pods/useClubPodSheets';
 import { ChipSelectField } from '@/components/create-pod';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { useClubAdminPods } from '@/hooks/useClubAdminPods';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
 import type { RootStackParamList } from '@/navigation/types';
@@ -41,8 +44,11 @@ export function ClubPodsScreen() {
   const { params } = useRoute<RouteProp<RootStackParamList, 'ClubPods'>>();
   const { clubId } = params;
   const [status, setStatus] = useState<PodRowStatusFilter>('');
+  const [query, setQuery] = useState('');
+  const search = useDebouncedValue(query.trim());
   const [deleted, setDeleted] = useState(false);
-  const pods = useClubAdminPods(clubId, status);
+  const pods = useClubAdminPods(clubId, status, search);
+  const searchLabel = t('mweb.common.search');
   const sheets = useClubPodSheets({
     clubId,
     refetch: pods.refetch,
@@ -73,6 +79,20 @@ export function ClubPodsScreen() {
     <StackScreen title={t('mweb.meta.clubPods.title')} testID="club-pods-screen" right={newPod}>
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={20} padding={16} paddingBottom={48}>
+          {/* Server-side, like mWeb's: a club with two hundred pods paged
+              twenty at a time cannot be searched by filtering what is already
+              on screen. Debounced so a keystroke is not a request. */}
+          <Field label={searchLabel} testID="club-pods-search">
+            <XStack>
+              <SearchPill
+                testID="field-club-pods-search"
+                ariaLabel={searchLabel}
+                placeholder=""
+                value={query}
+                onChangeText={setQuery}
+              />
+            </XStack>
+          </Field>
           <ChipSelectField
             label={t('clubAdmin.pods.statusFilter')}
             options={statusOptions}

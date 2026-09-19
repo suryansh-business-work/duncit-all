@@ -1,21 +1,18 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Stack } from '@mui/material';
 import MonitorHeartRoundedIcon from '@mui/icons-material/MonitorHeartRounded';
+import { useDebouncedValue } from '@duncit/ui';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import AuditEntryCard from '../../components/club-admin/AuditEntryCard';
 import PagedListBody from '../../components/club-admin/PagedListBody';
 import { usePagedRows } from '../../components/club-admin/usePagedRows';
 import type { AuditEntry } from '../../components/club-admin/audit-entry';
+import SearchPillField from '../pod-list/SearchPillField';
 import AuditLogDetailDialog from './AuditLogDetailDialog';
 import { MWEB_CLUB_ADMIN_POD_AUDIT_LOGS_TABLE } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const PAGE_SIZE = 20;
-
-/** Newest first, twenty at a time — the club scope is the server's. */
-const auditPage = (page: number) => ({
-  query: { page, page_size: PAGE_SIZE, sort_by: 'created_at', sort_dir: 'desc' },
-});
 
 /**
  * Pod Monitoring (AI) — every pod edit, status change and critical action in
@@ -25,17 +22,43 @@ const auditPage = (page: number) => ({
 export default function ClubMonitoringPage() {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<AuditEntry | null>(null);
+  const [search, setSearch] = useState('');
+  const term = useDebouncedValue(search.trim(), 300);
+  // Newest first, twenty at a time. Both the club scope and the search — over
+  // the pod title, the actor and the AI summary — are the server's, so the
+  // list pages over every match rather than filtering the page it already has.
+  const variables = useCallback(
+    (page: number) => ({
+      query: {
+        page,
+        page_size: PAGE_SIZE,
+        search: term || undefined,
+        sort_by: 'created_at',
+        sort_dir: 'desc',
+      },
+    }),
+    [term],
+  );
   const list = usePagedRows<AuditEntry>({
     document: MWEB_CLUB_ADMIN_POD_AUDIT_LOGS_TABLE,
     field: 'clubAdminPodAuditLogsTable',
-    variables: auditPage,
+    variables,
   });
+  const searchLabel = t('clubAdmin.monitoring.search');
 
   return (
     <Stack data-testid="club-monitoring-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<MonitorHeartRoundedIcon fontSize="small" />}
         title={t('clubAdmin.monitoring.title')}
+      />
+      <SearchPillField
+        value={search}
+        onChange={setSearch}
+        placeholder={searchLabel}
+        ariaLabel={searchLabel}
+        enterKeyHint="search"
+        testId="club-monitoring-search"
       />
       <PagedListBody
         loading={list.loading}

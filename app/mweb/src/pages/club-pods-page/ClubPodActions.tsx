@@ -5,13 +5,14 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { DuncitIconButton } from '@duncit/buttons';
-import { canOpenPodAttendance } from '@duncit/utils';
+import { canOpenPodAttendance, changeRequestMenuKey } from '@duncit/utils';
 import type { ClubAdminPodRow } from './types';
 import { useTranslation } from '../../i18n/useTranslation';
 
-type ActionColor = 'default' | 'success' | 'error';
+type ActionColor = 'default' | 'success' | 'warning' | 'error';
 
 interface Action {
   key: string;
@@ -50,16 +51,25 @@ interface Props {
   /** `/clubs/:clubId/pods` — the details and edit routes hang off it. */
   podsPath: string;
   onActivity: () => void;
+  /** "Request Change Club Admin" — the ask that hands this pod's club to a
+   * different admin, so the admin need not go back to Club Studio to file it. */
+  onRequestChange: () => void;
   onDelete: () => void;
 }
 
 /**
  * The actions on one pod row. Attendance only for a pod that ran or is
- * running (`canOpenPodAttendance`), delete only for one not already
- * cancelled — a cancelled pod stays editable, but there is nothing left to
- * delete.
+ * running (`canOpenPodAttendance`); the change request and delete only for one
+ * not already cancelled — a cancelled pod stays editable, but there is nothing
+ * left to hand over or to delete.
  */
-export default function ClubPodActions({ pod, podsPath, onActivity, onDelete }: Readonly<Props>) {
+export default function ClubPodActions({
+  pod,
+  podsPath,
+  onActivity,
+  onRequestChange,
+  onDelete,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const actions: Action[] = [
     {
@@ -93,13 +103,22 @@ export default function ClubPodActions({ pod, podsPath, onActivity, onDelete }: 
     },
   );
   if (!pod.is_deleted) {
-    actions.push({
-      key: 'delete',
-      title: t('clubAdmin.pods.deletePod'),
-      icon: <DeleteOutlineIcon fontSize="small" />,
-      color: 'error',
-      onClick: onDelete,
-    });
+    actions.push(
+      {
+        key: 'change',
+        title: t(changeRequestMenuKey('CLUB_ADMIN')),
+        icon: <SwapHorizIcon fontSize="small" />,
+        color: 'warning',
+        onClick: onRequestChange,
+      },
+      {
+        key: 'delete',
+        title: t('clubAdmin.pods.deletePod'),
+        icon: <DeleteOutlineIcon fontSize="small" />,
+        color: 'error',
+        onClick: onDelete,
+      },
+    );
   }
 
   return (

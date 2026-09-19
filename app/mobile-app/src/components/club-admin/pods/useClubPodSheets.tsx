@@ -3,7 +3,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSheet';
 import { ClubAdminDeletePodDocument } from '@/graphql/club-admin';
+import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
 import type { ClubAdminPodRow } from '@/hooks/useClubAdminPods';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -42,7 +44,9 @@ export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Option
   const [actionsPod, setActionsPod] = useState<ClubAdminPodRow | null>(null);
   const [activityPod, setActivityPod] = useState<ClubAdminPodRow | null>(null);
   const [deletePod, setDeletePod] = useState<ClubAdminPodRow | null>(null);
+  const [changePod, setChangePod] = useState<ClubAdminPodRow | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const change = usePodChangeRequests();
 
   const openPod = (pod: ClubAdminPodRow) => openPodDetail(pod.club_slug, pod.pod_id);
 
@@ -75,9 +79,32 @@ export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Option
         onAttendance={withPod((pod) => navigation.navigate('PodAttendance', { podId: pod.id }))}
         onEdit={withPod((pod) => navigation.navigate('ClubPodEdit', { clubId, podId: pod.id }))}
         onActivity={withPod(setActivityPod)}
+        onRequestChange={withPod(setChangePod)}
         onDelete={withPod(setDeletePod)}
       />
       <ClubPodActivitySheet pod={activityPod} onClose={() => setActivityPod(null)} />
+      {/* The same ask Club Studio offers, reachable from the row an admin is
+          actually looking at. CLUB-level: approving hands over the whole club,
+          which is what the sheet's copy says. */}
+      <RequestChangeSheet
+        open={!!changePod}
+        role="CLUB_ADMIN"
+        penalty={change.board.penalties.club_admin_penalty}
+        attendeeCount={changePod?.seats_taken ?? 0}
+        busy={change.busy}
+        errorText={change.feedback?.ok === false ? change.feedback.text : null}
+        onClose={() => setChangePod(null)}
+        onConfirm={(reason) => {
+          const pod = changePod;
+          if (!pod) return;
+          fireAndForget(
+            change.file(pod.id, 'CLUB_ADMIN', reason, t('changeRequest.filed')).then((ok) => {
+              if (ok) setChangePod(null);
+              return undefined;
+            }),
+          );
+        }}
+      />
       <ConfirmDialog
         open={!!deletePod}
         title={t('clubAdmin.pods.deletePodConfirmTitle')}

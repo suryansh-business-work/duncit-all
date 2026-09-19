@@ -90,10 +90,16 @@ export const appConfig = {
       // host at that server, and a new portal's A record is added here rather
       // than by someone logged in to GoDaddy. The key lives in Environment
       // Variables → GoDaddy like every other credential.
-      label: 'DNS Config', labelKey: 'shell.nav.dnsConfig',
+      //
+      // Overview leads because the registration is the one thing here that
+      // stops working on a DATE rather than because somebody changed it — a
+      // perfect zone under a lapsed domain resolves nowhere.
+      label: 'Domain', labelKey: 'shell.nav.domain',
       icon: 'language',
       children: [
-        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/dns/records', icon: 'dns' },
+        { label: 'Overview', labelKey: 'shell.nav.overview', to: '/domain/overview', icon: 'info' },
+        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/domain/dns-records', icon: 'dns' },
+        { label: 'Staging Sync', labelKey: 'shell.nav.dnsStagingSync', to: '/domain/staging', icon: 'compare' },
       ],
     },
     // Beside DNS Config: both decide something about every public website —

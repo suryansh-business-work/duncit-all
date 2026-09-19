@@ -3105,6 +3105,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spots: 'Spots',
       people: 'People',
       ticket: 'Ticket',
+      // Seats actually marked present, against seats booked. It is its own
+      // figure because it is the one the host's payout is computed from — a
+      // full pod nobody marked pays nothing.
+      attended: 'Attended',
+      attendedNone: 'Not marked',
       // The list is capped server-side while the figures count every pod.
       showingLatest: 'Showing the latest {pods} pods — the figures above count them all.',
       error: 'Could not load these pods. Please try again.',

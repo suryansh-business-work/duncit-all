@@ -6,9 +6,11 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from '@duncit/pod-form';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
 import { useDebouncedValue } from '@duncit/ui';
 import type { PodRowStatusFilter } from '@duncit/utils';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { notifySuccess } from '../../components/notify';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import PagedListBody from '../../components/club-admin/PagedListBody';
 import { usePagedRows } from '../../components/club-admin/usePagedRows';
@@ -58,6 +60,11 @@ export default function ClubPodsPage() {
   });
   const [activityPod, setActivityPod] = useState<ClubAdminPodRow | null>(null);
   const del = useDeletePod(list.reload);
+  // "Request Change Club Admin" — asking Duncit to hand this pod's club to a
+  // different admin. Club-level by design: the club owns that assignment, not
+  // the pod, so the whole club moves with it. The dialog renders once here,
+  // not per row.
+  const change = useRequestPodChange({ onFiled: notifySuccess });
 
   return (
     <Stack data-testid="club-pods-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
@@ -96,12 +103,21 @@ export default function ClubPodsPage() {
             pod={pod}
             podsPath={podsPath}
             onActivity={setActivityPod}
+            onRequestChange={(target) =>
+              change.open({
+                podDocId: target.id,
+                role: 'CLUB_ADMIN',
+                attendeeCount: target.pod_attendees.length,
+              })
+            }
             onDelete={del.ask}
           />
         ))}
       </PagedListBody>
 
       <ClubPodActivityDialog pod={activityPod} onClose={() => setActivityPod(null)} />
+
+      {change.dialog}
 
       <ConfirmDialog
         testId="club-pods-delete-confirm"

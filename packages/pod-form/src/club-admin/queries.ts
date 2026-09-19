@@ -43,6 +43,7 @@ export const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     pod_hashtag
     pod_hosts_id
     host_names
+    place_label
     pod_date_time
     pod_end_date_time
     pod_type

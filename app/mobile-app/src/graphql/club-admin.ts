@@ -104,6 +104,18 @@ export const ClubAdminPodsTableDocument = gql(`
         is_deleted
         completed_at
         venue_approval_status
+        # What an admin triages a list on. Without these a row said only when a
+        # pod was and how full it is, so every pod had to be opened to learn
+        # where it is, what it charges and how many actually turned up — the
+        # last of which is what the host is paid on.
+        place_label
+        pod_type
+        pod_amount
+        attendance {
+          attended_seats
+          booked_seats
+          recorded
+        }
       }
     }
   }

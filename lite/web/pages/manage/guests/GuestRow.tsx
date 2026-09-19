@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Menu, MenuItem, TableCell, TableRow, Typography } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useDateFormat } from '@duncit/app-settings';
 import { DuncitIconButton } from '@duncit/buttons';

@@ -33,7 +33,7 @@ function DateTimeField({ control, name, label, testId }: Readonly<PickerProps>) 
           label={label}
           value={field.value}
           onChange={(date) => field.onChange(date)}
-          slotProps={{ textField: { fullWidth: true, required: true, error: Boolean(fieldState.error), helperText: fieldState.error?.message ?? ' ', inputProps: { 'data-testid': testId } } }}
+          slotProps={{ textField: { fullWidth: true, required: true, error: Boolean(fieldState.error), helperText: fieldState.error?.message ?? ' ', slotProps: { htmlInput: { 'data-testid': testId } as Record<string, string> } } }}
         />
       )}
     />
@@ -66,7 +66,7 @@ export function WhenSection({ control }: Readonly<{ control: Control<EventFormVa
                   label={t('liteWeb.eventForm.timezone')}
                   error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message ?? t('liteWeb.eventForm.timezoneHint')}
-                  slotProps={{ htmlInput: { ...params.inputProps, 'data-testid': 'event-timezone' } }}
+                  slotProps={{ ...params.slotProps, htmlInput: { ...params.slotProps.htmlInput, 'data-testid': 'event-timezone' } }}
                 />
               )}
             />

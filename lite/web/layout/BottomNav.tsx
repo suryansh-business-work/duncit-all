@@ -1,6 +1,6 @@
 import { Link as RouterLink, useLocation } from 'react-router';
 import { BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';

@@ -72,6 +72,6 @@ export function buildLiteTheme(): Theme {
       MuiCard: { styleOverrides: { root: { borderRadius: T.radius.card, boxShadow: T.shadow, border: `1px solid ${T.border}` } } },
       MuiPaper: { styleOverrides: { rounded: { borderRadius: T.radius.card } } },
       MuiDialog: { styleOverrides: { paper: { borderRadius: T.radius.card } } },
-    }),
+    }, { ink: T.ink, accent: light.accent }),
   });
 }

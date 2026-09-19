@@ -32,7 +32,7 @@ export function QuestionField({ control, question }: Readonly<QuestionFieldProps
                 <Checkbox
                   checked={field.value === CHECKBOX_YES}
                   onChange={(event) => field.onChange(event.target.checked ? CHECKBOX_YES : '')}
-                  inputProps={{ 'data-testid': `question-${question.id}` } as Record<string, string>}
+                  slotProps={{ input: { 'data-testid': `question-${question.id}` } as Record<string, string> }}
                 />
               }
               label={label}

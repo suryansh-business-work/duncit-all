@@ -272,6 +272,7 @@ export interface LitePublicSettings {
   duncit_app_url: string;
 }
 
+export type LiteSignInVia = 'LITE' | 'DUNCIT';
 export type LiteEventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
 export type LiteVisibility = 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
 export type LiteLocationType = 'IN_PERSON' | 'VIRTUAL';

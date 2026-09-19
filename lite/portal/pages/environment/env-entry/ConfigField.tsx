@@ -34,7 +34,7 @@ export function ConfigField({ control, field, secretKept, disabled }: Readonly<P
         defaultValue=""
         render={({ field: rhf }) => (
           <FormControlLabel
-            control={<Switch checked={rhf.value === 'true'} onChange={(event) => rhf.onChange(event.target.checked ? 'true' : 'false')} disabled={disabled} inputRef={rhf.ref} />}
+            control={<Switch checked={rhf.value === 'true'} onChange={(event) => rhf.onChange(event.target.checked ? 'true' : 'false')} disabled={disabled} slotProps={{ input: { ref: rhf.ref } }} />}
             label={field.label}
           />
         )}

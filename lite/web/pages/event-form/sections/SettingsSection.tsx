@@ -33,7 +33,7 @@ export function SettingsSection({ control, categories, calendars }: Readonly<Set
           name="require_approval"
           render={({ field }) => (
             <FormControlLabel
-              control={<Switch checked={field.value} onChange={(event) => field.onChange(event.target.checked)} inputProps={{ 'data-testid': 'event-require-approval' } as Record<string, string>} />}
+              control={<Switch checked={field.value} onChange={(event) => field.onChange(event.target.checked)} slotProps={{ input: { 'data-testid': 'event-require-approval' } as Record<string, string> }} />}
               label={t('liteWeb.eventForm.requireApproval')}
             />
           )}

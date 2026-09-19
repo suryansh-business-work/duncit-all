@@ -35,7 +35,7 @@ export function DateTimeSection({ control, busy }: Readonly<Props>) {
                   required
                   error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message ?? t('litePortal.settings.timezoneHint')}
-                  slotProps={{ htmlInput: { ...params.inputProps, 'data-testid': 'settings-timezone' } }}
+                  slotProps={{ ...params.slotProps, htmlInput: { ...params.slotProps.htmlInput, 'data-testid': 'settings-timezone' } }}
                 />
               )}
             />

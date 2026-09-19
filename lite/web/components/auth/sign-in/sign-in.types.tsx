@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import type { LiteSignInVia } from '../../../../shared/graphql/documents';
 import { rules, type Translate } from '../../../lib/validation';
+
+/** Which service proved the email: Lite's own code, or the person's Duncit account. */
+export type LiteSignInVia = 'LITE' | 'DUNCIT';
 
 /** Step one: the address the code goes to. */
 export const makeEmailSchema = (t: Translate) => z.object({ email: rules.email(t) });

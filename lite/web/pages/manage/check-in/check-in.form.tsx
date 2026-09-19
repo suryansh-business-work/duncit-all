@@ -44,7 +44,6 @@ export function CheckInForm({ eventId, onCheckedIn }: Readonly<CheckInFormProps>
         label={t('liteWeb.manage.checkIn.code')}
         hint={t('liteWeb.manage.checkIn.codeHint')}
         autoComplete="off"
-        autoFocus
         slotProps={{ htmlInput: { maxLength: 20, style: { textTransform: 'uppercase', fontFamily: 'monospace', letterSpacing: '0.1em' }, 'data-testid': 'check-in-code' } }}
       />
       <DuncitButton type="submit" variant="contained" size="large" loading={formState.isSubmitting} sx={{ flexShrink: 0 }} data-testid="check-in-submit">

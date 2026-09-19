@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useFieldArray, useWatch, type Control } from 'react-hook-form';
 import { Box, Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { SectionCard } from '@duncit/ui';
@@ -46,7 +46,7 @@ function QuestionRow({ control, index, types, onRemove }: Readonly<QuestionRowPr
             name={`questions.${index}.required`}
             render={({ field }) => (
               <FormControlLabel
-                control={<Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)} inputProps={{ 'data-testid': `question-required-${index}` } as Record<string, string>} />}
+                control={<Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)} slotProps={{ input: { 'data-testid': `question-required-${index}` } as Record<string, string> }} />}
                 label={t('lite.common.required')}
               />
             )}

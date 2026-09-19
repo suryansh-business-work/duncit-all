@@ -1,3 +1,4 @@
+import type { ComponentPropsWithRef } from 'react';
 import { Box, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SendIcon from '@mui/icons-material/Send';
@@ -34,16 +35,12 @@ const renderKey = (row: LiteEmailTemplate) => (
   </Typography>
 );
 
+type SwitchInputProps = ComponentPropsWithRef<'input'> & { 'data-testid'?: string };
+
 function EnabledSwitch({ row, onToggle }: Readonly<{ row: LiteEmailTemplate; onToggle: TemplateHandlers['onToggle'] }>) {
   const { t } = usePortalT();
-  return (
-    <Switch
-      size="small"
-      checked={row.enabled}
-      onChange={(event) => onToggle(row, event.target.checked)}
-      slotProps={{ input: { 'aria-label': t('litePortal.emailTemplates.toggle', { vars: { name: row.name } }), 'data-testid': `template-enabled-${row.key}` } as never }}
-    />
-  );
+  const inputProps: SwitchInputProps = { 'aria-label': t('litePortal.emailTemplates.toggle', { vars: { name: row.name } }), 'data-testid': `template-enabled-${row.key}` };
+  return <Switch size="small" checked={row.enabled} onChange={(event) => onToggle(row, event.target.checked)} slotProps={{ input: inputProps }} />;
 }
 
 function RowActions({ row, onEdit, onSendTest }: Readonly<{ row: LiteEmailTemplate; onEdit: TemplateHandlers['onEdit']; onSendTest: TemplateHandlers['onSendTest'] }>) {

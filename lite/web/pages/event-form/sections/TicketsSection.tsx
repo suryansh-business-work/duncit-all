@@ -1,7 +1,7 @@
 import { Controller, useFieldArray, type Control } from 'react-hook-form';
 import { Box, Checkbox, FormControlLabel, FormHelperText, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { SectionCard } from '@duncit/ui';
@@ -44,7 +44,7 @@ function TicketRow({ control, index, canRemove, onRemove }: Readonly<TicketRowPr
             name={`tickets.${index}.is_active`}
             render={({ field }) => (
               <FormControlLabel
-                control={<Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)} inputProps={{ 'data-testid': `ticket-active-${index}` } as Record<string, string>} />}
+                control={<Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)} slotProps={{ input: { 'data-testid': `ticket-active-${index}` } as Record<string, string> }} />}
                 label={t('liteWeb.eventForm.ticketActive')}
               />
             )}

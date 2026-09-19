@@ -1,6 +1,6 @@
 import { useMutation } from '@apollo/client/react';
 import { Chip, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';

@@ -34,7 +34,7 @@ export function TicketStep({ control, tickets }: Readonly<TicketStepProps>) {
                     key={ticket.id}
                     value={ticket.id}
                     disabled={soldOut}
-                    control={<Radio inputProps={{ 'data-testid': `register-ticket-${ticket.id}` } as Record<string, string>} />}
+                    control={<Radio slotProps={{ input: { 'data-testid': `register-ticket-${ticket.id}` } as Record<string, string> }} />}
                     sx={{ alignItems: 'flex-start', my: 0.5, mr: 0 }}
                     label={
                       <Stack sx={{ pt: 1 }}>

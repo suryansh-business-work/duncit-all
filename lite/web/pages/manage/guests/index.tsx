@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Chip, Stack, TextField } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
+import PeopleOutlineIcon from '@mui/icons-material/PeopleOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { QueryGuard, useDebouncedValue } from '@duncit/ui';

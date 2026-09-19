@@ -70,6 +70,7 @@ export const SUPPORT_BUNDLE: NestedCatalogue = {
       sourceApp: 'Duncit App',
       sourceWebsite: "Duncit's Main Website",
       sourceMailbox: 'Connected Mailbox',
+      sourceStore: 'Pet Store',
       sort: 'Sort',
       priority: 'Priority',
       priorityHigh: 'High',

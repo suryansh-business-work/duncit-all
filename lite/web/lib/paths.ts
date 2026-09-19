@@ -1,0 +1,26 @@
+/** Every route the web app links to, in one place. */
+export const paths = {
+  home: '/',
+  discover: '/discover',
+  search: (q: string) => `/search?q=${encodeURIComponent(q)}`,
+  city: (slug: string) => `/${slug}`,
+  category: (slug: string) => `/category/${slug}`,
+  event: (slug: string) => `/e/${slug}`,
+  eventEdit: (slug: string) => `/e/${slug}/edit`,
+  eventManage: (slug: string) => `/e/${slug}/manage`,
+  create: '/create',
+  tickets: '/tickets',
+  ticket: (id: string) => `/tickets/${id}`,
+  hosting: '/hosting',
+  calendars: '/calendars',
+  calendarNew: '/calendars/new',
+  calendarEdit: (id: string) => `/calendars/${id}/edit`,
+  calendar: (slug: string) => `/cal/${slug}`,
+  user: (handle: string) => `/u/${handle}`,
+  profile: '/profile',
+  signIn: '/signin',
+  ics: {
+    event: (slug: string) => `/ics/event/${slug}.ics`,
+    calendar: (slug: string) => `/ics/cal/${slug}.ics`,
+  },
+} as const;

@@ -21,11 +21,30 @@ export interface ProductVisibility {
   visible: boolean;
 }
 
-/** Reads the product kill switch. Everything product-shaped hangs off this. */
+/**
+ * How often an open console re-reads the flag. An admin flips it in one tab
+ * and expects the Products portal in another to grow its sidebar without a
+ * reload; a minute matches the server's own response-cache TTL, so polling
+ * faster would only re-read the cached answer.
+ */
+const REFRESH_MS = 60_000;
+
+/**
+ * Reads the product kill switch. Everything product-shaped hangs off this.
+ *
+ * `cache-and-network` rather than `cache-first`: the sidebar of a console that
+ * stayed open across the flip used to keep the cached `false` for the whole
+ * session — a reload was the only way to see the product menu — and the
+ * first paint still answers from the cache, so nothing flashes.
+ */
 export function useProductVisibility(): ProductVisibility {
   const { data, loading } = useQuery<{
     publicFeatureFlags: { key: string; enabled: boolean }[];
-  }>(PUBLIC_FEATURE_FLAGS, { fetchPolicy: 'cache-first' });
+  }>(PUBLIC_FEATURE_FLAGS, {
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+    pollInterval: REFRESH_MS,
+  });
   const flag = (data?.publicFeatureFlags ?? []).find((f) => f.key === PRODUCT_VISIBILITY_FLAG);
   return { pending: loading && !data, visible: flag?.enabled === true };
 }

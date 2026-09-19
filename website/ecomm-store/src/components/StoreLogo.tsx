@@ -11,7 +11,8 @@ import { STORE_FALLBACK_ICONS } from '../fallback-icons';
  * what catches a 404, which never arrives as an empty string.
  */
 export function StoreLogo({ height = 40 }: Readonly<{ height?: number }>) {
-  const { logo_url: logoUrl, store_name: storeName } = useStoreSettings();
+  const { logo_url: storeLogo, store_name: storeName, active_occasion: occasion } = useStoreSettings();
+  const logoUrl = occasion?.logo_url || storeLogo;
   const [failed, setFailed] = useState(false);
   const { source } = resolveIconSource(logoUrl, STORE_FALLBACK_ICONS.logo, failed);
   return (

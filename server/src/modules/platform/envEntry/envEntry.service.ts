@@ -7,6 +7,7 @@ import {
   appleSignInConnection,
   appStoreConnectConnection,
   githubConnection,
+  godaddyConnection,
   googlePlayConnection,
   msg91Connection,
   razorpayConnection,
@@ -206,6 +207,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   MSG91: msg91Connection,
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,
+  GODADDY: godaddyConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

@@ -8,6 +8,7 @@ import { useStoreT } from '../../../i18n';
 import { AutoshipDialog } from '../autoship-subscribe';
 import { PurchaseActions } from './PurchaseActions';
 import { BigQuantity } from '../BigQuantity';
+import { OfferPill } from '../OfferPill';
 import { DeliveryCheckForm } from '../delivery-check';
 import { ProductBadges } from '../ProductBadges';
 import { StockAlertForm } from '../stock-alert';
@@ -49,6 +50,7 @@ export function BuyBox({ product, variant, picker }: Readonly<BuyBoxProps>) {
         mrp={variant?.mrp ?? product.mrp}
         discountPct={variant?.discount_pct ?? product.discount_pct}
       />
+      {product.offer_text ? <OfferPill text={product.offer_text} /> : null}
       {needsChoice ? <Alert severity="info">{t('ecommStore.product.chooseOption')}</Alert> : null}
       {inStock && product.low_stock ? <Alert severity="warning">{t('ecommStore.product.lowStock', { vars: { count: available } })}</Alert> : null}
       {canBuy ? (

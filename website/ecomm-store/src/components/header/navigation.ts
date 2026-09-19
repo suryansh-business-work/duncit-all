@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client/react';
 
 import { STORE_NAVIGATION, type StoreCategoryNode, type StoreNavigation } from '../../graphql/settings';
 
-const EMPTY: StoreNavigation = { pet_types: [], categories: [], collections: [] };
+const EMPTY: StoreNavigation = { pet_types: [], categories: [], collections: [], pages: [] };
 
 /** The header's menu data, fetched once and shared by the desktop and mobile menus. */
 export function useNavigationData(): StoreNavigation {

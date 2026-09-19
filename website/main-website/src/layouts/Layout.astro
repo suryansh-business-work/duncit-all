@@ -4,6 +4,7 @@ import { fetchBranding } from '../lib/site-data';
 import { urlConfigs } from '../config/url-configs';
 import { getTranslator } from '../lib/i18n';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
+import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 
 const { t } = await getTranslator();
 
@@ -27,6 +28,7 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <GoogleAnalytics site="MAIN" graphqlUrl={urlConfigs.graphqlUrl} />
     <SiteMeta
       title={title}
       description={description}

@@ -52,6 +52,9 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     // Reads only: the app lookup proves the key, the certificate list proves Admin.
     case 'APP_STORE_CONNECT':
       return <ConnectionTestPanel entry={entry} description={t('tech.environment.appStoreConnectHint')} />;
+    // Reads only: the domain proves the key, the record list proves DNS API access.
+    case 'GODADDY':
+      return <ConnectionTestPanel entry={entry} description={t('tech.environment.godaddyConnectionHint')} />;
     default:
       return null;
   }

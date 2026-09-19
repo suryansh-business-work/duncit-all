@@ -17,6 +17,7 @@ import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/ap
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
+import { godaddyConfigOf, godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -628,6 +629,35 @@ export async function sonarqubeConnection(str: EnvConfigReader): Promise<EnvConn
   }
 }
 
+// --- GoDaddy ------------------------------------------------------------------
+
+/** Where GoDaddy's own nameservers live. Records edited at GoDaddy are only live behind these. */
+const GODADDY_NAMESERVER_SUFFIX = '.domaincontrol.com';
+
+/**
+ * Reads the domain, then its records — the call DNS Config makes. The first
+ * proves the key, the secret and that this account owns the domain; the second
+ * that GoDaddy lets the account use its DNS API at all, which it does not for
+ * every account. Nothing is written.
+ */
+export async function godaddyConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const cfg = godaddyConfigOf(str('api_key'), str('api_secret'), str('domain'));
+  if (!cfg) return { ok: false, message: 'API key, API secret and domain are all required', details: [] };
+  try {
+    const domain = await godaddyDomain(cfg);
+    const records = await godaddyRecords(cfg);
+    const nameServers = domain.nameServers ?? [];
+    const details = [`${records.length} DNS records in the zone.`];
+    if (nameServers.length > 0) details.push(`Nameservers: ${nameServers.join(', ')}.`);
+    if (nameServers.some((ns) => !ns.toLowerCase().endsWith(GODADDY_NAMESERVER_SUFFIX))) {
+      details.push('Some nameservers are not GoDaddy\'s, so records edited here may not be what the internet sees.');
+    }
+    return { ok: true, message: `Connected to ${cfg.domain} (${domain.status})`, details };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+  }
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -646,6 +676,7 @@ const CONNECTION_CHECKS = {
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,
   SONARQUBE: sonarqubeConnection,
+  GODADDY: godaddyConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

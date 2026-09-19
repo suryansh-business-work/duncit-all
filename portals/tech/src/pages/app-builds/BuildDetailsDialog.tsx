@@ -16,6 +16,7 @@ import { useTranslation } from '@duncit/shell';
 import BuildFacts from './BuildFacts';
 import BuildProgress from './BuildProgress';
 import PlayReleases from './PlayReleases';
+import AppStoreReleases from './AppStoreReleases';
 import IosSigningFiles from './IosSigningFiles';
 import { type AppBuildArtifact, type AppBuildRow } from './queries';
 
@@ -130,6 +131,8 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
         )}
         {build.platform === 'IOS' && (
           <>
+            <Divider sx={{ my: 2 }} />
+            <AppStoreReleases build={build} />
             <Divider sx={{ my: 2 }} />
             <IosSigningFiles buildId={build.id} />
           </>

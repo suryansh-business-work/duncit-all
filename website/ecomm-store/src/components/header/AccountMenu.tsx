@@ -9,7 +9,7 @@ import { logFailure } from '../../lib/log';
 import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 
-const ACCOUNT_LINKS = [
+export const ACCOUNT_LINKS = [
   { to: paths.account, labelKey: 'ecommStore.account.overview' },
   { to: paths.orders, labelKey: 'ecommStore.account.orders' },
   { to: paths.addresses, labelKey: 'ecommStore.account.addresses' },

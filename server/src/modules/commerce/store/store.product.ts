@@ -106,6 +106,7 @@ export function toStoreCard(p: any, rating?: RatingSummary) {
     rating: (rating ?? NO_RATING).average,
     rating_count: (rating ?? NO_RATING).count,
     short_description: p.short_description ?? '',
+    offer_text: listing.offer_text ?? '',
   };
 }
 

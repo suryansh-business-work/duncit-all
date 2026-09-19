@@ -330,6 +330,25 @@ services:
       # 8080, not 80: the store runs its non-root Node HTML server (per-page SEO).
       - "127.0.0.1:2039:8080"
 
+  # Duncit Lite (luma.duncit.com + luma-portal.duncit.com): ONE process is its
+  # GraphQL API, its upload/calendar routes and the HTML server for both
+  # hostnames — nginx sends both to this port. Its OWN database (lite.env:
+  # LITE_MONGO_DB_NAME=duncit-lite); nothing here reads the main stack's data.
+  lite:
+    image: ${DOCKERHUB_USERNAME}/duncit-lite:${IMAGE_TAG:-latest}
+    container_name: duncit-lite
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit/lite.env
+    ports:
+      - "127.0.0.1:2040:2040"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2040/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this
   # network reach it; humans go through the redis-ui below. Infra service, not

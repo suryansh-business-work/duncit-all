@@ -1,0 +1,28 @@
+---
+/**
+ * Google Analytics (gtag.js) for the Astro websites.
+ *
+ * Which tag loads — if any — is set per website in Tech → Google Analytics and
+ * read as the page opens (./google-analytics.ts), so no id is baked into the
+ * build. This component only tells that script which website this is and
+ * where its API lives; the meta tag carries both because a bundled script
+ * cannot read component props.
+ */
+import type { TrackedWebsite } from './google-analytics';
+
+interface Props {
+  site: TrackedWebsite;
+  graphqlUrl: string;
+}
+
+const { site, graphqlUrl } = Astro.props;
+---
+
+<meta name="duncit-analytics-site" content={site} data-graphql-url={graphqlUrl} />
+
+<script>
+  import { loadGoogleAnalytics, type TrackedWebsite } from './google-analytics';
+
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="duncit-analytics-site"]');
+  if (meta?.dataset.graphqlUrl) loadGoogleAnalytics(meta.dataset.graphqlUrl, meta.content as TrackedWebsite);
+</script>

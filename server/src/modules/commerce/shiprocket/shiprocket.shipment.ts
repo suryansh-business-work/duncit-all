@@ -11,6 +11,7 @@ import {
   assignAwb,
   couriersForOrder,
   createOrderAdhoc,
+  fetchDocumentPdf,
   findOrderByChannelId,
   generateLabel,
   generatePickup,
@@ -317,4 +318,26 @@ export async function documentFor(orders: IProductOrder[], kind: ShipmentDocumen
     await order.save();
   }
   return url;
+}
+
+export interface ShipmentFile {
+  filename: string;
+  mime: string;
+  content_base64: string;
+}
+
+const FILE_STEM: Record<ShipmentDocument, string> = { LABEL: 'label', INVOICE: 'invoice', MANIFEST: 'manifest' };
+
+/**
+ * The document itself, not just ShipRocket's link to it — so the console can
+ * print it in place and save it under a file name that says which order it is.
+ */
+export async function documentFile(orders: IProductOrder[], kind: ShipmentDocument): Promise<ShipmentFile> {
+  const url = await documentFor(orders, kind);
+  const subject = orders.length === 1 ? orders[0].order_no : `${orders.length}-orders`;
+  return {
+    filename: `${FILE_STEM[kind]}-${subject}.pdf`,
+    mime: 'application/pdf',
+    content_base64: await fetchDocumentPdf(url),
+  };
 }

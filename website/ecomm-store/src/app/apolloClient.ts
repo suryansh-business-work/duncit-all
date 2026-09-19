@@ -1,5 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 import { SetContextLink } from '@apollo/client/link/context';
+import { trackingFetch } from '@duncit/ui';
 import { clientIdentityHeaders } from '@duncit/user-core';
 
 import { APP_KEY, GRAPHQL_URL } from '../config/env';
@@ -24,7 +25,9 @@ export function createStoreClient(): ApolloClient {
     };
   });
   return new ApolloClient({
-    link: auth.concat(new HttpLink({ uri: GRAPHQL_URL })),
+    // `trackingFetch` counts the requests in flight — what the top progress bar
+    // in `App` reads, so every wait on the server shows without each page opting in.
+    link: auth.concat(new HttpLink({ uri: GRAPHQL_URL, fetch: trackingFetch })),
     cache: new InMemoryCache({
       typePolicies: {
         User: { keyFields: ['user_id'] },

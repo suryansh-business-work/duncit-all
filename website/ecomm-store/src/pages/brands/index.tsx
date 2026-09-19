@@ -25,7 +25,7 @@ export function BrandsPage() {
           <Box component="li" key={brand.id}>
             <ButtonBase
               component={RouterLink}
-              to={paths.brand(brand.id)}
+              to={paths.brand(brand.slug)}
               sx={{ width: '100%', flexDirection: 'column', gap: 1, p: 2, borderRadius: `${T.radius.card}px`, bgcolor: tintAt(position) }}
             >
               <Box sx={{ width: 96, height: 96, borderRadius: '50%', bgcolor: T.surface, overflow: 'hidden', display: 'grid', placeItems: 'center' }}>

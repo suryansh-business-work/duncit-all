@@ -28,7 +28,7 @@ function toOptions(found: StoreSuggest | undefined, q: string, searchLabel: stri
       image: p.image_url,
     })),
     ...found.categories.map((c): SuggestOption => ({ kind: 'category', id: c.id, label: c.name, to: paths.category(c.slug) })),
-    ...found.brands.map((b): SuggestOption => ({ kind: 'brand', id: b.id, label: b.name, to: paths.brand(b.id) })),
+    ...found.brands.map((b): SuggestOption => ({ kind: 'brand', id: b.id, label: b.name, to: paths.brand(b.slug) })),
     query,
   ];
 }

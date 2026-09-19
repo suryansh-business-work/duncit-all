@@ -3,6 +3,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
+import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
 
 const OPS_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGER'];
 
@@ -75,6 +76,14 @@ export const productOrderResolvers = {
     refreshProductOrderTracking: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, OPS_RW);
       return productOrderService.refreshTrackingById(args.id);
+    },
+    productOrderShipmentFile: (
+      _p: unknown,
+      args: { ids: string[]; kind: ShipmentDocument },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, OPS_RW);
+      return productOrderService.shipmentFile(args.ids, args.kind);
     },
   },
 };

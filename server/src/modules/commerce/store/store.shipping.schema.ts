@@ -54,11 +54,6 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     height_cm: Float!
   }
 
-  enum StoreShipmentDocument {
-    LABEL
-    INVOICE
-    MANIFEST
-  }
 
   enum StoreNdrAction {
     REATTEMPT
@@ -68,6 +63,8 @@ export const storeShippingTypeDefs = /* GraphQL */ `
   "The ShipRocket account at a glance."
   type StoreShiprocketStatus {
     configured: Boolean!
+    "The API user the store ships with — the Tech portal entry mapped to this console, else the default."
+    account_email: String!
     "The saved credentials were refused; nothing is retried until they change in the Tech portal."
     login_refused: Boolean!
     login_message: String!
@@ -79,15 +76,13 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     webhook_path: String!
   }
 
-  type StorePickupSyncRow {
-    warehouse_id: ID!
-    nickname: String!
-    owner_kind: String!
-    city: String!
-    pincode: String!
-    "READY, AWAITING_VERIFICATION or NOT_IN_SHIPROCKET."
-    state: String!
-    shiprocket_id: String!
+  "A warehouse matched against the ShipRocket account's pickup addresses."
+  type StorePickupRow {
+    warehouse: BrandPickupLocation!
+    "READY, AWAITING_VERIFICATION, NOT_IN_SHIPROCKET — or UNKNOWN when ShipRocket could not be read."
+    shiprocket_state: String!
+    "Products (pet store and pod shop) shipping from it; it cannot be deleted while any do."
+    product_count: Int!
   }
 
   type StoreShiprocketPickup {
@@ -97,11 +92,37 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     verified: Boolean!
   }
 
-  type StorePickupSync {
-    warehouses: [StorePickupSyncRow!]!
+  type StorePickupLocations {
+    warehouses: [StorePickupRow!]!
     "Pickup addresses on the ShipRocket account no warehouse uses."
     shiprocket_only: [StoreShiprocketPickup!]!
+    "Why ShipRocket could not be read; empty when it was."
+    shiprocket_error: String!
     synced_at: String!
+  }
+
+  "One of the store's own warehouses — a ShipRocket pickup address."
+  input StoreWarehouseInput {
+    "The pickup name every order is booked under; must be unique on the ShipRocket account."
+    nickname: String!
+    contact_name: String!
+    phone: String!
+    email: String!
+    address_line1: String!
+    address_line2: String
+    city: String!
+    state: String!
+    pincode: String!
+    is_default: Boolean
+  }
+
+  "What a retry of the failed bookings did."
+  type StoreBookingRetry {
+    attempted: Int!
+    "Now with a courier (AWB assigned)."
+    booked: Int!
+    "Still failing — each order says why."
+    failed: Int!
   }
 
   type StoreCodLedgerRow {
@@ -155,6 +176,8 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     storeShiprocketStatus: StoreShiprocketStatus!
     "COD orders of the last N days and the cash collected on them."
     storeCodLedger(days: Int): StoreCodLedger!
+    "Every warehouse against the ShipRocket account's pickup addresses (reads ShipRocket and records what it says)."
+    storePickupLocations: StorePickupLocations!
   }
 
   extend type Mutation {
@@ -164,11 +187,21 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     storeSetParcel(id: ID!, input: StoreParcelInput): ProductOrder!
     "Correct the ship-to address before the shipment is booked."
     storeUpdateShippingAddress(id: ID!, input: StoreAddressInput!): ProductOrder!
-    "One PDF (label, invoice or manifest) for the given orders. Answers its URL."
-    storeShipmentDocument(ids: [ID!]!, kind: StoreShipmentDocument!): String!
+    "One PDF (label, invoice or manifest) for the given orders, as a file to print or save."
+    storeShipmentFile(ids: [ID!]!, kind: ShipmentDocumentKind!): ShipmentFile!
+    "Book again every order whose booking failed, once what stopped it is fixed."
+    storeRetryFailedBookings: StoreBookingRetry!
     storeAnswerNdr(id: ID!, action: StoreNdrAction!, comments: String): ProductOrder!
-    "Match warehouses to the ShipRocket account's pickup addresses."
-    storeSyncPickupLocations: StorePickupSync!
+    "Log in to ShipRocket once more with the saved credentials, clearing an earlier refusal."
+    storeShiprocketReconnect: StoreShiprocketStatus!
+    "Add or correct one of the store's warehouses, then add it to ShipRocket."
+    storeSaveWarehouse(id: ID, input: StoreWarehouseInput!): BrandPickupLocation!
+    "Delete one of the store's warehouses no product ships from."
+    storeDeleteWarehouse(id: ID!): Boolean!
+    "Add a warehouse to the ShipRocket account as a pickup address."
+    storeRegisterWarehouse(id: ID!): BrandPickupLocation!
+    "Make a warehouse of a pickup address already on the ShipRocket account."
+    storeImportPickup(nickname: String!): BrandPickupLocation!
     storeBookReturnPickup(id: ID!): StoreReturn!
     storeRestockReturn(id: ID!): StoreReturn!
   }

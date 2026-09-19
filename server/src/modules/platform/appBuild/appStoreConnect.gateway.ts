@@ -99,6 +99,19 @@ async function call(token: string, path: string, init: RequestInit = {}): Promis
 const post = (token: string, path: string, data: unknown) =>
   call(token, path, { method: 'POST', body: JSON.stringify({ data }) });
 
+/**
+ * The same four verbs for the release, listing and review gateways beside this
+ * file. Exported as one object so every App Store Connect call in the module
+ * shares one timeout, one error shape and one place to change either.
+ */
+export const asc = {
+  get: (token: string, path: string) => call(token, path),
+  post,
+  patch: (token: string, path: string, data: unknown) =>
+    call(token, path, { method: 'PATCH', body: JSON.stringify({ data }) }),
+  delete: (token: string, path: string) => call(token, path, { method: 'DELETE' }),
+};
+
 /** The App Store Connect app record for a bundle id, or null when none exists yet. */
 export async function findApp(token: string, bundleId: string): Promise<{ id: string; name: string } | null> {
   const query = new URLSearchParams({ 'filter[bundleId]': bundleId, limit: '1' });

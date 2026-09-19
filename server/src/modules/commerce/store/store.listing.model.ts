@@ -18,6 +18,12 @@ export interface IStoreSpecification {
   value: string;
 }
 
+/** One question shoppers ask about the product, answered on its page. */
+export interface IStoreFaq {
+  question: string;
+  answer: string;
+}
+
 export interface IStoreListing {
   /** Public URL key — ecomm.duncit.com/p/<slug>. Unique among published products. */
   slug: string;
@@ -46,6 +52,9 @@ export interface IStoreListing {
   return_window_days: number | null;
   /** Most units one order may carry; 0 = the store-wide cap. */
   max_per_order: number;
+  /** A short offer line beside the price ("Buy 2, get 1 free"); '' = none. */
+  offer_text: string;
+  faqs: IStoreFaq[];
   sold_count: number;
   view_count: number;
   wishlist_count: number;
@@ -65,6 +74,14 @@ const specificationSchema = new Schema<IStoreSpecification>(
   {
     label: { type: String, default: '', trim: true, maxlength: 80 },
     value: { type: String, default: '', trim: true, maxlength: 400 },
+  },
+  { _id: false }
+);
+
+const faqSchema = new Schema<IStoreFaq>(
+  {
+    question: { type: String, default: '', trim: true, maxlength: 200 },
+    answer: { type: String, default: '', trim: true, maxlength: 2000 },
   },
   { _id: false }
 );
@@ -93,6 +110,8 @@ export const storeListingSchema = new Schema<IStoreListing>(
     returnable: { type: Boolean, default: true },
     return_window_days: { type: Number, default: null, min: 0, max: 365 },
     max_per_order: { type: Number, default: 0, min: 0 },
+    offer_text: { type: String, default: '', trim: true, maxlength: 80 },
+    faqs: { type: [faqSchema], default: [] },
     sold_count: { type: Number, default: 0, min: 0 },
     view_count: { type: Number, default: 0, min: 0 },
     wishlist_count: { type: Number, default: 0, min: 0 },
@@ -125,6 +144,8 @@ export const EMPTY_STORE_LISTING: IStoreListing = {
   returnable: true,
   return_window_days: null,
   max_per_order: 0,
+  offer_text: '',
+  faqs: [],
   sold_count: 0,
   view_count: 0,
   wishlist_count: 0,

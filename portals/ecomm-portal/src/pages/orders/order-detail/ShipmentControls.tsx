@@ -4,6 +4,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import { useDateFormat } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { StoreAdminOrder } from '../queries';
@@ -28,18 +29,41 @@ export function shipmentState(detail: StoreAdminOrder) {
 
 type State = ReturnType<typeof shipmentState>;
 
-/** Every alert the server raised about this shipment, in words. */
-export function ShipmentAlerts({ detail, state }: Readonly<{ detail: StoreAdminOrder; state: State }>) {
+interface AlertsProps {
+  detail: StoreAdminOrder;
+  state: State;
+  /** Opens the ship-to address dialog — the fix for an address the courier refuses. */
+  onFixAddress: (() => void) | null;
+}
+
+/**
+ * Every alert the server raised about this shipment, in words. The stored
+ * error is what the LAST booking attempt said, dated — so a reason that has
+ * since been fixed (a refused login, say) reads as history, not as now.
+ */
+export function ShipmentAlerts({ detail, state, onFixAddress }: Readonly<AlertsProps>) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormat();
   const { order, shipment } = detail;
   const addressAlert = !state.booked && shipment.address_problems.length > 0;
+  const attemptedAt = order.shiprocket.last_synced_at;
+  const lastError = attemptedAt
+    ? t('ecommPortal.shipping.lastAttempt', { vars: { at: formatDateTime(attemptedAt), reason: order.last_error } })
+    : order.last_error;
+  const fixAddress = onFixAddress ? (
+    <DuncitButton size="small" color="inherit" startIcon={<HomeWorkIcon />} onClick={onFixAddress}>
+      {t('ecommPortal.shipping.editAddress')}
+    </DuncitButton>
+  ) : null;
   return (
     <>
-      {order.last_error ? <Alert severity="error">{order.last_error}</Alert> : null}
+      {order.last_error ? <Alert severity="error">{lastError}</Alert> : null}
       {shipment.alert === 'LOW_WALLET' ? <Alert severity="warning">{shipment.alert_message}</Alert> : null}
       {state.ndr ? <Alert severity="error">{t('ecommPortal.shipping.ndrAlert', { vars: { reason: shipment.alert_message } })}</Alert> : null}
       {addressAlert ? (
-        <Alert severity="warning">{t('ecommPortal.shipping.addressNeeds', { vars: { needs: shipment.address_problems.join(', ') } })}</Alert>
+        <Alert severity="warning" action={fixAddress}>
+          {t('ecommPortal.shipping.addressNeeds', { vars: { needs: shipment.address_problems.join(', ') } })}
+        </Alert>
       ) : null}
     </>
   );

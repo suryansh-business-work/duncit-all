@@ -4,11 +4,12 @@ import {
   clearParcelOverride,
   courierChoices,
   createShipment,
-  documentFor,
+  documentFile,
   setParcelOverride,
   type ShipmentDocument,
 } from '@modules/commerce/shiprocket/shiprocket.shipment';
-import { answerNdr, shiprocketAccountStatus, syncPickupLocations } from '@modules/commerce/shiprocket/shiprocket.ops';
+import { answerNdr, shiprocketAccountStatus } from '@modules/commerce/shiprocket/shiprocket.ops';
+import { retryShiprocketLogin } from '@modules/commerce/shiprocket/shiprocket.client';
 import { bookReturnPickup } from '@modules/commerce/shiprocket/shiprocket.returns';
 import { COURIER_WEBHOOK_PATH } from '@modules/commerce/shiprocket/shiprocket.webhook';
 import type { ParcelDims } from '@modules/commerce/shiprocket/shiprocket.parcel';
@@ -36,6 +37,9 @@ async function storeOrder(id: string) {
 }
 
 const NDR_ACTION = { REATTEMPT: 're-attempt', RETURN: 'return' } as const;
+
+/** How many failed bookings one "retry all" works through — each is a courier call. */
+const RETRY_BATCH = 50;
 
 export const storeShippingService = {
   /** Book (or resume booking) with the chosen courier — ShipRocket's recommendation when none. */
@@ -69,11 +73,34 @@ export const storeShippingService = {
     return productOrderService.toPub(order);
   },
 
-  async document(ids: string[], kind: ShipmentDocument) {
+  /** One PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
+  async file(ids: string[], kind: ShipmentDocument) {
     const oids = ids.map(toObjectId).filter(Boolean);
     const orders = await ProductOrderModel.find({ _id: { $in: oids }, ...PET_STORE });
     if (orders.length === 0) notFound('No orders selected');
-    return documentFor(orders, kind);
+    return documentFile(orders, kind);
+  },
+
+  /**
+   * Book again every order whose booking failed — oldest first — once what
+   * stopped them (the login, a pickup address, the wallet) is fixed. Each
+   * resumes where it stopped, so none is ever booked twice.
+   */
+  async retryFailedBookings() {
+    const orders = await ProductOrderModel.find({
+      ...PET_STORE,
+      cancelled_at: null,
+      fulfilment_method: 'SHIP',
+      fulfilment_status: 'FAILED',
+    })
+      .sort({ created_at: 1 })
+      .limit(RETRY_BATCH);
+    for (const order of orders) await createShipment(order);
+    return {
+      attempted: orders.length,
+      booked: orders.filter((o) => o.shiprocket.awb).length,
+      failed: orders.filter((o) => o.fulfilment_status === 'FAILED').length,
+    };
   },
 
   async answerNdr(id: string, action: keyof typeof NDR_ACTION, comments?: string | null) {
@@ -97,7 +124,11 @@ export const storeShippingService = {
     return { ...(await shiprocketAccountStatus()), webhook_path: `/webhooks${COURIER_WEBHOOK_PATH}` };
   },
 
-  syncPickups: () => syncPickupLocations(),
+  /** Log in again once with the saved credentials, clearing an earlier refusal. */
+  async reconnect() {
+    await retryShiprocketLogin();
+    return this.status();
+  },
 
   /**
    * What the couriers collected in cash. ShipRocket's remittance ledger is not

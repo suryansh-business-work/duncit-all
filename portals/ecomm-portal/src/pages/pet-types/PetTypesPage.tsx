@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client/react';
+import { Chip } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import ListEditorPage from '../../components/ListEditorPage';
 import ProductThumb from '../../components/ProductThumb';
@@ -33,8 +34,18 @@ export default function PetTypesPage() {
       deleteMessage={t('ecommPortal.petTypes.deleteMessage')}
       getName={(petType) => petType.name}
       renderLeading={(petType) => <ProductThumb src={petType.icon_url || petType.image_url} />}
-      renderSecondary={(petType) => <RowMeta slug={petType.slug} active={petType.is_active} />}
+      renderSecondary={(petType) => (
+        <RowMeta slug={petType.slug} active={petType.is_active}>
+          <Chip
+            size="small"
+            variant="outlined"
+            label={t('ecommPortal.petTypes.categoryCount', { count: petType.category_ids.length })}
+            data-testid="pet-type-category-count"
+          />
+        </RowMeta>
+      )}
       renderForm={(props) => <PetTypeForm {...props} />}
+      testId="pet-types-page"
     />
   );
 }

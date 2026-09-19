@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { base64ToBlob, downloadBase64File, downloadBlob, downloadTextFile } from '../src/download';
+import {
+  base64ToBlob,
+  downloadBase64File,
+  downloadBlob,
+  downloadTextFile,
+  printBase64File,
+  printBlob,
+} from '../src/download';
 
 // jsdom does not implement createObjectURL/revokeObjectURL.
 const createObjectURL = vi.fn(() => 'blob:mock-url');
@@ -93,5 +100,37 @@ describe('downloadTextFile', () => {
     downloadTextFile('a,b', 'data.csv', 'text/csv');
     const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
     expect(blob.type).toBe('text/csv');
+  });
+});
+
+const printFrames = () => Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[aria-hidden="true"]'));
+
+describe('printBlob', () => {
+  it('loads the file into a hidden, titled frame and prints it once loaded', () => {
+    printBlob(new Blob(['%PDF-'], { type: 'application/pdf' }), 'Shipping label');
+    const [frame] = printFrames();
+    expect(frame.title).toBe('Shipping label');
+    expect(frame.getAttribute('src')).toBe('blob:mock-url');
+    expect(frame.tabIndex).toBe(-1);
+    const print = vi.spyOn(frame.contentWindow as Window, 'print').mockImplementation(() => undefined);
+    frame.dispatchEvent(new Event('load'));
+    expect(print).toHaveBeenCalled();
+  });
+
+  it('replaces the previous frame and releases its URL on the next print', () => {
+    printBlob(new Blob(['a'], { type: 'application/pdf' }), 'First');
+    revokeObjectURL.mockClear();
+    printBlob(new Blob(['b'], { type: 'application/pdf' }), 'Second');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+    expect(printFrames().map((frame) => frame.title)).toEqual(['Second']);
+  });
+});
+
+describe('printBase64File', () => {
+  it('decodes the payload and prints it under the given title', () => {
+    printBase64File(btoa('%PDF-1.4'), 'application/pdf', 'Invoice');
+    const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
+    expect(blob.type).toBe('application/pdf');
+    expect(printFrames().at(-1)?.title).toBe('Invoice');
   });
 });

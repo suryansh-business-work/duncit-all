@@ -4065,6 +4065,8 @@ export type Coupon = {
   per_user_limit?: Maybe<Scalars['Int']['output']>;
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** STORE coupons only: the products the code applies to. Empty = the whole store. */
+  product_ids: Array<Scalars['ID']['output']>;
   scope: CouponScope;
   updated_at: Scalars['String']['output'];
   used_count: Scalars['Int']['output'];
@@ -4277,6 +4279,7 @@ export type CreateCouponInput = {
   min_order_amount?: InputMaybe<Scalars['Float']['input']>;
   per_user_limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   scope: CouponScope;
   valid_from?: InputMaybe<Scalars['String']['input']>;
   valid_until?: InputMaybe<Scalars['String']['input']>;
@@ -5372,6 +5375,52 @@ export type DbRestoreCollection = {
   name: Scalars['String']['output'];
 };
 
+/** One record in the zone, as GoDaddy holds it. */
+export type DnsRecord = {
+  __typename?: 'DnsRecord';
+  data: Scalars['String']['output'];
+  /** False for the types this console lists but never writes (NS, SOA, SRV). */
+  editable: Scalars['Boolean']['output'];
+  /** type|name|value — unique in a zone, since GoDaddy refuses duplicates. */
+  id: Scalars['String']['output'];
+  /** Relative to the domain: @ for the domain itself, shop for shop.<domain>. */
+  name: Scalars['String']['output'];
+  /** MX and SRV only. */
+  priority?: Maybe<Scalars['Int']['output']>;
+  /** Seconds. */
+  ttl: Scalars['Int']['output'];
+  /** A, AAAA, CNAME, MX, TXT, CAA, NS, SOA or SRV. A string, so a type GoDaddy adds never fails the listing. */
+  type: Scalars['String']['output'];
+};
+
+export type DnsRecordInput = {
+  data: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  /** Required for MX, ignored otherwise. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  ttl: Scalars['Int']['input'];
+  type: Scalars['String']['input'];
+};
+
+/** Which record a change is about: its values as the listing showed them. */
+export type DnsRecordRef = {
+  data: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+};
+
+/** The DNS zone managed from Tech → DNS Config, and the rules its editor follows. */
+export type DnsZone = {
+  __typename?: 'DnsZone';
+  /** Whether the default GoDaddy entry holds a key, a secret and a domain. */
+  configured: Scalars['Boolean']['output'];
+  domain: Scalars['String']['output'];
+  max_ttl: Scalars['Int']['output'];
+  min_ttl: Scalars['Int']['output'];
+  records: Array<DnsRecord>;
+  writable_types: Array<Scalars['String']['output']>;
+};
+
 export type DummyCheckoutInput = {
   amount: Scalars['Float']['input'];
   /** Structured billing address (preferred). Legacy free-text still accepted. */
@@ -5923,6 +5972,7 @@ export type EnvCategory =
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
+  | 'GODADDY'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'IMAGEKIT'
@@ -6735,6 +6785,24 @@ export type GiftCardStatus =
   | 'ACTIVE'
   | 'EXPIRED'
   | 'REDEEMED';
+
+/** One website's Google Analytics tag, as set in Tech → Google Analytics. */
+export type GoogleAnalyticsSite = {
+  __typename?: 'GoogleAnalyticsSite';
+  /** Off keeps the id on file but stops the website loading the tag. */
+  enabled: Scalars['Boolean']['output'];
+  /** The GA4 measurement id (G-…), or null when this website has none. */
+  measurement_id?: Maybe<Scalars['String']['output']>;
+  site: TrackedWebsite;
+  /** ISO time of the last change, or null when this website has no tag. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type GoogleAnalyticsSiteInput = {
+  enabled: Scalars['Boolean']['input'];
+  measurement_id: Scalars['String']['input'];
+  site: TrackedWebsite;
+};
 
 export type GoogleAuthInput = {
   id_token: Scalars['String']['input'];
@@ -8834,6 +8902,7 @@ export type Mutation = {
   /** Append an uploaded image to the template's library (persists immediately). */
   addCrmEmailTemplateImage: CrmEmailTemplate;
   addCrmManualLog: CrmActivity;
+  addDnsRecord: Scalars['Boolean']['output'];
   addExpenseRefund: Expense;
   /** Onboarding staff add (or update) a holiday / leave day. */
   addMeetingHoliday: MeetingHoliday;
@@ -9233,6 +9302,7 @@ export type Mutation = {
    * was backed up and when is history, not a file pointer.
    */
   deleteDbBackup: DbBackup;
+  deleteDnsRecord: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products. */
   deleteEcommBrand: Scalars['Boolean']['output'];
   deleteEcommLead: Scalars['Boolean']['output'];
@@ -9250,6 +9320,8 @@ export type Mutation = {
   deleteFaq: Scalars['Boolean']['output'];
   deleteFeatureFlag: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
+  /** Removes one website's tag. The website stops loading Google Analytics. */
+  deleteGoogleAnalyticsSite: Scalars['Boolean']['output'];
   deleteHost: Scalars['Boolean']['output'];
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
@@ -9848,6 +9920,8 @@ export type Mutation = {
   saveExpoPushToken: Scalars['Boolean']['output'];
   /** Save a founder setting (constant / manual metric value). */
   saveFounderSetting: FounderSettingKv;
+  /** Sets or replaces one website's tag. */
+  saveGoogleAnalyticsSite: GoogleAnalyticsSite;
   saveGrievanceOfficer: GrievanceOfficer;
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
@@ -10207,6 +10281,8 @@ export type Mutation = {
   updateCrmReminder: CrmReminder;
   updateCrmService: CrmService;
   updateCrmServiceOffered: CrmServiceOffered;
+  /** Rewrites the value, TTL and priority of one record. Its type and name stay. */
+  updateDnsRecord: Scalars['Boolean']['output'];
   updateEcommLead: EcommLead;
   updateEmailFragment: EmailFragment;
   updateEmailTemplate: EmailTemplate;
@@ -10397,6 +10473,11 @@ export type MutationAddCrmEmailTemplateImageArgs = {
 
 export type MutationAddCrmManualLogArgs = {
   input: ManualLogInput;
+};
+
+
+export type MutationAddDnsRecordArgs = {
+  input: DnsRecordInput;
 };
 
 
@@ -11385,6 +11466,11 @@ export type MutationDeleteDbBackupArgs = {
 };
 
 
+export type MutationDeleteDnsRecordArgs = {
+  ref: DnsRecordRef;
+};
+
+
 export type MutationDeleteEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   email: Scalars['String']['input'];
@@ -11434,6 +11520,11 @@ export type MutationDeleteFaqArgs = {
 
 export type MutationDeleteFeatureFlagArgs = {
   flag_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteGoogleAnalyticsSiteArgs = {
+  site: TrackedWebsite;
 };
 
 
@@ -12595,6 +12686,11 @@ export type MutationSaveFounderSettingArgs = {
 };
 
 
+export type MutationSaveGoogleAnalyticsSiteArgs = {
+  input: GoogleAnalyticsSiteInput;
+};
+
+
 export type MutationSaveGrievanceOfficerArgs = {
   input: SaveGrievanceOfficerInput;
 };
@@ -13552,6 +13648,12 @@ export type MutationUpdateCrmServiceArgs = {
 export type MutationUpdateCrmServiceOfferedArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCrmServiceOfferedInput;
+};
+
+
+export type MutationUpdateDnsRecordArgs = {
+  input: DnsRecordInput;
+  ref: DnsRecordRef;
 };
 
 
@@ -17788,6 +17890,8 @@ export type Query = {
    * will actually apply when the venue carries no override of its own.
    */
   defaultVenueCommissionPct: Scalars['Float']['output'];
+  /** Every record in the configured GoDaddy zone. */
+  dnsZone: DnsZone;
   /** Onboarding/admin: a single brand by id. */
   ecommBrand?: Maybe<EcommBrand>;
   /** Onboarding/admin: all brands, optionally filtered by status. */
@@ -17861,6 +17965,10 @@ export type Query = {
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
   /** Finance > Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
   giftCardsTable: GiftCardAdminCardTablePage;
+  /** Every Duncit website, with its tag where one is set. */
+  googleAnalyticsSites: Array<GoogleAnalyticsSite>;
+  /** The measurement id a website loads, or null when it has none or it is switched off. Public: every page of every website asks for it. */
+  googleAnalyticsTag?: Maybe<Scalars['String']['output']>;
   /** Public: the officer the app and website publish. */
   grievanceOfficer: GrievanceOfficer;
   grievanceStats: GrievanceStats;
@@ -19569,6 +19677,11 @@ export type QueryGiftCardTransactionsTableArgs = {
 
 export type QueryGiftCardsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGoogleAnalyticsTagArgs = {
+  site: TrackedWebsite;
 };
 
 
@@ -23698,6 +23811,7 @@ export type TicketPriority =
 export type TicketSource =
   | 'APP'
   | 'EMAIL'
+  | 'STORE'
   | 'WEBSITE';
 
 export type TicketStatus =
@@ -23736,6 +23850,15 @@ export type TrackedLinkKind =
   | 'UNSUBSCRIBE';
 
 /** Export format for support chat / ticket transcripts. */
+/** A Duncit website that can load a Google Analytics tag — the key it passes to googleAnalyticsTag. */
+export type TrackedWebsite =
+  | 'ADS'
+  | 'EARNWITH'
+  | 'ECOMM'
+  | 'MAIN'
+  | 'PARTNERS'
+  | 'STATUS';
+
 export type TranscriptFormat =
   | 'DOCX'
   | 'TXT';
@@ -24156,6 +24279,7 @@ export type UpdateCouponInput = {
   min_order_amount?: InputMaybe<Scalars['Float']['input']>;
   per_user_limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   scope?: InputMaybe<CouponScope>;
   valid_from?: InputMaybe<Scalars['String']['input']>;
   valid_until?: InputMaybe<Scalars['String']['input']>;

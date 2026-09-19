@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import {
-  Alert,
-  Box,
   Card,
   CardContent,
-  Chip,
   Divider,
-  Link,
   MenuItem,
   Stack,
   Step,
@@ -17,8 +13,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import SyncIcon from '@mui/icons-material/Sync';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { DuncitButton } from '@duncit/buttons';
 import {
   ALL_STATUSES,
@@ -27,6 +21,7 @@ import {
   humaniseStatus,
   type FulfilmentStatus,
 } from './constants';
+import OrderShipmentSection from './OrderShipmentSection';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -52,7 +47,6 @@ export default function OrderFulfilmentPanel({
   const isShip = order.fulfilment_method === 'SHIP';
   const flow = isShip ? SHIP_FLOW : PICKUP_FLOW;
   const activeStep = flow.indexOf(order.fulfilment_status);
-  const shiprocket = order.shiprocket ?? {};
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -64,7 +58,7 @@ export default function OrderFulfilmentPanel({
             fontWeight: 700,
             mb: 1.5
           }}>
-          Fulfilment
+          {t('shell.nav.fulfilment')}
         </Typography>
 
         <ToggleButtonGroup
@@ -76,7 +70,7 @@ export default function OrderFulfilmentPanel({
           aria-label={t('shell.nav.fulfilment')}
           data-testid="order-fulfilment-method"
         >
-          <ToggleButton value="SHIP">Ship</ToggleButton>
+          <ToggleButton value="SHIP">{t('products.orders.ship')}</ToggleButton>
           <ToggleButton value="PICKUP">{t('products.orders.pickup')}</ToggleButton>
         </ToggleButtonGroup>
 
@@ -115,72 +109,15 @@ export default function OrderFulfilmentPanel({
             disabled={busy || target === order.fulfilment_status}
             onClick={() => onAdvance(target, note)}
           >
-            Update status
+            {t('products.orders.updateStatus')}
           </DuncitButton>
         </Stack>
 
         {isShip && (
           <>
             <Divider sx={{ my: 2 }} />
-            <Stack spacing={1.25}>
-              <Stack direction="row" spacing={1} useFlexGap sx={{
-                flexWrap: "wrap"
-              }}>
-                <DuncitButton
-                  size="small"
-                  variant="outlined"
-                  startIcon={<LocalShippingIcon />}
-                  disabled={busy}
-                  onClick={onCreateShipment}
-                >
-                  {shiprocket.awb ? 'Recreate shipment' : 'Create shipment'}
-                </DuncitButton>
-                <DuncitButton size="small" startIcon={<SyncIcon />} disabled={busy || !shiprocket.awb} onClick={onRefreshTracking}>
-                  Sync tracking
-                </DuncitButton>
-              </Stack>
-              {shiprocket.awb ? (
-                <Box>
-                  <Stack direction="row" spacing={1} sx={{
-                    alignItems: "center"
-                  }}>
-                    <Chip size="small" label={`AWB ${shiprocket.awb}`} />
-                    <Typography variant="body2" sx={{
-                      color: "text.secondary"
-                    }}>
-                      {shiprocket.courier_name || 'Courier pending'}
-                    </Typography>
-                  </Stack>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "text.secondary",
-                      display: "block",
-                      mt: 0.5
-                    }}>
-                    {shiprocket.tracking_status || 'Awaiting first scan'}
-                  </Typography>
-                  {shiprocket.label_url && (
-                    <Link href={shiprocket.label_url} target="_blank" rel="noopener" variant="body2">
-                      Download shipping label
-                    </Link>
-                  )}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{
-                  color: "text.secondary"
-                }}>
-                  No shipment created yet.
-                </Typography>
-              )}
-            </Stack>
+            <OrderShipmentSection order={order} busy={busy} onCreateShipment={onCreateShipment} onRefreshTracking={onRefreshTracking} />
           </>
-        )}
-
-        {order.last_error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {order.last_error}
-          </Alert>
         )}
       </CardContent>
     </Card>

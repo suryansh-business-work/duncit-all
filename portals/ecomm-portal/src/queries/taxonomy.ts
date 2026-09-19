@@ -15,6 +15,8 @@ export interface StorePetType {
   description: string;
   sort_order: number;
   is_active: boolean;
+  /** The categories filed under this pet — the ones its page and menu show. */
+  category_ids: string[];
 }
 
 export interface StoreCategory {
@@ -68,6 +70,7 @@ const PET_TYPE_FIELDS = `
   description
   sort_order
   is_active
+  category_ids
 `;
 
 const CATEGORY_FIELDS = `

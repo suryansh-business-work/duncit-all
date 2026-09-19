@@ -22,11 +22,18 @@ const toPub = (c: ICoupon) => ({
   min_order_amount: c.min_order_amount,
   used_count: c.used_count,
   is_active: c.is_active,
+  product_ids: (c.product_ids ?? []).map(String),
   created_at: c.created_at.toISOString(),
   updated_at: c.updated_at.toISOString(),
 });
 
 const toDate = (v?: string | null) => (v ? new Date(v) : null);
+
+/** Well-formed product ids only; a code that is not STORE-scoped applies to no products at all. */
+const productIdsOf = (scope: string, ids: unknown) =>
+  scope === 'STORE' && Array.isArray(ids)
+    ? [...new Set(ids.map(String).filter((id) => Types.ObjectId.isValid(id)))].slice(0, 100).map((id) => new Types.ObjectId(id))
+    : [];
 
 /** Allowlists for the shared table engine (couponsTable / couponsForPodTable — DUNCIT TABLE CONTRACT v1). */
 const COUPON_TABLE_CONFIG: TableEntityConfig = {
@@ -119,6 +126,7 @@ function buildDoc(input: any) {
     per_user_limit: input.per_user_limit ?? null,
     min_order_amount: input.min_order_amount ?? 0,
     is_active: input.is_active !== false,
+    product_ids: productIdsOf(input.scope, input.product_ids),
   };
 }
 

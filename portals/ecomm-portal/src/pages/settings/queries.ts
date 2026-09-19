@@ -30,7 +30,8 @@ type FlagSetting =
   | 'cod_requires_otp'
   | 'returns_enabled'
   | 'restock_on_cancel'
-  | 'autoship_enabled';
+  | 'autoship_enabled'
+  | 'serviceable_pincodes_enabled';
 
 /** The settings that are amounts, percentages or counts. */
 type NumberSetting =
@@ -45,7 +46,22 @@ type NumberSetting =
   | 'return_window_days'
   | 'autoship_discount_pct';
 
-/** The store's own settings — identity, checkout rules, shipping, returns, autoship, SEO and pages. */
+/** A festive window: while it is open the store swaps its logo, favicon and background. */
+export interface StoreOccasion {
+  slug: string;
+  label: string;
+  starts_at: string;
+  ends_at: string;
+  logo_url: string;
+  favicon_url: string;
+  background_url: string;
+  background_color: string;
+  announcement_text: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+/** The store's own settings — identity, checkout rules, shipping, returns, autoship, SEO, pages and occasions. */
 export type StoreSettings = Record<TextSetting, string> &
   Record<FlagSetting, boolean> &
   Record<NumberSetting, number> & {
@@ -54,6 +70,8 @@ export type StoreSettings = Record<TextSetting, string> &
     cancel_reasons: string[];
     autoship_frequencies: number[];
     social_links: { label: string; url: string }[];
+    serviceable_pincodes: string[];
+    occasions: StoreOccasion[];
   };
 
 const SETTINGS_FIELDS = `
@@ -99,6 +117,21 @@ const SETTINGS_FIELDS = `
   social_links {
     label
     url
+  }
+  serviceable_pincodes_enabled
+  serviceable_pincodes
+  occasions {
+    slug
+    label
+    starts_at
+    ends_at
+    logo_url
+    favicon_url
+    background_url
+    background_color
+    announcement_text
+    is_active
+    sort_order
   }
   updated_at
 `;

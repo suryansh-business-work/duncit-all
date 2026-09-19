@@ -21,6 +21,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEach } from '@services/notify/notify.service';
+import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const newOrderNo = () =>
@@ -735,10 +736,31 @@ export const productOrderService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    if (pickupLocation) doc.pickup_location_id = pickupLocation;
+    if (pickupLocation && pickupLocation !== doc.pickup_location_id) {
+      // The pickup is the warehouse NICKNAME — the name ShipRocket books it under.
+      if (doc.shiprocket.order_id) {
+        throw new GraphQLError(`This shipment is already booked from "${doc.pickup_location_id}" — its pickup cannot change`, {
+          extensions: { code: 'BAD_REQUEST' },
+        });
+      }
+      const warehouse = await BrandPickupLocationModel.findOne({ nickname: pickupLocation }).select('nickname').lean();
+      if (!warehouse) {
+        throw new GraphQLError(`There is no warehouse named "${pickupLocation}"`, { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      doc.pickup_location_id = warehouse.nickname;
+    }
     const { shiprocketService } = await import('@modules/commerce/shiprocket/shiprocket.service');
     await shiprocketService.createShipment(doc);
     return toPub(doc);
+  },
+
+  /** One PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
+  async shipmentFile(ids: string[], kind: ShipmentDocument) {
+    const oids = ids.filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    const orders = await ProductOrderModel.find({ _id: { $in: oids } });
+    if (orders.length === 0) throw new GraphQLError('No orders selected', { extensions: { code: 'NOT_FOUND' } });
+    const { documentFile } = await import('@modules/commerce/shiprocket/shiprocket.shipment');
+    return documentFile(orders, kind);
   },
 
   async refreshTrackingById(id: string) {

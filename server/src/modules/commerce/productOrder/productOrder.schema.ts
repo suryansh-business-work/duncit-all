@@ -79,6 +79,20 @@ export const productOrderTypeDefs = /* GraphQL */ `
     last_synced_at: String
   }
 
+  "A ShipRocket document: the shipping label, the GST invoice or the pickup manifest."
+  enum ShipmentDocumentKind {
+    LABEL
+    INVOICE
+    MANIFEST
+  }
+
+  "A ShipRocket document itself — for a console to print in place or save under this name."
+  type ShipmentFile {
+    filename: String!
+    mime: String!
+    content_base64: String!
+  }
+
   type OrderTrackingEvent {
     status: String!
     code: Int!
@@ -207,5 +221,7 @@ export const productOrderTypeDefs = /* GraphQL */ `
     createProductOrderShipment(id: ID!, pickup_location: String): ProductOrder!
     "Ops: pull the latest tracking from ShipRocket."
     refreshProductOrderTracking(id: ID!): ProductOrder!
+    "Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save."
+    productOrderShipmentFile(ids: [ID!]!, kind: ShipmentDocumentKind!): ShipmentFile!
   }
 `;

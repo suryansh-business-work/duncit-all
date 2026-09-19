@@ -52,6 +52,66 @@ export const storeTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     "Finance's test switch — checkout captures without a real gateway."
     dummy_mode: Boolean!
+    "On: delivery is limited to an operator-kept pincode list (storePincodeServiceable says which)."
+    serviceable_pincodes_enabled: Boolean!
+    "The festive window open right now, if any — the store swaps its logo, favicon and background for it."
+    active_occasion: StoreActiveOccasion
+  }
+
+  type StoreActiveOccasion {
+    slug: String!
+    label: String!
+    logo_url: String!
+    favicon_url: String!
+    background_url: String!
+    background_color: String!
+    announcement_text: String!
+    ends_at: String!
+  }
+
+  "One of the store's own pages, as the footer and menu link it."
+  type StorePageLink {
+    id: ID!
+    title: String!
+    slug: String!
+  }
+
+  type StorePage {
+    id: ID!
+    title: String!
+    slug: String!
+    content_html: String!
+    seo_title: String!
+    seo_description: String!
+    updated_at: String!
+  }
+
+  type StoreFaq {
+    question: String!
+    answer: String!
+  }
+
+  "Whether the store delivers to a pincode, by the operator's list alone (the courier is asked at checkout)."
+  type StorePincodeCheck {
+    pincode: String!
+    serviceable: Boolean!
+    "False when the store serves every pincode the courier can reach."
+    restricted: Boolean!
+  }
+
+  input StoreSupportTicketInput {
+    name: String!
+    email: String!
+    phone: String
+    subject: String!
+    category: TicketCategory
+    message: String!
+    "The order it is about, when there is one — goes into the subject."
+    order_no: String
+  }
+
+  type StoreSupportTicketResult {
+    ticket_no: String!
   }
 
   type StorePetType {
@@ -100,6 +160,8 @@ export const storeTypeDefs = /* GraphQL */ `
     pet_types: [StorePetType!]!
     categories: [StoreCategoryNode!]!
     collections: [StoreCollectionLink!]!
+    "The store's own pages that show in the footer, in order."
+    pages: [StorePageLink!]!
   }
 
   "A product as a shelf card."
@@ -123,6 +185,8 @@ export const storeTypeDefs = /* GraphQL */ `
     rating: Float!
     rating_count: Int!
     short_description: String!
+    "A short offer line, e.g. Buy 2, get 1 free; blank when there is none."
+    offer_text: String!
   }
 
   type StoreFacetOptionCount {
@@ -232,6 +296,8 @@ export const storeTypeDefs = /* GraphQL */ `
   type StoreBrandInfo {
     id: ID!
     name: String!
+    "Public URL key — ecomm.duncit.com/brand/<slug>."
+    slug: String!
     logo_url: String!
     tagline: String!
   }
@@ -272,6 +338,8 @@ export const storeTypeDefs = /* GraphQL */ `
     rating: Float!
     rating_count: Int!
     short_description: String!
+    offer_text: String!
+    faqs: [StoreFaq!]!
     available: Int!
     images: [String!]!
     video_url: String!
@@ -306,6 +374,7 @@ export const storeTypeDefs = /* GraphQL */ `
   type StoreSuggestBrand {
     id: ID!
     name: String!
+    slug: String!
     logo_url: String!
   }
 
@@ -412,6 +481,8 @@ export const storeTypeDefs = /* GraphQL */ `
     CATEGORY
     COLLECTION
     PET_TYPE
+    BRAND
+    PAGE
   }
 
   type StoreSitemapEntry {
@@ -823,6 +894,10 @@ export const storeTypeDefs = /* GraphQL */ `
     storeCategory(slug: String!): StoreCategoryPage
     storeCollection(slug: String!): StoreCollectionPage
     storeBrands: [StoreBrandInfo!]!
+    "One of the store's own pages by slug; null when there is none (or it is switched off)."
+    storePage(slug: String!): StorePage
+    "Whether the operator's pincode list allows delivery there — instant, no courier call."
+    storePincodeServiceable(pincode: String!): StorePincodeCheck!
     storeDeliveryCheck(product_id: ID!, variant_id: ID, pincode: String!): StoreDeliveryCheck!
     storeSitemap: [StoreSitemapEntry!]!
     storeProductReviews(product_id: ID!): [ProductReview!]!
@@ -857,6 +932,8 @@ export const storeTypeDefs = /* GraphQL */ `
     storeToggleWishlist(cart_token: String, product_id: ID!): [ID!]!
     storeSubscribeStockAlert(product_id: ID!, variant_id: String, email: String!): Boolean!
     storeRecordView(product_id: ID!): Boolean!
+    "A shopper's question or complaint, filed as a support ticket tagged with the Pet Store source."
+    storeCreateSupportTicket(input: StoreSupportTicketInput!): StoreSupportTicketResult!
     storeRequestCodOtp(cart_token: String, phone_extension: String!, phone_number: String!): StoreCodOtp!
     storeVerifyCodOtp(challenge_id: ID!, code: String!): Boolean!
     storePlaceOrder(input: StorePlaceOrderInput!): StorePlaceOrderResult!

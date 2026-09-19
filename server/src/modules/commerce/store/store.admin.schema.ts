@@ -45,12 +45,78 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String!
     about_html: String!
     social_links: [StoreSocialLink!]!
+    "On: only the pincodes in serviceable_pincodes are delivered to."
+    serviceable_pincodes_enabled: Boolean!
+    serviceable_pincodes: [String!]!
+    occasions: [StoreOccasion!]!
     updated_at: String!
   }
 
   input StoreSocialLinkInput {
     label: String!
     url: String!
+  }
+
+  "A festive window: while it is open the store swaps its logo, favicon and background."
+  type StoreOccasion {
+    slug: String!
+    label: String!
+    starts_at: String!
+    ends_at: String!
+    logo_url: String!
+    favicon_url: String!
+    background_url: String!
+    background_color: String!
+    announcement_text: String!
+    is_active: Boolean!
+    sort_order: Int!
+  }
+
+  input StoreOccasionInput {
+    "Blank mints one from the label."
+    slug: String
+    label: String!
+    starts_at: String!
+    ends_at: String!
+    logo_url: String
+    favicon_url: String
+    background_url: String
+    "A CSS colour; blank keeps the store's own page colour."
+    background_color: String
+    "Replaces the announcement bar while the occasion is on; blank leaves it."
+    announcement_text: String
+    is_active: Boolean
+    "Higher wins when two windows overlap."
+    sort_order: Int
+  }
+
+  "One of the store's own pages — a policy, a guide, an about page — beyond the four built-in ones."
+  type StoreAdminPage {
+    id: ID!
+    title: String!
+    slug: String!
+    content_html: String!
+    show_in_footer: Boolean!
+    is_active: Boolean!
+    sort_order: Int!
+    seo_title: String!
+    seo_description: String!
+    updated_at: String!
+  }
+
+  input StorePageInput {
+    title: String!
+    slug: String
+    content_html: String
+    show_in_footer: Boolean
+    is_active: Boolean
+    seo_title: String
+    seo_description: String
+  }
+
+  input StoreFaqInput {
+    question: String!
+    answer: String!
   }
 
   "Every field optional — only what is sent changes."
@@ -97,6 +163,10 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String
     about_html: String
     social_links: [StoreSocialLinkInput!]
+    serviceable_pincodes_enabled: Boolean
+    "6-digit pincodes; anything else is dropped."
+    serviceable_pincodes: [String!]
+    occasions: [StoreOccasionInput!]
   }
 
   type StoreAdminPetType {
@@ -108,6 +178,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     description: String!
     sort_order: Int!
     is_active: Boolean!
+    "The categories filed under this pet — the ones its page and menu show."
+    category_ids: [ID!]!
   }
 
   input StorePetTypeInput {
@@ -117,6 +189,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     image_url: String
     description: String
     is_active: Boolean
+    "When sent, exactly these categories are filed under the pet (others are unfiled from it)."
+    category_ids: [ID!]
   }
 
   type StoreAdminCategory {
@@ -421,6 +495,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     returnable: Boolean!
     return_window_days: Int
     max_per_order: Int!
+    "A short offer line shown beside the price, e.g. Buy 2, get 1 free."
+    offer_text: String!
+    faqs: [StoreFaq!]!
   }
 
   input StoreFacetValueInput {
@@ -498,6 +575,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Null uses the store default."
     return_window_days: Int
     max_per_order: Int
+    offer_text: String
+    faqs: [StoreFaqInput!]
   }
 
   "One of Duncit's own warehouses — where a store product ships from."
@@ -758,8 +837,11 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeAdminProduct(id: ID!): StoreAdminProduct!
     storeAdminWarehouses: [StoreWarehouse!]!
     storeAdminBrands: [StoreAdminBrand!]!
+    storeAdminPages: [StoreAdminPage!]!
     "The Razorpay accounts the store can take online payments with."
     storeAdminRazorpayAccounts: [StoreRazorpayAccount!]!
+    "Every payment the pet store took, for its Logs › Payment logs page."
+    storePaymentsTable(query: TableQueryInput): PaymentTablePage!
     storeOrdersTable(query: TableQueryInput): StoreOrderTablePage!
     storeAdminOrder(id: ID!): StoreAdminOrder!
     storeCustomerOrders(email: String!): [ProductOrder!]!
@@ -866,6 +948,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeSaveBrand(id: ID, input: StoreBrandInput!): StoreAdminBrand!
     storeDeleteBrand(id: ID!): Boolean!
     storeReorderBrands(ids: [ID!]!): Boolean!
+    storeSavePage(id: ID, input: StorePageInput!): StoreAdminPage!
+    storeDeletePage(id: ID!): Boolean!
+    storeReorderPages(ids: [ID!]!): Boolean!
     "Add pet types / categories to many products at once."
     storeBulkFile(product_ids: [ID!]!, pet_type_ids: [ID!], category_ids: [ID!]): Int!
     storeUpdateOrderStatus(id: ID!, status: FulfilmentStatus!, note: String): ProductOrder!

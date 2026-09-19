@@ -9,3 +9,6 @@ export const runtime = createPortalRuntime(appConfig, graphqlUrl);
 
 /** The storefront this console manages — for "View on store" links. */
 export const STORE_URL = (import.meta.env.VITE_STORE_URL || 'https://ecomm.duncit.com').replace(/\/+$/, '');
+
+/** The Support console, where the store's shopper tickets land. */
+export const SUPPORT_URL = (import.meta.env.VITE_SUPPORT_URL || 'https://support.duncit.com').replace(/\/+$/, '');

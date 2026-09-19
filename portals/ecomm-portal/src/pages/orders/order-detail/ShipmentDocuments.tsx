@@ -1,38 +1,40 @@
-import { Divider, Stack, Typography } from '@mui/material';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import LabelIcon from '@mui/icons-material/Label';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import { DuncitButton } from '@duncit/buttons';
+import { Divider, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import type { ShipmentDocument } from '../shipping-queries';
+import DocumentButtons from '../DocumentButtons';
+import { useShipmentFile } from '../useShipmentFile';
 
 interface ShipmentDocumentsProps {
+  orderId: string;
   /** Label and manifest need a courier (AWB); the invoice only needs the booking. */
   hasAwb: boolean;
+  /** Another shipment write is in flight. */
   busy: boolean;
-  onDocument: (kind: ShipmentDocument) => void;
 }
 
-/** The shipment's PDFs from ShipRocket — each opens in a new tab. */
-export default function ShipmentDocuments({ hasAwb, busy, onDocument }: Readonly<ShipmentDocumentsProps>) {
+/** The shipment's PDFs from ShipRocket — printed in place, or saved under the order number. */
+export default function ShipmentDocuments({ orderId, hasAwb, busy }: Readonly<ShipmentDocumentsProps>) {
   const { t } = useTranslation();
+  const file = useShipmentFile();
   return (
     <>
       <Divider sx={{ my: 2 }} />
       <Typography component="h4" variant="subtitle2" sx={{ mb: 1 }}>
         {t('ecommPortal.shipping.documents')}
       </Typography>
-      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-        <DuncitButton size="small" variant="outlined" startIcon={<LabelIcon />} disabled={busy || !hasAwb} onClick={() => onDocument('LABEL')}>
-          {t('ecommPortal.shipping.label')}
-        </DuncitButton>
-        <DuncitButton size="small" variant="outlined" startIcon={<ReceiptLongIcon />} disabled={busy} onClick={() => onDocument('INVOICE')}>
-          {t('ecommPortal.shipping.invoice')}
-        </DuncitButton>
-        <DuncitButton size="small" variant="outlined" startIcon={<AssignmentIcon />} disabled={busy || !hasAwb} onClick={() => onDocument('MANIFEST')}>
-          {t('ecommPortal.shipping.manifest')}
-        </DuncitButton>
-      </Stack>
+      <DocumentButtons
+        busy={busy || file.busy}
+        onRun={(kind, mode) => file.run([orderId], kind, mode)}
+        items={[
+          { kind: 'LABEL', label: t('ecommPortal.shipping.label'), disabled: !hasAwb },
+          { kind: 'INVOICE', label: t('ecommPortal.shipping.invoice') },
+          { kind: 'MANIFEST', label: t('ecommPortal.shipping.manifest'), disabled: !hasAwb },
+        ]}
+      />
+      {hasAwb ? null : (
+        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+          {t('ecommPortal.shipping.needsAwb')}
+        </Typography>
+      )}
     </>
   );
 }

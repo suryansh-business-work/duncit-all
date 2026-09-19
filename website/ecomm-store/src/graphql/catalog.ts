@@ -21,6 +21,7 @@ export interface StoreProductCard {
   badge: string;
   rating: number;
   rating_count: number;
+  offer_text: string;
 }
 
 const CARD_FIELDS = `
@@ -40,6 +41,7 @@ const CARD_FIELDS = `
   badge
   rating
   rating_count
+  offer_text
 `;
 
 export type StoreSort = 'RELEVANCE' | 'NEWEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'BESTSELLING' | 'DISCOUNT' | 'RATING';
@@ -115,7 +117,7 @@ export const STORE_SEARCH: TypedDocumentNode<{ storeSearch: StoreSearchPage }, {
 export interface StoreSuggest {
   products: StoreProductCard[];
   categories: { id: string; name: string; slug: string }[];
-  brands: { id: string; name: string; logo_url: string }[];
+  brands: { id: string; name: string; slug: string; logo_url: string }[];
 }
 
 export const STORE_SUGGEST: TypedDocumentNode<{ storeSuggest: StoreSuggest }, { q: string }> = gql`
@@ -123,7 +125,7 @@ export const STORE_SUGGEST: TypedDocumentNode<{ storeSuggest: StoreSuggest }, { 
     storeSuggest(q: $q) {
       products { ${CARD_FIELDS} }
       categories { id name slug }
-      brands { id name logo_url }
+      brands { id name slug logo_url }
     }
   }
 `;
@@ -161,13 +163,14 @@ export const TOGGLE_WISHLIST: TypedDocumentNode<{ storeToggleWishlist: string[] 
 export interface StoreBrandInfo {
   id: string;
   name: string;
+  slug: string;
   logo_url: string;
   tagline: string;
 }
 
 export const STORE_BRANDS: TypedDocumentNode<{ storeBrands: StoreBrandInfo[] }, NoVars> = gql`
   query EcommStoreBrands {
-    storeBrands { id name logo_url tagline }
+    storeBrands { id name slug logo_url tagline }
   }
 `;
 
@@ -230,7 +233,7 @@ export const STORE_HOME: TypedDocumentNode<{ storeHome: StoreHomeSection[] }, No
       products { ${CARD_FIELDS} }
       categories { id name slug image_url }
       pet_types { id name slug icon_url image_url description }
-      brands { id name logo_url tagline }
+      brands { id name slug logo_url tagline }
       discount_tiers
       ends_at
     }

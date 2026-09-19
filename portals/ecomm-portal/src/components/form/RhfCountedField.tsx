@@ -9,6 +9,7 @@ interface RhfCountedFieldProps<T extends FieldValues> {
   /** The length a search result shows before cutting the text off. */
   max: number;
   multiline?: boolean;
+  required?: boolean;
 }
 
 /** A text field that counts its characters against the length a search result shows. */
@@ -18,6 +19,7 @@ export default function RhfCountedField<T extends FieldValues>({
   label,
   max,
   multiline,
+  required,
 }: Readonly<RhfCountedFieldProps<T>>) {
   const { t } = useTranslation();
   const value: unknown = useWatch({ control, name });
@@ -29,6 +31,7 @@ export default function RhfCountedField<T extends FieldValues>({
       label={label}
       multiline={multiline}
       minRows={multiline ? 2 : undefined}
+      required={required}
       hint={t('ecommPortal.form.counter', { vars: { count, max } })}
     />
   );

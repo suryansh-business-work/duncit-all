@@ -1,4 +1,5 @@
 import { cacheGet, cacheSet } from '@config/redis';
+import { logs } from '@observability/log';
 import { srRequest, shiprocketError, type Json } from './shiprocket.client';
 import { isShiprocketConfigured } from './shiprocket.account';
 import { chargeableWeightKg } from './shiprocket.parcel';
@@ -184,6 +185,49 @@ export async function manifestFor(shipmentIds: string[], srOrderIds: string[]): 
   return str(printed.manifest_url);
 }
 
+/** Where ShipRocket serves its PDFs from. A stored link is only ever fetched from these. */
+const DOCUMENT_HOSTS = ['amazonaws.com', 'shiprocket.in', 'shiprocket.co', 'cloudfront.net'];
+const DOCUMENT_TIMEOUT_MS = 30_000;
+const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
+
+const trustedDocumentUrl = (raw: string): URL | null => {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  const trusted = url.protocol === 'https:' && DOCUMENT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  return trusted ? url : null;
+};
+
+/**
+ * The bytes behind a ShipRocket document link, as base64. The console prints
+ * and saves the PDF itself — a browser can neither print a cross-origin link
+ * in place nor save it under our file name — so the server fetches it, and
+ * only from ShipRocket's own storage.
+ */
+export async function fetchDocumentPdf(link: string): Promise<string> {
+  const url = trustedDocumentUrl(link);
+  if (!url) throw shiprocketError('ShipRocket returned a document link we do not download from');
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(DOCUMENT_TIMEOUT_MS) });
+  } catch (error) {
+    logs.server.warn('shiprocket', 'fetchDocument', { error, host: url.hostname, msg: 'document download failed' });
+    throw shiprocketError('The document could not be downloaded from ShipRocket — try again shortly');
+  }
+  if (!res.ok || !trustedDocumentUrl(res.url || url.href)) {
+    throw shiprocketError(`The document could not be downloaded from ShipRocket (HTTP ${res.status})`, res.status);
+  }
+  const bytes = Buffer.from(await res.arrayBuffer());
+  if (bytes.length === 0 || bytes.length > MAX_DOCUMENT_BYTES || bytes.subarray(0, 5).toString('latin1') !== '%PDF-') {
+    throw shiprocketError('ShipRocket did not return a PDF for this document');
+  }
+  return bytes.toString('base64');
+}
+
 /* ------------------------------------------------------------------ *
  * Tracking and NDR
  * ------------------------------------------------------------------ */
@@ -271,7 +315,10 @@ export async function addPickupLocation(payload: Json): Promise<AddPickupResult>
 export interface ShiprocketPickup {
   id: string;
   nickname: string;
-  address: string;
+  name: string;
+  email: string;
+  address_line1: string;
+  address_line2: string;
   city: string;
   state: string;
   pincode: string;
@@ -286,7 +333,10 @@ export async function listPickupLocations(): Promise<ShiprocketPickup[]> {
   return ((data?.data?.shipping_address ?? []) as Json[]).map((p) => ({
     id: str(p.id),
     nickname: str(p.pickup_location),
-    address: [p.address, p.address_2].filter(Boolean).join(', '),
+    name: str(p.name),
+    email: str(p.email),
+    address_line1: str(p.address),
+    address_line2: str(p.address_2),
     city: str(p.city),
     state: str(p.state),
     pincode: str(p.pin_code),

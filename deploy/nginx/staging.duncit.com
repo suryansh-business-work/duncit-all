@@ -867,6 +867,48 @@ server {
     }
 }
 
+# --- Duncit Lite: staging.luma.duncit.com (Node API + HTML server on :2140) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.luma.duncit.com;
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2140;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Duncit Lite console: staging.luma-portal.duncit.com (same process, :2140) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.luma-portal.duncit.com;
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2140;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: staging.open-wa-server.duncit.com (NestJS on :2124) ------
 # Staging twin of the CRM WhatsApp gateway. Larger body for media; long read
 # timeout so the QR/session stream stays open.

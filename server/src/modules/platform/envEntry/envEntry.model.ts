@@ -29,6 +29,7 @@ export const ENV_CATEGORIES = [
   'APPLE_SIGNIN',
   'APP_STORE_CONNECT',
   'SONARQUBE',
+  'GODADDY',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

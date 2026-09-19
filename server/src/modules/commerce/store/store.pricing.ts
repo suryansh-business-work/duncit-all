@@ -4,9 +4,10 @@ import { getServiceability, isShiprocketConfigured } from '@modules/commerce/shi
 import { buildParcel, type ParcelLine } from '@modules/commerce/shiprocket/shiprocket.parcel';
 import { effectiveDims } from '@modules/venues/inventory/inventory.packaging';
 import { couponService } from '@modules/finance/coupon/coupon.service';
+import { CouponModel } from '@modules/finance/coupon/coupon.model';
 import { applyCoins, computeQuote, type QuoteBreakup } from '@modules/finance/payment/payment.service';
 import { logs } from '@observability/log';
-import type { IStoreSettings } from './storeSettings.model';
+import { isPincodeServed, type IStoreSettings } from './storeSettings.model';
 import { StoreProductModel } from './storeProduct.model';
 import { listedFilter } from './store.catalog.service';
 import {
@@ -268,6 +269,11 @@ export async function quoteStoreShipping(
   if (groups.size === 0) {
     return { total: 0, breakup: [], all_quoted: true, serviceable: true, cod_serviceable: true, etd: '' };
   }
+  // The operator's own pincode list is the first gate: a pincode it excludes
+  // is not served, whatever the courier would say — so the courier is not asked.
+  if (/^\d{6}$/.test(String(pincode ?? '')) && !isPincodeServed(settings, String(pincode))) {
+    return { total: 0, breakup: [], all_quoted: false, serviceable: false, cod_serviceable: false, etd: '' };
+  }
   const ids = [...groups.keys()].filter((id) => Types.ObjectId.isValid(id));
   const warehouses = await BrandPickupLocationModel.find({ _id: { $in: ids } }).select('pincode').lean();
   const pinById = new Map(warehouses.map((w) => [String(w._id), String(w.pincode ?? '')]));
@@ -360,16 +366,32 @@ function codBlockFor(input: StoreQuoteInput, payable: number, shipping: StoreShi
   return null;
 }
 
+/**
+ * The goods a coupon may take its percentage off: everything, or — for a code
+ * limited to certain products — only the lines carrying those products.
+ */
+async function couponBase(code: string, lines: StoreLine[], itemsTotal: number) {
+  const coupon = await CouponModel.findOne({ code: code.toUpperCase() }).select('product_ids').lean();
+  const products = new Set((coupon?.product_ids ?? []).map(String));
+  if (products.size === 0) return { amount: itemsTotal, scoped: false };
+  const amount = round2(lines.filter((l) => products.has(l.product_id)).reduce((sum, l) => sum + l.gross, 0));
+  return { amount, scoped: true };
+}
+
 /** Evaluate a coupon on the goods; a bad code is reported, never thrown here. */
-async function couponOn(input: StoreQuoteInput, itemsTotal: number) {
+async function couponOn(input: StoreQuoteInput, lines: StoreLine[], itemsTotal: number) {
   const code = String(input.couponCode ?? '').trim();
   if (!code) return { code: null, discount: 0, error: null };
-  const result = await couponService.evaluate(code, null, itemsTotal, input.userId ?? null, {
+  const base = await couponBase(code, lines, itemsTotal);
+  if (base.scoped && base.amount <= 0) {
+    return { code: null, discount: 0, error: 'This coupon applies to products that are not in your cart' };
+  }
+  const result = await couponService.evaluate(code, null, base.amount, input.userId ?? null, {
     channel: 'STORE',
     email: input.email ?? null,
   });
   if (!result.ok) return { code: null, discount: 0, error: result.message ?? 'Invalid coupon' };
-  return { code: result.coupon!.code, discount: round2(itemsTotal - result.final_total), error: null };
+  return { code: result.coupon!.code, discount: round2(base.amount - result.final_total), error: null };
 }
 
 /** Whole rupees off the subscribed line(s) of an Autoship basket. */
@@ -386,7 +408,7 @@ export async function priceStoreCart(input: StoreQuoteInput): Promise<StoreQuote
   const buyable = input.lines.filter((l) => l.quantity > 0 && l.issue !== 'UNAVAILABLE' && l.issue !== 'VARIANT_GONE');
   const itemsTotal = round2(buyable.reduce((sum, l) => sum + l.gross, 0));
   const mrpTotal = round2(buyable.reduce((sum, l) => sum + (l.mrp || l.unit_cost) * l.quantity, 0));
-  const coupon = await couponOn(input, itemsTotal);
+  const coupon = await couponOn(input, buyable, itemsTotal);
   const afterCoupon = round2(itemsTotal - coupon.discount);
   const cod = input.paymentMethod === 'COD';
   const prepaidDiscount =

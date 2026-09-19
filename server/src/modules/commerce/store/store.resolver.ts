@@ -15,6 +15,7 @@ import {
 import { storeOrderService } from './store.order.service';
 import { storeReturnService, type ReturnRequestInput } from './store.return.service';
 import { storeAutoshipService } from './store.autoship.service';
+import { ticketFromStore } from '@modules/support/ticket/ticket.fromStore';
 import { badInput, forbidden, notFound, sameSecret, toObjectId } from './store.shared';
 
 /**
@@ -67,6 +68,8 @@ export const storeResolvers = {
     storeCategory: (_p: unknown, a: Args) => storeStorefrontService.category(a.slug),
     storeCollection: (_p: unknown, a: Args) => storeStorefrontService.collection(a.slug),
     storeBrands: () => storeStorefrontService.brands(),
+    storePage: (_p: unknown, a: Args) => storeStorefrontService.page(a.slug),
+    storePincodeServiceable: (_p: unknown, a: Args) => storeStorefrontService.pincodeServiceable(a.pincode),
     storeDeliveryCheck: (_p: unknown, a: Args) =>
       storeStorefrontService.deliveryCheck(a.product_id, a.variant_id ?? null, a.pincode),
     storeSitemap: () => storeStorefrontService.sitemap(),
@@ -107,6 +110,7 @@ export const storeResolvers = {
     storeSubscribeStockAlert: (_p: unknown, a: Args, ctx: Ctx) =>
       storeCartService.subscribeStockAlert(ctx, a.product_id, a.variant_id ?? null, a.email),
     storeRecordView: (_p: unknown, a: Args) => storeCatalogService.recordView(a.product_id),
+    storeCreateSupportTicket: (_p: unknown, a: Args, ctx: Ctx) => ticketFromStore(ctx.user?.id ?? null, a.input ?? {}),
     storeRequestCodOtp: (_p: unknown, a: Args, ctx: Ctx) =>
       storeCheckoutService.requestCodOtp(ctx, a.cart_token, a.phone_extension, a.phone_number),
     storeVerifyCodOtp: (_p: unknown, a: Args) => storeCheckoutService.verifyCodOtp(a.challenge_id, a.code),

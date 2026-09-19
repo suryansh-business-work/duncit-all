@@ -21,6 +21,8 @@ export const couponTypeDefs = /* GraphQL */ `
     min_order_amount: Float!
     used_count: Int!
     is_active: Boolean!
+    "STORE coupons only: the products the code applies to. Empty = the whole store."
+    product_ids: [ID!]!
     created_at: String!
     updated_at: String!
   }
@@ -111,6 +113,8 @@ export const couponTypeDefs = /* GraphQL */ `
     per_user_limit: Int
     min_order_amount: Float
     is_active: Boolean
+    "STORE coupons only: limit the code to these products. Empty = the whole store."
+    product_ids: [ID!]
   }
 
   input UpdateCouponInput {
@@ -125,6 +129,7 @@ export const couponTypeDefs = /* GraphQL */ `
     per_user_limit: Int
     min_order_amount: Float
     is_active: Boolean
+    product_ids: [ID!]
   }
 
   extend type Query {

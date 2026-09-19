@@ -1,10 +1,10 @@
 import { firstFilled } from '../src/lib/text';
 
-import type { SeoProduct } from './documents';
+import type { SeoFaq, SeoProduct } from './documents';
 
 /**
  * schema.org JSON-LD for the pages a search engine can show as rich results:
- * a Product (price, stock, rating) and a BreadcrumbList.
+ * a Product (price, stock, rating), a BreadcrumbList, and an FAQPage.
  */
 export interface Crumb {
   name: string;
@@ -51,8 +51,21 @@ export function productLd(product: SeoProduct, url: string, description: string)
   return ld;
 }
 
+/** FAQPage rich result: each question with its accepted answer. */
+export function faqPageLd(faqs: SeoFaq[]) {
+  return {
+    '@context': SCHEMA,
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+  };
+}
+
 /** A JSON-LD script tag, with `<` escaped so the data can never close the tag. */
 export function jsonLdTag(data: unknown): string {
-  const json = JSON.stringify(data).replaceAll('<', String.raw`<`);
+  const json = JSON.stringify(data).replaceAll('<', String.raw`\u003c`);
   return `<script type="application/ld+json">${json}</script>`;
 }

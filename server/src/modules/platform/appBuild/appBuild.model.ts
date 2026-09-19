@@ -60,6 +60,48 @@ export interface IAppBuildPlayRelease {
   finished_at: Date | null;
 }
 
+/** Where a stored IPA can go from the portal: testers, or App Review. */
+export type AppStoreTrack = 'TESTFLIGHT' | 'APP_STORE';
+
+/**
+ * PUSHING for as long as the state machine below is working — an upload, then
+ * Apple's processing (minutes, sometimes half an hour), then the listing and
+ * the review submission — and the scheduler resumes it across restarts.
+ */
+export type AppStoreReleaseStatus = 'PUSHING' | 'RELEASED' | 'FAILED';
+
+/**
+ * Which part of the push is next. Kept on the row so a server that restarts
+ * mid-push carries on from where it was rather than uploading twice.
+ */
+export type AppStoreReleaseStep = 'UPLOAD' | 'PROCESSING' | 'LISTING' | 'SUBMIT' | 'DONE';
+
+/**
+ * One press of "Push to TestFlight / App Store" on this build. Appended, never
+ * replaced, like the Play releases above. The Apple ids it collects on the way
+ * are what make it resumable AND idempotent: a retry finds the build Apple
+ * already has instead of uploading it again.
+ */
+export interface IAppBuildAppStoreRelease {
+  track: AppStoreTrack;
+  status: AppStoreReleaseStatus;
+  step: AppStoreReleaseStep;
+  /** What is happening right now, for the row. */
+  stage: string;
+  asc_app_id: string;
+  build_upload_id: string;
+  asc_build_id: string;
+  version_id: string;
+  submission_id: string;
+  /** Why it FAILED. Empty otherwise. */
+  error: string;
+  by: string;
+  started_at: Date;
+  /** Last time the state machine touched this entry — how a dead push is told from a slow one. */
+  heartbeat_at: Date;
+  finished_at: Date | null;
+}
+
 /**
  * One file a build produced. Android makes two of these — the APK people
  * sideload and the AAB that goes to Play — from a single compile, so they
@@ -83,6 +125,13 @@ export interface IAppBuild extends Document {
   status: AppBuildStatus;
   /** app.json expo.version at the commit the build was made from. */
   version: string;
+  /**
+   * The store's build identifier: CFBundleVersion on iOS, versionCode on
+   * Android. The runner mints it (seconds since 2020) and reports it, because
+   * uploading a build to App Store Connect has to NAME it first. Empty on rows
+   * from before the reporter sent it — those cannot be pushed to Apple.
+   */
+  build_number: string;
   /** The store identifier this build shipped under — app.json's
    * ios.bundleIdentifier on iOS, android.package on Android. */
   bundle_id: string;
@@ -160,6 +209,8 @@ export interface IAppBuild extends Document {
   stages: IAppBuildStage[];
   /** Every push of this build's AAB to Google Play, oldest first. */
   play_releases: IAppBuildPlayRelease[];
+  /** Every push of this build's IPA to TestFlight or the App Store, oldest first. */
+  app_store_releases: IAppBuildAppStoreRelease[];
   /**
    * What happened to the Slack announcement. Slack is a NOTIFICATION, not the
    * store of record — the row is. An unposted build stays visible here.
@@ -213,6 +264,26 @@ const appBuildPlayReleaseSchema = new Schema<IAppBuildPlayRelease>(
   { _id: false }
 );
 
+const appBuildAppStoreReleaseSchema = new Schema<IAppBuildAppStoreRelease>(
+  {
+    track: { type: String, enum: ['TESTFLIGHT', 'APP_STORE'], required: true },
+    status: { type: String, enum: ['PUSHING', 'RELEASED', 'FAILED'], required: true },
+    step: { type: String, enum: ['UPLOAD', 'PROCESSING', 'LISTING', 'SUBMIT', 'DONE'], default: 'UPLOAD' },
+    stage: { type: String, default: '' },
+    asc_app_id: { type: String, default: '' },
+    build_upload_id: { type: String, default: '' },
+    asc_build_id: { type: String, default: '' },
+    version_id: { type: String, default: '' },
+    submission_id: { type: String, default: '' },
+    error: { type: String, default: '' },
+    by: { type: String, default: '' },
+    started_at: { type: Date, required: true },
+    heartbeat_at: { type: Date, required: true },
+    finished_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
 const appBuildSchema = new Schema<IAppBuild>(
   {
     build_no: { type: String, required: true, unique: true, index: true },
@@ -226,6 +297,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     // Empty until the runner reads app.json: a build queued from the portal is
     // a real row before anything has checked out the branch it will build.
     version: { type: String, default: '', trim: true, index: true },
+    build_number: { type: String, default: '', trim: true },
     bundle_id: { type: String, default: '', trim: true },
     artifacts: { type: [appBuildArtifactSchema], default: [] },
     build_name: { type: String, default: '' },
@@ -253,6 +325,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     stage: { type: String, default: '' },
     stages: { type: [appBuildStageSchema], default: [] },
     play_releases: { type: [appBuildPlayReleaseSchema], default: [] },
+    app_store_releases: { type: [appBuildAppStoreReleaseSchema], default: [] },
     slack_channel: { type: String, default: null },
     slack_ts: { type: String, default: null },
     slack_error: { type: String, default: null },
@@ -262,6 +335,9 @@ const appBuildSchema = new Schema<IAppBuild>(
 
 // Each platform tab reads its own builds newest-first.
 appBuildSchema.index({ platform: 1, created_at: -1 });
+
+// How the App Store scheduler finds the pushes it has to carry on with.
+appBuildSchema.index({ 'app_store_releases.status': 1 }, { sparse: true });
 
 // How a workflow's start-of-run and end-of-run reports find each other and
 // become one row. Deliberately NOT unique: workflow_run_id is '' on a

@@ -47,6 +47,10 @@ env:
   # The pet store: its storefront (canonical URLs, sitemap, email links) and
   # the console that runs it.
   ECOMM_URL: ${{ github.ref_name == 'staging' && 'https://staging.ecomm.duncit.com' || 'https://ecomm.duncit.com' }}
+  # Duncit Lite: the web app and its console. Both are served by ONE
+  # container; the URLs are compiled into the bundles for links and canonicals.
+  LITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.luma.duncit.com' || 'https://luma.duncit.com' }}
+  LITE_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.luma-portal.duncit.com' || 'https://luma-portal.duncit.com' }}
   # Build-time Google creds baked into the frontend bundles. Staging builds
   # prefer the STAGING_-prefixed secret and fall back to the production one
   # when it is not set. (Runtime service creds — SMTP/ImageKit/OpenAI/... —
@@ -195,6 +199,7 @@ jobs:
       analytics: ${{ steps.filter.outputs.analytics }}
       ecomm_portal: ${{ steps.filter.outputs.ecomm_portal }}
       ecomm_store: ${{ steps.filter.outputs.ecomm_store }}
+      lite: ${{ steps.filter.outputs.lite }}
       earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
       - uses: actions/checkout@v5
@@ -507,6 +512,15 @@ jobs:
               - '.github/workflows/deploy.yml'
             ecomm_portal:
               - 'portals/ecomm-portal/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            lite:
+              - 'lite/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -1822,6 +1836,40 @@ jobs:
               --cache-to   type=gha,scope=duncit-ecomm-store${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
+  # Duncit Lite: API + web app + console in one image (lite/Dockerfile).
+  build-lite:
+    needs: changes
+    if: needs.changes.outputs.lite == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: duncit-lite
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push lite
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file lite/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-lite:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-lite:${{ env.SHA_TAG }} \
+              --build-arg VITE_LITE_SITE_URL=${{ env.LITE_URL }} \
+              --build-arg VITE_LITE_PORTAL_URL=${{ env.LITE_PORTAL_URL }} \
+              --cache-from type=gha,scope=duncit-lite${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-lite${{ env.SCOPE_SUFFIX }},mode=max \
+              --push .
+
   build-earnwith:
     needs: changes
     if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
@@ -1862,8 +1910,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-ecomm-portal, build-ecomm-store, build-earnwith]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-ecomm-portal.result == 'success' || needs.build-ecomm-store.result == 'success' || needs.build-earnwith.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-venues, build-clubs, build-club-admins, build-hosts, build-pods, build-communications, build-logs, build-analytics, build-ecomm-portal, build-ecomm-store, build-earnwith, build-lite]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-venues.result == 'success' || needs.build-clubs.result == 'success' || needs.build-club-admins.result == 'success' || needs.build-hosts.result == 'success' || needs.build-pods.result == 'success' || needs.build-communications.result == 'success' || needs.build-logs.result == 'success' || needs.build-analytics.result == 'success' || needs.build-ecomm-portal.result == 'success' || needs.build-ecomm-store.result == 'success' || needs.build-earnwith.result == 'success' || needs.build-lite.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Branch-aware deploy target: the staging stack lives side-by-side with
@@ -1940,6 +1988,7 @@ jobs:
           [ "${{ needs.build-ecomm-portal.result }}" = "success" ] && PARTS+=("ecomm-portal")
           [ "${{ needs.build-ecomm-store.result }}" = "success" ] && PARTS+=("ecomm-store")
           [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
+          [ "${{ needs.build-lite.result }}" = "success" ] && PARTS+=("lite")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -1961,6 +2010,13 @@ jobs:
           JWT_SECRET:            ${{ github.ref_name == 'staging' && secrets.STAGING_JWT_SECRET || secrets.JWT_SECRET }}
           OPENWA_API_MASTER_KEY: ${{ github.ref_name == 'staging' && secrets.STAGING_OPENWA_API_MASTER_KEY || secrets.OPENWA_API_MASTER_KEY }}
           STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
+          # Duncit Lite's OWN database. With no LITE_MONGO_URI secret it uses
+          # the same Mongo host as the main stack but a separate database name
+          # (duncit-lite / duncit-lite-staging) — never the main data. Its JWT
+          # secret is its own too; the main one is only the first-deploy fallback.
+          LITE_MONGO_URI:        ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_MONGO_URI || secrets.LITE_MONGO_URI }}
+          LITE_JWT_SECRET:       ${{ github.ref_name == 'staging' && secrets.STAGING_LITE_JWT_SECRET || secrets.LITE_JWT_SECRET }}
+          LITE_ADMIN_EMAILS:     ${{ secrets.LITE_ADMIN_EMAILS }}
         run: |
           envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
           # OpenWA gateway env (SQLite + session data on the mounted /app/data
@@ -2076,6 +2132,26 @@ jobs:
           DEFAULT_SUPER_ADMIN_PASSWORD=${STAGING_SUPER_ADMIN_PASSWORD}
           EOF
           fi
+          # Duncit Lite's env (lite.env): its own database name on every stack,
+          # its own JWT secret, the two public URLs the emails and calendar
+          # feeds link to, and the main API a "Sign in with Duncit" code is
+          # proved against. Service credentials (SMTP, ImageKit, Google) live
+          # in the Lite console's Environment page, not here.
+          LITE_DB_NAME="duncit-lite"
+          if [ "${{ env.DEPLOY_ENV }}" = "staging" ]; then LITE_DB_NAME="duncit-lite-staging"; fi
+          cat > /tmp/lite.env <<EOF
+          NODE_ENV=production
+          APP_ENV=${{ env.DEPLOY_ENV }}
+          PORT=2040
+          LITE_MONGO_URI=${LITE_MONGO_URI:-$MONGO_URI}
+          LITE_MONGO_DB_NAME=${LITE_DB_NAME}
+          LITE_JWT_SECRET=${LITE_JWT_SECRET:-$JWT_SECRET}
+          LITE_SITE_URL=${{ env.LITE_URL }}
+          LITE_PORTAL_URL=${{ env.LITE_PORTAL_URL }}
+          LITE_ADMIN_EMAILS=${LITE_ADMIN_EMAILS:-admin@duncit.com}
+          DUNCIT_GRAPHQL_URL=${{ env.GRAPHQL_URL }}
+          DUNCIT_APP_URL=${{ env.MWEB_URL }}
+          EOF
 
       - name: Push files to VPS
         run: |
@@ -2088,13 +2164,15 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/server.env
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/open-wa.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/open-wa.env
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/lite.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/lite.env
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/redeploy.sh
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/${{ env.NGINX_SITE }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/nginx/${{ env.NGINX_SITE }}
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh; chmod 755 ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/app-builds"
+            "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env ${{ env.STACK_DIR }}/lite.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh; chmod 755 ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/app-builds"
 
       - name: Configure nginx + TLS (production)
         if: env.DEPLOY_ENV == 'production'
@@ -2123,7 +2201,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com ecomm.duncit.com ecomm-portal.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com venues.duncit.com clubs.duncit.com club-admins.duncit.com hosts.duncit.com pods.duncit.com communications.duncit.com logs.duncit.com analytics.duncit.com ecomm.duncit.com ecomm-portal.duncit.com luma.duncit.com luma-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -2180,7 +2258,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com staging.venues.duncit.com staging.clubs.duncit.com staging.club-admins.duncit.com staging.hosts.duncit.com staging.pods.duncit.com staging.communications.duncit.com staging.logs.duncit.com staging.analytics.duncit.com staging.ecomm.duncit.com staging.ecomm-portal.duncit.com staging.luma.duncit.com staging.luma-portal.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else
@@ -2242,6 +2320,9 @@ jobs:
               echo
               # open-wa is optional/stateful — never block the gate on it.
               curl -fsSI http://127.0.0.1:$((2024+O))/ | head -1 || true
+              # Duncit Lite answers /health once its own database is connected.
+              echo -n "$((2040+O)) lite: "
+              curl -fsS http://127.0.0.1:$((2040+O))/health | head -c 120; echo
               for p in 2000 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2022 2025 2026 2027; do
                 echo -n "$((p+O)): "
                 curl -fsSI http://127.0.0.1:$((p+O))/ | head -1

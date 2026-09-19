@@ -201,6 +201,12 @@ on a pod, the cart, the catalogue, brand and ShipRocket warehouse registration, 
 orders and the E-commerce studio. It ships OFF, and the server refuses product operations
 while it is off, so hiding a button is never the only thing holding the line.
 
+The hook reads the flags `cache-and-network` and polls them once a minute: a console that
+stayed open while an admin flipped the switch used to keep the cached `false` for the whole
+session (the Products portal sidebar showed only Dashboard until a reload). The first paint
+still answers from the cache, so nothing flashes; the minute matches the server's own
+response-cache TTL for `publicFeatureFlags`.
+
 ```ts
 const { pending, visible } = useProductVisibility();
 

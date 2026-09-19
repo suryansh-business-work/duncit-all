@@ -86,6 +86,20 @@ export const appConfig = {
       ],
     },
     {
+      // Beside Server and Database: the zone is what points every *.duncit.com
+      // host at that server, and a new portal's A record is added here rather
+      // than by someone logged in to GoDaddy. The key lives in Environment
+      // Variables → GoDaddy like every other credential.
+      label: 'DNS Config', labelKey: 'shell.nav.dnsConfig',
+      icon: 'language',
+      children: [
+        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/dns/records', icon: 'dns' },
+      ],
+    },
+    // Beside DNS Config: both decide something about every public website —
+    // one where its name points, the other where its traffic is reported.
+    { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },
+    {
       // Beside Server rather than under it: a ceiling is a platform-wide
       // policy, and the systems it governs are the portals, the two apps and
       // the websites — not the box any of it happens to run on.
@@ -114,6 +128,9 @@ export const appConfig = {
       children: [
         { label: 'Android', labelKey: 'shell.nav.android', to: '/app-builds/android', icon: 'android' },
         { label: 'iOS', labelKey: 'shell.nav.ios', to: '/app-builds/ios', icon: 'apple' },
+        // What the stores show — name, descriptions, screenshots, review contact —
+        // kept once and applied by every push from the two tables above.
+        { label: 'Store Listing', labelKey: 'shell.nav.storeListing', to: '/app-builds/store-listing', icon: 'storefront' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },

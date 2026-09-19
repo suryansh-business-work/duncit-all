@@ -82,6 +82,10 @@ export default [
       'app/mweb/src/**/*.{tsx,jsx}',
       'portals/*/src/**/*.{tsx,jsx}',
       'packages/*/src/**/*.{tsx,jsx}',
+      // Duncit Lite: the web app, the console and what they share.
+      'lite/web/**/*.{tsx,jsx}',
+      'lite/portal/**/*.{tsx,jsx}',
+      'lite/shared/**/*.{tsx,jsx}',
     ],
     plugins: {
       'jsx-a11y': jsxA11y,

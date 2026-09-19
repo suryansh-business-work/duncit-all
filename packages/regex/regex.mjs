@@ -105,6 +105,13 @@ export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 
 /**
+ * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
+ * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
+ * server checks the same shape before Tech → Google Analytics saves a tag.
+ */
+export const GA_MEASUREMENT_ID = /^G-[A-Z\d]{6,16}$/;
+
+/**
  * Keep only the digits in a string.
  *
  * The rule behind every number-only box: a phone field is typed into, pasted

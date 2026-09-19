@@ -286,14 +286,17 @@ describe('account', () => {
     expect(pickups[0]).toEqual({
       id: '88121',
       nickname: 'DUN-WH-NOIDA',
-      address: 'B-14, Sector 63',
+      name: '',
+      email: '',
+      address_line1: 'B-14, Sector 63',
+      address_line2: '',
       city: 'Noida',
       state: 'Uttar Pradesh',
       pincode: '201301',
       phone: '9811022334',
       verified: true,
     });
-    expect(pickups[1]).toMatchObject({ address: '12 Hosur Rd, Bommanahalli', verified: true });
+    expect(pickups[1]).toMatchObject({ address_line1: '12 Hosur Rd', address_line2: 'Bommanahalli', verified: true });
     expect(pickups[2]).toMatchObject({ nickname: 'Primary', verified: false });
   });
 

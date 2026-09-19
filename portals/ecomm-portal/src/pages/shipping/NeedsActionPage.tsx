@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { useQuery } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
+import ReplayIcon from '@mui/icons-material/Replay';
+import { DuncitButton } from '@duncit/buttons';
+import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import type { DuncitColumn } from '@duncit/table';
 import { PageHeader, QueryGuard } from '@duncit/ui';
@@ -9,7 +12,8 @@ import BuyerCell from '../../components/BuyerCell';
 import ClientTable from '../../components/ClientTable';
 import CodeWithDate from '../../components/CodeWithDate';
 import { OrderStatusChip } from '../../components/chips';
-import { STORE_SHIPMENT_ALERTS, type AlertOrder } from '../orders/shipping-queries';
+import { runAction } from '../../lib/actions';
+import { RETRY_FAILED_BOOKINGS, STORE_SHIPMENT_ALERTS, type AlertOrder, type BookingRetry } from '../orders/shipping-queries';
 
 const searchOf = (row: AlertOrder) => `${row.order_no} ${row.buyer_name} ${row.buyer_email} ${row.shiprocket.awb}`;
 const idOf = (row: AlertOrder) => row.id;
@@ -29,8 +33,29 @@ const renderReason = (row: AlertOrder) => (
 export default function NeedsActionPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const { data, loading, error } = useQuery(STORE_SHIPMENT_ALERTS, { fetchPolicy: 'cache-and-network' });
+  const [retry, retryState] = useMutation(RETRY_FAILED_BOOKINGS, { refetchQueries: ['StoreShipmentAlerts'], awaitRefetchQueries: true });
   const rows = data?.storeShipmentAlerts ?? [];
+  const failedCount = rows.filter((row) => row.fulfilment_status === 'FAILED').length;
+
+  const retryAll = async () => {
+    const ok = await confirm({
+      title: t('ecommPortal.shipping.retryAllTitle'),
+      message: t('ecommPortal.shipping.retryAllMessage', { vars: { count: failedCount } }),
+      confirmLabel: t('ecommPortal.shipping.retryAll'),
+      cancelLabel: t('shell.common.cancel'),
+    });
+    if (!ok) return;
+    let outcome: BookingRetry = { attempted: 0, booked: 0, failed: 0 };
+    await runAction(
+      async () => {
+        const result = await retry();
+        outcome = result.data?.storeRetryFailedBookings ?? outcome;
+      },
+      () => t('ecommPortal.shipping.retryAllDone', { vars: { ...outcome } }),
+    );
+  };
   const columns = useMemo<DuncitColumn<AlertOrder>[]>(
     () => [
       { field: 'order_no', headerName: t('shell.common.order'), type: 'text', width: 180, cellRenderer: renderOrder },
@@ -42,7 +67,15 @@ export default function NeedsActionPage() {
   );
   return (
     <Stack spacing={3}>
-      <PageHeader title={t('ecommPortal.nav.needsAction')} subtitle={t('ecommPortal.shipping.needsActionSubtitle')} />
+      <PageHeader
+        title={t('ecommPortal.nav.needsAction')}
+        subtitle={t('ecommPortal.shipping.needsActionSubtitle')}
+        actions={
+          <DuncitButton variant="contained" startIcon={<ReplayIcon />} disabled={failedCount === 0} loading={retryState.loading} onClick={retryAll}>
+            {t('ecommPortal.shipping.retryAll')}
+          </DuncitButton>
+        }
+      />
       <QueryGuard loading={loading && !data} error={error}>
         {() => (
           <ClientTable<AlertOrder>

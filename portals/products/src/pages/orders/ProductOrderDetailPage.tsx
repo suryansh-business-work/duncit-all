@@ -62,10 +62,13 @@ export default function ProductOrderDetailPage() {
     }
   };
 
-  const confirmShipment = async (pickupLocationId: string) => {
-    await run('Shipment created', () =>
-      createShipment({ variables: { id: orderId, pickup_location: pickupLocationId } }),
-    );
+  // Booking never throws for a courier's refusal — the reason lands on the order, so read it back.
+  const confirmShipment = async (pickupNickname: string) => {
+    await run(t('products.orders.shipmentBooked'), async () => {
+      const result = await createShipment({ variables: { id: orderId, pickup_location: pickupNickname } });
+      const failure = result.data?.createProductOrderShipment?.last_error;
+      if (failure) throw new Error(failure);
+    });
     setShipmentOpen(false);
   };
 

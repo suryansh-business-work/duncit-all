@@ -28,6 +28,7 @@ import RateLimitBlockedPage from './pages/rate-limiting/blocked';
 import RateLimitSettingsPage from './pages/rate-limiting/settings';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
+import StoreListingPage from './pages/app-builds/store-listing';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
 import E2eFlowsPage from './pages/e2e/flows';
@@ -43,6 +44,8 @@ import GraphqlFieldsPage from './pages/graphql-monitor/fields';
 import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
+import DnsRecordsPage from './pages/dns';
+import GoogleAnalyticsPage from './pages/google-analytics';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -105,6 +108,11 @@ export default function App() {
         <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
         <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />
+        {/* The GoDaddy zone behind every *.duncit.com host. */}
+        <Route path="/dns" element={<Navigate to="/dns/records" replace />} />
+        <Route path="/dns/records" element={authed(<DnsRecordsPage />)} />
+        {/* The GA4 tag each Duncit website loads, one per website. */}
+        <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
         {/* Rate limiting. Systems is the landing page: which callers exist and
             what they spend is what a limit has to be written against. */}
         <Route path="/rate-limiting" element={<Navigate to="/rate-limiting/systems" replace />} />
@@ -129,6 +137,7 @@ export default function App() {
           element={authed(<AppBuildsPage key="ios" platform="IOS" />)}
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
+        <Route path="/app-builds/store-listing" element={authed(<StoreListingPage />)} />
         {/* Every run of the end-to-end suite, and the nightly schedule that
             produces most of them. The workflow has no cron of its own — the
             schedule below is the only thing that starts a scheduled run. */}

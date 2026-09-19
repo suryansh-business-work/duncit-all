@@ -24,6 +24,14 @@ export default defineDemos('brand', [
         { name: 'SocialLinks.astro', renders: 'The social icon row, from admin-configured URLs.' },
         { name: 'AppDownload.astro', renders: 'The store badges, pointed at the live listings.' },
         { name: 'AppPhone.astro', renders: 'The phone mockup used on landing hero sections.' },
+        {
+          name: 'GoogleAnalytics.astro',
+          renders: 'The gtag.js tag this website has in Tech → Google Analytics (e.g. G-V0CTVZFGM0 for MAIN), read as the page opens.',
+        },
+        {
+          name: 'google-analytics',
+          renders: 'loadGoogleAnalytics(graphqlUrl, site) — the same loader for the React sites (STATUS, ECOMM).',
+        },
       ],
     },
     compute: (mock) => ({

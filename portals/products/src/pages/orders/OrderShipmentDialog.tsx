@@ -20,7 +20,8 @@ interface Props {
   order: any;
   submitting?: boolean;
   onClose: () => void;
-  onConfirm: (pickupLocationId: string) => void;
+  /** The chosen warehouse's NICKNAME — the pickup name ShipRocket books the order under. */
+  onConfirm: (pickupNickname: string) => void;
 }
 
 function derivePickupOwner(order: any) {
@@ -44,11 +45,12 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
 
   useEffect(() => {
     if (!open) return;
-    const preset = order.pickup_location_id || locations.find((item: any) => item.is_default)?.id || '';
-    setSelected(preset);
+    // An order carries its warehouse's nickname; start there, else on the owner's default.
+    const current = locations.find((item: any) => item.nickname === order.pickup_location_id);
+    setSelected((current ?? locations.find((item: any) => item.is_default))?.nickname ?? '');
   }, [open, locations, order.pickup_location_id]);
 
-  const chosen = locations.find((item: any) => item.id === selected);
+  const chosen = locations.find((item: any) => item.nickname === selected);
   const notRegistered = chosen && !chosen.shiprocket_registered;
 
   return (
@@ -70,7 +72,7 @@ export default function OrderShipmentDialog({ open, order, submitting, onClose, 
             helperText={locations.length === 0 ? 'No pickup locations found for this owner.' : ' '}
           >
             {locations.map((location: any) => (
-              <MenuItem key={location.id} value={location.id}>
+              <MenuItem key={location.id} value={location.nickname}>
                 {location.nickname} — {location.city}
                 {location.is_default ? ' (default)' : ''}
               </MenuItem>

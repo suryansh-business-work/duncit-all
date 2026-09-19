@@ -46,7 +46,7 @@ export default defineDemos('app-settings', [
     id: 'product-visibility',
     title: 'The product kill switch, and why a route gate waits',
     note:
-      "Flip is_product_visible to true and every product surface returns. Empty the flag list to see the loading beat: visible is already false (nothing flashes on), but pending says a route gate must WAIT rather than redirect a bookmarked /shop link home. The last line is useFeatureFlagState('auto_pods') — the same two-part answer for any flag, which is what keeps a reload of Admin > Auto Pods on Auto Pods.",
+      "Flip is_product_visible to true and every product surface returns. Empty the flag list to see the loading beat: visible is already false (nothing flashes on), but pending says a route gate must WAIT rather than redirect a bookmarked /shop link home. In a live console the hook re-reads the flags on every mount and once a minute (cache-and-network + a 60 s poll), so an admin's flip reaches an open Products portal without a reload. The last line is useFeatureFlagState('auto_pods') — the same two-part answer for any flag, which is what keeps a reload of Admin > Auto Pods on Auto Pods.",
     mock: {
       loading: true,
       publicFeatureFlags: [

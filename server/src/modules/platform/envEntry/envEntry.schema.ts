@@ -37,6 +37,7 @@ const SDL_CATEGORIES = [
   'APPLE_SIGNIN',
   'APP_STORE_CONNECT',
   'SONARQUBE',
+  'GODADDY',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -68,6 +69,7 @@ export const envEntryTypeDefs = gql`
     APPLE_SIGNIN
     APP_STORE_CONNECT
     SONARQUBE
+    GODADDY
   }
 
   type EnvConfigPair {

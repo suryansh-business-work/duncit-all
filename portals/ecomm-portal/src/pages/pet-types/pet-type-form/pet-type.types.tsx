@@ -11,6 +11,7 @@ export const makePetTypeSchema = (t: Translate) => {
     icon_url: rules.link(),
     image_url: rules.link(),
     is_active: z.boolean(),
+    category_ids: rules.ids(),
   });
 };
 
@@ -24,4 +25,5 @@ export const toPetTypeValues = (petType: StorePetType | null): PetTypeValues => 
   icon_url: petType?.icon_url ?? '',
   image_url: petType?.image_url ?? '',
   is_active: petType?.is_active ?? true,
+  category_ids: petType?.category_ids ?? [],
 });

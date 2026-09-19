@@ -43,6 +43,8 @@
     "dev:analytics": "pnpm --filter analytics dev",
     "dev:ecomm-portal": "pnpm --filter ecomm-portal dev",
     "dev:ecomm-store": "pnpm --filter ecomm-store dev",
+    "dev:lite": "pnpm --filter duncit-lite dev",
+    "dev:lite-server": "pnpm --filter duncit-lite dev:server",
     "run:all": "pnpm kill-ports:all && node scripts/dev-banner.mjs",
     "kill-ports:all": "node scripts/kill-ports.mjs",
     "build": "pnpm --recursive --if-present build",
@@ -81,6 +83,7 @@
     "build:analytics": "pnpm --filter analytics build",
     "build:ecomm-portal": "pnpm --filter ecomm-portal build",
     "build:ecomm-store": "pnpm --filter ecomm-store build",
+    "build:lite": "pnpm --filter duncit-lite build",
     "typecheck": "pnpm --recursive --if-present build",
     "test:forms": "pnpm --filter admin test:forms && pnpm --filter mweb-app test:forms && pnpm --filter ads-portal test:forms && pnpm --filter crm test:forms && pnpm --filter finance test:forms && pnpm --filter tech test:forms && pnpm --filter support test:forms && pnpm --filter website-app test:forms && pnpm --filter legal test:forms && pnpm --filter ai test:forms && pnpm --filter products test:forms && pnpm --filter marketing test:forms && pnpm --filter onboarding test:forms && pnpm --filter hr test:forms && pnpm --filter employee test:forms && pnpm --filter challenge-portal test:forms && pnpm --filter developers-portal test:forms",
     "test:forms:admin": "pnpm --filter admin test:forms",
@@ -133,7 +136,7 @@
     "dup": "node scripts/verify-duplication.mjs",
     "dup:report": "node scripts/verify-duplication.mjs --summary=duplication-report.md",
     "dup:update": "node scripts/verify-duplication.mjs --update",
-    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 app/mweb/src portals packages"
+    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 app/mweb/src portals packages lite/web lite/portal lite/shared"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

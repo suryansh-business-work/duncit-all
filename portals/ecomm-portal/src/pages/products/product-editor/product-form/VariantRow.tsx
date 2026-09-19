@@ -22,6 +22,8 @@ interface VariantRowProps {
 const VARIANT_GRID = {
   display: 'grid',
   columnGap: 1.5,
+  // Wrapped rows need this room, or the next input's floating label sits on the hint above it.
+  rowGap: 2,
   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '2fr 1.5fr 1fr 1fr 1fr' },
 } as const;
 

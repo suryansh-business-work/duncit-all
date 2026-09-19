@@ -33,7 +33,11 @@ function SupportColumn() {
   );
 }
 
-/** Aisles, policies, support contacts, social links and the newsletter. */
+/**
+ * Aisles, policies, support contacts, social links and the newsletter. On a
+ * phone its bottom padding is the room the floating bottom nav sits in, so the
+ * nav never covers the last links.
+ */
 export function Footer() {
   const { t } = useStoreT();
   const s = useStoreSettings();
@@ -41,7 +45,7 @@ export function Footer() {
   const dates = useDateFormat();
   const aisles = categories.filter((c) => c.show_in_menu).slice(0, 8);
   return (
-    <Box component="footer" sx={{ bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider', mt: 6 }}>
+    <Box component="footer" sx={{ bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider', mt: 6, pb: { xs: 12, md: 0 } }}>
       <Container maxWidth="xl" sx={{ py: 5 }}>
         <Box sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' } }}>
           <FooterColumn title={t('ecommStore.footer.shop')}>

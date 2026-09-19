@@ -35,7 +35,8 @@ export function AppShell() {
   useRouteFocus(mainRef);
   const isHome = pathname === '/';
   return (
-    <>
+    // A full-height column whose main grows, so the footer always ends the page.
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       <Link
         href={`#${MAIN_ID}`}
         sx={{
@@ -53,7 +54,7 @@ export function AppShell() {
       </Link>
       <Header />
       {isHome ? null : <MobileTopBar />}
-      <Box component="main" id={MAIN_ID} ref={mainRef} tabIndex={-1} sx={{ outline: 'none', minHeight: '60vh', pb: { xs: 12, md: 0 } }}>
+      <Box component="main" id={MAIN_ID} ref={mainRef} tabIndex={-1} sx={{ outline: 'none', flexGrow: 1, minHeight: '60vh' }}>
         <Suspense fallback={<Loader label={t('ecommStore.common.loading')} />}>
           <Container maxWidth="lg" sx={{ py: { xs: 1, md: 3 } }}>
             <Outlet />
@@ -67,6 +68,6 @@ export function AppShell() {
       <LiveRegion />
       <OnboardingSplash />
       <ScrollRestoration />
-    </>
+    </Box>
   );
 }

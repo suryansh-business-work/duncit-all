@@ -312,6 +312,9 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
     product: {
       gallery: 'Product photos',
       showImage: 'Show photo {n} of {total}',
+      photoPicker: 'Choose a photo',
+      previousImage: 'Previous photo',
+      nextImage: 'Next photo',
       valueSoldOut: '{value}, sold out',
       chooseOption: 'Choose an option to continue.',
       lowStock: 'Hurry — only {count} left.',

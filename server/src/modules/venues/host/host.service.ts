@@ -410,13 +410,47 @@ export const hostService = {
     }
     return toPub(h);
   },
+  /**
+   * The Review step's Reject on the Onboarded page.
+   *
+   * On the transition it tells the applicant on both channels — the
+   * `host_onboarding_rejection` campaign and the `host-onboarding-rejected`
+   * email — off one array of values, exactly as `approve` does for the
+   * welcome. It used to write the status and say nothing: the interview's Deny
+   * sent the rejection, but a record rejected under Review went quiet.
+   *
+   * The reason is required because the message prints it — the funnel refuses
+   * a blank value rather than bill for "Reason: ".
+   *
+   * The slot is this decision's own stamp, not the host record: a rejected host
+   * re-applies on the SAME record, so a later rejection is a second message and
+   * not a duplicate of the first.
+   */
   async reject(id: string, notes: string) {
+    const reason = notes?.trim() ?? '';
+    if (!reason) {
+      throw new GraphQLError('Add the reason before rejecting', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    // Re-rejecting is how an admin edits the note, so it stays allowed — the
+    // message only goes out on the transition.
+    const wasRejected = h.status === 'REJECTED';
+    const decidedAt = new Date();
     h.status = 'REJECTED';
-    h.rejected_at = new Date();
-    h.reviewer_notes = notes;
+    h.rejected_at = decidedAt;
+    h.reviewer_notes = reason;
     await h.save();
+    if (!wasRejected) {
+      await notifyEvent({
+        event: 'HOST_ONBOARDING_REJECTED',
+        entityId: `${String(h._id)}:${decidedAt.getTime()}`,
+        user: await waRecipient(h.user_id),
+        name: h.full_name,
+        params: [h.full_name, reason],
+        email: h.email,
+      });
+    }
     return toPub(h);
   },
   async adminCreate(opts: {

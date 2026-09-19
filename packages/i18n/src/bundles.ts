@@ -47,6 +47,7 @@ import { POD_FORM_BUNDLE } from './bundles/pod-form';
 import { CLUB_FORM_BUNDLE } from './bundles/club-form';
 import { POD_DETAILS_BUNDLE } from './bundles/pod-details';
 import { SUPPORT_BUNDLE } from './bundles/support';
+import { TABS_BUNDLE } from './bundles/tabs';
 import { TECH_BUNDLE } from './bundles/tech';
 import { WEBSITE_BUNDLE } from './bundles/website';
 import { WEBSITE_APP_BUNDLE } from './bundles/website-app';
@@ -114,6 +115,7 @@ export {
   CLUB_FORM_BUNDLE,
   POD_DETAILS_BUNDLE,
   SUPPORT_BUNDLE,
+  TABS_BUNDLE,
   TECH_BUNDLE,
   UI_BUNDLE,
   VERIFICATION_BUNDLE,
@@ -178,6 +180,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   clubForm: CLUB_FORM_BUNDLE,
   podDetailsPanel: POD_DETAILS_BUNDLE,
   support: SUPPORT_BUNDLE,
+  tabs: TABS_BUNDLE,
   tech: TECH_BUNDLE,
   website: WEBSITE_BUNDLE,
   websiteApp: WEBSITE_APP_BUNDLE,

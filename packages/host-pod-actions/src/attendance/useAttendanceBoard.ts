@@ -22,6 +22,8 @@ export interface AttendanceBoardApi {
   choiceRow: PodAttendanceRow | null;
   /** The attendee a Club Admin is about to mark by hand, or null. */
   forceRow: PodAttendanceRow | null;
+  /** The page-level by-name search is open (Club Admin only). */
+  directOpen: boolean;
   /** Row's Mark button: the host's next step, or the Club Admin's choice. */
   startMark: (row: PodAttendanceRow) => void;
   /** OTP dialog succeeded — spend the challenge on the row it was raised for. */
@@ -30,9 +32,14 @@ export interface AttendanceBoardApi {
   chooseOtp: () => void;
   /** Club Admin picked the by-name door. */
   chooseDirect: () => void;
+  /** Open the page-level by-name search. */
+  openDirect: () => void;
+  /** A booking was picked out of that search — confirm it like any other. */
+  pickDirect: (row: PodAttendanceRow) => void;
   cancelOtp: () => void;
   cancelChoice: () => void;
   cancelForce: () => void;
+  cancelDirect: () => void;
   confirmForce: (row: PodAttendanceRow, companions: readonly NamedCompanionInput[]) => void;
 }
 
@@ -65,6 +72,7 @@ export function useAttendanceBoard(
   const [otpRow, setOtpRow] = useState<PodAttendanceRow | null>(null);
   const [choiceRow, setChoiceRow] = useState<PodAttendanceRow | null>(null);
   const [forceRow, setForceRow] = useState<PodAttendanceRow | null>(null);
+  const [directOpen, setDirectOpen] = useState(false);
 
   const board: PodAttendanceBoard | undefined = data?.podAttendanceBoard;
 
@@ -184,6 +192,19 @@ export function useAttendanceBoard(
     [markAsClubAdmin]
   );
 
+  /**
+   * A booking picked out of the by-name search.
+   *
+   * Straight to the force dialog rather than back through the chooser: the
+   * admin has already said which door this is by opening the by-name one, and
+   * the warning that names the person is the step that must not be skipped
+   * (rule 41).
+   */
+  const pickDirect = useCallback((row: PodAttendanceRow) => {
+    setDirectOpen(false);
+    setForceRow(row);
+  }, []);
+
   return {
     board,
     loading: loading && !board,
@@ -193,13 +214,17 @@ export function useAttendanceBoard(
     otpRow,
     choiceRow,
     forceRow,
+    directOpen,
     startMark,
     finishMark,
+    pickDirect,
     chooseOtp: useCallback(() => handOff(setOtpRow), [handOff]),
     chooseDirect: useCallback(() => handOff(setForceRow), [handOff]),
+    openDirect: useCallback(() => setDirectOpen(true), []),
     cancelOtp: useCallback(() => setOtpRow(null), []),
     cancelChoice: useCallback(() => setChoiceRow(null), []),
     cancelForce: useCallback(() => setForceRow(null), []),
+    cancelDirect: useCallback(() => setDirectOpen(false), []),
     confirmForce,
   };
 }

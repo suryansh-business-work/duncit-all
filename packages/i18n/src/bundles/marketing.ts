@@ -186,6 +186,101 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       noNotificationsYet: 'No notifications yet',
       silentInAppOnlyNoPush: 'Silent (in-app only — no push alert)',
     },
+    /**
+     * Marketing > External Links — short links to pages we do not run, and the
+     * one privacy policy every short link is recorded under. The links
+     * themselves are the same rows as shortLinks.*; only this page's own copy
+     * lives here.
+     */
+    externalLinks: {
+      title: 'External Links',
+      subtitle:
+        'Shorten any public URL to a duncit.com link and see every click on it — where it came from, on what, from where.',
+      tabLinks: 'Links',
+      tabPrivacy: 'Privacy & GDPR',
+      newLink: 'New external link',
+      newLinkBlurb:
+        'You get a duncit.com link to somebody else’s page, with the same click analytics as our own.',
+      destinationHint:
+        'The public https:// page this link should open, e.g. https://partner.example.com/offer',
+      destinationInvalid:
+        'Use a full https:// link to a public site — a Duncit address belongs on the Short Links page',
+      noLinksYet: 'No external links yet. Create one to shorten a non-Duncit URL.',
+      deleteTitle: 'Delete this external link?',
+      deleteMessage:
+        '“{label}” stops working immediately — anywhere it is already printed or posted will 404. Retire it instead if you only want to stop new traffic.',
+      deleted: '“{label}” deleted',
+      couldNotDelete: 'Could not delete the link',
+      leavesDuncitTitle: 'This link leaves Duncit',
+      leavesDuncitBody:
+        'Everything below is measured at the click, which is all we can see. The page this link opens is not one we run, so there is no signup or payment to attribute to it.',
+      retentionAndConsent: 'Retention and consent',
+      retentionAndConsentHint:
+        'One policy for every short link. Changes take effect on the next click — nothing already recorded is rewritten.',
+      keepClicksFor: 'Keep clicks for',
+      keepClicksHint:
+        'Between {min} and {max} days. A daily sweep deletes every click older than this.',
+      obeyConsentSignals: 'Obey Do-Not-Track and Global Privacy Control',
+      obeyConsentHint:
+        'When a visitor’s browser sends Sec-GPC or DNT, the click is still counted but nothing that could single them out is written — no address hash, no city, no user agent.',
+      blockedDomains: 'Blocked domains',
+      blockedDomainsHint:
+        'One domain per line. Each entry covers its subdomains, and a link can never be created pointing at one.',
+      savePrivacy: 'Save privacy settings',
+      privacySaved: 'Privacy settings saved',
+      couldNotSavePrivacy: 'Could not save the privacy settings',
+      couldNotLoadPolicy: 'Could not load the policy',
+      retentionNotANumber: 'Retention has to be a number of days',
+      retentionNotWhole: 'Retention has to be a whole number of days',
+      retentionTooShort: 'Keep clicks for at least {min} days',
+      retentionTooLong: 'Keep clicks for at most {max} days',
+      domainsOnePerLine: 'One domain per line, with no spaces',
+      storedClickData: 'Stored click data',
+      storedClickDataHint: 'Across every short link, Duncit and external.',
+      clicksStored: 'Clicks stored',
+      pastRetention: 'Past the retention window',
+      minimisedOnRequest: 'Minimised on request',
+      deletedBelow: 'Deleted below',
+      lastSweep: 'Last sweep',
+      lastSweepValue: '{when} · {count} removed',
+      sweepNotRunYet: 'Not run yet',
+      saltLastRotated: 'Salt last rotated',
+      dataActions: 'Data actions',
+      dataActionsHint: 'Both act on every short link at once and neither can be undone.',
+      rotateSalt: 'Rotate address salt',
+      rotateSaltHint: 'Makes every hash written so far unlinkable to anything written after it.',
+      rotateSaltTitle: 'Rotate the address salt?',
+      rotateSaltMessage:
+        'Every address hash written so far stops being comparable to anything written after this, so a visitor recorded yesterday can never be recognised again. Unique-visitor counts will split across today — that is the price of the guarantee, and it cannot be undone.',
+      rotateSaltConfirm: 'Rotate salt',
+      rotateSaltDone: 'Address salt rotated — earlier hashes are now unlinkable',
+      purgeNow: 'Run retention sweep now',
+      purgeNowHint: '{count} clicks are past the window and would go.',
+      purgeTitle: 'Run the retention sweep now?',
+      purgeMessage:
+        'Every click older than the retention window is deleted immediately, across every link. The daily sweep would do this on its own; running it now only brings it forward.',
+      purgeConfirm: 'Delete now',
+      purgeDone: '{count} clicks deleted',
+      actionFailed: 'Could not complete that',
+      actionBusy: 'Working…',
+      whatAClickRecords: 'What a click records',
+      whatAClickRecordsHint:
+        'Every short link, Duncit or external, records exactly this and nothing else.',
+      collectedWhen: 'The time of the click',
+      collectedWhenWhy: 'What the clicks-over-time chart is drawn from.',
+      collectedPlatform: 'Where the click came from — the referring site, or the in-app browser',
+      collectedPlatformWhy: 'The only way to tell which channel a link actually worked on.',
+      collectedDevice: 'Device type, operating system and browser, from the user agent',
+      collectedDeviceWhy: 'Read off the request; never combined into an identifier.',
+      collectedGeo: 'Country, region and city, looked up from the address offline',
+      collectedGeoWhy:
+        'No third-party geolocation service is called, so the address never leaves this server.',
+      collectedIp: 'A salted SHA-256 of the address — never the address itself',
+      collectedIpWhy:
+        'Enough to count one visitor twice, useless for naming them. Rotating the salt breaks even that.',
+      legalBasis:
+        'Legitimate interest in measuring our own campaigns (GDPR Art. 6(1)(f)). No advertising identifier is set, nothing is shared with an ad network, and no cookie is written by the redirect.',
+    },
     shortLinks: {
       browser: 'Browser',
       cameFrom: 'Came from',
@@ -206,6 +301,45 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       openLinkDetails: 'Open link details',
       operatingSystem: 'Operating system',
       paid: 'Paid',
+      askedNotToBeTracked: 'Asked not to be tracked',
+      couldNotDelete: 'Could not delete the link',
+      deleteMessage:
+        '“{label}” stops working immediately — anywhere it is already printed or posted will 404. Retire it instead if you only want to stop new traffic.',
+      deleted: '“{label}” deleted',
+      deleting: 'Deleting…',
+      intro:
+        'One duncit.com link per channel. Each one tags its destination so you can tell where a visitor came from.',
+      newShortLink: 'New short link',
+      newShortLinkBlurb: 'You get a duncit.com link that tags its destination for you.',
+      searchLinks: 'Search by label, code or destination',
+      couldNotEraseClicks: 'Could not erase the click data',
+      eraseClickData: 'Erase click data',
+      eraseClicksDone: '{count} clicks erased',
+      eraseClicksMessage:
+        'Every recorded click for this link is deleted — who followed it, from where, on what. The link keeps working and keeps its lifetime click count, because how many times a link was followed is a fact about the link, not about anyone who followed it. This cannot be undone.',
+      eraseClicksTitle: 'Erase every click on this link?',
+      erasing: 'Erasing…',
+      everyClick: 'Every click',
+      everyClickHint: 'What the redirect itself recorded, newest first.',
+      noClicksYet: 'No clicks recorded yet.',
+      period: 'Period',
+      privacySignalTooltip:
+        'This visitor sent a Do-Not-Track or Global Privacy Control signal, so the click was counted but nothing identifying was stored — no address hash, no city, no user agent.',
+      rangeAllTime: 'All time',
+      rangeLast7Days: 'Last 7 days',
+      rangeLast30Days: 'Last 30 days',
+      rangeLast90Days: 'Last 90 days',
+      reactivateLink: 'Reactivate link',
+      reactivated: '“{label}” reactivated',
+      retireLink: 'Retire link',
+      retired: '“{label}” retired',
+      searchClicks: 'Search by platform, country, city or browser',
+      searchJourneys: 'Search by platform, country or city',
+      whoFollowed: 'Who followed this link',
+      whoFollowedHint: 'One row per click. Open a row for that person’s timeline.',
+      privacyMinimised: 'Privacy-minimised',
+      privacySignal: 'Privacy signal',
+      referrer: 'Referrer',
       sayWhatTheChannelIs: 'Say what the channel is',
       sayWhatTheMediumIs: 'Say what the medium is',
       shareThis: 'Share this',

@@ -14,6 +14,7 @@ import {
 export {
   blankShortLinkValues,
   isAllowedDestination,
+  isAllowedExternalDestination,
   shortLinkSchema,
   toShortLinkInput,
 } from './short-link.types';
@@ -21,21 +22,27 @@ import { useTranslation } from '@duncit/app-settings';
 
 const NO_CAMPAIGN = '';
 
+const DUNCIT_HINT = 'The page this link should open, e.g. https://mweb.duncit.com/club/…/pod/…';
+const EXTERNAL_HINT =
+  'The public https:// page this link should open, e.g. https://partner.example.com/offer';
+
 export default function ShortLinkForm({
   options,
   campaigns,
   busy,
   errorMessage,
+  external = false,
   onCancel,
   onSubmit,
 }: Readonly<ShortLinkFormProps>) {
   const { t } = useTranslation();
   const { control, handleSubmit, formState } = useForm<ShortLinkFormValues, any, ShortLinkFormValues>({
     defaultValues: blankShortLinkValues(),
-    resolver: zodResolver(shortLinkSchema(t)) as unknown as Resolver<ShortLinkFormValues, any, ShortLinkFormValues>,
+    resolver: zodResolver(shortLinkSchema(t, external)) as unknown as Resolver<ShortLinkFormValues, any, ShortLinkFormValues>,
     mode: 'onChange',
   });
 
+  const destinationHint = external ? EXTERNAL_HINT : DUNCIT_HINT;
   const source = useWatch({ control, name: 'source' });
   const medium = useWatch({ control, name: 'medium' });
 
@@ -59,7 +66,7 @@ export default function ShortLinkForm({
             name="destination_url"
             label={t('marketing.common.destination')}
             required
-            hint="The page this link should open, e.g. https://mweb.duncit.com/club/…/pod/…"
+            hint={destinationHint}
           />
         </Grid>
 

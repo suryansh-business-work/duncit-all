@@ -24,6 +24,14 @@ export interface DuncitTabItem<T extends TabValue> {
   iconPosition?: TabProps['iconPosition'];
   disabled?: boolean;
   sx?: SxProps<Theme>;
+  /**
+   * What the tab strip's search box matches this tab on, when the label is
+   * not a plain string — a count badge, an icon beside a word, a whole
+   * `<Stack>`. Without it such a tab is matched on its `value`, which is a
+   * slug and so usually right; pass this when it is not what a reader would
+   * type (a server-driven category whose value is an id).
+   */
+  searchText?: string;
   /** Rendered as `data-testid` on the tab. */
   testId?: string;
 }

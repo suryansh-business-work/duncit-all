@@ -110,6 +110,37 @@ export const VerifyAttendanceOtpDocument = gql(`
   }
 `);
 
+/**
+ * The Club Admin's mark — no scan, and a code only if they chose to send one.
+ *
+ * Both optional arguments are the two doors their board offers: the challenge
+ * when they verified the attendee, the names when the host missed the pod and
+ * read them out. Neither is required, which is what makes this the path that
+ * still works when nobody can be reached. The MUI twin is
+ * `FORCE_ATTENDANCE` in `@duncit/host-pod-actions` (rule 27) — the document is
+ * re-declared rather than imported because codegen only sees documents written
+ * inline in this workspace.
+ */
+export const ClubAdminForceAttendanceDocument = gql(`
+  mutation MobileClubAdminForceAttendance(
+    $pod_doc_id: ID!
+    $membership_id: ID!
+    $otp_challenge_id: ID
+    $companions: [PodForcedCompanionInput!]
+  ) {
+    clubAdminForceAttendance(
+      pod_doc_id: $pod_doc_id
+      membership_id: $membership_id
+      otp_challenge_id: $otp_challenge_id
+      companions: $companions
+    ) {
+      id
+      status
+      checked_in_at
+    }
+  }
+`);
+
 /** Mark one attendee present without a scan. */
 export const HostMarkAttendanceDocument = gql(`
   mutation MobileHostMarkPodAttendance(

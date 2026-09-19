@@ -572,6 +572,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       employeeExpenses: 'Employee Expenses',
       expenseSettings: 'Expense Settings',
       expenses: 'Expenses',
+      externalLinks: 'External Links',
       engagement: 'Engagement',
       environmentVariables: 'Environment Variables',
       errorLogs: 'Error Logs',
@@ -1363,6 +1364,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       chooseDirectBody:
         'Use this when the host missed the pod and read you the attendees. Nothing is sent — you are vouching for the mark.',
       chooseCancel: 'Cancel',
+      // The by-name mark as a door on the PAGE, not one hidden behind a row.
+      // The call an admin actually gets is somebody standing in front of them
+      // giving their NAME because the host never scanned them — so the page
+      // takes a name rather than sending the admin hunting down a roster.
+      directCta: 'Direct attendance mark',
+      directTitle: 'Direct attendance mark',
+      directBody:
+        'Type the participant’s name and pick their booking. No one-time code is sent — you are vouching for the mark, so check who you are marking.',
+      directSearchLabel: 'Participant name, phone or ticket code',
+      directNoMatch:
+        'No booking on this pod matches that. Check the spelling, or ask them for their ticket code.',
       // The direct mark. It exists for when proof cannot be produced, so the
       // warning is the only thing standing between it and a wrong payout.
       forceTitle: 'Mark attendance without a scan',

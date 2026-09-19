@@ -44,4 +44,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   // App Store Connect refuses a copyright line holding a URL; the hint now says so.
   "tech.storeListing.copyrightHint": ["e.g. 2026 Duncit. Apple requires it to submit."],
+  // The line under the WhatsApp box when the account's own number is typed back.
+  "mweb.contactChange.whatsappCurrent": [
+    "This is your current WhatsApp number, enter a different number to make a change.",
+  ],
 };

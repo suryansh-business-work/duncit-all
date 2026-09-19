@@ -11,8 +11,9 @@
  * A draft here is that wording, written once beside the registry entry it
  * belongs to, so `provision` on the Automation board can submit it as-is: the
  * template first (Meta decides, asynchronously), then the campaign once the
- * template is APPROVED. The template takes the campaign's name, so a reader of
- * the board sees one name in both columns.
+ * template is APPROVED — a press the funnel also makes by itself, on the first
+ * send AiSensy refuses for lacking the campaign. The template takes the
+ * campaign's name, so a reader of the board sees one name in both columns.
  *
  * Only scenarios that were never provisioned belong here. Once a campaign is
  * LIVE the draft is inert — the board offers nothing for a row that has one.

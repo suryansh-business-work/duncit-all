@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
 import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
 import type { ShortLinkClickRow } from '../queries';
 import { useTranslation } from '@duncit/app-settings';
@@ -57,6 +57,21 @@ const renderDevice = (row: ShortLinkClickRow) => (
   </Box>
 );
 
+/**
+ * Why a row's device and location are thin.
+ *
+ * Without it "Not recorded" beside a blank city looks like a bug in the
+ * recorder rather than a visitor's choice being honoured.
+ */
+const consentRenderer = (title: string) => (row: ShortLinkClickRow) => {
+  if (!row.consent_signal) return <Typography variant="body2">{EM_DASH}</Typography>;
+  return (
+    <Tooltip title={title}>
+      <Chip size="small" variant="outlined" label={row.consent_signal} />
+    </Tooltip>
+  );
+};
+
 export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[] {
   return [
     dateColumn<ShortLinkClickRow>({
@@ -92,5 +107,13 @@ export function getClickColumns(t: Translate): DuncitColumn<ShortLinkClickRow>[]
     },
     { field: 'os', headerName: 'OS', type: 'text', width: 130, hide: true },
     { field: 'browser', headerName: t('marketing.shortLinks.browser'), type: 'text', width: 160, hide: true },
+    {
+      field: 'consent_signal',
+      headerName: t('marketing.shortLinks.privacySignal'),
+      type: 'text',
+      width: 140,
+      cellRenderer: consentRenderer(t('marketing.shortLinks.privacySignalTooltip')),
+      valueGetter: (row) => row.consent_signal ?? EM_DASH,
+    },
   ];
 }

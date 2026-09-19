@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { shortLinkService } from './shortLink.service';
+import { shortLinkPolicyService } from './shortLinkPolicy.service';
 import { shortLinkJourneyService } from './shortLinkJourney.service';
 import type { JourneyStep } from './shortLinkClick.model';
 import type { ShareLinkTarget } from './shortLink.share';
@@ -30,9 +31,9 @@ export const shortLinkResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.qrDataUrl(args.id);
     },
-    shortLinkStats: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    shortLinkStats: (_p: unknown, args: { id: string; days?: number | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return shortLinkService.stats(args.id);
+      return shortLinkService.stats(args.id, args.days ?? 0);
     },
     shortLinkClicks: (
       _p: unknown,
@@ -53,6 +54,10 @@ export const shortLinkResolvers = {
     ) => {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkJourneyService.journeys(args.id, args.query);
+    },
+    shortLinkPolicy: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkPolicyService.read();
     },
   },
   Mutation: {
@@ -92,6 +97,22 @@ export const shortLinkResolvers = {
     deleteShortLink: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.remove(args.id);
+    },
+    updateShortLinkPolicy: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return shortLinkPolicyService.update(args.input, user.id);
+    },
+    rotateShortLinkIpSalt: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return shortLinkPolicyService.rotateIpSalt(user.id);
+    },
+    purgeShortLinkClicks: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return shortLinkPolicyService.purge(user.id);
+    },
+    eraseShortLinkClicks: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.eraseClicks(args.id);
     },
   },
 };

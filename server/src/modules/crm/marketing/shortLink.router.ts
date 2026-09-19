@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { shortLinkService } from './shortLink.service';
 import { shortLinkClickService } from './shortLinkClick.service';
 import { shortLinkJourneyService } from './shortLinkJourney.service';
@@ -8,6 +8,26 @@ import { cardForDestination } from './shortLink.preview';
 import { isLinkPreviewCrawler, renderCardHtml } from './shortLink.crawler';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
+import type { ConsentSignal } from './shortLinkClick.model';
+
+/**
+ * The privacy signal this visitor's browser sent, if any.
+ *
+ * Both headers are set by the browser itself, never by our code, and both are
+ * CORS-safelisted — so the landing-side report at `/v` carries them too
+ * without a preflight. GPC is checked first because it is the current standard
+ * and the one with legal weight; DNT is the older header people still set.
+ *
+ * What OBEYING it means is decided further in, by shortLinkClickService: the
+ * click is still counted, but nothing that could single the visitor out is
+ * written. An admin can switch that off, which is why the header is read here
+ * and judged there.
+ */
+function consentSignalFrom(req: Request): ConsentSignal | null {
+  if (req.get('sec-gpc') === '1') return 'GPC';
+  if (req.get('dnt') === '1') return 'DNT';
+  return null;
+}
 
 /** The card document, or null when this destination has nothing to describe. */
 async function crawlerCardHtml(code: string, destination: string): Promise<string | null> {
@@ -89,6 +109,7 @@ export function buildShortLinkRouter() {
           userAgent: req.get('user-agent'),
           forwardedFor: req.get('x-forwarded-for'),
           remoteAddress: req.socket.remoteAddress,
+          consentSignal: consentSignalFrom(req),
         });
         res.json({ click_id: clickId });
         return;
@@ -148,6 +169,7 @@ export function buildShortLinkRouter() {
         userAgent: req.get('user-agent'),
         forwardedFor: req.get('x-forwarded-for'),
         remoteAddress: req.socket.remoteAddress,
+        consentSignal: consentSignalFrom(req),
       })
       .catch((error) => logs.server.error('shortLink', 'recordClick', { error }));
   });

@@ -59,6 +59,8 @@ interface SchemaMock {
   channel: ContactChannel;
   extension: string;
   number: string;
+  /** What the account holds now — its own number typed back is refused first. */
+  current_number: string;
   /** Signup's tick box: is the WhatsApp number the mobile number too? */
   whatsappIsMobile: boolean;
   /** The recipient on a saved address — name and number, as typed. */
@@ -156,7 +158,7 @@ export default defineDemos('forms', [
     id: 'schemas',
     title: 'The form contracts mWeb and the native app both validate against',
     note:
-      'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for.',
+      'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for. Set number to current_number and the contact change is refused as the current number before its shape is even checked.',
     mock: {
       name: 'Meera Nair',
       dob: '1998-04-23',
@@ -169,6 +171,7 @@ export default defineDemos('forms', [
       channel: 'PHONE',
       extension: '+91',
       number: '9845012345',
+      current_number: '9845067890',
       whatsappIsMobile: true,
       recipient_name: 'Ravi Kumar',
       recipient_phone: '+91 98450 12345',
@@ -248,8 +251,15 @@ export default defineDemos('forms', [
         ),
         // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
         'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
+        // `current` is what the account holds: its own number typed back is
+        // refused as the current number BEFORE its shape is looked at.
         [`Contact change (${mock.channel})`]: say(
-          makeContactValueSchema(mock.channel, t).safeParse({
+          makeContactValueSchema(mock.channel, t, {
+            phone_extension: mock.extension,
+            phone_number: mock.current_number,
+            whatsapp_extension: mock.extension,
+            whatsapp_number: mock.current_number,
+          }).safeParse({
             email: mock.email,
             extension: mock.extension,
             number: mock.number,

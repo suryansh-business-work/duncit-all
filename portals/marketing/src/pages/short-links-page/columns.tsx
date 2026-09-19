@@ -9,6 +9,12 @@ interface Args {
   sources: ShortLinkOption[];
   mediums: ShortLinkOption[];
   campaigns: CampaignChoice[];
+  /**
+   * Show where the link actually lands. Off on the Short Links page, where
+   * every destination is one of ours and the column would say the same thing
+   * on every row; on for External Links, where it is the whole point.
+   */
+  showDestination?: boolean;
   onView: (row: ShortLinkRow) => void;
   onDelete: (row: ShortLinkRow) => void;
 }
@@ -16,6 +22,15 @@ interface Args {
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
+
+/** The host of a stored destination, or the raw value if it will not parse. */
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www[.]/, '');
+  } catch {
+    return url;
+  }
+};
 
 const labelOf = (options: ShortLinkOption[], value: string) =>
   options.filter((option) => option.value === value).map((option) => option.label).join('') || value;
@@ -61,10 +76,20 @@ const campaignText = (row: ShortLinkRow, campaigns: CampaignChoice[]) => {
   return match?.name ?? row.utm_campaign;
 };
 
+/** The host a link lands on, which is what identifies an external one. */
+const renderDestination = (row: ShortLinkRow) => (
+  <Tooltip title={row.destination_url}>
+    <Typography variant="body2" noWrap>
+      {hostOf(row.destination_url)}
+    </Typography>
+  </Tooltip>
+);
+
 export function getShortLinkColumns({
   sources,
   mediums,
   campaigns,
+  showDestination = false,
   onView,
   onDelete,
 }: Readonly<Args>, t: Translate): DuncitColumn<ShortLinkRow>[] {
@@ -81,6 +106,19 @@ export function getShortLinkColumns({
       cellRenderer: renderLink,
       valueGetter: (row) => row.label,
     },
+    ...(showDestination
+      ? [
+          {
+            field: 'destination_url',
+            headerName: t('marketing.shortLinks.whereItLands'),
+            type: 'text' as const,
+            flex: 1,
+            minWidth: 180,
+            cellRenderer: renderDestination,
+            valueGetter: (row: ShortLinkRow) => hostOf(row.destination_url),
+          },
+        ]
+      : []),
     {
       field: 'source',
       headerName: t('marketing.shortLinks.createdFor'),

@@ -462,17 +462,26 @@ directly.
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
 
-`makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
-one schema with every field optional. A schema that accepts a blank number because the caller
-*might* have meant an email is a schema that lets "Send code" through with nothing typed. It is
-typed `z.ZodType<ContactValueValues>` so both branches present ONE type to `useForm` — a raw
-union gives react-hook-form a union to resolve field paths against, which it cannot do.
+`makeContactValueSchema(channel, t, current?)` returns a different object schema per channel
+rather than one schema with every field optional. A schema that accepts a blank number because
+the caller *might* have meant an email is a schema that lets "Send code" through with nothing
+typed. It is typed `z.ZodType<ContactValueValues>` so both branches present ONE type to
+`useForm` — a raw union gives react-hook-form a union to resolve field paths against, which it
+cannot do.
 
-Phone numbers validate against `PHONE_INTL` (6-15 digits), not the 10-digit Indian pattern: there
-is a country-code picker beside the box, and a `+91`-only rule would refuse numbers the picker
-itself offers. The one exception is India's own dial code — `+91` is additionally held to
-`PHONE_NUMBER_IN`, so a 9-digit number no longer passes just because it fits the international
-range.
+`current` is the account's `ContactSnapshot` (what `me` holds now). On the two number channels
+the box refuses the account's own number — `contactNumberIsCurrent` from `@duncit/utils`, so the
+country code counts — BEFORE it looks at the number's shape, under
+`mweb.contactChange.phoneCurrent` / `whatsappCurrent`. Every rule about the number runs inside
+one object-level `superRefine` for exactly that reason: a field-level regex is reported ahead of
+anything the object says, and a number stored before today's rules would then read "enter a
+valid phone number" when the person has not changed it at all.
+
+Otherwise phone numbers validate against `PHONE_INTL` (6-15 digits), not the 10-digit Indian
+pattern: there is a country-code picker beside the box, and a `+91`-only rule would refuse
+numbers the picker itself offers. The one exception is India's own dial code — `+91` is
+additionally held to `PHONE_NUMBER_IN`, so a 9-digit number no longer passes just because it fits
+the international range.
 
 ### One saved address
 

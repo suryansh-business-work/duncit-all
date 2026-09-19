@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Dialog, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/app-settings';
 import ShortLinkForm, { toShortLinkInput, type ShortLinkFormValues } from './short-link-form';
 import {
   CAMPAIGNS_FOR_SHORT_LINK,
@@ -13,15 +14,25 @@ import {
 
 interface Props {
   options: ShortLinkOptions;
+  /** Creating a link to a NON-Duncit destination: different rule, different copy. */
+  external?: boolean;
   onClose: () => void;
   onCreated: (link: ShortLinkRow) => void;
 }
 
 export default function CreateShortLinkDialog({
   options,
+  external = false,
   onClose,
   onCreated,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const title = t(
+    external ? 'marketing.externalLinks.newLink' : 'marketing.shortLinks.newShortLink',
+  );
+  const blurb = t(
+    external ? 'marketing.externalLinks.newLinkBlurb' : 'marketing.shortLinks.newShortLinkBlurb',
+  );
   const [error, setError] = useState<string | null>(null);
   const [createLink, { loading }] = useMutation<any>(CREATE_SHORT_LINK);
   const { data: campaignsData } = useQuery<{ shortLinkCampaigns: CampaignChoice[] }>(
@@ -32,7 +43,9 @@ export default function CreateShortLinkDialog({
   const submit = async (values: ShortLinkFormValues) => {
     setError(null);
     try {
-      const result = await createLink({ variables: { input: toShortLinkInput(values) } });
+      const result = await createLink({
+        variables: { input: toShortLinkInput(values, external) },
+      });
       // Straight into the details dialog: the whole point of creating a link
       // is walking away with it, so the code and its QR are the next thing
       // you see rather than a row you then have to find.
@@ -49,18 +62,19 @@ export default function CreateShortLinkDialog({
         <Typography variant="h6" component="div" sx={{
           fontWeight: 700
         }}>
-          New short link
+          {title}
         </Typography>
         <Typography variant="body2" component="div" sx={{
           color: "text.secondary"
         }}>
-          You get a duncit.com link that tags its destination for you.
+          {blurb}
         </Typography>
       </DialogTitle>
       <DialogContent dividers>
         <ShortLinkForm
           options={options}
           campaigns={campaignsData?.shortLinkCampaigns ?? []}
+          external={external}
           busy={loading}
           errorMessage={error}
           onCancel={onClose}

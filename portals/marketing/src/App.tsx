@@ -12,6 +12,7 @@ import CreateCampaignPage from './pages/marketing-campaigns-page/CreateCampaignP
 import MailPreferenceAnalyticsPage from './pages/mail-preference-analytics-page';
 import ShortLinksPage from './pages/short-links-page/ShortLinksPage';
 import ShortLinkDetailPage from './pages/short-links-page/ShortLinkDetailPage';
+import ExternalLinksPage from './pages/external-links-page';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
 import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
@@ -44,6 +45,10 @@ export default function App() {
         <Route path="/coupons/:couponId" element={authed(<CouponDetailPage />)} />
         <Route path="/short-links" element={authed(<ShortLinksPage />)} />
         <Route path="/short-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
+        <Route path="/external-links" element={authed(<ExternalLinksPage />)} />
+        {/* The same detail page: an external link's analytics are the same
+            analytics, and it reads which list to go Back to off the path. */}
+        <Route path="/external-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/social-accounts" element={authed(<SocialAccountsPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/app-popups" element={authed(<AppPopupsPage />)} />

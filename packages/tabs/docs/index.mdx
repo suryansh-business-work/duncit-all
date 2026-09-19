@@ -1,6 +1,6 @@
 ---
 name: '@duncit/tabs'
-summary: 'The MUI tab strip every surface renders — DuncitTabs plus useTabParam, which keeps the selection in the URL (?selectedtab=) instead of component state.'
+summary: 'The MUI tab strip every surface renders — DuncitTabs plus useTabParam, which keeps the selection in the URL (?selectedtab=) instead of component state, and the debounced client-side search in every strip header.'
 category: 'ui'
 zeroDeps: false
 frameworkFree: false
@@ -29,6 +29,12 @@ exports:
   - 'TabValue'
   - 'tabPanelProps'
   - 'tabIds'
+  - 'useTabSearch'
+  - 'filterTabItems'
+  - 'tabSearchText'
+  - 'TAB_SEARCH_DEBOUNCE_MS'
+  - 'FilteredTabs'
+  - 'TabSearchState'
 ---
 
 ## Why this exists
@@ -84,6 +90,58 @@ There is no third mode. Every layout prop MUI's `<Tabs>` takes — `variant`, `s
 `allowScrollButtonsMobile`, `textColor`, `TabIndicatorProps`, `sx`, `aria-label` — passes
 straight through, and each item carries its own `icon`, `iconPosition`, `disabled`, `sx` and
 `testId`.
+
+## The strip searches itself
+
+Every strip carries a search box at the start of its header, and what it filters is the **tabs**,
+client-side. The strip already holds every tab it could ever show, so there is nothing to ask a
+server for; a round trip could only tell it what it already knows.
+
+```tsx
+// On by default — this strip already has the box:
+<DuncitTabs {...tabs} variant="scrollable" />
+
+// A two-tab segmented control has nothing to search:
+<DuncitTabs {...tabs} variant="fullWidth" searchable={false} />
+
+// A strip whose tabs are not "tabs" to the reader:
+<DuncitTabs {...tabs} searchPlaceholder={t('admin.cities.searchCity')} />
+```
+
+| Prop / field | Type | What it does |
+| --- | --- | --- |
+| `searchable` | `boolean` (default `true`) | The box. `false` renders exactly the strip this package shipped before it existed — no wrapper, no row. |
+| `searchPlaceholder` | `string` | Overrides `tabs.search.placeholder` ("Search tabs"). It is also the field's accessible name, so it must read as a label. |
+| `searchText` (per item) | `string` | What that tab is matched on when its `label` is not a plain string. |
+
+Three things about the behaviour are deliberate:
+
+- **The typing is not debounced; the filtering is.** The field updates on every keystroke, and the
+  strip narrows `TAB_SEARCH_DEBOUNCE_MS` (250 ms) after the last one — one redraw for "cancel",
+  not six.
+- **The open tab is never filtered away.** MUI's `<Tabs>` is given a `value`, and a value no child
+  carries drops the indicator and logs an error, while the page below would go on rendering a
+  panel whose tab had vanished. So the strip narrows to the matches **plus** the tab in the URL.
+  When a word matches nothing at all, the strip says so in a `role="status"` caption rather than
+  emptying out.
+- **A rich label falls back to the tab's `value`.** A label is a `ReactNode` — a count badge, an
+  icon beside a word — and interpolating one into a string yields `[object Object]` (Sonar
+  S6551). A slug is still a fair thing to type; pass `searchText` when it is not.
+
+The pure part is exported, because a page that renders its tabs through something other than
+`<DuncitTabs>` should not write a second filter:
+
+| Export | Signature | What it returns |
+| --- | --- | --- |
+| `useTabSearch` | `(items, value)` | `{ input, setInput, visible, matches, needle }` — the box's state and the filtered strip. |
+| `filterTabItems` | `(items, query, value)` | `{ visible, matches, needle }`, in the items' own order. |
+| `tabSearchText` | `(item)` | The one string a tab is matched on. |
+| `TAB_SEARCH_DEBOUNCE_MS` | `250` | The pause before the strip redraws. |
+
+Copy lives in `tabs.*` in `@duncit/i18n` — its own namespace rather than `shell.*` or `mweb.*`,
+because the same strip renders on both surface families and the other would print the raw key
+(rule 38). The box is `data-testid="tabs-search"`, or `"<idPrefix>-tabs-search"` on a strip that
+has an `idPrefix`, so two strips on one page do not collide.
 
 ## Wiring a tab to its panel
 
@@ -164,7 +222,7 @@ last used. It is the page's own strip that must never be the thing that moves.
 
 ## Peer dependencies, including the router
 
-`react`, `react-dom`, `@mui/material` and `react-router-dom` are peers — nothing here bundles a
+`react`, `react-dom`, `@mui/material`, `@mui/icons-material` and `react-router-dom` are peers — nothing here bundles a
 second React or MUI. The router peer is the one to remember: `useTabParam` calls
 `useSearchParams`, so a strip that owns its selection **must render inside a router context**. A
 `<DuncitTabs>` driven entirely by its parent's props does not touch the router at all.

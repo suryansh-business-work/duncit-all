@@ -17,6 +17,17 @@ export const JOURNEY_STEPS = [
 
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
 
+/**
+ * The privacy signal a visitor's browser sent, when it sent one.
+ *
+ * GPC is `Sec-GPC: 1` (Global Privacy Control), DNT the older Do-Not-Track
+ * header. Stored so the console can say how much of its data was minimised,
+ * rather than leaving the gap in a breakdown unexplained.
+ */
+export const CONSENT_SIGNALS = ['GPC', 'DNT'] as const;
+
+export type ConsentSignal = (typeof CONSENT_SIGNALS)[number];
+
 export interface IJourneyEntry {
   step: JourneyStep;
   at: Date;
@@ -55,11 +66,22 @@ export interface IShortLinkClick extends Document {
   region?: string | null;
   city?: string | null;
   /**
-   * SHA-256 of the address, never the address itself. Enough to count a
-   * returning visitor, useless for identifying a person.
+   * SHA-256 of the SALTED address, never the address itself. Enough to count a
+   * returning visitor, useless for identifying a person — and, unlike a bare
+   * hash of an IPv4 address, not reversible by walking the address space. The
+   * salt lives on ShortLinkPolicy, and rotating it unlinks every hash written
+   * before it.
+   *
+   * Null when the visitor asked not to be tracked.
    */
   ip_hash?: string | null;
   user_agent?: string | null;
+  /**
+   * Set when the visitor's browser asked not to be tracked and we obeyed. The
+   * click is still counted — how many people opened a link is not personal
+   * data — but the address hash, the city and the user agent are never written.
+   */
+  consent_signal?: ConsentSignal | null;
   /** Filled in later, when the visit is tied to an account. */
   user_id?: Types.ObjectId | null;
   /**
@@ -105,6 +127,7 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
     city: { type: String, default: null },
     ip_hash: { type: String, default: null, index: true },
     user_agent: { type: String, default: null },
+    consent_signal: { type: String, enum: [...CONSENT_SIGNALS, null], default: null },
     user_id: { type: Schema.Types.ObjectId, default: null, index: true },
     journey: {
       type: [
@@ -135,6 +158,15 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
 
 // The detail page always reads one link's clicks newest-first.
 shortLinkClickSchema.index({ short_link_id: 1, clicked_at: -1 });
+// The retention sweep deletes by age across every link at once.
+shortLinkClickSchema.index({ clicked_at: 1 });
+// Partial, because the privacy console counts the minimised clicks and almost
+// none of them are: an index over the whole collection would be nearly all
+// nulls, and a count without one scans every click ever recorded.
+shortLinkClickSchema.index(
+  { consent_signal: 1 },
+  { partialFilterExpression: { consent_signal: { $type: 'string' } } },
+);
 // The payment detail page asks the reverse question — which link earned THIS
 // payment — once per view, so the lookup must not scan every click ever made.
 shortLinkClickSchema.index({ 'conversions.payment_id': 1 });

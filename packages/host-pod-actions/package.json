@@ -11,6 +11,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/buttons": "workspace:*",
+    "@duncit/forms": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/utils": "workspace:*",

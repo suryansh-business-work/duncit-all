@@ -1,6 +1,7 @@
 import type { PodAttendanceLabels } from '@duncit/utils';
 import AttendanceOtpDialog from './AttendanceOtpDialog';
 import ClubAdminMarkDialog from './ClubAdminMarkDialog';
+import DirectMarkDialog from './DirectMarkDialog';
 import ForceMarkDialog from './ForceMarkDialog';
 import type { AttendanceBoardApi } from './useAttendanceBoard';
 
@@ -33,6 +34,16 @@ export default function AttendanceDialogs({ podId, labels, api }: Readonly<Props
         onClose={api.cancelChoice}
         onChooseOtp={api.chooseOtp}
         onChooseDirect={api.chooseDirect}
+      />
+      {/* The page-level by-name door. It searches the board's own rows, so it
+          can never offer a booking the roster does not have — and it hands
+          whatever it finds to the same ForceMarkDialog below. */}
+      <DirectMarkDialog
+        open={api.directOpen}
+        rows={api.board?.rows ?? []}
+        labels={labels}
+        onClose={api.cancelDirect}
+        onPick={api.pickDirect}
       />
       <AttendanceOtpDialog
         podId={podId}

@@ -185,6 +185,78 @@ export const needsOtp = (
 ): boolean => board.viewer === 'HOST' && board.otp_required;
 
 /**
+ * Whether the page offers the by-name mark as an action of its own.
+ *
+ * The Club Admin's, and only theirs. Their override already skips the one-time
+ * code (see `needsOtp`), but it was reachable only by finding the attendee's
+ * row and pressing Mark — which is the wrong shape for the call this path
+ * exists to answer: somebody walks up to the admin and gives their NAME. So
+ * the page carries it as a door of its own, on every pod whose roster this
+ * viewer may still write to.
+ *
+ * Never offered to the host. Their by-hand mark is gated on
+ * `attendance_otp_required` (Admin > Pods > Pod Settings), and a page-level
+ * door that skipped it would quietly undo the setting rather than respect it.
+ */
+export const canDirectMark = (
+  board: Readonly<Pick<PodAttendanceBoard, 'viewer' | 'can_mark'>>
+): boolean => board.viewer === 'CLUB_ADMIN' && board.can_mark;
+
+/** Digits only, so a number matches however it was typed or stored. */
+const digitsOf = (value: string): string => (value.match(/\d+/g) ?? []).join('');
+
+/** Below this, digits in the box are part of a name, not a phone search. */
+const PHONE_SEARCH_MIN_DIGITS = 3;
+
+/**
+ * The fields the by-name search reads — no more.
+ *
+ * Stated as a Pick rather than the whole row so a caller holding a trimmed
+ * selection (or a docs demo) can search without inventing sixteen fields it
+ * never looks at, exactly as `needsOtp` and `attendanceRowState` do.
+ */
+export type AttendanceSearchableRow = Pick<
+  PodAttendanceRow,
+  'name' | 'email' | 'ticket_code' | 'phone_extension' | 'phone_number' | 'attended'
+> & { companions: readonly Readonly<Pick<PodAttendanceCompanion, 'name'>>[] };
+
+/** Whether one booking could be the person whose details were typed. */
+function rowMatchesQuery(
+  row: Readonly<AttendanceSearchableRow>,
+  text: string,
+  digits: string
+): boolean {
+  const searchable = [row.name, row.email, row.ticket_code, ...row.companions.map((c) => c.name)]
+    .join(' ')
+    .toLowerCase();
+  if (searchable.includes(text)) return true;
+  if (digits.length < PHONE_SEARCH_MIN_DIGITS) return false;
+  return digitsOf(`${row.phone_extension}${row.phone_number}`).includes(digits);
+}
+
+/**
+ * The bookings a typed name could mean, unmarked first.
+ *
+ * Companion names are searched too: a multi-seat booking is bought by one
+ * person and admits several, so the name the admin is given is often not the
+ * buyer's — and a search that could not find them would send the admin back to
+ * reading the whole roster, which is the work this box removes.
+ *
+ * Already-marked bookings stay in the results rather than being filtered out.
+ * "I cannot find them" and "they are already marked" are different answers, and
+ * hiding the second one makes it look like the first.
+ */
+export function matchAttendanceRows<T extends AttendanceSearchableRow>(
+  rows: readonly T[],
+  query: string
+): T[] {
+  const text = query.trim().toLowerCase();
+  const digits = digitsOf(text);
+  const matched = text ? rows.filter((row) => rowMatchesQuery(row, text, digits)) : [...rows];
+  return [...matched.filter((row) => !row.attended), ...matched.filter((row) => row.attended)];
+}
+
+/**
  * Whether the page states the completion deadline.
  *
  * Only to the HOST, and only while there is still a deadline to beat: it is

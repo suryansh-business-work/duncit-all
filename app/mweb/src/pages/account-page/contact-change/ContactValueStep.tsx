@@ -69,7 +69,7 @@ export default function ContactValueStep({
     formState: { isValid },
   } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues,
-    resolver: zodResolver(makeContactValueSchema(channel)) as unknown as Resolver<ContactValueValues, any, ContactValueValues>,
+    resolver: zodResolver(makeContactValueSchema(channel, t, snapshot)) as unknown as Resolver<ContactValueValues, any, ContactValueValues>,
     mode: 'onChange',
   });
 

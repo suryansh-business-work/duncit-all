@@ -57,6 +57,7 @@ import {
   canScanPodTickets,
   canFollowBack,
   attendanceRowState,
+  canDirectMark,
   canScanTickets,
   canSubmitPodFeedback,
   commChannelSummary,
@@ -80,6 +81,7 @@ import {
   followRequestRowState,
   formatMoney,
   hostPodSection,
+  matchAttendanceRows,
   mwebAttendanceLabels,
   namedCompanionEntries,
   needsOtp,
@@ -316,6 +318,8 @@ interface AttendanceBoardMock {
   complete_deadline: string | null;
   /** Seats on one booking still without a name against them. */
   companions_required: number;
+  /** What the Club Admin typed into the by-name mark. Try `rohan`. */
+  search: string;
 }
 
 /** A slice of the Home feed, plus the instant the rails are drawn at. */
@@ -1464,7 +1468,11 @@ export default defineDemos('utils', [
       'admin is correcting the roster long after that door shut. needsOtp also answers false for ' +
       'them — not because they cannot send a code, but because they are never made to. ' +
       'Set lock to EXPIRED: the host’s completion window ran out, the deadline banner gives way ' +
-      'to the locked notice, and only a Club Admin can still record who came.',
+      'to the locked notice, and only a Club Admin can still record who came. ' +
+      'With viewer CLUB_ADMIN the page also carries a Direct attendance mark button ' +
+      '(canDirectMark) — type into search and matchAttendanceRows narrows the pod’s bookings: ' +
+      '`rohan` finds PRIYA’s booking, because Rohan is a seat on it, and `98200` finds Arjun ' +
+      'even though he is already marked.',
     mock: {
       pod_id: 'DUN-POD-4821',
       viewer: 'HOST',
@@ -1474,6 +1482,7 @@ export default defineDemos('utils', [
       lock: 'OPEN',
       complete_deadline: '2026-08-31T14:00:00.000Z',
       companions_required: 7,
+      search: 'pri',
     },
     compute: (mock) => {
       // Keys rather than copy, so the demo names WHICH sentence each surface renders.
@@ -1481,8 +1490,36 @@ export default defineDemos('utils', [
       const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
       const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
       const row = { attended: false, companions_required: mock.companions_required };
+      // One booking per person, as the roster holds them — Priya's admits two,
+      // and the second seat is named rather than counted.
+      const roster = [
+        {
+          membership_id: 'm1',
+          name: 'Priya Sharma',
+          email: 'priya@example.com',
+          ticket_code: 'DUN-TKT-4821',
+          phone_extension: '+91',
+          phone_number: '8791234693',
+          attended: false,
+          companions: [{ name: 'Rohan Mehta' }],
+        },
+        {
+          membership_id: 'm2',
+          name: 'Arjun Nair',
+          email: 'arjun@example.com',
+          ticket_code: 'DUN-TKT-4830',
+          phone_extension: '+91',
+          phone_number: '9820011223',
+          attended: true,
+          companions: [],
+        },
+      ];
+      const found = matchAttendanceRows(roster, mock.search);
       return {
         'needsOtp(board)': needsOtp(mock),
+        'canDirectMark(board)': canDirectMark(mock),
+        'matchAttendanceRows(roster, search)':
+          found.map((r) => r.name).join(', ') || '(no booking matches)',
         'canScanTickets(board)': canScanTickets(mock),
         'showsCompleteDeadline(board)': showsCompleteDeadline(mock),
         'Locked notice': labels.lockedTitle(mock.lock),

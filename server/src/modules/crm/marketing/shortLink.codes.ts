@@ -67,6 +67,15 @@ export function buildDestination(
      * would sign them out of their own app.
      */
     share?: boolean;
+    /**
+     * The destination is not a page we run.
+     *
+     * `dl` and `dlc` exist so OUR landing page can report back; an external
+     * page never will, so on one they are query junk on somebody else's URL
+     * and a click id handed to a third party for no purpose. The utm tags do
+     * stay — a partner attributing our traffic is exactly what they are for.
+     */
+    external?: boolean;
   },
 ): string {
   const url = new URL(destinationUrl);
@@ -74,9 +83,9 @@ export function buildDestination(
     ['utm_source', tags.utm_source],
     ['utm_medium', tags.utm_medium],
     ['utm_campaign', tags.utm_campaign],
-    ['dl', tags.code],
-    ['dlc', tags.click_id],
-    ['dls', tags.share ? '1' : null],
+    ['dl', tags.external ? null : tags.code],
+    ['dlc', tags.external ? null : tags.click_id],
+    ['dls', !tags.external && tags.share ? '1' : null],
   ];
   for (const [key, value] of params) {
     if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);

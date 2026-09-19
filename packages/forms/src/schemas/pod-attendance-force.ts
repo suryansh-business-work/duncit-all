@@ -6,6 +6,17 @@ import {
   type PodAttendanceLabels,
 } from '@duncit/utils';
 
+/**
+ * The Club Admin's by-name mark, as a contract.
+ *
+ * It lived in `@duncit/host-pod-actions` while only MUI had this path. The
+ * native app cannot consume that package (it is MUI), so bringing the Club
+ * Admin's mark to the phone would have meant a second copy of these rules —
+ * and a second copy is how mWeb and native start refusing different input with
+ * different sentences (rules 27 and 40). It lives here instead, beside the
+ * other contracts all three surfaces share, and the MUI dialog imports it back.
+ */
+
 /** One person a Club Admin was told about, as the dialog holds them. */
 export interface ForceCompanionValues {
   name: string;
@@ -41,7 +52,7 @@ export const forceMarkInitialValues = (count: number): ForceMarkValues => ({
  * half a phone number on the roster is worse than an empty row, because it
  * reads as a record.
  */
-export const buildForceMarkSchema = (labels: PodAttendanceLabels) =>
+export const makeForceMarkSchema = (labels: PodAttendanceLabels) =>
   z.object({
     companions: z.array(
       z.object({

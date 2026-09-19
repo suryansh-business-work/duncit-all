@@ -386,6 +386,8 @@ exports:
   - 'LocalityClubCount'
   - 'namedCompanionEntries'
   - 'needsOtp'
+  - 'canDirectMark'
+  - 'matchAttendanceRows'
   - 'canScanTickets'
   - 'showsCompleteDeadline'
   - 'earningsBodyFor'
@@ -1083,6 +1085,8 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `progressPercent` | `(done, total) => number` | 0–100, clamped; 0 when the total is unknown. |
 | `isVerifiablePhoneShape` / `OTP_PHONE_MIN_DIGITS` | `(value) => boolean` / `10` | Long enough to be worth a WhatsApp code. `isOtpPhoneShape` still accepts six digits — that is what the record stores, not what a code should be spent on. |
 | `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin is never *required* to send a code — their board offers it as one of two doors. |
+| `canDirectMark` | `(board) => boolean` | CLUB_ADMIN viewer AND `can_mark`. Shows the page-level **Direct attendance mark** button, on every pod whose roster they may still write to — including one with an empty roster. Never the host's: their by-hand mark is gated on `attendance_otp_required`, and a page-level door skipping it would undo the setting. |
+| `matchAttendanceRows` | `(rows, query) => PodAttendanceRow[]` | The bookings a typed name could mean, unmarked first. Matches name, email, ticket code and **companion names** (a multi-seat booking is bought by one person and admits several); three digits or more also match the phone. Already-marked rows stay in the results — "cannot find them" and "already marked" are different answers. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
 | `showsCompleteDeadline` | `(board) => boolean` | HOST viewer AND `lock === 'OPEN'` AND a `complete_deadline`. The banner naming the hours the host has left to complete the pod; past it the `EXPIRED` locked notice says it in past tense instead. |
 | `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
@@ -1114,6 +1118,25 @@ earningsBodyFor(online, labels)   // 'This pod is online, so there is no door to
 labels.methodLabel('VIRTUAL_JOIN')  // 'Joined the meeting' — what the row reads after joinPodMeeting
 
 needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — never REQUIRED of them
+
+// The Club Admin's page-level door. Somebody the host never scanned walks up
+// and gives their NAME, so the page takes a name instead of a roster hunt.
+canDirectMark({ viewer: 'CLUB_ADMIN', can_mark: true })  // true  — the button is on the page
+canDirectMark({ viewer: 'HOST', can_mark: true })        // false — the OTP setting still rules
+
+const roster = [
+  { membership_id: 'm1', name: 'Priya Sharma', email: 'priya@example.com',
+    ticket_code: 'DUN-TKT-4821', phone_extension: '+91', phone_number: '8791234693',
+    attended: false, companions: [{ name: 'Rohan Mehta' }] },
+  { membership_id: 'm2', name: 'Arjun Nair', email: 'arjun@example.com',
+    ticket_code: 'DUN-TKT-4830', phone_extension: '+91', phone_number: '9820011223',
+    attended: true, companions: [] },
+];
+
+matchAttendanceRows(roster, 'pri')      // [Priya] — what the admin was told
+matchAttendanceRows(roster, 'rohan')    // [Priya] — Rohan is a SEAT on Priya's booking
+matchAttendanceRows(roster, '98200')    // [Arjun] — already marked, and still shown
+matchAttendanceRows(roster, '')         // [Priya, Arjun] — unmarked first
 
 // An 8-seat booking the host never marked. The host's row waits for the door;
 // the Club Admin's does not, because the door is long shut.

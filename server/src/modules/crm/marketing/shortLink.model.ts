@@ -64,6 +64,13 @@ export interface IShortLink extends Document {
   code: string;
   label: string;
   destination_url: string;
+  /**
+   * True when the destination is not one of our own sites or an app store —
+   * a partner page, a press piece, the venue map a shared pod points at.
+   * Derived from the host at creation rather than chosen, so it cannot
+   * disagree with where the link actually goes.
+   */
+  is_external: boolean;
   source: ShortLinkSource;
   source_other?: string | null;
   medium: ShortLinkMedium;
@@ -102,6 +109,7 @@ const shortLinkSchema = new Schema<IShortLink>(
     code: { type: String, required: true, unique: true, index: true },
     label: { type: String, required: true, trim: true, maxlength: 120 },
     destination_url: { type: String, required: true, trim: true },
+    is_external: { type: Boolean, default: false, index: true },
     source: { type: String, enum: SHORT_LINK_SOURCES, required: true },
     source_other: { type: String, default: null, trim: true, maxlength: 60 },
     medium: { type: String, enum: SHORT_LINK_MEDIUMS, required: true },

@@ -23,6 +23,7 @@ import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMo
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
+import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
@@ -345,13 +346,43 @@ async function bootstrap() {
     const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
     await giftcardService.syncIndexes();
   });
+  // Our own sites and the two app stores, as a Mongo-side regex — the backfill
+  // below runs in the database, so it cannot call the TypeScript classifier.
+  // TWIN of shortLink.destination.ts's host rule; change one, change the other.
+  const FIRST_PARTY_URL =
+    '^https?://(([a-z0-9-]+[.])*duncit[.]com|play[.]google[.]com|apps[.]apple[.]com)([/:?#]|$)';
   // Builds the share-key unique index that makes an automatically minted share
   // link one per thing shared. Without it two people sharing the same pod at
   // the same moment each get their own link, and neither carries the pod's
   // real click count. New unique indexes only land through syncIndexes.
   await safeSeed('shortLinkIndexes', async () => {
     const { ShortLinkModel } = await import('@modules/crm/marketing/shortLink.model');
+    const { ShortLinkClickModel } = await import('@modules/crm/marketing/shortLinkClick.model');
     await ShortLinkModel.syncIndexes();
+    // The retention sweep deletes by age across every link at once, so it
+    // needs an index that is not scoped to one link.
+    await ShortLinkClickModel.syncIndexes();
+    // Links minted before is_external existed carry no flag, and a missing
+    // field matches neither true nor false — so the External Links page would
+    // silently omit the venue-map links the apps have been minting all along.
+    // One pass, and only over the rows that have no answer yet.
+    await ShortLinkModel.updateMany({ is_external: { $exists: false } }, [
+      {
+        $set: {
+          is_external: {
+            $not: [
+              {
+                $regexMatch: {
+                  input: '$destination_url',
+                  regex: FIRST_PARTY_URL,
+                  options: 'i',
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
   });
   // Builds the WhatsApp send log's unique index. It IS the idempotency: without
   // it every re-trigger of a domain event is a second billed message, and the
@@ -477,6 +508,11 @@ async function bootstrap() {
   // profile every few hours — posts, numbers, new comments — and send the new
   // comments through the AI review.
   startSocialAccountsScheduler();
+
+  // Short links: delete every recorded click past the retention window an
+  // admin set in Marketing > External Links > Privacy. A stated window that
+  // nothing enforces is not a retention policy.
+  startShortLinkRetentionScheduler();
 
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.

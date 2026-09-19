@@ -235,9 +235,10 @@ const MEETING_WA_EVENTS: Record<string, MeetingWaEvents> = {
   HOST: {
     booked: 'HOST_ONBOARDING_BOOKED',
     interview: 'HOST_ONBOARDING_INTERVIEW',
-    // The template is approved, but its campaign `host_onboarding_rejection` was
-    // never created at AiSensy — the funnel logs the outcome against that name,
-    // which is exactly the gap the WhatsApp console is built to surface.
+    // Its campaign `host_onboarding_rejection` was never created at AiSensy.
+    // Once the template is approved under that name, the first send AiSensy
+    // refuses creates it (`provisionCampaign` in whatsapp.service); until then
+    // the funnel logs the outcome against that name for the console to surface.
     rejected: 'HOST_ONBOARDING_REJECTED',
   },
   VENUE: {

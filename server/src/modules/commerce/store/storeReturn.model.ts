@@ -45,6 +45,29 @@ export interface IStoreReturnEvent {
   at: Date;
 }
 
+/** Where the reverse-pickup parcel is. */
+export type ReturnPickupStatus = '' | 'BOOKED' | 'PICKUP_SCHEDULED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'FAILED';
+
+export interface IReturnPickupEvent {
+  status: string;
+  location: string;
+  note: string;
+  at: Date;
+}
+
+/** The courier leg of a return: collected from the buyer, delivered to our warehouse. */
+export interface IReturnPickup {
+  sr_order_id: string;
+  shipment_id: string;
+  awb: string;
+  courier_name: string;
+  status: ReturnPickupStatus;
+  tracking_status: string;
+  last_error: string;
+  last_synced_at: Date | null;
+  events: IReturnPickupEvent[];
+}
+
 export interface IStoreReturn extends Document {
   return_no: string;
   order_id: Types.ObjectId;
@@ -64,13 +87,14 @@ export interface IStoreReturn extends Document {
   restocked: boolean;
   admin_note: string;
   events: IStoreReturnEvent[];
+  pickup: IReturnPickup;
   created_at: Date;
   updated_at: Date;
 }
 
 const returnItemSchema = new Schema<IStoreReturnItem>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     name: { type: String, default: '' },
     variant_label: { type: String, default: '' },
@@ -87,6 +111,38 @@ const returnEventSchema = new Schema<IStoreReturnEvent>(
     note: { type: String, default: '', maxlength: 1000 },
     by: { type: String, default: '' },
     at: { type: Date, default: () => new Date() },
+  },
+  { _id: false }
+);
+
+const returnPickupSchema = new Schema<IReturnPickup>(
+  {
+    sr_order_id: { type: String, default: '' },
+    shipment_id: { type: String, default: '' },
+    awb: { type: String, default: '', index: true },
+    courier_name: { type: String, default: '' },
+    status: {
+      type: String,
+      enum: ['', 'BOOKED', 'PICKUP_SCHEDULED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'FAILED'],
+      default: '',
+    },
+    tracking_status: { type: String, default: '' },
+    last_error: { type: String, default: '' },
+    last_synced_at: { type: Date, default: null },
+    events: {
+      type: [
+        new Schema<IReturnPickupEvent>(
+          {
+            status: { type: String, default: '' },
+            location: { type: String, default: '' },
+            note: { type: String, default: '' },
+            at: { type: Date, default: () => new Date() },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
   },
   { _id: false }
 );
@@ -111,6 +167,7 @@ const returnSchema = new Schema<IStoreReturn>(
     restocked: { type: Boolean, default: false },
     admin_note: { type: String, default: '', trim: true, maxlength: 2000 },
     events: { type: [returnEventSchema], default: [] },
+    pickup: { type: returnPickupSchema, default: () => ({}) },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -132,7 +189,7 @@ export interface IStoreStockAlert extends Document {
 
 const stockAlertSchema = new Schema<IStoreStockAlert>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },

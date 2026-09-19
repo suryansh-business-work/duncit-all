@@ -1517,16 +1517,13 @@ importers:
         version: link:../virtual-scroll
       '@hookform/resolvers':
         specifier: '>=3'
-        version: 3.10.0(react-hook-form@7.77.0(react@19.2.8))
+        version: 3.10.0(react-hook-form@7.87.0(react@19.2.8))
       date-fns:
         specifier: '>=2'
         version: 2.30.0
       graphql:
         specifier: 16.14.2
         version: 16.14.2
-      react-hook-form:
-        specifier: '>=7'
-        version: 7.77.0(react@19.2.8)
       react-router:
         specifier: '>=8'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1555,6 +1552,9 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      react-hook-form:
+        specifier: ^7.87.0
+        version: 7.87.0(react@19.2.8)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -16134,12 +16134,6 @@ packages:
   react-fast-compare@2.0.4:
     resolution: {integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==}
 
-  react-hook-form@7.77.0:
-    resolution: {integrity: sha512-Sslh9YDYc0GDlWT/lxasnIduNo4v3yyvqRGvmGKUre5AFjDs/HV9/OafHGD8d+sB2yoL4UIL9L8X9i0WlZZebg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17 || ^18 || ^19
-
   react-hook-form@7.87.0:
     resolution: {integrity: sha512-zhFzWvLxNHH+8839OnZcUxgMZw88ah2jZWDWvKWgF3Tpbnd0vKL+dlcuU3nZVWESZQjd81EW8K+wU+cYfYAc0w==}
     engines: {node: '>=18.0.0'}
@@ -19292,9 +19286,9 @@ snapshots:
       protobufjs: 7.6.2
       yargs: 17.7.2
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.77.0(react@19.2.8))':
+  '@hookform/resolvers@3.10.0(react-hook-form@7.87.0(react@19.2.8))':
     dependencies:
-      react-hook-form: 7.77.0(react@19.2.8)
+      react-hook-form: 7.87.0(react@19.2.8)
 
   '@hookform/resolvers@5.9.1(@sinclair/typebox@0.34.52)(@standard-schema/spec@1.1.0)(react-hook-form@7.87.0(react@19.2.8))(yup@1.7.1)(zod@4.5.4)':
     dependencies:
@@ -27737,10 +27731,6 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
 
   react-fast-compare@2.0.4: {}
-
-  react-hook-form@7.77.0(react@19.2.8):
-    dependencies:
-      react: 19.2.8
 
   react-hook-form@7.87.0(react@19.2.8):
     dependencies:

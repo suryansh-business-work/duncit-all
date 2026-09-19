@@ -54,6 +54,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
         }}>
         <RhfTextField
           control={control}
+          required
           name="brand_name"
           label={t('products.basic.brandName')}
           hint="Manufacturer or brand"

@@ -47,10 +47,16 @@ export interface StoreFacet {
   is_active: boolean;
 }
 
+/** One of the store's own brands — the ones its products are made by. */
 export interface StoreBrand {
   id: string;
   name: string;
+  slug: string;
   logo_url: string;
+  tagline: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
 }
 
 const PET_TYPE_FIELDS = `
@@ -116,13 +122,42 @@ export const STORE_FACETS: TypedDocumentNode<{ storeAdminFacets: StoreFacet[] }>
   }
 `;
 
-export const STORE_BRANDS: TypedDocumentNode<{ storeBrands: StoreBrand[] }> = gql`
-  query StoreBrands {
-    storeBrands {
-      id
-      name
-      logo_url
+const BRAND_FIELDS = `
+  id
+  name
+  slug
+  logo_url
+  tagline
+  description
+  sort_order
+  is_active
+`;
+
+export const STORE_BRANDS: TypedDocumentNode<{ storeAdminBrands: StoreBrand[] }> = gql`
+  query StoreAdminBrands {
+    storeAdminBrands {
+      ${BRAND_FIELDS}
     }
+  }
+`;
+
+export const SAVE_BRAND = gql`
+  mutation StoreSaveBrand($id: ID, $input: StoreBrandInput!) {
+    storeSaveBrand(id: $id, input: $input) {
+      ${BRAND_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_BRAND = gql`
+  mutation StoreDeleteBrand($id: ID!) {
+    storeDeleteBrand(id: $id)
+  }
+`;
+
+export const REORDER_BRANDS = gql`
+  mutation StoreReorderBrands($ids: [ID!]!) {
+    storeReorderBrands(ids: $ids)
   }
 `;
 

@@ -9,6 +9,7 @@ import { numberText, splitLines, toNumber, toOptionalInt } from '../../../../lib
 import { makeRules } from '../../../../lib/rules';
 import type { Translate } from '../../../../lib/translate';
 import type { SettingsTabSpec, StoreSettings } from '../settings.types';
+import RazorpayAccountField from './RazorpayAccountField';
 
 const PINCODE = /^\d{6}$/;
 /** The server caps the prepaid discount at half the order. */
@@ -21,6 +22,8 @@ const makeSchema = (t: Translate) => {
     min_order_value: r.amount(),
     max_qty_per_line: r.whole().refine((value) => Number(value) >= 1, t('ecommPortal.settings.atLeastOne')),
     prepaid_discount_pct: r.percent(PREPAID_MAX),
+    /** A Tech-portal Razorpay entry id, or '' for the default account. */
+    razorpay_account: z.string(),
     cod_enabled: z.boolean(),
     cod_fee: r.amount(),
     cod_min_order: r.amount(),
@@ -37,6 +40,7 @@ const toValues = (s: StoreSettings): CheckoutValues => ({
   min_order_value: numberText(s.min_order_value),
   max_qty_per_line: numberText(s.max_qty_per_line),
   prepaid_discount_pct: numberText(s.prepaid_discount_pct),
+  razorpay_account: s.razorpay_account,
   cod_enabled: s.cod_enabled,
   cod_fee: numberText(s.cod_fee),
   cod_min_order: numberText(s.cod_min_order),
@@ -50,6 +54,7 @@ const toInput = (v: CheckoutValues) => ({
   min_order_value: toNumber(v.min_order_value),
   max_qty_per_line: toOptionalInt(v.max_qty_per_line) ?? 1,
   prepaid_discount_pct: toNumber(v.prepaid_discount_pct),
+  razorpay_account: v.razorpay_account,
   cod_enabled: v.cod_enabled,
   cod_fee: toNumber(v.cod_fee),
   cod_min_order: toNumber(v.cod_min_order),
@@ -77,6 +82,8 @@ function CheckoutFields({ control }: Readonly<{ control: Control<CheckoutValues>
           unit="%"
         />
       </Box>
+      <Divider />
+      <RazorpayAccountField control={control} name="razorpay_account" />
       <Divider />
       <RhfSwitch control={control} name="cod_enabled" label={t('ecommPortal.settings.codEnabled')} />
       <Box sx={twoColumns}>

@@ -5,13 +5,17 @@ import { runtime } from './runtime';
 import DashboardPage from './pages/dashboard';
 import OrdersPage from './pages/orders/OrdersPage';
 import OrderDetailPage from './pages/orders/order-detail';
+import NeedsActionPage from './pages/shipping/NeedsActionPage';
+import ShiprocketPage from './pages/shipping/ShiprocketPage';
+import CodLedgerPage from './pages/shipping/CodLedgerPage';
 import ReturnsPage from './pages/returns/ReturnsPage';
 import ReturnDetailPage from './pages/returns/return-detail';
 import CustomersPage from './pages/customers/CustomersPage';
 import CustomerDetailPage from './pages/customers/CustomerDetailPage';
 import ProductsPage from './pages/products/ProductsPage';
-import ListingPage from './pages/products/listing-page';
+import ProductEditorPage from './pages/products/product-editor';
 import PetTypesPage from './pages/pet-types/PetTypesPage';
+import BrandsPage from './pages/brands/BrandsPage';
 import CategoriesPage from './pages/categories/CategoriesPage';
 import FiltersPage from './pages/filters/FiltersPage';
 import CollectionsPage from './pages/collections/CollectionsPage';
@@ -34,14 +38,19 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/', element: <DashboardPage /> },
   { path: '/orders', element: <OrdersPage /> },
   { path: '/orders/:id', element: <OrderDetailPage /> },
+  { path: '/shipping', element: <ShiprocketPage /> },
+  { path: '/shipping/needs-action', element: <NeedsActionPage /> },
+  { path: '/shipping/cod', element: <CodLedgerPage /> },
   { path: '/returns', element: <ReturnsPage /> },
   { path: '/returns/:id', element: <ReturnDetailPage /> },
   { path: '/customers', element: <CustomersPage /> },
   { path: '/customers/:email', element: <CustomerDetailPage /> },
   { path: '/products', element: <ProductsPage /> },
-  { path: '/products/:id', element: <ListingPage /> },
+  { path: '/products/new', element: <ProductEditorPage /> },
+  { path: '/products/:id', element: <ProductEditorPage /> },
   { path: '/pet-types', element: <PetTypesPage /> },
   { path: '/categories', element: <CategoriesPage /> },
+  { path: '/brands', element: <BrandsPage /> },
   { path: '/filters', element: <FiltersPage /> },
   { path: '/collections', element: <CollectionsPage /> },
   { path: '/collections/new', element: <CollectionEditorPage /> },

@@ -570,6 +570,10 @@ describe('the public product shape', () => {
       breadth_cm: 2,
       length_cm: 3,
       weight_kg: 0.5,
+      mrp: 0,
+      // 3 × 2 × 1 cm / 5000 — the 0.5 kg packed weight is what the courier bills.
+      volumetric_weight_kg: 0.001,
+      chargeable_weight_kg: 0.5,
     });
     expect(pub!.variants[1]).toMatchObject({
       id: 'v2',
@@ -602,6 +606,8 @@ describe('the public product shape', () => {
 describe('inventoryService.create', () => {
   const createInput = (over: Record<string, unknown> = {}) => ({
     product_name: '  Duncit Cap  ',
+    // A new product needs its brand.
+    brand_name: 'Duncit',
     unit_cost: 250,
     pickup_location_id: WAREHOUSE_ID,
     ...over,

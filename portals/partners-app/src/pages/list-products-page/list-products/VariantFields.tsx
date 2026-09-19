@@ -6,6 +6,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues, VariantOptionValue } from './list-products.types';
+import PackagingSection from './PackagingSection';
 import { useTranslation } from '@duncit/shell';
 
 interface VariantImagesProps {
@@ -92,17 +93,17 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
         hint="Describe this variant — what's included, how it's used, handling notes."
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        {numberField(control, nm('height_cm'), 'Height (cm)')}
-        {numberField(control, nm('weight_kg'), 'Weight (kg)')}
-      </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        {numberField(control, nm('length_cm'), 'Length (cm)')}
-        {numberField(control, nm('breadth_cm'), 'Breadth (cm)')}
-      </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {numberField(control, nm('unit_cost'), 'Price (₹)')}
+        {numberField(control, nm('mrp'), t('partners.listProductsPage.mrp'))}
         {numberField(control, nm('inventory_count'), t('partners.listProductsPage.stock'))}
       </Stack>
+      <PackagingSection
+        control={control}
+        setValue={setValue}
+        prefix={`variants.${index}.`}
+        productFields={false}
+        note={t('partners.listProductsPage.variantParcelHint')}
+      />
       <DuncitButton color="error" size="small" startIcon={<DeleteOutlineIcon />} onClick={onRemove} disabled={!canRemove} sx={{ alignSelf: 'flex-start' }}>
         Remove this variant
       </DuncitButton>

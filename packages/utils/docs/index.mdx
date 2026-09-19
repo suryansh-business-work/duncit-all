@@ -40,6 +40,17 @@ exports:
   - 'SHIP_FLOW'
   - 'PICKUP_FLOW'
   - 'FULFILMENT_TONE'
+  - 'PACKAGE_TYPES'
+  - 'PACKAGING_LIMITS'
+  - 'PACKAGING_PRESETS'
+  - 'VOLUMETRIC_DIVISOR'
+  - 'chargeableWeightKg'
+  - 'packagingGaps'
+  - 'parcelWeights'
+  - 'volumetricWeightKg'
+  - 'PackageType'
+  - 'PackagingPreset'
+  - 'ParcelDims'
   - 'buildPodsOverTime'
   - 'buildParticipantTrend'
   - 'buildStatusSlices'
@@ -2318,6 +2329,32 @@ test run on 31 December does not disagree with one run on 1 January.
 `buildParticipantTrend` counts **seats**, not people: it sits beside money, and the settlement
 it has to agree with is priced per seat. It also copies before sorting — the caller's array is
 usually the Apollo cache's, and sorting that in place is a render-loop bug waiting to happen.
+
+## Parcel weights and packaging presets
+
+`parcel.ts` is the arithmetic ShipRocket bills by, for the product forms' live readout. A
+courier charges the **higher** of the packed weight and the volumetric weight
+(L × B × H in cm / 5000), so a light toy in a big box costs what the box would. The server keeps
+a twin (`shiprocket.parcel.ts`) because it imports no `@duncit/*` package; their tests pin the
+same numbers.
+
+| Export | What it answers |
+| --- | --- |
+| `volumetricWeightKg(l, b, h)` | L × B × H / 5000, in kg |
+| `chargeableWeightKg(dims)` | The weight the courier bills |
+| `parcelWeights(dims)` | `{ volumetric, chargeable, boxHeavier }` — `boxHeavier` drives the "box is too big" hint |
+| `packagingGaps(dims)` | The dimension fields still missing or under the minimum |
+| `PACKAGING_PRESETS` | Six one-click packs (small pouch … bed/large), each with a `labelKey` |
+| `PACKAGING_LIMITS` | The bounds the server enforces (0.05–50 kg, sides ≥ 0.5 cm) |
+
+```ts
+import { parcelWeights, PACKAGING_PRESETS } from '@duncit/utils';
+
+const foodBag = PACKAGING_PRESETS.find((p) => p.id === 'food-bag-10')!;
+parcelWeights(foodBag); // { volumetric: 7.2, chargeable: 10.4, boxHeavier: false }
+parcelWeights({ weight_kg: 2.5, length_cm: 70, breadth_cm: 50, height_cm: 20 });
+// { volumetric: 14, chargeable: 14, boxHeavier: true } — the bed ships at 14 kg
+```
 
 ## Product-order fulfilment
 

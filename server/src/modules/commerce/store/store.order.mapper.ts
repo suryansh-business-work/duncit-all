@@ -118,6 +118,7 @@ export function toStoreOrder(order: IProductOrder, payment: IPayment | null, ctx
     courier_name: order.shiprocket?.courier_name ?? '',
     awb,
     tracking_url: trackingUrlOf(awb),
+    etd: order.shiprocket?.etd ?? '',
     events: (order.tracking_events ?? []).map((e) => ({
       status: e.status,
       location: e.location,

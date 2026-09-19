@@ -8,6 +8,7 @@ import { ReturnStatusChip } from '../../../components/chips';
 import { runAction } from '../../../lib/actions';
 import { STORE_ADMIN_RETURN, UPDATE_RETURN, type StoreReturn } from '../queries';
 import { ReturnHistoryPanel, ReturnRequestPanel, ReturnSummaryPanel } from './ReturnPanels';
+import ReturnPickupPanel from './ReturnPickupPanel';
 import ReturnUpdateForm, { type toReturnUpdateInput } from './return-update';
 
 /** The page once the return has loaded: the request and its history, then what to do next. */
@@ -35,6 +36,7 @@ function ReturnDetail({ item }: Readonly<{ item: StoreReturn }>) {
               </Typography>
             )}
           </SectionCard>
+          <ReturnPickupPanel item={item} />
           <ReturnSummaryPanel item={item} />
         </Stack>
       </Grid>

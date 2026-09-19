@@ -3,6 +3,7 @@ import { PUBLIC_URL_PATTERN } from '@duncit/forms';
 import type { Translate } from './translate';
 
 const AMOUNT = /^\d+(\.\d{1,2})?$/;
+const MEASURE = /^\d+(\.\d{1,3})?$/;
 const WHOLE = /^\d+$/;
 
 /** Blank, or a link — absolute, or a path on the store itself. */
@@ -36,6 +37,12 @@ export function makeRules(t: Translate) {
     webUrl: () => z.string().trim().regex(PUBLIC_URL_PATTERN, t('ecommPortal.form.invalidUrl')),
     email: () => z.string().trim().refine(isEmail, t('ecommPortal.form.invalidEmail')),
     amount: () => z.string().trim().refine(amountRule, t('ecommPortal.form.amount')),
+    /** A weight or a length — grams need a third decimal of a kilogram. */
+    measure: () =>
+      z
+        .string()
+        .trim()
+        .refine((value) => value === '' || MEASURE.test(value), t('ecommPortal.form.measure')),
     whole: () => z.string().trim().refine(wholeRule, t('ecommPortal.form.whole')),
     percent: (max: number) =>
       z

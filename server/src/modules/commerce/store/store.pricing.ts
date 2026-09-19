@@ -1,12 +1,14 @@
 import { Types } from 'mongoose';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
-import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { getServiceability, isShiprocketConfigured } from '@modules/commerce/shiprocket/shiprocket.gateway';
+import { buildParcel, type ParcelLine } from '@modules/commerce/shiprocket/shiprocket.parcel';
+import { effectiveDims } from '@modules/venues/inventory/inventory.packaging';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { applyCoins, computeQuote, type QuoteBreakup } from '@modules/finance/payment/payment.service';
 import { logs } from '@observability/log';
 import type { IStoreSettings } from './storeSettings.model';
+import { StoreProductModel } from './storeProduct.model';
+import { listedFilter } from './store.catalog.service';
 import {
   availableFor,
   discountPct,
@@ -59,31 +61,20 @@ export interface StoreLine {
   cod_available: boolean;
   returnable: boolean;
   warehouse_id: string;
+  /** One unit's packed parcel (variant, else product) — what the courier rates. */
   weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
   fulfilment_method: 'SHIP';
   issue: StoreLineIssue | null;
 }
 
+/** The asked-for products that are on the shelf right now (published), by id. */
 async function loadProducts(ids: string[]) {
   const valid = [...new Set(ids)].filter((id) => Types.ObjectId.isValid(id));
-  const products = await InventoryProductModel.find({ _id: { $in: valid } }).lean();
-  const brandIds = [...new Set(products.map((p) => (p.brand_id ? String(p.brand_id) : '')).filter(Boolean))];
-  const paused = brandIds.length
-    ? await EcommBrandModel.find({ _id: { $in: brandIds }, is_active: false }).select('_id').lean()
-    : [];
-  const pausedSet = new Set(paused.map((b) => String(b._id)));
-  return new Map(products.map((p) => [String(p._id), { product: p, brandPaused: p.brand_id ? pausedSet.has(String(p.brand_id)) : false }]));
-}
-
-/** On the shelf right now: listed, live, approved, with its brand trading. */
-function isSellable(p: any, brandPaused: boolean) {
-  return (
-    p.store?.listed === true &&
-    p.is_active !== false &&
-    (p.status === 'ACTIVE' || p.status === 'OUT_OF_STOCK') &&
-    p.listing_review_status === 'APPROVED' &&
-    !brandPaused
-  );
+  const products = await StoreProductModel.find(listedFilter({ _id: { $in: valid } })).lean();
+  return new Map(products.map((p) => [String(p._id), p]));
 }
 
 function blankLine(input: StoreLineInput, issue: StoreLineIssue): StoreLine {
@@ -108,6 +99,9 @@ function blankLine(input: StoreLineInput, issue: StoreLineIssue): StoreLine {
     returnable: false,
     warehouse_id: '',
     weight_kg: 0,
+    length_cm: 0,
+    breadth_cm: 0,
+    height_cm: 0,
     fulfilment_method: 'SHIP',
     issue,
   };
@@ -127,7 +121,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
   let issue: StoreLineIssue | null = null;
   if (available <= 0) issue = 'OUT_OF_STOCK';
   else if (quantity < requested) issue = 'QTY_REDUCED';
-  const images = [...(variant?.images ?? []), ...(p.images ?? []), p.image_url].filter(Boolean);
+  const image = [...(variant?.images ?? []), ...(p.images ?? [])].find(Boolean) ?? '';
   return {
     product_id: String(p._id),
     pod_id: '',
@@ -136,7 +130,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
     variant_sku: variant?.sku ?? '',
     name: listing.title || p.product_name,
     slug: listing.slug,
-    image_url: images[0] ?? '',
+    image_url: image,
     brand_name: p.brand_name ?? '',
     quantity,
     requested_qty: requested,
@@ -148,7 +142,7 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
     cod_available: listing.cod_available,
     returnable: listing.returnable,
     warehouse_id: p.pickup_location_id ? String(p.pickup_location_id) : '',
-    weight_kg: Number(variant?.weight_kg) || Number(p.weight_kg) || 0,
+    ...effectiveDims(p, variant),
     fulfilment_method: 'SHIP',
     issue,
   };
@@ -159,9 +153,9 @@ function buildLine(input: StoreLineInput, p: any, settings: IStoreSettings): Sto
 export async function resolveStoreLines(items: StoreLineInput[], settings: IStoreSettings): Promise<StoreLine[]> {
   const byId = await loadProducts(items.map((i) => String(i.product_id)));
   return items.map((item) => {
-    const hit = byId.get(String(item.product_id));
-    if (!hit || !isSellable(hit.product, hit.brandPaused)) return blankLine(item, 'UNAVAILABLE');
-    return buildLine(item, hit.product, settings);
+    const product = byId.get(String(item.product_id));
+    if (!product) return blankLine(item, 'UNAVAILABLE');
+    return buildLine(item, product, settings);
   });
 }
 
@@ -197,8 +191,15 @@ export interface StoreShipQuote {
   etd: string;
 }
 
+/** One warehouse's parcel and the value of the goods in it. */
+interface ShipGroup {
+  warehouse_id: string;
+  lines: ParcelLine[];
+  value: number;
+}
+
 async function quoteGroup(
-  group: { warehouse_id: string; weight: number },
+  group: ShipGroup,
   pickup: string,
   pincode: string,
   opts: { free: boolean; cod: boolean; flatFee: number; configured: boolean }
@@ -217,10 +218,19 @@ async function quoteGroup(
   };
   if (!opts.configured || !pickup || !/^\d{6}$/.test(pincode)) return base;
   try {
-    const weightKg = Math.max(0.1, group.weight);
+    const parcel = buildParcel(group.lines);
+    const lane = {
+      pickupPincode: pickup,
+      deliveryPincode: pincode,
+      weightKg: parcel.weight_kg,
+      lengthCm: parcel.length_cm,
+      breadthCm: parcel.breadth_cm,
+      heightCm: parcel.height_cm,
+      declaredValue: group.value,
+    };
     const [prepaid, cod] = await Promise.all([
-      getServiceability({ pickupPincode: pickup, deliveryPincode: pincode, weightKg }),
-      opts.cod ? getServiceability({ pickupPincode: pickup, deliveryPincode: pincode, weightKg, cod: true }) : null,
+      getServiceability(lane),
+      opts.cod ? getServiceability({ ...lane, cod: true }) : null,
     ]);
     if (!prepaid) return { ...base, reachable: false, codReachable: false };
     return {
@@ -248,10 +258,11 @@ export async function quoteStoreShipping(
   settings: IStoreSettings,
   opts: { goodsTotal: number; cod: boolean }
 ): Promise<StoreShipQuote> {
-  const groups = new Map<string, { warehouse_id: string; weight: number }>();
+  const groups = new Map<string, ShipGroup>();
   for (const line of lines.filter((l) => l.quantity > 0)) {
-    const g = groups.get(line.warehouse_id) ?? { warehouse_id: line.warehouse_id, weight: 0 };
-    g.weight += line.weight_kg * line.quantity;
+    const g = groups.get(line.warehouse_id) ?? { warehouse_id: line.warehouse_id, lines: [], value: 0 };
+    g.lines.push({ qty: line.quantity, weight_kg: line.weight_kg, length_cm: line.length_cm, breadth_cm: line.breadth_cm, height_cm: line.height_cm });
+    g.value = round2(g.value + line.gross);
     groups.set(line.warehouse_id, g);
   }
   if (groups.size === 0) {

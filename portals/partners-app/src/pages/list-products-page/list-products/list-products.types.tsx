@@ -1,4 +1,5 @@
 import type { AdminCategoryValue } from '@duncit/category';
+import type { PackageType } from '@duncit/utils';
 
 /** ShipRocket is the only delivery option offered to brands now (Host/Venue
  * self-delivery was removed). The server enum still accepts the legacy values. */
@@ -18,7 +19,8 @@ export interface ProductOptionValues {
 }
 
 /** A purchasable variant (an option combination) with its own media, copy,
- * dimensions, price and stock. */
+ * price and stock. Its packed parcel is optional: a blank dimension ships in
+ * the product's own parcel. */
 export interface ProductVariantValues {
   option_label: string;
   option_values: VariantOptionValue[];
@@ -31,6 +33,8 @@ export interface ProductVariantValues {
   length_cm: number | string;
   breadth_cm: number | string;
   unit_cost: number | string;
+  /** Printed MRP the store strikes the price through from ('' = none). */
+  mrp: number | string;
   inventory_count: number | string;
 }
 
@@ -38,6 +42,19 @@ export interface ProductListingValues {
   /** One or more Super → Category → Sub rows the product is sold in. */
   categories: AdminCategoryValue[];
   product_name: string;
+  /** The PACKED parcel of one unit, box included — what ShipRocket rates and
+   * bills, and every variant's fallback. */
+  height_cm: number | string;
+  weight_kg: number | string;
+  length_cm: number | string;
+  breadth_cm: number | string;
+  package_type: PackageType;
+  /** GST HSN code, 4-8 digits. */
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  /** Days a sealed unit stays good ('' = doesn't expire). */
+  shelf_life_days: number | string;
   /** Product-level option definitions; variants are their combinations. */
   options: ProductOptionValues[];
   variants: ProductVariantValues[];

@@ -891,6 +891,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@types/react-dom", range: "^19.2.5", kind: "devDependencies" },
       { name: "react", range: "^19.2.8", kind: "devDependencies" },
       { name: "react-dom", range: "^19.2.8", kind: "devDependencies" },
+      { name: "react-hook-form", range: "^7.87.0", kind: "devDependencies" },
       { name: "typescript", range: "^7.0.2", kind: "devDependencies" },
       { name: "@apollo/client", range: ">=3", kind: "peerDependencies" },
       { name: "@hookform/resolvers", range: ">=3", kind: "peerDependencies" },

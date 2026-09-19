@@ -664,7 +664,7 @@ describe('inventoryService Duncit warehouse guard', () => {
     // A valid Duncit warehouse succeeds and serializes onto the public shape.
     const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-WH' });
     const created = await inventoryService.create(
-      { product_name: 'Good WH', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
+      { product_name: 'Good WH', brand_name: 'Duncit', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
       admin,
     );
     expect(created.pickup_location_id).toBe(String(duncitWh._id));
@@ -673,7 +673,7 @@ describe('inventoryService Duncit warehouse guard', () => {
   it('keeps a valid warehouse on update and rejects clearing it for a Duncit product', async () => {
     const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-UPD' });
     const created = await inventoryService.create(
-      { product_name: 'Editable', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
+      { product_name: 'Editable', brand_name: 'Duncit', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
       admin,
     );
     const renamed = await inventoryService.update(

@@ -21,6 +21,9 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'RhfTextField'
+  - 'PackagingFields'
+  - 'PackagingFieldsProps'
+  - 'PackagingTranslate'
   - 'FormField'
   - 'zodRules'
   - 'validationRules'
@@ -296,6 +299,27 @@ import createUserFormSource from '@duncit/docs-demos/examples/CreateUserFormDemo
 
 A form preview is worth having precisely because the messages above only appear on submit —
 until it exists, the worked examples are the exact strings the user reads.
+
+## `PackagingFields` — shipping & packaging
+
+The section every product form shares: the Products portal's product page, the Partners app's
+listing form and the E-commerce portal's bulk packaging edit. It renders the packed parcel of one
+unit (weight and L × B × H), six one-click presets (`PACKAGING_PRESETS` from `@duncit/utils`), a
+live "Chargeable weight" readout and — when the box out-weighs its contents — a warning naming the
+weight the courier will bill.
+
+```tsx
+import { PackagingFields } from '@duncit/forms';
+
+// Product-level: every field, product-wide ones included.
+<PackagingFields control={control} setValue={setValue} t={t} />
+
+// One variant row: its own parcel only; type, HSN and flags stay product-wide.
+<PackagingFields control={control} setValue={setValue} t={t} prefix={`variants.${index}.`} productFields={false} />
+```
+
+The values stay the form's own — the consumer's Zod schema validates them. Copy comes from
+`PACKAGING_BUNDLE` (`packaging.*`), which each consuming portal layers into its `i18nFallback`.
 
 ## `RhfTextField` vs `FormField`
 

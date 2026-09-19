@@ -13,6 +13,8 @@ interface RhfNumberFieldProps<T extends FieldValues> {
   /** A unit shown after the value, e.g. `%` or `days`. */
   unit?: string;
   required?: boolean;
+  /** Stable hook for tests on the field's root. */
+  testId?: string;
 }
 
 /** A number box that brings up the numeric keypad on a phone and names its unit. */
@@ -24,6 +26,7 @@ export default function RhfNumberField<T extends FieldValues>({
   whole,
   unit,
   required,
+  testId,
 }: Readonly<RhfNumberFieldProps<T>>) {
   const endAdornment = unit ? <InputAdornment position="end">{unit}</InputAdornment> : undefined;
   return (
@@ -33,6 +36,7 @@ export default function RhfNumberField<T extends FieldValues>({
       label={label}
       hint={hint}
       required={required}
+      data-testid={testId}
       slotProps={{
         htmlInput: { inputMode: whole ? 'numeric' : 'decimal' },
         input: { endAdornment },

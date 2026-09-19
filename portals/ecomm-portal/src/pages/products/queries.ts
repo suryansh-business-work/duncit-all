@@ -1,22 +1,26 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { PackageType } from '@duncit/utils';
+import type { ProductStatus } from '../../lib/status';
 
-/** One catalogue product as the listings table shows it. */
-export interface StoreListingRow {
+/** One of the store's own products as the products table shows it. */
+export interface StoreProductRow {
   id: string;
   product_name: string;
   sku: string;
+  brand_id: string | null;
   brand_name: string;
   image_url: string;
   price: number;
   mrp: number;
   available: number;
   variant_count: number;
-  status: string;
-  is_active: boolean;
-  review_status: string;
-  /** False when no Duncit warehouse is set — the parcel ships from the default pickup. */
+  /** What still stops it shipping with ShipRocket (empty = ready). */
+  packaging_missing: string[];
+  /** What a courier bills for one unit: the higher of packed and volumetric weight. */
+  chargeable_weight_kg: number;
+  status: ProductStatus;
+  /** False until a Duncit warehouse is picked — a product cannot be published without one. */
   has_warehouse: boolean;
-  listed: boolean;
   slug: string;
   title: string;
   badge: string;
@@ -27,25 +31,44 @@ export interface StoreListingRow {
   sold_count: number;
   view_count: number;
   wishlist_count: number;
-  listed_at: string | null;
+  published_at: string | null;
   updated_at: string;
 }
 
-export interface StoreListingVariant {
+export interface StoreProductVariant {
   id: string;
-  label: string;
+  option_label: string;
   sku: string;
   price: number;
   mrp: number;
-  available: number;
+  stock: number;
+  images: string[];
+  weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
 }
 
-/** The full editable listing, with the product facts shown beside it. */
-export interface StoreListing extends StoreListingRow {
+/** Everything the product editor shows and saves back. */
+export interface StoreProduct extends StoreProductRow {
   short_description: string;
   description: string;
   images: string[];
-  variants: StoreListingVariant[];
+  stock: number;
+  low_stock_alert: number;
+  weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
+  package_type: PackageType;
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  shelf_life_days: number | null;
+  warehouse_id: string | null;
+  /** What the variants differ by, e.g. Size. */
+  variant_option: string;
+  variants: StoreProductVariant[];
   facet_values: { facet_id: string; values: string[] }[];
   highlights: string[];
   specifications: { label: string; value: string }[];
@@ -63,21 +86,32 @@ export interface StoreListing extends StoreListingRow {
   max_per_order: number;
 }
 
+/** One of Duncit's own warehouses — where a store product ships from. */
+export interface StoreWarehouse {
+  id: string;
+  nickname: string;
+  city: string;
+  pincode: string;
+  is_default: boolean;
+  /** Registered with ShipRocket, so parcels can be picked up from it. */
+  shiprocket_ready: boolean;
+}
+
 const ROW_FIELDS = `
   id
   product_name
   sku
+  brand_id
   brand_name
   image_url
   price
   mrp
   available
   variant_count
+  packaging_missing
+  chargeable_weight_kg
   status
-  is_active
-  review_status
   has_warehouse
-  listed
   slug
   title
   badge
@@ -88,22 +122,40 @@ const ROW_FIELDS = `
   sold_count
   view_count
   wishlist_count
-  listed_at
+  published_at
   updated_at
 `;
 
-const LISTING_FIELDS = `
+const PRODUCT_FIELDS = `
   ${ROW_FIELDS}
   short_description
   description
   images
+  stock
+  low_stock_alert
+  weight_kg
+  length_cm
+  breadth_cm
+  height_cm
+  package_type
+  hsn_code
+  is_fragile
+  is_liquid
+  shelf_life_days
+  warehouse_id
+  variant_option
   variants {
     id
-    label
+    option_label
     sku
     price
     mrp
-    available
+    stock
+    images
+    weight_kg
+    length_cm
+    breadth_cm
+    height_cm
   }
   facet_values {
     facet_id
@@ -127,9 +179,9 @@ const LISTING_FIELDS = `
   max_per_order
 `;
 
-export const STORE_LISTINGS_TABLE = gql`
-  query StoreListingsTable($query: TableQueryInput) {
-    storeListingsTable(query: $query) {
+export const STORE_PRODUCTS_TABLE = gql`
+  query StoreAdminProductsTable($query: TableQueryInput) {
+    storeAdminProductsTable(query: $query) {
       total
       rows {
         ${ROW_FIELDS}
@@ -138,25 +190,31 @@ export const STORE_LISTINGS_TABLE = gql`
   }
 `;
 
-export const STORE_LISTING: TypedDocumentNode<{ storeListing: StoreListing }, { product_id: string }> = gql`
-  query StoreListing($product_id: ID!) {
-    storeListing(product_id: $product_id) {
-      ${LISTING_FIELDS}
+export const STORE_PRODUCT: TypedDocumentNode<{ storeAdminProduct: StoreProduct }, { id: string }> = gql`
+  query StoreAdminProduct($id: ID!) {
+    storeAdminProduct(id: $id) {
+      ${PRODUCT_FIELDS}
     }
   }
 `;
 
-export const SAVE_LISTING = gql`
-  mutation StoreSaveListing($product_id: ID!, $input: StoreListingInput!) {
-    storeSaveListing(product_id: $product_id, input: $input) {
-      ${LISTING_FIELDS}
+export const SAVE_PRODUCT: TypedDocumentNode<
+  { storeSaveProduct: StoreProduct },
+  { id: string | null; input: Record<string, unknown>; status: ProductStatus }
+> = gql`
+  mutation StoreSaveProduct($id: ID, $input: StoreAdminProductInput!, $status: StoreProductStatus!) {
+    storeSaveProduct(id: $id, input: $input, status: $status) {
+      ${PRODUCT_FIELDS}
     }
   }
 `;
 
-export const SET_LISTED: TypedDocumentNode<{ storeSetListed: number }, { product_ids: string[]; listed: boolean }> = gql`
-  mutation StoreSetListed($product_ids: [ID!]!, $listed: Boolean!) {
-    storeSetListed(product_ids: $product_ids, listed: $listed)
+export const SET_PRODUCT_STATUS: TypedDocumentNode<
+  { storeSetProductStatus: number },
+  { ids: string[]; status: ProductStatus }
+> = gql`
+  mutation StoreSetProductStatus($ids: [ID!]!, $status: StoreProductStatus!) {
+    storeSetProductStatus(ids: $ids, status: $status)
   }
 `;
 
@@ -166,5 +224,18 @@ export const BULK_FILE: TypedDocumentNode<
 > = gql`
   mutation StoreBulkFile($product_ids: [ID!]!, $pet_type_ids: [ID!], $category_ids: [ID!]) {
     storeBulkFile(product_ids: $product_ids, pet_type_ids: $pet_type_ids, category_ids: $category_ids)
+  }
+`;
+
+export const STORE_WAREHOUSES: TypedDocumentNode<{ storeAdminWarehouses: StoreWarehouse[] }> = gql`
+  query StoreAdminWarehouses {
+    storeAdminWarehouses {
+      id
+      nickname
+      city
+      pincode
+      is_default
+      shiprocket_ready
+    }
   }
 `;

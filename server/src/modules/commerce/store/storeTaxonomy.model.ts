@@ -2,9 +2,9 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 
 /**
  * How the pet store files its shelves: which pet a product is for, which aisle
- * (category) it sits in, and the filters (facets) a shopper narrows by. All
- * three are admin-managed from the ecomm portal — nothing here is seeded, so
- * the store shows exactly the taxonomy the team built.
+ * (category) it sits in, the filters (facets) a shopper narrows by, and the
+ * brands it sells. All are admin-managed from the ecomm portal — nothing here
+ * is seeded, so the store shows exactly the taxonomy the team built.
  */
 
 /** A pet the store sells for — Dogs, Cats, Birds, Fish… */
@@ -110,3 +110,31 @@ const facetSchema = new Schema<IStoreFacet>(
 );
 
 export const StoreFacetModel = model<IStoreFacet>('StoreFacet', facetSchema);
+
+/** A brand the store sells — the pet store's own list, run from the ecomm portal. */
+export interface IStoreBrand extends Document {
+  name: string;
+  slug: string;
+  logo_url: string;
+  tagline: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const brandSchema = new Schema<IStoreBrand>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    slug: { type: String, required: true, unique: true, trim: true, lowercase: true, maxlength: 100 },
+    logo_url: { type: String, default: '', trim: true },
+    tagline: { type: String, default: '', trim: true, maxlength: 160 },
+    description: { type: String, default: '', trim: true, maxlength: 2000 },
+    sort_order: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true, index: true },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+export const StoreBrandModel = model<IStoreBrand>('StoreBrand', brandSchema);

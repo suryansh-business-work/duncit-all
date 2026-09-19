@@ -1,7 +1,8 @@
 import type { GraphQLContext } from '@context';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import { StoreProductModel } from './storeProduct.model';
 import { getStoreSettings, StoreSettingsModel } from './storeSettings.model';
-import { StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
+import { StoreBrandModel, StoreCategoryModel, StoreFacetModel, StorePetTypeModel } from './storeTaxonomy.model';
 import {
   STORE_COLLECTION_MODES,
   STORE_HOME_SECTION_KINDS,
@@ -65,6 +66,17 @@ export const petTypeOut = (p: Doc) => ({
   description: p.description ?? '',
   sort_order: p.sort_order ?? 0,
   is_active: p.is_active !== false,
+});
+
+export const brandOut = (b: Doc) => ({
+  id: String(b._id),
+  name: b.name,
+  slug: b.slug,
+  logo_url: b.logo_url ?? '',
+  tagline: b.tagline ?? '',
+  description: b.description ?? '',
+  sort_order: b.sort_order ?? 0,
+  is_active: b.is_active !== false,
 });
 
 export const categoryAdminOut = (c: Doc) => ({
@@ -186,6 +198,34 @@ const SETTINGS_NUMBERS = [
   'autoship_discount_pct',
 ] as const;
 
+/** A Razorpay account the store may use: '' (the default), or an active Tech-portal RAZORPAY entry. */
+async function razorpayAccountOf(value: unknown) {
+  const id = typeof value === 'string' ? value.trim() : '';
+  if (!id) return '';
+  const oid = toObjectId(id);
+  const found = oid ? await EnvEntryModel.exists({ _id: oid, category: 'RAZORPAY', is_active: true }) : null;
+  if (!found) badInput('That Razorpay account is not an active entry in the Tech portal');
+  return id;
+}
+
+type RazorpayMode = 'LIVE' | 'TEST' | 'UNKNOWN';
+
+/** One text value of an env entry's config ('' when it is missing or not text). */
+const configText = (config: unknown, key: string) => {
+  const value = (config as Record<string, unknown> | null | undefined)?.[key];
+  return typeof value === 'string' ? value : '';
+};
+
+/** Razorpay key ids say which mode they belong to. */
+function razorpayModeOf(keyId: string): RazorpayMode {
+  if (keyId.startsWith('rzp_live_')) return 'LIVE';
+  if (keyId.startsWith('rzp_test_')) return 'TEST';
+  return 'UNKNOWN';
+}
+
+/** Enough of a key id to tell accounts apart, never the whole thing. */
+const keyHint = (keyId: string) => (keyId.length > 8 ? `${keyId.slice(0, 9)}…${keyId.slice(-4)}` : '');
+
 /** Whole numbers within [min, max], de-duplicated and ascending — autoship
  * frequencies in weeks, flash-sale discount tiers in percent. */
 function intList(values: unknown, min: number, max: number, cap: number): number[] {
@@ -250,11 +290,29 @@ export const storeAdminMerchService = {
 
   async saveSettings(ctx: GraphQLContext, input: Doc) {
     await getStoreSettings();
+    const patch = settingsPatch(input);
+    if (present(input.razorpay_account)) patch.razorpay_account = await razorpayAccountOf(input.razorpay_account);
     return StoreSettingsModel.findOneAndUpdate(
       { singleton_key: 'store' },
-      { $set: { ...settingsPatch(input), updated_by_id: ctx.user?.id ?? null } },
+      { $set: { ...patch, updated_by_id: ctx.user?.id ?? null } },
       { new: true, runValidators: true }
     );
+  },
+
+  /** The Tech portal's Razorpay accounts, default first — names and a key hint, no secrets. */
+  async razorpayAccounts() {
+    const rows = await EnvEntryModel.find({ category: 'RAZORPAY' }).sort({ is_default: -1, name: 1 }).lean();
+    return rows.map((row) => {
+      const keyId = configText(row.config, 'key_id');
+      return {
+        id: String(row._id),
+        name: row.name,
+        key_hint: keyHint(keyId),
+        mode: razorpayModeOf(keyId),
+        is_default: row.is_default,
+        is_active: row.is_active,
+      };
+    });
   },
 
   /* --- pet types ------------------------------------------------------ */
@@ -278,12 +336,43 @@ export const storeAdminMerchService = {
   },
   async deletePetType(id: string) {
     const oid = toObjectId(id);
-    const used = await InventoryProductModel.countDocuments({ 'store.pet_type_ids': oid });
+    const used = await StoreProductModel.countDocuments({ 'store.pet_type_ids': oid });
     if (used > 0) badInput(`${used} product(s) are filed under this pet type — move them first, or switch it off`);
     await StorePetTypeModel.deleteOne({ _id: oid });
     return true;
   },
   reorderPetTypes: (ids: string[]) => reorder(StorePetTypeModel, ids),
+
+  /* --- brands --------------------------------------------------------- */
+  async brands() {
+    const rows = await StoreBrandModel.find({}).sort({ sort_order: 1, name: 1 }).lean();
+    return rows.map(brandOut);
+  },
+  async saveBrand(id: string | null | undefined, input: Doc) {
+    const name = String(input.name ?? '').trim();
+    if (!name) badInput('Enter the brand name');
+    const doc = await upsert(StoreBrandModel, id, {
+      name,
+      slug: await uniqueSlug(StoreBrandModel, input.slug, name, toObjectId(id)),
+      logo_url: String(input.logo_url ?? '').trim(),
+      tagline: String(input.tagline ?? '').trim(),
+      description: String(input.description ?? '').trim(),
+      is_active: input.is_active !== false,
+      ...(id ? {} : { sort_order: await StoreBrandModel.countDocuments() }),
+    });
+    // Products carry the brand's name for search and the table — keep it current.
+    await StoreProductModel.updateMany({ brand_id: doc._id }, { $set: { brand_name: doc.name } });
+    return brandOut(doc);
+  },
+  async deleteBrand(id: string) {
+    const oid = toObjectId(id);
+    const used = await StoreProductModel.countDocuments({ brand_id: oid });
+    if (used > 0) badInput(`${used} product(s) carry this brand — change them first, or switch it off`);
+    await StoreCollectionModel.updateMany({ 'rules.brand_ids': oid }, { $pull: { 'rules.brand_ids': oid } });
+    await StoreBrandModel.deleteOne({ _id: oid });
+    return true;
+  },
+  reorderBrands: (ids: string[]) => reorder(StoreBrandModel, ids),
 
   /* --- categories ----------------------------------------------------- */
   async categories() {
@@ -316,7 +405,7 @@ export const storeAdminMerchService = {
   async deleteCategory(id: string) {
     const oid = toObjectId(id);
     if (await StoreCategoryModel.exists({ parent_id: oid })) badInput('Move or delete its sub-categories first');
-    const used = await InventoryProductModel.countDocuments({ 'store.category_ids': oid });
+    const used = await StoreProductModel.countDocuments({ 'store.category_ids': oid });
     if (used > 0) badInput(`${used} product(s) are filed in this category — move them first, or switch it off`);
     await StoreCategoryModel.deleteOne({ _id: oid });
     return true;
@@ -348,7 +437,7 @@ export const storeAdminMerchService = {
   async deleteFacet(id: string) {
     const oid = toObjectId(id);
     await StoreFacetModel.deleteOne({ _id: oid });
-    await InventoryProductModel.updateMany(
+    await StoreProductModel.updateMany(
       { 'store.facet_values.facet_id': oid },
       { $pull: { 'store.facet_values': { facet_id: oid } } }
     );
@@ -413,7 +502,7 @@ export const storeAdminMerchService = {
   /** Cards for a manual collection's picked products, in its own order. */
   async productsForPicker(ids: string[]) {
     const objectIds = toObjectIds(ids).slice(0, 500);
-    const docs = await InventoryProductModel.find({ _id: { $in: objectIds } }).lean();
+    const docs = await StoreProductModel.find({ _id: { $in: objectIds } }).lean();
     const byId = new Map(docs.map((d) => [String(d._id), d]));
     return cardsFor(objectIds.map((id) => byId.get(String(id))).filter(Boolean));
   },

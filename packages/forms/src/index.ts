@@ -1,5 +1,10 @@
 export { default as RhfTextField, type RhfTextFieldProps } from './RhfTextField';
 export {
+  default as PackagingFields,
+  type PackagingFieldsProps,
+  type PackagingTranslate,
+} from './PackagingFields';
+export {
   default as FormField,
   type FormFieldProps,
   type FormFieldErrorMode,

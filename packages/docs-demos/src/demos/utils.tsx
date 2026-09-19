@@ -202,6 +202,9 @@ import {
   hasUnseenOfficialStatus,
   isOfficialStatusLive,
   type OfficialStatusSource,
+  packagingGaps,
+  parcelWeights,
+  type ParcelDims,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -466,6 +469,9 @@ interface ClubGroupingMock {
   openCityId: string;
 }
 
+/** One packed unit as the product form holds it. */
+type ParcelMock = ParcelDims;
+
 /** One city from the `locations` query, with its launch waitlist fields. */
 interface CityLaunchMock {
   location_name: string;
@@ -507,6 +513,23 @@ export default defineDemos('utils', [
         'Light accent (blank → bundled)': palettes.light.accent,
         'Dark primary / accent': `${palettes.dark.primary} / ${palettes.dark.accent}`,
         'Bundled palettes returned untouched': palettes === local,
+      };
+    },
+  }),
+
+  defineDemo<ParcelMock>({
+    id: 'parcel-weights',
+    title: 'What the courier bills for a parcel',
+    note:
+      'A dog bed packed 70 × 50 × 20 cm weighs 2.5 kg but ships at 14 kg — the box out-weighs the bed, so the form warns. Shrink the box (try 60 × 40 × 15 at 10.4 kg, a food bag) and the packed weight wins again. Zero a side and it shows up as missing.',
+    mock: { weight_kg: 2.5, length_cm: 70, breadth_cm: 50, height_cm: 20 },
+    compute: (mock) => {
+      const weights = parcelWeights(mock);
+      return {
+        'Volumetric weight (kg)': weights.volumetric,
+        'Chargeable weight (kg)': weights.chargeable,
+        'Box heavier than contents': weights.boxHeavier,
+        'Missing values': packagingGaps(mock).join(', ') || 'none',
       };
     },
   }),

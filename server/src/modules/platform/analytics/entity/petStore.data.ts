@@ -1,5 +1,5 @@
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { StoreCategoryModel, StorePetTypeModel } from '@modules/commerce/store/storeTaxonomy.model';
 import { inEitherPeriod, type AnalyticsWindow } from './window';
 
@@ -68,7 +68,7 @@ export interface ProductFiling {
 
 /** For every product sold: its brand and where it is filed on the store. */
 export async function filingOf(productIds: string[]) {
-  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+  const products = await StoreProductModel.find({ _id: { $in: productIds } })
     .select('brand_id brand_name store.pet_type_ids store.category_ids')
     .lean();
   const filing = new Map<string, ProductFiling>(

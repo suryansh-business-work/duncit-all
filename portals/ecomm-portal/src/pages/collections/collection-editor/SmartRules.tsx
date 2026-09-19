@@ -20,7 +20,7 @@ export default function SmartRules({ control }: Readonly<{ control: Control<Coll
   const taxonomy = useTaxonomyOptions();
   const { data } = useQuery(STORE_BRANDS, { fetchPolicy: 'cache-and-network' });
   const brandOptions = useMemo(
-    () => (data?.storeBrands ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
+    () => (data?.storeAdminBrands ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
     [data],
   );
   const noLimit = t('ecommPortal.collections.blankNoLimit');

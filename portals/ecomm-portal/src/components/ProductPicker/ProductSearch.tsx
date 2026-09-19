@@ -20,7 +20,7 @@ interface ProductSearchProps {
   onAdd: (row: PickerSearchRow) => void;
 }
 
-/** Find catalogue products by name, SKU or brand and add them to a hand-picked list. */
+/** Find store products by name, SKU or brand and add them to a hand-picked list. */
 export default function ProductSearch({ chosen, full, onAdd }: Readonly<ProductSearchProps>) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
@@ -30,7 +30,7 @@ export default function ProductSearch({ chosen, full, onAdd }: Readonly<ProductS
     variables: { query: { search: term, page: 1, page_size: RESULTS } },
     skip: !ready,
   });
-  const rows = ready ? (data?.storeListingsTable.rows ?? []) : [];
+  const rows = ready ? (data?.storeAdminProductsTable.rows ?? []) : [];
   return (
     <Stack spacing={1}>
       <TextField

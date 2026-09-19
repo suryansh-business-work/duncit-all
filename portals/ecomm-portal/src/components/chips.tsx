@@ -5,6 +5,8 @@ import { useTranslation } from '@duncit/shell';
 import {
   ORDER_STATUS_COLORS,
   PAYMENT_METHOD_KEYS,
+  PRODUCT_STATUS_COLORS,
+  PRODUCT_STATUS_KEYS,
   RETURN_STATUS_COLORS,
   RETURN_STATUS_KEYS,
   codeLabel,
@@ -20,6 +22,19 @@ export function OrderStatusChip({ status }: Readonly<{ status: string }>) {
 export function ReturnStatusChip({ status }: Readonly<{ status: string }>) {
   const { t } = useTranslation();
   return <StatusChip status={status} label={codeLabel(RETURN_STATUS_KEYS, status, t)} colorMap={RETURN_STATUS_COLORS} />;
+}
+
+/** Whether a store product is a draft, on sale, or retired. */
+export function ProductStatusChip({ status }: Readonly<{ status: string }>) {
+  const { t } = useTranslation();
+  return (
+    <StatusChip
+      status={status}
+      label={codeLabel(PRODUCT_STATUS_KEYS, status, t)}
+      colorMap={PRODUCT_STATUS_COLORS}
+      data-testid="product-status-chip"
+    />
+  );
 }
 
 /** Paid up front, or cash on delivery. */

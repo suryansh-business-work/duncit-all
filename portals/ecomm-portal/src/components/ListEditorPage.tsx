@@ -36,6 +36,8 @@ interface ListEditorPageProps<T extends { id: string }>
   onEdit?: (item: T) => void;
   /** Controls beside the add button (a "View store" link). */
   extraActions?: ReactNode;
+  /** Stable hook for tests on the page. */
+  testId?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ export default function ListEditorPage<T extends { id: string }>({
   onAdd,
   onEdit,
   extraActions,
+  testId,
   ...list
 }: Readonly<ListEditorPageProps<T>>) {
   const { editing, setEditing } = editor;
@@ -69,7 +72,7 @@ export default function ListEditorPage<T extends { id: string }>({
   );
   const initial = editing === 'new' ? null : editing;
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} data-testid={testId}>
       <PageHeader title={title} subtitle={subtitle} actions={actions} />
       <QueryGuard loading={loading && items.length === 0} error={error}>
         <ReorderList<T>

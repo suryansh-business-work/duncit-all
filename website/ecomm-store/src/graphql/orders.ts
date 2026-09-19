@@ -20,6 +20,9 @@ export type FulfilmentStatus =
   | 'PICKED_UP'
   | 'CANCELLED'
   | 'RTO'
+  | 'RTO_DELIVERED'
+  | 'NDR'
+  | 'LOST'
   | 'FAILED';
 
 export type StorePaymentState =
@@ -82,6 +85,8 @@ export interface StoreOrder {
   courier_name: string;
   awb: string;
   tracking_url: string;
+  /** The courier's estimated delivery date; '' until one is assigned. */
+  etd: string;
   events: StoreOrderEvent[];
   created_at: string;
   delivered_at: string | null;
@@ -111,6 +116,7 @@ const ORDER_FIELDS = `
   courier_name
   awb
   tracking_url
+  etd
   events { status location note at }
   created_at
   delivered_at

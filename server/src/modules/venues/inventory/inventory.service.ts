@@ -17,6 +17,12 @@ import { UserModel } from '@modules/access/user/user.model';
 import { notifyEvent } from '@services/notify/notify.service';
 import { sendEmail } from '@services/email/email.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
+import {
+  assertMrp,
+  packagingMissing,
+  parcelOf,
+  validatePackagingInput,
+} from './inventory.packaging';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
 
@@ -80,6 +86,12 @@ const TRACKED_FIELDS = [
   'length_cm',
   'breadth_cm',
   'weight_kg',
+  'package_type',
+  'hsn_code',
+  'is_fragile',
+  'is_liquid',
+  'shelf_life_days',
+  'mrp',
   'color',
   'commission_pct',
   'delivery_target',
@@ -95,6 +107,12 @@ const STOCK_FIELDS = new Set([
 ]);
 
 const dateToIso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
+
+/** The two read-only weights a courier bills by, for the product/variant payload. */
+const weightsOf = (parcel: { volumetric_weight_kg: number; chargeable_weight_kg: number }) => ({
+  volumetric_weight_kg: parcel.volumetric_weight_kg,
+  chargeable_weight_kg: parcel.chargeable_weight_kg,
+});
 
 export const inventoryProductToPub = (product: IInventoryProduct) => {
   const inventory = Number(product.inventory_count) || 0;
@@ -125,6 +143,8 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
           breadth_cm: v.breadth_cm ?? 0,
           length_cm: v.length_cm ?? 0,
           weight_kg: v.weight_kg ?? 0,
+          mrp: v.mrp ?? 0,
+          ...weightsOf(parcelOf(product, v)),
         }))
       : [],
     categories: Array.isArray(product.categories)
@@ -193,6 +213,14 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     length_cm: product.length_cm ?? 0,
     breadth_cm: product.breadth_cm ?? 0,
     weight_kg: product.weight_kg ?? 0,
+    package_type: product.package_type ?? 'BOX',
+    hsn_code: product.hsn_code ?? '',
+    is_fragile: !!product.is_fragile,
+    is_liquid: !!product.is_liquid,
+    shelf_life_days: product.shelf_life_days ?? null,
+    mrp: product.mrp ?? 0,
+    ...weightsOf(parcelOf(product)),
+    packaging_missing: packagingMissing(product),
     color: product.color ?? '',
     commission_pct: product.commission_pct ?? 5,
     delivery_target: product.delivery_target ?? 'HOST',
@@ -277,6 +305,7 @@ async function recordStockChanges(
 }
 
 function validateInput(input: any) {
+  validatePackagingInput(input);
   if (input.unit_cost !== undefined && input.unit_cost < 0) {
     throw new GraphQLError('Product cost cannot be negative', { extensions: { code: 'BAD_USER_INPUT' } });
   }
@@ -354,6 +383,8 @@ function validateProductListingInput(input: any) {
       throw new GraphQLError('Free-delivery threshold cannot be negative', { extensions: { code: 'BAD_USER_INPUT' } });
     }
   }
+  validatePackagingInput(input);
+  assertMrp(Number(input.unit_cost), input.mrp);
   validateVariantsInput(input);
 }
 
@@ -402,6 +433,8 @@ function validateVariantsInput(input: any) {
     if (Number(v?.inventory_count) < 0) {
       throw new GraphQLError(`Stock for ${label} cannot be negative`, { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    validatePackagingInput(v ?? {}, label);
+    assertMrp(Number(v?.unit_cost), v?.mrp, label);
     const key = variantComboKey(v);
     if (key && seen.has(key)) {
       throw new GraphQLError(`Duplicate variant combination: ${label}`, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -545,6 +578,9 @@ function applyVariants(doc: IInventoryProduct, input: any) {
       size_label: cleanText(v.size_label, 120),
       description: cleanText(v.description, 4000),
       unit_cost: Number(v.unit_cost) || 0,
+      // An MRP the form did not send is kept: the pet store's listing editor
+      // sets it, and a partner re-saving the listing must not wipe it.
+      mrp: v.mrp === undefined || v.mrp === null ? Number(previous?.mrp ?? 0) : Number(v.mrp) || 0,
       inventory_count: Number(v.inventory_count) || 0,
       images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
       height_cm: Number(v.height_cm) || 0,
@@ -589,7 +625,10 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   doc.is_duncit_delivery_partner = !!input.is_duncit_delivery_partner;
   doc.size_label = cleanText(input.size_label, 120);
   doc.height_cm = Number(input.height_cm) || 0;
+  doc.length_cm = Number(input.length_cm) || 0;
+  doc.breadth_cm = Number(input.breadth_cm) || 0;
   doc.weight_kg = Number(input.weight_kg) || 0;
+  applyPackagingFields(doc, input);
   doc.color = cleanText(input.color, 80);
   applyVariants(doc, input);
   doc.commission_pct = Number(input.commission_pct) || 5;
@@ -598,6 +637,44 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   if (input.pickup_location_id !== undefined) doc.pickup_location_id = toOid(input.pickup_location_id);
   const info = userInfo(user);
   doc.last_updated_by_id = info.id;
+}
+
+/** The packaging values beyond the four dimensions, as a listing form sends them. */
+function applyPackagingFields(doc: IInventoryProduct, input: any) {
+  if (input.package_type != null) doc.package_type = input.package_type;
+  if (input.hsn_code != null) doc.hsn_code = cleanText(input.hsn_code, 8);
+  if (input.is_fragile != null) doc.is_fragile = !!input.is_fragile;
+  if (input.is_liquid != null) doc.is_liquid = !!input.is_liquid;
+  if (input.shelf_life_days !== undefined) doc.shelf_life_days = input.shelf_life_days ?? null;
+  if (input.mrp != null) doc.mrp = Number(input.mrp) || 0;
+}
+
+/** The brand's display name, copied onto the product so tables and the store's Brand facet can read it. */
+async function brandNameOf(brandId: unknown): Promise<string> {
+  const id = String(brandId ?? '');
+  if (!Types.ObjectId.isValid(id)) return '';
+  const brand = await EcommBrandModel.findById(id).select('brand_name').lean();
+  return brand?.brand_name ?? '';
+}
+
+/** Brand is required: a product with no brand reads blank in every table and on the store's Brand filter. */
+async function ensureBrandName(doc: IInventoryProduct) {
+  if (!String(doc.brand_name ?? '').trim() && doc.brand_id) doc.brand_name = await brandNameOf(doc.brand_id);
+  if (!String(doc.brand_name ?? '').trim()) {
+    throw new GraphQLError('Enter the brand this product is sold under', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+}
+
+/**
+ * The checks a catalogue save ends with: MRP against price, and the brand —
+ * required on a new product and whenever an edit sets it (it may not be
+ * cleared). An older product saved without one stays editable (a stock
+ * change must not demand a brand); it still gets the brand record's name.
+ */
+async function assertProductSaveable(doc: IInventoryProduct, brandRequired: boolean) {
+  if (brandRequired) await ensureBrandName(doc);
+  else if (!String(doc.brand_name ?? '').trim() && doc.brand_id) doc.brand_name = await brandNameOf(doc.brand_id);
+  assertMrp(doc.unit_cost, doc.mrp);
 }
 
 /* ---- Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1) ---- */
@@ -1256,6 +1333,13 @@ export const inventoryService = {
       length_cm: Number(input.length_cm) || 0,
       breadth_cm: Number(input.breadth_cm) || 0,
       weight_kg: Number(input.weight_kg) || 0,
+      package_type: input.package_type ?? 'BOX',
+      hsn_code: cleanText(input.hsn_code, 8),
+      is_fragile: !!input.is_fragile,
+      is_liquid: !!input.is_liquid,
+      shelf_life_days: input.shelf_life_days ?? null,
+      mrp: Number(input.mrp) || 0,
+      brand_name: await brandNameOf(input.brand_id),
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,
       delivery_target: resolveDeliveryTarget(input.delivery_target),
@@ -1285,6 +1369,7 @@ export const inventoryService = {
     };
     const beforeAvailable = availableOf(doc);
     applyListingFields(doc, input, user);
+    doc.brand_name = await brandNameOf(doc.brand_id);
     doc.listing_review_status = 'PENDING';
     doc.listing_review_notes = '';
     doc.status = 'DRAFT';
@@ -1451,6 +1536,7 @@ export const inventoryService = {
     // products; external brand products come exclusively via submitProductListing.
     doc.ownership = 'DUNCIT';
     doc.brand_id = null;
+    await assertProductSaveable(doc, true);
     await doc.save();
     await logActivity(doc._id, user, 'CREATE', ['*']);
     if (doc.inventory_count > 0) {
@@ -1497,6 +1583,7 @@ export const inventoryService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    await assertProductSaveable(doc, input.brand_name !== undefined);
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
     await doc.save();

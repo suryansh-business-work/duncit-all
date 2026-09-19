@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, type Path, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Stack, Step, StepContent, StepLabel, Stepper } from '@mui/material';
@@ -8,7 +8,7 @@ import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { parseApiError } from '@duncit/utils';
 import { ModerationBlockedDialog } from '@duncit/ui';
 import type { ProductListingValues } from './list-products.types';
-import { productListingSchema } from './list-products.schema';
+import { makeProductListingSchema } from './list-products.schema';
 import { productToValues, toSubmitInput } from './list-products.map';
 import { StepBody } from './list-products.form-ui';
 import StepActions from './StepActions';
@@ -47,7 +47,8 @@ const UPDATE_PRODUCT_LISTING = gql`
 const steps = ['Category', 'Product', 'Variants', 'Commission', 'Delivery', 'Preview'];
 const stepFields: Path<ProductListingValues>[][] = [
   ['categories'],
-  ['product_name'],
+  // The product's parcel sits on the Product step: it is every variant's fallback.
+  ['product_name', 'weight_kg', 'length_cm', 'breadth_cm', 'height_cm', 'package_type', 'hsn_code', 'shelf_life_days'],
   ['variants'],
   ['commission_pct'],
   ['delivery_target', 'pickup_location_id', 'free_delivery_above'],
@@ -72,8 +73,9 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const loading = submitState.loading || updateState.loading || moderation.moderating;
   const editing = Boolean(product?.id);
 
+  const schema = useMemo(() => makeProductListingSchema(t), [t]);
   const { control, handleSubmit, reset, trigger, watch, getValues, setValue, setError } = useForm<ProductListingValues, any, ProductListingValues>({
-    resolver: zodResolver(productListingSchema) as unknown as Resolver<ProductListingValues, any, ProductListingValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<ProductListingValues, any, ProductListingValues>,
     defaultValues: productToValues(product),
     mode: 'onBlur',
   });

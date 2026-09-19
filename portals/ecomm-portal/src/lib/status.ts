@@ -19,6 +19,20 @@ export type ReturnStatus =
   | 'CLOSED';
 export type RefundMode = 'ORIGINAL' | 'COINS';
 export type PaymentMethod = 'PREPAID' | 'COD';
+/** A store product: saved but hidden, on sale, or retired. */
+export type ProductStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+export const PRODUCT_STATUS_KEYS: Record<ProductStatus, string> = {
+  DRAFT: 'ecommPortal.productStatus.draft',
+  PUBLISHED: 'ecommPortal.productStatus.published',
+  ARCHIVED: 'ecommPortal.productStatus.archived',
+};
+
+export const PRODUCT_STATUS_COLORS: StatusColorMap = {
+  DRAFT: 'warning',
+  PUBLISHED: 'success',
+  ARCHIVED: 'default',
+};
 
 /** Order status → chip colour, through the shared tone so the store reads like the rest of Duncit. */
 export const ORDER_STATUS_COLORS: StatusColorMap = Object.fromEntries(

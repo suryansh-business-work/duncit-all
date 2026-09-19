@@ -50,7 +50,7 @@ describe('the flows the seller actually drives', () => {
 
   it('lists every status the type allows, exactly once', () => {
     expect(new Set(ALL_FULFILMENT_STATUSES).size).toBe(ALL_FULFILMENT_STATUSES.length);
-    expect(ALL_FULFILMENT_STATUSES).toHaveLength(12);
+    expect(ALL_FULFILMENT_STATUSES).toHaveLength(15);
   });
 
   it('draws both flows from the same vocabulary', () => {
@@ -69,10 +69,14 @@ describe('fulfilmentFlow', () => {
 });
 
 describe('isTerminalFulfilment', () => {
-  it('is true only for the three states an order does not come back from', () => {
+  it('is true only for the states an order does not come back from', () => {
     expect(isTerminalFulfilment('CANCELLED')).toBe(true);
     expect(isTerminalFulfilment('RTO')).toBe(true);
+    expect(isTerminalFulfilment('RTO_DELIVERED')).toBe(true);
+    expect(isTerminalFulfilment('LOST')).toBe(true);
     expect(isTerminalFulfilment('FAILED')).toBe(true);
+    // A failed delivery is answered (re-attempt or return) — it is not the end.
+    expect(isTerminalFulfilment('NDR')).toBe(false);
     expect(isTerminalFulfilment('DELIVERED')).toBe(false);
     expect(isTerminalFulfilment('PENDING')).toBe(false);
   });

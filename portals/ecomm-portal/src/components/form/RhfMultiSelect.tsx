@@ -9,6 +9,8 @@ interface RhfMultiSelectProps<T extends FieldValues> {
   label: string;
   options: readonly Option[];
   hint?: string;
+  /** Stable hook for tests on the field's root. */
+  testId?: string;
 }
 
 const sameOption = (a: Option, b: Option) => a.value === b.value;
@@ -21,6 +23,7 @@ export default function RhfMultiSelect<T extends FieldValues>({
   label,
   options,
   hint,
+  testId,
 }: Readonly<RhfMultiSelectProps<T>>) {
   return (
     <Controller
@@ -38,6 +41,7 @@ export default function RhfMultiSelect<T extends FieldValues>({
             filterSelectedOptions
             onChange={(_event, next) => field.onChange(next.map((option) => option.value))}
             onBlur={field.onBlur}
+            data-testid={testId}
             renderInput={(params) => (
               <TextField
                 {...params}

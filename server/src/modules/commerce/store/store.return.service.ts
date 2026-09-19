@@ -4,7 +4,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from './storeProduct.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { getStoreSettings } from './storeSettings.model';
 import {
@@ -14,6 +14,7 @@ import {
   type StoreRefundMode,
   type StoreReturnStatus,
 } from './storeReturn.model';
+import { bookReturnPickup } from '@modules/commerce/shiprocket/shiprocket.returns';
 import { mailReturnUpdate } from './store.emails';
 import { returnDeadline } from './store.order.mapper';
 import { creditCoinsBack, recordPaymentRefund, restock } from './store.order.service';
@@ -68,6 +69,21 @@ export const toReturnPub = (r: IStoreReturn | any) => ({
   restocked: !!r.restocked,
   admin_note: r.admin_note ?? '',
   events: (r.events ?? []).map((e: any) => ({ status: e.status, note: e.note ?? '', by: e.by ?? '', at: iso(e.at) ?? '' })),
+  pickup: {
+    sr_order_id: r.pickup?.sr_order_id ?? '',
+    awb: r.pickup?.awb ?? '',
+    courier_name: r.pickup?.courier_name ?? '',
+    status: r.pickup?.status ?? '',
+    tracking_status: r.pickup?.tracking_status ?? '',
+    last_error: r.pickup?.last_error ?? '',
+    last_synced_at: iso(r.pickup?.last_synced_at),
+    events: (r.pickup?.events ?? []).map((e: any) => ({
+      status: e.status ?? '',
+      location: e.location ?? '',
+      note: e.note ?? '',
+      at: iso(e.at) ?? '',
+    })),
+  },
   created_at: iso(r.created_at) ?? '',
   updated_at: iso(r.updated_at) ?? '',
 });
@@ -144,7 +160,7 @@ export const storeReturnService = {
     if (!reason) badInput('Choose why you are returning it');
     const left = await claimable(order._id as Types.ObjectId, order.line_items);
     const productIds = (input.items ?? []).map((i) => toObjectId(i.product_id)).filter(Boolean);
-    const products = await InventoryProductModel.find({ _id: { $in: productIds } }).select('store').lean();
+    const products = await StoreProductModel.find({ _id: { $in: productIds } }).select('store').lean();
     const returnable = new Map(products.map((p) => [String(p._id), listingOf(p).returnable]));
     const items = (input.items ?? [])
       .filter((i) => Number(i.qty) > 0)
@@ -236,6 +252,8 @@ export const storeReturnService = {
     doc.status = input.status;
     doc.events.push({ status: input.status, note, by: user.email ?? user.id, at: new Date() });
     await doc.save();
+    // Approval books the reverse pickup; a courier hiccup lands on pickup.last_error for a retry.
+    if (input.status === 'APPROVED') await bookReturnPickup(doc);
     const order = await ProductOrderModel.findById(doc.order_id);
     const currency = order?.currency_symbol ?? '₹';
     await mailReturnUpdate(doc, order, `${currency}${doc.refund_amount.toFixed(2)}`);

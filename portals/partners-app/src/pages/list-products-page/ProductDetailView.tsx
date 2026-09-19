@@ -47,8 +47,11 @@ function VariantImages({ images }: Readonly<{ images: string[] }>) {
   );
 }
 
-function VariantCard({ variant, index }: Readonly<{ variant: any; index: number }>) {
-  const dims = [variant.length_cm, variant.breadth_cm, variant.height_cm].map((value) => Number(value) || 0);
+/** A variant's packed value, falling back to the product's — the server ships a blank one at the product's parcel. */
+const packed = (variant: any, product: any, key: string) => Number(variant[key]) || Number(product[key]) || 0;
+
+function VariantCard({ variant, product, index }: Readonly<{ variant: any; product: any; index: number }>) {
+  const dims = ['length_cm', 'breadth_cm', 'height_cm'].map((key) => packed(variant, product, key));
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -67,7 +70,7 @@ function VariantCard({ variant, index }: Readonly<{ variant: any; index: number 
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {dims[0]} × {dims[1]} × {dims[2]} cm · {Number(variant.weight_kg) || 0} kg
+            {dims[0]} × {dims[1]} × {dims[2]} cm · {packed(variant, product, 'weight_kg')} kg
           </Typography>
         </Stack>
       </CardContent>
@@ -110,7 +113,7 @@ export default function ProductDetailView({ product }: Readonly<{ product: any }
           }}>Variants ({variants.length})</Typography>
           <Stack spacing={1.5}>
             {variants.map((variant, index) => (
-              <VariantCard key={variant.id ?? variant.sku ?? variant.option_label} variant={variant} index={index} />
+              <VariantCard product={product} key={variant.id ?? variant.sku ?? variant.option_label} variant={variant} index={index} />
             ))}
           </Stack>
         </Stack>

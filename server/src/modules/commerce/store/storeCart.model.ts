@@ -36,7 +36,7 @@ export interface IStoreCart extends Document {
 
 const cartItemSchema = new Schema<IStoreCartItem>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     variant_id: { type: String, default: '' },
     qty: { type: Number, required: true, min: 1 },
     added_at: { type: Date, default: () => new Date() },
@@ -77,7 +77,7 @@ export interface IStoreWishlist extends Document {
 
 const wishlistItemSchema = new Schema<IStoreWishlistItem>(
   {
-    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'StoreProduct', required: true },
     added_at: { type: Date, default: () => new Date() },
   },
   { _id: false }

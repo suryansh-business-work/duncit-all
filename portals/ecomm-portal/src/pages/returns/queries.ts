@@ -19,6 +19,19 @@ export interface StoreReturnEvent {
 }
 
 /** A buyer's request to send goods back, and everything that has happened to it. */
+/** The reverse pickup: a courier collecting the goods from the buyer for the warehouse. */
+export interface ReturnPickup {
+  sr_order_id: string;
+  awb: string;
+  courier_name: string;
+  /** '', BOOKED, PICKUP_SCHEDULED, IN_TRANSIT, DELIVERED, CANCELLED or FAILED. */
+  status: string;
+  tracking_status: string;
+  last_error: string;
+  last_synced_at: string | null;
+  events: { status: string; location: string; note: string; at: string }[];
+}
+
 export interface StoreReturn {
   id: string;
   return_no: string;
@@ -40,6 +53,7 @@ export interface StoreReturn {
   restocked: boolean;
   admin_note: string;
   events: StoreReturnEvent[];
+  pickup: ReturnPickup;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +91,21 @@ const RETURN_FIELDS = `
     by
     at
   }
+  pickup {
+    sr_order_id
+    awb
+    courier_name
+    status
+    tracking_status
+    last_error
+    last_synced_at
+    events {
+      status
+      location
+      note
+      at
+    }
+  }
   created_at
   updated_at
 `;
@@ -103,6 +132,22 @@ export const STORE_ADMIN_RETURN: TypedDocumentNode<{ storeAdminReturn: StoreRetu
 export const UPDATE_RETURN = gql`
   mutation StoreUpdateReturn($id: ID!, $input: StoreReturnUpdateInput!) {
     storeUpdateReturn(id: $id, input: $input) {
+      ${RETURN_FIELDS}
+    }
+  }
+`;
+
+export const BOOK_RETURN_PICKUP: TypedDocumentNode<{ storeBookReturnPickup: StoreReturn }, { id: string }> = gql`
+  mutation StoreBookReturnPickup($id: ID!) {
+    storeBookReturnPickup(id: $id) {
+      ${RETURN_FIELDS}
+    }
+  }
+`;
+
+export const RESTOCK_RETURN: TypedDocumentNode<{ storeRestockReturn: StoreReturn }, { id: string }> = gql`
+  mutation StoreRestockReturn($id: ID!) {
+    storeRestockReturn(id: $id) {
       ${RETURN_FIELDS}
     }
   }

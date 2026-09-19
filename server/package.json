@@ -79,6 +79,7 @@
     "check:whatsapp": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-whatsapp.ts",
     "audit:whatsapp-media": "ts-node -r tsconfig-paths/register --transpile-only scripts/audit-whatsapp-media.ts",
     "check:emails": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-email-catalogue.ts",
+    "shiprocket:smoke": "ts-node --transpile-only scripts/shiprocket-smoke.ts",
     "docs:emails": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-email-doc.ts"
   },
   "dependencies": {

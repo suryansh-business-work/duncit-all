@@ -1,5 +1,5 @@
 import { mountPortal } from '@duncit/shell';
-import { ECOMM_PORTAL_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { ECOMM_PORTAL_BUNDLE, PACKAGING_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
@@ -16,7 +16,8 @@ mountPortal({
   apolloClient: runtime.apolloClient,
   graphqlUrl,
   logsPortal: logs.portal['ecomm-portal'],
-  i18nFallback: flattenCatalogue(ECOMM_PORTAL_BUNDLE),
+  // The shared Shipping & packaging section (parcel override) reads packaging.*.
+  i18nFallback: { ...flattenCatalogue(ECOMM_PORTAL_BUNDLE), ...flattenCatalogue(PACKAGING_BUNDLE) },
   loadUser: createSessionUserLoader(runtime.apolloClient),
   children: <App />,
 });

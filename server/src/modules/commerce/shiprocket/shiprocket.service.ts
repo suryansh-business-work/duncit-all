@@ -1,22 +1,9 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import {
-  isShiprocketConfigured,
-  createOrderAdhoc,
-  assignAwb,
-  getServiceability,
-  trackByShipment,
-  type TrackResult,
-} from './shiprocket.gateway';
-import { mapShiprocketStatus } from './shiprocket.statusMap';
-import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
-
-/** The shared post-status reaction, imported lazily — productOrder imports this module. */
-async function afterStatusChange(order: IProductOrder, previous: IProductOrder['fulfilment_status']) {
-  const { afterStatusChange: react } = await import('@modules/commerce/productOrder/productOrder.service');
-  await react(order, previous);
-}
+import { isShiprocketConfigured, getServiceability } from './shiprocket.gateway';
+import { createShipment } from './shiprocket.shipment';
+import { applyWebhookEvent, refreshTracking } from './shiprocket.tracking';
+import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -237,70 +224,6 @@ async function quoteShipGroup(
   }
 }
 
-async function resolvePickup(order: IProductOrder): Promise<string> {
-  if (order.pickup_location_id) return order.pickup_location_id;
-  return (await getRuntimeEnvValue('SHIPROCKET_PICKUP_LOCATION')) || 'Primary';
-}
-
-function buildAdhocPayload(order: IProductOrder, pickup: string): Record<string, unknown> {
-  const addr = (order.shipping_address ?? {}) as Record<string, any>;
-  const nameParts = String(addr.name ?? order.buyer_name).trim().split(/\s+/);
-  const first = nameParts.shift() || 'Customer';
-  const last = nameParts.join(' ') || '.';
-  const items = order.line_items;
-  const weight = Math.max(0.1, items.reduce((s, l) => s + Number(l.weight_kg || 0) * l.qty, 0));
-  const length = Math.max(1, ...items.map((l) => Number(l.length_cm || 0)), 10);
-  const breadth = Math.max(1, ...items.map((l) => Number(l.breadth_cm || 0)), 10);
-  const height = Math.max(1, ...items.map((l) => Number(l.height_cm || 0)), 5);
-  return {
-    order_id: order.order_no,
-    order_date: order.created_at.toISOString().slice(0, 10),
-    pickup_location: pickup,
-    billing_customer_name: first,
-    billing_last_name: last,
-    billing_address: addr.line1 ?? '',
-    billing_address_2: addr.line2 ?? '',
-    billing_city: addr.city ?? '',
-    billing_pincode: addr.pincode ?? '',
-    billing_state: addr.state ?? '',
-    billing_country: addr.country || 'India',
-    billing_email: addr.email || order.buyer_email,
-    billing_phone: (addr.phone || order.buyer_phone || '').replace(/\D/g, '').slice(-10),
-    shipping_is_billing: true,
-    order_items: items.map((l) => ({
-      name: l.name,
-      sku: l.sku || l.name,
-      units: l.qty,
-      selling_price: l.unit_cost,
-    })),
-    // A pet-store Cash-on-Delivery order: the courier collects this order's
-    // share of the bill (goods + delivery + COD fee − discounts) at the door.
-    payment_method: order.payment_method === 'COD' ? 'COD' : 'Prepaid',
-    sub_total: order.payment_method === 'COD' ? order.cod_amount : order.items_total,
-    length,
-    breadth,
-    height,
-    weight,
-  };
-}
-
-function applyTracking(order: IProductOrder, t: TrackResult): void {
-  const status = mapShiprocketStatus(t.current_status);
-  order.shiprocket.tracking_status = t.current_status;
-  order.shiprocket.last_synced_at = new Date();
-  order.fulfilment_status = status;
-  const latest = t.activities[0];
-  if (latest) {
-    order.tracking_events.push({
-      status: latest.status || t.current_status,
-      code: 0,
-      location: latest.location,
-      note: latest.note,
-      at: new Date(),
-    } as any);
-  }
-}
-
 export const shiprocketService = {
   /**
    * Estimate the delivery charge for a product cart: only SHIPROCKET-delivered
@@ -342,77 +265,12 @@ export const shiprocketService = {
     };
   },
 
-  /**
-   * Create the ShipRocket order + shipment for a SHIP order and assign an AWB.
-   * Best-effort: no-ops when ShipRocket is unconfigured or the order isn't SHIP,
-   * and records FAILED + last_error on error instead of throwing (so a paid
-   * checkout is never failed by a fulfilment hiccup).
-   */
-  async createShipment(order: IProductOrder): Promise<IProductOrder> {
-    if (order.fulfilment_method !== 'SHIP') return order;
-    // Already ordered with the courier. Creating a second ad-hoc order ships a
-    // second parcel and pays a second courier charge, and there is no undo — so
-    // the guard lives here, next to the call, not only in whatever retried it.
-    if (order.shiprocket?.order_id) return order;
-    if (!(await isShiprocketConfigured())) return order;
-    try {
-      const pickup = await resolvePickup(order);
-      const adhoc = await createOrderAdhoc(buildAdhocPayload(order, pickup));
-      order.pickup_location_id = pickup;
-      order.shiprocket.order_id = adhoc.order_id;
-      order.shiprocket.shipment_id = adhoc.shipment_id;
-      let status: IProductOrder['fulfilment_status'] = 'AWAITING_SHIPMENT';
-      if (adhoc.shipment_id) {
-        const awb = await assignAwb(adhoc.shipment_id);
-        order.shiprocket.awb = awb.awb;
-        order.shiprocket.courier_name = awb.courier_name;
-        order.shiprocket.courier_company_id = awb.courier_company_id;
-        order.shiprocket.label_url = awb.label_url;
-        if (awb.awb) status = 'AWB_ASSIGNED';
-      }
-      order.fulfilment_status = status;
-      order.shiprocket.last_synced_at = new Date();
-      order.last_error = '';
-      order.tracking_events.push({
-        status,
-        code: 0,
-        location: '',
-        note: 'ShipRocket shipment created',
-        at: new Date(),
-      } as any);
-      await order.save();
-    } catch (e) {
-      order.fulfilment_status = 'FAILED';
-      order.last_error = (e as Error).message;
-      await order.save().catch(() => {});
-    }
-    return order;
-  },
+  /** Book the shipment (or resume a half-booked one): order, courier + AWB, pickup. Never throws. */
+  createShipment: (order: IProductOrder, courierId?: string | null) => createShipment(order, courierId),
 
-  /** Pull the latest tracking from ShipRocket and persist it. No-op when
-   * unconfigured or no shipment exists yet. */
-  async refreshTracking(order: IProductOrder): Promise<IProductOrder> {
-    if (!(await isShiprocketConfigured()) || !order.shiprocket.shipment_id) return order;
-    const previous = order.fulfilment_status;
-    const t = await trackByShipment(order.shiprocket.shipment_id);
-    applyTracking(order, t);
-    await order.save();
-    await afterStatusChange(order, previous);
-    return order;
-  },
+  /** Pull the latest tracking from ShipRocket and persist it. */
+  refreshTracking: (order: IProductOrder) => refreshTracking(order),
 
-  /** Apply an inbound ShipRocket webhook status event to the matching order. */
-  async applyWebhookEvent(payload: Record<string, any>): Promise<IProductOrder | null> {
-    const awb = String(payload.awb ?? payload.awb_code ?? '').trim();
-    const orderId = String(payload.order_id ?? payload.channel_order_id ?? '').trim();
-    const query = awb ? { 'shiprocket.awb': awb } : { 'shiprocket.order_id': orderId };
-    const order = await ProductOrderModel.findOne(query);
-    if (!order) return null;
-    const previous = order.fulfilment_status;
-    const current = String(payload.current_status ?? payload.shipment_status ?? '');
-    applyTracking(order, { current_status: current, activities: [] });
-    await order.save();
-    await afterStatusChange(order, previous);
-    return order;
-  },
+  /** Apply an inbound ShipRocket webhook to the matching order or return. */
+  applyWebhookEvent: (payload: Record<string, any>) => applyWebhookEvent(payload),
 };

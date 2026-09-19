@@ -312,6 +312,9 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
     product: {
       gallery: 'Product photos',
       showImage: 'Show photo {n} of {total}',
+      photoPicker: 'Choose a photo',
+      previousImage: 'Previous photo',
+      nextImage: 'Next photo',
       valueSoldOut: '{value}, sold out',
       chooseOption: 'Choose an option to continue.',
       lowStock: 'Hurry — only {count} left.',
@@ -513,6 +516,7 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       timeline: 'Tracking',
       awb: '{courier} · AWB {awb}',
       trackCourier: 'Track with courier',
+      eta: 'Expected by {etd}',
       qty: 'Qty {qty}',
       itemCount: { one: '{count} item', other: '{count} items' },
       returnedQty: '{qty} on a return',
@@ -540,6 +544,9 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       pickedUp: 'Picked up',
       cancelled: 'Cancelled',
       rto: 'Returning to seller',
+      rtoDelivered: 'Returned to seller',
+      ndr: 'Delivery attempt failed',
+      lost: 'Lost in transit',
       failed: 'Delivery failed',
     },
     paymentState: {

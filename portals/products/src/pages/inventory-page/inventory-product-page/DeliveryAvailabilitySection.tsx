@@ -1,10 +1,10 @@
 import {
+  Alert,
   FormControlLabel,
   Grid,
   InputAdornment,
   Stack,
   Switch,
-  Typography,
 } from '@mui/material';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
@@ -98,46 +98,11 @@ export default function DeliveryAvailabilitySection() {
           </Grid>
         </>
       )}
-      <Grid size={12}>
-        <Typography component="h3" variant="subtitle2" sx={{
-          fontWeight: 700
-        }}>
-          Shipping dimensions
-        </Typography>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          Package size and weight used by ShipRocket to rate and book couriers.
-        </Typography>
-      </Grid>
-      <Grid
-        size={{
-          xs: 6,
-          md: 3
-        }}>
-        <RhfNumberField control={control} name="length_cm" label={t('products.delivery.length')} hint="cm" />
-      </Grid>
-      <Grid
-        size={{
-          xs: 6,
-          md: 3
-        }}>
-        <RhfNumberField control={control} name="breadth_cm" label={t('products.delivery.breadth')} hint="cm" />
-      </Grid>
-      <Grid
-        size={{
-          xs: 6,
-          md: 3
-        }}>
-        <RhfNumberField control={control} name="height_cm" label={t('products.delivery.height')} hint="cm" />
-      </Grid>
-      <Grid
-        size={{
-          xs: 6,
-          md: 3
-        }}>
-        <RhfNumberField control={control} name="weight_kg" label={t('products.delivery.weight')} hint="kg" />
-      </Grid>
+      {shiprocket && (
+        <Grid size={12}>
+          <Alert severity="info">{t('products.delivery.packagingNote')}</Alert>
+        </Grid>
+      )}
     </Grid>
   );
 }

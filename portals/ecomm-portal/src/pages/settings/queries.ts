@@ -11,6 +11,7 @@ type TextSetting =
   | 'whatsapp_number'
   | 'announcement_text'
   | 'announcement_link'
+  | 'razorpay_account'
   | 'seo_title'
   | 'seo_description'
   | 'og_image_url'
@@ -68,6 +69,7 @@ const SETTINGS_FIELDS = `
   announcement_text
   announcement_link
   guest_checkout_enabled
+  razorpay_account
   cod_enabled
   cod_fee
   cod_min_order
@@ -113,6 +115,32 @@ export const SAVE_SETTINGS = gql`
   mutation StoreSaveSettings($input: StoreSettingsInput!) {
     storeSaveSettings(input: $input) {
       ${SETTINGS_FIELDS}
+    }
+  }
+`;
+
+/** Test keys take no real money; the mode is read from the key id. */
+export type RazorpayMode = 'LIVE' | 'TEST' | 'UNKNOWN';
+
+/** One of the Tech portal's Razorpay entries — never a secret, only a name and a hint of the key. */
+export interface StoreRazorpayAccount {
+  id: string;
+  name: string;
+  key_hint: string;
+  mode: RazorpayMode;
+  is_default: boolean;
+  is_active: boolean;
+}
+
+export const STORE_RAZORPAY_ACCOUNTS: TypedDocumentNode<{ storeAdminRazorpayAccounts: StoreRazorpayAccount[] }> = gql`
+  query StoreAdminRazorpayAccounts {
+    storeAdminRazorpayAccounts {
+      id
+      name
+      key_hint
+      mode
+      is_default
+      is_active
     }
   }
 `;

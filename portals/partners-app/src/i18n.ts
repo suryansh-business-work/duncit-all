@@ -1,5 +1,6 @@
 import {
   flattenCatalogue,
+  PACKAGING_BUNDLE,
   PARTNERS_BUNDLE,
   useTranslation as useSharedTranslation,
 } from '@duncit/app-settings';
@@ -12,7 +13,13 @@ import {
  *
  * This is the thin per-surface wrapper @duncit/app-settings' own doc comment
  * asks for, rather than repeating the argument at every call site.
+ *
+ * The shared "Shipping & packaging" section of the listing form ships its own
+ * `packaging.*` copy, layered in here.
  */
-export const PARTNERS_FALLBACK = flattenCatalogue(PARTNERS_BUNDLE);
+export const PARTNERS_FALLBACK = {
+  ...flattenCatalogue(PARTNERS_BUNDLE),
+  ...flattenCatalogue(PACKAGING_BUNDLE),
+};
 
 export const useTranslation = () => useSharedTranslation(PARTNERS_FALLBACK);

@@ -1,13 +1,15 @@
 import { z } from 'zod';
+import { PACKAGE_TYPES } from '@duncit/utils';
+import { listingRules, type ListingTranslate } from './list-products.rules';
+
+const blank = (value: unknown) => value === '' || value === null || value === undefined;
 
 const requiredNumber = (message: string) =>
-  z.preprocess(
-    (value) => (value === '' || value === null || value === undefined ? Number.NaN : Number(value)),
-    z.number({ error: message }),
-  );
+  z.preprocess((value) => (blank(value) ? Number.NaN : Number(value)), z.number({ error: message }));
 
-const positiveDimension = (message: string) =>
-  requiredNumber(message).pipe(z.number().positive(message).max(1000, 'Value cannot exceed 1000'));
+/** An optional number input — blank reads 0, "not entered". A variant's blank
+ * parcel dimension ships with the product's; the bounds live in listingRules. */
+const optionalNumber = z.preprocess((value) => (blank(value) ? 0 : Number(value)), z.number());
 
 const optionSchema = z.object({
   name: z.string().trim().min(1, 'Option name is required').max(60, 'Option name is too long'),
@@ -23,13 +25,14 @@ const variantSchema = z.object({
   size_label: z.string().trim().max(120, 'Size label is too long').default(''),
   description: z.string().trim().min(20, 'Description must be at least 20 characters').max(2000),
   image_urls: z.array(z.string().trim().url('Use valid image URLs')).min(1, 'Add at least one image'),
-  height_cm: positiveDimension('Enter a valid height in cm'),
-  weight_kg: positiveDimension('Enter a valid weight in kg'),
-  length_cm: positiveDimension('Enter a valid length in cm'),
-  breadth_cm: positiveDimension('Enter a valid breadth in cm'),
+  height_cm: optionalNumber,
+  weight_kg: optionalNumber,
+  length_cm: optionalNumber,
+  breadth_cm: optionalNumber,
   unit_cost: requiredNumber('Enter the variant price').pipe(
     z.number().positive('Price must be greater than 0').max(1000000, 'Price cannot exceed ₹10,00,000'),
   ),
+  mrp: optionalNumber,
   inventory_count: requiredNumber('Enter the variant stock').pipe(
     z.number().int('Stock must be a whole number').min(0, 'Stock cannot be negative').max(1000000),
   ),
@@ -54,6 +57,15 @@ const hasStock = (variants: { inventory_count: number }[]) =>
 export const productListingSchema = z.object({
   categories: z.array(categoryRowSchema).min(1, 'Add at least one category'),
   product_name: z.string().trim().min(3, 'Product title is too short').max(160).min(1, 'Product title is required'),
+  height_cm: optionalNumber,
+  weight_kg: optionalNumber,
+  length_cm: optionalNumber,
+  breadth_cm: optionalNumber,
+  package_type: z.enum(PACKAGE_TYPES).default('BOX'),
+  hsn_code: z.string().trim().default(''),
+  is_fragile: z.boolean().default(false),
+  is_liquid: z.boolean().default(false),
+  shelf_life_days: z.preprocess((value) => (blank(value) ? null : Number(value)), z.number().nullable()),
   options: z.array(optionSchema).default([]),
   variants: z
     .array(variantSchema)
@@ -71,3 +83,14 @@ export const productListingSchema = z.object({
       .nullable(),
   ),
 });
+
+/**
+ * The schema the listing form validates with: the structural
+ * `productListingSchema` plus the packaging and MRP rules, whose messages are
+ * localized. They run even while another field has a type error (a variant's
+ * blank price), so a missing parcel shows on the Product step, not at submit.
+ */
+export const makeProductListingSchema = (t: ListingTranslate) =>
+  productListingSchema.superRefine(listingRules(t), {
+    when: (payload) => typeof payload.value === 'object' && payload.value !== null,
+  });

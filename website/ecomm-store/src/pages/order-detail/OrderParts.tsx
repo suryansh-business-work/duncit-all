@@ -31,6 +31,11 @@ export function StatusTimeline({ order }: Readonly<{ order: StoreOrder }>) {
           </Step>
         ))}
       </Stepper>
+      {order.etd && !order.delivered_at ? (
+        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          {t('ecommStore.order.eta', { vars: { etd: order.etd } })}
+        </Typography>
+      ) : null}
       {order.awb ? (
         <Typography variant="body2">
           {t('ecommStore.order.awb', { vars: { courier: order.courier_name, awb: order.awb } })}{' '}

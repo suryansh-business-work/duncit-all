@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState, type FocusEvent } from 'react';
+import { useEffect, useState, type FocusEvent } from 'react';
 import { useMediaQuery } from '@mui/material';
+
+import { useCarouselIndex } from '../../../../lib/useCarouselIndex';
 
 const INTERVAL_MS = 6000;
 
@@ -11,15 +13,11 @@ const INTERVAL_MS = 6000;
  */
 export function useCarousel(count: number) {
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const [index, setIndex] = useState(0);
+  const { index, goTo, next, prev } = useCarouselIndex(count);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const playing = count > 1 && !reducedMotion && !paused && !hovered && !focused;
-
-  const goTo = useCallback((next: number) => setIndex(((next % count) + count) % count), [count]);
-  const next = useCallback(() => setIndex((i) => (i + 1) % count), [count]);
-  const prev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count]);
 
   useEffect(() => {
     if (!playing) return undefined;

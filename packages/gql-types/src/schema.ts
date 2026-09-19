@@ -6509,12 +6509,15 @@ export type FulfilmentStatus =
   | 'CANCELLED'
   | 'DELIVERED'
   | 'FAILED'
+  | 'LOST'
+  | 'NDR'
   | 'OUT_FOR_DELIVERY'
   | 'PENDING'
   | 'PICKED_UP'
   | 'PICKUP_SCHEDULED'
   | 'READY_FOR_PICKUP'
   | 'RTO'
+  | 'RTO_DELIVERED'
   | 'SHIPPED';
 
 /**
@@ -7429,6 +7432,15 @@ export type InventoryLinkedPod = {
 
 export type InventoryProduct = {
   __typename?: 'InventoryProduct';
+  chargeable_weight_kg: Scalars['Float']['output'];
+  hsn_code: Scalars['String']['output'];
+  is_fragile: Scalars['Boolean']['output'];
+  is_liquid: Scalars['Boolean']['output'];
+  mrp: Scalars['Float']['output'];
+  package_type: PackageType;
+  packaging_missing: Array<Scalars['String']['output']>;
+  shelf_life_days?: Maybe<Scalars['Int']['output']>;
+  volumetric_weight_kg: Scalars['Float']['output'];
   available_count: Scalars['Int']['output'];
   barcode: Scalars['String']['output'];
   batch_number: Scalars['String']['output'];
@@ -7507,6 +7519,12 @@ export type InventoryProduct = {
 };
 
 export type InventoryProductInput = {
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  package_type?: InputMaybe<PackageType>;
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
@@ -16995,6 +17013,12 @@ export type ProductListingDeliveryTarget =
   | 'VENUE';
 
 export type ProductListingInput = {
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  package_type?: InputMaybe<PackageType>;
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   brand_id: Scalars['ID']['input'];
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   /** Full list of Super/Category/Sub rows the product is sold in. When present, categories[0] backfills the single fields above. */
@@ -17165,6 +17189,13 @@ export type ProductShippingQuoteLine = {
   warehouse_id: Scalars['ID']['output'];
 };
 
+/** How a unit is packed for the courier. */
+export type PackageType =
+  | 'BOX'
+  | 'ENVELOPE'
+  | 'OTHER'
+  | 'POLYBAG';
+
 export type ProductType =
   | 'CONSUMABLE'
   | 'EQUIPMENT'
@@ -17172,6 +17203,9 @@ export type ProductType =
 
 export type ProductVariant = {
   __typename?: 'ProductVariant';
+  chargeable_weight_kg: Scalars['Float']['output'];
+  mrp: Scalars['Float']['output'];
+  volumetric_weight_kg: Scalars['Float']['output'];
   breadth_cm: Scalars['Float']['output'];
   color: Scalars['String']['output'];
   description: Scalars['String']['output'];
@@ -17189,6 +17223,7 @@ export type ProductVariant = {
 };
 
 export type ProductVariantInput = {
+  mrp?: InputMaybe<Scalars['Float']['input']>;
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   color?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -21999,6 +22034,10 @@ export type ShellWorkspaceStateInput = {
 
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
+  etd: Scalars['String']['output'];
+  invoice_url: Scalars['String']['output'];
+  manifest_url: Scalars['String']['output'];
+  pickup_scheduled_date: Scalars['String']['output'];
   awb: Scalars['String']['output'];
   courier_name: Scalars['String']['output'];
   label_url: Scalars['String']['output'];
@@ -24252,6 +24291,12 @@ export type UpdateInterviewInput = {
 };
 
 export type UpdateInventoryProductInput = {
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  package_type?: InputMaybe<PackageType>;
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;

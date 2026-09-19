@@ -17,7 +17,7 @@ import { ShelfHeading } from '../shelf/ShelfHeading';
 import { BuyBox } from './buy-box';
 import { RecentlyViewed, RelatedProducts } from './MoreProducts';
 import { ProductDetails } from './ProductDetails';
-import { ProductGallery } from './ProductGallery';
+import { ProductGallery } from './product-gallery';
 import { ProductReviews } from './reviews';
 import { ProductTitleBlock } from './ProductTitleBlock';
 import { useVariantSelection } from './useVariantSelection';

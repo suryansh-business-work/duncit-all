@@ -21,6 +21,7 @@ import { StoreCartModel } from './storeCart.model';
 import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
 import { storeCartService } from './store.cart.service';
 import { assertBuyable, lineOut, priceStoreCart, resolveStoreLines, type StoreQuote } from './store.pricing';
+import { addressProblems } from '@modules/commerce/shiprocket/shiprocket.address';
 import { toStoreOrder } from './store.order.mapper';
 import { autoshipDiscountFor } from './store.autoship.discount';
 import { badInput, forbidden, notFound, resolveOwner, sameSecret, secretKey, type StoreOwner } from './store.shared';
@@ -117,6 +118,9 @@ export function cleanAddress(a: AddressInput) {
   if (!out.line1) badInput('Enter the delivery address');
   if (!out.city || !out.state) badInput('Enter the city and state');
   if (!PINCODE.test(out.pincode)) badInput('Enter a valid 6-digit pincode');
+  // The courier's own bar: a street that is only "India" passes "not empty" and fails ShipRocket.
+  const problems = addressProblems(out);
+  if (problems.length > 0) badInput(`Enter ${problems.join(' and ')} of the delivery address`);
   return out;
 }
 
@@ -371,9 +375,10 @@ async function openRazorpay(
   draft: StorePaymentDraft,
   quote: StoreQuote,
   contact: ReturnType<typeof cleanContact>,
-  businessName: string
+  businessName: string,
+  account: string
 ) {
-  const { keyId } = await getRazorpayKeys();
+  const { keyId } = await getRazorpayKeys(account);
   const q = quote.quote;
   const amountPaise = Math.round(q.total * 100);
   const order = await createRazorpayOrder({
@@ -381,13 +386,15 @@ async function openRazorpay(
     currency: 'INR',
     receipt: String(draft.base.payment_id),
     notes: { kind: 'pet_store', user_id: draft.base.user_id ? String(draft.base.user_id) : 'guest' },
+    account,
   });
   const doc = await PaymentModel.create({
     ...draft.base,
     status: 'PENDING',
     gateway: 'RAZORPAY',
     gateway_ref: order.id,
-    metadata: { ...draft.metadata, razorpay_order_id: order.id },
+    // The account is frozen on the payment: verification and the reconciler use the same one.
+    metadata: { ...draft.metadata, razorpay_order_id: order.id, razorpay_account: account },
   });
   const sheet = razorpaySheet({
     paymentDocId: String(doc._id),
@@ -525,7 +532,13 @@ export const storeCheckoutService = {
       await markConverted(owner.owner_key, doc._id);
       return resultFor(doc, 'PAID', draft.accessKey);
     }
-    const { doc, sheet } = await openRazorpay(draft, quote, contact, settings.store_name || fs.business_name);
+    const { doc, sheet } = await openRazorpay(
+      draft,
+      quote,
+      contact,
+      settings.store_name || fs.business_name,
+      settings.razorpay_account
+    );
     return resultFor(doc, 'PENDING_PAYMENT', draft.accessKey, sheet);
   },
 

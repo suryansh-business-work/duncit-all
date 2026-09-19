@@ -7,21 +7,19 @@ export interface Country {
   flag: string;
 }
 
-const normalizeDial = (phonecode?: string | number) => {
-  const cleaned = String(phonecode ?? '').trim().replace(/^\+/, '');
-  return cleaned ? `+${cleaned}` : '';
-};
+// countries-list types `phone` as number[], and every country carries at least one.
+const normalizeDial = (phonecode: number) => `+${phonecode}`;
 
 const flagForIso = (iso: string) =>
   iso
     .toUpperCase()
-    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) ?? 0)));
+    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) as number)));
 
 const allCountries = Object.entries(countries)
   .map(([iso, country]) => ({
     name: country.name,
     iso,
-    dial: normalizeDial(country.phone?.[0]),
+    dial: normalizeDial(country.phone[0]),
     flag: flagForIso(iso),
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
@@ -33,6 +31,3 @@ export const COUNTRIES: Country[] = [
 
 export const findCountryByDial = (dial: string): Country | undefined =>
   COUNTRIES.find((country) => country.dial === dial);
-
-export const findCountryByIso = (iso: string): Country | undefined =>
-  COUNTRIES.find((country) => country.iso === iso.toUpperCase());

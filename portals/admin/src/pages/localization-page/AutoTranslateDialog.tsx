@@ -97,18 +97,20 @@ export default function AutoTranslateDialog({
       await start({ variables: { locale: locale.code, replace_existing: replaceExisting } });
       await refetchJob();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : t('admin.localization.startFailed'));
+      // A rejected mutation or refetch is always an Error — Apollo wraps anything else.
+      setOpError((e as Error).message);
     }
   };
 
+  // Stop is only offered while the job is RUNNING, so there is always a job here.
   const stop = async () => {
-    if (!job) return;
+    const { id } = job as AutoTranslateJobRow;
     setOpError(null);
     try {
-      await cancel({ variables: { id: job.id } });
+      await cancel({ variables: { id } });
       await refetchJob();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : t('admin.localization.stopFailed'));
+      setOpError((e as Error).message);
     }
   };
 

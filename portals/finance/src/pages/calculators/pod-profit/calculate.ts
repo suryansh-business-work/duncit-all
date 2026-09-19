@@ -15,14 +15,13 @@ const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
 const scaleRupees = (paise: number, count: number) => Math.round(paise * count) / 100;
 
 /** Per-side expense totals in PAISE, so the subtraction below stays exact. */
-function expensePaise(expenses: readonly PodExpense[] | undefined): Record<ExpenseBearer, number> {
+function expensePaise(expenses: readonly PodExpense[]): Record<ExpenseBearer, number> {
   const totals: Record<ExpenseBearer, number> = { DUNCIT: 0, HOST: 0, VENUE: 0 };
-  for (const expense of expenses ?? []) {
-    // An unknown bearer falls to Duncit rather than being dropped: a cost that
-    // silently vanishes from the total is worse than one filed in the wrong
-    // column, and the reader can see and move it.
-    const bearer: ExpenseBearer = totals[expense.borne_by] === undefined ? 'DUNCIT' : expense.borne_by;
-    totals[bearer] += toPaise(expense.amount);
+  // `borne_by` is always one of the three here: a saved row passes through
+  // `expensesOf` (an unknown bearer becomes DUNCIT there) and the editor's
+  // select offers nothing else.
+  for (const expense of expenses) {
+    totals[expense.borne_by] += toPaise(expense.amount);
   }
   return totals;
 }
@@ -67,7 +66,7 @@ export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
   const totalSpots = Math.max(0, Math.round(inputs.no_of_spots));
   // At least one: a projection of zero pods would print an all-zero report
   // that reads as a broken calculator rather than an empty one.
-  const podCount = Math.max(1, Math.round(inputs.pod_count || 1));
+  const podCount = Math.max(1, Math.round(inputs.pod_count));
   // The host's spot is free — only (total - 1) spots are ever billed.
   const spots = payableSpots(totalSpots);
   const amount = toPaise(inputs.pod_amount) * spots;

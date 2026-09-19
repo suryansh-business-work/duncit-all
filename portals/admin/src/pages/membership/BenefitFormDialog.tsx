@@ -50,7 +50,7 @@ const toFormValues = (
     // input rather than an uneditable, permanently-blank column.
     values: buildBenefitValueFields(
       plans.map((p) => p.key),
-      base.values ?? []
+      base.values
     ),
     sort_order: base.sort_order,
     is_active: base.is_active,

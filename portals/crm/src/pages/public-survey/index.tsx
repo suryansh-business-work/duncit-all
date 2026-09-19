@@ -87,7 +87,6 @@ export default function PublicSurveyPage() {
           color: "text.secondary"
         }}>
           {payload?.lead_name ? `For ${payload.lead_name} — a` : 'A'} few quick questions.
-          {payload?.already_filled ? ' You can update your earlier answers.' : ''}
         </Typography>
       </Stack>
       {submitError && <Alert severity="error" sx={{ mb: 1.5 }}>{submitError}</Alert>}

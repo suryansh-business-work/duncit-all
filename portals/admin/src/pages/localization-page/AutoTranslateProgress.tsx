@@ -55,7 +55,7 @@ export default function AutoTranslateProgress({ job }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Alert severity={SEVERITY[job.status] ?? 'info'}>{summaryFor(job, t)}</Alert>
+      <Alert severity={SEVERITY[job.status]}>{summaryFor(job, t)}</Alert>
       {job.status === 'FAILED' && job.error && (
         <Typography variant="caption" sx={{ color: 'error.main' }}>
           {job.error}

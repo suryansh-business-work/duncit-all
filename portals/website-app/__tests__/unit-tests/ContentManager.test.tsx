@@ -92,7 +92,7 @@ describe('ContentManager', () => {
   it('edits an existing entry seeded from the row', async () => {
     renderBlog([updateContentMock()]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'edit' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Edit Blog entry')).toBeInTheDocument();
     expect(within(dialog).getByDisplayValue('First')).toBeInTheDocument();
@@ -113,9 +113,9 @@ describe('ContentManager', () => {
   it('deletes an entry after confirmation', async () => {
     renderBlog([deleteContentMock()]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Delete "First"?')).toBeInTheDocument();
+    expect(within(dialog).getByText('Delete “First”?')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('Blog entry deleted')).toBeInTheDocument();
   });
@@ -123,7 +123,7 @@ describe('ContentManager', () => {
   it('cancels the delete confirmation', async () => {
     renderBlog([]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -133,7 +133,7 @@ describe('ContentManager', () => {
   it('toasts a delete error', async () => {
     renderBlog([deleteContentMock({ fail: true })]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText(/Boom failed/)).toBeInTheDocument();

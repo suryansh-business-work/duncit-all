@@ -105,7 +105,7 @@ export default function ExpenseTable({
     );
 
     const statusLabel = (row: ExpenseRecord) =>
-      t(COMPENSATION_STATUS_KEYS[row.compensation_status as CompensationStatus] ?? '');
+      t(COMPENSATION_STATUS_KEYS[row.compensation_status as CompensationStatus]);
     const renderStatus = (row: ExpenseRecord) => (
       <StatusChip
         status={row.compensation_status}

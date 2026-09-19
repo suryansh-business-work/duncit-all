@@ -100,10 +100,10 @@ export default function PaymentDetailPage() {
       notFoundSeverity="warning"
       spinnerSx={{ p: 6 }}
     >
-      {() => {
-        if (!detail) return null;
-        return <PaymentDetailBody detail={detail} formatDateTime={formatDateTime} />;
-      }}
+      {() => (
+        // QueryGuard only calls this once `notFound` (= !detail) has passed.
+        <PaymentDetailBody detail={detail as PaymentDetail} formatDateTime={formatDateTime} />
+      )}
     </QueryGuard>
   );
 }

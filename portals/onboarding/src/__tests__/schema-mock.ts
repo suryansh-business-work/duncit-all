@@ -289,7 +289,10 @@ function scalarValue(typeName: string, fieldName: string): unknown {
   if (typeName === 'Float') return 100.5;
   if (typeName === 'Boolean') return !name.includes('deleted') && !name.includes('disabled');
   if (typeName !== 'String') return null; // custom scalars (JSON, Upload…)
-  if (name.endsWith('_at') || name.includes('date') || name.includes('time')) return ISO;
+  // A date of birth (`dob`, `owner_dob`) is a date too — the edit dialogs parse it.
+  if (name.endsWith('_at') || name.includes('date') || name.includes('time') || name.endsWith('dob')) {
+    return ISO;
+  }
   if (name.includes('email')) return 'smoke@duncit.com';
   if (name.includes('url') || name.includes('image') || name.includes('photo') || name.includes('avatar')) {
     return 'https://cdn.duncit.com/smoke.jpg';

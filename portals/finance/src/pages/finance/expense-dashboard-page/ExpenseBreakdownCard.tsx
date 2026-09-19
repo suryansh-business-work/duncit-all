@@ -58,8 +58,10 @@ export default function ExpenseBreakdownCard({
                   variant="determinate"
                   // Relative to the BIGGEST slice, not to the total: with eleven
                   // categories every bar against the total is a sliver, and the
-                  // card stops telling you which one is the problem.
-                  value={top > 0 ? Math.round((slice.total / top) * 100) : 0}
+                  // card stops telling you which one is the problem. The first
+                  // slice is the biggest and every expense is over 0, so `top`
+                  // is never 0 once there is a bar to draw.
+                  value={Math.round((slice.total / top) * 100)}
                   sx={{ height: 6, borderRadius: 3 }}
                 />
               </Stack>

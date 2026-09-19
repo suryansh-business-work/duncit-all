@@ -289,6 +289,10 @@ function scalarValue(typeName: string, fieldName: string): unknown {
   if (typeName === 'Float') return 100.5;
   if (typeName === 'Boolean') return !name.includes('deleted') && !name.includes('disabled');
   if (typeName !== 'String') return null; // custom scalars (JSON, Upload…)
+  // A monthly bucket's key is `yyyy-MM` on the wire (coin + gift-card stats),
+  // and the charts parse it with exactly that pattern — the bare field name
+  // parses to an Invalid Date and date-fns throws out of the render.
+  if (name === 'month') return '2026-08';
   if (name.endsWith('_at') || name.includes('date') || name.includes('time')) return ISO;
   if (name.includes('email')) return 'smoke@duncit.com';
   if (name.includes('url') || name.includes('image') || name.includes('photo') || name.includes('avatar')) {

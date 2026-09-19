@@ -66,7 +66,8 @@ export default function PortalAccessPage() {
       notifySuccess(t('admin.portalAccess.approved'));
       refetchRef.current?.();
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : t('admin.portalAccess.failed'));
+      // A rejected mutation is always an Error — Apollo wraps anything else.
+      notifyError((e as Error).message);
     }
   };
 
@@ -84,7 +85,7 @@ export default function PortalAccessPage() {
       notifySuccess(t('admin.portalAccess.denied'));
       refetchRef.current?.();
     } catch (e) {
-      notifyError(e instanceof Error ? e.message : t('admin.portalAccess.failed'));
+      notifyError((e as Error).message);
     }
   };
 

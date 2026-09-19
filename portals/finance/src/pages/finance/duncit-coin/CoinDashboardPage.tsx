@@ -92,10 +92,10 @@ export default function CoinDashboardPage() {
           </Stack>
 
           {error && <Alert severity="error">{error.message}</Alert>}
-          {drift !== 0 && (
+          {stats && drift !== 0 && (
             <Alert severity="warning">
-              The ledger says {coinCount(stats?.total_outstanding ?? 0)} coins are outstanding, but user
-              balances add up to {coinCount(stats?.wallet_balance_total ?? 0)} — a gap of{' '}
+              The ledger says {coinCount(stats.total_outstanding)} coins are outstanding, but user
+              balances add up to {coinCount(stats.wallet_balance_total)} — a gap of{' '}
               {coinCount(Math.abs(drift))}. The ledger is the source of truth for the tiles below.
             </Alert>
           )}

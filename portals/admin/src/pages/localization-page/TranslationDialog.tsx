@@ -56,13 +56,14 @@ export default function TranslationDialog({
   const trimmedKey = key.trim();
   const keyLooksNamespaced = trimmedKey.split('.').filter(Boolean).length >= 2;
 
+  // By the time Save can be pressed, the open effect has seeded a value for every locale.
   const submit = () =>
     onSubmit({
       key: trimmedKey,
       description: description.trim(),
       values: locales.map((locale) => ({
         locale: locale.code,
-        value: values[locale.code] ?? '',
+        value: values[locale.code],
       })),
     });
 

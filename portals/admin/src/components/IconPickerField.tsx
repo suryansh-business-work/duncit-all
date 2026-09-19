@@ -88,15 +88,13 @@ export default function IconPickerField({
       onInputChange={(_e, v, reason) => {
         if (reason === 'input') onChange(v);
       }}
-      renderOption={(props, option) => {
-        const Comp = resolveIcon(option);
-        return (
-          <Box component="li" {...props} sx={{ display: 'flex', gap: 1.25 }}>
-            {Comp ? <Comp fontSize="small" /> : <span style={{ width: 20 }}>·</span>}
-            <Typography variant="body2">{option}</Typography>
-          </Box>
-        );
-      }}
+      // Every option is a name from ICON_NAMES, and each of those resolves to an icon.
+      renderOption={(props, option) => (
+        <Box component="li" {...props} sx={{ display: 'flex', gap: 1.25 }}>
+          {renderIconByName(option, 'small')}
+          <Typography variant="body2">{option}</Typography>
+        </Box>
+      )}
       renderInput={(params) => (
         <TextField
           {...params}

@@ -60,6 +60,9 @@ export const makeWaterfall = (over: Partial<PodFinanceWaterfall> = {}): Waterfal
   platform_fee_pct: 5,
   platform_fee_amount: 42,
   pool_amount: 808,
+  // The waterfall query selects the club-admin cut; this pod's club takes none.
+  club_admin_pct: 0,
+  club_admin_amount: 0,
   venue_amount: 400,
   venue_commission_pct: 10,
   venue_commission_amount: 40,

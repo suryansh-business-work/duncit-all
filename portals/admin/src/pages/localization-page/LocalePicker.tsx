@@ -60,13 +60,14 @@ export default function LocalePicker({ value, error, onPick }: Readonly<Props>) 
       }}
       renderOption={(props, code) => {
         const { key, ...rest } = props as typeof props & { key: string };
-        const option = byCode.get(code);
+        // Every option is a code taken from `options`, so its row is always in the map.
+        const option = byCode.get(code) as LocaleOption;
         return (
           <li key={key} {...rest}>
             <Stack>
-              <Typography variant="body2">{option?.label ?? code}</Typography>
+              <Typography variant="body2">{option.label}</Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {option?.english_label ?? code} · {code}
+                {option.english_label} · {code}
               </Typography>
             </Stack>
           </li>

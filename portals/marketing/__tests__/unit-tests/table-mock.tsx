@@ -35,7 +35,7 @@ export const tableById = (id: string): HTMLElement =>
 
 /** Build a `fetchRows` that always resolves the given rows (component specs). */
 export const fetchRowsFrom =
-  (rows: unknown[]) => async (): Promise<{ rows: unknown[]; total: number }> => ({
+  <T,>(rows: T[]) => async (): Promise<{ rows: T[]; total: number }> => ({
     rows,
     total: rows.length,
   });

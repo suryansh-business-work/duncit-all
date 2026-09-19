@@ -19,6 +19,18 @@ interface PickerProps {
   slotProps?: { textField?: { helperText?: ReactNode; error?: boolean } };
 }
 
+/**
+ * Text typed straight into the input is read the way the real field reads a
+ * pasted string: a date it can parse, or `null` for anything it cannot (MUI X
+ * `parseValueStr` answers null for an unparseable string rather than an
+ * Invalid Date).
+ */
+const toPickerValue = (text: string): Date | null => {
+  if (text === '') return null;
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 function Picker({ label, value, onChange, slotProps }: PickerProps) {
   const field = slotProps?.textField;
   return (
@@ -27,7 +39,7 @@ function Picker({ label, value, onChange, slotProps }: PickerProps) {
         aria-label={label}
         aria-invalid={field?.error ? 'true' : undefined}
         value={value ? value.toISOString() : ''}
-        onChange={(e) => onChange?.(e.target.value === '' ? null : new Date(e.target.value))}
+        onChange={(e) => onChange?.(toPickerValue(e.target.value))}
       />
       {field?.helperText ? <p>{field.helperText}</p> : null}
     </>

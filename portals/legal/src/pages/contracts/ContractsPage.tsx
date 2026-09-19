@@ -67,12 +67,12 @@ export default function ContractsPage() {
     setReadOnly(mode === 'view');
     setForm({
       title: contract.title,
-      counterparty: contract.counterparty ?? '',
-      description: contract.description ?? '',
+      counterparty: contract.counterparty,
+      description: contract.description,
       status: contract.status,
       effective_from: toDateInput(contract.effective_from),
       effective_to: toDateInput(contract.effective_to),
-      content: contract.content ?? '',
+      content: contract.content,
     });
     setError(null);
     setOpen(true);
@@ -80,10 +80,7 @@ export default function ContractsPage() {
 
   const submit = async () => {
     setError(null);
-    if (!form.title.trim()) {
-      setError(t('legal.contracts.titleRequired'));
-      return;
-    }
+    // No blank-title check: Save stays disabled until the title has text.
     const input = {
       title: form.title.trim(),
       counterparty: form.counterparty.trim(),

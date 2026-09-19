@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router';
 import { PodFinancePage, PodFinanceDetailPage } from '../../src/pages/finance/pod-finance-page';
 import SettlementStatusChip, { FrozenBadge } from '../../src/pages/finance/pod-finance-page/SettlementStatusChip';
-import { resetTableControls } from './mocks/table';
+import { resetTableControls, tableControls } from './mocks/table';
 import { renderWithProviders } from '../testkit';
 import {
   makePodBreakdown,
@@ -42,6 +42,27 @@ describe('PodFinancePage', () => {
     expect(screen.getByText('Beta')).toBeInTheDocument();
     fireEvent.click(screen.getAllByTestId('row-open')[0]);
     expect(screen.getByTestId('detail-probe')).toBeInTheDocument();
+  });
+
+  it('searches the grouped pods by title', async () => {
+    tableControls.queries = [{ ...tableControls.queries[0], search: 'beta' }];
+    renderWithProviders(<PodFinancePage />, { path: '/', mocks: [podFinanceReleasesMock()] });
+    await waitFor(() => expect(screen.getByText('Beta')).toBeInTheDocument());
+    expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('table-row')).toHaveLength(1);
+  });
+
+  it('sorts the grouped pods by what they requested, largest first', async () => {
+    tableControls.queries = [{ ...tableControls.queries[0], sortBy: 'requested_total', sortDir: 'desc' }];
+    renderWithProviders(<PodFinancePage />, { path: '/', mocks: [podFinanceReleasesMock()] });
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(2));
+    const [first, second] = screen.getAllByTestId('table-row');
+    expect(within(first).getByText('Alpha')).toBeInTheDocument();
+    expect(within(first).getByTestId('cell-requested_total')).toHaveTextContent('₹150.00');
+    expect(within(first).getByTestId('cell-status_counts')).toHaveTextContent('1 PENDING');
+    expect(within(first).getByTestId('cell-status_counts')).toHaveTextContent('1 APPROVED');
+    // A release stamped with an unreadable date shows a dash, not "Invalid Date".
+    expect(within(second).getByTestId('cell-last_requested_at')).toHaveTextContent('—');
   });
 
   it('renders an empty table when the query returns no data', async () => {

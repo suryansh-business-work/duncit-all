@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client';
 import { Observable } from '@apollo/client/utilities';
 import { ApolloProvider } from '@apollo/client/react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { MemoryRouter } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import RegisterVenueForm from './register-venue.form';
@@ -29,6 +31,7 @@ const savedVenue = {
   id: 'venue-1',
   venue_name: 'Cafe Mocha',
   description: 'A cosy corner cafe',
+  cover_image_url: 'https://cdn.example.com/cover.jpg',
   venue_category: { super_category_id: 'super-1', category_id: 'cat-1', sub_category_id: 'sub-1' },
   address_line1: '12 Main Street',
   address_line2: '',
@@ -43,12 +46,23 @@ const savedVenue = {
   venue_type: 'Cafe',
   capacity_items: [{ label: 'Main hall', capacity: 30 }],
   documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
+  gstin: '22ABCDE1234F1Z5',
+  pan: 'ABCDE1234F',
   owner_name: 'Owner Name',
   owner_phone: '+919876543210',
   owner_dob: '1990-05-10T00:00:00.000Z',
   owner_address: '12 Main Street',
+  bank_account: {
+    payout_method: 'UPI',
+    account_holder_name: 'Owner Name',
+    account_number: '',
+    ifsc_code: '',
+    upi_id: 'owner@okaxis',
+  },
   settings: { holidays: ['2026-08-15'] },
 };
+
+const theme = createTheme();
 
 const RESULTS: Record<string, Record<string, unknown>> = {
   AdminCategories: { categories: [] },
@@ -102,19 +116,24 @@ const mount = ({ venue = null, mode = 'register', failOn }: MountOptions = {}) =
   const sent: Sent[] = [];
   const onSubmitted = vi.fn();
   const onPersisted = vi.fn().mockResolvedValue(undefined);
+  // The open section lives in ?selectedtab=, so the form needs a router.
   render(
     <ApolloProvider client={makeClient(sent, failOn)}>
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <RegisterVenueForm
-          venue={venue}
-          locations={[]}
-          account={account}
-          config={config}
-          mode={mode}
-          onPersisted={onPersisted}
-          onSubmitted={onSubmitted}
-        />
-      </LocalizationProvider>
+      <ThemeProvider theme={theme}>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <MemoryRouter>
+            <RegisterVenueForm
+              venue={venue}
+              locations={[]}
+              account={account}
+              config={config}
+              mode={mode}
+              onPersisted={onPersisted}
+              onSubmitted={onSubmitted}
+            />
+          </MemoryRouter>
+        </LocalizationProvider>
+      </ThemeProvider>
     </ApolloProvider>
   );
   return { sent, onSubmitted, onPersisted };
@@ -126,11 +145,11 @@ describe('RegisterVenueForm — navigation', () => {
   it('opens on Venue Details and swaps the panel when another section is picked', async () => {
     mount();
     expect(screen.getByLabelText(/Venue name/)).toBeTruthy();
-    expect(screen.queryByLabelText('GSTIN (optional)')).toBeNull();
+    expect(screen.queryByLabelText(/^GSTIN/)).toBeNull();
 
     openSection('Venue Documents');
 
-    expect(await screen.findByLabelText('GSTIN (optional)')).toBeTruthy();
+    expect(await screen.findByLabelText(/^GSTIN/)).toBeTruthy();
     expect(screen.queryByLabelText(/Venue name/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Save & continue' })).toBeTruthy();
   });
@@ -247,18 +266,22 @@ describe('RegisterVenueForm — edit-approved mode', () => {
   it('persists the active section through updateApprovedVenue and confirms it', async () => {
     const { sent, onPersisted } = mount({ venue: savedVenue, mode: 'edit-approved' });
 
-    fireEvent.change(screen.getByLabelText('Venue description'), { target: { value: 'Now with a rooftop' } });
+    fireEvent.change(screen.getByLabelText(/Venue description/), { target: { value: 'Now with a rooftop' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('Changes saved.')).toBeTruthy();
     const update = sent.find((call) => call.name === 'UpdateApprovedVenue');
     expect(update?.variables).toEqual({
       venue_id: 'venue-1',
-      input: { description: 'Now with a rooftop', cover_image_url: '', gallery: [] },
+      input: {
+        description: 'Now with a rooftop',
+        cover_image_url: 'https://cdn.example.com/cover.jpg',
+        gallery: [],
+      },
     });
     expect(onPersisted).toHaveBeenCalledTimes(1);
     // A spot edit never walks the wizard forward.
-    expect(screen.getByLabelText('Venue description')).toBeTruthy();
+    expect(screen.getByLabelText(/Venue description/)).toBeTruthy();
   });
 
   it('hides the save bar on the amenities section, which approval locks', async () => {

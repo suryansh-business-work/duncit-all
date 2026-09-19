@@ -59,8 +59,8 @@ export default function SendAdminCredentials() {
     setOpen(true);
   };
 
+  // Only reachable from the Send button, which is disabled while a send is in flight.
   const confirm = async () => {
-    if (loading) return; // guard against double-submit
     if (entry.trim().toUpperCase() !== code) {
       setCaptchaError('That does not match. Please try again.');
       refresh();

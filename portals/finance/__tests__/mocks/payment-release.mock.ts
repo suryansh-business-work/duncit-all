@@ -1,6 +1,7 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import type { PaymentReleaseRow } from '../../src/pages/finance/payment-release-page/queries';
 import {
+  POD_COIN_TOTALS,
   PUBLIC_FINANCE_SETTINGS,
   REVIEW_PAYMENT_RELEASE,
 } from '../../src/pages/finance/payment-release-page/queries';
@@ -24,6 +25,10 @@ export interface BreakdownV2Mock {
   commission_amount: number;
   payout_amount: number;
   duncit_revenue: number;
+  /** Frozen at completion: what the pod settled on (0 booked = no attendance lines). */
+  booked_seats: number;
+  attended_seats: number;
+  attended_total: number;
 }
 
 export interface BreakdownV1Mock {
@@ -53,6 +58,9 @@ export const makeBreakdownV2 = (over: Partial<BreakdownV2Mock> = {}): BreakdownV
   commission_amount: 40,
   payout_amount: 360,
   duncit_revenue: 120,
+  booked_seats: 0,
+  attended_seats: 0,
+  attended_total: 0,
   ...over,
 });
 
@@ -147,5 +155,18 @@ export const reviewPaymentReleaseMock = (
           },
         },
       }),
+  maxUsageCount: 20,
+});
+
+export interface PodCoinTotalsMock {
+  coins_redeemed_total: number;
+  coins_earned_total: number;
+  ticket_discount_total: number;
+}
+
+/** The pod's live coin movement + multi-ticket discounts behind the review's explanatory notes. */
+export const podCoinTotalsMock = (totals: PodCoinTotalsMock, podId = 'pod1'): MockedResponse => ({
+  request: { query: POD_COIN_TOTALS, variables: { podId } },
+  result: { data: { podFinanceBreakdown: { __typename: 'PodFinanceBreakdown', pod_id: podId, ...totals } } },
   maxUsageCount: 20,
 });

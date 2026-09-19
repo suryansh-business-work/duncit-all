@@ -69,7 +69,7 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
       setEditing(null);
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not save row');
+      notifyError(e.message);
     }
   };
 
@@ -86,7 +86,7 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
       notifySuccess('Row deleted');
       refetchRef.current?.();
     } catch (e: any) {
-      notifyError(e.message ?? 'Could not delete row');
+      notifyError(e.message);
     }
   };
 

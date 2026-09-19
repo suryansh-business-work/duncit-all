@@ -1,3 +1,9 @@
+// The table package's shared jsdom gaps (ResizeObserver, elementFromPoint, the
+// download click's MouseEvent view), imported by path: '@duncit/table' is
+// aliased to a stub in this workspace, so '@duncit/table/test-setup' would
+// resolve inside the stub. Without the observer, GridStack's init throws in
+// the effect and React 19 unmounts every DuncitDashboard page under test.
+import '../../../../packages/table/src/test-setup';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { cleanup } from '@testing-library/react';
 import { afterEach, expect, vi } from 'vitest';

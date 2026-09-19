@@ -4,6 +4,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import OpenAiDashboardPage from '../../src/pages/openai-dashboard';
 import {
   OPENAI_USAGE_DASHBOARD,
+  UPSERT_OPENAI_MODEL_PRICE,
   type UsageDashboardData,
 } from '../../src/pages/openai-dashboard/queries';
 import { renderWithProviders } from '../testkit';
@@ -163,6 +164,58 @@ describe('OpenAiDashboardPage', () => {
     // survive so the reader can pick a window that does have data.
     await waitFor(() => expect(screen.getByLabelText('Range')).toBeInTheDocument());
     expect(screen.queryByTestId('dashboard')).not.toBeInTheDocument();
+  });
+
+  // A saved rate changes the rate list and what future calls cost, so the
+  // page reads the dashboard again rather than patching it locally.
+  it('reads the dashboard again once a rate is saved', async () => {
+    renderWithProviders(<OpenAiDashboardPage />, {
+      mocks: [
+        { ...dashMock(7), maxUsageCount: 1 },
+        dashMock(7, {
+          by_task: [
+            {
+              task: 'club.suggest',
+              label: 'Suggest a club',
+              module: 'Clubs',
+              calls: 20,
+              tokens: 9_000,
+              cost_usd: 0.04,
+              failures: 0,
+              avg_duration_ms: 900,
+            },
+          ],
+        }),
+        {
+          request: {
+            query: UPSERT_OPENAI_MODEL_PRICE,
+            variables: { input: { model: 'gpt-4o-mini', input_per_1m: 0.2, output_per_1m: 0.6 } },
+          },
+          result: {
+            data: {
+              upsertOpenAiModelPrice: {
+                __typename: 'OpenAiModelPrice',
+                id: 'p-1',
+                model: 'gpt-4o-mini',
+                input_per_1m: 0.2,
+                output_per_1m: 0.6,
+                updated_at: '2026-09-18T10:00:00.000Z',
+              },
+            },
+          },
+        },
+      ],
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit rate for gpt-4o-mini' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Input — USD per 1M tokens'), {
+      target: { value: '0.2' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Suggest a club')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('surfaces a failed load rather than an empty page', async () => {

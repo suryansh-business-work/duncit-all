@@ -28,6 +28,11 @@ const makeRequest = (over: Partial<ApprovalRequest> = {}): ApprovalRequest => ({
 
 const formatDateTime = (s: string) => `fmt<${s}>`;
 
+/** The text "Close" action in the footer (the title's X carries only an aria-label). */
+const closeAction = () => screen.getByText('Close', { selector: 'button' });
+/** The title's X icon button, named by its aria-label alone. */
+const closeIcon = () => screen.getByLabelText('Close', { selector: 'button' });
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -95,7 +100,7 @@ describe('ReviewDialog — pending request', () => {
         onDeny={vi.fn()}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(closeAction());
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -112,11 +117,11 @@ describe('ReviewDialog — pending request', () => {
         onDeny={onDeny}
       />,
     );
-    expect(screen.queryByLabelText('Reason for denial')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Reason for denial/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Deny' }));
     expect(onDeny).not.toHaveBeenCalled();
-    const field = screen.getByLabelText('Reason for denial');
+    const field = screen.getByLabelText(/Reason for denial/);
     expect(field).toBeInTheDocument();
 
     // Confirm Deny stays disabled until a reason is typed.
@@ -158,13 +163,12 @@ describe('ReviewDialog — pending request', () => {
         onDeny={vi.fn()}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+    expect(closeAction()).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Deny' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
 
     // The dialog's own close affordance (the X icon) must no-op while saving.
-    fireEvent.click(screen.getByRole('button', { name: 'Close', hidden: true }) ?? document.body);
-    fireEvent.click(screen.getAllByRole('button', { name: /close/i })[0]);
+    fireEvent.click(closeIcon());
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -181,8 +185,7 @@ describe('ReviewDialog — pending request', () => {
         onDeny={vi.fn()}
       />,
     );
-    const closeButtons = screen.getAllByRole('button', { name: /close/i });
-    fireEvent.click(closeButtons[closeButtons.length - 1]);
+    fireEvent.click(closeIcon());
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -214,7 +217,7 @@ describe('ReviewDialog — pending request', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Deny' }));
-    fireEvent.change(screen.getByLabelText('Reason for denial'), { target: { value: 'Some reason' } });
+    fireEvent.change(screen.getByLabelText(/Reason for denial/), { target: { value: 'Some reason' } });
     expect(screen.getByRole('button', { name: 'Confirm Deny' })).toBeInTheDocument();
 
     rerender(
@@ -230,7 +233,7 @@ describe('ReviewDialog — pending request', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Deny' })).toBeInTheDocument();
-    expect(screen.queryByLabelText('Reason for denial')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Reason for denial/)).not.toBeInTheDocument();
   });
 
   it('logs when a confirmed deny rejects instead of dropping the failure', async () => {
@@ -248,7 +251,7 @@ describe('ReviewDialog — pending request', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Deny' }));
-    fireEvent.change(screen.getByLabelText('Reason for denial'), { target: { value: 'reason' } });
+    fireEvent.change(screen.getByLabelText(/Reason for denial/), { target: { value: 'reason' } });
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Deny' }));
 
     await waitFor(() =>
@@ -277,7 +280,9 @@ describe('ReviewDialog — reviewed request', () => {
     );
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Deny' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getAllByText('Close', { selector: 'button' })).toHaveLength(1);
+    expect(closeAction()).toHaveClass('MuiButton-contained');
+    fireEvent.click(closeAction());
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

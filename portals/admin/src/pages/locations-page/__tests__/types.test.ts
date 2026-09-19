@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { blankForm, buildLocationInput, type LocForm } from '../types';
+import { DEFAULT_LAUNCH_TARGET } from '@duncit/utils';
+import {
+  blankForm,
+  buildLocationInput,
+  launchTargetError,
+  whatsappGroupUrlError,
+  type LocForm,
+} from '../types';
 
 const validForm = (over: Partial<LocForm> = {}): LocForm => ({
   ...blankForm,
@@ -97,7 +104,49 @@ describe('buildLocationInput — happy path shape', () => {
       location_image: 'https://cdn.test/bengaluru.jpg',
       location_pincode: '560001',
       location_zones: [{ zone_name: 'Koramangala', pincode: '560034' }],
+      is_launched: true,
+      launch_target: DEFAULT_LAUNCH_TARGET,
+      whatsapp_group_url: '',
     });
+  });
+
+  it('sends the launch target as a number and the group link trimmed', () => {
+    const input = buildLocationInput(
+      validForm({ is_launched: false, launch_target: '750', whatsapp_group_url: '  https://chat.whatsapp.com/AbC  ' }),
+    );
+    expect(input.is_launched).toBe(false);
+    expect(input.launch_target).toBe(750);
+    expect(input.whatsapp_group_url).toBe('https://chat.whatsapp.com/AbC');
+  });
+});
+
+describe('launchTargetError', () => {
+  it('accepts a whole number from 1 to 1,000,000', () => {
+    expect(launchTargetError('1')).toBeNull();
+    expect(launchTargetError('2000')).toBeNull();
+    expect(launchTargetError('1000000')).toBeNull();
+  });
+
+  it('rejects a blank, fractional, zero or too-large target', () => {
+    for (const value of ['', '   ', '1.5', '0', '-4', '1000001', 'abc']) {
+      expect(launchTargetError(value)).toBe('admin.locations.launchTargetInvalid');
+    }
+  });
+});
+
+describe('whatsappGroupUrlError', () => {
+  it('treats the link as optional', () => {
+    expect(whatsappGroupUrlError('')).toBeNull();
+    expect(whatsappGroupUrlError('   ')).toBeNull();
+  });
+
+  it('accepts a WhatsApp group invite link, surrounding spaces included', () => {
+    expect(whatsappGroupUrlError(' https://chat.whatsapp.com/AbC123 ')).toBeNull();
+  });
+
+  it('rejects any other address', () => {
+    expect(whatsappGroupUrlError('https://example.com/group')).toBe('admin.locations.whatsappGroupUrlInvalid');
+    expect(whatsappGroupUrlError('http://chat.whatsapp.com/AbC')).toBe('admin.locations.whatsappGroupUrlInvalid');
   });
 });
 

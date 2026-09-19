@@ -86,9 +86,11 @@ export default function LaunchCitiesTable({ rows, onSent }: Readonly<Props>) {
       if (!ok) return;
       try {
         const result = await sendMut({ variables: { location_doc_id: row.id } });
+        // A resolved send always carries its non-null result; a failure throws instead.
+        const { queued } = (result.data as SendResult).sendLocationLaunchMessage;
         notifySuccess(
           t('admin.locationSubscriptions.sendQueued', {
-            count: result.data?.sendLocationLaunchMessage.queued ?? 0,
+            count: queued,
             vars: { city: row.city },
           })
         );

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route } from 'react-router';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
   makeShortLinkFunnel,
@@ -148,8 +149,9 @@ describe('FunnelCard', () => {
 
 // ===========================================================================
 describe('journey columns', () => {
+  const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
   const value = (field: string, row: ShortLinkJourneyRow) =>
-    getJourneyColumns().find((column) => column.field === field)?.valueGetter?.(row);
+    getJourneyColumns(t).find((column) => column.field === field)?.valueGetter?.(row);
 
   it('reads the person, their furthest step and what they paid', () => {
     const row = makeShortLinkJourneyRow();

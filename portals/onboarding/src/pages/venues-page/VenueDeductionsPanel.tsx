@@ -52,10 +52,11 @@ export default function VenueDeductionsPanel({
   // venue to today's number — cutting it out of every future change in Finance →
   // Default Deductions. So saving is only offered once the number actually moves.
   const unchanged = valid(commission) && Number(commission) === effectivePct;
+  // Only reachable with a valid number: the button is disabled otherwise.
   const saveDeductions = () => {
     // Venue share is no longer edited here — keep whatever the venue already has
     // and only override the per-venue commission (the default-deduction override).
-    if (valid(commission)) onSaveDeductions(Number(active?.venue_share_pct ?? 0), Number(commission));
+    onSaveDeductions(Number(active?.venue_share_pct ?? 0), Number(commission));
   };
 
   return (

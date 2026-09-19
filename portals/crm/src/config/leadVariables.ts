@@ -45,12 +45,9 @@ export const HOST_VARIABLES: LeadVariable[] = [
 export const leadVariablesFor = (entity: 'VENUE_LEAD' | 'HOST_LEAD') =>
   entity === 'HOST_LEAD' ? HOST_VARIABLES : VENUE_VARIABLES;
 
-const s = (v: unknown): string => {
-  if (v == null) return '';
-  if (typeof v === 'string') return v;
-  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-  return JSON.stringify(v);
-};
+// Every field read below is a GraphQL String (or null), so blanking the empty
+// ones is all the normalising a value needs.
+const s = (v: string | null | undefined): string => v ?? '';
 
 /** Slug → value map from a venue lead (blank when the field is empty). */
 export function venueVariableValues(lead: VenueLead): Record<string, string> {

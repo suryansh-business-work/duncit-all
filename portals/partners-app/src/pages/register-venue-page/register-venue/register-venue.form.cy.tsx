@@ -7,6 +7,7 @@ const validValues: RegisterVenueValues = {
   ...blankRegisterVenueValues,
   venue_name: 'Cafe Mocha',
   description: 'A cosy corner cafe',
+  cover_image_url: 'https://cdn.example.com/cover.jpg',
   super_category_id: 'super-1',
   category_id: 'cat-1',
   sub_category_id: 'sub-1',
@@ -25,9 +26,16 @@ const validValues: RegisterVenueValues = {
     { label: 'Rooftop tables', capacity: '12' },
   ],
   documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
+  gstin: '22ABCDE1234F1Z5',
+  pan: 'ABCDE1234F',
   owner_name: 'Owner Name',
   owner_email: 'owner@example.com',
   owner_phone: '+919876543210',
+  owner_dob: '1990-05-10',
+  owner_address: '12 Main Street, Indiranagar',
+  payout_method: 'UPI',
+  account_holder_name: 'Owner Name',
+  upi_id: 'owner@okaxis',
 };
 
 const messagesOf = (values: RegisterVenueValues) => {
@@ -76,15 +84,52 @@ describe('registerVenueSchema', () => {
     );
   });
 
-  it('validates optional GSTIN/PAN formats only when present', () => {
-    expect(registerVenueSchema().safeParse({ ...validValues, gstin: '', pan: '' }).success).toBe(true);
+  it('requires GSTIN and PAN, and validates their formats', () => {
+    const blank = messagesOf({ ...validValues, gstin: '', pan: '' });
+    expect(blank).toContain('GSTIN is required');
+    expect(blank).toContain('PAN is required');
     expect(messagesOf({ ...validValues, gstin: 'nope' })).toContain(
       'GSTIN must follow format like 22ABCDE1234F1Z5'
     );
     expect(messagesOf({ ...validValues, pan: 'nope' })).toContain('PAN must follow format ABCDE1234F');
     expect(
-      registerVenueSchema().safeParse({ ...validValues, gstin: '22ABCDE1234F1Z5', pan: 'ABCDE1234F' }).success
+      registerVenueSchema().safeParse({ ...validValues, gstin: '22abcde1234f1z5', pan: 'abcde1234f' }).success
     ).toBe(true);
+  });
+
+  it('requires the payout fields the chosen method needs', () => {
+    expect(messagesOf({ ...validValues, payout_method: '' })).toContain('Select a payout method');
+    expect(messagesOf({ ...validValues, payout_method: 'CHEQUE' })).toContain('Select UPI, IMPS or NEFT');
+    expect(messagesOf({ ...validValues, account_holder_name: '' })).toContain('Account holder name is required');
+    expect(messagesOf({ ...validValues, account_holder_name: 'Owner 2' })).toContain(
+      'Account holder name can use letters and spaces only'
+    );
+    expect(messagesOf({ ...validValues, upi_id: '' })).toContain('UPI ID is required');
+    expect(messagesOf({ ...validValues, upi_id: 'not-a-upi' })).toContain('Enter a valid UPI ID');
+
+    const bank = { ...validValues, payout_method: 'NEFT', upi_id: '' };
+    expect(messagesOf({ ...bank, account_number: '', ifsc_code: '' })).toEqual([
+      'Account number is required',
+      'IFSC code is required',
+    ]);
+    expect(messagesOf({ ...bank, account_number: '12', ifsc_code: 'HDFC123' })).toEqual([
+      'Account number must be 6 to 18 digits',
+      'IFSC must follow format ABCD0123456',
+    ]);
+    expect(messagesOf({ ...bank, payout_method: 'IMPS', account_number: '123456789', ifsc_code: 'hdfc0001234' })).toEqual(
+      []
+    );
+  });
+
+  it('refuses the same file uploaded under two document headings', () => {
+    const documents = [
+      { type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf', hash: 'h1' },
+      { type: 'Trade License', url: 'https://cdn.example.com/pan-again.pdf', hash: 'h1' },
+      { type: 'Fire NOC', url: 'https://cdn.example.com/noc.pdf' },
+    ];
+    expect(messagesOf({ ...validValues, documents })).toEqual([
+      'This document is already uploaded under another heading',
+    ]);
   });
 
   it('validates owner contact details', () => {

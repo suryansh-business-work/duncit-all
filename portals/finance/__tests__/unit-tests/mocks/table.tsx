@@ -30,12 +30,20 @@ export const tableControls: {
   autoFetch: boolean;
   setRefetch: boolean;
   queries: Array<typeof DEFAULT_Q>;
+  /**
+   * Fire every query in `queries` before any has answered, the way the real
+   * table does while someone is still typing a search — so a page's guard
+   * against a slow earlier answer overwriting a newer one can be exercised.
+   * The rows shown are the LAST query's.
+   */
+  concurrent: boolean;
 } = {
   rows: [],
   rowsByKey: {},
   autoFetch: true,
   setRefetch: true,
   queries: [DEFAULT_Q],
+  concurrent: false,
 };
 
 export function resetTableControls(): void {
@@ -44,28 +52,36 @@ export function resetTableControls(): void {
   tableControls.autoFetch = true;
   tableControls.setRefetch = true;
   tableControls.queries = [DEFAULT_Q];
+  tableControls.concurrent = false;
 }
 
-export const tableQueryToGql = (q: unknown) => ({ query: q });
+/** Runs the configured queries in order, or all at once, and answers with the last page. */
+async function fetchAll(fetchRows: (q: typeof DEFAULT_Q) => Promise<{ rows?: any[] }>) {
+  if (tableControls.concurrent) {
+    const pages = await Promise.all(tableControls.queries.map((q) => fetchRows(q)));
+    return pages.at(-1);
+  }
+  let last: { rows?: any[] } = { rows: [] };
+  for (const q of tableControls.queries) {
+    last = await fetchRows(q);
+  }
+  return last;
+}
 
 /**
- * The column builders come from the REAL package rather than a copy.
+ * Everything this stub does not have to fake comes from the REAL package.
  *
  * This file is aliased over '@duncit/table', so any export it omits reaches a
- * component as `undefined` — which is exactly how `dateColumn` became "is not
- * a function" and took fifteen suites down with it. They are pure builders
- * over MUI and date-fns with no AG-Grid behind them, so there is nothing to
- * stub; a re-export also cannot drift behind the package again, which a
- * hand-written copy already had.
+ * component as `undefined` — which is how `dateColumn` and then
+ * `clientTableFetch` became "is not a function" and took whole suites down.
+ * A hand-written copy drifts too: the old `tableQueryToGql` stub sent
+ * `pageSize`/`sortBy` where the server's TableQueryInput takes `page_size`/
+ * `sort_by`, so the schema-shaped mock rejected every table query it saw.
+ * Only the two pieces that need AG-Grid or a live server — `DuncitTable` and
+ * `useApolloTableFetch` — are defined below; a local export always wins over
+ * an `export *` of the same name.
  */
-export {
-  EM_DASH,
-  actionsColumn,
-  activeChipColumn,
-  dateColumn,
-  entityIdColumn,
-  formatDateCell,
-} from '../../../../../packages/table/src/cells';
+export * from '../../../../../packages/table/src/index';
 
 export const useApolloTableFetch =
   <T,>(_client: unknown, _query: unknown, key: string) =>
@@ -86,21 +102,26 @@ function renderCell(col: any, row: any): ReactNode {
 export function DuncitTable(props: any) {
   const { columns, fetchRows, getRowId, onRowClick, toolbarActions, emptyText, refetchRef } = props;
   const [rows, setRows] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const run = async () => {
-      let last: { rows?: any[] } = { rows: [] };
-      for (const q of tableControls.queries) {
-        last = await fetchRows(q);
-      }
+    const load = async () => {
+      const last = await fetchAll(fetchRows);
       setRows(last?.rows ?? []);
     };
+    // The real table catches a failed fetch and shows its message in place of
+    // the rows (useTableQuery). Letting it escape instead turned every
+    // unanswered query into an unhandled rejection that fails the whole run.
+    const run = () => {
+      setError(null);
+      load().catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      });
+    };
     if (refetchRef && tableControls.setRefetch) {
-      refetchRef.current = () => {
-        void run();
-      };
+      refetchRef.current = run;
     }
-    if (tableControls.autoFetch) void run();
+    if (tableControls.autoFetch) run();
     // Intentionally run once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -108,6 +129,7 @@ export function DuncitTable(props: any) {
   return (
     <div data-testid="duncit-table">
       <div data-testid="toolbar-actions">{toolbarActions}</div>
+      {error ? <div data-testid="table-error">{error}</div> : null}
       {rows.length === 0 ? (
         <div data-testid="table-empty">{emptyText}</div>
       ) : (

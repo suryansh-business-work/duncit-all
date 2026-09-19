@@ -445,6 +445,47 @@ describe('AudienceListDetailPage', () => {
       );
     });
 
+    it('unticks somebody picked by mistake', async () => {
+      renderDetail([audienceListMock(), audienceListCandidatesMock()]);
+      await openPicker();
+      fireEvent.click(await screen.findByText('Vikram Nair'));
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Vikram Nair'));
+      expect(screen.getByText('0 selected')).toBeInTheDocument();
+    });
+
+    // With a search typed, an empty picker is the search's fault, not a full list.
+    it('blames the search when a typed search matches nobody', async () => {
+      renderDetail([
+        audienceListMock(),
+        audienceListCandidatesMock(),
+        audienceListCandidatesMock([], { search: 'zzz' }),
+      ]);
+      await openPicker();
+      expect(await screen.findByText('Vikram Nair')).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('Search by name, email or phone'), {
+        target: { value: 'zzz' },
+      });
+      expect(
+        await screen.findByText('No one matches that search.', undefined, { timeout: 3000 }),
+      ).toBeInTheDocument();
+    });
+
+    it('pages through more candidates than fit on one page', async () => {
+      renderDetail([
+        audienceListMock(),
+        audienceListCandidatesMock([makePickableUser()], { total: 30 }),
+        audienceListCandidatesMock([makePickableUser({ id: 'u10', full_name: 'Meera Iyer' })], {
+          page: 2,
+          total: 30,
+        }),
+      ]);
+      await openPicker();
+      expect(await screen.findByText('Vikram Nair')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Go to page 2' }));
+      expect(await screen.findByText('Meera Iyer')).toBeInTheDocument();
+    });
+
     it('surfaces a failed add', async () => {
       renderDetail([
         audienceListMock(),
@@ -459,7 +500,10 @@ describe('AudienceListDetailPage', () => {
   });
 });
 
-describe('CreateAudienceListPage', () => {
+// Every test here mounts the whole two-step wizard (filter sidebar, audience
+// table, owner combobox); on the CI runner the longer flows take 5–8s, which is
+// the render cost rather than a hang, so the suite gets a longer budget.
+describe('CreateAudienceListPage', { timeout: 30_000 }, () => {
   const listInput = {
     name: 'Pune 25+',
     description: 'For the Diwali push',

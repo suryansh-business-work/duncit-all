@@ -90,8 +90,11 @@ describe('UserBadgesSection — with badges', () => {
     expect(screen.getByText('Early Bird')).toBeInTheDocument();
     expect(screen.getByText('No Icon Badge')).toBeInTheDocument();
 
-    const images = screen.getAllByRole('img');
+    // The avatar image is decorative (alt=""), so it has no img role — query the element.
+    const images = document.querySelectorAll('img');
     expect(images).toHaveLength(1);
     expect(images[0]).toHaveAttribute('src', 'https://cdn.test/early-bird.png');
+    // The header trophy plus the fallback trophy inside the imageless badge's avatar.
+    expect(screen.getAllByTestId('EmojiEventsIcon')).toHaveLength(2);
   });
 });

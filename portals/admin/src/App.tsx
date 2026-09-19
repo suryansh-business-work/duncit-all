@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { ProfilePage, RequireAuth } from '@duncit/shell';
-import { useFeatureFlagState } from '@duncit/app-settings';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
@@ -27,20 +25,6 @@ import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membersh
 import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
 import { getToken } from './lib/session';
-
-/**
- * Auto Pods ship behind the `auto_pods` flag. With it off the route falls back
- * to All Pods rather than 404-ing, which is what a stale bookmark or a link in
- * an older email hits. The gate WAITS for the flags to land: on a reload the
- * first render has no answer yet, and reading that as "off" bounced every
- * refresh of /auto-pods to /pods.
- */
-function AutoPodsRoute({ page }: Readonly<{ page: ReactNode }>) {
-  const { pending, enabled } = useFeatureFlagState('auto_pods');
-  if (pending) return null;
-  if (!enabled) return <Navigate to="/pods" replace />;
-  return <>{page}</>;
-}
 
 export default function App() {
   return (

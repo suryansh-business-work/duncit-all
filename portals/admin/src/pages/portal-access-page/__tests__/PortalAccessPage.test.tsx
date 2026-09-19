@@ -202,6 +202,17 @@ describe('PortalAccessPage — deny flow', () => {
     );
   });
 
+  it('falls the deny message back to an em dash when the requester has no name', async () => {
+    __setTableRows([makeRow({ subject_name: null })]);
+    renderWithProviders(<PortalAccessPage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Deny' }));
+
+    expect(
+      await screen.findByText('Deny — access to the Finance portal? They are emailed about the decision.'),
+    ).toBeInTheDocument();
+  });
+
   it('does nothing when the deny confirmation is cancelled', async () => {
     __setTableRows([makeRow()]);
     renderWithProviders(<PortalAccessPage />);

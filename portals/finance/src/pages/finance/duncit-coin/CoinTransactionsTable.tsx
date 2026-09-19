@@ -164,7 +164,7 @@ const buildColumns = (
     minWidth: 170,
     type: 'enum',
     options: sourceOptions(t),
-    valueGetter: (row) => sourceLabel(t).get(row.source) ?? row.source,
+    valueGetter: (row) => sourceLabel(t).get(row.source),
   },
   {
     field: 'amount',

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { Route } from 'react-router';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
   campaignsForShortLinkMock,
@@ -33,7 +34,13 @@ vi.mock('@duncit/utils', async (importOriginal) => ({
 import ShortLinksPage from '../../src/pages/short-links-page/ShortLinksPage';
 import CopyableUrl from '../../src/pages/short-links-page/CopyableUrl';
 import { getShortLinkColumns } from '../../src/pages/short-links-page/columns';
-import type { ShortLinkOption, ShortLinkRow } from '../../src/pages/short-links-page/queries';
+import type {
+  CampaignChoice,
+  ShortLinkOption,
+  ShortLinkRow,
+} from '../../src/pages/short-links-page/queries';
+
+const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
 
 const SOURCES: ShortLinkOption[] = [
   { value: 'INSTAGRAM', label: 'Instagram', utm_value: 'instagram', requires_text: false },
@@ -42,6 +49,9 @@ const SOURCES: ShortLinkOption[] = [
 const MEDIUMS: ShortLinkOption[] = [
   { value: 'SOCIAL', label: 'Social', utm_value: 'social', requires_text: false },
   { value: 'OTHER', label: 'Other', utm_value: '', requires_text: true },
+];
+const CAMPAIGNS: CampaignChoice[] = [
+  { campaign_id: 'camp-1', name: 'Badminton Launch', utm_campaign: 'badminton_launch', kind: 'EMAIL' },
 ];
 
 const pageMocks = () => [shortLinkOptionsMock(), campaignsForShortLinkMock()];
@@ -80,7 +90,10 @@ function ShortLinksTableHarness({
 }>) {
   return (
     <DuncitTable
-      columns={getShortLinkColumns({ sources: SOURCES, mediums: MEDIUMS, onView, onDelete })}
+      columns={getShortLinkColumns(
+        { sources: SOURCES, mediums: MEDIUMS, campaigns: CAMPAIGNS, onView, onDelete },
+        t,
+      )}
       fetchRows={fetchRowsFrom(rows)}
       getRowId={(row: ShortLinkRow) => row.id}
     />
@@ -90,22 +103,34 @@ function ShortLinksTableHarness({
 // ===========================================================================
 describe('short link columns', () => {
   const cols = () =>
-    getShortLinkColumns({
-      sources: SOURCES,
-      mediums: MEDIUMS,
-      onView: vi.fn(),
-      onDelete: vi.fn(),
-    });
+    getShortLinkColumns(
+      {
+        sources: SOURCES,
+        mediums: MEDIUMS,
+        campaigns: CAMPAIGNS,
+        onView: vi.fn(),
+        onDelete: vi.fn(),
+      },
+      t,
+    );
   const value = (field: string, row: ShortLinkRow) =>
     cols().find((column) => column.field === field)?.valueGetter?.(row);
 
   it('reads the sortable value off each column', () => {
-    const row = makeShortLinkRow({ utm_campaign: 'badminton_launch' });
+    const row = makeShortLinkRow({ utm_campaign: 'spring_sale' });
     expect(value('label', row)).toBe('Diwali pod push');
     expect(value('source', row)).toBe('Instagram');
     expect(value('medium', row)).toBe('Social');
-    expect(value('utm_campaign', row)).toBe('badminton_launch');
+    expect(value('utm_campaign', row)).toBe('spring_sale');
     expect(value('is_active', row)).toBe('Active');
+    expect(value('is_active', makeShortLinkRow({ is_active: false }))).toBe('Retired');
+  });
+
+  // The slug is what is stored, but nobody filters a report by it.
+  it('names a known campaign instead of showing its slug', () => {
+    expect(value('utm_campaign', makeShortLinkRow({ utm_campaign: 'badminton_launch' }))).toBe(
+      'Badminton Launch',
+    );
   });
 
   // "Other" on its own tells a marketer nothing — the free text is the answer.
@@ -123,6 +148,7 @@ describe('short link columns', () => {
   it('falls back to the stored value when an option is unknown, and em-dashes no campaign', () => {
     const row = makeShortLinkRow({ source: 'RETIRED_CHANNEL', medium: 'OTHER', medium_other: null });
     expect(value('source', row)).toBe('RETIRED_CHANNEL');
+    expect(value('source', makeShortLinkRow({ source: 'OTHER', source_other: null }))).toBe('Other');
     expect(value('medium', row)).toBe('Other');
     expect(value('utm_campaign', row)).toBe('—');
   });
@@ -133,6 +159,11 @@ describe('short link columns', () => {
     expect(row).toHaveTextContent('Diwali pod push');
     expect(row).toHaveTextContent('/aB3xY9Zq');
     expect(row).toHaveTextContent('Retired');
+  });
+
+  it('shows a live link as Active', async () => {
+    renderWithProviders(<ShortLinksTableHarness rows={[makeShortLinkRow()]} />);
+    expect(await screen.findByTestId('cell-is_active')).toHaveTextContent('ActiveActive');
   });
 
   it('opens and deletes a row from its actions', async () => {

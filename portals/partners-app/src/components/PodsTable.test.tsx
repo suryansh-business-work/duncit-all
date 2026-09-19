@@ -1,9 +1,11 @@
 import '../../__tests__/helpers/agGridEnv';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { TablePage, TableQueryState } from '@duncit/table';
+import { formatDate, formatDateTime } from '@duncit/app-settings';
 import PodsTable, { type PodRowBase } from './PodsTable';
 import { DuncitButton } from '@duncit/buttons';
+import { renderWithProviders } from '../__tests__/render';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -67,8 +69,10 @@ const podRow = (cell: HTMLElement): HTMLElement => {
 
 type Extra = Partial<Parameters<typeof PodsTable<PodRowBase>>[0]>;
 
+// Mounted under the portal's providers: the status labels and column headers
+// are shell / club-admin copy that only the portal's locale catalogue carries.
 const renderPodsTable = (fetchRows: ReturnType<typeof makeFetch>, extra: Extra = {}) =>
-  render(
+  renderWithProviders(
     <PodsTable<PodRowBase>
       tableId={`pods-${Math.random().toString(36).slice(2)}`}
       fetchRows={fetchRows}
@@ -94,7 +98,8 @@ describe('PodsTable', () => {
 
     const physical = podRow(await screen.findByText('Rooftop Mixer'));
     expect(within(physical).getByText('Vista Rooftop')).toBeTruthy();
-    expect(within(physical).getByText('04 Jul 2026, 10:30 AM')).toBeTruthy();
+    // Formatted by the shared, admin-configured formatter — not a local format.
+    expect(within(physical).getByText(formatDateTime('2026-07-04T10:30:00'))).toBeTruthy();
     expect(within(physical).getByText('3')).toBeTruthy();
 
     // A virtual pod never shows a venue name.
@@ -139,9 +144,13 @@ describe('PodsTable', () => {
     fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
 
     expect(await screen.findByText('899')).toBeTruthy();
-    expect(screen.getByText('21 Jun 2026')).toBeTruthy();
+    const completedCells = [
+      ...document.querySelectorAll<HTMLElement>('[role="gridcell"][col-id="completed_at"]'),
+    ].map((cell) => cell.textContent);
     // Pods that were never completed show the em dash placeholder.
-    expect(screen.getAllByText('—')).toHaveLength(2);
+    expect(completedCells).toHaveLength(3);
+    expect(completedCells.filter((text) => text === '—')).toHaveLength(2);
+    expect(completedCells).toContain(formatDate('2026-06-21T09:00:00'));
   });
 
   it('adds an Actions column that receives the clicked pod', async () => {

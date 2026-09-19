@@ -67,13 +67,13 @@ export default function CoinGrantCard({ onApplied }: Readonly<Props>) {
           reason: values.reason,
         },
       });
-      const balance = res.data?.adjustUserCoins?.balance ?? 0;
+      const balance = res.data?.adjustUserCoins?.balance;
       notifySuccess(`${user.full_name || user.email} now holds ${balance} coins`);
       reset(BLANK_GRANT);
       setUser(null);
       onApplied();
     } catch (e: any) {
-      setError(e.message ?? 'Could not apply the adjustment.');
+      setError(e.message);
     }
   });
 

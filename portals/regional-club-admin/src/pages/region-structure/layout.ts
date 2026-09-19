@@ -122,8 +122,8 @@ export function layoutTree(
   const rowStep = direction === 'LR' ? NODE_HEIGHT + ROW_GAP.LR : NODE_WIDTH + ROW_GAP.TB;
 
   return nodes.map((node) => {
-    const alongDepth = (depth.get(node.id) ?? 0) * depthStep;
-    const alongRow = (row.get(node.id) ?? 0) * rowStep;
+    const alongDepth = (depth.get(node.id) as number) * depthStep;
+    const alongRow = (row.get(node.id) as number) * rowStep;
     const horizontal = direction === 'LR';
     return {
       ...node,

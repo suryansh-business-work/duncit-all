@@ -35,4 +35,27 @@ describe('toBadgeInput', () => {
     const input = toBadgeInput({ ...base, condition_type: 'MANUAL', threshold: 99 });
     expect(input.threshold).toBe(0);
   });
+
+  it('passes a counted threshold through and nulls a blank description and image', () => {
+    expect(toBadgeInput({ ...base, threshold: 5 })).toEqual({
+      title: 'Top Host',
+      description: null,
+      image_url: null,
+      condition_type: 'PODS_HOSTED',
+      threshold: 5,
+      is_active: true,
+    });
+  });
+
+  it('keeps a written description and image, and a zero threshold as zero', () => {
+    const input = toBadgeInput({
+      ...base,
+      description: 'Hosted five pods',
+      image_url: 'https://cdn.duncit.com/badges/top-host.png',
+      threshold: 0,
+    });
+    expect(input.description).toBe('Hosted five pods');
+    expect(input.image_url).toBe('https://cdn.duncit.com/badges/top-host.png');
+    expect(input.threshold).toBe(0);
+  });
 });

@@ -1,5 +1,5 @@
 import { Box, Chip, Typography } from '@mui/material';
-import { EM_DASH, dateColumn, type DuncitColumn } from '@duncit/table';
+import { dateColumn, type DuncitColumn } from '@duncit/table';
 import { mailCategoryCopy, type Translator } from '@duncit/app-settings';
 import type { MailPreferenceLogRow } from './queries';
 
@@ -88,7 +88,8 @@ export function getMailPreferenceLogColumns(
       headerName: t('mailPreference.analytics.columnSource'),
       type: 'text',
       minWidth: 150,
-      valueGetter: (row) => row.source_detail || row.source || EM_DASH,
+      // `source` is a required enum (default SERVER), so it always has a value.
+      valueGetter: (row) => row.source_detail || row.source,
     },
     dateColumn<MailPreferenceLogRow>({
       headerName: t('mailPreference.analytics.columnWhen'),

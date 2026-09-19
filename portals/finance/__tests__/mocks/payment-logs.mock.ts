@@ -73,19 +73,34 @@ export const paymentFailed = (): PaymentRowMock =>
  * `null` stands for the query having answered nothing at all, which is the
  * page's empty-totals branch.
  */
+const totalsOf = (payments: PaymentRowMock[] | null) =>
+  payments && {
+    __typename: 'PaymentTotals',
+    count: payments.length,
+    gross: payments.reduce((sum, p) => sum + p.total, 0),
+    fee: payments.reduce((sum, p) => sum + p.platform_fee_amount, 0),
+    gst: payments.reduce((sum, p) => sum + p.gst_amount, 0),
+    // None of these rows reached a multi-ticket tier.
+    ticket_discount_total: 0,
+  };
+
 export const paymentTotalsMock = (payments: PaymentRowMock[] | null): MockedResponse => ({
   request: { query: PAYMENT_TOTALS, variables: () => true },
-  result: {
-    data: {
-      paymentTotals: payments && {
-        __typename: 'PaymentTotals',
-        count: payments.length,
-        gross: payments.reduce((sum, p) => sum + p.total, 0),
-        fee: payments.reduce((sum, p) => sum + p.platform_fee_amount, 0),
-        gst: payments.reduce((sum, p) => sum + p.gst_amount, 0),
-      },
-    },
+  result: { data: { paymentTotals: totalsOf(payments) } },
+  maxUsageCount: 50,
+});
+
+/**
+ * Answers ONLY the totals read narrowed to one status, so a card that follows
+ * the table's status filter shows a different figure than the unfiltered one.
+ * List it BEFORE `paymentTotalsMock`, whose matcher accepts anything.
+ */
+export const paymentTotalsForStatusMock = (status: string, payments: PaymentRowMock[]): MockedResponse => ({
+  request: {
+    query: PAYMENT_TOTALS,
+    variables: (vars: Record<string, unknown>) => (vars.filter as { status?: string } | undefined)?.status === status,
   },
+  result: { data: { paymentTotals: totalsOf(payments) } },
   maxUsageCount: 50,
 });
 

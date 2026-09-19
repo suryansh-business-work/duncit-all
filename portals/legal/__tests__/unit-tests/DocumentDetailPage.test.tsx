@@ -9,16 +9,21 @@ import {
   deleteLegalDocumentMock,
   legalDocumentMock,
   makeLegalDocumentDetail,
+  setLegalDocumentActiveMock,
   updateLegalDocumentMock,
 } from '../mocks';
 
-vi.mock('react-quill', () => ({
-  default: ({ value, onChange }: any) => (
-    <textarea data-testid="quill" value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
-
 const ID = 'doc-1';
+
+/** The detail document with the fields the Active switch and its chip read. */
+const withActiveState = (isActive: boolean) => ({
+  ...makeLegalDocumentDetail(),
+  document_no: 'DOC-000007',
+  is_active: isActive,
+  signing_status: 'UNSIGNED' as const,
+  signed_at: null,
+  is_locked: false,
+});
 
 const renderAt = (mocks: MockedResponse[]) =>
   renderWithProviders(<></>, {
@@ -77,9 +82,25 @@ describe('DocumentDetailPage', () => {
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Updated description' } });
     fireEvent.mouseDown(screen.getByRole('combobox'));
     fireEvent.click(screen.getByText('Cookie Policy'));
-    fireEvent.change(screen.getByTestId('quill'), { target: { value: '<p>Updated body</p>' } });
+    // The body editor is the shared rich-text input; its content arrives with
+    // the refetch below, so there is no need to type into it here.
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     await waitFor(() => expect(screen.getByText('Updated body')).toBeInTheDocument());
+  });
+
+  it('switches the document off from its page and re-reads it', async () => {
+    renderAt([
+      legalDocumentMock(withActiveState(true)),
+      setLegalDocumentActiveMock(ID, false),
+      legalDocumentMock(withActiveState(false)),
+    ]);
+    await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
+    expect(screen.getByText('Active')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Active' }));
+
+    // The write succeeded, so the page re-reads and shows the stored value.
+    expect(await screen.findByText('Inactive')).toBeInTheDocument();
   });
 
   it('cancels an edit', async () => {

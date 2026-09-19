@@ -79,15 +79,19 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
       name: 'ClubAdminPodsTable',
       type: 'query',
     });
+    // `status` narrows to one bucket of the Status column on the server, so the
+    // filter pages over every matching pod rather than the page already fetched.
     expect(variablesOf(CLUB_ADMIN_PODS_TABLE)).toEqual({
       club_id: 'ID',
       query: 'TableQueryInput',
+      status: 'PodRowStatus',
     });
     // Scope is an ARGUMENT the server enforces, never a client-side filter.
     expect(fieldsAt(CLUB_ADMIN_PODS_TABLE)).toEqual(['clubAdminPodsTable']);
     expect(argumentsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable')).toEqual({
       club_id: '$club_id',
       query: '$query',
+      status: '$status',
     });
     expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable')).toEqual(['total', 'rows']);
   });
@@ -99,12 +103,16 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
     );
   });
 
-  it('rows are a superset of the plain list selection, so a row can prefill the editor', () => {
-    const listFields = fieldsAt(CLUB_ADMIN_PODS, 'pods');
+  it('rows carry every editor field of the plain list selection, so a row can prefill the editor', () => {
+    // `seats_taken` is a read-only tally the editor never writes back, and the
+    // shared row fragment does not select it — the seats cell counts the
+    // attendee list instead.
+    const listFields = fieldsAt(CLUB_ADMIN_PODS, 'pods').filter((field) => field !== 'seats_taken');
     const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows');
     for (const field of listFields) {
       expect(rowFields).toContain(field);
     }
+    expect(rowFields).not.toContain('seats_taken');
     expect(rowFields.length).toBeGreaterThan(listFields.length);
   });
 
@@ -119,6 +127,8 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
       'place_charges',
       'pod_hosts_id',
       'reel_url',
+      'ticket_discount_enabled',
+      'ticket_discount_tiers',
       'venue_approval_status',
     ]);
   });

@@ -38,7 +38,7 @@ export default function ExpenseOptionForm({
   }, [option, reset]);
 
   const editing = !!option;
-  const keyPreview = toOptionKey(watch('key') ?? '');
+  const keyPreview = toOptionKey(watch('key'));
   const showSource = kind === 'RELATED_FROM_TYPE';
 
   return (

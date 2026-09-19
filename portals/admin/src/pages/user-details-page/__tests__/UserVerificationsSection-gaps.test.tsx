@@ -67,7 +67,9 @@ describe('statusLabel / detailValue — values the broad suite never puts in a r
     renderWithProviders(<UserVerificationsSection userId={USER_ID} />);
 
     await waitFor(() => expect(row('Address')).toBeInTheDocument());
-    expect(within(row('Address')).getByTestId('value-details')).toHaveTextContent('—');
+    // The sortable value is blank; the rendered cell shows the empty-detail dash.
+    expect(within(row('Address')).getByTestId('value-details').textContent).toBe('');
+    expect(within(row('Address')).getByTestId('cell-details')).toHaveTextContent('—');
   });
 });
 

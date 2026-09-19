@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import ExpenseSpendFields from './ExpenseSpendFields';
@@ -14,7 +14,6 @@ export default function ExpenseForm({
   expense,
   currency,
   busy,
-  errorMessage,
   onCancel,
   onSubmit,
 }: Readonly<ExpenseFormProps>) {
@@ -40,10 +39,10 @@ export default function ExpenseForm({
 
   // Three watched values, because three controls depend on them: the entity
   // picker on the type, and the derived-status chip on the two amounts.
-  const typeKey = useWatch({ control, name: 'related_from_type' }) ?? '';
-  const amount = useWatch({ control, name: 'amount' }) ?? '';
-  const compensated = useWatch({ control, name: 'compensated_amount' }) ?? '';
-  const rejected = useWatch({ control, name: 'compensation_rejected' }) ?? false;
+  const typeKey = useWatch({ control, name: 'related_from_type' });
+  const amount = useWatch({ control, name: 'amount' });
+  const compensated = useWatch({ control, name: 'compensated_amount' });
+  const rejected = useWatch({ control, name: 'compensation_rejected' });
 
   const status = previewStatus(Number(amount || 0), Number(compensated || 0), rejected);
   const submitLabel = expense ? t('shell.common.save') : t('finance.expenseManagement.addExpense');
@@ -51,8 +50,6 @@ export default function ExpenseForm({
   return (
     <form noValidate onSubmit={handleSubmit((values) => onSubmit(values))}>
       <Stack spacing={2}>
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-
         <ExpenseSpendFields
           control={control}
           currency={currency}

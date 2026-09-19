@@ -1,24 +1,21 @@
 import { Divider, Stack } from '@mui/material';
-import { PortalLoginPage, useTranslation } from '@duncit/shell';
+import { PortalLoginPage } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import SendAdminCredentials from '../components/SendAdminCredentials';
 
-type Translate = ReturnType<typeof useTranslation>['t'];
-
 // Admin deliberately shows the raw error message instead of parseApiError.
-const parseAdminError = (err: unknown, t: Translate) =>
-  err instanceof Error ? err.message : t('admin.login.failed');
+// Everything the login page reports is an Error: Apollo's, or the one it throws itself.
+const parseAdminError = (err: unknown) => (err as Error).message;
 
 export default function LoginPage() {
-  const { t } = useTranslation();
   return (
     <PortalLoginPage
       appConfig={appConfig}
       session={{ setToken, hasAppAccess, accessDeniedMessage }}
       mutationName="AdminLogin"
       defaultRedirect="/hub"
-      parseError={(err: unknown) => parseAdminError(err, t)}
+      parseError={parseAdminError}
       footerSlot={
         <Stack spacing={1.5}>
           <Divider>or</Divider>

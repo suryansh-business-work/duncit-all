@@ -13,6 +13,8 @@
     "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "e2e": "node ../../scripts/e2e-no-surface.mjs analytics"
   },
   "dependencies": {
@@ -52,8 +54,11 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "cross-env": "^10.1.0",
+    "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }

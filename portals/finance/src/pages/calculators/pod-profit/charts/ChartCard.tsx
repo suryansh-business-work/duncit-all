@@ -4,7 +4,7 @@ import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
   title: string;
-  hint?: string;
+  hint: string;
   /** False when there is nothing to draw — an empty chart reads as a broken one. */
   hasData: boolean;
   height?: number;
@@ -34,11 +34,9 @@ export default function ChartCard({
           <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
-          {hint ? (
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {hint}
-            </Typography>
-          ) : null}
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {hint}
+          </Typography>
         </Stack>
         <Box sx={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {hasData ? (

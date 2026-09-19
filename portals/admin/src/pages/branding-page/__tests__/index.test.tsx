@@ -5,6 +5,14 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import BrandingPage from '../index';
 import { BRANDING, OCCASIONAL_ICONS, UPDATE_BRANDING } from '../queries';
+import { emptyThemeTokens } from '../theme-tokens/tokenRows';
+
+/**
+ * The page is large — every accordion body is mounted, closed or not — so a
+ * single test (render, wait for the query, save, wait for the toast) runs past
+ * vitest's 5-second default on a busy CI runner.
+ */
+vi.setConfig({ testTimeout: 20_000 });
 
 /** The real field mounts the shared ImageKit/Pexels dialog (its own queries and
  * uploads); this page has a dozen of them and only stores their URLs. */
@@ -36,18 +44,30 @@ const branding = {
   portals_logo_url: '',
   portals_splash_url: '',
   portals_splash_type: 'IMAGE',
+  login_background_image_enabled: false,
+  login_background_image_url: '',
+  login_background_video_enabled: false,
+  login_background_video_url: '',
   website_header_logo_url: '',
   website_footer_logo_url: '',
   website_favicon_url: '',
   android_app_url: 'https://play.google.com/store/apps/details?id=com.duncit',
   ios_app_url: '',
+  terms_url: '',
+  privacy_url: '',
+  app_min_supported_version: '1.50.0',
   home_all_vibe_icon_url: '',
   home_all_vibe_icon_layout: null,
   home_show_all_vibe_categories: true,
+  home_vibe_heading: 'Pick your vibe',
+  home_vibe_subheading: 'Pods near you',
   home_header_tagline: 'Your city, tonight',
   mobile_font_family: 'Inter',
   mweb_font_family: '',
   portals_font_family: '',
+  theme_token_source: 'LOCAL',
+  theme_tokens_light: { __typename: 'ThemeModeTokens', ...emptyThemeTokens() },
+  theme_tokens_dark: { __typename: 'ThemeModeTokens', ...emptyThemeTokens() },
   updated_at: '2026-07-01T00:00:00.000Z',
 };
 
@@ -87,7 +107,7 @@ const captureSave = (sent: { variables?: Record<string, unknown> }): MockedRespo
 describe('BrandingPage — query states', () => {
   it('shows a spinner and no form while the first load is in flight', () => {
     renderPage([brandingQuery, iconsQuery]);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loader')).toBeInTheDocument();
     expect(screen.queryByLabelText('App name')).not.toBeInTheDocument();
   });
 

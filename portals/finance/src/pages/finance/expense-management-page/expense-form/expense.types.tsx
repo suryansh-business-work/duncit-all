@@ -66,7 +66,6 @@ export interface ExpenseFormProps {
   /** Admin-configured currency symbol for the amount adornments. */
   currency: string;
   busy: boolean;
-  errorMessage?: string | null;
   onCancel: () => void;
   onSubmit: (values: ExpenseFormValues) => Promise<void> | void;
 }

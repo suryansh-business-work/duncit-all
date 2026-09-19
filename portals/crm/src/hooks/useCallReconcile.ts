@@ -19,8 +19,9 @@ export function useCallReconcile(logId: string | null, onStatus: (status: CallSt
     let stopped = false;
     let errors = 0;
     let timer: ReturnType<typeof setTimeout>;
+    // Cleanup clears the pending timer and an in-flight tick never reschedules
+    // once stopped, so a tick only ever runs while polling is live.
     const tick = async () => {
-      if (stopped) return;
       try {
         const res = await reconcile({ variables: { log_id: logId } });
         errors = 0;

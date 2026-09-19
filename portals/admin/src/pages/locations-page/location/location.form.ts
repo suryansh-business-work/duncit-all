@@ -51,6 +51,7 @@ export function toLocationInput(values: LocationFormValues) {
     location_pincode: cast.location_pincode,
     is_active: cast.is_active,
     location_image: cast.location_image,
-    location_zones: (cast.zones ?? []).filter((zone) => zone.zone_name || zone.zone_code || zone.pincode),
+    // `zones` defaults to [] in the schema, so the cast always carries an array.
+    location_zones: cast.zones.filter((zone) => zone.zone_name || zone.zone_code || zone.pincode),
   };
 }

@@ -62,7 +62,8 @@ describe('ads-approvals helpers', () => {
 // ---------------------------------------------------------------------------
 // pages/notifications-page/helpers.tsx
 // ---------------------------------------------------------------------------
-import { blankForm, SCOPES } from '../../src/pages/notifications-page/helpers';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
+import { blankForm, scopes } from '../../src/pages/notifications-page/helpers';
 
 describe('notifications helpers', () => {
   it('provides a GLOBAL blank form', () => {
@@ -71,15 +72,18 @@ describe('notifications helpers', () => {
     expect(blankForm.silent).toBe(false);
   });
 
-  it('lists the four audience scopes with icons', () => {
-    expect(SCOPES.map((s) => s.value)).toEqual([
+  it('lists the five audience scopes with icons', () => {
+    const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
+    const list = scopes(t);
+    expect(list.map((s) => s.value)).toEqual([
       'GLOBAL',
       'LOCATION',
       'ZONE',
       'USER',
       'AUDIENCE_LIST',
     ]);
-    expect(SCOPES.every((s) => s.icon)).toBe(true);
+    expect(list.every((s) => s.icon)).toBe(true);
+    expect(list[0].label).toBe('All users (Global)');
   });
 });
 

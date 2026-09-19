@@ -31,9 +31,17 @@ describe('every module loads', () => {
     expect(paths.length).toBeGreaterThan(0);
   });
 
-  it.each(paths)('loads %s', async (modulePath) => {
-    const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
+  // The first path (apollo.ts) pulls in the whole of @duncit/shell, so on a
+  // cold Vite transform it alone can outlast the default 5s test timeout —
+  // that is genuinely how long the transform takes, not a hang, so the fix is
+  // a longer budget rather than a smaller check.
+  it.each(paths)(
+    'loads %s',
+    async (modulePath) => {
+      const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
-    await expect(load()).resolves.toBeDefined();
-  });
+      await expect(load()).resolves.toBeDefined();
+    },
+    45_000,
+  );
 });

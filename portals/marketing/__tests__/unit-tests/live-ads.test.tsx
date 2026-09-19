@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { GraphQLError } from 'graphql';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import { makeAdRequestRow } from '../mocks';
 import { __setTableRows, fetchRowsFrom } from './table-mock';
@@ -69,7 +70,8 @@ beforeEach(() => {
 });
 
 describe('live ad columns', () => {
-  const cols = () => getLiveAdColumns({ formatDate: fmt, onStop: vi.fn(), onDelete: vi.fn() });
+  const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
+  const cols = () => getLiveAdColumns({ formatDate: fmt, onStop: vi.fn(), onDelete: vi.fn() }, t);
   const value = (field: string, row: AdRequestRow) =>
     cols().find((c) => c.field === field)?.valueGetter?.(row);
 

@@ -21,16 +21,17 @@ export const LOCATIONS = gql`
   }
 `;
 
-/** Row shape shared by the locations table and the edit dialog. */
+/** Row shape shared by the locations table and the edit dialog — non-null
+ * wherever the `Location` type is (only a zone's pincode is optional there). */
 export interface LocationRow {
   id: string;
   location_name: string;
-  country?: string | null;
-  country_code?: string | null;
-  state?: string | null;
-  state_code?: string | null;
-  city?: string | null;
-  location_image?: string | null;
+  country: string;
+  country_code: string;
+  state: string;
+  state_code: string;
+  city: string;
+  location_image: string;
   location_zones: { zone_name: string; pincode?: string | null }[];
   is_active: boolean;
   is_launched: boolean;

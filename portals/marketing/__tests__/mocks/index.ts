@@ -7,8 +7,10 @@
  * without `addTypename`.
  */
 export * from './ads.mock';
+export * from './app-popups.mock';
 export * from './audience.mock';
 export * from './campaigns.mock';
+export * from './mail-preference.mock';
 export * from './notifications.mock';
 export * from './mjml.mock';
 export * from './short-links.mock';

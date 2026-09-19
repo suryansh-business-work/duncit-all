@@ -267,7 +267,7 @@ describe('UserDetailsPage — header, summary card and the default tab', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
     // Summary card.
     expect(screen.getByText('riya@example.com')).toBeInTheDocument();
     // Profile tab's own content, proving it is the tab shown by default.
@@ -283,7 +283,7 @@ describe('UserDetailsPage — tab switching', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('tab', { name: 'Interests' }));
 
     expect(screen.getByText('No survey interests saved yet.')).toBeInTheDocument();
@@ -296,7 +296,7 @@ describe('UserDetailsPage — tab switching', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('tab', { name: 'Access' }));
     expect(screen.getByText('Host')).toBeInTheDocument(); // role chip from roleByKey
 
@@ -318,7 +318,7 @@ describe('UserDetailsPage — tab switching', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('tab', { name: 'Badges' }));
     await waitFor(() => expect(screen.getByText('No badges earned yet.')).toBeInTheDocument());
@@ -351,7 +351,7 @@ describe('UserDetailsPage — tab switching', () => {
       mocks: [userMock({ user_id: '' }), hostProfileMock(), badgesMock(), surveysMock(), healthMock(), activityMock()],
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('tab', { name: 'Verification' }));
 
     await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID }));
@@ -366,7 +366,7 @@ describe('UserDetailsPage — header actions and dialogs', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: 'Call' }));
     expect(screen.getByText('Contact type: CALL')).toBeInTheDocument();
@@ -386,7 +386,7 @@ describe('UserDetailsPage — header actions and dialogs', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: 'Call' }));
     fireEvent.click(screen.getByRole('button', { name: 'Stub save' }));
@@ -404,7 +404,7 @@ describe('UserDetailsPage — header actions and dialogs', () => {
       mocks: fullMocks(),
     });
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Riya Sharma' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     const dialog = await screen.findByRole('dialog');

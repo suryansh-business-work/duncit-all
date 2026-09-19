@@ -13,6 +13,7 @@ import {
   makeFounderMetric,
   saveFounderSettingMock,
 } from '../mocks/startup.mock';
+import { dashboardLayoutMock } from '../mocks/dashboard-layout.mock';
 
 describe('Sparkline', () => {
   it('renders an empty box below two points and a polyline otherwise', () => {
@@ -105,6 +106,23 @@ describe('MetricDrawer', () => {
     expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
   });
 
+  it('starts a setting nobody has saved yet at 0', () => {
+    renderWithProviders(
+      <MetricDrawer
+        metric={makeFounderMetric({ setting_keys: ['a', 'b'] })}
+        mode="settings"
+        settings={{ a: 5 }}
+        saving={false}
+        onClose={noop}
+        onSave={noop}
+      />,
+    );
+    expect(screen.getAllByRole('spinbutton').map((field) => (field as HTMLInputElement).value)).toEqual([
+      '5',
+      '0',
+    ]);
+  });
+
   it('edits a manual metric and saves only finite values', () => {
     const onSave = vi.fn();
     renderWithProviders(
@@ -135,13 +153,13 @@ describe('StartupDashboardPage', () => {
   });
 
   it('shows an error', async () => {
-    renderWithProviders(<StartupDashboardPage />, { mocks: [founderDashboardErrorMock()] });
+    renderWithProviders(<StartupDashboardPage />, { mocks: [founderDashboardErrorMock(), dashboardLayoutMock('finance.startup')] });
     expect(await screen.findByText('boom')).toBeInTheDocument();
   });
 
   it('renders the metrics and saves a setting from the drawer', async () => {
     renderWithProviders(<StartupDashboardPage />, {
-      mocks: [founderDashboardMock(), saveFounderSettingMock()],
+      mocks: [founderDashboardMock(), saveFounderSettingMock(), dashboardLayoutMock('finance.startup')],
     });
     expect(await screen.findByText('Founder Overview')).toBeInTheDocument();
     expect(screen.getByText('Ops')).toBeInTheDocument();
@@ -157,7 +175,7 @@ describe('StartupDashboardPage', () => {
   });
 
   it('opens and closes the info drawer', async () => {
-    renderWithProviders(<StartupDashboardPage />, { mocks: [founderDashboardMock()] });
+    renderWithProviders(<StartupDashboardPage />, { mocks: [founderDashboardMock(), dashboardLayoutMock('finance.startup')] });
     await screen.findByText('Founder Overview');
     fireEvent.click(screen.getAllByRole('button', { name: /about mrr/i })[0]);
     expect(screen.getAllByText('Monthly recurring revenue').length).toBeGreaterThan(0);

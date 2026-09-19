@@ -10,6 +10,7 @@ import {
   makeBreakdownV1,
   makeBreakdownV2,
   makeReleaseRow,
+  podCoinTotalsMock,
   publicFinanceSettingsMock,
   publicFinanceSettingsNullMock,
   reviewPaymentReleaseMock,
@@ -27,6 +28,13 @@ describe('ReleaseKindChip', () => {
     expect(screen.getByText('Venue Billing')).toBeInTheDocument();
     rerender(<ReleaseKindChip kind="HOST_PAYMENT" />);
     expect(screen.getByText('Host Payment')).toBeInTheDocument();
+  });
+
+  it('labels the club-admin cut and an e-commerce brand payout', () => {
+    const { rerender } = renderWithProviders(<ReleaseKindChip kind="CLUB_ADMIN" />);
+    expect(screen.getByText('Club Admin')).toBeInTheDocument();
+    rerender(<ReleaseKindChip kind="ECOMM_PAYMENT" />);
+    expect(screen.getByText('E-Commerce Brand')).toBeInTheDocument();
   });
 });
 
@@ -60,6 +68,32 @@ describe('ReleaseBreakdownLines', () => {
       mocks: [publicFinanceSettingsNullMock()],
     });
     expect(screen.getByText('Venue bill')).toBeInTheDocument();
+  });
+
+  it('shows the attendance a host payout settled on, and the pod’s coin and tier notes', async () => {
+    const breakdown = makeBreakdownV2({ booked_seats: 10, attended_seats: 8, attended_total: 800 });
+    renderWithProviders(<ReleaseBreakdownLines request={{ kind: 'HOST_PAYMENT', pod_id: 'pod1', breakdown }} />, {
+      mocks: [
+        publicFinanceSettingsMock(),
+        podCoinTotalsMock({ coins_redeemed_total: 50, coins_earned_total: 12, ticket_discount_total: 120 }),
+      ],
+    });
+    expect(screen.getByText('Attendance at completion')).toBeInTheDocument();
+    expect(screen.getByText('8 of 10 seats')).toBeInTheDocument();
+    expect(screen.getByText('Settled on (attended seats)')).toBeInTheDocument();
+    expect(await screen.findByText(/^Duncit Coins on this pod: 50 spent by buyers .* 12 earned back\.$/)).toBeInTheDocument();
+    expect(
+      await screen.findByText('₹120.00 in multi-ticket discounts is already off the collected total.'),
+    ).toBeInTheDocument();
+  });
+
+  it('reads a pod nobody attended as zero of its booked seats', () => {
+    const breakdown = makeBreakdownV2({ booked_seats: 4, attended_seats: 0, attended_total: 0 });
+    renderWithProviders(<ReleaseBreakdownLines request={{ kind: 'CLUB_ADMIN', breakdown }} />, {
+      mocks: [publicFinanceSettingsMock()],
+    });
+    expect(screen.getByText('0 of 4 seats')).toBeInTheDocument();
+    expect(screen.getByText('Club admin cut (off the pool)')).toBeInTheDocument();
   });
 });
 

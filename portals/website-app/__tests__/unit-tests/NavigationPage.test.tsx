@@ -60,17 +60,23 @@ describe('NavigationPage', () => {
     fireEvent.change(within(dialog).getByLabelText(/Label/), { target: { value: 'Pricing' } });
     fireEvent.change(within(dialog).getByLabelText(/URL/), { target: { value: '/pricing' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // The save refetches the grid before the dialog closes — slow under jsdom.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 5000,
+    });
   });
 
   it('edits an existing link', async () => {
     renderWithProviders(<NavigationPage />, { mocks: allMocks });
     await waitFor(() => expect(screen.getByText('Careers')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'edit' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Edit navigation link')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // The save refetches the grid before the dialog closes — slow under jsdom.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
+      timeout: 5000,
+    });
   });
 
   it('deletes a link after confirmation and cancels otherwise', async () => {
@@ -78,20 +84,20 @@ describe('NavigationPage', () => {
     await waitFor(() => expect(screen.getByText('Careers')).toBeInTheDocument());
 
     // Cancel path.
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     let dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Delete this link?')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     // Escape dismisses the confirm dialog (Dialog onClose → setConfirmDelete(null)).
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     dialog = await screen.findByRole('dialog');
     fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     // Confirm path.
-    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

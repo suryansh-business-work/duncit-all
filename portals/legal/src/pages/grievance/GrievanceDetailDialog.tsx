@@ -55,7 +55,7 @@ export default function GrievanceDetailDialog({
   useEffect(() => {
     if (!ticket) return;
     setStatus(ticket.status);
-    setResolution(ticket.resolution ?? '');
+    setResolution(ticket.resolution);
     setError('');
   }, [ticket]);
 

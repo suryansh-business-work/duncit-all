@@ -25,11 +25,11 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
     setValue(key, value, { shouldDirty: true, shouldValidate: validate });
 
   const catValue: AdminCategoryValue = {
-    super_id: values.super_category_id ?? '',
+    super_id: values.super_category_id,
     super_name: '',
-    category_id: values.category_id ?? '',
+    category_id: values.category_id,
     category_name: '',
-    sub_id: values.sub_category_id ?? '',
+    sub_id: values.sub_category_id,
     sub_name: '',
   };
   const categoryError = Boolean(
@@ -37,14 +37,14 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
   );
 
   const locValue: AdminLocationValue = {
-    location_id: values.location_id ?? '',
-    country: values.country ?? '',
-    country_code: values.country_code ?? '',
-    state: values.state ?? '',
-    state_code: values.state_code ?? '',
-    city: values.city ?? '',
-    locality: values.locality ?? '',
-    pincode: values.postal_code ?? '',
+    location_id: values.location_id,
+    country: values.country,
+    country_code: values.country_code,
+    state: values.state,
+    state_code: values.state_code,
+    city: values.city,
+    locality: values.locality,
+    pincode: values.postal_code,
   };
   const err = (key: keyof RegisterVenueValues) => String(formState.errors[key]?.message ?? '') || undefined;
 

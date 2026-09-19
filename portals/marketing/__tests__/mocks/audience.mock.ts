@@ -185,10 +185,11 @@ export const makePickableUser = (over: Record<string, unknown> = {}) => ({
 });
 
 /** The picker's feed. `search` and `page` are part of the request, so a spec
- * that types into the box must build the mock for the search it typed. */
+ * that types into the box must build the mock for the search it typed.
+ * `total` is the whole candidate count behind this page (defaults to the rows). */
 export const audienceListCandidatesMock = (
   users: Record<string, unknown>[] = [makePickableUser()],
-  { listId = 'l1', search = '', page = 1 } = {},
+  { listId = 'l1', search = '', page = 1, total = users.length } = {},
 ): MockedResponse => ({
   request: {
     query: AUDIENCE_LIST_CANDIDATES,
@@ -198,7 +199,7 @@ export const audienceListCandidatesMock = (
     data: {
       audienceListCandidatesTable: {
         __typename: 'AudienceTablePage',
-        total: users.length,
+        total,
         rows: users,
       },
     },

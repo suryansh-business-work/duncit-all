@@ -66,7 +66,8 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
       const { url } = await upload(file, { folder: 'crm/email-templates', fallbackMimeType: 'image/png' });
       // Persist immediately to the template's library.
       const saved = await addImage({ variables: { id: templateId, image: { url, name: file.name } } });
-      onChangeImages(saved.data?.addCrmEmailTemplateImage?.images ?? [...images, { url, name: file.name }]);
+      // The mutation returns the template's whole library (a non-null list).
+      onChangeImages(saved.data?.addCrmEmailTemplateImage?.images);
     } catch (e) {
       setError(parseApiError(e));
     } finally {
@@ -79,7 +80,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
     setError(null);
     try {
       const res = await removeImage({ variables: { id: templateId, url } });
-      onChangeImages(res.data?.removeCrmEmailTemplateImage?.images ?? images.filter((i) => i.url !== url));
+      onChangeImages(res.data?.removeCrmEmailTemplateImage?.images);
     } catch (e) {
       setError(parseApiError(e));
     }

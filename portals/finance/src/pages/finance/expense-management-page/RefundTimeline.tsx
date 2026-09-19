@@ -11,10 +11,6 @@ interface Props {
   onRemove: (refundId: string) => Promise<void>;
 }
 
-const fmtDate = (iso: string) => {
-  return formatDate(iso) || '—';
-};
-
 function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string; label: string; amount: number; onRemove?: () => void }>) {
   const { t } = useTranslation();
   const credit = amount > 0;
@@ -32,7 +28,7 @@ function TimelineRow({ date, label, amount, onRemove }: Readonly<{ date: string;
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
-          {fmtDate(date)}
+          {formatDate(date)}
         </Typography>
       </Box>
       <Typography variant="body2" color={credit ? 'success.main' : 'error.main'} sx={{
@@ -86,7 +82,7 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
 
       <Stack spacing={1.25} sx={{ pl: 0.5 }}>
         <TimelineRow date={expense.date} label={t('finance.expenseManagement.expenseRecorded')} amount={-expense.amount} />
-        {(expense.refunds ?? []).map((r: any) => (
+        {expense.refunds.map((r: any) => (
           <TimelineRow key={r.refund_id} date={r.date} label={r.note || 'Refund received'} amount={r.amount} onRemove={() => onRemove(r.refund_id)} />
         ))}
       </Stack>

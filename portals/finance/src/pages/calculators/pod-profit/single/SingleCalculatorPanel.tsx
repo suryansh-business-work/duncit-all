@@ -70,26 +70,26 @@ export default function SingleCalculatorPanel({
       .catch((error: Error) => notifyError(error.message));
   };
 
-  const onDelete = () => {
-    if (!saved) return;
+  // Only reachable from the Delete button, which renders for a saved row alone.
+  // The confirm resolves true/false and never rejects, and the remove below
+  // catches its own failure, so the chain needs no outer catch.
+  const onDelete = (target: SavedPodCalculator) => {
     confirm({
       title: t('finance.calculators.deleteCalculationTitle'),
       message: t('finance.calculators.deleteCalculationBody'),
       confirmLabel: t('shell.common.delete'),
       destructive: true,
-    })
-      .then((ok) => {
-        if (!ok) return undefined;
-        return remove({ variables: { calculator_doc_id: saved.id } })
-          .then(() => {
-            notifySuccess(t('finance.calculators.calculationDeleted'));
-            onOpen(null);
-            onSaved();
-            return undefined;
-          })
-          .catch((error: Error) => notifyError(error.message));
-      })
-      .catch(() => undefined);
+    }).then((ok) => {
+      if (!ok) return undefined;
+      return remove({ variables: { calculator_doc_id: target.id } })
+        .then(() => {
+          notifySuccess(t('finance.calculators.calculationDeleted'));
+          onOpen(null);
+          onSaved();
+          return undefined;
+        })
+        .catch((error: Error) => notifyError(error.message));
+    });
   };
 
   return (
@@ -116,7 +116,7 @@ export default function SingleCalculatorPanel({
             size="small"
             color="error"
             startIcon={<DeleteOutlinedIcon />}
-            onClick={onDelete}
+            onClick={() => onDelete(saved)}
             disabled={busy}
           >
             {t('shell.common.delete')}

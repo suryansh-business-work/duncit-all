@@ -318,6 +318,15 @@ describe('MarketingCampaignForm', () => {
 
 // ===========================================================================
 describe('CreateCampaignPage', () => {
+  // The preview re-renders 350ms after the last subject/MJML edit and submit is
+  // disabled while it does, so a press that lands in that window is dropped.
+  // Wait for the preview (subject "S" from the render mock) before pressing.
+  const submitOncePreviewSettles = async (label: string) => {
+    expect(await screen.findByText('S', undefined, { timeout: 2500 })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: label })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: label }));
+  };
+
   // The whole point of the split layout: type MJML, watch it render — with no
   // subject line typed yet.
   it('renders the preview from the MJML alone, before a subject is written', async () => {
@@ -343,10 +352,7 @@ describe('CreateCampaignPage', () => {
     fireEvent.change(screen.getByLabelText('Schedule at'), {
       target: { value: '2030-01-01T00:00:00.000Z' },
     });
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Schedule Campaign' })).toBeEnabled(),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule Campaign' }));
+    await submitOncePreviewSettles('Schedule Campaign');
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign scheduled'));
     expect(await screen.findByText('campaigns-list')).toBeInTheDocument();
   });
@@ -355,8 +361,7 @@ describe('CreateCampaignPage', () => {
     renderCreatePage([...pageBaseMocks(), createCampaignMock()]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+    await submitOncePreviewSettles('Send Now');
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign sent'));
   });
 
@@ -365,8 +370,7 @@ describe('CreateCampaignPage', () => {
     renderCreatePage([...pageBaseMocks(), createCampaignMock({ serverError: 'Bad MJML' })]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+    await submitOncePreviewSettles('Send Now');
     await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Bad MJML'));
   });
 
@@ -375,8 +379,7 @@ describe('CreateCampaignPage', () => {
     renderCreatePage([...pageBaseMocks(), createCampaignMock({ throwMessage: 'Network down' })]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+    await submitOncePreviewSettles('Send Now');
     await waitFor(() => expect(screen.getByText('Network down')).toBeInTheDocument());
     expect(screen.queryByText('campaigns-list')).not.toBeInTheDocument();
   });

@@ -90,7 +90,9 @@ describe('LocationFormDialog', () => {
   it('titles itself "New Location" and hides the active toggle without an id', () => {
     renderWithProviders(<Harness initial={seed()} />);
     expect(screen.getByText('New Location')).toBeInTheDocument();
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('location-form-active')).not.toBeInTheDocument();
+    // The launch switch is not tied to an id — a new city can start launched or not.
+    expect(screen.getByTestId('location-form-launched')).toBeInTheDocument();
   });
 
   it('titles itself "Edit Location" and toggles the active switch', () => {
@@ -98,8 +100,45 @@ describe('LocationFormDialog', () => {
     expect(screen.getByText('Edit Location')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.click(screen.getByTestId('location-form-active'));
     expect(screen.getByText('Inactive')).toBeInTheDocument();
+  });
+
+  it('flips the launch switch between Launched and Not launched', () => {
+    renderWithProviders(<Harness initial={seed({ is_launched: true })} />);
+    expect(screen.getByText('Launched')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('location-form-launched'));
+    expect(screen.getByText('Not launched')).toBeInTheDocument();
+    expect(screen.getByTestId('location-form-launched')).not.toBeChecked();
+  });
+
+  it('flags an out-of-range launch target and keeps Save disabled until it is fixed', () => {
+    renderWithProviders(<Harness initial={seed()} />);
+    const target = screen.getByTestId('location-form-launch-target');
+
+    fireEvent.change(target, { target: { value: '0' } });
+    expect(screen.getByText('Enter a whole number from 1 to 1,000,000.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+    fireEvent.change(target, { target: { value: '500' } });
+    expect(screen.queryByText('Enter a whole number from 1 to 1,000,000.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  it('flags a group link that is not a WhatsApp invite and accepts a real one', () => {
+    renderWithProviders(<Harness initial={seed()} />);
+    const link = screen.getByTestId('location-form-whatsapp-group-url');
+
+    fireEvent.change(link, { target: { value: 'https://example.com/group' } });
+    expect(
+      screen.getByText('Enter a WhatsApp group invite link starting with https://chat.whatsapp.com/'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+    fireEvent.change(link, { target: { value: 'https://chat.whatsapp.com/AbC123' } });
+    expect(link).toHaveValue('https://chat.whatsapp.com/AbC123');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
   });
 
   it('blocks Save until the location has a name', () => {
@@ -265,6 +304,22 @@ describe('LocationFormDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Fill with AI' }));
     expect(await screen.findByText('AI service is unavailable')).toBeInTheDocument();
+  });
+
+  it('falls back to a generic message when the AI failure carries none', async () => {
+    renderWithProviders(<Harness initial={seed()} />, {
+      mocks: [
+        {
+          request: {
+            query: AI_FILL_LOCATION_AREAS,
+            variables: { input: { country: 'India', state: 'Karnataka', city: 'Bengaluru' } },
+          },
+          error: new Error(''),
+        },
+      ],
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Fill with AI' }));
+    expect(await screen.findByText('Could not fill localities with AI.')).toBeInTheDocument();
   });
 
   it('shows a filling state while the AI request is in flight', async () => {

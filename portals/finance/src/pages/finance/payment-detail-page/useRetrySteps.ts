@@ -33,11 +33,12 @@ export function useRetrySteps(paymentDocId: string): RetryApi {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [mutate] = useMutation<RetryData>(RETRY_PAYMENT_STEPS, {
     update(cache, { data }) {
-      if (!data?.retryPaymentSteps) return;
+      // Apollo only calls `update` on an error-free reply (errorPolicy 'none'),
+      // and `retryPaymentSteps` is non-null in the schema.
       cache.writeQuery({
         query: PAYMENT_DETAIL,
         variables: { id: paymentDocId },
-        data: { paymentDetail: data.retryPaymentSteps },
+        data: { paymentDetail: (data as RetryData).retryPaymentSteps },
       });
     },
   });

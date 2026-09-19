@@ -6,7 +6,7 @@ import { roleLabel, type WithdrawerRole } from './roles';
 
 type ChipColor = 'default' | 'primary' | 'secondary' | 'info' | 'warning' | 'success' | 'error';
 
-const STATUS_COLOR: Record<string, ChipColor> = {
+const STATUS_COLOR: Record<WithdrawalRow['status'], ChipColor> = {
   PENDING: 'warning',
   PAID: 'success',
   REJECTED: 'error',
@@ -45,7 +45,7 @@ export const renderRole = (w: WithdrawalRow) => (
   <Chip
     size="small"
     variant="outlined"
-    color={ROLE_COLOR[w.withdrawer_role] ?? 'default'}
+    color={ROLE_COLOR[w.withdrawer_role]}
     label={roleLabel(w.withdrawer_role)}
   />
 );
@@ -76,7 +76,7 @@ export const renderStatus = (w: WithdrawalRow) => (
       alignItems: "flex-start",
       lineHeight: 1.2
     }}>
-    <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
+    <Chip size="small" color={STATUS_COLOR[w.status]} label={w.status} />
     {w.reject_reason ? (
       <Typography variant="caption" component="span" sx={{
         color: "text.secondary"

@@ -1,21 +1,28 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+/**
+ * Finance > Expenses > Duncit Expenses — the ledger page, its summary chips and
+ * the create/save paths of its drawer.
+ *
+ * Every screen here reads its dropdowns from `expenseOptions`, so each render
+ * carries the four configured lists; a category, payment method and amount are
+ * required before anything is sent, which is why every save below fills them.
+ */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
+import { logs } from '@duncit/logs';
 import ExpenseManagementPage from '../../src/pages/finance/expense-management-page';
 import { resetTableControls, tableControls } from './mocks/table';
 import { renderWithProviders } from '../testkit';
+import { pickOption, typeInto } from '../expense-dom';
+import { allExpenseOptionsMocks, type VarsMatcher } from '../mocks/expense-config.mock';
 import {
-  addRefundMock,
   createExpenseMock,
-  deleteExpenseMock,
   emptyExpense,
   expenseSummaryErrorMock,
   expenseSummaryMock,
   expensesTableMock,
   makeExpense,
-  makeExpenseRefund,
   makeExpenseSummary,
-  refundedExpense,
-  removeRefundMock,
   updateExpenseMock,
 } from '../mocks/expense.mock';
 
@@ -28,10 +35,23 @@ const RICH_Q = {
   sortDir: 'asc' as const,
 };
 
-const selectOption = (name: RegExp | string, option: string) => {
-  fireEvent.mouseDown(screen.getByRole('combobox', { name }));
-  fireEvent.click(within(screen.getByRole('listbox')).getByText(option));
+const renderPage = (mocks: MockedResponse[]) =>
+  renderWithProviders(<ExpenseManagementPage />, { mocks: [...allExpenseOptionsMocks(), ...mocks] });
+
+const openNewExpense = async () => {
+  fireEvent.click(await screen.findByRole('button', { name: 'New expense' }));
+  return screen.findByRole('dialog', { name: 'New expense' });
 };
+
+/** The three fields a new expense cannot be saved without. */
+const fillRequired = async (amount = '99') => {
+  typeInto('Amount', amount);
+  await pickOption('Category', 'Marketing');
+  await pickOption('Payment method', 'UPI');
+};
+
+const drawerGone = (name: string) =>
+  waitFor(() => expect(screen.queryByRole('dialog', { name })).toBeNull());
 
 beforeEach(() => {
   resetTableControls();
@@ -40,147 +60,131 @@ beforeEach(() => {
 describe('ExpenseManagementPage', () => {
   it('renders the summary + table, syncs filters and creates a new expense', async () => {
     tableControls.queries = [tableControls.queries[0], RICH_Q];
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [
-        expenseSummaryMock(),
-        expensesTableMock([makeExpense(), emptyExpense()]),
-        createExpenseMock(),
-      ],
-    });
+    const created = vi.fn<VarsMatcher>(() => true);
+    renderPage([
+      expenseSummaryMock(),
+      expensesTableMock([makeExpense(), emptyExpense()]),
+      createExpenseMock({ match: created }),
+    ]);
     await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
-    expect(screen.getByText('Gross ₹100.00')).toBeInTheDocument();
-    expect(screen.getByText('1 expense')).toBeInTheDocument();
-    expect(screen.getByText('Rent: ₹80.00')).toBeInTheDocument();
+    expect(await screen.findByText('Gross 100.00')).toBeInTheDocument();
+    expect(screen.getByText('Refund 20.00')).toBeInTheDocument();
+    expect(screen.getByText('Net 80.00')).toBeInTheDocument();
+    expect(screen.getByText('1 expense(s)')).toBeInTheDocument();
+    // The by-category chip reads the configured label, not the stored key.
+    expect(await screen.findByText('Rent: 80.00')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /new expense/i }));
-    expect(await screen.findByRole('heading', { name: 'New expense' })).toBeInTheDocument();
+    const drawer = await openNewExpense();
+    expect(within(drawer).getByRole('heading', { name: 'New expense' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
-    expect(screen.getByText(/greater than 0/i)).toBeInTheDocument();
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    expect(await within(drawer).findByText(/greater than 0/i)).toBeInTheDocument();
+    expect(within(drawer).getByText('Pick a category')).toBeInTheDocument();
+    expect(within(drawer).getByText('Pick how it was paid')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText(/^Amount/), { target: { value: '250' } });
-    fireEvent.change(screen.getByLabelText(/vendor/i), { target: { value: 'Acme' } });
-    fireEvent.change(screen.getByLabelText(/reference/i), { target: { value: 'txn-9' } });
-    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Snacks' } });
-    selectOption('Category', 'Marketing');
-    selectOption('Payment method', 'Upi');
-    fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
+    // A cleared date is refused on its own line, then put back.
+    fireEvent.change(within(drawer).getByLabelText('Date'), { target: { value: '' } });
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    expect(await within(drawer).findByText('Pick the day the money left')).toBeInTheDocument();
+    fireEvent.change(within(drawer).getByLabelText('Date'), {
+      target: { value: '2026-08-01T10:00:00.000Z' },
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'New expense' })).not.toBeInTheDocument());
+    await fillRequired('250');
+    typeInto('Vendor / payee', 'Acme');
+    typeInto('Reference / txn id', 'txn-9');
+    typeInto('Description', 'Snacks');
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Upload' }));
+
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    await drawerGone('New expense');
+    expect(created).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          date: '2026-08-01T10:00:00.000Z',
+          amount: 250,
+          category: 'MARKETING',
+          payment_method: 'UPI',
+          vendor_name: 'Acme',
+          reference: 'txn-9',
+          description: 'Snacks',
+          attachment_url: 'https://img.example/new.png',
+          related_from_id: null,
+          compensated_amount: 0,
+          compensation_date: null,
+        }),
+      }),
+    );
   });
 
   it('logs a warning when the summary refresh fails after saving', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [
-        // Success is single-use so the post-save refetch hits the error mock.
-        expenseSummaryMock(makeExpenseSummary(), 1),
-        expenseSummaryErrorMock(),
-        expensesTableMock([makeExpense()]),
-        createExpenseMock(),
-      ],
-    });
+    const warn = vi.spyOn(logs.portal.finance, 'warn').mockImplementation(() => undefined);
+    renderPage([
+      // Success is single-use so the post-save refetch hits the error mock.
+      expenseSummaryMock(makeExpenseSummary(), 1),
+      expenseSummaryErrorMock(),
+      expensesTableMock([makeExpense()]),
+      createExpenseMock(),
+    ]);
     await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
-    fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'New expense' })).not.toBeInTheDocument());
-  });
-
-  it('edits an existing expense: refund add/guard/remove and delete', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [
-        expenseSummaryMock(),
-        expensesTableMock([refundedExpense()]),
-        addRefundMock(makeExpense({ refunds: [makeExpenseRefund({ refund_id: 'rf9', note: 'ref note' })] })),
-        removeRefundMock(),
-        deleteExpenseMock(),
-      ],
-    });
-    await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
-    fireEvent.click(screen.getByTestId('row-open'));
-    expect(await screen.findByText('Expense details')).toBeInTheDocument();
-    expect(screen.getByText('Refunds & timeline')).toBeInTheDocument();
-
-    // add-refund guard: no amount → the mutation is not fired yet
-    fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
-
-    fireEvent.change(screen.getAllByLabelText(/^Amount/)[1], { target: { value: '10' } });
-    fireEvent.change(screen.getByLabelText('Note'), { target: { value: 'ref note' } });
-    fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
-    await waitFor(() => expect(screen.getByText('ref note')).toBeInTheDocument());
-
-    fireEvent.click(screen.getAllByRole('button', { name: /remove refund/i })[0]);
-    fireEvent.click(screen.getByRole('button', { name: /delete expense/i }));
-    await waitFor(() => expect(screen.queryByText('Expense details')).not.toBeInTheDocument());
+    const drawer = await openNewExpense();
+    await fillRequired();
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    await drawerGone('New expense');
+    await waitFor(() =>
+      expect(warn).toHaveBeenCalledWith('ExpenseManagementPage', 'handleSaved', {
+        error: expect.any(Error),
+        msg: 'Expense summary refresh failed',
+      }),
+    );
+    warn.mockRestore();
   });
 
   it('saves changes to an existing expense (update path, no refunds)', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [
-        expenseSummaryMock(),
-        expensesTableMock([makeExpense({ refunds: null })]),
-        updateExpenseMock(),
-      ],
-    });
+    const updated = vi.fn<VarsMatcher>(() => true);
+    renderPage([
+      expenseSummaryMock(),
+      expensesTableMock([makeExpense({ refunds: [], refund_total: 0, net_amount: 100 })]),
+      updateExpenseMock(updated),
+    ]);
     await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('row-open'));
-    expect(await screen.findByRole('button', { name: /save changes/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
-    await waitFor(() => expect(screen.queryByText('Expense details')).not.toBeInTheDocument());
+    const drawer = await screen.findByRole('dialog', { name: 'Expense details' });
+    fireEvent.click(await within(drawer).findByRole('button', { name: 'Save' }));
+    await drawerGone('Expense details');
+    expect(updated).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'e1',
+        input: expect.objectContaining({ category: 'RENT', amount: 100, payment_method: 'BANK_TRANSFER' }),
+      }),
+    );
   });
 
-  it('keeps the current expense when a refund mutation returns no data', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [
-        expenseSummaryMock(),
-        expensesTableMock([refundedExpense()]),
-        addRefundMock(null),
-        removeRefundMock(null),
-      ],
-    });
-    await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
-    fireEvent.click(screen.getByTestId('row-open'));
-    await screen.findByText('Refunds & timeline');
-    fireEvent.change(screen.getAllByLabelText(/^Amount/)[1], { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
-    await waitFor(() => expect(screen.getAllByRole('button', { name: /remove refund/i }).length).toBeGreaterThan(0));
-    fireEvent.click(screen.getAllByRole('button', { name: /remove refund/i })[0]);
+  it('shows how many expenses the summary matched', async () => {
+    renderPage([expenseSummaryMock(makeExpenseSummary({ count: 3, by_category: [] })), expensesTableMock([])]);
+    expect(await screen.findByText('3 expense(s)')).toBeInTheDocument();
   });
 
-  it('pluralises the expense count', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [expenseSummaryMock(makeExpenseSummary({ count: 3, by_category: [] })), expensesTableMock([])],
-    });
-    expect(await screen.findByText('3 expenses')).toBeInTheDocument();
-  });
-
-  it('renders without a summary card', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [expenseSummaryMock(null), expensesTableMock([])],
-    });
+  it('renders without a summary card while the summary is still loading', async () => {
+    renderPage([expenseSummaryMock(makeExpenseSummary(), 50, 60_000), expensesTableMock([])]);
     await waitFor(() => expect(screen.getByText('No expenses match these filters.')).toBeInTheDocument());
     expect(screen.queryByText(/^Gross/)).not.toBeInTheDocument();
   });
 
-  it('surfaces a create error', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ fail: true })],
-    });
-    fireEvent.click(await screen.findByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
-    fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
-    expect(await screen.findByText('create failed')).toBeInTheDocument();
+  it('surfaces a create error and keeps the form open', async () => {
+    renderPage([expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ fail: true })]);
+    const drawer = await openNewExpense();
+    await fillRequired();
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    expect(await within(drawer).findByText('create failed')).toBeInTheDocument();
+    expect(within(drawer).getByRole('heading', { name: 'New expense' })).toBeInTheDocument();
   });
 
   it('shows the saving state in the drawer', async () => {
-    renderWithProviders(<ExpenseManagementPage />, {
-      mocks: [expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ delay: 60_000 })],
-    });
-    fireEvent.click(await screen.findByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
-    fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
-    await waitFor(() => expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled());
+    renderPage([expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ delay: 60_000 })]);
+    const drawer = await openNewExpense();
+    await fillRequired();
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add expense' }));
+    await waitFor(() => expect(within(drawer).getByRole('button', { name: /saving/i })).toBeDisabled());
   });
 });

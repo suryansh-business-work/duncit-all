@@ -68,10 +68,10 @@ export const BLANK_COIN_SETTINGS: CoinSettingsForm = {
 /** Server payload -> form strings. */
 export function toCoinSettingsForm(settings: CoinSettings): CoinSettingsForm {
   return {
-    pod_join_earn_pct: String(settings.pod_join_earn_pct ?? 0),
-    shop_earn_pct: String(settings.shop_earn_pct ?? 0),
-    coins_per_referral: String(settings.coins_per_referral ?? 0),
+    pod_join_earn_pct: String(settings.pod_join_earn_pct),
+    shop_earn_pct: String(settings.shop_earn_pct),
+    coins_per_referral: String(settings.coins_per_referral),
     pod_feedback_coins: String(settings.pod_feedback_coins ?? 0),
-    coin_expiry_days: String(settings.coin_expiry_days ?? 0),
+    coin_expiry_days: String(settings.coin_expiry_days),
   };
 }

@@ -1,91 +1,82 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+/**
+ * Finance > Withdrawal Payments, level 1: the pods money has been withdrawn
+ * against. The Mark Paid / Reject work moved one level down, onto the pod's own
+ * page (see withdrawal-detail.test.tsx) — this list only has to say which pods
+ * are waiting on a payment and who asked.
+ */
+import { beforeEach, describe, expect, it } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { Route } from 'react-router';
 import WithdrawalsPage from '../../src/pages/finance/withdrawals-page';
-import { notifyError, notifySuccess } from './mocks/dialogs';
 import { resetTableControls, tableControls } from './mocks/table';
 import { renderWithProviders } from '../testkit';
-import { makeWithdrawalRow, reviewWithdrawalMock } from '../mocks/withdrawals.mock';
-
-const w1 = makeWithdrawalRow();
-const w2 = makeWithdrawalRow({
-  id: 'w2',
-  beneficiary_name: 'Host B',
-  beneficiary_email: 'b@x',
-  amount: 300,
-  status: 'REJECTED',
-  payout_method: 'NEFT',
-  account_holder_name: 'B',
-  account_number: '123456',
-  ifsc_code: 'IFSC1',
-  upi_id: '',
-  scheduled_for: 'bad-date',
-  reject_reason: 'invalid account',
-  requested_at: '2024-01-02',
-});
-const w3 = makeWithdrawalRow({ id: 'w3', status: 'WEIRD', beneficiary_name: 'Host C', upi_id: 'c@upi' });
+import { makePodWithdrawalGroup } from '../mocks/withdrawals.mock';
 
 beforeEach(() => {
   resetTableControls();
-  (notifySuccess as unknown as { mockClear: () => void }).mockClear();
-  (notifyError as unknown as { mockClear: () => void }).mockClear();
 });
 
+const mount = () =>
+  renderWithProviders(<WithdrawalsPage />, {
+    path: '/withdrawals',
+    entry: '/withdrawals',
+    extra: <Route path="/withdrawals/:podId" element={<div data-testid="pod-probe">pod</div>} />,
+  });
+
 describe('WithdrawalsPage', () => {
-  it('renders account/status variants and marks a withdrawal paid', async () => {
-    tableControls.rows = [w1, w2, w3];
-    renderWithProviders(<WithdrawalsPage />, { mocks: [reviewWithdrawalMock()] });
-    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
-    expect(screen.getByText('a@upi')).toBeInTheDocument();
-    expect(screen.getByText('123456 · IFSC1')).toBeInTheDocument();
-    expect(screen.getByText('invalid account')).toBeInTheDocument();
+  it('lists each pod with who asked and whether every request is paid', async () => {
+    tableControls.rowsByKey = {
+      podWithdrawalGroupsTable: [
+        makePodWithdrawalGroup(),
+        makePodWithdrawalGroup({
+          pod_id: 'DUN-POD-5102',
+          // A credit whose release no longer resolved was stamped without a
+          // title, and a leg whose kind maps to no partner names no role.
+          pod_title: '',
+          requested_from: [],
+          status: 'APPROVED',
+        }),
+      ],
+    };
+    mount();
 
-    fireEvent.click(screen.getByRole('button', { name: /mark paid/i }));
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Marked as paid'));
+    expect(await screen.findByRole('heading', { name: 'Withdrawal Payments' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(2));
+    const [pending, settled] = screen.getAllByTestId('table-row');
+
+    expect(within(pending).getByText('Sunday Badminton')).toBeInTheDocument();
+    const roles = within(pending).getByTestId('cell-requested_from');
+    expect(within(roles).getByText('Host')).toBeInTheDocument();
+    expect(within(roles).getByText('Venue Owner')).toBeInTheDocument();
+    expect(within(pending).getByTestId('cell-status')).toHaveTextContent('Pending');
+
+    expect(within(settled).getByTestId('cell-pod_title')).toHaveTextContent('—');
+    expect(within(settled).getByTestId('cell-requested_from')).toHaveTextContent('—');
+    expect(within(settled).getByTestId('cell-status')).toHaveTextContent('Approved');
   });
 
-  it('rejects a withdrawal with a reason', async () => {
-    tableControls.rows = [w1];
-    renderWithProviders(<WithdrawalsPage />, { mocks: [reviewWithdrawalMock()] });
-    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
-
-    const dialog = await screen.findByRole('dialog');
-    const confirm = within(dialog).getByRole('button', { name: /reject & refund/i });
-    expect(confirm).toBeDisabled();
-    fireEvent.change(within(dialog).getByLabelText(/^Reason/), { target: { value: 'fraud' } });
-    fireEvent.click(confirm);
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Withdrawal rejected'));
+  it('opens a pod on its own page', async () => {
+    tableControls.rowsByKey = { podWithdrawalGroupsTable: [makePodWithdrawalGroup()] };
+    mount();
+    fireEvent.click(await screen.findByTestId('row-open'));
+    expect(screen.getByTestId('pod-probe')).toBeInTheDocument();
   });
 
-  it('cancels the reject dialog via the button and via Escape', async () => {
-    tableControls.rows = [w1];
-    renderWithProviders(<WithdrawalsPage />, { mocks: [reviewWithdrawalMock()] });
-    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
+  it('says why the list is empty, naming the role it is filtered to', async () => {
+    mount();
+    expect(
+      await screen.findByText('No withdrawals have been requested against any pod yet.'),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
-    const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Role' }));
+    const options = within(screen.getByRole('listbox'));
+    expect(options.getByRole('option', { name: 'All roles' })).toBeInTheDocument();
+    expect(options.getByRole('option', { name: 'E-Commerce Brand' })).toBeInTheDocument();
+    fireEvent.click(options.getByRole('option', { name: 'Club Admin' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
-    const dialog2 = await screen.findByRole('dialog');
-    fireEvent.keyDown(dialog2, { key: 'Escape', code: 'Escape' });
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  });
-
-  it('surfaces a review error via a toast', async () => {
-    tableControls.rows = [w1];
-    renderWithProviders(<WithdrawalsPage />, { mocks: [reviewWithdrawalMock({ fail: true })] });
-    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /mark paid/i }));
-    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('review failed'));
-  });
-
-  it('disables the actions while a review is in flight', async () => {
-    tableControls.rows = [w1];
-    renderWithProviders(<WithdrawalsPage />, { mocks: [reviewWithdrawalMock({ delay: 60_000 })] });
-    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /mark paid/i }));
-    await waitFor(() => expect(screen.getByRole('button', { name: /mark paid/i })).toBeDisabled());
+    expect(
+      await screen.findByText('No pod has a withdrawal request from a Club Admin yet.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Role' })).toHaveTextContent('Club Admin');
   });
 });

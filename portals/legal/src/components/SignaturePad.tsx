@@ -67,8 +67,8 @@ export default function SignaturePad({
   }, [methods, tab, setTab]);
 
   const canvasPoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+    // Only the canvas's own pointer handlers call this, so it is the target.
+    const canvas = event.currentTarget;
     const rect = canvas.getBoundingClientRect();
     return {
       x: ((event.clientX - rect.left) / rect.width) * canvas.width,
@@ -89,8 +89,8 @@ export default function SignaturePad({
   };
 
   const move = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
-    const ctx = canvasRef.current?.getContext('2d');
+    // Only mid-stroke — and a stroke only starts once the context was obtained.
+    const ctx = drawing.current ? canvasRef.current?.getContext('2d') : null;
     if (!ctx) return;
     const { x, y } = canvasPoint(event);
     ctx.lineWidth = 2.2;
@@ -144,7 +144,8 @@ export default function SignaturePad({
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => onChange(typeof reader.result === 'string' ? reader.result : '', 'UPLOAD');
+    // readAsDataURL always settles on a string.
+    reader.onload = () => onChange(reader.result as string, 'UPLOAD');
     reader.onerror = () => setError(t('legal.signature.unreadable'));
     reader.readAsDataURL(file);
   };

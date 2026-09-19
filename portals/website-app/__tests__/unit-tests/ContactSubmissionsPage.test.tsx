@@ -22,7 +22,7 @@ describe('ContactSubmissionsPage', () => {
     await waitFor(() => expect(screen.getByText('Asha')).toBeInTheDocument());
     expect(screen.getByText('Ravi')).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'View' })[0]);
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Billing')).toBeInTheDocument();
   });
@@ -32,7 +32,7 @@ describe('ContactSubmissionsPage', () => {
       mocks: [contactSubmissionsTableMock(rows), updateContactStatusMock('a', 'RESOLVED')],
     });
     await waitFor(() => expect(screen.getByText('Asha')).toBeInTheDocument());
-    fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'View' })[0]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(screen.getByRole('option', { name: 'RESOLVED' }));

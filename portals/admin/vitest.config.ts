@@ -17,6 +17,9 @@ export default defineConfig({
       exclude: [
         'src/**/*.d.ts',
         'src/vite-env.d.ts',
+        // Test helpers and mocks (schema-mock, gql-contract, testkit, table
+        // stubs) are not product code; SonarQube already excludes them too.
+        'src/**/__tests__/**',
         'src/main.tsx', // app bootstrap: mountPortal side-effect, no unit surface
         'src/apollo.ts', // thin Apollo client factory
         'src/theme.ts', // pure re-export barrel of @duncit/theme

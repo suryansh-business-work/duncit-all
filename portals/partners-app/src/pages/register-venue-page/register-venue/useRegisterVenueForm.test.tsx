@@ -3,6 +3,7 @@ import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client';
 import { Observable } from '@apollo/client/utilities';
 import { ApolloProvider } from '@apollo/client/react';
+import { MemoryRouter } from 'react-router';
 import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
 import type { RegisterVenueMode } from './register-venue.types';
 
@@ -15,6 +16,7 @@ const savedVenue = {
   id: 'venue-1',
   venue_name: 'Cafe Mocha',
   description: 'A cosy corner cafe',
+  cover_image_url: 'https://cdn.example.com/cover.jpg',
   venue_category: { super_category_id: 'super-1', category_id: 'cat-1', sub_category_id: 'sub-1' },
   address_line1: '12 Main Street',
   address_line2: '',
@@ -29,10 +31,28 @@ const savedVenue = {
   venue_type: 'Cafe',
   capacity_items: [{ label: 'Main hall', capacity: 30 }],
   documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
+  gstin: '22ABCDE1234F1Z5',
+  pan: 'ABCDE1234F',
   owner_name: 'Owner Name',
   owner_phone: '+919876543210',
   owner_dob: '1990-05-10T00:00:00.000Z',
   owner_address: '12 Main Street',
+  bank_account: {
+    payout_method: 'UPI',
+    account_holder_name: 'Owner Name',
+    account_number: '',
+    ifsc_code: '',
+    upi_id: 'owner@okaxis',
+  },
+};
+
+/** What step 3 sends for the stored UPI payout. */
+const upiBankAccount = {
+  payout_method: 'UPI',
+  account_holder_name: 'Owner Name',
+  account_number: '',
+  ifsc_code: '',
+  upi_id: 'owner@okaxis',
 };
 
 /** Same venue before its first save — no id, so the hook must create one. */
@@ -103,15 +123,20 @@ const mount = ({ venue = null, mode = 'register', failOn }: MountOptions = {}) =
   const apiRef: { current: Api | null } = { current: null };
   const sent: Sent[] = [];
   const onPersisted = vi.fn().mockResolvedValue(undefined);
+  // The active section lives in the URL (?selectedtab=), so the hook needs a router.
   const view = render(
     <ApolloProvider client={makeClient(sent, failOn)}>
-      <Harness venue={venue} mode={mode} onPersisted={onPersisted} apiRef={apiRef} />
+      <MemoryRouter>
+        <Harness venue={venue} mode={mode} onPersisted={onPersisted} apiRef={apiRef} />
+      </MemoryRouter>
     </ApolloProvider>
   );
   const rerenderWith = (nextVenue: any) =>
     view.rerender(
       <ApolloProvider client={makeClient(sent, failOn)}>
-        <Harness venue={nextVenue} mode={mode} onPersisted={onPersisted} apiRef={apiRef} />
+        <MemoryRouter>
+          <Harness venue={nextVenue} mode={mode} onPersisted={onPersisted} apiRef={apiRef} />
+        </MemoryRouter>
       </ApolloProvider>
     );
   return { apiRef, sent, onPersisted, rerenderWith };
@@ -136,6 +161,7 @@ describe('useRegisterVenueForm — section completion', () => {
       amenities: 'complete',
       documents: 'incomplete',
       owner: 'incomplete',
+      payout: 'incomplete',
     });
   });
 
@@ -148,6 +174,7 @@ describe('useRegisterVenueForm — section completion', () => {
       amenities: 'complete',
       documents: 'complete',
       owner: 'complete',
+      payout: 'complete',
     });
     expect(apiRef.current?.form.getValues('owner_dob')).toBe('1990-05-10');
   });
@@ -202,8 +229,8 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(sent[1].variables.venue_id).toBe('venue-1');
     expect(sent[1].variables.input).toEqual({
       documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
-      gstin: '',
-      pan: '',
+      gstin: '22ABCDE1234F1Z5',
+      pan: 'ABCDE1234F',
     });
     expect(apiRef.current?.active).toBe('owner');
   });
@@ -220,8 +247,29 @@ describe('useRegisterVenueForm — saving a section', () => {
       owner_phone: '+919876543210',
       owner_dob: '1990-05-10',
       owner_address: '12 Main Street',
+      bank_account: upiBankAccount,
     });
+    expect(apiRef.current?.active).toBe('payout');
+  });
+
+  it('saves the payout method through step 3 and moves on to leaves', async () => {
+    const { apiRef, sent } = mount({ venue: savedVenue });
+
+    expect(await save(apiRef, 'payout')).toBe(true);
+
+    // A stored venue already has its id, so step 1 is not re-sent first.
+    expect(sent.map((call) => call.name)).toEqual(['V3']);
+    expect(sent[0].variables.venue_id).toBe('venue-1');
+    expect(sent[0].variables.input.bank_account).toEqual(upiBankAccount);
     expect(apiRef.current?.active).toBe('leaves');
+  });
+
+  it('keeps an invalid section unsaved without contacting the server', async () => {
+    const { apiRef, sent } = mount({ venue: { ...savedVenue, owner_phone: 'call me' } });
+
+    expect(await save(apiRef, 'owner')).toBe(false);
+    expect(sent).toEqual([]);
+    expect(apiRef.current?.error).toBeNull();
   });
 
   it('surfaces a server error and stays on the section', async () => {
@@ -331,9 +379,35 @@ describe('useRegisterVenueForm — approved-venue spot edits', () => {
 
     expect(sent[0].variables.input).toEqual({
       description: 'Now with a rooftop',
-      cover_image_url: '',
+      cover_image_url: 'https://cdn.example.com/cover.jpg',
       gallery: [],
     });
+  });
+
+  it('saves documents for a venue approved before GSTIN and PAN became mandatory', async () => {
+    const { apiRef, sent } = mount({ venue: { ...savedVenue, gstin: '', pan: '' }, mode: 'edit-approved' });
+
+    let ok: boolean | undefined;
+    await act(async () => {
+      ok = await apiRef.current?.saveApprovedSection('documents');
+    });
+
+    // The tax ids render locked after approval, so they are never validated here.
+    expect(ok).toBe(true);
+    expect(sent[0].variables.input).toEqual({ add_documents: [] });
+  });
+
+  it('refuses an approved edit whose own fields are invalid', async () => {
+    const { apiRef, sent } = mount({ venue: savedVenue, mode: 'edit-approved' });
+
+    let ok: boolean | undefined;
+    await act(async () => {
+      apiRef.current?.form.setValue('capacity_items', [{ label: '', capacity: 5 }]);
+      ok = await apiRef.current?.saveApprovedSection('type-capacity');
+    });
+
+    expect(ok).toBe(false);
+    expect(sent).toEqual([]);
   });
 
   it('surfaces a failed approved update and leaves no success message', async () => {

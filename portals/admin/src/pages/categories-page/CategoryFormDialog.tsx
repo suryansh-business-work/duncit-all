@@ -235,7 +235,7 @@ export default function CategoryFormDialog({
                     onChange={(e) =>
                       setDialog({
                         ...dialog,
-                        form: { ...dialog.form, max_co_hosts: Number(e.target.value) || 1 },
+                        form: { ...dialog.form, max_co_hosts: Number(e.target.value) },
                       })
                     }
                     helperText={t('admin.categories.maxCoHostsHint')}

@@ -99,11 +99,12 @@ describe('UserHeader — status buttons for an INACTIVE user', () => {
 });
 
 describe('UserHeader — status buttons for a SUSPENDED user', () => {
-  it('offers Activate and Unblock, but not Deactivate or Block', () => {
+  it('offers Activate, Deactivate and Unblock, but not Block', () => {
     renderWithProviders(<UserHeader user={baseUser} status="SUSPENDED" busy={false} {...spies()} />);
 
     expect(screen.getByRole('button', { name: 'Activate' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Deactivate' })).toBeNull();
+    // Deactivate is hidden only for an already-INACTIVE user; a blocked one can still be parked.
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Block' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Unblock' })).toBeInTheDocument();
   });

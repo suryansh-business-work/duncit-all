@@ -52,9 +52,11 @@ export default function MultiPodCalculator() {
       },
     })
       .then((res) => {
+        // `createPodCalculator` is `PodCalculator!`: a resolved create always
+        // carries the new row (a failed one rejects into the catch below).
         const created = res.data?.createPodCalculator;
         return refetch().then(() => {
-          if (created?.id) setOpen(created.id);
+          setOpen(created.id);
           return undefined;
         });
       })

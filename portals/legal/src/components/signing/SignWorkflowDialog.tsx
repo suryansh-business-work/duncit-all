@@ -76,6 +76,9 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
   });
   const base64 = pdfData?.[ops.pdfField] ?? '';
   const pdfUrl = base64 ? toPdfUrl(base64) : '';
+  // Named at render: Download is only live while the dialog holds a record and
+  // its PDF (a skipped query has no data), so the handler has nothing to check.
+  const fileName = record ? fileNameFor(record.title, alreadySigned) : '';
 
   const [signMut, { loading: signing }] = useMutation<any>(ops.signMutation);
   const [shareMut, { loading: sharing }] = useMutation<any>(ops.shareMutation);
@@ -92,10 +95,9 @@ export default function SignWorkflowDialog({ record, ops, onClose, onSigned }: R
   }, [open, alreadySigned, record?.id]);
 
   const download = () => {
-    if (!pdfUrl || !record) return;
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = fileNameFor(record.title, !!alreadySigned);
+    link.download = fileName;
     link.click();
   };
 

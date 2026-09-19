@@ -46,7 +46,7 @@ describe('NavItemDialog', () => {
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByDisplayValue('Careers')).toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText(/Sort order/), { target: { value: '5' } });
-    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('switch'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
     expect(onSave.mock.calls[0][0]).toMatchObject({ label: 'Careers', is_active: true });

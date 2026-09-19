@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formatDateTime } from '@duncit/app-settings';
 import {
   buildKpis,
   countByKind,
@@ -75,11 +76,14 @@ describe('monthlyOnboarding', () => {
     const clubAdmins: StatusItem[] = [{ submitted_at: '2026-04-11' }, { submitted_at: '2026-06-01' }];
 
     const buckets = monthlyOnboarding(hosts, venues, brands, clubAdmins, 3, now);
+    // Each bucket is labelled with its first day, in the admin-set date format.
+    const [apr, may, jun] = [3, 4, 5].map((month) => formatDateTime(new Date(2026, month, 1)));
     expect(buckets).toHaveLength(3);
-    expect(buckets.map((b) => b.label)).toEqual(['Apr', 'May', 'Jun']);
-    expect(buckets[2]).toEqual({ label: 'Jun', hosts: 1, venues: 1, brands: 1, club_admins: 1 });
-    expect(buckets[1]).toEqual({ label: 'May', hosts: 1, venues: 0, brands: 1, club_admins: 0 });
-    expect(buckets[0]).toEqual({ label: 'Apr', hosts: 0, venues: 0, brands: 0, club_admins: 1 });
+    expect(buckets.map((b) => b.label)).toEqual([apr, may, jun]);
+    expect(apr).toContain('Apr 2026');
+    expect(buckets[2]).toEqual({ label: jun, hosts: 1, venues: 1, brands: 1, club_admins: 1 });
+    expect(buckets[1]).toEqual({ label: may, hosts: 1, venues: 0, brands: 1, club_admins: 0 });
+    expect(buckets[0]).toEqual({ label: apr, hosts: 0, venues: 0, brands: 0, club_admins: 1 });
   });
 
   it('defaults to a 6-month window when no range is given', () => {

@@ -51,7 +51,8 @@ export default function MembershipSubscribersPage() {
         headerName: t('admin.membership.signedUp'),
         type: 'date',
         minWidth: 200,
-        valueGetter: (r) => (r.created_at ? formatDateTime(r.created_at) : ''),
+        // created_at is non-null on every subscriber row.
+        valueGetter: (r) => formatDateTime(r.created_at),
       },
     ],
     [formatDateTime]

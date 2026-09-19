@@ -11,6 +11,7 @@ import {
   DELETE_LEGAL_DOCUMENT,
   LEGAL_DOCUMENT,
   LEGAL_DOCUMENT_STATS,
+  SET_LEGAL_DOCUMENT_ACTIVE,
   UPDATE_LEGAL_DOCUMENT,
 } from '../../src/graphql/documents';
 
@@ -167,4 +168,47 @@ export const deleteLegalDocumentMock = (id = 'doc-1'): MockedResponse => ({
 export const cloneLegalDocumentMock = (over: { id?: string } = {}, sourceId = 'doc-1'): MockedResponse => ({
   request: { query: CLONE_LEGAL_DOCUMENT, variables: { id: sourceId } },
   result: { data: { cloneLegalDocument: { __typename: 'LegalDocument', id: over.id ?? 'new-1' } } },
+});
+
+/** The full `LegalDocumentFields` row — what the documents table really reads. */
+export type LegalDocumentListItemMock = LegalDocumentRowMock &
+  Pick<LegalDocument, 'document_no' | 'is_active' | 'signing_status' | 'is_locked'> & {
+    signed_at: string | null;
+  };
+
+export const makeLegalDocumentListItem = (
+  over: Partial<LegalDocumentListItemMock> = {},
+): LegalDocumentListItemMock => ({
+  ...makeLegalDocumentRow(),
+  document_no: 'DOC-000007',
+  is_active: true,
+  signing_status: 'UNSIGNED',
+  signed_at: null,
+  is_locked: false,
+  ...over,
+});
+
+export const updateLegalDocumentErrorMock = (message: string): MockedResponse => ({
+  request: { query: UPDATE_LEGAL_DOCUMENT, variables: () => true },
+  result: { errors: [{ message }] },
+});
+
+export const setLegalDocumentActiveMock = (id: string, isActive: boolean): MockedResponse => ({
+  request: { query: SET_LEGAL_DOCUMENT_ACTIVE, variables: { id, isActive } },
+  result: {
+    data: {
+      setLegalDocumentActive: {
+        __typename: 'LegalDocument',
+        id,
+        is_active: isActive,
+        updated_by_name: 'Priya Sharma',
+        updated_at: '2026-02-02T00:00:00.000Z',
+      },
+    },
+  },
+});
+
+export const setLegalDocumentActiveErrorMock = (id: string, isActive: boolean): MockedResponse => ({
+  request: { query: SET_LEGAL_DOCUMENT_ACTIVE, variables: { id, isActive } },
+  result: { errors: [{ message: 'Only Legal can take a document down' }] },
 });

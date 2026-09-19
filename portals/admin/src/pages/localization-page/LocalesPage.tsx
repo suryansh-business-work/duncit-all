@@ -61,7 +61,8 @@ export default function LocalesPage() {
       // offer to translate it comes with the language, not two clicks later.
       if (!editing && saved) setAutoTarget(saved);
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : t('admin.localization.saveLocaleFailed'));
+      // A rejected mutation is always an Error — Apollo wraps anything else.
+      setOpError((e as Error).message);
     } finally {
       setSaving(false);
     }
@@ -74,7 +75,7 @@ export default function LocalesPage() {
       setToast(t('admin.localization.localeRemoved', { vars: { code: row.code } }));
       onRunFinished();
     } catch (e) {
-      setOpError(e instanceof Error ? e.message : t('admin.localization.removeLocaleFailed'));
+      setOpError((e as Error).message);
     }
   };
 

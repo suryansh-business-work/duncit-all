@@ -322,6 +322,23 @@ services:
     ports:
       - "127.0.0.1:2139:8080"
 
+  # Duncit Lite — staging twin (staging.luma.* + staging.luma-portal.*), on
+  # its own staging database (lite.env: LITE_MONGO_DB_NAME=duncit-lite-staging).
+  lite:
+    image: ${DOCKERHUB_USERNAME}/duncit-lite:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-lite
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit-staging/lite.env
+    ports:
+      - "127.0.0.1:2140:2040"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2040/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   # Staging Redis — same shape as production's, isolated on the staging
   # network with its own data dir, so a staging cache flush never touches
   # production's cache (and vice versa).

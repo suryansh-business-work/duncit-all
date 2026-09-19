@@ -42,6 +42,17 @@ Docker image push uses DockerHub secrets: `DOCKERHUB_USERNAME` and
    - `duncit-partners-app` (nginx static — partner React app on :2005)
 3. `deploy` SSHes to the VPS, runs `/opt/duncit/redeploy.sh` and **loops health checks** (24 retries × 15 s) until every container is responding. Job fails only if it never goes green.
 
+## Duncit Lite (luma.duncit.com + luma-portal.duncit.com)
+
+One image (`duncit-lite`, built from `lite/Dockerfile`) runs as the `lite` service on
+:2040 (staging :2140). It is its own API + web app + console with its own database
+(`lite.env`: `LITE_MONGO_DB_NAME=duncit-lite`, staging `duncit-lite-staging`). nginx
+proxies both hostnames to that one port; the process serves the console shell for
+`luma-portal.*` and the web app for `luma.*`. The workflow renders `lite.env` from the
+optional `LITE_MONGO_URI`, `LITE_JWT_SECRET` and `LITE_ADMIN_EMAILS` secrets and folds
+both hostnames into the certbot certificate once their DNS resolves (they are in the
+DNS-gated list, so a missing record never fails the certificate).
+
 ## Local Husky
 
 ```bash

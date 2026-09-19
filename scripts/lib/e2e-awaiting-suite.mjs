@@ -18,6 +18,8 @@ export const AWAITING_SUITE = new Set([
   'analytics',
   'ecomm-portal',
   'ecomm-store',
+  // Duncit Lite (web app + console in one workspace), shipped after the removal.
+  'duncit-lite',
   'challenge-portal',
   'club-admins',
   'communications',

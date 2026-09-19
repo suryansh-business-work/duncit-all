@@ -37,6 +37,8 @@ packages:
   - website/ecomm-store
   - website/status-website
   - website/earnwith-website
+  # Duncit Lite: its API, web app and console, built as one workspace.
+  - lite
   - docs-site
   - packages/*
 

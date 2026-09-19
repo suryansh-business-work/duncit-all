@@ -624,6 +624,8 @@ export const storeTypeDefs = /* GraphQL */ `
     courier_name: String!
     awb: String!
     tracking_url: String!
+    "The courier's estimated delivery date, as ShipRocket phrased it ('' until a courier is assigned)."
+    etd: String!
     events: [StoreOrderEvent!]!
     created_at: String!
     delivered_at: String

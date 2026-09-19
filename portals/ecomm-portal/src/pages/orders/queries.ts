@@ -65,7 +65,17 @@ export interface StoreOrder extends Omit<OrderRow, 'line_items' | 'shiprocket'> 
   items_total: number;
   shipping_charge: number;
   shipping_address: OrderAddress | null;
-  shiprocket: { awb: string; courier_name: string; tracking_status: string; label_url: string; last_synced_at: string | null };
+  shiprocket: {
+    awb: string;
+    courier_name: string;
+    tracking_status: string;
+    label_url: string;
+    invoice_url: string;
+    manifest_url: string;
+    etd: string;
+    pickup_scheduled_date: string;
+    last_synced_at: string | null;
+  };
   tracking_events: OrderEvent[];
   last_error: string;
   cod_amount: number;
@@ -103,8 +113,60 @@ export interface OrderReturnSummary {
   items: { product_id: string; qty: number }[];
 }
 
+/** The parcel declared to ShipRocket — or, before booking, the one that will be. */
+export interface OrderParcel {
+  weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
+  volumetric_weight_kg: number;
+  chargeable_weight_kg: number;
+  source: 'AUTO' | 'OVERRIDE';
+  sent_at: string | null;
+}
+
+/** An order's shipment as the portal works it. */
+export interface ShipmentOps {
+  shiprocket_order_id: string;
+  shipment_id: string;
+  /** LOW_WALLET, NDR or ''. */
+  alert: string;
+  alert_message: string;
+  ndr_action: string;
+  ndr_actioned_at: string | null;
+  pickup_token: string;
+  parcel: OrderParcel;
+  parcel_sent: boolean;
+  packaging_missing: string[];
+  address_problems: string[];
+}
+
+export const SHIPMENT_FIELDS = `
+  shiprocket_order_id
+  shipment_id
+  alert
+  alert_message
+  ndr_action
+  ndr_actioned_at
+  pickup_token
+  parcel_sent
+  packaging_missing
+  address_problems
+  parcel {
+    weight_kg
+    length_cm
+    breadth_cm
+    height_cm
+    volumetric_weight_kg
+    chargeable_weight_kg
+    source
+    sent_at
+  }
+`;
+
 export interface StoreAdminOrder {
   order: StoreOrder;
+  shipment: ShipmentOps;
   payment: StoreAdminPayment | null;
   return_ids: string[];
   customer_order_count: number;
@@ -131,7 +193,7 @@ const ROW_FIELDS = `
   created_at
 `;
 
-const ORDER_FIELDS = `
+export const ORDER_FIELDS = `
   id
   order_no
   buyer_id
@@ -173,6 +235,10 @@ const ORDER_FIELDS = `
     courier_name
     tracking_status
     label_url
+    invoice_url
+    manifest_url
+    etd
+    pickup_scheduled_date
     last_synced_at
   }
   tracking_events {
@@ -241,6 +307,9 @@ export const STORE_ADMIN_ORDER: TypedDocumentNode<{ storeAdminOrder: StoreAdminO
       return_ids
       customer_order_count
       is_guest
+      shipment {
+        ${SHIPMENT_FIELDS}
+      }
     }
   }
 `;
@@ -297,14 +366,6 @@ export const CANCEL_ORDER = gql`
 export const MARK_COD_COLLECTED = gql`
   mutation StoreMarkCodCollected($id: ID!) {
     storeMarkCodCollected(id: $id) {
-      ${ORDER_FIELDS}
-    }
-  }
-`;
-
-export const CREATE_SHIPMENT = gql`
-  mutation StoreCreateShipment($id: ID!) {
-    storeCreateShipment(id: $id) {
       ${ORDER_FIELDS}
     }
   }

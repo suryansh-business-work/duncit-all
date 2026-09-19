@@ -12,6 +12,7 @@ import OrderItemsCard from './OrderItemsCard';
 import OrderMoneyCard from './OrderMoneyCard';
 import OrderNotesCard from './OrderNotesCard';
 import OrderReturnsCard from './OrderReturnsCard';
+import OrderShipmentCard from './OrderShipmentCard';
 import OrderTimelineCard from './OrderTimelineCard';
 import { useOrderActions } from './useOrderActions';
 
@@ -31,6 +32,7 @@ function OrderDetail({ detail }: Readonly<{ detail: StoreAdminOrder }>) {
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <Stack spacing={3}>
+          <OrderShipmentCard detail={detail} />
           <OrderActionsCard detail={detail} actions={actions} />
           <OrderCustomerCard detail={detail} />
           <OrderReturnsCard orderId={order.id} symbol={order.currency_symbol} />

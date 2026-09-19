@@ -28,6 +28,15 @@ export const appConfig = {
     { label: 'Dashboard', labelKey: 'ecommPortal.nav.dashboard', to: '/', icon: 'dashboard' },
     { label: 'Orders', labelKey: 'ecommPortal.nav.orders', to: '/orders', icon: 'orders' },
     { label: 'Returns', labelKey: 'ecommPortal.nav.returns', to: '/returns', icon: 'receipt' },
+    {
+      label: 'Shipping', labelKey: 'ecommPortal.nav.shipping',
+      icon: 'shipping',
+      children: [
+        { label: 'Needs action', labelKey: 'ecommPortal.nav.needsAction', to: '/shipping/needs-action', icon: 'sos' },
+        { label: 'ShipRocket', labelKey: 'ecommPortal.nav.shiprocket', to: '/shipping', icon: 'warehouse' },
+        { label: 'COD remittance', labelKey: 'ecommPortal.nav.codLedger', to: '/shipping/cod', icon: 'wallet' },
+      ],
+    },
     { label: 'Customers', labelKey: 'ecommPortal.nav.customers', to: '/customers', icon: 'customers' },
     {
       label: 'Catalogue', labelKey: 'ecommPortal.nav.catalogue',

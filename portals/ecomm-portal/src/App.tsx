@@ -5,6 +5,9 @@ import { runtime } from './runtime';
 import DashboardPage from './pages/dashboard';
 import OrdersPage from './pages/orders/OrdersPage';
 import OrderDetailPage from './pages/orders/order-detail';
+import NeedsActionPage from './pages/shipping/NeedsActionPage';
+import ShiprocketPage from './pages/shipping/ShiprocketPage';
+import CodLedgerPage from './pages/shipping/CodLedgerPage';
 import ReturnsPage from './pages/returns/ReturnsPage';
 import ReturnDetailPage from './pages/returns/return-detail';
 import CustomersPage from './pages/customers/CustomersPage';
@@ -35,6 +38,9 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/', element: <DashboardPage /> },
   { path: '/orders', element: <OrdersPage /> },
   { path: '/orders/:id', element: <OrderDetailPage /> },
+  { path: '/shipping', element: <ShiprocketPage /> },
+  { path: '/shipping/needs-action', element: <NeedsActionPage /> },
+  { path: '/shipping/cod', element: <CodLedgerPage /> },
   { path: '/returns', element: <ReturnsPage /> },
   { path: '/returns/:id', element: <ReturnDetailPage /> },
   { path: '/customers', element: <CustomersPage /> },

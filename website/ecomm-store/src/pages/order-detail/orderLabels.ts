@@ -14,6 +14,9 @@ export const FULFILMENT_KEYS: Record<FulfilmentStatus, string> = {
   PICKED_UP: 'ecommStore.orderStatus.pickedUp',
   CANCELLED: 'ecommStore.orderStatus.cancelled',
   RTO: 'ecommStore.orderStatus.rto',
+  RTO_DELIVERED: 'ecommStore.orderStatus.rtoDelivered',
+  NDR: 'ecommStore.orderStatus.ndr',
+  LOST: 'ecommStore.orderStatus.lost',
   FAILED: 'ecommStore.orderStatus.failed',
 };
 

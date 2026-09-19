@@ -391,6 +391,18 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     length_cm: Float!
     breadth_cm: Float!
     height_cm: Float!
+    package_type: PackageType!
+    "HSN code for the GST invoice."
+    hsn_code: String!
+    is_fragile: Boolean!
+    is_liquid: Boolean!
+    shelf_life_days: Int
+    "L x B x H / 5000 of the packed parcel."
+    volumetric_weight_kg: Float!
+    "What a courier bills: the higher of the packed weight and the volumetric weight."
+    chargeable_weight_kg: Float!
+    "Packaging values still missing before this product can be published (empty = ready)."
+    packaging_missing: [String!]!
     warehouse_id: ID
     "What the variants differ by, e.g. Size."
     variant_option: String!
@@ -452,6 +464,14 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     height_cm: Float
+    "How a unit is packed (default BOX)."
+    package_type: PackageType
+    "4-8 digits (pet food 2309, toys 9503). Required to publish."
+    hsn_code: String
+    is_fragile: Boolean
+    is_liquid: Boolean
+    "Days a sealed unit stays good; null when it does not expire."
+    shelf_life_days: Int
     warehouse_id: ID
     variant_option: String
     variants: [StoreAdminVariantInput!]

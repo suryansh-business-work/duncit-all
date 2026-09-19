@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
-import { InventoryProductModel, type IInventoryProduct } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel, type IStoreProduct } from '@modules/commerce/store/storeProduct.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
@@ -53,12 +53,13 @@ export const seedWarehouse = () =>
   });
 
 export const seedProduct = (over: Record<string, unknown> = {}) =>
-  InventoryProductModel.create({
+  StoreProductModel.create({
     product_name: 'Drools Chicken Jerky 200g',
     sku: `DRL-JRK-${next()}`,
     unit_cost: 349,
     inventory_count: 40,
-    delivery_target: 'SHIPROCKET',
+    // A pet-store product: its own catalogue, published, shipped by ShipRocket.
+    status: 'PUBLISHED',
     hsn_code: '2309',
     weight_kg: 0.25,
     length_cm: 20,
@@ -68,7 +69,7 @@ export const seedProduct = (over: Record<string, unknown> = {}) =>
   });
 
 export interface PaidOrderSeed {
-  product: IInventoryProduct;
+  product: IStoreProduct;
   qty?: number;
   cod?: boolean;
   over?: Record<string, unknown>;
@@ -128,4 +129,4 @@ export async function seedPaidOrder({ product, qty = 2, cod = false, over = {} }
 /** The order as the database has it now. */
 export const reloadOrder = (id: unknown) => ProductOrderModel.findById(id).orFail();
 
-export const stockOf = async (id: unknown) => (await InventoryProductModel.findById(id).orFail()).inventory_count;
+export const stockOf = async (id: unknown) => (await StoreProductModel.findById(id).orFail()).inventory_count;

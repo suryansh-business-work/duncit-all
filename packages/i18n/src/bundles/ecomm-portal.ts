@@ -299,6 +299,23 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       listOnStore: 'List on store',
       takeOff: 'Take off store',
       fileUnder: 'File under…',
+      packaging: 'Packaging',
+      setPackaging: 'Set packaging',
+      packagingSet: {
+        one: 'Packaging set on 1 product',
+        other: 'Packaging set on {count} products',
+      },
+      bulkPackagingTitle: {
+        one: 'Packaging for 1 product',
+        other: 'Packaging for {count} products',
+      },
+      bulkPackagingHint: 'Only what you fill in changes — a blank value keeps what each product has. A ticked flag is set on all of them.',
+      exportPackaging: 'Export packaging CSV',
+      importPackaging: 'Import packaging CSV',
+      importEmpty: 'That file has no rows with a SKU.',
+      importSummary: '{updated} rows updated, {failed} refused',
+      importErrorsTitle: 'Rows that were not imported',
+      importRow: 'Line {row} · {sku}',
       listedChanged: '{changed} of {total} products changed. A paused, draft or unapproved product cannot be listed.',
       fileTitle: {
         one: 'File 1 product',
@@ -372,6 +389,7 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
     },
 
     productEditor: {
+      hsnRule: 'An HSN code is 4 to 8 digits (pet food 2309, toys 9503)',
       newTitle: 'New product',
       form: 'Product details',
       actions: 'Product actions',

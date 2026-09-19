@@ -1,14 +1,11 @@
 import { GraphQLError } from 'graphql';
-import {
-  InventoryProductModel,
-  type IInventoryProduct,
-  type IProductVariant,
-} from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel, type IStoreProduct, type IStoreProductVariant } from './storeProduct.model';
 import { packagingMissing, parcelOf, validatePackagingInput } from '@modules/venues/inventory/inventory.packaging';
 import { toObjectIds } from './store.shared';
 
 /**
- * Packaging in bulk, from the ecomm portal's Products table: set the same
+ * Packaging in bulk, from the ecomm portal's Products table (the pet store's
+ * own StoreProduct catalogue): set the same
  * values on many products at once, and round-trip them through a CSV.
  *
  * A blank value never overwrites a saved one — a CSV with only the weight
@@ -28,7 +25,7 @@ const EXPORT_LIMIT = 5000;
 const filled = (input: Doc, fields: readonly string[]) =>
   Object.fromEntries(fields.filter((f) => input[f] !== undefined && input[f] !== null && input[f] !== '').map((f) => [f, input[f]]));
 
-function exportRow(p: IInventoryProduct, variant: IProductVariant | null) {
+function exportRow(p: IStoreProduct, variant: IStoreProductVariant | null) {
   const own = variant ?? p;
   const parcel = parcelOf(p, variant);
   return {
@@ -53,7 +50,7 @@ function exportRow(p: IInventoryProduct, variant: IProductVariant | null) {
 }
 
 /** One import row onto its product: dimensions to the named variant (or the product), the rest product-wide. */
-function applyRow(doc: IInventoryProduct, sku: string, row: Doc) {
+function applyRow(doc: IStoreProduct, sku: string, row: Doc) {
   const variant = (doc.variants ?? []).find((v) => v.sku === sku) ?? null;
   Object.assign(variant ?? doc, filled(row, DIM_FIELDS));
   Object.assign(doc, filled(row, PRODUCT_FIELDS));
@@ -61,11 +58,11 @@ function applyRow(doc: IInventoryProduct, sku: string, row: Doc) {
 }
 
 export const storeAdminPackagingService = {
-  /** Every approved product and each of its variants, as CSV rows. */
+  /** Every product not archived, and each of its variants, as CSV rows. */
   async exportRows(productIds?: string[] | null) {
-    const filter: Doc = { listing_review_status: 'APPROVED' };
+    const filter: Doc = { status: { $ne: 'ARCHIVED' } };
     if (productIds?.length) filter._id = { $in: toObjectIds(productIds) };
-    const docs = await InventoryProductModel.find(filter).sort({ product_name: 1 }).limit(EXPORT_LIMIT);
+    const docs = await StoreProductModel.find(filter).sort({ product_name: 1 }).limit(EXPORT_LIMIT);
     return docs.flatMap((p) => [exportRow(p, null), ...(p.variants ?? []).map((v) => exportRow(p, v))]);
   },
 
@@ -76,21 +73,21 @@ export const storeAdminPackagingService = {
     if (Object.keys(values).length === 0) {
       throw new GraphQLError('Fill in at least one packaging value', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const res = await InventoryProductModel.updateMany({ _id: { $in: toObjectIds(productIds) } }, { $set: values });
+    const res = await StoreProductModel.updateMany({ _id: { $in: toObjectIds(productIds) } }, { $set: values });
     return res.modifiedCount;
   },
 
   /** Apply a CSV: rows are matched by product or variant SKU; a bad row is reported, never half-applied. */
   async importRows(rows: Doc[]) {
     const skus = [...new Set(rows.map((r) => String(r.sku ?? '').trim().toUpperCase()).filter(Boolean))];
-    const docs = await InventoryProductModel.find({ $or: [{ sku: { $in: skus } }, { 'variants.sku': { $in: skus } }] });
-    const bySku = new Map<string, IInventoryProduct>();
+    const docs = await StoreProductModel.find({ $or: [{ sku: { $in: skus } }, { 'variants.sku': { $in: skus } }] });
+    const bySku = new Map<string, IStoreProduct>();
     for (const doc of docs) {
       bySku.set(doc.sku, doc);
       for (const v of doc.variants ?? []) if (v.sku) bySku.set(v.sku, doc);
     }
     const errors: { row: number; sku: string; message: string }[] = [];
-    const touched = new Set<IInventoryProduct>();
+    const touched = new Set<IStoreProduct>();
     rows.forEach((row, index) => {
       const sku = String(row.sku ?? '').trim().toUpperCase();
       const line = index + 2; // row 1 is the CSV header

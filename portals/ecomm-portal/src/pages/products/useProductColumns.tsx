@@ -6,11 +6,13 @@ import { ProductStatusChip } from '../../components/chips';
 import ProductThumb from '../../components/ProductThumb';
 import { money } from '../../lib/format';
 import { codeLabel, codeOptions, PRODUCT_STATUS_KEYS } from '../../lib/status';
+import PackagingCell from './packaging/PackagingCell';
 import type { StoreProductRow } from './queries';
 
 const nameOf = (row: StoreProductRow) => row.title || row.product_name;
 
 const renderImage = (row: StoreProductRow) => <ProductThumb src={row.image_url} />;
+const renderPackaging = (row: StoreProductRow) => <PackagingCell row={row} />;
 
 const renderName = (row: StoreProductRow) => (
   <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }} data-testid="product-row-name">
@@ -42,6 +44,19 @@ export function useProductColumns(): DuncitColumn<StoreProductRow>[] {
       { field: 'price', headerName: t('ecommPortal.products.price'), type: 'number', width: 110, valueGetter: (row) => money(row.price) },
       { field: 'mrp', headerName: t('ecommPortal.products.mrp'), type: 'number', width: 110, hide: true, sortable: false, filterable: false, valueGetter: (row) => money(row.mrp) },
       { field: 'inventory_count', headerName: t('ecommPortal.products.available'), type: 'number', width: 150, filterable: false, valueGetter: stockOf },
+      {
+        field: 'packaging',
+        headerName: t('ecommPortal.products.packaging'),
+        type: 'text',
+        width: 170,
+        sortable: false,
+        filterable: false,
+        cellRenderer: renderPackaging,
+        valueGetter: (row) =>
+          row.packaging_missing.length > 0
+            ? t('packaging.missing')
+            : t('ecommPortal.shipping.kg', { vars: { value: row.chargeable_weight_kg } }),
+      },
       {
         field: 'status',
         headerName: t('shell.common.status'),

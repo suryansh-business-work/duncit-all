@@ -12,6 +12,9 @@ import StoreTable from '../../components/StoreTable';
 import { useTableRefresh } from '../../components/useTableActions';
 import { PRODUCT_STATUS_KEYS, type ProductStatus } from '../../lib/status';
 import BulkFileForm, { type BulkFileValues } from './bulk-file';
+import BulkPackagingForm from './packaging/bulk-packaging';
+import PackagingTools from './packaging/PackagingTools';
+import { BULK_SET_PACKAGING, type PackagingInput } from './packaging/packaging-queries';
 import ProductBulkBar from './ProductBulkBar';
 import { BULK_FILE, SET_PRODUCT_STATUS, STORE_PRODUCTS_TABLE, type StoreProductRow } from './queries';
 import { useProductColumns } from './useProductColumns';
@@ -41,6 +44,8 @@ export default function ProductsPage() {
   const clearRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<StoreProductRow[]>([]);
   const [filing, setFiling] = useState(false);
+  const [packaging, setPackaging] = useState(false);
+  const [bulkPackaging, packagingState] = useMutation(BULK_SET_PACKAGING);
   const [setStatus, statusState] = useMutation(SET_PRODUCT_STATUS);
   const [bulkFile, fileState] = useMutation(BULK_FILE);
   const ids = selected.map((row) => row.id);
@@ -79,10 +84,23 @@ export default function ProductsPage() {
     clearRef.current?.();
   };
 
+  const setPackagingOn = async (input: PackagingInput) => {
+    let changed = 0;
+    const done = await run(async () => {
+      const result = await bulkPackaging({ variables: { product_ids: ids, input } });
+      changed = result.data?.storeBulkSetPackaging ?? 0;
+    }, () => t('ecommPortal.products.packagingSet', { count: changed }));
+    if (done) clearRef.current?.();
+    return done;
+  };
+
   const addButton = (
-    <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/products/new')} data-testid="products-add">
-      {t('ecommPortal.products.add')}
-    </DuncitButton>
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+      <PackagingTools onImported={() => refetchRef.current?.()} />
+      <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/products/new')} data-testid="products-add">
+        {t('ecommPortal.products.add')}
+      </DuncitButton>
+    </Stack>
   );
 
   return (
@@ -92,9 +110,10 @@ export default function ProductsPage() {
       {ids.length > 0 && (
         <ProductBulkBar
           count={ids.length}
-          busy={statusState.loading || fileState.loading}
+          busy={statusState.loading || fileState.loading || packagingState.loading}
           onStatus={changeStatus}
           onFile={() => setFiling(true)}
+          onPackaging={() => setPackaging(true)}
         />
       )}
       <StoreTable<StoreProductRow>
@@ -111,6 +130,9 @@ export default function ProductsPage() {
         onRowClick={(row) => navigate(`/products/${row.id}`)}
       />
       {filing && <BulkFileForm count={ids.length} busy={fileState.loading} onClose={() => setFiling(false)} onSubmit={file} />}
+      {packaging && (
+        <BulkPackagingForm count={ids.length} busy={packagingState.loading} onClose={() => setPackaging(false)} onSubmit={setPackagingOn} />
+      )}
     </Stack>
   );
 }

@@ -6,13 +6,13 @@ import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import { SectionCard } from '@duncit/ui';
 import VariantRow from './VariantRow';
-import { blankVariant, MAX_VARIANTS, type ProductControl } from './product.types';
+import { blankVariant, MAX_VARIANTS, type ProductControl, type ProductSetValue } from './product.types';
 
 /**
  * Optional: the versions a shopper picks between (sizes, flavours, pack
  * counts). What they differ by is named once; each row then prices itself.
  */
-export default function VariantsSection({ control }: Readonly<{ control: ProductControl }>) {
+export default function VariantsSection({ control, setValue }: Readonly<{ control: ProductControl; setValue: ProductSetValue }>) {
   const { t } = useTranslation();
   const { fields, append, remove, move } = useFieldArray({ control, name: 'variants' });
   return (
@@ -35,6 +35,7 @@ export default function VariantsSection({ control }: Readonly<{ control: Product
           <VariantRow
             key={field.id}
             control={control}
+            setValue={setValue}
             index={index}
             isFirst={index === 0}
             isLast={index === fields.length - 1}

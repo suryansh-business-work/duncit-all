@@ -5,10 +5,6 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
  * Catalogue repairs the pet store depends on. Idempotent: each step only fills
  * a value that is empty, so running it on every boot changes nothing twice.
  *
- * - MRP moved from the store listing (`store.mrp`) to the catalogue
- *   (`mrp` / `variants.mrp`) so the Products portal, the Partners app and the
- *   store all read one number. A listing MRP is copied onto a product that has
- *   none of its own.
  * - `brand_name` is copied from the brand record onto products that carry only
  *   the brand id — they read blank in the Products table and on the store's
  *   Brand filter.
@@ -17,11 +13,6 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
  * never entered) and `packagingMissing` flags them as "Missing packaging".
  */
 export async function migrateStoreCatalogue() {
-  const mrp = await InventoryProductModel.collection.updateMany(
-    { 'store.mrp': { $gt: 0 }, $or: [{ mrp: { $exists: false } }, { mrp: 0 }] },
-    [{ $set: { mrp: '$store.mrp' } }]
-  );
-
   const unnamed = await InventoryProductModel.find({
     brand_id: { $ne: null },
     $or: [{ brand_name: '' }, { brand_name: { $exists: false } }],
@@ -39,5 +30,5 @@ export async function migrateStoreCatalogue() {
     }));
   if (writes.length > 0) await InventoryProductModel.bulkWrite(writes);
 
-  return { mrp_copied: mrp.modifiedCount, brands_named: writes.length };
+  return { brands_named: writes.length };
 }

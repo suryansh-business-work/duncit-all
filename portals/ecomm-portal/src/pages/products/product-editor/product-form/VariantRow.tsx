@@ -1,15 +1,16 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
-import { RhfTextField } from '@duncit/forms';
+import { PackagingFields, RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import MoveButtons from '../../../../components/MoveButtons';
 import RhfImageList from '../../../../components/form/RhfImageList';
 import RhfNumberField from '../../../../components/form/RhfNumberField';
-import type { ProductControl } from './product.types';
+import type { ProductControl, ProductSetValue } from './product.types';
 
 interface VariantRowProps {
   control: ProductControl;
+  setValue: ProductSetValue;
   index: number;
   isFirst: boolean;
   isLast: boolean;
@@ -21,11 +22,14 @@ interface VariantRowProps {
 const VARIANT_GRID = {
   display: 'grid',
   columnGap: 1.5,
-  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '2fr 1.5fr 1fr 1fr 1fr 1fr' },
+  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '2fr 1.5fr 1fr 1fr 1fr' },
 } as const;
 
-/** One variant — its option, code, price, MRP, stock, parcel weight and own photos — with move and remove. */
-export default function VariantRow({ control, index, isFirst, isLast, onMoveUp, onMoveDown, onRemove }: Readonly<VariantRowProps>) {
+/**
+ * One variant — its option, code, price, MRP, stock, its own packed parcel
+ * (blank values fall back to the product's) and photos — with move and remove.
+ */
+export default function VariantRow({ control, setValue, index, isFirst, isLast, onMoveUp, onMoveDown, onRemove }: Readonly<VariantRowProps>) {
   const { t } = useTranslation();
   const label = t('ecommPortal.productEditor.variantN', { vars: { n: index + 1 } });
   return (
@@ -62,14 +66,8 @@ export default function VariantRow({ control, index, isFirst, isLast, onMoveUp, 
         <RhfNumberField control={control} name={`variants.${index}.price`} label={t('ecommPortal.products.price')} testId="product-variant-price" />
         <RhfNumberField control={control} name={`variants.${index}.mrp`} label={t('ecommPortal.products.mrp')} testId="product-variant-mrp" />
         <RhfNumberField control={control} name={`variants.${index}.stock`} label={t('ecommPortal.productEditor.stock')} whole testId="product-variant-stock" />
-        <RhfNumberField
-          control={control}
-          name={`variants.${index}.weight_kg`}
-          label={t('ecommPortal.productEditor.weight')}
-          unit={t('ecommPortal.productEditor.kg')}
-          testId="product-variant-weight"
-        />
       </Box>
+      <PackagingFields control={control} setValue={setValue} t={t} prefix={`variants.${index}.`} productFields={false} />
       <RhfImageList
         control={control}
         name={`variants.${index}.images`}

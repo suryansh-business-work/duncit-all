@@ -1,5 +1,6 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 import { storeListingSchema, type IStoreListing } from './store.listing.model';
+import { PACKAGE_TYPES, type PackageType } from '@modules/venues/inventory/inventory.model';
 
 /**
  * A product the pet store (ecomm.duncit.com) sells — its OWN catalogue, run
@@ -50,6 +51,14 @@ export interface IStoreProduct extends Document {
   length_cm: number;
   breadth_cm: number;
   height_cm: number;
+  /** How a unit is packed for the courier. */
+  package_type: PackageType;
+  /** HSN code on the GST invoice (pet food 2309, toys 9503). */
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  /** Days a sealed unit stays good (food, medicine); null when it doesn't expire. */
+  shelf_life_days: number | null;
   /** The Duncit warehouse a parcel ships from (a ShipRocket pickup location). */
   pickup_location_id: Types.ObjectId | null;
   /** What the variants differ by, e.g. "Size" — the picker's heading on the store. */
@@ -95,6 +104,11 @@ const storeProductSchema = new Schema<IStoreProduct>(
     length_cm: { type: Number, default: 0, min: 0 },
     breadth_cm: { type: Number, default: 0, min: 0 },
     height_cm: { type: Number, default: 0, min: 0 },
+    package_type: { type: String, enum: PACKAGE_TYPES, default: 'BOX' },
+    hsn_code: { type: String, default: '', trim: true, maxlength: 8 },
+    is_fragile: { type: Boolean, default: false },
+    is_liquid: { type: Boolean, default: false },
+    shelf_life_days: { type: Number, default: null, min: 0 },
     pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null },
     variant_option: { type: String, default: '', trim: true, maxlength: 40 },
     variants: { type: [variantSchema], default: [] },

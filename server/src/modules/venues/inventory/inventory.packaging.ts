@@ -31,8 +31,9 @@ type DimKey = keyof typeof DIM_LABEL;
 const DIM_KEYS = Object.keys(DIM_LABEL) as DimKey[];
 
 type Dims = Pick<IProductVariant, DimKey>;
+/** Any catalogue product — the pod shop's InventoryProduct or the pet store's StoreProduct. */
 type Packable = Pick<IInventoryProduct, DimKey | 'hsn_code' | 'product_name'> & {
-  variants?: IProductVariant[] | null;
+  variants?: readonly (Partial<Dims> & { option_label?: string; sku?: string })[] | null;
 };
 
 const bad = (message: string): never => {
@@ -67,7 +68,7 @@ export function packagingMissing(p: Packable): string[] {
   const variants = p.variants ?? [];
   if (variants.length === 0) return [...missing, ...dimGaps(effectiveDims(p))];
   for (const variant of variants) {
-    const gaps = dimGaps(effectiveDims(p, variant));
+    const gaps = dimGaps(effectiveDims(p, variant as Partial<Dims>));
     if (gaps.length > 0) missing.push(`${variant.option_label || variant.sku || 'variant'}: ${gaps.join(', ')}`);
   }
   return missing;
@@ -113,13 +114,3 @@ export function assertMrp(price: number, mrp: unknown, label = '') {
   if (value < Number(price)) bad(`${of}MRP (₹${value}) cannot be below the price (₹${Number(price)})`);
 }
 
-/** A ShipRocket product on the store must be packable — the error names every missing value. */
-export function assertStoreReady(
-  p: Packable & Pick<IInventoryProduct, 'delivery_target'> & { store?: { listed?: boolean } | null }
-) {
-  if (p.delivery_target !== 'SHIPROCKET' || !p.store?.listed) return;
-  const missing = packagingMissing(p);
-  if (missing.length > 0) {
-    bad(`"${p.product_name}" can't be on the store with ShipRocket delivery until it has: ${missing.join('; ')}`);
-  }
-}

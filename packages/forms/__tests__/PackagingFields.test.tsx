@@ -67,7 +67,7 @@ describe('PackagingFields', () => {
   it('fills every dimension and the package type from a preset', async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: 'packaging.preset.foodBag10' }));
-    expect(values()).toMatchObject({ weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, package_type: 'POLYBAG' });
+    expect(values()).toMatchObject({ weight_kg: '10.4', length_cm: '60', breadth_cm: '40', height_cm: '15', package_type: 'POLYBAG' });
     expect(screen.getByRole('status')).toHaveTextContent('{"kg":10.4}');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -90,7 +90,7 @@ describe('PackagingFields', () => {
     expect(screen.queryByLabelText('packaging.hsn')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'packaging.preset.smallPouch' }));
     const saved = values();
-    expect(saved.variants[0]).toMatchObject({ weight_kg: 0.3, length_cm: 20, breadth_cm: 15, height_cm: 5 });
+    expect(saved.variants[0]).toMatchObject({ weight_kg: '0.3', length_cm: '20', breadth_cm: '15', height_cm: '5' });
     // The product's own package type is not a variant's to change.
     expect(saved.package_type).toBe('BOX');
     expect(saved.weight_kg).toBe('');

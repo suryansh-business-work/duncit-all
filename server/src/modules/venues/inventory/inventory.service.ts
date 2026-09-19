@@ -19,7 +19,6 @@ import { sendEmail } from '@services/email/email.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import {
   assertMrp,
-  assertStoreReady,
   packagingMissing,
   parcelOf,
   validatePackagingInput,
@@ -1579,8 +1578,6 @@ export const inventoryService = {
       });
     }
     await assertProductSaveable(doc);
-    // Switching a product on the store over to ShipRocket is the moment it must be packable.
-    if (before.delivery_target !== 'SHIPROCKET') assertStoreReady(doc);
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
     await doc.save();

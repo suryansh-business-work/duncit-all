@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { PACKAGING_LIMITS } from '@modules/venues/inventory/inventory.packaging';
 import type { IProductOrder, IOrderParcel } from '@modules/commerce/productOrder/productOrder.model';
 import { getShiprocketAccount, isShiprocketConfigured } from './shiprocket.account';
@@ -91,9 +92,12 @@ async function pickupFor(order: IProductOrder): Promise<string> {
 }
 
 async function hsnByProduct(order: IProductOrder): Promise<Map<string, string>> {
-  const products = await InventoryProductModel.find({ _id: { $in: order.line_items.map((l) => l.product_id) } })
-    .select('hsn_code')
-    .lean();
+  // The pet store sells from its own catalogue; the pod shop from the inventory.
+  const ids = { _id: { $in: order.line_items.map((l) => l.product_id) } };
+  const products: { _id: unknown; hsn_code?: string }[] =
+    order.channel === 'PET_STORE'
+      ? await StoreProductModel.find(ids).select('hsn_code').lean()
+      : await InventoryProductModel.find(ids).select('hsn_code').lean();
   return new Map(products.map((p) => [String(p._id), p.hsn_code ?? '']));
 }
 

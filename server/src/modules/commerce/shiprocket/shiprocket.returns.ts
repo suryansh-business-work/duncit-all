@@ -1,6 +1,6 @@
 import { logs } from '@observability/log';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
-import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PACKAGING_LIMITS } from '@modules/venues/inventory/inventory.packaging';
 import type { IStoreReturn, ReturnPickupStatus } from '@modules/commerce/store/storeReturn.model';
@@ -46,7 +46,8 @@ async function returnPayload(ret: IStoreReturn, order: IProductOrder): Promise<J
   const addr = (order.shipping_address ?? {}) as unknown as Record<string, string>;
   const [first = 'Customer', ...rest] = String(addr.name || order.buyer_name).trim().split(/\s+/);
   const parcel = returnParcel(ret, order);
-  const products = await InventoryProductModel.find({ _id: { $in: ret.items.map((i) => i.product_id) } })
+  // Returns exist only for the pet store, which sells from its own catalogue.
+  const products = await StoreProductModel.find({ _id: { $in: ret.items.map((i) => i.product_id) } })
     .select('hsn_code sku')
     .lean();
   const productById = new Map(products.map((p) => [String(p._id), p]));

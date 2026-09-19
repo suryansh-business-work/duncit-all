@@ -3,6 +3,7 @@ import PublishIcon from '@mui/icons-material/Publish';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import CategoryIcon from '@mui/icons-material/Category';
+import StraightenIcon from '@mui/icons-material/Straighten';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { ProductStatus } from '../../lib/status';
@@ -12,10 +13,11 @@ interface ProductBulkBarProps {
   busy: boolean;
   onStatus: (status: ProductStatus) => void;
   onFile: () => void;
+  onPackaging: () => void;
 }
 
-/** What can be done to every ticked product at once: publish, move to draft, archive, or file. */
-export default function ProductBulkBar({ count, busy, onStatus, onFile }: Readonly<ProductBulkBarProps>) {
+/** What can be done to every ticked product at once: publish, move to draft, archive, file, or set packaging. */
+export default function ProductBulkBar({ count, busy, onStatus, onFile, onPackaging }: Readonly<ProductBulkBarProps>) {
   const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ p: 1.5 }} role="region" aria-label={t('ecommPortal.products.bulkActions')} data-testid="products-bulk-bar">
@@ -62,6 +64,16 @@ export default function ProductBulkBar({ count, busy, onStatus, onFile }: Readon
           data-testid="products-bulk-file"
         >
           {t('ecommPortal.products.fileUnder')}
+        </DuncitButton>
+        <DuncitButton
+          size="small"
+          variant="outlined"
+          startIcon={<StraightenIcon />}
+          disabled={busy}
+          onClick={onPackaging}
+          data-testid="products-bulk-packaging"
+        >
+          {t('ecommPortal.products.setPackaging')}
         </DuncitButton>
       </Stack>
     </Paper>

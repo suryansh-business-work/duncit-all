@@ -32,7 +32,7 @@ interface ProductFormProps {
  */
 export default function ProductForm({ initial, onSave, renderActions }: Readonly<ProductFormProps>) {
   const { t, form } = useSchemaForm<ProductValues>(makeProductSchema, toProductValues(initial));
-  const { control, handleSubmit, reset } = form;
+  const { control, handleSubmit, reset, setValue } = form;
   const submitAs: SubmitAs = (status) =>
     handleSubmit(async (values) => {
       const saved = await onSave(toProductInput(values), status);
@@ -46,8 +46,8 @@ export default function ProductForm({ initial, onSave, renderActions }: Readonly
             <BasicsSection control={control} />
             <PhotosSection control={control} />
             <PricingSection control={control} />
-            <VariantsSection control={control} />
-            <ShippingSection control={control} />
+            <VariantsSection control={control} setValue={setValue} />
+            <ShippingSection control={control} setValue={setValue} />
             <ContentSection control={control} />
             <SeoSection control={control} />
           </Stack>

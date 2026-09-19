@@ -3,7 +3,6 @@ import type { IProductVariant } from '../../inventory.model';
 import {
   PACKAGING_LIMITS,
   assertMrp,
-  assertStoreReady,
   effectiveDims,
   packagingMissing,
   parcelOf,
@@ -121,35 +120,6 @@ describe('parcelOf', () => {
       volumetric_weight_kg: 4.8,
       chargeable_weight_kg: 4.8,
     });
-  });
-});
-
-describe('assertStoreReady', () => {
-  const listed = { ...jerky, delivery_target: 'SHIPROCKET' as const, store: { listed: true } };
-
-  it('lets a packed ShipRocket product on the store', () => {
-    expect(refusal(() => assertStoreReady(listed))).toBe('');
-  });
-
-  it('blocks a listed ShipRocket product and names every missing field', () => {
-    const message = refusal(() => assertStoreReady({ ...listed, hsn_code: '', length_cm: 0 }));
-    expect(message).toBe(
-      `"Drools Chicken Jerky 200g" can't be on the store with ShipRocket delivery until it has: HSN code; length (cm)`
-    );
-  });
-
-  it('names a variant gap with its label', () => {
-    const variants = [variant({ option_label: '1 kg pack' })];
-    const message = refusal(() => assertStoreReady({ ...listed, weight_kg: 0, variants }));
-    expect(message).toMatch(/until it has: 1 kg pack: packed weight \(kg\)$/);
-  });
-
-  it.each<[string, Partial<Pick<Parameters<typeof assertStoreReady>[0], 'store' | 'delivery_target'>>]>([
-    ['an unlisted draft', { store: { listed: false } }],
-    ['a product with no listing at all', { store: null }],
-    ['a product the host delivers', { delivery_target: 'HOST' }],
-  ])('does not block %s', (_why, over) => {
-    expect(refusal(() => assertStoreReady({ ...listed, hsn_code: '', weight_kg: 0, ...over }))).toBe('');
   });
 });
 

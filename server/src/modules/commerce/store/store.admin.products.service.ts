@@ -8,6 +8,12 @@ import {
   type IStoreProductVariant,
   type StoreProductStatus,
 } from './storeProduct.model';
+import {
+  assertMrp,
+  packagingMissing,
+  parcelOf as packedParcelOf,
+  validatePackagingInput,
+} from '@modules/venues/inventory/inventory.packaging';
 import { listingOf, totalAvailable } from './store.product';
 import { badInput, cleanList, iso, nonNegative, notFound, secretKey, slugify, toObjectId, toObjectIds } from './store.shared';
 
@@ -59,6 +65,9 @@ const productRow = (p: Doc) => {
     price: p.unit_cost,
     mrp: s.mrp,
     available: totalAvailable(p as any),
+    // What stops it shipping with ShipRocket, and what one unit is billed at.
+    packaging_missing: packagingMissing(p as never),
+    chargeable_weight_kg: packedParcelOf(p).chargeable_weight_kg,
     variant_count: p.variants.length,
     status: p.status,
     has_warehouse: !!p.pickup_location_id,
@@ -105,6 +114,12 @@ const productDetail = (p: Doc) => {
     length_cm: p.length_cm,
     breadth_cm: p.breadth_cm,
     height_cm: p.height_cm,
+    package_type: p.package_type ?? 'BOX',
+    hsn_code: p.hsn_code ?? '',
+    is_fragile: !!p.is_fragile,
+    is_liquid: !!p.is_liquid,
+    shelf_life_days: p.shelf_life_days ?? null,
+    volumetric_weight_kg: packedParcelOf(p).volumetric_weight_kg,
     warehouse_id: p.pickup_location_id ? String(p.pickup_location_id) : null,
     variant_option: p.variant_option,
     variants: p.variants.map(variantOut),
@@ -204,7 +219,29 @@ async function warehouseOf(id: unknown) {
   return oid;
 }
 
+/** The courier's bounds and MRP-over-price, for the product and each variant, before anything is saved. */
+function checkPackagingInput(input: Doc) {
+  validatePackagingInput(input);
+  const variants = (input.variants ?? []) as Doc[];
+  if (variants.length === 0) assertMrp(nonNegative(input.price), input.mrp);
+  for (const v of variants) {
+    const label = String(v.option_label ?? '').trim() || String(v.sku ?? '').trim();
+    validatePackagingInput(v, label);
+    assertMrp(nonNegative(v.price), v.mrp, label);
+  }
+}
+
+/** The packaging values that are product-wide — the four dimensions go with parcelOf. */
+const packagingOf = (input: Doc) => ({
+  package_type: input.package_type ?? 'BOX',
+  hsn_code: String(input.hsn_code ?? '').trim().slice(0, 8),
+  is_fragile: !!input.is_fragile,
+  is_liquid: !!input.is_liquid,
+  shelf_life_days: input.shelf_life_days ?? null,
+});
+
 async function applyProduct(doc: IStoreProduct, input: Doc) {
+  checkPackagingInput(input);
   const variants = variantsOf(input.variants ?? [], doc.variants);
   doc.product_name = String(input.product_name ?? '').trim();
   doc.sku = await freeSku(input.sku, doc._id);
@@ -216,7 +253,7 @@ async function applyProduct(doc: IStoreProduct, input: Doc) {
   doc.pickup_location_id = await warehouseOf(input.warehouse_id);
   doc.variant_option = variants.length ? String(input.variant_option ?? '').trim() : '';
   doc.set('variants', variants);
-  Object.assign(doc, parcelOf(input));
+  Object.assign(doc, parcelOf(input), packagingOf(input));
   // With variants the product's own price and stock are theirs: the cheapest
   // price, and the sum of their counts (which caps nothing).
   doc.unit_cost = variants.length ? Math.min(...variants.map((v) => v.unit_cost)) : nonNegative(input.price);
@@ -266,7 +303,23 @@ async function listingFields(doc: IStoreProduct, input: Doc, publishing: boolean
 }
 
 /** What still stands between a product and the shelf — empty when it can be sold. */
-export function publishGaps(p: Pick<IStoreProduct, 'unit_cost' | 'images' | 'pickup_location_id' | 'weight_kg' | 'variant_option' | 'store'> & { variants: readonly IStoreProductVariant[] }) {
+export function publishGaps(
+  p: Pick<
+    IStoreProduct,
+    | 'unit_cost'
+    | 'images'
+    | 'pickup_location_id'
+    | 'weight_kg'
+    | 'length_cm'
+    | 'breadth_cm'
+    | 'height_cm'
+    | 'hsn_code'
+    | 'product_name'
+    | 'brand_id'
+    | 'variant_option'
+    | 'store'
+  > & { variants: readonly IStoreProductVariant[] }
+) {
   const gaps: string[] = [];
   const variants = p.variants;
   if (variants.length === 0 && p.unit_cost <= 0) gaps.push('a selling price');
@@ -275,8 +328,11 @@ export function publishGaps(p: Pick<IStoreProduct, 'unit_cost' | 'images' | 'pic
   if (p.images.length === 0) gaps.push('at least one photo');
   if (listingOf(p).category_ids.length === 0) gaps.push('a category');
   if (!p.pickup_location_id) gaps.push('the warehouse it ships from');
-  const weighed = variants.length ? variants.every((v) => v.weight_kg > 0 || p.weight_kg > 0) : p.weight_kg > 0;
-  if (!weighed) gaps.push('the parcel weight');
+  if (!p.brand_id) gaps.push('a brand');
+  // ShipRocket bills the packed parcel: every variant's (falling back to the
+  // product's) weight and L × B × H, and the HSN code for the GST invoice.
+  const packaging = packagingMissing(p as never);
+  if (packaging.length > 0) gaps.push(`the packaging (${packaging.join('; ')})`);
   return gaps;
 }
 

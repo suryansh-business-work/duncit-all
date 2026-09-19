@@ -184,12 +184,12 @@ async function bootstrap() {
       });
     }
   });
-  // Pet-store catalogue repairs (MRP onto the catalogue, brand names). Only
-  // fills empty values, so it is safe on every boot.
+  // Catalogue repair: brand names copied from the brand record. Only fills
+  // empty values, so it is safe on every boot.
   await safeSeed('storeCatalogue', async () => {
     const { migrateStoreCatalogue } = await import('@modules/commerce/store/store.migration');
     const result = await migrateStoreCatalogue();
-    if (result.mrp_copied + result.brands_named > 0) logs.server.info('bootstrap', 'storeCatalogue', result);
+    if (result.brands_named > 0) logs.server.info('bootstrap', 'storeCatalogue', result);
   });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());

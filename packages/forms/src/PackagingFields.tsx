@@ -111,8 +111,9 @@ export default function PackagingFields<T extends FieldValues>({
   });
   const set = (key: string, value: unknown) =>
     setValue(path(key) as Path<T>, value as PathValue<T, Path<T>>, { shouldDirty: true, shouldValidate: true });
+  // Written as text, exactly what typing into the box gives — the forms keep numbers as text until submit.
   const applyPreset = (preset: PackagingPreset) => {
-    for (const d of DIMS) set(d.key, preset[d.key]);
+    for (const d of DIMS) set(d.key, String(preset[d.key]));
     if (productFields) set('package_type', preset.package_type);
   };
 

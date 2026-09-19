@@ -1,4 +1,5 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
+import type { PackageType } from '@duncit/utils';
 import type { ProductStatus } from '../../lib/status';
 
 /** One of the store's own products as the products table shows it. */
@@ -13,6 +14,10 @@ export interface StoreProductRow {
   mrp: number;
   available: number;
   variant_count: number;
+  /** What still stops it shipping with ShipRocket (empty = ready). */
+  packaging_missing: string[];
+  /** What a courier bills for one unit: the higher of packed and volumetric weight. */
+  chargeable_weight_kg: number;
   status: ProductStatus;
   /** False until a Duncit warehouse is picked — a product cannot be published without one. */
   has_warehouse: boolean;
@@ -55,6 +60,11 @@ export interface StoreProduct extends StoreProductRow {
   length_cm: number;
   breadth_cm: number;
   height_cm: number;
+  package_type: PackageType;
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  shelf_life_days: number | null;
   warehouse_id: string | null;
   /** What the variants differ by, e.g. Size. */
   variant_option: string;
@@ -98,6 +108,8 @@ const ROW_FIELDS = `
   mrp
   available
   variant_count
+  packaging_missing
+  chargeable_weight_kg
   status
   has_warehouse
   slug
@@ -125,6 +137,11 @@ const PRODUCT_FIELDS = `
   length_cm
   breadth_cm
   height_cm
+  package_type
+  hsn_code
+  is_fragile
+  is_liquid
+  shelf_life_days
   warehouse_id
   variant_option
   variants {

@@ -1,4 +1,4 @@
-import type { Control } from 'react-hook-form';
+import type { Control, UseFormSetValue } from 'react-hook-form';
 import { z } from 'zod';
 import { makeRules, type Rules } from '../../../../lib/rules';
 import type { Translate } from '../../../../lib/translate';
@@ -10,6 +10,9 @@ export const MAX_VARIANTS = 60;
 export const MAX_HIGHLIGHTS = 12;
 export const MAX_SPECS = 40;
 
+/** An HSN code on the GST invoice: 4 to 8 digits. */
+const HSN = /^\d{4,8}$/;
+
 const makeVariantSchema = (r: Rules, t: Translate) =>
   z.object({
     /** An existing variant's id — blank for one added here, so carts holding the old one stay valid. */
@@ -20,6 +23,9 @@ const makeVariantSchema = (r: Rules, t: Translate) =>
     mrp: r.amount(),
     stock: r.whole(),
     weight_kg: r.measure(),
+    length_cm: r.measure(),
+    breadth_cm: r.measure(),
+    height_cm: r.measure(),
     images: z.array(z.string()).max(MAX_VARIANT_PHOTOS, t('ecommPortal.productEditor.photosMax', { vars: { max: MAX_VARIANT_PHOTOS } })),
   });
 
@@ -50,6 +56,15 @@ export const makeProductSchema = (t: Translate) => {
     length_cm: r.measure(),
     breadth_cm: r.measure(),
     height_cm: r.measure(),
+    package_type: z.enum(['BOX', 'POLYBAG', 'ENVELOPE', 'OTHER']),
+    /** Needed to publish — the server says so; a draft may leave it blank. */
+    hsn_code: z
+      .string()
+      .trim()
+      .refine((value) => value === '' || HSN.test(value), t('ecommPortal.productEditor.hsnRule')),
+    is_fragile: z.boolean(),
+    is_liquid: z.boolean(),
+    shelf_life_days: r.whole(),
     title: r.optionalText(150),
     slug: r.optionalText(120),
     badge: r.optionalText(40),
@@ -82,6 +97,9 @@ export type VariantValues = ProductValues['variants'][number];
 /** Every section of the editor takes the one form's control. */
 export type ProductControl = Control<ProductValues>;
 
+/** The shared Shipping & packaging section fills several fields at once (its presets). */
+export type ProductSetValue = UseFormSetValue<ProductValues>;
+
 export const BLANK_HIGHLIGHT = { text: '' };
 export const BLANK_SPEC = { label: '', value: '' };
 
@@ -94,5 +112,8 @@ export const blankVariant = (): VariantValues => ({
   mrp: '',
   stock: '',
   weight_kg: '',
+  length_cm: '',
+  breadth_cm: '',
+  height_cm: '',
   images: [],
 });

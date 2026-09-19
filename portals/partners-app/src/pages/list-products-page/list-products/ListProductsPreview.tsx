@@ -10,8 +10,13 @@ import {
 import type { ProductListingValues, ProductVariantValues } from './list-products.types';
 import { useTranslation } from '@duncit/shell';
 
-const dimensions = (variant: ProductVariantValues) =>
-  `${Number(variant.length_cm) || 0} × ${Number(variant.breadth_cm) || 0} × ${Number(variant.height_cm) || 0} cm · ${Number(variant.weight_kg) || 0} kg`;
+type Parcel = Pick<ProductVariantValues, 'length_cm' | 'breadth_cm' | 'height_cm' | 'weight_kg'>;
+
+/** The parcel a variant ships in: each blank dimension falls back to the product's. */
+const dimensions = (product: Parcel, variant: Parcel) => {
+  const dim = (key: keyof Parcel) => Number(variant[key]) || Number(product[key]) || 0;
+  return `${dim('length_cm')} × ${dim('breadth_cm')} × ${dim('height_cm')} cm · ${dim('weight_kg')} kg`;
+};
 
 /** Stable content-derived key — variants carry no id inside the form values. */
 const variantKey = (variant: ProductVariantValues) =>
@@ -20,7 +25,7 @@ const variantKey = (variant: ProductVariantValues) =>
   `${variant.size_label}-${variant.unit_cost}-${variant.image_urls[0] ?? ''}`;
 
 /** One row of the per-variant summary table. Hoisted to module scope (S6478). */
-function VariantRow({ variant }: Readonly<{ variant: ProductVariantValues }>) {
+function VariantRow({ variant, product }: Readonly<{ variant: ProductVariantValues; product: Parcel }>) {
   return (
     <TableRow>
       <TableCell>
@@ -37,7 +42,7 @@ function VariantRow({ variant }: Readonly<{ variant: ProductVariantValues }>) {
       </TableCell>
       <TableCell>{formatINR(Number(variant.unit_cost) || 0)}</TableCell>
       <TableCell>{Number(variant.inventory_count) || 0}</TableCell>
-      <TableCell sx={{ whiteSpace: 'nowrap' }}>{dimensions(variant)}</TableCell>
+      <TableCell sx={{ whiteSpace: 'nowrap' }}>{dimensions(product, variant)}</TableCell>
     </TableRow>
   );
 }
@@ -104,7 +109,7 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
           </TableHead>
           <TableBody>
             {values.variants.map((variant) => (
-              <VariantRow key={variantKey(variant)} variant={variant} />
+              <VariantRow key={variantKey(variant)} variant={variant} product={values} />
             ))}
           </TableBody>
         </Table>

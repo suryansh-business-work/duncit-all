@@ -14,6 +14,7 @@ import DeliveryAvailabilitySection from './DeliveryAvailabilitySection';
 import InventoryManagementSection from './InventoryManagementSection';
 import MediaBrandingSection from './MediaBrandingSection';
 import PricingTaxSection from './PricingTaxSection';
+import ShippingPackagingSection from './ShippingPackagingSection';
 import SupplierDetailsSection from './SupplierDetailsSection';
 import type { InventoryProductFormValues } from './types';
 import { useTranslation } from '@duncit/shell';
@@ -27,6 +28,7 @@ const buildSections = (t: Translate) => [
   { id: 'inventory', label: t('products.sections.inventoryManagement') },
   { id: 'supplier', label: t('products.sections.supplierDetails') },
   { id: 'delivery', label: t('products.sections.deliveryAvailability') },
+  { id: 'shipping', label: t('packaging.title') },
   { id: 'media', label: t('products.sections.mediaBranding') },
   { id: 'advanced', label: t('products.sections.advancedSettings') },
   { id: 'activity', label: t('products.sections.activityAnalytics') },
@@ -80,6 +82,7 @@ export default function ProductAccordion({
             {sec.id === 'inventory' && <InventoryManagementSection />}
             {sec.id === 'supplier' && <SupplierDetailsSection />}
             {sec.id === 'delivery' && <DeliveryAvailabilitySection />}
+            {sec.id === 'shipping' && <ShippingPackagingSection />}
             {sec.id === 'media' && <MediaBrandingSection onError={onError} />}
             {sec.id === 'advanced' && <AdvancedSettingsSection onError={onError} />}
             {sec.id === 'activity' && (

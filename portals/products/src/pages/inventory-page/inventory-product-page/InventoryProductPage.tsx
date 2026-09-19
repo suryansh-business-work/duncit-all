@@ -17,7 +17,7 @@ import {
 } from './productQueries';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../queries';
 import { productListLabel, productListPath } from './productPaths';
-import { productSchema } from './schema';
+import { makeProductSchema } from './schema';
 import { toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
 import { useTranslation } from '@duncit/shell';
 
@@ -66,8 +66,9 @@ export default function InventoryProductPage() {
     (c: any) => c.level !== 'SUPER'
   );
 
+  const schema = useMemo(() => makeProductSchema(t), [t]);
   const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
-    resolver: zodResolver(productSchema) as unknown as Resolver<InventoryProductFormValues, any, InventoryProductFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<InventoryProductFormValues, any, InventoryProductFormValues>,
     mode: 'onChange',
     defaultValues: initialValues,
   });

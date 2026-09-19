@@ -27,6 +27,7 @@ import CategoryRows from './CategoryRows';
 import OptionsEditor from './OptionsEditor';
 import VariantTabs from './VariantTabs';
 import ListProductsPreview from './ListProductsPreview';
+import PackagingSection from './PackagingSection';
 import { useTranslation } from '@duncit/shell';
 
 /** Why a warehouse cannot be picked, shown inline on its disabled option. */
@@ -60,6 +61,7 @@ export function StepBody({ step, brandId, control, watch, setValue, onPickImage 
           required
           hint="Use the exact product name hosts will understand during pod creation."
         />
+        <PackagingSection control={control} setValue={setValue} productFields note={t('packaging.intro')} />
       </Stack>
     );
   }

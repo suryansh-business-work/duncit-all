@@ -1,3 +1,5 @@
+import type { PackageType } from '@duncit/utils';
+
 export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
 export type UnitType =
   | 'BOTTLE'
@@ -75,10 +77,20 @@ export interface InventoryProductFormValues {
   delivery_target: DeliveryTarget;
   pickup_location_id: string;
 
+  /** The PACKED parcel of one unit, box included — what ShipRocket rates and bills. */
   height_cm: number;
   length_cm: number;
   breadth_cm: number;
   weight_kg: number;
+  package_type: PackageType;
+  /** GST HSN code, 4-8 digits; required once the product ships through ShipRocket. */
+  hsn_code: string;
+  is_fragile: boolean;
+  is_liquid: boolean;
+  /** Days a sealed unit stays good; null when it doesn't expire. */
+  shelf_life_days: number | null;
+  /** Printed MRP the store strikes the price through from; 0 = none. */
+  mrp: number;
 }
 
 export const blankProductForm: InventoryProductFormValues = {
@@ -125,6 +137,12 @@ export const blankProductForm: InventoryProductFormValues = {
   length_cm: 0,
   breadth_cm: 0,
   weight_kg: 0,
+  package_type: 'BOX',
+  hsn_code: '',
+  is_fragile: false,
+  is_liquid: false,
+  shelf_life_days: null,
+  mrp: 0,
 };
 
 export function toFormValues(product: any): InventoryProductFormValues {
@@ -176,6 +194,12 @@ export function toFormValues(product: any): InventoryProductFormValues {
     length_cm: product.length_cm ?? 0,
     breadth_cm: product.breadth_cm ?? 0,
     weight_kg: product.weight_kg ?? 0,
+    package_type: (product.package_type as PackageType) ?? 'BOX',
+    hsn_code: product.hsn_code ?? '',
+    is_fragile: product.is_fragile ?? false,
+    is_liquid: product.is_liquid ?? false,
+    shelf_life_days: product.shelf_life_days ?? null,
+    mrp: product.mrp ?? 0,
   };
 }
 

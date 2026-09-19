@@ -34,6 +34,15 @@ export default function PricingTaxSection() {
           slotProps={{ input: { startAdornment: rupee } }}
         />
       </Grid>
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <RhfNumberField
+          control={control}
+          name="mrp"
+          label={t('products.pricing.mrp')}
+          hint={t('products.pricing.mrpHint')}
+          slotProps={{ input: { startAdornment: rupee } }}
+        />
+      </Grid>
       <Grid
         size={{
           xs: 12,

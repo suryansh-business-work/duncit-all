@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { PACKAGE_TYPES } from '@duncit/utils';
+import { catalogueRules, type Translate } from './packagingRules';
 
 const SKU_PATTERN = /^[A-Z0-9-]*$/;
 
@@ -15,6 +17,16 @@ const moneyField = z
   .number({ error: 'Number required' })
   .min(0)
   .max(1000000);
+
+/** A packed dimension. `PackagingFields` renders plain text inputs, so the raw
+ * value is a string; blank reads 0 ("not entered"), the bounds live in the rules. */
+const parcelNumber = z.coerce.number();
+
+/** Blank shelf life means the product doesn't expire. */
+const shelfLifeDays = z.preprocess(
+  (value) => (value === '' || value === null || value === undefined ? null : Number(value)),
+  z.number().nullable(),
+);
 
 export const productSchema = z
   .object({
@@ -88,10 +100,16 @@ export const productSchema = z
     // Required for Duncit products only — see the ownership refine below.
     pickup_location_id: z.string(),
 
-    height_cm: z.number({ error: 'Number required' }).min(0).max(1000),
-    length_cm: z.number({ error: 'Number required' }).min(0).max(1000),
-    breadth_cm: z.number({ error: 'Number required' }).min(0).max(1000),
-    weight_kg: z.number({ error: 'Number required' }).min(0).max(1000),
+    height_cm: parcelNumber,
+    length_cm: parcelNumber,
+    breadth_cm: parcelNumber,
+    weight_kg: parcelNumber,
+    package_type: z.enum(PACKAGE_TYPES),
+    hsn_code: z.string().trim(),
+    is_fragile: z.boolean(),
+    is_liquid: z.boolean(),
+    shelf_life_days: shelfLifeDays,
+    mrp: moneyField,
   })
   .superRefine((values, ctx) => {
     /* v8 ignore next -- min/max always parse to numbers before this runs; the `?? 0` guards are defensive */
@@ -112,4 +130,15 @@ export const productSchema = z
         message: 'Warehouse is required',
       });
     }
+  });
+
+/**
+ * The schema the product page validates with: the structural `productSchema`
+ * plus the catalogue rules whose messages are localized (brand, packaging,
+ * HSN, shelf life, MRP). They run even while another field has a type error,
+ * so a missing parcel is reported together with everything else, not after it.
+ */
+export const makeProductSchema = (t: Translate) =>
+  productSchema.superRefine(catalogueRules(t), {
+    when: (payload) => typeof payload.value === 'object' && payload.value !== null,
   });

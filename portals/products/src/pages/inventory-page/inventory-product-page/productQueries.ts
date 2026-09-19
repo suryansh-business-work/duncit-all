@@ -48,6 +48,12 @@ export const INVENTORY_PRODUCT_DETAIL = gql`
       length_cm
       breadth_cm
       weight_kg
+      package_type
+      hsn_code
+      is_fragile
+      is_liquid
+      shelf_life_days
+      mrp
       ownership
       is_active
       last_updated_by_id

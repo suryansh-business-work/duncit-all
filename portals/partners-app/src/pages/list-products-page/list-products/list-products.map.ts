@@ -18,12 +18,22 @@ export const emptyVariant: ProductVariantValues = {
   length_cm: '',
   breadth_cm: '',
   unit_cost: '',
+  mrp: '',
   inventory_count: '',
 };
 
 export const emptyValues: ProductListingValues = {
   categories: [{ ...EMPTY_CATEGORY }],
   product_name: '',
+  height_cm: '',
+  weight_kg: '',
+  length_cm: '',
+  breadth_cm: '',
+  package_type: 'BOX',
+  hsn_code: '',
+  is_fragile: false,
+  is_liquid: false,
+  shelf_life_days: '',
   options: [],
   variants: [{ ...emptyVariant }],
   commission_pct: 15,
@@ -67,6 +77,9 @@ export function generateVariants(
 const toNumberOrEmpty = (value: unknown): number | string =>
   value === null || value === undefined || value === '' ? '' : Number(value);
 
+/** Parcel dimensions and MRP store 0 for "not set"; the form shows that as blank. */
+const positiveOrEmpty = (value: unknown): number | string => (Number(value) > 0 ? Number(value) : '');
+
 const mapServerVariant = (variant: any): ProductVariantValues => ({
   option_label: variant.option_label ?? '',
   option_values: Array.isArray(variant.option_values)
@@ -76,15 +89,17 @@ const mapServerVariant = (variant: any): ProductVariantValues => ({
   size_label: variant.size_label ?? '',
   description: variant.description ?? '',
   image_urls: Array.isArray(variant.images) ? variant.images : [],
-  height_cm: toNumberOrEmpty(variant.height_cm),
-  weight_kg: toNumberOrEmpty(variant.weight_kg),
-  length_cm: toNumberOrEmpty(variant.length_cm),
-  breadth_cm: toNumberOrEmpty(variant.breadth_cm),
+  height_cm: positiveOrEmpty(variant.height_cm),
+  weight_kg: positiveOrEmpty(variant.weight_kg),
+  length_cm: positiveOrEmpty(variant.length_cm),
+  breadth_cm: positiveOrEmpty(variant.breadth_cm),
   unit_cost: toNumberOrEmpty(variant.unit_cost),
+  mrp: positiveOrEmpty(variant.mrp),
   inventory_count: toNumberOrEmpty(variant.inventory_count),
 });
 
-/** Legacy products stored their single variant in the flat product fields. */
+/** Legacy products stored their single variant in the flat product fields. Its
+ * parcel stays blank: the product's own parcel (the same flat fields) carries it. */
 const variantFromFlat = (product: any): ProductVariantValues => {
   const images = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter(Boolean)));
   return {
@@ -94,13 +109,25 @@ const variantFromFlat = (product: any): ProductVariantValues => {
     size_label: product.size_label ?? '',
     description: product.description ?? '',
     image_urls: images as string[],
-    height_cm: toNumberOrEmpty(product.height_cm),
-    weight_kg: toNumberOrEmpty(product.weight_kg),
-    length_cm: toNumberOrEmpty(product.length_cm),
-    breadth_cm: toNumberOrEmpty(product.breadth_cm),
+    height_cm: '',
+    weight_kg: '',
+    length_cm: '',
+    breadth_cm: '',
     unit_cost: toNumberOrEmpty(product.unit_cost),
+    mrp: positiveOrEmpty(product.mrp),
     inventory_count: toNumberOrEmpty(product.inventory_count),
   };
+};
+
+/**
+ * The product's parcel. Listings saved before it had one of its own mirrored
+ * the first variant into the flat fields — minus length and breadth, which the
+ * server used to drop — so a blank dimension starts from that variant's value.
+ */
+const productParcel = (product: any, first: ProductVariantValues) => {
+  const pick = (key: 'height_cm' | 'weight_kg' | 'length_cm' | 'breadth_cm') =>
+    positiveOrEmpty(product[key]) || first[key];
+  return { height_cm: pick('height_cm'), weight_kg: pick('weight_kg'), length_cm: pick('length_cm'), breadth_cm: pick('breadth_cm') };
 };
 
 const mapServerCategory = (category: any): AdminCategoryValue => ({
@@ -142,6 +169,12 @@ export function productToValues(product?: any): ProductListingValues {
   return {
     categories: categoriesFromProduct(product),
     product_name: product.product_name ?? '',
+    ...productParcel(product, variants[0]),
+    package_type: product.package_type ?? 'BOX',
+    hsn_code: product.hsn_code ?? '',
+    is_fragile: Boolean(product.is_fragile),
+    is_liquid: Boolean(product.is_liquid),
+    shelf_life_days: toNumberOrEmpty(product.shelf_life_days),
     options: Array.isArray(product.options)
       ? product.options.map((option: any) => ({
           name: option.name ?? '',
@@ -170,6 +203,7 @@ const toVariantInput = (variant: ProductVariantValues) => ({
   length_cm: Number(variant.length_cm) || 0,
   breadth_cm: Number(variant.breadth_cm) || 0,
   unit_cost: Number(variant.unit_cost) || 0,
+  mrp: Number(variant.mrp) || 0,
   inventory_count: Number(variant.inventory_count) || 0,
 });
 
@@ -197,16 +231,18 @@ export function productViolationTarget(field: string): { stepIndex: number; path
   return { stepIndex: 1, path: null };
 }
 
-/** Blank/unset free-delivery amount means "no offer" — never coerce it to 0
- * (the Zod schema preprocesses '' to null before submit). */
-const toFreeDeliveryAbove = (value: number | string | null | undefined): number | null => {
+/** Blank/unset means "none" — a free-delivery amount with no offer, a shelf life
+ * that never expires — so never coerce it to 0 (the Zod schema preprocesses ''
+ * to null before submit). */
+const toNullableNumber = (value: number | string | null | undefined): number | null => {
   if (value == null || value === '') return null;
   const amount = Number(value);
   return Number.isNaN(amount) ? null : amount;
 };
 
 /** Build the ProductListingInput. The first variant backfills the flat product
- * fields (the server also mirrors them) and the single category triple. */
+ * fields (the server also mirrors them) and the single category triple; the
+ * parcel is the product's own, every variant's fallback. */
 export function toSubmitInput(values: ProductListingValues, brandId: string) {
   const primary = values.variants[0];
   const totalStock = values.variants.reduce((sum, variant) => sum + (Number(variant.inventory_count) || 0), 0);
@@ -232,17 +268,23 @@ export function toSubmitInput(values: ProductListingValues, brandId: string) {
     images: primary.image_urls,
     description: primary.description,
     size_label: primary.size_label,
-    height_cm: Number(primary.height_cm) || 0,
-    weight_kg: Number(primary.weight_kg) || 0,
-    length_cm: Number(primary.length_cm) || 0,
-    breadth_cm: Number(primary.breadth_cm) || 0,
+    height_cm: Number(values.height_cm) || 0,
+    weight_kg: Number(values.weight_kg) || 0,
+    length_cm: Number(values.length_cm) || 0,
+    breadth_cm: Number(values.breadth_cm) || 0,
+    package_type: values.package_type,
+    hsn_code: values.hsn_code,
+    is_fragile: values.is_fragile,
+    is_liquid: values.is_liquid,
+    shelf_life_days: toNullableNumber(values.shelf_life_days),
     color: primary.color,
     inventory_count: totalStock,
     unit_cost: Number(primary.unit_cost) || 0,
+    mrp: Number(primary.mrp) || 0,
     variants: values.variants.map(toVariantInput),
     commission_pct: values.commission_pct,
     delivery_target: values.delivery_target,
     pickup_location_id: values.pickup_location_id,
-    free_delivery_above: toFreeDeliveryAbove(values.free_delivery_above),
+    free_delivery_above: toNullableNumber(values.free_delivery_above),
   };
 }

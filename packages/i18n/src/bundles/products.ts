@@ -181,6 +181,23 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       taxGst: 'Tax / GST %',
       discount: 'Discount %',
       weightVolume: 'Weight / Volume',
+      mrp: 'MRP',
+      mrpHint: 'Printed maximum retail price, struck through on the store — 0 if none',
+    },
+
+    // Messages from the product page's catalogue rules (schema + packagingRules).
+    validation: {
+      brandRequired: 'Enter the brand',
+      weightRequired: 'Enter the packed weight (kg) — ShipRocket delivery needs it',
+      lengthRequired: 'Enter the length (cm) — ShipRocket delivery needs it',
+      breadthRequired: 'Enter the breadth (cm) — ShipRocket delivery needs it',
+      heightRequired: 'Enter the height (cm) — ShipRocket delivery needs it',
+      weightRange: 'Packed weight must be between {min} and {max} kg',
+      sideRange: 'Each side must be between {min} and {max} cm',
+      hsnRequired: 'Enter the HSN code — ShipRocket delivery needs it for the GST invoice',
+      hsnFormat: 'HSN code is 4 to 8 digits (pet food 2309, toys 9503)',
+      shelfLife: "Shelf life is a whole number of days — leave it blank if it doesn't expire",
+      mrpBelowPrice: "MRP can't be below the price",
     },
 
     stock: {
@@ -211,10 +228,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       target: 'Delivery method',
       targetHint: 'ShipRocket rates and books the courier live from the warehouse below. Host and Venue delivery are hand-carried and never quoted.',
       chargeFallbackHint: 'Fallback only — charged when ShipRocket cannot rate the warehouse to the buyer.',
-      length: 'Length',
-      breadth: 'Breadth',
-      height: 'Height',
-      weight: 'Weight',
+      packagingNote: 'ShipRocket rates the packed parcel — fill in Shipping & packaging below before saving.',
       availableInPods: 'Available in pods',
       hostsCanRequest: 'Hosts can request this',
       deliveryAvailable: 'Delivery available',

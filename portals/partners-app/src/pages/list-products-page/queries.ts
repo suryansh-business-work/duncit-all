@@ -11,6 +11,12 @@ const PRODUCT_FIELDS = `
   weight_kg
   length_cm
   breadth_cm
+  package_type
+  hsn_code
+  is_fragile
+  is_liquid
+  shelf_life_days
+  mrp
   color
   inventory_count
   available_count
@@ -46,6 +52,7 @@ const PRODUCT_FIELDS = `
     size_label
     description
     unit_cost
+    mrp
     inventory_count
     images
     height_cm

@@ -4,7 +4,7 @@ interface Props {
   description?: string;
 }
 
-import { siteContent } from '../config/site-config';
+import { siteContent, siteUrls } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
@@ -22,7 +22,7 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <GoogleAnalytics measurementId={import.meta.env.PUBLIC_GA_MEASUREMENT_ID} />
+    <GoogleAnalytics site="EARNWITH" graphqlUrl={siteUrls.graphqlUrl} />
     <SiteMeta
       title={title}
       description={description}

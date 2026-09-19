@@ -50,6 +50,8 @@ export const GSTIN: RegExp;
 export const PERSON_NAME: RegExp;
 /** A Duncit referral code — `DUN-` and six uppercase hex characters. */
 export const REFERRAL_CODE: RegExp;
+/** A GA4 measurement id — `G-` and the stream's alphanumeric suffix (G-XXXXXXXXXX). */
+export const GA_MEASUREMENT_ID: RegExp;
 
 export function isPhoneNumber(value: string): boolean;
 export function isPincode(value: string): boolean;

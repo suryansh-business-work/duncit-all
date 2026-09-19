@@ -6,6 +6,7 @@ import '@fontsource/nunito/800.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { configureLogs, httpTransport } from '@duncit/logs';
+import { loadGoogleAnalytics } from '@duncit/brand/google-analytics';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { SERVER_BASE } from './config/server';
 import { TranslationProvider } from './i18n';
@@ -24,6 +25,9 @@ captureShortLinkAttribution({
 });
 // Keep the tags on every hyperlink out to another duncit surface.
 installAttributionLinkDecorator();
+
+// The GA4 tag set for this website in Tech → Google Analytics, if any.
+loadGoogleAnalytics(`${SERVER_BASE}/graphql`, 'STATUS');
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root not found');

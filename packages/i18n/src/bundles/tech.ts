@@ -223,6 +223,43 @@ export const TECH_BUNDLE: NestedCatalogue = {
         priorityRange: 'A whole number between 0 and 65535.',
       },
     },
+    googleAnalytics: {
+      subtitle:
+        'The Google Analytics (GA4) tag each Duncit website loads. Websites read it as a page opens, so a change reaches them within a minute — no redeploy.',
+      addTag: 'Add website tag',
+      editTag: 'Edit website tag',
+      removeTag: 'Remove tag',
+      removeConfirm: 'Remove the tag {id} from {website}? The website stops sending visits to Google Analytics within a minute.',
+      saveFailed: 'Could not save the tag',
+      removeFailed: 'Could not remove the tag',
+      noTagToRemove: 'This website has no tag to remove',
+      empty: 'No websites.',
+      searchPlaceholder: 'Search websites and IDs…',
+      colWebsite: 'Website',
+      colUpdated: 'Last changed',
+      website: 'Website',
+      websiteHint: 'The website this tag loads on.',
+      measurementId: 'Measurement ID',
+      measurementIdHint: 'From Google Analytics → Admin → Data streams, like G-XXXXXXXXXX.',
+      enabled: 'Load the tag on this website',
+      enabledHint: 'Off keeps the ID here but stops the website sending visits to Google Analytics.',
+      status: {
+        LIVE: 'Live',
+        OFF: 'Off',
+        NOT_SET: 'Not set',
+      },
+      sites: {
+        MAIN: 'Main website — duncit.com',
+        PARTNERS: 'Partners — partners.duncit.com',
+        ADS: 'Ads — ads.duncit.com',
+        EARNWITH: 'Earn with Duncit — earnwith.duncit.com',
+        STATUS: 'Status page — status.duncit.com',
+        ECOMM: 'Duncit Pet Store — ecomm.duncit.com',
+      },
+      validation: {
+        measurementIdInvalid: 'Enter a GA4 measurement ID, like G-XXXXXXXXXX.',
+      },
+    },
     dbBackup: {
       title: 'Database Backups',
       subtitle:

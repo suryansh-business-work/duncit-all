@@ -6786,6 +6786,24 @@ export type GiftCardStatus =
   | 'EXPIRED'
   | 'REDEEMED';
 
+/** One website's Google Analytics tag, as set in Tech → Google Analytics. */
+export type GoogleAnalyticsSite = {
+  __typename?: 'GoogleAnalyticsSite';
+  /** Off keeps the id on file but stops the website loading the tag. */
+  enabled: Scalars['Boolean']['output'];
+  /** The GA4 measurement id (G-…), or null when this website has none. */
+  measurement_id?: Maybe<Scalars['String']['output']>;
+  site: TrackedWebsite;
+  /** ISO time of the last change, or null when this website has no tag. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type GoogleAnalyticsSiteInput = {
+  enabled: Scalars['Boolean']['input'];
+  measurement_id: Scalars['String']['input'];
+  site: TrackedWebsite;
+};
+
 export type GoogleAuthInput = {
   id_token: Scalars['String']['input'];
   portal_key?: InputMaybe<Scalars['String']['input']>;
@@ -9302,6 +9320,8 @@ export type Mutation = {
   deleteFaq: Scalars['Boolean']['output'];
   deleteFeatureFlag: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
+  /** Removes one website's tag. The website stops loading Google Analytics. */
+  deleteGoogleAnalyticsSite: Scalars['Boolean']['output'];
   deleteHost: Scalars['Boolean']['output'];
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
@@ -9900,6 +9920,8 @@ export type Mutation = {
   saveExpoPushToken: Scalars['Boolean']['output'];
   /** Save a founder setting (constant / manual metric value). */
   saveFounderSetting: FounderSettingKv;
+  /** Sets or replaces one website's tag. */
+  saveGoogleAnalyticsSite: GoogleAnalyticsSite;
   saveGrievanceOfficer: GrievanceOfficer;
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
@@ -11501,6 +11523,11 @@ export type MutationDeleteFeatureFlagArgs = {
 };
 
 
+export type MutationDeleteGoogleAnalyticsSiteArgs = {
+  site: TrackedWebsite;
+};
+
+
 export type MutationDeleteHostArgs = {
   email: Scalars['String']['input'];
   host_doc_id: Scalars['ID']['input'];
@@ -12656,6 +12683,11 @@ export type MutationSaveExpoPushTokenArgs = {
 
 export type MutationSaveFounderSettingArgs = {
   input: FounderSettingInput;
+};
+
+
+export type MutationSaveGoogleAnalyticsSiteArgs = {
+  input: GoogleAnalyticsSiteInput;
 };
 
 
@@ -17933,6 +17965,10 @@ export type Query = {
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
   /** Finance > Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
   giftCardsTable: GiftCardAdminCardTablePage;
+  /** Every Duncit website, with its tag where one is set. */
+  googleAnalyticsSites: Array<GoogleAnalyticsSite>;
+  /** The measurement id a website loads, or null when it has none or it is switched off. Public: every page of every website asks for it. */
+  googleAnalyticsTag?: Maybe<Scalars['String']['output']>;
   /** Public: the officer the app and website publish. */
   grievanceOfficer: GrievanceOfficer;
   grievanceStats: GrievanceStats;
@@ -19641,6 +19677,11 @@ export type QueryGiftCardTransactionsTableArgs = {
 
 export type QueryGiftCardsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGoogleAnalyticsTagArgs = {
+  site: TrackedWebsite;
 };
 
 
@@ -23809,6 +23850,15 @@ export type TrackedLinkKind =
   | 'UNSUBSCRIBE';
 
 /** Export format for support chat / ticket transcripts. */
+/** A Duncit website that can load a Google Analytics tag — the key it passes to googleAnalyticsTag. */
+export type TrackedWebsite =
+  | 'ADS'
+  | 'EARNWITH'
+  | 'ECOMM'
+  | 'MAIN'
+  | 'PARTNERS'
+  | 'STATUS';
+
 export type TranscriptFormat =
   | 'DOCX'
   | 'TXT';

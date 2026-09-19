@@ -16,6 +16,7 @@
     "./site-i18n": "./src/site-i18n.ts",
     "./SiteMeta.astro": "./src/SiteMeta.astro",
     "./GoogleAnalytics.astro": "./src/GoogleAnalytics.astro",
+    "./google-analytics": "./src/google-analytics.ts",
     "./site-meta": "./src/site-meta.ts"
   },
   "files": [

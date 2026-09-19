@@ -26,7 +26,11 @@ export default defineDemos('brand', [
         { name: 'AppPhone.astro', renders: 'The phone mockup used on landing hero sections.' },
         {
           name: 'GoogleAnalytics.astro',
-          renders: 'The gtag.js tag for G-V0CTVZFGM0 — production builds only.',
+          renders: 'The gtag.js tag this website has in Tech → Google Analytics (e.g. G-V0CTVZFGM0 for MAIN), read as the page opens.',
+        },
+        {
+          name: 'google-analytics',
+          renders: 'loadGoogleAnalytics(graphqlUrl, site) — the same loader for the React sites (STATUS, ECOMM).',
         },
       ],
     },

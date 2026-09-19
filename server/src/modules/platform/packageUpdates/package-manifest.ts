@@ -3167,6 +3167,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/regex", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/shell", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slack", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/table", range: "workspace:*", kind: "dependencies" },
@@ -3521,6 +3522,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "website/status-website/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/brand", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/captcha", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },

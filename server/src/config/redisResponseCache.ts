@@ -107,6 +107,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   // no write and no field resolver on PublicAd; an approved ad reaches the slots
   // within the TTL of its start time.
   'activeAds',
+  // Asked on every page load of every website. Argument-keyed (site), no auth,
+  // no ctx, returns a bare string; a Tech → Google Analytics edit reaches the
+  // websites within the TTL.
+  'googleAnalyticsTag',
 ]);
 
 /**

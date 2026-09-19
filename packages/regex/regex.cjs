@@ -104,6 +104,13 @@ const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 
 /**
+ * A GA4 measurement id — `G-` and the data stream's alphanumeric suffix
+ * (G-XXXXXXXXXX), as Google Analytics → Admin → Data streams shows it. The
+ * server checks the same shape before Tech → Google Analytics saves a tag.
+ */
+const GA_MEASUREMENT_ID = /^G-[A-Z\d]{6,16}$/;
+
+/**
  * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.
  * Lowercase letters, digits and single hyphens, 3–30 characters, starting and
  * ending on an alphanumeric. See regex.mjs for the full note.
@@ -127,6 +134,7 @@ module.exports = {
   GSTIN,
   PERSON_NAME,
   REFERRAL_CODE,
+  GA_MEASUREMENT_ID,
   USERNAME,
   toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),

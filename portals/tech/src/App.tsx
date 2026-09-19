@@ -45,6 +45,7 @@ import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
 import DnsRecordsPage from './pages/dns';
+import GoogleAnalyticsPage from './pages/google-analytics';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -110,6 +111,8 @@ export default function App() {
         {/* The GoDaddy zone behind every *.duncit.com host. */}
         <Route path="/dns" element={<Navigate to="/dns/records" replace />} />
         <Route path="/dns/records" element={authed(<DnsRecordsPage />)} />
+        {/* The GA4 tag each Duncit website loads, one per website. */}
+        <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
         {/* Rate limiting. Systems is the landing page: which callers exist and
             what they spend is what a limit has to be written against. */}
         <Route path="/rate-limiting" element={<Navigate to="/rate-limiting/systems" replace />} />

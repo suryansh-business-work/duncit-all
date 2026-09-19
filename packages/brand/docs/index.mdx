@@ -20,6 +20,7 @@ exports:
   - 'SiteMeta.astro'
   - 'site-meta'
   - 'GoogleAnalytics.astro'
+  - 'google-analytics'
 ---
 
 ## Why this exists
@@ -191,17 +192,37 @@ viewport meta, where Google asks for it.
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
 ---
 
-<GoogleAnalytics measurementId={import.meta.env.PUBLIC_GA_MEASUREMENT_ID} />
+<GoogleAnalytics site="MAIN" graphqlUrl={urlConfigs.graphqlUrl} />
 ```
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `measurementId` | `string` | — | The `G-…` id. Empty renders nothing at all. |
+| `site` | `TrackedWebsite` | — | `MAIN`, `PARTNERS`, `ADS`, `EARNWITH`, `STATUS` or `ECOMM` — which website this is. |
+| `graphqlUrl` | `string` | — | The API the page asks for its tag. |
 
-The id is baked in at build time. `deploy.yml` passes `PUBLIC_GA_MEASUREMENT_ID` to
-production builds only, so a local or staging build ships no tag and its traffic never
-lands in the live property. `gtag` is kept on `globalThis` so a page can send its own
-events with `gtag('event', …)`.
+No id is baked into the build. Which GA4 tag each website loads — and whether it loads
+one — is set per website in **Tech → Google Analytics**, and the page asks the public
+`googleAnalyticsTag(site)` query as it opens. A change there reaches the website within
+the API's cache TTL (a minute), with no redeploy. Staging and local stacks read their own
+databases, so their traffic never lands in the production property unless someone sets
+a tag there on purpose. `gtag` ends up on `window`, so a page can send its own events
+with `gtag('event', …)`.
+
+### `google-analytics`
+
+The same loader as a plain module, for the React websites that cannot render an
+`.astro` component (the status page and the pet store call it from their entry module).
+
+```ts
+import { loadGoogleAnalytics } from '@duncit/brand/google-analytics';
+
+loadGoogleAnalytics(`${SERVER_BASE}/graphql`, 'STATUS');
+```
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `loadGoogleAnalytics` | `(graphqlUrl: string, site: TrackedWebsite) => void` | Fire-and-forget: a page never waits on it, and a failure is logged, not shown. |
+| `TrackedWebsite` | `'MAIN' \| 'PARTNERS' \| 'ADS' \| 'EARNWITH' \| 'STATUS' \| 'ECOMM'` | Mirrors the server's `TrackedWebsite` enum. |
 
 ## The wordmark is plain CSS on purpose
 

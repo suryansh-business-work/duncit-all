@@ -523,6 +523,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       defaultDeductions: 'Default Deductions',
       dnsConfig: 'DNS Config',
       dnsRecords: 'DNS Records',
+      googleAnalytics: 'Google Analytics',
       docker: 'Docker',
       documents: 'Documents',
       e2eTests: 'E2E Tests',

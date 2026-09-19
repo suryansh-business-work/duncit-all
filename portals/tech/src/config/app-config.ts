@@ -96,6 +96,9 @@ export const appConfig = {
         { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/dns/records', icon: 'dns' },
       ],
     },
+    // Beside DNS Config: both decide something about every public website —
+    // one where its name points, the other where its traffic is reported.
+    { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },
     {
       // Beside Server rather than under it: a ceiling is a platform-wide
       // policy, and the systems it governs are the portals, the two apps and

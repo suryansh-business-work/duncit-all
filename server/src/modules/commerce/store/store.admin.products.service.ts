@@ -137,6 +137,8 @@ const productDetail = (p: Doc) => {
     returnable: s.returnable,
     return_window_days: s.return_window_days,
     max_per_order: s.max_per_order,
+    offer_text: s.offer_text,
+    faqs: s.faqs.map((f) => ({ question: f.question, answer: f.answer })),
   };
 };
 
@@ -166,17 +168,45 @@ async function freeSku(wanted: string, selfId: Types.ObjectId) {
   return `PET-${secretKey(6).toUpperCase()}`;
 }
 
-/** The facet values a product may carry: known facets, known option slugs. */
+/**
+ * The facet values a product may carry, as option slugs of known facets. A
+ * value that is not one of the facet's options yet is ADDED to the facet — the
+ * product editor lets an operator type a new tag straight into the filter, so
+ * "add the option under Filters first" is not a step they have to know about.
+ */
 async function cleanFacetValues(values: Doc[] | null | undefined) {
-  const facets = await StoreFacetModel.find({ _id: { $in: toObjectIds((values ?? []).map((v) => v.facet_id)) } }).lean();
-  const allowed = new Map(facets.map((f) => [String(f._id), new Set(f.options.map((o) => o.slug))]));
-  return (values ?? [])
-    .map((v) => ({
-      facet_id: toObjectId(v.facet_id),
-      values: cleanList(v.values, 30).filter((slug) => allowed.get(String(v.facet_id))?.has(slug)),
-    }))
-    .filter((v) => v.facet_id && v.values.length > 0);
+  const facets = await StoreFacetModel.find({ _id: { $in: toObjectIds((values ?? []).map((v) => v.facet_id)) } });
+  const byId = new Map(facets.map((f) => [String(f._id), f]));
+  const out: { facet_id: Types.ObjectId; values: string[] }[] = [];
+  for (const entry of values ?? []) {
+    const facet = byId.get(String(entry.facet_id));
+    if (!facet) continue;
+    const slugs = new Set<string>();
+    let grew = false;
+    for (const typed of cleanList(entry.values, 30)) {
+      const known = facet.options.find((o) => o.slug === typed || o.slug === slugify(typed));
+      if (known) {
+        slugs.add(known.slug);
+        continue;
+      }
+      const slug = slugify(typed);
+      if (!slug) continue;
+      facet.options.push({ label: typed.slice(0, 60), slug });
+      slugs.add(slug);
+      grew = true;
+    }
+    if (grew) await facet.save();
+    if (slugs.size > 0) out.push({ facet_id: facet._id as Types.ObjectId, values: [...slugs] });
+  }
+  return out;
 }
+
+/** The product page's FAQs as saved: both halves filled, capped. */
+const faqsOf = (input: unknown) =>
+  ((Array.isArray(input) ? input : []) as Doc[])
+    .map((f) => ({ question: String(f.question ?? '').trim().slice(0, 200), answer: String(f.answer ?? '').trim().slice(0, 2000) }))
+    .filter((f) => f.question && f.answer)
+    .slice(0, 20);
 
 /** Parcel facts, as saved: never negative. */
 const parcelOf = (input: Doc) => ({
@@ -298,6 +328,8 @@ async function listingFields(doc: IStoreProduct, input: Doc, publishing: boolean
     returnable: input.returnable !== false,
     return_window_days: returnWindow === null ? null : nonNegative(returnWindow),
     max_per_order: Math.floor(nonNegative(input.max_per_order)),
+    offer_text: String(input.offer_text ?? '').trim().slice(0, 80),
+    faqs: faqsOf(input.faqs),
     listed_at: current.listed_at ?? (publishing ? new Date() : null),
   };
 }

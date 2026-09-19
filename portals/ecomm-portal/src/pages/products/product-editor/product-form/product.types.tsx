@@ -9,6 +9,7 @@ export const MAX_VARIANT_PHOTOS = 12;
 export const MAX_VARIANTS = 60;
 export const MAX_HIGHLIGHTS = 12;
 export const MAX_SPECS = 40;
+export const MAX_FAQS = 20;
 
 /** An HSN code on the GST invoice: 4 to 8 digits. */
 const HSN = /^\d{4,8}$/;
@@ -88,6 +89,10 @@ export const makeProductSchema = (t: Translate) => {
     returnable: z.boolean(),
     return_window_days: r.whole(),
     max_per_order: r.whole(),
+    offer_text: r.optionalText(80),
+    faqs: z
+      .array(z.object({ question: r.optionalText(200), answer: r.optionalText(2000) }))
+      .max(MAX_FAQS, t('ecommPortal.productEditor.faqsMax', { vars: { max: MAX_FAQS } })),
   });
 };
 
@@ -102,6 +107,7 @@ export type ProductSetValue = UseFormSetValue<ProductValues>;
 
 export const BLANK_HIGHLIGHT = { text: '' };
 export const BLANK_SPEC = { label: '', value: '' };
+export const BLANK_FAQ = { question: '', answer: '' };
 
 /** A fresh variant row — no id, so the server mints one. */
 export const blankVariant = (): VariantValues => ({

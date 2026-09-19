@@ -4,7 +4,8 @@ import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gatew
 import { logs } from '@observability/log';
 import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
 import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model';
-import { getStoreSettings, type IStoreSettings } from './storeSettings.model';
+import { activeOccasionAt, getStoreSettings, isPincodeServed, type IStoreSettings } from './storeSettings.model';
+import { StorePageModel } from './storePage.model';
 import { StoreProductModel } from './storeProduct.model';
 import { cardsFor, listedFilter, storeCatalogService, type StoreSort } from './store.catalog.service';
 import { findVariant, listingOf, unitPriceOf } from './store.product';
@@ -42,10 +43,30 @@ const categoryOut = (c: Doc) => ({
   seo_description: c.seo_description ?? '',
 });
 
+/** The festive window open right now, as the storefront paints it. */
+function activeOccasionOut(s: IStoreSettings) {
+  const occasion = activeOccasionAt(s.occasions ?? [], Date.now());
+  if (!occasion) return null;
+  return {
+    slug: occasion.slug,
+    label: occasion.label,
+    logo_url: occasion.logo_url ?? '',
+    favicon_url: occasion.favicon_url ?? '',
+    background_url: occasion.background_url ?? '',
+    background_color: occasion.background_color ?? '',
+    announcement_text: occasion.announcement_text ?? '',
+    ends_at: iso(occasion.ends_at) ?? '',
+  };
+}
+
+const pageLinkOut = (p: Doc) => ({ id: String(p._id), title: p.title, slug: p.slug });
+
 /** The public slice of the store settings — no internal switches, no audit fields. */
 export async function publicSettingsOut(s: IStoreSettings) {
   const fs = await getFinanceSettings();
   return {
+    serviceable_pincodes_enabled: s.serviceable_pincodes_enabled && (s.serviceable_pincodes ?? []).length > 0,
+    active_occasion: activeOccasionOut(s),
     store_enabled: s.store_enabled,
     store_name: s.store_name,
     tagline: s.tagline,
@@ -105,7 +126,7 @@ async function shelfBrands(limit = 40) {
     .sort({ sort_order: 1, name: 1 })
     .limit(limit)
     .lean();
-  return brands.map((b) => ({ id: String(b._id), name: b.name, logo_url: b.logo_url, tagline: b.tagline }));
+  return brands.map((b) => ({ id: String(b._id), name: b.name, slug: b.slug, logo_url: b.logo_url, tagline: b.tagline }));
 }
 
 /** The shelf sort a source-driven slider reads its products in. */
@@ -242,10 +263,11 @@ export const storeStorefrontService = {
   },
 
   async navigation() {
-    const [pets, categories, collections] = await Promise.all([
+    const [pets, categories, collections, pages] = await Promise.all([
       StorePetTypeModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }).lean(),
       StoreCategoryModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }).lean(),
       StoreCollectionModel.find({ is_active: true }).sort({ sort_order: 1, name: 1 }).lean(),
+      StorePageModel.find({ is_active: true, show_in_footer: true }).sort({ sort_order: 1, title: 1 }).lean(),
     ]);
     return {
       pet_types: pets.map(petOut),
@@ -256,7 +278,29 @@ export const storeStorefrontService = {
         slug: c.slug,
         image_url: c.image_url ?? '',
       })),
+      pages: pages.map(pageLinkOut),
     };
+  },
+
+  /** One of the store's own pages by slug; null when there is none or it is switched off. */
+  async page(slug: string) {
+    const page = await StorePageModel.findOne({ slug: String(slug ?? '').toLowerCase().trim(), is_active: true }).lean();
+    if (!page) return null;
+    return {
+      ...pageLinkOut(page),
+      content_html: page.content_html ?? '',
+      seo_title: page.seo_title ?? '',
+      seo_description: page.seo_description ?? '',
+      updated_at: iso(page.updated_at) ?? '',
+    };
+  },
+
+  /** The operator's pincode list alone — instant, no courier call. */
+  async pincodeServiceable(pincode: string) {
+    const clean = String(pincode ?? '').replaceAll(/\D/g, '');
+    const settings = await getStoreSettings();
+    const restricted = settings.serviceable_pincodes_enabled && settings.serviceable_pincodes.length > 0;
+    return { pincode: clean, restricted, serviceable: /^\d{6}$/.test(clean) && isPincodeServed(settings, clean) };
   },
 
   async home() {
@@ -319,6 +363,8 @@ export const storeStorefrontService = {
       cod_available: false,
     };
     if (!/^\d{6}$/.test(clean)) return empty;
+    // The operator's own list answers before the courier is asked.
+    if (!isPincodeServed(settings, clean)) return { ...empty, checked: true };
     const id = toObjectId(productId);
     const product = id ? await StoreProductModel.findById(id).lean() : null;
     if (!product) return empty;
@@ -360,11 +406,14 @@ export const storeStorefrontService = {
 
   /** Every public URL key, for the storefront's sitemap.xml. */
   async sitemap() {
-    const [products, categories, collections, pets] = await Promise.all([
+    const brandIds = await StoreProductModel.distinct('brand_id', listedFilter({ brand_id: { $ne: null } }));
+    const [products, categories, collections, pets, brands, pages] = await Promise.all([
       StoreProductModel.find(listedFilter()).select('store.slug updated_at').lean(),
       StoreCategoryModel.find({ is_active: true }).select('slug updated_at').lean(),
       StoreCollectionModel.find({ is_active: true }).select('slug updated_at').lean(),
       StorePetTypeModel.find({ is_active: true }).select('slug updated_at').lean(),
+      StoreBrandModel.find({ _id: { $in: brandIds }, is_active: true }).select('slug updated_at').lean(),
+      StorePageModel.find({ is_active: true }).select('slug updated_at').lean(),
     ]);
     const row = (kind: string) => (d: any) => ({
       kind,
@@ -376,6 +425,8 @@ export const storeStorefrontService = {
       ...categories.map(row('CATEGORY')),
       ...collections.map(row('COLLECTION')),
       ...pets.map(row('PET_TYPE')),
+      ...brands.map(row('BRAND')),
+      ...pages.map(row('PAGE')),
     ].filter((r) => r.slug);
   },
 

@@ -45,7 +45,7 @@ export default function ProductForm({ initial, onSave, renderActions }: Readonly
           <Stack spacing={3}>
             <BasicsSection control={control} />
             <PhotosSection control={control} />
-            <PricingSection control={control} />
+            <PricingSection control={control} setValue={setValue} />
             <VariantsSection control={control} setValue={setValue} />
             <ShippingSection control={control} setValue={setValue} />
             <ContentSection control={control} />

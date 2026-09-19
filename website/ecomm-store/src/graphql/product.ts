@@ -1,5 +1,7 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
 
+import type { StoreCategoryTile } from './catalog';
+
 export interface StoreRef {
   id: string;
   name: string;
@@ -22,6 +24,11 @@ export interface StoreVariant {
 export interface StoreProductOption {
   name: string;
   values: string[];
+}
+
+export interface StoreFaq {
+  question: string;
+  answer: string;
 }
 
 export interface StoreProduct {
@@ -63,6 +70,8 @@ export interface StoreProduct {
   seo_title: string;
   seo_description: string;
   star_counts: number[];
+  offer_text: string;
+  faqs: StoreFaq[];
 }
 
 export const STORE_PRODUCT: TypedDocumentNode<{ storeProduct: StoreProduct | null }, { slug: string }> = gql`
@@ -117,6 +126,8 @@ export const STORE_PRODUCT: TypedDocumentNode<{ storeProduct: StoreProduct | nul
       seo_title
       seo_description
       star_counts
+      offer_text
+      faqs { question answer }
     }
   }
 `;
@@ -199,11 +210,19 @@ export interface StorePetTypePage {
   slug: string;
   image_url: string;
   description: string;
+  categories: StoreCategoryTile[];
 }
 
 export const STORE_PET_TYPE: TypedDocumentNode<{ storePetType: StorePetTypePage | null }, { slug: string }> = gql`
   query EcommStorePetType($slug: String!) {
-    storePetType(slug: $slug) { id name slug image_url description }
+    storePetType(slug: $slug) {
+      id
+      name
+      slug
+      image_url
+      description
+      categories { id name slug image_url }
+    }
   }
 `;
 

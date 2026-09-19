@@ -22,6 +22,8 @@ export interface ICoupon extends Document {
   min_order_amount: number;
   used_count: number;
   is_active: boolean;
+  /** STORE coupons only: the products the code applies to. Empty = the whole store. */
+  product_ids: Types.ObjectId[];
   created_at: Date;
   updated_at: Date;
 }
@@ -40,6 +42,7 @@ const couponSchema = new Schema<ICoupon>(
     min_order_amount: { type: Number, default: 0, min: 0 },
     used_count: { type: Number, default: 0, min: 0 },
     is_active: { type: Boolean, default: true, index: true },
+    product_ids: { type: [Schema.Types.ObjectId], ref: 'StoreProduct', default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

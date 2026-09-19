@@ -13,6 +13,25 @@ export interface IStoreSocialLink {
   url: string;
 }
 
+/**
+ * A festive window. While "now" sits inside it the store swaps its logo,
+ * favicon and background (and, when set, the announcement bar) for these.
+ * Overlapping windows: the higher `sort_order` wins, ties to the later start.
+ */
+export interface IStoreOccasion {
+  slug: string;
+  label: string;
+  starts_at: Date;
+  ends_at: Date;
+  logo_url: string;
+  favicon_url: string;
+  background_url: string;
+  background_color: string;
+  announcement_text: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 export interface IStoreSettings extends Document {
   singleton_key: string;
   store_enabled: boolean;
@@ -56,6 +75,10 @@ export interface IStoreSettings extends Document {
   terms_html: string;
   about_html: string;
   social_links: IStoreSocialLink[];
+  /** On: only `serviceable_pincodes` are delivered to; off: wherever the courier reaches. */
+  serviceable_pincodes_enabled: boolean;
+  serviceable_pincodes: string[];
+  occasions: IStoreOccasion[];
   updated_by_id: string | null;
   created_at: Date;
   updated_at: Date;
@@ -65,6 +88,23 @@ const socialLinkSchema = new Schema<IStoreSocialLink>(
   {
     label: { type: String, default: '', trim: true, maxlength: 40 },
     url: { type: String, default: '', trim: true, maxlength: 500 },
+  },
+  { _id: false }
+);
+
+const occasionSchema = new Schema<IStoreOccasion>(
+  {
+    slug: { type: String, required: true, trim: true, lowercase: true, maxlength: 60 },
+    label: { type: String, required: true, trim: true, maxlength: 60 },
+    starts_at: { type: Date, required: true },
+    ends_at: { type: Date, required: true },
+    logo_url: { type: String, default: '', trim: true },
+    favicon_url: { type: String, default: '', trim: true },
+    background_url: { type: String, default: '', trim: true },
+    background_color: { type: String, default: '', trim: true, maxlength: 20 },
+    announcement_text: { type: String, default: '', trim: true, maxlength: 200 },
+    is_active: { type: Boolean, default: true },
+    sort_order: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -112,12 +152,43 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
     terms_html: { type: String, default: '', maxlength: 50000 },
     about_html: { type: String, default: '', maxlength: 50000 },
     social_links: { type: [socialLinkSchema], default: [] },
+    serviceable_pincodes_enabled: { type: Boolean, default: false },
+    serviceable_pincodes: { type: [String], default: [] },
+    occasions: { type: [occasionSchema], default: [] },
     updated_by_id: { type: String, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
 export const StoreSettingsModel = model<IStoreSettings>('StoreSettings', storeSettingsSchema);
+
+/** Whether the store's own pincode list (when it is switched on) allows delivery to `pincode`. */
+export function isPincodeServed(settings: Pick<IStoreSettings, 'serviceable_pincodes_enabled' | 'serviceable_pincodes'>, pincode: string): boolean {
+  if (!settings.serviceable_pincodes_enabled || settings.serviceable_pincodes.length === 0) return true;
+  return settings.serviceable_pincodes.includes(String(pincode ?? '').trim());
+}
+
+/**
+ * The festive window open at `nowMs`, if any — inactive windows and unusable
+ * dates are ignored; when several overlap the highest `sort_order` wins, ties
+ * going to the later start. Twin of `resolveActiveOccasion` in @duncit/datetime,
+ * which the server cannot import (rule 40).
+ */
+export function activeOccasionAt(occasions: readonly IStoreOccasion[], nowMs: number): IStoreOccasion | null {
+  let best: IStoreOccasion | null = null;
+  for (const occasion of occasions) {
+    if (occasion.is_active === false) continue;
+    const start = occasion.starts_at?.getTime();
+    const end = occasion.ends_at?.getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || nowMs < start || nowMs > end) continue;
+    const better =
+      !best ||
+      occasion.sort_order > best.sort_order ||
+      (occasion.sort_order === best.sort_order && start > best.starts_at.getTime());
+    if (better) best = occasion;
+  }
+  return best;
+}
 
 /** The one settings document, created on first read with every default. */
 export async function getStoreSettings(): Promise<IStoreSettings> {

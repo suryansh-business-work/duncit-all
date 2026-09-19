@@ -5,6 +5,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LocaleProvider } from '@duncit/app-settings';
 import { ConfirmProvider, NotifyProvider } from '@duncit/dialogs';
+import { RequestProgressBar } from '@duncit/ui';
 
 import { GOOGLE_CLIENT_ID } from '../config/env';
 import { STORE_FALLBACK } from '../i18n';
@@ -56,6 +57,9 @@ export function App() {
           <StoreLocale>
             <ThemeProvider theme={theme}>
               <CssBaseline />
+              {/* The floor under every wait on the server — the settings load,
+                  a shelf, a checkout — before any page draws its own loader. */}
+              <RequestProgressBar />
               <ConfirmProvider>
                 <NotifyProvider>
                   <StoreSettingsProvider>

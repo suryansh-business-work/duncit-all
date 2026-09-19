@@ -23,7 +23,15 @@ export { QueryGuard } from './QueryGuard';
 export type { QueryGuardProps } from './QueryGuard';
 export { FormActionsRow } from './FormActionsRow';
 export type { FormActionsRowProps } from './FormActionsRow';
-export { Loader, LoadingOverlay, TopProgressBar } from './loader';
+export {
+  Loader,
+  LoadingOverlay,
+  RequestProgressBar,
+  TopProgressBar,
+  getInFlightRequests,
+  subscribeRequests,
+  trackingFetch,
+} from './loader';
 export type { LoaderProps, LoaderVariant, LoadingOverlayProps, TopProgressBarProps } from './loader';
 export { useDebouncedValue } from './useDebouncedValue';
 export { useRouteFocus } from './useRouteFocus';

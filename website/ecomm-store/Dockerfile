@@ -54,6 +54,7 @@ COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/geo/package.json ./packages/geo/
+COPY packages/location/package.json ./packages/location/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 COPY packages/user-core/package.json ./packages/user-core/

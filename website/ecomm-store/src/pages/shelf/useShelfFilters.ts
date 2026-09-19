@@ -16,6 +16,7 @@ export type ShelfScope = Pick<StoreSearchInput, 'category' | 'collection' | 'pet
 export interface ShelfFilters {
   q: string;
   pet: string;
+  category: string;
   brands: string[];
   facets: Record<string, string[]>;
   min: number | null;
@@ -43,6 +44,7 @@ function readFilters(params: URLSearchParams): ShelfFilters {
   return {
     q: params.get('q') ?? '',
     pet: params.get('pet') ?? '',
+    category: params.get('cat') ?? '',
     brands: list(params.get('brand')),
     facets,
     min: numberOrNull(params.get('min')),
@@ -64,6 +66,7 @@ export function toSearchInput(filters: ShelfFilters, scope: ShelfScope): StoreSe
     ...scope,
     q: filters.q || undefined,
     pet_type: scope.pet_type ?? (filters.pet || undefined),
+    category: scope.category ?? (filters.category || undefined),
     brand_ids: brandIds.length > 0 ? brandIds : undefined,
     facets: facets.length > 0 ? facets : undefined,
     min_price: filters.min ?? undefined,
@@ -113,6 +116,7 @@ export function useShelfFilters() {
     setSort: (sort: StoreSort) => update({ sort }),
     setPage: (page: number) => update({ page: page > 1 ? String(page) : null }, true),
     setPet: (slug: string) => update({ pet: filters.pet === slug ? null : slug }),
+    setCategory: (slug: string) => update({ cat: filters.category === slug ? null : slug }),
     toggleBrand: (id: string) => toggleInList('brand', filters.brands, id),
     toggleFacet: (facet: string, value: string) => toggleInList(`${FACET_PREFIX}${facet}`, filters.facets[facet] ?? [], value),
     setPrice: (min: number | null, max: number | null) =>

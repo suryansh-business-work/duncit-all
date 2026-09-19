@@ -6,7 +6,8 @@ import { mergeSx } from '@duncit/ui';
 
 import { STORE_TOKENS as T } from '../theme/tokens';
 
-const ROUND = {
+/** The round white 44px look, shared with the footer's social icon links. */
+export const CIRCLE_BUTTON_SX = {
   width: 44,
   height: 44,
   bgcolor: T.surface,
@@ -33,13 +34,13 @@ interface CircleButtonProps {
 export function CircleButton({ to, sx, children, ...rest }: Readonly<CircleButtonProps>) {
   if (to) {
     return (
-      <DuncitIconButton component={RouterLink} to={to} aria-label={rest['aria-label']} sx={mergeSx(ROUND, sx)}>
+      <DuncitIconButton component={RouterLink} to={to} aria-label={rest['aria-label']} sx={mergeSx(CIRCLE_BUTTON_SX, sx)}>
         {children}
       </DuncitIconButton>
     );
   }
   return (
-    <DuncitIconButton {...rest} sx={mergeSx(ROUND, sx)}>
+    <DuncitIconButton {...rest} sx={mergeSx(CIRCLE_BUTTON_SX, sx)}>
       {children}
     </DuncitIconButton>
   );

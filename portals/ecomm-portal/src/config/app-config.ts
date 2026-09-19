@@ -56,6 +56,7 @@ export const appConfig = {
       children: [
         { label: 'Home page', labelKey: 'ecommPortal.nav.homePage', to: '/home-page', icon: 'image' },
         { label: 'Reviews', labelKey: 'ecommPortal.nav.reviews', to: '/reviews', icon: 'feedback' },
+        { label: 'Policies & pages', labelKey: 'ecommPortal.nav.pages', to: '/pages', icon: 'article' },
       ],
     },
     {
@@ -66,6 +67,20 @@ export const appConfig = {
         { label: 'Abandoned carts', labelKey: 'ecommPortal.nav.carts', to: '/carts', icon: 'sales' },
         { label: 'Stock alerts', labelKey: 'ecommPortal.nav.stockAlerts', to: '/stock-alerts', icon: 'notifications' },
         { label: 'Autoship', labelKey: 'ecommPortal.nav.autoship', to: '/autoship', icon: 'timeline' },
+      ],
+    },
+    {
+      label: 'Logs', labelKey: 'ecommPortal.nav.logs',
+      icon: 'receipt',
+      children: [
+        { label: 'Payment logs', labelKey: 'ecommPortal.nav.paymentLogs', to: '/logs/payments', icon: 'payments' },
+      ],
+    },
+    {
+      label: 'Support', labelKey: 'ecommPortal.nav.support',
+      icon: 'support',
+      children: [
+        { label: 'Store tickets', labelKey: 'ecommPortal.nav.storeTickets', to: '/support', icon: 'ticket' },
       ],
     },
     { label: 'Settings', labelKey: 'ecommPortal.nav.settings', to: '/settings', icon: 'settings' },

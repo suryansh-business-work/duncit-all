@@ -59,6 +59,8 @@ export default function FieldListRow<T extends FieldValues>({
           flex: 1,
           display: 'grid',
           columnGap: 1.5,
+          // Stacked on a phone, the next input's floating label needs this room.
+          rowGap: 2,
           gridTemplateColumns: { xs: '1fr', sm: wide ? '1fr 1fr' : `repeat(${columns.length}, 1fr)` },
         }}
       >

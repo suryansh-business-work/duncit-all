@@ -39,6 +39,10 @@ exports:
   - 'Loader'
   - 'LoadingOverlay'
   - 'TopProgressBar'
+  - 'RequestProgressBar'
+  - 'trackingFetch'
+  - 'subscribeRequests'
+  - 'getInFlightRequests'
   - 'FormActionsRow'
   - 'useDebouncedValue'
   - 'useRouteFocus'
@@ -402,6 +406,28 @@ count — nothing else has to opt in.
 
 It appears only after 180ms and then stays 400ms: below that a cached answer
 flashes a bar, and a page firing several queries strobes.
+
+### `RequestProgressBar` + `trackingFetch` — the bar wired to the transport
+
+The counter behind the portals' bar lives here too, so a surface that does not
+mount the shell chrome draws the same bar over the same count. Hand
+`trackingFetch` to the Apollo `HttpLink` and mount `RequestProgressBar` once at
+the app root; nothing else opts in. The count is taken at `fetch`, not in a
+link, so retries are counted and cache hits are not.
+
+```ts
+import { RequestProgressBar, trackingFetch } from '@duncit/ui';
+
+const link = new HttpLink({ uri: GRAPHQL_URL, fetch: trackingFetch });
+
+// at the app root, inside the ThemeProvider:
+<RequestProgressBar />
+```
+
+`subscribeRequests` / `getInFlightRequests` are the `useSyncExternalStore`
+halves, exported for anything else that wants to react to "a request is out".
+`@duncit/shell` re-exports all four (its `GlobalProgress` is this bar under its
+older name), so existing portal imports stand.
 
 ### `FormActionsRow`
 

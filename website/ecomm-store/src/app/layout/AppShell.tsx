@@ -1,7 +1,7 @@
 import { Suspense, useRef } from 'react';
 import { Outlet, ScrollRestoration, useLocation } from 'react-router';
 import { Box, Container, Link } from '@mui/material';
-import { Loader, useRouteFocus } from '@duncit/ui';
+import { Loader, mergeSx, useRouteFocus } from '@duncit/ui';
 
 import { CartDrawer } from '../../components/cart/CartDrawer';
 import { Footer } from '../../components/footer';
@@ -13,8 +13,17 @@ import { useCart } from '../providers/CartProvider';
 import { useWishlist } from '../providers/WishlistProvider';
 import { BottomNav } from './BottomNav';
 import { OnboardingSplash } from './onboarding';
+import { useStoreBranding } from './useStoreBranding';
 
 const MAIN_ID = 'main-content';
+
+/**
+ * A full-height column whose main grows, so the footer always ends the page.
+ * `overflowX: clip` stops an absolutely positioned element wider than the
+ * viewport from adding a horizontal scrollbar — without making the page a
+ * scroll container, which would break the sticky header.
+ */
+const ROOT_SX = { display: 'flex', flexDirection: 'column', minHeight: '100dvh', overflowX: 'clip' } as const;
 
 /** Announces cart and wishlist changes to screen readers without moving focus. */
 function LiveRegion() {
@@ -31,12 +40,12 @@ function LiveRegion() {
 export function AppShell() {
   const { t } = useStoreT();
   const { pathname } = useLocation();
+  const { backgroundSx } = useStoreBranding();
   const mainRef = useRef<HTMLElement>(null);
   useRouteFocus(mainRef);
   const isHome = pathname === '/';
   return (
-    // A full-height column whose main grows, so the footer always ends the page.
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+    <Box sx={mergeSx(ROOT_SX, backgroundSx)}>
       <Link
         href={`#${MAIN_ID}`}
         sx={{

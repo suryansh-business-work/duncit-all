@@ -84,9 +84,10 @@ export default function SingleImageUploadField({
   }
 
   return (
-    <Stack spacing={0.75} sx={{
-      alignItems: "flex-start"
-    }}>
+    // The chip is the field's last in-flow child, and the control that follows
+    // in a form grid floats its label 9px above its own box — without this
+    // room the label was drawn across the chip (Ecomm portal › Settings).
+    <Stack spacing={0.75} sx={{ alignItems: 'flex-start', pb: 2 }}>
       {chrome}
       <AiMonitoringChip />
     </Stack>

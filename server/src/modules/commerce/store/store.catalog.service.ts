@@ -383,21 +383,35 @@ export const storeCatalogService = {
     return cardsFor(objectIds.map((id) => byId.get(String(id))).filter(Boolean));
   },
 
-  /** "You may also like": same aisle or same pet, best sellers first. */
+  /**
+   * "You may also like": products sharing a tag (search keyword) come first,
+   * then the same aisle or the same pet — best sellers first within each.
+   */
   async related(productId: string, limit = 12) {
     const [self] = toObjectIds([productId]);
     if (!self) return [];
     const doc = await StoreProductModel.findById(self).select('store').lean();
     const listing = listingOf(doc ?? {});
+    const cap = Math.min(24, Math.max(1, limit));
+    const bySales = { 'store.sold_count': -1, 'store.sort_rank': -1 } as const;
+    const tagged = listing.search_keywords.length
+      ? await StoreProductModel.find(listedFilter({ _id: { $ne: self }, 'store.search_keywords': { $in: listing.search_keywords } }))
+          .sort(bySales)
+          .limit(cap)
+          .lean()
+      : [];
     const or: Record<string, unknown>[] = [];
     if (listing.category_ids.length) or.push({ 'store.category_ids': { $in: listing.category_ids } });
     if (listing.pet_type_ids.length) or.push({ 'store.pet_type_ids': { $in: listing.pet_type_ids } });
-    if (or.length === 0) return [];
-    const docs = await StoreProductModel.find(listedFilter({ _id: { $ne: self }, $or: or }))
-      .sort({ 'store.sold_count': -1, 'store.sort_rank': -1 })
-      .limit(Math.min(24, Math.max(1, limit)))
-      .lean();
-    return cardsFor(docs);
+    const room = cap - tagged.length;
+    const nearby =
+      or.length > 0 && room > 0
+        ? await StoreProductModel.find(listedFilter({ _id: { $nin: [self, ...tagged.map((t) => t._id)] }, $or: or }))
+            .sort(bySales)
+            .limit(room)
+            .lean()
+        : [];
+    return cardsFor([...tagged, ...nearby]);
   },
 
   /** Type-ahead: a handful of products, aisles and brands matching what was typed. */
@@ -418,7 +432,7 @@ export const storeCatalogService = {
     return {
       products: await cardsFor(docs),
       categories: categories.map((c) => ({ id: String(c._id), name: c.name, slug: c.slug })),
-      brands: brands.map((b) => ({ id: String(b._id), name: b.name, logo_url: b.logo_url })),
+      brands: brands.map((b) => ({ id: String(b._id), name: b.name, slug: b.slug, logo_url: b.logo_url })),
     };
   },
 
@@ -486,7 +500,10 @@ async function productDetail(doc: any) {
     options: variantOptionsOf(doc),
     variants,
     default_variant_id: lead?.id ?? null,
-    brand: brand ? { id: String(brand._id), name: brand.name, logo_url: brand.logo_url, tagline: brand.tagline } : null,
+    brand: brand
+      ? { id: String(brand._id), name: brand.name, slug: brand.slug, logo_url: brand.logo_url, tagline: brand.tagline }
+      : null,
+    faqs: listing.faqs.map((f) => ({ question: f.question, answer: f.answer })),
     pet_types: pets.map((p) => ({ id: String(p._id), name: p.name, slug: p.slug })),
     categories: categories.map((c) => ({ id: String(c._id), name: c.name, slug: c.slug })),
     breadcrumbs: await breadcrumbsFor(listing.category_ids[0]),

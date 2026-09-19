@@ -21,10 +21,21 @@ export function useCouponColumns({ onEdit, onDelete }: CouponColumnActions): Dun
   const { t } = useTranslation();
   return useMemo<DuncitColumn<StoreCoupon>[]>(() => {
     const limit = (value: number | null) => (value === null ? t('ecommPortal.coupons.unlimited') : String(value));
+    /** The whole store, or however many products the code is limited to. */
+    const appliesTo = (count: number) => (count === 0 ? t('ecommPortal.coupons.wholeStore') : t('ecommPortal.coupons.productCount', { count }));
     return [
       { field: 'code', headerName: t('ecommPortal.coupons.code'), type: 'text', width: 150, cellRenderer: renderCode, valueGetter: (row) => row.code },
       { field: 'description', headerName: t('shell.common.description'), type: 'text', flex: 1, minWidth: 180, sortable: false, filterable: false },
       { field: 'discount_pct', headerName: t('ecommPortal.coupons.discount'), type: 'number', width: 120, valueGetter: (row) => `${row.discount_pct}%` },
+      {
+        field: 'product_ids',
+        headerName: t('ecommPortal.coupons.appliesTo'),
+        type: 'text',
+        width: 140,
+        sortable: false,
+        filterable: false,
+        valueGetter: (row) => appliesTo(row.product_ids.length),
+      },
       dateColumn<StoreCoupon>({ field: 'valid_from', headerName: t('ecommPortal.coupons.validFrom'), hide: false, width: 140 }),
       dateColumn<StoreCoupon>({ field: 'valid_until', headerName: t('ecommPortal.coupons.validUntil'), hide: false, width: 140 }),
       {

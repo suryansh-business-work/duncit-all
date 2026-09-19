@@ -43,7 +43,7 @@ export function IdentityFields<T extends FieldValues>({
 }
 
 /** The title and description a search result shows, each counted against its limit. */
-export function SeoFields<T extends FieldValues>({ control }: Readonly<FieldsProps<T>>) {
+export function SeoFields<T extends FieldValues>({ control, required }: Readonly<FieldsProps<T> & { required?: boolean }>) {
   const { t } = useTranslation();
   return (
     <>
@@ -52,6 +52,7 @@ export function SeoFields<T extends FieldValues>({ control }: Readonly<FieldsPro
         name={'seo_title' as Path<T>}
         label={t('ecommPortal.form.seoTitle')}
         max={SEO_TITLE_MAX}
+        required={required}
       />
       <RhfCountedField
         control={control}
@@ -59,6 +60,7 @@ export function SeoFields<T extends FieldValues>({ control }: Readonly<FieldsPro
         label={t('ecommPortal.form.seoDescription')}
         max={SEO_DESCRIPTION_MAX}
         multiline
+        required={required}
       />
     </>
   );

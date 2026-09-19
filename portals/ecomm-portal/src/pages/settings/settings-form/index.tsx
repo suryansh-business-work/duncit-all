@@ -11,6 +11,7 @@ export {
 export { AUTOSHIP_TAB } from './tabs/autoship';
 export { CHECKOUT_TAB } from './tabs/checkout';
 export { GENERAL_TAB } from './tabs/general';
+export { OCCASIONS_TAB } from './tabs/occasions';
 export { PAGES_TAB } from './tabs/pages';
 export { RETURNS_TAB } from './tabs/returns';
 export { SEO_TAB } from './tabs/seo';

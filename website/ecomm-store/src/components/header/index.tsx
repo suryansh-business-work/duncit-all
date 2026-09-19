@@ -15,6 +15,7 @@ import { StoreLogo } from '../StoreLogo';
 import { AccountMenu } from './AccountMenu';
 import { AnnouncementBar } from './AnnouncementBar';
 import { MegaMenu } from './mega-menu';
+import { MobileMenuButton } from './mobile-menu';
 import { SearchForm } from './search-form';
 
 /** The round cart button with its count; opens the cart drawer. */
@@ -74,7 +75,7 @@ export function Header() {
   );
 }
 
-/** Phone pages other than home: back, the logo, and the cart. */
+/** Phone pages other than home: back, the logo, the menu and the cart. */
 export function MobileTopBar() {
   const { t } = useStoreT();
   const navigate = useNavigate();
@@ -86,7 +87,10 @@ export function MobileTopBar() {
           <ArrowBackRoundedIcon />
         </CircleButton>
         <HomeLink />
-        <CartButton />
+        <Stack direction="row" spacing={1}>
+          <MobileMenuButton />
+          <CartButton />
+        </Stack>
       </Stack>
     </Box>
   );

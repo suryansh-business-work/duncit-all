@@ -18,7 +18,7 @@ export function SeoSection({ control }: Readonly<{ control: ProductControl }>) {
           control={control}
           name="search_keywords"
           label={t('ecommPortal.listing.keywords')}
-          hint={t('ecommPortal.form.commaHint')}
+          hint={t('ecommPortal.listing.tagsHint')}
           data-testid="product-keywords"
         />
         <RhfTextField control={control} name="video_url" label={t('ecommPortal.listing.videoUrl')} data-testid="product-video-url" />

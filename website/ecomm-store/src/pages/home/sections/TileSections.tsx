@@ -64,7 +64,7 @@ export function BrandsSection({ section }: Readonly<SectionProps>) {
       <Stack component="ul" direction="row" spacing={1.5} sx={{ listStyle: 'none', p: 0, m: 0, overflowX: 'auto', pb: 1 }}>
         {section.brands.map((brand) => (
           <Stack component="li" key={brand.id} sx={{ flexShrink: 0 }}>
-            <ButtonBase component={RouterLink} to={paths.brand(brand.id)} sx={{ borderRadius: `${T.radius.card}px`, flexDirection: 'column', gap: 1, p: 1, width: 112 }}>
+            <ButtonBase component={RouterLink} to={paths.brand(brand.slug)} sx={{ borderRadius: `${T.radius.card}px`, flexDirection: 'column', gap: 1, p: 1, width: 112 }}>
               <Box sx={{ width: 88, height: 88, borderRadius: '50%', bgcolor: T.surface, border: 1, borderColor: T.border, overflow: 'hidden', display: 'grid', placeItems: 'center' }}>
                 <StoreImage src={brand.logo_url} alt="" width={72} height={72} sx={{ objectFit: 'contain', width: 72 }} />
               </Box>

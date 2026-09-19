@@ -57,6 +57,8 @@ const SOURCE_KEY: Record<TicketSource, string> = {
   // Mail Automation opened it. The agent's reply has to reach an email thread,
   // not only an app the sender may not have — which is why it says so.
   EMAIL: 'support.tickets.sourceMailbox',
+  // The pet store's Contact page (ecomm.duncit.com) — the ecomm team's queue.
+  STORE: 'support.tickets.sourceStore',
 };
 
 const renderSource = (t: Ticket, translate: Translate) => (

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import RhfFieldList from '../../../../components/form/FieldList';
 import RhfImageField from '../../../../components/form/RhfImageField';
 import RhfSwitch from '../../../../components/form/RhfSwitch';
+import { TWO_COLUMNS } from '../../../../lib/layout';
 import { makeRules } from '../../../../lib/rules';
 import type { Translate } from '../../../../lib/translate';
 import type { SettingsTabSpec, StoreSettings } from '../settings.types';
@@ -45,14 +46,12 @@ const toValues = (s: StoreSettings): GeneralValues => ({
   social_links: s.social_links.map((link) => ({ label: link.label, url: link.url })),
 });
 
-const twoColumns = { display: 'grid', columnGap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } };
-
 function GeneralFields({ control }: Readonly<{ control: Control<GeneralValues> }>) {
   const { t } = useTranslation();
   return (
     <Stack spacing={1}>
       <RhfSwitch control={control} name="store_enabled" label={t('ecommPortal.settings.storeOpen')} hint={t('ecommPortal.settings.storeOpenHint')} />
-      <Box sx={twoColumns}>
+      <Box sx={TWO_COLUMNS}>
         <RhfTextField control={control} name="store_name" label={t('ecommPortal.settings.storeName')} required />
         <RhfTextField control={control} name="tagline" label={t('ecommPortal.settings.tagline')} />
         <RhfImageField control={control} name="logo_url" label={t('ecommPortal.settings.logo')} />

@@ -10,6 +10,9 @@ export interface SeoSettings {
   seo_description: string;
   og_image_url: string;
   store_enabled: boolean;
+  favicon_url: string;
+  /** The festive window open right now; its favicon replaces the store's while it lasts. */
+  active_occasion: { favicon_url: string } | null;
 }
 
 export const SEO_SETTINGS = /* GraphQL */ `
@@ -21,9 +24,16 @@ export const SEO_SETTINGS = /* GraphQL */ `
       seo_description
       og_image_url
       store_enabled
+      favicon_url
+      active_occasion { favicon_url }
     }
   }
 `;
+
+export interface SeoFaq {
+  question: string;
+  answer: string;
+}
 
 export interface SeoProduct {
   title: string;
@@ -42,6 +52,7 @@ export interface SeoProduct {
   default_variant_id: string | null;
   variants: { id: string; sku: string }[];
   breadcrumbs: { name: string; slug: string }[];
+  faqs: SeoFaq[];
 }
 
 export const SEO_PRODUCT = /* GraphQL */ `
@@ -63,6 +74,7 @@ export const SEO_PRODUCT = /* GraphQL */ `
       default_variant_id
       variants { id sku }
       breadcrumbs { name slug }
+      faqs { question answer }
     }
   }
 `;
@@ -118,7 +130,47 @@ export const SEO_PET_TYPE = /* GraphQL */ `
   }
 `;
 
-export type SitemapKind = 'PRODUCT' | 'CATEGORY' | 'COLLECTION' | 'PET_TYPE';
+export interface SeoBrand {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string;
+  tagline: string;
+}
+
+export const SEO_BRANDS = /* GraphQL */ `
+  query EcommSeoBrands {
+    storeBrands {
+      id
+      name
+      slug
+      logo_url
+      tagline
+    }
+  }
+`;
+
+export interface SeoPage {
+  title: string;
+  slug: string;
+  seo_title: string;
+  seo_description: string;
+  updated_at: string;
+}
+
+export const SEO_PAGE = /* GraphQL */ `
+  query EcommSeoPage($slug: String!) {
+    storePage(slug: $slug) {
+      title
+      slug
+      seo_title
+      seo_description
+      updated_at
+    }
+  }
+`;
+
+export type SitemapKind = 'PRODUCT' | 'CATEGORY' | 'COLLECTION' | 'PET_TYPE' | 'BRAND' | 'PAGE';
 
 export const SEO_SITEMAP = /* GraphQL */ `
   query EcommSeoSitemap {

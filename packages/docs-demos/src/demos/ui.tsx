@@ -366,7 +366,7 @@ export default defineDemos('ui', [
     id: 'loader',
     title: 'Loader — the four shapes a wait actually takes',
     note:
-      'Press Refresh venues. The overlay keeps the rows readable underneath, which is what makes a refetch feel like a refresh rather than a reload — swap `variant` to block and watch the same wait blank the panel instead. `serverMs` is the round trip; under about 180ms the top bar never appears at all, because a bar that flashes reads as a glitch rather than as progress.',
+      'Press Refresh venues. The overlay keeps the rows readable underneath, which is what makes a refetch feel like a refresh rather than a reload — swap `variant` to block and watch the same wait blank the panel instead. `serverMs` is the round trip; under about 180ms the top bar never appears at all, because a bar that flashes reads as a glitch rather than as progress. In a real app the same bar is `RequestProgressBar`, driven by `trackingFetch` on the Apollo HttpLink — the portals mount it through the shell, the pet store mounts it itself.',
     mock: { variant: 'overlay', serverMs: 1400, rows: ['Play Arena, HSR Layout', 'Smashtress, Raj Nagar Extension', 'The Turf Club, Indiranagar'] },
     render: (mock) => <LoaderDemo mock={mock} />,
   }),

@@ -11,6 +11,8 @@ const idOrNull = (value: string): string | null => value || null;
 const hasChoices = ([, chosen]: [string, string[]]) => chosen.length > 0;
 const toFacetValue = ([facet_id, values]: [string, string[]]) => ({ facet_id, values });
 const isFullSpec = (spec: { label: string; value: string }) => spec.label !== '' && spec.value !== '';
+/** An FAQ missing its question or its answer is dropped rather than shown half-written. */
+const isFullFaq = (faq: { question: string; answer: string }) => faq.question !== '' && faq.answer !== '';
 /** A variant row added and left empty is dropped rather than saved blank. */
 const isFilledVariant = (v: VariantValues) => [v.option_label, v.sku, v.price, v.stock].some(Boolean);
 
@@ -87,6 +89,8 @@ const blankProduct = (): ProductValues => ({
   returnable: true,
   return_window_days: '',
   max_per_order: '',
+  offer_text: '',
+  faqs: [],
 });
 
 const fromProduct = (p: StoreProduct): ProductValues => ({
@@ -133,6 +137,8 @@ const fromProduct = (p: StoreProduct): ProductValues => ({
   returnable: p.returnable,
   return_window_days: numberText(p.return_window_days),
   max_per_order: blankZero(p.max_per_order),
+  offer_text: p.offer_text,
+  faqs: p.faqs.map((faq) => ({ question: faq.question, answer: faq.answer })),
 });
 
 /** The form's values for a saved product, or blank ones for a new product. */
@@ -160,6 +166,7 @@ export const toProductInput = (values: ProductValues) => ({
   search_keywords: splitLines(values.search_keywords),
   return_window_days: toOptionalInt(values.return_window_days),
   max_per_order: intOrZero(values.max_per_order),
+  faqs: values.faqs.filter(isFullFaq),
 });
 
 export type ProductInput = ReturnType<typeof toProductInput>;

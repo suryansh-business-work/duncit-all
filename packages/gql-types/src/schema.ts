@@ -5375,6 +5375,52 @@ export type DbRestoreCollection = {
   name: Scalars['String']['output'];
 };
 
+/** One record in the zone, as GoDaddy holds it. */
+export type DnsRecord = {
+  __typename?: 'DnsRecord';
+  data: Scalars['String']['output'];
+  /** False for the types this console lists but never writes (NS, SOA, SRV). */
+  editable: Scalars['Boolean']['output'];
+  /** type|name|value — unique in a zone, since GoDaddy refuses duplicates. */
+  id: Scalars['String']['output'];
+  /** Relative to the domain: @ for the domain itself, shop for shop.<domain>. */
+  name: Scalars['String']['output'];
+  /** MX and SRV only. */
+  priority?: Maybe<Scalars['Int']['output']>;
+  /** Seconds. */
+  ttl: Scalars['Int']['output'];
+  /** A, AAAA, CNAME, MX, TXT, CAA, NS, SOA or SRV. A string, so a type GoDaddy adds never fails the listing. */
+  type: Scalars['String']['output'];
+};
+
+export type DnsRecordInput = {
+  data: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  /** Required for MX, ignored otherwise. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  ttl: Scalars['Int']['input'];
+  type: Scalars['String']['input'];
+};
+
+/** Which record a change is about: its values as the listing showed them. */
+export type DnsRecordRef = {
+  data: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  type: Scalars['String']['input'];
+};
+
+/** The DNS zone managed from Tech → DNS Config, and the rules its editor follows. */
+export type DnsZone = {
+  __typename?: 'DnsZone';
+  /** Whether the default GoDaddy entry holds a key, a secret and a domain. */
+  configured: Scalars['Boolean']['output'];
+  domain: Scalars['String']['output'];
+  max_ttl: Scalars['Int']['output'];
+  min_ttl: Scalars['Int']['output'];
+  records: Array<DnsRecord>;
+  writable_types: Array<Scalars['String']['output']>;
+};
+
 export type DummyCheckoutInput = {
   amount: Scalars['Float']['input'];
   /** Structured billing address (preferred). Legacy free-text still accepted. */
@@ -5926,6 +5972,7 @@ export type EnvCategory =
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
+  | 'GODADDY'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'IMAGEKIT'
@@ -8837,6 +8884,7 @@ export type Mutation = {
   /** Append an uploaded image to the template's library (persists immediately). */
   addCrmEmailTemplateImage: CrmEmailTemplate;
   addCrmManualLog: CrmActivity;
+  addDnsRecord: Scalars['Boolean']['output'];
   addExpenseRefund: Expense;
   /** Onboarding staff add (or update) a holiday / leave day. */
   addMeetingHoliday: MeetingHoliday;
@@ -9236,6 +9284,7 @@ export type Mutation = {
    * was backed up and when is history, not a file pointer.
    */
   deleteDbBackup: DbBackup;
+  deleteDnsRecord: Scalars['Boolean']['output'];
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products. */
   deleteEcommBrand: Scalars['Boolean']['output'];
   deleteEcommLead: Scalars['Boolean']['output'];
@@ -10210,6 +10259,8 @@ export type Mutation = {
   updateCrmReminder: CrmReminder;
   updateCrmService: CrmService;
   updateCrmServiceOffered: CrmServiceOffered;
+  /** Rewrites the value, TTL and priority of one record. Its type and name stay. */
+  updateDnsRecord: Scalars['Boolean']['output'];
   updateEcommLead: EcommLead;
   updateEmailFragment: EmailFragment;
   updateEmailTemplate: EmailTemplate;
@@ -10400,6 +10451,11 @@ export type MutationAddCrmEmailTemplateImageArgs = {
 
 export type MutationAddCrmManualLogArgs = {
   input: ManualLogInput;
+};
+
+
+export type MutationAddDnsRecordArgs = {
+  input: DnsRecordInput;
 };
 
 
@@ -11385,6 +11441,11 @@ export type MutationDeleteCrmServiceOfferedArgs = {
 
 export type MutationDeleteDbBackupArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteDnsRecordArgs = {
+  ref: DnsRecordRef;
 };
 
 
@@ -13555,6 +13616,12 @@ export type MutationUpdateCrmServiceArgs = {
 export type MutationUpdateCrmServiceOfferedArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCrmServiceOfferedInput;
+};
+
+
+export type MutationUpdateDnsRecordArgs = {
+  input: DnsRecordInput;
+  ref: DnsRecordRef;
 };
 
 
@@ -17791,6 +17858,8 @@ export type Query = {
    * will actually apply when the venue carries no override of its own.
    */
   defaultVenueCommissionPct: Scalars['Float']['output'];
+  /** Every record in the configured GoDaddy zone. */
+  dnsZone: DnsZone;
   /** Onboarding/admin: a single brand by id. */
   ecommBrand?: Maybe<EcommBrand>;
   /** Onboarding/admin: all brands, optionally filtered by status. */

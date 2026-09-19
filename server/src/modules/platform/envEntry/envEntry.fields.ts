@@ -258,6 +258,19 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'sonar.projectKey in sonar-project.properties — SonarQube → the project → Project Information',
     },
   ],
+  // The DNS zone behind every *.duncit.com host. Tech → DNS Config reads and
+  // edits its records with this key, so a new portal's A record no longer
+  // needs someone logged in to GoDaddy.
+  GODADDY: [
+    {
+      name: 'api_key',
+      label: 'API Key',
+      secret: true,
+      hint: 'developer.godaddy.com → API Keys → Create New API Key, environment "Production" (an OTE key only works on the test API)',
+    },
+    { name: 'api_secret', label: 'API Secret', secret: true, hint: 'Shown once, beside the key, when it is created' },
+    { name: 'domain', label: 'Domain', hint: 'The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key' },
+  ],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -282,6 +295,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   APPLE_SIGNIN: 'Sign in with Apple',
   APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
   SONARQUBE: 'SonarQube (code analysis)',
+  GODADDY: 'GoDaddy (DNS)',
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -306,6 +320,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   APPLE_SIGNIN: 'https://developer.apple.com/account/resources/identifiers/list',
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
   SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
+  GODADDY: 'https://developer.godaddy.com/keys',
 };
 
 /**
@@ -317,6 +332,7 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
   APPLE_SIGNIN: 'https://developer.apple.com/documentation/signinwithapple/configuring-your-environment-for-sign-in-with-apple',
   APP_STORE_CONNECT:
     'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
+  GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
 };
 
 const secretSet = new Set<string>();
@@ -401,6 +417,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SONAR_HOST_URL: { category: 'SONARQUBE', field: 'host_url' },
   SONAR_TOKEN: { category: 'SONARQUBE', field: 'token' },
   SONAR_PROJECT_KEY: { category: 'SONARQUBE', field: 'project_key' },
+  GODADDY_API_KEY: { category: 'GODADDY', field: 'api_key' },
+  GODADDY_API_SECRET: { category: 'GODADDY', field: 'api_secret' },
+  GODADDY_DOMAIN: { category: 'GODADDY', field: 'domain' },
 };
 
 export function maskSecret(value: string) {

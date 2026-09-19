@@ -104,6 +104,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Run one-shot shell commands inside the API container from a web terminal and read stdout/stderr and exit codes (SUPER_ADMIN only; every command is audited).' },
   { surface: 'tech', path: '/server/data-clone', label: 'Data Clone', group: 'Server',
     description: 'Configure the source/target database connections and start a production-to-staging data clone, then watch its progress, excluded collections and completion without leaving the page.' },
+  { surface: 'tech', path: '/dns/records', label: 'DNS Records', group: 'DNS Config',
+    description: 'List every DNS record in the GoDaddy zone (e.g. duncit.com) and add, edit or delete A, AAAA, CNAME, MX, TXT and CAA records — such as the A record a new portal subdomain needs. NS and SOA are read-only. The GoDaddy API key is set under Environment Variables → GoDaddy.' },
   { surface: 'tech', path: '/app-builds/android', label: 'Android', group: 'App Builds',
     description: 'Track every CI Android build of the mobile app with live status polling, open a build for its full details and download link, trigger a new build, or delete a build and its stored artifact.' },
   { surface: 'tech', path: '/app-builds/ios', label: 'iOS', group: 'App Builds',

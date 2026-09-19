@@ -86,6 +86,17 @@ export const appConfig = {
       ],
     },
     {
+      // Beside Server and Database: the zone is what points every *.duncit.com
+      // host at that server, and a new portal's A record is added here rather
+      // than by someone logged in to GoDaddy. The key lives in Environment
+      // Variables → GoDaddy like every other credential.
+      label: 'DNS Config', labelKey: 'shell.nav.dnsConfig',
+      icon: 'language',
+      children: [
+        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/dns/records', icon: 'dns' },
+      ],
+    },
+    {
       // Beside Server rather than under it: a ceiling is a platform-wide
       // policy, and the systems it governs are the portals, the two apps and
       // the websites — not the box any of it happens to run on.

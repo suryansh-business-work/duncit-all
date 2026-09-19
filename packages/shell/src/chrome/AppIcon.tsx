@@ -40,6 +40,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import InsightsIcon from '@mui/icons-material/Insights';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import LanguageIcon from '@mui/icons-material/Language';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -121,6 +122,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   info: InfoOutlinedIcon,
   insights: InsightsIcon,
   inventory: Inventory2Icon,
+  language: LanguageIcon,
   local_shipping: LocalShippingIcon,
   location: MyLocationIcon,
   link: LinkIcon,

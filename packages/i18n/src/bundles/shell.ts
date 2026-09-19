@@ -521,6 +521,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       database: 'Database',
       dataClone: 'Data Clone',
       defaultDeductions: 'Default Deductions',
+      dnsConfig: 'DNS Config',
+      dnsRecords: 'DNS Records',
       docker: 'Docker',
       documents: 'Documents',
       e2eTests: 'E2E Tests',

@@ -188,6 +188,41 @@ export const TECH_BUNDLE: NestedCatalogue = {
       openSecrets: 'Open secrets',
       openDeployRuns: 'Deploy runs',
     },
+    /** DNS Config — the GoDaddy zone behind every *.duncit.com host. */
+    dns: {
+      subtitle:
+        'Every record in the {domain} zone at GoDaddy. A change is live at GoDaddy at once; resolvers see it once the old record’s TTL runs out.',
+      notConfiguredTitle: 'GoDaddy is not connected',
+      notConfigured: 'Add a GoDaddy entry with the API key, secret and domain, then come back:',
+      addRecord: 'Add record',
+      editRecord: 'Edit record',
+      deleteRecord: 'Delete record',
+      deleteConfirm:
+        'Delete the {type} record {host} → {data}? Anything that looks this name up stops finding it once the TTL runs out.',
+      saveFailed: 'Could not save the record',
+      deleteFailed: 'Could not delete the record',
+      empty: 'No records in this zone.',
+      searchPlaceholder: 'Search names and values…',
+      readOnly: 'GoDaddy’s nameservers own {type} records — change them at GoDaddy',
+      colHost: 'Host',
+      colValue: 'Value',
+      colTtl: 'TTL (seconds)',
+      colPriority: 'Priority',
+      typeHint: 'A and AAAA point at an address, CNAME at another name, MX receives mail, TXT and CAA carry text.',
+      nameHint: '“@” for {domain} itself, “shop” for shop.{domain}.',
+      valueHint: 'An IPv4 address for A, IPv6 for AAAA, a hostname for CNAME and MX, free text for TXT and CAA.',
+      ttlRange: 'Whole seconds between {min} and {max}.',
+      priorityHint: 'Lower is tried first.',
+      editKeepsAddress: 'Type and name are the record’s address. To change either, add a new record and delete this one.',
+      validation: {
+        nameInvalid: 'Use “@”, or letters, digits, “-” and “_” separated by dots.',
+        nameIsRelative: 'Leave out .{domain} — it is added for you.',
+        valueRequired: 'Enter a value.',
+        ipv4: 'Enter an IPv4 address, e.g. 203.0.113.10.',
+        ipv6: 'Enter an IPv6 address.',
+        priorityRange: 'A whole number between 0 and 65535.',
+      },
+    },
     dbBackup: {
       title: 'Database Backups',
       subtitle:
@@ -596,6 +631,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
         'Signs a client secret with this key and asks Apple to redeem a code it never issued. Apple checks the key before the code, so this proves the Team ID, Key ID, private key and Services ID belong together. Nobody is signed in.',
       appStoreConnectHint:
         'Signs in to the App Store Connect API with this key, looks the app up by its bundle ID and lists one certificate. Nothing is created — it proves the Issuer ID, Key ID and .p8 belong together, and that the key has the Admin access Generate signing files needs.',
+      godaddyConnectionHint:
+        'Reads the domain and its records with this key. Nothing is written — it proves the key and secret, that this account owns the domain, and that GoDaddy lets the account use its DNS API.',
       assignedConfigs: 'Assigned configs',
       assignedPortals: 'Assigned portals',
       callNow: 'Call now',

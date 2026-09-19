@@ -1,4 +1,6 @@
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { flattenCatalogue, PACKAGING_BUNDLE } from '@duncit/i18n';
 import type { ContactChannel } from '@duncit/utils';
 import {
   AADHAR_PATTERN,
@@ -8,7 +10,9 @@ import {
   PHONE_NUMBER_PATTERN,
   PUBLIC_URL_PATTERN,
   SLUG_KEY_PATTERN,
+  PackagingFields,
   zodRules,
+  type PackagingTranslate,
 } from '@duncit/forms';
 import {
   makeAddressSchema,
@@ -74,6 +78,31 @@ interface FieldMock {
   slug: string;
 }
 
+interface PackagingMock {
+  weight_kg: number;
+  length_cm: number;
+  breadth_cm: number;
+  height_cm: number;
+  hsn_code: string;
+}
+
+const PACKAGING_TEXT = flattenCatalogue(PACKAGING_BUNDLE);
+
+/** The shipped English, with {placeholders} filled — what a portal's t() answers. */
+const packagingT: PackagingTranslate = (key, options) =>
+  Object.entries(options?.vars ?? {}).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+    PACKAGING_TEXT[key] ?? key
+  );
+
+/** A real form around the section, seeded from the mock. */
+function PackagingDemo({ mock }: Readonly<{ mock: PackagingMock }>) {
+  const { control, setValue } = useForm({
+    values: { ...mock, package_type: 'POLYBAG', shelf_life_days: 365, is_fragile: false, is_liquid: false },
+  });
+  return <PackagingFields control={control} setValue={setValue} t={packagingT} />;
+}
+
 /** Built from the shared rules — never from a hand-written zod chain per form. */
 const profileSchema = z.object({
   full_name: zodRules.personName('Full name'),
@@ -82,6 +111,14 @@ const profileSchema = z.object({
 });
 
 export default defineDemos('forms', [
+  defineDemo<PackagingMock>({
+    id: 'packaging',
+    title: 'Shipping & packaging — the section every product form shares',
+    note:
+      'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable.',
+    mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309' },
+    render: (mock) => <PackagingDemo mock={mock} />,
+  }),
   defineDemo<FieldMock>({
     id: 'rules',
     title: 'One set of field rules, every form on the platform',

@@ -737,6 +737,19 @@ export {
   type TimelineStep,
 } from './product-orders';
 export {
+  PACKAGE_TYPES,
+  PACKAGING_LIMITS,
+  PACKAGING_PRESETS,
+  VOLUMETRIC_DIVISOR,
+  chargeableWeightKg,
+  packagingGaps,
+  parcelWeights,
+  volumetricWeightKg,
+  type PackageType,
+  type PackagingPreset,
+  type ParcelDims,
+} from './parcel';
+export {
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
   SIGNUP_STEP_FIELDS,

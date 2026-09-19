@@ -28,6 +28,7 @@ import { AVAILABILITY_BUNDLE } from './bundles/availability';
 import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
+import { PACKAGING_BUNDLE } from './bundles/packaging';
 import { SESSION_BUNDLE } from './bundles/session';
 import { LOCATION_BUNDLE } from './bundles/location';
 import { MWEB_BUNDLE } from './bundles/mweb';
@@ -119,6 +120,7 @@ export {
   VENUE_SETTINGS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
+  PACKAGING_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -155,6 +157,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   venueSettings: VENUE_SETTINGS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,
+  packaging: PACKAGING_BUNDLE,
   session: SESSION_BUNDLE,
   location: LOCATION_BUNDLE,
   mweb: MWEB_BUNDLE,

@@ -33,6 +33,9 @@ export type FulfilmentStatus =
   | 'PICKED_UP'
   | 'CANCELLED'
   | 'RTO'
+  | 'RTO_DELIVERED'
+  | 'NDR'
+  | 'LOST'
   | 'FAILED';
 
 /** The seller's status filter lists these, so the order is the working order. */
@@ -47,7 +50,10 @@ export const ALL_FULFILMENT_STATUSES: readonly FulfilmentStatus[] = [
   'READY_FOR_PICKUP',
   'PICKED_UP',
   'CANCELLED',
+  'NDR',
   'RTO',
+  'RTO_DELIVERED',
+  'LOST',
   'FAILED',
 ];
 
@@ -70,7 +76,7 @@ export const PICKUP_FLOW: readonly FulfilmentStatus[] = [
 ];
 
 /** States an order does not come back from — they collapse the timeline to one step. */
-const TERMINAL = new Set<string>(['CANCELLED', 'RTO', 'FAILED']);
+const TERMINAL = new Set<string>(['CANCELLED', 'RTO', 'RTO_DELIVERED', 'LOST', 'FAILED']);
 
 /** True when the order has stopped moving. */
 export function isTerminalFulfilment(status: string): boolean {
@@ -101,6 +107,9 @@ export const FULFILMENT_STATUS_KEYS: Record<FulfilmentStatus, string> = {
   PICKED_UP: 'fulfilment.statusPickedUp',
   CANCELLED: 'fulfilment.statusCancelled',
   RTO: 'fulfilment.statusReturnedToOrigin',
+  RTO_DELIVERED: 'fulfilment.statusRtoDelivered',
+  NDR: 'fulfilment.statusNdr',
+  LOST: 'fulfilment.statusLost',
   FAILED: 'fulfilment.statusFailed',
 };
 
@@ -140,6 +149,9 @@ export const FULFILMENT_TONE: Record<FulfilmentStatus, FulfilmentTone> = {
   PICKED_UP: 'done',
   CANCELLED: 'neutral',
   RTO: 'failed',
+  RTO_DELIVERED: 'failed',
+  NDR: 'pending',
+  LOST: 'failed',
   FAILED: 'failed',
 };
 

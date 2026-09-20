@@ -43,6 +43,8 @@ import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
+import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
+import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
 import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
@@ -504,6 +506,9 @@ async function bootstrap() {
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
 
+  // AI portal automation: wake runs whose delay is up, time out unanswered waits.
+  startAutomationScheduler();
+
   // Social Accounts (Marketing): re-read each connected Page, channel and
   // profile every few hours — posts, numbers, new comments — and send the new
   // comments through the AI review.
@@ -749,6 +754,9 @@ async function bootstrap() {
   // Google's OAuth redirect after an operator connects a Gmail mailbox in the
   // Tech portal. A browser navigation, so it lives here and not in GraphQL.
   app.use('/gmail', buildGmailOAuthRouter());
+
+  // AI portal automation: where AiSensy posts each incoming WhatsApp message.
+  app.use('/automation', buildAutomationRouter());
 
   // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a
   // social account in the Marketing portal. A browser navigation, like Gmail's.

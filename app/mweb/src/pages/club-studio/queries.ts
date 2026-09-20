@@ -11,6 +11,9 @@ export interface AdminClubRow {
   followers_count: number;
   total_pods: number;
   upcoming_pods: number;
+  /** Venues whose category and city match this club — a club with none cannot
+   * book a pod anywhere, which is worth seeing from the list. */
+  matched_venues_count: number;
   is_verified: boolean;
 }
 
@@ -34,6 +37,7 @@ export const MWEB_MY_ADMIN_CLUBS = gql`
         followers_count
         total_pods
         upcoming_pods
+        matched_venues_count
         is_verified
       }
     }

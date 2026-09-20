@@ -20,8 +20,13 @@ export interface ClubEditFormValues {
   club_description: string;
   /** Feature images/videos — one URL per line, as the media field serialises. */
   feature_text: string;
+  /** Past-event photos, same serialisation. Optional, unlike the feature media:
+   * a club with no moments yet is a new club, not an invalid one. */
+  moments_text: string;
   community_link: string;
   group_link: string;
+  /** The WhatsApp announcement channel. Optional — not every club runs one. */
+  announcement_link: string;
   who_we_are: string[];
   what_we_do: string[];
   perks: string[];
@@ -34,8 +39,10 @@ export interface EditableClubFields {
   club_name: string;
   club_description?: string | null;
   club_feature_images_and_videos: readonly { url: string }[];
+  club_moments: readonly { url: string }[];
   club_whats_app_community_link?: string | null;
   club_whats_app_group_link?: string | null;
+  club_whats_app_announcement_link?: string | null;
   who_we_are: readonly string[];
   what_we_do: readonly string[];
   perks: readonly string[];
@@ -80,6 +87,14 @@ export function makeClubEditSchema(t: Translate) {
       .trim()
       .min(1, t('mweb.clubEdit.validation.groupLinkRequired'))
       .refine(isLink, t('mweb.clubEdit.validation.linkInvalid')),
+    // Both optional, matching @duncit/club-form: a blank one is a club that
+    // has no moments yet or runs no announcement channel, not a broken form.
+    // Anything actually typed still has to be a link.
+    moments_text: z.string(),
+    announcement_link: z
+      .string()
+      .trim()
+      .refine((value) => !value || isLink(value), t('mweb.clubEdit.validation.linkInvalid')),
     who_we_are: z
       .array(z.string())
       .refine(hasEntry, t('mweb.clubEdit.validation.whoWeAreRequired')),
@@ -98,8 +113,10 @@ export function clubToEditValues(club: EditableClubFields): ClubEditFormValues {
     club_name: club.club_name,
     club_description: club.club_description ?? '',
     feature_text: club.club_feature_images_and_videos.map((media) => media.url).join('\n'),
+    moments_text: club.club_moments.map((media) => media.url).join('\n'),
     community_link: club.club_whats_app_community_link ?? '',
     group_link: club.club_whats_app_group_link ?? '',
+    announcement_link: club.club_whats_app_announcement_link ?? '',
     who_we_are: [...club.who_we_are],
     what_we_do: [...club.what_we_do],
     perks: [...club.perks],
@@ -122,8 +139,13 @@ export function buildClubEditInput(values: ClubEditFormValues): UpdateClubInput 
       url,
       type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
+    club_moments: lines(values.moments_text).map((url) => ({
+      url,
+      type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+    })),
     club_whats_app_community_link: values.community_link.trim(),
     club_whats_app_group_link: values.group_link.trim(),
+    club_whats_app_announcement_link: values.announcement_link.trim(),
     who_we_are: clean(values.who_we_are),
     what_we_do: clean(values.what_we_do),
     perks: clean(values.perks),

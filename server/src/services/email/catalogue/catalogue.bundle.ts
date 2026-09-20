@@ -451,6 +451,10 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.storeCartReminder.title': 'You left something in your cart',
   'email.storeCartReminder.body':
     'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
+  // --- Automation message (catalogue.automation) ------------------------------
+  'email.automationMessage.title': 'A message from {{app_name}}',
+  'email.automationMessage.footer':
+    "You're receiving this because you wrote to Duncit, or asked to hear from us.",
   // --- Analytics reports (catalogue.analytics) --------------------------------
   'email.analyticsReport.title': 'Your analytics report',
   'email.analyticsReport.body':

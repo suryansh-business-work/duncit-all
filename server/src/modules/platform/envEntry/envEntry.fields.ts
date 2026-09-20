@@ -434,6 +434,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
   AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },
   AISENSY_PROJECT_API_BASE_URL: { category: 'AISENSY', field: 'project_api_base_url' },
+  AISENSY_WEBHOOK_SECRET: { category: 'AISENSY', field: 'webhook_secret' },
   GITHUB_TOKEN: { category: 'GITHUB', field: 'token' },
   GITHUB_OWNER: { category: 'GITHUB', field: 'owner' },
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },

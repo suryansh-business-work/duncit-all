@@ -47,6 +47,8 @@ export const OPENAI_TASKS = {
   'localization.auto_translate': { label: 'Locale auto-translation', module: 'Platform' },
   'askbot.navigation': { label: 'Navigation bot answer', module: 'Ask Bot' },
   'agent.console': { label: 'Agent console turn', module: 'Agent' },
+  'automation.compose': { label: 'Automation AI reply', module: 'Automation' },
+  'automation.classify': { label: 'Automation AI sorting', module: 'Automation' },
 } as const satisfies Record<string, OpenAiTaskMeta>;
 
 export type OpenAiTaskKey = keyof typeof OPENAI_TASKS;

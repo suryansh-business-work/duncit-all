@@ -16,6 +16,7 @@ import {
 import { mailAutomationService } from './mailAutomation.service';
 import { openTicketForEmail } from './mailAutomation.tickets';
 import { composeReply } from './mailAutomation.reply';
+import { inboundEmail } from '@modules/ai/automation/automation.inbound';
 
 /**
  * The loop that makes the mailbox answer itself.
@@ -163,6 +164,17 @@ async function handleArrival(
 
   const message = await getMessage(token, ref.id);
   if (!shouldAnswer(account, message)) return;
+
+  // AI > Automation: a new conversation on this mailbox starts every active
+  // email flow that listens on it. Fire-and-forget, and before the claim below,
+  // so a flow neither waits on the ticket nor changes what this loop does.
+  inboundEmail({
+    mailbox: account.email,
+    fromEmail: message.fromEmail,
+    fromName: message.fromName,
+    subject: message.subject,
+    text: message.bodyText,
+  }).catch((error) => logs.server.warn('mail-automation', 'automation', { error, mailbox: account.email }));
 
   // A row WITHOUT one is our own claim from a sweep that was interrupted
   // between claiming the thread and opening the ticket. Finishing it is the

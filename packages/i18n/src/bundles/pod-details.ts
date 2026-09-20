@@ -17,9 +17,26 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       // the sentence is shared rather than written twice.
       noClubLinked: 'No club linked to this pod.',
       status: 'Status',
+      description: 'Description',
     },
     podAttendeesSection: {
       attendees: 'Attendees',
+      nobodyJoined: 'Nobody has joined this pod yet.',
+      // One booking can admit several people, so the row reports seats rather
+      // than counting heads.
+      seats: 'Seats',
+      // What to call this person's booking. One literal key per state, because
+      // `scripts/verify-translation-keys.mjs` greps source for the literal
+      // string — a key composed at runtime reads as shipped-but-never-rendered.
+      statusHost: 'Host',
+      statusAttendee: 'Attendee',
+      statusJoined: 'Joined',
+      // "Visited" once the pod has happened AND they were checked in at the
+      // door — the word the member is quoting when they complain.
+      statusVisited: 'Visited',
+      statusBackoutInProcess: 'Backout in process',
+      statusBackedOut: 'Backed out',
+      spotFilledBy: 'Spot filled by {name}',
     },
     podClubAdminsCard: {
       clubAdminDetails: 'Club Admin Details',
@@ -34,6 +51,8 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
     },
     podFeedbackSection: {
       ratings: 'Ratings',
+      noRatings: 'No one has rated this pod yet.',
+      ratingsCount: '{count} ratings',
     },
     podFinanceSection: {
       breakdownUnavailable: 'Finance breakdown is not available for this pod.',
@@ -55,6 +74,8 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
     podHostsCard: {
       hosts: 'Hosts',
       primary: 'Primary',
+      noHosts: 'No hosts on this pod.',
+      noContact: 'No contact on file',
     },
     podOverviewCard: {
       ends: 'Ends',
@@ -64,6 +85,9 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       peopleIn: 'People in',
       podId: 'Pod ID',
       products: 'Products',
+      // Whether this pod sells the club's products alongside its tickets.
+      productsEnabled: 'Enabled',
+      productsOff: 'Off',
       spotsLeft: 'Spots left',
       ticketDiscount: 'Multi-ticket offer',
       ticketDiscountTier: '{count}+ tickets · {pct}% off',
@@ -89,6 +113,11 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
     podTimelineSection: {
       podDate: 'Pod date',
       timeline: 'Timeline',
+      // The trail under the lifecycle strip: every edit, approval and
+      // cancellation recorded against this pod.
+      activity: 'Activity',
+      // A lifecycle step the pod has not reached, so there is no date to stamp.
+      pending: 'Pending',
     },
   },
 };

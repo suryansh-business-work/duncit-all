@@ -658,6 +658,7 @@ export {
 export {
   mwebAutoPodLabels,
   shellAutoPodLabels,
+  mwebPodKindLabels,
   shellPodKindLabels,
   type AutoPodLabels,
   type AutoPodTranslate,

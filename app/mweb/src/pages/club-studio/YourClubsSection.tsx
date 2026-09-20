@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
+import { useDebouncedValue } from '@duncit/ui';
 import { Alert, Card, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import SectionHeader from '../../components/SectionHeader';
+import SearchPillField from '../pod-list/SearchPillField';
 import AdminClubRowCard from './AdminClubRow';
 import { MWEB_MY_ADMIN_CLUBS, type AdminClubRow } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -54,15 +57,29 @@ function ClubsBody({ clubs, loading, error }: Readonly<BodyProps>) {
  */
 export default function YourClubsSection() {
   const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const search = useDebouncedValue(query.trim(), 300);
+  // Server-side, like the native twin's: the list is capped at fifty, so
+  // filtering what is already on screen would hide clubs past the cap from
+  // exactly the admin who runs most of them.
   const { data, loading, error } = useQuery<any>(MWEB_MY_ADMIN_CLUBS, {
-    variables: { query: CLUBS_PAGE },
+    variables: { query: { ...CLUBS_PAGE, search: search || null } },
     fetchPolicy: 'cache-and-network',
   });
   const clubs: AdminClubRow[] = data?.myAdminClubsTable?.rows ?? [];
+  const searchLabel = t('clubAdmin.clubs.search');
 
   return (
     <Stack data-testid="your-clubs-section" spacing={1.5}>
       <SectionHeader testId="your-clubs-section-header" title={t('mweb.clubStudio.yourClubs')} />
+      <SearchPillField
+        value={query}
+        onChange={setQuery}
+        placeholder={searchLabel}
+        ariaLabel={searchLabel}
+        enterKeyHint="search"
+        testId="your-clubs-section-search"
+      />
       <Card>
         <ClubsBody clubs={clubs} loading={loading && !data} error={error} />
       </Card>

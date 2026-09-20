@@ -14,7 +14,9 @@ export interface ClubAdminPodRow extends PodStatusFields {
   /** Where the pod sits — a row used to say only when it was, so an admin had
    * to open every pod to triage a list. */
   place_label: string | null;
-  pod_type: string;
+  /** FREE reads as "Free", never as a zero price — the same rule every other
+   * pod row on both surfaces applies. */
+  pod_type: 'FREE' | 'PAID';
   pod_amount: number;
   /** Seats marked present against seats booked — what the host is PAID on.
    * `recorded` false means nobody scanned, which is not the same as nobody

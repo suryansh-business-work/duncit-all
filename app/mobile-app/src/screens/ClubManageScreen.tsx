@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { YStack } from 'tamagui';
@@ -9,6 +10,7 @@ import { useClubStudioPods } from '@/components/studio';
 import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { ClubStudioChangeRequests } from '@/components/change-requests/ClubStudioChangeRequests';
 import { useClubAdminClubs } from '@/hooks/useClubAdminClubs';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -31,7 +33,8 @@ export function ClubManageScreen() {
   // `navigate` needs the narrower signature spelled out.
   const navigate: (screen: MenuRoute) => void = navigation.navigate;
   const podsState = useClubStudioPods();
-  const clubsState = useClubAdminClubs();
+  const [clubQuery, setClubQuery] = useState('');
+  const clubsState = useClubAdminClubs(useDebouncedValue(clubQuery.trim()));
 
   return (
     <StackScreen header title={t('mweb.studioPods.clubStudio')} testID="club-manage-screen">
@@ -40,6 +43,8 @@ export function ClubManageScreen() {
           <ClubQuickActions onNavigate={navigate} />
           <YourClubsSection
             state={clubsState}
+            query={clubQuery}
+            onQuery={setClubQuery}
             onOpenPods={(clubId) => navigation.navigate('ClubPods', { clubId })}
             onEdit={(clubId) => navigation.navigate('ClubEdit', { clubId })}
           />

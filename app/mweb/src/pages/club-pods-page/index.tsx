@@ -1,10 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Link as RouterLink, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { Alert, Stack } from '@mui/material';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded';
-import { DuncitButton } from '@duncit/buttons';
 import { CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from '@duncit/pod-form';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
 import { useDebouncedValue } from '@duncit/ui';
@@ -17,6 +15,7 @@ import { usePagedRows } from '../../components/club-admin/usePagedRows';
 import ClubPodActivityDialog from './ClubPodActivityDialog';
 import ClubPodRow from './ClubPodRow';
 import ClubPodsFilters from './ClubPodsFilters';
+import CreatePodLauncher from './CreatePodLauncher';
 import { useDeletePod } from './useDeletePod';
 import type { ClubAdminPodRow } from './types';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -72,17 +71,7 @@ export default function ClubPodsPage() {
         icon={<EventNoteRoundedIcon fontSize="small" />}
         title={club?.club_name ?? t('clubAdmin.pods.clubPods')}
         action={
-          <DuncitButton
-            data-testid="club-pods-page-new"
-            component={RouterLink}
-            to={`${podsPath}/new`}
-            variant="contained"
-            size="small"
-            startIcon={<AddRoundedIcon />}
-            sx={{ flexShrink: 0 }}
-          >
-            {t('clubAdmin.pods.newPod')}
-          </DuncitButton>
+          <CreatePodLauncher clubId={clubId} normalTo={`${podsPath}/new`} />
         }
       />
       {lookups.error && <Alert data-testid="club-pods-page-error" severity="error">{lookups.error.message}</Alert>}

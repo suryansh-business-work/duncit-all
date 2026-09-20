@@ -52,6 +52,7 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
             <FactLine value={formatCount(club.followers_count)} label={t('clubAdmin.clubs.followers')} />
             <FactLine value={formatCount(club.total_pods)} label={t('clubAdmin.clubs.pods')} />
             <FactLine value={formatCount(club.upcoming_pods)} label={t('clubAdmin.clubs.upcoming')} />
+            <FactLine value={formatCount(club.matched_venues_count)} label={t('clubAdmin.clubs.venues')} />
           </Stack>
         </Stack>
       </Stack>

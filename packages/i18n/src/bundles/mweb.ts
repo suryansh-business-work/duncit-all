@@ -3128,6 +3128,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       searchVenuesByNameTypeOr: 'Search venues by name, type or area',
       mapPreview: 'Map preview',
     },
+    // "Normal Pod or Auto Pod?" — the same question the portals ask under
+    // shell.podKind, word-for-word (rule 27: mWeb and native share this).
+    podKind: {
+      newPodCta: 'New Pod',
+      title: 'What kind of pod?',
+      subtitle: 'This decides who fills in the venue, the host and the club.',
+      normalTitle: 'Normal Pod',
+      normalDesc:
+        'You pick the club, the venue slot and the host yourself, and the pod is scheduled the moment you save it.',
+      autoTitle: 'Auto Pod',
+      autoDesc:
+        'You write the pod only. A venue accepts it with one of its own slots, a host assigns themselves and a club claims it — then it goes live by itself.',
+      dismiss: 'Cancel',
+    },
     // Auto Pods — an admin writes the pod, then a venue, a host and a club
     // admin each enrol in it. One namespace for mWeb AND native (rule 27), and
     // the portals mirror it word-for-word under shell.autoPods.
@@ -3177,6 +3191,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       categoryLabel: 'Category',
       allCategories: 'All my categories',
       noHostCategories: 'You are not an approved host in any category yet.',
+      // The Club Admin's "New Auto Pod" editor, opened from their club's pods.
+      // Word-for-word the portals' shell.autoPods copy (rule 27).
+      newTitle: 'New Auto Pod',
+      clubEyebrow: 'Club Admin · {club}',
+      backToClubPods: 'Back to pods',
+      clubHint:
+        'You do not pick a venue or a host — the first of each to enrol takes it. This Auto Pod is already claimed for {club}, so no other club can take it, and it is pinned to the club’s city.',
+      clubCategoryMissing:
+        'This club has no category yet. Set one under Edit Club Details before opening an Auto Pod.',
+      openedAnyOrder: 'Auto Pod opened — venues, hosts and club admins can now enrol.',
       pinnedTo: 'In {city}',
       unpinned: 'Any city — the first partner to enrol sets it',
       virtualPod: 'Virtual pod — no venue needed',

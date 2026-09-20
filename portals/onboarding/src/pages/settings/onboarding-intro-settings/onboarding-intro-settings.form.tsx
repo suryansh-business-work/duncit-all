@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitRichTextInput } from '@duncit/rich-text';
-import { useTranslation } from '@duncit/app-settings';
+import { useProductVisibility, useTranslation } from '@duncit/app-settings';
 import SocialHandlesFields from './SocialHandlesFields';
 import {
   onboardingIntroSettingsSchema,
@@ -25,10 +25,14 @@ interface Section {
   aiContext: string;
 }
 
+/** The List Product flow's intro — a product surface, so it follows the
+ * `is_product_visible` flag like the rest of e-commerce. */
+const PRODUCT_INTRO_FIELD: IntroField = 'ecomm_intro_html';
+
 const SECTIONS: Section[] = [
   { field: 'host_intro_html', labelKey: 'onboarding.settingsPage.hostIntro', aiContext: 'host onboarding intro' },
   { field: 'venue_intro_html', labelKey: 'onboarding.settingsPage.venueIntro', aiContext: 'venue onboarding intro' },
-  { field: 'ecomm_intro_html', labelKey: 'onboarding.settingsPage.ecommIntro', aiContext: 'product onboarding intro' },
+  { field: PRODUCT_INTRO_FIELD, labelKey: 'onboarding.settingsPage.ecommIntro', aiContext: 'product onboarding intro' },
   {
     field: 'club_admin_intro_html',
     labelKey: 'onboarding.settingsPage.clubAdminIntro',
@@ -36,12 +40,16 @@ const SECTIONS: Section[] = [
   },
 ];
 
-/** The four per-kind rich-text fields shown first on each onboarding flow
+/** The per-kind rich-text fields shown first on each onboarding flow
  * (native + mWeb), authored here. A section left blank skips straight to the
- * category picker on the client. Beside them: Duncit's social media handles,
- * shown on the survey pages. */
+ * category picker on the client. The Product intro is drawn only while the
+ * `is_product_visible` flag is on; its stored copy still rides along in the
+ * form values, so a save with the flag off never blanks it. Beside them:
+ * Duncit's social media handles, shown on the survey pages. */
 export default function OnboardingIntroSettingsForm({ defaultValues, saving, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { visible: showEcomm } = useProductVisibility();
+  const sections = showEcomm ? SECTIONS : SECTIONS.filter((section) => section.field !== PRODUCT_INTRO_FIELD);
   const {
     control,
     handleSubmit,
@@ -68,7 +76,7 @@ export default function OnboardingIntroSettingsForm({ defaultValues, saving, onS
         }}
       >
         <Stack spacing={3} sx={{ minWidth: 0 }}>
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <Stack key={section.field} spacing={1}>
               <Typography variant="subtitle1">{t(section.labelKey)}</Typography>
               <Controller

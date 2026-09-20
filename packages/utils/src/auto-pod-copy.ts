@@ -432,6 +432,26 @@ export interface PodKindLabels {
   dismiss: string;
 }
 
+/**
+ * mWeb and the native app (`mweb.podKind.*`, one namespace for both — rule 27).
+ *
+ * The question is the same one the portals ask; the namespace differs because
+ * the server stores one row per key path, so the two cannot collapse into one.
+ * The values are kept word-for-word identical instead.
+ */
+export function mwebPodKindLabels(t: AutoPodTranslate): PodKindLabels {
+  return {
+    newPodCta: t('mweb.podKind.newPodCta'),
+    title: t('mweb.podKind.title'),
+    subtitle: t('mweb.podKind.subtitle'),
+    normalTitle: t('mweb.podKind.normalTitle'),
+    normalDesc: t('mweb.podKind.normalDesc'),
+    autoTitle: t('mweb.podKind.autoTitle'),
+    autoDesc: t('mweb.podKind.autoDesc'),
+    dismiss: t('mweb.podKind.dismiss'),
+  };
+}
+
 /** The MUI portals (`shell.podKind.*`). */
 export function shellPodKindLabels(t: AutoPodTranslate): PodKindLabels {
   return {

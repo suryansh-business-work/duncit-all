@@ -80,6 +80,9 @@ export const MyAdminClubsTableDocument = gql(`
         followers_count
         total_pods
         upcoming_pods
+        # Venues whose category and city match this club — a club with none
+        # cannot book a pod anywhere, which is worth seeing from the list.
+        matched_venues_count
         is_verified
       }
     }
@@ -259,8 +262,13 @@ export const ClubAdminClubDocument = gql(`
         url
         type
       }
+      club_moments {
+        url
+        type
+      }
       club_whats_app_community_link
       club_whats_app_group_link
+      club_whats_app_announcement_link
       who_we_are
       what_we_do
       perks

@@ -138,6 +138,9 @@ export const CLUB_ADMIN_BUNDLE: NestedCatalogue = {
       editClub: 'Edit Club Details',
       noClubs: 'No clubs are assigned to you yet.',
       search: 'Search clubs',
+      // Venues whose category and city match this club, so its pods can be
+      // booked into them. A club with none cannot schedule anywhere.
+      venues: 'Venues',
     },
     pods: {
       title: 'Club Admin · Pods',

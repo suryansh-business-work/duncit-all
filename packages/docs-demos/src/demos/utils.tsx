@@ -566,7 +566,7 @@ export default defineDemos('utils', [
     id: 'brand-wizard',
     title: 'How far a brand is through onboarding',
     note:
-      'Yonex has filled seven of the nine required steps. Flip razorpay_connected to true and the percentage moves to 89 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number.',
+      'Yonex has filled six of the eight required steps. Flip razorpay_connected to true and the percentage moves to 88 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number.',
     mock: {
       brand_name: 'Yonex',
       description: 'Badminton racquets, shuttles and grips for club players.',

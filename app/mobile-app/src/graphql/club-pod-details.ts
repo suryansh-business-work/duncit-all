@@ -56,7 +56,7 @@ export const ClubAdminPodDetailDocument = gql(`
         recorded
       }
       # The club and the people who run it, in one round trip — mWeb reads the
-      # same two cards off a single `club` document for the same reason.
+      # same two cards off a single club document for the same reason.
       club {
         id
         club_id
@@ -101,7 +101,6 @@ export const ClubAdminPodAttendeesDocument = gql(`
         pod_cancelled_by
         pod_cancelled_at
         cancel_refund_status
-        refund_status
       }
     }
   }

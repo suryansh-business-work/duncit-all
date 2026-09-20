@@ -564,7 +564,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('rejects a warehouse that does not belong to the listing brand', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co', status: 'APPROVED' });
     // Another brand's warehouse.
     const foreignWh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
@@ -587,7 +587,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('blocks a same-brand warehouse that is still awaiting approval', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co Pending' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co Pending', status: 'APPROVED' });
     const pendingWh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
       brand_id: brand._id,
@@ -604,7 +604,7 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('persists a same-brand warehouse + free-delivery threshold and round-trips them', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 2' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 2', status: 'APPROVED' });
     const wh = await BrandPickupLocationModel.create({
       owner_kind: 'BRAND',
       brand_id: brand._id,

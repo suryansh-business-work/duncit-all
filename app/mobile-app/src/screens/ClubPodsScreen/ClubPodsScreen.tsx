@@ -28,6 +28,7 @@ function noticeText(kind: string | undefined, deleted: boolean, t: Translate): s
   if (deleted) return t('clubAdmin.pods.podDeleted');
   if (kind === 'created') return t('clubAdmin.editor.podCreated');
   if (kind === 'updated') return t('clubAdmin.editor.podUpdated');
+  if (kind === 'draft') return t('clubAdmin.editor.draftSaved');
   return null;
 }
 

@@ -163,6 +163,7 @@ import {
   type VenuePodRow,
   POD_ROW_STATUS_COLORS,
   canOpenPodAttendance,
+  clubAdminVenueOptions,
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
   openGoogleSignup,
@@ -446,6 +447,13 @@ interface ClubAdminMock {
   pod: PodStatusFields & { pod_title: string };
   /** One entry of `clubAdminPodAuditLogs`. */
   audit: { action: PodAuditAction; source: PodAuditSource; ai_risk: PodAuditRisk };
+  /** Venues the club is explicitly attached to. Empty = never attached, which
+   * restricts nothing — clear it and every public venue comes back. */
+  meetup_venues_id: string[];
+  /** `publicVenues` — server-filtered to APPROVED + active, so no `status`. */
+  publicVenues: { id: string; venue_name: string; is_active: boolean }[];
+  /** `myVenues` — what this person OWNS, unapproved rows included. */
+  myVenues: { id: string; venue_name: string; status: string; is_active: boolean }[];
 }
 
 /** The bundle's own English for `clubAdmin.*`, resolved the way every surface does. */
@@ -1752,6 +1760,16 @@ export default defineDemos('utils', [
         venue_approval_status: 'APPROVED',
       },
       audit: { action: 'UPDATE', source: 'CLUB_ADMIN', ai_risk: 'MEDIUM' },
+      // Venues the club could book. Blank meetup_venues_id and every public
+      // venue comes back — an unlinked club restricts nothing.
+      meetup_venues_id: ['v-koramangala'],
+      publicVenues: [
+        { id: 'v-koramangala', venue_name: 'Cubbon Park Pavilion', is_active: true },
+        { id: 'v-indiranagar', venue_name: 'Indiranagar Social', is_active: true },
+      ],
+      myVenues: [
+        { id: 'v-mine', venue_name: 'My Rooftop', status: 'PENDING', is_active: true },
+      ],
     },
     compute: (mock) => {
       const labels = clubAdminKpiLabels(clubAdminT);
@@ -1772,6 +1790,11 @@ export default defineDemos('utils', [
         'Trend lines': clubAdminTrendSeries.map((series) => `${seriesLabels[series.key]} on ${series.palette}`),
         'Pod row status': `${status} — "${podRowStatusLabel(status, clubAdminT)}" in ${POD_ROW_STATUS_COLORS[status]}`,
         'Offers Pod Attendance': canOpenPodAttendance(mock.pod),
+        // One rule for mWeb, the Partners console and the app. A PENDING venue
+        // of their own never reaches the picker; an unlinked club sees all.
+        'Venues they may book': clubAdminVenueOptions(mock.publicVenues, mock.myVenues, {
+          meetup_venues_id: mock.meetup_venues_id,
+        }).map((venue) => venue.venue_name),
         'Status filter rows': podRowStatusOptions(clubAdminT).map((option) => option.label),
         'Audit entry reads': `${podAuditActionLabel(mock.audit.action, clubAdminT)} by ${podAuditSourceLabel(mock.audit.source, clubAdminT)} — AI risk ${podAuditRiskLabel(mock.audit.ai_risk, clubAdminT)}`,
         'Dashboard subtitle': clubAdminLabels(clubAdminT).dashboard.subtitle,

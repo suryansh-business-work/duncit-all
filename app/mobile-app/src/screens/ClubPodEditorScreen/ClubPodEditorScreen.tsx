@@ -46,9 +46,10 @@ export function ClubPodEditorScreen() {
         searchHosts: editor.searchHosts,
         submitLabel: podId ? t('mweb.hostManage.saveChanges') : t('mweb.createPod.createPod'),
         busyLabel: podId ? t('mweb.hostPodActions.saving') : t('mweb.createPod.creating'),
-        submit: async (input, hostIds) => {
-          const notice = await editor.submit(input, hostIds);
-          navigation.popTo('ClubPods', { clubId, notice });
+        draftLabel: t('clubAdmin.editor.saveDraft'),
+        submit: async (input, hostIds, options) => {
+          const notice = await editor.submit(input, hostIds, options);
+          navigation.popTo('ClubPods', { clubId, notice: options?.draft ? 'draft' : notice });
         },
       }
     : null;

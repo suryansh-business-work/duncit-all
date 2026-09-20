@@ -85,7 +85,7 @@ export type RootStackParamList = {
   /** /clubs/monitoring — the AI-monitored trail of every pod edit in their clubs. */
   ClubPodMonitoring: undefined;
   /** /clubs/:clubId/pods — one club's pods. `notice` is what the editor just did. */
-  ClubPods: { clubId: string; notice?: 'created' | 'updated' };
+  ClubPods: { clubId: string; notice?: 'created' | 'updated' | 'draft' };
   /** /clubs/:clubId/pods/new — a new pod, pinned to the club. */
   ClubPodEditor: { clubId: string };
   /** /clubs/:clubId/pods/:podId/edit — the same editor over an existing pod. Its

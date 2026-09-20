@@ -120,9 +120,22 @@ export function useClubAdminPodEditor(clubId: string, podId?: string) {
   const pod = loaded?.pod ?? null;
   const club = loaded?.club ?? null;
 
-  const submit = async (input: CreatePodInput, hostIds: string[]): Promise<ClubAdminSaveKind> => {
+  const submit = async (
+    input: CreatePodInput,
+    hostIds: string[],
+    options: { draft?: boolean } = {},
+  ): Promise<ClubAdminSaveKind> => {
     // Every save stays pinned to this club server-side.
     const payload = { ...input, club_id: clubId, pod_hosts_id: hostIds };
+    // A draft is the pod written INACTIVE — what `buildPodInput(values, {
+    // draft })` sets on the portals, and what the pods list's DRAFT filter has
+    // always been showing rows for.
+    //
+    // On an EDIT this takes a live pod back off the schedule, which is exactly
+    // what the portals do (`usePodEditorState` only restores `values.is_active`
+    // when the save is NOT a draft). Matching them is the point: the same
+    // button on the same pod must not mean two different things.
+    if (options.draft) payload.is_active = false;
     if (!pod) {
       await graphqlRequest(ClubAdminCreatePodDocument, { input: payload }, { auth: true });
       return 'created';

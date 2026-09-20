@@ -396,6 +396,7 @@ exports:
   - 'buildAttendanceLabels'
   - 'podRowStatus'
   - 'canOpenPodAttendance'
+  - 'clubAdminVenueOptions'
   - 'podRowStatusLabel'
   - 'podRowStatusOptions'
   - 'POD_ROW_STATUS_COLORS'
@@ -1390,6 +1391,7 @@ Nothing here touches React or a date library.
 | --- | --- | --- |
 | `podRowStatus` | `(pod) => PodRowStatus` | Which of the six statuses a row is in, from `is_deleted`, `completed_at`, `venue_approval_status` and `is_active` — in that precedence, the same one the server's `PodRowStatus` enum filters by. |
 | `canOpenPodAttendance` | `(pod) => boolean` | Only an `ACTIVE` or `COMPLETED` pod offers the attendance board; a draft, a venue-blocked or a cancelled pod has no door to have stood at. |
+| `clubAdminVenueOptions` | `(publicVenues, owned, club) => T[]` | The venues a Club Admin may book a pod into: the public list (plus their own, so a venue-owning admin keeps theirs), narrowed to the club's `meetup_venues_id` **only when it has any**. An empty link list means "never attached", not "may use none" — reading it as a whitelist is what made the portals' picker dead. A venue with no `status` came from `publicVenues`, which the server already filtered, so it counts as bookable. |
 | `podRowStatusLabel` / `podRowStatusOptions` | `(status, t)` / `(t)` | The chip's words, and the filter's rows ("All statuses" first, then `POD_ROW_STATUS_ORDER`). |
 | `POD_ROW_STATUS_COLORS` | `Record<PodRowStatus, StatusTone>` | The chip's tone — `default` / `info` / `success` / `warning` / `error`, which MUI's `Chip` takes as-is. |
 | `podAuditActionLabel` / `podAuditSourceLabel` / `podAuditRiskLabel` | `(value, t) => string` | What an audit entry says it was, who did it and how risky the monitor scored it. |

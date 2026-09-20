@@ -12309,12 +12309,10 @@ export type Mutation = {
   storeDeletePetType: Scalars['Boolean']['output'];
   storeDeleteReview: Scalars['Boolean']['output'];
   storeDeleteSection: Scalars['Boolean']['output'];
-  /** Delete one of the store's warehouses no product ships from. */
+  /** Delete a warehouse ShipRocket does not hold and no product ships from. */
   storeDeleteWarehouse: Scalars['Boolean']['output'];
   /** Apply a packaging CSV, matched by product or variant SKU. */
   storeImportPackaging: StorePackagingImportResult;
-  /** Make a warehouse of a pickup address already on the ShipRocket account. */
-  storeImportPickup: BrandPickupLocation;
   storeMarkCodCollected: ProductOrder;
   /** After signing in: fold the guest cart + wishlist into the account's. */
   storeMergeGuest: StoreCart;
@@ -12350,7 +12348,7 @@ export type Mutation = {
   storeSaveProduct: StoreAdminProduct;
   storeSaveSection: StoreAdminSection;
   storeSaveSettings: StoreSettings;
-  /** Add or correct one of the store's warehouses, then add it to ShipRocket. */
+  /** Add the pickup address to the ShipRocket account, then keep the account's copy of it here. Nothing is saved if ShipRocket refuses it. */
   storeSaveWarehouse: BrandPickupLocation;
   /** Email everyone whose product is back. Answers how many were sent. */
   storeSendBackInStock: Scalars['Int']['output'];
@@ -16039,11 +16037,6 @@ export type MutationStoreDeleteWarehouseArgs = {
 
 export type MutationStoreImportPackagingArgs = {
   rows: Array<StorePackagingImportRow>;
-};
-
-
-export type MutationStoreImportPickupArgs = {
-  nickname: Scalars['String']['input'];
 };
 
 
@@ -22620,7 +22613,7 @@ export type Query = {
   /** Every payment the pet store took, for its Logs › Payment logs page. */
   storePaymentsTable: PaymentTablePage;
   storePetType?: Maybe<StorePetTypePage>;
-  /** Every warehouse against the ShipRocket account's pickup addresses (reads ShipRocket and records what it says). */
+  /** The ShipRocket account's pickup addresses as our warehouses — reads ShipRocket, takes in any address it has that we do not, and records what it says about each. */
   storePickupLocations: StorePickupLocations;
   /** Whether the operator's pincode list allows delivery there — instant, no courier call. */
   storePincodeServiceable: StorePincodeCheck;
@@ -29528,9 +29521,8 @@ export type StorePickupLocations = {
   __typename?: 'StorePickupLocations';
   /** Why ShipRocket could not be read; empty when it was. */
   shiprocket_error: Scalars['String']['output'];
-  /** Pickup addresses on the ShipRocket account no warehouse uses. */
-  shiprocket_only: Array<StoreShiprocketPickup>;
   synced_at: Scalars['String']['output'];
+  /** Every pickup address on the ShipRocket account (a sync takes in any it has that we do not). */
   warehouses: Array<StorePickupRow>;
 };
 
@@ -29693,7 +29685,7 @@ export type StorePublicSettings = {
   cod_fee: Scalars['Float']['output'];
   cod_requires_otp: Scalars['Boolean']['output'];
   currency_symbol: Scalars['String']['output'];
-  /** Finance's test switch — checkout captures without a real gateway. */
+  /** On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money. */
   dummy_mode: Scalars['Boolean']['output'];
   favicon_url: Scalars['String']['output'];
   free_shipping_above: Scalars['Float']['output'];
@@ -30238,14 +30230,6 @@ export type StoreShipmentOps = {
   shiprocket_order_id: Scalars['String']['output'];
 };
 
-export type StoreShiprocketPickup = {
-  __typename?: 'StoreShiprocketPickup';
-  city: Scalars['String']['output'];
-  nickname: Scalars['String']['output'];
-  pincode: Scalars['String']['output'];
-  verified: Scalars['Boolean']['output'];
-};
-
 /** The ShipRocket account at a glance. */
 export type StoreShiprocketStatus = {
   __typename?: 'StoreShiprocketStatus';
@@ -30258,6 +30242,8 @@ export type StoreShiprocketStatus = {
   login_refused: Scalars['Boolean']['output'];
   /** Null when it could not be read. */
   wallet_balance?: Maybe<Scalars['Float']['output']>;
+  /** Why the wallet could not be read — a refused billing call is the account's problem, not the order's. */
+  wallet_error: Scalars['String']['output'];
   webhook_key_set: Scalars['Boolean']['output'];
   /** Path to register as the ShipRocket webhook on the API host. */
   webhook_path: Scalars['String']['output'];

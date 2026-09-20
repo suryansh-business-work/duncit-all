@@ -114,6 +114,8 @@ export default function PickupLocationsPanel({
         </DuncitButton>
       </Stack>
 
+      {owner.owner_kind === 'DUNCIT' && <Alert severity="info">{t('products.pickup.shiprocketFirst')}</Alert>}
+
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {loading && locations.length === 0 ? (

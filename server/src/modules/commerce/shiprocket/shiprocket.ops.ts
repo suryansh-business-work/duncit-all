@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import {
@@ -113,14 +114,21 @@ async function adoptPickups(pickups: ShiprocketPickup[]) {
   // The store's first warehouse becomes the one new products default to.
   let needsDefault = !known.some((w) => w.owner_kind === 'DUNCIT' && w.is_default);
   for (const pickup of fresh) {
-    await BrandPickupLocationModel.create({
-      ...mirrorOf(pickup),
-      owner_kind: 'DUNCIT',
-      brand_id: null,
-      review_status: 'APPROVED',
-      is_default: needsDefault,
-    });
-    needsDefault = false;
+    try {
+      await BrandPickupLocationModel.create({
+        ...mirrorOf(pickup),
+        owner_kind: 'DUNCIT',
+        brand_id: null,
+        review_status: 'APPROVED',
+        is_default: needsDefault,
+      });
+      needsDefault = false;
+    } catch (error) {
+      // Two syncs at once (a double-click on the page) race for the same
+      // nickname. The loser has nothing to do — the address is already in.
+      if ((error as { code?: number }).code !== 11000) throw error;
+      logs.server.warn('shiprocket', 'adoptPickup', { nickname: pickup.nickname, msg: 'already taken in' });
+    }
   }
 }
 
@@ -231,7 +239,8 @@ async function pushPickup(clean: ReturnType<typeof cleanPickupInput>): Promise<S
  */
 export async function saveDuncitPickup(id: string | null | undefined, input: PickupInput) {
   const clean = cleanPickupInput(input);
-  const existing = id ? await BrandPickupLocationModel.findOne({ _id: id, owner_kind: 'DUNCIT' }) : null;
+  const oid = id && Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null;
+  const existing = oid ? await BrandPickupLocationModel.findOne({ _id: oid, owner_kind: 'DUNCIT' }) : null;
   if (id && !existing) bad('Warehouse not found');
   if (existing?.shiprocket_registered) bad('ShipRocket holds this pickup address — change it in ShipRocket, then sync');
   const clash = await BrandPickupLocationModel.findOne({ nickname: clean.nickname }).select('_id').lean();

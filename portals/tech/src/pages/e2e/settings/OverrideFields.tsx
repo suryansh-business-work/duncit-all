@@ -1,7 +1,7 @@
 import { Controller, useWatch, type Control } from 'react-hook-form';
 import { Alert, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import SwitchRow from './SwitchRow';
+import SwitchRow from '../../../components/SwitchRow';
 import type { E2eSettingsValues } from './e2e-settings.types';
 
 /**

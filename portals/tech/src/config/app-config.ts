@@ -150,6 +150,9 @@ export const appConfig = {
         // What the stores show — name, descriptions, screenshots, review contact —
         // kept once and applied by every push from the two tables above.
         { label: 'Store Listing', labelKey: 'shell.nav.storeListing', to: '/app-builds/store-listing', icon: 'storefront' },
+        // What the stores say about every version, read live: review state,
+        // rejections with their reason and advice, and the latest build's retry.
+        { label: 'Releases', labelKey: 'shell.nav.releases', to: '/app-builds/releases', icon: 'upload' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },

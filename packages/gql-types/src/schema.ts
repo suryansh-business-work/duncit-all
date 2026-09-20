@@ -2360,6 +2360,239 @@ export type AutoPodVenueSlots = {
   window_days: Scalars['Int']['output'];
 };
 
+export type AutomationChannel =
+  | 'EMAIL'
+  | 'WHATSAPP';
+
+export type AutomationContact = {
+  __typename?: 'AutomationContact';
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+};
+
+export type AutomationContactInput = {
+  /** Email flows. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** WhatsApp flows: country code + number, digits only. */
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One arrow. source_handle is the exit it leaves by — next for a single-exit step. */
+export type AutomationEdge = {
+  __typename?: 'AutomationEdge';
+  id: Scalars['ID']['output'];
+  source: Scalars['ID']['output'];
+  source_handle: Scalars['String']['output'];
+  target: Scalars['ID']['output'];
+};
+
+export type AutomationEdgeInput = {
+  id: Scalars['ID']['input'];
+  source: Scalars['ID']['input'];
+  source_handle?: InputMaybe<Scalars['String']['input']>;
+  target: Scalars['ID']['input'];
+};
+
+/** An SMTP mailbox from Tech > Environment, as a send step may pick it. Never a credential. */
+export type AutomationEmailSender = {
+  __typename?: 'AutomationEmailSender';
+  from_address: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** A template from Tech > Email Templates and the variables a send step must fill. */
+export type AutomationEmailTemplate = {
+  __typename?: 'AutomationEmailTemplate';
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  variables: Array<Scalars['String']['output']>;
+};
+
+/**
+ * A flow the AI portal drew. The graph is stored as drawn; the server walks it
+ * when the trigger fires. issues is computed on every read, so the builder
+ * always shows what still has to be fixed before the flow can be activated.
+ */
+export type AutomationFlow = {
+  __typename?: 'AutomationFlow';
+  channel: AutomationChannel;
+  created_at?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  edges: Array<AutomationEdge>;
+  id: Scalars['ID']['output'];
+  issues: Array<AutomationIssue>;
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  nodes: Array<AutomationNode>;
+  /** Live runs only — a test never counts. */
+  run_count: Scalars['Int']['output'];
+  status: AutomationFlowStatus;
+  /** The trigger step's kind — INBOUND_MESSAGE, INBOUND_EMAIL or MANUAL; empty before one is set. */
+  trigger: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type AutomationFlowStatus =
+  | 'ACTIVE'
+  | 'DRAFT'
+  | 'PAUSED';
+
+/** Something that stops the flow from running, tied to the step it is on when it is. */
+export type AutomationIssue = {
+  __typename?: 'AutomationIssue';
+  message: Scalars['String']['output'];
+  node_id?: Maybe<Scalars['ID']['output']>;
+};
+
+/** A Gmail mailbox connected in Tech > Mail Automation — what an incoming-email trigger listens on. */
+export type AutomationMailbox = {
+  __typename?: 'AutomationMailbox';
+  display_name: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+};
+
+/** One line of a run's transcript: what came in, what went out, or a note. */
+export type AutomationMessage = {
+  __typename?: 'AutomationMessage';
+  at: Scalars['String']['output'];
+  buttons: Array<Scalars['String']['output']>;
+  /** False for a test preview that was never handed to a provider. */
+  delivered: Scalars['Boolean']['output'];
+  /** IN, OUT or SYSTEM. */
+  direction: Scalars['String']['output'];
+  html: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** text, whatsapp_template or email. */
+  kind: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  template_name: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+/** One step on the canvas. data is the step kind's own settings, as JSON. */
+export type AutomationNode = {
+  __typename?: 'AutomationNode';
+  data: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  x: Scalars['Float']['output'];
+  y: Scalars['Float']['output'];
+};
+
+export type AutomationNodeInput = {
+  /** The step's settings, as JSON. */
+  data?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  kind: Scalars['String']['input'];
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/**
+ * Everything the builder picks from, for one channel. The WhatsApp fields are
+ * empty on an email flow and vice versa, so one query serves both builders.
+ */
+export type AutomationOptions = {
+  __typename?: 'AutomationOptions';
+  campaigns: Array<AisensyCampaign>;
+  channel: AutomationChannel;
+  email_categories: Array<Scalars['String']['output']>;
+  email_senders: Array<AutomationEmailSender>;
+  email_templates: Array<AutomationEmailTemplate>;
+  mailboxes: Array<AutomationMailbox>;
+  project_configured: Scalars['Boolean']['output'];
+  prompts: Array<AutomationPromptOption>;
+  saved_campaign_names: Array<WaCampaignNameOption>;
+  templates: Array<AisensyTemplate>;
+  /** Recipient variables read off the matching Duncit account, e.g. first_name. */
+  variables: Array<WaCampaignVariable>;
+  /** Whether the AiSensy entry in Tech > Environment carries a Webhook Secret. Without one, incoming messages are refused. */
+  webhook_secret_set: Scalars['Boolean']['output'];
+  /** Where AiSensy's incoming-message webhook must point. */
+  webhook_url: Scalars['String']['output'];
+  whatsapp_configured: Scalars['Boolean']['output'];
+};
+
+export type AutomationPromptOption = {
+  __typename?: 'AutomationPromptOption';
+  category: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** One walk of a flow for one contact. */
+export type AutomationRun = {
+  __typename?: 'AutomationRun';
+  channel: AutomationChannel;
+  contact: AutomationContact;
+  current_node_id: Scalars['String']['output'];
+  deliver: Scalars['Boolean']['output'];
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  flow_id: Scalars['ID']['output'];
+  flow_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  messages: Array<AutomationMessage>;
+  mode: AutomationRunMode;
+  resume_at?: Maybe<Scalars['String']['output']>;
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: AutomationRunStatus;
+  steps: Array<AutomationStep>;
+  trigger_subject: Scalars['String']['output'];
+  trigger_text: Scalars['String']['output'];
+  variables_json: Scalars['String']['output'];
+  wait_until?: Maybe<Scalars['String']['output']>;
+};
+
+export type AutomationRunMode =
+  | 'LIVE'
+  | 'TEST';
+
+export type AutomationRunStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'RUNNING'
+  | 'WAITING_DELAY'
+  | 'WAITING_REPLY';
+
+export type AutomationStep = {
+  __typename?: 'AutomationStep';
+  at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  node_id: Scalars['ID']['output'];
+  /** OK, SKIPPED, FAILED or WAITING. */
+  status: Scalars['String']['output'];
+};
+
+/** A test run. The graph is the one on the canvas, so an unsaved change is tested as drawn. */
+export type AutomationTestInput = {
+  contact: AutomationContactInput;
+  /** Send and call webhooks for real instead of previewing. */
+  deliver?: InputMaybe<Scalars['Boolean']['input']>;
+  edges: Array<AutomationEdgeInput>;
+  flow_id: Scalars['ID']['input'];
+  nodes: Array<AutomationNodeInput>;
+  subject?: InputMaybe<Scalars['String']['input']>;
+  /** What the contact writes to start the flow. */
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AutomationTestReplyInput = {
+  run_id: Scalars['ID']['input'];
+  text?: InputMaybe<Scalars['String']['input']>;
+  /** Take the No reply exit instead of answering. */
+  timed_out?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 /**
  * A long-running piece of work a person started from a console — a bulk
  * delete, or an AI translation of one language. Kept on the server, so the
@@ -9793,6 +10026,14 @@ export type LocationZoneInput = {
   zone_name: Scalars['String']['input'];
 };
 
+export type LogStoreRejectionInput = {
+  build_number?: InputMaybe<Scalars['String']['input']>;
+  /** What the reviewer said, pasted from the store's mail or console. */
+  reviewer_message: Scalars['String']['input'];
+  store: ReleaseStore;
+  version: Scalars['String']['input'];
+};
+
 export type LoginInput = {
   /**
    * Which of the two the password is being proved against. Defaults to EMAIL, so
@@ -10726,6 +10967,7 @@ export type Mutation = {
   callVenueLeadContact: LeadContactActionResult;
   /** Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released. */
   cancelAutoPod: AutoPod;
+  cancelAutomationRun: AutomationRun;
   /** Stop a running job after the batch in hand. */
   cancelBackgroundJob: BackgroundJob;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
@@ -10980,6 +11222,7 @@ export type Mutation = {
    * everyone enrolled is told.
    */
   deleteAutoPod: Scalars['Boolean']['output'];
+  deleteAutomationFlow: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
   /** Delete the given bugs. Returns how many actually went. */
@@ -11143,6 +11386,7 @@ export type Mutation = {
   dummyGiftCardCheckout: Payment;
   /** Standalone product-cart checkout via the dummy gateway. */
   dummyProductCheckout: Payment;
+  duplicateAutomationFlow: AutomationFlow;
   duplicateInventoryProduct: InventoryProduct;
   /**
    * Reserve a place in Slack for one suite's recording. Tech/Super admin only.
@@ -11331,6 +11575,12 @@ export type Mutation = {
    * both ways in.
    */
   linkGoogleAccount: AuthPayload;
+  /**
+   * Record a rejection the store's API could not report, with the reviewer's
+   * words. The advice is written at once and the notices go out. Tech/Super
+   * admin only.
+   */
+  logStoreRejection: StoreReleaseIssue;
   login: AuthPayload;
   /**
    * Sign in with an Apple credential — from the iOS app's native sheet, or the
@@ -11699,6 +11949,8 @@ export type Mutation = {
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
   resolveBouncerSos: BouncerSosAlert;
+  /** Close an issue by hand — the reminders stop. */
+  resolveStoreIssue: StoreReleaseIssue;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
   resolveSupportChat: SupportChatSession;
   /** Mark a ticket resolved (owner OR an agent) — appends a SYSTEM timeline bubble. */
@@ -11715,6 +11967,8 @@ export type Mutation = {
    */
   restoreDbBackup: DbRestore;
   restoreInventoryProduct: InventoryProduct;
+  /** Answer a test run that is waiting for the contact, or let it time out. */
+  resumeAutomationTest: AutomationRun;
   /**
    * Re-run the checkout work that did not land, and answer with the fresh audit.
    *
@@ -11777,6 +12031,8 @@ export type Mutation = {
    * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
    */
   runDbBackup: DbBackup;
+  /** Create or update a flow. A draft may be incomplete; the returned issues say what is left. */
+  saveAutomationFlow: AutomationFlow;
   saveBrandPickupLocation: BrandPickupLocation;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
@@ -11852,6 +12108,8 @@ export type Mutation = {
    * told again.
    */
   setAutoPodActive: AutoPod;
+  /** Activating is refused while the flow has issues. */
+  setAutomationFlowStatus: AutomationFlow;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
@@ -11927,6 +12185,8 @@ export type Mutation = {
   /** Retire or revive a link without deleting its click history. */
   setShortLinkActive: ShortLink;
   setSocialIdeaStatus: SocialIdea;
+  /** Keep the reviewer's message on an issue and write the advice again with it. */
+  setStoreIssueReviewerMessage: StoreReleaseIssue;
   setVenueActive: Venue;
   /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
   setVenueCancellationTrigger: Venue;
@@ -11974,6 +12234,10 @@ export type Mutation = {
    * no further step. url is the page it was started from, for the drawer.
    */
   startAiTranslation: Array<BackgroundJob>;
+  /** A live run for one contact, started by hand. Messages are really sent. */
+  startAutomationRun: AutomationRun;
+  /** Start a test run from the test window. Returns the run with its transcript so far. */
+  startAutomationTest: AutomationRun;
   /**
    * Start deleting rows from a table in the background. Each row goes through
    * the table's own delete mutation, as the caller.
@@ -12162,6 +12426,12 @@ export type Mutation = {
   submitHostStep3: Host;
   /** Public: apply to an open role from the careers page. */
   submitJobApplication: JobApplicationResult;
+  /**
+   * Push the newest successful production build with a stored artifact to the
+   * store's review track — the same push as the Android / iOS tables, reached
+   * from the rejection so the retry is one click. Tech/Super admin only.
+   */
+  submitLatestBuildToStore: AppBuild;
   /** Public — submit answers via a share token (no auth). */
   submitLeadSurveyByToken: Scalars['Boolean']['output'];
   submitProductListing: InventoryProduct;
@@ -12412,6 +12682,7 @@ export type Mutation = {
    * limit the form could have shown. Tech/Super admin only.
    */
   updateStoreListing: StoreListing;
+  updateStoreReleaseSettings: StoreReleaseSettings;
   updateStressSettings: StressSettings;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
@@ -12895,6 +13166,11 @@ export type MutationCallVenueLeadContactArgs = {
 export type MutationCancelAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelAutomationRunArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -13523,6 +13799,11 @@ export type MutationDeleteAutoPodArgs = {
 };
 
 
+export type MutationDeleteAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteBadgeArgs = {
   badge_doc_id: Scalars['ID']['input'];
 };
@@ -14052,6 +14333,11 @@ export type MutationDummyProductCheckoutArgs = {
 };
 
 
+export type MutationDuplicateAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDuplicateInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -14324,6 +14610,11 @@ export type MutationLinkAppleAccountArgs = {
 
 export type MutationLinkGoogleAccountArgs = {
   input: GoogleAuthInput;
+};
+
+
+export type MutationLogStoreRejectionArgs = {
+  input: LogStoreRejectionInput;
 };
 
 
@@ -14868,6 +15159,11 @@ export type MutationResolveBouncerSosArgs = {
 };
 
 
+export type MutationResolveStoreIssueArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationResolveSupportChatArgs = {
   session_id: Scalars['ID']['input'];
 };
@@ -14898,6 +15194,11 @@ export type MutationRestoreDbBackupArgs = {
 
 export type MutationRestoreInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationResumeAutomationTestArgs = {
+  input: AutomationTestReplyInput;
 };
 
 
@@ -14995,6 +15296,11 @@ export type MutationRevokeLeadSurveyLinkArgs = {
 
 export type MutationRevokePodCancellationArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSaveAutomationFlowArgs = {
+  input: SaveAutomationFlowInput;
 };
 
 
@@ -15191,6 +15497,12 @@ export type MutationSetAnalyticsTargetArgs = {
 export type MutationSetAutoPodActiveArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetAutomationFlowStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: AutomationFlowStatus;
 };
 
 
@@ -15394,6 +15706,12 @@ export type MutationSetSocialIdeaStatusArgs = {
 };
 
 
+export type MutationSetStoreIssueReviewerMessageArgs = {
+  id: Scalars['ID']['input'];
+  message: Scalars['String']['input'];
+};
+
+
 export type MutationSetVenueActiveArgs = {
   active: Scalars['Boolean']['input'];
   venue_doc_id: Scalars['ID']['input'];
@@ -15499,6 +15817,18 @@ export type MutationSocialInsightsArgs = {
 export type MutationStartAiTranslationArgs = {
   input: AiTranslationInput;
   url?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartAutomationRunArgs = {
+  contact: AutomationContactInput;
+  flow_id: Scalars['ID']['input'];
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartAutomationTestArgs = {
+  input: AutomationTestInput;
 };
 
 
@@ -16050,6 +16380,11 @@ export type MutationSubmitHostStep3Args = {
 
 export type MutationSubmitJobApplicationArgs = {
   input: SubmitJobApplicationInput;
+};
+
+
+export type MutationSubmitLatestBuildToStoreArgs = {
+  store: ReleaseStore;
 };
 
 
@@ -16828,6 +17163,11 @@ export type MutationUpdateStatusReportArgs = {
 
 export type MutationUpdateStoreListingArgs = {
   input: StoreListingInput;
+};
+
+
+export type MutationUpdateStoreReleaseSettingsArgs = {
+  input: UpdateStoreReleaseSettingsInput;
 };
 
 
@@ -21028,6 +21368,11 @@ export type Query = {
    * venue would be paid after Finance's deductions.
    */
   autoPodVenueSlots: AutoPodVenueSlots;
+  automationFlow?: Maybe<AutomationFlow>;
+  automationFlows: Array<AutomationFlow>;
+  automationOptions: AutomationOptions;
+  automationRun?: Maybe<AutomationRun>;
+  automationRuns: Array<AutomationRun>;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -22284,6 +22629,9 @@ export type Query = {
   storeProductReviews: Array<ProductReview>;
   storeProductsByIds: Array<StoreProductCard>;
   storeRelatedProducts: Array<StoreProductCard>;
+  storeReleaseSettings: StoreReleaseSettings;
+  /** One store's releases, live. Reading Apple also opens an issue for any newly rejected or awaiting version. Tech/Super admin only. */
+  storeReleases: StoreReleasePage;
   storeReturnsForOrder: Array<StoreReturn>;
   storeReturnsTable: StoreReturnTablePage;
   storeReviewsTable: StoreReviewTablePage;
@@ -22685,6 +23033,33 @@ export type QueryAutoPodHostProjectionArgs = {
 export type QueryAutoPodVenueSlotsArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutomationFlowsArgs = {
+  channel: AutomationChannel;
+};
+
+
+export type QueryAutomationOptionsArgs = {
+  channel: AutomationChannel;
+};
+
+
+export type QueryAutomationRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutomationRunsArgs = {
+  flow_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  mode?: InputMaybe<AutomationRunMode>;
 };
 
 
@@ -25030,6 +25405,11 @@ export type QueryStoreRelatedProductsArgs = {
 };
 
 
+export type QueryStoreReleasesArgs = {
+  store: ReleaseStore;
+};
+
+
 export type QueryStoreReturnsForOrderArgs = {
   order_id: Scalars['ID']['input'];
 };
@@ -26068,6 +26448,24 @@ export type RegisterInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Why a release needed a person. */
+export type ReleaseIssueKind =
+  /** Approved, and waiting for someone here to press release. */
+  | 'AWAITING_RELEASE'
+  /** The store said no. */
+  | 'REJECTION';
+
+export type ReleaseIssueSource =
+  /** Logged by an operator from the store's mail or console — the only way for Google Play. */
+  | 'MANUAL'
+  /** Read off the store's API — App Store Connect reports rejected states. */
+  | 'STORE';
+
+/** Which store a release row or issue belongs to. */
+export type ReleaseStore =
+  | 'APP_STORE'
+  | 'GOOGLE_PLAY';
+
 export type ReportAppBuildInput = {
   /**
    * Why the artifact is missing on an otherwise successful build. Send this
@@ -26349,6 +26747,16 @@ export type RoleTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Role>;
   total: Scalars['Int']['output'];
+};
+
+export type SaveAutomationFlowInput = {
+  channel: AutomationChannel;
+  description?: InputMaybe<Scalars['String']['input']>;
+  edges: Array<AutomationEdgeInput>;
+  /** Absent creates a flow; present updates it. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  nodes: Array<AutomationNodeInput>;
 };
 
 export type SaveGrievanceOfficerInput = {
@@ -29354,6 +29762,140 @@ export type StoreRefundMode =
   | 'COINS'
   /** Back to the original payment — paid out by Finance. */
   | 'ORIGINAL';
+
+/** What OpenAI advised about an issue, written from the store's state, the reviewer's message and the listing. */
+export type StoreReleaseAdvice = {
+  __typename?: 'StoreReleaseAdvice';
+  causes: Array<Scalars['String']['output']>;
+  confidence: Scalars['String']['output'];
+  /** Why there is no advice, when OpenAI could not answer. Empty otherwise. */
+  error: Scalars['String']['output'];
+  generated_at?: Maybe<Scalars['String']['output']>;
+  model: Scalars['String']['output'];
+  next_time: Array<Scalars['String']['output']>;
+  steps: Array<Scalars['String']['output']>;
+  summary: Scalars['String']['output'];
+};
+
+/**
+ * One moment a release needed a person: a rejection, or an approved version
+ * waiting to be released. Kept after the store has moved on, so the reason a
+ * version was refused is still readable beside the version that replaced it.
+ */
+export type StoreReleaseIssue = {
+  __typename?: 'StoreReleaseIssue';
+  advice?: Maybe<StoreReleaseAdvice>;
+  build_number: Scalars['String']['output'];
+  detected_at: Scalars['String']['output'];
+  /** Who logged it, for a MANUAL issue. */
+  detected_by: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: ReleaseIssueKind;
+  last_reminded_at?: Maybe<Scalars['String']['output']>;
+  notified_at?: Maybe<Scalars['String']['output']>;
+  /** What went wrong sending the notices, when something did. */
+  notify_error: Scalars['String']['output'];
+  reminder_count: Scalars['Int']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  /** STATE_CHANGED:<new state>, VERSION_GONE, or BY:<who> for a manual close. */
+  resolved_reason: Scalars['String']['output'];
+  resubmitted_at?: Maybe<Scalars['String']['output']>;
+  /** The build pushed from the Releases page in answer to this issue, if any. */
+  resubmitted_build_no: Scalars['String']['output'];
+  resubmitted_by: Scalars['String']['output'];
+  /** Apple's review-submission state at the time. Empty on Play. */
+  review_state: Scalars['String']['output'];
+  /**
+   * What the reviewer wrote. Neither store's API carries it — Apple keeps it in
+   * the Resolution Center, Google in the Play Console — so it is pasted here,
+   * and the advice is written again with it.
+   */
+  reviewer_message: Scalars['String']['output'];
+  source: ReleaseIssueSource;
+  /** The store's own word (METADATA_REJECTED, PENDING_DEVELOPER_RELEASE…), or MANUAL for a logged one. */
+  state: Scalars['String']['output'];
+  store: ReleaseStore;
+  store_ref: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
+/** A store's releases, read live when asked. A store that cannot be read still answers, with its error. */
+export type StoreReleasePage = {
+  __typename?: 'StoreReleasePage';
+  /** The app's name on Apple; the package name on Play. */
+  app_name: Scalars['String']['output'];
+  /** Whether the store's credentials are configured on the Environment page. */
+  configured: Scalars['Boolean']['output'];
+  /** What the store answered when it refused. Empty when the read succeeded. */
+  error: Scalars['String']['output'];
+  fetched_at: Scalars['String']['output'];
+  rows: Array<StoreReleaseRow>;
+  store: ReleaseStore;
+  /** The app's page on the store's console. Empty when the store could not be read. */
+  store_url: Scalars['String']['output'];
+};
+
+/**
+ * One release as the store shows it right now — an App Store version with its
+ * build and review state, or a Google Play track release with its version
+ * codes and rollout — plus the issue this server holds for it, when there is one.
+ */
+export type StoreReleaseRow = {
+  __typename?: 'StoreReleaseRow';
+  /** The DUN-BLD row this build came from, when its build number matches one. */
+  build_no: Scalars['String']['output'];
+  /** CFBundleVersion on Apple; the version code(s) on Play. */
+  build_number: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  issue?: Maybe<StoreReleaseIssue>;
+  /** Apple's review-submission state. Empty on Play. */
+  review_state: Scalars['String']['output'];
+  /** Play's staged rollout percentage. Null when not staged. */
+  rollout_pct?: Maybe<Scalars['Float']['output']>;
+  /** The store's own word for where the release is. */
+  state: Scalars['String']['output'];
+  status: StoreReleaseStatus;
+  store: ReleaseStore;
+  store_ref: Scalars['String']['output'];
+  submitted_at?: Maybe<Scalars['String']['output']>;
+  /** Play's track. Empty on Apple. */
+  track: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
+/** Where release notices go, and how often an open issue is raised again. */
+export type StoreReleaseSettings = {
+  __typename?: 'StoreReleaseSettings';
+  mail_to: Array<Scalars['String']['output']>;
+  notify_enabled: Scalars['Boolean']['output'];
+  reminder_hours: Scalars['Int']['output'];
+  reminders_enabled: Scalars['Boolean']['output'];
+  /** Slack channel ID. Empty means no Slack post. */
+  slack_channel: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: Scalars['String']['output'];
+};
+
+/**
+ * A store's state for a release, folded to what the table colours. Apple's
+ * version states and Play's track statuses each map onto these; the store's
+ * own word stays on the row as `state`.
+ */
+export type StoreReleaseStatus =
+  | 'APPROVED'
+  | 'HALTED'
+  | 'IN_REVIEW'
+  | 'LIVE'
+  | 'OTHER'
+  | 'PREPARING'
+  | 'REJECTED'
+  | 'REMOVED'
+  | 'REPLACED'
+  | 'ROLLING_OUT'
+  | 'TESTING'
+  | 'WAITING'
+  | 'WITHDRAWN';
 
 export type StoreReturn = {
   __typename?: 'StoreReturn';
@@ -32384,6 +32926,14 @@ export type UpdateReportProblemSlackInput = {
 export type UpdateRoleInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateStoreReleaseSettingsInput = {
+  mail_to: Array<Scalars['String']['input']>;
+  notify_enabled: Scalars['Boolean']['input'];
+  reminder_hours: Scalars['Int']['input'];
+  reminders_enabled: Scalars['Boolean']['input'];
+  slack_channel: Scalars['String']['input'];
 };
 
 export type UpdateStressSettingsInput = {

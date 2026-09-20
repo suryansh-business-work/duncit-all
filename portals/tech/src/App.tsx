@@ -29,6 +29,7 @@ import RateLimitSettingsPage from './pages/rate-limiting/settings';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import StoreListingPage from './pages/app-builds/store-listing';
+import ReleasesPage from './pages/app-builds/releases';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
 import E2eFlowsPage from './pages/e2e/flows';
@@ -158,6 +159,9 @@ export default function App() {
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
         <Route path="/app-builds/store-listing" element={authed(<StoreListingPage />)} />
+        {/* What the stores say about every version — read live — with the
+            rejections this server recorded, advised on and announced. */}
+        <Route path="/app-builds/releases" element={authed(<ReleasesPage />)} />
         {/* Every run of the end-to-end suite, and the nightly schedule that
             produces most of them. The workflow has no cron of its own — the
             schedule below is the only thing that starts a scheduled run. */}

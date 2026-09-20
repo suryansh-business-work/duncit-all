@@ -5824,6 +5824,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "ecommPortal.shipping.verifyHint": "A pickup address awaiting verification cannot ship yet. Verify its phone number in ShipRocket (Settings → Pickup Addresses), then sync.",
   "ecommPortal.shipping.volumetric": "Volumetric weight",
   "ecommPortal.shipping.wallet": "Wallet balance",
+  "ecommPortal.shipping.walletUnread": "ShipRocket would not give the wallet balance: {reason}",
   "ecommPortal.shipping.warehouseInShiprocket": "Warehouse saved and added to ShipRocket",
   "ecommPortal.shipping.warehouseInUse": "Products ship from this warehouse — move them first",
   "ecommPortal.shipping.warehouseNotInShiprocket": "Warehouse saved, but ShipRocket has not taken it yet: {reason}",

@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import type { Edge } from '@xyflow/react';
 import { Alert, Box, Divider, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { NODE_KINDS, type NodeKind } from '../../node-kinds';
@@ -92,7 +92,7 @@ export default function NodeInspector({ node, nodes, edges, channel, options, on
               onClick={() => onRemove(node.id)}
               data-testid="automation-inspector-delete"
             >
-              <DeleteOutlineIcon fontSize="small" />
+              <DeleteOutlinedIcon fontSize="small" />
             </DuncitIconButton>
           </span>
         </Tooltip>

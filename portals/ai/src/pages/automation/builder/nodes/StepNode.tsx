@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Box, Paper, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import { useTranslation } from '@duncit/shell';
 import { NODE_KINDS } from '../../node-kinds';
 import { exitsOf, type CanvasNode } from '../../graph-io';
@@ -74,7 +74,7 @@ function StepNode({ data, selected }: NodeProps<CanvasNode>) {
         </Box>
         {hasIssues && (
           <Tooltip title={data.issues.join(' · ')}>
-            <ErrorOutlineIcon color="error" fontSize="small" aria-label={data.issues.join('. ')} />
+            <ErrorOutlinedIcon color="error" fontSize="small" aria-label={data.issues.join('. ')} />
           </Tooltip>
         )}
       </Stack>

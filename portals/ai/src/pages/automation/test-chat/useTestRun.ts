@@ -7,6 +7,7 @@ import { parseApiError } from '@duncit/utils';
 import type { AutomationContactFormValues } from '../../../forms/automation-contact';
 import { RESUME_TEST, START_TEST } from '../queries';
 import { toEdgeInputs, toNodeInputs, type CanvasNode } from '../graph-io';
+import { issuesFromError } from '../errors';
 import type { AutomationChannel, AutomationRun, FlowIssue } from '../types';
 
 const CONTACT_KEY = 'ai_automation_test_contact';
@@ -52,8 +53,8 @@ export function useTestRun({ flowId, channel, nodes, edges, onIssues }: Params) 
 
   const fail = useCallback(
     (error: unknown, fallbackKey: string) => {
-      const issues = (error as { graphQLErrors?: Array<{ extensions?: { issues?: FlowIssue[] } }> })?.graphQLErrors?.[0]?.extensions?.issues;
-      if (Array.isArray(issues)) onIssues(issues);
+      const issues = issuesFromError(error);
+      if (issues.length) onIssues(issues);
       notifyError(parseApiError(error, t(fallbackKey)));
     },
     [onIssues, t]

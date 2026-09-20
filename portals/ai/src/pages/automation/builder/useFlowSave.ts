@@ -6,6 +6,7 @@ import { useTranslation } from '@duncit/shell';
 import { parseApiError } from '@duncit/utils';
 import { SAVE_FLOW, SET_FLOW_STATUS } from '../queries';
 import { toEdgeInputs, toNodeInputs, type CanvasNode } from '../graph-io';
+import { issuesFromError } from '../errors';
 import type { AutomationChannel, AutomationFlow, FlowIssue, FlowStatus } from '../types';
 
 interface Params {
@@ -56,8 +57,8 @@ export function useFlowSave({ flowId, channel, onSaved }: Params) {
         }
         return !!flow;
       } catch (error) {
-        const issues = (error as { graphQLErrors?: Array<{ extensions?: { issues?: FlowIssue[] } }> })?.graphQLErrors?.[0]?.extensions?.issues;
-        if (Array.isArray(issues)) onIssues(issues);
+        const issues = issuesFromError(error);
+        if (issues.length) onIssues(issues);
         notifyError(parseApiError(error, t('ai.automation.builder.statusFailed')));
         return false;
       }

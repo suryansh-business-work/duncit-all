@@ -33,6 +33,8 @@ const LABELS: Record<string, (t: PolicyMethodTranslate) => string> = {
   // never fall through to a raw enum for a method that ships today.
   ACCOUNT: (t) => t('legalAcceptanceLogs.methods.later'),
   LATER: (t) => t('legalAcceptanceLogs.methods.later'),
+  // Signed at the last step of the brand wizard in the Partners console.
+  BRAND_CONSENT: (t) => t('legalAcceptanceLogs.methods.brandConsent'),
 };
 
 /**

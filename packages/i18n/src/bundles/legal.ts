@@ -181,6 +181,26 @@ export const LEGAL_BUNDLE: NestedCatalogue = {
       officerNamePlaceholder: 'e.g. Priya Sharma',
     },
 
+    brandConsent: {
+      title: 'Brand Consent',
+      subtitle:
+        'The consent every e-commerce brand partner signs at the last step of brand onboarding in the Partners console. It is a policy with the fixed slug brand-partner-consent; each signature is recorded in the acceptance log with the wording signed.',
+      titleLabel: 'Title',
+      contentLabel: 'Consent text',
+      contentHint: 'What the partner agrees to: listing rules, fulfilment, payouts, liability.',
+      active: 'Published — partners see and sign this',
+      hidden: 'Unpublished — the consent step tells partners nothing is published yet',
+      save: 'Save consent',
+      saved: 'Brand Consent saved.',
+      notCreated: 'No Brand Consent has been written yet. Write it below and save.',
+      lastUpdated: 'Last updated {when}',
+      rewordWarning: 'Changing the wording means every partner must sign again before their next submission.',
+      titleRequired: 'Title is required',
+      titleTooLong: 'Title must be 160 characters or fewer',
+      contentRequired: 'Consent text is required',
+      contentTooShort: 'Consent text must be at least 20 characters',
+    },
+
     policies: {
       title: 'Policies',
       subtitle: 'Website & app policies — managed in one place.',

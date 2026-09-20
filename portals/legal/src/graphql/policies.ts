@@ -64,6 +64,39 @@ export const DELETE_POLICY = gql`
   }
 `;
 
+/** One policy by its fixed slug — how the Brand Consent page finds its record. Null until written. */
+export const POLICY_BY_SLUG = gql`
+  query LegalPolicyBySlug($slug: String!) {
+    policyBySlug(slug: $slug) {
+      id
+      slug
+      title
+      policy_type
+      content
+      is_active
+      requires_signup_acceptance
+      updated_at
+      content_hash
+      version_count
+    }
+  }
+`;
+
+/** The `policyBySlug` selection above. */
+export interface PolicyBySlug {
+  id: string;
+  slug: string;
+  title: string;
+  policy_type: string;
+  content: string;
+  is_active: boolean;
+  requires_signup_acceptance: boolean;
+  updated_at: string;
+  /** sha256 of the CURRENT wording — what a fresh signature records. */
+  content_hash: string;
+  version_count: number;
+}
+
 export interface Policy {
   id: string;
   /** Permanent handle, POL-000001. Never edited, never reused. */

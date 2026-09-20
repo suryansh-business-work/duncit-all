@@ -136,6 +136,36 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Reason: The venue photos and safety certificates were incomplete. ' +
       'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
   },
+  ECOMM_BRAND_SUBMITTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your brand {{2}} has been submitted for review on Duncit. Our Products team verifies every detail — ' +
+      'business, documents, ShipRocket and Razorpay connections — and you will hear from us once it is approved. — Team Duncit',
+    sample:
+      'Hi Ananya, your brand Yonex has been submitted for review on Duncit. Our Products team verifies every detail — ' +
+      'business, documents, ShipRocket and Razorpay connections — and you will hear from us once it is approved. — Team Duncit',
+  },
+  ECOMM_BRAND_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, we could not approve your brand {{2}} this time. Reason: {{3}}. ' +
+      'Open the Partners console, update the brand and submit it again whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Ananya, we could not approve your brand Yonex this time. Reason: The GST certificate does not match the registered business name. ' +
+      'Open the Partners console, update the brand and submit it again whenever you are ready. — Team Duncit',
+  },
+  ECOMM_BRAND_DELETED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your brand {{2}} has been removed from Duncit along with its warehouses. ' +
+      'Orders already placed are not affected. You can register a new brand from the Partners console at any time. — Team Duncit',
+    sample:
+      'Hi Ananya, your brand Yonex has been removed from Duncit along with its warehouses. ' +
+      'Orders already placed are not affected. You can register a new brand from the Partners console at any time. — Team Duncit',
+  },
   ECOMM_ONBOARDING_REJECTED: {
     category: 'UTILITY',
     language: 'English',

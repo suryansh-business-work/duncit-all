@@ -35,6 +35,49 @@ const BRAND_FIELDS = `
   approved_at
 `;
 
+/** Every field of BrandIntegrationStatus — the one selection each integration read uses. */
+export const BRAND_INTEGRATION_FIELDS = `
+  provider
+  configured
+  connected
+  checked_at
+  message
+  details
+  identifier
+  has_secret
+  pickup_location
+  live_mode
+  has_webhook_secret
+`;
+
+const BRAND_CONSENT_FIELDS = `
+  accepted
+  signed_name
+  signed_at
+  policy_slug
+  policy_title
+  content_hash
+  current
+  available
+`;
+
+const BRAND_COMPLETION_FIELDS = `
+  percent
+  next_step
+  steps { key complete required }
+`;
+
+/** The wizard's brand: the saved facts plus the server-judged integrations, consent and progress. */
+const BRAND_WIZARD_FIELDS = `
+  ${BRAND_FIELDS}
+  integrations {
+    shiprocket { ${BRAND_INTEGRATION_FIELDS} }
+    razorpay { ${BRAND_INTEGRATION_FIELDS} }
+  }
+  consent { ${BRAND_CONSENT_FIELDS} }
+  completion { ${BRAND_COMPLETION_FIELDS} }
+`;
+
 export const MY_BRANDS = gql`
   query MyEcommBrands {
     me { user_id full_name email roles }
@@ -43,19 +86,40 @@ export const MY_BRANDS = gql`
 `;
 
 /** Server-paged sibling of myEcommBrands (shared table engine). Rows keep the
- * full BRAND_FIELDS selection so a row can prefill the brand dialog. */
+ * full BRAND_FIELDS selection plus the progress and connection facts the
+ * "Your brands" table shows. */
 export const MY_BRANDS_TABLE = gql`
   query MyEcommBrandsTable($query: TableQueryInput) {
     myEcommBrandsTable(query: $query) {
       total
-      rows { ${BRAND_FIELDS} created_at updated_at }
+      rows {
+        ${BRAND_FIELDS}
+        created_at
+        updated_at
+        completion { percent }
+        integrations { shiprocket { connected } razorpay { connected } }
+      }
     }
+  }
+`;
+
+/** The signed-in account — a new brand's contact email starts as its address. */
+export const MY_ACCOUNT = gql`
+  query BrandWizardAccount {
+    me { user_id email }
+  }
+`;
+
+/** One own brand at any status — what the wizard opens. */
+export const MY_BRAND = gql`
+  query MyEcommBrand($brand_doc_id: ID!) {
+    myEcommBrand(brand_doc_id: $brand_doc_id) { ${BRAND_WIZARD_FIELDS} }
   }
 `;
 
 export const SAVE_BRAND = gql`
   mutation SaveEcommBrand($brand_doc_id: ID, $input: EcommBrandInput!) {
-    saveEcommBrand(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_FIELDS} }
+    saveEcommBrand(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_WIZARD_FIELDS} }
   }
 `;
 
@@ -78,9 +142,89 @@ export const SET_MY_BRAND_ACTIVE = gql`
   }
 `;
 
+export const DELETE_MY_BRAND = gql`
+  mutation DeleteMyEcommBrand($brand_doc_id: ID!) {
+    deleteMyEcommBrand(brand_doc_id: $brand_doc_id)
+  }
+`;
+
+export const CONNECT_BRAND_SHIPROCKET = gql`
+  mutation ConnectBrandShiprocket($brand_doc_id: ID!, $input: BrandShiprocketInput!) {
+    connectBrandShiprocket(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_INTEGRATION_FIELDS} }
+  }
+`;
+
+export const CONNECT_BRAND_RAZORPAY = gql`
+  mutation ConnectBrandRazorpay($brand_doc_id: ID!, $input: BrandRazorpayInput!) {
+    connectBrandRazorpay(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_INTEGRATION_FIELDS} }
+  }
+`;
+
+export const RECHECK_BRAND_INTEGRATION = gql`
+  mutation RecheckBrandIntegration($brand_doc_id: ID!, $provider: BrandIntegrationProvider!) {
+    recheckBrandIntegration(brand_doc_id: $brand_doc_id, provider: $provider) { ${BRAND_INTEGRATION_FIELDS} }
+  }
+`;
+
+export const DISCONNECT_BRAND_INTEGRATION = gql`
+  mutation DisconnectBrandIntegration($brand_doc_id: ID!, $provider: BrandIntegrationProvider!) {
+    disconnectBrandIntegration(brand_doc_id: $brand_doc_id, provider: $provider) { ${BRAND_INTEGRATION_FIELDS} }
+  }
+`;
+
+export const BRAND_CONSENT_POLICY = gql`
+  query BrandConsentPolicy {
+    brandConsentPolicy { id slug title content is_active updated_at }
+  }
+`;
+
+export const SIGN_BRAND_CONSENT = gql`
+  mutation SignBrandConsent($brand_doc_id: ID!, $signed_name: String!) {
+    signBrandConsent(brand_doc_id: $brand_doc_id, signed_name: $signed_name) { ${BRAND_CONSENT_FIELDS} }
+  }
+`;
+
 export interface BrandDocument {
   type: string;
   url: string;
+}
+
+export type BrandIntegrationProvider = 'SHIPROCKET' | 'RAZORPAY';
+
+export interface BrandIntegrationStatus {
+  provider: BrandIntegrationProvider;
+  configured: boolean;
+  connected: boolean;
+  checked_at: string | null;
+  message: string;
+  details: string[];
+  identifier: string;
+  has_secret: boolean;
+  pickup_location: string;
+  live_mode: boolean;
+  has_webhook_secret: boolean;
+}
+
+export interface BrandIntegrations {
+  shiprocket: BrandIntegrationStatus;
+  razorpay: BrandIntegrationStatus;
+}
+
+export interface BrandConsent {
+  accepted: boolean;
+  signed_name: string;
+  signed_at: string | null;
+  policy_slug: string;
+  policy_title: string;
+  content_hash: string;
+  current: boolean;
+  available: boolean;
+}
+
+export interface BrandCompletion {
+  percent: number;
+  next_step: number;
+  steps: { key: string; complete: boolean; required: boolean }[];
 }
 
 export interface EcommBrand {
@@ -116,9 +260,13 @@ export interface EcommBrand {
   reviewer_notes: string;
   submitted_at: string | null;
   approved_at: string | null;
+  /** Present on the wizard's `myEcommBrand` read and on table rows (connected flags only). */
+  integrations?: BrandIntegrations;
+  consent?: BrandConsent;
+  completion?: BrandCompletion;
 }
 
-/** Table rows add the sort timestamps on top of the dialog's brand shape. */
+/** Table rows add the sort timestamps on top of the wizard's brand shape. */
 export interface EcommBrandRow extends EcommBrand {
   created_at?: string | null;
   updated_at?: string | null;

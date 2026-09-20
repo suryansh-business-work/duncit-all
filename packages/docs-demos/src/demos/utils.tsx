@@ -213,6 +213,10 @@ import {
   packagingGaps,
   parcelWeights,
   type ParcelDims,
+  brandCompletionPercent,
+  brandNextStepIndex,
+  brandStepStates,
+  type BrandWizardFacts,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -491,6 +495,9 @@ interface ClubGroupingMock {
 /** One packed unit as the product form holds it. */
 type ParcelMock = ParcelDims;
 
+/** A brand part-way through the Partners console wizard. */
+type BrandWizardMock = BrandWizardFacts;
+
 /** One city from the `locations` query, with its launch waitlist fields. */
 interface CityLaunchMock {
   location_name: string;
@@ -553,6 +560,42 @@ export default defineDemos('utils', [
         'Missing values': packagingGaps(mock).join(', ') || 'none',
       };
     },
+  }),
+
+  defineDemo<BrandWizardMock>({
+    id: 'brand-wizard',
+    title: 'How far a brand is through onboarding',
+    note:
+      'Yonex has filled seven of the nine required steps. Flip razorpay_connected to true and the percentage moves to 89 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number.',
+    mock: {
+      brand_name: 'Yonex',
+      description: 'Badminton racquets, shuttles and grips for club players.',
+      contact_email: 'ops@yonex.in',
+      registered_business_name: 'Yonex India Pvt Ltd',
+      gstin: '29AABCY1234F1ZP',
+      pan: '',
+      address_line1: '14 MG Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      postal_code: '560001',
+      product_categories: ['Sports Equipment'],
+      logo_url: 'https://ik.imagekit.io/duncit/brands/yonex-logo.png',
+      documents: [{ type: 'GST certificate', url: 'https://ik.imagekit.io/duncit/brands/yonex-gst.pdf' }],
+      account_number: '',
+      ifsc_code: '',
+      upi_id: '',
+      shiprocket_connected: true,
+      razorpay_connected: false,
+      consent_signed: false,
+    },
+    compute: (mock) => ({
+      'Completion (%)': brandCompletionPercent(mock),
+      'Opens on step': brandNextStepIndex(mock) + 1,
+      'Still to do': brandStepStates(mock)
+        .filter((step) => step.required && !step.complete)
+        .map((step) => step.key)
+        .join(', ') || 'nothing — ready to submit',
+    }),
   }),
 
   defineDemo<CityLaunchMock>({

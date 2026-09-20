@@ -26,8 +26,13 @@ function uid(ctx: GraphQLContext) {
   return ctx.user.id;
 }
 
+type Provider = 'SHIPROCKET' | 'RAZORPAY';
+
 export const ecommBrandResolvers = {
   EcommBrand: {
+    // The two halves of a brand that depend on the published Brand Consent.
+    consent: (parent: any) => ecommBrandService.consentField(parent),
+    completion: (parent: any) => ecommBrandService.completionField(parent),
     // .exec() returns a genuine Promise — returning the bare Mongoose Query lets
     // the GraphQL executor adopt (.then) it more than once → "Query was already
     // executed". Guard a missing id (0 products) too.
@@ -70,6 +75,13 @@ export const ecommBrandResolvers = {
     publicEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       uid(ctx);
       return ecommBrandService.getById(args.brand_doc_id);
+    },
+    myEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>
+      ecommBrandService.myBrand(uid(ctx), args.brand_doc_id),
+    // Signed-in only: the wizard's last step and the review page both read it.
+    brandConsentPolicy: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      uid(ctx);
+      return ecommBrandService.consentPolicy();
     },
   },
   Mutation: {
@@ -135,6 +147,26 @@ export const ecommBrandResolvers = {
       requireRole(ctx, DEVELOPER_DELETE);
       await userService.assertPasswordConfirmation(uid(ctx), args.email, args.password);
       return ecommBrandService.deleteBrand(args.brand_doc_id);
+    },
+    connectBrandShiprocket: (_p: unknown, args: { brand_doc_id: string; input: any }, ctx: GraphQLContext) =>
+      ecommBrandService.connectIntegration(uid(ctx), args.brand_doc_id, 'SHIPROCKET', args.input),
+    connectBrandRazorpay: (_p: unknown, args: { brand_doc_id: string; input: any }, ctx: GraphQLContext) =>
+      ecommBrandService.connectIntegration(uid(ctx), args.brand_doc_id, 'RAZORPAY', args.input),
+    recheckBrandIntegration: (_p: unknown, args: { brand_doc_id: string; provider: Provider }, ctx: GraphQLContext) =>
+      ecommBrandService.recheckIntegration(uid(ctx), args.brand_doc_id, args.provider),
+    disconnectBrandIntegration: (_p: unknown, args: { brand_doc_id: string; provider: Provider }, ctx: GraphQLContext) =>
+      ecommBrandService.disconnectIntegration(uid(ctx), args.brand_doc_id, args.provider),
+    signBrandConsent: (_p: unknown, args: { brand_doc_id: string; signed_name: string }, ctx: GraphQLContext) =>
+      ecommBrandService.signConsent(uid(ctx), args.brand_doc_id, args.signed_name),
+    deleteMyEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>
+      ecommBrandService.deleteMine(uid(ctx), args.brand_doc_id),
+    reviewBrandIntegration: (_p: unknown, args: { brand_doc_id: string; provider: Provider }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.reviewIntegration(args.brand_doc_id, args.provider);
+    },
+    adminDeleteEcommBrand: (_p: unknown, args: { brand_doc_id: string; notes?: string | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.adminDelete(args.brand_doc_id, args.notes ?? '');
     },
   },
 };

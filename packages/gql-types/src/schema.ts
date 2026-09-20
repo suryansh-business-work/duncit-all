@@ -2995,6 +2995,69 @@ export type BouncerSupportTarget = {
   phone: Scalars['String']['output'];
 };
 
+/** How far the brand is through the onboarding wizard — the % in the Your brands table. */
+export type BrandCompletion = {
+  __typename?: 'BrandCompletion';
+  /** The first step still to do, for the wizard to open on. */
+  next_step: Scalars['Int']['output'];
+  percent: Scalars['Int']['output'];
+  steps: Array<BrandStepState>;
+};
+
+/** The Brand Consent (Legal portal) as the partner signed it. */
+export type BrandConsent = {
+  __typename?: 'BrandConsent';
+  accepted: Scalars['Boolean']['output'];
+  /** Legal has published a Brand Consent to sign. Without one the step has nothing to show. */
+  available: Scalars['Boolean']['output'];
+  /** sha256 of the wording that was signed. */
+  content_hash: Scalars['String']['output'];
+  /** The signature is against the consent's CURRENT wording. False once Legal edits it. */
+  current: Scalars['Boolean']['output'];
+  policy_slug: Scalars['String']['output'];
+  policy_title: Scalars['String']['output'];
+  signed_at?: Maybe<Scalars['String']['output']>;
+  signed_name: Scalars['String']['output'];
+};
+
+/** The two accounts a brand ships and gets paid through. Each brand holds its own — never the Tech portal's. */
+export type BrandIntegrationProvider =
+  | 'RAZORPAY'
+  | 'SHIPROCKET';
+
+/**
+ * One brand integration as the console reads it. The secret (ShipRocket
+ * password, Razorpay key secret) never leaves the server; `has_secret` says
+ * whether one is on file and `identifier` is the public half (the API user's
+ * email, the Razorpay key id).
+ */
+export type BrandIntegrationStatus = {
+  __typename?: 'BrandIntegrationStatus';
+  checked_at?: Maybe<Scalars['String']['output']>;
+  /** Both halves of the credential are on file. */
+  configured: Scalars['Boolean']['output'];
+  /** The vendor accepted the credential the last time it was checked. */
+  connected: Scalars['Boolean']['output'];
+  details: Array<Scalars['String']['output']>;
+  has_secret: Scalars['Boolean']['output'];
+  /** A webhook secret is on file for this account. */
+  has_webhook_secret: Scalars['Boolean']['output'];
+  identifier: Scalars['String']['output'];
+  /** Razorpay: the key id is a live key (rzp_live_…), so real money moves. */
+  live_mode: Scalars['Boolean']['output'];
+  /** What the vendor answered, for a person to read. Never a credential. */
+  message: Scalars['String']['output'];
+  /** ShipRocket: the default pickup nickname on that account. */
+  pickup_location: Scalars['String']['output'];
+  provider: BrandIntegrationProvider;
+};
+
+export type BrandIntegrations = {
+  __typename?: 'BrandIntegrations';
+  razorpay: BrandIntegrationStatus;
+  shiprocket: BrandIntegrationStatus;
+};
+
 export type BrandPickupLocation = {
   __typename?: 'BrandPickupLocation';
   address_line1: Scalars['String']['output'];
@@ -3035,6 +3098,31 @@ export type BrandPickupLocationInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   pincode?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BrandRazorpayInput = {
+  key_id: Scalars['String']['input'];
+  /** Omitted or blank keeps the secret already on file. */
+  key_secret?: InputMaybe<Scalars['String']['input']>;
+  webhook_secret?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BrandShiprocketInput = {
+  /** The ShipRocket API user's email (Settings → API → Configure). */
+  email: Scalars['String']['input'];
+  /** Omitted or blank keeps the password already on file. */
+  password?: InputMaybe<Scalars['String']['input']>;
+  /** Default pickup nickname on that account — must match a ShipRocket pickup address. */
+  pickup_location?: InputMaybe<Scalars['String']['input']>;
+  /** Omitted or blank keeps the one on file. */
+  webhook_secret?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BrandStepState = {
+  __typename?: 'BrandStepState';
+  complete: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  required: Scalars['Boolean']['output'];
 };
 
 export type Branding = {
@@ -6747,6 +6835,10 @@ export type EcommBrand = {
   /** Permanent human id (BRD-000001) — Onboarded Brands table. */
   brand_no?: Maybe<Scalars['String']['output']>;
   city: Scalars['String']['output'];
+  /** Wizard progress — required steps done, as a percentage. */
+  completion: BrandCompletion;
+  /** The Brand Consent as signed by the owner. */
+  consent: BrandConsent;
   contact_email: Scalars['String']['output'];
   contact_person: Scalars['String']['output'];
   contact_phone: Scalars['String']['output'];
@@ -6761,6 +6853,8 @@ export type EcommBrand = {
   id: Scalars['ID']['output'];
   ifsc_code: Scalars['String']['output'];
   instagram_url: Scalars['String']['output'];
+  /** The brand's own ShipRocket and Razorpay accounts, and whether each connects. */
+  integrations: BrandIntegrations;
   is_active: Scalars['Boolean']['output'];
   logo_url: Scalars['String']['output'];
   owner_user_id: Scalars['ID']['output'];
@@ -10849,6 +10943,8 @@ export type Mutation = {
   adminCreateVenue: Venue;
   /** Onboarding/admin slot management for any venue (role-gated). */
   adminCreateVenueSlots: Array<VenueSlot>;
+  /** Products portal: delete a brand that is not approved (or approved with no products). The owner is told. */
+  adminDeleteEcommBrand: Scalars['Boolean']['output'];
   adminDeleteVenueSlot: Scalars['Boolean']['output'];
   /**
    * Replace a host's operating categories and nothing else. adminUpdateHost
@@ -11078,6 +11174,10 @@ export type Mutation = {
    * whole reason it was sent there rather than to the address being replaced.
    */
   confirmEmailChange: User;
+  /** Partner: save the brand's Razorpay keys and check them against Razorpay right away. */
+  connectBrandRazorpay: BrandIntegrationStatus;
+  /** Partner: save the brand's ShipRocket API user and check it against ShipRocket right away. */
+  connectBrandShiprocket: BrandIntegrationStatus;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
@@ -11304,6 +11404,8 @@ export type Mutation = {
   deleteMyAddress: Scalars['Boolean']['output'];
   /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
   deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
+  /** Partner: delete an OWN brand. Refused for an approved brand that still has products — deactivate it instead. */
+  deleteMyEcommBrand: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
@@ -11358,6 +11460,8 @@ export type Mutation = {
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
   denyWarehouseRequest: ApprovalRequest;
+  /** Partner: forget the saved credential. The brand drops out of review until it is reconnected. */
+  disconnectBrandIntegration: BrandIntegrationStatus;
   /**
    * Auth-required: unlink the Google account.
    *
@@ -11703,6 +11807,8 @@ export type Mutation = {
    * different kind replaces it, so one person is only ever counted once.
    */
   reactToStaffMessage: StaffMessage;
+  /** Partner: check the saved credential again without changing it. */
+  recheckBrandIntegration: BrandIntegrationStatus;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
@@ -11983,6 +12089,8 @@ export type Mutation = {
   retryWaCampaign: WaCampaign;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
+  /** Products portal: check a submitted brand's credential against the vendor during review. */
+  reviewBrandIntegration: BrandIntegrationStatus;
   /** Record a manual review of a sub flow. Answers with the whole flow. */
   reviewE2eSubFlow: E2eFlow;
   /** Finance's decision — APPROVED or REJECTED; a rejection owes the employee a note. */
@@ -12211,6 +12319,8 @@ export type Mutation = {
   shareLink: ShareLink;
   sharePodIdea: PodIdea;
   shareScheduledSocialPostNow: SocialScheduledPost;
+  /** Partner: accept the Brand Consent and sign it by typing their full name. Recorded in the Legal acceptance log. */
+  signBrandConsent: BrandConsent;
   /**
    * Sign as the acting user. Locks the contract once nobody is left to sign,
    * and moves a DRAFT to ACTIVE — a signed contract is in force.
@@ -12920,6 +13030,12 @@ export type MutationAdminCreateVenueSlotsArgs = {
 };
 
 
+export type MutationAdminDeleteEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationAdminDeleteVenueSlotArgs = {
   slot_id: Scalars['ID']['input'];
 };
@@ -13325,6 +13441,18 @@ export type MutationConfirmContactPhoneChangeArgs = {
 export type MutationConfirmEmailChangeArgs = {
   email: Scalars['String']['input'];
   otp: Scalars['String']['input'];
+};
+
+
+export type MutationConnectBrandRazorpayArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  input: BrandRazorpayInput;
+};
+
+
+export type MutationConnectBrandShiprocketArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  input: BrandShiprocketInput;
 };
 
 
@@ -14065,6 +14193,11 @@ export type MutationDeleteMyBrandPickupLocationArgs = {
 };
 
 
+export type MutationDeleteMyEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMyProductListingArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -14282,6 +14415,12 @@ export type MutationDenyRequestArgs = {
 export type MutationDenyWarehouseRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationDisconnectBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
 };
 
 
@@ -14775,6 +14914,12 @@ export type MutationReactToStaffMessageArgs = {
 };
 
 
+export type MutationRecheckBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
+};
+
+
 export type MutationReconcileCrmCallArgs = {
   log_id: Scalars['ID']['input'];
 };
@@ -15220,6 +15365,12 @@ export type MutationReviewAdRequestArgs = {
   approve: Scalars['Boolean']['input'];
   id: Scalars['ID']['input'];
   remarks?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationReviewBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
 };
 
 
@@ -15777,6 +15928,12 @@ export type MutationSharePodIdeaArgs = {
 
 export type MutationShareScheduledSocialPostNowArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSignBrandConsentArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  signed_name: Scalars['String']['input'];
 };
 
 
@@ -20480,6 +20637,8 @@ export type PolicyAcceptanceMethod =
   | 'ACCOUNT'
   /** The same, after Apple returned. */
   | 'APPLE_SIGNUP'
+  /** Signed by a brand partner at the last step of brand onboarding (Partners console). */
+  | 'BRAND_CONSENT'
   /** Ticked in the same dialog, after Google returned but before the account existed. */
   | 'GOOGLE_SIGNUP'
   /** Ticked on the email/password signup form. */
@@ -20818,6 +20977,8 @@ export type ProductListingInput = {
   sub_category_id: Scalars['ID']['input'];
   /** Primary category triple (kept for back-compat; mirrors categories[0]). */
   super_category_id: Scalars['ID']['input'];
+  /** GST rate (%) printed on the invoice and sent to ShipRocket with each item. Default 0. */
+  tax_percent?: InputMaybe<Scalars['Float']['input']>;
   unit_cost: Scalars['Float']['input'];
   /** Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant. */
   variants?: InputMaybe<Array<ProductVariantInput>>;
@@ -21385,6 +21546,8 @@ export type Query = {
   bouncerSosAlert?: Maybe<BouncerSosAlert>;
   bouncerSosAlerts: BouncerSosAlertPage;
   bouncerSupportTarget: BouncerSupportTarget;
+  /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
+  brandConsentPolicy?: Maybe<Policy>;
   /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
   brandPickupLocations: Array<BrandPickupLocation>;
   branding: Branding;
@@ -22033,6 +22196,8 @@ export type Query = {
    * preference and is never readable for anybody else.
    */
   myDashboardLayout?: Maybe<DashboardLayout>;
+  /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
+  myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
   myEcommBrands: Array<EcommBrand>;
   /** Server-side table sibling of myEcommBrands — always scoped to the caller's own brands. */
@@ -24322,6 +24487,11 @@ export type QueryMyCoHostedPodsArgs = {
 
 export type QueryMyDashboardLayoutArgs = {
   dashboard_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
 };
 
 

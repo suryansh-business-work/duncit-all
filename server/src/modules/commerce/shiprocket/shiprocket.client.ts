@@ -1,6 +1,7 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
-import { getShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
+import { DEFAULT_SESSION_KEY, getShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
 import { ShiprocketSessionModel } from './shiprocketSession.model';
 
 /**
@@ -23,13 +24,16 @@ import { ShiprocketSessionModel } from './shiprocketSession.model';
  *   timeout could book a second parcel.
  * - Failures are logged with the path, status and attempt — never the
  *   password, never the token.
+ * - WHICH account a call uses is decided by the caller, not the call:
+ *   `withShiprocketAccount(account, fn)` runs fn on a brand's own account, and
+ *   every `srRequest` inside it — however deep — logs in and books on that
+ *   account, with its own session row. Outside it, the Tech portal's account.
  */
 export const SR_BASE = 'https://apiv2.shiprocket.in/v1/external';
 
 const TIMEOUT_MS = 20_000;
 const RENEW_BEFORE_MS = 24 * 3_600_000;
 const BACKOFF_MS = [600, 1_800];
-const SESSION_KEY = 'default';
 /** How long a token is trusted before a refused call may spend a login on a new one. */
 const REAUTH_COOLDOWN_MS = 15 * 60_000;
 /** The answers that can mean "this token is no good" as well as "you may not do this". */
@@ -40,6 +44,19 @@ const PERMISSION_HINT =
   'The API user is not allowed this call. In ShipRocket open Settings → API → Configure and create an API user (its email must not be registered on ShipRocket), save it in the Tech portal under Environment Variables → SHIPROCKET, then press Retry login here.';
 
 export type Json = Record<string, any>;
+
+/** The account the current call chain runs on, when a brand's was chosen. */
+const accountContext = new AsyncLocalStorage<ShiprocketAccount>();
+
+/** Run `fn` on a brand's own ShipRocket account. A null account runs it on the Tech portal's. */
+export function withShiprocketAccount<T>(account: ShiprocketAccount | null, fn: () => Promise<T>): Promise<T> {
+  return account ? accountContext.run(account, fn) : fn();
+}
+
+/** Whether ANY account can take the next call: the chosen brand's, else the Tech portal's. */
+export async function hasShiprocketAccount(): Promise<boolean> {
+  return !!accountContext.getStore() || (await getShiprocketAccount()) !== null;
+}
 
 export function shiprocketError(message: string, status = 0): GraphQLError {
   return new GraphQLError(message, { extensions: { code: 'BAD_GATEWAY', shiprocket_status: status } });
@@ -86,7 +103,7 @@ async function login(account: ShiprocketAccount): Promise<string> {
   if (res.ok && typeof data.token === 'string' && data.token) {
     const expires = jwtExpiry(data.token) ?? new Date(Date.now() + account.tokenTtlHours * 3_600_000);
     await ShiprocketSessionModel.updateOne(
-      { key: SESSION_KEY },
+      { key: account.sessionKey },
       {
         $set: {
           cred_hash: account.hash,
@@ -107,7 +124,7 @@ async function login(account: ShiprocketAccount): Promise<string> {
   // 4xx = wrong, blocked or throttled credentials: stop. 5xx = ShipRocket's bad minute: retryable.
   if (res.status >= 400 && res.status < 500) {
     await ShiprocketSessionModel.updateOne(
-      { key: SESSION_KEY },
+      { key: account.sessionKey },
       { $set: { refused_hash: account.hash, refused_message: message, refused_at: new Date(), token: '', expires_at: null } },
       { upsert: true }
     );
@@ -116,14 +133,17 @@ async function login(account: ShiprocketAccount): Promise<string> {
   throw shiprocketError(`ShipRocket login failed: ${message}`, res.status);
 }
 
-/** Concurrent callers share one login instead of each spending an attempt. */
-let loginInFlight: Promise<string> | null = null;
+/** Concurrent callers share one login PER ACCOUNT instead of each spending an attempt. */
+const loginInFlight = new Map<string, Promise<string>>();
 
 function loginOnce(account: ShiprocketAccount): Promise<string> {
-  loginInFlight ??= login(account).finally(() => {
-    loginInFlight = null;
+  const held = loginInFlight.get(account.sessionKey);
+  if (held) return held;
+  const started = login(account).finally(() => {
+    loginInFlight.delete(account.sessionKey);
   });
-  return loginInFlight;
+  loginInFlight.set(account.sessionKey, started);
+  return started;
 }
 
 /**
@@ -134,7 +154,7 @@ function loginOnce(account: ShiprocketAccount): Promise<string> {
  * re-sending the request is worth an attempt at all.
  */
 async function token(account: ShiprocketAccount, reauth: boolean): Promise<string> {
-  const session = await ShiprocketSessionModel.findOne({ key: SESSION_KEY }).select('+token').lean();
+  const session = await ShiprocketSessionModel.findOne({ key: account.sessionKey }).select('+token').lean();
   if (session?.refused_hash === account.hash) throw refusal(session.refused_message);
   const held = session?.cred_hash === account.hash && session.token ? session.token : '';
   if (!held) return loginOnce(account);
@@ -150,7 +170,7 @@ async function token(account: ShiprocketAccount, reauth: boolean): Promise<strin
 export async function shiprocketLoginState() {
   const account = await getShiprocketAccount();
   if (!account) return { configured: false, refused: false, message: '' };
-  const session = await ShiprocketSessionModel.findOne({ key: SESSION_KEY }).lean();
+  const session = await ShiprocketSessionModel.findOne({ key: DEFAULT_SESSION_KEY }).lean();
   const refused = session?.refused_hash === account.hash;
   return { configured: true, refused, message: refused ? session!.refused_message : '' };
 }
@@ -166,7 +186,7 @@ export async function shiprocketLoginState() {
 export async function retryShiprocketLogin(): Promise<void> {
   const acc = await account();
   await ShiprocketSessionModel.updateOne(
-    { key: SESSION_KEY },
+    { key: acc.sessionKey },
     { $set: { refused_hash: '', refused_message: '', refused_at: null } }
   );
   await loginOnce(acc);
@@ -180,6 +200,8 @@ export interface RequestOptions {
 }
 
 async function account(): Promise<ShiprocketAccount> {
+  const chosen = accountContext.getStore();
+  if (chosen) return chosen;
   const found = await getShiprocketAccount();
   if (!found) throw shiprocketError('ShipRocket is not configured. Add the credentials in the Tech portal.');
   return found;

@@ -23,7 +23,7 @@ export const POLICY_ACCEPTANCES_TABLE = gql`
   }
 `;
 
-export type PolicyAcceptanceMethod = 'SIGNUP_FORM' | 'GOOGLE_SIGNUP' | 'ACCOUNT';
+export type PolicyAcceptanceMethod = 'SIGNUP_FORM' | 'GOOGLE_SIGNUP' | 'ACCOUNT' | 'BRAND_CONSENT';
 
 export type PolicyAcceptanceSurface = 'MWEB' | 'APP' | 'PORTAL' | 'WEBSITE' | 'UNKNOWN';
 
@@ -64,6 +64,8 @@ export const POLICY_ACCEPTANCE_METHODS: PolicyAcceptanceMethod[] = [
   'SIGNUP_FORM',
   'GOOGLE_SIGNUP',
   'ACCOUNT',
+  // Signed at the last step of the brand wizard in the Partners console.
+  'BRAND_CONSENT',
 ];
 
 /** The surface values the server stores — shown as stored, so values only. */

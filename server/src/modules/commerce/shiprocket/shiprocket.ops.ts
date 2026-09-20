@@ -7,7 +7,8 @@ import {
 } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { getShiprocketAccount } from './shiprocket.account';
-import { shiprocketLoginState } from './shiprocket.client';
+import { shiprocketLoginState, withShiprocketAccount } from './shiprocket.client';
+import { accountForOrder } from './shiprocket.shipment';
 import {
   addPickupLocation,
   listPickupLocations,
@@ -35,7 +36,7 @@ export async function answerNdr(order: IProductOrder, action: NdrAction, comment
   if (!NDR_ACTIONS.has(action)) bad('Choose re-attempt or return');
   if (order.fulfilment_status !== 'NDR' || !order.shiprocket.awb) bad('This order has no failed delivery to answer');
   const note = String(comments ?? '').trim().slice(0, 300) || (action === 're-attempt' ? 'Please re-attempt delivery' : 'Return to origin');
-  await ndrAction(order.shiprocket.awb, action, note);
+  await withShiprocketAccount(await accountForOrder(order), () => ndrAction(order.shiprocket.awb, action, note));
   order.shiprocket.ndr_action = action;
   order.shiprocket.ndr_actioned_at = new Date();
   order.shiprocket.alert = '';

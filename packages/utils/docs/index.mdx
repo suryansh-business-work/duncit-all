@@ -51,6 +51,16 @@ exports:
   - 'PackageType'
   - 'PackagingPreset'
   - 'ParcelDims'
+  - 'BRAND_WIZARD_STEPS'
+  - 'BRAND_CONSENT_POLICY_SLUG'
+  - 'brandStepStates'
+  - 'brandStepComplete'
+  - 'brandCompletionPercent'
+  - 'brandNextStepIndex'
+  - 'BrandWizardFacts'
+  - 'BrandWizardStep'
+  - 'BrandWizardStepKey'
+  - 'BrandStepState'
   - 'buildPodsOverTime'
   - 'buildParticipantTrend'
   - 'buildStatusSlices'
@@ -2410,6 +2420,42 @@ const foodBag = PACKAGING_PRESETS.find((p) => p.id === 'food-bag-10')!;
 parcelWeights(foodBag); // { volumetric: 7.2, chargeable: 10.4, boxHeavier: false }
 parcelWeights({ weight_kg: 2.5, length_cm: 70, breadth_cm: 50, height_cm: 20 });
 // { volumetric: 14, chargeable: 14, boxHeavier: true } — the bed ships at 14 kg
+```
+
+## The brand onboarding wizard — `brand-wizard`
+
+`brand-wizard.ts` is the ten-step brand registration the Partners console runs and the Products
+console reviews: which steps exist, which count towards completion, and when each is done. The
+server keeps a twin (`ecommBrand.completion.ts`) because it imports no `@duncit/*` package;
+the server's number is what the **Your brands** table shows, this copy is the wizard's live
+readout while the partner is still typing.
+
+| Export | What it answers |
+| --- | --- |
+| `BRAND_WIZARD_STEPS` | The ten steps in order, each with its `labelKey` and whether it is `required` |
+| `brandStepComplete(facts, key)` | Is this step done? `review` is done once every required step before it is |
+| `brandStepStates(facts)` | Every step with its `complete` flag — what the vertical stepper draws |
+| `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to submit |
+| `brandNextStepIndex(facts)` | Where a saved draft opens — the first required step still to do |
+| `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy the last step signs |
+
+Payout is optional (it never lowers the percentage) and Review is derived. Integration needs
+BOTH ShipRocket and Razorpay connected, which only the server can say — pass the brand's
+`integrations.*.connected` and `consent.accepted` through as facts.
+
+```ts
+import { brandCompletionPercent, brandStepStates } from '@duncit/utils';
+
+const facts = {
+  brand_name: 'Yonex', description: 'Badminton gear for club players.', contact_email: 'ops@yonex.in',
+  registered_business_name: 'Yonex India Pvt Ltd', gstin: '29AABCY1234F1ZP',
+  address_line1: '14 MG Road', city: 'Bengaluru', state: 'Karnataka', postal_code: '560001',
+  product_categories: ['Sports Equipment'], logo_url: 'https://ik.imagekit.io/duncit/brands/yonex.png',
+  documents: [{ type: 'GST certificate', url: '…' }],
+  shiprocket_connected: true, razorpay_connected: false, consent_signed: false,
+};
+brandCompletionPercent(facts); // 75 — integration and consent still to do
+brandStepStates(facts).filter((s) => s.required && !s.complete).map((s) => s.key); // ['integration', 'consent']
 ```
 
 ## Product-order fulfilment

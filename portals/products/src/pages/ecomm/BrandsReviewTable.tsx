@@ -1,14 +1,22 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Chip, Stack, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { StatusChip } from '@duncit/ui';
-import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from './brandStatus';
 import { useDateFormat } from '@duncit/app-settings';
-import type { EcommBrandRow } from './queries';
 import { useTranslation } from '@duncit/shell';
+import { BRAND_STATUS_OPTIONS } from './brandStatus';
+import {
+  completionValue,
+  integrationsValue,
+  locationValue,
+  pickupValue,
+  renderBrand,
+  renderCompletion,
+  renderIntegrations,
+  renderLogo,
+  renderPickup,
+  renderStatus,
+} from './brandReviewCells';
+import type { EcommBrandRow } from './queries';
 
 interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
@@ -18,46 +26,6 @@ interface Props {
 }
 
 const getRowId = (b: EcommBrandRow) => b.id;
-
-const renderLogo = (b: EcommBrandRow) => (
-  <Avatar alt="" src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
-    {b.brand_name?.[0]?.toUpperCase() ?? '?'}
-  </Avatar>
-);
-
-const renderBrand = (b: EcommBrandRow) => (
-  <Stack sx={{ lineHeight: 1.2 }} component="span">
-    <Typography variant="body2" component="span" sx={{
-      fontWeight: 600
-    }}>
-      {b.brand_name}
-    </Typography>
-    <Typography variant="caption" component="span" sx={{
-      color: "text.secondary"
-    }}>
-      {b.contact_email || b.contact_phone || '—'}
-    </Typography>
-  </Stack>
-);
-
-const locationValue = (b: EcommBrandRow) =>
-  [b.city, b.state].filter(Boolean).join(', ') || '—';
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-const renderPickup = (b: EcommBrandRow, t: Translate) =>
-  b.default_pickup_location_id ? (
-    <Chip size="small" color="success" variant="outlined" icon={<CheckCircleIcon />} label={t('products.pickup.registered')} />
-  ) : (
-    <Chip size="small" color="warning" variant="outlined" icon={<ErrorOutlineIcon />} label={t('products.pickup.noDefault')} />
-  );
-
-const pickupValue = (b: EcommBrandRow) =>
-  b.default_pickup_location_id ? 'Registered' : 'No default';
-
-const renderStatus = (b: EcommBrandRow) => (
-  <StatusChip status={b.status} colorMap={BRAND_STATUS_COLOR} />
-);
 
 export default function BrandsReviewTable({
   fetchRows,
@@ -101,6 +69,28 @@ export default function BrandsReviewTable({
         valueGetter: locationValue,
       },
       {
+        field: 'completion',
+        headerName: t('products.brandReview.colCompletion'),
+        type: 'number',
+        // Resolved per row from the wizard's step checks — no stored path to order or match.
+        sortable: false,
+        filterable: false,
+        width: 150,
+        cellRenderer: (row: EcommBrandRow) => renderCompletion(row, t),
+        valueGetter: completionValue,
+      },
+      {
+        field: 'integrations',
+        headerName: t('products.brandReview.colIntegration'),
+        type: 'text',
+        // Two vendor checks resolved per row — nothing stored to match a filter against.
+        sortable: false,
+        filterable: false,
+        width: 140,
+        cellRenderer: (row: EcommBrandRow) => renderIntegrations(row, t),
+        valueGetter: (row: EcommBrandRow) => integrationsValue(row, t),
+      },
+      {
         field: 'approved_product_count',
         headerName: t('products.brands.colApprovedProducts'),
         type: 'number',
@@ -117,7 +107,7 @@ export default function BrandsReviewTable({
         filterable: false,
         width: 130,
         cellRenderer: (row: EcommBrandRow) => renderPickup(row, t),
-        valueGetter: pickupValue,
+        valueGetter: (row: EcommBrandRow) => pickupValue(row, t),
       },
       {
         // No column filter: the page's status tabs own the status scope and are
@@ -149,7 +139,7 @@ export default function BrandsReviewTable({
       },
       { field: 'review', headerName: t('products.review.action'), type: 'actions', width: 110, cellRenderer: renderReview },
     ];
-  }, [onReview, formatDate]);
+  }, [onReview, formatDate, t]);
 
   return (
     <DuncitTable<EcommBrandRow>

@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import DocumentsListPage from './pages/documents/DocumentsListPage';
 import DocumentDetailPage from './pages/documents/DocumentDetailPage';
 import PoliciesPage from './pages/policies/PoliciesPage';
+import BrandConsentPage from './pages/brand-consent/BrandConsentPage';
 import PolicyAcceptanceLogsPage from './pages/policy-acceptance-logs-page';
 import ContractsPage from './pages/contracts/ContractsPage';
 import GrievanceTicketsPage from './pages/grievance/GrievanceTicketsPage';
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/documents" element={authed(<DocumentsListPage />)} />
       <Route path="/documents/:id" element={authed(<DocumentDetailPage />)} />
       <Route path="/policies" element={authed(<PoliciesPage />)} />
+      <Route path="/brand-consent" element={authed(<BrandConsentPage />)} />
       <Route path="/policy-acceptance-logs" element={authed(<PolicyAcceptanceLogsPage />)} />
       <Route path="/contracts" element={authed(<ContractsPage />)} />
       <Route path="/grievance/tickets" element={authed(<GrievanceTicketsPage />)} />

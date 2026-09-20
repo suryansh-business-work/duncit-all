@@ -515,6 +515,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       brands: 'Brands',
       brandsAndProductsReview: 'Brands & Products Review',
       brandsReview: 'Brands Review',
+      brandConsent: 'Brand Consent',
       bugs: 'Bugs',
       business: 'Business',
       businessIdentity: 'Business Identity',

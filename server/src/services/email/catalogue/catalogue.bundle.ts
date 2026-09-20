@@ -339,6 +339,18 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'The pod below ran at your venue. Tell us how the host and the group were — it is what decides who we send you next.',
 
   // --- Brand, running --------------------------------------------------------
+  'email.ecommBrandSubmitted.title': 'Your brand is under review',
+  'email.ecommBrandSubmitted.body':
+    'Thanks — the brand below is with our Products team. They verify the business details, documents and both your ShipRocket and Razorpay connections, and you will hear from us once it is approved. You can follow its status in the Partners console.',
+  'email.ecommBrandRejected.title': 'We could not approve your brand yet',
+  'email.ecommBrandRejected.body':
+    'The brand below was not approved this time. The reason from our reviewer is beneath it. Update the brand in the Partners console and submit it again whenever you are ready.',
+  'email.ecommBrandDeleted.title': 'Your brand has been removed',
+  'email.ecommBrandDeleted.body':
+    'The brand below has been removed from Duncit, along with its warehouses. Orders already placed are not affected. You can register a new brand from the Partners console at any time.',
+  'email.ecommBrandReviewRequested.title': 'A brand is waiting for review',
+  'email.ecommBrandReviewRequested.body':
+    'A partner has submitted the brand below. Open Brands Review, check every section — business, documents, integrations and the signed consent — and approve or reject it.',
   'email.ecommBrandAdded.title': 'Your brand has been added',
   'email.ecommBrandAdded.body':
     'We have your new brand and it is with our team for review. Once it is approved you can list products against it.',

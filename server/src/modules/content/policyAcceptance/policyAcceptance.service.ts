@@ -288,6 +288,15 @@ export const policyAcceptanceService = {
   },
 
   /**
+   * A brand partner signing the Brand Consent from the Partners console. The
+   * brand keeps the signature (name, hash, time); this is the auditable row
+   * beside every other acceptance, so Legal's log reads it like the rest.
+   */
+  async recordBrandConsent(userId: string, policy: IPolicy): Promise<void> {
+    await writeRows({ user_id: userId, policies: [policy], method: 'BRAND_CONSENT', surface: 'PORTAL' });
+  },
+
+  /**
    * The acceptance a brand-new account owes, plus its receipt.
    *
    * Called AFTER the account is committed and never inside the transaction

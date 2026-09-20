@@ -22,6 +22,7 @@ const FILE_MEASURE = new Map([
   ['new_line_coverage', 'new_uncovered_lines'],
   ['new_branch_coverage', 'new_uncovered_conditions'],
   ['new_duplicated_lines_density', 'new_duplicated_lines'],
+  ['new_security_hotspots_reviewed', 'new_security_hotspots'],
 ]);
 
 const { SONAR_HOST_URL, SONAR_TOKEN, GITHUB_STEP_SUMMARY } = process.env;
@@ -110,8 +111,10 @@ async function reportAnalysis({ projectKey, ceTaskId, dashboardUrl }) {
   }
   const failed = await reportConditions(task.analysisId);
   // No hotspot list: the CI analysis token is refused /api/hotspots/search
-  // (HTTP 403), and the condition table above already carries
-  // new_security_hotspots_reviewed.
+  // (HTTP 403). The measures API is not, so a failed
+  // new_security_hotspots_reviewed reports the FILES holding the hotspots
+  // instead (FILE_MEASURE) — without that the condition names no file at
+  // all, and a hotspot has to be reviewed in the SonarQube UI to be found.
   await reportIssues(projectKey);
   const measures = new Set(failed.map((metric) => FILE_MEASURE.get(metric)).filter(Boolean));
   for (const metric of measures) {

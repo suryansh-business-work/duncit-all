@@ -486,6 +486,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     is_liquid: Boolean
     "Days a sealed unit stays good (food, medicine); null when it doesn't expire."
     shelf_life_days: Int
+    "GST rate (%) printed on the invoice and sent to ShipRocket with each item. Default 0."
+    tax_percent: Float
     "Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none."
     mrp: Float
     color: String

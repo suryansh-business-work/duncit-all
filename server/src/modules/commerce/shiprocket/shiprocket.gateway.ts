@@ -1,7 +1,6 @@
 import { cacheGet, cacheSet } from '@config/redis';
 import { logs } from '@observability/log';
-import { srRequest, shiprocketError, type Json } from './shiprocket.client';
-import { isShiprocketConfigured } from './shiprocket.account';
+import { hasShiprocketAccount, srRequest, shiprocketError, type Json } from './shiprocket.client';
 import { chargeableWeightKg } from './shiprocket.parcel';
 
 export { isShiprocketConfigured } from './shiprocket.account';
@@ -441,7 +440,7 @@ async function lookupServiceability(args: ServiceabilityArgs, slab: number): Pro
  * and COD; a gateway failure is never cached.
  */
 export async function getServiceability(args: ServiceabilityArgs): Promise<ServiceabilityQuote | null> {
-  if (!(await isShiprocketConfigured())) return null;
+  if (!(await hasShiprocketAccount())) return null;
   const slab = weightSlab(args);
   const key = `sr:svc:${args.pickupPincode}:${args.deliveryPincode}:${slab}:${args.cod ? 1 : 0}`;
   const cached = await cacheGet<{ quote: ServiceabilityQuote | null }>(key);

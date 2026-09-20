@@ -6,7 +6,8 @@ import {
   type IProductOrder,
 } from '@modules/commerce/productOrder/productOrder.model';
 import { StoreReturnModel } from '@modules/commerce/store/storeReturn.model';
-import { isShiprocketConfigured } from './shiprocket.account';
+import { hasShiprocketAccount, withShiprocketAccount } from './shiprocket.client';
+import { accountForOrder } from './shiprocket.shipment';
 import { parseShiprocketDate, trackByAwb, trackByShipment, type TrackActivity, type TrackResult } from './shiprocket.gateway';
 import { isFinalStatus, mapShiprocketStatus, nextStatus } from './shiprocket.statusMap';
 import { applyReturnTracking } from './shiprocket.returns';
@@ -68,7 +69,11 @@ export function applyTracking(order: IProductOrder, t: TrackResult): FulfilmentS
 
 /** Pull the latest tracking for one order and persist it. */
 export async function refreshTracking(order: IProductOrder): Promise<IProductOrder> {
-  if (!(await isShiprocketConfigured())) return order;
+  return withShiprocketAccount(await accountForOrder(order), () => refreshOnAccount(order));
+}
+
+async function refreshOnAccount(order: IProductOrder): Promise<IProductOrder> {
+  if (!(await hasShiprocketAccount())) return order;
   const { awb, shipment_id } = order.shiprocket;
   if (!awb && !shipment_id) return order;
   const previous = order.fulfilment_status;
@@ -135,7 +140,6 @@ const OPEN_STATUSES = FULFILMENT_STATUSES.filter((s) => !isFinalStatus(s) && s !
 
 /** Pull tracking for every open shipment the webhook has not updated lately. Answers how many were pulled. */
 export async function sweepStaleTracking(): Promise<number> {
-  if (!(await isShiprocketConfigured())) return 0;
   const cutoff = new Date(Date.now() - STALE_AFTER_MS);
   const stale = { $or: [{ 'shiprocket.last_synced_at': null }, { 'shiprocket.last_synced_at': { $lt: cutoff } }] };
   const orders = await ProductOrderModel.find({

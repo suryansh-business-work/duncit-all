@@ -42,6 +42,9 @@ export default function WarehouseSelect() {
   }, [ready]);
 
   const emptyHint = !loading && ready.length === 0 ? t('products.pickup.noReadyWarehouses') : ' ';
+  // Hoisted out of the option label below: a template literal nested inside
+  // another one is unreadable, and Sonar refuses it (S4624).
+  const defaultTag = ` (${t('products.pickup.default')})`;
 
   return (
     <TextField
@@ -61,7 +64,7 @@ export default function WarehouseSelect() {
       {locations.map((loc) => (
         <MenuItem key={loc.id} value={loc.id} disabled={!loc.shiprocket_registered}>
           <ListItemText
-            primary={`${loc.nickname} — ${loc.city}${loc.is_default ? ` (${t('products.pickup.default')})` : ''}`}
+            primary={`${loc.nickname} — ${loc.city}${loc.is_default ? defaultTag : ''}`}
             secondary={loc.shiprocket_registered ? undefined : t('products.pickup.warehouseNotInShiprocket')}
           />
         </MenuItem>

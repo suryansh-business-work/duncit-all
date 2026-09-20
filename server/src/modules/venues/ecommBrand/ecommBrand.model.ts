@@ -9,6 +9,44 @@ export interface IEcommBrandDocument {
   uploaded_at: Date;
 }
 
+/**
+ * One vendor account the brand holds. The credential is the brand's own —
+ * never the Tech portal's — and is checked against the vendor with the same
+ * probe the Tech portal runs on its entries. `connected` is what the last
+ * check said; a brand cannot be submitted or approved until both are true.
+ */
+export interface IBrandShiprocketIntegration {
+  email: string;
+  password: string;
+  pickup_location: string;
+  webhook_secret: string;
+  connected: boolean;
+  checked_at: Date | null;
+  message: string;
+  details: string[];
+}
+
+export interface IBrandRazorpayIntegration {
+  key_id: string;
+  key_secret: string;
+  webhook_secret: string;
+  connected: boolean;
+  checked_at: Date | null;
+  message: string;
+  details: string[];
+}
+
+/** The Brand Consent as the owner signed it — the wording hash is the record. */
+export interface IBrandConsent {
+  accepted: boolean;
+  policy_id: Types.ObjectId | null;
+  policy_slug: string;
+  policy_title: string;
+  content_hash: string;
+  signed_name: string;
+  signed_at: Date | null;
+}
+
 export interface IEcommBrand extends Document {
   /** Permanent human id (BRD-000001) shown in the Onboarded Brands table. */
   brand_no: string | null;
@@ -51,6 +89,13 @@ export interface IEcommBrand extends Document {
   tags: string[];
   // E-commerce: default ShipRocket pickup/warehouse for this brand's SHIP orders.
   default_pickup_location_id: Types.ObjectId | null;
+  // The brand's own ShipRocket + Razorpay accounts (wizard step 8).
+  integrations: {
+    shiprocket: IBrandShiprocketIntegration;
+    razorpay: IBrandRazorpayIntegration;
+  };
+  // The Brand Consent signature (wizard step 10).
+  consent: IBrandConsent;
   // Workflow
   status: EcommBrandStatus;
   is_active: boolean;
@@ -67,6 +112,47 @@ const brandDocumentSchema = new Schema<IEcommBrandDocument>(
     type: { type: String, required: true },
     url: { type: String, required: true },
     uploaded_at: { type: Date, default: () => new Date() },
+  },
+  { _id: false }
+);
+
+const probeFields = {
+  connected: { type: Boolean, default: false },
+  checked_at: { type: Date, default: null },
+  message: { type: String, default: '' },
+  details: { type: [String], default: [] },
+};
+
+const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegration>(
+  {
+    email: { type: String, default: '', trim: true },
+    password: { type: String, default: '' },
+    pickup_location: { type: String, default: '', trim: true },
+    webhook_secret: { type: String, default: '', trim: true },
+    ...probeFields,
+  },
+  { _id: false }
+);
+
+const razorpayIntegrationSchema = new Schema<IBrandRazorpayIntegration>(
+  {
+    key_id: { type: String, default: '', trim: true },
+    key_secret: { type: String, default: '' },
+    webhook_secret: { type: String, default: '', trim: true },
+    ...probeFields,
+  },
+  { _id: false }
+);
+
+const brandConsentSchema = new Schema<IBrandConsent>(
+  {
+    accepted: { type: Boolean, default: false },
+    policy_id: { type: Schema.Types.ObjectId, ref: 'Policy', default: null },
+    policy_slug: { type: String, default: '' },
+    policy_title: { type: String, default: '' },
+    content_hash: { type: String, default: '' },
+    signed_name: { type: String, default: '', trim: true },
+    signed_at: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -103,6 +189,11 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     documents: { type: [brandDocumentSchema], default: [] },
     tags: { type: [String], default: [] },
     default_pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null },
+    integrations: {
+      shiprocket: { type: shiprocketIntegrationSchema, default: () => ({}) },
+      razorpay: { type: razorpayIntegrationSchema, default: () => ({}) },
+    },
+    consent: { type: brandConsentSchema, default: () => ({}) },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },
     reviewer_notes: { type: String, default: '' },

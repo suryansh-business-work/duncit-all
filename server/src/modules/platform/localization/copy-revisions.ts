@@ -44,6 +44,12 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   // App Store Connect refuses a copyright line holding a URL; the hint now says so.
   "tech.storeListing.copyrightHint": ["e.g. 2026 Duncit. Apple requires it to submit."],
+  // The finance-negative auto-cancel sweep sends this email too, and its refund
+  // follows the venue's refund ladder — so the old line promised every cancelled
+  // attendee a full refund the partial-refund path was never going to pay.
+  "email.userPodCancelledDuncit.body": [
+    "We have had to cancel the pod below. Your payment is being refunded in full, and you do not need to do anything to claim it.",
+  ],
   // The line under the WhatsApp box when the account's own number is typed back.
   "mweb.contactChange.whatsappCurrent": [
     "This is your current WhatsApp number, enter a different number to make a change.",

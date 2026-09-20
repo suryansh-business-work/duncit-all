@@ -15,6 +15,7 @@ import {
   useMediaPickerBridge,
 } from '@duncit/pod-form';
 import { QueryGuard } from '@duncit/ui';
+import { clubAdminVenueOptions } from '@duncit/utils';
 import { MediaPickerDialog } from '@duncit/media-picker';
 
 /**
@@ -39,11 +40,16 @@ export default function ClubAdminPodEditorPage() {
   const pod = podQuery.data?.clubAdminPodForEdit ?? null;
 
   const clubs = lookups.data?.myAdminClubs ?? [];
-  const venues = (lookups.data?.myVenues ?? []).filter(
-    (venue: any) => venue.status === 'APPROVED' && venue.is_active,
-  );
   const products = lookups.data?.availablePodProducts ?? [];
   const club = clubs.find((item: any) => item.id === clubId);
+  // One rule for all three surfaces (rule 40): `myVenues` is what this person
+  // OWNS, so a club admin who owns no venue had an empty picker and could not
+  // schedule a physical pod at all.
+  const venues = clubAdminVenueOptions(
+    lookups.data?.publicVenues ?? [],
+    lookups.data?.myVenues ?? [],
+    club
+  );
 
   const editor = useClubAdminPodEditor({
     clubId,

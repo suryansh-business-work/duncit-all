@@ -258,6 +258,10 @@ export const ClubAdminClubDocument = gql(`
       matched_venues {
         id
       }
+      # The venues this club is explicitly attached to. They narrow the pod
+      # editor's venue picker — the same narrowing the portals apply — so the
+      # same club admin sees the same options on all three surfaces (rule 27).
+      meetup_venues_id
       club_feature_images_and_videos {
         url
         type

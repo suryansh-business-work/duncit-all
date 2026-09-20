@@ -1,6 +1,7 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
+import { clubAdminVenueOptions } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
@@ -82,7 +83,7 @@ export function ClubPodEditorScreen() {
             initialDraftId={null}
             clubs={[club]}
             locations={options.locations ?? []}
-            venues={(options.publicVenues ?? []).filter((venue) => venue.is_active !== false)}
+            venues={clubAdminVenueOptions(options.publicVenues ?? [], [], club)}
             products={options.availablePodProducts ?? []}
             subCategories={options.subCategories ?? []}
             hostCategories={[]}

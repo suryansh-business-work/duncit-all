@@ -17,6 +17,7 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       calendarView: 'Calendar view',
       meetingStatusFilter: 'Filter meetings by status',
       viewVenuePods: '{count} pods — view pods hosted at this venue',
+      venueCommissionPercentage: 'Venue commission percentage',
     },
     adminVenueCreateDialog: {
       additionalVenuePhotosShownOnThe: 'Additional venue photos shown on the public venue page.',
@@ -347,8 +348,10 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       registeredVenues: 'Registered Venues',
       removeRefundBand: 'Remove refund band',
       saveCancellationTrigger: 'Save cancellation trigger',
+      saveDeductions: 'Save deductions',
       triggerHours: 'Cancellation trigger',
       validation: {
+        commissionRange: 'Enter a number between 0 and 100.',
         duplicateWindow: 'Another band already uses this window.',
         hoursMax: 'Use 8760 hours (a year) or fewer.',
         hoursNegative: 'Hours cannot be negative.',
@@ -360,6 +363,8 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
         wholeHours: 'Use whole hours.',
       },
       venueDeductions: 'Venue deductions',
+      venueDeductionsHint:
+        'The commission Duncit takes from the venue payout (after GST). Defaults to the {pct}% set in Finance → Default Deductions; change it here to override it for this venue only, or set 0 to always follow the default.',
       venueId: 'Venue ID',
       viewPodsHostedAtThisVenue: 'View pods hosted at this venue',
       noVenuesFound: 'No venues found.',

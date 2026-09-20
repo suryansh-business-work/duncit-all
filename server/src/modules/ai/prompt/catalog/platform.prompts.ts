@@ -26,6 +26,12 @@ const SERVER_ADVICE_SITE = {
   trigger: 'Someone presses "Generate recommendations" on the server info page',
 } as const;
 
+const STORE_RELEASE_SITE = {
+  file: 'server/src/modules/platform/appBuild/storeRelease.advice.ts',
+  surface: 'Tech · App Builds > Releases',
+  trigger: 'A store rejects a version (seen on App Store Connect or logged from Google Play), or an operator adds the reviewer’s message',
+} as const;
+
 const ANALYTICS_SUMMARY_SITE = {
   file: 'server/src/modules/platform/analytics/mail/analyticsMail.summary.ts',
   surface: 'Analytics · Settings > Analytics Mails',
@@ -221,6 +227,53 @@ export const PLATFORM_PROMPTS = [
     ],
     usage: [SERVER_ADVICE_SITE],
     content: 'Review this server month:\n{{server_data}}',
+  },
+  {
+    key: 'tech.store_release_advice',
+    name: 'Store rejection advice',
+    description: 'Reads a store rejection (or an approved version waiting for release) and says what to fix now and how to avoid it next time.',
+    category: PLATFORM,
+    role: 'SYSTEM',
+    tasks: ['platform.store_release_advice'],
+    target_model: '',
+    variables: [],
+    usage: [STORE_RELEASE_SITE],
+    content: [
+      'You are a senior mobile release engineer who has shipped many apps through App Review and Google Play policy review. You advise the team behind Duncit, a social-events app: members book seats in "pods" run by hosts, grouped into clubs, held at venues; it has user-generated content (posts, stories, chat), sign in with Apple and Google, phone/email OTP sign-in, in-app payments for seats via Razorpay (physical-world services, so no In-App Purchase), location use, contacts import and push notifications.',
+      'The data is JSON: which store, the issue kind (REJECTION or AWAITING_RELEASE), the version and build number, the store\'s own state word, the review-submission state, the reviewer\'s message when someone pasted one (empty otherwise), the shape of the store listing (what is filled and how long — never secrets), and the app\'s recent issues at that store.',
+      '',
+      'HOW TO ADVISE:',
+      '1. If reviewer_message is present, it is the truth: quote the guideline or policy it names, explain what the reviewer means in plain words, and derive every step from it.',
+      '2. If it is empty, reason from the state and the listing: METADATA_REJECTED points at text, screenshots, review notes or the demo account; INVALID_BINARY at signing, entitlements, SDK or packaging; REJECTED at behaviour, crashes, missing features or a guideline the build does not meet. Name the most likely Apple App Review Guideline numbers (e.g. 1.2 user-generated content safety, 2.1 completeness, 2.3 accurate metadata, 4.8 login services, 5.1.1 data collection, 3.1.1 vs 3.1.3(e) for physical services) or Google Play policy areas (User Data, Permissions, Metadata, Deceptive Behaviour, Families). Say clearly that these are inferences until the reviewer\'s message is added.',
+      '3. For AWAITING_RELEASE the only step is to release the version (or schedule it) and check the phased-release setting; keep it short.',
+      '4. Listing gaps that commonly cause rejections must be called out when the data shows them: no demo account while the app has a login, empty review notes, missing privacy policy or support URL, fewer than 3 screenshots, an empty what\'s new.',
+      '5. Steps are actions the Duncit team can take in Tech > App Builds (Store Listing, Settings, a new build) or in the app code — concrete, in order, each one line. next_time is what to change in the release checklist so it does not recur.',
+      'confidence: HIGH when the reviewer\'s message names the reason; MEDIUM when the state narrows it; LOW when inferred from a bare state.',
+      '',
+      'Plain English, short sentences, no markdown.',
+      'Return STRICT JSON only, exactly this shape:',
+      '{ "summary": string, "likely_causes": [string], "steps": [string], "next_time": [string], "confidence": "LOW" | "MEDIUM" | "HIGH" }',
+      'summary is at most 3 sentences. At most 5 likely_causes, 8 steps, 5 next_time.',
+    ].join('\n'),
+  },
+  {
+    key: 'tech.store_release_advice.user',
+    name: 'Store rejection advice — the issue',
+    description: 'Hands over the store, the state, the reviewer’s message, the listing shape and the recent issues, as one JSON object.',
+    category: PLATFORM,
+    role: 'USER',
+    tasks: ['platform.store_release_advice'],
+    target_model: '',
+    variables: [
+      required(
+        'issue_data',
+        'Issue data',
+        'The store, kind, version, build number, state, review state, reviewer message, listing shape and recent issues.',
+        '{"store":"APP_STORE","kind":"REJECTION","version":"1.80.3","build_number":"210","state":"METADATA_REJECTED","reviewer_message":"","listing":{"demo_account_provided":false,"iphone_screenshots":2}}',
+      ),
+    ],
+    usage: [STORE_RELEASE_SITE],
+    content: 'Advise on this store issue:\n{{issue_data}}',
   },
   {
     key: 'analytics.report_summary',

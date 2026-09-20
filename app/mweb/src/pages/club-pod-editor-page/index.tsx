@@ -13,6 +13,7 @@ import {
   useMediaPickerBridge,
 } from '@duncit/pod-form';
 import { QueryGuard } from '@duncit/ui';
+import { clubAdminVenueOptions } from '@duncit/utils';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { notifySuccess } from '../../components/notify';
 import { useDateFormat } from '../../utils/dateFormat';
@@ -26,15 +27,14 @@ function savedMessage(t: Translate, created: boolean, draft: boolean): string {
   return t('clubAdmin.editor.podCreated');
 }
 
-/** The editor's pick lists, out of the one lookups document. Only an approved,
- * active venue can be booked, so the rest never reach the select. */
+/** The editor's pick lists, out of the one lookups document. Which venues a
+ * club admin may book is `clubAdminVenueOptions` — one rule for mWeb, the
+ * Partners console and the app (rule 40). */
 function editorLookups(data: any, clubId: string) {
   const clubs: any[] = data?.myAdminClubs ?? [];
-  const venues: any[] = (data?.myVenues ?? []).filter(
-    (venue: any) => venue.status === 'APPROVED' && venue.is_active,
-  );
   const products: any[] = data?.availablePodProducts ?? [];
   const club = clubs.find((item) => item.id === clubId);
+  const venues = clubAdminVenueOptions(data?.publicVenues ?? [], data?.myVenues ?? [], club);
   return { clubs, venues, products, club };
 }
 

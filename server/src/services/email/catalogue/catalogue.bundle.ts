@@ -510,4 +510,53 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.analyticsAlert.change': '{change} against the period before',
   'email.analyticsAlert.noChange': 'No earlier period to compare with',
   'email.analyticsAlert.slack': 'Analytics alert — *{name}*: {tile} is {value} ({rule}; {period}). {url}',
+
+  // --- Tech > App Builds > Releases ----------------------------------------
+  'email.storeReleaseRejected.title': 'A release was rejected',
+  'email.storeReleaseRejected.body':
+    'The store refused a version of the app. The facts are below, with what to do about it and how to avoid it next time. Open Releases to see the full reason, add the reviewer’s message, and submit the latest build.',
+  'email.storeReleaseApproved.title': 'A release is approved and waiting',
+  'email.storeReleaseApproved.body':
+    'Apple has approved this version. It is not live yet — it waits for someone to press release in App Store Connect.',
+  'email.storeReleaseReminder.title': 'A release still needs you',
+  'email.storeReleaseReminder.body':
+    'This has been open for {hours_open} hours and nothing has changed at the store. Open Releases to act on it, or mark it resolved to stop these reminders.',
+  'email.storeRelease.stateLabel': 'Store status',
+  'email.storeRelease.storeLabel': 'Store',
+  'email.storeRelease.versionLabel': 'Version',
+  'email.storeRelease.buildLabel': 'Build',
+  'email.storeRelease.detectedLabel': 'First seen',
+  'email.storeRelease.reviewerLabel': 'Reviewer said',
+  'email.storeRelease.adviceLabel': 'What to do',
+  'email.storeRelease.causesLabel': 'Likely causes',
+  'email.storeRelease.stepsLabel': 'Steps now',
+  'email.storeRelease.nextTimeLabel': 'Next time',
+  'email.storeRelease.openReleases': 'Open Releases',
+  'email.storeRelease.help':
+    'Notices go to the addresses and the Slack channel set on Tech > App Builds > Settings > Release notices.',
+  'email.storeRelease.footer': 'You are receiving this because you are a release contact on the Duncit Tech console.',
+  'email.storeRelease.storeAppStore': 'App Store',
+  'email.storeRelease.storeGooglePlay': 'Google Play',
+  'email.storeRelease.noReviewerMessage': 'Not added yet — paste it on the Releases page to sharpen the advice.',
+  'email.storeRelease.noAdvice': 'No advice was written for this issue.',
+  'email.storeRelease.meaningRejected':
+    'App Review refused the app itself — behaviour, a crash, a missing feature or a guideline the build does not meet. The reviewer’s message is in App Store Connect > Resolution Center.',
+  'email.storeRelease.meaningMetadataRejected':
+    'App Review refused the listing — text, screenshots, review notes or the demo account — not the binary. Fix the listing and resubmit the same build.',
+  'email.storeRelease.meaningInvalidBinary':
+    'Apple could not accept the uploaded build: a signing, entitlement, SDK or packaging problem named in the mail from App Store Connect.',
+  'email.storeRelease.meaningDeveloperRejected': 'Someone on our side withdrew this version from review.',
+  'email.storeRelease.meaningPendingDeveloperRelease':
+    'Apple approved the version. It goes live only when someone presses Release this version in App Store Connect.',
+  'email.storeRelease.meaningManual': 'Logged by hand from the store’s mail or console.',
+  'email.storeRelease.meaningOther': 'The store reports this version as {state}.',
+  'email.storeRelease.subjectRejected': '{store} rejected version {version}',
+  'email.storeRelease.subjectApproved': '{store} approved version {version} — release it',
+  'email.storeRelease.subjectReminder': 'Still open: {store} version {version}',
+  'email.storeRelease.slackRejected':
+    ':red_circle: *{store}* rejected *v{version}* (build {build}) — {state}.\n*Suggestion:* {suggestion}\n{url}',
+  'email.storeRelease.slackApproved':
+    ':large_green_circle: *{store}* approved *v{version}* (build {build}) — waiting for release.\n{url}',
+  'email.storeRelease.slackReminder':
+    ':alarm_clock: Still open after {hours} h: *{store}* *v{version}* (build {build}) — {state}.\n*Suggestion:* {suggestion}\n{url}',
 };

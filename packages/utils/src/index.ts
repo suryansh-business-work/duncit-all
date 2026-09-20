@@ -1,5 +1,10 @@
 export { copyToClipboard } from './clipboard';
 export {
+  clubAdminVenueOptions,
+  type BookableVenue,
+  type ClubVenueLinks,
+} from './club-venues';
+export {
   canFlipGiftCard,
   giftCardArtwork,
   type GiftCardArtwork,

@@ -59,7 +59,7 @@ export default function HomeSectionForm({
         <RhfTextField control={control} name="subtitle" label={t('ecommPortal.homePage.subtitleField')} />
         <Box sx={TWO_COLUMNS}>
           <RhfDateTimeField control={control} name="starts_at" label={t('ecommPortal.homePage.startsAt')} hint={t('ecommPortal.homePage.blankNow')} />
-          <RhfDateTimeField control={control} name="ends_at" label={t('ecommPortal.homePage.endsAt')} hint={endsHint} />
+          <RhfDateTimeField control={control} name="ends_at" label={t('ecommPortal.homePage.endsAt')} hint={endsHint} required={kind === 'FLASH_SALE'} />
         </Box>
         <RhfSwitch control={control} name="is_active" label={t('shell.common.active')} hint={t('ecommPortal.form.activeHint')} />
         <Divider />

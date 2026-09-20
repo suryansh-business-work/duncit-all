@@ -12,6 +12,8 @@ export interface ListColumn {
   key: string;
   label: string;
   kind?: 'text' | 'multiline' | 'image';
+  /** Marks the input required: the asterisk on its label. The list schema decides whether blank is refused. */
+  required?: boolean;
 }
 
 interface FieldListRowProps<T extends FieldValues> {
@@ -33,9 +35,19 @@ function RowInput<T extends FieldValues>({
   name,
   column,
 }: Readonly<{ control: Control<T>; name: Path<T>; column: ListColumn }>) {
-  if (column.kind === 'image') return <RhfImageField control={control} name={name} label={column.label} />;
+  if (column.kind === 'image') return <RhfImageField control={control} name={name} label={column.label} required={column.required} />;
   const multiline = column.kind === 'multiline';
-  return <RhfTextField control={control} name={name} label={column.label} size="small" multiline={multiline} minRows={multiline ? 2 : undefined} />;
+  return (
+    <RhfTextField
+      control={control}
+      name={name}
+      label={column.label}
+      size="small"
+      multiline={multiline}
+      minRows={multiline ? 2 : undefined}
+      required={column.required}
+    />
+  );
 }
 
 /** One row of a list editor: its inputs side by side, then move / remove. */

@@ -55,6 +55,7 @@ export default function CategoryForm({
           label={t('ecommPortal.nav.petTypes')}
           options={petTypeOptions}
           hint={t('ecommPortal.categories.petTypesHint')}
+          required
           testId="category-pet-types"
         />
         <RhfImageField
@@ -62,6 +63,7 @@ export default function CategoryForm({
           name="image_url"
           label={t('ecommPortal.form.image')}
           hint={t('ecommPortal.categories.imageHint')}
+          required
           testId="category-image"
         />
         <RhfImageField
@@ -69,6 +71,7 @@ export default function CategoryForm({
           name="banner_url"
           label={t('ecommPortal.form.banner')}
           hint={t('ecommPortal.categories.bannerHint')}
+          required
           testId="category-banner"
         />
         <RhfSwitch control={control} name="is_active" label={t('shell.common.active')} hint={t('ecommPortal.form.activeHint')} testId="category-active" />

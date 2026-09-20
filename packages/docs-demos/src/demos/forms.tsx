@@ -90,6 +90,8 @@ interface PackagingMock {
   breadth_cm: number;
   height_cm: number;
   hsn_code: string;
+  /** Marks the four measurements required, as the E-commerce parcel edit before a booking does. */
+  required: boolean;
 }
 
 const PACKAGING_TEXT = flattenCatalogue(PACKAGING_BUNDLE);
@@ -103,10 +105,11 @@ const packagingT: PackagingTranslate = (key, options) =>
 
 /** A real form around the section, seeded from the mock. */
 function PackagingDemo({ mock }: Readonly<{ mock: PackagingMock }>) {
+  const { required, ...parcel } = mock;
   const { control, setValue } = useForm({
-    values: { ...mock, package_type: 'POLYBAG', shelf_life_days: 365, is_fragile: false, is_liquid: false },
+    values: { ...parcel, package_type: 'POLYBAG', shelf_life_days: 365, is_fragile: false, is_liquid: false },
   });
-  return <PackagingFields control={control} setValue={setValue} t={packagingT} />;
+  return <PackagingFields control={control} setValue={setValue} t={packagingT} required={required} />;
 }
 
 /** Built from the shared rules — never from a hand-written zod chain per form. */
@@ -121,8 +124,8 @@ export default defineDemos('forms', [
     id: 'packaging',
     title: 'Shipping & packaging — the section every product form shares',
     note:
-      'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable.',
-    mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309' },
+      'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable. Set required to true and every measurement label gains its asterisk, as the parcel edit before a booking shows it.',
+    mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309', required: false },
     render: (mock) => <PackagingDemo mock={mock} />,
   }),
   defineDemo<FieldMock>({

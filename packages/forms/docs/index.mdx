@@ -320,6 +320,9 @@ import { PackagingFields } from '@duncit/forms';
 
 // One variant row: its own parcel only; type, HSN and flags stay product-wide.
 <PackagingFields control={control} setValue={setValue} t={t} prefix={`variants.${index}.`} productFields={false} />
+
+// A parcel about to be booked: every measurement is marked required (the schema still decides what blank means).
+<PackagingFields control={control} setValue={setValue} t={t} productFields={false} required />
 ```
 
 The values stay the form's own — the consumer's Zod schema validates them. Copy comes from

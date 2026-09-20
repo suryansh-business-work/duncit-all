@@ -7,6 +7,7 @@ interface RhfDateTimeFieldProps<T extends FieldValues> {
   name: Path<T>;
   label: string;
   hint?: string;
+  required?: boolean;
 }
 
 const toDate = (value: unknown): Date | null => {
@@ -23,7 +24,7 @@ const toIso = (date: Date | null): string => (date && !Number.isNaN(date.getTime
  * an ISO string so the moment goes to the server unchanged. Clearable — a blank
  * value means "no limit" wherever this is used.
  */
-export default function RhfDateTimeField<T extends FieldValues>({ control, name, label, hint }: Readonly<RhfDateTimeFieldProps<T>>) {
+export default function RhfDateTimeField<T extends FieldValues>({ control, name, label, hint, required }: Readonly<RhfDateTimeFieldProps<T>>) {
   return (
     <Controller
       control={control}
@@ -36,6 +37,7 @@ export default function RhfDateTimeField<T extends FieldValues>({ control, name,
           slotProps={{
             textField: {
               fullWidth: true,
+              required,
               onBlur: field.onBlur,
               error: Boolean(fieldState.error),
               helperText: fieldState.error?.message ?? hint ?? ' ',

@@ -74,8 +74,8 @@ function GeneralFields({ control }: Readonly<{ control: Control<GeneralValues> }
         blank={{ label: '', url: '' }}
         max={12}
         columns={[
-          { key: 'label', label: t('ecommPortal.settings.socialLabel') },
-          { key: 'url', label: t('ecommPortal.settings.socialUrl') },
+          { key: 'label', label: t('ecommPortal.settings.socialLabel'), required: true },
+          { key: 'url', label: t('ecommPortal.settings.socialUrl'), required: true },
         ]}
         addLabel={t('ecommPortal.settings.addSocial')}
         itemLabel={(position) => t('ecommPortal.settings.socialN', { vars: { n: position } })}

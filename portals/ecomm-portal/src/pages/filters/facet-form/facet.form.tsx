@@ -33,7 +33,7 @@ export default function FacetForm({ initial, busy, onClose, onSubmit }: Readonly
           name="options"
           blank={BLANK_FACET_OPTION}
           columns={[
-            { key: 'label', label: t('ecommPortal.filters.optionLabel') },
+            { key: 'label', label: t('ecommPortal.filters.optionLabel'), required: true },
             { key: 'slug', label: t('ecommPortal.form.slug') },
           ]}
           addLabel={t('ecommPortal.filters.addOption')}

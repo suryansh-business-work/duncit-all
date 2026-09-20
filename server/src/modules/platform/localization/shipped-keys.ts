@@ -3944,6 +3944,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "clubAdmin.editor.notFound": "Pod not found in this club.",
   "clubAdmin.editor.podCreated": "Pod created.",
   "clubAdmin.editor.podUpdated": "Pod updated.",
+  "clubAdmin.editor.saveDraft": "Save as Draft",
   "clubAdmin.monitoring.actor": "By",
   "clubAdmin.monitoring.aiRisk": "AI Risk",
   "clubAdmin.monitoring.aiRiskChip": "AI risk: {risk}",

@@ -10,6 +10,7 @@ interface Props extends SingleImageState {
   onChange: (url: string) => void;
   helperText?: string;
   externalError?: boolean;
+  required?: boolean;
   disabled?: boolean;
   buttonLabel: string;
   uploadTestId?: string;
@@ -27,6 +28,7 @@ export default function UrlButtonVariant({
   onChange,
   helperText,
   externalError,
+  required,
   disabled,
   busy,
   error,
@@ -45,6 +47,7 @@ export default function UrlButtonVariant({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           fullWidth
+          required={required}
           disabled={disabled}
           error={externalError}
         />

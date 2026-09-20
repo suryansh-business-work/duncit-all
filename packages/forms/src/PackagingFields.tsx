@@ -25,6 +25,8 @@ export interface PackagingFieldsProps<T extends FieldValues> {
   prefix?: string;
   /** Also render the product-wide fields (type, HSN, fragile/liquid, shelf life). Off for a variant row. */
   productFields?: boolean;
+  /** Mark the four measurements required: the asterisk on each label. Whether blank is refused stays with the consumer schema. */
+  required?: boolean;
 }
 
 const DIMS = [
@@ -100,6 +102,7 @@ export default function PackagingFields<T extends FieldValues>({
   t,
   prefix = '',
   productFields = true,
+  required,
 }: Readonly<PackagingFieldsProps<T>>) {
   const path: PathOf = (key) => `${prefix}${key}`;
   const [weight, length, breadth, height] = useWatch({ control, name: DIMS.map((d) => path(d.key)) as Path<T>[] });
@@ -139,6 +142,7 @@ export default function PackagingFields<T extends FieldValues>({
             name={path(d.key) as Path<T>}
             type="number"
             label={t(d.label)}
+            required={required}
             slotProps={{ htmlInput: { min: 0, step: d.step, inputMode: 'decimal' } }}
           />
         ))}

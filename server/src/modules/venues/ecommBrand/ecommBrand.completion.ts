@@ -50,27 +50,18 @@ export interface BrandCompletion {
   next_step: number;
 }
 
+/** The text fields a step reads. */
+type BrandTextFact =
+  | 'brand_name' | 'description' | 'contact_email' | 'registered_business_name' | 'gstin' | 'pan'
+  | 'address_line1' | 'city' | 'state' | 'postal_code' | 'logo_url' | 'account_number' | 'ifsc_code' | 'upi_id';
+
 /** The facts a step is judged on — the Mongoose document and the public shape both fit. */
-export interface BrandFacts {
-  brand_name?: string | null;
-  description?: string | null;
-  contact_email?: string | null;
-  registered_business_name?: string | null;
-  gstin?: string | null;
-  pan?: string | null;
-  address_line1?: string | null;
-  city?: string | null;
-  state?: string | null;
-  postal_code?: string | null;
+export type BrandFacts = Partial<Record<BrandTextFact, string | null>> & {
   product_categories?: readonly string[] | null;
-  logo_url?: string | null;
   documents?: readonly unknown[] | null;
-  account_number?: string | null;
-  ifsc_code?: string | null;
-  upi_id?: string | null;
   integrations?: { shiprocket?: { connected?: boolean | null }; razorpay?: { connected?: boolean | null } } | null;
   consent?: { accepted?: boolean | null } | null;
-}
+};
 
 /** What the consent step needs from outside the brand document. */
 export interface ConsentContext {

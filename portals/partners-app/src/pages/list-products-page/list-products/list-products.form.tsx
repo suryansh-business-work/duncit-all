@@ -48,7 +48,7 @@ const steps = ['Category', 'Product', 'Variants', 'Commission', 'Delivery', 'Pre
 const stepFields: Path<ProductListingValues>[][] = [
   ['categories'],
   // The product's parcel sits on the Product step: it is every variant's fallback.
-  ['product_name', 'weight_kg', 'length_cm', 'breadth_cm', 'height_cm', 'package_type', 'hsn_code', 'shelf_life_days'],
+  ['product_name', 'weight_kg', 'length_cm', 'breadth_cm', 'height_cm', 'package_type', 'hsn_code', 'shelf_life_days', 'tax_percent'],
   ['variants'],
   ['commission_pct'],
   ['delivery_target', 'pickup_location_id', 'free_delivery_above'],

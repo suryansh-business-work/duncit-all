@@ -83,6 +83,14 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
       ) : (
         <RhfTextField control={control} name={nm('option_label')} label={t('partners.listProductsPage.variantNameEGDefault')} />
       )}
+      <RhfTextField
+        control={control}
+        name={nm('sku')}
+        label={t('partners.listProductsPage.variantSku')}
+        hint={t('partners.listProductsPage.variantSkuHint')}
+        slotProps={{ htmlInput: { maxLength: 60, style: { textTransform: 'uppercase' }, 'data-testid': `variant-${index}-sku` } }}
+        sx={{ maxWidth: 320 }}
+      />
       <VariantImages images={images} onAdd={() => onPickImage(index)} onRemove={removeImage} />
       <RhfTextField
         control={control}

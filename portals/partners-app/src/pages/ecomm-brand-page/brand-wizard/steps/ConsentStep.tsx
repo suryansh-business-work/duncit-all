@@ -88,7 +88,13 @@ export default function ConsentStep({ brandId, consent, locked, ensureBrandId, o
             render={({ field, fieldState }) => (
               <Box>
                 <FormControlLabel
-                  control={<Checkbox checked={field.value} onChange={(event) => field.onChange(event.target.checked)} inputProps={{ 'aria-describedby': 'brand-consent-accept-error' }} />}
+                  control={
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(event) => field.onChange(event.target.checked)}
+                      slotProps={{ input: { 'aria-describedby': 'brand-consent-accept-error' } }}
+                    />
+                  }
                   label={t('partners.brandWizard.consent.acceptLabel')}
                   data-testid="brand-consent-accept"
                 />

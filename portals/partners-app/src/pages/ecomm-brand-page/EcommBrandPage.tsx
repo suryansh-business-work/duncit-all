@@ -1,195 +1,108 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton } from '@duncit/buttons';
+import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { useApolloTableFetch } from '@duncit/table';
-import MediaPickerDialog from '../../components/MediaPickerDialog';
-import EcommBrandForm from './EcommBrandForm';
+import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 import BrandPauseDialog from './BrandPauseDialog';
 import PartnerBrandsTable from './PartnerBrandsTable';
-import {
-  MY_BRANDS,
-  MY_BRANDS_TABLE,
-  SAVE_BRAND,
-  SUBMIT_BRAND,
-  WITHDRAW_BRAND,
-  type EcommBrand,
-  type EcommBrandRow,
-} from './queries';
-import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
-import { useTranslation } from '@duncit/shell';
+import { DELETE_MY_BRAND, MY_BRANDS_TABLE, type EcommBrandRow } from './queries';
 import { primaryHeroBackground } from '../../components/primaryHero';
 
-type Editing = EcommBrand | 'new' | null;
+const editPath = (brand: EcommBrandRow) => `/ecomm-brand/${brand.id}/edit`;
 
+/** "Your brands": the table, and the doors into the wizard, products and settings. */
 export default function EcommBrandPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading } = useQuery<any>(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [saveBrand, saveState] = useMutation<any>(SAVE_BRAND);
-  const [submitBrand, submitState] = useMutation<any>(SUBMIT_BRAND);
-  const [withdrawBrand, withdrawState] = useMutation<any>(WITHDRAW_BRAND);
-  const [editing, setEditing] = useState<Editing>(null);
+  const [deleteBrand, deleteState] = useMutation<any>(DELETE_MY_BRAND);
   const [pauseTarget, setPauseTarget] = useState<EcommBrandRow | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
-
-  const accountEmail = data?.me?.email || '';
-  const busy = saveState.loading || submitState.loading || withdrawState.loading;
-
-  const editingBrand = editing && editing !== 'new' ? editing : null;
-  const brandId = editingBrand?.id;
-  const locked = editingBrand?.status === 'SUBMITTED' || editingBrand?.status === 'APPROVED';
-  const defaultValues = useMemo(() => toFormValues(editingBrand, accountEmail), [editingBrand, accountEmail]);
-  const existingBrandTitle = locked ? 'Brand details' : 'Edit brand';
-  const dialogTitle = editing === 'new' ? 'New brand' : existingBrandTitle;
+  const [deleteTarget, setDeleteTarget] = useState<EcommBrandRow | null>(null);
 
   const fetchRows = useApolloTableFetch<EcommBrandRow>(client, MY_BRANDS_TABLE, 'myEcommBrandsTable');
 
-  const pickImage = () =>
-    new Promise<string | null>((resolve) => {
-      pickerResolve.current = resolve;
-      setPickerOpen(true);
-    });
-  const settlePicker = (url: string | null) => {
-    pickerResolve.current?.(url);
-    pickerResolve.current = null;
-    setPickerOpen(false);
-  };
-  const closeDialog = () => {
-    setEditing(null);
-    setError(null);
-  };
-
-  const save = async (values: BrandFormValues) => {
-    setError(null);
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await saveBrand({ variables: { brand_doc_id: brandId ?? null, input: toSaveInput(values) } });
-      setMessage(t('partners.ecommBrandPage.brandSaved'));
-      closeDialog();
+      await deleteBrand({ variables: { brand_doc_id: deleteTarget.id } });
+      notifySuccess(t('partners.brandWizard.danger.deleted'));
+      setDeleteTarget(null);
       refetchRef.current?.();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error) {
+      notifyError(parseApiError(error));
+      setDeleteTarget(null);
     }
   };
-  const submitForReview = async (values: BrandFormValues) => {
-    setError(null);
-    try {
-      const res = await saveBrand({ variables: { brand_doc_id: brandId ?? null, input: toSaveInput(values) } });
-      const id = brandId ?? res.data?.saveEcommBrand?.id;
-      await submitBrand({ variables: { brand_doc_id: id } });
-      setMessage(t('partners.ecommBrandPage.brandSubmittedForReview'));
-      closeDialog();
-      refetchRef.current?.();
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
-  const withdraw = async (brand: EcommBrand) => {
-    setError(null);
-    try {
-      await withdrawBrand({ variables: { brand_doc_id: brand.id } });
-      setEditing({ ...brand, status: 'DRAFT' }); // unlock the form in place
-      setMessage(t('partners.ecommBrandPage.brandMovedBackToDraft'));
-      refetchRef.current?.();
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
-
-  if (loading && !data) return <Typography role="status">Loading…</Typography>;
 
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
-        <Typography variant="overline" sx={{ fontWeight: 800 }}>{t('partners.common.partnerTools')}</Typography>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>E-Commerce Brands</Typography>
+        <Typography variant="overline" sx={{ fontWeight: 800 }}>
+          {t('partners.common.partnerTools')}
+        </Typography>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
+          {t('partners.ecommBrandPage.heroTitle')}
+        </Typography>
         <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
-          Register one or more product brands — our onboarding team verifies each before it goes live.
+          {t('partners.ecommBrandPage.heroIntro')}
         </Typography>
       </Box>
 
-      {error && !editing && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
-
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          <Typography
-            variant="h6"
-            component="h2"
-            sx={{
-              fontWeight: 900,
-              mb: 2
-            }}>{t('partners.ecommBrandPage.yourBrands')}</Typography>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 900, mb: 2 }}>
+            {t('partners.ecommBrandPage.yourBrands')}
+          </Typography>
           <PartnerBrandsTable
             fetchRows={fetchRows}
             refetchRef={refetchRef}
             toolbarActions={
-              <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setError(null); setEditing('new'); }}>
-                New brand
+              <DuncitButton
+                size="small"
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/ecomm-brand/new')}
+                data-testid="brands-new-brand"
+              >
+                {t('partners.ecommBrandPage.newBrand')}
               </DuncitButton>
             }
-            onOpen={(brand) => { setError(null); setEditing(brand); }}
+            onOpen={(brand) => navigate(editPath(brand))}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
             onSettings={(brand) => navigate(`/ecomm-brand/${brand.id}/settings`)}
             onToggleActive={setPauseTarget}
+            onDelete={setDeleteTarget}
           />
         </CardContent>
       </Card>
 
-      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm" aria-labelledby="brand-dialog-title">
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <span id="brand-dialog-title">{dialogTitle}</span>
-          <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          {editingBrand?.status === 'SUBMITTED' && (
-            <Alert severity="info" sx={{ mb: 2 }} action={<DuncitButton color="inherit" size="small" onClick={() => withdraw(editingBrand)} disabled={busy}>Edit</DuncitButton>}>
-              This brand is under review.
-            </Alert>
-          )}
-          {editingBrand?.status === 'APPROVED' && <Alert severity="success" sx={{ mb: 2 }}>{t('partners.ecommBrandPage.approvedYourBrandIsVerified')}</Alert>}
-          {editingBrand?.status === 'REJECTED' && <Alert severity="error" sx={{ mb: 2 }}>Rejected: {editingBrand.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>}
-          {error && editing && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
-          <EcommBrandForm
-            key={editingBrand?.id ?? 'new'}
-            defaultValues={defaultValues}
-            busy={busy}
-            locked={locked}
-            onSave={save}
-            onSubmitForReview={submitForReview}
-            onPickImage={pickImage}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <BrandPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />
-      <MediaPickerDialog
-        open={pickerOpen}
-        onClose={() => settlePicker(null)}
-        onPicked={(url) => settlePicker(url)}
-        folder="/brands/media"
-        title={t('partners.ecommBrandPage.uploadBrandMedia')}
-        accept="image/*,application/pdf"
+      <BrandPauseDialog
+        target={pauseTarget}
+        onClose={() => setPauseTarget(null)}
+        onDone={(text) => {
+          notifySuccess(text);
+          refetchRef.current?.();
+        }}
       />
-      <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={t('partners.brandWizard.danger.deleteConfirmTitle', {
+          vars: { brand: deleteTarget?.brand_name || t('partners.ecommBrandPage.untitledBrand') },
+        })}
+        message={t('partners.brandWizard.danger.deleteConfirmBody')}
+        destructive
+        busy={deleteState.loading}
+        busyLabel={t('shell.common.deleting')}
+        confirmLabel={t('shell.common.delete')}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
     </Stack>
   );
 }

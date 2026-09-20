@@ -16,6 +16,7 @@ const PRODUCT_FIELDS = `
   is_fragile
   is_liquid
   shelf_life_days
+  tax_percent
   mrp
   color
   inventory_count
@@ -48,6 +49,7 @@ const PRODUCT_FIELDS = `
       name
       value
     }
+    sku
     color
     size_label
     description

@@ -90,7 +90,9 @@ export function accountFromBrandIntegration(
 }
 
 /** The account a brand ships on, or null when it holds no connected one (or the id is not a brand's). */
-export async function getBrandShiprocketAccount(brandId: unknown): Promise<ShiprocketAccount | null> {
+export async function getBrandShiprocketAccount(
+  brandId: string | Types.ObjectId | null | undefined,
+): Promise<ShiprocketAccount | null> {
   const id = String(brandId ?? '');
   if (!id || !Types.ObjectId.isValid(id)) return null;
   const brand = await EcommBrandModel.findById(id).select('integrations.shiprocket').lean();

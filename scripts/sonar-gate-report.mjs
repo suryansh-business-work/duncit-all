@@ -89,10 +89,15 @@ async function reportIssues(projectKey) {
 }
 
 async function reportFiles(projectKey, metric) {
-  const query = `component=${projectKey}&qualifiers=FIL&metricKeys=${metric}&s=metricPeriod&metricSort=${metric}&metricPeriod=1&asc=false&metricSortFilter=withMeasuresOnly&ps=${FILE_LIMIT}`;
+  const query = `component=${projectKey}&qualifiers=FIL&metricKeys=${metric}&s=metric&metricSort=${metric}&asc=false&metricSortFilter=withMeasuresOnly&ps=${FILE_LIMIT}`;
   const { components } = await api(`/api/measures/component_tree?${query}`);
   const rows = components
-    .map((component) => [component.path, Number(component.measures[0]?.period?.value ?? 0)])
+    // A new-code measure sits under `period` on some versions and is the
+    // plain `value` on others; read whichever this server sent.
+    .map((component) => [
+      component.path,
+      Number(component.measures[0]?.period?.value ?? component.measures[0]?.value ?? 0),
+    ])
     .filter(([, value]) => value > 0);
   if (rows.length === 0) return;
   lines.push(`### Files with the most \`${metric}\``, '');
@@ -118,7 +123,13 @@ async function reportAnalysis({ projectKey, ceTaskId, dashboardUrl }) {
   await reportIssues(projectKey);
   const measures = new Set(failed.map((metric) => FILE_MEASURE.get(metric)).filter(Boolean));
   for (const metric of measures) {
-    await reportFiles(projectKey, metric);
+    // One section that cannot be read must not cost the reader the rest of
+    // the report — say which metric went missing and carry on.
+    try {
+      await reportFiles(projectKey, metric);
+    } catch (error) {
+      lines.push(`_No per-file \`${metric}\` list: ${error.message}_`, '');
+    }
   }
   lines.push(`[Open the analysis in SonarQube](${dashboardUrl})`);
 }

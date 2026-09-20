@@ -98,7 +98,7 @@ export const makeIntegrationSchema = (t: Translate, provider: BrandIntegrationPr
       need('key_secret', hasSecret || values.key_secret.length > 0);
     });
 
-const orUndefined = (value: string) => (value ? value : undefined);
+const orUndefined = (value: string) => value || undefined;
 
 /** The mutation input — a blank secret is omitted so the server keeps the saved one. */
 export const toIntegrationInput = (provider: BrandIntegrationProvider, values: IntegrationFormValues) => {

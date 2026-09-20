@@ -62,10 +62,13 @@ async function emailOptions() {
     MailAutomationAccountModel.find().select('email display_name is_active').sort({ email: 1 }).lean(),
   ]);
   return {
+    // `list` answers with the public shape: the non-secret fields as key/value pairs.
     email_senders: entries.map((entry: any) => ({
-      id: String(entry.id ?? entry._id),
+      id: String(entry.id),
       name: entry.name,
-      from_address: String((entry.config as Record<string, unknown> | undefined)?.from_address ?? ''),
+      from_address: String(
+        (entry.config as Array<{ key: string; value: string }> | undefined)?.find((pair) => pair.key === 'from_address')?.value ?? ''
+      ),
       is_default: Boolean(entry.is_default),
     })),
     email_templates: templates.map((tpl: any) => {

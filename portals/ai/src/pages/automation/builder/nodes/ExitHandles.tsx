@@ -1,5 +1,6 @@
+import type { CSSProperties } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, useTheme } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { HANDLE_LABEL_KEYS } from '../../node-kinds';
 import { classifyLabelOf } from '../../graph-io';
@@ -12,12 +13,11 @@ interface Props {
 }
 
 /** The dot an arrow starts from, sized for a coarse pointer and tinted like the card. */
-const handleSx = (color: string) => ({
+const handleStyle = (color: string, paper: string): CSSProperties => ({
   width: 12,
   height: 12,
   background: color,
-  border: '2px solid',
-  borderColor: 'background.paper',
+  border: `2px solid ${paper}`,
 });
 
 /** A handle's wording — an exit key's copy, or a classify label's own text. */
@@ -35,8 +35,10 @@ export function exitLabel(handle: string, config: NodeData, t: (key: string) => 
  */
 export default function ExitHandles({ exits, config, color }: Readonly<Props>) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const dot = handleStyle(color, theme.palette.background.paper);
   if (exits.length === 1) {
-    return <Handle type="source" position={Position.Right} id={exits[0]} style={handleSx(color) as never} aria-label={exitLabel(exits[0], config, t)} />;
+    return <Handle type="source" position={Position.Right} id={exits[0]} style={dot} aria-label={exitLabel(exits[0], config, t)} />;
   }
   return (
     <Stack spacing={0.5} sx={{ mt: 1, alignItems: 'flex-end' }}>
@@ -50,7 +52,7 @@ export default function ExitHandles({ exits, config, color }: Readonly<Props>) {
             position={Position.Right}
             id={exit}
             aria-label={exitLabel(exit, config, t)}
-            style={{ ...(handleSx(color) as object), position: 'relative', top: 'auto', right: -14, transform: 'none' } as never}
+            style={{ ...dot, position: 'relative', top: 'auto', right: -14, transform: 'none' }}
           />
         </Box>
       ))}

@@ -9,7 +9,6 @@ import { QueryGuard, SectionCard } from '@duncit/ui';
 import ClientTable from '../../../components/ClientTable';
 import { reload } from '../../../lib/actions';
 import { STORE_PICKUP_LOCATIONS, type PickupLocations, type PickupRow, type Warehouse } from '../queries';
-import ShiprocketOnlyList from './ShiprocketOnlyList';
 import WarehouseForm from './warehouse-form';
 import { usePickupActions, type PickupActions } from './usePickupActions';
 import { usePickupColumns } from './usePickupColumns';
@@ -53,16 +52,16 @@ function PickupBody({ result, actions, onEdit }: Readonly<PickupBodyProps>) {
         emptyText={t('ecommPortal.shipping.noWarehouses')}
         searchPlaceholder={t('ecommPortal.shipping.searchPickups')}
       />
-      <ShiprocketOnlyList pickups={result.shiprocket_only} busy={actions.busy} onImport={actions.importPickup} />
     </Stack>
   );
 }
 
 /**
- * Our warehouses against the ShipRocket account's pickup addresses, matched
- * by nickname — the name every order's `pickup_location` must equal exactly.
- * Opening the page reads ShipRocket; a warehouse is added, corrected, pushed
- * to ShipRocket or brought in from it here, until each one reads Ready.
+ * The ShipRocket account's pickup addresses. Opening the page reads the
+ * account and takes in every address it has, so this list IS its list —
+ * matched by nickname, the name every order's `pickup_location` must equal
+ * exactly. Adding one here creates it on the account first, and an address
+ * the account already holds is changed and removed there.
  */
 export default function PickupLocationsCard() {
   const { t } = useTranslation();

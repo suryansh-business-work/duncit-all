@@ -87,17 +87,9 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     product_count: Int!
   }
 
-  type StoreShiprocketPickup {
-    nickname: String!
-    city: String!
-    pincode: String!
-    verified: Boolean!
-  }
-
   type StorePickupLocations {
+    "Every pickup address on the ShipRocket account (a sync takes in any it has that we do not)."
     warehouses: [StorePickupRow!]!
-    "Pickup addresses on the ShipRocket account no warehouse uses."
-    shiprocket_only: [StoreShiprocketPickup!]!
     "Why ShipRocket could not be read; empty when it was."
     shiprocket_error: String!
     synced_at: String!
@@ -178,7 +170,7 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     storeShiprocketStatus: StoreShiprocketStatus!
     "COD orders of the last N days and the cash collected on them."
     storeCodLedger(days: Int): StoreCodLedger!
-    "Every warehouse against the ShipRocket account's pickup addresses (reads ShipRocket and records what it says)."
+    "The ShipRocket account's pickup addresses as our warehouses — reads ShipRocket, takes in any address it has that we do not, and records what it says about each."
     storePickupLocations: StorePickupLocations!
   }
 
@@ -196,14 +188,12 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     storeAnswerNdr(id: ID!, action: StoreNdrAction!, comments: String): ProductOrder!
     "Log in to ShipRocket once more with the saved credentials, clearing an earlier refusal."
     storeShiprocketReconnect: StoreShiprocketStatus!
-    "Add or correct one of the store's warehouses, then add it to ShipRocket."
+    "Add the pickup address to the ShipRocket account, then keep the account's copy of it here. Nothing is saved if ShipRocket refuses it."
     storeSaveWarehouse(id: ID, input: StoreWarehouseInput!): BrandPickupLocation!
-    "Delete one of the store's warehouses no product ships from."
+    "Delete a warehouse ShipRocket does not hold and no product ships from."
     storeDeleteWarehouse(id: ID!): Boolean!
     "Add a warehouse to the ShipRocket account as a pickup address."
     storeRegisterWarehouse(id: ID!): BrandPickupLocation!
-    "Make a warehouse of a pickup address already on the ShipRocket account."
-    storeImportPickup(nickname: String!): BrandPickupLocation!
     storeBookReturnPickup(id: ID!): StoreReturn!
     storeRestockReturn(id: ID!): StoreReturn!
   }

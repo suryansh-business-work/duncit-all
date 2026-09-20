@@ -14,7 +14,7 @@ import {
   toPub,
   verifyRazorpayAndSettle,
 } from '@modules/finance/payment/payment.service';
-import { createRazorpayOrder, getRazorpayKeys } from '@modules/finance/payment/razorpay.gateway';
+import { createRazorpayOrder, getRazorpayKeys, isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { otpService } from '@modules/platform/otp/otp.service';
 import { StoreCartModel } from './storeCart.model';
@@ -30,8 +30,10 @@ import { badInput, forbidden, notFound, resolveOwner, sameSecret, secretKey, typ
  * Turning a cart into orders. One path for every way of paying:
  *
  *  - Razorpay: a PENDING payment + a Razorpay order; the storefront opens the
- *    sheet and comes back through `verify`.
- *  - Dummy mode (Finance's test switch): captured on the spot.
+ *    sheet and comes back through `verify`. Chosen whenever the store's
+ *    Razorpay account can open one — a configured gateway is never skipped.
+ *  - Dummy mode (Finance's test switch): captured on the spot, and ONLY when
+ *    no Razorpay account is configured for the store.
  *  - Nothing left to charge (coupon / coins cover it): settled with no gateway.
  *  - Cash on Delivery: booked now, with the phone proven by a one-time code;
  *    the payment stays PENDING until the courier reports delivery.
@@ -355,7 +357,8 @@ async function assertPlaceable(
   if (settings.cod_requires_otp) await consumeCodProof(args.cod_challenge_id, phone);
 }
 
-/** Captured on the spot: a zero-charge basket, or Finance's dummy mode. */
+/** Captured on the spot: a zero-charge basket, or Finance's dummy mode with no
+ * gateway to send the buyer to. */
 async function settleInstantly(draft: StorePaymentDraft, quote: StoreQuote) {
   const settlement =
     quote.quote.total <= 0 ? freeSettlement(quote.coupon_code) : { gateway: 'DUMMY', label: 'Dummy Gateway' };
@@ -526,12 +529,18 @@ export const storeCheckoutService = {
       await markConverted(owner.owner_key, doc._id);
       return resultFor(doc, 'COD_CONFIRMED', draft.accessKey);
     }
-    const fs = await getFinanceSettings();
-    if (quote.quote.total <= 0 || fs.dummy_mode) {
+    const captureNow = async () => {
       const doc = await settleInstantly(draft, quote);
       await markConverted(owner.owner_key, doc._id);
       return resultFor(doc, 'PAID', draft.accessKey);
-    }
+    };
+    if (quote.quote.total <= 0) return captureNow();
+    // The gateway decides, not the test switch: Finance's `dummy_mode` is on by
+    // default and is shared with the pod checkout, which also only falls back to
+    // it when Razorpay cannot open a sheet. Reading it first would silently mark
+    // a real store order paid without ever showing the buyer a payment sheet.
+    const fs = await getFinanceSettings();
+    if (fs.dummy_mode && !(await isRazorpayConfigured(settings.razorpay_account))) return captureNow();
     const { doc, sheet } = await openRazorpay(
       draft,
       quote,

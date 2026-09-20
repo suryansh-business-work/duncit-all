@@ -1,5 +1,6 @@
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gateway';
 import { logs } from '@observability/log';
 import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
@@ -102,7 +103,9 @@ export async function publicSettingsOut(s: IStoreSettings) {
     about_html: s.about_html,
     social_links: s.social_links.map((l) => ({ label: l.label, url: l.url })),
     currency_symbol: fs.currency_symbol,
-    dummy_mode: fs.dummy_mode,
+    // What the buyer will actually meet at checkout, not Finance's switch alone:
+    // with a Razorpay account configured the sheet opens and dummy mode is moot.
+    dummy_mode: fs.dummy_mode && !(await isRazorpayConfigured(s.razorpay_account)),
   };
 }
 

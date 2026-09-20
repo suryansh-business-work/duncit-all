@@ -54,4 +54,22 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "mweb.contactChange.whatsappCurrent": [
     "This is your current WhatsApp number, enter a different number to make a change.",
   ],
+  // The ecomm console now keeps its own pickup addresses, so an empty warehouse
+  // picker no longer sends the operator to the Products console for them.
+  "ecommPortal.productEditor.noWarehouses": [
+    "No Duncit warehouses yet — add one under Pickup locations in the Products console.",
+  ],
+  // A pickup address now belongs to the ShipRocket account: the page takes in
+  // whatever the account has, adding one creates it there first, and one the
+  // account holds is changed or removed in ShipRocket. So the old copy offered
+  // an "import" step that is gone, and promised a local save ShipRocket had
+  // not accepted.
+  "ecommPortal.shipping.pickupsIntro": [
+    "Every order is booked under its warehouse nickname, which must match a pickup address on the ShipRocket account exactly. A warehouse you add here is sent to ShipRocket as it saves; one ShipRocket already has can be brought in below.",
+  ],
+  "ecommPortal.shipping.saveWarehouse": ["Save and send to ShipRocket"],
+  "ecommPortal.shipping.warehouseInShiprocket": ["Warehouse saved and added to ShipRocket"],
+  "ecommPortal.shipping.deleteWarehouseMessage": [
+    "The warehouse is removed here. ShipRocket keeps its own copy of the pickup address.",
+  ],
 };

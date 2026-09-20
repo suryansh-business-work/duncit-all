@@ -8,12 +8,14 @@ import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.
 import { getShiprocketAccount } from './shiprocket.account';
 import { shiprocketLoginState } from './shiprocket.client';
 import {
+  addPickupLocation,
   listPickupLocations,
   ndrAction,
   walletBalance,
   type NdrAction,
   type ShiprocketPickup,
 } from './shiprocket.gateway';
+import { pickupProblems } from './shiprocket.address';
 
 /**
  * The operator's side of ShipRocket: answering a failed delivery, keeping our
@@ -78,65 +80,178 @@ async function readPickups(): Promise<{ pickups: ShiprocketPickup[] | null; erro
   }
 }
 
+/** A ShipRocket pickup address written as one of our warehouses — ShipRocket's copy, verbatim. */
+const mirrorOf = (p: ShiprocketPickup) => ({
+  nickname: p.nickname,
+  contact_name: p.name,
+  phone: p.phone,
+  email: p.email,
+  address_line1: p.address_line1,
+  address_line2: p.address_line2,
+  city: p.city,
+  state: p.state,
+  pincode: p.pincode,
+  country: 'India',
+  shiprocket_registered: true,
+  shiprocket_pickup_id: p.id,
+  shiprocket_error: p.verified ? '' : AWAITING_VERIFICATION,
+});
+
 /**
- * Match every warehouse to the ShipRocket pickup address with the same
- * nickname (the name `pickup_location` must equal on every order), record
- * what ShipRocket says, and list the account's pickups no warehouse uses.
+ * Take in every pickup address the account has that we do not hold yet.
+ *
+ * ShipRocket is where a pickup address lives; ours is a copy of it, kept so a
+ * product can point at one. So there is nothing to "import" by hand and no
+ * such thing as an address that is on the account but not offered here — a
+ * sync adopts it, and the list the console shows is the account's own list.
+ */
+async function adoptPickups(pickups: ShiprocketPickup[]) {
+  const known = await BrandPickupLocationModel.find({}).select('nickname owner_kind is_default').lean();
+  const held = new Set(known.map((w) => nicknameKey(w.nickname)));
+  const fresh = pickups.filter((p) => !held.has(nicknameKey(p.nickname)));
+  if (fresh.length === 0) return;
+  // The store's first warehouse becomes the one new products default to.
+  let needsDefault = !known.some((w) => w.owner_kind === 'DUNCIT' && w.is_default);
+  for (const pickup of fresh) {
+    await BrandPickupLocationModel.create({
+      ...mirrorOf(pickup),
+      owner_kind: 'DUNCIT',
+      brand_id: null,
+      review_status: 'APPROVED',
+      is_default: needsDefault,
+    });
+    needsDefault = false;
+  }
+}
+
+/**
+ * The account's pickup addresses, as our warehouses.
+ *
+ * Every address ShipRocket has is taken in first, then each warehouse is
+ * matched to the pickup address with the same nickname (the name
+ * `pickup_location` must equal on every order) and what ShipRocket says is
+ * recorded on it. A warehouse ShipRocket does NOT have is one of ours that
+ * never landed there — a partner's awaiting approval, or a legacy row — and
+ * it is marked so, because nothing can ship from it.
+ *
  * When ShipRocket cannot be read the warehouses are still listed — as
  * UNKNOWN, with the reason — so they can be managed while the account is fixed.
  */
 export async function syncPickupLocations() {
-  const [{ pickups, error }, warehouses] = await Promise.all([
-    readPickups(),
-    BrandPickupLocationModel.find({}).sort({ owner_kind: 1, nickname: 1 }),
-  ]);
+  const { pickups, error } = await readPickups();
+  if (pickups) await adoptPickups(pickups);
+  const warehouses = await BrandPickupLocationModel.find({}).sort({ owner_kind: 1, nickname: 1 });
   const byNickname = new Map((pickups ?? []).map((p) => [nicknameKey(p.nickname), p]));
-  const used = new Set<string>();
   const rows = [];
   for (const w of warehouses) {
     const match = byNickname.get(nicknameKey(w.nickname)) ?? null;
-    if (match) used.add(nicknameKey(match.nickname));
     const state = pickups ? stateOf(match) : 'UNKNOWN';
     if (pickups) await recordMatch(w, match, state);
     rows.push({ warehouse: w, shiprocket_state: state });
   }
-  const unmatched = (pickups ?? [])
-    .filter((p) => !used.has(nicknameKey(p.nickname)))
-    .map((p) => ({ nickname: p.nickname, city: p.city, pincode: p.pincode, verified: p.verified }));
-  return { warehouses: rows, shiprocket_only: unmatched, shiprocket_error: error, synced_at: new Date().toISOString() };
+  return { warehouses: rows, shiprocket_error: error, synced_at: new Date().toISOString() };
+}
+
+export interface PickupInput {
+  nickname: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  address_line1: string;
+  address_line2?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  country?: string | null;
+  is_default?: boolean | null;
+}
+
+/** Letters, digits, spaces, dots, dashes and underscores — what ShipRocket takes as a pickup name. */
+const NICKNAME = /^[\w .-]{2,60}$/;
+
+const text = (v: string | null | undefined) => (v ?? '').trim();
+
+function cleanPickupInput(input: PickupInput) {
+  const clean = {
+    nickname: text(input.nickname),
+    contact_name: text(input.contact_name),
+    phone: text(input.phone).replaceAll(/\D/g, '').slice(-10),
+    email: text(input.email).toLowerCase(),
+    address_line1: text(input.address_line1),
+    address_line2: text(input.address_line2),
+    city: text(input.city),
+    state: text(input.state),
+    pincode: text(input.pincode).replaceAll(/\D/g, ''),
+    country: text(input.country) || 'India',
+  };
+  if (!NICKNAME.test(clean.nickname)) {
+    bad('Name the warehouse with 2–60 letters, digits, spaces, dots, dashes or underscores');
+  }
+  const problems = pickupProblems({ ...clean, name: clean.contact_name, line1: clean.address_line1 });
+  if (problems.length > 0) bad(`Enter ${problems.join(' and ')}`);
+  return clean;
 }
 
 /**
- * Make a warehouse of a pickup address that is on the ShipRocket account but
- * not ours yet — the quickest way to a ready pickup, since ShipRocket has
- * already verified it. It is Duncit's own; the store's products can ship from it.
+ * Put the address on the ShipRocket account and answer with what the account
+ * then holds. A nickname it already has is not an error — that address IS the
+ * answer, and ShipRocket's API cannot edit one, so its copy wins.
  */
-export async function importShiprocketPickup(nickname: string) {
-  const key = nicknameKey(nickname);
-  const pickup = (await listPickupLocations()).find((p) => nicknameKey(p.nickname) === key);
-  if (!pickup) return bad(`ShipRocket has no pickup address named "${nickname}" — sync and try again`);
-  const warehouses = await BrandPickupLocationModel.find({}).select('nickname owner_kind is_default').lean();
-  if (warehouses.some((w) => nicknameKey(w.nickname) === key)) bad(`A warehouse named "${pickup.nickname}" already exists`);
-  return BrandPickupLocationModel.create({
-    owner_kind: 'DUNCIT',
+async function pushPickup(clean: ReturnType<typeof cleanPickupInput>): Promise<ShiprocketPickup> {
+  const payload = {
+    pickup_location: clean.nickname,
+    name: clean.contact_name,
+    email: clean.email,
+    phone: clean.phone,
+    address: clean.address_line1,
+    address_2: clean.address_line2,
+    city: clean.city,
+    state: clean.state,
+    country: clean.country,
+    pin_code: clean.pincode,
+  };
+  try {
+    await addPickupLocation(payload);
+  } catch (error) {
+    if (!/already/i.test((error as Error).message)) throw error;
+  }
+  const held = (await listPickupLocations()).find((p) => nicknameKey(p.nickname) === nicknameKey(clean.nickname));
+  if (!held) bad('ShipRocket took the pickup address but does not list it yet — sync in a minute');
+  return held!;
+}
+
+/**
+ * Add one of the store's pickup addresses, from either console.
+ *
+ * ShipRocket first, and only then us: the address is created on the account,
+ * read back, and OUR row is written from what came back. A row can therefore
+ * never describe an address ShipRocket does not have — which is what used to
+ * let a product be given a warehouse no courier would ever collect from.
+ * ShipRocket refusing means nothing is saved at all.
+ */
+export async function saveDuncitPickup(id: string | null | undefined, input: PickupInput) {
+  const clean = cleanPickupInput(input);
+  const existing = id ? await BrandPickupLocationModel.findOne({ _id: id, owner_kind: 'DUNCIT' }) : null;
+  if (id && !existing) bad('Warehouse not found');
+  if (existing?.shiprocket_registered) bad('ShipRocket holds this pickup address — change it in ShipRocket, then sync');
+  const clash = await BrandPickupLocationModel.findOne({ nickname: clean.nickname }).select('_id').lean();
+  if (clash && String(clash._id) !== id) bad(`A warehouse named "${clean.nickname}" already exists`);
+  const held = await pushPickup(clean);
+  const fields = {
+    ...mirrorOf(held),
+    country: clean.country,
+    owner_kind: 'DUNCIT' as const,
     brand_id: null,
-    review_status: 'APPROVED',
-    nickname: pickup.nickname,
-    contact_name: pickup.name,
-    phone: pickup.phone,
-    email: pickup.email,
-    address_line1: pickup.address_line1,
-    address_line2: pickup.address_line2,
-    city: pickup.city,
-    state: pickup.state,
-    pincode: pickup.pincode,
-    country: 'India',
-    // The store's first warehouse becomes the one new products default to.
-    is_default: !warehouses.some((w) => w.owner_kind === 'DUNCIT' && w.is_default),
-    shiprocket_registered: true,
-    shiprocket_pickup_id: pickup.id,
-    shiprocket_error: pickup.verified ? '' : AWAITING_VERIFICATION,
-  });
+    review_status: 'APPROVED' as const,
+  };
+  const saved = existing
+    ? await BrandPickupLocationModel.findByIdAndUpdate(existing._id, { $set: fields }, { new: true })
+    : await BrandPickupLocationModel.create({ ...fields, is_default: !!input.is_default });
+  if (input.is_default) {
+    await BrandPickupLocationModel.updateMany({ owner_kind: 'DUNCIT', _id: { $ne: saved!._id } }, { $set: { is_default: false } });
+    await BrandPickupLocationModel.updateOne({ _id: saved!._id }, { $set: { is_default: true } });
+  }
+  return (await BrandPickupLocationModel.findById(saved!._id))!;
 }
 
 /** The wallet, or ShipRocket's reason for not saying — a silent dash hides a refused account. */

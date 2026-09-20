@@ -97,7 +97,18 @@ export const brandPickupLocationService = {
     return docs.map(toPub);
   },
 
+  /**
+   * A Duncit warehouse IS a ShipRocket pickup address, so it is created on the
+   * account first and written here from what the account holds — the same one
+   * path the E-commerce console adds one through. A partner's warehouse is a
+   * request until a Products Manager approves it, so it is only recorded here
+   * and reaches ShipRocket on approval.
+   */
   async save(id: string | null | undefined, input: any) {
+    if (input.owner_kind === 'DUNCIT') {
+      const { saveDuncitPickup } = await import('@modules/commerce/shiprocket/shiprocket.ops');
+      return toPub(await saveDuncitPickup(id, input));
+    }
     const brandId =
       input.brand_id && Types.ObjectId.isValid(input.brand_id) ? new Types.ObjectId(input.brand_id) : null;
     const fields = {

@@ -57,6 +57,8 @@ export interface StoreSettings {
   autoship_frequencies: number[];
   /** On: delivery is limited to the operator's pincode list (storePincodeServiceable says which). */
   serviceable_pincodes_enabled: boolean;
+  /** On: no payment gateway is configured, so checkout confirms without taking money. */
+  dummy_mode: boolean;
   active_occasion: StoreActiveOccasion | null;
 }
 
@@ -101,6 +103,7 @@ export const STORE_SETTINGS: TypedDocumentNode<{ storeSettings: StoreSettings },
       autoship_discount_pct
       autoship_frequencies
       serviceable_pincodes_enabled
+      dummy_mode
       active_occasion {
         slug
         label

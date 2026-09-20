@@ -81,9 +81,16 @@ export default function PickupLocationsPanel({
     setDialogOpen(true);
   };
 
+  // A Duncit warehouse is created on the ShipRocket account first, so a save
+  // can be refused by ShipRocket — the dialog stays open with the reason.
   const submit = async (values: PickupLocationFormValues) => {
     const input = toSubmitInput(values, { owner_kind: owner.owner_kind, brand_id: brandDocId });
-    await save({ variables: { id: editing?.id ?? null, input } });
+    try {
+      await save({ variables: { id: editing?.id ?? null, input } });
+    } catch (saveError) {
+      notifyError(saveError instanceof Error ? saveError.message : t('products.pickup.actionFailed'));
+      return;
+    }
     await refetch(variables);
     setDialogOpen(false);
     notifySuccess(t('products.pickup.saved'));

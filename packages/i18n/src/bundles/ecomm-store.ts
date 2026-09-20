@@ -501,6 +501,7 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       cod: 'Cash on Delivery',
       prepaidOffer: 'Extra {pct}% off when you pay online',
       codFee: 'A {fee} handling fee applies',
+      testMode: 'Test mode: no payment gateway is set up, so this order is confirmed without taking any money.',
       cancelled: 'Payment was cancelled. Nothing was charged — you can try again.',
       timeout: 'The payment did not finish in time. If money left your account it will be refunded — please check before trying again.',
       failed: 'The payment was declined. Please try again or use another method.',

@@ -83,6 +83,12 @@ describe('CascadeEffect', () => {
     expect(ref.current?.getValues('venue_id')).toBe('v1');
   });
 
+  it('keeps the venue when the club has no venue links at all, because no links is not a whitelist', () => {
+    const data = makeData({ clubs: [{ id: 'c1' }], getClubVenueIds: () => [] });
+    const ref = mount({ club_id: 'c1', venue_id: 'v1', venue_slot_id: 's1' }, data);
+    expect(ref.current?.getValues('venue_id')).toBe('v1');
+    expect(ref.current?.getValues('venue_slot_id')).toBe('s1');
+  });
   it('skips the link check when club or venue is unset', () => {
     const data = makeData({ clubs: [{ id: 'c1' }], getClubVenueIds: () => [] });
     const ref = mount({ club_id: '', venue_id: '' }, data);

@@ -6,6 +6,7 @@ export interface ShiprocketStatus {
   login_refused: boolean;
   login_message: string;
   wallet_balance: number | null;
+  wallet_error: string;
   webhook_key_set: boolean;
   default_pickup: string;
   webhook_path: string;
@@ -17,6 +18,7 @@ const STATUS_FIELDS = `
   login_refused
   login_message
   wallet_balance
+  wallet_error
   webhook_key_set
   default_pickup
   webhook_path

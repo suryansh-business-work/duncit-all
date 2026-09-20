@@ -12,6 +12,12 @@ import { ShiprocketSessionModel } from './shiprocketSession.model';
  * - A refused login (any 4xx) is remembered against the credential hash and
  *   never retried until the credentials change — retrying is what gets the
  *   account locked.
+ * - A call answered 401 OR 403 is tried once more with a fresh token:
+ *   ShipRocket phrases a token it will not honour as "Unauthorized. You do not
+ *   have permission for this action.", which is also what it says when the API
+ *   user really may not make that call. One login tells the two apart, and it
+ *   is rationed (REAUTH_COOLDOWN_MS), so a call that is genuinely not allowed
+ *   can never turn every request into a login attempt and lock the user out.
  * - Every request has a timeout. A 5xx or 429 is retried with backoff, but
  *   only for calls that are safe to repeat: re-sending "create order" after a
  *   timeout could book a second parcel.
@@ -24,6 +30,14 @@ const TIMEOUT_MS = 20_000;
 const RENEW_BEFORE_MS = 24 * 3_600_000;
 const BACKOFF_MS = [600, 1_800];
 const SESSION_KEY = 'default';
+/** How long a token is trusted before a refused call may spend a login on a new one. */
+const REAUTH_COOLDOWN_MS = 15 * 60_000;
+/** The answers that can mean "this token is no good" as well as "you may not do this". */
+const AUTH_STATUS = new Set([401, 403]);
+
+/** What an operator has to change when ShipRocket refuses the call itself. */
+const PERMISSION_HINT =
+  'The API user is not allowed this call. In ShipRocket open Settings → API → Configure and create an API user (its email must not be registered on ShipRocket), save it in the Tech portal under Environment Variables → SHIPROCKET, then press Retry login here.';
 
 export type Json = Record<string, any>;
 
@@ -73,7 +87,17 @@ async function login(account: ShiprocketAccount): Promise<string> {
     const expires = jwtExpiry(data.token) ?? new Date(Date.now() + account.tokenTtlHours * 3_600_000);
     await ShiprocketSessionModel.updateOne(
       { key: SESSION_KEY },
-      { $set: { cred_hash: account.hash, token: data.token, expires_at: expires, refused_hash: '', refused_message: '', refused_at: null } },
+      {
+        $set: {
+          cred_hash: account.hash,
+          token: data.token,
+          expires_at: expires,
+          issued_at: new Date(),
+          refused_hash: '',
+          refused_message: '',
+          refused_at: null,
+        },
+      },
       { upsert: true }
     );
     return data.token;
@@ -95,19 +119,31 @@ async function login(account: ShiprocketAccount): Promise<string> {
 /** Concurrent callers share one login instead of each spending an attempt. */
 let loginInFlight: Promise<string> | null = null;
 
-async function token(account: ShiprocketAccount, force: boolean): Promise<string> {
-  const session = await ShiprocketSessionModel.findOne({ key: SESSION_KEY }).select('+token').lean();
-  if (session?.refused_hash === account.hash) throw refusal(session.refused_message);
-  const fresh =
-    session?.cred_hash === account.hash &&
-    !!session.token &&
-    !!session.expires_at &&
-    session.expires_at.getTime() - Date.now() > RENEW_BEFORE_MS;
-  if (fresh && !force) return session!.token;
+function loginOnce(account: ShiprocketAccount): Promise<string> {
   loginInFlight ??= login(account).finally(() => {
     loginInFlight = null;
   });
   return loginInFlight;
+}
+
+/**
+ * The bearer token to use. `reauth` is a refused call asking for a new one: it
+ * is granted only once the held token has had time to go stale, so a call
+ * ShipRocket refuses however new the token is cannot spend a login every time.
+ * The caller compares what it gets back with what it used, to see whether
+ * re-sending the request is worth an attempt at all.
+ */
+async function token(account: ShiprocketAccount, reauth: boolean): Promise<string> {
+  const session = await ShiprocketSessionModel.findOne({ key: SESSION_KEY }).select('+token').lean();
+  if (session?.refused_hash === account.hash) throw refusal(session.refused_message);
+  const held = session?.cred_hash === account.hash && session.token ? session.token : '';
+  if (!held) return loginOnce(account);
+  if (reauth) {
+    const age = Date.now() - (session!.issued_at?.getTime() ?? 0);
+    return age < REAUTH_COOLDOWN_MS ? held : loginOnce(account);
+  }
+  const live = !!session!.expires_at && session!.expires_at.getTime() - Date.now() > RENEW_BEFORE_MS;
+  return live ? held : loginOnce(account);
 }
 
 /** Whether the saved credentials were refused, and why — for the admin order page and Tech portal hints. */
@@ -133,7 +169,7 @@ export async function retryShiprocketLogin(): Promise<void> {
     { key: SESSION_KEY },
     { $set: { refused_hash: '', refused_message: '', refused_at: null } }
   );
-  await token(acc, true);
+  await loginOnce(acc);
 }
 
 export interface RequestOptions {
@@ -166,12 +202,19 @@ async function send(path: string, init: RequestInit, bearer: string, opts: Reque
   }
 }
 
+/**
+ * A refusal an operator can act on: which call, which endpoint, what ShipRocket
+ * said. "ShipRocket: Unauthorized" on its own names neither the step that
+ * stopped nor the thing to change.
+ */
 async function parse<T>(res: Response, path: string, opts: RequestOptions): Promise<T> {
   const data = (await res.json().catch(() => ({}))) as Json;
   if (res.ok) return data as T;
   const message = reasonOf(data, res.status);
   logs.server.error('shiprocket', opts.op, { status: res.status, path: route(path), msg: message });
-  throw shiprocketError(`ShipRocket: ${message}`, res.status);
+  const said = message.replace(/\s*\.\s*$/, '');
+  const hint = res.status === 403 ? ` ${PERMISSION_HINT}` : '';
+  throw shiprocketError(`ShipRocket refused ${opts.op} (${route(path)}, HTTP ${res.status}): ${said}.${hint}`, res.status);
 }
 
 /**
@@ -180,15 +223,19 @@ async function parse<T>(res: Response, path: string, opts: RequestOptions): Prom
  */
 export async function srRequest<T = Json>(path: string, init: RequestInit, opts: RequestOptions): Promise<T> {
   const acc = await account();
+  let bearer = await token(acc, false);
   let reauthed = false;
-  let forceLogin = false;
   for (let attempt = 0; ; attempt += 1) {
-    const res = await send(path, init, await token(acc, forceLogin), opts, attempt);
-    forceLogin = false;
-    if (res?.status === 401 && !reauthed) {
+    const res = await send(path, init, bearer, opts, attempt);
+    // 401 and 403 both read as "this token is no good" from here; re-sending is
+    // worth an attempt only when the login handed back a different one.
+    if (res && AUTH_STATUS.has(res.status) && !reauthed) {
       reauthed = true;
-      forceLogin = true;
-      continue;
+      const renewed = await token(acc, true);
+      if (renewed !== bearer) {
+        bearer = renewed;
+        continue;
+      }
     }
     const failed = !res || res.status === 429 || res.status >= 500;
     if (failed && opts.retry && attempt < BACKOFF_MS.length) {

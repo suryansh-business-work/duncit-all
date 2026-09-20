@@ -139,23 +139,27 @@ export async function importShiprocketPickup(nickname: string) {
   });
 }
 
+/** The wallet, or ShipRocket's reason for not saying — a silent dash hides a refused account. */
+async function wallet(): Promise<{ balance: number | null; error: string }> {
+  try {
+    return { balance: await walletBalance(), error: '' };
+  } catch (error) {
+    logs.server.warn('shiprocket', 'accountStatus', { error, msg: 'wallet balance unavailable' });
+    return { balance: null, error: (error as Error).message };
+  }
+}
+
 /** The account at a glance: which API user, credentials refused, wallet, webhook key. */
 export async function shiprocketAccountStatus() {
   const [account, login] = await Promise.all([getShiprocketAccount(), shiprocketLoginState()]);
-  let wallet: number | null = null;
-  if (account && !login.refused) {
-    try {
-      wallet = await walletBalance();
-    } catch (error) {
-      logs.server.warn('shiprocket', 'accountStatus', { error, msg: 'wallet balance unavailable' });
-    }
-  }
+  const purse = account && !login.refused ? await wallet() : { balance: null, error: '' };
   return {
     configured: !!account,
     account_email: account?.email ?? '',
     login_refused: login.refused,
     login_message: login.message,
-    wallet_balance: wallet,
+    wallet_balance: purse.balance,
+    wallet_error: purse.error,
     webhook_key_set: !!account?.webhookSecret,
     default_pickup: account?.pickupLocation ?? '',
   };

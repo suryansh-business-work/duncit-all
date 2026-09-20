@@ -80,6 +80,8 @@ export interface IOrderShippingAddress {
 export interface IShipRocketInfo {
   order_id: string;
   shipment_id: string;
+  /** When "create order" was last sent. Set before the call, so an answer we never received is looked for on the next attempt. */
+  create_attempted_at: Date | null;
   awb: string;
   courier_name: string;
   courier_company_id: string;
@@ -230,6 +232,7 @@ const shiprocketSchema = new Schema<IShipRocketInfo>(
   {
     order_id: { type: String, default: '' },
     shipment_id: { type: String, default: '' },
+    create_attempted_at: { type: Date, default: null },
     awb: { type: String, default: '' },
     courier_name: { type: String, default: '' },
     courier_company_id: { type: String, default: '' },

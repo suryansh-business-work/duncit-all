@@ -70,6 +70,8 @@ export const storeShippingTypeDefs = /* GraphQL */ `
     login_message: String!
     "Null when it could not be read."
     wallet_balance: Float
+    "Why the wallet could not be read — a refused billing call is the account's problem, not the order's."
+    wallet_error: String!
     webhook_key_set: Boolean!
     default_pickup: String!
     "Path to register as the ShipRocket webhook on the API host."

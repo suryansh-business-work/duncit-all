@@ -838,6 +838,7 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       webhookUrl: 'Webhook URL',
       notConfigured: 'ShipRocket is not set up — add the API user in the Tech portal (Environment Variables → ShipRocket).',
       loginRefused: 'ShipRocket refused the saved login: {reason}. Fix the API user — in the Tech portal (Environment Variables → ShipRocket) or in ShipRocket itself — then press Retry login.',
+      walletUnread: 'ShipRocket would not give the wallet balance: {reason}',
       webhookHint: 'Set a webhook key in the Tech portal and register the webhook URL below in ShipRocket (Settings → API → Webhooks) so tracking arrives the moment it changes.',
       pickups: 'Pickup addresses',
       pickupsIntro: 'Every order is booked under its warehouse nickname, which must match a pickup address on the ShipRocket account exactly. A warehouse you add here is sent to ShipRocket as it saves; one ShipRocket already has can be brought in below.',

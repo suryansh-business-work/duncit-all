@@ -18,6 +18,8 @@ import {
   manifestFor,
   printInvoice,
   walletBalance,
+  type AdhocOrderResult,
+  type AwbResult,
   type CourierOption,
 } from './shiprocket.gateway';
 import { buildParcel, withWeights, type Parcel, type ParcelDims } from './shiprocket.parcel';
@@ -34,7 +36,13 @@ import { buildParcel, withWeights, type Parcel, type ParcelDims } from './shipro
  * A step that fails leaves a readable `last_error` and the order where it was;
  * the order page's Retry runs the pipeline again and it resumes. An order is
  * FAILED only while no AWB exists. A wallet too low to pay is not a failure —
- * the order waits in AWAITING_SHIPMENT with a LOW_WALLET alert.
+ * the order waits in AWAITING_SHIPMENT with a LOW_WALLET alert, whether we read
+ * the balance first or ShipRocket refuses the AWB for it.
+ *
+ * Only the three calls above actually book. The two that merely inform —
+ * looking for a booking a lost answer may have left behind, and reading the
+ * wallet — are never allowed to stop an order: a ShipRocket account whose API
+ * user may not read its orders list or its billing still ships.
  */
 
 const bad = (message: string): never => {
@@ -154,6 +162,30 @@ function adhocPayload(order: IProductOrder, pickup: string, parcel: Parcel, hsn:
   };
 }
 
+/**
+ * The ShipRocket order our order number already carries. This lookup is what
+ * makes a retry safe when an earlier create reached ShipRocket but its answer
+ * never came back — so once a create has been sent it has to succeed. Before
+ * the first one there is nothing to find, and an account that refuses the
+ * orders list must still be able to book.
+ */
+async function bookedAlready(order: IProductOrder): Promise<AdhocOrderResult | null> {
+  try {
+    return await findOrderByChannelId(order.order_no);
+  } catch (error) {
+    if (order.shiprocket.create_attempted_at) throw error;
+    logs.server.warn('shiprocket', 'findOrder', { order_no: order.order_no, msg: (error as Error).message });
+    return null;
+  }
+}
+
+/** The create, stamped before it is sent so a lost answer is looked for next time. */
+async function createOrder(order: IProductOrder, pickup: string, parcel: Parcel): Promise<AdhocOrderResult> {
+  order.shiprocket.create_attempted_at = new Date();
+  await order.save();
+  return createOrderAdhoc(adhocPayload(order, pickup, parcel, await hsnByProduct(order)));
+}
+
 /** Step 1 — the ShipRocket order. Re-uses one a lost answer already created. */
 async function book(order: IProductOrder) {
   if (order.shiprocket.order_id) return;
@@ -164,9 +196,7 @@ async function book(order: IProductOrder) {
   const parcel = parcelFor(order);
   assertParcel(order, parcel);
   const pickup = await pickupFor(order);
-  const booked =
-    (await findOrderByChannelId(order.order_no)) ??
-    (await createOrderAdhoc(adhocPayload(order, pickup, parcel, await hsnByProduct(order))));
+  const booked = (await bookedAlready(order)) ?? (await createOrder(order, pickup, parcel));
   order.pickup_location_id = pickup;
   order.shiprocket.order_id = booked.order_id;
   order.shiprocket.shipment_id = booked.shipment_id;
@@ -182,18 +212,51 @@ async function pickCourier(order: IProductOrder, courierId?: string | null): Pro
   return options.find((o) => o.courier_company_id === courierId) ?? bad('That courier is no longer offered for this shipment — pick another');
 }
 
+/** ShipRocket's ways of saying the wallet cannot pay for this AWB. */
+const LOW_BALANCE = /(insufficient|low)\s+(wallet\s+)?(balance|funds)|recharge/i;
+
+/** The wallet, or null when ShipRocket would not tell us — the guard is a courtesy, not the gate. */
+async function walletOrNull(): Promise<number | null> {
+  try {
+    return await walletBalance();
+  } catch (error) {
+    logs.server.warn('shiprocket', 'walletBalance', { msg: (error as Error).message });
+    return null;
+  }
+}
+
+/** The AWB, or null when ShipRocket refused it over the wallet — an alert, not a failure. */
+async function awbFor(shipmentId: string, courierId: string): Promise<AwbResult | null> {
+  try {
+    return await assignAwb(shipmentId, courierId);
+  } catch (error) {
+    if (!LOW_BALANCE.test((error as Error).message)) throw error;
+    return null;
+  }
+}
+
+/** The order waits in AWAITING_SHIPMENT until the wallet is recharged and someone retries. */
+function lowWallet(order: IProductOrder, courier: CourierOption, balance: number | null) {
+  const has = balance === null ? '' : `The ShipRocket wallet has ₹${balance}; `;
+  order.fulfilment_status = 'AWAITING_SHIPMENT';
+  order.shiprocket.alert = 'LOW_WALLET';
+  order.shiprocket.alert_message = `${has}${courier.courier_name} costs about ₹${courier.rate}. Recharge the wallet, then retry.`;
+}
+
 /** Step 2 — courier + AWB. Answers false when the wallet cannot pay, so the pipeline stops without failing. */
 async function assignCourier(order: IProductOrder, courierId?: string | null): Promise<boolean> {
   if (order.shiprocket.awb) return true;
   const courier = await pickCourier(order, courierId);
-  const balance = await walletBalance();
-  if (balance < courier.rate) {
-    order.fulfilment_status = 'AWAITING_SHIPMENT';
-    order.shiprocket.alert = 'LOW_WALLET';
-    order.shiprocket.alert_message = `The ShipRocket wallet has ₹${balance}; ${courier.courier_name} costs about ₹${courier.rate}. Recharge the wallet, then retry.`;
+  const balance = await walletOrNull();
+  if (balance !== null && balance < courier.rate) {
+    lowWallet(order, courier, balance);
     return false;
   }
-  const awb = await assignAwb(order.shiprocket.shipment_id, courier.courier_company_id);
+  const awb = await awbFor(order.shiprocket.shipment_id, courier.courier_company_id);
+  if (!awb) {
+    lowWallet(order, courier, balance);
+    return false;
+  }
   order.shiprocket.awb = awb.awb;
   order.shiprocket.courier_name = awb.courier_name || courier.courier_name;
   order.shiprocket.courier_company_id = awb.courier_company_id || courier.courier_company_id;

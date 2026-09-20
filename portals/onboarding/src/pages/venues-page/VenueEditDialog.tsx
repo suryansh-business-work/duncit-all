@@ -28,6 +28,7 @@ import {
 } from '../../components/admin-venue-create-dialog/venue.form';
 import { normalizeBankAccountValues } from '../../forms/validation/bankAccount';
 import { STATUSES, UPDATE_VENUE } from './queries';
+import VenueSettingsPanels from './VenueSettingsPanels';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -172,6 +173,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
               </MenuItem>
             ))}
           </TextField>
+          <VenueSettingsPanels venue={venue} onSaved={onSaved} />
         </Stack>
       </DialogContent>
       <DialogActions>

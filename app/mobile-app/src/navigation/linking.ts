@@ -109,6 +109,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ClubPods: 'clubs/:clubId/pods',
       ClubPodEditor: 'clubs/:clubId/pods/new',
       ClubPodEdit: 'clubs/:clubId/pods/:podId/edit',
+      // Declared AFTER the two above so `new` and `…/edit` keep their own
+      // screens: this pattern would otherwise swallow both path shapes.
+      ClubPodDetails: 'clubs/:clubId/pods/:podId',
       ClubEdit: 'clubs/:clubId/edit',
       BeClubAdmin: 'be-club-admin',
       Support: 'support',

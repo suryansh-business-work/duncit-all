@@ -24,14 +24,7 @@ interface RowProps {
 
 /** One person on the pod: who they are, what their booking is doing, how many
  * seats it holds and how to reach them. */
-function AttendeeLine({
-  row,
-  statusLabel,
-  statusColor,
-  joined,
-  divided,
-  t,
-}: Readonly<RowProps>) {
+function AttendeeLine({ row, statusLabel, statusColor, joined, divided, t }: Readonly<RowProps>) {
   const struck = row.status === 'BACKED_OUT';
   const name = row.full_name ?? '';
   const contact = [row.email, row.phone].filter(Boolean).join(' · ');
@@ -102,9 +95,7 @@ export function PodDetailAttendees({ rows, podDateTime, isLoading }: Readonly<Pr
   const { formatDateTime } = useDateFormat();
   const tones: Record<StatusTone, string> = useToneColors();
   const empty =
-    !isLoading && rows.length === 0
-      ? t('podDetailsPanel.podAttendeesSection.nobodyJoined')
-      : null;
+    !isLoading && rows.length === 0 ? t('podDetailsPanel.podAttendeesSection.nobodyJoined') : null;
 
   return (
     <PodDetailSection

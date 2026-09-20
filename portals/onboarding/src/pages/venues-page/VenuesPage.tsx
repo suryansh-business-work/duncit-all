@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -7,16 +7,12 @@ import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import {
   APPROVE,
-  DEFAULT_VENUE_COMMISSION,
   DELETE_VENUE,
   REJECT,
   SET_VENUE_ACTIVE,
-  SET_VENUE_CANCELLATION_TRIGGER,
-  SET_VENUE_DEDUCTIONS,
   VENUES_TABLE,
   type VenueRow,
 } from './queries';
-import type { VenueCancellationTrigger } from './cancellation-trigger';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
@@ -29,12 +25,6 @@ export default function VenuesPage() {
   const refresh = useCallback(() => refetchRef.current?.(), []);
   const [approve] = useMutation<any>(APPROVE);
   const [reject] = useMutation<any>(REJECT);
-  const [setVenueDeductions, { loading: savingDeductions }] = useMutation<any>(SET_VENUE_DEDUCTIONS);
-  const [setCancellationTrigger, { loading: savingCancellationTrigger }] = useMutation<any>(
-    SET_VENUE_CANCELLATION_TRIGGER
-  );
-  const { data: defaultsData } = useQuery<any>(DEFAULT_VENUE_COMMISSION, { fetchPolicy: 'cache-first' });
-  const defaultCommissionPct: number | undefined = defaultsData?.defaultVenueCommissionPct;
   const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refresh);
   const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
@@ -64,30 +54,6 @@ export default function VenuesPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refresh();
-  };
-  const doSaveDeductions = async (sharePct: number, commissionPct: number) => {
-    await setVenueDeductions({
-      variables: { id: active.id, venue_share_pct: sharePct, venue_commission_pct: commissionPct },
-    });
-    setActive((current: any) =>
-      current ? { ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct } : current
-    );
-    refresh();
-  };
-  /** Merged back onto the open venue rather than refetched into it: the dialog
-   * re-seeds its fields from `active`, so the saved trigger has to be what it
-   * reads next — the same reason the deductions above are merged. */
-  const doSaveCancellationTrigger = async (trigger: VenueCancellationTrigger) => {
-    await setCancellationTrigger({ variables: { id: active.id, ...trigger } });
-    setActive((current: any) =>
-      current
-        ? {
-            ...current,
-            settings: { ...current.settings, cancellation: { ...current.settings?.cancellation, ...trigger } },
-          }
-        : current
-    );
     refresh();
   };
 
@@ -151,11 +117,7 @@ export default function VenuesPage() {
         onClose={() => setActive(null)}
         onApprove={doApprove}
         onReject={doReject}
-        onSaveDeductions={doSaveDeductions}
-        savingDeductions={savingDeductions}
-        onSaveCancellationTrigger={doSaveCancellationTrigger}
-        savingCancellationTrigger={savingCancellationTrigger}
-        defaultCommissionPct={defaultCommissionPct}
+        onSaved={refresh}
       />
 
       <VenueEditDialog venue={editing} onClose={() => setEditing(null)} onSaved={refresh} />

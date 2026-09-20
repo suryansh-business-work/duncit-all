@@ -1,8 +1,4 @@
-import {
-  participationInputFrom,
-  podParticipationActions,
-  type StatusTone,
-} from '@duncit/utils';
+import { participationInputFrom, podParticipationActions, type StatusTone } from '@duncit/utils';
 
 import type { ClubPodAttendee } from '@/hooks/useClubPodDetail';
 import type { Translate } from '@/i18n/fallback';
@@ -25,7 +21,10 @@ export function attendeeStatus(
   t: Translate,
 ): { label: string; tone: StatusTone } {
   if (row.status === 'BACKOUT_IN_PROCESS') {
-    return { label: t('podDetailsPanel.podAttendeesSection.statusBackoutInProcess'), tone: 'warning' };
+    return {
+      label: t('podDetailsPanel.podAttendeesSection.statusBackoutInProcess'),
+      tone: 'warning',
+    };
   }
   if (row.status === 'BACKED_OUT') {
     return { label: t('podDetailsPanel.podAttendeesSection.statusBackedOut'), tone: 'error' };

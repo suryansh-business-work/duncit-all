@@ -42,6 +42,14 @@ export const appConfig = {
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/monitoring/settings', icon: 'settings' },
       ],
     },
+    {
+      label: 'Automation', labelKey: 'shell.nav.automation',
+      icon: 'hub',
+      children: [
+        { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/automation/whatsapp', icon: 'whatsapp' },
+        { label: 'Email', labelKey: 'shell.nav.email', to: '/automation/email', icon: 'email' },
+      ],
+    },
   ],
   modules: [
     {
@@ -59,6 +67,11 @@ export const appConfig = {
       title: 'AI Monitoring',
       description: 'Every uploaded image the platform screened, and the prompt it screened it with.',
       icon: 'shield',
+    },
+    {
+      title: 'Automation',
+      description: 'WhatsApp and email flows drawn on a canvas — AI replies, branches and follow-ups the server runs for you.',
+      icon: 'hub',
     },
   ],
 } satisfies AppConfig;

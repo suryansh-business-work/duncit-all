@@ -11,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { formResolver } from '@/utils/form-resolver';
 import { makeClubEditSchema, type ClubEditFormValues } from './club-edit.form';
+import { ClubBasicFields } from './ClubBasicFields';
 import { ClubContentFields } from './ClubContentFields';
 
 interface Props {
@@ -24,9 +25,9 @@ interface Props {
 /**
  * The Club Admin's club form — the Tamagui twin of @duncit/club-form's
  * `ClubEditorPage` under the partner config (no admins, no verified flag, no
- * active toggle): name, description, the WhatsApp links, the feature media,
- * the four bullet lists and the FAQs (rule 27), grouped into the same four
- * titled sections the MUI form draws.
+ * active toggle): name, description, the Category and Location cascades, the
+ * WhatsApp links, the feature media, the four bullet lists and the FAQs
+ * (rule 27), grouped into the same four titled sections the MUI form draws.
  */
 export function ClubEditForm({ initialValues, busy, error, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -43,19 +44,7 @@ export function ClubEditForm({ initialValues, busy, error, onSubmit }: Readonly<
     <YStack gap={20} testID="club-edit-form">
       <SurfaceCard gap={14}>
         <SectionHeader title={t('clubForm.clubSections.basicInformation')} />
-        <FormTextField
-          control={control}
-          name="club_name"
-          label={t('clubForm.basicSection.clubName')}
-          required
-        />
-        <FormTextField
-          control={control}
-          name="club_description"
-          label={t('clubForm.common.description')}
-          multiline
-          required
-        />
+        <ClubBasicFields form={form} />
       </SurfaceCard>
       <SurfaceCard gap={14}>
         <SectionHeader title={t('clubForm.clubSections.venuesAndCommunityLinks')} />

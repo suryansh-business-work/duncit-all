@@ -46,7 +46,7 @@ function lifecycleOf(pod: ClubPodDetail, t: Translate): LifecycleStep[] {
     {
       key: 'end',
       label: endLabel,
-      when: finished ? endedAt ?? null : null,
+      when: finished ? (endedAt ?? null) : null,
       done: finished,
       failed: cancelled,
     },
@@ -66,7 +66,13 @@ interface StepProps {
 /** One column of the strip: the dot, the step's name and when it happened. */
 function LifecycleStepColumn({ step, when, dotColor, glyph }: Readonly<StepProps>) {
   return (
-    <YStack flex={1} minWidth={0} alignItems="center" gap={6} testID={`club-pod-detail-step-${step.key}`}>
+    <YStack
+      flex={1}
+      minWidth={0}
+      alignItems="center"
+      gap={6}
+      testID={`club-pod-detail-step-${step.key}`}
+    >
       <XStack
         width={28}
         height={28}

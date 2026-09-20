@@ -7,7 +7,6 @@ import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSh
 import { ClubAdminDeletePodDocument } from '@/graphql/club-admin';
 import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
 import type { ClubAdminPodRow } from '@/hooks/useClubAdminPods';
-import { useDetailNav } from '@/hooks/useDetailNav';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -40,7 +39,6 @@ export interface ClubPodSheets {
 export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Options>): ClubPodSheets {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { openPod: openPodDetail } = useDetailNav();
   const [actionsPod, setActionsPod] = useState<ClubAdminPodRow | null>(null);
   const [activityPod, setActivityPod] = useState<ClubAdminPodRow | null>(null);
   const [deletePod, setDeletePod] = useState<ClubAdminPodRow | null>(null);
@@ -48,7 +46,17 @@ export function useClubPodSheets({ clubId, refetch, onDeleted }: Readonly<Option
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const change = usePodChangeRequests();
 
-  const openPod = (pod: ClubAdminPodRow) => openPodDetail(pod.club_slug, pod.pod_id);
+  /**
+   * The CLUB-SCOPED detail, not the public pod page.
+   *
+   * It used to open `useDetailNav().openPod`, which is the page a member sees
+   * — so a club admin pressing "Pod Details" got none of the roster, payments,
+   * ratings or audit trail their own page is for. mWeb and the Partners
+   * console have always mounted `@duncit/pod-details` at CLUB_ADMIN scope here
+   * (rule 27); this is its Tamagui twin.
+   */
+  const openPod = (pod: ClubAdminPodRow) =>
+    navigation.navigate('ClubPodDetails', { clubId, podId: pod.id });
 
   /** Close the actions sheet and run one action for the pod it was open on. */
   const withPod = (action: (pod: ClubAdminPodRow) => void) => () => {

@@ -91,6 +91,9 @@ export type RootStackParamList = {
   /** /clubs/:clubId/pods/:podId/edit — the same editor over an existing pod. Its
    * own screen because React Navigation gives a screen ONE path and mWeb has two. */
   ClubPodEdit: { clubId: string; podId: string };
+  /** /clubs/:clubId/pods/:podId — the club-scoped pod detail: roster, payments,
+   * ratings and the audit trail. NOT the public pod page (rule 27). */
+  ClubPodDetails: { clubId: string; podId: string };
   /** /clubs/:clubId/edit — the club's own page. */
   ClubEdit: { clubId: string };
   ProductsManage: undefined;
@@ -203,6 +206,7 @@ export type MenuStackRoute = Exclude<
   | 'ClubPods'
   | 'ClubPodEditor'
   | 'ClubPodEdit'
+  | 'ClubPodDetails'
   | 'ClubEdit'
 >;
 

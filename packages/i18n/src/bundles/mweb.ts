@@ -4434,6 +4434,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         perksRequired: 'Add at least one perk',
         valuesRequired: 'Add at least one value',
         imageRequired: 'Add at least one feature image',
+        // The category and location picks. Word for word what
+        // @duncit/club-form's `makeClubSchema` says, because the two forms save
+        // the same club through the same mutation (rule 27).
+        superCategoryRequired: 'Select a super category',
+        subCategoryRequired: 'Select a sub category',
+        locationRequired: 'Select the club location',
       },
     },
     venueManagePage: {

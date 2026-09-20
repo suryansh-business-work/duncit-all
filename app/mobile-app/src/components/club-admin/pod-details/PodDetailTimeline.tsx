@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import type { PodAuditLog } from '@duncit/utils';
 
 import { ClubAdminPodAuditLogsDocument } from '@/graphql/club-admin';
@@ -9,6 +9,7 @@ import { useReloadableQuery } from '@/hooks/useReloadableQuery';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toPodAuditLog } from '../audit-log';
+import { LoadErrorNotice } from '../LoadErrorNotice';
 import { AuditLogChanges } from '../monitoring/AuditLogChanges';
 import { AuditLogRow } from '../monitoring/AuditLogRow';
 import { PodDetailLifecycle } from './PodDetailLifecycle';
@@ -79,9 +80,15 @@ export function PodDetailTimeline({ pod }: Readonly<{ pod: ClubPodDetail }>) {
         {t('podDetailsPanel.podTimelineSection.activity')}
       </Text>
       {isLoading && logs.length === 0 ? (
-        <Text testID="club-pod-detail-activity-loading" fontSize={13} color="$muted">
-          {t('mweb.a11y.loading')}
-        </Text>
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="club-pod-detail-activity-loading"
+          color="$primary"
+        />
+      ) : null}
+      {hasError ? (
+        <LoadErrorNotice testID="club-pod-detail-activity-error" onRetry={refetch} />
       ) : null}
       {empty ? (
         <Text testID="club-pod-detail-activity-empty" fontSize={13} color="$muted">

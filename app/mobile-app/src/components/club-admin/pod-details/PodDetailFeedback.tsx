@@ -109,7 +109,12 @@ export function PodDetailFeedback({ podId }: Readonly<{ podId: string }>) {
       {rated && summary ? (
         <YStack gap={12}>
           <XStack alignItems="center" gap={12}>
-            <Text testID="club-pod-detail-rating-average" fontSize={28} fontWeight="700" color="$color">
+            <Text
+              testID="club-pod-detail-rating-average"
+              fontSize={28}
+              fontWeight="700"
+              color="$color"
+            >
               {summary.overall_average.toFixed(1)}
             </Text>
             <YStack gap={2}>

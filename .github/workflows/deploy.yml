@@ -2056,8 +2056,9 @@ jobs:
         env:
           DOCKERHUB_USERNAME:    ${{ secrets.DOCKERHUB_USERNAME }}
           MONGO_URI:             ${{ github.ref_name == 'staging' && secrets.STAGING_MONGO_URI || secrets.MONGO_URI }}
+          # Where Social Accounts' OAuth callback returns the marketer to, per environment.
+          MARKETING_URL:         ${{ env.MARKETING_URL }}
           # Production's connection string, unbranched. The staging stack needs
-          MARKETING_URL=${{ env.MARKETING_URL }}
           # it as the Data Clone SOURCE — it reads production and writes only
           # its own database. The production stack already has it as MONGO_URI.
           PROD_MONGO_URI:        ${{ secrets.MONGO_URI }}

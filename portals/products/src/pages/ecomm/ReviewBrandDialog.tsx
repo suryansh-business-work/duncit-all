@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import {
   Alert,
@@ -14,40 +14,17 @@ import {
 import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { StatusChip } from '@duncit/ui';
+import { useTranslation } from '@duncit/shell';
 import BrandReviewDetails from './BrandReviewDetails';
 import { BRAND_STATUS_COLOR } from './brandStatus';
 import { APPROVE_ECOMM_BRAND, REJECT_ECOMM_BRAND, type EcommBrandRow } from './queries';
-import { useTranslation } from '@duncit/shell';
-
-type Decision = 'APPROVE' | 'REJECT';
+import { approveBlockedReasons, confirmCopy, type Decision } from './reviewBrandRules';
 
 interface Props {
   brand: EcommBrandRow | null;
   onClose: () => void;
   onDone: (message: string) => void;
 }
-
-/** Approving grants a role and reactivating a rejection is a partner action, so
- * both decisions confirm first (@duncit/dialogs, no window.confirm). */
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-const confirmCopy = (t: Translate): Record<
-  Decision,
-  { title: string; message: string; label: string; color: 'success' | 'error' }
-> => ({
-  APPROVE: {
-    title: t('products.review.approveTitle'),
-    message: t('products.review.approveBody'),
-    label: t('products.review.approveConfirm'),
-    color: 'success',
-  },
-  REJECT: {
-    title: t('products.review.rejectTitle'),
-    message: t('products.review.rejectBody'),
-    label: t('products.review.rejectConfirm'),
-    color: 'error',
-  },
-});
 
 /** Approve/reject a partner brand submission — the brand sibling of
  * ReviewListingDialog so both review inboxes behave identically. */
@@ -74,6 +51,9 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
   // brand is not the one thing this inbox exists for: a pending submission.
   const openStatus = brand?.status ?? null;
   const staleStatus = openStatus === 'SUBMITTED' ? null : openStatus;
+  // The server refuses to approve on these; showing them here means the
+  // reviewer never learns them from an error toast. Reject stays available.
+  const blocked = useMemo(() => (brand ? approveBlockedReasons(brand, t) : []), [brand, t]);
 
   const submit = async () => {
     /* v8 ignore next -- the decision buttons only render while a brand is set */
@@ -105,18 +85,9 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
     <>
       <Dialog open={!!brand} onClose={onClose} fullWidth maxWidth="sm">
         <DialogTitle sx={{ pb: 1 }}>
-          <Stack direction="row" spacing={1} sx={{
-            alignItems: "center"
-          }}>
-            <Typography component="span"
-              variant="h6"
-              noWrap
-              sx={{
-                fontWeight: 900,
-                flex: 1,
-                minWidth: 0
-              }}>
-              {brand?.brand_name || 'Brand'}
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Typography component="span" variant="h6" noWrap sx={{ fontWeight: 900, flex: 1, minWidth: 0 }}>
+              {brand?.brand_name ?? ''}
             </Typography>
             {brand && <StatusChip status={brand.status} colorMap={BRAND_STATUS_COLOR} />}
           </Stack>
@@ -127,6 +98,19 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
               <Alert severity="info">
                 This brand is {staleStatus}, not awaiting review. Reviewing it again overwrites the
                 previous decision.
+              </Alert>
+            )}
+            {blocked.length > 0 && (
+              <Alert severity="warning" data-testid="review-brand-blocked">
+                {t('products.brandReview.approveBlocked')}
+                <Typography variant="body2" component="p" sx={{ mt: 1, fontWeight: 700 }}>
+                  {t('products.brandReview.blockedReasons')}
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  {blocked.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </Box>
               </Alert>
             )}
             {brand && <BrandReviewDetails brand={brand} />}
@@ -151,7 +135,7 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose} disabled={loading}>
-            Cancel
+            {t('shell.common.cancel')}
           </DuncitButton>
           <Box sx={{ flex: 1 }} />
           <DuncitButton
@@ -159,16 +143,18 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
             variant="outlined"
             disabled={loading || !trimmedNotes}
             onClick={() => setPending('REJECT')}
+            data-testid="review-brand-reject"
           >
-            Reject
+            {t('products.brandReview.reject')}
           </DuncitButton>
           <DuncitButton
             color="success"
             variant="contained"
-            disabled={loading}
+            disabled={loading || blocked.length > 0}
             onClick={() => setPending('APPROVE')}
+            data-testid="review-brand-approve"
           >
-            Approve
+            {t('products.brandReview.approve')}
           </DuncitButton>
         </DialogActions>
       </Dialog>
@@ -181,7 +167,7 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
         cancelLabel={t('products.review.back')}
         confirmColor={confirm.color}
         loading={loading}
-        busyLabel="Working…"
+        busyLabel={t('products.brandReview.working')}
         onClose={() => setPending(null)}
         onConfirm={submit}
       />

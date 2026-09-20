@@ -42,6 +42,14 @@ export const appConfig = {
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/monitoring/settings', icon: 'settings' },
       ],
     },
+    {
+      label: 'Automation', labelKey: 'shell.nav.automation',
+      icon: 'hub',
+      children: [
+        { label: 'WhatsApp', labelKey: 'shell.nav.whatsapp', to: '/automation/whatsapp', icon: 'whatsapp' },
+        { label: 'Email', labelKey: 'shell.nav.email', to: '/automation/email', icon: 'email' },
+      ],
+    },
   ],
   modules: [
     {

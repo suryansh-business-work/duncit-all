@@ -40,6 +40,7 @@ COPY portals/hosts/package.json ./portals/hosts/
 COPY portals/communications/package.json ./portals/communications/
 COPY portals/logs/package.json ./portals/logs/
 COPY portals/analytics/package.json ./portals/analytics/
+COPY portals/localization/package.json ./portals/localization/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
@@ -94,6 +95,8 @@ COPY portals/ai/src ./portals/ai/src
 COPY portals/communications/src ./portals/communications/src
 COPY portals/finance/src ./portals/finance/src
 COPY portals/legal/src ./portals/legal/src
+# The dashboard at / is the Analytics console's Logs page, read from its source too.
+COPY portals/analytics/src ./portals/analytics/src
 RUN pnpm --filter logs-portal build
 
 # --- runner ---

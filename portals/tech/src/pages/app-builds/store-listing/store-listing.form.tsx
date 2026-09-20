@@ -36,9 +36,12 @@ const sections = (t: Translate): DuncitTabItem<ListingSection>[] => [
 ];
 
 const makeMessages = (t: Translate): StoreListingMessages => ({
+  required: t('tech.storeListing.required'),
   tooLong: (max) => t('tech.storeListing.tooLong', { vars: { max: String(max) } }),
+  copyrightNoUrl: t('tech.storeListing.copyrightNoUrl'),
   invalidUrl: t('tech.storeListing.invalidUrl'),
   invalidEmail: t('tech.storeListing.invalidEmail'),
+  tooFewImages: (min) => t('tech.storeListing.tooFewImages', { vars: { min: String(min) } }),
   tooManyImages: (max) => t('tech.storeListing.tooManyImages', { vars: { max: String(max) } }),
 });
 

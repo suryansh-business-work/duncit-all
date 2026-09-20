@@ -1,17 +1,21 @@
 import { GraphQLError } from 'graphql';
-import type { AnalyticsEntity, AnalyticsKpi } from '../entity/shapes';
+import type { AnalyticsEntity, AnalyticsFormat, AnalyticsKpi } from '../entity/shapes';
 import { AnalyticsTargetModel } from './analyticsTarget.model';
 
 /** A monthly goal is read against a period of this many days as its own. */
 const MONTH_DAYS = 30;
 const KEY = /^[a-z][a-z\d_]{1,63}$/;
+const ACCRUING = new Set<AnalyticsFormat>(['COUNT', 'CURRENCY', 'USD']);
 
 /** A number that happens over time — scaled with the period, unlike a rate or a live count. */
-const accrues = (kpi: AnalyticsKpi) => kpi.previous !== null && (kpi.format === 'COUNT' || kpi.format === 'CURRENCY');
+const accrues = (kpi: AnalyticsKpi) => kpi.previous !== null && ACCRUING.has(kpi.format);
 
 /** The goal a tile is judged against over `days`: the monthly goal scaled for a count, as set for anything else. */
 function targetFor(kpi: AnalyticsKpi, goal: number, days: number): number {
-  return accrues(kpi) ? Math.round((goal * days) / MONTH_DAYS) : goal;
+  if (!accrues(kpi)) return goal;
+  const scaled = (goal * days) / MONTH_DAYS;
+  // Dollars keep their cents — an OpenAI budget is often a few dollars a month.
+  return kpi.format === 'USD' ? Math.round(scaled * 100) / 100 : Math.round(scaled);
 }
 
 export const analyticsTargetService = {

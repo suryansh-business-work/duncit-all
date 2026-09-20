@@ -55,14 +55,22 @@ export function useCityLaunch(locationId: string) {
     },
   });
 
-  const subscribe = useCallback(() => {
-    setProblem(null);
-    setSubscribing(true);
-    graphqlRequest(SubscribeLocationLaunchDocument, { locationDocId: locationId }, { auth: true })
-      .then((data) => setStatus(data.subscribeLocationLaunch))
-      .catch((error: unknown) => setProblem(problemOf(error)))
-      .finally(() => setSubscribing(false));
-  }, [locationId]);
+  /** Adds the member with their answer to the share-your-location question. */
+  const subscribe = useCallback(
+    (locationShared: boolean) => {
+      setProblem(null);
+      setSubscribing(true);
+      graphqlRequest(
+        SubscribeLocationLaunchDocument,
+        { locationDocId: locationId, locationShared },
+        { auth: true },
+      )
+        .then((data) => setStatus(data.subscribeLocationLaunch))
+        .catch((error: unknown) => setProblem(problemOf(error)))
+        .finally(() => setSubscribing(false));
+    },
+    [locationId],
+  );
 
   return { status, isLoading, loadError, subscribing, problem, subscribe };
 }

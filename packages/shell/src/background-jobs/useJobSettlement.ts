@@ -1,22 +1,36 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { notify, notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '../i18n/useTranslation';
-import type { BackgroundJob, BackgroundJobStatus } from './queries';
+import type { BackgroundJob, BackgroundJobKind, BackgroundJobStatus } from './queries';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
+/** How each kind says it ended — literal keys, so the localization gate sees them. */
+const NOTICE_COPY: Readonly<Record<BackgroundJobKind, { stopped: string; partial: string; done: string }>> = {
+  BULK_DELETE: {
+    stopped: 'shell.jobs.stoppedNotice',
+    partial: 'shell.jobs.partialNotice',
+    done: 'shell.jobs.doneNotice',
+  },
+  AI_TRANSLATE: {
+    stopped: 'shell.jobs.translateStoppedNotice',
+    partial: 'shell.jobs.translatePartialNotice',
+    done: 'shell.jobs.translateDoneNotice',
+  },
+};
+
 /** Say how a job ended. A cancel was the person's own doing, so it passes quietly. */
 function announce(job: BackgroundJob, t: Translate): void {
+  const copy = NOTICE_COPY[job.kind];
   const vars = { label: job.label, reason: job.error_message };
   if (job.status === 'FAILED') {
-    notifyError(t('shell.jobs.stoppedNotice', { vars }));
+    notifyError(t(copy.stopped, { vars }));
   } else if (job.status === 'COMPLETED' && job.failed > 0) {
-    notify(
-      t('shell.jobs.partialNotice', { vars: { ...vars, deleted: job.succeeded, failed: job.failed } }),
-      'warning'
-    );
+    // `deleted` and `translated` are the same count, named for each kind's sentence.
+    const counts = { deleted: job.succeeded, translated: job.succeeded, failed: job.failed };
+    notify(t(copy.partial, { vars: { ...vars, ...counts } }), 'warning');
   } else if (job.status === 'COMPLETED') {
-    notifySuccess(t('shell.jobs.doneNotice', { count: job.succeeded, vars }));
+    notifySuccess(t(copy.done, { count: job.succeeded, vars }));
   }
 }
 

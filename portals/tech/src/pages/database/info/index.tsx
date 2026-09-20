@@ -1,15 +1,21 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, LinearProgress, Stack, Typography } from '@mui/material';
 import StorageIcon from '@mui/icons-material/Storage';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import BackupIcon from '@mui/icons-material/Backup';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
+import BackupStoreCard from '../backups/BackupStoreCard';
 import ChangeDatabaseGuide from './ChangeDatabaseGuide';
 import CollectionsTable from './CollectionsTable';
 import ConnectionCard from './ConnectionCard';
 import ConnectionEvents from './ConnectionEvents';
+import DatabasesCard from './DatabasesCard';
+import MongoLogsCard from './MongoLogsCard';
+import ReplicaCard from './ReplicaCard';
 import ServerCard from './ServerCard';
 import StorageTiles from './StorageTiles';
 import {
@@ -39,6 +45,7 @@ function StatsNotice({ info }: Readonly<{ info: DatabaseInfo }>) {
  */
 export default function DbInfoPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const { data, loading, error, refetch } = useQuery<{ techDatabaseInfo: DatabaseInfo }>(DATABASE_INFO, {
@@ -86,10 +93,34 @@ export default function DbInfoPage() {
         <>
           <StatsNotice info={info} />
           {info.storage && <StorageTiles storage={info.storage} />}
+          {info.storage && <DatabasesCard databases={info.databases} error={info.databasesError} />}
           <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
             <ConnectionCard connection={info.connection} pingMs={info.pingMs} />
             {info.server && <ServerCard server={info.server} />}
           </Box>
+          {info.storage && (
+            <ReplicaCard
+              replica={info.replica}
+              replicaError={info.replicaError}
+              oplog={info.oplog}
+              oplogError={info.oplogError}
+              username={info.connection.username}
+            />
+          )}
+          <MongoLogsCard container={info.connection.logsContainer} />
+          <BackupStoreCard
+            action={
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                startIcon={<BackupIcon fontSize="small" />}
+                onClick={() => navigate('/database/backups')}
+                data-testid="db-info-open-backups"
+              >
+                {t('tech.dbBackup.storeOpen')}
+              </DuncitButton>
+            }
+          />
           <ChangeDatabaseGuide connection={info.connection} />
           <ConnectionEvents events={info.events} />
           {info.storage && (

@@ -14,6 +14,7 @@
     "check:schema": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-schema.ts",
     "check:askbot": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-askbot-catalog.ts",
     "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:types": "node ../scripts/verify-gql-schema.mjs --emit ../.codegen/server-schema.graphql && graphql-codegen --config codegen.gqltypes.ts",
     "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "test": "jest",
     "test:ci": "jest --runInBand",

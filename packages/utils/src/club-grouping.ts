@@ -90,6 +90,29 @@ export function groupClubsByCity<T extends GroupableClub>(
     .sort((a, b) => a.city.localeCompare(b.city));
 }
 
+/** A locality in Create a Pod's Locality dropdown, with how many of the host's clubs it holds. */
+export interface LocalityClubCount {
+  locality: string;
+  count: number;
+}
+
+/**
+ * Create a Pod's Locality dropdown order: the localities that hold at least one
+ * of `clubs` first, then the empty ones — which the pickers show disabled, since
+ * a pod there would have no club to join. Each half keeps the admin's zone order.
+ * The match is exact, as the create-pod club filter matches it.
+ */
+export function localitiesByClubCount(
+  localities: readonly string[],
+  clubs: readonly GroupableClub[],
+): LocalityClubCount[] {
+  const counted = localities.map((locality) => ({
+    locality,
+    count: clubs.filter((club) => (club.locality ?? '') === locality).length,
+  }));
+  return [...counted.filter((item) => item.count > 0), ...counted.filter((item) => item.count === 0)];
+}
+
 /** One group per locality, A→Z, with the clubs that name no area last. */
 export function groupClubsByLocality<T extends GroupableClub>(
   clubs: readonly T[],

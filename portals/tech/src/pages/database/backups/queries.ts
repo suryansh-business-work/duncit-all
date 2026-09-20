@@ -50,6 +50,38 @@ export const DB_BACKUP_SETTINGS = gql`
   }
 `;
 
+/** The archive directory on this server and its newest downloadable backup. */
+export const DB_BACKUP_STORE = gql`
+  query DbBackupStore {
+    dbBackupStore {
+      directory
+      archives
+      archiveBytes
+      newestArchiveAt
+      fsFreeBytes
+      fsTotalBytes
+      latest {
+        id
+        status
+        trigger
+        database
+        fileName
+        hasFile
+        sizeBytes
+        rawBytes
+        documentsTotal
+        collectionsTotal
+        currentCollection
+        error
+        startedBy
+        startedAt
+        archiveTakenAt
+        finishedAt
+      }
+    }
+  }
+`;
+
 export const DB_RESTORE_JOB = gql`
   query DbRestoreJob($id: ID) {
     dbRestoreJob(id: $id) {
@@ -180,6 +212,17 @@ export interface BackupSettings {
   keepLast: number;
   lastRunAt: string | null;
   nextRunAt: string | null;
+}
+
+/** Where the archives live on this server; `latest` is the one to download. */
+export interface BackupStore {
+  directory: string;
+  archives: number;
+  archiveBytes: number;
+  newestArchiveAt: string | null;
+  fsFreeBytes: number;
+  fsTotalBytes: number;
+  latest: BackupRow | null;
 }
 
 export interface RestoreJob {

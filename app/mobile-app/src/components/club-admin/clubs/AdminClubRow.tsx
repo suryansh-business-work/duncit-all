@@ -82,6 +82,11 @@ export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Prop
           label={t('clubAdmin.clubs.upcoming')}
           value={formatCount(club.upcoming_pods)}
         />
+        <MetricCell
+          testID={`${testID}-venues`}
+          label={t('clubAdmin.clubs.venues')}
+          value={formatCount(club.matched_venues_count)}
+        />
       </XStack>
       <XStack gap={8}>
         <YStack flex={1}>

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { LaunchPageMedia } from '@duncit/utils';
 
 export const LOCATIONS = gql`
   query Locations($filter: LocationFilterInput) {
@@ -37,6 +38,8 @@ export interface LocationRow {
   is_launched: boolean;
   launch_target: number;
   whatsapp_group_url: string;
+  /** This city's own launch page backdrops; '' in a field means the global one plays. */
+  launch_media: LaunchPageMedia;
   created_at?: string | null;
 }
 
@@ -59,6 +62,16 @@ const LOCATION_ROW_FIELDS = gql`
     is_launched
     launch_target
     whatsapp_group_url
+    launch_media {
+      hero_video_url
+      hero_image_url
+      host_video_url
+      host_image_url
+      venue_video_url
+      venue_image_url
+      club_admin_video_url
+      club_admin_image_url
+    }
     created_at
     updated_at
   }
@@ -101,5 +114,41 @@ export const DELETE_LOCATION = gql`
 export const AI_FILL_LOCATION_AREAS = gql`
   mutation AiFillLocationAreas($input: AiLocationAreasInput!) {
     aiFillLocationAreas(input: $input)
+  }
+`;
+
+/** The global launch page backdrops — the set every not-yet-launched city
+ * plays unless it overrides a field. They live on the Branding singleton. */
+export const LAUNCH_PAGE_MEDIA = gql`
+  query LaunchPageMedia {
+    branding {
+      launch_media {
+        hero_video_url
+        hero_image_url
+        host_video_url
+        host_image_url
+        venue_video_url
+        venue_image_url
+        club_admin_video_url
+        club_admin_image_url
+      }
+    }
+  }
+`;
+
+export const UPDATE_LAUNCH_PAGE_MEDIA = gql`
+  mutation UpdateLaunchPageMedia($input: UpdateBrandingInput!) {
+    updateBranding(input: $input) {
+      launch_media {
+        hero_video_url
+        hero_image_url
+        host_video_url
+        host_image_url
+        venue_video_url
+        venue_image_url
+        club_admin_video_url
+        club_admin_image_url
+      }
+    }
   }
 `;

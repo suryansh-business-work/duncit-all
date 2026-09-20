@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link as RouterLink } from 'react-router';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
@@ -7,7 +8,7 @@ import {
   CLUB_ADMIN_AUTO_PODS,
   ClubClaimDialog,
 } from '@duncit/auto-pods';
-import type { AutoPodRow } from '@duncit/utils';
+import type { AutoPodLabels, AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
 import { useAutoPodCityLabel } from '../../hooks/useAutoPodCityLabel';
 import { useAutoPodQueue } from '../../hooks/useAutoPodQueue';
@@ -15,6 +16,41 @@ import { useAutoPodQueue } from '../../hooks/useAutoPodQueue';
 interface Props {
   /** The header's selected location — '' shows every city's offers. */
   locationId: string;
+}
+
+/** The club's own pod page, once the three enrolments have materialised one.
+ * Null while the offer is still collecting them — there is no pod to open. */
+function clubPodHref(row: AutoPodRow): string | null {
+  if (!row.pod_id || !row.club_claim) return null;
+  return `/clubs/${row.club_claim.club_id}/pods/${row.pod_id}`;
+}
+
+interface MineActionsProps {
+  row: AutoPodRow;
+  labels: AutoPodLabels;
+  onWithdrawn: () => void;
+}
+
+/** What a club admin sees on an offer they already claimed: the pod it became,
+ * once all three enrolments landed, and the way back out of it. */
+function ClubMineActions({ row, labels, onWithdrawn }: Readonly<MineActionsProps>) {
+  const podHref = clubPodHref(row);
+
+  return (
+    <Stack spacing={1}>
+      {podHref ? (
+        <DuncitButton
+          data-testid={`club-auto-pods-view-pod-${row.id}`}
+          fullWidth
+          component={RouterLink}
+          to={podHref}
+        >
+          {labels.viewPod}
+        </DuncitButton>
+      ) : null}
+      <AutoPodWithdrawAction row={row} role="club" labels={labels} onWithdrawn={onWithdrawn} />
+    </Stack>
+  );
 }
 
 /**
@@ -58,7 +94,7 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
           </DuncitButton>
         )}
         renderMineAction={(row) => (
-          <AutoPodWithdrawAction row={row} role="club" labels={queue.labels} onWithdrawn={queue.reload} />
+          <ClubMineActions row={row} labels={queue.labels} onWithdrawn={queue.reload} />
         )}
       />
 

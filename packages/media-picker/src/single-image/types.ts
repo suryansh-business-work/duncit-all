@@ -24,6 +24,8 @@ export interface SingleImageUploadFieldProps {
   helperText?: string;
   /** External error flag (url variants forward it to the TextField). */
   error?: boolean;
+  /** Mark the field required: the url variants put the asterisk on the TextField label. */
+  required?: boolean;
   disabled?: boolean;
   /** File-input accept list. Default 'image/*'. */
   accept?: string;

@@ -16,14 +16,14 @@
  * TEXT now: no ts-node, no env, no side effects at import, and the same
  * technique on the schema as on the documents.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { buildASTSchema, concatAST, parse, validate, Kind } = require(
+const { buildASTSchema, concatAST, parse, print, validate, Kind } = require(
   require.resolve('graphql', {
     paths: [path.join(repoRoot, 'server'), path.join(repoRoot, 'app', 'mweb'), repoRoot],
   }),
@@ -248,7 +248,32 @@ if (schemaAst.definitions.length === 0) {
   console.error('verify-gql-schema: found no SDL in server/src — refusing to report success.');
   process.exit(1);
 }
-const schema = buildASTSchema(mergeDuplicateTypes(schemaAst), { assumeValidSDL: true });
+const merged = mergeDuplicateTypes(schemaAst);
+
+/**
+ * `--emit <file>` writes the resolved schema as plain SDL and stops.
+ *
+ * It exists because `server codegen` cannot read these files: it loads
+ * `*.schema.ts` as TEXT and so cannot see through the template literal
+ * podCalculator.schema.ts interpolates its shared field block into, which fails
+ * the whole run. The resolver above already handles that, so pointing codegen
+ * at this output is what makes `@duncit/gql-types` regenerable instead of
+ * hand-patched.
+ */
+const emitAt = process.argv.indexOf('--emit');
+if (emitAt !== -1) {
+  const out = process.argv[emitAt + 1];
+  if (!out) {
+    console.error('verify-gql-schema: --emit needs a file path.');
+    process.exit(1);
+  }
+  mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+  writeFileSync(out, print(merged), 'utf8');
+  console.log(`verify-gql-schema: wrote ${merged.definitions.length} definition(s) to ${out}`);
+  process.exit(0);
+}
+
+const schema = buildASTSchema(merged, { assumeValidSDL: true });
 
 const failures = [];
 let checked = 0;

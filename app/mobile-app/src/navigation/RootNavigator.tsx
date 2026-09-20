@@ -96,6 +96,7 @@ import { ClubAdminDashboardScreen } from '@/screens/ClubAdminDashboardScreen';
 import { ClubPodMonitoringScreen } from '@/screens/ClubPodMonitoringScreen';
 import { ClubPodsScreen } from '@/screens/ClubPodsScreen';
 import { ClubPodEditorScreen } from '@/screens/ClubPodEditorScreen';
+import { ClubPodDetailsScreen } from '@/screens/ClubPodDetailsScreen';
 import { ClubEditScreen } from '@/screens/ClubEditScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { withProductGate } from '@/navigation/withProductGate';
@@ -219,6 +220,7 @@ export function RootNavigator() {
       <Stack.Screen name="ClubPods" component={ClubPodsScreen} />
       <Stack.Screen name="ClubPodEditor" component={ClubPodEditorScreen} />
       <Stack.Screen name="ClubPodEdit" component={ClubPodEditorScreen} />
+      <Stack.Screen name="ClubPodDetails" component={ClubPodDetailsScreen} />
       <Stack.Screen name="ClubEdit" component={ClubEditScreen} />
       <Stack.Screen name="ProductsManage" component={GatedProductsManageScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />

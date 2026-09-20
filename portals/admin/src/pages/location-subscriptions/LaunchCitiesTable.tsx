@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { Avatar, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Stack, Tooltip, Typography, alpha, useTheme } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, activeChipColumn, clientTableFetch, type DuncitColumn } from '@duncit/table';
@@ -12,6 +12,9 @@ interface Props {
   rows: readonly LaunchCityRow[];
   /** Called once a send has been queued, so the page can re-read the counts. */
   onSent: () => void;
+  /** The city whose subscribers are listed below — its row is highlighted. */
+  selectedId: string | null;
+  onSelect: (row: LaunchCityRow) => void;
 }
 
 interface SendResult {
@@ -66,9 +69,16 @@ function SendLaunchCell({ row, onSend }: Readonly<SendCellProps>) {
 }
 
 /** One row per city with subscribers: the totals, and Send for its launch message. */
-export default function LaunchCitiesTable({ rows, onSent }: Readonly<Props>) {
+export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
+  const theme = useTheme();
+  // The picked city is yellow across the whole row; AG Grid restyles rows when this changes.
+  const getRowStyle = useCallback(
+    (row: LaunchCityRow) =>
+      row.id === selectedId ? { backgroundColor: alpha(theme.palette.warning.main, 0.24) } : undefined,
+    [selectedId, theme]
+  );
   const refetchRef = useRef<(() => void) | null>(null);
   const [sendMut] = useMutation<SendResult>(SEND_LOCATION_LAUNCH_MESSAGE);
 
@@ -168,6 +178,8 @@ export default function LaunchCitiesTable({ rows, onSent }: Readonly<Props>) {
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
+      onRowClick={onSelect}
+      getRowStyle={getRowStyle}
       emptyText={t('admin.locationSubscriptions.citiesEmpty')}
       defaultSort={{ field: 'subscriber_count', dir: 'desc' }}
       searchPlaceholder={t('admin.locationSubscriptions.searchCity')}

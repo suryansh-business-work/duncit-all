@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GSTIN_PATTERN, PAN_PATTERN, PHONE_NUMBER_PATTERN, POSTAL_CODE_PATTERN, PUBLIC_URL_PATTERN } from '@duncit/forms';
 import type { EcommBrand } from './queries';
 
 // Lenient form schema — drafts can be partial. The server enforces the
@@ -35,6 +36,41 @@ export const brandSchema = z.object({
 });
 
 export type BrandFormValues = z.infer<typeof brandSchema>;
+
+const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+const UPI_PATTERN = /^[\w.-]+@[\w-]+$/;
+const YEAR_PATTERN = /^\d{4}$/;
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+type Translate = (key: string) => string;
+
+/** A blank value passes — drafts are partial; a value that IS there must be well-formed. */
+const whenFilled = (pattern: RegExp, message: string) =>
+  z.string().trim().refine((value) => value === '' || pattern.test(value), message);
+
+/**
+ * The wizard's schema: `brandSchema` with proper formats wherever a value is
+ * present, so a typo is caught on its own step rather than by the server at
+ * submit. Messages come from the localization bundle.
+ */
+export const makeBrandSchema = (t: Translate) =>
+  brandSchema.extend({
+    description: z
+      .string()
+      .trim()
+      .max(4000)
+      .refine((value) => value === '' || value.length >= 20, t('partners.brandWizard.validation.descriptionMin')),
+    website_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
+    instagram_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
+    contact_email: whenFilled(EMAIL_PATTERN, t('partners.brandWizard.validation.email')),
+    contact_phone: whenFilled(PHONE_NUMBER_PATTERN, t('partners.brandWizard.validation.phone')),
+    gstin: whenFilled(GSTIN_PATTERN, t('partners.brandWizard.validation.gstin')),
+    pan: whenFilled(PAN_PATTERN, t('partners.brandWizard.validation.pan')),
+    established_year: whenFilled(YEAR_PATTERN, t('partners.brandWizard.validation.establishedYear')),
+    postal_code: whenFilled(POSTAL_CODE_PATTERN, t('partners.brandWizard.validation.postalCode')),
+    ifsc_code: whenFilled(IFSC_PATTERN, t('partners.brandWizard.validation.ifsc')),
+    upi_id: whenFilled(UPI_PATTERN, t('partners.brandWizard.validation.upi')),
+  });
 
 export const blankBrand: BrandFormValues = {
   brand_name: '',

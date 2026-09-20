@@ -7,6 +7,8 @@ export const linkPreviewTypeDefs = /* GraphQL */ `
     POST
     VENUE
     PRODUCT
+    "A not-yet-launched city's waitlist page (/city-launch/:slug)."
+    LOCATION
   }
 
   """

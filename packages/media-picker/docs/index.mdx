@@ -296,6 +296,7 @@ rule with Tamagui components (rules 27 and 40).
 | `variant` | `'url-adornment' \| 'url-button' \| 'avatar'` | no | `'url-adornment'` | Chrome: website-app field, finance field, or crm avatar (no URL paste). |
 | `label` / `helperText` | `string` | no | — | Field copy. |
 | `error` | `boolean` | no | `false` | External error flag (url variants forward it to the `TextField`). |
+| `required` | `boolean` | no | `false` | Marks the field required: the url variants put the asterisk on the `TextField` label and `aria-required` on its input. |
 | `disabled` | `boolean` | no | `false` | Disable the field. |
 | `accept` | `string` | no | `'image/*'` | File-input accept list. |
 | `maxBytes` | `number \| null` | no | 15 MB | Per-file cap; `null` disables it. |

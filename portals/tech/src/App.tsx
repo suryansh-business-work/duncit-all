@@ -29,6 +29,7 @@ import RateLimitSettingsPage from './pages/rate-limiting/settings';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
 import StoreListingPage from './pages/app-builds/store-listing';
+import ReleasesPage from './pages/app-builds/releases';
 import E2eRunsPage from './pages/e2e';
 import { E2eSettingsPage } from './pages/e2e/settings';
 import E2eFlowsPage from './pages/e2e/flows';
@@ -44,8 +45,16 @@ import GraphqlFieldsPage from './pages/graphql-monitor/fields';
 import GraphqlErrorsPage from './pages/graphql-monitor/errors';
 import GraphqlMonitorSettingsPage from './pages/graphql-monitor/settings';
 import TableApiSettingsPage from './pages/table-api-settings';
-import DnsRecordsPage from './pages/dns';
+import DomainOverviewPage from './pages/domain/overview';
+import DnsRecordsPage from './pages/domain/dns-records';
+import DnsStagingPage from './pages/domain/staging';
 import GoogleAnalyticsPage from './pages/google-analytics';
+import Msg91SettingsPage from './pages/msg91-settings';
+// The Communications console's own pages, mounted here as they are — one
+// implementation, two doors (rules 34/40). The Dockerfile copies that console's
+// src for the build, and the deploy filter rebuilds this console when it changes.
+import Msg91LogsPage from '../../communications/src/pages/msg91-otp/logs';
+import Msg91AnalyticsPage from '../../communications/src/pages/msg91-otp/analytics';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -108,11 +117,23 @@ export default function App() {
         <Route path="/database/backups" element={authed(<DbBackupsPage />)} />
         <Route path="/database/data-clone" element={authed(<DataClonePage />)} />
         <Route path="/server/data-clone" element={<Navigate to="/database/data-clone" replace />} />
-        {/* The GoDaddy zone behind every *.duncit.com host. */}
-        <Route path="/dns" element={<Navigate to="/dns/records" replace />} />
-        <Route path="/dns/records" element={authed(<DnsRecordsPage />)} />
+        {/* The domain at GoDaddy and the zone behind every *.duncit.com host.
+            The old /dns paths still resolve, so a bookmark keeps working. */}
+        <Route path="/domain" element={<Navigate to="/domain/overview" replace />} />
+        <Route path="/domain/overview" element={authed(<DomainOverviewPage />)} />
+        <Route path="/domain/dns-records" element={authed(<DnsRecordsPage />)} />
+        <Route path="/domain/staging" element={authed(<DnsStagingPage />)} />
+        <Route path="/dns" element={<Navigate to="/domain/overview" replace />} />
+        <Route path="/dns/records" element={<Navigate to="/domain/dns-records" replace />} />
         {/* The GA4 tag each Duncit website loads, one per website. */}
         <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
+        {/* MSG91 OTP Logs: the widget's records, read live from MSG91, beside
+            the keys that read them — Settings is the MSG91 category of
+            Environment Variables on a page of its own. */}
+        <Route path="/msg91-otp" element={<Navigate to="/msg91-otp/logs" replace />} />
+        <Route path="/msg91-otp/logs" element={authed(<Msg91LogsPage />)} />
+        <Route path="/msg91-otp/analytics" element={authed(<Msg91AnalyticsPage />)} />
+        <Route path="/msg91-otp/settings" element={authed(<Msg91SettingsPage />)} />
         {/* Rate limiting. Systems is the landing page: which callers exist and
             what they spend is what a limit has to be written against. */}
         <Route path="/rate-limiting" element={<Navigate to="/rate-limiting/systems" replace />} />
@@ -138,6 +159,9 @@ export default function App() {
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
         <Route path="/app-builds/store-listing" element={authed(<StoreListingPage />)} />
+        {/* What the stores say about every version — read live — with the
+            rejections this server recorded, advised on and announced. */}
+        <Route path="/app-builds/releases" element={authed(<ReleasesPage />)} />
         {/* Every run of the end-to-end suite, and the nightly schedule that
             produces most of them. The workflow has no cron of its own — the
             schedule below is the only thing that starts a scheduled run. */}

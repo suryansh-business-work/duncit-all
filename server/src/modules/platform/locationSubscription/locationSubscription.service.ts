@@ -2,8 +2,13 @@ import { GraphQLError } from 'graphql';
 import { Types, isValidObjectId } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { destinationFor, userNameFor } from '@modules/crm/marketing/waCampaign.recipients';
-import { LocationModel, type ILocation } from '@modules/platform/location/location.model';
+import {
+  LocationModel,
+  resolveLaunchMedia,
+  type ILocation,
+} from '@modules/platform/location/location.model';
 import { locationService } from '@modules/platform/location/location.service';
+import { settingsService } from '@modules/platform/settings/settings.service';
 import {
   escapedSearchRegex,
   runTableQuery,
@@ -33,6 +38,7 @@ const SUBSCRIPTION_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     name: 'name',
     whatsapp: 'whatsapp',
+    location_shared: 'location_shared',
     status: 'status',
     created_at: 'created_at',
     notified_at: 'notified_at',
@@ -40,6 +46,7 @@ const SUBSCRIPTION_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     location_doc_id: { path: 'location_id', type: 'enum' },
     status: { type: 'enum' },
+    location_shared: { type: 'boolean' },
     created_at: { type: 'date' },
     notified_at: { type: 'date' },
   },
@@ -55,22 +62,22 @@ const subscriptionPub = (d: ILocationSubscription, cityById: ReadonlyMap<string,
   user_id: d.user_id.toHexString(),
   name: d.name ?? '',
   whatsapp: d.whatsapp ?? '',
+  location_shared: d.location_shared ?? false,
   status: d.status,
   reason: d.reason ?? '',
   notified_at: iso(d.notified_at),
   created_at: iso(d.created_at) ?? '',
 });
 
-/** The city a mutation names, with its validated id — or NOT_FOUND. */
+/** The city a mutation names (by slug or id, as the page's link carries it),
+ * with its doc id — or NOT_FOUND. */
 export async function findCity(input: unknown) {
   const { location_doc_id } = await validate<LocationDocIdInput>(locationDocIdSchema, input);
-  const location = await LocationModel.findById(location_doc_id)
-    .select('location_name city is_launched')
-    .lean();
+  const location = await locationService.getBySlugOrId(location_doc_id);
   if (!location) {
     throw new GraphQLError('Location not found', { extensions: { code: 'NOT_FOUND' } });
   }
-  return { id: new Types.ObjectId(location_doc_id), location };
+  return { id: new Types.ObjectId(location.id), location };
 }
 
 /** Search spans the subscriber's name and number, and the city they chose. */
@@ -97,23 +104,26 @@ export const locationSubscriptionService = {
     return map;
   },
 
-  /** What the subscribe page reads. Null for a city that does not exist. */
-  async launchStatus(locationDocId: string, userId: string | null) {
-    if (!isValidObjectId(locationDocId)) return null;
-    const location = await locationService.getById(locationDocId);
+  /** What the subscribe page reads, by the city's slug or id. Null for a city that does not exist. */
+  async launchStatus(locationKey: string, userId: string | null) {
+    const location = await locationService.getBySlugOrId(locationKey);
     if (!location) return null;
-    const locationId = new Types.ObjectId(locationDocId);
-    const [subscriber_count, mine] = await Promise.all([
+    const locationId = new Types.ObjectId(location.id);
+    const [subscriber_count, mine, branding] = await Promise.all([
       LocationSubscriptionModel.countDocuments({ location_id: locationId }),
       userId && isValidObjectId(userId)
         ? LocationSubscriptionModel.exists({ user_id: new Types.ObjectId(userId), location_id: locationId })
         : null,
+      settingsService.getBranding(),
     ]);
     return {
       location,
       subscriber_count,
       launch_target: location.launch_target,
       is_subscribed: !!mine,
+      // The city's own backdrop where it set one, else the global one — decided
+      // here so both apps draw the same picture without knowing the rule.
+      launch_media: resolveLaunchMedia(location.launch_media, branding.launch_media),
     };
   },
 
@@ -124,7 +134,7 @@ export const locationSubscriptionService = {
    * account can only ever sign up its own WhatsApp. A repeat tap refreshes the
    * name and number and leaves the send status alone.
    */
-  async subscribe(userId: string, locationDocId: string) {
+  async subscribe(userId: string, locationDocId: string, locationShared: boolean) {
     const { id, location } = await findCity({ location_doc_id: locationDocId });
     if (location.is_launched ?? true) {
       throw new GraphQLError(`${cityOf(location)} is already live on Duncit.`, {
@@ -143,7 +153,7 @@ export const locationSubscriptionService = {
     await LocationSubscriptionModel.updateOne(
       { user_id: new Types.ObjectId(userId), location_id: id },
       {
-        $set: { name: userNameFor(user ?? {}), whatsapp },
+        $set: { name: userNameFor(user ?? {}), whatsapp, location_shared: locationShared },
         $setOnInsert: { status: 'PENDING', reason: '', notified_at: null },
       },
       { upsert: true }

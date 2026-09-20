@@ -65,9 +65,9 @@ export default function VenueDeductionsPanel({
         {t('onboarding.venues.venueDeductions')}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        The commission Duncit takes from the venue payout (after GST). Defaults to the{' '}
-        {defaultCommissionPct ?? '—'}% set in Finance → Default Deductions; change it here to
-        override it for this venue only, or set 0 to always follow the default.
+        {t('onboarding.venues.venueDeductionsHint', {
+          vars: { pct: defaultCommissionPct ?? '—' },
+        })}
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1.5 }}>
         <TextField
@@ -77,11 +77,16 @@ export default function VenueDeductionsPanel({
           value={commission}
           onChange={(e) => setCommission(e.target.value)}
           error={!valid(commission)}
-          helperText={valid(commission) ? undefined : 'Enter a number between 0 and 100.'}
+          helperText={valid(commission) ? undefined : t('onboarding.venues.validation.commissionRange')}
           fullWidth
           slotProps={{
             input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
-            htmlInput: { min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' },
+            htmlInput: {
+              min: 0,
+              max: 100,
+              step: 1,
+              'aria-label': t('onboarding.a11y.venueCommissionPercentage'),
+            },
           }}
         />
       </Stack>
@@ -93,7 +98,7 @@ export default function VenueDeductionsPanel({
         disabled={!valid(commission) || unchanged}
         sx={{ mt: 1.5 }}
       >
-        Save deductions
+        {t('onboarding.venues.saveDeductions')}
       </DuncitButton>
     </Paper>
   );

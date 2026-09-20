@@ -22,6 +22,8 @@ import { rateLimitMiddleware, rateLimitPlugin } from '@modules/platform/rateLimi
 import { graphqlMonitorPlugin } from '@modules/platform/graphqlMonitor/graphqlMonitor.plugin';
 import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/graphqlMonitor.flusher';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
+import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
+import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
@@ -29,6 +31,7 @@ import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin'
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
+import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
 import { startAnalyticsAlertScheduler } from '@modules/platform/analytics/alerts/analyticsAlert.scheduler';
@@ -41,6 +44,9 @@ import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
+import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
+import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
+import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
 import { buildHealth } from './observability/health';
@@ -225,15 +231,34 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'policySignupFlag', { repaired });
     }
   });
-  // Every key the platform ships copy for, into Admin > Localization.
+  // Stamp the launched flag onto cities saved before it existed, so Admin >
+  // Locations' Launch Status filter matches every city the app treats as launched.
+  await safeSeed('locationLaunched', async () => {
+    const { locationService } = await import('@modules/platform/location/location.service');
+    const { repaired } = await locationService.backfillLaunched();
+    if (repaired > 0) {
+      logs.server.info('bootstrap', 'locationLaunched', { repaired });
+    }
+  });
+  // What every existing translation was written against, recorded once so it
+  // can be seen to fall out of date with English. Must run BEFORE the shipped
+  // English below is revised, or a reword in this boot would read as in sync.
+  await safeSeed('localizationSyncBaseline', async () => {
+    const { aiTranslateService } = await import('@modules/platform/localization/aiTranslate.service');
+    const stamped = await aiTranslateService.baselineSync();
+    if (stamped > 0) logs.server.info('bootstrap', 'localizationSyncBaseline', { stamped });
+  });
+  // Every key the platform ships copy for, into Localization.
   // This used to happen only when somebody opened that page and pressed
   // "Import app keys", so a fresh environment — or any key added since the
   // last time anyone pressed it — sat untranslatable. Create-only: an
-  // existing row keeps its translations.
+  // existing row keeps its translations, except English that was reworded in
+  // code and never edited here (copy-revisions.ts).
   await safeSeed('localization', async () => {
     const { localizationService } = await import('@modules/platform/localization/localization.service');
     const created = await localizationService.seedDefaults();
-    if (created > 0) logs.server.info('bootstrap', 'localization', { created });
+    const revised = await localizationService.reviseShippedCopy();
+    if (created > 0 || revised > 0) logs.server.info('bootstrap', 'localization', { created, revised });
   });
   // Every AI feature reads its system prompt from the AI portal's Prompt
   // Library; this puts the shipped defaults there on first boot.
@@ -324,13 +349,43 @@ async function bootstrap() {
     const { giftcardService } = await import('@modules/finance/giftcard/giftcard.service');
     await giftcardService.syncIndexes();
   });
+  // Our own sites and the two app stores, as a Mongo-side regex — the backfill
+  // below runs in the database, so it cannot call the TypeScript classifier.
+  // TWIN of shortLink.destination.ts's host rule; change one, change the other.
+  const FIRST_PARTY_URL =
+    '^https?://(([a-z0-9-]+[.])*duncit[.]com|play[.]google[.]com|apps[.]apple[.]com)([/:?#]|$)';
   // Builds the share-key unique index that makes an automatically minted share
   // link one per thing shared. Without it two people sharing the same pod at
   // the same moment each get their own link, and neither carries the pod's
   // real click count. New unique indexes only land through syncIndexes.
   await safeSeed('shortLinkIndexes', async () => {
     const { ShortLinkModel } = await import('@modules/crm/marketing/shortLink.model');
+    const { ShortLinkClickModel } = await import('@modules/crm/marketing/shortLinkClick.model');
     await ShortLinkModel.syncIndexes();
+    // The retention sweep deletes by age across every link at once, so it
+    // needs an index that is not scoped to one link.
+    await ShortLinkClickModel.syncIndexes();
+    // Links minted before is_external existed carry no flag, and a missing
+    // field matches neither true nor false — so the External Links page would
+    // silently omit the venue-map links the apps have been minting all along.
+    // One pass, and only over the rows that have no answer yet.
+    await ShortLinkModel.updateMany({ is_external: { $exists: false } }, [
+      {
+        $set: {
+          is_external: {
+            $not: [
+              {
+                $regexMatch: {
+                  input: '$destination_url',
+                  regex: FIRST_PARTY_URL,
+                  options: 'i',
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
   });
   // Builds the WhatsApp send log's unique index. It IS the idempotency: without
   // it every re-trigger of a domain event is a second billed message, and the
@@ -452,6 +507,19 @@ async function bootstrap() {
   // open a ticket for every new conversation and acknowledge it once.
   startMailAutomationScheduler();
 
+  // AI portal automation: wake runs whose delay is up, time out unanswered waits.
+  startAutomationScheduler();
+
+  // Social Accounts (Marketing): re-read each connected Page, channel and
+  // profile every few hours — posts, numbers, new comments — and send the new
+  // comments through the AI review.
+  startSocialAccountsScheduler();
+
+  // Short links: delete every recorded click past the retention window an
+  // admin set in Marketing > External Links > Privacy. A stated window that
+  // nothing enforces is not a retention policy.
+  startShortLinkRetentionScheduler();
+
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.
   startPaymentReconciler();
@@ -469,6 +537,11 @@ async function bootstrap() {
   // the review submission — longer than any request, and longer than a deploy.
   // The row records each step; this carries on whatever a restart interrupted.
   startAppStoreReleaseScheduler();
+
+  // Store releases: a half-hourly read of App Store Connect that opens an
+  // issue (advice, mail, Slack) for every newly rejected or awaiting version,
+  // and raises every open issue again past the configured reminder window.
+  startStoreReleaseScheduler();
 
   // End-to-end tests: a one-minute tick that dispatches the E2E workflow when
   // the admin-configured window has passed (Tech > E2E Tests > Settings,
@@ -687,6 +760,13 @@ async function bootstrap() {
   // Google's OAuth redirect after an operator connects a Gmail mailbox in the
   // Tech portal. A browser navigation, so it lives here and not in GraphQL.
   app.use('/gmail', buildGmailOAuthRouter());
+
+  // AI portal automation: where AiSensy posts each incoming WhatsApp message.
+  app.use('/automation', buildAutomationRouter());
+
+  // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a
+  // social account in the Marketing portal. A browser navigation, like Gmail's.
+  app.use('/social', buildSocialOAuthRouter());
 
   // Sign in with Apple's form_post for the Android app and native web, handed
   // back to the app with one redirect. Apple posts a form, so it lives here.

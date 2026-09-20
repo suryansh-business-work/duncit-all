@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { SocialHandles } from '@duncit/onboarding';
 
 export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM' | 'CLUB_ADMIN';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
@@ -33,6 +34,7 @@ export interface OnboardingIntro {
   venue_intro_html: string;
   ecomm_intro_html: string;
   club_admin_intro_html: string;
+  social_handles: SocialHandles;
 }
 
 export const ONBOARDING_INTRO = gql`
@@ -42,6 +44,13 @@ export const ONBOARDING_INTRO = gql`
       venue_intro_html
       ecomm_intro_html
       club_admin_intro_html
+      social_handles {
+        x_url
+        instagram_url
+        youtube_url
+        facebook_url
+        website_url
+      }
     }
   }
 `;

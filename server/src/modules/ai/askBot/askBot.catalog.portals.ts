@@ -68,10 +68,6 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Configure max upload sizes, allowed formats, crop presets, compression and AI image monitoring for the native app (pods, reels, statuses, avatars).' },
   { surface: 'admin', path: '/upload-settings/mweb', label: 'mWeb Upload Setting', group: 'Upload Settings',
     description: 'Configure max upload sizes, allowed formats, crop presets, compression and AI image monitoring for the mWeb PWA (pods, reels, statuses, avatars).' },
-  { surface: 'admin', path: '/localization/locales', label: 'Locales', group: 'Localization',
-    description: 'Add, edit and remove the languages/country locales the platform renders in, including which one is default, RTL and active.' },
-  { surface: 'admin', path: '/localization/translations', label: 'Translations', group: 'Localization',
-    description: 'Browse translation namespaces, drill into one namespace\'s keys to add or edit each locale\'s copy, and press "Import app keys" to seed every shipped key.' },
   { surface: 'admin', path: '/branding', label: 'Branding', group: 'System',
     description: 'Edit the platform identity (app name, logo, primary colour, support contacts), per-platform favicon/logo/splash assets, website logos and store links, date-windowed occasional icons, and the Google font per platform.' },
   { surface: 'admin', path: '/settings', label: 'Settings', group: 'System',
@@ -706,6 +702,14 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Open or close the store; its name, logo, support contacts and announcement bar; guest checkout, minimum order, prepaid discount and Cash on Delivery rules; free-shipping threshold and flat fee; returns and cancellation reasons; SEO; and the shipping, returns, terms and about pages.' },
   { surface: 'ecomm-portal', path: '/profile', label: 'Profile',
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
+
+  // ---- Localization (localization) ------------------------------------
+  { surface: 'localization', path: '/locales', label: 'Locales',
+    description: 'Add a language from the ISO list — with the option to have AI translate it from English straight away — and edit or remove the locales the platform renders in, including which one is default, RTL and active. Each language shows how much of it is translated and how many of its translations are out of date with English, and any one language can be AI-translated from here.' },
+  { surface: 'localization', path: '/translations', label: 'Translations',
+    description: 'Every translation namespace, page by page, with how complete each language is; drill into a page to add or edit its entries in every language. Press "Import app keys" to seed every shipped key, or "AI translate" to sync chosen languages with English — only the missing entries, the missing ones plus those whose English changed since they were translated, or everything. AI translation runs as a background job whose progress shows in the header and survives refreshes, page changes and server restarts.' },
+  { surface: 'localization', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Localization console.' },
 
   // ---- Duncit Pet Store (ecomm) ---------------------------------------
   { surface: 'ecomm', path: '/', label: 'Home',

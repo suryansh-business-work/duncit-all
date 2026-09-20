@@ -23,6 +23,9 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       // label serves both pages rather than drifting into two.
       superCategory: 'Super Category',
       allSuperCategories: 'All Super Categories',
+      // The two lower levels of the same cascade — Admin > Pods filters by all three.
+      category: 'Category',
+      subCategory: 'Sub Category',
       podLifecycle: 'Status',
       podLifecycleAll: 'All Pods',
       podLifecycleUpcoming: 'Upcoming',
@@ -72,6 +75,13 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       address: 'Address',
       noChanges: 'No profile changes recorded yet.',
       changeLogs: 'User Change Logs',
+      changeLogsHint:
+        'Every profile change this user made themselves, from Native or mWeb, plus system writes such as signup. Entries are append-only, so nothing here is overwritten.',
+      changeLogsSearch: 'Search field, old or new value, or who changed it',
+      adminChangeLogs: 'Admin Change Logs',
+      adminChangeLogsHint:
+        'Every change an admin made to this account, from this portal or another console. Entries are append-only, so nothing here is overwritten.',
+      noAdminChanges: 'No admin changes recorded yet.',
       whatsappNumber: 'WhatsApp number',
       contactDirectHint:
         'Email, phone and WhatsApp save straight away here. On the app they need a one-time code.',
@@ -227,6 +237,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       cancellationRisk: 'Cancellation risk',
       cancellationRiskHint:
         'Bookings cannot cover the venue cost — short by {symbol}{shortfall}. The pod is cancelled automatically at the lead window unless this is fixed.',
+      belowMinPax: 'Below the minimum of {min} people this activity needs',
       colCover: 'Cover',
       colClub: 'Club',
       colVenue: 'Venue',
@@ -707,89 +718,6 @@ changeRequests: {
       iconHeight: 'Height',
     },
 
-    localization: {
-      language: 'Language',
-      languageName: 'Language name',
-      englishName: 'English name',
-      localeCode: 'Locale code',
-      englishNamePlaceholder: 'Hindi (India)',
-      rtl: 'Right-to-left script',
-      activeHint: 'Active — offered in the language switcher',
-      defaultHint: 'Default language — every other locale falls back to it',
-      localesEmpty: 'No locales yet — add one to start translating.',
-      saveLocaleFailed: 'Failed to save locale',
-      removeLocaleFailed: 'Failed to remove locale',
-      saveTranslationFailed: 'Failed to save translation',
-      importFailed: 'Failed to import keys',
-      importHint: 'Add every key the apps and emails ship, keeping existing translations',
-      noLocale: 'Add a locale first — there is nothing to translate into.',
-      namespacesEmpty: 'No namespaces yet — press Import app keys to seed them.',
-      entriesEmpty: 'No translations match the current filters.',
-      noteHint: 'What this string is and where it appears — context for translators',
-      colKeys: 'Keys',
-      colFlags: 'Flags',
-
-      localesTitle: 'Locales',
-      localesIntro:
-        'Languages offered across the apps, portals and websites. The default is the source language every other falls back to.',
-      addLocale: 'Add locale',
-      editLocale: 'Edit {code}',
-      code: 'Code',
-
-      // The locale picker. Choosing a language fills its tag, both names and
-      // its writing direction, which is what stopped anyone adding one before.
-      localePickerHint:
-        'Search the ISO language list, or type a BCP-47 tag such as en-IN. Picking one fills in the names and the writing direction.',
-      localeCodeFixed: 'The code is stored on every profile, so it cannot be changed',
-      languageNameHint: "Shown in the switcher, in the language's own script",
-      englishNameHint: 'Shown in admin lists',
-      sortOrderHint: 'Order in the language switcher',
-
-      // The source language everything falls back to.
-      defaultLocked:
-        'This is the default language — the source every other one falls back to. It cannot be switched off or removed; make another language the default to move it.',
-      defaultLockedSwitch: 'Locked while this is the default language',
-      translated: 'Translated',
-      defaultNotRemovable: 'The default language cannot be removed',
-      localeAdded: 'Locale added',
-      localeUpdated: 'Locale updated',
-      localeRemoved: '{code} removed',
-
-      // Auto-translation. A language added here starts empty, and the
-      // catalogue is thousands of keys — this is the only way one gets filled
-      // in without somebody typing for a week.
-      autoTranslate: 'Auto-translate',
-      autoTranslateOn: 'Auto-translate {language}',
-      autoTranslateIntro:
-        'OpenAI translates the default language into this one and writes the result straight into Translations. The apps, portals and websites then pick it up on their own.',
-      autoTranslateDefault:
-        'This is the default language — it is the source everything else is translated from.',
-      scopeLabel: 'What to send',
-      scopeMissing: 'Only the keys with no text yet',
-      scopeMissingHint:
-        'Leaves anything already written by hand untouched. This is also how a run that stopped part-way is picked up again.',
-      scopeAll: 'Every key, replacing what is there',
-      scopeAllHint:
-        'Re-translates keys that already carry text, hand-written ones included. Use it after the source copy changes.',
-      willSend: '{keys} key(s) will be sent',
-      nothingToSend: 'Nothing to send — every key already has text in this language.',
-      startRun: 'Start translating',
-      startingRun: 'Starting…',
-      startFailed: 'Could not start the run',
-      stopRun: 'Stop',
-      stopFailed: 'Could not stop the run',
-      runProgress: '{done} of {total} keys',
-      runHint:
-        'This takes a few minutes. Closing this window is fine — the run carries on and the progress is here when you come back.',
-      runSucceeded: 'Finished — {translated} keys translated',
-      runFailed: 'The run failed',
-      runCancelled: 'Stopped — {translated} keys were translated first',
-      runSomeFailed:
-        '{failed} key(s) came back unusable and were left untranslated. Run it again to retry just those.',
-      runApplies: 'The apps and portals show the new text within a minute.',
-      modelUsed: 'Model: {model}',
-    },
-
     locations: {
       title: 'Locations',
       deleteLocation: 'Delete location',
@@ -803,15 +731,33 @@ changeRequests: {
       // A city that is not launched still shows in the app's location picker,
       // but opens its launch waitlist instead of the feed.
       launched: 'Launched',
+      launchStatus: 'Launch Status',
       notLaunched: 'Not launched',
       launchedHint:
         'Off: the city still shows in the app’s location picker with a “Coming soon” badge, and opens its launch waitlist instead of the feed.',
       launchTarget: 'Launch target',
-      launchTargetHint: 'Shown in the app as “We’ll launch once X people have added their names”. Default 2000.',
+      launchTargetHint: 'Shown in the app as “WE’RE GOING LIVE AT 10,000! Add your name and join the movement.” Default 2000.',
       launchTargetInvalid: 'Enter a whole number from 1 to 1,000,000.',
       whatsappGroupUrl: 'City WhatsApp group link',
       whatsappGroupUrlHint: 'Optional. Shown on the launch waitlist page once someone has added their name.',
       whatsappGroupUrlInvalid: 'Enter a WhatsApp group invite link starting with https://chat.whatsapp.com/',
+      // The Launch Settings group of the location dialog, and the global
+      // Launch page media dialog on the Locations page.
+      launchSettings: 'Launch Settings',
+      launchSettingsHint:
+        'Whether the city is live in the app, and what its launch waitlist page shows while it is not.',
+      launchMedia: 'Launch page media',
+      launchMediaHint:
+        'The video behind each section of the launch waitlist page in the app, with a backup image drawn when the video cannot play. Applies to every city that is not launched yet; a city can override any field from its own Launch Settings.',
+      launchMediaOverride: 'Override launch page media for this city',
+      launchMediaOverrideHint: 'Leave a field empty to use the global media set under Launch page media.',
+      launchMediaVideo: 'Video',
+      launchMediaImage: 'Backup image',
+      launchSectionHero: 'Top (live count)',
+      launchSectionHost: 'Host',
+      launchSectionVenue: 'Venue Partner',
+      launchSectionClubAdmin: 'Club Admin',
+      launchMediaSaveFailed: 'Could not save the launch page media.',
       addArea: 'Add Area',
       fillWithAi: 'Fill with AI',
       fillingWithAi: 'Filling…',
@@ -846,11 +792,14 @@ changeRequests: {
         other: 'Launch message queued for {count} people in {city}.',
       },
       subscribersTitle: 'Subscribers',
+      pickCity: 'Select a city above to see who is waiting for it.',
+      subscribersFor: 'Showing the people waiting for {city}.',
       subscribersEmpty: 'No subscribers match.',
       searchSubscribers: 'Search name, WhatsApp or city',
       whatsapp: 'WhatsApp',
       subscribedAt: 'Subscribed at',
       notifiedAt: 'Notified at',
+      locationShared: 'Location shared',
       statusPending: 'Waiting',
       statusSent: 'Sent',
       statusSkipped: 'Skipped',

@@ -112,6 +112,7 @@ const ClubMonitoringPage = lazy(() => import('../pages/club-monitoring-page'));
 const ClubPodsPage = lazy(() => import('../pages/club-pods-page'));
 const ClubPodEditorPage = lazy(() => import('../pages/club-pod-editor-page'));
 const ClubPodDetailsPage = lazy(() => import('../pages/club-pod-details-page'));
+const ClubAutoPodEditorPage = lazy(() => import('../pages/club-auto-pod-editor-page'));
 const ClubEditPage = lazy(() => import('../pages/club-edit-page'));
 const ChatsPage = lazy(() => import('../pages/ChatsPage'));
 const ChatRoomPage = lazy(() => import('../pages/ChatRoomPage'));
@@ -237,6 +238,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/clubs/:clubId/pods/new" element={withAuth(<ClubPodEditorPage />)} />
         <Route path="/clubs/:clubId/pods/:id/edit" element={withAuth(<ClubPodEditorPage />)} />
         <Route path="/clubs/:clubId/pods/:id" element={withAuth(<ClubPodDetailsPage />)} />
+        {/* A Club Admin may open an Auto Pod instead of an ordinary pod — the
+            same door the Partners console offers (rule 27). */}
+        <Route path="/clubs/:clubId/auto-pods/new" element={withAuth(<ClubAutoPodEditorPage />)} />
         <Route path="/clubs/:clubId/edit" element={withAuth(<ClubEditPage />)} />
         {/* Auto Pods — one queue per enrolment. Reached through the flag-gated
             drawer row, and `/clubs/...` for the same reason Club Studio is. */}

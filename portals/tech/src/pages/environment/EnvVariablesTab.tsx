@@ -24,8 +24,16 @@ import { parseApiError } from '@duncit/utils';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '@duncit/app-settings';
 
+interface Props {
+  /**
+   * Pins the tab to one category: the strip is not drawn and the URL cannot
+   * lead anywhere else. MSG91 Settings is that category on a page of its own.
+   */
+  category?: EnvCategory;
+}
+
 /** Manage the named entries within each environment category. */
-export default function EnvVariablesTab() {
+export default function EnvVariablesTab({ category }: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
   const client = useApolloClient();
@@ -43,12 +51,13 @@ export default function EnvVariablesTab() {
   // The server's catalogue is the ONLY source of tabs and form fields, so a
   // category added server-side shows up here with no portal change.
   const categories = catData?.envCategories ?? [];
+  const shown = category ? categories.filter((c) => c.category === category) : categories;
   // Its own key: the page's Variables/Portal Mapping strip already owns
   // `selectedtab`. Until the catalogue lands there is nothing to match, so the
   // first server category stands in — including for a link naming a category.
   const tabs = useTabParam<EnvCategory>({
-    items: categories.map((c) => ({ value: c.category, label: c.label })),
-    fallback: categories[0]?.category ?? '',
+    items: shown.map((c) => ({ value: c.category, label: c.label })),
+    fallback: shown[0]?.category ?? '',
     param: 'selectedtab_category',
   });
   const active = tabs.value;
@@ -136,7 +145,7 @@ export default function EnvVariablesTab() {
         password: do not share it, and delete it once you are done.
       </Alert>
 
-      <DuncitTabs {...tabs} variant="scrollable" scrollButtons="auto" />
+      {category ? null : <DuncitTabs {...tabs} variant="scrollable" scrollButtons="auto" />}
       {/* key remounts the table per category so the page/query state resets with the tab. */}
       <EnvEntriesTable
         key={active}

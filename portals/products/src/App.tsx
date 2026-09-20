@@ -8,7 +8,7 @@ import InventoryPage from './pages/inventory-page/InventoryPage';
 import InventoryProductPage from './pages/inventory-page/inventory-product-page/InventoryProductPage';
 import ProductsReviewPage from './pages/ecomm/ProductsReviewPage';
 import BrandsReviewPage from './pages/ecomm/BrandsReviewPage';
-import BrandReviewDetailPage from './pages/ecomm/BrandReviewDetailPage';
+import BrandReviewDetailPage from './pages/ecomm/brand-review-detail';
 import CatalogBrandsPage from './pages/catalog-brands/CatalogBrandsPage';
 import CatalogBrandDetailPage from './pages/catalog-brands/CatalogBrandDetailPage';
 import CatalogBrandProductsPage from './pages/catalog-brands/CatalogBrandProductsPage';

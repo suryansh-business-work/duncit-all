@@ -1,0 +1,82 @@
+import { Chip, Stack, Typography } from '@mui/material';
+import type { DuncitColumn } from '@duncit/table';
+import { valueFor, type LocaleRow, type TranslationRow } from '../../lib/queries';
+
+interface ColumnArgs {
+  /** Headings are copy — the page hands its translator down. */
+  t: (key: string) => string;
+  locales: LocaleRow[];
+  formatDateTime: (value: string) => string;
+}
+
+/**
+ * One column per active locale, so a translator sees every language for a
+ * string on a single row and can spot gaps at a glance. Untranslated cells are
+ * marked rather than left blank, because blank reads as "translated to empty".
+ */
+export function getTranslationColumns({
+  locales,
+  formatDateTime,
+  t,
+}: Readonly<ColumnArgs>): DuncitColumn<TranslationRow>[] {
+  const localeColumns: DuncitColumn<TranslationRow>[] = locales.map((locale) => ({
+    field: `value_${locale.code}`,
+    headerName: locale.label || locale.code,
+    type: 'text',
+    cellRenderer: (row: TranslationRow) => {
+      const text = valueFor(row, locale.code);
+      if (!text) {
+        return (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('localization.translations.notTranslated')}
+          </Typography>
+        );
+      }
+      return (
+        <Typography variant="body2" noWrap title={text}>
+          {text}
+        </Typography>
+      );
+    },
+  }));
+
+  return [
+    {
+      field: 'key',
+      headerName: t('localization.translations.key'),
+      type: 'text',
+      cellRenderer: (row: TranslationRow) => (
+        <Stack spacing={0.25}>
+          <Typography variant="body2" noWrap title={row.key} sx={{ fontWeight: 700 }}>
+            {row.key}
+          </Typography>
+          {row.description && (
+            <Typography variant="caption" noWrap title={row.description} sx={{ color: 'text.secondary' }}>
+              {row.description}
+            </Typography>
+          )}
+        </Stack>
+      ),
+    },
+    {
+      field: 'surface',
+      headerName: t('localization.translations.portal'),
+      type: 'text',
+      cellRenderer: (row: TranslationRow) => (row.surface ? <Chip size="small" label={row.surface} /> : '—'),
+    },
+    {
+      field: 'page',
+      headerName: t('localization.translations.page'),
+      type: 'text',
+      cellRenderer: (row: TranslationRow) =>
+        row.page ? <Chip size="small" variant="outlined" label={row.page} /> : '—',
+    },
+    ...localeColumns,
+    {
+      field: 'updated_at',
+      headerName: t('shell.common.updated'),
+      type: 'date',
+      valueGetter: (row) => (row.updated_at ? formatDateTime(row.updated_at) : '—'),
+    },
+  ];
+}

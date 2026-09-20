@@ -7,6 +7,7 @@ const SHORT_LINK_FIELDS = gql`
     short_url
     label
     destination_url
+    is_external
     tagged_url
     source
     source_other
@@ -99,6 +100,14 @@ export const SET_SHORT_LINK_ACTIVE = gql`
   }
 `;
 
+/** Answers an erasure request: every click row for one link goes, the link
+ * and its lifetime counter stay. */
+export const ERASE_SHORT_LINK_CLICKS = gql`
+  mutation EraseShortLinkClicks($id: ID!) {
+    eraseShortLinkClicks(id: $id)
+  }
+`;
+
 export const DELETE_SHORT_LINK = gql`
   mutation DeleteShortLink($id: ID!) {
     deleteShortLink(id: $id)
@@ -117,11 +126,12 @@ export const SHORT_LINK = gql`
 
 /** Aggregated analytics for one link — powers the detail page. */
 export const SHORT_LINK_STATS = gql`
-  query ShortLinkStats($id: ID!) {
-    shortLinkStats(id: $id) {
+  query ShortLinkStats($id: ID!, $days: Int) {
+    shortLinkStats(id: $id, days: $days) {
       total_clicks
       unique_visitors
       countries_reached
+      consent_minimised
       daily {
         date
         count
@@ -174,6 +184,7 @@ export const SHORT_LINK_CLICKS = gql`
         country
         region
         city
+        consent_signal
       }
     }
   }
@@ -268,6 +279,8 @@ export interface ShortLinkStats {
   total_clicks: number;
   unique_visitors: number;
   countries_reached: number;
+  /** Clicks recorded with nothing identifying, because the visitor opted out. */
+  consent_minimised: number;
   daily: { date: string; count: number }[];
   platforms: ShortLinkBreakdown[];
   devices: ShortLinkBreakdown[];
@@ -290,6 +303,7 @@ export interface ShortLinkClickRow {
   country?: string | null;
   region?: string | null;
   city?: string | null;
+  consent_signal?: string | null;
 }
 
 export interface ShortLinkOption {
@@ -310,6 +324,8 @@ export interface ShortLinkRow {
   short_url: string;
   label: string;
   destination_url: string;
+  /** True when the link points somewhere that is not ours. */
+  is_external: boolean;
   tagged_url: string;
   source: string;
   source_other?: string | null;

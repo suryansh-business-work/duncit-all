@@ -10,6 +10,10 @@ interface CityArgs {
   location_doc_id: string;
 }
 
+interface SubscribeArgs extends CityArgs {
+  location_shared: boolean;
+}
+
 interface TableArgs {
   query?: TableQueryInput | null;
 }
@@ -32,9 +36,9 @@ export const locationSubscriptionResolvers = {
   },
 
   Mutation: {
-    subscribeLocationLaunch: async (_p: unknown, args: CityArgs, ctx: GraphQLContext) => {
+    subscribeLocationLaunch: async (_p: unknown, args: SubscribeArgs, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return locationSubscriptionService.subscribe(user.id, args.location_doc_id);
+      return locationSubscriptionService.subscribe(user.id, args.location_doc_id, args.location_shared);
     },
     sendLocationLaunchMessage: async (_p: unknown, args: CityArgs, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);

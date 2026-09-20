@@ -65,8 +65,12 @@ export interface ContactSnapshot {
   email?: string | null;
   phone_extension?: string | null;
   phone_number?: string | null;
+  /** Set once an SMS code proved the contact number; cleared when it moves. */
+  is_phone_verified?: boolean | null;
   whatsapp_extension?: string | null;
   whatsapp_number?: string | null;
+  /** When a WhatsApp code proved the WhatsApp number; null once it moves. */
+  whatsapp_verified_at?: string | null;
 }
 
 /** The new value being asked for. Extension is ignored for EMAIL. */
@@ -110,6 +114,24 @@ export function currentContactValue(
  */
 export const contactDetailsComplete = (snapshot: Readonly<ContactSnapshot>): boolean =>
   CONTACT_CHANNELS.every((channel) => currentContactValue(snapshot, channel) !== '');
+
+/**
+ * Whether the number on this row was proved by a one-time code — the badge.
+ *
+ * Only the two numbers carry one. The server stamps a number verified only
+ * when a code sent to it comes back, and clears the stamp whenever the number
+ * moves, so a number with no stamp was typed but never answered. A row with no
+ * number has nothing to vouch for, whatever a stale stamp says.
+ */
+export function contactValueVerified(
+  snapshot: Readonly<ContactSnapshot>,
+  channel: ContactChannel,
+): boolean {
+  if (currentContactValue(snapshot, channel) === '') return false;
+  if (channel === 'PHONE') return snapshot.is_phone_verified === true;
+  if (channel === 'WHATSAPP') return Boolean(snapshot.whatsapp_verified_at);
+  return false;
+}
 
 /** The draft a dialog opens with: the value already on the account. */
 export function contactDraftFrom(
@@ -198,19 +220,34 @@ export const noteContactEdit = <S extends ContactEditState>(state: S): S =>
  * in is stated here rather than in each of them, because a fold that put a
  * WhatsApp number in the phone row would be invisible until the refetch
  * corrected it.
+ *
+ * `verified` is whether a code proved the value on its way in. The contact
+ * number can be stored without one, and a row that kept the old number's badge
+ * beside a number nobody has answered on would claim a proof that never happened.
  */
 export function applyContactDraft(
   snapshot: Readonly<ContactSnapshot>,
   channel: ContactChannel,
   draft: Readonly<ContactDraft>,
+  verified: boolean,
 ): ContactSnapshot {
   if (channel === 'EMAIL') {
     return { ...snapshot, email: contactDraftValue(draft, channel) };
   }
   if (channel === 'PHONE') {
-    return { ...snapshot, phone_extension: draft.extension, phone_number: draft.number };
+    return {
+      ...snapshot,
+      phone_extension: draft.extension,
+      phone_number: draft.number,
+      is_phone_verified: verified,
+    };
   }
-  return { ...snapshot, whatsapp_extension: draft.extension, whatsapp_number: draft.number };
+  return {
+    ...snapshot,
+    whatsapp_extension: draft.extension,
+    whatsapp_number: draft.number,
+    whatsapp_verified_at: verified ? new Date().toISOString() : null,
+  };
 }
 
 /**
@@ -383,6 +420,8 @@ export interface ContactChangeLabels {
   whyOtp: string;
   /** Shown under the rows while any of the three is still missing. */
   allRequired: string;
+  /** The badge beside a number a code proved (`contactValueVerified`). */
+  verified: string;
   saved: (channelName: string) => string;
 }
 
@@ -452,6 +491,7 @@ export function buildContactChangeLabels(t: ContactTranslate): ContactChangeLabe
     testCode: (code) => t('mweb.contactChange.testCode', { vars: { code } }),
     whyOtp: t('mweb.contactChange.whyOtp'),
     allRequired: t('mweb.contactChange.allRequired'),
+    verified: t('mweb.contactChange.verified'),
     saved: (channelName) => t('mweb.contactChange.saved', { vars: { channelName } }),
   };
 }

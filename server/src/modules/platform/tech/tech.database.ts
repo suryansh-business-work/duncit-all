@@ -20,8 +20,16 @@ import {
   type TableQueryInput,
 } from '@utils/table-query';
 import { maskUri, scrubUri } from '../dataClone/dataCloneConnection.service';
+import { oplogOf, replicaOf } from './tech.database.replica';
+import { dockerGet } from './tech.service';
 
 type DbEnvironment = 'production' | 'staging' | 'localhost';
+
+/** mongod's own databases — never a Duncit stack's, so never listed as one. */
+const SYSTEM_DATABASES = new Set(['admin', 'local', 'config']);
+
+/** serverStatus reports resident/virtual memory in MiB. */
+const MIB = 1024 * 1024;
 
 /** Where each environment's MONGO_URI comes from — mirrors .github/workflows/deploy.yml. */
 const DEPLOY_SOURCE: Record<DbEnvironment, { secret: string; branch: string } | null> = {
@@ -87,6 +95,23 @@ async function deployLinks(branch: string | undefined) {
   };
 }
 
+/**
+ * The mongod's container, when it runs beside the API on this host: the
+ * connection host IS the container name on the stack network (duncit-mongo),
+ * and its stdout is the mongod log the Info page shows. Null off the VPS, or
+ * when the host is not a container docker knows (Atlas).
+ */
+async function logsContainerOf(hosts: string[], environment: DbEnvironment): Promise<string | null> {
+  if (environment === 'localhost' || hosts.length === 0) return null;
+  const name = hosts[0].split(':')[0];
+  try {
+    await dockerGet(`/containers/${encodeURIComponent(name)}/json`);
+    return name;
+  } catch {
+    return null;
+  }
+}
+
 async function connectionOf(uri: string) {
   const conn = mongoose.connection;
   const options = conn.getClient().options;
@@ -100,13 +125,16 @@ async function connectionOf(uri: string) {
     authSource: options.credentials?.source ?? null,
     hosts,
     replicaSet: options.replicaSet ?? null,
-    tls: options.tls,
+    // The driver only sets `tls` for SRV URIs; a plain mongodb:// leaves it
+    // undefined, which is "off" — and null would fail the non-null field.
+    tls: Boolean(options.tls),
     databaseName: conn.name,
     databaseNamePinned: Boolean(process.env.MONGO_DB_NAME),
     environment,
     secretName: source?.secret ?? null,
     deployBranch: source?.branch ?? null,
     ...(await deployLinks(source?.branch)),
+    logsContainer: await logsContainerOf(hosts, environment),
     state: mongoose.ConnectionStates[conn.readyState],
     minPoolSize: MONGO_MIN_POOL_SIZE,
     maxPoolSize: MONGO_MAX_POOL_SIZE,
@@ -143,6 +171,29 @@ export async function storageOf(db: mongo.Db) {
  * is not normally given — so its fields come back empty with the refusal as
  * the reason, while the rest of the page still answers.
  */
+/** The serverStatus slice the page shows. Given `{}` every field is null. */
+function loadOf(status: mongo.Document) {
+  const cache = status.wiredTiger?.cache ?? {};
+  return {
+    uptimeSeconds: status.uptime ?? null,
+    connectionsCurrent: status.connections?.current ?? null,
+    connectionsAvailable: status.connections?.available ?? null,
+    connectionsTotalCreated: status.connections?.totalCreated ?? null,
+    storageEngine: status.storageEngine?.name ?? null,
+    opInsert: status.opcounters?.insert ?? null,
+    opQuery: status.opcounters?.query ?? null,
+    opUpdate: status.opcounters?.update ?? null,
+    opDelete: status.opcounters?.delete ?? null,
+    opCommand: status.opcounters?.command ?? null,
+    memResidentBytes: status.mem?.resident == null ? null : status.mem.resident * MIB,
+    networkBytesIn: status.network?.bytesIn ?? null,
+    networkBytesOut: status.network?.bytesOut ?? null,
+    networkRequests: status.network?.numRequests ?? null,
+    cacheBytes: cache['bytes currently in the cache'] ?? null,
+    cacheMaxBytes: cache['maximum bytes configured'] ?? null,
+  };
+}
+
 async function serverOf(db: mongo.Db, uri: string) {
   const admin = db.admin();
   const [build, hello] = await Promise.all([admin.buildInfo(), admin.command({ hello: 1 })]);
@@ -151,28 +202,15 @@ async function serverOf(db: mongo.Db, uri: string) {
     setName: hello.setName ?? null,
     isWritablePrimary: hello.isWritablePrimary ?? null,
     members: hello.hosts ?? [],
+    primary: hello.primary ?? null,
+    me: hello.me ?? null,
+    lastWriteAt: hello.lastWrite?.lastWriteDate?.toISOString() ?? null,
   };
   try {
     const status = await admin.serverStatus();
-    return {
-      ...base,
-      uptimeSeconds: status.uptime,
-      connectionsCurrent: status.connections?.current ?? null,
-      connectionsAvailable: status.connections?.available ?? null,
-      connectionsTotalCreated: status.connections?.totalCreated ?? null,
-      storageEngine: status.storageEngine?.name ?? null,
-      statusError: null,
-    };
+    return { ...base, ...loadOf(status), statusError: null };
   } catch (err) {
-    return {
-      ...base,
-      uptimeSeconds: null,
-      connectionsCurrent: null,
-      connectionsAvailable: null,
-      connectionsTotalCreated: null,
-      storageEngine: null,
-      statusError: scrubUri((err as Error).message, uri),
-    };
+    return { ...base, ...loadOf({}), statusError: scrubUri((err as Error).message, uri) };
   }
 }
 
@@ -201,6 +239,40 @@ export async function collectionsOf(db: mongo.Db): Promise<TechDatabaseCollectio
   return rows;
 }
 
+type ListedDatabase = mongo.ListDatabasesResult['databases'][number];
+
+async function databaseOf(client: mongo.MongoClient, listed: ListedDatabase, liveName: string, uri: string) {
+  const base = {
+    name: listed.name,
+    isLive: listed.name === liveName,
+    sizeOnDisk: listed.sizeOnDisk ?? 0,
+    empty: listed.empty ?? false,
+  };
+  try {
+    return { ...base, storage: await storageOf(client.db(listed.name)), statsError: null };
+  } catch (err) {
+    return { ...base, storage: null, statsError: scrubUri((err as Error).message, uri) };
+  }
+}
+
+/**
+ * Every database the API's user may read on this server — production, staging
+ * and Lite share one mongod since the move off Atlas — each with its own stats.
+ * `authorizedDatabases` keeps the list to what the user can open, so this needs
+ * nothing beyond the readWrite grants the user already has.
+ */
+export async function databasesOf(db: mongo.Db, liveName: string, uri: string) {
+  try {
+    const listed = await db.admin().listDatabases({ authorizedDatabases: true });
+    const client = mongoose.connection.getClient();
+    const own = listed.databases.filter((d) => !SYSTEM_DATABASES.has(d.name));
+    const databases = await Promise.all(own.map((d) => databaseOf(client, d, liveName, uri)));
+    return { databases, databasesError: null };
+  } catch (err) {
+    return { databases: [], databasesError: scrubUri((err as Error).message, uri) };
+  }
+}
+
 export async function databaseInfo() {
   const uri = process.env.MONGO_URI ?? '';
   const { db } = mongoose.connection;
@@ -209,15 +281,44 @@ export async function databaseInfo() {
     ...e,
     message: e.message && scrubUri(e.message, uri),
   }));
-  const empty = { server: null, storage: null, pingMs: null, statsError: null };
+  const empty = {
+    server: null,
+    storage: null,
+    pingMs: null,
+    statsError: null,
+    databases: [],
+    databasesError: null,
+    replica: null,
+    replicaError: null,
+    oplog: null,
+    oplogError: null,
+  };
   const collectedAt = new Date().toISOString();
   // Not connected: say so through `state` rather than wait on a driver timeout.
   if (!db || mongoose.connection.readyState !== mongoose.ConnectionStates.connected) {
     return { connection, ...empty, events, collectedAt };
   }
   try {
-    const [server, storage, ping] = await Promise.all([serverOf(db, uri), storageOf(db), pingMs(db)]);
-    return { connection, server, storage, pingMs: ping, statsError: null, events, collectedAt };
+    const [server, storage, ping, listed, replica, oplog] = await Promise.all([
+      serverOf(db, uri),
+      storageOf(db),
+      pingMs(db),
+      databasesOf(db, connection.databaseName, uri),
+      replicaOf(db, uri),
+      oplogOf(mongoose.connection.getClient(), uri),
+    ]);
+    return {
+      connection,
+      server,
+      storage,
+      pingMs: ping,
+      statsError: null,
+      ...listed,
+      ...replica,
+      ...oplog,
+      events,
+      collectedAt,
+    };
   } catch (err) {
     return { connection, ...empty, statsError: scrubUri((err as Error).message, uri), events, collectedAt };
   }

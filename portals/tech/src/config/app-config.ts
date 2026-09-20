@@ -90,15 +90,34 @@ export const appConfig = {
       // host at that server, and a new portal's A record is added here rather
       // than by someone logged in to GoDaddy. The key lives in Environment
       // Variables → GoDaddy like every other credential.
-      label: 'DNS Config', labelKey: 'shell.nav.dnsConfig',
+      //
+      // Overview leads because the registration is the one thing here that
+      // stops working on a DATE rather than because somebody changed it — a
+      // perfect zone under a lapsed domain resolves nowhere.
+      label: 'Domain', labelKey: 'shell.nav.domain',
       icon: 'language',
       children: [
-        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/dns/records', icon: 'dns' },
+        { label: 'Overview', labelKey: 'shell.nav.overview', to: '/domain/overview', icon: 'info' },
+        { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/domain/dns-records', icon: 'dns' },
+        { label: 'Staging Sync', labelKey: 'shell.nav.dnsStagingSync', to: '/domain/staging', icon: 'compare' },
       ],
     },
     // Beside DNS Config: both decide something about every public website —
     // one where its name points, the other where its traffic is reported.
     { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },
+    {
+      // Beside Google Analytics: another outside service this console holds the
+      // keys for. Logs and Analytics are the Communications console's own
+      // pages, mounted here too; Settings is the MSG91 category of Environment
+      // Variables on a page of its own, so the keys sit beside what they read.
+      label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
+      icon: 'phone',
+      children: [
+        { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
+        { label: 'Analytics', labelKey: 'shell.nav.analytics', to: '/msg91-otp/analytics', icon: 'analytics' },
+        { label: 'MSG91 Settings', labelKey: 'shell.nav.msg91Settings', to: '/msg91-otp/settings', icon: 'tune' },
+      ],
+    },
     {
       // Beside Server rather than under it: a ceiling is a platform-wide
       // policy, and the systems it governs are the portals, the two apps and
@@ -131,6 +150,9 @@ export const appConfig = {
         // What the stores show — name, descriptions, screenshots, review contact —
         // kept once and applied by every push from the two tables above.
         { label: 'Store Listing', labelKey: 'shell.nav.storeListing', to: '/app-builds/store-listing', icon: 'storefront' },
+        // What the stores say about every version, read live: review state,
+        // rejections with their reason and advice, and the latest build's retry.
+        { label: 'Releases', labelKey: 'shell.nav.releases', to: '/app-builds/releases', icon: 'upload' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },

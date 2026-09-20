@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -20,6 +20,8 @@ interface Props {
   disabledIds?: string[];
   /** Prior selection to seed the picker with when re-entered to edit. */
   initialScope?: Scope;
+  /** The last row of the scroll, under Continue — the social media handles. */
+  footer?: ReactNode;
 }
 
 /** Super → Category → Sub picker; resolves which survey to ask. */
@@ -29,6 +31,7 @@ export function CategoryPhase({
   onContinue,
   disabledIds,
   initialScope,
+  footer,
 }: Readonly<Props>) {
   // Same as the other phases: the Continue button is the last row of the scroll
   // and the edge-to-edge window paints the Android navigation bar over it.
@@ -142,6 +145,7 @@ export function CategoryPhase({
         disabled={busy}
         onPress={onContinuePress}
       />
+      {footer}
     </RefreshScrollView>
   );
 }

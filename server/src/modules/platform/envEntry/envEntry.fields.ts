@@ -271,6 +271,41 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'api_secret', label: 'API Secret', secret: true, hint: 'Shown once, beside the key, when it is created' },
     { name: 'domain', label: 'Domain', hint: 'The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key' },
   ],
+  // The apps Marketing → Social Accounts connects through. One entry holds all
+  // four, so the Marketing page can say exactly which network is missing. Every
+  // app registers the SAME redirect URL: <server URL>/social/callback.
+  SOCIAL_APPS: [
+    {
+      name: 'linkedin_client_id',
+      label: 'LinkedIn Client ID',
+      hint: 'linkedin.com/developers/apps → your app → Auth. Needs the Community Management API product (read and post as company Pages)',
+    },
+    { name: 'linkedin_client_secret', label: 'LinkedIn Client Secret', secret: true, hint: 'Same Auth tab, beside the Client ID' },
+    {
+      name: 'linkedin_api_version',
+      label: 'LinkedIn API Version (optional)',
+      hint: 'YYYYMM, e.g. 202509 — LinkedIn retires a version after a year; default 202509',
+    },
+    {
+      name: 'meta_app_id',
+      label: 'Meta App ID (Facebook + Instagram)',
+      hint: 'developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business and the Instagram Graph API; posting needs pages_manage_posts and instagram_content_publish approved',
+    },
+    { name: 'meta_app_secret', label: 'Meta App Secret', secret: true, hint: 'App settings → Basic → App secret' },
+    { name: 'meta_graph_version', label: 'Meta Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
+    {
+      name: 'x_client_id',
+      label: 'X OAuth 2.0 Client ID',
+      hint: 'developer.x.com → your project app → Keys and tokens → OAuth 2.0 Client ID. User authentication: Read and write, Type of App: Web App (confidential client)',
+    },
+    { name: 'x_client_secret', label: 'X OAuth 2.0 Client Secret', secret: true, hint: 'Shown once, beside the Client ID' },
+    {
+      name: 'youtube_client_id',
+      label: 'YouTube (Google) OAuth Client ID',
+      hint: 'console.cloud.google.com → Credentials → OAuth client (Web). Enable the YouTube Data API v3 on the project',
+    },
+    { name: 'youtube_client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
+  ],
 };
 
 /** How each category is named in the Tech portal and on the Analytics console. */
@@ -296,6 +331,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
   SONARQUBE: 'SonarQube (code analysis)',
   GODADDY: 'GoDaddy (DNS)',
+  SOCIAL_APPS: 'Social apps',
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -321,6 +357,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
   SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
   GODADDY: 'https://developer.godaddy.com/keys',
+  SOCIAL_APPS: 'https://developers.facebook.com/apps/',
 };
 
 /**
@@ -397,6 +434,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
   AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },
   AISENSY_PROJECT_API_BASE_URL: { category: 'AISENSY', field: 'project_api_base_url' },
+  AISENSY_WEBHOOK_SECRET: { category: 'AISENSY', field: 'webhook_secret' },
   GITHUB_TOKEN: { category: 'GITHUB', field: 'token' },
   GITHUB_OWNER: { category: 'GITHUB', field: 'owner' },
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
@@ -420,6 +458,16 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GODADDY_API_KEY: { category: 'GODADDY', field: 'api_key' },
   GODADDY_API_SECRET: { category: 'GODADDY', field: 'api_secret' },
   GODADDY_DOMAIN: { category: 'GODADDY', field: 'domain' },
+  SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'linkedin_client_id' },
+  SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'linkedin_client_secret' },
+  SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_APPS', field: 'linkedin_api_version' },
+  SOCIAL_META_APP_ID: { category: 'SOCIAL_APPS', field: 'meta_app_id' },
+  SOCIAL_META_APP_SECRET: { category: 'SOCIAL_APPS', field: 'meta_app_secret' },
+  SOCIAL_META_GRAPH_VERSION: { category: 'SOCIAL_APPS', field: 'meta_graph_version' },
+  SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'x_client_id' },
+  SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'x_client_secret' },
+  SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'youtube_client_id' },
+  SOCIAL_YOUTUBE_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'youtube_client_secret' },
 };
 
 export function maskSecret(value: string) {

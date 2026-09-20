@@ -58,6 +58,7 @@ const consoles: StatusService[] = [
   { key: 'logs', name: 'Logs', url: 'https://logs.duncit.com/', description: 'Platform logs' },
   { key: 'analytics', name: 'Analytics', url: 'https://analytics.duncit.com/', description: 'Business analytics' },
   { key: 'ecomm-portal', name: 'E-commerce', url: 'https://ecomm-portal.duncit.com/', description: 'Pet store console' },
+  { key: 'localization', name: 'Localization', url: 'https://localization.duncit.com/', description: 'Languages & translations' },
   { key: 'ecomm', name: 'Pet Store', url: 'https://ecomm.duncit.com/', description: 'Online pet store' },
 ];
 

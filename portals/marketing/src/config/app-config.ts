@@ -48,6 +48,13 @@ export const appConfig = {
     // Its own section, not a child of Campaigns: a short link is just as often
     // made for an ad, a poster or a partner as for a campaign.
     { label: 'Short Links', labelKey: 'shell.nav.shortLinks', to: '/short-links', icon: 'link' },
+    // Beside Short Links rather than inside it: a link to somebody else's page
+    // is a different thing to approve and a different thing to keep data
+    // about, even though it is the same duncit.com/<code> underneath.
+    { label: 'External Links', labelKey: 'shell.nav.externalLinks', to: '/external-links', icon: 'language' },
+    // Its own section: the accounts are connected once and then watched —
+    // how posts perform and what people say under them — not sent to.
+    { label: 'Social Accounts', labelKey: 'shell.nav.socialAccounts', to: '/social-accounts', icon: 'hub' },
     // A discount code is a promotion, so it belongs to whoever runs promotions.
     // It sits beside Campaigns rather than inside one: a code is as likely to be
     // handed out at an event or printed on a poster as it is to be emailed.

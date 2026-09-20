@@ -54,7 +54,8 @@ export async function playStoreSettings(): Promise<{ configured: boolean; packag
   return { configured, packageName: configured ? packageName.trim() : '' };
 }
 
-async function requirePlayConfig(): Promise<PlayConfig> {
+/** The service account and package name, or a thrown error naming where to configure them. */
+export async function requirePlayConfig(): Promise<PlayConfig> {
   const [json, packageName] = await Promise.all([
     getRuntimeEnvValue('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON'),
     getRuntimeEnvValue('GOOGLE_PLAY_PACKAGE_NAME'),

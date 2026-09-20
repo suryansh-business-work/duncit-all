@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
-import { Card, Stack, Typography } from '@mui/material';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActiveRounded';
+import { Stack, Typography } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import PersonAddIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
 import { firstGraphQLError } from '@duncit/utils';
 import { notifyError } from '../notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import { redirectPathFromLocation } from '../../utils/redirect';
+import CityLaunchLocationDialog from './CityLaunchLocationDialog';
+import { LaunchGlass } from './LaunchGlass';
 import {
   LOCATION_LAUNCH_STATUS,
   SUBSCRIBE_LOCATION_LAUNCH,
@@ -26,7 +29,8 @@ interface Props {
 
 /**
  * The call to action before a name is added. Signed out it sends the visitor
- * to sign in and back here; signed in it adds them. The server needs a
+ * to sign in and back here; signed in it first asks whether they will share
+ * their current location, then adds them with that answer. The server needs a
  * WhatsApp number to notify, so an account without one is sent to add it.
  * Native twin: components/city-launch/CityLaunchNotify.
  */
@@ -35,6 +39,7 @@ export default function CityLaunchNotify({ locationId, city }: Readonly<Props>) 
   const navigate = useNavigate();
   const location = useLocation();
   const [needsWhatsapp, setNeedsWhatsapp] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [subscribe] = useMutation<{ subscribeLocationLaunch: CityLaunchStatus }>(SUBSCRIBE_LOCATION_LAUNCH, {
     // The fresh status replaces the page's own query, so it flips to "added"
     // with the new count without asking again.
@@ -49,9 +54,10 @@ export default function CityLaunchNotify({ locationId, city }: Readonly<Props>) 
   });
   const signedIn = !!localStorage.getItem('token');
 
-  const onNotify = async () => {
+  const onAnswer = async (locationShared: boolean) => {
+    setAsking(false);
     try {
-      await subscribe({ variables: { locationId } });
+      await subscribe({ variables: { locationId, locationShared } });
     } catch (error) {
       if (firstGraphQLError(error)?.extensions?.code === WHATSAPP_REQUIRED) {
         setNeedsWhatsapp(true);
@@ -70,6 +76,7 @@ export default function CityLaunchNotify({ locationId, city }: Readonly<Props>) 
         variant="contained"
         size="large"
         fullWidth
+        endIcon={<ArrowForwardIcon />}
         onClick={() => navigate(`/login?redirect=${redirect}`)}
       >
         {t('mweb.cityLaunch.signInCta')}
@@ -79,7 +86,7 @@ export default function CityLaunchNotify({ locationId, city }: Readonly<Props>) 
 
   if (needsWhatsapp) {
     return (
-      <Card data-testid="city-launch-need-whatsapp" sx={{ p: 2 }}>
+      <LaunchGlass testId="city-launch-need-whatsapp">
         <Stack spacing={1.5}>
           <Typography sx={{ fontSize: 15, lineHeight: 1.4 }}>
             {t('mweb.cityLaunch.needWhatsapp', { vars: { city } })}
@@ -93,20 +100,24 @@ export default function CityLaunchNotify({ locationId, city }: Readonly<Props>) 
             {t('mweb.cityLaunch.goToProfile')}
           </DuncitButton>
         </Stack>
-      </Card>
+      </LaunchGlass>
     );
   }
 
   return (
-    <DuncitButton
-      data-testid="city-launch-notify"
-      variant="contained"
-      size="large"
-      fullWidth
-      startIcon={<NotificationsActiveIcon />}
-      onClick={onNotify}
-    >
-      {t('mweb.cityLaunch.notifyCta', { vars: { city } })}
-    </DuncitButton>
+    <>
+      <DuncitButton
+        data-testid="city-launch-notify"
+        variant="contained"
+        size="large"
+        fullWidth
+        startIcon={<PersonAddIcon />}
+        endIcon={<ArrowForwardIcon />}
+        onClick={() => setAsking(true)}
+      >
+        {t('mweb.cityLaunch.notifyCta')}
+      </DuncitButton>
+      <CityLaunchLocationDialog open={asking} onAnswer={onAnswer} />
+    </>
   );
 }

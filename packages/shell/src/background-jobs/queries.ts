@@ -2,19 +2,25 @@ import { gql } from '@apollo/client';
 
 export type BackgroundJobStatus = 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
-/** One row a bulk delete could not remove, with its delete's own reason. */
+/** What a job does: a bulk delete from a table, or an AI translation of one language. */
+export type BackgroundJobKind = 'BULK_DELETE' | 'AI_TRANSLATE';
+
+/** One row a bulk delete could not remove (or a batch a translation lost), with the reason. */
 export interface BackgroundJobFailure {
   id: string;
   message: string;
 }
 
-/** A long-running piece of work the signed-in person started — a bulk delete today. */
+/** A long-running piece of work the signed-in person started. */
 export interface BackgroundJob {
   id: string;
+  kind: BackgroundJobKind;
+  /** BULK_DELETE: the table query. Empty for other kinds. */
   table: string;
   label: string;
   url: string;
-  mode: 'SELECTED' | 'ALL';
+  /** BULK_DELETE only. */
+  mode: 'SELECTED' | 'ALL' | null;
   status: BackgroundJobStatus;
   total: number;
   succeeded: number;
@@ -35,6 +41,7 @@ export const MY_BACKGROUND_JOBS = gql`
   query MyBackgroundJobs {
     myBackgroundJobs {
       id
+      kind
       table
       label
       url

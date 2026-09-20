@@ -1,6 +1,6 @@
 # Duncit Lite
 
-The event platform at **luma.duncit.com** (web app) and **luma-portal.duncit.com**
+The event platform at **lite.duncit.com** (web app) and **lite-portal.duncit.com**
 (console). Its own API and its own database; nothing here reads or writes the main
 Duncit stack's data. The only bridge is "Sign in with Duncit", which asks the main
 API's public sign-in mutations to prove an email — never its database.

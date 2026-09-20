@@ -233,7 +233,19 @@ export interface ClubAdminStepperMode {
   club: CreatePodClub;
   initialHosts: PodHostOption[];
   searchHosts: (term: string) => Promise<PodHostOption[]>;
-  submit: (input: CreatePodInput, hostIds: string[]) => Promise<void>;
+  /**
+   * `draft` saves the pod inactive instead of scheduling it — the same thing
+   * the portals' "Save draft" does (`buildPodInput(values, { draft })` sets
+   * `is_active: false`), which is why the pods list's DRAFT filter has always
+   * had rows the app could see but never create (rule 27).
+   */
+  submit: (
+    input: CreatePodInput,
+    hostIds: string[],
+    options?: { draft?: boolean },
+  ) => Promise<void>;
   submitLabel: string;
   busyLabel: string;
+  /** The secondary action on the last step. */
+  draftLabel: string;
 }

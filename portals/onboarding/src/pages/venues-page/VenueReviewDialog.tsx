@@ -12,9 +12,8 @@ import {
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
-import { CancellationTriggerForm, type SubmitCancellationTrigger } from './cancellation-trigger';
-import VenueDeductionsPanel from './VenueDeductionsPanel';
 import VenueReviewSummary from './VenueReviewSummary';
+import VenueSettingsPanels from './VenueSettingsPanels';
 
 interface Props {
   active: any;
@@ -25,13 +24,8 @@ interface Props {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
-  onSaveDeductions: (sharePct: number, commissionPct: number) => void;
-  savingDeductions: boolean;
-  onSaveCancellationTrigger: SubmitCancellationTrigger;
-  savingCancellationTrigger: boolean;
-  /** Finance → Default Deductions. Undefined until the query resolves — the
-   * commission field waits for it rather than seeding a misleading 0. */
-  defaultCommissionPct?: number;
+  /** Refresh the table once a settings panel has saved. */
+  onSaved: () => void;
 }
 
 const STATUS_COLOR: StatusColorMap = {
@@ -50,11 +44,7 @@ export default function VenueReviewDialog({
   onClose,
   onApprove,
   onReject,
-  onSaveDeductions,
-  savingDeductions,
-  onSaveCancellationTrigger,
-  savingCancellationTrigger,
-  defaultCommissionPct,
+  onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -103,18 +93,7 @@ export default function VenueReviewDialog({
             fullWidth
           />
 
-          <VenueDeductionsPanel
-            active={active}
-            onSaveDeductions={onSaveDeductions}
-            saving={savingDeductions}
-            defaultCommissionPct={defaultCommissionPct}
-          />
-
-          <CancellationTriggerForm
-            trigger={active?.settings?.cancellation}
-            saving={savingCancellationTrigger}
-            onSubmit={onSaveCancellationTrigger}
-          />
+          <VenueSettingsPanels venue={active} onSaved={onSaved} />
         </Stack>
       </DialogContent>
       <Divider />

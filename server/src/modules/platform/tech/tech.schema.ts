@@ -223,6 +223,8 @@ export const techTypeDefs = gql`
     minPoolSize: Int!
     maxPoolSize: Int!
     maxTimeMs: Int!
+    "The mongod's docker container on this host, whose stdout is its log (techContainerLogs); null when it is not one."
+    logsContainer: String
   }
 
   type TechDatabaseServer {
@@ -230,13 +232,81 @@ export const techTypeDefs = gql`
     setName: String
     isWritablePrimary: Boolean
     members: [String!]!
+    "The set's current primary and this connection's own member, as hello reports them."
+    primary: String
+    me: String
+    lastWriteAt: String
     uptimeSeconds: Float
     connectionsCurrent: Int
     connectionsAvailable: Int
     connectionsTotalCreated: Float
     storageEngine: String
+    "Operation counters since mongod started."
+    opInsert: Float
+    opQuery: Float
+    opUpdate: Float
+    opDelete: Float
+    opCommand: Float
+    memResidentBytes: Float
+    networkBytesIn: Float
+    networkBytesOut: Float
+    networkRequests: Float
+    "WiredTiger cache in use, and its configured ceiling."
+    cacheBytes: Float
+    cacheMaxBytes: Float
     "Why the serverStatus fields are empty — usually the database user lacks the clusterMonitor role."
     statusError: String
+  }
+
+  "One database on the same mongod, with its stats where the user may read them."
+  type TechDatabaseDatabase {
+    name: String!
+    "True for the database this API is connected to."
+    isLive: Boolean!
+    sizeOnDisk: Float!
+    empty: Boolean!
+    storage: TechDatabaseStorage
+    statsError: String
+  }
+
+  type TechDatabaseReplicaMember {
+    name: String!
+    "PRIMARY | SECONDARY | ARBITER | RECOVERING | STARTUP | … as mongod names them."
+    stateStr: String!
+    healthy: Boolean!
+    "True for the member this connection is on."
+    self: Boolean!
+    uptimeSeconds: Float!
+    optimeAt: String
+    "Seconds behind the primary's last applied write; null for the primary."
+    lagSeconds: Float
+    lastHeartbeatAt: String
+    pingMs: Float
+    syncSourceHost: String
+    priority: Float
+    votes: Int
+  }
+
+  "replSetGetStatus + replSetGetConfig, read-only. Needs the clusterMonitor role."
+  type TechDatabaseReplica {
+    set: String!
+    term: Float
+    myState: String
+    primary: String
+    heartbeatIntervalMs: Float
+    configVersion: Int
+    members: [TechDatabaseReplicaMember!]!
+  }
+
+  "The oplog in local.oplog.rs: how much history the set keeps. Needs read on local (clusterMonitor)."
+  type TechDatabaseOplog {
+    entries: Float!
+    dataBytes: Float!
+    "The capped size; null where the server does not report it."
+    maxBytes: Float
+    firstAt: String
+    lastAt: String
+    windowSeconds: Float
   }
 
   type TechDatabaseStorage {
@@ -271,6 +341,14 @@ export const techTypeDefs = gql`
     pingMs: Float
     "The driver's reason the stats could not be read (scrubbed of the connection string)."
     statsError: String
+    "Every database this user can read on the same server (production, staging, Lite), live one marked."
+    databases: [TechDatabaseDatabase!]!
+    databasesError: String
+    "Null while disconnected or when the user lacks clusterMonitor — replicaError says which."
+    replica: TechDatabaseReplica
+    replicaError: String
+    oplog: TechDatabaseOplog
+    oplogError: String
     "Newest first."
     events: [TechDatabaseEvent!]!
     collectedAt: String!

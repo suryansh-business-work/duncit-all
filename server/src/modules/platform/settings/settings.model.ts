@@ -6,6 +6,10 @@ import {
   type ThemeTokens,
 } from "./theme-tokens";
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
+import {
+  launchPageMediaSchema,
+  type ILaunchPageMedia,
+} from "@modules/platform/location/location.model";
 
 export interface IAppSettings extends Document {
   singleton_key: string;
@@ -252,6 +256,10 @@ export interface IBranding extends Document {
   login_background_image_url: string;
   login_background_video_enabled: boolean;
   login_background_video_url: string;
+  /** The global backdrops behind the four sections of every not-yet-launched
+   * city's waitlist page (Admin > Locations > Launch page media). A city can
+   * override any of them from its own Launch Settings. */
+  launch_media: ILaunchPageMedia;
   // Per-platform Google Font family names (admin Branding → Fonts tabs).
   // Empty string = each platform's built-in default (Quicksand).
   mobile_font_family: string;
@@ -438,6 +446,7 @@ const brandingSchema = new Schema<IBranding>(
     login_background_image_url: { type: String, default: "" },
     login_background_video_enabled: { type: Boolean, default: false },
     login_background_video_url: { type: String, default: "" },
+    launch_media: { type: launchPageMediaSchema, default: () => ({}) },
     mobile_font_family: { type: String, default: "" },
     mweb_font_family: { type: String, default: "" },
     portals_font_family: { type: String, default: "" },

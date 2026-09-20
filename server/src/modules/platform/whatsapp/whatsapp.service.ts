@@ -9,12 +9,14 @@ import {
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { isWhatsappDestination } from '@utils/phone';
 import {
+  createCampaign,
   isProjectApiConfigured,
   listCampaigns,
   listTemplates,
 } from '@modules/platform/aisensy/aisensy.project';
 import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
+import { WA_TEMPLATE_DRAFTS } from './whatsapp.drafts';
 import {
   assetFor,
   defaultFor,
@@ -547,6 +549,62 @@ async function postWithMediaRecovery(
   return { ...second, reason: '' };
 }
 
+/**
+ * Create the campaign AiSensy has just refused to find — when, and only when, a
+ * template already APPROVED under the campaign's name is waiting for it.
+ *
+ * `provision` on the Automation board is two presses days apart: the template
+ * (Meta decides, asynchronously) and then the campaign. The second press is
+ * mechanical — the name is the registry's and the template is the draft's — and
+ * it is the press nobody made for `host_onboarding_rejection`, whose template
+ * sat approved while every rejection failed with "No AiSensy campaign". The
+ * send now makes that press itself. The template step stays an operator's: it
+ * is a submission to Meta, not a binding.
+ *
+ * Only a drafted scenario qualifies, as on the board: a legacy scenario's
+ * template carries a different name and is never provisioned by anything.
+ *
+ * Never throws. Returns whether the campaign now exists; a Project API that is
+ * unset or unreachable leaves the send to fail with the reason it already had.
+ */
+async function provisionCampaign(event: WaEvent): Promise<boolean> {
+  if (!WA_TEMPLATE_DRAFTS[event.key] || !(await isProjectApiConfigured())) return false;
+  try {
+    const template = (await listTemplates()).find((row) => row.name === event.campaign);
+    if (template?.status !== 'APPROVED') return false;
+    const created = await createCampaign(template.name, event.campaign);
+    logs.server.info('whatsapp', 'provision', {
+      event_key: event.key,
+      campaign: created.name,
+      status: created.status,
+      msg: 'campaign created at AiSensy on first send',
+    });
+    return true;
+  } catch (error) {
+    logs.server.warn('whatsapp', 'provision', { error, event: event.key });
+    return false;
+  }
+}
+
+/**
+ * The send with both recoveries, the campaign's around the media's: a message
+ * refused because its campaign does not exist yet is sent once more after the
+ * campaign is created, and that second send still gets the media retry.
+ */
+async function postWithRecovery(
+  event: WaEvent,
+  input: WaSendInput,
+  destination: string,
+  params: string[],
+  defaults: WaDefaults,
+  resolved: ResolvedMedia
+): Promise<SendAttempt> {
+  const first = await postWithMediaRecovery(event, input, destination, params, defaults, resolved);
+  if (!first.error || !isCampaignMissing(first.error)) return first;
+  if (!(await provisionCampaign(event))) return first;
+  return postWithMediaRecovery(event, input, destination, params, defaults, resolved);
+}
+
 /** Claim the slot, send, then write what happened onto the same row. */
 async function dispatch(
   event: WaEvent,
@@ -600,7 +658,7 @@ async function dispatch(
   }
 
   const startedAt = Date.now();
-  const attempt = await postWithMediaRecovery(
+  const attempt = await postWithRecovery(
     event,
     input,
     destination,

@@ -119,6 +119,9 @@ export default function ListProductsPreview({ values, brandId }: Readonly<Props>
         <Typography variant="body2">
           <strong>Commission:</strong> {values.commission_pct}% · <strong>{t('partners.listProductsPage.totalStock')}</strong> {totalStock}
         </Typography>
+        <Typography variant="body2" data-testid="preview-tax-percent">
+          {t('partners.listProductsPage.taxPercentValue', { vars: { percent: values.tax_percent } })}
+        </Typography>
         <Typography variant="body2">
           <strong>Delivery:</strong> ShipRocket
           {warehouse ? ` · from ${warehouse.nickname} (${warehouse.city})` : ''}

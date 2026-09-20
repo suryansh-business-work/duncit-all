@@ -1,5 +1,10 @@
 export { copyToClipboard } from './clipboard';
 export {
+  clubAdminVenueOptions,
+  type BookableVenue,
+  type ClubVenueLinks,
+} from './club-venues';
+export {
   canFlipGiftCard,
   giftCardArtwork,
   type GiftCardArtwork,
@@ -422,6 +427,7 @@ export {
   attendanceProgress,
   attendanceRowState,
   blankCompanionEntries,
+  canDirectMark,
   canScanTickets,
   companionEntriesToInput,
   companionOtpState,
@@ -433,6 +439,7 @@ export {
   isOtpPhoneShape,
   isVerifiablePhoneShape,
   joinPhone,
+  matchAttendanceRows,
   namedCompanionEntries,
   needsOtp,
   phoneKey,
@@ -440,6 +447,7 @@ export {
   splitAttendance,
   type AttendanceMarkMethod,
   type AttendanceRowState,
+  type AttendanceSearchableRow,
   type CompanionEntry,
   type CompanionOtpState,
   type CompanionRecordInput,
@@ -515,6 +523,7 @@ export {
   contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
+  contactValueVerified,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -654,6 +663,7 @@ export {
 export {
   mwebAutoPodLabels,
   shellAutoPodLabels,
+  mwebPodKindLabels,
   shellPodKindLabels,
   type AutoPodLabels,
   type AutoPodTranslate,
@@ -972,9 +982,21 @@ export {
 } from './location-mismatch';
 export {
   DEFAULT_LAUNCH_TARGET,
+  EMPTY_LAUNCH_MEDIA,
+  LAUNCH_HERO_FEATURES,
+  LAUNCH_HERO_TRUST,
+  LAUNCH_ROLE_SECTIONS,
+  LAUNCH_SECTIONS,
   compareCitiesLaunchedFirst,
   launchProgress,
+  launchSectionMedia,
   showsWaitlist,
+  type LaunchIconKey,
+  type LaunchItem,
+  type LaunchPageMedia,
+  type LaunchRoleDefinition,
+  type LaunchRoleKind,
+  type LaunchSection,
 } from './city-launch';
 export {
   clubCityName,
@@ -982,11 +1004,13 @@ export {
   clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  localitiesByClubCount,
   placeLabel,
   type ClubCityGroup,
   type ClubCityLocation,
   type ClubLocalityGroup,
   type GroupableClub,
+  type LocalityClubCount,
 } from './club-grouping';
 export {
   E2E_GOOGLE_CREDENTIAL_QUERY,
@@ -1010,3 +1034,15 @@ export {
   type ThemeTokenSettings,
   type ThemeTokenSource,
 } from './theme-tokens';
+export {
+  BRAND_CONSENT_POLICY_SLUG,
+  BRAND_WIZARD_STEPS,
+  brandCompletionPercent,
+  brandNextStepIndex,
+  brandStepComplete,
+  brandStepStates,
+  type BrandStepState,
+  type BrandWizardFacts,
+  type BrandWizardStep,
+  type BrandWizardStepKey,
+} from './brand-wizard';

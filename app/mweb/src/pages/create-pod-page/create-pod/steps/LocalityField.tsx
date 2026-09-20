@@ -1,5 +1,6 @@
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
+import { localitiesByClubCount } from '@duncit/utils';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { applyPodLocation } from '../create-pod.location';
@@ -16,39 +17,43 @@ interface Props {
 
 /**
  * Step 1 — a searchable dropdown of the city's localities, each with the number
- * of this host's clubs in it. Picking one is what opens the club picker below,
+ * of this host's clubs in it. Localities with clubs come first; the empty ones
+ * sit at the bottom, disabled. Picking one is what opens the club picker below,
  * and a new pick clears the club chosen for the old area. Native twin (rule 27).
  */
 export default function LocalityField({ form, zones, cityClubs, cityName }: Readonly<Props>) {
   const { t } = useTranslation();
   const locality = form.watch('locality');
-  const selected = zones.find((zone) => zone.zone_name === locality) ?? null;
-  const clubCount = (zone: CreatePodLocationZone) =>
-    cityClubs.filter((club) => (club.locality ?? '') === zone.zone_name).length;
+  const options = localitiesByClubCount(
+    zones.map((zone) => zone.zone_name),
+    cityClubs,
+  );
+  const selected = options.find((option) => option.locality === locality) ?? null;
 
   return (
     <Autocomplete
       data-testid="create-pod-locality"
-      options={zones}
+      options={options}
       value={selected}
-      getOptionLabel={(zone) => zone.zone_name}
-      isOptionEqualToValue={(option, value) => option.zone_name === value.zone_name}
-      onChange={(_e, next) => applyPodLocation(form, form.getValues('location_id'), next?.zone_name ?? '')}
+      getOptionLabel={(option) => option.locality}
+      getOptionDisabled={(option) => option.count === 0}
+      isOptionEqualToValue={(option, value) => option.locality === value.locality}
+      onChange={(_e, next) => applyPodLocation(form, form.getValues('location_id'), next?.locality ?? '')}
       noOptionsText={t('mweb.createPod.localitiesEmpty')}
-      renderOption={(props, zone) => (
+      renderOption={(props, option) => (
         <Box
           component="li"
           {...props}
-          key={zone.zone_name}
-          data-testid={`create-pod-locality-option-${zone.zone_name}`}
+          key={option.locality}
+          data-testid={`create-pod-locality-option-${option.locality}`}
           sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
         >
           <PlaceIcon fontSize="small" aria-hidden sx={{ color: 'text.secondary' }} />
           <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
-            {zone.zone_name}
+            {option.locality}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
-            {t('mweb.clubsPage.clubCount', { count: clubCount(zone) })}
+            {t('mweb.clubsPage.clubCount', { count: option.count })}
           </Typography>
         </Box>
       )}

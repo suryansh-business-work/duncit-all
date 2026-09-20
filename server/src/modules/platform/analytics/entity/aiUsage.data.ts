@@ -38,6 +38,8 @@ export interface UsageDayRow {
   answer_ms: number;
   ask_bot: number;
   agent: number;
+  /** Answered calls on a model with no rate — counted at zero, so the spend beside them is short. */
+  unpriced: number;
 }
 
 export const loadUsageDays = (window: AnalyticsWindow) =>
@@ -51,6 +53,7 @@ export const loadUsageDays = (window: AnalyticsWindow) =>
       answer_ms: whenTrue(ANSWERED, '$duration_ms'),
       ask_bot: whenTrue({ $eq: ['$task', ASK_BOT_TASK] }, 1),
       agent: whenTrue({ $eq: ['$task', AGENT_TASK] }, 1),
+      unpriced: whenTrue({ $and: [ANSWERED, { $ne: ['$priced', true] }] }, 1),
     })
   );
 

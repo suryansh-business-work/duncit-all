@@ -8,8 +8,8 @@ import { useTranslation } from '@duncit/app-settings';
 import { MSG91_CONFIGURED } from './queries';
 import { DateWindowForm, type DateWindowValues } from './date-window';
 
-/** Environment Variables, opened on the MSG91 category tab. */
-const ENVIRONMENT_MSG91 = '/?selectedtab_category=MSG91';
+/** MSG91 Settings — the keys, on a page of their own beside these two. */
+const MSG91_SETTINGS = '/msg91-otp/settings';
 
 /** Whether MSG91 is configured; undefined until the server has answered. */
 export function useMsg91Configured(): boolean | undefined {
@@ -51,8 +51,8 @@ export default function Msg91PageFrame({
       <Alert
         severity="info"
         action={
-          <Button component={RouterLink} to={ENVIRONMENT_MSG91} size="small">
-            {t('tech.msg91.openEnvironment')}
+          <Button component={RouterLink} to={MSG91_SETTINGS} size="small">
+            {t('tech.msg91.openSettings')}
           </Button>
         }
       >

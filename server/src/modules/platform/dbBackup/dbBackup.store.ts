@@ -80,6 +80,37 @@ export async function ensureBackupsDir(): Promise<void> {
   await fs.promises.mkdir(BACKUPS_DIR, { recursive: true });
 }
 
+export interface BackupsDirScan {
+  directory: string;
+  archives: number;
+  archiveBytes: number;
+  newestArchiveAt: string | null;
+  fsFreeBytes: number;
+  fsTotalBytes: number;
+}
+
+/**
+ * What is actually on the disk: every archive in the directory and the room
+ * left on the volume it sits on. Read off the filesystem rather than the rows,
+ * because the rows say what was written and this says what is still there —
+ * the two drift exactly when it matters (a pruned file, a full disk).
+ */
+export async function scanBackupsDir(): Promise<BackupsDirScan> {
+  await ensureBackupsDir();
+  const names = (await fs.promises.readdir(BACKUPS_DIR)).filter((name) => name.endsWith(BACKUP_EXTENSION));
+  const stats = await Promise.all(names.map((name) => fs.promises.stat(path.join(BACKUPS_DIR, name))));
+  const newest = stats.reduce((max, s) => Math.max(max, s.mtimeMs), 0);
+  const volume = await fs.promises.statfs(BACKUPS_DIR);
+  return {
+    directory: path.resolve(BACKUPS_DIR),
+    archives: names.length,
+    archiveBytes: stats.reduce((sum, s) => sum + s.size, 0),
+    newestArchiveAt: newest > 0 ? new Date(newest).toISOString() : null,
+    fsFreeBytes: volume.bavail * volume.bsize,
+    fsTotalBytes: volume.blocks * volume.bsize,
+  };
+}
+
 /** Bytes on disk, or null when the file is gone. */
 export async function backupSize(name: string): Promise<number | null> {
   const target = backupPath(name);

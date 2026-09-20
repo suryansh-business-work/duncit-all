@@ -22,6 +22,7 @@ import { ProfileDemographicsFields } from './ProfileDemographicsFields';
 import { UsernameField } from './UsernameField';
 import { AccountEditActions } from './AccountEditActions';
 import {
+  accountEditContacts,
   accountEditDefaults,
   makeAccountEditSchema,
   toDobInput,
@@ -72,13 +73,7 @@ export function AccountEditForm({
   const { t } = useTranslation();
   // Mirrored into state so a proved change shows on the row immediately,
   // rather than only once the parent's reload comes back.
-  const [contacts, setContacts] = useState<ContactSnapshot>(() => ({
-    email: me?.email,
-    phone_extension: me?.phone_extension,
-    phone_number: me?.phone_number,
-    whatsapp_extension: me?.whatsapp_extension,
-    whatsapp_number: me?.whatsapp_number,
-  }));
+  const [contacts, setContacts] = useState<ContactSnapshot>(() => accountEditContacts(me));
   // The handle is checked against the server, which no Zod rule can wait for,
   // so its verdict is held here and ANDed into the one Save button below.
   const [handleStatus, setHandleStatus] = useState<UsernameStatus>('IDLE');

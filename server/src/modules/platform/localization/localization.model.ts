@@ -52,6 +52,13 @@ export interface ITranslation extends Document {
   description: string;
   /** locale code -> text. Missing/blank entries fall back at render time. */
   values: Map<string, string>;
+  /**
+   * locale code -> the default language's text that locale's value was written
+   * against (by AI or by hand). When the default text changes, the two stop
+   * matching, which is how a translation is known to be out of date with
+   * English. Never set for the default locale itself.
+   */
+  synced_from: Map<string, string>;
   created_at: Date;
   updated_at: Date;
 }
@@ -63,6 +70,7 @@ const translationSchema = new Schema<ITranslation>(
     page: { type: String, default: "", index: true },
     description: { type: String, default: "" },
     values: { type: Map, of: String, default: () => new Map<string, string>() },
+    synced_from: { type: Map, of: String, default: () => new Map<string, string>() },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

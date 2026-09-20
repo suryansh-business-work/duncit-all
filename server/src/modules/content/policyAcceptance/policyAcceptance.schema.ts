@@ -9,6 +9,8 @@ export const policyAcceptanceTypeDefs = /* GraphQL */ `
     APPLE_SIGNUP
     "Accepted later from inside the account — predates the gate, or a policy changed."
     ACCOUNT
+    "Signed by a brand partner at the last step of brand onboarding (Partners console)."
+    BRAND_CONSENT
   }
 
   "Which app an acceptance was given in. UNKNOWN when the caller did not say."

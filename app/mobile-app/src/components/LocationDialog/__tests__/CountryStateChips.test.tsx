@@ -8,6 +8,7 @@ import type { LocationItem } from '@/stores/location.store';
 const city = (state: string, code: string): LocationItem =>
   ({
     id: `c-${code}`,
+    location_id: `city-${code.toLowerCase()}`,
     location_name: `City ${code}`,
     city: `City ${code}`,
     state,

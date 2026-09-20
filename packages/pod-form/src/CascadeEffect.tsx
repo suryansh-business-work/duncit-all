@@ -54,6 +54,12 @@ export default function CascadeEffect() {
   useEffect(() => {
     if (!clubId || !venueId) return;
     const linked = new Set(getClubVenueIds(clubs.find((item) => item.id === clubId)));
+    // No links is NOT "nothing is allowed". A club that has never had venues
+    // attached restricts nothing, and treating its empty list as a whitelist
+    // cleared every venue the moment it was picked — a dead picker on exactly
+    // the clubs that need one. The server agrees: `clubAdminCreatePod` checks
+    // club membership and never checks the venue against the club.
+    if (linked.size === 0) return;
     if (!linked.has(venueId)) {
       setValue('venue_id', '');
       setValue('venue_slot_id', '');

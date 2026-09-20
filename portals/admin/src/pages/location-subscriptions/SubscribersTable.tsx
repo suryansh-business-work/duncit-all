@@ -1,7 +1,13 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { Chip, Tooltip } from '@mui/material';
-import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import {
+  DuncitTable,
+  activeChipColumn,
+  useApolloTableFetch,
+  type DuncitColumn,
+  type TableFilterValue,
+} from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import {
@@ -12,8 +18,8 @@ import {
 } from './queries';
 
 interface Props {
-  /** The cities that have subscribers — the only values the City filter can match. */
-  cities: readonly LaunchCityRow[];
+  /** The city picked in the Cities table — the only city this table pages. */
+  city: LaunchCityRow;
   refetchRef: MutableRefObject<(() => void) | null>;
 }
 
@@ -50,11 +56,16 @@ function StatusChip({ row, label }: Readonly<StatusChipProps>) {
   );
 }
 
-/** Every subscriber across cities, paged and filtered on the server. */
-export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>) {
+/** Every subscriber of the chosen city, paged and filtered on the server. */
+export default function SubscribersTable({ city, refetchRef }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const { formatDateTime } = useDateFormat();
+  // The city scope rides outside the column filters, so a new pick resets to page 1.
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () => [{ field: 'location_doc_id', op: 'in', values: [city.id] }],
+    [city.id]
+  );
 
   const fetchRows = useApolloTableFetch<LocationSubscriptionRow>(
     client,
@@ -64,7 +75,6 @@ export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>
 
   const columns = useMemo<DuncitColumn<LocationSubscriptionRow>[]>(() => {
     const labels = statusLabels(t);
-    const cityOptions = cities.map((c) => ({ value: c.id, label: c.city }));
     const statusOptions = (Object.keys(labels) as LocationSubscriptionStatus[]).map((s) => ({
       value: s,
       label: labels[s],
@@ -90,9 +100,10 @@ export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>
       {
         field: 'location_doc_id',
         headerName: t('admin.locations.city'),
-        type: 'enum',
-        options: cityOptions,
-        // The city name lives on the Location, so there is no stored value to order by.
+        type: 'text',
+        // The city is the one picked above, and its name lives on the Location, so
+        // there is nothing to filter or order by here.
+        filterable: false,
         sortable: false,
         minWidth: 150,
         valueGetter: (row) => row.city,
@@ -106,6 +117,16 @@ export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>
         cellRenderer: (row) => <StatusChip row={row} label={labels[row.status]} />,
         valueGetter: (row) => labels[row.status],
       },
+      // The answer to the app's "share your current location?" question, asked
+      // as the name was added; the ✕ on that dialog counts as No.
+      activeChipColumn<LocationSubscriptionRow>({
+        field: 'location_shared',
+        headerName: t('admin.locationSubscriptions.locationShared'),
+        width: 150,
+        activeLabel: t('shell.common.yes'),
+        inactiveLabel: t('shell.common.no'),
+        outlineInactive: true,
+      }),
       {
         field: 'created_at',
         headerName: t('admin.locationSubscriptions.subscribedAt'),
@@ -121,7 +142,7 @@ export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>
         valueGetter: (row) => (row.notified_at ? formatDateTime(row.notified_at) : '—'),
       },
     ];
-  }, [cities, formatDateTime, t]);
+  }, [formatDateTime, t]);
 
   return (
     <DuncitTable<LocationSubscriptionRow>
@@ -130,6 +151,7 @@ export default function SubscribersTable({ cities, refetchRef }: Readonly<Props>
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
+      externalFilters={externalFilters}
       emptyText={t('admin.locationSubscriptions.subscribersEmpty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('admin.locationSubscriptions.searchSubscribers')}

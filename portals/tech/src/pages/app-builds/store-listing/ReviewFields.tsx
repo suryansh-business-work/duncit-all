@@ -1,5 +1,5 @@
 import { Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
-import { Controller, type Control } from 'react-hook-form';
+import { Controller, useWatch, type Control } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import { LISTING_LIMITS, type StoreListingValues } from './store-listing.types';
@@ -15,6 +15,8 @@ interface Props {
  */
 export default function ReviewFields({ control }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Required only while App Review is told it needs an account — the schema says the same.
+  const demoRequired = useWatch({ control, name: 'demo_account_required' });
   return (
     <Stack spacing={2} data-testid="store-listing-review">
       <Typography variant="subtitle2">{t('tech.storeListing.sectionShared')}</Typography>
@@ -24,6 +26,7 @@ export default function ReviewFields({ control }: Readonly<Props>) {
         label={t('tech.storeListing.contactEmail')}
         hint={t('tech.storeListing.contactEmailHint')}
         type="email"
+        required
       />
       <RhfTextField
         control={control}
@@ -31,11 +34,12 @@ export default function ReviewFields({ control }: Readonly<Props>) {
         label={t('tech.storeListing.contactPhone')}
         hint={t('tech.storeListing.contactPhoneHint')}
         type="tel"
+        required
       />
       <Typography variant="subtitle2">{t('tech.storeListing.sectionApple')}</Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <RhfTextField control={control} name="review_first_name" label={t('tech.storeListing.reviewFirstName')} />
-        <RhfTextField control={control} name="review_last_name" label={t('tech.storeListing.reviewLastName')} />
+        <RhfTextField control={control} name="review_first_name" label={t('tech.storeListing.reviewFirstName')} required />
+        <RhfTextField control={control} name="review_last_name" label={t('tech.storeListing.reviewLastName')} required />
       </Stack>
       <Controller
         control={control}
@@ -60,6 +64,7 @@ export default function ReviewFields({ control }: Readonly<Props>) {
         label={t('tech.storeListing.demoAccountName')}
         hint={t('tech.storeListing.demoAccountNameHint')}
         autoComplete="off"
+        required={demoRequired}
       />
       <RhfTextField
         control={control}
@@ -67,6 +72,7 @@ export default function ReviewFields({ control }: Readonly<Props>) {
         label={t('tech.storeListing.demoAccountPassword')}
         type="password"
         autoComplete="new-password"
+        required={demoRequired}
       />
       <RhfTextField
         control={control}

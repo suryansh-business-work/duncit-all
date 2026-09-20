@@ -16,6 +16,12 @@ export const CLUB_ADMIN_POD_LOOKUPS = gql`
       category_id
     }
     myVenues { id venue_name city locality status is_active }
+    # The venues a Club Admin may actually book. myVenues is what they OWN
+    # (venueService.listMine filters on owner_user_id), so a club admin who
+    # owns no venue had an EMPTY picker and could not schedule a physical pod
+    # at all — while the native app has always offered the public list and the
+    # server accepts it. One source for all three surfaces (rule 27).
+    publicVenues { id venue_name city locality status is_active }
     availablePodProducts {
       ...PodPickerProductFields
       listing_review_status
@@ -43,6 +49,7 @@ export const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     pod_hashtag
     pod_hosts_id
     host_names
+    place_label
     pod_date_time
     pod_end_date_time
     pod_type

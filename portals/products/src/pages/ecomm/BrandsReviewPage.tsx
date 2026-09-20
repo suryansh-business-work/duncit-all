@@ -58,12 +58,12 @@ export default function BrandsReviewPage() {
           <Typography component="h1" variant="h4" sx={{
             fontWeight: 950
           }}>
-            Brands Review
+            {t('products.brandReview.title')}
           </Typography>
           <Typography sx={{
             color: "text.secondary"
           }}>
-            Approve or reject the e-commerce brands partners submit for onboarding.
+            {t('products.brandReview.subtitle')}
           </Typography>
         </Box>
         <ToggleButtonGroup

@@ -35,6 +35,8 @@ export const PORTALS = [
   'analytics',
   // The pet store's console.
   'ecomm-portal',
+  // Locales and translations.
+  'localization',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

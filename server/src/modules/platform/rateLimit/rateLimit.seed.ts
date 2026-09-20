@@ -43,6 +43,7 @@ const SEED_SYSTEMS: SeedSystem[] = [
   { surface: 'PORTAL', app: 'finance', label: 'Finance Portal' },
   { surface: 'PORTAL', app: 'hr', label: 'HR Portal' },
   { surface: 'PORTAL', app: 'legal', label: 'Legal Portal' },
+  { surface: 'PORTAL', app: 'localization', label: 'Localization Portal' },
   { surface: 'PORTAL', app: 'logs', label: 'Logs Portal' },
   { surface: 'PORTAL', app: 'marketing', label: 'Marketing Portal' },
   { surface: 'PORTAL', app: 'onboarding', label: 'Onboarding Portal' },

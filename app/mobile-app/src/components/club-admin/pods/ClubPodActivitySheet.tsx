@@ -10,6 +10,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toPodAuditLog } from '../audit-log';
+import { LoadErrorNotice } from '../LoadErrorNotice';
 import { RowDivider } from '../NavRow';
 import { AuditLogChanges } from '../monitoring/AuditLogChanges';
 import { AuditLogRow } from '../monitoring/AuditLogRow';
@@ -26,6 +27,9 @@ export function ClubPodActivitySheet({ pod, onClose }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
   const [logs, setLogs] = useState<PodAuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  /** Bumped by Retry, so the effect below re-runs on the same pod. */
+  const [attempt, setAttempt] = useState(0);
   const podId = pod?.id ?? null;
 
   useEffect(() => {
@@ -35,14 +39,22 @@ export function ClubPodActivitySheet({ pod, onClose }: Readonly<Props>) {
     }
     let active = true;
     setIsLoading(true);
+    setFailed(false);
     graphqlRequest(ClubAdminPodAuditLogsDocument, { pod_doc_id: podId }, { auth: true })
       .then((res) => active && setLogs(res.clubAdminPodAuditLogs.map(toPodAuditLog)))
-      .catch(() => active && setLogs([]))
+      // A trail that failed to load is not an empty trail. Saying "no activity"
+      // here told an admin the pod had never been touched, which is the one
+      // thing this sheet exists to answer — and it answered it wrongly.
+      .catch(() => {
+        if (!active) return;
+        setLogs([]);
+        setFailed(true);
+      })
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [podId, attempt]);
 
   const closeLabel = t('mweb.common.close');
   const footer = (
@@ -74,7 +86,13 @@ export function ClubPodActivitySheet({ pod, onClose }: Readonly<Props>) {
             color="$primary"
           />
         ) : null}
-        {!isLoading && logs.length === 0 ? (
+        {!isLoading && failed ? (
+          <LoadErrorNotice
+            testID="club-pod-activity-error"
+            onRetry={() => setAttempt((n) => n + 1)}
+          />
+        ) : null}
+        {!isLoading && !failed && logs.length === 0 ? (
           <Text testID="club-pod-activity-empty" fontSize={14} color="$muted">
             {t('clubAdmin.pods.noActivity')}
           </Text>

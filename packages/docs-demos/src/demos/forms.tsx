@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { flattenCatalogue, PACKAGING_BUNDLE } from '@duncit/i18n';
-import type { ContactChannel } from '@duncit/utils';
+import { mwebAttendanceLabels, type ContactChannel } from '@duncit/utils';
 import {
   AADHAR_PATTERN,
   GSTIN_PATTERN,
@@ -29,6 +29,7 @@ import {
   buildWithdrawInput,
   blankWithdrawValues,
   makeCancellationPolicySchema,
+  makeForceMarkSchema,
   makeVenueCancelPodSchema,
   toPolicyInput,
   type CancellationPolicyValues,
@@ -59,6 +60,8 @@ interface SchemaMock {
   channel: ContactChannel;
   extension: string;
   number: string;
+  /** What the account holds now — its own number typed back is refused first. */
+  current_number: string;
   /** Signup's tick box: is the WhatsApp number the mobile number too? */
   whatsappIsMobile: boolean;
   /** The recipient on a saved address — name and number, as typed. */
@@ -66,6 +69,9 @@ interface SchemaMock {
   recipient_phone: string;
   /** A profile bio, as typed into Edit profile. */
   bio: string;
+  /** One name a Club Admin was read for a multi-seat booking. Blank it: the
+   * mark still goes through, because "I was not told" is a real answer. */
+  companion_name: string;
 }
 
 interface FieldMock {
@@ -84,6 +90,8 @@ interface PackagingMock {
   breadth_cm: number;
   height_cm: number;
   hsn_code: string;
+  /** Marks the four measurements required, as the E-commerce parcel edit before a booking does. */
+  required: boolean;
 }
 
 const PACKAGING_TEXT = flattenCatalogue(PACKAGING_BUNDLE);
@@ -97,10 +105,11 @@ const packagingT: PackagingTranslate = (key, options) =>
 
 /** A real form around the section, seeded from the mock. */
 function PackagingDemo({ mock }: Readonly<{ mock: PackagingMock }>) {
+  const { required, ...parcel } = mock;
   const { control, setValue } = useForm({
-    values: { ...mock, package_type: 'POLYBAG', shelf_life_days: 365, is_fragile: false, is_liquid: false },
+    values: { ...parcel, package_type: 'POLYBAG', shelf_life_days: 365, is_fragile: false, is_liquid: false },
   });
-  return <PackagingFields control={control} setValue={setValue} t={packagingT} />;
+  return <PackagingFields control={control} setValue={setValue} t={packagingT} required={required} />;
 }
 
 /** Built from the shared rules — never from a hand-written zod chain per form. */
@@ -115,8 +124,8 @@ export default defineDemos('forms', [
     id: 'packaging',
     title: 'Shipping & packaging — the section every product form shares',
     note:
-      'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable.',
-    mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309' },
+      'A 10 kg food bag packed 60 × 40 × 15 cm bills at its own weight. Press "Bed / large" and the box (70 × 50 × 20) out-weighs the bed: the readout jumps to 14 kg and the warning appears. Every value stays editable. Set required to true and every measurement label gains its asterisk, as the parcel edit before a booking shows it.',
+    mock: { weight_kg: 10.4, length_cm: 60, breadth_cm: 40, height_cm: 15, hsn_code: '2309', required: false },
     render: (mock) => <PackagingDemo mock={mock} />,
   }),
   defineDemo<FieldMock>({
@@ -156,7 +165,7 @@ export default defineDemos('forms', [
     id: 'schemas',
     title: 'The form contracts mWeb and the native app both validate against',
     note:
-      'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for.',
+      'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for. Set number to current_number and the contact change is refused as the current number before its shape is even checked.',
     mock: {
       name: 'Meera Nair',
       dob: '1998-04-23',
@@ -169,10 +178,12 @@ export default defineDemos('forms', [
       channel: 'PHONE',
       extension: '+91',
       number: '9845012345',
+      current_number: '9845067890',
       whatsappIsMobile: true,
       recipient_name: 'Ravi Kumar',
       recipient_phone: '+91 98450 12345',
       bio: 'Weekend trail runner in Bengaluru — hosting DUN-POD-4821 on Saturdays.',
+      companion_name: 'Rohan Mehta',
     },
     compute: (mock) => {
       // Messages are keys here so the demo shows WHICH sentence fires without
@@ -248,8 +259,28 @@ export default defineDemos('forms', [
         ),
         // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
         'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
+        // The Club Admin's by-name mark. Blank the name and it still passes —
+        // the admin records what the call told them; a one-letter name does not.
+        'Club Admin marks by name': say(
+          makeForceMarkSchema(mwebAttendanceLabels(t)).safeParse({
+            companions: [
+              {
+                name: mock.companion_name,
+                phone_extension: mock.extension,
+                phone_number: '',
+              },
+            ],
+          }),
+        ),
+        // `current` is what the account holds: its own number typed back is
+        // refused as the current number BEFORE its shape is looked at.
         [`Contact change (${mock.channel})`]: say(
-          makeContactValueSchema(mock.channel, t).safeParse({
+          makeContactValueSchema(mock.channel, t, {
+            phone_extension: mock.extension,
+            phone_number: mock.current_number,
+            whatsapp_extension: mock.extension,
+            whatsapp_number: mock.current_number,
+          }).safeParse({
             email: mock.email,
             extension: mock.extension,
             number: mock.number,

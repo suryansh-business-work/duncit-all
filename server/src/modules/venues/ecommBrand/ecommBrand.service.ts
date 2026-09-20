@@ -9,8 +9,25 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { logs } from '@observability/log';
-import { notifyEach } from '@services/notify/notify.service';
+import { notifyEach, notifyEvent } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { policyAcceptanceService } from '@modules/content/policyAcceptance/policyAcceptance.service';
+import { toPub as policyToPub } from '@modules/content/policy/policy.service';
+import { brandCompletion, missingBrandSteps, type BrandStepKey } from './ecommBrand.completion';
+import {
+  applyConsentSignature,
+  applyRazorpayInput,
+  applyShiprocketInput,
+  assertProvider,
+  clearIntegration,
+  consentContext,
+  consentPub,
+  currentConsentPolicy,
+  integrationStatus,
+  integrationsOf,
+  probeBrandIntegration,
+  type BrandIntegrationProvider,
+} from './ecommBrand.integrations';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -49,6 +66,11 @@ const toPub = (b: IEcommBrand) => ({
   is_active: b.is_active ?? true,
   reviewer_notes: b.reviewer_notes ?? '',
   default_pickup_location_id: b.default_pickup_location_id ? String(b.default_pickup_location_id) : null,
+  // Secrets stay behind: only whether each half is on file and what the vendor said.
+  integrations: integrationsOf(b),
+  // `current` and `available` need the published consent; the field resolver
+  // adds them (`consentField`) so a list of brands reads the policy once.
+  consent: consentPub(b, { available: false, current: false }),
   submitted_at: b.submitted_at ? b.submitted_at.toISOString() : null,
   approved_at: b.approved_at ? b.approved_at.toISOString() : null,
   rejected_at: b.rejected_at ? b.rejected_at.toISOString() : null,
@@ -167,6 +189,103 @@ async function assignEcommRole(userId: Types.ObjectId) {
 const waRecipient = (userId: Types.ObjectId) =>
   UserModel.findById(userId).select('auth.phone communication.whatsapp').lean();
 
+/** What a required step is called in a refusal — the wizard's own step names. */
+const STEP_NAME: Record<BrandStepKey, string> = {
+  details: 'Brand details',
+  business: 'Business & legal',
+  address: 'Address',
+  payout: 'Payout',
+  categories: 'Product categories',
+  media: 'Brand media (logo)',
+  documents: 'Documents',
+  integration: 'Integration (ShipRocket and Razorpay must both be connected)',
+  review: 'Review',
+  consent: 'Final consent (sign the Brand Consent)',
+};
+
+/** Refuse a submission or an approval while a required wizard step is undone. */
+async function assertReadyForReview(brand: IEcommBrand, who: 'submitted' | 'approved') {
+  const policy = await currentConsentPolicy();
+  const missing = missingBrandSteps(brand, consentContext(brand, policy));
+  if (missing.length === 0) return;
+  throw new GraphQLError(
+    `This brand cannot be ${who} yet — finish: ${missing.map((key) => STEP_NAME[key]).join('; ')}`,
+    { extensions: { code: 'BAD_REQUEST', missing_steps: missing } }
+  );
+}
+
+/** Where the owner opens this brand in the Partners console. */
+async function brandUrl(brand: IEcommBrand) {
+  const { partnersUrl } = await getUrlConfigs();
+  return `${partnersUrl}/ecomm-brand/${String(brand._id)}/edit`;
+}
+
+/** The owner, on both channels, for one lifecycle event. Best effort — never fails the mutation. */
+async function notifyOwner(brand: IEcommBrand, event: string, params: string[], vars: Record<string, string>) {
+  try {
+    await notifyEvent({
+      event,
+      // Keyed on the moment, not the brand: a brand rejected and resubmitted
+      // is told again, which the per-entity duplicate index would otherwise stop.
+      entityId: `${String(brand._id)}:${Date.now()}`,
+      user: await waRecipient(brand.owner_user_id),
+      name: brand.contact_person,
+      params,
+      email: brand.contact_email ?? '',
+      vars,
+    });
+  } catch (error) {
+    logs.server.warn('ecommBrand', 'notifyOwner', { error, event, brandId: String(brand._id) });
+  }
+}
+
+/** Every Products Manager, so a submission is never waiting unnoticed. Email only — an internal notice. */
+async function notifyReviewers(brand: IEcommBrand) {
+  const { productsUrl } = await getUrlConfigs();
+  const managers = await UserModel.find({ 'metadata.role_keys': 'PRODUCTS_MANAGER', 'metadata.status': 'ACTIVE' })
+    .select('auth.email profile.first_name')
+    .lean();
+  const owner = await UserModel.findById(brand.owner_user_id).select('profile.first_name profile.last_name').lean();
+  const ownerName =
+    [owner?.profile?.first_name, owner?.profile?.last_name].filter(Boolean).join(' ') || brand.contact_person || '';
+  for (const manager of managers) {
+    const to = String(manager.auth?.email ?? '');
+    if (!to) continue;
+    try {
+      await sendEmail({
+        to,
+        subject: `Brand awaiting review: ${brand.brand_name}`,
+        template: 'ecomm-brand-review-requested',
+        category: 'notification',
+        vars: {
+          name: String(manager.profile?.first_name ?? ''),
+          brand: brand.brand_name,
+          owner: ownerName,
+          category: (brand.product_categories ?? []).join(', '),
+          review_url: `${productsUrl}/ecomm/brands/${String(brand._id)}`,
+        },
+      });
+    } catch (error) {
+      logs.server.warn('ecommBrand', 'notifyReviewers', { error, to, brandId: String(brand._id) });
+    }
+  }
+}
+
+/**
+ * Take a brand out for good: its pickup locations go with it, the owner loses
+ * the seller role when it was their last brand, and they are told. The
+ * product guard is the caller's: an approved brand with products is never
+ * deleted from here.
+ */
+async function removeBrand(brand: IEcommBrand, reason: string) {
+  await BrandPickupLocationModel.deleteMany({ brand_id: brand._id });
+  await EcommBrandModel.deleteOne({ _id: brand._id });
+  const remaining = await EcommBrandModel.countDocuments({ owner_user_id: brand.owner_user_id });
+  if (remaining === 0) await removeUserRole(String(brand.owner_user_id), 'ECOMM_MANAGER');
+  await notifyOwner(brand, 'ECOMM_BRAND_DELETED', [brand.contact_person, brand.brand_name], { reason });
+  return true;
+}
+
 /** Strip a single role from a user (used on brand hard-delete when they have no
  * remaining brand). No-op if the user is gone or never held the role. */
 async function removeUserRole(userId: string, role: string) {
@@ -281,9 +400,17 @@ export const ecommBrandService = {
     if (!str(brand.contact_email)) {
       throw new GraphQLError('Add a contact email before submitting', { extensions: { code: 'BAD_REQUEST' } });
     }
+    // Every required wizard step, both integrations connected, the consent
+    // signed against its current wording — the same bar approval applies.
+    await assertReadyForReview(brand, 'submitted');
     brand.status = 'SUBMITTED';
     brand.submitted_at = new Date();
+    brand.rejected_at = null;
     await brand.save();
+    await notifyOwner(brand, 'ECOMM_BRAND_SUBMITTED', [brand.contact_person, brand.brand_name], {
+      brand_url: await brandUrl(brand),
+    });
+    await notifyReviewers(brand);
     return toPub(brand);
   },
 
@@ -308,6 +435,11 @@ export const ecommBrandService = {
     // tags. Both stay allowed; the message only goes out on the transition,
     // because it carries no entity for the duplicate index to key on.
     const wasApproved = brand.status === 'APPROVED';
+    // A brand goes live only once the reviewer can see every section is done:
+    // required steps, both vendor connections and the signed consent. A brand
+    // approved before the wizard existed is re-approved without the bar, so a
+    // change request on it still lands.
+    if (!wasApproved) await assertReadyForReview(brand, 'approved');
     brand.status = 'APPROVED';
     brand.approved_at = new Date();
     brand.rejected_at = null;
@@ -377,6 +509,9 @@ export const ecommBrandService = {
     brand.rejected_at = new Date();
     brand.reviewer_notes = notes;
     await brand.save();
+    await notifyOwner(brand, 'ECOMM_BRAND_REJECTED', [brand.contact_person, brand.brand_name, notes], {
+      brand_url: await brandUrl(brand),
+    });
     return toPub(brand);
   },
 
@@ -498,6 +633,137 @@ export const ecommBrandService = {
       await brand.save();
     }
     return true;
+  },
+
+  /** One of the caller's own brands, at any status — what the wizard opens. */
+  async myBrand(userId: string, brandId: string) {
+    return toPub(await loadOwned(userId, brandId));
+  },
+
+  /** The published Brand Consent, as the wizard's last step and the review page read it. */
+  async consentPolicy() {
+    const policy = await currentConsentPolicy();
+    return policy ? policyToPub(policy) : null;
+  },
+
+  /**
+   * Save a brand's own vendor credential and check it right away. Allowed on a
+   * draft, a rejected brand and a LIVE brand (credentials get rotated) — but
+   * not while the brand sits in the review queue, where the reviewer must see
+   * what was submitted.
+   */
+  async connectIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider, input: any) {
+    assertProvider(provider);
+    const brand = await loadOwned(userId, brandId);
+    if (brand.status === 'SUBMITTED') {
+      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    if (provider === 'SHIPROCKET') applyShiprocketInput(brand, input);
+    else applyRazorpayInput(brand, input);
+    const status = await probeBrandIntegration(brand, provider);
+    await brand.save();
+    return status;
+  },
+
+  /** Check the saved credential again — the vendor's answer today, not the one on file. */
+  async recheckIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider) {
+    assertProvider(provider);
+    const brand = await loadOwned(userId, brandId);
+    const status = await probeBrandIntegration(brand, provider);
+    await brand.save();
+    return status;
+  },
+
+  /** Forget the credential. The brand is no longer connected, so it cannot be submitted until it is again. */
+  async disconnectIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider) {
+    assertProvider(provider);
+    const brand = await loadOwned(userId, brandId);
+    if (brand.status === 'SUBMITTED') {
+      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    clearIntegration(brand, provider);
+    await brand.save();
+    return integrationStatus(brand, provider);
+  },
+
+  /** Products portal: the reviewer's own check of a submitted brand's credential. */
+  async reviewIntegration(brandId: string, provider: BrandIntegrationProvider) {
+    assertProvider(provider);
+    if (!Types.ObjectId.isValid(brandId)) {
+      throw new GraphQLError('Invalid brand', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const brand = await EcommBrandModel.findById(brandId);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    const status = await probeBrandIntegration(brand, provider);
+    await brand.save();
+    return status;
+  },
+
+  /**
+   * Sign the Brand Consent by typing a name. The brand keeps the signature and
+   * the hash of the wording; the Legal acceptance log gets its row, so an
+   * auditor reads it beside every other acceptance.
+   */
+  async signConsent(userId: string, brandId: string, signedName: string) {
+    const brand = await loadOwned(userId, brandId);
+    const policy = await currentConsentPolicy();
+    if (!policy) {
+      throw new GraphQLError('No Brand Consent is published yet — there is nothing to sign', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    applyConsentSignature(brand, policy, signedName);
+    await brand.save();
+    await policyAcceptanceService.recordBrandConsent(userId, policy);
+    return consentPub(brand, consentContext(brand, policy));
+  },
+
+  /** Partner self-service delete. An approved brand that still sells is deactivated instead, never deleted. */
+  async deleteMine(userId: string, brandId: string) {
+    const brand = await loadOwned(userId, brandId);
+    const productCount = await InventoryProductModel.countDocuments({ brand_id: brand._id, ownership: 'BRAND' });
+    if (brand.status === 'APPROVED' && productCount > 0) {
+      throw new GraphQLError(
+        `This brand still has ${productCount} product(s). Deactivate it instead, or remove the products first.`,
+        { extensions: { code: 'BAD_REQUEST' } }
+      );
+    }
+    return removeBrand(brand, '');
+  },
+
+  /** Products portal delete, with the reason the owner is sent. Same product guard as the partner's. */
+  async adminDelete(brandId: string, notes: string) {
+    if (!Types.ObjectId.isValid(brandId)) {
+      throw new GraphQLError('Invalid brand id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const brand = await EcommBrandModel.findById(brandId);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    const productCount = await InventoryProductModel.countDocuments({ brand_id: brand._id, ownership: 'BRAND' });
+    if (productCount > 0) {
+      throw new GraphQLError(
+        `This brand still has ${productCount} product(s). Deactivate it, or remove the products before deleting.`,
+        { extensions: { code: 'BAD_REQUEST' } }
+      );
+    }
+    return removeBrand(brand, str(notes));
+  },
+
+  /* ---- Field resolvers' helpers: the consent-aware halves of a public brand ---- */
+
+  /** `consent` with `current`/`available` filled in against the published wording. */
+  async consentField(parent: { consent: ReturnType<typeof consentPub> }) {
+    const policy = await currentConsentPolicy();
+    return { ...parent.consent, ...consentContext(parent, policy) };
+  },
+
+  /** Wizard progress for a public brand — what the Your brands table and the review inbox show. */
+  async completionField(parent: Parameters<typeof brandCompletion>[0] & { consent: ReturnType<typeof consentPub> }) {
+    const policy = await currentConsentPolicy();
+    return brandCompletion(parent, consentContext(parent, policy));
   },
 
   /** Draft a brand shell from an approved onboarding-meeting request so it shows

@@ -23,6 +23,7 @@ export default function SingleImageUploadField({
   label,
   helperText,
   error: externalError,
+  required,
   disabled = false,
   accept = 'image/*',
   maxBytes,
@@ -69,7 +70,7 @@ export default function SingleImageUploadField({
   // Chosen into a variable rather than returned from three branches: all three
   // chromes carry the same AI Monitoring notice, and three placements would be
   // three chances for one of them to lose it.
-  let chrome = <UrlAdornmentVariant {...shared} externalError={externalError} />;
+  let chrome = <UrlAdornmentVariant {...shared} externalError={externalError} required={required} />;
   if (variant === 'avatar') {
     chrome = <AvatarVariant {...shared} shape={shape} uploadTestId={uploadTestId} />;
   } else if (variant === 'url-button') {
@@ -77,6 +78,7 @@ export default function SingleImageUploadField({
       <UrlButtonVariant
         {...shared}
         externalError={externalError}
+        required={required}
         buttonLabel={buttonLabel}
         uploadTestId={uploadTestId}
       />

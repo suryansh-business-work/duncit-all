@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { DIAL_CODE, EMAIL, OTP_6, PHONE_INTL, PHONE_NUMBER_IN } from '@duncit/regex';
-import { isPhoneChannel, type ContactChannel, type ContactDraft } from '@duncit/utils';
+import {
+  contactNumberIsCurrent,
+  isPhoneChannel,
+  type ContactChannel,
+  type ContactDraft,
+  type ContactSnapshot,
+} from '@duncit/utils';
 
 import type { Translate } from './translate';
 
@@ -29,6 +35,9 @@ const INDIA_DIAL_CODE = '+91';
 export function makeContactValueSchema(
   channel: ContactChannel,
   t: Translate,
+  /** What the account holds now: its own number typed back is refused before
+   * its shape is even looked at — there is nothing to change. */
+  current?: Readonly<ContactSnapshot>,
   // zod 4 dropped the middle `ZodTypeDef` parameter: ZodType is <Output, Input>.
   // Both sides are the draft shape — the refinements only trim — and naming the
   // input is what lets zodResolver accept it: it requires field values, and
@@ -45,31 +54,51 @@ export function makeContactValueSchema(
     .trim()
     .refine((v) => DIAL_CODE.test(v), t('mweb.contactChange.validation.extensionInvalid'));
 
-  // The international range the server accepts, not the 10-digit Indian one:
-  // there is a country-code picker beside this box, so a rule that only fits
-  // +91 would refuse numbers the picker itself offers.
-  const numberValue = z
-    .string()
-    .trim()
-    .refine((v) => PHONE_INTL.test(v), t('mweb.contactChange.validation.phoneInvalid'));
-
   if (isPhoneChannel(channel)) {
+    // Every rule about the number runs in ONE place so the box shows one line
+    // and the first refusal wins — a field-level regex would be reported ahead
+    // of anything the object then says (see `phoneNumberIssue`).
     return z
-      .object({ email: anyString, extension: extensionValue, number: numberValue })
-      // On India's own dial code there is no picker ambiguity left to protect:
-      // a 9-digit number is simply short, so it is held to the real 10-digit
-      // Indian mobile shape rather than the international 6-15 digit range.
+      .object({ email: anyString, extension: extensionValue, number: z.string().trim() })
       .superRefine((values, ctx) => {
-        if (values.extension === INDIA_DIAL_CODE && !PHONE_NUMBER_IN.test(values.number)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t('mweb.contactChange.validation.phoneInvalid'),
-            path: ['number'],
-          });
+        const message = phoneNumberIssue(channel, t, values, current);
+        if (message) {
+          ctx.addIssue({ code: 'custom', message, path: ['number'] });
         }
       });
   }
   return z.object({ email: emailValue, extension: anyString, number: anyString });
+}
+
+/**
+ * The one line under the number box, or null when the number may be sent.
+ *
+ * The account's own number comes first: typed back, it is refused as "the
+ * current number" whatever its shape, since a number stored before today's
+ * rules can fail them and a shape complaint about a number the person is not
+ * changing helps nobody. Then the international range the server accepts, not
+ * the 10-digit Indian one — there is a country-code picker beside this box, so
+ * a rule that only fits +91 would refuse numbers the picker itself offers. On
+ * India's own dial code there is no picker ambiguity left to protect: a
+ * 9-digit number is simply short, so it is held to the real 10-digit shape.
+ */
+function phoneNumberIssue(
+  channel: ContactChannel,
+  t: Translate,
+  values: Readonly<ContactDraft>,
+  current?: Readonly<ContactSnapshot>,
+): string | null {
+  if (current && contactNumberIsCurrent(current, channel, values)) {
+    return channel === 'PHONE'
+      ? t('mweb.contactChange.phoneCurrent')
+      : t('mweb.contactChange.whatsappCurrent');
+  }
+  const shortForIndia =
+    values.extension === INDIA_DIAL_CODE && !PHONE_NUMBER_IN.test(values.number);
+  if (!PHONE_INTL.test(values.number) || shortForIndia) {
+    return t('mweb.contactChange.validation.phoneInvalid');
+  }
+  return null;
 }
 
 /** The code that proves the value above. Six digits, nothing else. */

@@ -26,24 +26,36 @@ export interface RazorpayKeys {
 /** A Tech-portal RAZORPAY entry id; empty means the category's default entry. */
 export type RazorpayAccount = string | null | undefined;
 
-/** One chosen account's credentials — it must still exist and be switched on. */
-async function accountKeys(account: string): Promise<RazorpayKeys> {
+/** One chosen account's keys, or null when the entry is gone, switched off or half-filled. */
+async function findAccountKeys(account: string): Promise<RazorpayKeys | null> {
   const entry = Types.ObjectId.isValid(account)
     ? await EnvEntryModel.findOne({ _id: account, category: 'RAZORPAY', is_active: true }).lean()
     : null;
   const config = (entry?.config ?? {}) as Record<string, unknown>;
   const keyId = typeof config.key_id === 'string' ? config.key_id : '';
   const keySecret = typeof config.key_secret === 'string' ? config.key_secret : '';
-  if (!keyId || !keySecret) {
+  if (!keyId || !keySecret) return null;
+  return { keyId, keySecret };
+}
+
+/** One chosen account's credentials — it must still exist and be switched on. */
+async function accountKeys(account: string): Promise<RazorpayKeys> {
+  const keys = await findAccountKeys(account);
+  if (!keys) {
     throw new GraphQLError('The Razorpay account chosen for this payment is missing or switched off in the Tech portal.', {
       extensions: { code: 'BAD_REQUEST' },
     });
   }
-  return { keyId, keySecret };
+  return keys;
 }
 
-/** True when a Razorpay key id is configured in the Tech portal. */
-export async function isRazorpayConfigured(): Promise<boolean> {
+/**
+ * Whether a sheet can be opened at all: the chosen account's keys, or — with no
+ * account — a Razorpay key id in the Tech portal. A surface asks this BEFORE it
+ * falls back to Finance's dummy mode, so a live gateway is never skipped.
+ */
+export async function isRazorpayConfigured(account?: RazorpayAccount): Promise<boolean> {
+  if (account) return !!(await findAccountKeys(account));
   return !!(await getRuntimeEnvValue('RAZORPAY_KEY_ID'));
 }
 

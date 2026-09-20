@@ -101,8 +101,6 @@ const ROUTES = [
   '/profile',
   '/settings',
   '/portal-app-settings',
-  '/localization/locales',
-  '/localization/translations',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

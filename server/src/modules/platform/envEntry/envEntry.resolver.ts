@@ -3,9 +3,40 @@ import { envEntryTests, type Msg91TestInput } from './envEntry.tests';
 import { CATEGORY_API_DOCS, CATEGORY_FIELDS, CATEGORY_DOCS, CATEGORY_LABELS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { GraphQLError } from 'graphql';
+import { hasRole, LOGS_READER, requireRole } from '@middleware/rbac';
 
 const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+
+/**
+ * The MSG91 keys are the one category another console manages. The
+ * Communications console owns the OTP channel, so its MSG91 Settings page
+ * reads and edits MSG91 entries — and no other category: every other secret
+ * stays Tech's. The Logs console mounts the same page, and only reads.
+ */
+const CHANNEL_CATEGORY: EnvCategory = 'MSG91';
+const CHANNEL_MANAGE = ['COMMUNICATIONS_MANAGER'];
+const CHANNEL_READ = [...CHANNEL_MANAGE, LOGS_READER];
+
+/** The one category the caller is confined to — none for Tech, which reads them all. */
+function readScope(ctx: GraphQLContext): EnvCategory | null {
+  const user = requireRole(ctx, [...TECH_MANAGE, ...CHANNEL_READ]);
+  return hasRole(user, TECH_MANAGE) ? null : CHANNEL_CATEGORY;
+}
+
+/** Tech manages every category; a channel manager only the OTP channel's. */
+function requireManage(ctx: GraphQLContext, category: string | null | undefined): void {
+  const user = requireRole(ctx, [...TECH_MANAGE, ...CHANNEL_MANAGE]);
+  if (hasRole(user, TECH_MANAGE) || category === CHANNEL_CATEGORY) return;
+  throw new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } });
+}
+
+/** The entry an id names, once the caller may manage its category. */
+async function manageable(ctx: GraphQLContext, id: string) {
+  const entry = await envEntryService.get(id);
+  requireManage(ctx, entry?.category);
+  return entry;
+}
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */
 function pairsToConfig(category: EnvCategory, pairs?: { key: string; value: string }[] | null): EnvEntryConfig {
@@ -25,20 +56,24 @@ function pairsToConfig(category: EnvCategory, pairs?: { key: string; value: stri
 export const envEntryResolvers = {
   Query: {
     envEntries: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return envEntryService.list(args.filter ?? {});
+      const scope = readScope(ctx);
+      // A confined caller's filter cannot name another category: theirs is pinned over it.
+      return envEntryService.list(scope ? { ...args.filter, category: scope } : args.filter ?? {});
     },
     envEntriesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return envEntryService.table(args.query);
+      const scope = readScope(ctx);
+      return envEntryService.table(args.query, scope ? { category: scope } : {});
     },
     envEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return envEntryService.get(args.id);
+      const scope = readScope(ctx);
+      const entry = await envEntryService.get(args.id);
+      if (scope && entry?.category !== scope) return null;
+      return entry;
     },
     envCategories: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return ENV_CATEGORIES.map((category) => ({
+      const scope = readScope(ctx);
+      const categories: readonly EnvCategory[] = scope ? [scope] : ENV_CATEGORIES;
+      return categories.map((category) => ({
         category,
         label: CATEGORY_LABELS[category],
         docUrl: CATEGORY_DOCS[category] ?? null,
@@ -62,13 +97,12 @@ export const envEntryResolvers = {
 
   Mutation: {
     createEnvEntry: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
+      requireManage(ctx, args.input.category);
       const { config, ...rest } = args.input;
       return envEntryService.create({ ...rest, config: pairsToConfig(rest.category, config) });
     },
     updateEnvEntry: async (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      const existing = await envEntryService.get(args.id);
+      const existing = await manageable(ctx, args.id);
       const category = existing?.category ?? 'EMAIL';
       const { config, ...rest } = args.input;
       return envEntryService.update(args.id, {
@@ -77,15 +111,15 @@ export const envEntryResolvers = {
       });
     },
     deleteEnvEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
+      await manageable(ctx, args.id);
       return envEntryService.remove(args.id);
     },
     setDefaultEnvEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
+      await manageable(ctx, args.id);
       return envEntryService.setDefault(args.id);
     },
     testEnvEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
+      await manageable(ctx, args.id);
       return envEntryService.test(args.id);
     },
     setPortalEnvEntries: async (
@@ -115,7 +149,7 @@ export const envEntryResolvers = {
       args: { id: string; input?: { to?: string | null } | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, TECH_MANAGE);
+      await manageable(ctx, args.id);
       // The signed-in admin is who a live test message falls back to, so the
       // caller cannot nominate somebody else's number by omitting one.
       return envEntryTests.connection(args.id, args.input?.to, ctx.user?.id ?? null);
@@ -154,7 +188,7 @@ export const envEntryResolvers = {
       args: { id: string; input: Msg91TestInput },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, TECH_MANAGE);
+      await manageable(ctx, args.id);
       return envEntryTests.msg91(args.id, args.input);
     },
   },

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 
-/** Everything the web app at luma.duncit.com reads and writes. */
+/** Everything the web app at lite.duncit.com reads and writes. */
 export const publicTypeDefs = gql`
   type LiteUser {
     id: ID!

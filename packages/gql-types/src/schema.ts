@@ -706,6 +706,35 @@ export type AiRichTextImproveInput = {
 };
 
 /**
+ * What an AI translation run sends. MISSING: keys with no text in the language
+ * yet. OUTDATED: those, plus keys whose text was written against default-language
+ * copy that has changed since — "sync with English". ALL: every key, replacing
+ * what is there, hand-written text included.
+ */
+export type AiTranslateScope =
+  | 'ALL'
+  | 'MISSING'
+  | 'OUTDATED';
+
+/** Which languages an AI translation covers, how much of each, and optionally one namespace. */
+export type AiTranslationInput = {
+  /** Target locale codes. The default locale is the source and is never a target. */
+  locales: Array<Scalars['String']['input']>;
+  /** Only keys under this page of the surface, e.g. 'shop'. */
+  page?: InputMaybe<Scalars['String']['input']>;
+  scope: AiTranslateScope;
+  /** Only keys under this surface, e.g. 'mweb'. */
+  surface?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** How many keys a run would send for one language. */
+export type AiTranslationPending = {
+  __typename?: 'AiTranslationPending';
+  keys: Scalars['Int']['output'];
+  locale: Scalars['String']['output'];
+};
+
+/**
  * What fills a CTA button's dynamic link. It travels in its own field and never
  * as a template parameter — a template_params of the wrong length is refused.
  */
@@ -919,6 +948,11 @@ export type AnalyticsColumn = {
   key: Scalars['String']['output'];
 };
 
+/** What the tiles are compared with: the period just before, or the same dates a year earlier. */
+export type AnalyticsCompare =
+  | 'PREVIOUS'
+  | 'YEAR';
+
 /** The subjects the Analytics console reports on. */
 export type AnalyticsEntity =
   | 'AI_USAGE'
@@ -933,7 +967,12 @@ export type AnalyticsEntity =
   | 'FUNNEL'
   | 'HOSTS'
   | 'LEGAL'
+  /** Every log the Logs console lists (logs.duncit.com). */
+  | 'LOGS'
   | 'MARKETING'
+  /** What OpenAI requests cost, in US dollars. */
+  | 'OPENAI_COSTS'
+  /** The Duncit Pet Store (ecomm.duncit.com). */
   | 'PET_STORE'
   | 'PODS'
   | 'REVENUE'
@@ -945,24 +984,28 @@ export type AnalyticsEntity =
   | 'SUPPORT'
   | 'TEST_COVERAGE'
   | 'USERS'
-  | 'VENUES';
-
-/** What the tiles are compared with: the period just before, or the same dates a year earlier. */
-export type AnalyticsCompare =
-  | 'PREVIOUS'
-  | 'YEAR';
+  | 'VENUES'
+  /** What WhatsApp messages cost, in rupees. */
+  | 'WHATSAPP_COSTS';
 
 /** What kind of number a value is, so the console formats it. */
 export type AnalyticsFormat =
+  /** A size in bytes. */
   | 'BYTES'
   | 'COUNT'
   | 'CURRENCY'
   | 'DAYS'
   | 'DECIMAL'
+  /** A length of time in milliseconds. */
   | 'DURATION'
+  /** SonarQube's rating, 1 (A) to 5 (E). */
   | 'GRADE'
+  /** A check's result: 1 passed, 0 failed, null never run. */
+  | 'OUTCOME'
   | 'PERCENT'
-  | 'RATING';
+  | 'RATING'
+  /** An amount in US dollars, which is what OpenAI bills in. */
+  | 'USD';
 
 export type AnalyticsGranularity =
   | 'DAY'
@@ -982,9 +1025,9 @@ export type AnalyticsKpi = {
   target?: Maybe<Scalars['Float']['output']>;
   /** The goal as it was set — monthly for a count or an amount, which target scales to the period. */
   target_goal?: Maybe<Scalars['Float']['output']>;
-  value: Scalars['Float']['output'];
   /** The console page with the records behind this, for more details. */
   url?: Maybe<Scalars['String']['output']>;
+  value: Scalars['Float']['output'];
 };
 
 export type AnalyticsLeaderRow = {
@@ -992,10 +1035,10 @@ export type AnalyticsLeaderRow = {
   caption?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  /** One value per column, in column order; null where there is nothing to show. */
-  values: Array<Maybe<Scalars['Float']['output']>>;
   /** The console page with the records behind this, for more details. */
   url?: Maybe<Scalars['String']['output']>;
+  /** One value per column, in column order; null where there is nothing to show. */
+  values: Array<Maybe<Scalars['Float']['output']>>;
 };
 
 export type AnalyticsLeaderboard = {
@@ -1007,21 +1050,27 @@ export type AnalyticsLeaderboard = {
   url?: Maybe<Scalars['String']['output']>;
 };
 
+/** How often a subscriber's analytics report goes out. */
 export type AnalyticsMailFrequency =
   | 'DAILY'
   | 'WEEKLY';
 
 export type AnalyticsMailSendResult = {
   __typename?: 'AnalyticsMailSendResult';
+  /** Why it did not go, when it did not. */
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
 };
 
+/** When analytics reports go out. The time is wall-clock in the platform's own time zone. */
 export type AnalyticsMailSettings = {
   __typename?: 'AnalyticsMailSettings';
   enabled: Scalars['Boolean']['output'];
+  /** HH:mm */
   time_of_day: Scalars['String']['output'];
+  /** The zone time_of_day is read in (Admin > Settings). */
   time_zone: Scalars['String']['output'];
+  /** 0-6, Sunday first. Read only for weekly subscribers. */
   weekday: Scalars['Int']['output'];
 };
 
@@ -1031,10 +1080,13 @@ export type AnalyticsMailSettingsInput = {
   weekday: Scalars['Int']['input'];
 };
 
+/** Somebody who receives the Analytics console's numbers by email, with the PDF attached. */
 export type AnalyticsMailSubscription = {
   __typename?: 'AnalyticsMailSubscription';
+  /** An AI-written summary of the numbers heads the mail and the PDF. */
   ai_summary: Scalars['Boolean']['output'];
   created_at: Scalars['String']['output'];
+  /** The reporting period in days: 7, 30, 90 or 365. */
   days: Scalars['Int']['output'];
   email: Scalars['String']['output'];
   frequency: AnalyticsMailFrequency;
@@ -1042,9 +1094,12 @@ export type AnalyticsMailSubscription = {
   is_active: Scalars['Boolean']['output'];
   last_error?: Maybe<Scalars['String']['output']>;
   last_sent_at?: Maybe<Scalars['String']['output']>;
+  /** SENT, FAILED or SKIPPED. */
   last_status?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  /** Null while sending is off or this subscriber is paused. */
   next_send_at?: Maybe<Scalars['String']['output']>;
+  /** The dashboards the report covers, in sidebar order. */
   pages: Array<AnalyticsEntity>;
 };
 
@@ -1164,6 +1219,8 @@ export type AppBuild = {
   __typename?: 'AppBuild';
   /** Which server and database this build's app points at. */
   app_env: AppBuildEnv;
+  /** Every push of this build's IPA to TestFlight or the App Store, oldest first. */
+  app_store_releases: Array<AppBuildAppStoreRelease>;
   /**
    * Why a SUCCESS build has no download. Empty whenever there is one. A build
    * that compiled but could not be stored is still reported and announced, so
@@ -1189,6 +1246,14 @@ export type AppBuild = {
   build_name: Scalars['String']['output'];
   /** Permanent human-readable id (DUN-BLD-000001). */
   build_no: Scalars['String']['output'];
+  /**
+   * The store's build identifier — CFBundleVersion on iOS, versionCode on
+   * Android — minted by the runner. Empty on builds reported before it was sent;
+   * those cannot be pushed to App Store Connect, which needs it up front.
+   */
+  build_number: Scalars['String']['output'];
+  /** The store identifier this build shipped under (iOS bundleIdentifier / Android package). */
+  bundle_id: Scalars['String']['output'];
   commit_sha: Scalars['String']['output'];
   /** The commits this build shipped. */
   commits: Array<AppBuildCommit>;
@@ -1212,6 +1277,8 @@ export type AppBuild = {
   id: Scalars['ID']['output'];
   insertions?: Maybe<Scalars['Int']['output']>;
   platform: AppBuildPlatform;
+  /** Every push of this build's AAB to Google Play, oldest first. */
+  play_releases: Array<AppBuildPlayRelease>;
   /** Who the CI authenticated as when it reported the build. */
   reported_by: Scalars['String']['output'];
   /**
@@ -1241,6 +1308,30 @@ export type AppBuild = {
   version: Scalars['String']['output'];
   workflow_run_id: Scalars['String']['output'];
   workflow_run_url: Scalars['String']['output'];
+};
+
+/**
+ * One push of a build's IPA to TestFlight or App Review. A build keeps every one,
+ * oldest first. RELEASED on the TESTFLIGHT track means Apple finished processing
+ * the build; on APP_STORE it means the version was submitted for review — the
+ * review's outcome is Apple's to report, in App Store Connect.
+ */
+export type AppBuildAppStoreRelease = {
+  __typename?: 'AppBuildAppStoreRelease';
+  /** Apple's id for the processed build. Empty until processing finished. */
+  asc_build_id: Scalars['String']['output'];
+  by: Scalars['String']['output'];
+  /** Why it FAILED. Empty otherwise. */
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  /** What the push is doing right now. */
+  stage: Scalars['String']['output'];
+  started_at: Scalars['String']['output'];
+  status: AppStoreReleaseStatus;
+  step: AppStoreReleaseStep;
+  track: AppStoreTrack;
+  /** Apple's id for the App Store version this build was attached to. APP_STORE track only. */
+  version_id: Scalars['String']['output'];
 };
 
 export type AppBuildArtifact = {
@@ -1317,15 +1408,52 @@ export type AppBuildPlatform =
   | 'ANDROID'
   | 'IOS';
 
+/**
+ * One push of a build's AAB to Google Play. A build keeps every push it has had,
+ * oldest first: a failed one followed by a good one is two facts, and internal
+ * testing followed by production is two releases.
+ */
+export type AppBuildPlayRelease = {
+  __typename?: 'AppBuildPlayRelease';
+  /** Who pressed the button. */
+  by: Scalars['String']['output'];
+  /** Why it FAILED. Empty otherwise. */
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  started_at: Scalars['String']['output'];
+  status: PlayReleaseStatus;
+  track: PlayStoreTrack;
+  /** The version code Google filed the bundle under. Empty until it answered. */
+  version_code: Scalars['String']['output'];
+};
+
 /** Which Slack channels build announcements post to (stored on the SLACK env entry). */
 export type AppBuildSettings = {
   __typename?: 'AppBuildSettings';
   android_channel?: Maybe<Scalars['String']['output']>;
+  /** The bundle ID iOS signing files are made for. Empty when not configured. */
+  app_store_bundle_id: Scalars['String']['output'];
+  /**
+   * Whether an App Store Connect API key and bundle ID are configured
+   * (Environment Variables → App Store Connect). Generating iOS signing files
+   * needs it.
+   */
+  app_store_configured: Scalars['Boolean']['output'];
   ios_channel?: Maybe<Scalars['String']['output']>;
+  /** The newest iOS signing identity — what the next iOS build signs with. Null until one is generated. */
+  ios_signing?: Maybe<IosSigning>;
   /** When CI last reported any build. Null means the workflows have never reached us. */
   last_reported_at?: Maybe<Scalars['String']['output']>;
   /** Which account the last report authenticated as. */
   last_reported_by?: Maybe<Scalars['String']['output']>;
+  /** The package name releases go to. Empty when not configured. */
+  play_package_name: Scalars['String']['output'];
+  /**
+   * Whether a Google Play service account and package name are configured
+   * (Environment Variables → Google Play). The push buttons stay visible without
+   * it, and the reason is what they say when pressed.
+   */
+  play_store_configured: Scalars['Boolean']['output'];
 };
 
 /**
@@ -1548,10 +1676,20 @@ export type AppSettings = {
   pod_auto_cancel_enabled: Scalars['Boolean']['output'];
   /** How many hours before a pod's start the auto-cancel finance check runs. */
   pod_auto_cancel_lead_hours: Scalars['Int']['output'];
+  /** Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once. Revoking before the start cancels a held refund; the release sweep pays it once the start passes. */
+  pod_cancel_refund_hold: Scalars['Boolean']['output'];
+  /** How often, in hours, the host and club admins of an at-risk pod are re-alerted while the risk stands. */
+  pod_cancel_risk_alert_hours: Scalars['Int']['output'];
+  /** How many hours before a pod's start it is watched for cancellation risk: inside this window a finance-negative pod is flagged and its host and club admins are alerted. */
+  pod_cancel_risk_window_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it. */
   pod_complete_reminder_hours: Scalars['Int']['output'];
   /** How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings. */
   pod_complete_timeout_hours: Scalars['Int']['output'];
+  /** How many hours after a pod ends its guests, host, venue and club admins are asked how it went. 0 asks the moment it ends. */
+  pod_feedback_delay_hours: Scalars['Int']['output'];
+  /** How many hours before a pod starts its attendees are reminded over email and WhatsApp. */
+  pod_reminder_lead_hours: Scalars['Int']['output'];
   /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -1564,7 +1702,35 @@ export type AppSettings = {
   venue_cancel_health_penalty: Scalars['Int']['output'];
   /** Account Health points a VENUE loses for filing a Request Change on a pod booked at it (0-10, 0 disables it). */
   venue_change_request_health_penalty: Scalars['Int']['output'];
+  /** How many hours before the requested slot a venue still sitting on an unanswered pod slot request is chased. */
+  venue_slot_reminder_lead_hours: Scalars['Int']['output'];
 };
+
+/**
+ * PUSHING for the whole journey — upload, Apple's processing (minutes to half an
+ * hour), listing, submission — then RELEASED or FAILED. Unlike a Play push there
+ * is no stale timeout: the server's scheduler carries a PUSHING entry on across
+ * restarts, and gives up only after three hours.
+ */
+export type AppStoreReleaseStatus =
+  | 'FAILED'
+  | 'PUSHING'
+  | 'RELEASED';
+
+/** Which part of an App Store push is next. */
+export type AppStoreReleaseStep =
+  | 'DONE'
+  | 'LISTING'
+  | 'PROCESSING'
+  | 'SUBMIT'
+  | 'UPLOAD';
+
+/** Where a stored IPA can go from the portal. */
+export type AppStoreTrack =
+  /** Uploaded, the store listing applied from Store Listing, and submitted to App Review. */
+  | 'APP_STORE'
+  /** Uploaded to App Store Connect and processed for TestFlight testers. */
+  | 'TESTFLIGHT';
 
 export type AppVersionInfo = {
   __typename?: 'AppVersionInfo';
@@ -1577,6 +1743,34 @@ export type AppVersionInfo = {
    * Blank means nothing is blocked, which is the state a fresh database is in.
    */
   min_supported_version: Scalars['String']['output'];
+};
+
+/** An Apple id_token, from the iOS app's native sheet or the web flow. */
+export type AppleAuthInput = {
+  id_token: Scalars['String']['input'];
+  portal_key?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The Apple door's signup: the Google door's fields, plus the name.
+ *
+ * Apple never puts the name in its token. It hands it to the client once, on
+ * the first authorisation, and the client sends it here — or asks for it, when
+ * Apple had already shared it on an earlier attempt that never became an account.
+ */
+export type AppleSignupInput = {
+  accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  dob: Scalars['String']['input'];
+  first_name: Scalars['String']['input'];
+  id_token: Scalars['String']['input'];
+  last_name?: InputMaybe<Scalars['String']['input']>;
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  whatsapp_token: Scalars['String']['input'];
+  zone?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A single label → value row the admin inbox renders (survey answers, feedback…). */
@@ -1626,34 +1820,6 @@ export type ApprovalRequestTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<ApprovalRequest>;
   total: Scalars['Int']['output'];
-};
-
-/** An Apple id_token, from the iOS app's native sheet or the web flow. */
-export type AppleAuthInput = {
-  id_token: Scalars['String']['input'];
-  portal_key?: InputMaybe<Scalars['String']['input']>;
-};
-
-/**
- * The Apple door's signup: the Google door's fields, plus the name.
- *
- * Apple never puts the name in its token. It hands it to the client once, on
- * the first authorisation, and the client sends it here — or asks for it, when
- * Apple had already shared it on an earlier attempt that never became an account.
- */
-export type AppleSignupInput = {
-  accepted_policy_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
-  accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
-  city?: InputMaybe<Scalars['String']['input']>;
-  dob: Scalars['String']['input'];
-  first_name: Scalars['String']['input'];
-  id_token: Scalars['String']['input'];
-  last_name?: InputMaybe<Scalars['String']['input']>;
-  phone_extension: Scalars['String']['input'];
-  phone_number: Scalars['String']['input'];
-  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
-  whatsapp_token: Scalars['String']['input'];
-  zone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ApprovalStatus =
@@ -1735,6 +1901,14 @@ export type AskBotTurnInput = {
  */
 export type AskBotUnavailableReason =
   | 'NOT_CONFIGURED';
+
+export type AttachE2eRunVideosInput = {
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  /** The scenario clips, when the run cut any. Absent means none. */
+  scenarios?: InputMaybe<Array<E2eScenarioVideoInput>>;
+  videos: Array<E2eRunVideoInput>;
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+};
 
 /** How a booking came to be marked present. */
 export type AttendanceMarkMethod =
@@ -2186,38 +2360,288 @@ export type AutoPodVenueSlots = {
   window_days: Scalars['Int']['output'];
 };
 
+export type AutomationChannel =
+  | 'EMAIL'
+  | 'WHATSAPP';
+
+export type AutomationContact = {
+  __typename?: 'AutomationContact';
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+};
+
+export type AutomationContactInput = {
+  /** Email flows. */
+  email?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** WhatsApp flows: country code + number, digits only. */
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One arrow. source_handle is the exit it leaves by — next for a single-exit step. */
+export type AutomationEdge = {
+  __typename?: 'AutomationEdge';
+  id: Scalars['ID']['output'];
+  source: Scalars['ID']['output'];
+  source_handle: Scalars['String']['output'];
+  target: Scalars['ID']['output'];
+};
+
+export type AutomationEdgeInput = {
+  id: Scalars['ID']['input'];
+  source: Scalars['ID']['input'];
+  source_handle?: InputMaybe<Scalars['String']['input']>;
+  target: Scalars['ID']['input'];
+};
+
+/** An SMTP mailbox from Tech > Environment, as a send step may pick it. Never a credential. */
+export type AutomationEmailSender = {
+  __typename?: 'AutomationEmailSender';
+  from_address: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** A template from Tech > Email Templates and the variables a send step must fill. */
+export type AutomationEmailTemplate = {
+  __typename?: 'AutomationEmailTemplate';
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  variables: Array<Scalars['String']['output']>;
+};
+
 /**
- * One auto-translation run — an admin filling a language in through OpenAI.
- *
- * The catalogue is thousands of keys, so a run takes minutes and lives on as a
- * row rather than inside the request that started it: the browser can be closed,
- * a second admin sees the same progress, and a run interrupted by a restart is
- * reported instead of spinning forever.
+ * A flow the AI portal drew. The graph is stored as drawn; the server walks it
+ * when the trigger fires. issues is computed on every read, so the builder
+ * always shows what still has to be fixed before the flow can be activated.
  */
-export type AutoTranslateJob = {
-  __typename?: 'AutoTranslateJob';
-  /** The model that answered, as the OpenAI client reported it. */
-  ai_model: Scalars['String']['output'];
-  /** Keys finished with, translated or not — what the progress bar reads. */
-  done_keys: Scalars['Int']['output'];
+export type AutomationFlow = {
+  __typename?: 'AutomationFlow';
+  channel: AutomationChannel;
+  created_at?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  edges: Array<AutomationEdge>;
+  id: Scalars['ID']['output'];
+  issues: Array<AutomationIssue>;
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  nodes: Array<AutomationNode>;
+  /** Live runs only — a test never counts. */
+  run_count: Scalars['Int']['output'];
+  status: AutomationFlowStatus;
+  /** The trigger step's kind — INBOUND_MESSAGE, INBOUND_EMAIL or MANUAL; empty before one is set. */
+  trigger: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type AutomationFlowStatus =
+  | 'ACTIVE'
+  | 'DRAFT'
+  | 'PAUSED';
+
+/** Something that stops the flow from running, tied to the step it is on when it is. */
+export type AutomationIssue = {
+  __typename?: 'AutomationIssue';
+  message: Scalars['String']['output'];
+  node_id?: Maybe<Scalars['ID']['output']>;
+};
+
+/** A Gmail mailbox connected in Tech > Mail Automation — what an incoming-email trigger listens on. */
+export type AutomationMailbox = {
+  __typename?: 'AutomationMailbox';
+  display_name: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+};
+
+/** One line of a run's transcript: what came in, what went out, or a note. */
+export type AutomationMessage = {
+  __typename?: 'AutomationMessage';
+  at: Scalars['String']['output'];
+  buttons: Array<Scalars['String']['output']>;
+  /** False for a test preview that was never handed to a provider. */
+  delivered: Scalars['Boolean']['output'];
+  /** IN, OUT or SYSTEM. */
+  direction: Scalars['String']['output'];
+  html: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** text, whatsapp_template or email. */
+  kind: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
+  template_name: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+/** One step on the canvas. data is the step kind's own settings, as JSON. */
+export type AutomationNode = {
+  __typename?: 'AutomationNode';
+  data: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  x: Scalars['Float']['output'];
+  y: Scalars['Float']['output'];
+};
+
+export type AutomationNodeInput = {
+  /** The step's settings, as JSON. */
+  data?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  kind: Scalars['String']['input'];
+  x?: InputMaybe<Scalars['Float']['input']>;
+  y?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/**
+ * Everything the builder picks from, for one channel. The WhatsApp fields are
+ * empty on an email flow and vice versa, so one query serves both builders.
+ */
+export type AutomationOptions = {
+  __typename?: 'AutomationOptions';
+  campaigns: Array<AisensyCampaign>;
+  channel: AutomationChannel;
+  email_categories: Array<Scalars['String']['output']>;
+  email_senders: Array<AutomationEmailSender>;
+  email_templates: Array<AutomationEmailTemplate>;
+  mailboxes: Array<AutomationMailbox>;
+  project_configured: Scalars['Boolean']['output'];
+  prompts: Array<AutomationPromptOption>;
+  saved_campaign_names: Array<WaCampaignNameOption>;
+  templates: Array<AisensyTemplate>;
+  /** Recipient variables read off the matching Duncit account, e.g. first_name. */
+  variables: Array<WaCampaignVariable>;
+  /** Whether the AiSensy entry in Tech > Environment carries a Webhook Secret. Without one, incoming messages are refused. */
+  webhook_secret_set: Scalars['Boolean']['output'];
+  /** Where AiSensy's incoming-message webhook must point. */
+  webhook_url: Scalars['String']['output'];
+  whatsapp_configured: Scalars['Boolean']['output'];
+};
+
+export type AutomationPromptOption = {
+  __typename?: 'AutomationPromptOption';
+  category: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** One walk of a flow for one contact. */
+export type AutomationRun = {
+  __typename?: 'AutomationRun';
+  channel: AutomationChannel;
+  contact: AutomationContact;
+  current_node_id: Scalars['String']['output'];
+  deliver: Scalars['Boolean']['output'];
   error: Scalars['String']['output'];
-  /** Keys the model returned nothing usable for. Running again retries them. */
-  failed_keys: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  flow_id: Scalars['ID']['output'];
+  flow_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  messages: Array<AutomationMessage>;
+  mode: AutomationRunMode;
+  resume_at?: Maybe<Scalars['String']['output']>;
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: AutomationRunStatus;
+  steps: Array<AutomationStep>;
+  trigger_subject: Scalars['String']['output'];
+  trigger_text: Scalars['String']['output'];
+  variables_json: Scalars['String']['output'];
+  wait_until?: Maybe<Scalars['String']['output']>;
+};
+
+export type AutomationRunMode =
+  | 'LIVE'
+  | 'TEST';
+
+export type AutomationRunStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'RUNNING'
+  | 'WAITING_DELAY'
+  | 'WAITING_REPLY';
+
+export type AutomationStep = {
+  __typename?: 'AutomationStep';
+  at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  node_id: Scalars['ID']['output'];
+  /** OK, SKIPPED, FAILED or WAITING. */
+  status: Scalars['String']['output'];
+};
+
+/** A test run. The graph is the one on the canvas, so an unsaved change is tested as drawn. */
+export type AutomationTestInput = {
+  contact: AutomationContactInput;
+  /** Send and call webhooks for real instead of previewing. */
+  deliver?: InputMaybe<Scalars['Boolean']['input']>;
+  edges: Array<AutomationEdgeInput>;
+  flow_id: Scalars['ID']['input'];
+  nodes: Array<AutomationNodeInput>;
+  subject?: InputMaybe<Scalars['String']['input']>;
+  /** What the contact writes to start the flow. */
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AutomationTestReplyInput = {
+  run_id: Scalars['ID']['input'];
+  text?: InputMaybe<Scalars['String']['input']>;
+  /** Take the No reply exit instead of answering. */
+  timed_out?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/**
+ * A long-running piece of work a person started from a console — a bulk
+ * delete, or an AI translation of one language. Kept on the server, so the
+ * header's progress survives page changes, refreshes and server restarts.
+ */
+export type BackgroundJob = {
+  __typename?: 'BackgroundJob';
+  created_at: Scalars['String']['output'];
+  /** Why the whole job stopped, when it did. */
+  error_message: Scalars['String']['output'];
+  /** Rows refused, or keys that came back unusable. */
+  failed: Scalars['Int']['output'];
+  /** The first refusals, capped — enough to say why. */
+  failures: Array<BackgroundJobFailure>;
   finished_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  /** The language being filled in. */
-  locale: Scalars['String']['output'];
-  /** Re-translated keys that already had text, rather than only the gaps. */
-  replace_existing: Scalars['Boolean']['output'];
-  /** The default language its text was translated from. */
-  source_locale: Scalars['String']['output'];
-  started_at?: Maybe<Scalars['String']['output']>;
-  started_by: Scalars['String']['output'];
-  /** RUNNING | SUCCEEDED | FAILED | CANCELLED */
-  status: Scalars['String']['output'];
-  total_keys: Scalars['Int']['output'];
-  translated_keys: Scalars['Int']['output'];
+  kind: BackgroundJobKind;
+  /** What the person was looking at when they started it — for AI_TRANSLATE, the language. */
+  label: Scalars['String']['output'];
+  /** BULK_DELETE only. */
+  mode?: Maybe<BulkDeleteMode>;
+  status: BackgroundJobStatus;
+  /** Rows deleted, or keys translated. */
+  succeeded: Scalars['Int']['output'];
+  /** BULK_DELETE: the <name>Table query the rows come from. Empty otherwise. */
+  table: Scalars['String']['output'];
+  /** Rows (or translation keys) in scope when the job started. */
+  total: Scalars['Int']['output'];
+  /** The page it was started from. */
+  url: Scalars['String']['output'];
 };
+
+/** One row a bulk delete could not remove, with the reason its own delete gave. */
+export type BackgroundJobFailure = {
+  __typename?: 'BackgroundJobFailure';
+  id: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+};
+
+/** What a background job does. */
+export type BackgroundJobKind =
+  | 'AI_TRANSLATE'
+  | 'BULK_DELETE';
+
+export type BackgroundJobStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'RUNNING';
 
 /** One recorded Backout lifecycle event (immutable, chronological). */
 export type BackoutEvent = {
@@ -2571,6 +2995,69 @@ export type BouncerSupportTarget = {
   phone: Scalars['String']['output'];
 };
 
+/** How far the brand is through the onboarding wizard — the % in the Your brands table. */
+export type BrandCompletion = {
+  __typename?: 'BrandCompletion';
+  /** The first step still to do, for the wizard to open on. */
+  next_step: Scalars['Int']['output'];
+  percent: Scalars['Int']['output'];
+  steps: Array<BrandStepState>;
+};
+
+/** The Brand Consent (Legal portal) as the partner signed it. */
+export type BrandConsent = {
+  __typename?: 'BrandConsent';
+  accepted: Scalars['Boolean']['output'];
+  /** Legal has published a Brand Consent to sign. Without one the step has nothing to show. */
+  available: Scalars['Boolean']['output'];
+  /** sha256 of the wording that was signed. */
+  content_hash: Scalars['String']['output'];
+  /** The signature is against the consent's CURRENT wording. False once Legal edits it. */
+  current: Scalars['Boolean']['output'];
+  policy_slug: Scalars['String']['output'];
+  policy_title: Scalars['String']['output'];
+  signed_at?: Maybe<Scalars['String']['output']>;
+  signed_name: Scalars['String']['output'];
+};
+
+/** The two accounts a brand ships and gets paid through. Each brand holds its own — never the Tech portal's. */
+export type BrandIntegrationProvider =
+  | 'RAZORPAY'
+  | 'SHIPROCKET';
+
+/**
+ * One brand integration as the console reads it. The secret (ShipRocket
+ * password, Razorpay key secret) never leaves the server; `has_secret` says
+ * whether one is on file and `identifier` is the public half (the API user's
+ * email, the Razorpay key id).
+ */
+export type BrandIntegrationStatus = {
+  __typename?: 'BrandIntegrationStatus';
+  checked_at?: Maybe<Scalars['String']['output']>;
+  /** Both halves of the credential are on file. */
+  configured: Scalars['Boolean']['output'];
+  /** The vendor accepted the credential the last time it was checked. */
+  connected: Scalars['Boolean']['output'];
+  details: Array<Scalars['String']['output']>;
+  has_secret: Scalars['Boolean']['output'];
+  /** A webhook secret is on file for this account. */
+  has_webhook_secret: Scalars['Boolean']['output'];
+  identifier: Scalars['String']['output'];
+  /** Razorpay: the key id is a live key (rzp_live_…), so real money moves. */
+  live_mode: Scalars['Boolean']['output'];
+  /** What the vendor answered, for a person to read. Never a credential. */
+  message: Scalars['String']['output'];
+  /** ShipRocket: the default pickup nickname on that account. */
+  pickup_location: Scalars['String']['output'];
+  provider: BrandIntegrationProvider;
+};
+
+export type BrandIntegrations = {
+  __typename?: 'BrandIntegrations';
+  razorpay: BrandIntegrationStatus;
+  shiprocket: BrandIntegrationStatus;
+};
+
 export type BrandPickupLocation = {
   __typename?: 'BrandPickupLocation';
   address_line1: Scalars['String']['output'];
@@ -2613,6 +3100,31 @@ export type BrandPickupLocationInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type BrandRazorpayInput = {
+  key_id: Scalars['String']['input'];
+  /** Omitted or blank keeps the secret already on file. */
+  key_secret?: InputMaybe<Scalars['String']['input']>;
+  webhook_secret?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BrandShiprocketInput = {
+  /** The ShipRocket API user's email (Settings → API → Configure). */
+  email: Scalars['String']['input'];
+  /** Omitted or blank keeps the password already on file. */
+  password?: InputMaybe<Scalars['String']['input']>;
+  /** Default pickup nickname on that account — must match a ShipRocket pickup address. */
+  pickup_location?: InputMaybe<Scalars['String']['input']>;
+  /** Omitted or blank keeps the one on file. */
+  webhook_secret?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type BrandStepState = {
+  __typename?: 'BrandStepState';
+  complete: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  required: Scalars['Boolean']['output'];
+};
+
 export type Branding = {
   __typename?: 'Branding';
   android_app_url: Scalars['String']['output'];
@@ -2635,6 +3147,8 @@ export type Branding = {
   /** Sub-heading under the vibe heading; empty falls back to each client's bundled copy. */
   home_vibe_subheading: Scalars['String']['output'];
   ios_app_url: Scalars['String']['output'];
+  /** The global backdrops behind the launch waitlist page of every city not launched yet; a city can override any field. */
+  launch_media: LaunchPageMedia;
   /**
    * The backdrop behind the sign-in and sign-up screens, as two independent
    * switches. With both off the apps keep their bundled animated gradient,
@@ -2801,6 +3315,11 @@ export type BulkCreateVenueSlotsInput = {
   slots: Array<CreateVenueSlotInput>;
   venue_id: Scalars['ID']['input'];
 };
+
+/** SELECTED deletes the ticked rows; ALL deletes every row matching the table's current view. */
+export type BulkDeleteMode =
+  | 'ALL'
+  | 'SELECTED';
 
 /** Filter for bulk slot ops — only non-booked slots; from defaults to now so history is never touched. */
 export type BulkDeleteVenueSlotsInput = {
@@ -3068,6 +3587,13 @@ export type CheckoutQuoteInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ClaimStressRunInput = {
+  dispatch_id: Scalars['String']['input'];
+  shard: Scalars['Int']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+  workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Club = {
@@ -3902,6 +4428,47 @@ export type ConnectedGoogleAccount = {
   linked_at?: Maybe<Scalars['String']['output']>;
 };
 
+export type ContactEntryInput = {
+  /** The phone-book name, shown when the account's own name is blank. */
+  label?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The comparable digits of one phone-book number — the client reduces every
+   * number to its last ten digits before it leaves the device, and the server
+   * applies the same rule again, so any format the phone book uses is accepted.
+   */
+  phone_key: Scalars['String']['input'];
+};
+
+/** What one invite press actually did. */
+export type ContactInviteResult = {
+  __typename?: 'ContactInviteResult';
+  failed: Scalars['Int']['output'];
+  /** How many numbers this call tried. */
+  requested: Scalars['Int']['output'];
+  sent: Scalars['Int']['output'];
+  /** The numbers that actually went, so a client can mark them Invited without re-reading the list. */
+  sent_keys: Array<Scalars['String']['output']>;
+  /** Held back — switched off, already invited, or opted out. */
+  skipped: Scalars['Int']['output'];
+};
+
+/**
+ * One phone-book entry that turned out to have a Duncit account. The profile is
+ * the SAME PublicProfile every other people surface renders, so the follow
+ * button and the privacy rules cannot drift.
+ */
+export type ContactOnDuncit = {
+  __typename?: 'ContactOnDuncit';
+  /** The name as it reads in the viewer's phone book, for when the account has none to show. */
+  contact_label: Scalars['String']['output'];
+  /**
+   * True when this account's selected city is the viewer's. Duncit stores no
+   * coordinates, so "nearby" is a city, never a radius.
+   */
+  is_nearby: Scalars['Boolean']['output'];
+  profile: PublicProfile;
+};
+
 /** Which number on the account a one-time code is being asked to move. */
 export type ContactPhoneField =
   /** The contact number — auth.phone. */
@@ -3941,6 +4508,74 @@ export type ContactSubmitResult = {
   __typename?: 'ContactSubmitResult';
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
+};
+
+/**
+ * Which slice of a phone book one `syncContacts` request carries. A big phone
+ * book goes up in slices so the screen can show how far along it is.
+ */
+export type ContactSyncBatchInput = {
+  /** True on the slice that closes the sync — the one that retires numbers no longer in the phone book. */
+  last: Scalars['Boolean']['input'];
+  /** Omitted on the first slice; every later slice passes back the `sync_id` the first one returned. */
+  sync_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * One phone-book number that reached no Duncit account, and so can be invited.
+ * The number itself never comes back to the client — it already has the phone
+ * book; `phone_key` is what an invite is asked for by.
+ */
+export type ContactToInvite = {
+  __typename?: 'ContactToInvite';
+  /** The name it is saved under in the viewer's phone book. */
+  contact_label: Scalars['String']['output'];
+  /** When an invite last went to this number, or null while none has. */
+  invited_at?: Maybe<Scalars['String']['output']>;
+  phone_key: Scalars['String']['output'];
+};
+
+/** One page of the viewer's matched contacts, and how many there are in all. */
+export type ContactsOnDuncitPage = {
+  __typename?: 'ContactsOnDuncitPage';
+  rows: Array<ContactOnDuncit>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * What one `syncContacts` request did. Every count describes the slice that
+ * request carried — for a sync sent in one request, that is the whole phone book.
+ */
+export type ContactsSyncResult = {
+  __typename?: 'ContactsSyncResult';
+  /** How many submitted numbers reached nobody — who the invite list holds. */
+  invitable: Scalars['Int']['output'];
+  matched: Scalars['Int']['output'];
+  /** Matches this slice found that no earlier sync had. */
+  new_matches: Scalars['Int']['output'];
+  submitted: Scalars['Int']['output'];
+  /** The sync this slice belongs to — pass it back on every later slice. */
+  sync_id: Scalars['String']['output'];
+  synced_at: Scalars['String']['output'];
+};
+
+/** Whether this account has synced its contacts, and what the last sync found. */
+export type ContactsSyncStatus = {
+  __typename?: 'ContactsSyncStatus';
+  /** How many reached nobody — the size of the invite list. */
+  invitable: Scalars['Int']['output'];
+  /** How many of them resolved to a Duncit account. */
+  matched: Scalars['Int']['output'];
+  /** How many contacts the last sync kept: every matched account plus every number that reached nobody. */
+  submitted: Scalars['Int']['output'];
+  synced_at: Scalars['String']['output'];
+};
+
+/** One page of the numbers that reached nobody, and how many there are in all. */
+export type ContactsToInvitePage = {
+  __typename?: 'ContactsToInvitePage';
+  rows: Array<ContactToInvite>;
+  total: Scalars['Int']['output'];
 };
 
 export type ContentReport = {
@@ -4100,9 +4735,55 @@ export type CouponPreviewInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** One payment that consumed the coupon. */
+export type CouponRedemption = {
+  __typename?: 'CouponRedemption';
+  coupon_discount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  pod_id?: Maybe<Scalars['ID']['output']>;
+  status: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+  user_email: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name: Scalars['String']['output'];
+  user_phone?: Maybe<Scalars['String']['output']>;
+};
+
+export type CouponRedemptionTablePage = {
+  __typename?: 'CouponRedemptionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CouponRedemption>;
+  total: Scalars['Int']['output'];
+};
+
 export type CouponScope =
   | 'GLOBAL'
-  | 'POD';
+  | 'POD'
+  /** Only a pet-store checkout (ecomm.duncit.com). */
+  | 'STORE';
+
+/** What a coupon has actually done — the figures a detail page states above its redemption table. */
+export type CouponStats = {
+  __typename?: 'CouponStats';
+  currency_symbol: Scalars['String']['output'];
+  last_redeemed_at?: Maybe<Scalars['String']['output']>;
+  /** What those discounted orders were actually charged. */
+  order_value: Scalars['Float']['output'];
+  /** Null when the coupon has no usage cap. */
+  remaining_uses?: Maybe<Scalars['Int']['output']>;
+  /** Rupees taken off orders by this code. */
+  total_discount: Scalars['Float']['output'];
+  /** Distinct buyers behind those redemptions. */
+  unique_users: Scalars['Int']['output'];
+  /** The coupon's own counter, incremented by the checkout finalizer. */
+  used_count: Scalars['Int']['output'];
+};
 
 /** Server-side table page for the shared table engine (couponsTable / couponsForPodTable). */
 export type CouponTablePage = {
@@ -4279,6 +4960,7 @@ export type CreateCouponInput = {
   min_order_amount?: InputMaybe<Scalars['Float']['input']>;
   per_user_limit?: InputMaybe<Scalars['Int']['input']>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** STORE coupons only: limit the code to these products. Empty = the whole store. */
   product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   scope: CouponScope;
   valid_from?: InputMaybe<Scalars['String']['input']>;
@@ -4365,10 +5047,21 @@ export type CreateExpenseInput = {
   amount: Scalars['Float']['input'];
   attachment_url?: InputMaybe<Scalars['String']['input']>;
   category: Scalars['String']['input'];
+  compensated_amount?: InputMaybe<Scalars['Float']['input']>;
+  compensation_date?: InputMaybe<Scalars['String']['input']>;
+  compensation_method?: InputMaybe<Scalars['String']['input']>;
+  compensation_reference?: InputMaybe<Scalars['String']['input']>;
+  /** The one part of the status a person states; the rest follows the amount. */
+  compensation_rejected?: InputMaybe<Scalars['Boolean']['input']>;
   date: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
+  paid_by?: InputMaybe<Scalars['String']['input']>;
   payment_method?: InputMaybe<Scalars['String']['input']>;
   reference?: InputMaybe<Scalars['String']['input']>;
+  /** The entity's document id. Its NAME is read server-side, never trusted from here. */
+  related_from_id?: InputMaybe<Scalars['ID']['input']>;
+  /** A configured RELATED_FROM_TYPE key; anything else is stored as unattributed. */
+  related_from_type?: InputMaybe<Scalars['String']['input']>;
   vendor_name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -4413,6 +5106,12 @@ export type CreateLocationInput = {
   city: Scalars['String']['input'];
   country: Scalars['String']['input'];
   country_code: Scalars['String']['input'];
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Defaults to true. */
+  is_launched?: InputMaybe<Scalars['Boolean']['input']>;
+  launch_media?: InputMaybe<LaunchPageMediaInput>;
+  /** Defaults to 2000. */
+  launch_target?: InputMaybe<Scalars['Int']['input']>;
   location_id?: InputMaybe<Scalars['String']['input']>;
   location_image: Scalars['String']['input'];
   location_name: Scalars['String']['input'];
@@ -4420,6 +5119,7 @@ export type CreateLocationInput = {
   location_zones?: InputMaybe<Array<LocationZoneInput>>;
   state: Scalars['String']['input'];
   state_code: Scalars['String']['input'];
+  whatsapp_group_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateNotificationInput = {
@@ -4974,7 +5674,6 @@ export type CrmServiceKind =
   | 'HOST'
   | 'VENUE';
 
-/** A Service Offered title scoped to the Super → Category → Sub taxonomy. */
 export type CrmServiceOffered = {
   __typename?: 'CrmServiceOffered';
   applies_to_ecomm: Scalars['Boolean']['output'];
@@ -5315,6 +6014,26 @@ export type DbBackupSettingsInput = {
   weekday: Scalars['Int']['input'];
 };
 
+/**
+ * Where this server keeps its archives: a directory on its own disk, read off
+ * the filesystem so it says what is still there rather than what was written.
+ * There is no copy on another host — the page says so, and "latest" is the
+ * archive to download for one.
+ */
+export type DbBackupStore = {
+  __typename?: 'DbBackupStore';
+  archiveBytes: Scalars['Float']['output'];
+  /** Archives still on disk, and their bytes together. */
+  archives: Scalars['Int']['output'];
+  directory: Scalars['String']['output'];
+  /** Room left on the volume the directory sits on. */
+  fsFreeBytes: Scalars['Float']['output'];
+  fsTotalBytes: Scalars['Float']['output'];
+  /** The newest completed backup that still has its file, or null. */
+  latest?: Maybe<DbBackup>;
+  newestArchiveAt?: Maybe<Scalars['String']['output']>;
+};
+
 export type DbBackupTablePage = {
   __typename?: 'DbBackupTablePage';
   page: Scalars['Int']['output'];
@@ -5375,6 +6094,74 @@ export type DbRestoreCollection = {
   name: Scalars['String']['output'];
 };
 
+/** A party on the domain's registrar record. */
+export type DnsDomainContact = {
+  __typename?: 'DnsDomainContact';
+  email?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  organization?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  /** REGISTRANT, ADMIN, TECH or BILLING. */
+  role: Scalars['String']['output'];
+};
+
+/** The domain at the registrar — what decides whether the name resolves next year. */
+export type DnsDomainInfo = {
+  __typename?: 'DnsDomainInfo';
+  configured: Scalars['Boolean']['output'];
+  contacts: Array<DnsDomainContact>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Whole days until expiry. Negative once it has passed. */
+  days_to_expiry?: Maybe<Scalars['Int']['output']>;
+  domain: Scalars['String']['output'];
+  domain_id?: Maybe<Scalars['Int']['output']>;
+  expiration_protected?: Maybe<Scalars['Boolean']['output']>;
+  expires_at?: Maybe<Scalars['String']['output']>;
+  hold_registrar?: Maybe<Scalars['Boolean']['output']>;
+  /** Registrar lock — a locked domain cannot be transferred away. */
+  locked?: Maybe<Scalars['Boolean']['output']>;
+  name_servers: Array<Scalars['String']['output']>;
+  privacy?: Maybe<Scalars['Boolean']['output']>;
+  renew_auto?: Maybe<Scalars['Boolean']['output']>;
+  /** The last day GoDaddy will still renew it. */
+  renew_deadline?: Maybe<Scalars['String']['output']>;
+  renewable?: Maybe<Scalars['Boolean']['output']>;
+  /** GoDaddy's own status, e.g. ACTIVE. */
+  status?: Maybe<Scalars['String']['output']>;
+  transfer_protected?: Maybe<Scalars['Boolean']['output']>;
+};
+
+/** One host as production and staging each hold it. */
+export type DnsHostPair = {
+  __typename?: 'DnsHostPair';
+  /** Whether syncing can repair it — false with no production record to copy. */
+  fixable: Scalars['Boolean']['output'];
+  host: Scalars['String']['output'];
+  /** type|production name. */
+  id: Scalars['String']['output'];
+  /** The production name, relative to the domain. */
+  name: Scalars['String']['output'];
+  production_values: Array<Scalars['String']['output']>;
+  staging_host: Scalars['String']['output'];
+  staging_name: Scalars['String']['output'];
+  staging_values: Array<Scalars['String']['output']>;
+  state: DnsPairState;
+  /** The production TTL a sync would copy. */
+  ttl?: Maybe<Scalars['Int']['output']>;
+  type: Scalars['String']['output'];
+};
+
+/** What the two stacks hold for one host. */
+export type DnsPairState =
+  /** Both stacks answer, with the same values. */
+  | 'MATCHED'
+  /** Staging answers for a host production no longer has. */
+  | 'MISSING_PRODUCTION'
+  /** Production answers and staging does not — the staging URL resolves nowhere. */
+  | 'MISSING_STAGING'
+  /** Both answer, at different addresses. */
+  | 'VALUE_DIFFERS';
+
 /** One record in the zone, as GoDaddy holds it. */
 export type DnsRecord = {
   __typename?: 'DnsRecord';
@@ -5387,6 +6174,7 @@ export type DnsRecord = {
   name: Scalars['String']['output'];
   /** MX and SRV only. */
   priority?: Maybe<Scalars['Int']['output']>;
+  scope: DnsScope;
   /** Seconds. */
   ttl: Scalars['Int']['output'];
   /** A, AAAA, CNAME, MX, TXT, CAA, NS, SOA or SRV. A string, so a type GoDaddy adds never fails the listing. */
@@ -5409,15 +6197,65 @@ export type DnsRecordRef = {
   type: Scalars['String']['input'];
 };
 
-/** The DNS zone managed from Tech → DNS Config, and the rules its editor follows. */
+/** Which stack a record answers for, read off its name: staging.* is the replica. */
+export type DnsScope =
+  | 'PRODUCTION'
+  | 'STAGING';
+
+/** Staging beside production, host by host. */
+export type DnsStagingCompare = {
+  __typename?: 'DnsStagingCompare';
+  differs: Scalars['Int']['output'];
+  in_sync: Scalars['Boolean']['output'];
+  matched: Scalars['Int']['output'];
+  missing_production: Scalars['Int']['output'];
+  missing_staging: Scalars['Int']['output'];
+  /** The types that name a host, and so have a staging twin at all. */
+  paired_types: Array<Scalars['String']['output']>;
+  pairs: Array<DnsHostPair>;
+  /** Records counted across the paired types only. */
+  production_count: Scalars['Int']['output'];
+  staging_count: Scalars['Int']['output'];
+};
+
+/** What syncing one host onto staging did. */
+export type DnsSyncOutcome = {
+  __typename?: 'DnsSyncOutcome';
+  host: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** GoDaddy's reason, when it refused. */
+  message?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+};
+
+export type DnsSyncResult = {
+  __typename?: 'DnsSyncResult';
+  failed: Scalars['Int']['output'];
+  outcomes: Array<DnsSyncOutcome>;
+  synced: Scalars['Int']['output'];
+};
+
+/** How many records of one type each stack holds. */
+export type DnsTypeGroup = {
+  __typename?: 'DnsTypeGroup';
+  production: Scalars['Int']['output'];
+  staging: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  type: Scalars['String']['output'];
+};
+
+/** The DNS zone managed from Tech → Domain, and the rules its editor follows. */
 export type DnsZone = {
   __typename?: 'DnsZone';
+  /** Every record type in the zone, with its production and staging counts. */
+  by_type: Array<DnsTypeGroup>;
   /** Whether the default GoDaddy entry holds a key, a secret and a domain. */
   configured: Scalars['Boolean']['output'];
   domain: Scalars['String']['output'];
   max_ttl: Scalars['Int']['output'];
   min_ttl: Scalars['Int']['output'];
   records: Array<DnsRecord>;
+  staging: DnsStagingCompare;
   writable_types: Array<Scalars['String']['output']>;
 };
 
@@ -5486,6 +6324,497 @@ export type DummyProductCheckoutInput = {
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/**
+ * A main flow the Tech team documents for the e2e suite, e.g. User
+ * Authentication. Tech > E2E Tests > Flows.
+ */
+export type E2eFlow = {
+  __typename?: 'E2eFlow';
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** The portal account that added it; system for the flows seeded from the codebase. */
+  created_by: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** How many of its sub flows are marked LOOKS_GOOD. */
+  looks_good_count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  sub_flow_count: Scalars['Int']['output'];
+  sub_flows: Array<E2eSubFlow>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type E2eFlowInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
+/** One step of a sub flow: what the person does, and what should happen. */
+export type E2eFlowStep = {
+  __typename?: 'E2eFlowStep';
+  action: Scalars['String']['output'];
+  /** Empty when the step has no stated outcome. */
+  expected: Scalars['String']['output'];
+};
+
+export type E2eFlowStepInput = {
+  action: Scalars['String']['input'];
+  expected?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type E2eFlowTablePage = {
+  __typename?: 'E2eFlowTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<E2eFlow>;
+  total: Scalars['Int']['output'];
+};
+
+/** A one-time code held for the e2e run account instead of being sent. */
+export type E2eOneTimeCode = {
+  __typename?: 'E2eOneTimeCode';
+  code: Scalars['String']['output'];
+  expires_at: Scalars['String']['output'];
+  issued_at: Scalars['String']['output'];
+  /** LOGIN, PASSWORD_RESET, WHATSAPP_SIGNUP, WHATSAPP_CHANGE, EMAIL_VERIFICATION, PASSWORD_CHANGE, ACCOUNT_DELETION or PORTAL_LOGIN. */
+  purpose: Scalars['String']['output'];
+};
+
+export type E2ePurgeReport = {
+  __typename?: 'E2ePurgeReport';
+  /** How many accounts were removed — the run account and any address it derived. */
+  accounts_deleted: Scalars['Int']['output'];
+  /** Per collection, what else was removed: one-time codes and the run's uploads. */
+  records: Array<E2ePurgedCollection>;
+};
+
+export type E2ePurgedCollection = {
+  __typename?: 'E2ePurgedCollection';
+  collection: Scalars['String']['output'];
+  deleted: Scalars['Int']['output'];
+};
+
+/** A tech admin's verdict on a sub flow. Only LOOKS_GOOD journeys are ready for e2e. */
+export type E2eReviewStatus =
+  | 'LOOKS_GOOD'
+  | 'NEEDS_REVIEW'
+  | 'NOT_REVIEWED';
+
+/**
+ * One end-to-end run of the suite — made by the E2E GitHub Actions workflow,
+ * nightly on the configured schedule or on demand from Tech > E2E Tests. The row
+ * is the store of record; the GitHub run log expires, this does not.
+ */
+export type E2eRun = {
+  __typename?: 'E2eRun';
+  commit_sha: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * Correlates the row the portal wrote at dispatch with the reports the runner
+   * sends afterwards. Empty on a run started by hand from the Actions tab, which
+   * has a run id from its first report and needs no other join key.
+   */
+  dispatch_id: Scalars['String']['output'];
+  duration_seconds?: Maybe<Scalars['Int']['output']>;
+  /** Why the run failed. Empty on every other status. */
+  error_message: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  identity_phone: Scalars['String']['output'];
+  /**
+   * The dynamic half of this run's identity — ddMMyyyyHHmm in the platform's own
+   * timezone. This is how you find, weeks later, the account a run created.
+   */
+  identity_stamp: Scalars['String']['output'];
+  /** The account the suite signs IN as. The same address on every run. */
+  login_email: Scalars['String']['output'];
+  /** The branch the suite ran against. */
+  ref: Scalars['String']['output'];
+  /** Who the CI authenticated as when it reported. */
+  reported_by: Scalars['String']['output'];
+  /**
+   * Which suites were asked for. EMPTY MEANS EVERY SUITE, the same convention
+   * the workflow's filter uses, so "all" is one shape rather than a list that
+   * has to be kept in step with the matrix.
+   */
+  requested_suites: Array<Scalars['String']['output']>;
+  /** What each leg did, in the order the legs reported. */
+  results: Array<E2eSuiteResult>;
+  /** Permanent human-readable id (DUN-E2E-000001). */
+  run_no: Scalars['String']['output'];
+  /** One clip per scenario, in the order they ran, for the suites that record them. */
+  scenario_videos: Array<E2eScenarioVideo>;
+  /** The account the suite signs UP as. Unique to this run. */
+  signup_email: Scalars['String']['output'];
+  /** Which channel this run was announced on, when it was. */
+  slack_channel?: Maybe<Scalars['String']['output']>;
+  /** Why the Slack post did not happen, when it did not. */
+  slack_error?: Maybe<Scalars['String']['output']>;
+  slack_ts?: Maybe<Scalars['String']['output']>;
+  /** What the workflow is doing now. Empty once the run is over. */
+  stage: Scalars['String']['output'];
+  stages: Array<E2eRunStage>;
+  status: E2eRunStatus;
+  totals: E2eRunTotals;
+  trigger_source: E2eRunTrigger;
+  /** Who started it — the portal account, the scheduler, or the GitHub actor. */
+  triggered_by: Scalars['String']['output'];
+  /**
+   * Why the recordings did not reach Slack, when the announcement itself did.
+   * A separate fact from slack_error: a message that posted with no videos
+   * under it was still delivered.
+   */
+  video_error?: Maybe<Scalars['String']['output']>;
+  workflow_run_id: Scalars['String']['output'];
+  workflow_run_url: Scalars['String']['output'];
+};
+
+/**
+ * The account the suite should use. Handed to the runner and to nobody else:
+ * the password never travels as a workflow input, because a dispatch input is
+ * shown in the run's own UI.
+ */
+export type E2eRunCredentials = {
+  __typename?: 'E2eRunCredentials';
+  /** The run account's address. The same address as signup_email: one account per run. */
+  login_email: Scalars['String']['output'];
+  password: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  signup_email: Scalars['String']['output'];
+  stamp: Scalars['String']['output'];
+};
+
+/**
+ * The nightly schedule and the identity the suite runs as.
+ *
+ * time_of_day is wall-clock time in the platform's configured timezone, not the
+ * server's UTC — an operator picking 03:00 means their own quiet hour. The
+ * schedule lives HERE rather than in the workflow's own cron so that changing it
+ * is a setting rather than a commit; the workflow has no schedule trigger of its
+ * own, which is also why there is never a doubled run.
+ */
+export type E2eRunSettings = {
+  __typename?: 'E2eRunSettings';
+  /**
+   * False when the bot token has no 'files:write' scope, which is the one thing
+   * that stops recordings reaching Slack while everything else about the
+   * integration works. Null when Slack is not configured at all.
+   */
+  can_upload_videos?: Maybe<Scalars['Boolean']['output']>;
+  email_domain: Scalars['String']['output'];
+  /** The local part the run identities are built from, e.g. suryansh. */
+  email_prefix: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  frequency: E2eScheduleFrequency;
+  identity_phone: Scalars['String']['output'];
+  /** How many runs to keep. Older rows are pruned after each scheduled run. */
+  keep_last: Scalars['Int']['output'];
+  /** When CI last reported any run. Null means the workflow has never reached us. */
+  last_reported_at?: Maybe<Scalars['String']['output']>;
+  /** Which account the last report authenticated as. */
+  last_reported_by?: Maybe<Scalars['String']['output']>;
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * What the next run's addresses would look like, built with the current time
+   * so the operator can see the shape before saving. Empty until a prefix and a
+   * domain are set.
+   */
+  login_email_preview: Scalars['String']['output'];
+  /**
+   * Hold every outbound email and WhatsApp message inside the platform. Each is
+   * still recorded in its own log with the reason it did not go. It does NOT
+   * reveal one-time codes — that is otp_bypass.
+   */
+  mute_communications: Scalars['Boolean']['output'];
+  /** When the schedule next fires, or null when it is off. */
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * Return one-time codes in the API response instead of sending them, so a
+   * suite can finish a signup or a passwordless sign-in. Expiry, attempt limit
+   * and single use are unchanged. Never on for a production database.
+   */
+  otp_bypass: Scalars['Boolean']['output'];
+  /**
+   * Whether a password has been saved. The password itself is never returned —
+   * it goes to the runner and nowhere else.
+   */
+  password_set: Scalars['Boolean']['output'];
+  /**
+   * Record every suite from start to end and post the videos to the results
+   * channel. Off means the run still reports its counts and announces itself,
+   * with nothing to watch.
+   */
+  record_videos: Scalars['Boolean']['output'];
+  /** The branch scheduled runs are dispatched against. */
+  ref: Scalars['String']['output'];
+  signup_email_preview: Scalars['String']['output'];
+  /**
+   * Slack channel ID a finished run announces to. Stored on the SLACK env entry
+   * beside the bot token, so Environment Variables shows it too. Empty means the
+   * result is recorded here and announced nowhere.
+   */
+  slack_channel?: Maybe<Scalars['String']['output']>;
+  /** False when no Slack bot token is configured, which is why the picker is empty. */
+  slack_configured: Scalars['Boolean']['output'];
+  /** Which suites a scheduled run asks for. Empty means every one of them. */
+  suites: Array<Scalars['String']['output']>;
+  /** Wall-clock HH:mm in the platform's timezone. */
+  time_of_day: Scalars['String']['output'];
+  /** 0-6, Sunday first. Only read when frequency is WEEKLY. */
+  weekday: Scalars['Int']['output'];
+};
+
+/** A stage the workflow entered, stamped when it got there. */
+export type E2eRunStage = {
+  __typename?: 'E2eRunStage';
+  at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** What a workflow gets when it claims its run. */
+export type E2eRunStart = {
+  __typename?: 'E2eRunStart';
+  /**
+   * Null when no identity has been configured, which is legal — every suite in
+   * this repo stubs its GraphQL and none of them signs in, so a missing identity
+   * must not stop the suite from running.
+   */
+  credentials?: Maybe<E2eRunCredentials>;
+  run: E2eRun;
+  /** The suites this run should execute. Empty means every one of them. */
+  suites: Array<Scalars['String']['output']>;
+};
+
+/**
+ * QUEUED belongs to a run started from the Tech portal or by the nightly
+ * schedule: dispatching a workflow answers with no run id, so the row is written
+ * first and the runner claims it by dispatch_id. A QUEUED row that never becomes
+ * RUNNING means GitHub accepted the dispatch and never scheduled it.
+ *
+ * RUNNING is written when the workflow starts and replaced in place when it
+ * finishes. A row can sit RUNNING forever if the runner was cancelled or killed
+ * — nothing is left to report it — so treat an old RUNNING row as unknown.
+ */
+export type E2eRunStatus =
+  | 'FAILED'
+  | 'QUEUED'
+  | 'RUNNING'
+  | 'SUCCESS';
+
+export type E2eRunTablePage = {
+  __typename?: 'E2eRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<E2eRun>;
+  total: Scalars['Int']['output'];
+};
+
+/** The run's arithmetic, summed from the suite results as they land. */
+export type E2eRunTotals = {
+  __typename?: 'E2eRunTotals';
+  failed: Scalars['Int']['output'];
+  passed: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+  suites: Scalars['Int']['output'];
+  suites_failed: Scalars['Int']['output'];
+  suites_passed: Scalars['Int']['output'];
+  suites_skipped: Scalars['Int']['output'];
+  tests: Scalars['Int']['output'];
+};
+
+/** What started a run. */
+export type E2eRunTrigger =
+  /** Someone started the workflow by hand from the GitHub Actions tab. */
+  | 'MANUAL'
+  /** Someone pressed Run tests in the Tech portal. */
+  | 'PORTAL'
+  /** The nightly schedule in Tech > E2E Tests > Settings. */
+  | 'SCHEDULE';
+
+export type E2eRunVideoInput = {
+  bytes?: InputMaybe<Scalars['Int']['input']>;
+  /** The file_id handed back by e2eVideoUploadAuth, once its bytes are in. */
+  file_id: Scalars['String']['input'];
+  seconds?: InputMaybe<Scalars['Int']['input']>;
+  suite: Scalars['String']['input'];
+};
+
+/**
+ * One scenario's clip — a single test, cut out of its spec's recording and
+ * posted under the run's message beside the suite videos. Only the suites that
+ * record where each test began and ended produce these; today that is the live
+ * mWeb suite.
+ */
+export type E2eScenarioVideo = {
+  __typename?: 'E2eScenarioVideo';
+  bytes?: Maybe<Scalars['Int']['output']>;
+  file_id: Scalars['String']['output'];
+  /** Where the clip sits in Slack. Empty until the finished run shares it. */
+  permalink: Scalars['String']['output'];
+  seconds?: Maybe<Scalars['Int']['output']>;
+  /** The spec file, relative to the suite. */
+  spec: Scalars['String']['output'];
+  /** Mocha's word for it: passed, failed, pending. */
+  state: Scalars['String']['output'];
+  /** The suite the scenario ran in — one of results[].key. */
+  suite: Scalars['String']['output'];
+  /** The test's full title, e.g. 'Sign in › wrong password is refused'. */
+  title: Scalars['String']['output'];
+};
+
+export type E2eScenarioVideoInput = {
+  bytes?: InputMaybe<Scalars['Int']['input']>;
+  /** The file_id handed back by e2eVideoUploadAuth, once its bytes are in. */
+  file_id: Scalars['String']['input'];
+  seconds?: InputMaybe<Scalars['Int']['input']>;
+  spec?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Scalars['String']['input']>;
+  suite: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+export type E2eScheduleFrequency =
+  | 'DAILY'
+  | 'WEEKLY';
+
+/** A journey inside a flow, e.g. User Login inside User Authentication. */
+export type E2eSubFlow = {
+  __typename?: 'E2eSubFlow';
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  review_status: E2eReviewStatus;
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  /** The portal account that last reviewed it; empty until someone does. */
+  reviewed_by: Scalars['String']['output'];
+  steps: Array<E2eFlowStep>;
+};
+
+export type E2eSubFlowInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** At least one step. */
+  steps: Array<E2eFlowStepInput>;
+};
+
+/** A suite that can be asked for, as offered by the Tech portal's picker. */
+export type E2eSuite = {
+  __typename?: 'E2eSuite';
+  group: E2eSuiteGroup;
+  /** The matrix leg's name — this is what travels in the workflow input. */
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+/** Which part of the platform a suite drives. */
+export type E2eSuiteGroup =
+  | 'APP'
+  | 'PORTAL'
+  | 'SHARED';
+
+/**
+ * What one leg of the matrix did. The counts come from the JUnit report Cypress
+ * writes; a leg that produced none still reports its status, so a suite that died
+ * before Cypress started is a red row rather than a missing one.
+ */
+export type E2eSuiteResult = {
+  __typename?: 'E2eSuiteResult';
+  duration_seconds?: Maybe<Scalars['Int']['output']>;
+  /** Why it failed, in the runner's own words. Empty on every other status. */
+  error: Scalars['String']['output'];
+  failed?: Maybe<Scalars['Int']['output']>;
+  /** The GitHub job this leg ran as, so a red row leads straight to its log. */
+  job_url: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  passed?: Maybe<Scalars['Int']['output']>;
+  reported_at?: Maybe<Scalars['String']['output']>;
+  skipped?: Maybe<Scalars['Int']['output']>;
+  specs?: Maybe<Scalars['Int']['output']>;
+  status: E2eSuiteStatus;
+  tests?: Maybe<Scalars['Int']['output']>;
+  video_bytes?: Maybe<Scalars['Int']['output']>;
+  /**
+   * The Slack file this leg's recording became — every spec it ran, stitched
+   * into one video of the suite from start to end. Empty when nothing was
+   * recorded, which is every suite with no browser and every run whose token
+   * lacks 'files:write'.
+   */
+  video_file_id: Scalars['String']['output'];
+  /** Where that recording sits in Slack. Empty until the finished run shares it. */
+  video_permalink: Scalars['String']['output'];
+  video_seconds?: Maybe<Scalars['Int']['output']>;
+};
+
+export type E2eSuiteResultInput = {
+  duration_seconds?: InputMaybe<Scalars['Int']['input']>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  failed?: InputMaybe<Scalars['Int']['input']>;
+  job_url?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  passed?: InputMaybe<Scalars['Int']['input']>;
+  skipped?: InputMaybe<Scalars['Int']['input']>;
+  specs?: InputMaybe<Scalars['Int']['input']>;
+  status: E2eSuiteStatus;
+  tests?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
+ * One suite's outcome. SKIPPED is not a failure — it is what a leg the operator
+ * did not select reports, and telling it apart from PASSED is the difference
+ * between "the admin suite is green" and "nobody ran the admin suite".
+ */
+export type E2eSuiteStatus =
+  | 'FAILED'
+  | 'PASSED'
+  | 'RUNNING'
+  | 'SKIPPED';
+
+/** Whether the portal can start runs, and what it would run. */
+export type E2eTriggerConfig = {
+  __typename?: 'E2eTriggerConfig';
+  /**
+   * False when no GitHub token is configured. The Run tests button is disabled
+   * rather than hidden, so the reason is discoverable.
+   */
+  configured: Scalars['Boolean']['output'];
+  /** The branch a run defaults to. */
+  default_ref: Scalars['String']['output'];
+  /**
+   * Where a dispatched run reports back to — this server. A run always records
+   * itself in the portal it was started from.
+   */
+  reports_to: Scalars['String']['output'];
+  /** owner/repo runs are dispatched against. Empty when not configured. */
+  repository: Scalars['String']['output'];
+};
+
+/**
+ * A pre-authorised place to put one recording's bytes.
+ *
+ * 'ok: false' is a normal answer, not an error: videos are switched off, no
+ * results channel is configured, or the bot token has no 'files:write'. CI reads
+ * 'reason', says so in its log and moves on — a run must never go red because
+ * nobody could watch it afterwards.
+ */
+export type E2eVideoUploadAuth = {
+  __typename?: 'E2eVideoUploadAuth';
+  /** The handle the finished run shares this file by. */
+  file_id: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  /** Why there is no upload URL, when there is not. */
+  reason: Scalars['String']['output'];
+  /** Where to POST the bytes. Pre-authorised — it carries no bot token. */
+  upload_url: Scalars['String']['output'];
+};
+
+export type E2eVideoUploadAuthInput = {
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  file_name: Scalars['String']['input'];
+  /** Exact byte count. Slack checks it against what actually arrives. */
+  length: Scalars['Int']['input'];
+  /** The matrix leg this recording is of. */
+  suite: Scalars['String']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type EarningsSummary = {
   __typename?: 'EarningsSummary';
   currency_symbol: Scalars['String']['output'];
@@ -5506,6 +6835,10 @@ export type EcommBrand = {
   /** Permanent human id (BRD-000001) — Onboarded Brands table. */
   brand_no?: Maybe<Scalars['String']['output']>;
   city: Scalars['String']['output'];
+  /** Wizard progress — required steps done, as a percentage. */
+  completion: BrandCompletion;
+  /** The Brand Consent as signed by the owner. */
+  consent: BrandConsent;
   contact_email: Scalars['String']['output'];
   contact_person: Scalars['String']['output'];
   contact_phone: Scalars['String']['output'];
@@ -5520,6 +6853,8 @@ export type EcommBrand = {
   id: Scalars['ID']['output'];
   ifsc_code: Scalars['String']['output'];
   instagram_url: Scalars['String']['output'];
+  /** The brand's own ShipRocket and Razorpay accounts, and whether each connects. */
+  integrations: BrandIntegrations;
   is_active: Scalars['Boolean']['output'];
   logo_url: Scalars['String']['output'];
   owner_user_id: Scalars['ID']['output'];
@@ -5942,12 +7277,79 @@ export type EmailTestResult = {
 };
 
 /**
- * What a one-time entity-id repair did.
- *
- * Every entity whose id is minted on insert (contracts, documents, policies …)
- * needs the same one-off pass for rows written before that id existed, and each
- * one answers the same single question: how many did it have to fix.
+ * One out-of-pocket spend an employee is claiming back. The employee files it
+ * from the Employee console; Finance decides on it from Finance > Employee
+ * Expenses. The employee name and email are joined on for the Finance list —
+ * the employee's own list already knows whose claims it is showing.
  */
+export type EmployeeExpense = {
+  __typename?: 'EmployeeExpense';
+  amount: Scalars['Float']['output'];
+  /** The supplier's bill / invoice number, as printed on the document. */
+  bill_number: Scalars['String']['output'];
+  /** The uploaded bill or receipt (image or PDF). Empty when none is attached. */
+  bill_url: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  /** Human-readable claim reference, e.g. DUN-EXP-4F2A19. */
+  claim_id: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  date: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  employee_email: Scalars['String']['output'];
+  employee_id: Scalars['ID']['output'];
+  employee_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Who was paid — the shop, airline or vendor on the receipt. */
+  merchant: Scalars['String']['output'];
+  payment_method: Scalars['String']['output'];
+  reference: Scalars['String']['output'];
+  /** Finance's note on the decision — the reason a rejection gives back. */
+  review_note: Scalars['String']['output'];
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  reviewed_by?: Maybe<Scalars['ID']['output']>;
+  status: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type EmployeeExpenseInput = {
+  amount: Scalars['Float']['input'];
+  bill_number?: InputMaybe<Scalars['String']['input']>;
+  bill_url?: InputMaybe<Scalars['String']['input']>;
+  category: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  merchant?: InputMaybe<Scalars['String']['input']>;
+  payment_method?: InputMaybe<Scalars['String']['input']>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * The tiles above either list. On the employee's own page the numbers are
+ * their claims; on the Finance page they are every employee's.
+ */
+export type EmployeeExpenseSummary = {
+  __typename?: 'EmployeeExpenseSummary';
+  approved_count: Scalars['Int']['output'];
+  approved_total: Scalars['Float']['output'];
+  claim_count: Scalars['Int']['output'];
+  claimed_total: Scalars['Float']['output'];
+  /** Distinct employees with at least one claim. Always 1 on the employee's own page. */
+  employee_count: Scalars['Int']['output'];
+  pending_count: Scalars['Int']['output'];
+  pending_total: Scalars['Float']['output'];
+  rejected_count: Scalars['Int']['output'];
+  rejected_total: Scalars['Float']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type EmployeeExpenseTablePage = {
+  __typename?: 'EmployeeExpenseTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EmployeeExpense>;
+  total: Scalars['Int']['output'];
+};
+
 export type EntityAnalytics = {
   __typename?: 'EntityAnalytics';
   breakdowns: Array<AnalyticsBreakdown>;
@@ -5961,6 +7363,80 @@ export type EntityAnalytics = {
   trends: Array<AnalyticsTrend>;
 };
 
+/** A directory record that carries a change log. */
+export type EntityAuditType =
+  | 'CLUB'
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'REGION'
+  | 'VENUE';
+
+/** What happened to the record (not to the individual field). */
+export type EntityChangeAction =
+  | 'CREATE'
+  | 'DELETE'
+  | 'UPDATE';
+
+/**
+ * Who made the change, relative to the record it changed. The partner the
+ * record belongs to editing their own is OWNER, anybody else signed in is
+ * ADMIN, and a write with no signed-in caller (a sweep, a webhook, a boot task)
+ * is SYSTEM.
+ */
+export type EntityChangeActorType =
+  | 'ADMIN'
+  | 'OWNER'
+  | 'SYSTEM';
+
+/** One immutable entry: one field of one record, changed once. */
+export type EntityChangeLog = {
+  __typename?: 'EntityChangeLog';
+  action: EntityChangeAction;
+  actor_name: Scalars['String']['output'];
+  actor_type: EntityChangeActorType;
+  /** The account that made the change; null for SYSTEM writes. */
+  actor_user_id?: Maybe<Scalars['ID']['output']>;
+  /** When the change was recorded. */
+  created_at: Scalars['String']['output'];
+  /** The record the change was made TO. */
+  entity_id: Scalars['ID']['output'];
+  /** Its name at the time, so a row still reads after a rename. */
+  entity_label: Scalars['String']['output'];
+  entity_type: EntityAuditType;
+  /** Document path of the field, e.g. settings.rules.buffer_minutes. */
+  field: Scalars['String']['output'];
+  /** Human label for the same field, e.g. Buffer Between Slots (min). */
+  field_label: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  new_value: Scalars['String']['output'];
+  old_value: Scalars['String']['output'];
+  source: EntityChangeSource;
+};
+
+/** Server-side table page for the shared table engine. */
+export type EntityChangeLogTablePage = {
+  __typename?: 'EntityChangeLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<EntityChangeLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** Which surface the change was made from. */
+export type EntityChangeSource =
+  | 'ADMIN_PORTAL'
+  | 'MWEB'
+  | 'NATIVE'
+  | 'PORTAL'
+  | 'SERVER';
+
+/**
+ * What a one-time entity-id repair did.
+ *
+ * Every entity whose id is minted on insert (contracts, documents, policies …)
+ * needs the same one-off pass for rows written before that id existed, and each
+ * one answers the same single question: how many did it have to fix.
+ */
 export type EntityIdBackfillResult = {
   __typename?: 'EntityIdBackfillResult';
   repaired: Scalars['Int']['output'];
@@ -5969,12 +7445,14 @@ export type EntityIdBackfillResult = {
 export type EnvCategory =
   | 'AISENSY'
   | 'APPLE_SIGNIN'
+  | 'APP_STORE_CONNECT'
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
   | 'GODADDY'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
+  | 'GOOGLE_PLAY'
   | 'IMAGEKIT'
   | 'MSG91'
   | 'OPENAI'
@@ -5983,6 +7461,7 @@ export type EnvCategory =
   | 'SERVAM'
   | 'SHIPROCKET'
   | 'SLACK'
+  | 'SOCIAL_APPS'
   | 'SONARQUBE'
   | 'TURN'
   | 'TWILIO';
@@ -6194,8 +7673,16 @@ export type EventTicketVerifyResult = {
 export type Expense = {
   __typename?: 'Expense';
   amount: Scalars['Float']['output'];
+  /** Receipt / proof of the spend (image or PDF). Empty when none is attached. */
   attachment_url: Scalars['String']['output'];
   category: Scalars['String']['output'];
+  compensated_amount: Scalars['Float']['output'];
+  compensation_date?: Maybe<Scalars['String']['output']>;
+  /** Configured COMPENSATION_METHOD key, or '' until somebody decides. */
+  compensation_method: Scalars['String']['output'];
+  compensation_reference: Scalars['String']['output'];
+  /** PENDING | PARTIAL | FULL | REJECTED — derived from the money, not typed. */
+  compensation_status: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
   created_by?: Maybe<Scalars['ID']['output']>;
   date: Scalars['String']['output'];
@@ -6203,12 +7690,30 @@ export type Expense = {
   expense_id: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   net_amount: Scalars['Float']['output'];
+  /** Who actually paid it out. */
+  paid_by: Scalars['String']['output'];
   payment_method: Scalars['String']['output'];
+  /** amount - compensated_amount, floored at 0. */
+  pending_compensation: Scalars['Float']['output'];
   reference: Scalars['String']['output'];
   refund_total: Scalars['Float']['output'];
   refunds: Array<ExpenseRefund>;
+  related_from_id?: Maybe<Scalars['ID']['output']>;
+  /** The entity's name AS FILED — a snapshot, so a rename never rewrites history. */
+  related_from_name: Scalars['String']['output'];
+  /** Configured RELATED_FROM_TYPE key, or '' when the expense is unattributed. */
+  related_from_type: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
+  updated_by?: Maybe<Scalars['ID']['output']>;
   vendor_name: Scalars['String']['output'];
+};
+
+/** One bar of a dashboard breakdown. An empty key is 'not attributed'. */
+export type ExpenseBreakdownSlice = {
+  __typename?: 'ExpenseBreakdownSlice';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
 };
 
 export type ExpenseCategoryTotal = {
@@ -6217,14 +7722,88 @@ export type ExpenseCategoryTotal = {
   total: Scalars['Float']['output'];
 };
 
+/**
+ * Everything Finance > Expenses > Dashboard renders, from one matched set.
+ *
+ * Keys in the breakdowns are the STORED option keys; the labels come from
+ * expenseOptions, which the page already reads for its filters.
+ */
+export type ExpenseDashboard = {
+  __typename?: 'ExpenseDashboard';
+  by_category: Array<ExpenseBreakdownSlice>;
+  by_compensation_method: Array<ExpenseBreakdownSlice>;
+  by_related_type: Array<ExpenseBreakdownSlice>;
+  /** Calendar month totals, deliberately ignoring the page's date filter. */
+  current_month_total: Scalars['Float']['output'];
+  expense_count: Scalars['Int']['output'];
+  full_count: Scalars['Int']['output'];
+  full_total: Scalars['Float']['output'];
+  partial_count: Scalars['Int']['output'];
+  partial_total: Scalars['Float']['output'];
+  /** Still owed on everything not rejected. */
+  pending_compensation_amount: Scalars['Float']['output'];
+  pending_count: Scalars['Int']['output'];
+  pending_total: Scalars['Float']['output'];
+  previous_month_total: Scalars['Float']['output'];
+  rejected_count: Scalars['Int']['output'];
+  rejected_total: Scalars['Float']['output'];
+  total_compensation_amount: Scalars['Float']['output'];
+  total_expenses: Scalars['Float']['output'];
+};
+
 export type ExpenseFilterInput = {
   category?: InputMaybe<Scalars['String']['input']>;
+  compensation_method?: InputMaybe<Scalars['String']['input']>;
+  compensation_status?: InputMaybe<Scalars['String']['input']>;
   from?: InputMaybe<Scalars['String']['input']>;
   max_amount?: InputMaybe<Scalars['Float']['input']>;
   min_amount?: InputMaybe<Scalars['Float']['input']>;
+  paid_by?: InputMaybe<Scalars['String']['input']>;
   payment_method?: InputMaybe<Scalars['String']['input']>;
+  related_from_id?: InputMaybe<Scalars['ID']['input']>;
+  related_from_type?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * One row of one Expense dropdown, edited from Finance > Settings > Expense
+ * Settings. The four lists are told apart by 'kind': RELATED_FROM_TYPE,
+ * CATEGORY, PAYMENT_METHOD, COMPENSATION_METHOD.
+ */
+export type ExpenseOption = {
+  __typename?: 'ExpenseOption';
+  created_at: Scalars['String']['output'];
+  /** RELATED_FROM_TYPE only: which entity list its picker searches. */
+  entity_source: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** Seeded by the platform: rewordable and switchable, never deletable. */
+  is_system: Scalars['Boolean']['output'];
+  /** CONSTANT_CASE code an expense stores. Never changes after creation. */
+  key: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  /** What a person reads. Editable without touching a single stored expense. */
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+  /**
+   * How many expenses point at this option — only ever 0 for a deletable row.
+   *
+   * Counted for the SETTINGS read and null for the form dropdown, which asks a
+   * different question and should not pay for four count queries to answer it.
+   */
+  usage_count?: Maybe<Scalars['Int']['output']>;
+};
+
+export type ExpenseOptionInput = {
+  /** RELATED_FROM_TYPE only; an unknown source name is dropped. */
+  entity_source?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Required on create, ignored on update — the key is what expenses store. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type ExpenseRefund = {
@@ -6234,6 +7813,15 @@ export type ExpenseRefund = {
   date: Scalars['String']['output'];
   note: Scalars['String']['output'];
   refund_id: Scalars['String']['output'];
+};
+
+/** One thing an expense can be attributed to, as the picker shows it. */
+export type ExpenseRelatedEntity = {
+  __typename?: 'ExpenseRelatedEntity';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** The human reference beside the name — a pod slug, VEN-000001, CADM-000001. */
+  reference: Scalars['String']['output'];
 };
 
 export type ExpenseSummary = {
@@ -6474,6 +8062,16 @@ export type FinanceStat = {
   total: Scalars['Float']['output'];
 };
 
+export type FinishStressRunInput = {
+  dispatch_id: Scalars['String']['input'];
+  endpoints?: InputMaybe<Array<StressEndpointInput>>;
+  error?: InputMaybe<Scalars['String']['input']>;
+  /** COMPLETED, ABORTED or FAILED. */
+  outcome: Scalars['String']['input'];
+  shard: Scalars['Int']['input'];
+  summary: StressSummaryInput;
+};
+
 /** A pending ask to follow a PRIVATE profile. Answering it is what creates the follow. */
 export type FollowRequest = {
   __typename?: 'FollowRequest';
@@ -6559,16 +8157,26 @@ export type FulfilmentStatus =
   | 'CANCELLED'
   | 'DELIVERED'
   | 'FAILED'
+  /** Lost or destroyed by the courier. */
   | 'LOST'
+  /** A delivery attempt failed and needs an answer (re-attempt or return). */
   | 'NDR'
   | 'OUT_FOR_DELIVERY'
   | 'PENDING'
   | 'PICKED_UP'
   | 'PICKUP_SCHEDULED'
   | 'READY_FOR_PICKUP'
+  /** Returning to origin. */
   | 'RTO'
+  /** Back at the warehouse after a return to origin. */
   | 'RTO_DELIVERED'
   | 'SHIPPED';
+
+/** Self-reported on Edit profile. */
+export type Gender =
+  | 'FEMALE'
+  | 'MALE'
+  | 'OTHER';
 
 /**
  * A purchased gift card. A bearer instrument: whoever holds the code holds the
@@ -6821,6 +8429,11 @@ export type GoogleSignupInput = {
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
   city?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Date of birth. A Google credential carries no birthday, so the client asks
+   * for it on the same step as the number — and it is as required as it is on
+   * the email door, because the joining age is checked against it.
+   */
   dob: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   phone_extension: Scalars['String']['input'];
@@ -6838,6 +8451,212 @@ export type GoogleSignupInput = {
   /** From verifySignupWhatsAppOtp. Spent here, once. */
   whatsapp_token: Scalars['String']['input'];
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type GrantE2eRunAccountRolesInput = {
+  /** The run account; must carry the stamp. */
+  email: Scalars['String']['input'];
+  /** Portal roles to add: SUPPORT_MANAGER, LEGAL_MANAGER, ALL_PODS_ACCESS. */
+  roles: Array<Scalars['String']['input']>;
+  /** The run's ddMMyyyyHHmm stamp. */
+  stamp: Scalars['String']['input'];
+};
+
+/** Errors grouped by operation, code, path and message shape. */
+export type GraphqlErrorGroup = {
+  __typename?: 'GraphqlErrorGroup';
+  code: Scalars['String']['output'];
+  count: Scalars['Float']['output'];
+  first_seen_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  operation_id: Scalars['String']['output'];
+  operation_name: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+/** One field of the schema with how much it was used. */
+export type GraphqlFieldUsage = {
+  __typename?: 'GraphqlFieldUsage';
+  arguments: Array<Scalars['String']['output']>;
+  avg_ms: Scalars['Float']['output'];
+  coordinate: Scalars['String']['output'];
+  deprecation_reason?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  error_rate_pct: Scalars['Float']['output'];
+  field_name: Scalars['String']['output'];
+  /** QUERY | MUTATION | SUBSCRIPTION for root fields, TYPE for every other. */
+  kind: Scalars['String']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  max_ms: Scalars['Float']['output'];
+  parent_type: Scalars['String']['output'];
+  /** Operations that selected this field — exact. */
+  referenced: Scalars['Float']['output'];
+  return_type: Scalars['String']['output'];
+  /** Resolver calls timed on sampled requests. */
+  sampled_calls: Scalars['Float']['output'];
+};
+
+export type GraphqlLatencyBucket = {
+  __typename?: 'GraphqlLatencyBucket';
+  count: Scalars['Float']['output'];
+  /** The slowest duration this bucket holds. */
+  le_ms: Scalars['Float']['output'];
+};
+
+export type GraphqlMonitorOverview = {
+  __typename?: 'GraphqlMonitorOverview';
+  avg_ms: Scalars['Float']['output'];
+  cached: Scalars['Float']['output'];
+  /** SURFACE:app, as the rate limiter names callers. */
+  clients: Array<GraphqlMonitorTally>;
+  error_codes: Array<GraphqlMonitorTally>;
+  error_rate_pct: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  execute_avg_ms: Scalars['Float']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  max_ms: Scalars['Float']['output'];
+  /** Distinct operations seen in the range. */
+  operation_count: Scalars['Int']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p90_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  parse_avg_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+  rpm: Scalars['Float']['output'];
+  series: Array<GraphqlMonitorPoint>;
+  validate_avg_ms: Scalars['Float']['output'];
+};
+
+export type GraphqlMonitorPoint = {
+  __typename?: 'GraphqlMonitorPoint';
+  at: Scalars['String']['output'];
+  errors: Scalars['Float']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+};
+
+export type GraphqlMonitorSettings = {
+  __typename?: 'GraphqlMonitorSettings';
+  /** Off means requests are not measured at all. */
+  enabled: Scalars['Boolean']['output'];
+  /** Share of requests whose resolvers are timed (field latency and traces). */
+  field_sample_pct: Scalars['Int']['output'];
+  /** How long hourly rollups, errors and traces are kept. Minute rollups keep 48 hours. */
+  retention_days: Scalars['Int']['output'];
+  /** p95 above this marks an operation slow in the console. */
+  slow_threshold_ms: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type GraphqlMonitorSettingsInput = {
+  enabled: Scalars['Boolean']['input'];
+  field_sample_pct: Scalars['Int']['input'];
+  retention_days: Scalars['Int']['input'];
+  slow_threshold_ms: Scalars['Int']['input'];
+};
+
+export type GraphqlMonitorTally = {
+  __typename?: 'GraphqlMonitorTally';
+  count: Scalars['Float']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type GraphqlOperationDetail = {
+  __typename?: 'GraphqlOperationDetail';
+  avg_ms: Scalars['Float']['output'];
+  cached: Scalars['Float']['output'];
+  clients: Array<GraphqlMonitorTally>;
+  error_codes: Array<GraphqlMonitorTally>;
+  error_rate_pct: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  execute_avg_ms: Scalars['Float']['output'];
+  /** Every Type.field the document selects. */
+  fields: Array<Scalars['String']['output']>;
+  first_seen_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  latency_distribution: Array<GraphqlLatencyBucket>;
+  max_ms: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p90_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  parse_avg_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+  root_fields: Array<Scalars['String']['output']>;
+  rpm: Scalars['Float']['output'];
+  series: Array<GraphqlMonitorPoint>;
+  /** The document as the server keys it: literals blanked, whitespace removed. */
+  signature: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  validate_avg_ms: Scalars['Float']['output'];
+};
+
+/**
+ * How one operation (or every operation together) performed over a range.
+ * Percentiles are read off a summed latency histogram, accurate to ±10%.
+ */
+export type GraphqlOperationSummary = {
+  __typename?: 'GraphqlOperationSummary';
+  avg_ms: Scalars['Float']['output'];
+  /** Requests answered from the response cache without executing. */
+  cached: Scalars['Float']['output'];
+  error_rate_pct: Scalars['Float']['output'];
+  /** Requests that answered with at least one error. */
+  errors: Scalars['Float']['output'];
+  execute_avg_ms: Scalars['Float']['output'];
+  /** The operation's signature hash — stable across requests and deploys. */
+  id: Scalars['ID']['output'];
+  last_seen_at?: Maybe<Scalars['String']['output']>;
+  max_ms: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p90_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  parse_avg_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+  root_fields: Array<Scalars['String']['output']>;
+  /** Requests per minute, averaged over the range. */
+  rpm: Scalars['Float']['output'];
+  /** QUERY | MUTATION | SUBSCRIPTION | UNKNOWN (a request that never became an operation). */
+  type: Scalars['String']['output'];
+  validate_avg_ms: Scalars['Float']['output'];
+};
+
+export type GraphqlResolverTiming = {
+  __typename?: 'GraphqlResolverTiming';
+  duration_ms: Scalars['Float']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  field_name: Scalars['String']['output'];
+  parent_type: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  return_type: Scalars['String']['output'];
+  /** Milliseconds from the start of the request. */
+  start_ms: Scalars['Float']['output'];
+};
+
+/** The slowest sampled request of one operation in one hour. */
+export type GraphqlTrace = {
+  __typename?: 'GraphqlTrace';
+  at?: Maybe<Scalars['String']['output']>;
+  client: Scalars['String']['output'];
+  duration_ms: Scalars['Float']['output'];
+  error_messages: Array<Scalars['String']['output']>;
+  execute_ms: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  op_key: Scalars['String']['output'];
+  parse_ms: Scalars['Float']['output'];
+  resolver_count: Scalars['Int']['output'];
+  /** Only on graphqlMonitorTrace — the list query leaves it out. */
+  resolvers?: Maybe<Array<GraphqlResolverTiming>>;
+  validate_ms: Scalars['Float']['output'];
 };
 
 /**
@@ -7500,15 +9319,6 @@ export type InventoryLinkedPod = {
 
 export type InventoryProduct = {
   __typename?: 'InventoryProduct';
-  chargeable_weight_kg: Scalars['Float']['output'];
-  hsn_code: Scalars['String']['output'];
-  is_fragile: Scalars['Boolean']['output'];
-  is_liquid: Scalars['Boolean']['output'];
-  mrp: Scalars['Float']['output'];
-  package_type: PackageType;
-  packaging_missing: Array<Scalars['String']['output']>;
-  shelf_life_days?: Maybe<Scalars['Int']['output']>;
-  volumetric_weight_kg: Scalars['Float']['output'];
   available_count: Scalars['Int']['output'];
   barcode: Scalars['String']['output'];
   batch_number: Scalars['String']['output'];
@@ -7517,6 +9327,8 @@ export type InventoryProduct = {
   breadth_cm: Scalars['Float']['output'];
   categories: Array<ProductCategory>;
   category_id?: Maybe<Scalars['ID']['output']>;
+  /** What a courier bills: the higher of the packed weight and the volumetric weight. */
+  chargeable_weight_kg: Scalars['Float']['output'];
   color: Scalars['String']['output'];
   commission_pct: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
@@ -7531,12 +9343,15 @@ export type InventoryProduct = {
   free_delivery_above?: Maybe<Scalars['Float']['output']>;
   height_cm: Scalars['Float']['output'];
   host_request_allowed: Scalars['Boolean']['output'];
+  hsn_code: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
   images: Array<Scalars['String']['output']>;
   inventory_count: Scalars['Int']['output'];
   is_active: Scalars['Boolean']['output'];
   is_duncit_delivery_partner: Scalars['Boolean']['output'];
+  is_fragile: Scalars['Boolean']['output'];
+  is_liquid: Scalars['Boolean']['output'];
   last_updated_by_id?: Maybe<Scalars['String']['output']>;
   last_updated_by_name: Scalars['String']['output'];
   length_cm: Scalars['Float']['output'];
@@ -7550,9 +9365,14 @@ export type InventoryProduct = {
   manufacturing_date?: Maybe<Scalars['String']['output']>;
   max_order_qty: Scalars['Int']['output'];
   min_order_qty: Scalars['Int']['output'];
+  /** Compare-at price of a product without variants. 0 = none. */
+  mrp: Scalars['Float']['output'];
   notify_low_stock: Scalars['Boolean']['output'];
   options: Array<ProductOption>;
   ownership: ProductOwnership;
+  package_type: PackageType;
+  /** Packaging values still missing before this product can ship with ShipRocket (empty = ready). */
+  packaging_missing: Array<Scalars['String']['output']>;
   /** Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product ships from. Required for Duncit-owned products. */
   pickup_location_id?: Maybe<Scalars['ID']['output']>;
   pod_available: Scalars['Boolean']['output'];
@@ -7566,6 +9386,7 @@ export type InventoryProduct = {
   /** Aggregate rating for the Pod Shop catalogue card (average + count + star split). */
   review_summary: ProductReviewSummary;
   selling_price: Scalars['Float']['output'];
+  shelf_life_days?: Maybe<Scalars['Int']['output']>;
   short_description: Scalars['String']['output'];
   size_label: Scalars['String']['output'];
   sku: Scalars['String']['output'];
@@ -7582,17 +9403,13 @@ export type InventoryProduct = {
   variants: Array<ProductVariant>;
   vendor_name: Scalars['String']['output'];
   visibility: InventoryVisibility;
+  /** L x B x H / 5000 of the packed parcel. */
+  volumetric_weight_kg: Scalars['Float']['output'];
   weight_kg: Scalars['Float']['output'];
   weight_volume: Scalars['String']['output'];
 };
 
 export type InventoryProductInput = {
-  hsn_code?: InputMaybe<Scalars['String']['input']>;
-  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
-  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
-  mrp?: InputMaybe<Scalars['Float']['input']>;
-  package_type?: InputMaybe<PackageType>;
-  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
@@ -7609,15 +9426,23 @@ export type InventoryProductInput = {
   free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   host_request_allowed?: InputMaybe<Scalars['Boolean']['input']>;
+  /** HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503). */
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   inventory_count?: InputMaybe<Scalars['Int']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
   low_stock_alert?: InputMaybe<Scalars['Int']['input']>;
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none. */
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  /** How a unit is packed for the courier (default BOX). */
+  package_type?: InputMaybe<PackageType>;
   /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
   pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
@@ -7626,6 +9451,8 @@ export type InventoryProductInput = {
   purchase_price?: InputMaybe<Scalars['Float']['input']>;
   reserved_count?: InputMaybe<Scalars['Int']['input']>;
   selling_price?: InputMaybe<Scalars['Float']['input']>;
+  /** Days a sealed unit stays good (food, medicine); null when it doesn't expire. */
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   short_description?: InputMaybe<Scalars['String']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<InventoryStatus>;
@@ -7686,6 +9513,64 @@ export type InvoiceTemplatesInput = {
   venue?: InputMaybe<PartyInvoiceTemplateInput>;
 };
 
+/**
+ * An iOS signing identity the server made through the App Store Connect API: an
+ * Apple Distribution certificate for a key pair generated on the server, and the
+ * App Store provisioning profile built on it. Identities are kept, never
+ * replaced, so an older build's files stay downloadable.
+ */
+export type IosSigning = {
+  __typename?: 'IosSigning';
+  bundle_id: Scalars['String']['output'];
+  certificate_serial: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Who generated it. */
+  created_by: Scalars['String']['output'];
+  /** When the certificate, and the profile built on it, stop signing. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  profile_name: Scalars['String']['output'];
+  team_id: Scalars['String']['output'];
+};
+
+/**
+ * Everything the ios-build workflow signs and uploads with. CI only — it carries
+ * private keys, and every read is logged.
+ */
+export type IosSigningBundle = {
+  __typename?: 'IosSigningBundle';
+  asc_issuer_id: Scalars['String']['output'];
+  asc_key_id: Scalars['String']['output'];
+  /** The .p8 as PEM. */
+  asc_private_key: Scalars['String']['output'];
+  bundle_id: Scalars['String']['output'];
+  p12_base64: Scalars['String']['output'];
+  p12_password: Scalars['String']['output'];
+  profile_base64: Scalars['String']['output'];
+  profile_name: Scalars['String']['output'];
+  profile_uuid: Scalars['String']['output'];
+  team_id: Scalars['String']['output'];
+};
+
+export type IosSigningFile = {
+  __typename?: 'IosSigningFile';
+  content_base64: Scalars['String']['output'];
+  file_name: Scalars['String']['output'];
+  /** The .p12's password. Empty for every other kind. */
+  password: Scalars['String']['output'];
+};
+
+/** The files an iOS signing identity can be downloaded as. */
+export type IosSigningFileKind =
+  /** The App Store Connect API key (.p8) the identity was made with. */
+  | 'API_KEY'
+  /** The Apple Distribution certificate (.cer) — public, no key. */
+  | 'CERTIFICATE'
+  /** The certificate with its private key (.p12), under a password made for this download. */
+  | 'P12'
+  /** The App Store provisioning profile (.mobileprovision). */
+  | 'PROFILE';
+
 /** A public careers-page application, triaged in the Website portal. */
 export type JobApplication = {
   __typename?: 'JobApplication';
@@ -7730,6 +9615,36 @@ export type JoinSource =
   | 'HOST_ADD'
   | 'PAID'
   | 'REFERRAL';
+
+/**
+ * The backdrop behind each of the four full-page sections of a city's launch
+ * waitlist page: the top (live count), Host, Venue Partner and Club Admin. A
+ * section plays its video and draws its image when the video cannot play or
+ * none is set. An empty string means not set.
+ */
+export type LaunchPageMedia = {
+  __typename?: 'LaunchPageMedia';
+  club_admin_image_url: Scalars['String']['output'];
+  club_admin_video_url: Scalars['String']['output'];
+  hero_image_url: Scalars['String']['output'];
+  hero_video_url: Scalars['String']['output'];
+  host_image_url: Scalars['String']['output'];
+  host_video_url: Scalars['String']['output'];
+  venue_image_url: Scalars['String']['output'];
+  venue_video_url: Scalars['String']['output'];
+};
+
+/** Replaces the whole set. A field left null or empty is unset: on a city it then falls back to the global media. */
+export type LaunchPageMediaInput = {
+  club_admin_image_url?: InputMaybe<Scalars['String']['input']>;
+  club_admin_video_url?: InputMaybe<Scalars['String']['input']>;
+  hero_image_url?: InputMaybe<Scalars['String']['input']>;
+  hero_video_url?: InputMaybe<Scalars['String']['input']>;
+  host_image_url?: InputMaybe<Scalars['String']['input']>;
+  host_video_url?: InputMaybe<Scalars['String']['input']>;
+  venue_image_url?: InputMaybe<Scalars['String']['input']>;
+  venue_video_url?: InputMaybe<Scalars['String']['input']>;
+};
 
 export type LeadContactActionResult = {
   __typename?: 'LeadContactActionResult';
@@ -8042,6 +9957,8 @@ export type LinkPreview = {
 /** Which kind of page a shared mWeb link points at. */
 export type LinkPreviewKind =
   | 'CLUB'
+  /** A not-yet-launched city's waitlist page (/city-launch/:slug). */
+  | 'LOCATION'
   | 'POD'
   | 'POST'
   | 'PRODUCT'
@@ -8070,6 +9987,8 @@ export type Locale = {
 export type LocaleCoverage = {
   __typename?: 'LocaleCoverage';
   locale: Scalars['String']['output'];
+  /** Keys whose text was written against default-language copy that has changed since. */
+  outdated_keys: Scalars['Int']['output'];
   total_keys: Scalars['Int']['output'];
   translated_keys: Scalars['Int']['output'];
 };
@@ -8084,6 +10003,15 @@ export type Location = {
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /**
+   * Live in the app. Off: the city still shows in the location picker, but the
+   * app opens its subscribe-for-launch page instead of the feed.
+   */
+  is_launched: Scalars['Boolean']['output'];
+  /** This city's own launch page media; an empty field falls back to the global set on Branding. */
+  launch_media: LaunchPageMedia;
+  /** How many subscribers the city needs before launch — the goal the app shows. Default 2000. */
+  launch_target: Scalars['Int']['output'];
   location_id: Scalars['String']['output'];
   location_image: Scalars['String']['output'];
   location_name: Scalars['String']['output'];
@@ -8091,12 +10019,81 @@ export type Location = {
   location_zones: Array<LocationZone>;
   state: Scalars['String']['output'];
   state_code: Scalars['String']['output'];
+  /** Signed-in members who asked to be told when this city launches. */
+  subscriber_count: Scalars['Int']['output'];
   updated_at: Scalars['String']['output'];
+  /** Optional chat.whatsapp.com invite link shown on the subscribe page; empty when unset. */
+  whatsapp_group_url: Scalars['String']['output'];
 };
 
 export type LocationFilterInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type LocationLaunchSendResult = {
+  __typename?: 'LocationLaunchSendResult';
+  /** How many subscribers the send was started for; it runs in the background. */
+  queued: Scalars['Int']['output'];
+};
+
+/** A city's launch waitlist, as the app's subscribe page reads it. */
+export type LocationLaunchStatus = {
+  __typename?: 'LocationLaunchStatus';
+  /** Whether the signed-in viewer has already added their name; false when signed out. */
+  is_subscribed: Scalars['Boolean']['output'];
+  /** The backdrops the page plays: the city's own where it set one, else the global set from Branding. */
+  launch_media: LaunchPageMedia;
+  launch_target: Scalars['Int']['output'];
+  location: Location;
+  subscriber_count: Scalars['Int']['output'];
+};
+
+/** A member who asked to be told when a not-yet-launched city launches. */
+export type LocationSubscription = {
+  __typename?: 'LocationSubscription';
+  city: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  location_doc_id: Scalars['ID']['output'];
+  /** Whether the member agreed to share their current location when they added their name. */
+  location_shared: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  notified_at?: Maybe<Scalars['String']['output']>;
+  /** Why a send was skipped or failed; empty otherwise. */
+  reason: Scalars['String']['output'];
+  status: LocationSubscriptionStatus;
+  user_id: Scalars['ID']['output'];
+  /** Country code + number, digits only, as the launch message is sent to. */
+  whatsapp: Scalars['String']['output'];
+};
+
+/** One city's waitlist totals (Admin > Subscribe for location). */
+export type LocationSubscriptionCity = {
+  __typename?: 'LocationSubscriptionCity';
+  location: Location;
+  notified_count: Scalars['Int']['output'];
+  /** Everyone not yet SENT — who the next Send reaches. */
+  pending_count: Scalars['Int']['output'];
+  subscriber_count: Scalars['Int']['output'];
+};
+
+/** Where one subscriber's launch message stands. */
+export type LocationSubscriptionStatus =
+  /** The send was attempted and failed; the next Send retries it. */
+  | 'FAILED'
+  /** Not messaged yet. */
+  | 'PENDING'
+  | 'SENT'
+  /** Not sent on purpose, e.g. the number opted out of marketing or is invalid. */
+  | 'SKIPPED';
+
+export type LocationSubscriptionTablePage = {
+  __typename?: 'LocationSubscriptionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<LocationSubscription>;
+  total: Scalars['Int']['output'];
 };
 
 /** Server-side table page for the shared table engine (locationsTable). */
@@ -8121,6 +10118,14 @@ export type LocationZoneInput = {
   pincode?: InputMaybe<Scalars['String']['input']>;
   zone_code?: InputMaybe<Scalars['String']['input']>;
   zone_name: Scalars['String']['input'];
+};
+
+export type LogStoreRejectionInput = {
+  build_number?: InputMaybe<Scalars['String']['input']>;
+  /** What the reviewer said, pasted from the store's mail or console. */
+  reviewer_message: Scalars['String']['input'];
+  store: ReleaseStore;
+  version: Scalars['String']['input'];
 };
 
 export type LoginInput = {
@@ -8862,10 +10867,10 @@ export type Msg91WidgetLog = {
   /** The access token from that verification was checked as well. */
   token_verified: Scalars['Boolean']['output'];
   user_ip: Scalars['String']['output'];
-  /** How many verify calls the request took. */
-  verify_attempts: Scalars['Int']['output'];
   /** The code was verified. */
   verified: Scalars['Boolean']['output'];
+  /** How many verify calls the request took. */
+  verify_attempts: Scalars['Int']['output'];
   voice: Scalars['Int']['output'];
   whatsapp: Scalars['Int']['output'];
 };
@@ -8879,6 +10884,7 @@ export type Msg91WidgetLogPage = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  _noop?: Maybe<Scalars['Boolean']['output']>;
   /** The private profile's owner accepts — this is what creates the follow. */
   acceptFollowRequest: User;
   /**
@@ -8912,6 +10918,8 @@ export type Mutation = {
   addPodPartyMedia: PodMediaBoard;
   addPodStatus: Pod;
   addPostComment: Post;
+  /** Refused for somebody who is not a Club Admin, or is already in a region. */
+  addRegionClubAdmin: Region;
   addUserRole: User;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
@@ -8925,10 +10933,18 @@ export type Mutation = {
   adjustUserCoins: CoinAdjustResult;
   /** Admin assistant chat backed by OpenAI with limited internal lookup context. */
   adminAiChat: Scalars['String']['output'];
+  /**
+   * Appoint a Club Admin: grants the account the CLUB_ADMIN role — which is what
+   * mints the record — and writes these details onto it. Refused when the account
+   * is already a Club Admin, because one person is one record.
+   */
+  adminCreateClubAdminProfile: ClubAdminProfile;
   adminCreateHost: Host;
   adminCreateVenue: Venue;
   /** Onboarding/admin slot management for any venue (role-gated). */
   adminCreateVenueSlots: Array<VenueSlot>;
+  /** Products portal: delete a brand that is not approved (or approved with no products). The owner is told. */
+  adminDeleteEcommBrand: Scalars['Boolean']['output'];
   adminDeleteVenueSlot: Scalars['Boolean']['output'];
   /**
    * Replace a host's operating categories and nothing else. adminUpdateHost
@@ -8967,6 +10983,10 @@ export type Mutation = {
   aiParseCrmLead: Scalars['String']['output'];
   /** Extract multiple leads from text — returns JSON { records: [...] }. */
   aiParseCrmLeads: Scalars['String']['output'];
+  /** Run the AI over every comment still waiting for a verdict. */
+  analyzeSocialComments: SocialAnalysisResult;
+  /** Ask the AI why this post did as it did; the answer is kept on the post. */
+  analyzeSocialPost: SocialPostDetail;
   /** Authorise one build-artifact upload through the server. Tech/Super admin only. */
   appBuildUploadAuth: AppBuildUploadAuth;
   /** Redeem someone's referral code (once per account, not your own). */
@@ -9003,6 +11023,13 @@ export type Mutation = {
   assignTicket: Ticket;
   assignUserRoles: User;
   /**
+   * Share the uploaded recordings under the run's own Slack message, and record
+   * which file each suite became. Called once, by the gate, after the run has
+   * been reported and announced — that is the only moment the thread to hang
+   * them under exists.
+   */
+  attachE2eRunVideos: E2eRun;
+  /**
    * Hang a finished recording on the call it came from. Only a call you were
    * on: a call id is guessable, and this writes into a conversation.
    */
@@ -9036,8 +11063,9 @@ export type Mutation = {
   callVenueLeadContact: LeadContactActionResult;
   /** Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released. */
   cancelAutoPod: AutoPod;
-  /** Stop a run after the batches already in flight finish. */
-  cancelAutoTranslate: AutoTranslateJob;
+  cancelAutomationRun: AutomationRun;
+  /** Stop a running job after the batch in hand. */
+  cancelBackgroundJob: BackgroundJob;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
   /** The requester withdraws their own pending ask (tapping Requested). */
@@ -9064,9 +11092,17 @@ export type Mutation = {
   cancelWaCampaign: WaCampaign;
   /** Auth-required: confirm the OTP and set the new password. */
   changePasswordWithOtp: Scalars['Boolean']['output'];
+  /** Check one alert now; a tripped one tells its people straight away. */
+  checkAnalyticsAlertNow: AnalyticsAlertCheckResult;
   checkInEventTicket: EventTicket;
+  /** CI: a runner claims its shard of a dispatched run. */
+  claimStressRun: StressClaimResult;
   /** Agent picks up an unassigned chat — announced as a SYSTEM bubble. */
   claimSupportChat: SupportChatSession;
+  /** Hide every finished job; returns how many. */
+  clearFinishedBackgroundJobs: Scalars['Int']['output'];
+  /** Forget every stored match — the undo for having allowed contact access. */
+  clearMyContacts: Scalars['Boolean']['output'];
   /** Delete every recorded breach. Returns how many rows went. */
   clearRateLimitEvents: Scalars['Int']['output'];
   /**
@@ -9138,6 +11174,10 @@ export type Mutation = {
    * whole reason it was sent there rather than to the address being replaced.
    */
   confirmEmailChange: User;
+  /** Partner: save the brand's Razorpay keys and check them against Razorpay right away. */
+  connectBrandRazorpay: BrandIntegrationStatus;
+  /** Partner: save the brand's ShipRocket API user and check it against ShipRocket right away. */
+  connectBrandShiprocket: BrandIntegrationStatus;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
@@ -9146,6 +11186,8 @@ export type Mutation = {
   createAisensyCampaign: AisensyCampaignDraft;
   /** Submit a new WhatsApp template straight to AiSensy. Nothing is stored here. */
   createAisensyTemplate: AisensyTemplateDraft;
+  createAnalyticsAlert: AnalyticsAlert;
+  createAnalyticsMailSubscription: AnalyticsMailSubscription;
   createApiKey: CreatedApiKey;
   createAppPopup: AppPopup;
   createAudienceList: AudienceList;
@@ -9171,12 +11213,18 @@ export type Mutation = {
   createCrmReminder: CrmReminder;
   createCrmService: CrmService;
   createCrmServicesOffered: Array<CrmServiceOffered>;
+  createE2eFlow: E2eFlow;
+  /** Add a sub flow. Answers with the whole flow. */
+  createE2eSubFlow: E2eFlow;
   createEcommLead: EcommLead;
   /** Add a fragment of your own. It belongs to no category and can be deleted. */
   createEmailFragment: EmailFragment;
   createEmailTemplate: EmailTemplate;
+  /** File a new claim. It starts PENDING and is worth nothing until Finance decides. */
+  createEmployeeExpense: EmployeeExpense;
   createEnvEntry: EnvEntry;
   createExpense: Expense;
+  createExpenseOption: ExpenseOption;
   createFaq: Faq;
   createFeatureFlag: FeatureFlag;
   createHostLead: HostLead;
@@ -9188,9 +11236,11 @@ export type Mutation = {
   createMembershipBenefit: MembershipBenefit;
   createMembershipPlan: MembershipPlan;
   createNotification: Notification;
+  createOfficialStatus: OfficialStatus;
   createPartnerPod: Pod;
   createPaymentReleaseRequest: PaymentReleaseRequest;
   createPod: Pod;
+  createPodCalculator: PodCalculator;
   createPodExpense: PodExpense;
   createPodIdea: PodIdea;
   createPodPlan: PodPlan;
@@ -9207,6 +11257,7 @@ export type Mutation = {
   /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
   createRazorpayProductOrder: RazorpayOrder;
   createRole: Role;
+  createScheduledSocialPost: SocialScheduledPost;
   createShortLink: ShortLink;
   createSlotTemplate: SlotTemplate;
   createSomethingForYouItem: SomethingForYouItem;
@@ -9245,11 +11296,6 @@ export type Mutation = {
   /** Remove a template. There is no edit — replacing one means delete and resubmit. */
   deleteAisensyTemplate: Scalars['Boolean']['output'];
   /**
-   * Delete every bug ever rolled up — the whole collection, not a filtered view.
-   * Deleting a filtered set is what deleteBugs is for.
-   */
-  deleteAllBugs: Scalars['Int']['output'];
-  /**
    * Empty the log entirely. Returns how many rows went.
    *
    * Deliberately unscoped rather than filter-scoped: the table's filters are
@@ -9258,6 +11304,8 @@ export type Mutation = {
    * Deleting a filtered set is what deleteEmailLogs is for.
    */
   deleteAllEmailLogs: Scalars['Int']['output'];
+  deleteAnalyticsAlert: Scalars['Boolean']['output'];
+  deleteAnalyticsMailSubscription: Scalars['Boolean']['output'];
   /**
    * Delete a build and the artifact it points at. Tech/Super admin only.
    *
@@ -9274,6 +11322,7 @@ export type Mutation = {
    * everyone enrolled is told.
    */
   deleteAutoPod: Scalars['Boolean']['output'];
+  deleteAutomationFlow: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
   /** Delete the given bugs. Returns how many actually went. */
@@ -9303,6 +11352,12 @@ export type Mutation = {
    */
   deleteDbBackup: DbBackup;
   deleteDnsRecord: Scalars['Boolean']['output'];
+  /** Delete a flow and every sub flow inside it. */
+  deleteE2eFlow: Scalars['Boolean']['output'];
+  /** Delete a run. Tech/Super admin only. */
+  deleteE2eRun: Scalars['Boolean']['output'];
+  /** Remove a sub flow. Answers with the whole flow. */
+  deleteE2eSubFlow: E2eFlow;
   /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products. */
   deleteEcommBrand: Scalars['Boolean']['output'];
   deleteEcommLead: Scalars['Boolean']['output'];
@@ -9314,14 +11369,18 @@ export type Mutation = {
   /** Delete the ticked rows. Returns how many actually went. */
   deleteEmailLogs: Scalars['Int']['output'];
   deleteEmailTemplate: Scalars['Boolean']['output'];
+  /** Withdraw one of your own claims. Only while it is still PENDING. */
+  deleteEmployeeExpense: Scalars['Boolean']['output'];
   deleteEnvEntry: Scalars['Boolean']['output'];
   deleteExpense: Scalars['Boolean']['output'];
+  /** Refused for a built-in option, and for any option an expense still uses. */
+  deleteExpenseOption: Scalars['Boolean']['output'];
   deleteExpoPushToken: Scalars['Boolean']['output'];
   deleteFaq: Scalars['Boolean']['output'];
   deleteFeatureFlag: Scalars['Boolean']['output'];
-  /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
   /** Removes one website's tag. The website stops loading Google Analytics. */
   deleteGoogleAnalyticsSite: Scalars['Boolean']['output'];
+  /** Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods. */
   deleteHost: Scalars['Boolean']['output'];
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
@@ -9345,9 +11404,13 @@ export type Mutation = {
   deleteMyAddress: Scalars['Boolean']['output'];
   /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
   deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
+  /** Partner: delete an OWN brand. Refused for an approved brand that still has products — deactivate it instead. */
+  deleteMyEcommBrand: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
+  deleteOfficialStatus: Scalars['Boolean']['output'];
   deletePod: Scalars['Boolean']['output'];
+  deletePodCalculator: Scalars['Boolean']['output'];
   deletePodComment: Scalars['Boolean']['output'];
   deletePodDraft: Scalars['Boolean']['output'];
   deletePodExpense: Scalars['Boolean']['output'];
@@ -9361,13 +11424,25 @@ export type Mutation = {
   deletePushSubscription: Scalars['Boolean']['output'];
   deleteRateLimitRule: Scalars['Boolean']['output'];
   deleteRole: Scalars['Boolean']['output'];
+  /** Removes it from Duncit only; a post already out stays on the network. */
+  deleteScheduledSocialPost: Scalars['Boolean']['output'];
   deleteShortLink: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
+  deleteSocialIdea: Scalars['Boolean']['output'];
   deleteSomethingForYouItem: Scalars['Boolean']['output'];
   /** Take back your own message. The row stays; the words go. */
   deleteStaffMessage: StaffMessage;
   deleteStatusReports: Scalars['Int']['output'];
+  deleteStressRun: Scalars['Boolean']['output'];
   deleteSurvey: Scalars['Boolean']['output'];
+  /**
+   * Delete telemetry rows by ticked ids, by a table's own filters, or by a date
+   * window. Returns how many actually went.
+   *
+   * A scope that narrows nothing empties the collection and needs SUPER_ADMIN;
+   * anything narrower is a TECH_MANAGER's to run.
+   */
+  deleteTelemetryRecords: Scalars['Int']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   deleteUserActivityDay: Scalars['Boolean']['output'];
@@ -9385,6 +11460,8 @@ export type Mutation = {
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
   denyWarehouseRequest: ApprovalRequest;
+  /** Partner: forget the saved credential. The brand drops out of review until it is reconnected. */
+  disconnectBrandIntegration: BrandIntegrationStatus;
   /**
    * Auth-required: unlink the Google account.
    *
@@ -9394,27 +11471,52 @@ export type Mutation = {
   disconnectGoogleAccount: ConnectedAccounts;
   /** Tech portal only: forget the mailbox. Tickets it already opened stay. */
   disconnectMailAutomationAccount: Scalars['Boolean']['output'];
+  /** Remove the account, its tokens and everything read from it. */
+  disconnectSocialAccount: Scalars['Boolean']['output'];
   /** Record that the signed-in user closed this popup, so it never returns. */
   dismissAppPopup: Scalars['Boolean']['output'];
+  /** Hide one finished job from the drawer. */
+  dismissBackgroundJob: Scalars['Boolean']['output'];
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
+  /**
+   * One file of an iOS signing identity, for download. A mutation rather than a
+   * query so private keys never sit in a client cache; every call is logged.
+   * Tech/Super admin only.
+   */
+  downloadIosSigningFile: IosSigningFile;
   dummyCheckout: Payment;
   /** Gift card purchase via the dummy gateway. */
   dummyGiftCardCheckout: Payment;
   /** Standalone product-cart checkout via the dummy gateway. */
   dummyProductCheckout: Payment;
+  duplicateAutomationFlow: AutomationFlow;
   duplicateInventoryProduct: InventoryProduct;
+  /**
+   * Reserve a place in Slack for one suite's recording. Tech/Super admin only.
+   *
+   * The bytes go straight from the runner to Slack on the pre-authorised URL
+   * this hands back: the bot token stays on this server, and a 30 MB video
+   * never touches our disk on its way through.
+   */
+  e2eVideoUploadAuth: E2eVideoUploadAuth;
   /**  Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score.  */
   editAdjustment: HealthScore;
   /** Change your own words. Only the text — never the attachment. */
   editStaffMessage: StaffMessage;
   emailEcommLeadContact: LeadContactActionResult;
   emailHostLeadContact: LeadContactActionResult;
+  /** Emails the same PDF report as an attachment. Errors when it reached nobody. */
+  emailPodCalculator: Scalars['Boolean']['output'];
   /** Email the chat transcript to an address (defaults to a .docx attachment). */
   emailSupportChatTranscript: Scalars['Boolean']['output'];
   /** Email the ticket transcript to an address (defaults to a .docx attachment). */
   emailTicketTranscript: Scalars['Boolean']['output'];
   emailVenueLeadContact: LeadContactActionResult;
+  /** Erase every recorded click for one link. The link and its lifetime count stay. */
+  eraseShortLinkClicks: Scalars['Int']['output'];
+  /** CI: a runner's final report. */
+  finishStressRun: Scalars['Boolean']['output'];
   followClub: User;
   followPod: User;
   /**
@@ -9425,14 +11527,33 @@ export type Mutation = {
   /** Send an existing message on to somebody else — a copy, not a pointer. */
   forwardStaffMessage: StaffMessage;
   generateInventorySku: Scalars['String']['output'];
+  /**
+   * Make a new iOS signing identity at Apple with the App Store Connect key:
+   * registers the bundle ID and its capabilities if missing, then creates an
+   * Apple Distribution certificate and an App Store profile. The previous
+   * identity is kept and not revoked. Tech/Super admin only.
+   */
+  generateIosSigning: IosSigning;
   generateLeadSurveyLink: LeadSurveyEntry;
   generateMeetingLink: MeetingLinkResult;
+  generateSocialIdeas: Array<SocialIdea>;
+  /** Ask OpenAI for the verdict on a finished run — capacity, bottlenecks, upgrades. Replaces an earlier verdict. */
+  generateStressVerdict: StressRun;
   /**
    * Ask for somewhere to put a file. The folder is fixed on the pass, so one
    * issued for avatars cannot be spent writing somewhere else.
    */
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
+  /**
+   * Add portal roles to this run's account, so the suite can follow what the
+   * member filed into the Support, Legal and Pods portals without a stored
+   * staff password. Answers with the account's roles. Tech/Super admin only;
+   * refused unless "one-time codes for the run account" is on, for any address
+   * without the run's stamp, and for any role but a portal's sign-in role. The
+   * purge deletes the account, roles and all.
+   */
+  grantE2eRunAccountRoles: Array<Scalars['String']['output']>;
   /**
    * Host enrols: assigns themselves, setting the pod's ticket price and spots.
    * Only once a venue has fixed the slot on a physical offer. location_id is
@@ -9505,6 +11626,15 @@ export type Mutation = {
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
   /**
+   * WhatsApp an invite to contacts who are not on Duncit yet.
+   *
+   * An empty `phone_keys` invites everyone still waiting, a batch at a time —
+   * the "Invite all" button older app builds still carry. A number already
+   * invited is never texted twice: one invite per number per inviter, enforced
+   * by the message log's unique slot.
+   */
+  inviteContacts: ContactInviteResult;
+  /**
    * Mint a CI credential for the caller, to paste into the GitHub repo secret.
    * Grants nothing the caller does not already hold — it re-signs their own
    * identity — but it is audited, because a copyable long-lived token is worth
@@ -9532,6 +11662,13 @@ export type Mutation = {
    */
   joinSlackChannel: SlackChannel;
   /**
+   * Grant Apple sign-in to an existing email/password account, then sign in —
+   * the "allow" half of the consent step loginWithApple triggers with
+   * EMAIL_LOGIN_REQUIRED. Unauthenticated for the same reason as
+   * linkGoogleAccount: a verified Apple address matching the account IS the proof.
+   */
+  linkAppleAccount: AuthPayload;
+  /**
    * Grant Google sign-in to an existing email/password account, then sign in.
    *
    * This is the "allow" half of the consent step loginWithGoogle triggers with
@@ -9541,14 +11678,13 @@ export type Mutation = {
    * an account IS the proof. The password is never touched; the account keeps
    * both ways in.
    */
-  /**
-   * Grant Apple sign-in to an existing email/password account, then sign in —
-   * the "allow" half of the consent step loginWithApple triggers with
-   * EMAIL_LOGIN_REQUIRED. Unauthenticated for the same reason as
-   * linkGoogleAccount: a verified Apple address matching the account IS the proof.
-   */
-  linkAppleAccount: AuthPayload;
   linkGoogleAccount: AuthPayload;
+  /**
+   * Record a rejection the store's API could not report, with the reviewer's
+   * words. The advice is written at once and the notices go out. Tech/Super
+   * admin only.
+   */
+  logStoreRejection: StoreReleaseIssue;
   login: AuthPayload;
   /**
    * Sign in with an Apple credential — from the iOS app's native sheet, or the
@@ -9559,6 +11695,16 @@ export type Mutation = {
    * same id_token — unspent — into signupWithApple.
    */
   loginWithApple: AuthPayload;
+  /**
+   * Sign in with a Google credential.
+   *
+   * Two refusals carry an "email" extension holding the address Google just
+   * verified, because both are offers rather than dead ends and the client
+   * names the account in each: EMAIL_LOGIN_REQUIRED, which offers the link
+   * below, and GOOGLE_ACCOUNT_NOT_FOUND, which offers signup and carries this
+   * same id_token — unspent — into signupWithGoogle. Echoing it discloses
+   * nothing: the caller supplied the token it was read out of.
+   */
   loginWithGoogle: AuthPayload;
   /**
    * Continue with OTP, step two: trade a correct code for the same session a
@@ -9600,6 +11746,10 @@ export type Mutation = {
   pinStaffMessage: StaffMessage;
   /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
   processBackoutRefund: BackoutRefundRequest;
+  /** Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
+  productOrderShipmentFile: ShipmentFile;
+  /** Create at AiSensy what a drafted scenario is missing: its template, or — once Meta approved it — its campaign. The row's provision_step says which. */
+  provisionWhatsappScenario: WaScenarioBoard;
   publishPodDraft: Pod;
   /**
    * Clear every remaining trace and then the account itself. Permanent.
@@ -9610,8 +11760,46 @@ export type Mutation = {
   purgeAccountCompletely: AccountDeletionDetail;
   /** Clear this member's rows behind ONE reference. Permanent. */
   purgeAccountTrace: AccountDeletionDetail;
+  /**
+   * Remove everything the live suite created on THIS server. Tech/Super admin
+   * only, and refused outright unless this server has 'Return one-time codes'
+   * switched on — the switch that declares a database an e2e target and that
+   * the settings page says must never be on for production.
+   *
+   * Deletes every account whose email carries the run's stamp, with everything
+   * that points at it (the same trace the account-deletion console walks), and
+   * every record the sign-in account created with the run's marker in its
+   * title or subject. Called by the live leg after Cypress, whether the suite
+   * passed or failed — a failed run leaves the most data behind.
+   */
+  purgeE2eRunData: E2ePurgeReport;
   /** Drop a URL from ImageKit's CDN cache, after replacing what sits behind it. */
   purgeMediaCache: Scalars['String']['output'];
+  /** Run the retention sweep now instead of waiting for the daily one. Returns how many clicks went. */
+  purgeShortLinkClicks: Scalars['Int']['output'];
+  /**
+   * Upload a build's stored IPA to App Store Connect from this server — no Mac,
+   * no Transporter: the App Store Connect API's build upload, with the key on
+   * the APP_STORE_CONNECT env entry. TESTFLIGHT stops once Apple has processed
+   * the build. APP_STORE goes on to apply Store Listing (name, description,
+   * keywords, screenshots, review contact), attach the build to the App Store
+   * version and submit it for review. Tech/Super admin only.
+   *
+   * Answers as soon as the push is recorded as PUSHING; the scheduler drives it
+   * to RELEASED or FAILED and the row says how far it is.
+   */
+  pushAppBuildToAppStore: AppBuild;
+  /**
+   * Release a build's stored AAB to a Google Play track. Tech/Super admin only.
+   *
+   * Any Android production build with a stored AAB qualifies, not only the
+   * newest: Google itself refuses a version code lower than what the track
+   * already has, and that refusal is reported on the row rather than second-
+   * guessed here. Answers as soon as the push is recorded as PUSHING — the
+   * upload and the commit happen in the background and the row says how it
+   * ended.
+   */
+  pushAppBuildToPlayStore: AppBuild;
   raiseBouncerSos: BouncerSosAlert;
   reactToPodMessage: PodMessage;
   /**
@@ -9619,6 +11807,8 @@ export type Mutation = {
    * different kind replaces it, so one person is only ever counted once.
    */
   reactToStaffMessage: StaffMessage;
+  /** Partner: check the saved credential again without changing it. */
+  recheckBrandIntegration: BrandIntegrationStatus;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
@@ -9626,6 +11816,8 @@ export type Mutation = {
   recordActivePing: Scalars['Boolean']['output'];
   recordAppEvent: Scalars['Boolean']['output'];
   recordInventoryStockMovement: InventoryProduct;
+  /** Signed in. Marks one slide watched, so its ring stops showing as unseen. */
+  recordOfficialStatusView: Scalars['Boolean']['output'];
   /** Record a buyer click on a product (optionally a specific variant). */
   recordProductClick: Scalars['Boolean']['output'];
   /** Record a buyer view of a product (forward-only engagement tracking). */
@@ -9686,9 +11878,11 @@ export type Mutation = {
   removeMeetingHoliday: Scalars['Boolean']['output'];
   /** Takes one item down — your own, or any of them if you host the pod. */
   removePodPartyMedia: PodMediaBoard;
+  removeRegionClubAdmin: Region;
   removeUserRole: User;
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
   renameMediaFile: MediaItem;
+  renameMyRegion: Region;
   /** Re-open a resolved/closed chat (user within 3 days, or an agent). Reason logged to the thread. */
   reopenSupportChat: SupportChatSession;
   /** Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread. */
@@ -9709,6 +11903,15 @@ export type Mutation = {
    */
   reportAppBuild: AppBuild;
   /**
+   * Record progress, one suite's result, or the run's outcome. Tech/Super admin
+   * only — the workflow authenticates with the same TECH_MANAGER JWT the build
+   * workflows use.
+   *
+   * Reports are keyed on dispatch_id then workflow_run_id, so every leg of the
+   * matrix and the final gate all write to ONE row rather than twenty.
+   */
+  reportE2eRun: E2eRun;
+  /**
    * Report a story. Open to any signed-in viewer — that is the point of it.
    *
    * The snapshot (media, caption, author, club) is taken server-side from the
@@ -9716,6 +11919,8 @@ export type Mutation = {
    * story never showed.
    */
   reportStory: ContentReport;
+  /** CI: a runner's periodic report. The answer says whether to stop. */
+  reportStressRun: StressReportResult;
   /**
    * Auth-required: email a confirmation code before asking to be deleted.
    *
@@ -9765,7 +11970,7 @@ export type Mutation = {
    */
   requestLoginOtp: PasswordResetRequestResult;
   requestMeeting: OnboardingMeeting;
-  /** Auth-required: verify the current password and email a change-confirmation OTP. */
+  /** Auth-required: verify the current password (when the account has one) and email a confirmation OTP. */
   requestPasswordChangeOtp: OtpRequestResult;
   /**
    * Step one of forgotten-password recovery: send a code to the chosen channel.
@@ -9791,6 +11996,11 @@ export type Mutation = {
    * be open per pod per role.
    */
   requestPodChange: PodChangeRequest;
+  /**
+   * Ask the pod's club admins for help, over email and WhatsApp. The caller must
+   * be the pod's host (side HOST) or the owner of the venue it runs at (side VENUE).
+   */
+  requestPodClubAdminHelp: PodHelpRequestResult;
   /**
    * Send ONE of the extra people a multi-seat booking admits a one-time code.
    *
@@ -9845,6 +12055,8 @@ export type Mutation = {
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
   resolveBouncerSos: BouncerSosAlert;
+  /** Close an issue by hand — the reminders stop. */
+  resolveStoreIssue: StoreReleaseIssue;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
   resolveSupportChat: SupportChatSession;
   /** Mark a ticket resolved (owner OR an agent) — appends a SYSTEM timeline bubble. */
@@ -9861,6 +12073,8 @@ export type Mutation = {
    */
   restoreDbBackup: DbRestore;
   restoreInventoryProduct: InventoryProduct;
+  /** Answer a test run that is waiting for the contact, or let it time out. */
+  resumeAutomationTest: AutomationRun;
   /**
    * Re-run the checkout work that did not land, and answer with the fresh audit.
    *
@@ -9869,12 +12083,21 @@ export type Mutation = {
    * whole instead — every leg guards its own replay, so nothing is created twice.
    */
   retryPaymentSteps: PaymentDetail;
+  /** Send the networks that refused it again; the ones it reached are left alone. */
+  retryScheduledSocialPost: SocialScheduledPost;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
   retryWaCampaign: WaCampaign;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
   reviewAdRequest: AdRequest;
+  /** Products portal: check a submitted brand's credential against the vendor during review. */
+  reviewBrandIntegration: BrandIntegrationStatus;
+  /** Record a manual review of a sub flow. Answers with the whole flow. */
+  reviewE2eSubFlow: E2eFlow;
+  /** Finance's decision — APPROVED or REJECTED; a rejection owes the employee a note. */
+  reviewEmployeeExpense: EmployeeExpense;
   reviewPaymentReleaseRequest: PaymentReleaseRequest;
   reviewProductListing: InventoryProduct;
+  reviewSocialComment: SocialComment;
   /** Approve or reject a user's IDENTITY/ADDRESS verification — admin only. */
   reviewVerification: Verification;
   reviewWithdrawal: WalletWithdrawal;
@@ -9882,6 +12105,22 @@ export type Mutation = {
   revokeApiKey: ApiKey;
   revokeBadge: Scalars['Boolean']['output'];
   revokeLeadSurveyLink: Scalars['Boolean']['output'];
+  revokeMyTableApiToken: TableApiAccess;
+  /**
+   * Undo a cancellation: the pod becomes visible again, reclaiming the venue slot
+   * and the product stock the cancellation released. Refunds already paid out are
+   * NOT reversed.
+   */
+  revokePodCancellation: Pod;
+  /** Issues a new token; every URL built from the previous one stops working. */
+  rotateMyTableApiToken: TableApiAccess;
+  /**
+   * Rotate the address-hash salt. The strongest erasure available: every hash
+   * written before it stops being comparable to anything after, so a visitor
+   * recorded yesterday can never be recognised again. Unique-visitor counts
+   * split across the rotation, which is the price of the guarantee.
+   */
+  rotateShortLinkIpSalt: ShortLinkPolicy;
   /**
    * Mint a new key for the public JSON feeds. Every URL copied before this
    * stops working the moment it returns — which is the entire point.
@@ -9900,6 +12139,8 @@ export type Mutation = {
    * the server, so closing the browser cannot interrupt it. SUPER_ADMIN only.
    */
   runDbBackup: DbBackup;
+  /** Create or update a flow. A draft may be incomplete; the returned issues say what is left. */
+  saveAutomationFlow: AutomationFlow;
   saveBrandPickupLocation: BrandPickupLocation;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
@@ -9941,6 +12182,8 @@ export type Mutation = {
   seedSuperAdmin: SeedAdminResult;
   /** Send a WhatsApp template campaign message through AiSensy. */
   sendAisensyCampaign: AisensySendResult;
+  /** Build and send one subscriber's report now, whatever the schedule says. */
+  sendAnalyticsMailNow: AnalyticsMailSendResult;
   /**
    * Emails the mobile-app release distribution list an APK download link plus an
    * OpenAI-summarised changelog built from the supplied git commits. Tech/Super
@@ -9948,6 +12191,8 @@ export type Mutation = {
    */
   sendAppReleaseEmail: AppReleaseEmailResult;
   sendCrmTestEmail: CrmEmailTestResult;
+  /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
+  sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
   sendPodMessage: PodMessage;
   /** Post a message to a Slack channel (full message surface). */
@@ -9963,17 +12208,31 @@ export type Mutation = {
   /** Switch off everything the signed-in person is allowed to switch off. */
   setAllMyMailPreferences: MailPreference;
   setAllMyWhatsappPreferences: WaPreference;
+  /** Set a tile's goal (monthly for a count or an amount), or clear it with a null value. */
+  setAnalyticsTarget: Scalars['Boolean']['output'];
   /**
    * Pauses (false) or resumes (true) an offer still enrolling. Paused, it is
    * shown to nobody and takes no claim; resumed, whoever is still missing is
    * told again.
    */
   setAutoPodActive: AutoPod;
+  /** Activating is refused while the flow has issues. */
+  setAutomationFlowStatus: AutomationFlow;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
   setClubAdminCommission: ClubAdminProfile;
   setClubAdminProfileActive: ClubAdminProfile;
+  /**
+   * Store this account's contact number, with no code behind it.
+   *
+   * Saved as typed and stored UNVERIFIED — nothing has answered on the number,
+   * so is_phone_verified keeps saying so. It is still refused when the number
+   * already belongs to another account: a number is how somebody signs in, so
+   * two accounts may not share one. Refused outright while the
+   * phone_otp_verification feature flag is on — the number must then be proved.
+   */
+  setContactPhoneNumber: User;
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
@@ -10033,7 +12292,12 @@ export type Mutation = {
   setRateLimitRuleEnabled: RateLimitRule;
   /** Retire or revive a link without deleting its click history. */
   setShortLinkActive: ShortLink;
+  setSocialIdeaStatus: SocialIdea;
+  /** Keep the reviewer's message on an issue and write the advice again with it. */
+  setStoreIssueReviewerMessage: StoreReleaseIssue;
   setVenueActive: Venue;
+  /** Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded. */
+  setVenueCancellationTrigger: Venue;
   setVenueDeductions: Venue;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
   setWhatsappDefaultMedia: WaScenarioBoard;
@@ -10054,6 +12318,9 @@ export type Mutation = {
    */
   shareLink: ShareLink;
   sharePodIdea: PodIdea;
+  shareScheduledSocialPostNow: SocialScheduledPost;
+  /** Partner: accept the Brand Consent and sign it by typing their full name. Recorded in the Legal acceptance log. */
+  signBrandConsent: BrandConsent;
   /**
    * Sign as the acting user. Locks the contract once nobody is left to sign,
    * and moves a DRAFT to ACTIVE — a signed contract is in force.
@@ -10063,16 +12330,29 @@ export type Mutation = {
   signLegalDocument: LegalDocument;
   signupWithApple: AuthPayload;
   signupWithGoogle: AuthPayload;
+  /** The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback. */
+  socialConnectUrl: Scalars['String']['output'];
+  /** The AI's read of a period — not stored, so a mutation: every call is a paid AI call. */
+  socialInsights: SocialInsights;
   /**
-   * Translate the default language's text into this locale with OpenAI, in the
-   * background. Writes the same values.<code> field the admin's own editor
-   * writes, so the apps, portals and websites pick the text up with no further
-   * step.
-   *
-   * replace_existing re-translates keys that already carry text; left off, only
-   * the gaps are sent — which is also how a run is resumed after a failure.
+   * Translate the default language's text into each chosen language with
+   * OpenAI — one background job per language that has anything to send. The
+   * jobs run on the server: the header's progress (myBackgroundJobs) follows
+   * them across refreshes, page changes and consoles, a restart resumes them,
+   * and cancelBackgroundJob stops one. The text lands on the same values.<code>
+   * field the editor writes, so the apps, portals and websites pick it up with
+   * no further step. url is the page it was started from, for the drawer.
    */
-  startAutoTranslate: AutoTranslateJob;
+  startAiTranslation: Array<BackgroundJob>;
+  /** A live run for one contact, started by hand. Messages are really sent. */
+  startAutomationRun: AutomationRun;
+  /** Start a test run from the test window. Returns the run with its transcript so far. */
+  startAutomationTest: AutomationRun;
+  /**
+   * Start deleting rows from a table in the background. Each row goes through
+   * the table's own delete mutation, as the caller.
+   */
+  startBulkDelete: BackgroundJob;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
   /** Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer. */
@@ -10083,6 +12363,15 @@ export type Mutation = {
    * SUPER_ADMIN only, and audited.
    */
   startDataClone: DataCloneJob;
+  /**
+   * Claim the run this workflow is fulfilling and collect the identity it should
+   * test with. Called once, by the workflow, before any suite runs.
+   *
+   * This is where the credentials are handed over rather than through a workflow
+   * input, because dispatch inputs are displayed on the run's own page and a
+   * password does not belong there.
+   */
+  startE2eRun: E2eRunStart;
   startRecordedUserCall: UserContactAction;
   startSupportChat: SupportChatSession;
   /**
@@ -10098,6 +12387,107 @@ export type Mutation = {
    * which is what actually takes it off the slots.
    */
   stopAdRequest: AdRequest;
+  /** Ask a live run to stop. */
+  stopStressRun: StressRun;
+  storeAddOrderNote: ProductOrder;
+  storeAddToCart: StoreCart;
+  storeAdminCancelOrder: ProductOrder;
+  storeAdminSetSubscriptionStatus: StoreAdminSubscriptionRow;
+  storeAnswerNdr: ProductOrder;
+  /** Remember a coupon on the cart; an empty code removes it. */
+  storeApplyCoupon: StoreCart;
+  storeBookReturnPickup: StoreReturn;
+  /** Book the shipment (or resume a half-booked one): order, courier + AWB, pickup. */
+  storeBookShipment: ProductOrder;
+  /** Add pet types / categories to many products at once. */
+  storeBulkFile: Scalars['Int']['output'];
+  /** Set the same packaging on many products. Answers how many changed. */
+  storeBulkSetPackaging: Scalars['Int']['output'];
+  storeCancelOrder: StoreOrder;
+  storeCancelSubscription: StoreSubscription;
+  storeClearCart: StoreCart;
+  storeCreateShipment: ProductOrder;
+  storeCreateSubscription: StoreSubscription;
+  /** A shopper's question or complaint, filed as a support ticket tagged with the Pet Store source. */
+  storeCreateSupportTicket: StoreSupportTicketResult;
+  storeDeleteBrand: Scalars['Boolean']['output'];
+  storeDeleteCategory: Scalars['Boolean']['output'];
+  storeDeleteCollection: Scalars['Boolean']['output'];
+  storeDeleteCoupon: Scalars['Boolean']['output'];
+  storeDeleteFacet: Scalars['Boolean']['output'];
+  storeDeletePage: Scalars['Boolean']['output'];
+  storeDeletePetType: Scalars['Boolean']['output'];
+  storeDeleteReview: Scalars['Boolean']['output'];
+  storeDeleteSection: Scalars['Boolean']['output'];
+  /** Delete a warehouse ShipRocket does not hold and no product ships from. */
+  storeDeleteWarehouse: Scalars['Boolean']['output'];
+  /** Apply a packaging CSV, matched by product or variant SKU. */
+  storeImportPackaging: StorePackagingImportResult;
+  storeMarkCodCollected: ProductOrder;
+  /** After signing in: fold the guest cart + wishlist into the account's. */
+  storeMergeGuest: StoreCart;
+  storePauseSubscription: StoreSubscription;
+  storePlaceOrder: StorePlaceOrderResult;
+  storeRecordView: Scalars['Boolean']['output'];
+  storeRefreshTracking: ProductOrder;
+  /** Add a warehouse to the ShipRocket account as a pickup address. */
+  storeRegisterWarehouse: BrandPickupLocation;
+  storeRemindCart: Scalars['Boolean']['output'];
+  storeReorderBrands: Scalars['Boolean']['output'];
+  storeReorderCategories: Scalars['Boolean']['output'];
+  storeReorderCollections: Scalars['Boolean']['output'];
+  storeReorderFacets: Scalars['Boolean']['output'];
+  storeReorderPages: Scalars['Boolean']['output'];
+  storeReorderPetTypes: Scalars['Boolean']['output'];
+  storeReorderSections: Scalars['Boolean']['output'];
+  storeReplyReview: Scalars['Boolean']['output'];
+  storeRequestCodOtp: StoreCodOtp;
+  storeRequestReturn: StoreReturn;
+  storeRestockReturn: StoreReturn;
+  /** Book again every order whose booking failed, once what stopped it is fixed. */
+  storeRetryFailedBookings: StoreBookingRetry;
+  storeSaveBrand: StoreAdminBrand;
+  storeSaveCategory: StoreAdminCategory;
+  storeSaveCollection: StoreAdminCollection;
+  /** Create (no id) or update a STORE-scoped coupon. */
+  storeSaveCoupon: Coupon;
+  storeSaveFacet: StoreFacet;
+  storeSavePage: StoreAdminPage;
+  storeSavePetType: StoreAdminPetType;
+  /** Create (no id) or update an ecomm product. DRAFT saves what is filled in; PUBLISHED first checks it can be sold, then puts it on the store. */
+  storeSaveProduct: StoreAdminProduct;
+  storeSaveSection: StoreAdminSection;
+  storeSaveSettings: StoreSettings;
+  /** Add the pickup address to the ShipRocket account, then keep the account's copy of it here. Nothing is saved if ShipRocket refuses it. */
+  storeSaveWarehouse: BrandPickupLocation;
+  /** Email everyone whose product is back. Answers how many were sent. */
+  storeSendBackInStock: Scalars['Int']['output'];
+  /** Set a line's quantity; 0 removes it. */
+  storeSetCartQty: StoreCart;
+  /** Override the parcel before booking; omit input to go back to the computed one. */
+  storeSetParcel: ProductOrder;
+  /** Publish, move to draft or archive many at once. Answers how many changed — a product not ready to publish is skipped. */
+  storeSetProductStatus: Scalars['Int']['output'];
+  /** One PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
+  storeShipmentFile: ShipmentFile;
+  /** Log in to ShipRocket once more with the saved credentials, clearing an earlier refusal. */
+  storeShiprocketReconnect: StoreShiprocketStatus;
+  /** Push the next delivery back by one cycle. */
+  storeSkipSubscription: StoreSubscription;
+  /** A signed-in buyer's review of a product they received. */
+  storeSubmitReview: ProductReview;
+  storeSubscribeStockAlert: Scalars['Boolean']['output'];
+  /** Put this delivery in the cart; check out with autoship_id for the discount. */
+  storeSubscriptionOrderNow: StoreCart;
+  /** Save or un-save; answers with the wishlist's product ids. */
+  storeToggleWishlist: Array<Scalars['ID']['output']>;
+  storeUpdateOrderStatus: ProductOrder;
+  storeUpdateReturn: StoreReturn;
+  /** Correct the ship-to address before the shipment is booked. */
+  storeUpdateShippingAddress: ProductOrder;
+  storeUpdateSubscription: StoreSubscription;
+  storeVerifyCodOtp: Scalars['Boolean']['output'];
+  storeVerifyPayment: StorePlaceOrderResult;
   /**
    * Ask for the account to be removed.
    *
@@ -10144,6 +12534,12 @@ export type Mutation = {
   submitHostStep3: Host;
   /** Public: apply to an open role from the careers page. */
   submitJobApplication: JobApplicationResult;
+  /**
+   * Push the newest successful production build with a stored artifact to the
+   * store's review track — the same push as the Android / iOS tables, reached
+   * from the rejection so the retry is one click. Tech/Super admin only.
+   */
+  submitLatestBuildToStore: AppBuild;
   /** Public — submit answers via a share token (no auth). */
   submitLeadSurveyByToken: Scalars['Boolean']['output'];
   submitProductListing: InventoryProduct;
@@ -10164,6 +12560,8 @@ export type Mutation = {
   submitVenueStep3: Venue;
   /** Submit/replace an IDENTITY document — moves it to PENDING. */
   submitVerification: Verification;
+  /** Signed in. Adds the viewer to a not-yet-launched city's waitlist (by id or slug); repeat taps are no-ops. location_shared records the answer to the app's share-your-location question. */
+  subscribeLocationLaunch: LocationLaunchStatus;
   /**
    * Add the caller to the notify-me list. The address is read from their
    * profile, never from the request, so nobody can subscribe another inbox.
@@ -10172,8 +12570,26 @@ export type Mutation = {
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /**
+   * Match a phone book against Duncit accounts and remember the hits.
+   *
+   * Every sync REPLACES both lists: a number that left the phone book leaves
+   * them. A number that matched is kept as an account id and nothing else; a
+   * number that did not is kept as its comparable key and the name it is saved
+   * under, which is what the invite list is. Clearing contacts deletes both.
+   *
+   * Without `batch` the entries are the whole phone book. With it they are one
+   * slice, and the replacing happens when the slice marked `last` arrives.
+   */
+  syncContacts: ContactsSyncResult;
+  /** Read the account now instead of waiting for the scheduler. */
+  syncSocialAccount: SocialAccount;
+  /** Points the named staging hosts at whatever production holds. Never writes production. */
+  syncStagingDns: DnsSyncResult;
   /** Run a shell command in the API container and return its output. SUPER_ADMIN only — host-root-equivalent via the mounted docker socket, and audited. */
   techExec: TechExecResult;
+  /** Send the month of server history to OpenAI and keep its recommendation (SUPER_ADMIN / TECH_MANAGER). */
+  techGenerateServerAdvice: TechServerAdvice;
   /** Re-ask the registry now, ignoring the cache. */
   techRefreshPackageUpdates: TechPackageUpdatesReport;
   /** Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited. */
@@ -10228,6 +12644,17 @@ export type Mutation = {
    * its own CI token in the repo secrets.
    */
   triggerAppBuild: TriggerAppBuildResult;
+  /**
+   * Start a run from the portal. Tech/Super admin only.
+   *
+   * Writes a QUEUED row, then dispatches the E2E workflow with the operator's
+   * suite selection as an input. The row is written FIRST and deleted again if
+   * GitHub refuses the dispatch, so a run the operator can see always
+   * corresponds to one GitHub accepted.
+   */
+  triggerE2eRun: TriggerE2eRunResult;
+  /** Start a stress run against this server's own environment. Production needs SUPER_ADMIN and confirm_text. */
+  triggerStressRun: StressRun;
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
@@ -10249,6 +12676,9 @@ export type Mutation = {
   updateAiMonitoringSettings: AiMonitoringSettings;
   /** On a code prompt only the body, note and target model are applied — the rest belongs to the catalogue. */
   updateAiPrompt: AiPrompt;
+  updateAnalyticsAlert: AnalyticsAlert;
+  updateAnalyticsMailSettings: AnalyticsMailSettings;
+  updateAnalyticsMailSubscription: AnalyticsMailSubscription;
   updateAppBuildSettings: AppBuildSettings;
   updateAppPopup: AppPopup;
   updateAppSettings: AppSettings;
@@ -10283,17 +12713,25 @@ export type Mutation = {
   updateCrmServiceOffered: CrmServiceOffered;
   /** Rewrites the value, TTL and priority of one record. Its type and name stay. */
   updateDnsRecord: Scalars['Boolean']['output'];
+  updateE2eFlow: E2eFlow;
+  updateE2eRunSettings: E2eRunSettings;
+  /** Replace a sub flow's name, description and steps. Answers with the whole flow. */
+  updateE2eSubFlow: E2eFlow;
   updateEcommLead: EcommLead;
   updateEmailFragment: EmailFragment;
   updateEmailTemplate: EmailTemplate;
+  /** Edit one of your own claims. Only while it is still PENDING. */
+  updateEmployeeExpense: EmployeeExpense;
   updateEnvEntry: EnvEntry;
   updateExpense: Expense;
+  updateExpenseOption: ExpenseOption;
   updateFaq: Faq;
   updateFaqSubmissionStatus: FaqSubmission;
   updateFeatureFlag: FeatureFlag;
   updateFinanceSettings: FinanceSettings;
   /** Finance: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
+  updateGraphqlMonitorSettings: GraphqlMonitorSettings;
   updateGrievanceStatus: GrievanceTicket;
   updateHostLead: HostLead;
   updateInterview: Interview;
@@ -10320,7 +12758,10 @@ export type Mutation = {
   updateMyProfileVisibility: User;
   /** Replace the occasional-icon windows (admin Branding). */
   updateOccasionalIcons: Array<OccasionalIcon>;
+  updateOfficialStatus: OfficialStatus;
+  updateOnboardingIntro: OnboardingIntro;
   updatePod: Pod;
+  updatePodCalculator: PodCalculator;
   updatePodExpense: PodExpense;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
@@ -10336,12 +12777,21 @@ export type Mutation = {
   /** Support portal: choose whether reports are announced on Slack, and where. */
   updateReportProblemSlack: ReportProblemSlackSettings;
   updateRole: Role;
+  updateScheduledSocialPost: SocialScheduledPost;
+  updateShortLinkPolicy: ShortLinkPolicy;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
    * Triage one report: its state, the note, and any images the operator added.
    * Omitting staff_images leaves the ones already there alone.
    */
   updateStatusReport: StatusReport;
+  /**
+   * Save the store listing. Lengths are checked here so a push never fails on a
+   * limit the form could have shown. Tech/Super admin only.
+   */
+  updateStoreListing: StoreListing;
+  updateStoreReleaseSettings: StoreReleaseSettings;
+  updateStressSettings: StressSettings;
   updateSurvey: Survey;
   updateTelemetrySettings: TelemetrySettings;
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
@@ -10522,6 +12972,11 @@ export type MutationAddPostCommentArgs = {
 };
 
 
+export type MutationAddRegionClubAdminArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
 export type MutationAddUserRoleArgs = {
   role_key: Scalars['String']['input'];
   user_id: Scalars['ID']['input'];
@@ -10546,6 +13001,12 @@ export type MutationAdminAiChatArgs = {
 };
 
 
+export type MutationAdminCreateClubAdminProfileArgs = {
+  input: UpdateClubAdminProfileInput;
+  user_id: Scalars['ID']['input'];
+};
+
+
 export type MutationAdminCreateHostArgs = {
   step1: HostStep1Input;
   step2: HostStep2Input;
@@ -10566,6 +13027,12 @@ export type MutationAdminCreateVenueArgs = {
 
 export type MutationAdminCreateVenueSlotsArgs = {
   input: BulkCreateVenueSlotsInput;
+};
+
+
+export type MutationAdminDeleteEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -10662,6 +13129,11 @@ export type MutationAiParseCrmLeadsArgs = {
 };
 
 
+export type MutationAnalyzeSocialPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationApplyReferralCodeArgs = {
   code: Scalars['String']['input'];
 };
@@ -10750,6 +13222,11 @@ export type MutationAssignUserRolesArgs = {
 };
 
 
+export type MutationAttachE2eRunVideosArgs = {
+  input: AttachE2eRunVideosInput;
+};
+
+
 export type MutationAttachStaffCallRecordingArgs = {
   call_id: Scalars['ID']['input'];
   url: Scalars['String']['input'];
@@ -10806,7 +13283,12 @@ export type MutationCancelAutoPodArgs = {
 };
 
 
-export type MutationCancelAutoTranslateArgs = {
+export type MutationCancelAutomationRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelBackgroundJobArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -10850,8 +13332,18 @@ export type MutationChangePasswordWithOtpArgs = {
 };
 
 
+export type MutationCheckAnalyticsAlertNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCheckInEventTicketArgs = {
   input: CheckInEventTicketInput;
+};
+
+
+export type MutationClaimStressRunArgs = {
+  input: ClaimStressRunInput;
 };
 
 
@@ -10952,6 +13444,18 @@ export type MutationConfirmEmailChangeArgs = {
 };
 
 
+export type MutationConnectBrandRazorpayArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  input: BrandRazorpayInput;
+};
+
+
+export type MutationConnectBrandShiprocketArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  input: BrandShiprocketInput;
+};
+
+
 export type MutationConnectGoogleAccountArgs = {
   input: GoogleAuthInput;
 };
@@ -10969,6 +13473,11 @@ export type MutationCreateAisensyCampaignArgs = {
 
 export type MutationCreateAisensyTemplateArgs = {
   input: CreateAisensyTemplateInput;
+};
+
+
+export type MutationCreateAnalyticsAlertArgs = {
+  input: AnalyticsAlertInput;
 };
 
 
@@ -11068,6 +13577,17 @@ export type MutationCreateCrmServicesOfferedArgs = {
 };
 
 
+export type MutationCreateE2eFlowArgs = {
+  input: E2eFlowInput;
+};
+
+
+export type MutationCreateE2eSubFlowArgs = {
+  flow_id: Scalars['ID']['input'];
+  input: E2eSubFlowInput;
+};
+
+
 export type MutationCreateEcommLeadArgs = {
   input: EcommLeadInput;
 };
@@ -11083,6 +13603,11 @@ export type MutationCreateEmailTemplateArgs = {
 };
 
 
+export type MutationCreateEmployeeExpenseArgs = {
+  input: EmployeeExpenseInput;
+};
+
+
 export type MutationCreateEnvEntryArgs = {
   input: CreateEnvEntryInput;
 };
@@ -11090,6 +13615,12 @@ export type MutationCreateEnvEntryArgs = {
 
 export type MutationCreateExpenseArgs = {
   input: CreateExpenseInput;
+};
+
+
+export type MutationCreateExpenseOptionArgs = {
+  input: ExpenseOptionInput;
+  kind: Scalars['String']['input'];
 };
 
 
@@ -11148,6 +13679,11 @@ export type MutationCreateNotificationArgs = {
 };
 
 
+export type MutationCreateOfficialStatusArgs = {
+  input: OfficialStatusInput;
+};
+
+
 export type MutationCreatePartnerPodArgs = {
   input: CreatePodInput;
 };
@@ -11160,6 +13696,11 @@ export type MutationCreatePaymentReleaseRequestArgs = {
 
 export type MutationCreatePodArgs = {
   input: CreatePodInput;
+};
+
+
+export type MutationCreatePodCalculatorArgs = {
+  input: SavePodCalculatorInput;
 };
 
 
@@ -11222,6 +13763,11 @@ export type MutationCreateRazorpayProductOrderArgs = {
 
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
+};
+
+
+export type MutationCreateScheduledSocialPostArgs = {
+  input: SocialScheduledPostInput;
 };
 
 
@@ -11349,6 +13895,11 @@ export type MutationDeleteAisensyTemplateArgs = {
 };
 
 
+export type MutationDeleteAnalyticsAlertArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteAnalyticsMailSubscriptionArgs = {
   id: Scalars['ID']['input'];
 };
@@ -11371,6 +13922,11 @@ export type MutationDeleteAudienceListArgs = {
 
 export type MutationDeleteAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -11471,6 +14027,22 @@ export type MutationDeleteDnsRecordArgs = {
 };
 
 
+export type MutationDeleteE2eFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteE2eRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteE2eSubFlowArgs = {
+  flow_id: Scalars['ID']['input'];
+  sub_flow_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   email: Scalars['String']['input'];
@@ -11498,6 +14070,11 @@ export type MutationDeleteEmailTemplateArgs = {
 };
 
 
+export type MutationDeleteEmployeeExpenseArgs = {
+  expense_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteEnvEntryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -11505,6 +14082,11 @@ export type MutationDeleteEnvEntryArgs = {
 
 export type MutationDeleteExpenseArgs = {
   expense_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteExpenseOptionArgs = {
+  option_id: Scalars['ID']['input'];
 };
 
 
@@ -11611,6 +14193,11 @@ export type MutationDeleteMyBrandPickupLocationArgs = {
 };
 
 
+export type MutationDeleteMyEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMyProductListingArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -11621,8 +14208,18 @@ export type MutationDeleteNotificationArgs = {
 };
 
 
+export type MutationDeleteOfficialStatusArgs = {
+  status_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeletePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeletePodCalculatorArgs = {
+  calculator_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -11694,12 +14291,22 @@ export type MutationDeleteRoleArgs = {
 };
 
 
+export type MutationDeleteScheduledSocialPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteShortLinkArgs = {
   id: Scalars['ID']['input'];
 };
 
 
 export type MutationDeleteSlotTemplateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSocialIdeaArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -11719,8 +14326,19 @@ export type MutationDeleteStatusReportsArgs = {
 };
 
 
+export type MutationDeleteStressRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteSurveyArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTelemetryRecordsArgs = {
+  scope: TelemetryDeleteScope;
+  target: TelemetryDeleteTarget;
 };
 
 
@@ -11800,7 +14418,18 @@ export type MutationDenyWarehouseRequestArgs = {
 };
 
 
+export type MutationDisconnectBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
+};
+
+
 export type MutationDisconnectMailAutomationAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDisconnectSocialAccountArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -11810,8 +14439,19 @@ export type MutationDismissAppPopupArgs = {
 };
 
 
+export type MutationDismissBackgroundJobArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDismissMeetingArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDownloadIosSigningFileArgs = {
+  id: Scalars['ID']['input'];
+  kind: IosSigningFileKind;
 };
 
 
@@ -11830,8 +14470,18 @@ export type MutationDummyProductCheckoutArgs = {
 };
 
 
+export type MutationDuplicateAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDuplicateInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationE2eVideoUploadAuthArgs = {
+  input: E2eVideoUploadAuthInput;
 };
 
 
@@ -11866,6 +14516,12 @@ export type MutationEmailHostLeadContactArgs = {
 };
 
 
+export type MutationEmailPodCalculatorArgs = {
+  calculator_doc_id: Scalars['ID']['input'];
+  to: Scalars['String']['input'];
+};
+
+
 export type MutationEmailSupportChatTranscriptArgs = {
   email: Scalars['String']['input'];
   format?: InputMaybe<TranscriptFormat>;
@@ -11887,6 +14543,16 @@ export type MutationEmailVenueLeadContactArgs = {
   id: Scalars['ID']['input'];
   provider_id?: InputMaybe<Scalars['ID']['input']>;
   subject: Scalars['String']['input'];
+};
+
+
+export type MutationEraseShortLinkClicksArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationFinishStressRunArgs = {
+  input: FinishStressRunInput;
 };
 
 
@@ -11926,6 +14592,16 @@ export type MutationGenerateMeetingLinkArgs = {
 };
 
 
+export type MutationGenerateSocialIdeasArgs = {
+  input: SocialIdeasInput;
+};
+
+
+export type MutationGenerateStressVerdictArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGetImagekitAuthArgs = {
   folder?: InputMaybe<Scalars['String']['input']>;
   surface?: InputMaybe<UploadSurface>;
@@ -11934,6 +14610,11 @@ export type MutationGetImagekitAuthArgs = {
 
 export type MutationGrantAdminAccessArgs = {
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationGrantE2eRunAccountRolesArgs = {
+  input: GrantE2eRunAccountRolesInput;
 };
 
 
@@ -12037,6 +14718,11 @@ export type MutationInviteCoHostArgs = {
 };
 
 
+export type MutationInviteContactsArgs = {
+  phone_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type MutationJoinFreePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   referral_token?: InputMaybe<Scalars['String']['input']>;
@@ -12061,6 +14747,11 @@ export type MutationLinkAppleAccountArgs = {
 
 export type MutationLinkGoogleAccountArgs = {
   input: GoogleAuthInput;
+};
+
+
+export type MutationLogStoreRejectionArgs = {
+  input: LogStoreRejectionInput;
 };
 
 
@@ -12157,6 +14848,17 @@ export type MutationProcessBackoutRefundArgs = {
 };
 
 
+export type MutationProductOrderShipmentFileArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  kind: ShipmentDocumentKind;
+};
+
+
+export type MutationProvisionWhatsappScenarioArgs = {
+  event_key: Scalars['String']['input'];
+};
+
+
 export type MutationPublishPodDraftArgs = {
   draft_id: Scalars['ID']['input'];
   input: CreatePodInput;
@@ -12173,8 +14875,25 @@ export type MutationPurgeAccountTraceArgs = {
 };
 
 
+export type MutationPurgeE2eRunDataArgs = {
+  input: PurgeE2eRunDataInput;
+};
+
+
 export type MutationPurgeMediaCacheArgs = {
   url: Scalars['String']['input'];
+};
+
+
+export type MutationPushAppBuildToAppStoreArgs = {
+  id: Scalars['ID']['input'];
+  track: AppStoreTrack;
+};
+
+
+export type MutationPushAppBuildToPlayStoreArgs = {
+  id: Scalars['ID']['input'];
+  track: PlayStoreTrack;
 };
 
 
@@ -12192,6 +14911,12 @@ export type MutationReactToPodMessageArgs = {
 export type MutationReactToStaffMessageArgs = {
   emoji: Scalars['String']['input'];
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecheckBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
 };
 
 
@@ -12213,6 +14938,11 @@ export type MutationRecordAppEventArgs = {
 export type MutationRecordInventoryStockMovementArgs = {
   input: StockMovementInput;
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecordOfficialStatusViewArgs = {
+  status_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -12361,6 +15091,11 @@ export type MutationRemovePodPartyMediaArgs = {
 };
 
 
+export type MutationRemoveRegionClubAdminArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveUserRoleArgs = {
   role_key: Scalars['String']['input'];
   user_id: Scalars['ID']['input'];
@@ -12371,6 +15106,11 @@ export type MutationRenameMediaFileArgs = {
   fileId: Scalars['ID']['input'];
   newFileName: Scalars['String']['input'];
   purgeCache?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type MutationRenameMyRegionArgs = {
+  region_name: Scalars['String']['input'];
 };
 
 
@@ -12410,10 +15150,20 @@ export type MutationReportAppBuildArgs = {
 };
 
 
+export type MutationReportE2eRunArgs = {
+  input: ReportE2eRunInput;
+};
+
+
 export type MutationReportStoryArgs = {
   details?: InputMaybe<Scalars['String']['input']>;
   post_doc_id: Scalars['ID']['input'];
   reason: ReportReason;
+};
+
+
+export type MutationReportStressRunArgs = {
+  input: ReportStressRunInput;
 };
 
 
@@ -12482,6 +15232,12 @@ export type MutationRequestPodChangeArgs = {
 };
 
 
+export type MutationRequestPodClubAdminHelpArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  side: PodHelpSide;
+};
+
+
 export type MutationRequestPodCompanionOtpArgs = {
   input: PodAttendanceOtpInput;
 };
@@ -12546,6 +15302,11 @@ export type MutationResolveBouncerSosArgs = {
 };
 
 
+export type MutationResolveStoreIssueArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationResolveSupportChatArgs = {
   session_id: Scalars['ID']['input'];
 };
@@ -12579,9 +15340,19 @@ export type MutationRestoreInventoryProductArgs = {
 };
 
 
+export type MutationResumeAutomationTestArgs = {
+  input: AutomationTestReplyInput;
+};
+
+
 export type MutationRetryPaymentStepsArgs = {
   payment_doc_id: Scalars['ID']['input'];
   step_keys?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type MutationRetryScheduledSocialPostArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -12597,6 +15368,26 @@ export type MutationReviewAdRequestArgs = {
 };
 
 
+export type MutationReviewBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
+};
+
+
+export type MutationReviewE2eSubFlowArgs = {
+  flow_id: Scalars['ID']['input'];
+  status: E2eReviewStatus;
+  sub_flow_id: Scalars['ID']['input'];
+};
+
+
+export type MutationReviewEmployeeExpenseArgs = {
+  decision: Scalars['String']['input'];
+  expense_doc_id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationReviewPaymentReleaseRequestArgs = {
   input: ReviewPaymentReleaseInput;
   request_id: Scalars['ID']['input'];
@@ -12608,6 +15399,12 @@ export type MutationReviewProductListingArgs = {
   notes?: InputMaybe<Scalars['String']['input']>;
   product_doc_id: Scalars['ID']['input'];
   status: ProductListingReviewStatus;
+};
+
+
+export type MutationReviewSocialCommentArgs = {
+  id: Scalars['ID']['input'];
+  status: SocialReviewStatus;
 };
 
 
@@ -12643,6 +15440,16 @@ export type MutationRevokeBadgeArgs = {
 
 export type MutationRevokeLeadSurveyLinkArgs = {
   entry_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRevokePodCancellationArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSaveAutomationFlowArgs = {
+  input: SaveAutomationFlowInput;
 };
 
 
@@ -12743,34 +15550,6 @@ export type MutationSendAisensyCampaignArgs = {
 };
 
 
-export type MutationCheckAnalyticsAlertNowArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type MutationCreateAnalyticsAlertArgs = {
-  input: AnalyticsAlertInput;
-};
-
-
-export type MutationDeleteAnalyticsAlertArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type MutationSetAnalyticsTargetArgs = {
-  entity: AnalyticsEntity;
-  key: Scalars['String']['input'];
-  value?: InputMaybe<Scalars['Float']['input']>;
-};
-
-
-export type MutationUpdateAnalyticsAlertArgs = {
-  id: Scalars['ID']['input'];
-  input: AnalyticsAlertInput;
-};
-
-
 export type MutationSendAnalyticsMailNowArgs = {
   id: Scalars['ID']['input'];
 };
@@ -12785,6 +15564,11 @@ export type MutationSendCrmTestEmailArgs = {
   template_id: Scalars['ID']['input'];
   to: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSendLocationLaunchMessageArgs = {
+  location_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -12852,9 +15636,22 @@ export type MutationSetAllMyWhatsappPreferencesArgs = {
 };
 
 
+export type MutationSetAnalyticsTargetArgs = {
+  entity: AnalyticsEntity;
+  key: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
 export type MutationSetAutoPodActiveArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetAutomationFlowStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: AutomationFlowStatus;
 };
 
 
@@ -12873,6 +15670,12 @@ export type MutationSetClubAdminCommissionArgs = {
 export type MutationSetClubAdminProfileActiveArgs = {
   id: Scalars['ID']['input'];
   is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetContactPhoneNumberArgs = {
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
 };
 
 
@@ -13046,8 +15849,27 @@ export type MutationSetShortLinkActiveArgs = {
 };
 
 
+export type MutationSetSocialIdeaStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: SocialIdeaStatus;
+};
+
+
+export type MutationSetStoreIssueReviewerMessageArgs = {
+  id: Scalars['ID']['input'];
+  message: Scalars['String']['input'];
+};
+
+
 export type MutationSetVenueActiveArgs = {
   active: Scalars['Boolean']['input'];
+  venue_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetVenueCancellationTriggerArgs = {
+  refund_tiers: Array<VenueCancellationRefundTierInput>;
+  trigger_hours: Scalars['Int']['input'];
   venue_doc_id: Scalars['ID']['input'];
 };
 
@@ -13104,6 +15926,17 @@ export type MutationSharePodIdeaArgs = {
 };
 
 
+export type MutationShareScheduledSocialPostNowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSignBrandConsentArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  signed_name: Scalars['String']['input'];
+};
+
+
 export type MutationSignContractArgs = {
   id: Scalars['ID']['input'];
   input: SignContractInput;
@@ -13126,9 +15959,36 @@ export type MutationSignupWithGoogleArgs = {
 };
 
 
-export type MutationStartAutoTranslateArgs = {
-  locale: Scalars['String']['input'];
-  replace_existing?: InputMaybe<Scalars['Boolean']['input']>;
+export type MutationSocialConnectUrlArgs = {
+  provider: SocialProvider;
+};
+
+
+export type MutationSocialInsightsArgs = {
+  input: SocialAnalyticsInput;
+};
+
+
+export type MutationStartAiTranslationArgs = {
+  input: AiTranslationInput;
+  url?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartAutomationRunArgs = {
+  contact: AutomationContactInput;
+  flow_id: Scalars['ID']['input'];
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartAutomationTestArgs = {
+  input: AutomationTestInput;
+};
+
+
+export type MutationStartBulkDeleteArgs = {
+  input: StartBulkDeleteInput;
 };
 
 
@@ -13148,6 +16008,11 @@ export type MutationStartCrmPortalCallArgs = {
   contact_number: Scalars['String']['input'];
   entity: CrmAiEntity;
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationStartE2eRunArgs = {
+  input: StartE2eRunInput;
 };
 
 
@@ -13173,6 +16038,418 @@ export type MutationStartVideoCompressionArgs = {
 
 export type MutationStopAdRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationStopStressRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreAddOrderNoteArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+};
+
+
+export type MutationStoreAddToCartArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  product_id: Scalars['ID']['input'];
+  qty: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStoreAdminCancelOrderArgs = {
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+  refund_mode: StoreRefundMode;
+};
+
+
+export type MutationStoreAdminSetSubscriptionStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: StoreSubscriptionStatus;
+};
+
+
+export type MutationStoreAnswerNdrArgs = {
+  action: StoreNdrAction;
+  comments?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreApplyCouponArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  code?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStoreBookReturnPickupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreBookShipmentArgs = {
+  courier_id?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreBulkFileArgs = {
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  pet_type_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  product_ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreBulkSetPackagingArgs = {
+  input: StorePackagingInput;
+  product_ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreCancelOrderArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_no: Scalars['String']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
+export type MutationStoreCancelSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreClearCartArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStoreCreateShipmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreCreateSubscriptionArgs = {
+  input: StoreSubscriptionInput;
+};
+
+
+export type MutationStoreCreateSupportTicketArgs = {
+  input: StoreSupportTicketInput;
+};
+
+
+export type MutationStoreDeleteBrandArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteCollectionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteCouponArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteFacetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeletePageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeletePetTypeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteReviewArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteSectionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreDeleteWarehouseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreImportPackagingArgs = {
+  rows: Array<StorePackagingImportRow>;
+};
+
+
+export type MutationStoreMarkCodCollectedArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreMergeGuestArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStorePauseSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+  paused: Scalars['Boolean']['input'];
+};
+
+
+export type MutationStorePlaceOrderArgs = {
+  input: StorePlaceOrderInput;
+};
+
+
+export type MutationStoreRecordViewArgs = {
+  product_id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreRefreshTrackingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreRegisterWarehouseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreRemindCartArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreReorderBrandsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderCategoriesArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderCollectionsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderFacetsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderPagesArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderPetTypesArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReorderSectionsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationStoreReplyReviewArgs = {
+  id: Scalars['ID']['input'];
+  reply: Scalars['String']['input'];
+};
+
+
+export type MutationStoreRequestCodOtpArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+
+export type MutationStoreRequestReturnArgs = {
+  input: StoreReturnRequestInput;
+};
+
+
+export type MutationStoreRestockReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreSaveBrandArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreBrandInput;
+};
+
+
+export type MutationStoreSaveCategoryArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreCategoryInput;
+};
+
+
+export type MutationStoreSaveCollectionArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreCollectionInput;
+};
+
+
+export type MutationStoreSaveCouponArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: CreateCouponInput;
+};
+
+
+export type MutationStoreSaveFacetArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreFacetInput;
+};
+
+
+export type MutationStoreSavePageArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StorePageInput;
+};
+
+
+export type MutationStoreSavePetTypeArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StorePetTypeInput;
+};
+
+
+export type MutationStoreSaveProductArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreAdminProductInput;
+  status: StoreProductStatus;
+};
+
+
+export type MutationStoreSaveSectionArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreSectionInput;
+};
+
+
+export type MutationStoreSaveSettingsArgs = {
+  input: StoreSettingsInput;
+};
+
+
+export type MutationStoreSaveWarehouseArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreWarehouseInput;
+};
+
+
+export type MutationStoreSetCartQtyArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  product_id: Scalars['ID']['input'];
+  qty: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStoreSetParcelArgs = {
+  id: Scalars['ID']['input'];
+  input?: InputMaybe<StoreParcelInput>;
+};
+
+
+export type MutationStoreSetProductStatusArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  status: StoreProductStatus;
+};
+
+
+export type MutationStoreShipmentFileArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  kind: ShipmentDocumentKind;
+};
+
+
+export type MutationStoreSkipSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreSubmitReviewArgs = {
+  input: StoreReviewInput;
+};
+
+
+export type MutationStoreSubscribeStockAlertArgs = {
+  email: Scalars['String']['input'];
+  product_id: Scalars['ID']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStoreSubscriptionOrderNowArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreToggleWishlistArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  product_id: Scalars['ID']['input'];
+};
+
+
+export type MutationStoreUpdateOrderStatusArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  status: FulfilmentStatus;
+};
+
+
+export type MutationStoreUpdateReturnArgs = {
+  id: Scalars['ID']['input'];
+  input: StoreReturnUpdateInput;
+};
+
+
+export type MutationStoreUpdateShippingAddressArgs = {
+  id: Scalars['ID']['input'];
+  input: StoreAddressInput;
+};
+
+
+export type MutationStoreUpdateSubscriptionArgs = {
+  id: Scalars['ID']['input'];
+  input: StoreSubscriptionUpdateInput;
+};
+
+
+export type MutationStoreVerifyCodOtpArgs = {
+  challenge_id: Scalars['ID']['input'];
+  code: Scalars['String']['input'];
+};
+
+
+export type MutationStoreVerifyPaymentArgs = {
+  input: StoreVerifyPaymentInput;
 };
 
 
@@ -13256,6 +16533,11 @@ export type MutationSubmitJobApplicationArgs = {
 };
 
 
+export type MutationSubmitLatestBuildToStoreArgs = {
+  store: ReleaseStore;
+};
+
+
 export type MutationSubmitLeadSurveyByTokenArgs = {
   answers: Array<SurveyAnswerInput>;
   token: Scalars['String']['input'];
@@ -13321,6 +16603,12 @@ export type MutationSubmitVerificationArgs = {
 };
 
 
+export type MutationSubscribeLocationLaunchArgs = {
+  location_doc_id: Scalars['ID']['input'];
+  location_shared?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type MutationSubscribeNewsletterArgs = {
   input: SubscribeNewsletterInput;
 };
@@ -13331,8 +16619,29 @@ export type MutationSupportCreateUserArgs = {
 };
 
 
+export type MutationSyncContactsArgs = {
+  batch?: InputMaybe<ContactSyncBatchInput>;
+  entries: Array<ContactEntryInput>;
+};
+
+
+export type MutationSyncSocialAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSyncStagingDnsArgs = {
+  ids: Array<Scalars['String']['input']>;
+};
+
+
 export type MutationTechExecArgs = {
   command: Scalars['String']['input'];
+};
+
+
+export type MutationTechGenerateServerAdviceArgs = {
+  sslHost?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -13442,6 +16751,16 @@ export type MutationTriggerAppBuildArgs = {
 };
 
 
+export type MutationTriggerE2eRunArgs = {
+  input: TriggerE2eRunInput;
+};
+
+
+export type MutationTriggerStressRunArgs = {
+  input: TriggerStressRunInput;
+};
+
+
 export type MutationUnfollowClubArgs = {
   club_id: Scalars['ID']['input'];
 };
@@ -13491,6 +16810,12 @@ export type MutationUpdateAiMonitoringSettingsArgs = {
 export type MutationUpdateAiPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateAiPromptInput;
+};
+
+
+export type MutationUpdateAnalyticsAlertArgs = {
+  id: Scalars['ID']['input'];
+  input: AnalyticsAlertInput;
 };
 
 
@@ -13657,6 +16982,24 @@ export type MutationUpdateDnsRecordArgs = {
 };
 
 
+export type MutationUpdateE2eFlowArgs = {
+  id: Scalars['ID']['input'];
+  input: E2eFlowInput;
+};
+
+
+export type MutationUpdateE2eRunSettingsArgs = {
+  input: UpdateE2eRunSettingsInput;
+};
+
+
+export type MutationUpdateE2eSubFlowArgs = {
+  flow_id: Scalars['ID']['input'];
+  input: E2eSubFlowInput;
+  sub_flow_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateEcommLeadArgs = {
   id: Scalars['ID']['input'];
   input: EcommLeadInput;
@@ -13675,6 +17018,12 @@ export type MutationUpdateEmailTemplateArgs = {
 };
 
 
+export type MutationUpdateEmployeeExpenseArgs = {
+  expense_doc_id: Scalars['ID']['input'];
+  input: EmployeeExpenseInput;
+};
+
+
 export type MutationUpdateEnvEntryArgs = {
   id: Scalars['ID']['input'];
   input: UpdateEnvEntryInput;
@@ -13684,6 +17033,12 @@ export type MutationUpdateEnvEntryArgs = {
 export type MutationUpdateExpenseArgs = {
   expense_doc_id: Scalars['ID']['input'];
   input: CreateExpenseInput;
+};
+
+
+export type MutationUpdateExpenseOptionArgs = {
+  input: ExpenseOptionInput;
+  option_id: Scalars['ID']['input'];
 };
 
 
@@ -13713,6 +17068,11 @@ export type MutationUpdateFinanceSettingsArgs = {
 
 export type MutationUpdateGiftCardSettingsArgs = {
   input: GiftCardSettingsInput;
+};
+
+
+export type MutationUpdateGraphqlMonitorSettingsArgs = {
+  input: GraphqlMonitorSettingsInput;
 };
 
 
@@ -13842,9 +17202,26 @@ export type MutationUpdateOccasionalIconsArgs = {
 };
 
 
+export type MutationUpdateOfficialStatusArgs = {
+  input: OfficialStatusInput;
+  status_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateOnboardingIntroArgs = {
+  input: UpdateOnboardingIntroInput;
+};
+
+
 export type MutationUpdatePodArgs = {
   input: UpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdatePodCalculatorArgs = {
+  calculator_doc_id: Scalars['ID']['input'];
+  input: SavePodCalculatorInput;
 };
 
 
@@ -13909,6 +17286,17 @@ export type MutationUpdateRoleArgs = {
 };
 
 
+export type MutationUpdateScheduledSocialPostArgs = {
+  id: Scalars['ID']['input'];
+  input: SocialScheduledPostInput;
+};
+
+
+export type MutationUpdateShortLinkPolicyArgs = {
+  input: ShortLinkPolicyInput;
+};
+
+
 export type MutationUpdateSomethingForYouItemArgs = {
   input: SomethingForYouInput;
   item_id: Scalars['ID']['input'];
@@ -13920,6 +17308,21 @@ export type MutationUpdateStatusReportArgs = {
   report_id: Scalars['ID']['input'];
   staff_images?: InputMaybe<Array<Scalars['String']['input']>>;
   status: StatusReportStatus;
+};
+
+
+export type MutationUpdateStoreListingArgs = {
+  input: StoreListingInput;
+};
+
+
+export type MutationUpdateStoreReleaseSettingsArgs = {
+  input: UpdateStoreReleaseSettingsInput;
+};
+
+
+export type MutationUpdateStressSettingsArgs = {
+  input: UpdateStressSettingsInput;
 };
 
 
@@ -14324,6 +17727,93 @@ export type OfferPodChangeInput = {
   venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/**
+ * A status Duncit itself publishes (Marketing > Status). It rides in the apps'
+ * status rail as a pinned Duncit tile, beside club and member stories.
+ */
+export type OfficialStatus = {
+  __typename?: 'OfficialStatus';
+  /** Shown over the slide; empty when there is none. */
+  caption: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  /** The portal account that published it. */
+  created_by: Scalars['String']['output'];
+  /** Null means it never expires. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Off keeps it out of the rail without deleting it. */
+  is_active: Scalars['Boolean']['output'];
+  /** Live right now: active, and not past its expiry. */
+  is_live: Scalars['Boolean']['output'];
+  /** Where tapping the slide goes — an in-app path like /pod-ideas or an https link. Empty means the slide is not tappable. */
+  link_url: Scalars['String']['output'];
+  /** The cities it is published to; empty for a GLOBAL status. */
+  location_ids: Array<Scalars['ID']['output']>;
+  /** Those cities by name, for the Marketing table. */
+  location_names: Array<Scalars['String']['output']>;
+  media_type: CategoryMediaType;
+  media_url: Scalars['String']['output'];
+  scope: OfficialStatusScope;
+  /** Whether the signed-in viewer has already watched it; false when signed out. */
+  seen_by_me: Scalars['Boolean']['output'];
+  /** What the marketing team calls it in the table; never shown in the apps. */
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  /** How many people have watched it. */
+  view_count: Scalars['Int']['output'];
+};
+
+/**
+ * How long a status stays in the rail. The server turns this into expires_at at
+ * save time: HOURS_24 is now + 24h, NEVER stores null, CUSTOM stores the date
+ * the marketer picked.
+ */
+export type OfficialStatusExpiry =
+  | 'CUSTOM'
+  | 'HOURS_24'
+  | 'NEVER';
+
+export type OfficialStatusInput = {
+  caption?: InputMaybe<Scalars['String']['input']>;
+  /** Required when expiry is CUSTOM, and must be in the future. */
+  custom_expires_at?: InputMaybe<Scalars['String']['input']>;
+  expiry: OfficialStatusExpiry;
+  /** Defaults to true. */
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  link_url?: InputMaybe<Scalars['String']['input']>;
+  /** Required and non-empty when scope is LOCATION; ignored for GLOBAL. */
+  location_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  media_type: CategoryMediaType;
+  media_url: Scalars['String']['input'];
+  scope: OfficialStatusScope;
+  title: Scalars['String']['input'];
+};
+
+/** Who an official status is published to. */
+export type OfficialStatusScope =
+  /** Everybody, whichever city they are browsing. */
+  | 'GLOBAL'
+  /** Only viewers whose selected city is one of location_ids. */
+  | 'LOCATION';
+
+export type OfficialStatusTablePage = {
+  __typename?: 'OfficialStatusTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<OfficialStatus>;
+  total: Scalars['Int']['output'];
+};
+
+/** The rich-text intro shown first on each onboarding flow — blank fields skip straight to the category picker. */
+export type OnboardingIntro = {
+  __typename?: 'OnboardingIntro';
+  club_admin_intro_html: Scalars['String']['output'];
+  ecomm_intro_html: Scalars['String']['output'];
+  host_intro_html: Scalars['String']['output'];
+  social_handles: OnboardingSocialHandles;
+  venue_intro_html: Scalars['String']['output'];
+};
+
 export type OnboardingMeeting = {
   __typename?: 'OnboardingMeeting';
   /** Onboarding decision on the interviewer's feedback: NONE (not yet decided) | APPROVED | DENIED. */
@@ -14369,6 +17859,25 @@ export type OnboardingMeetingTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<OnboardingMeeting>;
   total: Scalars['Int']['output'];
+};
+
+/** Duncit's social links, shown with their icons on the onboarding survey pages — a blank link is hidden. */
+export type OnboardingSocialHandles = {
+  __typename?: 'OnboardingSocialHandles';
+  facebook_url: Scalars['String']['output'];
+  instagram_url: Scalars['String']['output'];
+  website_url: Scalars['String']['output'];
+  x_url: Scalars['String']['output'];
+  youtube_url: Scalars['String']['output'];
+};
+
+/** Each link must be a full https:// address, or empty to hide it. */
+export type OnboardingSocialHandlesInput = {
+  facebook_url?: InputMaybe<Scalars['String']['input']>;
+  instagram_url?: InputMaybe<Scalars['String']['input']>;
+  website_url?: InputMaybe<Scalars['String']['input']>;
+  x_url?: InputMaybe<Scalars['String']['input']>;
+  youtube_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** USD per 1,000,000 tokens for one model. Editable — OpenAI re-prices models. */
@@ -14496,6 +18005,11 @@ export type OpenAiUsageLogTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Which shop sold an order. */
+export type OrderChannel =
+  | 'PET_STORE'
+  | 'POD_SHOP';
+
 export type OrderLineItem = {
   __typename?: 'OrderLineItem';
   brand_id?: Maybe<Scalars['ID']['output']>;
@@ -14516,6 +18030,36 @@ export type OrderLineItem = {
   variant_sku: Scalars['String']['output'];
   weight_kg: Scalars['Float']['output'];
 };
+
+/** An operator's private note on an order. */
+export type OrderNote = {
+  __typename?: 'OrderNote';
+  at: Scalars['String']['output'];
+  by_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  text: Scalars['String']['output'];
+};
+
+/** The parcel declared to ShipRocket for an order — or, before booking, the one that will be. */
+export type OrderParcel = {
+  __typename?: 'OrderParcel';
+  breadth_cm: Scalars['Float']['output'];
+  /** What the courier bills: the higher of the packed weight and the volumetric weight. */
+  chargeable_weight_kg: Scalars['Float']['output'];
+  height_cm: Scalars['Float']['output'];
+  length_cm: Scalars['Float']['output'];
+  /** When it went to ShipRocket; null until the shipment is booked. */
+  sent_at?: Maybe<Scalars['String']['output']>;
+  /** AUTO (built from the order's items) or OVERRIDE (an operator's correction). */
+  source: Scalars['String']['output'];
+  volumetric_weight_kg: Scalars['Float']['output'];
+  weight_kg: Scalars['Float']['output'];
+};
+
+/** Paid up front, or collected by the courier on delivery. */
+export type OrderPaymentMethod =
+  | 'COD'
+  | 'PREPAID';
 
 export type OrderShippingAddress = {
   __typename?: 'OrderShippingAddress';
@@ -14571,7 +18115,7 @@ export type OtpDeliveryStatus =
   | 'FAILED'
   /** Genuinely handed to a provider. */
   | 'SENT'
-  /** No transport is wired for this medium yet — the test code is returned instead. */
+  /** No provider is configured for this medium yet — the test code is returned instead. */
   | 'STUBBED';
 
 /** How a one-time code is carried to the person it proves. */
@@ -14586,6 +18130,13 @@ export type OtpRequestResult = {
   /** Password-reset only: false when the email is not a registered account (no OTP is sent). */
   registered?: Maybe<Scalars['Boolean']['output']>;
 };
+
+/** How a unit is packed for the courier. */
+export type PackageType =
+  | 'BOX'
+  | 'ENVELOPE'
+  | 'OTHER'
+  | 'POLYBAG';
 
 export type PartnerDashboard = {
   __typename?: 'PartnerDashboard';
@@ -15174,8 +18725,9 @@ export type PhoneOtpRequestResult = {
   resend_after_seconds: Scalars['Int']['output'];
   /**
    * The code itself, echoed back ONLY while no medium could really carry it —
-   * which is the case for both SMS and WhatsApp today. Null the moment a real
-   * transport is wired, so no client may depend on reading it.
+   * which is the case while neither MSG91 (SMS) nor AiSensy (WhatsApp) has its
+   * key in the Tech portal. Null the moment a real send happens, so no client
+   * may depend on reading it.
    */
   test_code?: Maybe<Scalars['String']['output']>;
 };
@@ -15183,6 +18735,23 @@ export type PhoneOtpRequestResult = {
 export type PickupOwnerKind =
   | 'BRAND'
   | 'DUNCIT';
+
+/**
+ * PUSHING while the server is uploading and committing with Google — that takes
+ * longer than a request should, so the mutation answers at once and the row
+ * reports the outcome. Then RELEASED or FAILED.
+ */
+export type PlayReleaseStatus =
+  | 'FAILED'
+  | 'PUSHING'
+  | 'RELEASED';
+
+/** The Google Play tracks a stored AAB can be released to from the portal. */
+export type PlayStoreTrack =
+  /** Only the testers listed on the app's internal testing track can install it. */
+  | 'INTERNAL'
+  /** Rolled out to every user on Google Play. */
+  | 'PRODUCTION';
 
 export type Pod = {
   __typename?: 'Pod';
@@ -15198,6 +18767,13 @@ export type Pod = {
   /** The Auto Pod offer this pod materialized from — null for ordinary pods. */
   auto_pod_id?: Maybe<Scalars['ID']['output']>;
   available_perks: Array<Scalars['String']['output']>;
+  /**
+   * The cancellation-risk sweep's last verdict on this pod, while it stands.
+   * Null is "no risk": the field is cleared the moment the pod is healthy,
+   * starts, is cancelled, or leaves the risk window. Admin only — every other
+   * audience reads null.
+   */
+  cancellation_risk?: Maybe<PodCancellationRiskFlag>;
   club?: Maybe<Club>;
   club_id: Scalars['ID']['output'];
   club_slug: Scalars['String']['output'];
@@ -15215,6 +18791,8 @@ export type Pod = {
   liked_by_me: Scalars['Boolean']['output'];
   /** Users who liked this pod — powers the 'who liked' list (explore item 8). */
   liked_user_ids: Array<Scalars['ID']['output']>;
+  /** The pod's area for its card chip: the venue's locality, else its zone; null for virtual pods. */
+  locality?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['ID']['output']>;
   meeting_notes?: Maybe<Scalars['String']['output']>;
   meeting_platform?: Maybe<Scalars['String']['output']>;
@@ -15243,6 +18821,11 @@ export type Pod = {
   product_cost_total: Scalars['Float']['output'];
   product_requests: Array<PodProductRequest>;
   products_enabled: Scalars['Boolean']['output'];
+  /**
+   * Whether the reel has an audio track — Explore disables its unmute control
+   * when false. Null when there is no reel or the check could not answer.
+   */
+  reel_has_audio?: Maybe<Scalars['Boolean']['output']>;
   /** Explore reel video URL. Set = reel enabled; live pods with a reel appear in Explore. */
   reel_url?: Maybe<Scalars['String']['output']>;
   /** Seats still bookable (0 when the pod has unlimited spots). */
@@ -15412,6 +18995,8 @@ export type PodAuditAction =
   | 'DELETE'
   /** A content-guideline check refused the edit — nothing was written to the pod. */
   | 'REJECTED'
+  /** An admin revoked a cancellation and put the pod back on the platform. */
+  | 'RESTORE'
   | 'RESUBMIT'
   | 'UPDATE'
   | 'VENUE_APPROVED'
@@ -15469,6 +19054,90 @@ export type PodAuditSource =
   | 'SYSTEM'
   | 'VENUE_OWNER';
 
+/**
+ * A saved calculation in the Finance portal's Pod Profit Calculator.
+ *
+ * It stores INPUTS only. Every payout figure is derived by the same finance
+ * engine that quotes and settles real pods, so a change to the waterfall reaches
+ * saved calculations without a migration and without a second copy of the maths.
+ *
+ * The kind field is which tab saved it: SINGLE is one pod, MULTI is a
+ * comparison. One collection serves both because a single-pod calculation IS a
+ * comparison with one pod in it — the kind only keeps the two lists apart.
+ */
+export type PodCalculator = {
+  __typename?: 'PodCalculator';
+  created_at: Scalars['String']['output'];
+  created_by?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  pods: Array<PodCalculatorPod>;
+  updated_at: Scalars['String']['output'];
+};
+
+/**
+ * One cost line against a pod.
+ *
+ * It is not a share of the collection: the side named in borne_by pays it out of
+ * what it was already paid, so every payout above stays put and only that side's
+ * net is smaller.
+ */
+export type PodCalculatorExpense = {
+  __typename?: 'PodCalculatorExpense';
+  /** Cost for ONE pod. The pod_count projection multiplies it. */
+  amount: Scalars['Float']['output'];
+  /** DUNCIT, HOST or VENUE — anything else is stored as DUNCIT. */
+  borne_by: Scalars['String']['output'];
+  expense_key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type PodCalculatorExpenseInput = {
+  /** Cost for ONE pod. The pod_count projection multiplies it. */
+  amount: Scalars['Float']['input'];
+  /** DUNCIT, HOST or VENUE — anything else is stored as DUNCIT. */
+  borne_by: Scalars['String']['input'];
+  expense_key: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+};
+
+/** One pod inside a saved calculation — the Pod Profit Calculator's inputs, named identically. */
+export type PodCalculatorPod = {
+  __typename?: 'PodCalculatorPod';
+  club_admin_percent: Scalars['Float']['output'];
+  /** Costs against ONE pod, each charged to the side that carries it. */
+  expenses: Array<PodCalculatorExpense>;
+  gst_percent: Scalars['Float']['output'];
+  host_commission_percent: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  no_of_spots: Scalars['Int']['output'];
+  platform_fee_percent: Scalars['Float']['output'];
+  pod_amount: Scalars['Float']['output'];
+  /** How many identical pods this row stands for, the projection multiplier. */
+  pod_count: Scalars['Int']['output'];
+  pod_key: Scalars['String']['output'];
+  venue_amount: Scalars['Float']['output'];
+  venue_commission_percent: Scalars['Float']['output'];
+};
+
+export type PodCalculatorPodInput = {
+  club_admin_percent: Scalars['Float']['input'];
+  /** Costs against ONE pod, each charged to the side that carries it. */
+  expenses: Array<PodCalculatorExpenseInput>;
+  gst_percent: Scalars['Float']['input'];
+  host_commission_percent: Scalars['Float']['input'];
+  name: Scalars['String']['input'];
+  no_of_spots: Scalars['Int']['input'];
+  platform_fee_percent: Scalars['Float']['input'];
+  pod_amount: Scalars['Float']['input'];
+  /** How many identical pods this row stands for, the projection multiplier. */
+  pod_count: Scalars['Int']['input'];
+  pod_key: Scalars['String']['input'];
+  venue_amount: Scalars['Float']['input'];
+  venue_commission_percent: Scalars['Float']['input'];
+};
+
 /** Who cancelled a pod — Finance's Cancel & Refunds pages split on this. */
 export type PodCancelKind =
   | 'ADMIN'
@@ -15505,6 +19174,82 @@ export type PodCancellation = {
   venue_id?: Maybe<Scalars['ID']['output']>;
   venue_name?: Maybe<Scalars['String']['output']>;
 };
+
+/**
+ * The live cancellation-risk picture for one pod, computed now from the same
+ * waterfall the auto-cancel sweep decides on. Admin only.
+ */
+export type PodCancellationRisk = {
+  __typename?: 'PodCancellationRisk';
+  alert_count: Scalars['Int']['output'];
+  /** Hours between repeat alerts to the host and club admins, from Pod Settings. */
+  alert_hours: Scalars['Int']['output'];
+  alerted_at?: Maybe<Scalars['String']['output']>;
+  at_risk: Scalars['Boolean']['output'];
+  attendees: PodCancellationRiskAttendees;
+  /** The moment the sweep cancels this pod if it is still negative — the start minus the lead window. Null unless at risk. */
+  cancel_at?: Maybe<Scalars['String']['output']>;
+  collected_total: Scalars['Float']['output'];
+  currency_symbol: Scalars['String']['output'];
+  hours_until_start: Scalars['Float']['output'];
+  /** The auto-cancel lead window (hours before start) from Pod Settings. */
+  lead_hours: Scalars['Int']['output'];
+  next_alert_at?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  /** How far below zero the host side sits — what the bookings must still raise. */
+  shortfall: Scalars['Float']['output'];
+  state: PodCancellationRiskState;
+  /** The venue's booked slot price the pool has to cover. */
+  venue_amount: Scalars['Float']['output'];
+  /** The unclamped settlement waterfall on today's collections; all zeros for the states that never ran one. */
+  waterfall: PodFinanceWaterfall;
+  /** The risk window (hours before start) from Pod Settings. */
+  window_hours: Scalars['Int']['output'];
+};
+
+/** The seats side of the risk: how full the pod is and what would close the gap. */
+export type PodCancellationRiskAttendees = {
+  __typename?: 'PodCancellationRiskAttendees';
+  booked_seats: Scalars['Int']['output'];
+  seats_available: Scalars['Int']['output'];
+  /** Bookings at that price that would lift the host side back to zero; null when bookings alone cannot (a free pod, or more seats than the pod has left). */
+  spots_needed?: Maybe<Scalars['Int']['output']>;
+  /** The GST-inclusive ticket price per spot. */
+  ticket_price: Scalars['Float']['output'];
+  /** 0 means unlimited. */
+  total_spots: Scalars['Int']['output'];
+};
+
+/** What the risk sweep stored on the pod — enough to tint a table row. */
+export type PodCancellationRiskFlag = {
+  __typename?: 'PodCancellationRiskFlag';
+  alert_count: Scalars['Int']['output'];
+  /** When the host and club admins were last alerted; null until the first round. */
+  alerted_at?: Maybe<Scalars['String']['output']>;
+  at_risk: Scalars['Boolean']['output'];
+  evaluated_at: Scalars['String']['output'];
+  /** Rupees short of covering the venue's booked slot price, as of evaluation. */
+  shortfall: Scalars['Float']['output'];
+  /** Bookings at the current ticket price that would close the gap; null when bookings alone cannot. */
+  spots_needed?: Maybe<Scalars['Int']['output']>;
+};
+
+/**
+ * Why a pod is, or is not, at risk of auto-cancellation. Only AT_RISK tints a
+ * row; the others say which gate stopped the check, so a page can explain a
+ * blank rather than show a green tick over a pod nobody is watching.
+ */
+export type PodCancellationRiskState =
+  | 'AT_RISK'
+  /** Admin > Pods > Pod Settings has auto-cancel switched off. */
+  | 'AUTO_CANCEL_OFF'
+  | 'HEALTHY'
+  /** Cancelled, completed, not yet live, or already started. */
+  | 'NOT_UPCOMING'
+  /** No booked venue slot price — nothing for the bookings to fall short of. */
+  | 'NO_VENUE_COST'
+  /** Starts later than the risk window looks ahead. */
+  | 'OUTSIDE_WINDOW';
 
 /** KPI tiles for Finance → Cancel & Refunds → Dashboard. */
 export type PodCancellationStats = {
@@ -16001,6 +19746,14 @@ export type PodFinanceBreakdown = {
   has_venue: Scalars['Boolean']['output'];
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
+  /** How many of this pod's bookings got money back. */
+  refunded_count: Scalars['Int']['output'];
+  /**
+   * Money handed back to buyers on this pod. A cancelled pod refunds every
+   * booking, so collected_total is 0 for it — this is what explains that zero
+   * rather than leaving it looking like missing money.
+   */
+  refunded_total: Scalars['Float']['output'];
   settlement_status: PodSettlementStatus;
   /**
    * Multi-ticket discounts given across this pod's successful bookings. Like
@@ -16050,6 +19803,28 @@ export type PodForcedCompanionInput = {
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type PodHelpRequestResult = {
+  __typename?: 'PodHelpRequestResult';
+  /** How many club admins were messaged. */
+  notified: Scalars['Int']['output'];
+  status: PodHelpStatus;
+};
+
+/** Which side of a pod is asking its club admin for help. */
+export type PodHelpSide =
+  | 'HOST'
+  | 'VENUE';
+
+/**
+ * What happened to a help request. SENT means every admin of the pod's club was
+ * messaged; ALREADY_REQUESTED means this side already asked about this pod today;
+ * NO_CLUB_ADMIN means the pod's club has nobody to ask.
+ */
+export type PodHelpStatus =
+  | 'ALREADY_REQUESTED'
+  | 'NO_CLUB_ADMIN'
+  | 'SENT';
 
 export type PodIdea = {
   __typename?: 'PodIdea';
@@ -16479,6 +20254,54 @@ export type PodProductRequestInput = {
   quantity: Scalars['Int']['input'];
 };
 
+/** Why a cancellation cannot be revoked. */
+export type PodRevokeBlockedReason =
+  /** The pod is not cancelled — there is nothing to undo. */
+  | 'NOT_CANCELLED'
+  /** The pod's own date and time have passed; a cancellation is final from then on. */
+  | 'POD_DATE_PASSED';
+
+/**
+ * What revoking a pod's cancellation would cost, before it is done.
+ *
+ * A Backout's own partial refund is excluded: it would have been paid whether or
+ * not the pod was cancelled, so it is not a price of undoing one.
+ */
+export type PodRevokePreview = {
+  __typename?: 'PodRevokePreview';
+  blocked_reason?: Maybe<PodRevokeBlockedReason>;
+  can_revoke: Scalars['Boolean']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** Money scheduled but not yet paid. Revoking cancels it, so it costs nothing. */
+  held_total: Scalars['Float']['output'];
+  is_cancelled: Scalars['Boolean']['output'];
+  /** Money already paid back. Reinstating the pod does not recover it. */
+  loss_total: Scalars['Float']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  refunds: Array<PodRevokeRefund>;
+};
+
+/** One payer's cancellation refund, as the revoke panel lists it. */
+export type PodRevokeRefund = {
+  __typename?: 'PodRevokeRefund';
+  amount: Scalars['Float']['output'];
+  currency_symbol: Scalars['String']['output'];
+  payment_id: Scalars['ID']['output'];
+  state: PodRevokeRefundState;
+  user_email: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name: Scalars['String']['output'];
+};
+
+/** Whether a cancellation refund has been paid out or is still only scheduled. */
+export type PodRevokeRefundState =
+  /** Scheduled for the pod's start and not yet paid. Revoking drops it. */
+  | 'HELD'
+  /** The money is back with the payer. Revoking does not recover it. */
+  | 'PAID';
+
 /**
  * The status a pod ROW shows in the Club Admin's pods table.
  *
@@ -16814,6 +20637,8 @@ export type PolicyAcceptanceMethod =
   | 'ACCOUNT'
   /** The same, after Apple returned. */
   | 'APPLE_SIGNUP'
+  /** Signed by a brand partner at the last step of brand onboarding (Partners console). */
+  | 'BRAND_CONSENT'
   /** Ticked in the same dialog, after Google returned but before the account existed. */
   | 'GOOGLE_SIGNUP'
   /** Ticked on the email/password signup form. */
@@ -17115,12 +20940,6 @@ export type ProductListingDeliveryTarget =
   | 'VENUE';
 
 export type ProductListingInput = {
-  hsn_code?: InputMaybe<Scalars['String']['input']>;
-  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
-  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
-  mrp?: InputMaybe<Scalars['Float']['input']>;
-  package_type?: InputMaybe<PackageType>;
-  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   brand_id: Scalars['ID']['input'];
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   /** Full list of Super/Category/Sub rows the product is sold in. When present, categories[0] backfills the single fields above. */
@@ -17133,21 +20952,33 @@ export type ProductListingInput = {
   /** Line subtotal (qty x unit price) at/above which this product's delivery is free. Omit/null = no offer. */
   free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503). */
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
   image_url: Scalars['String']['input'];
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   inventory_count: Scalars['Int']['input'];
   /** Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility. */
   is_duncit_delivery_partner?: InputMaybe<Scalars['Boolean']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none. */
+  mrp?: InputMaybe<Scalars['Float']['input']>;
   /** Product-level option definitions (e.g. Size, Colour); variants are their combinations. */
   options?: InputMaybe<Array<ProductOptionInput>>;
+  /** How a unit is packed for the courier (default BOX). */
+  package_type?: InputMaybe<PackageType>;
   /** Warehouse (BrandPickupLocation of the SAME brand) this product ships from. */
   pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   product_name: Scalars['String']['input'];
+  /** Days a sealed unit stays good (food, medicine); null when it doesn't expire. */
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   size_label?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
   /** Primary category triple (kept for back-compat; mirrors categories[0]). */
   super_category_id: Scalars['ID']['input'];
+  /** GST rate (%) printed on the invoice and sent to ShipRocket with each item. Default 0. */
+  tax_percent?: InputMaybe<Scalars['Float']['input']>;
   unit_cost: Scalars['Float']['input'];
   /** Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant. */
   variants?: InputMaybe<Array<ProductVariantInput>>;
@@ -17174,19 +21005,32 @@ export type ProductOptionInput = {
 export type ProductOrder = {
   __typename?: 'ProductOrder';
   buyer_email: Scalars['String']['output'];
-  buyer_id: Scalars['ID']['output'];
+  /** Null for a pet-store guest checkout. */
+  buyer_id?: Maybe<Scalars['ID']['output']>;
   buyer_name: Scalars['String']['output'];
   buyer_phone?: Maybe<Scalars['String']['output']>;
+  cancel_reason: Scalars['String']['output'];
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  cancelled_by: Scalars['String']['output'];
+  channel: OrderChannel;
+  /** What the courier collects in cash (COD only). */
+  cod_amount: Scalars['Float']['output'];
+  cod_collected_at?: Maybe<Scalars['String']['output']>;
+  coins_share: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
+  /** This order's share of the coupon, prepaid discount and coins. */
+  discount_total: Scalars['Float']['output'];
   fulfilment_method: FulfilmentMethod;
   fulfilment_status: FulfilmentStatus;
   id: Scalars['ID']['output'];
   items_total: Scalars['Float']['output'];
   last_error: Scalars['String']['output'];
   line_items: Array<OrderLineItem>;
+  notes: Array<OrderNote>;
   order_no: Scalars['String']['output'];
   payment_id: Scalars['ID']['output'];
+  payment_method: OrderPaymentMethod;
   payment_ref: Scalars['String']['output'];
   pickup_location_id: Scalars['String']['output'];
   pickup_ref: Scalars['String']['output'];
@@ -17291,13 +21135,6 @@ export type ProductShippingQuoteLine = {
   warehouse_id: Scalars['ID']['output'];
 };
 
-/** How a unit is packed for the courier. */
-export type PackageType =
-  | 'BOX'
-  | 'ENVELOPE'
-  | 'OTHER'
-  | 'POLYBAG';
-
 export type ProductType =
   | 'CONSUMABLE'
   | 'EQUIPMENT'
@@ -17305,10 +21142,9 @@ export type ProductType =
 
 export type ProductVariant = {
   __typename?: 'ProductVariant';
-  chargeable_weight_kg: Scalars['Float']['output'];
-  mrp: Scalars['Float']['output'];
-  volumetric_weight_kg: Scalars['Float']['output'];
   breadth_cm: Scalars['Float']['output'];
+  /** What a courier bills: the higher of the packed weight and the volumetric weight. */
+  chargeable_weight_kg: Scalars['Float']['output'];
   color: Scalars['String']['output'];
   description: Scalars['String']['output'];
   height_cm: Scalars['Float']['output'];
@@ -17316,16 +21152,19 @@ export type ProductVariant = {
   images: Array<Scalars['String']['output']>;
   inventory_count: Scalars['Int']['output'];
   length_cm: Scalars['Float']['output'];
+  /** Compare-at price the pet store strikes through. 0 = none. */
+  mrp: Scalars['Float']['output'];
   option_label: Scalars['String']['output'];
   option_values: Array<VariantOptionValue>;
   size_label: Scalars['String']['output'];
   sku: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
+  /** L x B x H / 5000 of this variant's packed parcel (falls back to the product's dimensions). */
+  volumetric_weight_kg: Scalars['Float']['output'];
   weight_kg: Scalars['Float']['output'];
 };
 
 export type ProductVariantInput = {
-  mrp?: InputMaybe<Scalars['Float']['input']>;
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   color?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -17333,6 +21172,8 @@ export type ProductVariantInput = {
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   inventory_count?: InputMaybe<Scalars['Int']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** Compare-at price; omitted keeps the saved one. Must not be below the variant's price. */
+  mrp?: InputMaybe<Scalars['Float']['input']>;
   option_label?: InputMaybe<Scalars['String']['input']>;
   option_values?: InputMaybe<Array<VariantOptionValueInput>>;
   size_label?: InputMaybe<Scalars['String']['input']>;
@@ -17472,6 +21313,8 @@ export type PublicProfile = {
   inbound_request_id?: Maybe<Scalars['ID']['output']>;
   /** Whether the signed-in viewer follows this user. */
   is_following: Scalars['Boolean']['output'];
+  /** True when this account holds the HOST role, so a profile can offer a tab of the pods they host. */
+  is_host: Scalars['Boolean']['output'];
   /** PRIVATE when this profile hides its posts/stories from non-followers. */
   is_private: Scalars['Boolean']['output'];
   last_name?: Maybe<Scalars['String']['output']>;
@@ -17500,6 +21343,28 @@ export type PurgeAccountTraceInput = {
   request_doc_id: Scalars['ID']['input'];
 };
 
+/**
+ * What the live suite left behind, and what purging it removed.
+ *
+ * The run's identity is passed IN rather than looked up, because the server
+ * holding the data is not always the server holding the run: a nightly run
+ * reports to production while its live suite drives staging, and the purge
+ * has to happen where the data is.
+ */
+export type PurgeE2eRunDataInput = {
+  /** Ignored. The run account is signup_email; kept so an older runner's call still parses. */
+  login_email?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The run account. Every account whose address carries this one's stamp is
+   * removed outright, with everything that points at it, together with its
+   * one-time codes — which is what frees the address and the phone for the
+   * next signup.
+   */
+  signup_email: Scalars['String']['input'];
+  /** The run's ddMMyyyyHHmm stamp. */
+  stamp: Scalars['String']['input'];
+};
+
 export type PushConfig = {
   __typename?: 'PushConfig';
   publicKey: Scalars['String']['output'];
@@ -17514,6 +21379,7 @@ export type PushSubscriptionInput = {
 
 export type Query = {
   __typename?: 'Query';
+  _ping: Scalars['String']['output'];
   /** Admin Panel: the window, the schedule, and when it last ran. */
   accountDeletionCronSettings: AccountDeletionCronSettings;
   /** How many requests are past their date right now — the console's preview. */
@@ -17575,6 +21441,8 @@ export type Query = {
   aiMonitoringSettings: AiMonitoringSettings;
   aiPrompt?: Maybe<AiPrompt>;
   aiPrompts: Array<AiPrompt>;
+  /** How many keys an AI translation would send right now, per language. */
+  aiTranslationPending: Array<AiTranslationPending>;
   /** The API campaigns AiSensy has for this project. */
   aisensyCampaigns: Array<AisensyCampaign>;
   /** Whether the Tech portal holds the AiSensy Project credentials that read campaigns and templates. */
@@ -17585,12 +21453,23 @@ export type Query = {
   aisensyTemplates: Array<AisensyTemplate>;
   /** Admin: both surfaces for the Upload Settings pages. */
   allUploadSettings: Array<UploadSetting>;
+  analyticsAlerts: Array<AnalyticsAlert>;
+  /** The cities an Analytics page can be narrowed to. */
+  analyticsCities: Array<AnalyticsCity>;
+  analyticsMailSettings: AnalyticsMailSettings;
+  analyticsMailSubscriptions: Array<AnalyticsMailSubscription>;
   appBuildSettings: AppBuildSettings;
   appBuildTriggerConfig: AppBuildTriggerConfig;
   /** CI builds of one platform, newest first (Tech portal App Builds tables). */
   appBuildsTable: AppBuildTablePage;
   appPopupsTable: AppPopupTablePage;
   appSettings: AppSettings;
+  /**
+   * Apple's top-level iOS category ids (SOCIAL_NETWORKING, LIFESTYLE, …), read
+   * live from App Store Connect. Empty until the App Store Connect key is
+   * configured. Tech/Super admin only.
+   */
+  appStoreCategories: Array<Scalars['String']['output']>;
   appVersionInfo: AppVersionInfo;
   /** Admin inbox of approval requests (defaults to all; filter by status/type). */
   approvalRequests: Array<ApprovalRequest>;
@@ -17643,12 +21522,11 @@ export type Query = {
    * venue would be paid after Finance's deductions.
    */
   autoPodVenueSlots: AutoPodVenueSlots;
-  /** The most recent run for one locale — what the progress dialog polls. */
-  autoTranslateJob?: Maybe<AutoTranslateJob>;
-  /** Recent runs across every locale, newest first. */
-  autoTranslateJobs: Array<AutoTranslateJob>;
-  /** How many keys an auto-translate run would send for this locale right now. */
-  autoTranslatePending: Scalars['Int']['output'];
+  automationFlow?: Maybe<AutomationFlow>;
+  automationFlows: Array<AutomationFlow>;
+  automationOptions: AutomationOptions;
+  automationRun?: Maybe<AutomationRun>;
+  automationRuns: Array<AutomationRun>;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -17668,6 +21546,8 @@ export type Query = {
   bouncerSosAlert?: Maybe<BouncerSosAlert>;
   bouncerSosAlerts: BouncerSosAlertPage;
   bouncerSupportTarget: BouncerSupportTarget;
+  /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
+  brandConsentPolicy?: Maybe<Policy>;
   /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
   brandPickupLocations: Array<BrandPickupLocation>;
   branding: Branding;
@@ -17677,6 +21557,8 @@ export type Query = {
   /** Every bug, unpaginated, for the JSON export. */
   bugsExport: Array<Bug>;
   bugsTable: BugTablePage;
+  /** The <name>Table queries the caller is offered bulk delete on. */
+  bulkDeletableTables: Array<Scalars['String']['output']>;
   /**
    * PUBLIC. Every form anyone on the internet can post asks for one of these
    * first, so this cannot itself require a session.
@@ -17810,6 +21692,30 @@ export type Query = {
   communicationLogs: CommunicationLogPage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
+  /**
+   * The viewer's phone contacts who have Duncit accounts. `search` narrows on
+   * name, @handle or the phone-book label; `nearby: true` keeps only the ones in
+   * the viewer's selected city. Empty until the viewer has synced.
+   * @deprecated Returns the first 500 only. Use contactsOnDuncitPage.
+   */
+  contactsOnDuncit: Array<ContactOnDuncit>;
+  /**
+   * One page of the viewer's matched contacts, newest match first. Walk it by
+   * raising `offset` by the `limit` asked for until it reaches `total`;
+   * `limit` is capped at 500. Empty until the viewer has synced.
+   */
+  contactsOnDuncitPage: ContactsOnDuncitPage;
+  /**
+   * The viewer's phone contacts who are NOT on Duncit — who an invite is for.
+   * `search` narrows on the phone-book name. Empty until the viewer has synced.
+   * @deprecated Returns the first 500 only. Use contactsToInvitePage.
+   */
+  contactsToInvite: Array<ContactToInvite>;
+  /**
+   * One page of the viewer's phone contacts who are NOT on Duncit, A–Z by the
+   * name the phone book saved. Walked the same way as `contactsOnDuncitPage`.
+   */
+  contactsToInvitePage: ContactsToInvitePage;
   contentReport?: Maybe<ContentReport>;
   contentReportStats: ContentReportStats;
   /** Legal-only queue of everything users have reported. */
@@ -17822,6 +21728,10 @@ export type Query = {
   contractPdfBase64: Scalars['String']['output'];
   contractsTable: ContractTablePage;
   coupon?: Maybe<Coupon>;
+  /** The payments that consumed one coupon — the detail page's history table. */
+  couponRedemptionsTable: CouponRedemptionTablePage;
+  /** Redemption figures for one coupon's detail page. */
+  couponStats: CouponStats;
   coupons: Array<Coupon>;
   couponsForPod: Array<Coupon>;
   /** Table sibling of couponsForPod — this pod's coupons plus every GLOBAL coupon. */
@@ -17860,6 +21770,8 @@ export type Query = {
   dataCloneTargets: DataCloneTargets;
   /** The automatic backup schedule, created with defaults on first read. */
   dbBackupSettings: DbBackupSettings;
+  /** The archive directory on this server and its newest downloadable backup. */
+  dbBackupStore: DbBackupStore;
   /** Every backup run, paged for the table. */
   dbBackupsTable: DbBackupTablePage;
   /** One restore by id, or the most recent one. Polled for progress. */
@@ -17890,8 +21802,43 @@ export type Query = {
    * will actually apply when the venue carries no override of its own.
    */
   defaultVenueCommissionPct: Scalars['Float']['output'];
-  /** Every record in the configured GoDaddy zone. */
+  /** The domain itself at GoDaddy: expiry, renewal and the locks on it. */
+  dnsDomainInfo: DnsDomainInfo;
+  /** Every record in the configured GoDaddy zone, grouped and compared against staging. */
   dnsZone: DnsZone;
+  /** One flow with its sub flows, or null when it does not exist. Tech/Super admin only. */
+  e2eFlow?: Maybe<E2eFlow>;
+  /** Every documented flow (Tech portal E2E Flows table). Tech/Super admin only. */
+  e2eFlowsTable: E2eFlowTablePage;
+  /**
+   * A credential the Google sign-in mutations accept in place of Google's own,
+   * for an e2e run account address only, so a live run can test everything
+   * after Google's popup. Signed by THIS server, dead after six hours.
+   * Tech/Super admin only; refused unless "one-time codes for the run account"
+   * is on.
+   */
+  e2eGoogleCredential: Scalars['String']['output'];
+  /**
+   * The newest one-time code held for the e2e run account, or null when none
+   * has been issued yet. Tech/Super admin only, refused unless "one-time codes
+   * for the run account" is on and the address or number is a run account's.
+   * Pass email for a mailed code or phone for a WhatsApp one.
+   */
+  e2eOneTimeCode?: Maybe<E2eOneTimeCode>;
+  e2eRunSettings: E2eRunSettings;
+  /** Every e2e run, newest first (Tech portal E2E Tests table). */
+  e2eRunsTable: E2eRunTablePage;
+  /** The suites a run can be asked for. */
+  e2eSuiteCatalogue: Array<E2eSuite>;
+  /**
+   * The x-duncit-e2e header value for a run stamp on THIS server, so a live
+   * run's many sign-ins are not refused by the sign-in rate limit. Asked of the
+   * server under test, not the one the run reports to: each server signs its
+   * own keys. Tech/Super admin only; refused unless "one-time codes for the run
+   * account" is on.
+   */
+  e2eTrafficKey: Scalars['String']['output'];
+  e2eTriggerConfig: E2eTriggerConfig;
   /** Onboarding/admin: a single brand by id. */
   ecommBrand?: Maybe<EcommBrand>;
   /** Onboarding/admin: all brands, optionally filtered by status. */
@@ -17922,8 +21869,20 @@ export type Query = {
    */
   emailTemplateUsage: Array<EmailTemplateUsage>;
   emailTemplates: Array<EmailTemplate>;
-  /** One Analytics console page: tiles, trends, breakdowns and a ranking. days is clamped to 7-365. */
+  /** Finance: tiles across every employee's claims. */
+  employeeExpenseSummary: EmployeeExpenseSummary;
+  /** Finance: every employee's claims, with the employee joined on. */
+  employeeExpensesTable: EmployeeExpenseTablePage;
+  /**
+   * One Analytics console page: tiles, trends, breakdowns and a ranking. Either a preset days
+   * (clamped to 7-365) or a calendar range from-to (yyyy-MM-dd in the admin zone, inclusive,
+   * at most a year); city narrows the pages that can be narrowed (Pods, Clubs).
+   */
   entityAnalytics: EntityAnalytics;
+  /** Every change across EVERY record of one entity — the console-wide feed. */
+  entityChangeFeedTable: EntityChangeLogTablePage;
+  /** The complete change history of ONE directory record, newest first. */
+  entityChangeLogsTable: EntityChangeLogTablePage;
   envCategories: Array<EnvCategoryDef>;
   envEntries: Array<EnvEntry>;
   /** Entries currently assigned to a portal (by portal key). */
@@ -17934,6 +21893,18 @@ export type Query = {
   eventTicketPdfBase64: Scalars['String']['output'];
   eventTickets: Array<EventTicket>;
   eventTicketsTable: EventTicketTablePage;
+  /** KPI tiles + the three breakdowns for the Expense Dashboard. */
+  expenseDashboard: ExpenseDashboard;
+  /** Every entity source a RELATED_FROM_TYPE may point at. */
+  expenseEntitySources: Array<Scalars['String']['output']>;
+  /** The dropdown the Expense form renders: active rows of one list, in order. */
+  expenseOptions: Array<ExpenseOption>;
+  /** The settings table: one whole list, switched-off rows and usage included. */
+  expenseOptionsTable: Array<ExpenseOption>;
+  /** Searchable entity list for one Related From type. */
+  expenseRelatedEntities: Array<ExpenseRelatedEntity>;
+  /** One entity by id — how a saved expense re-reads the name it was filed against. */
+  expenseRelatedEntity?: Maybe<ExpenseRelatedEntity>;
   expenseSummary: ExpenseSummary;
   expenses: Array<Expense>;
   expensesTable: ExpenseTablePage;
@@ -17969,6 +21940,17 @@ export type Query = {
   googleAnalyticsSites: Array<GoogleAnalyticsSite>;
   /** The measurement id a website loads, or null when it has none or it is switched off. Public: every page of every website asks for it. */
   googleAnalyticsTag?: Maybe<Scalars['String']['output']>;
+  graphqlMonitorErrors: Array<GraphqlErrorGroup>;
+  /** Every field in the schema, used or not. */
+  graphqlMonitorFields: Array<GraphqlFieldUsage>;
+  graphqlMonitorOperation: GraphqlOperationDetail;
+  graphqlMonitorOperations: Array<GraphqlOperationSummary>;
+  /** range: LAST_HOUR | LAST_6_HOURS | LAST_24_HOURS | LAST_7_DAYS | LAST_30_DAYS (default LAST_24_HOURS). */
+  graphqlMonitorOverview: GraphqlMonitorOverview;
+  graphqlMonitorSettings: GraphqlMonitorSettings;
+  graphqlMonitorTrace: GraphqlTrace;
+  /** Slowest sampled traces of one operation, slowest first. */
+  graphqlMonitorTraces: Array<GraphqlTrace>;
   /** Public: the officer the app and website publish. */
   grievanceOfficer: GrievanceOfficer;
   grievanceStats: GrievanceStats;
@@ -18010,6 +21992,10 @@ export type Query = {
   /** Server-side table sibling of inventoryProducts (shared table engine). */
   inventoryProductsTable: InventoryProductTablePage;
   inventoryStockMovements: Array<InventoryStockMovement>;
+  /** The newest iOS signing identity with its files and the upload key, for the ios-build workflow. */
+  iosSigningBundle: IosSigningBundle;
+  /** The iOS signing identity a build was signed with. Null on Android and on builds from before one existed. */
+  iosSigningForBuild?: Maybe<IosSigning>;
   jobApplications: Array<JobApplication>;
   jobApplicationsTable: JobApplicationTablePage;
   /** Optional category_id/sub_category_id resolve the survey for a chosen scope (multi-category leads). */
@@ -18062,6 +22048,12 @@ export type Query = {
   /** Every locale, for admin lists. */
   locales: Array<Locale>;
   location?: Maybe<Location>;
+  /** Public. Takes the city's id or its slug (Location.location_id, e.g. agra) — the form a shared link carries. Null when the city does not exist. */
+  locationLaunchStatus?: Maybe<LocationLaunchStatus>;
+  /** Admin: one row per city that has at least one subscriber. */
+  locationSubscriptionCities: Array<LocationSubscriptionCity>;
+  /** Admin: every subscriber, filterable by location_doc_id. */
+  locationSubscriptionsTable: LocationSubscriptionTablePage;
   locations: Array<Location>;
   locationsTable: LocationTablePage;
   /** Every connected mailbox. Read by both the Tech and Support portals. */
@@ -18161,6 +22153,8 @@ export type Query = {
   myApiKeysTable: ApiKeyTablePage;
   /** Per-role counts of Auto Pods waiting on the caller — drives role-switch landing. */
   myAutoPodActionCounts: AutoPodActionCounts;
+  /** The caller's own jobs that are running or not yet dismissed, newest first. */
+  myBackgroundJobs: Array<BackgroundJob>;
   myBadgeProgress: Array<BadgeProgress>;
   myBadges: Array<UserBadge>;
   /** Warehouses of one of the caller's OWN brands (partner portal Brand Settings). */
@@ -18194,18 +22188,31 @@ export type Query = {
    * field on User.
    */
   myConnectedAccounts: ConnectedAccounts;
+  /** The viewer's last contacts sync, or null when they have never synced. */
+  myContactsSync?: Maybe<ContactsSyncStatus>;
   /**
    * The signed-in user's layout for one dashboard, or null when they have
    * never saved one. Always scoped to the caller — a layout is a personal
    * preference and is never readable for anybody else.
    */
   myDashboardLayout?: Maybe<DashboardLayout>;
+  /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
+  myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
   myEcommBrands: Array<EcommBrand>;
   /** Server-side table sibling of myEcommBrands — always scoped to the caller's own brands. */
   myEcommBrandsTable: EcommBrandTablePage;
   /** Products portal: brand/product change requests raised from this portal (kind = BRAND | PRODUCT). */
   myEcommChangeRequests: Array<ApprovalRequest>;
+  /**
+   * One of the signed-in employee's own claims, so the claim page can open from
+   * its own URL rather than only from the row that was clicked.
+   */
+  myEmployeeExpense: EmployeeExpense;
+  /** Tiles for the signed-in employee's own claims. */
+  myEmployeeExpenseSummary: EmployeeExpenseSummary;
+  /** The signed-in employee's own claims. */
+  myEmployeeExpensesTable: EmployeeExpenseTablePage;
   myEventTicketForPod?: Maybe<EventTicket>;
   myEventTickets: Array<EventTicket>;
   /** Open follow requests waiting on the signed-in user, newest first. */
@@ -18260,6 +22267,12 @@ export type Query = {
   myProductOrdersForPod: Array<ProductOrder>;
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
+  /** The signed-in Regional Club Admin's own region, created on first read. */
+  myRegion: Region;
+  /** The region's Club Admins, with the clubs each one runs. */
+  myRegionMembers: Array<RegionMember>;
+  /** The whole canvas: Region -> City -> Locality -> Club Admin -> Host. */
+  myRegionTree: RegionTree;
   /** The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort. */
   mySavedPods: Array<Pod>;
   /** The signed-in owner's saved recurring-slot templates (optionally scoped to a venue). */
@@ -18269,6 +22282,7 @@ export type Query = {
   mySupportChat?: Maybe<SupportChatSession>;
   /** Current user's submitted response for a survey (drives 'asked once'). */
   mySurveyResponse?: Maybe<SurveyResponse>;
+  myTableApiAccess: TableApiAccess;
   myTickets: Array<Ticket>;
   /** All of the signed-in user's support items (tickets, SOS, callbacks, chats). */
   myUnifiedSupportTickets: Array<UnifiedSupportTicket>;
@@ -18293,6 +22307,15 @@ export type Query = {
   newsletterSubscribersTable: NewsletterSubscriberTablePage;
   notifications: Array<Notification>;
   notificationsTable: NotificationTablePage;
+  /**
+   * The live Duncit statuses for the apps' rail, newest first: every GLOBAL one,
+   * plus the ones published to the city the viewer is browsing.
+   */
+  officialStatuses: Array<OfficialStatus>;
+  /** Marketing > Status. Marketing/Super admin only. */
+  officialStatusesTable: OfficialStatusTablePage;
+  /** Onboarding-intro copy for the four onboarding flows, read before the category picker. */
+  onboardingIntro: OnboardingIntro;
   /** Onboarding list of meetings (calendar + tables). */
   onboardingMeetings: Array<OnboardingMeeting>;
   /** Server-side table page (search/filter/sort/paginate) over onboarding meetings. */
@@ -18336,6 +22359,12 @@ export type Query = {
   /** Admin: AI-monitored audit trail of every pod action. */
   podAuditLogsTable: PodAuditLogTablePage;
   podBySlugs?: Maybe<Pod>;
+  podCalculator?: Maybe<PodCalculator>;
+  /** The saved calculation as a PDF report, base64-encoded for the browser to save. */
+  podCalculatorPdfBase64: Scalars['String']['output'];
+  podCalculators: Array<PodCalculator>;
+  /** The live cancellation-risk picture for one pod — the admin detail page's risk section. */
+  podCancellationRisk: PodCancellationRisk;
   podCancellationStats: PodCancellationStats;
   podCancellations: Array<PodCancellation>;
   /** Admin: partners matching this pod's category (and city, where they have one). */
@@ -18379,6 +22408,8 @@ export type Query = {
   podMessages: Array<PodMessage>;
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
+  /** What revoking this pod's cancellation would cost, and whether it is allowed. */
+  podRevokePreview: PodRevokePreview;
   podSettlementPreview: PodSettlement;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
@@ -18518,6 +22549,47 @@ export type Query = {
   /** Admin: every redeemed referral, newest first. */
   referrals: Array<AdminReferral>;
   referralsTable: AdminReferralTablePage;
+  /** Club Admins this manager could add to the region. */
+  regionClubAdminCandidates: Array<RegionCandidate>;
+  /**
+   * The clubs ONE of the region's Club Admins runs.
+   *
+   * Refused for somebody who is not in the caller's region: a manager reads
+   * their own patch, and a user id from elsewhere is not an entry point.
+   */
+  regionClubAdminClubs: RegionClubPage;
+  /** Pods of ONE club in the region — the second level of the drill-down. */
+  regionClubPods: RegionHostPodPage;
+  /** One host's pods inside this region — the canvas drawer's table. */
+  regionHostPods: RegionHostPodPage;
+  /**
+   * Attendees of one pod in the caller's region — the region twin of
+   * adminPodAttendees.
+   *
+   * Its own query rather than a role added to the admin one: a region is a
+   * MEMBERSHIP chain (my Club Admins -> their clubs -> those clubs' pods), and
+   * requireRole cannot express a chain. Gated on the pod belonging to the
+   * region, which is what keeps a manager inside their own patch.
+   */
+  regionPodAttendees: Array<AdminPodAttendee>;
+  /** Full action trail of one pod in the caller's region, newest first. */
+  regionPodAuditLogs: Array<PodAuditLog>;
+  /** Rating + review summary for one pod in the caller's region. */
+  regionPodFeedback: PodFeedbackSummary;
+  /**
+   * The host profile behind one of this pod's hosts. Scoped to the pod, not to
+   * an arbitrary user id: a manager may read the host running a pod in their
+   * region, not look up any host on the platform.
+   */
+  regionPodHost?: Maybe<Host>;
+  /**
+   * Payments for ONE pod in the caller's region.
+   *
+   * Deliberately takes a pod id instead of the admin paymentsTable's free-form
+   * TableQueryInput: that input can express "every payment on the platform".
+   * The pod filter is applied server-side and cannot be widened by the caller.
+   */
+  regionPodPayments: PaymentTablePage;
   /** Render MJML with sample vars for the editor preview (CRM store). */
   renderCrmEmailTemplate: CrmEmailTemplateRender;
   /**
@@ -18542,6 +22614,8 @@ export type Query = {
   searchStaffMessages: Array<StaffMessage>;
   /** Type-ahead suggestions across clubs, categories, pods and activities. */
   searchSuggestions: Array<SearchSuggestion>;
+  /** This server's live pulse. Tech/Super admin only. */
+  serverPulse: ServerPulse;
   /**
    * Keys the SERVER itself ships copy for (the MJML email templates), with their
    * bundled English text. The admin merges these with the client surfaces' own
@@ -18565,9 +22639,14 @@ export type Query = {
   shortLinkJourneys: ShortLinkJourneyTablePage;
   /** The channel and medium dropdowns, so no client keeps its own copy. */
   shortLinkOptions: ShortLinkOptions;
+  /** Destination rules and click-data retention, for the privacy console. */
+  shortLinkPolicy: ShortLinkPolicy;
   /** A PNG data URL of the short link, rendered server-side. */
   shortLinkQr: Scalars['String']['output'];
-  /** Aggregated click analytics for one link. */
+  /**
+   * Aggregated click analytics for one link. The days argument narrows every number
+   * together; 0 or omitted means all time.
+   */
   shortLinkStats: ShortLinkStats;
   shortLinksTable: ShortLinkTablePage;
   /**
@@ -18575,6 +22654,10 @@ export type Query = {
    * to join with? Public, because there is no account yet. A hint for the form,
    * not the gate — requestSignupWhatsAppOtp and register refuse a taken contact
    * again, because two people can be typing the same one at once.
+   *
+   * When a session IS present — the profile's contact change asks the same
+   * question — the caller's own account is left out, so re-typing a number you
+   * already hold is never reported as taken.
    */
   signupContactAvailability: SignupContactAvailability;
   /**
@@ -18597,6 +22680,17 @@ export type Query = {
   slackConfigured: Scalars['Boolean']['output'];
   /** What the bot token is allowed to do, and where to change it. */
   slackPermissions: SlackPermissions;
+  socialAccounts: Array<SocialAccount>;
+  socialAnalytics: SocialAnalytics;
+  /** Everything dated in [from, to): posts written here and posts read from the networks. */
+  socialCalendar: Array<SocialCalendarItem>;
+  socialCommentsTable: SocialCommentTablePage;
+  socialIdeas: Array<SocialIdea>;
+  socialPost: SocialPostDetail;
+  socialPostsTable: SocialPostTablePage;
+  socialProviders: Array<SocialProviderStatus>;
+  socialScheduledPost: SocialScheduledPost;
+  socialScheduledPosts: Array<SocialScheduledPost>;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
   /**
@@ -18629,10 +22723,104 @@ export type Query = {
   staffUnreadCount: Scalars['Int']['output'];
   /** Tech portal only. Every report, through the shared table engine. */
   statusReportsTable: StatusReportTablePage;
+  storeAdminBrands: Array<StoreAdminBrand>;
+  storeAdminCategories: Array<StoreAdminCategory>;
+  storeAdminCollection: StoreAdminCollection;
+  /** What a collection shows on the store right now. */
+  storeAdminCollectionPreview: Array<StoreProductCard>;
+  storeAdminCollections: Array<StoreAdminCollection>;
+  storeAdminFacets: Array<StoreFacet>;
+  storeAdminOrder: StoreAdminOrder;
+  storeAdminPages: Array<StoreAdminPage>;
+  storeAdminPetTypes: Array<StoreAdminPetType>;
+  /** Cards for picked product ids, in the order given. */
+  storeAdminPickerProducts: Array<StoreProductCard>;
+  storeAdminProduct: StoreAdminProduct;
+  storeAdminProductsTable: StoreAdminProductTablePage;
+  /** The Razorpay accounts the store can take online payments with. */
+  storeAdminRazorpayAccounts: Array<StoreRazorpayAccount>;
+  storeAdminReturn: StoreReturn;
+  storeAdminSections: Array<StoreAdminSection>;
+  storeAdminSettings: StoreSettings;
+  storeAdminWarehouses: Array<StoreWarehouse>;
+  storeBrands: Array<StoreBrandInfo>;
+  storeCart: StoreCart;
+  storeCartsTable: StoreCartTablePage;
+  storeCategory?: Maybe<StoreCategoryPage>;
+  storeCheckoutQuote: StoreCheckoutQuote;
+  /** COD orders of the last N days and the cash collected on them. */
+  storeCodLedger: StoreCodLedger;
+  storeCollection?: Maybe<StoreCollectionPage>;
+  storeCouponsTable: CouponTablePage;
+  storeCustomerOrders: Array<ProductOrder>;
+  storeCustomersTable: StoreCustomerTablePage;
+  storeDashboard: StoreDashboard;
+  storeDeliveryCheck: StoreDeliveryCheck;
+  storeHome: Array<StoreHomeSection>;
+  /** The order's tax invoice as base64 PDF. */
+  storeInvoicePdf: Scalars['String']['output'];
+  /** The one store listing. Tech/Super admin only. */
+  storeListing: StoreListing;
+  /** The signed-in buyer's pet-store orders. */
+  storeMyOrders: Array<StoreOrder>;
+  storeMyReturns: Array<StoreReturn>;
+  /** The signed-in buyer's Autoship subscriptions. */
+  storeMySubscriptions: Array<StoreSubscription>;
+  storeNavigation: StoreNavigation;
+  storeOrder: StoreOrder;
+  storeOrderConfirmation: StorePlaceOrderResult;
+  storeOrderReturns: Array<StoreReturn>;
+  storeOrdersTable: StoreOrderTablePage;
+  /** Packaging of every approved product and variant (or just product_ids), for the CSV export. */
+  storePackagingExport: Array<StorePackagingRow>;
+  /** One of the store's own pages by slug; null when there is none (or it is switched off). */
+  storePage?: Maybe<StorePage>;
+  /** Every payment the pet store took, for its Logs › Payment logs page. */
+  storePaymentsTable: PaymentTablePage;
+  storePetType?: Maybe<StorePetTypePage>;
+  /** The ShipRocket account's pickup addresses as our warehouses — reads ShipRocket, takes in any address it has that we do not, and records what it says about each. */
+  storePickupLocations: StorePickupLocations;
+  /** Whether the operator's pincode list allows delivery there — instant, no courier call. */
+  storePincodeServiceable: StorePincodeCheck;
+  /** A product page by slug; null when it is not on the shelf. */
+  storeProduct?: Maybe<StoreProduct>;
+  storeProductReviews: Array<ProductReview>;
+  storeProductsByIds: Array<StoreProductCard>;
+  storeRelatedProducts: Array<StoreProductCard>;
+  storeReleaseSettings: StoreReleaseSettings;
+  /** One store's releases, live. Reading Apple also opens an issue for any newly rejected or awaiting version. Tech/Super admin only. */
+  storeReleases: StoreReleasePage;
+  storeReturnsForOrder: Array<StoreReturn>;
+  storeReturnsTable: StoreReturnTablePage;
+  storeReviewsTable: StoreReviewTablePage;
+  storeSearch: StoreSearchPage;
+  storeSettings: StorePublicSettings;
+  /** Orders waiting on an operator: failed bookings, a low wallet, failed deliveries. */
+  storeShipmentAlerts: Array<ProductOrder>;
+  /** Couriers that can carry a booked order, the recommended one first. */
+  storeShipmentCouriers: Array<StoreCourierOption>;
+  storeShiprocketStatus: StoreShiprocketStatus;
+  storeSitemap: Array<StoreSitemapEntry>;
+  storeStockAlertsTable: StoreStockAlertTablePage;
+  storeSubscriptionsTable: StoreSubscriptionTablePage;
+  storeSuggest: StoreSuggest;
+  /** A guest's lookup: order number + the email or phone it was placed with. */
+  storeTrackOrder: StoreOrder;
+  storeWishlist: Array<StoreProductCard>;
+  storeWishlistIds: Array<Scalars['ID']['output']>;
   /** Active (non-expired) stories, newest first. Optionally scoped to one author. */
   stories: Array<Post>;
   /** Owner-only list of who viewed a story, newest first (Bug 4). */
   storyViewers: Array<StoryView>;
+  stressRun: StressRun;
+  /** A run's time series, oldest first. */
+  stressRunSamples: Array<StressSample>;
+  /** What each runner is doing right now. Empty once a run has ended. */
+  stressRunShards: Array<StressShard>;
+  /** Every stress run, newest first (Tech > Stress Testing > Runs). */
+  stressRunsTable: StressRunTablePage;
+  stressSettings: StressSettings;
+  stressTriggerConfig: StressTriggerConfig;
   /**
    * Suggested ₹x99 ticket prices for Create-a-Pod Step 4 — the same input
    * surface as potentialPodEarnings minus the ticket price. Walks 99, 199, 299…
@@ -18653,15 +22841,30 @@ export type Query = {
   surveysTable: SurveyTablePage;
   /** Recent logs for one container (demuxed) — polled by the restart log panel. */
   techContainerLogs: Scalars['String']['output'];
+  /** Per-collection storage of the live database, for the shared table engine. */
+  techDatabaseCollectionsTable: TechDatabaseCollectionTablePage;
+  /** Tech > Database > Info: which database is live, its size, and the connection's recent events. */
+  techDatabaseInfo: TechDatabaseInfo;
   /** Paged/searchable view over techDockerInfo.containers for the shared table engine. */
   techDockerContainersTable: TechDockerContainerTablePage;
   /** Docker daemon + container status (requires the docker socket mounted into the API container). */
   techDockerInfo: TechDockerInfo;
   /** Every package.json in the repo beside what npm publishes (SUPER_ADMIN / TECH_MANAGER). Cached; use techRefreshPackageUpdates to force a re-check. */
   techPackageUpdates: TechPackageUpdatesReport;
+  /** The newest AI server recommendation, or null before anyone asked for one. */
+  techServerAdvice?: Maybe<TechServerAdvice>;
+  /** Per-day server readings for the last month (at most 30 days), recorded every five minutes by this environment's API. */
+  techServerHistory: TechServerHistory;
   /** Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate. */
   techServerInfo: TechServerInfo;
   telemetryDashboard: TelemetryDashboard;
+  /**
+   * How many rows a bulk delete would take, so the dialog can state the number
+   * before the button instead of after it.
+   */
+  telemetryDeleteCount: Scalars['Int']['output'];
+  /** One persisted log by id — the row behind its own address in the Tech portal. */
+  telemetryLog?: Maybe<TelemetryLog>;
   /**
    * One level's logs for the JSON export, newest first. Bounded (20k rows) —
    * a busy day of info is six figures of rows, and an export that tried to be
@@ -18691,11 +22894,19 @@ export type Query = {
   userActivityYear: UserActivityYear;
   userBadgeProgress: Array<BadgeProgress>;
   userBadges: Array<UserBadge>;
-  /** Admin: the complete profile change history of one user, newest first. */
+  /** Admin: one half of a user's profile change history, newest first. */
   userChangeLogsTable: UserChangeLogTablePage;
   userClickstream: Array<AppAnalyticsEvent>;
   userContactActions: Array<UserContactAction>;
   userContactActionsTable: UserContactActionTablePage;
+  /**
+   * The live pods a user has JOINED, newest first — what a profile's Joined
+   * Pods tab lists. Follows the posts/stories rule for a PRIVATE account: empty
+   * unless the viewer is the owner or a follower.
+   */
+  userJoinedPods: Array<Pod>;
+  /** Every refund already paid back to a buyer, from all four refund flows. */
+  userRefundsTable: UserRefundTablePage;
   /** All survey responses for a user (admin). */
   userSurveyResponses: Array<UserSurveyResponse>;
   /** A user's verifications — admin review (user details). */
@@ -18784,6 +22995,8 @@ export type Query = {
   waPricing: WaPricing;
   /** Current QR data URL to scan + session status. */
   waQr: WaQr;
+  /** How many messages each AiSensy campaign has produced — the count beside a campaign or template row. */
+  waSendCounts: Array<WaSendCount>;
   /** Refreshes the session status from the gateway, then returns it. */
   waStatus: WaConnection;
   waUserLead?: Maybe<WaUserLead>;
@@ -18904,6 +23117,11 @@ export type QueryAiPromptsArgs = {
 };
 
 
+export type QueryAiTranslationPendingArgs = {
+  input: AiTranslationInput;
+};
+
+
 export type QueryAppBuildsTableArgs = {
   platform: AppBuildPlatform;
   query?: InputMaybe<TableQueryInput>;
@@ -18976,14 +23194,30 @@ export type QueryAutoPodVenueSlotsArgs = {
 };
 
 
-export type QueryAutoTranslateJobArgs = {
-  locale: Scalars['String']['input'];
+export type QueryAutomationFlowArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
-export type QueryAutoTranslatePendingArgs = {
-  locale: Scalars['String']['input'];
-  replace_existing?: InputMaybe<Scalars['Boolean']['input']>;
+export type QueryAutomationFlowsArgs = {
+  channel: AutomationChannel;
+};
+
+
+export type QueryAutomationOptionsArgs = {
+  channel: AutomationChannel;
+};
+
+
+export type QueryAutomationRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutomationRunsArgs = {
+  flow_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  mode?: InputMaybe<AutomationRunMode>;
 };
 
 
@@ -19030,6 +23264,7 @@ export type QueryBouncerCallbackRequestArgs = {
 
 
 export type QueryBouncerCallbackRequestsArgs = {
+  filters?: InputMaybe<Array<TableFilterInput>>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -19050,6 +23285,7 @@ export type QueryBouncerSosAlertArgs = {
 
 
 export type QueryBouncerSosAlertsArgs = {
+  filters?: InputMaybe<Array<TableFilterInput>>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -19304,6 +23540,29 @@ export type QueryContactSubmissionsTableArgs = {
 };
 
 
+export type QueryContactsOnDuncitArgs = {
+  nearby?: InputMaybe<Scalars['Boolean']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryContactsOnDuncitPageArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryContactsToInviteArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryContactsToInvitePageArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryContentReportArgs = {
   id: Scalars['ID']['input'];
 };
@@ -19330,6 +23589,17 @@ export type QueryContractsTableArgs = {
 
 
 export type QueryCouponArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCouponRedemptionsTableArgs = {
+  id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCouponStatsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -19473,6 +23743,40 @@ export type QueryDbRestoreJobArgs = {
 };
 
 
+export type QueryE2eFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryE2eFlowsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryE2eGoogleCredentialArgs = {
+  email: Scalars['String']['input'];
+  family_name: Scalars['String']['input'];
+  given_name: Scalars['String']['input'];
+};
+
+
+export type QueryE2eOneTimeCodeArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  purpose: Scalars['String']['input'];
+};
+
+
+export type QueryE2eRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryE2eTrafficKeyArgs = {
+  stamp: Scalars['String']['input'];
+};
+
+
 export type QueryEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
 };
@@ -19538,6 +23842,11 @@ export type QueryEmailTemplateBySlugArgs = {
 };
 
 
+export type QueryEmployeeExpensesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryEntityAnalyticsArgs = {
   city?: InputMaybe<Scalars['ID']['input']>;
   compare?: InputMaybe<AnalyticsCompare>;
@@ -19545,6 +23854,19 @@ export type QueryEntityAnalyticsArgs = {
   entity: AnalyticsEntity;
   from?: InputMaybe<Scalars['String']['input']>;
   to?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryEntityChangeFeedTableArgs = {
+  entity_type: EntityAuditType;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryEntityChangeLogsTableArgs = {
+  entity_id: Scalars['ID']['input'];
+  entity_type: EntityAuditType;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -19585,6 +23907,34 @@ export type QueryEventTicketsArgs = {
 
 export type QueryEventTicketsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryExpenseDashboardArgs = {
+  filter?: InputMaybe<ExpenseFilterInput>;
+};
+
+
+export type QueryExpenseOptionsArgs = {
+  kind: Scalars['String']['input'];
+};
+
+
+export type QueryExpenseOptionsTableArgs = {
+  kind: Scalars['String']['input'];
+};
+
+
+export type QueryExpenseRelatedEntitiesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  type_key: Scalars['String']['input'];
+};
+
+
+export type QueryExpenseRelatedEntityArgs = {
+  entity_id: Scalars['ID']['input'];
+  type_key: Scalars['String']['input'];
 };
 
 
@@ -19682,6 +24032,42 @@ export type QueryGiftCardsTableArgs = {
 
 export type QueryGoogleAnalyticsTagArgs = {
   site: TrackedWebsite;
+};
+
+
+export type QueryGraphqlMonitorErrorsArgs = {
+  range?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGraphqlMonitorFieldsArgs = {
+  range?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGraphqlMonitorOperationArgs = {
+  id: Scalars['ID']['input'];
+  range?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGraphqlMonitorOperationsArgs = {
+  range?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGraphqlMonitorOverviewArgs = {
+  range?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGraphqlMonitorTraceArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGraphqlMonitorTracesArgs = {
+  operation_id: Scalars['ID']['input'];
 };
 
 
@@ -19817,6 +24203,11 @@ export type QueryInventoryStockMovementsArgs = {
 };
 
 
+export type QueryIosSigningForBuildArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryJobApplicationsArgs = {
   status?: InputMaybe<JobApplicationStatus>;
 };
@@ -19897,6 +24288,16 @@ export type QueryLiveAdsTableArgs = {
 
 export type QueryLocationArgs = {
   location_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryLocationLaunchStatusArgs = {
+  location_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryLocationSubscriptionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -20089,6 +24490,11 @@ export type QueryMyDashboardLayoutArgs = {
 };
 
 
+export type QueryMyEcommBrandArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyEcommBrandsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -20096,6 +24502,16 @@ export type QueryMyEcommBrandsTableArgs = {
 
 export type QueryMyEcommChangeRequestsArgs = {
   kind?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryMyEmployeeExpenseArgs = {
+  expense_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyEmployeeExpensesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -20205,6 +24621,16 @@ export type QueryNotificationsArgs = {
 
 
 export type QueryNotificationsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryOfficialStatusesArgs = {
+  location_doc_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryOfficialStatusesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -20344,6 +24770,26 @@ export type QueryPodBySlugsArgs = {
 };
 
 
+export type QueryPodCalculatorArgs = {
+  calculator_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodCalculatorPdfBase64Args = {
+  calculator_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodCalculatorsArgs = {
+  kind: Scalars['String']['input'];
+};
+
+
+export type QueryPodCancellationRiskArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodCancellationsArgs = {
   kind?: InputMaybe<PodCancelKind>;
 };
@@ -20453,6 +24899,11 @@ export type QueryPodMessagesArgs = {
 
 export type QueryPodPlansTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPodRevokePreviewArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -20720,6 +25171,58 @@ export type QueryReferralsTableArgs = {
 };
 
 
+export type QueryRegionClubAdminCandidatesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryRegionClubAdminClubsArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionClubPodsArgs = {
+  club_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryRegionHostPodsArgs = {
+  host_user_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryRegionPodAttendeesArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionPodAuditLogsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionPodFeedbackArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionPodHostArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionPodPaymentsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryRenderCrmEmailTemplateArgs = {
   mjml: Scalars['String']['input'];
   vars?: InputMaybe<Scalars['String']['input']>;
@@ -20804,6 +25307,7 @@ export type QueryShortLinkQrArgs = {
 
 
 export type QueryShortLinkStatsArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
   id: Scalars['ID']['input'];
 };
 
@@ -20823,6 +25327,47 @@ export type QuerySignupContactAvailabilityArgs = {
 export type QuerySlackChannelHistoryArgs = {
   channel: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QuerySocialAnalyticsArgs = {
+  input: SocialAnalyticsInput;
+};
+
+
+export type QuerySocialCalendarArgs = {
+  from: Scalars['String']['input'];
+  to: Scalars['String']['input'];
+};
+
+
+export type QuerySocialCommentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QuerySocialIdeasArgs = {
+  status?: InputMaybe<SocialIdeaStatus>;
+};
+
+
+export type QuerySocialPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySocialPostsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QuerySocialScheduledPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySocialScheduledPostsArgs = {
+  view: SocialQueueView;
 };
 
 
@@ -20854,6 +25399,236 @@ export type QueryStatusReportsTableArgs = {
 };
 
 
+export type QueryStoreAdminCollectionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreAdminCollectionPreviewArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStoreAdminOrderArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreAdminPickerProductsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryStoreAdminProductArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreAdminProductsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreAdminReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreCartArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryStoreCartsTableArgs = {
+  abandoned_only?: InputMaybe<Scalars['Boolean']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreCategoryArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStoreCheckoutQuoteArgs = {
+  input: StoreQuoteInput;
+};
+
+
+export type QueryStoreCodLedgerArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryStoreCollectionArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStoreCouponsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreCustomerOrdersArgs = {
+  email: Scalars['String']['input'];
+};
+
+
+export type QueryStoreCustomersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreDashboardArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryStoreDeliveryCheckArgs = {
+  pincode: Scalars['String']['input'];
+  product_id: Scalars['ID']['input'];
+  variant_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryStoreInvoicePdfArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryStoreOrderArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryStoreOrderConfirmationArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  payment_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreOrderReturnsArgs = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryStoreOrdersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStorePackagingExportArgs = {
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+
+export type QueryStorePageArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStorePaymentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStorePetTypeArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStorePincodeServiceableArgs = {
+  pincode: Scalars['String']['input'];
+};
+
+
+export type QueryStoreProductArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryStoreProductReviewsArgs = {
+  product_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreProductsByIdsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryStoreRelatedProductsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  product_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreReleasesArgs = {
+  store: ReleaseStore;
+};
+
+
+export type QueryStoreReturnsForOrderArgs = {
+  order_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreReturnsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreReviewsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreSearchArgs = {
+  input: StoreSearchInput;
+};
+
+
+export type QueryStoreShipmentCouriersArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStoreStockAlertsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreSubscriptionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryStoreSuggestArgs = {
+  q: Scalars['String']['input'];
+};
+
+
+export type QueryStoreTrackOrderArgs = {
+  contact: Scalars['String']['input'];
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryStoreWishlistArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryStoreWishlistIdsArgs = {
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryStoriesArgs = {
   author_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -20861,6 +25636,26 @@ export type QueryStoriesArgs = {
 
 export type QueryStoryViewersArgs = {
   post_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryStressRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStressRunSamplesArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStressRunShardsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStressRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -20919,8 +25714,18 @@ export type QueryTechContainerLogsArgs = {
 };
 
 
+export type QueryTechDatabaseCollectionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryTechDockerContainersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryTechServerHistoryArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -20931,6 +25736,17 @@ export type QueryTechServerInfoArgs = {
 
 export type QueryTelemetryDashboardArgs = {
   range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryTelemetryDeleteCountArgs = {
+  scope: TelemetryDeleteScope;
+  target: TelemetryDeleteTarget;
+};
+
+
+export type QueryTelemetryLogArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -20958,6 +25774,7 @@ export type QueryTicketTranscriptArgs = {
 
 export type QueryTicketsArgs = {
   assignee_id?: InputMaybe<Scalars['ID']['input']>;
+  filters?: InputMaybe<Array<TableFilterInput>>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
   priority_first?: InputMaybe<TicketPriority>;
@@ -21011,6 +25828,7 @@ export type QueryUserBadgesArgs = {
 
 export type QueryUserChangeLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  scope: UserChangeLogScope;
   user_id: Scalars['ID']['input'];
 };
 
@@ -21030,6 +25848,16 @@ export type QueryUserContactActionsArgs = {
 export type QueryUserContactActionsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserJoinedPodsArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserRefundsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -21611,6 +26439,122 @@ export type RefundStatus =
   | 'PENDING'
   | 'PROCESSED';
 
+/**
+ * A Regional Club Admin's patch. Only the Club Admins are stored — every level
+ * of the tree below them is derived from the clubs they run and the pods those
+ * clubs hold.
+ */
+export type Region = {
+  __typename?: 'Region';
+  club_admin_count: Scalars['Int']['output'];
+  club_admin_user_ids: Array<Scalars['ID']['output']>;
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  manager_user_id: Scalars['ID']['output'];
+  region_name: Scalars['String']['output'];
+  /** Permanent human id (RGN-000001). */
+  region_no: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+/** A Club Admin who could be added — anyone already in a region is left out. */
+export type RegionCandidate = {
+  __typename?: 'RegionCandidate';
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  region_name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/**
+ * One club a region's Club Admin runs — the first level of the drill-down a
+ * manager opens from the Club Admins table.
+ */
+export type RegionClub = {
+  __typename?: 'RegionClub';
+  city: Scalars['String']['output'];
+  /** Public club handle (the slug), not the document id. */
+  club_id: Scalars['String']['output'];
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  locality: Scalars['String']['output'];
+  /** Every pod the club has ever held, cancelled ones included. */
+  pod_count: Scalars['Int']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type RegionClubPage = {
+  __typename?: 'RegionClubPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RegionClub>;
+  total: Scalars['Int']['output'];
+};
+
+/** One pod in the host drawer's table, or in a club's. */
+export type RegionHostPod = {
+  __typename?: 'RegionHostPod';
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  no_of_spots: Scalars['Int']['output'];
+  pod_amount: Scalars['Float']['output'];
+  pod_date_time: Scalars['String']['output'];
+  pod_id: Scalars['String']['output'];
+  pod_mode: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type RegionHostPodPage = {
+  __typename?: 'RegionHostPodPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<RegionHostPod>;
+  total: Scalars['Int']['output'];
+};
+
+/** One Club Admin in the region, with the clubs they run. */
+export type RegionMember = {
+  __typename?: 'RegionMember';
+  club_count: Scalars['Int']['output'];
+  clubs: Array<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type RegionTree = {
+  __typename?: 'RegionTree';
+  edges: Array<RegionTreeEdge>;
+  nodes: Array<RegionTreeNode>;
+};
+
+export type RegionTreeEdge = {
+  __typename?: 'RegionTreeEdge';
+  id: Scalars['ID']['output'];
+  source: Scalars['ID']['output'];
+  target: Scalars['ID']['output'];
+};
+
+/** One box on the region canvas: REGION | CITY | LOCALITY | CLUB_ADMIN | HOST. */
+export type RegionTreeNode = {
+  __typename?: 'RegionTreeNode';
+  /** Direct children, or pods on a HOST node. */
+  count: Scalars['Int']['output'];
+  /** Carries the whole path, so one club admin under two localities is two nodes. */
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  /** Location id on CITY, user id on CLUB_ADMIN and HOST, '' elsewhere. */
+  ref_id: Scalars['String']['output'];
+  /** The line under the label — a club list, an email. */
+  sub_label: Scalars['String']['output'];
+};
+
 export type RegisterInput = {
   /**
    * Every policy the person ticked in the acceptance dialog.
@@ -21667,6 +26611,24 @@ export type RegisterInput = {
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Why a release needed a person. */
+export type ReleaseIssueKind =
+  /** Approved, and waiting for someone here to press release. */
+  | 'AWAITING_RELEASE'
+  /** The store said no. */
+  | 'REJECTION';
+
+export type ReleaseIssueSource =
+  /** Logged by an operator from the store's mail or console — the only way for Google Play. */
+  | 'MANUAL'
+  /** Read off the store's API — App Store Connect reports rejected states. */
+  | 'STORE';
+
+/** Which store a release row or issue belongs to. */
+export type ReleaseStore =
+  | 'APP_STORE'
+  | 'GOOGLE_PLAY';
+
 export type ReportAppBuildInput = {
   /**
    * Why the artifact is missing on an otherwise successful build. Send this
@@ -21684,6 +26646,9 @@ export type ReportAppBuildInput = {
   artifacts?: InputMaybe<Array<AppBuildArtifactInput>>;
   branch?: InputMaybe<Scalars['String']['input']>;
   build_name?: InputMaybe<Scalars['String']['input']>;
+  /** CFBundleVersion / versionCode the runner built with. Needed to upload the build to Apple. */
+  build_number?: InputMaybe<Scalars['String']['input']>;
+  bundle_id?: InputMaybe<Scalars['String']['input']>;
   commit_sha?: InputMaybe<Scalars['String']['input']>;
   commits?: InputMaybe<Array<AppBuildCommitInput>>;
   deletions?: InputMaybe<Scalars['Int']['input']>;
@@ -21711,6 +26676,29 @@ export type ReportAppBuildInput = {
   /** The GitHub actor whose merge triggered a push build. */
   triggered_by?: InputMaybe<Scalars['String']['input']>;
   version: Scalars['String']['input'];
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+  workflow_run_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReportE2eRunInput = {
+  commit_sha?: InputMaybe<Scalars['String']['input']>;
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  duration_seconds?: InputMaybe<Scalars['Int']['input']>;
+  /** Why the run failed. Ignored unless status is FAILED. */
+  error_message?: InputMaybe<Scalars['String']['input']>;
+  ref?: InputMaybe<Scalars['String']['input']>;
+  /** What the workflow is doing right now. Each distinct value is appended to the stage list. */
+  stage?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The run's own status. Absent leaves it alone, which is what a leg reporting
+   * only its own result sends — one suite finishing does not end the run.
+   */
+  status?: InputMaybe<E2eRunStatus>;
+  /**
+   * One leg's outcome. Reported as each leg ends, so the table fills in while
+   * the run is still going rather than all at once at the end.
+   */
+  suite?: InputMaybe<E2eSuiteResultInput>;
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
@@ -21798,6 +26786,26 @@ export type ReportStatusCount = {
   status: ReportStatus;
 };
 
+export type ReportStressRunInput = {
+  active_bots: Scalars['Float']['input'];
+  active_vus: Scalars['Float']['input'];
+  bots?: InputMaybe<Array<StressBotInput>>;
+  dispatch_id: Scalars['String']['input'];
+  elapsed_seconds: Scalars['Float']['input'];
+  errors: Scalars['Float']['input'];
+  events?: InputMaybe<Array<StressEventInput>>;
+  navigations: Scalars['Float']['input'];
+  p50_ms: Scalars['Float']['input'];
+  p95_ms: Scalars['Float']['input'];
+  p99_ms: Scalars['Float']['input'];
+  page_load_ms: Scalars['Float']['input'];
+  phase: Scalars['String']['input'];
+  requests: Scalars['Float']['input'];
+  shard: Scalars['Int']['input'];
+  status_counts?: InputMaybe<Array<StressStatusCountInput>>;
+  window_seconds: Scalars['Float']['input'];
+};
+
 /**
  * What was reported.
  *
@@ -21844,6 +26852,15 @@ export type RequestMeetingInput = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/**
+ * Step one of setting the account password.
+ *
+ * current_password is OPTIONAL because a Google-signup account has none: there
+ * is nothing to prove and nothing to change, so that account creates its first
+ * password with the emailed code alone. An account that already has a password
+ * must still send the right one — the server decides, because the hash is
+ * select:false and only it can see whether one exists.
+ */
 export type RequestPasswordChangeInput = {
   current_password?: InputMaybe<Scalars['String']['input']>;
 };
@@ -21895,11 +26912,28 @@ export type RoleTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type SaveAutomationFlowInput = {
+  channel: AutomationChannel;
+  description?: InputMaybe<Scalars['String']['input']>;
+  edges: Array<AutomationEdgeInput>;
+  /** Absent creates a flow; present updates it. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  nodes: Array<AutomationNodeInput>;
+};
+
 export type SaveGrievanceOfficerInput = {
   address?: InputMaybe<Scalars['String']['input']>;
   email: Scalars['String']['input'];
   name: Scalars['String']['input'];
   phone: Scalars['String']['input'];
+};
+
+export type SavePodCalculatorInput = {
+  /** SINGLE or MULTI. Only read on create — a calculation never changes tabs. */
+  kind?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  pods: Array<PodCalculatorPodInput>;
 };
 
 /** Sort order for the viewer's saved pods. RECENT = most recently saved first. */
@@ -22083,6 +27117,37 @@ export type SendWaTestInput = {
   wa_campaign_name: Scalars['String']['input'];
 };
 
+/** This server's live pulse — how busy it is right now and who is behind the traffic. */
+export type ServerPulse = {
+  __typename?: 'ServerPulse';
+  at: Scalars['String']['output'];
+  event_loop_lag_ms: Scalars['Float']['output'];
+  event_loop_p99_ms: Scalars['Float']['output'];
+  heap_used_mb: Scalars['Float']['output'];
+  host_cpu_pct: Scalars['Float']['output'];
+  host_memory_pct: Scalars['Float']['output'];
+  in_flight: Scalars['Int']['output'];
+  load_avg_1: Scalars['Float']['output'];
+  /** Signed-in accounts seen in the last minute (stress traffic excluded). */
+  real_users: Scalars['Int']['output'];
+  rps_stress: Scalars['Float']['output'];
+  rps_total: Scalars['Float']['output'];
+  rss_mb: Scalars['Float']['output'];
+  server_p95_ms: Scalars['Float']['output'];
+  sockets: Scalars['Int']['output'];
+  status_5xx: Scalars['Int']['output'];
+  uptime_seconds: Scalars['Int']['output'];
+  users_by_surface: Array<ServerPulseSurface>;
+  /** Anonymous visitors seen in the last minute (stress traffic excluded). */
+  visitors: Scalars['Int']['output'];
+};
+
+export type ServerPulseSurface = {
+  __typename?: 'ServerPulseSurface';
+  surface: Scalars['String']['output'];
+  users: Scalars['Int']['output'];
+};
+
 /** The link a share should hand out. */
 export type ShareLink = {
   __typename?: 'ShareLink';
@@ -22147,17 +27212,32 @@ export type ShellWorkspaceStateInput = {
 
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
-  etd: Scalars['String']['output'];
-  invoice_url: Scalars['String']['output'];
-  manifest_url: Scalars['String']['output'];
-  pickup_scheduled_date: Scalars['String']['output'];
   awb: Scalars['String']['output'];
   courier_name: Scalars['String']['output'];
+  /** The courier's estimated delivery date, as ShipRocket phrased it. */
+  etd: Scalars['String']['output'];
+  invoice_url: Scalars['String']['output'];
   label_url: Scalars['String']['output'];
   last_synced_at?: Maybe<Scalars['String']['output']>;
+  manifest_url: Scalars['String']['output'];
   order_id: Scalars['String']['output'];
+  pickup_scheduled_date: Scalars['String']['output'];
   shipment_id: Scalars['String']['output'];
   tracking_status: Scalars['String']['output'];
+};
+
+/** A ShipRocket document: the shipping label, the GST invoice or the pickup manifest. */
+export type ShipmentDocumentKind =
+  | 'INVOICE'
+  | 'LABEL'
+  | 'MANIFEST';
+
+/** A ShipRocket document itself — for a console to print in place or save under this name. */
+export type ShipmentFile = {
+  __typename?: 'ShipmentFile';
+  content_base64: Scalars['String']['output'];
+  filename: Scalars['String']['output'];
+  mime: Scalars['String']['output'];
 };
 
 export type ShortLink = {
@@ -22170,6 +27250,12 @@ export type ShortLink = {
   first_clicked_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  /**
+   * True when the destination is not one of our own sites or an app store.
+   * Derived from the host, never chosen, so it always matches where the link
+   * really goes.
+   */
+  is_external: Scalars['Boolean']['output'];
   label: Scalars['String']['output'];
   last_clicked_at?: Maybe<Scalars['String']['output']>;
   medium: ShortLinkMedium;
@@ -22215,6 +27301,8 @@ export type ShortLinkClick = {
   city?: Maybe<Scalars['String']['output']>;
   click_id: Scalars['String']['output'];
   clicked_at: Scalars['String']['output'];
+  /** GPC or DNT when this visitor asked not to be tracked, else null. */
+  consent_signal?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   device_type: Scalars['String']['output'];
   id: Scalars['ID']['output'];
@@ -22358,6 +27446,41 @@ export type ShortLinkOptions = {
 };
 
 /**
+ * What short links are allowed to point at, and what may be kept about the
+ * people who follow them. One policy for every link.
+ */
+export type ShortLinkPolicy = {
+  __typename?: 'ShortLinkPolicy';
+  /** Hosts a link may never point at. Each entry covers its subdomains. */
+  blocked_domains: Array<Scalars['String']['output']>;
+  clicks_beyond_retention: Scalars['Int']['output'];
+  clicks_stored: Scalars['Int']['output'];
+  /** How many stored clicks were minimised because the visitor opted out. */
+  consent_minimised: Scalars['Int']['output'];
+  /** Whether a visitor's Sec-GPC / DNT header is obeyed. */
+  honour_consent_signals: Scalars['Boolean']['output'];
+  /**
+   * When the address-hash salt was last rotated. Every hash written before
+   * this is unlinkable to anything written after it.
+   */
+  ip_salt_rotated_at: Scalars['String']['output'];
+  last_purge_at?: Maybe<Scalars['String']['output']>;
+  last_purged_count: Scalars['Int']['output'];
+  /** Clicks older than this are deleted by the next sweep. */
+  retention_cutoff: Scalars['String']['output'];
+  /** How long a recorded click is kept before the daily sweep deletes it. */
+  retention_days: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type ShortLinkPolicyInput = {
+  /** A full list, not a delta — what is sent replaces what is stored. */
+  blocked_domains?: InputMaybe<Array<Scalars['String']['input']>>;
+  honour_consent_signals?: InputMaybe<Scalars['Boolean']['input']>;
+  retention_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/**
  * Where a link is being handed out. Becomes utm_source. OTHER carries free
  * text in source_other.
  */
@@ -22387,6 +27510,12 @@ export type ShortLinkStats = {
   __typename?: 'ShortLinkStats';
   browsers: Array<ShortLinkBreakdown>;
   cities: Array<ShortLinkBreakdown>;
+  /**
+   * Clicks whose visitor asked not to be tracked, counted and then recorded
+   * with nothing that could single them out. Shown so a thin breakdown is
+   * explained rather than looking like data loss.
+   */
+  consent_minimised: Scalars['Int']['output'];
   countries: Array<ShortLinkBreakdown>;
   countries_reached: Scalars['Int']['output'];
   daily: Array<ShortLinkDailyPoint>;
@@ -22396,7 +27525,7 @@ export type ShortLinkStats = {
   platforms: Array<ShortLinkBreakdown>;
   referrers: Array<ShortLinkBreakdown>;
   total_clicks: Scalars['Int']['output'];
-  /** Distinct visitors, counted by hashed address. */
+  /** Distinct visitors, counted by salted address hash. */
   unique_visitors: Scalars['Int']['output'];
 };
 
@@ -22586,6 +27715,378 @@ export type SlotTemplatePerDayPrice = {
 export type SlotTemplatePerDayPriceInput = {
   price: Scalars['Int']['input'];
   weekday: Scalars['Int']['input'];
+};
+
+export type SocialAccount = {
+  __typename?: 'SocialAccount';
+  avatar_url?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Comments the AI flagged that nobody has reviewed yet. */
+  flagged_open: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  handle?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Why the last sync failed; empty when it did not. */
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_synced_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  platform: SocialPlatform;
+  profile_url?: Maybe<Scalars['String']['output']>;
+  provider: SocialProvider;
+  status: SocialAccountStatus;
+  token_expires_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type SocialAccountEngagement = {
+  __typename?: 'SocialAccountEngagement';
+  account_id: Scalars['ID']['output'];
+  engagement: Scalars['Int']['output'];
+  followers: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  platform: SocialPlatform;
+  posts: Scalars['Int']['output'];
+};
+
+/** EXPIRED needs a person to reconnect; ERROR is retried on the next sync. */
+export type SocialAccountStatus =
+  | 'CONNECTED'
+  | 'ERROR'
+  | 'EXPIRED';
+
+export type SocialAiStatus =
+  | 'CLEAN'
+  | 'FLAGGED'
+  | 'PENDING';
+
+export type SocialAnalysisResult = {
+  __typename?: 'SocialAnalysisResult';
+  analyzed: Scalars['Int']['output'];
+  /** Why the run stopped early (OpenAI missing or failing); null when it did not. */
+  error?: Maybe<Scalars['String']['output']>;
+  flagged: Scalars['Int']['output'];
+};
+
+export type SocialAnalytics = {
+  __typename?: 'SocialAnalytics';
+  by_account: Array<SocialAccountEngagement>;
+  /** Average engagement per post by hour, 0-23 (admin time zone). */
+  by_hour: Array<Scalars['Float']['output']>;
+  by_platform: Array<SocialPlatformEngagement>;
+  /** Average engagement per post, Monday first (admin time zone). */
+  by_weekday: Array<Scalars['Float']['output']>;
+  comments: Scalars['Int']['output'];
+  /** Every day of the period, oldest first (yyyy-MM-dd, admin time zone). */
+  days: Array<Scalars['String']['output']>;
+  engagement: Scalars['Int']['output'];
+  /** Average engagement per post as a percentage of followers. */
+  engagement_rate: Scalars['Float']['output'];
+  /** Likes, comments and shares by the day a post went out. */
+  engagement_series: Array<SocialSeries>;
+  /** Total followers per day; null before any account had a count. */
+  follower_series: Array<Maybe<Scalars['Int']['output']>>;
+  followers: Scalars['Int']['output'];
+  likes: Scalars['Int']['output'];
+  posts: Scalars['Int']['output'];
+  sentiment: SocialSentimentSummary;
+  shares: Scalars['Int']['output'];
+  top_posts: Array<SocialTopPost>;
+  views: Scalars['Int']['output'];
+};
+
+export type SocialAnalyticsInput = {
+  /** Empty or missing means every connected account. */
+  account_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** 7, 30 or 90. */
+  days: Scalars['Int']['input'];
+};
+
+export type SocialCalendarItem = {
+  __typename?: 'SocialCalendarItem';
+  account_names: Array<Scalars['String']['output']>;
+  at: Scalars['String']['output'];
+  /** Only for a post read back from a network. */
+  engagement?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  kind: SocialCalendarKind;
+  media_url?: Maybe<Scalars['String']['output']>;
+  permalink?: Maybe<Scalars['String']['output']>;
+  platforms: Array<SocialPlatform>;
+  status: SocialPublishStatus;
+  text: Scalars['String']['output'];
+};
+
+/** PLANNED was written in Duncit; PUBLISHED was read back from a network. */
+export type SocialCalendarKind =
+  | 'PLANNED'
+  | 'PUBLISHED';
+
+export type SocialComment = {
+  __typename?: 'SocialComment';
+  account_id: Scalars['ID']['output'];
+  account_name: Scalars['String']['output'];
+  ai_analyzed_at?: Maybe<Scalars['String']['output']>;
+  ai_categories: Array<Scalars['String']['output']>;
+  ai_reason?: Maybe<Scalars['String']['output']>;
+  ai_sentiment?: Maybe<SocialSentiment>;
+  ai_severity?: Maybe<SocialSeverity>;
+  ai_status: SocialAiStatus;
+  author_handle?: Maybe<Scalars['String']['output']>;
+  author_name?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  likes: Scalars['Int']['output'];
+  permalink?: Maybe<Scalars['String']['output']>;
+  platform: SocialPlatform;
+  post_id: Scalars['ID']['output'];
+  post_permalink?: Maybe<Scalars['String']['output']>;
+  post_text?: Maybe<Scalars['String']['output']>;
+  published_at?: Maybe<Scalars['String']['output']>;
+  review_status: SocialReviewStatus;
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  text: Scalars['String']['output'];
+};
+
+export type SocialCommentTablePage = {
+  __typename?: 'SocialCommentTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SocialComment>;
+  total: Scalars['Int']['output'];
+};
+
+export type SocialIdea = {
+  __typename?: 'SocialIdea';
+  brief?: Maybe<Scalars['String']['output']>;
+  caption: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  format: SocialIdeaFormat;
+  hashtags: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  platforms: Array<SocialPlatform>;
+  status: SocialIdeaStatus;
+  title: Scalars['String']['output'];
+  why?: Maybe<Scalars['String']['output']>;
+};
+
+export type SocialIdeaFormat =
+  | 'IMAGE'
+  | 'TEXT'
+  | 'VIDEO';
+
+export type SocialIdeaStatus =
+  | 'DISMISSED'
+  | 'NEW'
+  | 'USED';
+
+export type SocialIdeasInput = {
+  /** What the ideas should be about; empty for anything on-brand. */
+  brief?: InputMaybe<Scalars['String']['input']>;
+  /** 1-10; 5 when missing. */
+  count?: InputMaybe<Scalars['Int']['input']>;
+  /** Empty means the networks Duncit has accounts on. */
+  platforms?: InputMaybe<Array<SocialPlatform>>;
+};
+
+export type SocialInsights = {
+  __typename?: 'SocialInsights';
+  best_times: Array<Scalars['String']['output']>;
+  recommendations: Array<Scalars['String']['output']>;
+  summary: Scalars['String']['output'];
+  what_to_avoid: Array<Scalars['String']['output']>;
+  what_works: Array<Scalars['String']['output']>;
+};
+
+export type SocialMediaType =
+  | 'IMAGE'
+  | 'VIDEO';
+
+/** The network an account lives on. */
+export type SocialPlatform =
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
+  | 'LINKEDIN'
+  | 'X'
+  | 'YOUTUBE';
+
+export type SocialPlatformEngagement = {
+  __typename?: 'SocialPlatformEngagement';
+  engagement: Scalars['Int']['output'];
+  platform: SocialPlatform;
+  posts: Scalars['Int']['output'];
+};
+
+export type SocialPost = {
+  __typename?: 'SocialPost';
+  account_id: Scalars['ID']['output'];
+  account_name: Scalars['String']['output'];
+  ai_analysis?: Maybe<SocialPostAnalysis>;
+  /** The AI's score (0-100, 50 = the account's average); null until someone asks. */
+  ai_score?: Maybe<Scalars['Int']['output']>;
+  comments: Scalars['Int']['output'];
+  engagement: Scalars['Int']['output'];
+  /** Engagement as a percentage of the account's followers. */
+  engagement_rate: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  likes: Scalars['Int']['output'];
+  media_url?: Maybe<Scalars['String']['output']>;
+  permalink?: Maybe<Scalars['String']['output']>;
+  platform: SocialPlatform;
+  published_at?: Maybe<Scalars['String']['output']>;
+  shares: Scalars['Int']['output'];
+  text?: Maybe<Scalars['String']['output']>;
+  /** Null where the network does not report views to this app. */
+  views?: Maybe<Scalars['Int']['output']>;
+};
+
+export type SocialPostAnalysis = {
+  __typename?: 'SocialPostAnalysis';
+  analyzed_at?: Maybe<Scalars['String']['output']>;
+  improvements: Array<Scalars['String']['output']>;
+  next_idea?: Maybe<Scalars['String']['output']>;
+  score: Scalars['Int']['output'];
+  strengths: Array<Scalars['String']['output']>;
+  summary: Scalars['String']['output'];
+};
+
+/** The account's usual numbers — its other recent posts, averaged. */
+export type SocialPostAverage = {
+  __typename?: 'SocialPostAverage';
+  comments: Scalars['Float']['output'];
+  engagement: Scalars['Float']['output'];
+  likes: Scalars['Float']['output'];
+  posts: Scalars['Int']['output'];
+  shares: Scalars['Float']['output'];
+  views: Scalars['Float']['output'];
+};
+
+export type SocialPostDetail = {
+  __typename?: 'SocialPostDetail';
+  average: SocialPostAverage;
+  post: SocialPost;
+  recent_comments: Array<SocialComment>;
+  sentiment: SocialSentimentSummary;
+};
+
+export type SocialPostTablePage = {
+  __typename?: 'SocialPostTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SocialPost>;
+  total: Scalars['Int']['output'];
+};
+
+/** The app a marketer connects through. META covers Facebook Pages and Instagram Business. */
+export type SocialProvider =
+  | 'LINKEDIN'
+  | 'META'
+  | 'X'
+  | 'YOUTUBE';
+
+/** Whether Tech has set up this provider's app under Environment Variables › Social apps. */
+export type SocialProviderStatus = {
+  __typename?: 'SocialProviderStatus';
+  configured: Scalars['Boolean']['output'];
+  provider: SocialProvider;
+};
+
+/** DRAFT saves it, SCHEDULE sends it at scheduled_at, NOW sends it straight away. */
+export type SocialPublishMode =
+  | 'DRAFT'
+  | 'NOW'
+  | 'SCHEDULE';
+
+export type SocialPublishStatus =
+  | 'DRAFT'
+  | 'FAILED'
+  | 'PARTIAL'
+  | 'PUBLISHED'
+  | 'PUBLISHING'
+  | 'SCHEDULED';
+
+export type SocialPublishTarget = {
+  __typename?: 'SocialPublishTarget';
+  account_id: Scalars['ID']['output'];
+  account_name: Scalars['String']['output'];
+  /** Why this network refused the post; empty when it did not. */
+  error?: Maybe<Scalars['String']['output']>;
+  permalink?: Maybe<Scalars['String']['output']>;
+  platform: SocialPlatform;
+  published_at?: Maybe<Scalars['String']['output']>;
+  status: SocialTargetStatus;
+};
+
+export type SocialQueueView =
+  | 'DRAFTS'
+  | 'QUEUE'
+  | 'SENT';
+
+export type SocialReviewStatus =
+  | 'OPEN'
+  | 'REVIEWED';
+
+export type SocialScheduledPost = {
+  __typename?: 'SocialScheduledPost';
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  idea_id?: Maybe<Scalars['String']['output']>;
+  media_type?: Maybe<SocialMediaType>;
+  media_url?: Maybe<Scalars['String']['output']>;
+  published_at?: Maybe<Scalars['String']['output']>;
+  scheduled_at?: Maybe<Scalars['String']['output']>;
+  status: SocialPublishStatus;
+  targets: Array<SocialPublishTarget>;
+  text: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type SocialScheduledPostInput = {
+  account_ids: Array<Scalars['ID']['input']>;
+  /** The idea this post was written from; it is marked USED. */
+  idea_id?: InputMaybe<Scalars['ID']['input']>;
+  media_type?: InputMaybe<SocialMediaType>;
+  media_url?: InputMaybe<Scalars['String']['input']>;
+  mode: SocialPublishMode;
+  /** Required for SCHEDULE; optional on a DRAFT (it then shows on the calendar). */
+  scheduled_at?: InputMaybe<Scalars['String']['input']>;
+  text: Scalars['String']['input'];
+};
+
+export type SocialSentiment =
+  | 'NEGATIVE'
+  | 'NEUTRAL'
+  | 'POSITIVE';
+
+export type SocialSentimentSummary = {
+  __typename?: 'SocialSentimentSummary';
+  flagged: Scalars['Int']['output'];
+  negative: Scalars['Int']['output'];
+  neutral: Scalars['Int']['output'];
+  pending: Scalars['Int']['output'];
+  positive: Scalars['Int']['output'];
+};
+
+export type SocialSeries = {
+  __typename?: 'SocialSeries';
+  key: Scalars['String']['output'];
+  values: Array<Scalars['Int']['output']>;
+};
+
+export type SocialSeverity =
+  | 'HIGH'
+  | 'LOW'
+  | 'MEDIUM';
+
+export type SocialTargetStatus =
+  | 'FAILED'
+  | 'PENDING'
+  | 'PUBLISHED';
+
+export type SocialTopPost = {
+  __typename?: 'SocialTopPost';
+  account_name: Scalars['String']['output'];
+  engagement: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  platform: SocialPlatform;
+  text: Scalars['String']['output'];
 };
 
 /**
@@ -22828,6 +28329,35 @@ export type StaffThread = {
   unread: Scalars['Int']['output'];
 };
 
+export type StartBulkDeleteInput = {
+  /** SELECTED only: the ticked row ids. */
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  mode: BulkDeleteMode;
+  /** The <name>Table query the portal table reads. */
+  table: Scalars['String']['input'];
+  url?: InputMaybe<Scalars['String']['input']>;
+  /** That query's variables as JSON text — search, filters and pinned arguments. */
+  variables: Scalars['String']['input'];
+};
+
+export type StartE2eRunInput = {
+  commit_sha?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * The dispatch this run is fulfilling, when the portal or the scheduler
+   * started it. Claims the QUEUED row that already exists instead of opening a
+   * second one.
+   */
+  dispatch_id?: InputMaybe<Scalars['String']['input']>;
+  ref?: InputMaybe<Scalars['String']['input']>;
+  /** Which suites the workflow was asked for. Only read when opening a new row. */
+  suites?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** The GitHub actor who started a run by hand from the Actions tab. */
+  triggered_by?: InputMaybe<Scalars['String']['input']>;
+  workflow_run_id?: InputMaybe<Scalars['String']['input']>;
+  workflow_run_url?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type StartRecordedUserCallInput = {
   notes?: InputMaybe<Scalars['String']['input']>;
   target: Scalars['String']['input'];
@@ -22939,12 +28469,2523 @@ export type StockMovementType =
   | 'RELEASE'
   | 'RESERVE';
 
+export type StoreActiveOccasion = {
+  __typename?: 'StoreActiveOccasion';
+  announcement_text: Scalars['String']['output'];
+  background_color: Scalars['String']['output'];
+  background_url: Scalars['String']['output'];
+  ends_at: Scalars['String']['output'];
+  favicon_url: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  logo_url: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreAddressInput = {
+  city: Scalars['String']['input'];
+  country?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  landmark?: InputMaybe<Scalars['String']['input']>;
+  line1: Scalars['String']['input'];
+  line2?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
+  pincode: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+};
+
+export type StoreAdminBrand = {
+  __typename?: 'StoreAdminBrand';
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  logo_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  tagline: Scalars['String']['output'];
+};
+
+export type StoreAdminCategory = {
+  __typename?: 'StoreAdminCategory';
+  banner_url: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  show_in_menu: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+};
+
+export type StoreAdminCollection = {
+  __typename?: 'StoreAdminCollection';
+  banner_url: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  mode: StoreCollectionMode;
+  name: Scalars['String']['output'];
+  product_ids: Array<Scalars['ID']['output']>;
+  rules: StoreCollectionRules;
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+};
+
+export type StoreAdminOrder = {
+  __typename?: 'StoreAdminOrder';
+  customer_order_count: Scalars['Int']['output'];
+  is_guest: Scalars['Boolean']['output'];
+  order: ProductOrder;
+  payment?: Maybe<StoreAdminPayment>;
+  return_ids: Array<Scalars['ID']['output']>;
+  shipment: StoreShipmentOps;
+};
+
+/** One of the store's own pages — a policy, a guide, an about page — beyond the four built-in ones. */
+export type StoreAdminPage = {
+  __typename?: 'StoreAdminPage';
+  content_html: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  show_in_footer: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type StoreAdminPayment = {
+  __typename?: 'StoreAdminPayment';
+  cod_fee: Scalars['Float']['output'];
+  coins_redeemed: Scalars['Int']['output'];
+  coupon_code: Scalars['String']['output'];
+  coupon_discount: Scalars['Float']['output'];
+  gateway: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  invoice_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  prepaid_discount: Scalars['Float']['output'];
+  refunded_amount: Scalars['Float']['output'];
+  status: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+};
+
+export type StoreAdminPetType = {
+  __typename?: 'StoreAdminPetType';
+  /** The categories filed under this pet — the ones its page and menu show. */
+  category_ids: Array<Scalars['ID']['output']>;
+  description: Scalars['String']['output'];
+  icon_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+};
+
+/** One ecomm product, everything the editor page shows and saves back. */
+export type StoreAdminProduct = {
+  __typename?: 'StoreAdminProduct';
+  available: Scalars['Int']['output'];
+  badge: Scalars['String']['output'];
+  brand_id?: Maybe<Scalars['ID']['output']>;
+  brand_name: Scalars['String']['output'];
+  breadth_cm: Scalars['Float']['output'];
+  care_instructions: Scalars['String']['output'];
+  category_ids: Array<Scalars['ID']['output']>;
+  /** What a courier bills: the higher of the packed weight and the volumetric weight. */
+  chargeable_weight_kg: Scalars['Float']['output'];
+  cod_available: Scalars['Boolean']['output'];
+  description: Scalars['String']['output'];
+  facet_values: Array<StoreFacetValue>;
+  faqs: Array<StoreFaq>;
+  featured: Scalars['Boolean']['output'];
+  feeding_guide: Scalars['String']['output'];
+  has_warehouse: Scalars['Boolean']['output'];
+  height_cm: Scalars['Float']['output'];
+  highlights: Array<Scalars['String']['output']>;
+  /** HSN code for the GST invoice. */
+  hsn_code: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  images: Array<Scalars['String']['output']>;
+  ingredients: Scalars['String']['output'];
+  is_fragile: Scalars['Boolean']['output'];
+  is_liquid: Scalars['Boolean']['output'];
+  length_cm: Scalars['Float']['output'];
+  low_stock_alert: Scalars['Int']['output'];
+  max_per_order: Scalars['Int']['output'];
+  mrp: Scalars['Float']['output'];
+  /** A short offer line shown beside the price, e.g. Buy 2, get 1 free. */
+  offer_text: Scalars['String']['output'];
+  package_type: PackageType;
+  /** Packaging values still missing before this product can be published (empty = ready). */
+  packaging_missing: Array<Scalars['String']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  price: Scalars['Float']['output'];
+  product_name: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  return_window_days?: Maybe<Scalars['Int']['output']>;
+  returnable: Scalars['Boolean']['output'];
+  search_keywords: Array<Scalars['String']['output']>;
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  shelf_life_days?: Maybe<Scalars['Int']['output']>;
+  short_description: Scalars['String']['output'];
+  sku: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sold_count: Scalars['Int']['output'];
+  sort_rank: Scalars['Int']['output'];
+  specifications: Array<StoreSpec>;
+  status: StoreProductStatus;
+  stock: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  variant_count: Scalars['Int']['output'];
+  /** What the variants differ by, e.g. Size. */
+  variant_option: Scalars['String']['output'];
+  variants: Array<StoreAdminProductVariant>;
+  video_url: Scalars['String']['output'];
+  view_count: Scalars['Int']['output'];
+  /** L x B x H / 5000 of the packed parcel. */
+  volumetric_weight_kg: Scalars['Float']['output'];
+  warehouse_id?: Maybe<Scalars['ID']['output']>;
+  weight_kg: Scalars['Float']['output'];
+  wishlist_count: Scalars['Int']['output'];
+};
+
+export type StoreAdminProductInput = {
+  badge?: InputMaybe<Scalars['String']['input']>;
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
+  breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  care_instructions?: InputMaybe<Scalars['String']['input']>;
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  cod_available?: InputMaybe<Scalars['Boolean']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  facet_values?: InputMaybe<Array<StoreFacetValueInput>>;
+  faqs?: InputMaybe<Array<StoreFaqInput>>;
+  featured?: InputMaybe<Scalars['Boolean']['input']>;
+  feeding_guide?: InputMaybe<Scalars['String']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
+  highlights?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** 4-8 digits (pet food 2309, toys 9503). Required to publish. */
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  ingredients?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  length_cm?: InputMaybe<Scalars['Float']['input']>;
+  low_stock_alert?: InputMaybe<Scalars['Int']['input']>;
+  max_per_order?: InputMaybe<Scalars['Int']['input']>;
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  offer_text?: InputMaybe<Scalars['String']['input']>;
+  /** How a unit is packed (default BOX). */
+  package_type?: InputMaybe<PackageType>;
+  pet_type_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Ignored when there are variants — each variant carries its own price. */
+  price?: InputMaybe<Scalars['Float']['input']>;
+  product_name: Scalars['String']['input'];
+  /** Null uses the store default. */
+  return_window_days?: InputMaybe<Scalars['Int']['input']>;
+  returnable?: InputMaybe<Scalars['Boolean']['input']>;
+  search_keywords?: InputMaybe<Array<Scalars['String']['input']>>;
+  seo_description?: InputMaybe<Scalars['String']['input']>;
+  seo_title?: InputMaybe<Scalars['String']['input']>;
+  /** Days a sealed unit stays good; null when it does not expire. */
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
+  short_description?: InputMaybe<Scalars['String']['input']>;
+  /** Blank mints a PET-XXXXXX code. */
+  sku?: InputMaybe<Scalars['String']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  sort_rank?: InputMaybe<Scalars['Int']['input']>;
+  specifications?: InputMaybe<Array<StoreSpecInput>>;
+  stock?: InputMaybe<Scalars['Int']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  variant_option?: InputMaybe<Scalars['String']['input']>;
+  variants?: InputMaybe<Array<StoreAdminVariantInput>>;
+  video_url?: InputMaybe<Scalars['String']['input']>;
+  warehouse_id?: InputMaybe<Scalars['ID']['input']>;
+  weight_kg?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type StoreAdminProductRow = {
+  __typename?: 'StoreAdminProductRow';
+  available: Scalars['Int']['output'];
+  badge: Scalars['String']['output'];
+  brand_id?: Maybe<Scalars['ID']['output']>;
+  brand_name: Scalars['String']['output'];
+  category_ids: Array<Scalars['ID']['output']>;
+  /** What a courier bills for one unit: the higher of packed and volumetric weight. */
+  chargeable_weight_kg: Scalars['Float']['output'];
+  featured: Scalars['Boolean']['output'];
+  /** False until a Duncit warehouse is picked — a product cannot be published without one. */
+  has_warehouse: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  /** The lead variant's MRP, else the product's (0 = none). */
+  mrp: Scalars['Float']['output'];
+  /** Packaging values still missing before this product can ship with ShipRocket (empty = ready). */
+  packaging_missing: Array<Scalars['String']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  price: Scalars['Float']['output'];
+  product_name: Scalars['String']['output'];
+  published_at?: Maybe<Scalars['String']['output']>;
+  sku: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sold_count: Scalars['Int']['output'];
+  sort_rank: Scalars['Int']['output'];
+  status: StoreProductStatus;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  variant_count: Scalars['Int']['output'];
+  view_count: Scalars['Int']['output'];
+  wishlist_count: Scalars['Int']['output'];
+};
+
+export type StoreAdminProductTablePage = {
+  __typename?: 'StoreAdminProductTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreAdminProductRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreAdminProductVariant = {
+  __typename?: 'StoreAdminProductVariant';
+  breadth_cm: Scalars['Float']['output'];
+  height_cm: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  length_cm: Scalars['Float']['output'];
+  mrp: Scalars['Float']['output'];
+  option_label: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  sku: Scalars['String']['output'];
+  stock: Scalars['Int']['output'];
+  weight_kg: Scalars['Float']['output'];
+};
+
+export type StoreAdminSection = {
+  __typename?: 'StoreAdminSection';
+  category_ids: Array<Scalars['ID']['output']>;
+  collection_id?: Maybe<Scalars['ID']['output']>;
+  discount_tiers: Array<Scalars['Int']['output']>;
+  ends_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  items: Array<StoreSectionItem>;
+  kind: StoreHomeSectionKind;
+  product_ids: Array<Scalars['ID']['output']>;
+  product_limit: Scalars['Int']['output'];
+  product_source: StoreSectionProductSource;
+  sort_order: Scalars['Int']['output'];
+  starts_at?: Maybe<Scalars['String']['output']>;
+  subtitle: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** An Autoship subscription as the console lists it. */
+export type StoreAdminSubscriptionRow = {
+  __typename?: 'StoreAdminSubscriptionRow';
+  buyer_email: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  /** Consecutive automatic cycles that could not be booked. */
+  failures: Scalars['Int']['output'];
+  frequency_weeks: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  last_order_no: Scalars['String']['output'];
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  mode: StoreSubscriptionMode;
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  product_id: Scalars['ID']['output'];
+  product_name: Scalars['String']['output'];
+  qty: Scalars['Int']['output'];
+  run_count: Scalars['Int']['output'];
+  status: StoreSubscriptionStatus;
+  variant_label: Scalars['String']['output'];
+};
+
+export type StoreAdminVariantInput = {
+  breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** An existing variant's id — omitted for a new one. */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  length_cm?: InputMaybe<Scalars['Float']['input']>;
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  option_label: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
+  sku?: InputMaybe<Scalars['String']['input']>;
+  stock: Scalars['Int']['input'];
+  weight_kg?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** What a retry of the failed bookings did. */
+export type StoreBookingRetry = {
+  __typename?: 'StoreBookingRetry';
+  attempted: Scalars['Int']['output'];
+  /** Now with a courier (AWB assigned). */
+  booked: Scalars['Int']['output'];
+  /** Still failing — each order says why. */
+  failed: Scalars['Int']['output'];
+};
+
+export type StoreBrandCount = {
+  __typename?: 'StoreBrandCount';
+  count: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  selected: Scalars['Boolean']['output'];
+};
+
+export type StoreBrandInfo = {
+  __typename?: 'StoreBrandInfo';
+  id: Scalars['ID']['output'];
+  logo_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** Public URL key — ecomm.duncit.com/brand/<slug>. */
+  slug: Scalars['String']['output'];
+  tagline: Scalars['String']['output'];
+};
+
+export type StoreBrandInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  logo_url?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  slug?: InputMaybe<Scalars['String']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreCart = {
+  __typename?: 'StoreCart';
+  amount_to_free_shipping: Scalars['Float']['output'];
+  coupon_code: Scalars['String']['output'];
+  coupon_discount: Scalars['Float']['output'];
+  coupon_error?: Maybe<Scalars['String']['output']>;
+  free_shipping_above: Scalars['Float']['output'];
+  has_issues: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  item_count: Scalars['Int']['output'];
+  items_total: Scalars['Float']['output'];
+  lines: Array<StoreCartLine>;
+  min_order_value: Scalars['Float']['output'];
+  mrp_total: Scalars['Float']['output'];
+  savings: Scalars['Float']['output'];
+};
+
+export type StoreCartLine = {
+  __typename?: 'StoreCartLine';
+  available: Scalars['Int']['output'];
+  brand_name: Scalars['String']['output'];
+  cod_available: Scalars['Boolean']['output'];
+  discount_pct: Scalars['Int']['output'];
+  image_url: Scalars['String']['output'];
+  issue?: Maybe<StoreLineIssue>;
+  line_total: Scalars['Float']['output'];
+  max_qty: Scalars['Int']['output'];
+  mrp: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  product_id: Scalars['ID']['output'];
+  /** Units that will be bought — capped by stock and the per-order limit. */
+  quantity: Scalars['Int']['output'];
+  requested_qty: Scalars['Int']['output'];
+  slug: Scalars['String']['output'];
+  unit_price: Scalars['Float']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+};
+
+export type StoreCartRow = {
+  __typename?: 'StoreCartRow';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_guest: Scalars['Boolean']['output'];
+  item_count: Scalars['Int']['output'];
+  items: Array<Scalars['String']['output']>;
+  last_activity_at: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  reminded_at?: Maybe<Scalars['String']['output']>;
+  value: Scalars['Float']['output'];
+};
+
+export type StoreCartTablePage = {
+  __typename?: 'StoreCartTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreCartRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreCategory = {
+  __typename?: 'StoreCategory';
+  banner_url: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreCategoryInput = {
+  banner_url?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  parent_id?: InputMaybe<Scalars['ID']['input']>;
+  pet_type_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  seo_description?: InputMaybe<Scalars['String']['input']>;
+  seo_title?: InputMaybe<Scalars['String']['input']>;
+  show_in_menu?: InputMaybe<Scalars['Boolean']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** A category in the header menu, with the categories beneath it. */
+export type StoreCategoryNode = {
+  __typename?: 'StoreCategoryNode';
+  children: Array<StoreCategoryNode>;
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  show_in_menu: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreCategoryPage = {
+  __typename?: 'StoreCategoryPage';
+  banner_url: Scalars['String']['output'];
+  children: Array<StoreCategory>;
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  parent?: Maybe<StoreCategory>;
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreCheckoutMethod =
+  | 'COD'
+  /** Razorpay (UPI, cards, net banking, wallets) — or captured at once in dummy mode. */
+  | 'ONLINE';
+
+export type StoreCheckoutQuote = {
+  __typename?: 'StoreCheckoutQuote';
+  autoship_discount: Scalars['Float']['output'];
+  below_minimum: Scalars['Boolean']['output'];
+  cod_available: Scalars['Boolean']['output'];
+  cod_block?: Maybe<StoreCodBlock>;
+  cod_fee: Scalars['Float']['output'];
+  coins_redeemed: Scalars['Int']['output'];
+  coupon_code: Scalars['String']['output'];
+  coupon_discount: Scalars['Float']['output'];
+  coupon_error?: Maybe<Scalars['String']['output']>;
+  currency_symbol: Scalars['String']['output'];
+  discount_total: Scalars['Float']['output'];
+  etd: Scalars['String']['output'];
+  gst_amount: Scalars['Float']['output'];
+  has_issues: Scalars['Boolean']['output'];
+  items_total: Scalars['Float']['output'];
+  lines: Array<StoreCartLine>;
+  mrp_total: Scalars['Float']['output'];
+  prepaid_discount: Scalars['Float']['output'];
+  savings: Scalars['Float']['output'];
+  serviceable: Scalars['Boolean']['output'];
+  /** True when every parcel was rated live by the courier. */
+  shipping_quoted: Scalars['Boolean']['output'];
+  shipping_total: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+};
+
+/** Why Cash on Delivery is not on offer for a basket. */
+export type StoreCodBlock =
+  | 'DISABLED'
+  | 'MAX_ORDER'
+  | 'MIN_ORDER'
+  | 'NOT_SERVICEABLE'
+  | 'PINCODE'
+  | 'PRODUCT';
+
+export type StoreCodLedger = {
+  __typename?: 'StoreCodLedger';
+  collected: Scalars['Float']['output'];
+  outstanding: Scalars['Float']['output'];
+  rows: Array<StoreCodLedgerRow>;
+  /** Cash due on delivered COD orders. */
+  total_cod: Scalars['Float']['output'];
+};
+
+export type StoreCodLedgerRow = {
+  __typename?: 'StoreCodLedgerRow';
+  awb: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  cod_amount: Scalars['Float']['output'];
+  collected_at?: Maybe<Scalars['String']['output']>;
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  order_id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  status: FulfilmentStatus;
+};
+
+export type StoreCodOtp = {
+  __typename?: 'StoreCodOtp';
+  challenge_id: Scalars['ID']['output'];
+  expires_at: Scalars['String']['output'];
+  resend_after_seconds: Scalars['Int']['output'];
+  /** Echoed only while no SMS/WhatsApp transport is wired. */
+  test_code?: Maybe<Scalars['String']['output']>;
+};
+
+export type StoreCollectionInput = {
+  banner_url?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  mode: StoreCollectionMode;
+  name: Scalars['String']['input'];
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  rules?: InputMaybe<StoreCollectionRulesInput>;
+  seo_description?: InputMaybe<Scalars['String']['input']>;
+  seo_title?: InputMaybe<Scalars['String']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreCollectionLink = {
+  __typename?: 'StoreCollectionLink';
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreCollectionMode =
+  /** Hand-picked products. */
+  | 'MANUAL'
+  /** Every listed product matching the rules. */
+  | 'SMART';
+
+export type StoreCollectionPage = {
+  __typename?: 'StoreCollectionPage';
+  banner_url: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreCollectionRules = {
+  __typename?: 'StoreCollectionRules';
+  brand_ids: Array<Scalars['ID']['output']>;
+  category_ids: Array<Scalars['ID']['output']>;
+  featured_only: Scalars['Boolean']['output'];
+  in_stock_only: Scalars['Boolean']['output'];
+  max_price: Scalars['Float']['output'];
+  min_discount_pct: Scalars['Float']['output'];
+  pet_type_ids: Array<Scalars['ID']['output']>;
+  tags: Array<Scalars['String']['output']>;
+};
+
+export type StoreCollectionRulesInput = {
+  brand_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  featured_only?: InputMaybe<Scalars['Boolean']['input']>;
+  in_stock_only?: InputMaybe<Scalars['Boolean']['input']>;
+  max_price?: InputMaybe<Scalars['Float']['input']>;
+  min_discount_pct?: InputMaybe<Scalars['Float']['input']>;
+  pet_type_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type StoreContactInput = {
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+export type StoreCourierOption = {
+  __typename?: 'StoreCourierOption';
+  cod: Scalars['Boolean']['output'];
+  courier_company_id: Scalars['String']['output'];
+  courier_name: Scalars['String']['output'];
+  etd: Scalars['String']['output'];
+  rate: Scalars['Float']['output'];
+  rating: Scalars['Float']['output'];
+  recommended: Scalars['Boolean']['output'];
+};
+
+export type StoreCustomerRow = {
+  __typename?: 'StoreCustomerRow';
+  cancelled: Scalars['Int']['output'];
+  email: Scalars['String']['output'];
+  first_order_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_guest: Scalars['Boolean']['output'];
+  last_order_at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  orders: Scalars['Int']['output'];
+  phone: Scalars['String']['output'];
+  spent: Scalars['Float']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type StoreCustomerTablePage = {
+  __typename?: 'StoreCustomerTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreCustomerRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreDashboard = {
+  __typename?: 'StoreDashboard';
+  abandoned_carts: Scalars['Int']['output'];
+  average_order_value: Scalars['Float']['output'];
+  cancelled: Scalars['Int']['output'];
+  cod_share_pct: Scalars['Int']['output'];
+  customers: Scalars['Int']['output'];
+  days: Scalars['Int']['output'];
+  delivered: Scalars['Int']['output'];
+  listed_products: Scalars['Int']['output'];
+  low_stock: Scalars['Int']['output'];
+  new_customers: Scalars['Int']['output'];
+  orders: Scalars['Int']['output'];
+  out_of_stock: Scalars['Int']['output'];
+  returns_open: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+  series: Array<StoreDashboardPoint>;
+  statuses: Array<StoreStatusCount>;
+  to_ship: Scalars['Int']['output'];
+  top_products: Array<StoreTopProduct>;
+  units: Scalars['Int']['output'];
+};
+
+export type StoreDashboardPoint = {
+  __typename?: 'StoreDashboardPoint';
+  date: Scalars['String']['output'];
+  orders: Scalars['Int']['output'];
+  revenue: Scalars['Float']['output'];
+};
+
+/** The courier's answer for one product to one pincode. */
+export type StoreDeliveryCheck = {
+  __typename?: 'StoreDeliveryCheck';
+  /** False when the courier could not be asked (not configured, bad pincode). */
+  checked: Scalars['Boolean']['output'];
+  cod_available: Scalars['Boolean']['output'];
+  courier_name: Scalars['String']['output'];
+  /** Estimated delivery date, as the courier words it. */
+  etd: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  serviceable: Scalars['Boolean']['output'];
+};
+
+export type StoreFacet = {
+  __typename?: 'StoreFacet';
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  options: Array<StoreFacetOption>;
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+};
+
+export type StoreFacetDisplay = {
+  __typename?: 'StoreFacetDisplay';
+  name: Scalars['String']['output'];
+  values: Array<Scalars['String']['output']>;
+};
+
+export type StoreFacetFilterInput = {
+  /** The facet's slug. */
+  facet: Scalars['String']['input'];
+  /** Option slugs — a product matches when it carries ANY of them. */
+  values: Array<Scalars['String']['input']>;
+};
+
+export type StoreFacetInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  options: Array<StoreFacetOptionInput>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreFacetOption = {
+  __typename?: 'StoreFacetOption';
+  label: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreFacetOptionCount = {
+  __typename?: 'StoreFacetOptionCount';
+  count: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
+  selected: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreFacetOptionInput = {
+  label: Scalars['String']['input'];
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreFacetPanel = {
+  __typename?: 'StoreFacetPanel';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  options: Array<StoreFacetOptionCount>;
+  slug: Scalars['String']['output'];
+};
+
+export type StoreFacetValue = {
+  __typename?: 'StoreFacetValue';
+  facet_id: Scalars['ID']['output'];
+  values: Array<Scalars['String']['output']>;
+};
+
+export type StoreFacetValueInput = {
+  facet_id: Scalars['ID']['input'];
+  values: Array<Scalars['String']['input']>;
+};
+
+export type StoreFaq = {
+  __typename?: 'StoreFaq';
+  answer: Scalars['String']['output'];
+  question: Scalars['String']['output'];
+};
+
+export type StoreFaqInput = {
+  answer: Scalars['String']['input'];
+  question: Scalars['String']['input'];
+};
+
+export type StoreHomeSection = {
+  __typename?: 'StoreHomeSection';
+  brands: Array<StoreBrandInfo>;
+  categories: Array<StoreCategory>;
+  collection?: Maybe<StoreRef>;
+  /** FLASH_SALE: the discount tabs, in percent. */
+  discount_tiers: Array<Scalars['Int']['output']>;
+  /** When the block stops showing; a FLASH_SALE counts down to it. */
+  ends_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  items: Array<StoreSectionItem>;
+  kind: StoreHomeSectionKind;
+  pet_types: Array<StorePetType>;
+  products: Array<StoreProductCard>;
+  subtitle: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type StoreHomeSectionKind =
+  | 'BRANDS'
+  | 'CATEGORY_GRID'
+  /** A row of round category icons. */
+  | 'CATEGORY_ICONS'
+  | 'COLLECTION_CAROUSEL'
+  /** A countdown sale: ends_at is the deadline, discount_tiers the tabs. */
+  | 'FLASH_SALE'
+  | 'HERO_SLIDER'
+  | 'NEWSLETTER'
+  | 'PET_TYPES'
+  /** A product carousel from a collection, a category, hand-picked products or a best-seller/newest/discount list. */
+  | 'PRODUCT_SLIDER'
+  | 'PROMO_BANNERS'
+  | 'USP_STRIP';
+
+/** Why a cart line cannot be bought as it stands. */
+export type StoreLineIssue =
+  | 'OUT_OF_STOCK'
+  | 'QTY_REDUCED'
+  | 'UNAVAILABLE'
+  | 'VARIANT_GONE';
+
+/**
+ * Everything the stores ask for when the app is listed, kept once and applied on
+ * every push from Tech → App Builds. Apple reads name, subtitle, description,
+ * keywords, what's new, URLs, copyright, category, review contact and the
+ * iPhone/iPad screenshots; Google Play reads name (title), short description,
+ * description, what's new (release notes), contact details and the phone/tablet
+ * screenshots, feature graphic and icon.
+ */
+export type StoreListing = {
+  __typename?: 'StoreListing';
+  android_feature_graphic: Scalars['String']['output'];
+  android_icon: Scalars['String']['output'];
+  android_phone_screenshots: Array<Scalars['String']['output']>;
+  android_tablet_7_screenshots: Array<Scalars['String']['output']>;
+  android_tablet_10_screenshots: Array<Scalars['String']['output']>;
+  contact_email: Scalars['String']['output'];
+  contact_phone: Scalars['String']['output'];
+  copyright: Scalars['String']['output'];
+  demo_account_name: Scalars['String']['output'];
+  /** Sent to Apple's review team only; returned here because the form has to edit it. */
+  demo_account_password: Scalars['String']['output'];
+  demo_account_required: Scalars['Boolean']['output'];
+  description: Scalars['String']['output'];
+  ipad_screenshots: Array<Scalars['String']['output']>;
+  iphone_screenshots: Array<Scalars['String']['output']>;
+  keywords: Scalars['String']['output'];
+  locale: Scalars['String']['output'];
+  marketing_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  primary_category: Scalars['String']['output'];
+  privacy_policy_url: Scalars['String']['output'];
+  review_first_name: Scalars['String']['output'];
+  review_last_name: Scalars['String']['output'];
+  review_notes: Scalars['String']['output'];
+  short_description: Scalars['String']['output'];
+  subtitle: Scalars['String']['output'];
+  support_url: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: Scalars['String']['output'];
+  whats_new: Scalars['String']['output'];
+};
+
+/** Every field is optional: what is sent replaces what was stored, what is left out stays. */
+export type StoreListingInput = {
+  android_feature_graphic?: InputMaybe<Scalars['String']['input']>;
+  android_icon?: InputMaybe<Scalars['String']['input']>;
+  android_phone_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
+  android_tablet_7_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
+  android_tablet_10_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
+  contact_email?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  copyright?: InputMaybe<Scalars['String']['input']>;
+  demo_account_name?: InputMaybe<Scalars['String']['input']>;
+  demo_account_password?: InputMaybe<Scalars['String']['input']>;
+  demo_account_required?: InputMaybe<Scalars['Boolean']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  ipad_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
+  iphone_screenshots?: InputMaybe<Array<Scalars['String']['input']>>;
+  keywords?: InputMaybe<Scalars['String']['input']>;
+  locale?: InputMaybe<Scalars['String']['input']>;
+  marketing_url?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  primary_category?: InputMaybe<Scalars['String']['input']>;
+  privacy_policy_url?: InputMaybe<Scalars['String']['input']>;
+  review_first_name?: InputMaybe<Scalars['String']['input']>;
+  review_last_name?: InputMaybe<Scalars['String']['input']>;
+  review_notes?: InputMaybe<Scalars['String']['input']>;
+  short_description?: InputMaybe<Scalars['String']['input']>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  support_url?: InputMaybe<Scalars['String']['input']>;
+  whats_new?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreNavigation = {
+  __typename?: 'StoreNavigation';
+  categories: Array<StoreCategoryNode>;
+  collections: Array<StoreCollectionLink>;
+  /** The store's own pages that show in the footer, in order. */
+  pages: Array<StorePageLink>;
+  pet_types: Array<StorePetType>;
+};
+
+export type StoreNdrAction =
+  | 'REATTEMPT'
+  | 'RETURN';
+
+/** A festive window: while it is open the store swaps its logo, favicon and background. */
+export type StoreOccasion = {
+  __typename?: 'StoreOccasion';
+  announcement_text: Scalars['String']['output'];
+  background_color: Scalars['String']['output'];
+  background_url: Scalars['String']['output'];
+  ends_at: Scalars['String']['output'];
+  favicon_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  logo_url: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  starts_at: Scalars['String']['output'];
+};
+
+export type StoreOccasionInput = {
+  /** Replaces the announcement bar while the occasion is on; blank leaves it. */
+  announcement_text?: InputMaybe<Scalars['String']['input']>;
+  /** A CSS colour; blank keeps the store's own page colour. */
+  background_color?: InputMaybe<Scalars['String']['input']>;
+  background_url?: InputMaybe<Scalars['String']['input']>;
+  ends_at: Scalars['String']['input'];
+  favicon_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  label: Scalars['String']['input'];
+  logo_url?: InputMaybe<Scalars['String']['input']>;
+  /** Blank mints one from the label. */
+  slug?: InputMaybe<Scalars['String']['input']>;
+  /** Higher wins when two windows overlap. */
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  starts_at: Scalars['String']['input'];
+};
+
+export type StoreOptionValue = {
+  __typename?: 'StoreOptionValue';
+  name: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+/** A pet-store order as its buyer reads it. */
+export type StoreOrder = {
+  __typename?: 'StoreOrder';
+  amount_paid: Scalars['Float']['output'];
+  awb: Scalars['String']['output'];
+  can_cancel: Scalars['Boolean']['output'];
+  can_return: Scalars['Boolean']['output'];
+  cancel_reason: Scalars['String']['output'];
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  cod_amount: Scalars['Float']['output'];
+  courier_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  discount_total: Scalars['Float']['output'];
+  /** The courier's estimated delivery date, as ShipRocket phrased it ('' until a courier is assigned). */
+  etd: Scalars['String']['output'];
+  events: Array<StoreOrderEvent>;
+  id: Scalars['ID']['output'];
+  invoice_no: Scalars['String']['output'];
+  items: Array<StoreOrderItem>;
+  items_total: Scalars['Float']['output'];
+  order_no: Scalars['String']['output'];
+  payment_method: OrderPaymentMethod;
+  payment_state: StorePaymentState;
+  return_deadline?: Maybe<Scalars['String']['output']>;
+  shipping_address?: Maybe<StoreOrderAddress>;
+  shipping_charge: Scalars['Float']['output'];
+  status: FulfilmentStatus;
+  total: Scalars['Float']['output'];
+  tracking_url: Scalars['String']['output'];
+};
+
+export type StoreOrderAddress = {
+  __typename?: 'StoreOrderAddress';
+  city: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  landmark: Scalars['String']['output'];
+  line1: Scalars['String']['output'];
+  line2: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type StoreOrderEvent = {
+  __typename?: 'StoreOrderEvent';
+  at: Scalars['String']['output'];
+  location: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type StoreOrderItem = {
+  __typename?: 'StoreOrderItem';
+  image_url: Scalars['String']['output'];
+  line_total: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  product_id: Scalars['ID']['output'];
+  qty: Scalars['Int']['output'];
+  returned_qty: Scalars['Int']['output'];
+  unit_price: Scalars['Float']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+};
+
+export type StoreOrderResultStatus =
+  | 'COD_CONFIRMED'
+  | 'FAILED'
+  | 'PAID'
+  | 'PENDING_PAYMENT';
+
+export type StoreOrderTablePage = {
+  __typename?: 'StoreOrderTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ProductOrder>;
+  total: Scalars['Int']['output'];
+};
+
+export type StorePackagingImportError = {
+  __typename?: 'StorePackagingImportError';
+  message: Scalars['String']['output'];
+  /** The CSV line (1 is the header). */
+  row: Scalars['Int']['output'];
+  sku: Scalars['String']['output'];
+};
+
+export type StorePackagingImportResult = {
+  __typename?: 'StorePackagingImportResult';
+  errors: Array<StorePackagingImportError>;
+  updated: Scalars['Int']['output'];
+};
+
+/** One CSV row: a product or variant SKU and the values to set on it. */
+export type StorePackagingImportRow = {
+  breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  length_cm?: InputMaybe<Scalars['Float']['input']>;
+  package_type?: InputMaybe<PackageType>;
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
+  sku: Scalars['String']['input'];
+  weight_kg?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** Packaging values to set on many products at once; a value left out keeps the saved one. */
+export type StorePackagingInput = {
+  breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
+  length_cm?: InputMaybe<Scalars['Float']['input']>;
+  package_type?: InputMaybe<PackageType>;
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
+  weight_kg?: InputMaybe<Scalars['Float']['input']>;
+};
+
+/** A product's (or one variant's) packaging, as the CSV export carries it. */
+export type StorePackagingRow = {
+  __typename?: 'StorePackagingRow';
+  breadth_cm: Scalars['Float']['output'];
+  chargeable_weight_kg: Scalars['Float']['output'];
+  height_cm: Scalars['Float']['output'];
+  hsn_code: Scalars['String']['output'];
+  is_fragile: Scalars['Boolean']['output'];
+  is_liquid: Scalars['Boolean']['output'];
+  length_cm: Scalars['Float']['output'];
+  missing: Array<Scalars['String']['output']>;
+  package_type: PackageType;
+  product_id: Scalars['ID']['output'];
+  product_name: Scalars['String']['output'];
+  shelf_life_days?: Maybe<Scalars['Int']['output']>;
+  sku: Scalars['String']['output'];
+  /** Empty on the product's own row. */
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+  volumetric_weight_kg: Scalars['Float']['output'];
+  weight_kg: Scalars['Float']['output'];
+};
+
+export type StorePage = {
+  __typename?: 'StorePage';
+  content_html: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type StorePageInput = {
+  content_html?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  seo_description?: InputMaybe<Scalars['String']['input']>;
+  seo_title?: InputMaybe<Scalars['String']['input']>;
+  show_in_footer?: InputMaybe<Scalars['Boolean']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+/** One of the store's own pages, as the footer and menu link it. */
+export type StorePageLink = {
+  __typename?: 'StorePageLink';
+  id: Scalars['ID']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type StoreParcelInput = {
+  breadth_cm: Scalars['Float']['input'];
+  height_cm: Scalars['Float']['input'];
+  length_cm: Scalars['Float']['input'];
+  weight_kg: Scalars['Float']['input'];
+};
+
+export type StorePaymentState =
+  | 'CANCELLED'
+  | 'COD_COLLECTED'
+  | 'COD_PENDING'
+  | 'FAILED'
+  | 'PAID'
+  | 'PENDING'
+  | 'REFUNDED'
+  | 'REFUND_INITIATED';
+
+export type StorePetCount = {
+  __typename?: 'StorePetCount';
+  count: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  selected: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StorePetType = {
+  __typename?: 'StorePetType';
+  description: Scalars['String']['output'];
+  icon_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StorePetTypeInput = {
+  /** When sent, exactly these categories are filed under the pet (others are unfiled from it). */
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon_url?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StorePetTypePage = {
+  __typename?: 'StorePetTypePage';
+  categories: Array<StoreCategory>;
+  description: Scalars['String']['output'];
+  icon_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StorePickupLocations = {
+  __typename?: 'StorePickupLocations';
+  /** Why ShipRocket could not be read; empty when it was. */
+  shiprocket_error: Scalars['String']['output'];
+  synced_at: Scalars['String']['output'];
+  /** Every pickup address on the ShipRocket account (a sync takes in any it has that we do not). */
+  warehouses: Array<StorePickupRow>;
+};
+
+/** A warehouse matched against the ShipRocket account's pickup addresses. */
+export type StorePickupRow = {
+  __typename?: 'StorePickupRow';
+  /** Products (pet store and pod shop) shipping from it; it cannot be deleted while any do. */
+  product_count: Scalars['Int']['output'];
+  /** READY, AWAITING_VERIFICATION, NOT_IN_SHIPROCKET — or UNKNOWN when ShipRocket could not be read. */
+  shiprocket_state: Scalars['String']['output'];
+  warehouse: BrandPickupLocation;
+};
+
+/** Whether the store delivers to a pincode, by the operator's list alone (the courier is asked at checkout). */
+export type StorePincodeCheck = {
+  __typename?: 'StorePincodeCheck';
+  pincode: Scalars['String']['output'];
+  /** False when the store serves every pincode the courier can reach. */
+  restricted: Scalars['Boolean']['output'];
+  serviceable: Scalars['Boolean']['output'];
+};
+
+export type StorePlaceOrderInput = {
+  autoship_id?: InputMaybe<Scalars['ID']['input']>;
+  billing_address?: InputMaybe<StoreAddressInput>;
+  billing_same_as_shipping?: InputMaybe<Scalars['Boolean']['input']>;
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  checkout_url?: InputMaybe<Scalars['String']['input']>;
+  /** From storeRequestCodOtp + storeVerifyCodOtp, when COD needs a verified phone. */
+  cod_challenge_id?: InputMaybe<Scalars['ID']['input']>;
+  contact: StoreContactInput;
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  gstin?: InputMaybe<Scalars['String']['input']>;
+  payment_method: StoreCheckoutMethod;
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
+  shipping_address: StoreAddressInput;
+};
+
+export type StorePlaceOrderResult = {
+  __typename?: 'StorePlaceOrderResult';
+  /** A guest's key to their order pages — keep it; empty for a signed-in buyer. */
+  access_key: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  orders: Array<StoreOrder>;
+  payment_doc_id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  /** Present when the Razorpay sheet has to be opened. */
+  razorpay?: Maybe<RazorpayOrder>;
+  status: StoreOrderResultStatus;
+  total: Scalars['Float']['output'];
+};
+
+/** A product page. */
+export type StoreProduct = {
+  __typename?: 'StoreProduct';
+  available: Scalars['Int']['output'];
+  badge: Scalars['String']['output'];
+  brand?: Maybe<StoreBrandInfo>;
+  brand_id?: Maybe<Scalars['ID']['output']>;
+  brand_name: Scalars['String']['output'];
+  breadcrumbs: Array<StoreRef>;
+  care_instructions: Scalars['String']['output'];
+  categories: Array<StoreRef>;
+  cod_available: Scalars['Boolean']['output'];
+  default_variant_id?: Maybe<Scalars['ID']['output']>;
+  description: Scalars['String']['output'];
+  discount_pct: Scalars['Int']['output'];
+  facets: Array<StoreFacetDisplay>;
+  faqs: Array<StoreFaq>;
+  featured: Scalars['Boolean']['output'];
+  feeding_guide: Scalars['String']['output'];
+  has_variants: Scalars['Boolean']['output'];
+  highlights: Array<Scalars['String']['output']>;
+  hover_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  images: Array<Scalars['String']['output']>;
+  in_stock: Scalars['Boolean']['output'];
+  ingredients: Scalars['String']['output'];
+  low_stock: Scalars['Boolean']['output'];
+  max_per_order: Scalars['Int']['output'];
+  min_order_qty: Scalars['Int']['output'];
+  mrp: Scalars['Float']['output'];
+  offer_text: Scalars['String']['output'];
+  options: Array<StoreProductOption>;
+  pet_types: Array<StoreRef>;
+  price: Scalars['Float']['output'];
+  rating: Scalars['Float']['output'];
+  rating_count: Scalars['Int']['output'];
+  return_window_days: Scalars['Int']['output'];
+  returnable: Scalars['Boolean']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  short_description: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sold_count: Scalars['Int']['output'];
+  specifications: Array<StoreSpec>;
+  /** Reviews per star, index 0 = 1★ … index 4 = 5★. */
+  star_counts: Array<Scalars['Int']['output']>;
+  tags: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  variants: Array<StoreVariant>;
+  video_url: Scalars['String']['output'];
+  weight_volume: Scalars['String']['output'];
+};
+
+/** A product as a shelf card. */
+export type StoreProductCard = {
+  __typename?: 'StoreProductCard';
+  badge: Scalars['String']['output'];
+  brand_id?: Maybe<Scalars['ID']['output']>;
+  brand_name: Scalars['String']['output'];
+  discount_pct: Scalars['Int']['output'];
+  featured: Scalars['Boolean']['output'];
+  has_variants: Scalars['Boolean']['output'];
+  hover_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  in_stock: Scalars['Boolean']['output'];
+  low_stock: Scalars['Boolean']['output'];
+  /** Compare-at price; 0 when there is none. */
+  mrp: Scalars['Float']['output'];
+  /** A short offer line, e.g. Buy 2, get 1 free; blank when there is none. */
+  offer_text: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  rating: Scalars['Float']['output'];
+  rating_count: Scalars['Int']['output'];
+  short_description: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type StoreProductOption = {
+  __typename?: 'StoreProductOption';
+  name: Scalars['String']['output'];
+  values: Array<Scalars['String']['output']>;
+};
+
+/** DRAFT is saved but not on the store; PUBLISHED is on sale; ARCHIVED is retired. */
+export type StoreProductStatus =
+  | 'ARCHIVED'
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+/** The store's public settings: identity, checkout rules and its own pages. */
+export type StorePublicSettings = {
+  __typename?: 'StorePublicSettings';
+  about_html: Scalars['String']['output'];
+  /** The festive window open right now, if any — the store swaps its logo, favicon and background for it. */
+  active_occasion?: Maybe<StoreActiveOccasion>;
+  announcement_enabled: Scalars['Boolean']['output'];
+  announcement_link: Scalars['String']['output'];
+  announcement_text: Scalars['String']['output'];
+  autoship_discount_pct: Scalars['Float']['output'];
+  autoship_enabled: Scalars['Boolean']['output'];
+  /** Delivery intervals a subscription may choose, in weeks. */
+  autoship_frequencies: Array<Scalars['Int']['output']>;
+  cancel_reasons: Array<Scalars['String']['output']>;
+  cod_enabled: Scalars['Boolean']['output'];
+  cod_fee: Scalars['Float']['output'];
+  cod_requires_otp: Scalars['Boolean']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money. */
+  dummy_mode: Scalars['Boolean']['output'];
+  favicon_url: Scalars['String']['output'];
+  free_shipping_above: Scalars['Float']['output'];
+  guest_checkout_enabled: Scalars['Boolean']['output'];
+  logo_url: Scalars['String']['output'];
+  max_qty_per_line: Scalars['Int']['output'];
+  min_order_value: Scalars['Float']['output'];
+  og_image_url: Scalars['String']['output'];
+  prepaid_discount_pct: Scalars['Float']['output'];
+  return_reasons: Array<Scalars['String']['output']>;
+  return_window_days: Scalars['Int']['output'];
+  returns_enabled: Scalars['Boolean']['output'];
+  returns_policy_html: Scalars['String']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  /** On: delivery is limited to an operator-kept pincode list (storePincodeServiceable says which). */
+  serviceable_pincodes_enabled: Scalars['Boolean']['output'];
+  shipping_policy_html: Scalars['String']['output'];
+  social_links: Array<StoreSocialLink>;
+  store_enabled: Scalars['Boolean']['output'];
+  store_name: Scalars['String']['output'];
+  support_email: Scalars['String']['output'];
+  support_phone: Scalars['String']['output'];
+  tagline: Scalars['String']['output'];
+  terms_html: Scalars['String']['output'];
+  whatsapp_number: Scalars['String']['output'];
+};
+
+export type StoreQuoteInput = {
+  /** When checkout came from an Autoship Order now — earns the autoship discount. */
+  autoship_id?: InputMaybe<Scalars['ID']['input']>;
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  payment_method?: InputMaybe<StoreCheckoutMethod>;
+  pincode?: InputMaybe<Scalars['String']['input']>;
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A Razorpay account from the Tech portal's RAZORPAY entries. Never carries a secret. */
+export type StoreRazorpayAccount = {
+  __typename?: 'StoreRazorpayAccount';
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  is_default: Scalars['Boolean']['output'];
+  /** The key id, shortened — which account this is at a glance. */
+  key_hint: Scalars['String']['output'];
+  mode: StoreRazorpayMode;
+  name: Scalars['String']['output'];
+};
+
+export type StoreRazorpayMode =
+  | 'LIVE'
+  | 'TEST'
+  | 'UNKNOWN';
+
+export type StoreRef = {
+  __typename?: 'StoreRef';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreRefundMode =
+  /** Instantly as Duncit Coins (signed-in buyers only). */
+  | 'COINS'
+  /** Back to the original payment — paid out by Finance. */
+  | 'ORIGINAL';
+
+/** What OpenAI advised about an issue, written from the store's state, the reviewer's message and the listing. */
+export type StoreReleaseAdvice = {
+  __typename?: 'StoreReleaseAdvice';
+  causes: Array<Scalars['String']['output']>;
+  confidence: Scalars['String']['output'];
+  /** Why there is no advice, when OpenAI could not answer. Empty otherwise. */
+  error: Scalars['String']['output'];
+  generated_at?: Maybe<Scalars['String']['output']>;
+  model: Scalars['String']['output'];
+  next_time: Array<Scalars['String']['output']>;
+  steps: Array<Scalars['String']['output']>;
+  summary: Scalars['String']['output'];
+};
+
+/**
+ * One moment a release needed a person: a rejection, or an approved version
+ * waiting to be released. Kept after the store has moved on, so the reason a
+ * version was refused is still readable beside the version that replaced it.
+ */
+export type StoreReleaseIssue = {
+  __typename?: 'StoreReleaseIssue';
+  advice?: Maybe<StoreReleaseAdvice>;
+  build_number: Scalars['String']['output'];
+  detected_at: Scalars['String']['output'];
+  /** Who logged it, for a MANUAL issue. */
+  detected_by: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: ReleaseIssueKind;
+  last_reminded_at?: Maybe<Scalars['String']['output']>;
+  notified_at?: Maybe<Scalars['String']['output']>;
+  /** What went wrong sending the notices, when something did. */
+  notify_error: Scalars['String']['output'];
+  reminder_count: Scalars['Int']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  /** STATE_CHANGED:<new state>, VERSION_GONE, or BY:<who> for a manual close. */
+  resolved_reason: Scalars['String']['output'];
+  resubmitted_at?: Maybe<Scalars['String']['output']>;
+  /** The build pushed from the Releases page in answer to this issue, if any. */
+  resubmitted_build_no: Scalars['String']['output'];
+  resubmitted_by: Scalars['String']['output'];
+  /** Apple's review-submission state at the time. Empty on Play. */
+  review_state: Scalars['String']['output'];
+  /**
+   * What the reviewer wrote. Neither store's API carries it — Apple keeps it in
+   * the Resolution Center, Google in the Play Console — so it is pasted here,
+   * and the advice is written again with it.
+   */
+  reviewer_message: Scalars['String']['output'];
+  source: ReleaseIssueSource;
+  /** The store's own word (METADATA_REJECTED, PENDING_DEVELOPER_RELEASE…), or MANUAL for a logged one. */
+  state: Scalars['String']['output'];
+  store: ReleaseStore;
+  store_ref: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
+/** A store's releases, read live when asked. A store that cannot be read still answers, with its error. */
+export type StoreReleasePage = {
+  __typename?: 'StoreReleasePage';
+  /** The app's name on Apple; the package name on Play. */
+  app_name: Scalars['String']['output'];
+  /** Whether the store's credentials are configured on the Environment page. */
+  configured: Scalars['Boolean']['output'];
+  /** What the store answered when it refused. Empty when the read succeeded. */
+  error: Scalars['String']['output'];
+  fetched_at: Scalars['String']['output'];
+  rows: Array<StoreReleaseRow>;
+  store: ReleaseStore;
+  /** The app's page on the store's console. Empty when the store could not be read. */
+  store_url: Scalars['String']['output'];
+};
+
+/**
+ * One release as the store shows it right now — an App Store version with its
+ * build and review state, or a Google Play track release with its version
+ * codes and rollout — plus the issue this server holds for it, when there is one.
+ */
+export type StoreReleaseRow = {
+  __typename?: 'StoreReleaseRow';
+  /** The DUN-BLD row this build came from, when its build number matches one. */
+  build_no: Scalars['String']['output'];
+  /** CFBundleVersion on Apple; the version code(s) on Play. */
+  build_number: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  issue?: Maybe<StoreReleaseIssue>;
+  /** Apple's review-submission state. Empty on Play. */
+  review_state: Scalars['String']['output'];
+  /** Play's staged rollout percentage. Null when not staged. */
+  rollout_pct?: Maybe<Scalars['Float']['output']>;
+  /** The store's own word for where the release is. */
+  state: Scalars['String']['output'];
+  status: StoreReleaseStatus;
+  store: ReleaseStore;
+  store_ref: Scalars['String']['output'];
+  submitted_at?: Maybe<Scalars['String']['output']>;
+  /** Play's track. Empty on Apple. */
+  track: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
+/** Where release notices go, and how often an open issue is raised again. */
+export type StoreReleaseSettings = {
+  __typename?: 'StoreReleaseSettings';
+  mail_to: Array<Scalars['String']['output']>;
+  notify_enabled: Scalars['Boolean']['output'];
+  reminder_hours: Scalars['Int']['output'];
+  reminders_enabled: Scalars['Boolean']['output'];
+  /** Slack channel ID. Empty means no Slack post. */
+  slack_channel: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: Scalars['String']['output'];
+};
+
+/**
+ * A store's state for a release, folded to what the table colours. Apple's
+ * version states and Play's track statuses each map onto these; the store's
+ * own word stays on the row as `state`.
+ */
+export type StoreReleaseStatus =
+  | 'APPROVED'
+  | 'HALTED'
+  | 'IN_REVIEW'
+  | 'LIVE'
+  | 'OTHER'
+  | 'PREPARING'
+  | 'REJECTED'
+  | 'REMOVED'
+  | 'REPLACED'
+  | 'ROLLING_OUT'
+  | 'TESTING'
+  | 'WAITING'
+  | 'WITHDRAWN';
+
+export type StoreReturn = {
+  __typename?: 'StoreReturn';
+  admin_note: Scalars['String']['output'];
+  buyer_email: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  comments: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  events: Array<StoreReturnEvent>;
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  is_guest: Scalars['Boolean']['output'];
+  items: Array<StoreReturnItem>;
+  /** Where an operator may move it next. */
+  next_statuses: Array<StoreReturnStatus>;
+  order_id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  pickup: StoreReturnPickup;
+  reason: Scalars['String']['output'];
+  refund_amount: Scalars['Float']['output'];
+  refund_mode: StoreRefundMode;
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  restocked: Scalars['Boolean']['output'];
+  return_no: Scalars['String']['output'];
+  status: StoreReturnStatus;
+  updated_at: Scalars['String']['output'];
+};
+
+export type StoreReturnEvent = {
+  __typename?: 'StoreReturnEvent';
+  at: Scalars['String']['output'];
+  by: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: StoreReturnStatus;
+};
+
+export type StoreReturnItem = {
+  __typename?: 'StoreReturnItem';
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  product_id: Scalars['ID']['output'];
+  qty: Scalars['Int']['output'];
+  unit_price: Scalars['Float']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+};
+
+export type StoreReturnItemInput = {
+  product_id: Scalars['ID']['input'];
+  qty: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The courier leg of a return: a reverse pickup from the buyer to the warehouse. */
+export type StoreReturnPickup = {
+  __typename?: 'StoreReturnPickup';
+  awb: Scalars['String']['output'];
+  courier_name: Scalars['String']['output'];
+  events: Array<StoreReturnPickupEvent>;
+  last_error: Scalars['String']['output'];
+  last_synced_at?: Maybe<Scalars['String']['output']>;
+  sr_order_id: Scalars['String']['output'];
+  /** '', BOOKED, PICKUP_SCHEDULED, IN_TRANSIT, DELIVERED, CANCELLED or FAILED. */
+  status: Scalars['String']['output'];
+  tracking_status: Scalars['String']['output'];
+};
+
+export type StoreReturnPickupEvent = {
+  __typename?: 'StoreReturnPickupEvent';
+  at: Scalars['String']['output'];
+  location: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type StoreReturnRequestInput = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  comments?: InputMaybe<Scalars['String']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  items: Array<StoreReturnItemInput>;
+  order_no: Scalars['String']['input'];
+  reason: Scalars['String']['input'];
+};
+
+export type StoreReturnStatus =
+  | 'APPROVED'
+  | 'CLOSED'
+  | 'PICKUP_SCHEDULED'
+  | 'RECEIVED'
+  | 'REFUNDED'
+  | 'REJECTED'
+  | 'REQUESTED';
+
+export type StoreReturnTablePage = {
+  __typename?: 'StoreReturnTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreReturn>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreReturnUpdateInput = {
+  /** Shown to the buyer in the update email. */
+  note?: InputMaybe<Scalars['String']['input']>;
+  refund_amount?: InputMaybe<Scalars['Float']['input']>;
+  refund_mode?: InputMaybe<StoreRefundMode>;
+  /** On RECEIVED: put the units back into stock. */
+  restock?: InputMaybe<Scalars['Boolean']['input']>;
+  status: StoreReturnStatus;
+};
+
+export type StoreReviewInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  images?: InputMaybe<Array<Scalars['String']['input']>>;
+  product_id: Scalars['ID']['input'];
+  rating: Scalars['Int']['input'];
+};
+
+export type StoreReviewRow = {
+  __typename?: 'StoreReviewRow';
+  comment: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  product_id: Scalars['ID']['output'];
+  product_name: Scalars['String']['output'];
+  rating: Scalars['Int']['output'];
+  seller_reply: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+export type StoreReviewTablePage = {
+  __typename?: 'StoreReviewTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreReviewRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreSearchInput = {
+  brand_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Category slug; its sub-categories are included. */
+  category?: InputMaybe<Scalars['String']['input']>;
+  /** Collection slug. */
+  collection?: InputMaybe<Scalars['String']['input']>;
+  facets?: InputMaybe<Array<StoreFacetFilterInput>>;
+  in_stock_only?: InputMaybe<Scalars['Boolean']['input']>;
+  max_price?: InputMaybe<Scalars['Float']['input']>;
+  /** At least this much off MRP (a flash sale tab). */
+  min_discount_pct?: InputMaybe<Scalars['Int']['input']>;
+  min_price?: InputMaybe<Scalars['Float']['input']>;
+  on_sale?: InputMaybe<Scalars['Boolean']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  /** Pet type slug. */
+  pet_type?: InputMaybe<Scalars['String']['input']>;
+  q?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<StoreSort>;
+};
+
+export type StoreSearchPage = {
+  __typename?: 'StoreSearchPage';
+  brands: Array<StoreBrandCount>;
+  facets: Array<StoreFacetPanel>;
+  items: Array<StoreProductCard>;
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  pet_types: Array<StorePetCount>;
+  price_max: Scalars['Float']['output'];
+  price_min: Scalars['Float']['output'];
+  sort: StoreSort;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreSectionInput = {
+  category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  collection_id?: InputMaybe<Scalars['ID']['input']>;
+  /** FLASH_SALE tabs, 1-90 percent. */
+  discount_tiers?: InputMaybe<Array<Scalars['Int']['input']>>;
+  ends_at?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  items?: InputMaybe<Array<StoreSectionItemInput>>;
+  kind: StoreHomeSectionKind;
+  /** MANUAL slider: the picked products, in order. */
+  product_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  product_limit?: InputMaybe<Scalars['Int']['input']>;
+  product_source?: InputMaybe<StoreSectionProductSource>;
+  starts_at?: InputMaybe<Scalars['String']['input']>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreSectionItem = {
+  __typename?: 'StoreSectionItem';
+  cta_label: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_url: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  mobile_image_url: Scalars['String']['output'];
+  subtitle: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type StoreSectionItemInput = {
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  link?: InputMaybe<Scalars['String']['input']>;
+  mobile_image_url?: InputMaybe<Scalars['String']['input']>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where a PRODUCT_SLIDER takes its products from. */
+export type StoreSectionProductSource =
+  | 'BESTSELLING'
+  | 'CATEGORY'
+  | 'COLLECTION'
+  | 'DISCOUNT'
+  | 'FEATURED'
+  | 'MANUAL'
+  | 'NEWEST';
+
+export type StoreSettings = {
+  __typename?: 'StoreSettings';
+  about_html: Scalars['String']['output'];
+  announcement_enabled: Scalars['Boolean']['output'];
+  announcement_link: Scalars['String']['output'];
+  announcement_text: Scalars['String']['output'];
+  autoship_discount_pct: Scalars['Float']['output'];
+  autoship_enabled: Scalars['Boolean']['output'];
+  autoship_frequencies: Array<Scalars['Int']['output']>;
+  cancel_reasons: Array<Scalars['String']['output']>;
+  cod_blocked_pincodes: Array<Scalars['String']['output']>;
+  cod_enabled: Scalars['Boolean']['output'];
+  cod_fee: Scalars['Float']['output'];
+  cod_max_order: Scalars['Float']['output'];
+  cod_min_order: Scalars['Float']['output'];
+  cod_requires_otp: Scalars['Boolean']['output'];
+  favicon_url: Scalars['String']['output'];
+  flat_shipping_fee: Scalars['Float']['output'];
+  free_shipping_above: Scalars['Float']['output'];
+  guest_checkout_enabled: Scalars['Boolean']['output'];
+  logo_url: Scalars['String']['output'];
+  max_qty_per_line: Scalars['Int']['output'];
+  min_order_value: Scalars['Float']['output'];
+  occasions: Array<StoreOccasion>;
+  og_image_url: Scalars['String']['output'];
+  prepaid_discount_pct: Scalars['Float']['output'];
+  /** The Tech-portal Razorpay account online payments use; empty = the default one. */
+  razorpay_account: Scalars['String']['output'];
+  restock_on_cancel: Scalars['Boolean']['output'];
+  return_reasons: Array<Scalars['String']['output']>;
+  return_window_days: Scalars['Int']['output'];
+  returns_enabled: Scalars['Boolean']['output'];
+  returns_policy_html: Scalars['String']['output'];
+  seo_description: Scalars['String']['output'];
+  seo_title: Scalars['String']['output'];
+  serviceable_pincodes: Array<Scalars['String']['output']>;
+  /** On: only the pincodes in serviceable_pincodes are delivered to. */
+  serviceable_pincodes_enabled: Scalars['Boolean']['output'];
+  shipping_policy_html: Scalars['String']['output'];
+  social_links: Array<StoreSocialLink>;
+  store_enabled: Scalars['Boolean']['output'];
+  store_name: Scalars['String']['output'];
+  support_email: Scalars['String']['output'];
+  support_phone: Scalars['String']['output'];
+  tagline: Scalars['String']['output'];
+  terms_html: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  whatsapp_number: Scalars['String']['output'];
+};
+
+/** Every field optional — only what is sent changes. */
+export type StoreSettingsInput = {
+  about_html?: InputMaybe<Scalars['String']['input']>;
+  announcement_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  announcement_link?: InputMaybe<Scalars['String']['input']>;
+  announcement_text?: InputMaybe<Scalars['String']['input']>;
+  autoship_discount_pct?: InputMaybe<Scalars['Float']['input']>;
+  autoship_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Weeks, 1-26. */
+  autoship_frequencies?: InputMaybe<Array<Scalars['Int']['input']>>;
+  cancel_reasons?: InputMaybe<Array<Scalars['String']['input']>>;
+  cod_blocked_pincodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  cod_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  cod_fee?: InputMaybe<Scalars['Float']['input']>;
+  cod_max_order?: InputMaybe<Scalars['Float']['input']>;
+  cod_min_order?: InputMaybe<Scalars['Float']['input']>;
+  cod_requires_otp?: InputMaybe<Scalars['Boolean']['input']>;
+  favicon_url?: InputMaybe<Scalars['String']['input']>;
+  flat_shipping_fee?: InputMaybe<Scalars['Float']['input']>;
+  free_shipping_above?: InputMaybe<Scalars['Float']['input']>;
+  guest_checkout_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  logo_url?: InputMaybe<Scalars['String']['input']>;
+  max_qty_per_line?: InputMaybe<Scalars['Int']['input']>;
+  min_order_value?: InputMaybe<Scalars['Float']['input']>;
+  occasions?: InputMaybe<Array<StoreOccasionInput>>;
+  og_image_url?: InputMaybe<Scalars['String']['input']>;
+  prepaid_discount_pct?: InputMaybe<Scalars['Float']['input']>;
+  /** A Tech-portal Razorpay entry id, or empty for the default one. */
+  razorpay_account?: InputMaybe<Scalars['String']['input']>;
+  restock_on_cancel?: InputMaybe<Scalars['Boolean']['input']>;
+  return_reasons?: InputMaybe<Array<Scalars['String']['input']>>;
+  return_window_days?: InputMaybe<Scalars['Int']['input']>;
+  returns_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  returns_policy_html?: InputMaybe<Scalars['String']['input']>;
+  seo_description?: InputMaybe<Scalars['String']['input']>;
+  seo_title?: InputMaybe<Scalars['String']['input']>;
+  /** 6-digit pincodes; anything else is dropped. */
+  serviceable_pincodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  serviceable_pincodes_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  shipping_policy_html?: InputMaybe<Scalars['String']['input']>;
+  social_links?: InputMaybe<Array<StoreSocialLinkInput>>;
+  store_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  store_name?: InputMaybe<Scalars['String']['input']>;
+  support_email?: InputMaybe<Scalars['String']['input']>;
+  support_phone?: InputMaybe<Scalars['String']['input']>;
+  tagline?: InputMaybe<Scalars['String']['input']>;
+  terms_html?: InputMaybe<Scalars['String']['input']>;
+  whatsapp_number?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** An order's shipment as the ecomm portal works it. */
+export type StoreShipmentOps = {
+  __typename?: 'StoreShipmentOps';
+  /** What the ship-to address still needs before a courier will take it. */
+  address_problems: Array<Scalars['String']['output']>;
+  /** LOW_WALLET (courier not assigned — recharge) or NDR (failed delivery); empty when nothing is waiting. */
+  alert: Scalars['String']['output'];
+  alert_message: Scalars['String']['output'];
+  /** The operator's answer to a failed delivery: re-attempt or return. */
+  ndr_action: Scalars['String']['output'];
+  ndr_actioned_at?: Maybe<Scalars['String']['output']>;
+  /** Items without complete packaging — booking waits for them unless the parcel is overridden. */
+  packaging_missing: Array<Scalars['String']['output']>;
+  parcel: OrderParcel;
+  parcel_sent: Scalars['Boolean']['output'];
+  pickup_token: Scalars['String']['output'];
+  shipment_id: Scalars['String']['output'];
+  shiprocket_order_id: Scalars['String']['output'];
+};
+
+/** The ShipRocket account at a glance. */
+export type StoreShiprocketStatus = {
+  __typename?: 'StoreShiprocketStatus';
+  /** The API user the store ships with — the Tech portal entry mapped to this console, else the default. */
+  account_email: Scalars['String']['output'];
+  configured: Scalars['Boolean']['output'];
+  default_pickup: Scalars['String']['output'];
+  login_message: Scalars['String']['output'];
+  /** The saved credentials were refused; nothing is retried until they change in the Tech portal. */
+  login_refused: Scalars['Boolean']['output'];
+  /** Null when it could not be read. */
+  wallet_balance?: Maybe<Scalars['Float']['output']>;
+  /** Why the wallet could not be read — a refused billing call is the account's problem, not the order's. */
+  wallet_error: Scalars['String']['output'];
+  webhook_key_set: Scalars['Boolean']['output'];
+  /** Path to register as the ShipRocket webhook on the API host. */
+  webhook_path: Scalars['String']['output'];
+};
+
+export type StoreSitemapEntry = {
+  __typename?: 'StoreSitemapEntry';
+  kind: StoreSitemapKind;
+  slug: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type StoreSitemapKind =
+  | 'BRAND'
+  | 'CATEGORY'
+  | 'COLLECTION'
+  | 'PAGE'
+  | 'PET_TYPE'
+  | 'PRODUCT';
+
+export type StoreSocialLink = {
+  __typename?: 'StoreSocialLink';
+  label: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type StoreSocialLinkInput = {
+  label: Scalars['String']['input'];
+  url: Scalars['String']['input'];
+};
+
+export type StoreSort =
+  | 'BESTSELLING'
+  | 'DISCOUNT'
+  | 'NEWEST'
+  | 'PRICE_ASC'
+  | 'PRICE_DESC'
+  | 'RATING'
+  | 'RELEVANCE';
+
+export type StoreSpec = {
+  __typename?: 'StoreSpec';
+  label: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type StoreSpecInput = {
+  label: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type StoreStatusCount = {
+  __typename?: 'StoreStatusCount';
+  count: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type StoreStockAlertRow = {
+  __typename?: 'StoreStockAlertRow';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  notified_at?: Maybe<Scalars['String']['output']>;
+  product_id: Scalars['ID']['output'];
+  product_name: Scalars['String']['output'];
+  variant_id: Scalars['String']['output'];
+};
+
+export type StoreStockAlertTablePage = {
+  __typename?: 'StoreStockAlertTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreStockAlertRow>;
+  total: Scalars['Int']['output'];
+};
+
+/** An Autoship subscription — one product every N weeks. */
+export type StoreSubscription = {
+  __typename?: 'StoreSubscription';
+  created_at: Scalars['String']['output'];
+  discount_pct: Scalars['Float']['output'];
+  events: Array<StoreSubscriptionEvent>;
+  frequency_weeks: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  last_order_no: Scalars['String']['output'];
+  last_run_at?: Maybe<Scalars['String']['output']>;
+  mode: StoreSubscriptionMode;
+  next_run_at?: Maybe<Scalars['String']['output']>;
+  /** Null when the product is no longer on the shelf. */
+  product?: Maybe<StoreProductCard>;
+  product_id: Scalars['ID']['output'];
+  qty: Scalars['Int']['output'];
+  run_count: Scalars['Int']['output'];
+  shipping_address?: Maybe<StoreOrderAddress>;
+  status: StoreSubscriptionStatus;
+  unit_price: Scalars['Float']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+};
+
+export type StoreSubscriptionEvent = {
+  __typename?: 'StoreSubscriptionEvent';
+  action: Scalars['String']['output'];
+  at: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+};
+
+export type StoreSubscriptionInput = {
+  /** COD_AUTO with cod_requires_otp: the verified phone challenge. */
+  cod_challenge_id?: InputMaybe<Scalars['ID']['input']>;
+  contact: StoreContactInput;
+  frequency_weeks: Scalars['Int']['input'];
+  mode: StoreSubscriptionMode;
+  product_id: Scalars['ID']['input'];
+  qty: Scalars['Int']['input'];
+  shipping_address: StoreAddressInput;
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreSubscriptionMode =
+  /** We place a Cash-on-Delivery order automatically each cycle. */
+  | 'COD_AUTO'
+  /** We remind the buyer when it is due; they order it in one tap. */
+  | 'REMIND';
+
+export type StoreSubscriptionStatus =
+  | 'ACTIVE'
+  | 'CANCELLED'
+  | 'PAUSED';
+
+export type StoreSubscriptionTablePage = {
+  __typename?: 'StoreSubscriptionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreAdminSubscriptionRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type StoreSubscriptionUpdateInput = {
+  cod_challenge_id?: InputMaybe<Scalars['ID']['input']>;
+  frequency_weeks?: InputMaybe<Scalars['Int']['input']>;
+  mode?: InputMaybe<StoreSubscriptionMode>;
+  qty?: InputMaybe<Scalars['Int']['input']>;
+  shipping_address?: InputMaybe<StoreAddressInput>;
+};
+
+export type StoreSuggest = {
+  __typename?: 'StoreSuggest';
+  brands: Array<StoreSuggestBrand>;
+  categories: Array<StoreRef>;
+  products: Array<StoreProductCard>;
+};
+
+export type StoreSuggestBrand = {
+  __typename?: 'StoreSuggestBrand';
+  id: Scalars['ID']['output'];
+  logo_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type StoreSupportTicketInput = {
+  category?: InputMaybe<TicketCategory>;
+  email: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  /** The order it is about, when there is one — goes into the subject. */
+  order_no?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  subject: Scalars['String']['input'];
+};
+
+export type StoreSupportTicketResult = {
+  __typename?: 'StoreSupportTicketResult';
+  ticket_no: Scalars['String']['output'];
+};
+
+export type StoreTopProduct = {
+  __typename?: 'StoreTopProduct';
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  product_id: Scalars['ID']['output'];
+  revenue: Scalars['Float']['output'];
+  units: Scalars['Int']['output'];
+};
+
+export type StoreVariant = {
+  __typename?: 'StoreVariant';
+  available: Scalars['Int']['output'];
+  discount_pct: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  images: Array<Scalars['String']['output']>;
+  in_stock: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  mrp: Scalars['Float']['output'];
+  option_values: Array<StoreOptionValue>;
+  price: Scalars['Float']['output'];
+  sku: Scalars['String']['output'];
+  weight_kg: Scalars['Float']['output'];
+};
+
+export type StoreVerifyPaymentInput = {
+  access_key?: InputMaybe<Scalars['String']['input']>;
+  cart_token?: InputMaybe<Scalars['String']['input']>;
+  payment_doc_id: Scalars['ID']['input'];
+  razorpay_order_id: Scalars['String']['input'];
+  razorpay_payment_id: Scalars['String']['input'];
+  razorpay_signature: Scalars['String']['input'];
+};
+
+/** One of Duncit's own warehouses — where a store product ships from. */
+export type StoreWarehouse = {
+  __typename?: 'StoreWarehouse';
+  city: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_default: Scalars['Boolean']['output'];
+  nickname: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  /** Registered with ShipRocket, so parcels can be picked up from it. */
+  shiprocket_ready: Scalars['Boolean']['output'];
+};
+
+/** One of the store's own warehouses — a ShipRocket pickup address. */
+export type StoreWarehouseInput = {
+  address_line1: Scalars['String']['input'];
+  address_line2?: InputMaybe<Scalars['String']['input']>;
+  city: Scalars['String']['input'];
+  contact_name: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  /** The pickup name every order is booked under; must be unique on the ShipRocket account. */
+  nickname: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
+  pincode: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+};
+
 /** One viewer of a STORY (Bugs 2 & 4). */
 export type StoryView = {
   __typename?: 'StoryView';
   user?: Maybe<User>;
   user_id: Scalars['ID']['output'];
   viewed_at: Scalars['String']['output'];
+};
+
+/** What one bot is doing right now. */
+export type StressBot = {
+  __typename?: 'StressBot';
+  at: Scalars['String']['output'];
+  bot: Scalars['String']['output'];
+  journey: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  load_ms: Scalars['Float']['output'];
+  page: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type StressBotInput = {
+  at?: InputMaybe<Scalars['String']['input']>;
+  bot: Scalars['String']['input'];
+  journey?: InputMaybe<Scalars['String']['input']>;
+  kind: Scalars['String']['input'];
+  load_ms?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StressClaimResult = {
+  __typename?: 'StressClaimResult';
+  accepted: Scalars['Boolean']['output'];
+  profile?: Maybe<StressProfile>;
+  reason: Scalars['String']['output'];
+  run_no: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  target_graphql_url?: Maybe<Scalars['String']['output']>;
+  target_mweb_url?: Maybe<Scalars['String']['output']>;
+  traffic_key?: Maybe<Scalars['String']['output']>;
+};
+
+export type StressContainerSample = {
+  __typename?: 'StressContainerSample';
+  cpu_pct: Scalars['Float']['output'];
+  memory_mb: Scalars['Float']['output'];
+  memory_pct: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type StressEndpoint = {
+  __typename?: 'StressEndpoint';
+  avg_ms: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  key: Scalars['String']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+};
+
+export type StressEndpointInput = {
+  avg_ms: Scalars['Float']['input'];
+  errors: Scalars['Float']['input'];
+  key: Scalars['String']['input'];
+  p50_ms: Scalars['Float']['input'];
+  p95_ms: Scalars['Float']['input'];
+  p99_ms: Scalars['Float']['input'];
+  requests: Scalars['Float']['input'];
+};
+
+/** One line of a run's log. */
+export type StressEvent = {
+  __typename?: 'StressEvent';
+  at: Scalars['String']['output'];
+  level: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+};
+
+export type StressEventInput = {
+  level: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+};
+
+/** LOW / MEDIUM / HIGH — a bottleneck's weight, an upgrade's urgency, or the verdict's confidence. */
+export type StressLevel =
+  | 'HIGH'
+  | 'LOW'
+  | 'MEDIUM';
+
+export type StressLoadSample = {
+  __typename?: 'StressLoadSample';
+  active_bots: Scalars['Float']['output'];
+  active_vus: Scalars['Float']['output'];
+  error_rate_pct: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  navigations: Scalars['Float']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  page_load_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+  rps: Scalars['Float']['output'];
+};
+
+export type StressPeaks = {
+  __typename?: 'StressPeaks';
+  browser_bots: Scalars['Float']['output'];
+  error_rate_pct: Scalars['Float']['output'];
+  event_loop_lag_ms: Scalars['Float']['output'];
+  host_cpu_pct: Scalars['Float']['output'];
+  host_memory_pct: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  real_users: Scalars['Float']['output'];
+  rps: Scalars['Float']['output'];
+  virtual_users: Scalars['Float']['output'];
+};
+
+export type StressProfile = {
+  __typename?: 'StressProfile';
+  browser_bots: Scalars['Int']['output'];
+  hold_seconds: Scalars['Int']['output'];
+  journeys: Array<Scalars['String']['output']>;
+  ramp_down_seconds: Scalars['Int']['output'];
+  ramp_up_seconds: Scalars['Int']['output'];
+  runners: Scalars['Int']['output'];
+  think_time_ms: Scalars['Int']['output'];
+  virtual_users: Scalars['Int']['output'];
+};
+
+export type StressReportResult = {
+  __typename?: 'StressReportResult';
+  reason: Scalars['String']['output'];
+  stop: Scalars['Boolean']['output'];
+};
+
+export type StressRun = {
+  __typename?: 'StressRun';
+  created_at?: Maybe<Scalars['String']['output']>;
+  duration_seconds?: Maybe<Scalars['Int']['output']>;
+  ended_at?: Maybe<Scalars['String']['output']>;
+  endpoints: Array<StressEndpoint>;
+  /** production or staging — a run always targets the environment it was started from. */
+  environment: Scalars['String']['output'];
+  error_message: Scalars['String']['output'];
+  events: Array<StressEvent>;
+  id: Scalars['ID']['output'];
+  last_report_at?: Maybe<Scalars['String']['output']>;
+  peaks: StressPeaks;
+  profile: StressProfile;
+  ref: Scalars['String']['output'];
+  run_no: Scalars['String']['output'];
+  shards_finished: Scalars['Int']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  status: StressRunStatus;
+  stop_reason: Scalars['String']['output'];
+  stop_requested_at?: Maybe<Scalars['String']['output']>;
+  summary?: Maybe<StressSummary>;
+  target_graphql_url: Scalars['String']['output'];
+  target_mweb_url: Scalars['String']['output'];
+  /** True when the host ran out of CPU or memory and the run was terminated. */
+  terminated: Scalars['Boolean']['output'];
+  triggered_by: Scalars['String']['output'];
+  verdict?: Maybe<StressVerdict>;
+  workflow_run_url: Scalars['String']['output'];
+};
+
+/**
+ * QUEUED: dispatched, no runner yet. RUNNING: generating load. STOPPING: a
+ * person or a guardrail asked it to stop and the runners are winding down.
+ * COMPLETED / ABORTED / FAILED are terminal — ABORTED is a deliberate stop,
+ * FAILED is the run itself breaking.
+ */
+export type StressRunStatus =
+  | 'ABORTED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'QUEUED'
+  | 'RUNNING'
+  | 'STOPPING';
+
+export type StressRunTablePage = {
+  __typename?: 'StressRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StressRun>;
+  total: Scalars['Int']['output'];
+};
+
+/** One point of a run's time series, taken every five seconds while it is live. */
+export type StressSample = {
+  __typename?: 'StressSample';
+  at: Scalars['String']['output'];
+  containers: Array<StressContainerSample>;
+  load: StressLoadSample;
+  server: StressServerSample;
+};
+
+export type StressServerSample = {
+  __typename?: 'StressServerSample';
+  event_loop_lag_ms: Scalars['Float']['output'];
+  heap_used_mb: Scalars['Float']['output'];
+  host_cpu_pct: Scalars['Float']['output'];
+  host_memory_pct: Scalars['Float']['output'];
+  in_flight: Scalars['Float']['output'];
+  load_avg_1: Scalars['Float']['output'];
+  real_users: Scalars['Float']['output'];
+  rps_stress: Scalars['Float']['output'];
+  rps_total: Scalars['Float']['output'];
+  rss_mb: Scalars['Float']['output'];
+  server_p95_ms: Scalars['Float']['output'];
+  sockets: Scalars['Float']['output'];
+  status_5xx: Scalars['Float']['output'];
+  visitors: Scalars['Float']['output'];
+};
+
+export type StressSettings = {
+  __typename?: 'StressSettings';
+  abort_breach_samples: Scalars['Int']['output'];
+  abort_error_rate_pct: Scalars['Int']['output'];
+  abort_host_cpu_pct: Scalars['Int']['output'];
+  abort_host_memory_pct: Scalars['Int']['output'];
+  abort_p95_ms: Scalars['Int']['output'];
+  max_browser_bots: Scalars['Int']['output'];
+  max_duration_minutes: Scalars['Int']['output'];
+  max_runners: Scalars['Int']['output'];
+  max_virtual_users: Scalars['Int']['output'];
+  sample_retention_days: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A runner's newest report. Held in memory only — read while a run is live. */
+export type StressShard = {
+  __typename?: 'StressShard';
+  active_bots: Scalars['Float']['output'];
+  active_vus: Scalars['Float']['output'];
+  bots: Array<StressBot>;
+  elapsed_seconds: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  phase: Scalars['String']['output'];
+  received_at: Scalars['String']['output'];
+  requests: Scalars['Float']['output'];
+  shard: Scalars['Int']['output'];
+  status_counts: Array<StressStatusCount>;
+};
+
+export type StressStatusCount = {
+  __typename?: 'StressStatusCount';
+  code: Scalars['String']['output'];
+  count: Scalars['Float']['output'];
+};
+
+export type StressStatusCountInput = {
+  code: Scalars['String']['input'];
+  count: Scalars['Float']['input'];
+};
+
+export type StressSummary = {
+  __typename?: 'StressSummary';
+  avg_ms: Scalars['Float']['output'];
+  avg_page_load_ms: Scalars['Float']['output'];
+  avg_rps: Scalars['Float']['output'];
+  error_rate_pct: Scalars['Float']['output'];
+  errors: Scalars['Float']['output'];
+  navigation_errors: Scalars['Float']['output'];
+  navigations: Scalars['Float']['output'];
+  p50_ms: Scalars['Float']['output'];
+  p95_ms: Scalars['Float']['output'];
+  p99_ms: Scalars['Float']['output'];
+  requests: Scalars['Float']['output'];
+};
+
+export type StressSummaryInput = {
+  avg_ms: Scalars['Float']['input'];
+  avg_page_load_ms: Scalars['Float']['input'];
+  avg_rps: Scalars['Float']['input'];
+  error_rate_pct: Scalars['Float']['input'];
+  errors: Scalars['Float']['input'];
+  navigation_errors: Scalars['Float']['input'];
+  navigations: Scalars['Float']['input'];
+  p50_ms: Scalars['Float']['input'];
+  p95_ms: Scalars['Float']['input'];
+  p99_ms: Scalars['Float']['input'];
+  requests: Scalars['Float']['input'];
+};
+
+export type StressTriggerConfig = {
+  __typename?: 'StressTriggerConfig';
+  /** LOCAL (a local server cannot be reached by GitHub), TARGET (a staging server whose URLs are not staging), GITHUB (not configured), or empty. */
+  blocked_reason: Scalars['String']['output'];
+  can_start: Scalars['Boolean']['output'];
+  configured: Scalars['Boolean']['output'];
+  confirm_text: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  journeys: Array<Scalars['String']['output']>;
+  limits: StressSettings;
+  live_run_no?: Maybe<Scalars['String']['output']>;
+  ref: Scalars['String']['output'];
+  repository: Scalars['String']['output'];
+  requires_confirmation: Scalars['Boolean']['output'];
+  target_graphql_url: Scalars['String']['output'];
+  target_mweb_url: Scalars['String']['output'];
+};
+
+/** OpenAI's reading of a finished run. User counts are estimated REAL concurrent people, not virtual users. */
+export type StressVerdict = {
+  __typename?: 'StressVerdict';
+  bottlenecks: Array<StressVerdictItem>;
+  /** 0 when the run never pushed the setup past healthy. */
+  breaking_point_users: Scalars['Int']['output'];
+  capacity_reasoning: Scalars['String']['output'];
+  confidence: StressLevel;
+  generated_at?: Maybe<Scalars['String']['output']>;
+  generated_by: Scalars['String']['output'];
+  grade: StressVerdictGrade;
+  headline: Scalars['String']['output'];
+  model: Scalars['String']['output'];
+  safe_concurrent_users: Scalars['Int']['output'];
+  upgrades: Array<StressVerdictItem>;
+  watch_points: Array<Scalars['String']['output']>;
+};
+
+export type StressVerdictGrade =
+  | 'HEALTHY'
+  | 'INCONCLUSIVE'
+  | 'OVERLOADED'
+  | 'STRAINED';
+
+export type StressVerdictItem = {
+  __typename?: 'StressVerdictItem';
+  detail: Scalars['String']['output'];
+  level: StressLevel;
+  title: Scalars['String']['output'];
 };
 
 export type SubmitAccountDeletionRequestInput = {
@@ -23264,6 +31305,20 @@ export type SurveyTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/**
+ * The signed-in person's access to the table GET API. A URL carrying the token
+ * runs as its owner, so it returns only rows that person can already see.
+ */
+export type TableApiAccess = {
+  __typename?: 'TableApiAccess';
+  /** e.g. https://server.duncit.com/table-api — append /<tableQueryName>. */
+  base_url: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  last_used_at?: Maybe<Scalars['String']['output']>;
+  /** Null until generated. Treat it as a password. */
+  token?: Maybe<Scalars['String']['output']>;
+};
+
 export type TableFilterInput = {
   field: Scalars['String']['input'];
   op: TableFilterOp;
@@ -23314,6 +31369,191 @@ export type TechCpuInfo = {
   usagePercent: Scalars['Float']['output'];
 };
 
+export type TechDatabaseCollection = {
+  __typename?: 'TechDatabaseCollection';
+  avgDocumentBytes: Scalars['Float']['output'];
+  dataBytes: Scalars['Float']['output'];
+  documents: Scalars['Float']['output'];
+  indexBytes: Scalars['Float']['output'];
+  indexes: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  storageBytes: Scalars['Float']['output'];
+};
+
+export type TechDatabaseCollectionTablePage = {
+  __typename?: 'TechDatabaseCollectionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TechDatabaseCollection>;
+  total: Scalars['Int']['output'];
+};
+
+/** The MongoDB this API is connected to. The connection string is masked; the password never leaves the server. */
+export type TechDatabaseConnection = {
+  __typename?: 'TechDatabaseConnection';
+  authSource?: Maybe<Scalars['String']['output']>;
+  databaseName: Scalars['String']['output'];
+  /** False when MONGO_DB_NAME is unset and Mongo fell back to the URI's default database. */
+  databaseNamePinned: Scalars['Boolean']['output'];
+  /** The branch whose push deploys this environment. */
+  deployBranch?: Maybe<Scalars['String']['output']>;
+  deployRunsUrl?: Maybe<Scalars['String']['output']>;
+  /** production | staging | localhost */
+  environment: Scalars['String']['output'];
+  hosts: Array<Scalars['String']['output']>;
+  /** The mongod's docker container on this host, whose stdout is its log (techContainerLogs); null when it is not one. */
+  logsContainer?: Maybe<Scalars['String']['output']>;
+  maskedUri: Scalars['String']['output'];
+  maxPoolSize: Scalars['Int']['output'];
+  maxTimeMs: Scalars['Int']['output'];
+  minPoolSize: Scalars['Int']['output'];
+  /** ATLAS | SELF_HOSTED */
+  provider: Scalars['String']['output'];
+  replicaSet?: Maybe<Scalars['String']['output']>;
+  /** The GitHub Actions secret the deploy writes MONGO_URI from; null on a local server (server/.env). */
+  secretName?: Maybe<Scalars['String']['output']>;
+  secretsUrl?: Maybe<Scalars['String']['output']>;
+  /** disconnected | connected | connecting | disconnecting | uninitialized */
+  state: Scalars['String']['output'];
+  tls: Scalars['Boolean']['output'];
+  username?: Maybe<Scalars['String']['output']>;
+};
+
+/** One database on the same mongod, with its stats where the user may read them. */
+export type TechDatabaseDatabase = {
+  __typename?: 'TechDatabaseDatabase';
+  empty: Scalars['Boolean']['output'];
+  /** True for the database this API is connected to. */
+  isLive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sizeOnDisk: Scalars['Float']['output'];
+  statsError?: Maybe<Scalars['String']['output']>;
+  storage?: Maybe<TechDatabaseStorage>;
+};
+
+/** One thing that happened to the API's database connection, kept in memory since the process started. */
+export type TechDatabaseEvent = {
+  __typename?: 'TechDatabaseEvent';
+  at: Scalars['String']['output'];
+  attempt?: Maybe<Scalars['Int']['output']>;
+  /** CONNECTED | CONNECT_FAILED | DISCONNECTED | RECONNECTED | ERROR | CLOSED */
+  kind: Scalars['String']['output'];
+  message?: Maybe<Scalars['String']['output']>;
+};
+
+export type TechDatabaseInfo = {
+  __typename?: 'TechDatabaseInfo';
+  collectedAt: Scalars['String']['output'];
+  connection: TechDatabaseConnection;
+  /** Every database this user can read on the same server (production, staging, Lite), live one marked. */
+  databases: Array<TechDatabaseDatabase>;
+  databasesError?: Maybe<Scalars['String']['output']>;
+  /** Newest first. */
+  events: Array<TechDatabaseEvent>;
+  oplog?: Maybe<TechDatabaseOplog>;
+  oplogError?: Maybe<Scalars['String']['output']>;
+  pingMs?: Maybe<Scalars['Float']['output']>;
+  /** Null while disconnected or when the user lacks clusterMonitor — replicaError says which. */
+  replica?: Maybe<TechDatabaseReplica>;
+  replicaError?: Maybe<Scalars['String']['output']>;
+  /** Null while the connection is down. */
+  server?: Maybe<TechDatabaseServer>;
+  /** The driver's reason the stats could not be read (scrubbed of the connection string). */
+  statsError?: Maybe<Scalars['String']['output']>;
+  storage?: Maybe<TechDatabaseStorage>;
+};
+
+/** The oplog in local.oplog.rs: how much history the set keeps. Needs read on local (clusterMonitor). */
+export type TechDatabaseOplog = {
+  __typename?: 'TechDatabaseOplog';
+  dataBytes: Scalars['Float']['output'];
+  entries: Scalars['Float']['output'];
+  firstAt?: Maybe<Scalars['String']['output']>;
+  lastAt?: Maybe<Scalars['String']['output']>;
+  /** The capped size; null where the server does not report it. */
+  maxBytes?: Maybe<Scalars['Float']['output']>;
+  windowSeconds?: Maybe<Scalars['Float']['output']>;
+};
+
+/** replSetGetStatus + replSetGetConfig, read-only. Needs the clusterMonitor role. */
+export type TechDatabaseReplica = {
+  __typename?: 'TechDatabaseReplica';
+  configVersion?: Maybe<Scalars['Int']['output']>;
+  heartbeatIntervalMs?: Maybe<Scalars['Float']['output']>;
+  members: Array<TechDatabaseReplicaMember>;
+  myState?: Maybe<Scalars['String']['output']>;
+  primary?: Maybe<Scalars['String']['output']>;
+  set: Scalars['String']['output'];
+  term?: Maybe<Scalars['Float']['output']>;
+};
+
+export type TechDatabaseReplicaMember = {
+  __typename?: 'TechDatabaseReplicaMember';
+  healthy: Scalars['Boolean']['output'];
+  /** Seconds behind the primary's last applied write; null for the primary. */
+  lagSeconds?: Maybe<Scalars['Float']['output']>;
+  lastHeartbeatAt?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  optimeAt?: Maybe<Scalars['String']['output']>;
+  pingMs?: Maybe<Scalars['Float']['output']>;
+  priority?: Maybe<Scalars['Float']['output']>;
+  /** True for the member this connection is on. */
+  self: Scalars['Boolean']['output'];
+  /** PRIMARY | SECONDARY | ARBITER | RECOVERING | STARTUP | … as mongod names them. */
+  stateStr: Scalars['String']['output'];
+  syncSourceHost?: Maybe<Scalars['String']['output']>;
+  uptimeSeconds: Scalars['Float']['output'];
+  votes?: Maybe<Scalars['Int']['output']>;
+};
+
+export type TechDatabaseServer = {
+  __typename?: 'TechDatabaseServer';
+  /** WiredTiger cache in use, and its configured ceiling. */
+  cacheBytes?: Maybe<Scalars['Float']['output']>;
+  cacheMaxBytes?: Maybe<Scalars['Float']['output']>;
+  connectionsAvailable?: Maybe<Scalars['Int']['output']>;
+  connectionsCurrent?: Maybe<Scalars['Int']['output']>;
+  connectionsTotalCreated?: Maybe<Scalars['Float']['output']>;
+  isWritablePrimary?: Maybe<Scalars['Boolean']['output']>;
+  lastWriteAt?: Maybe<Scalars['String']['output']>;
+  me?: Maybe<Scalars['String']['output']>;
+  memResidentBytes?: Maybe<Scalars['Float']['output']>;
+  members: Array<Scalars['String']['output']>;
+  networkBytesIn?: Maybe<Scalars['Float']['output']>;
+  networkBytesOut?: Maybe<Scalars['Float']['output']>;
+  networkRequests?: Maybe<Scalars['Float']['output']>;
+  opCommand?: Maybe<Scalars['Float']['output']>;
+  opDelete?: Maybe<Scalars['Float']['output']>;
+  /** Operation counters since mongod started. */
+  opInsert?: Maybe<Scalars['Float']['output']>;
+  opQuery?: Maybe<Scalars['Float']['output']>;
+  opUpdate?: Maybe<Scalars['Float']['output']>;
+  /** The set's current primary and this connection's own member, as hello reports them. */
+  primary?: Maybe<Scalars['String']['output']>;
+  setName?: Maybe<Scalars['String']['output']>;
+  /** Why the serverStatus fields are empty — usually the database user lacks the clusterMonitor role. */
+  statusError?: Maybe<Scalars['String']['output']>;
+  storageEngine?: Maybe<Scalars['String']['output']>;
+  uptimeSeconds?: Maybe<Scalars['Float']['output']>;
+  version: Scalars['String']['output'];
+};
+
+export type TechDatabaseStorage = {
+  __typename?: 'TechDatabaseStorage';
+  avgDocumentBytes: Scalars['Float']['output'];
+  collections: Scalars['Int']['output'];
+  dataBytes: Scalars['Float']['output'];
+  documents: Scalars['Float']['output'];
+  fsTotalBytes?: Maybe<Scalars['Float']['output']>;
+  /** The filesystem mongod keeps its data on; null where the server does not report it. */
+  fsUsedBytes?: Maybe<Scalars['Float']['output']>;
+  indexBytes: Scalars['Float']['output'];
+  indexes: Scalars['Int']['output'];
+  storageBytes: Scalars['Float']['output'];
+  totalBytes: Scalars['Float']['output'];
+  views: Scalars['Int']['output'];
+};
+
 /** One dependency, as one `package.json` declares it. */
 export type TechDependencyUpdate = {
   __typename?: 'TechDependencyUpdate';
@@ -23330,6 +31570,7 @@ export type TechDependencyUpdate = {
 export type TechDiskInfo = {
   __typename?: 'TechDiskInfo';
   freeBytes: Scalars['Float']['output'];
+  inodeUsagePercent: Scalars['Float']['output'];
   path: Scalars['String']['output'];
   totalBytes: Scalars['Float']['output'];
   usagePercent: Scalars['Float']['output'];
@@ -23433,6 +31674,100 @@ export type TechRestartResult = {
   ok: Scalars['Boolean']['output'];
 };
 
+/** The AI recommendation read from a month of server history. */
+export type TechServerAdvice = {
+  __typename?: 'TechServerAdvice';
+  daysWithData: Scalars['Int']['output'];
+  generatedAt: Scalars['String']['output'];
+  generatedBy: Scalars['String']['output'];
+  /** HEALTHY | WATCH | ACTION_NEEDED | INCONCLUSIVE */
+  grade: Scalars['String']['output'];
+  headline: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  model: Scalars['String']['output'];
+  notableDays: Array<TechServerAdviceDay>;
+  periodDays: Scalars['Int']['output'];
+  recommendations: Array<TechServerAdviceItem>;
+  summary: Scalars['String']['output'];
+  trends: Array<TechServerAdviceItem>;
+  watchPoints: Array<Scalars['String']['output']>;
+};
+
+export type TechServerAdviceDay = {
+  __typename?: 'TechServerAdviceDay';
+  date: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+};
+
+export type TechServerAdviceItem = {
+  __typename?: 'TechServerAdviceItem';
+  detail: Scalars['String']['output'];
+  /** LOW | MEDIUM | HIGH */
+  level: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type TechServerHistory = {
+  __typename?: 'TechServerHistory';
+  containers: Array<TechServerHistoryContainer>;
+  days: Array<TechServerHistoryDay>;
+  summary: TechServerHistorySummary;
+  timeZone: Scalars['String']['output'];
+};
+
+/** One container's CPU and memory over the month, with its peak memory per day. */
+export type TechServerHistoryContainer = {
+  __typename?: 'TechServerHistoryContainer';
+  cpuAvgPct: Scalars['Float']['output'];
+  cpuPeakPct: Scalars['Float']['output'];
+  dailyMemoryPeakMb: Array<Maybe<Scalars['Float']['output']>>;
+  memoryAvgMb: Scalars['Float']['output'];
+  memoryPeakMb: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** One calendar day (admin time zone) of server readings. Null = no reading that day, not zero. */
+export type TechServerHistoryDay = {
+  __typename?: 'TechServerHistoryDay';
+  cpuAvgPct?: Maybe<Scalars['Float']['output']>;
+  cpuPeakPct?: Maybe<Scalars['Float']['output']>;
+  date: Scalars['String']['output'];
+  diskPct?: Maybe<Scalars['Float']['output']>;
+  diskTotalBytes?: Maybe<Scalars['Float']['output']>;
+  diskUsedBytes?: Maybe<Scalars['Float']['output']>;
+  errors5xx?: Maybe<Scalars['Float']['output']>;
+  eventLoopP99PeakMs?: Maybe<Scalars['Float']['output']>;
+  latencyAvgMs?: Maybe<Scalars['Float']['output']>;
+  latencyP95Ms?: Maybe<Scalars['Float']['output']>;
+  latencyPeakMs?: Maybe<Scalars['Float']['output']>;
+  loadAvg?: Maybe<Scalars['Float']['output']>;
+  memoryAvgPct?: Maybe<Scalars['Float']['output']>;
+  memoryPeakPct?: Maybe<Scalars['Float']['output']>;
+  probeLatencyMs?: Maybe<Scalars['Float']['output']>;
+  requests?: Maybe<Scalars['Float']['output']>;
+  rssPeakMb?: Maybe<Scalars['Float']['output']>;
+  samples: Scalars['Int']['output'];
+  swapPeakPct?: Maybe<Scalars['Float']['output']>;
+  uptimePct?: Maybe<Scalars['Float']['output']>;
+};
+
+export type TechServerHistorySummary = {
+  __typename?: 'TechServerHistorySummary';
+  cpuAvgPct?: Maybe<Scalars['Float']['output']>;
+  cpuPeakPct?: Maybe<Scalars['Float']['output']>;
+  daysUntilDiskFull?: Maybe<Scalars['Int']['output']>;
+  daysWithData: Scalars['Int']['output'];
+  diskGrowthBytesPerDay?: Maybe<Scalars['Float']['output']>;
+  diskPct?: Maybe<Scalars['Float']['output']>;
+  errors5xx: Scalars['Float']['output'];
+  latencyP95Ms?: Maybe<Scalars['Float']['output']>;
+  memoryAvgPct?: Maybe<Scalars['Float']['output']>;
+  memoryPeakPct?: Maybe<Scalars['Float']['output']>;
+  probeLatencyMs?: Maybe<Scalars['Float']['output']>;
+  requests: Scalars['Float']['output'];
+  uptimePct?: Maybe<Scalars['Float']['output']>;
+};
+
 export type TechServerInfo = {
   __typename?: 'TechServerInfo';
   collectedAt: Scalars['String']['output'];
@@ -23443,6 +31778,8 @@ export type TechServerInfo = {
   os: TechOsInfo;
   sshPort: Scalars['Int']['output'];
   ssl?: Maybe<TechSslInfo>;
+  /** Swap from /proc/meminfo; all zeros where the host reports none. */
+  swap: TechBytesInfo;
 };
 
 export type TechSslInfo = {
@@ -23516,6 +31853,39 @@ export type TelemetryDashboard = {
   top_bugs: Array<Bug>;
   total_logs: Scalars['Int']['output'];
 };
+
+/**
+ * What one bulk delete covers. The three ways an operator actually clears
+ * telemetry — the rows they ticked, everything a filtered view is showing, or
+ * everything older than a date — expressed as one shape so all three are
+ * answered by the same engine.
+ *
+ * A scope that narrows NOTHING empties the whole collection, and is held by a
+ * stricter role than a filtered one.
+ */
+export type TelemetryDeleteScope = {
+  /** Inclusive lower bound on the row's date (logs: created_at, bugs: last_seen_at). */
+  from?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Explicit rows. When this list is present it IS the scope: a set ticked on
+   * screen is not narrowed further by the view it was ticked in, and an EMPTY
+   * list deletes nothing rather than falling through to everything.
+   */
+  ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /**
+   * The table's own query — the same input its rows were read with, so a
+   * filtered delete and the page on screen can never describe different sets.
+   * Paging and sorting inside it are ignored; a delete has no page.
+   */
+  query?: InputMaybe<TableQueryInput>;
+  /** Exclusive upper bound — everything before this instant. */
+  to?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Which telemetry collection a bulk delete acts on. */
+export type TelemetryDeleteTarget =
+  | 'BUGS'
+  | 'LOGS';
 
 export type TelemetryError = {
   __typename?: 'TelemetryError';
@@ -23806,7 +32176,8 @@ export type TicketPriority =
 /**
  * Where the request came from. WEBSITE is the contact form on duncit.com,
  * which anyone can use without an account. EMAIL is a message that arrived in a
- * mailbox connected under Mail Automation.
+ * mailbox connected under Mail Automation. STORE is the pet store's Contact page
+ * (ecomm.duncit.com) — a shopper, signed in or not.
  */
 export type TicketSource =
   | 'APP'
@@ -23849,7 +32220,6 @@ export type TrackedLinkKind =
   /** An opt-out, kept apart so it never reads as ordinary engagement. */
   | 'UNSUBSCRIBE';
 
-/** Export format for support chat / ticket transcripts. */
 /** A Duncit website that can load a Google Analytics tag — the key it passes to googleAnalyticsTag. */
 export type TrackedWebsite =
   | 'ADS'
@@ -23859,6 +32229,7 @@ export type TrackedWebsite =
   | 'PARTNERS'
   | 'STATUS';
 
+/** Export format for support chat / ticket transcripts. */
 export type TranscriptFormat =
   | 'DOCX'
   | 'TXT';
@@ -23972,6 +32343,41 @@ export type TriggerAppBuildResult = {
   build: AppBuild;
 };
 
+export type TriggerE2eRunInput = {
+  /** Branch or tag to run against. Defaults to the configured schedule branch. */
+  ref?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Which suites to run. An empty list runs every one of them, which is what the
+   * nightly schedule does.
+   */
+  suites?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+/** Where a dispatched run can be watched while the runner picks it up. */
+export type TriggerE2eRunResult = {
+  __typename?: 'TriggerE2eRunResult';
+  /**
+   * The workflow's run list on GitHub, filtered to this branch. A dispatch
+   * answers before a run exists, so this is the only link available until the
+   * workflow sends its first report.
+   */
+  actions_url: Scalars['String']['output'];
+  run: E2eRun;
+};
+
+export type TriggerStressRunInput = {
+  browser_bots: Scalars['Int']['input'];
+  /** Required against production: the literal confirm_text from stressTriggerConfig. */
+  confirm_text?: InputMaybe<Scalars['String']['input']>;
+  hold_seconds: Scalars['Int']['input'];
+  journeys: Array<Scalars['String']['input']>;
+  ramp_down_seconds: Scalars['Int']['input'];
+  ramp_up_seconds: Scalars['Int']['input'];
+  runners: Scalars['Int']['input'];
+  think_time_ms: Scalars['Int']['input'];
+  virtual_users: Scalars['Int']['input'];
+};
+
 /** One row of the user's unified support history (every category in one list). */
 export type UnifiedSupportTicket = {
   __typename?: 'UnifiedSupportTicket';
@@ -24082,10 +32488,20 @@ export type UpdateAppSettingsInput = {
   pod_auto_cancel_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** How many hours before a pod's start the auto-cancel finance check runs (1-8760). */
   pod_auto_cancel_lead_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once. */
+  pod_cancel_refund_hold?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How often, in hours, the host and club admins of an at-risk pod are re-alerted (1-168). */
+  pod_cancel_risk_alert_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before a pod's start it is watched for cancellation risk (1-8760). */
+  pod_cancel_risk_window_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends the host is reminded to complete it (1-8760). */
   pod_complete_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours after a pod ends its host has to complete it (1-8760). */
   pod_complete_timeout_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours after a pod ends everyone who was there is asked how it went (0-8760). */
+  pod_feedback_delay_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before a pod starts its attendees are reminded (1-8760). */
+  pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
@@ -24095,6 +32511,8 @@ export type UpdateAppSettingsInput = {
   venue_cancel_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a venue loses for filing a Request Change (0-10, 0 disables it). */
   venue_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours before the requested slot an unanswered venue slot request is chased (1-8760). */
+  venue_slot_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -24154,6 +32572,7 @@ export type UpdateBrandingInput = {
   home_vibe_heading?: InputMaybe<Scalars['String']['input']>;
   home_vibe_subheading?: InputMaybe<Scalars['String']['input']>;
   ios_app_url?: InputMaybe<Scalars['String']['input']>;
+  launch_media?: InputMaybe<LaunchPageMediaInput>;
   login_background_image_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   login_background_image_url?: InputMaybe<Scalars['String']['input']>;
   login_background_video_enabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -24328,6 +32747,37 @@ export type UpdateCrmServiceOfferedInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateE2eRunSettingsInput = {
+  email_domain: Scalars['String']['input'];
+  email_prefix: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+  frequency: E2eScheduleFrequency;
+  identity_phone: Scalars['String']['input'];
+  keep_last: Scalars['Int']['input'];
+  /** Hold every outbound email and WhatsApp message inside the platform. */
+  mute_communications: Scalars['Boolean']['input'];
+  /** Return one-time codes in the API response instead of sending them. */
+  otp_bypass: Scalars['Boolean']['input'];
+  /**
+   * Absent leaves the saved password alone; an empty string clears it. There is
+   * no way to read it back, so a form that always sent this field would wipe it
+   * every time it was opened and saved.
+   */
+  password?: InputMaybe<Scalars['String']['input']>;
+  /** Record every suite and post the videos to the results channel. */
+  record_videos: Scalars['Boolean']['input'];
+  ref: Scalars['String']['input'];
+  /**
+   * Slack channel ID finished runs announce to. Empty clears it. Written onto
+   * the SLACK env entry rather than this feature's own settings, so every Slack
+   * channel the platform posts to is configured in one place.
+   */
+  slack_channel?: InputMaybe<Scalars['String']['input']>;
+  suites: Array<Scalars['String']['input']>;
+  time_of_day: Scalars['String']['input'];
+  weekday: Scalars['Int']['input'];
+};
+
 export type UpdateEmailFragmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   footer_mjml?: InputMaybe<Scalars['String']['input']>;
@@ -24415,12 +32865,6 @@ export type UpdateInterviewInput = {
 };
 
 export type UpdateInventoryProductInput = {
-  hsn_code?: InputMaybe<Scalars['String']['input']>;
-  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
-  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
-  mrp?: InputMaybe<Scalars['Float']['input']>;
-  package_type?: InputMaybe<PackageType>;
-  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   barcode?: InputMaybe<Scalars['String']['input']>;
   batch_number?: InputMaybe<Scalars['String']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
@@ -24437,15 +32881,23 @@ export type UpdateInventoryProductInput = {
   free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   host_request_allowed?: InputMaybe<Scalars['Boolean']['input']>;
+  /** HSN code for the GST invoice, 4-8 digits (pet food 2309, toys 9503). */
+  hsn_code?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   inventory_count?: InputMaybe<Scalars['Int']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_fragile?: InputMaybe<Scalars['Boolean']['input']>;
+  is_liquid?: InputMaybe<Scalars['Boolean']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
   low_stock_alert?: InputMaybe<Scalars['Int']['input']>;
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Compare-at price (MRP) of a product without variants; must not be below the price. 0 = none. */
+  mrp?: InputMaybe<Scalars['Float']['input']>;
+  /** How a unit is packed for the courier (default BOX). */
+  package_type?: InputMaybe<PackageType>;
   /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
   pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
@@ -24454,6 +32906,8 @@ export type UpdateInventoryProductInput = {
   purchase_price?: InputMaybe<Scalars['Float']['input']>;
   reserved_count?: InputMaybe<Scalars['Int']['input']>;
   selling_price?: InputMaybe<Scalars['Float']['input']>;
+  /** Days a sealed unit stays good (food, medicine); null when it doesn't expire. */
+  shelf_life_days?: InputMaybe<Scalars['Int']['input']>;
   short_description?: InputMaybe<Scalars['String']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<InventoryStatus>;
@@ -24493,12 +32947,16 @@ export type UpdateLocationInput = {
   country?: InputMaybe<Scalars['String']['input']>;
   country_code?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_launched?: InputMaybe<Scalars['Boolean']['input']>;
+  launch_media?: InputMaybe<LaunchPageMediaInput>;
+  launch_target?: InputMaybe<Scalars['Int']['input']>;
   location_image?: InputMaybe<Scalars['String']['input']>;
   location_name?: InputMaybe<Scalars['String']['input']>;
   location_pincode?: InputMaybe<Scalars['String']['input']>;
   location_zones?: InputMaybe<Array<LocationZoneInput>>;
   state?: InputMaybe<Scalars['String']['input']>;
   state_code?: InputMaybe<Scalars['String']['input']>;
+  whatsapp_group_url?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateMeetingInput = {
@@ -24516,6 +32974,8 @@ export type UpdateMyProfileInput = {
   country?: InputMaybe<Scalars['String']['input']>;
   dob?: InputMaybe<Scalars['String']['input']>;
   first_name?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Gender>;
+  is_pet_owner?: InputMaybe<Scalars['Boolean']['input']>;
   last_name?: InputMaybe<Scalars['String']['input']>;
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
@@ -24525,6 +32985,14 @@ export type UpdateMyProfileInput = {
   whatsapp_extension?: InputMaybe<Scalars['String']['input']>;
   whatsapp_number?: InputMaybe<Scalars['String']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateOnboardingIntroInput = {
+  club_admin_intro_html?: InputMaybe<Scalars['String']['input']>;
+  ecomm_intro_html?: InputMaybe<Scalars['String']['input']>;
+  host_intro_html?: InputMaybe<Scalars['String']['input']>;
+  social_handles?: InputMaybe<OnboardingSocialHandlesInput>;
+  venue_intro_html?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdatePodIdeaInput = {
@@ -24614,6 +33082,27 @@ export type UpdateReportProblemSlackInput = {
 export type UpdateRoleInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateStoreReleaseSettingsInput = {
+  mail_to: Array<Scalars['String']['input']>;
+  notify_enabled: Scalars['Boolean']['input'];
+  reminder_hours: Scalars['Int']['input'];
+  reminders_enabled: Scalars['Boolean']['input'];
+  slack_channel: Scalars['String']['input'];
+};
+
+export type UpdateStressSettingsInput = {
+  abort_breach_samples: Scalars['Int']['input'];
+  abort_error_rate_pct: Scalars['Int']['input'];
+  abort_host_cpu_pct: Scalars['Int']['input'];
+  abort_host_memory_pct: Scalars['Int']['input'];
+  abort_p95_ms: Scalars['Int']['input'];
+  max_browser_bots: Scalars['Int']['input'];
+  max_duration_minutes: Scalars['Int']['input'];
+  max_runners: Scalars['Int']['input'];
+  max_virtual_users: Scalars['Int']['input'];
+  sample_retention_days: Scalars['Int']['input'];
 };
 
 export type UpdateSurveyInput = {
@@ -24799,6 +33288,8 @@ export type User = {
   following_pod_ids: Array<Scalars['ID']['output']>;
   following_user_ids: Array<Scalars['ID']['output']>;
   full_name?: Maybe<Scalars['String']['output']>;
+  /** Null until the member picks one on Edit profile. */
+  gender?: Maybe<Gender>;
   /** The Gmail address linked to this account, or null when Google is not connected. Shown beside the email in the admin user list so support can see both ways in. */
   google_email?: Maybe<Scalars['String']['output']>;
   host_commission_pct: Scalars['Float']['output'];
@@ -24807,6 +33298,8 @@ export type User = {
   interest_category_ids: Array<Scalars['ID']['output']>;
   is_email_verified?: Maybe<Scalars['Boolean']['output']>;
   is_first_time_user: Scalars['Boolean']['output'];
+  /** Null until the member answers on Edit profile. */
+  is_pet_owner?: Maybe<Scalars['Boolean']['output']>;
   is_phone_verified?: Maybe<Scalars['Boolean']['output']>;
   last_login_at?: Maybe<Scalars['String']['output']>;
   last_login_provider?: Maybe<AuthProvider>;
@@ -24947,6 +33440,15 @@ export type UserChangeLog = {
   user_id: Scalars['ID']['output'];
 };
 
+/**
+ * Which half of a user's history to read. USER is what the account changed
+ * itself, plus system writes such as signup; ADMIN is every change an admin
+ * made to it. An admin's change is only ever listed under ADMIN.
+ */
+export type UserChangeLogScope =
+  | 'ADMIN'
+  | 'USER';
+
 /** Server-side table page for the shared table engine. */
 export type UserChangeLogTablePage = {
   __typename?: 'UserChangeLogTablePage';
@@ -24997,6 +33499,51 @@ export type UserNotification = {
   id: Scalars['ID']['output'];
   notification: Notification;
   read_at?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * One refund that has already been paid back to a buyer.
+ *
+ * Refunds have no collection of their own — each is recorded on the payment it
+ * reverses, by any of four flows (admin refund, pod cancellation, released
+ * cancellation hold, filled Backout). A payment merely HOLDING a refund has not
+ * paid anything back, so it is not one of these rows.
+ */
+export type UserRefund = {
+  __typename?: 'UserRefund';
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  gateway: Scalars['String']['output'];
+  gst_amount: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  paid_at?: Maybe<Scalars['String']['output']>;
+  /** True when only part of the booking came back — the buyer kept the rest of their seats, so the payment is still SUCCESS. */
+  partial: Scalars['Boolean']['output'];
+  payment_id: Scalars['String']['output'];
+  platform_fee_amount: Scalars['Float']['output'];
+  /** Money returned across every release on this booking. Falls back to the total for an admin refund, which returns the whole payment without writing a figure. */
+  refund_amount: Scalars['Float']['output'];
+  /** Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console. */
+  refund_initiated_by?: Maybe<Scalars['String']['output']>;
+  refund_reason?: Maybe<Scalars['String']['output']>;
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  subtotal: Scalars['Float']['output'];
+  /** What the buyer was originally charged. */
+  total: Scalars['Float']['output'];
+  user_email: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (userRefundsTable). */
+export type UserRefundTablePage = {
+  __typename?: 'UserRefundTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UserRefund>;
+  total: Scalars['Int']['output'];
 };
 
 export type UserStatus =
@@ -25154,15 +33701,35 @@ export type VenueCancellationChargeType =
 /** What a venue owner charges for a late cancellation, or whether they take one at all. */
 export type VenueCancellationPolicy = {
   __typename?: 'VenueCancellationPolicy';
+  /** The refund every enrolled attendee gets when that auto-cancel fires, widest window first. Empty refunds in full. */
+  refund_tiers: Array<VenueCancellationRefundTier>;
   /** Bookings may only be rescheduled, never cancelled. The bands do not apply while this is on. */
   reschedule_only: Scalars['Boolean']['output'];
   /** Ordered widest window first. */
   tiers: Array<VenueCancellationTier>;
+  /** Hours before a pod starts within which a pod at this venue is auto-cancelled while its finance stays negative against the venue's potential earnings. Defaults to 6. */
+  trigger_hours: Scalars['Int']['output'];
 };
 
 export type VenueCancellationPolicyInput = {
+  refund_tiers?: InputMaybe<Array<VenueCancellationRefundTierInput>>;
   reschedule_only?: InputMaybe<Scalars['Boolean']['input']>;
   tiers?: InputMaybe<Array<VenueCancellationTierInput>>;
+  trigger_hours?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** One refund band of the venue's auto-cancellation ladder — a pod cancelled with MORE than hours_before hours still to run refunds this share of the ticket money. */
+export type VenueCancellationRefundTier = {
+  __typename?: 'VenueCancellationRefundTier';
+  /** Notice, in hours, this band needs. The widest matching band wins, so more notice never refunds less. */
+  hours_before: Scalars['Int']['output'];
+  /** Share of the attendee's ticket money returned (0-100). */
+  refund_pct: Scalars['Float']['output'];
+};
+
+export type VenueCancellationRefundTierInput = {
+  hours_before: Scalars['Int']['input'];
+  refund_pct: Scalars['Float']['input'];
 };
 
 /** One band of a venue's cancellation policy — cancelling INSIDE hours_before of the slot start costs this much. */
@@ -26072,6 +34639,7 @@ export type WaMessageLogRow = {
 /** Server-side pagination / search / sort options for the cache lists. */
 export type WaPageInput = {
   community_jid?: InputMaybe<Scalars['String']['input']>;
+  /** Column filters — honoured by waUserLeads. */
   filters?: InputMaybe<Array<TableFilterInput>>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
@@ -26146,6 +34714,8 @@ export type WaScenario = {
   override_media_url: Scalars['String']['output'];
   /** One label per placeholder, in order. */
   params: Array<Scalars['String']['output']>;
+  /** For a scenario shipped with a template draft and no campaign yet: TEMPLATE (submit the draft to Meta) or CAMPAIGN (bind the approved template). Empty when there is nothing to press. */
+  provision_step: Scalars['String']['output'];
   /** Meta's category, which decides the per-message rate. */
   template_category: Scalars['String']['output'];
   /** The live template's header kind — TEXT, IMAGE, VIDEO, FILE, or empty for none. */
@@ -26178,6 +34748,17 @@ export type WaScenarioBoard = {
   /** The kill switch. Off by default — nothing sends until somebody turns it on. */
   global_enabled: Scalars['Boolean']['output'];
   rows: Array<WaScenario>;
+};
+
+/** What one AiSensy campaign name has produced, counting both records. */
+export type WaSendCount = {
+  __typename?: 'WaSendCount';
+  /** Everything that was tried, including what was skipped or failed. */
+  attempts: Scalars['Int']['output'];
+  /** The campaign name, which is the only name both records share. */
+  campaign: Scalars['String']['output'];
+  /** Messages AiSensy accepted. */
+  sent: Scalars['Int']['output'];
 };
 
 export type WaSourceRef = {

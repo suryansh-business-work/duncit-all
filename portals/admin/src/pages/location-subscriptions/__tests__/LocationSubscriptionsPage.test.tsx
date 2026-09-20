@@ -53,6 +53,7 @@ const subscriber = (id: string, name: string, notifiedAt: string | null) => ({
   user_id: `u-${id}`,
   name,
   whatsapp: '+91 90000 00000',
+  location_shared: false,
   status: notifiedAt ? 'SENT' : 'PENDING',
   reason: '',
   notified_at: notifiedAt,

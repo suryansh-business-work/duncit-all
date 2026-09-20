@@ -339,6 +339,18 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'The pod below ran at your venue. Tell us how the host and the group were — it is what decides who we send you next.',
 
   // --- Brand, running --------------------------------------------------------
+  'email.ecommBrandSubmitted.title': 'Your brand is under review',
+  'email.ecommBrandSubmitted.body':
+    'Thanks — the brand below is with our Products team. They verify the business details, documents and both your ShipRocket and Razorpay connections, and you will hear from us once it is approved. You can follow its status in the Partners console.',
+  'email.ecommBrandRejected.title': 'We could not approve your brand yet',
+  'email.ecommBrandRejected.body':
+    'The brand below was not approved this time. The reason from our reviewer is beneath it. Update the brand in the Partners console and submit it again whenever you are ready.',
+  'email.ecommBrandDeleted.title': 'Your brand has been removed',
+  'email.ecommBrandDeleted.body':
+    'The brand below has been removed from Duncit, along with its warehouses. Orders already placed are not affected. You can register a new brand from the Partners console at any time.',
+  'email.ecommBrandReviewRequested.title': 'A brand is waiting for review',
+  'email.ecommBrandReviewRequested.body':
+    'A partner has submitted the brand below. Open Brands Review, check every section — business, documents, integrations and the signed consent — and approve or reject it.',
   'email.ecommBrandAdded.title': 'Your brand has been added',
   'email.ecommBrandAdded.body':
     'We have your new brand and it is with our team for review. Once it is approved you can list products against it.',
@@ -451,6 +463,10 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.storeCartReminder.title': 'You left something in your cart',
   'email.storeCartReminder.body':
     'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
+  // --- Automation message (catalogue.automation) ------------------------------
+  'email.automationMessage.title': 'A message from {{app_name}}',
+  'email.automationMessage.footer':
+    "You're receiving this because you wrote to Duncit, or asked to hear from us.",
   // --- Analytics reports (catalogue.analytics) --------------------------------
   'email.analyticsReport.title': 'Your analytics report',
   'email.analyticsReport.body':
@@ -506,4 +522,53 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.analyticsAlert.change': '{change} against the period before',
   'email.analyticsAlert.noChange': 'No earlier period to compare with',
   'email.analyticsAlert.slack': 'Analytics alert — *{name}*: {tile} is {value} ({rule}; {period}). {url}',
+
+  // --- Tech > App Builds > Releases ----------------------------------------
+  'email.storeReleaseRejected.title': 'A release was rejected',
+  'email.storeReleaseRejected.body':
+    'The store refused a version of the app. The facts are below, with what to do about it and how to avoid it next time. Open Releases to see the full reason, add the reviewer’s message, and submit the latest build.',
+  'email.storeReleaseApproved.title': 'A release is approved and waiting',
+  'email.storeReleaseApproved.body':
+    'Apple has approved this version. It is not live yet — it waits for someone to press release in App Store Connect.',
+  'email.storeReleaseReminder.title': 'A release still needs you',
+  'email.storeReleaseReminder.body':
+    'This has been open for {hours_open} hours and nothing has changed at the store. Open Releases to act on it, or mark it resolved to stop these reminders.',
+  'email.storeRelease.stateLabel': 'Store status',
+  'email.storeRelease.storeLabel': 'Store',
+  'email.storeRelease.versionLabel': 'Version',
+  'email.storeRelease.buildLabel': 'Build',
+  'email.storeRelease.detectedLabel': 'First seen',
+  'email.storeRelease.reviewerLabel': 'Reviewer said',
+  'email.storeRelease.adviceLabel': 'What to do',
+  'email.storeRelease.causesLabel': 'Likely causes',
+  'email.storeRelease.stepsLabel': 'Steps now',
+  'email.storeRelease.nextTimeLabel': 'Next time',
+  'email.storeRelease.openReleases': 'Open Releases',
+  'email.storeRelease.help':
+    'Notices go to the addresses and the Slack channel set on Tech > App Builds > Settings > Release notices.',
+  'email.storeRelease.footer': 'You are receiving this because you are a release contact on the Duncit Tech console.',
+  'email.storeRelease.storeAppStore': 'App Store',
+  'email.storeRelease.storeGooglePlay': 'Google Play',
+  'email.storeRelease.noReviewerMessage': 'Not added yet — paste it on the Releases page to sharpen the advice.',
+  'email.storeRelease.noAdvice': 'No advice was written for this issue.',
+  'email.storeRelease.meaningRejected':
+    'App Review refused the app itself — behaviour, a crash, a missing feature or a guideline the build does not meet. The reviewer’s message is in App Store Connect > Resolution Center.',
+  'email.storeRelease.meaningMetadataRejected':
+    'App Review refused the listing — text, screenshots, review notes or the demo account — not the binary. Fix the listing and resubmit the same build.',
+  'email.storeRelease.meaningInvalidBinary':
+    'Apple could not accept the uploaded build: a signing, entitlement, SDK or packaging problem named in the mail from App Store Connect.',
+  'email.storeRelease.meaningDeveloperRejected': 'Someone on our side withdrew this version from review.',
+  'email.storeRelease.meaningPendingDeveloperRelease':
+    'Apple approved the version. It goes live only when someone presses Release this version in App Store Connect.',
+  'email.storeRelease.meaningManual': 'Logged by hand from the store’s mail or console.',
+  'email.storeRelease.meaningOther': 'The store reports this version as {state}.',
+  'email.storeRelease.subjectRejected': '{store} rejected version {version}',
+  'email.storeRelease.subjectApproved': '{store} approved version {version} — release it',
+  'email.storeRelease.subjectReminder': 'Still open: {store} version {version}',
+  'email.storeRelease.slackRejected':
+    ':red_circle: *{store}* rejected *v{version}* (build {build}) — {state}.\n*Suggestion:* {suggestion}\n{url}',
+  'email.storeRelease.slackApproved':
+    ':large_green_circle: *{store}* approved *v{version}* (build {build}) — waiting for release.\n{url}',
+  'email.storeRelease.slackReminder':
+    ':alarm_clock: Still open after {hours} h: *{store}* *v{version}* (build {build}) — {state}.\n*Suggestion:* {suggestion}\n{url}',
 };

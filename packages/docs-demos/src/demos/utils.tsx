@@ -57,6 +57,7 @@ import {
   canScanPodTickets,
   canFollowBack,
   attendanceRowState,
+  canDirectMark,
   canScanTickets,
   canSubmitPodFeedback,
   commChannelSummary,
@@ -80,6 +81,7 @@ import {
   followRequestRowState,
   formatMoney,
   hostPodSection,
+  matchAttendanceRows,
   mwebAttendanceLabels,
   namedCompanionEntries,
   needsOtp,
@@ -161,6 +163,7 @@ import {
   type VenuePodRow,
   POD_ROW_STATUS_COLORS,
   canOpenPodAttendance,
+  clubAdminVenueOptions,
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
   openGoogleSignup,
@@ -191,13 +194,18 @@ import {
   clubPlaceLabel,
   groupClubsByCity,
   groupClubsByLocality,
+  localitiesByClubCount,
   type ClubCityLocation,
   resolveThemeTokens,
   DEFAULT_LAUNCH_TARGET,
+  EMPTY_LAUNCH_MEDIA,
+  LAUNCH_ROLE_SECTIONS,
   compareCitiesLaunchedFirst,
   formatCount,
   launchProgress,
+  launchSectionMedia,
   showsWaitlist,
+  type LaunchPageMedia,
   buildOfficialStatusSlides,
   hasUnseenOfficialStatus,
   isOfficialStatusLive,
@@ -205,6 +213,10 @@ import {
   packagingGaps,
   parcelWeights,
   type ParcelDims,
+  brandCompletionPercent,
+  brandNextStepIndex,
+  brandStepStates,
+  type BrandWizardFacts,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
@@ -311,6 +323,8 @@ interface AttendanceBoardMock {
   complete_deadline: string | null;
   /** Seats on one booking still without a name against them. */
   companions_required: number;
+  /** What the Club Admin typed into the by-name mark. Try `rohan`. */
+  search: string;
 }
 
 /** A slice of the Home feed, plus the instant the rails are drawn at. */
@@ -437,6 +451,13 @@ interface ClubAdminMock {
   pod: PodStatusFields & { pod_title: string };
   /** One entry of `clubAdminPodAuditLogs`. */
   audit: { action: PodAuditAction; source: PodAuditSource; ai_risk: PodAuditRisk };
+  /** Venues the club is explicitly attached to. Empty = never attached, which
+   * restricts nothing — clear it and every public venue comes back. */
+  meetup_venues_id: string[];
+  /** `publicVenues` — server-filtered to APPROVED + active, so no `status`. */
+  publicVenues: { id: string; venue_name: string; is_active: boolean }[];
+  /** `myVenues` — what this person OWNS, unapproved rows included. */
+  myVenues: { id: string; venue_name: string; status: string; is_active: boolean }[];
 }
 
 /** The bundle's own English for `clubAdmin.*`, resolved the way every surface does. */
@@ -467,10 +488,15 @@ interface ClubGroupingMock {
   locations: ClubCityLocation[];
   clubs: { club_name: string; location_id: string; locality: string }[];
   openCityId: string;
+  /** The opened city's zones, in the admin's order — the Create a Pod Locality dropdown. */
+  zones: string[];
 }
 
 /** One packed unit as the product form holds it. */
 type ParcelMock = ParcelDims;
+
+/** A brand part-way through the Partners console wizard. */
+type BrandWizardMock = BrandWizardFacts;
 
 /** One city from the `locations` query, with its launch waitlist fields. */
 interface CityLaunchMock {
@@ -478,6 +504,8 @@ interface CityLaunchMock {
   is_launched: boolean | null;
   subscriber_count: number;
   launch_target: number;
+  /** As locationLaunchStatus answers it: the city's own file where set, else the global one. */
+  launch_media: LaunchPageMedia;
 }
 
 /** Marketing > Status, as the apps' `officialStatuses` query answers it. */
@@ -534,16 +562,57 @@ export default defineDemos('utils', [
     },
   }),
 
+  defineDemo<BrandWizardMock>({
+    id: 'brand-wizard',
+    title: 'How far a brand is through onboarding',
+    note:
+      'Yonex has filled six of the eight required steps. Flip razorpay_connected to true and the percentage moves to 88 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number.',
+    mock: {
+      brand_name: 'Yonex',
+      description: 'Badminton racquets, shuttles and grips for club players.',
+      contact_email: 'ops@yonex.in',
+      registered_business_name: 'Yonex India Pvt Ltd',
+      gstin: '29AABCY1234F1ZP',
+      pan: '',
+      address_line1: '14 MG Road',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      postal_code: '560001',
+      product_categories: ['Sports Equipment'],
+      logo_url: 'https://ik.imagekit.io/duncit/brands/yonex-logo.png',
+      documents: [{ type: 'GST certificate', url: 'https://ik.imagekit.io/duncit/brands/yonex-gst.pdf' }],
+      account_number: '',
+      ifsc_code: '',
+      upi_id: '',
+      shiprocket_connected: true,
+      razorpay_connected: false,
+      consent_signed: false,
+    },
+    compute: (mock) => ({
+      'Completion (%)': brandCompletionPercent(mock),
+      'Opens on step': brandNextStepIndex(mock) + 1,
+      'Still to do': brandStepStates(mock)
+        .filter((step) => step.required && !step.complete)
+        .map((step) => step.key)
+        .join(', ') || 'nothing — ready to submit',
+    }),
+  }),
+
   defineDemo<CityLaunchMock>({
     id: 'city-launch',
     title: 'A city that has not launched yet',
     note:
-      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front.',
+      'Ahmedabad is not launched, so its picker tile counts the people waiting and choosing it opens the waitlist. Set is_launched to true (or null, as an older location reads) and the tile goes back to clubs. Push subscriber_count past launch_target and the bar stops at 100; set launch_target to 0 and it reads 0. The picker lists the live cities of Gujarat before Ahmedabad; flip is_launched and it moves to the front. The page is four full-height sections: blank hero_video_url and the top section falls back to its image; blank both and it draws the dark ground alone.',
     mock: {
       location_name: 'Ahmedabad',
       is_launched: false,
       subscriber_count: 1252,
       launch_target: DEFAULT_LAUNCH_TARGET,
+      launch_media: {
+        ...EMPTY_LAUNCH_MEDIA,
+        hero_video_url: 'https://ik.imagekit.io/esdata1/launch/ahmedabad-riverfront.mp4',
+        hero_image_url: 'https://ik.imagekit.io/esdata1/launch/ahmedabad-riverfront.jpg',
+      },
     },
     compute: (mock) => ({
       'Shows the waitlist': showsWaitlist(mock),
@@ -551,6 +620,9 @@ export default defineDemos('utils', [
       'Hero number': formatCount(mock.subscriber_count),
       'Progress bar': `${launchProgress(mock.subscriber_count, mock.launch_target)}%`,
       'Goal line': mwebT('mweb.cityLaunch.launchGoal', { vars: { target: formatCount(mock.launch_target) } }),
+      'Top section backdrop': launchSectionMedia(mock.launch_media, 'hero'),
+      'Host section backdrop': launchSectionMedia(mock.launch_media, 'host'),
+      'Role sections': LAUNCH_ROLE_SECTIONS.map((role) => `${role.section} → ${role.kind}`).join(', '),
       'Picker order': [
         { location_name: 'Surat', is_launched: true },
         { location_name: 'Rajkot', is_launched: true },
@@ -566,7 +638,7 @@ export default defineDemos('utils', [
     id: 'club-grouping',
     title: 'The Clubs tab, grouped by city and then by locality',
     note:
-      'Change a club\'s location_id to loc-blr and it moves to the Bengaluru card. Blank its locality and it drops into the last, no-area section. Point openCityId at another city to see that city\'s sections.',
+      'Change a club\'s location_id to loc-blr and it moves to the Bengaluru card. Blank its locality and it drops into the last, no-area section. Point openCityId at another city to see that city\'s sections. Give Aundh a club and it climbs out of the disabled tail of the Locality dropdown.',
     mock: {
       locations: [
         { id: 'loc-pune', location_name: 'Pune', city: 'Pune', location_image: '' },
@@ -579,6 +651,7 @@ export default defineDemos('utils', [
         { club_name: 'Indiranagar Runners', location_id: 'loc-blr', locality: 'Indiranagar' },
       ],
       openCityId: 'loc-pune',
+      zones: ['Aundh', 'Baner', 'Kothrud', 'Viman Nagar'],
     },
     compute: (mock) => {
       const openCity = mock.locations.find((location) => location.id === mock.openCityId);
@@ -593,6 +666,9 @@ export default defineDemos('utils', [
         ),
         'Its locality sections': groupClubsByLocality(cityClubs).map(
           (group) => `${group.locality || 'Other areas'}: ${group.clubs.map((club) => club.club_name).join(', ')}`,
+        ),
+        'Create a Pod Locality dropdown': localitiesByClubCount(mock.zones, cityClubs).map(
+          (item) => `${item.locality} — ${item.count} clubs${item.count === 0 ? ' (disabled)' : ''}`,
         ),
       };
     },
@@ -1443,7 +1519,11 @@ export default defineDemos('utils', [
       'admin is correcting the roster long after that door shut. needsOtp also answers false for ' +
       'them — not because they cannot send a code, but because they are never made to. ' +
       'Set lock to EXPIRED: the host’s completion window ran out, the deadline banner gives way ' +
-      'to the locked notice, and only a Club Admin can still record who came.',
+      'to the locked notice, and only a Club Admin can still record who came. ' +
+      'With viewer CLUB_ADMIN the page also carries a Direct attendance mark button ' +
+      '(canDirectMark) — type into search and matchAttendanceRows narrows the pod’s bookings: ' +
+      '`rohan` finds PRIYA’s booking, because Rohan is a seat on it, and `98200` finds Arjun ' +
+      'even though he is already marked.',
     mock: {
       pod_id: 'DUN-POD-4821',
       viewer: 'HOST',
@@ -1453,6 +1533,7 @@ export default defineDemos('utils', [
       lock: 'OPEN',
       complete_deadline: '2026-08-31T14:00:00.000Z',
       companions_required: 7,
+      search: 'pri',
     },
     compute: (mock) => {
       // Keys rather than copy, so the demo names WHICH sentence each surface renders.
@@ -1460,8 +1541,36 @@ export default defineDemos('utils', [
       const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
       const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
       const row = { attended: false, companions_required: mock.companions_required };
+      // One booking per person, as the roster holds them — Priya's admits two,
+      // and the second seat is named rather than counted.
+      const roster = [
+        {
+          membership_id: 'm1',
+          name: 'Priya Sharma',
+          email: 'priya@example.com',
+          ticket_code: 'DUN-TKT-4821',
+          phone_extension: '+91',
+          phone_number: '8791234693',
+          attended: false,
+          companions: [{ name: 'Rohan Mehta' }],
+        },
+        {
+          membership_id: 'm2',
+          name: 'Arjun Nair',
+          email: 'arjun@example.com',
+          ticket_code: 'DUN-TKT-4830',
+          phone_extension: '+91',
+          phone_number: '9820011223',
+          attended: true,
+          companions: [],
+        },
+      ];
+      const found = matchAttendanceRows(roster, mock.search);
       return {
         'needsOtp(board)': needsOtp(mock),
+        'canDirectMark(board)': canDirectMark(mock),
+        'matchAttendanceRows(roster, search)':
+          found.map((r) => r.name).join(', ') || '(no booking matches)',
         'canScanTickets(board)': canScanTickets(mock),
         'showsCompleteDeadline(board)': showsCompleteDeadline(mock),
         'Locked notice': labels.lockedTitle(mock.lock),
@@ -1694,6 +1803,16 @@ export default defineDemos('utils', [
         venue_approval_status: 'APPROVED',
       },
       audit: { action: 'UPDATE', source: 'CLUB_ADMIN', ai_risk: 'MEDIUM' },
+      // Venues the club could book. Blank meetup_venues_id and every public
+      // venue comes back — an unlinked club restricts nothing.
+      meetup_venues_id: ['v-koramangala'],
+      publicVenues: [
+        { id: 'v-koramangala', venue_name: 'Cubbon Park Pavilion', is_active: true },
+        { id: 'v-indiranagar', venue_name: 'Indiranagar Social', is_active: true },
+      ],
+      myVenues: [
+        { id: 'v-mine', venue_name: 'My Rooftop', status: 'PENDING', is_active: true },
+      ],
     },
     compute: (mock) => {
       const labels = clubAdminKpiLabels(clubAdminT);
@@ -1714,6 +1833,11 @@ export default defineDemos('utils', [
         'Trend lines': clubAdminTrendSeries.map((series) => `${seriesLabels[series.key]} on ${series.palette}`),
         'Pod row status': `${status} — "${podRowStatusLabel(status, clubAdminT)}" in ${POD_ROW_STATUS_COLORS[status]}`,
         'Offers Pod Attendance': canOpenPodAttendance(mock.pod),
+        // One rule for mWeb, the Partners console and the app. A PENDING venue
+        // of their own never reaches the picker; an unlinked club sees all.
+        'Venues they may book': clubAdminVenueOptions(mock.publicVenues, mock.myVenues, {
+          meetup_venues_id: mock.meetup_venues_id,
+        }).map((venue) => venue.venue_name),
         'Status filter rows': podRowStatusOptions(clubAdminT).map((option) => option.label),
         'Audit entry reads': `${podAuditActionLabel(mock.audit.action, clubAdminT)} by ${podAuditSourceLabel(mock.audit.source, clubAdminT)} — AI risk ${podAuditRiskLabel(mock.audit.ai_risk, clubAdminT)}`,
         'Dashboard subtitle': clubAdminLabels(clubAdminT).dashboard.subtitle,

@@ -9,7 +9,9 @@ const developmentUrls = {
   adsUrl: 'http://localhost:2006',
   websiteUrl: 'http://localhost:2000',
   techUrl: 'http://localhost:2009',
+  marketingUrl: 'http://localhost:2015',
   ecommUrl: 'http://localhost:2039',
+  productsUrl: 'http://localhost:2014',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
 };
@@ -23,7 +25,9 @@ const productionUrls = {
   adsUrl: 'https://ads.duncit.com',
   websiteUrl: 'https://duncit.com',
   techUrl: 'https://tech.duncit.com',
+  marketingUrl: 'https://marketing.duncit.com',
   ecommUrl: 'https://ecomm.duncit.com',
+  productsUrl: 'https://products.duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
 };
@@ -58,8 +62,13 @@ export async function getUrlConfigs() {
     // server-side value on purpose: taking the return address from the request
     // would make this an open redirect wearing an OAuth callback's clothes.
     techUrl: await configValue('TECH_URL', defaults.techUrl),
+    // Where a social network's OAuth callback returns the marketer to — fixed
+    // server-side for the same open-redirect reason as techUrl.
+    marketingUrl: await configValue('MARKETING_URL', defaults.marketingUrl),
     // The pet store (ecomm.duncit.com) — where its order emails link back to.
     ecommUrl: await configValue('ECOMM_URL', defaults.ecommUrl),
+    // The Products console — where a submitted brand is reviewed.
+    productsUrl: await configValue('PRODUCTS_URL', defaults.productsUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {
       host: await getRuntimeEnvValue('SMTP_HOST'),

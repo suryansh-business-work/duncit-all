@@ -39,6 +39,7 @@ COPY portals/hosts/package.json ./portals/hosts/
 COPY portals/communications/package.json ./portals/communications/
 COPY portals/logs/package.json ./portals/logs/
 COPY portals/analytics/package.json ./portals/analytics/
+COPY portals/localization/package.json ./portals/localization/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/
@@ -115,7 +116,7 @@ RUN pnpm --filter duncit-lite build
 # --- runner ---
 # Node, not nginx: this one process is the GraphQL API, the upload and calendar
 # routes, and the HTML server for BOTH hostnames (the console shell for
-# luma-portal.*, the web app with per-page head tags for luma.*).
+# lite-portal.*, the web app with per-page head tags for lite.*).
 FROM public.ecr.aws/docker/library/node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

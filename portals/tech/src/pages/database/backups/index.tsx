@@ -5,6 +5,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import BackupScheduleCard from './BackupScheduleCard';
+import BackupStoreCard from './BackupStoreCard';
 import BackupsTable from './BackupsTable';
 import RestoreDialog from './RestoreDialog';
 import RestoreProgress from './RestoreProgress';
@@ -87,6 +88,8 @@ export default function DbBackupsPage() {
       )}
 
       {page.restore && <RestoreProgress job={page.restore} />}
+
+      <BackupStoreCard />
 
       <BackupsTable
         fetchRows={page.fetchRows}

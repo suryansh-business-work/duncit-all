@@ -41,12 +41,39 @@ export interface GodaddyRecord {
 /** A record inside its (type, name) set — the shape GoDaddy's set PUT takes. */
 export type GodaddySetRecord = Omit<GodaddyRecord, 'type' | 'name'>;
 
-/** The domain summary the connection check reads. */
+/** One party on the domain's registrar record, as GoDaddy returns it. */
+export interface GodaddyContact {
+  nameFirst?: string;
+  nameLast?: string;
+  organization?: string;
+  email?: string;
+  phone?: string;
+}
+
+/**
+ * The domain itself, as GoDaddy's registrar holds it — everything that decides
+ * whether the name keeps resolving next year, none of which any record in the
+ * zone says.
+ */
 export interface GodaddyDomain {
+  domainId?: number;
   domain: string;
   status: string;
   expires?: string;
+  createdAt?: string;
+  renewAuto?: boolean;
+  renewDeadline?: string;
+  renewable?: boolean;
+  locked?: boolean;
+  privacy?: boolean;
+  transferProtected?: boolean;
+  expirationProtected?: boolean;
+  holdRegistrar?: boolean;
   nameServers?: string[];
+  contactRegistrant?: GodaddyContact;
+  contactAdmin?: GodaddyContact;
+  contactTech?: GodaddyContact;
+  contactBilling?: GodaddyContact;
 }
 
 /** An entry's three values as a config, or null when any is blank. */

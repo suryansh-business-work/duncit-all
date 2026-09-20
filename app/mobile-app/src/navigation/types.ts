@@ -85,12 +85,15 @@ export type RootStackParamList = {
   /** /clubs/monitoring — the AI-monitored trail of every pod edit in their clubs. */
   ClubPodMonitoring: undefined;
   /** /clubs/:clubId/pods — one club's pods. `notice` is what the editor just did. */
-  ClubPods: { clubId: string; notice?: 'created' | 'updated' };
+  ClubPods: { clubId: string; notice?: 'created' | 'updated' | 'draft' };
   /** /clubs/:clubId/pods/new — a new pod, pinned to the club. */
   ClubPodEditor: { clubId: string };
   /** /clubs/:clubId/pods/:podId/edit — the same editor over an existing pod. Its
    * own screen because React Navigation gives a screen ONE path and mWeb has two. */
   ClubPodEdit: { clubId: string; podId: string };
+  /** /clubs/:clubId/pods/:podId — the club-scoped pod detail: roster, payments,
+   * ratings and the audit trail. NOT the public pod page (rule 27). */
+  ClubPodDetails: { clubId: string; podId: string };
   /** /clubs/:clubId/edit — the club's own page. */
   ClubEdit: { clubId: string };
   ProductsManage: undefined;
@@ -155,7 +158,7 @@ export type RootStackParamList = {
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
-  /** /city-launch/:locationId — a not-yet-launched city's waitlist (Location.id). */
+  /** /city-launch/:locationId — a not-yet-launched city's waitlist (its slug, or Location.id). */
   CityLaunch: { locationId: string };
   NotFound: undefined;
 };
@@ -203,6 +206,7 @@ export type MenuStackRoute = Exclude<
   | 'ClubPods'
   | 'ClubPodEditor'
   | 'ClubPodEdit'
+  | 'ClubPodDetails'
   | 'ClubEdit'
 >;
 

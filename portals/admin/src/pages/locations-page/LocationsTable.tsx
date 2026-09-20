@@ -1,5 +1,6 @@
-import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { useCallback, useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import {
   DuncitTable,
   actionsColumn,
@@ -9,6 +10,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import type { LocationRow } from './queries';
+import { LAUNCHED, NOT_LAUNCHED } from './launchFilter';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -20,6 +22,8 @@ interface Props {
 }
 
 const VISIBLE_ZONE_CHIPS = 2;
+/** How much of the status colour a row shows — a tint, not a fill, so the copy keeps its contrast. */
+const ROW_TINT = 0.14;
 
 const getLocationRowId = (loc: LocationRow) => loc.id;
 
@@ -83,6 +87,16 @@ export default function LocationsTable({
   onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  // A whole row says whether the city is live: green for launched, yellow
+  // for one still on its waitlist — the same answer as the chip, readable at
+  // a glance down the list.
+  const getRowStyle = useCallback(
+    (loc: LocationRow) => ({
+      backgroundColor: alpha(loc.is_launched ? theme.palette.success.main : theme.palette.warning.main, ROW_TINT),
+    }),
+    [theme],
+  );
   const columns = useMemo<DuncitColumn<LocationRow>[]>(() => {
     return [
       { field: 'image', headerName: t('admin.branding.assetImage'), type: 'text', width: 76, cellRenderer: renderImage },
@@ -120,15 +134,22 @@ export default function LocationsTable({
         valueGetter: (loc) => loc.country,
       },
       activeChipColumn<LocationRow>(),
-      activeChipColumn<LocationRow>({
-        field: 'is_launched',
-        headerName: t('admin.locations.launched'),
-        width: 140,
-        activeLabel: t('admin.locations.launched'),
-        inactiveLabel: t('admin.locations.notLaunched'),
-        outlineInactive: true,
-        filterable: false,
-      }),
+      {
+        ...activeChipColumn<LocationRow>({
+          field: 'is_launched',
+          headerName: t('admin.locations.launchStatus'),
+          width: 170,
+          activeLabel: t('admin.locations.launched'),
+          inactiveLabel: t('admin.locations.notLaunched'),
+          outlineInactive: true,
+        }),
+        // Filtered by the chip's own words; `withLaunchFilter` sends the pick as the server's boolean.
+        type: 'enum',
+        options: [
+          { value: LAUNCHED, label: t('admin.locations.launched') },
+          { value: NOT_LAUNCHED, label: t('admin.locations.notLaunched') },
+        ],
+      },
       dateColumn<LocationRow>(),
       actionsColumn<LocationRow>({ onEdit, onDelete, delete: { color: 'default' } }),
     ];
@@ -141,6 +162,7 @@ export default function LocationsTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getLocationRowId}
+      getRowStyle={getRowStyle}
       toolbarActions={toolbarActions}
       emptyText={'No locations yet. Click "New Location" to create one.'}
       defaultSort={{ field: 'city', dir: 'asc' }}

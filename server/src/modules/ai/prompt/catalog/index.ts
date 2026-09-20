@@ -4,6 +4,7 @@ import { GENERATION_PROMPTS } from './generation.prompts';
 import { SUPPORT_PROMPTS } from './support.prompts';
 import { CRM_PROMPTS } from './crm.prompts';
 import { PLATFORM_PROMPTS } from './platform.prompts';
+import { MARKETING_PROMPTS } from './marketing.prompts';
 
 /**
  * Every CODE prompt the product runs on — the "Code Inside Prompt" half of the
@@ -25,6 +26,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...SUPPORT_PROMPTS,
   ...CRM_PROMPTS,
   ...PLATFORM_PROMPTS,
+  ...MARKETING_PROMPTS,
 ];
 
 export const CODE_PROMPT_BY_KEY = new Map(CODE_PROMPTS.map((p) => [p.key, p]));

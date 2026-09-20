@@ -28,6 +28,7 @@ export const USER_INFO: TypedDocumentNode<UserInfoData> = gql`
       phone_extension
       whatsapp_number
       whatsapp_extension
+      whatsapp_verified_at
       profile_photo
       bio
       gender
@@ -98,6 +99,7 @@ export interface UserInfoMe {
   phone_extension: string;
   whatsapp_number?: string | null;
   whatsapp_extension?: string | null;
+  whatsapp_verified_at?: string | null;
   profile_photo?: string | null;
   bio?: string | null;
   gender?: string | null;

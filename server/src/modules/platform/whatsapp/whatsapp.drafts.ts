@@ -11,8 +11,9 @@
  * A draft here is that wording, written once beside the registry entry it
  * belongs to, so `provision` on the Automation board can submit it as-is: the
  * template first (Meta decides, asynchronously), then the campaign once the
- * template is APPROVED. The template takes the campaign's name, so a reader of
- * the board sees one name in both columns.
+ * template is APPROVED — a press the funnel also makes by itself, on the first
+ * send AiSensy refuses for lacking the campaign. The template takes the
+ * campaign's name, so a reader of the board sees one name in both columns.
  *
  * Only scenarios that were never provisioned belong here. Once a campaign is
  * LIVE the draft is inert — the board offers nothing for a row that has one.
@@ -134,6 +135,36 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Prakhar, thank you for your interest in listing your venue on Duncit. We are not able to take your application forward right now. ' +
       'Reason: The venue photos and safety certificates were incomplete. ' +
       'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  ECOMM_BRAND_SUBMITTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your brand {{2}} has been submitted for review on Duncit. Our Products team verifies every detail — ' +
+      'business, documents, ShipRocket and Razorpay connections — and you will hear from us once it is approved. — Team Duncit',
+    sample:
+      'Hi Ananya, your brand Yonex has been submitted for review on Duncit. Our Products team verifies every detail — ' +
+      'business, documents, ShipRocket and Razorpay connections — and you will hear from us once it is approved. — Team Duncit',
+  },
+  ECOMM_BRAND_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, we could not approve your brand {{2}} this time. Reason: {{3}}. ' +
+      'Open the Partners console, update the brand and submit it again whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Ananya, we could not approve your brand Yonex this time. Reason: The GST certificate does not match the registered business name. ' +
+      'Open the Partners console, update the brand and submit it again whenever you are ready. — Team Duncit',
+  },
+  ECOMM_BRAND_DELETED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your brand {{2}} has been removed from Duncit along with its warehouses. ' +
+      'Orders already placed are not affected. You can register a new brand from the Partners console at any time. — Team Duncit',
+    sample:
+      'Hi Ananya, your brand Yonex has been removed from Duncit along with its warehouses. ' +
+      'Orders already placed are not affected. You can register a new brand from the Partners console at any time. — Team Duncit',
   },
   ECOMM_ONBOARDING_REJECTED: {
     category: 'UTILITY',

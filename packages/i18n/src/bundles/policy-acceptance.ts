@@ -68,6 +68,7 @@ export const POLICY_ACCEPTANCE_BUNDLE: NestedCatalogue = {
       signupForm: 'Signup form',
       googleSignup: 'Google signup',
       later: 'Accepted later',
+      brandConsent: 'Brand consent (Partners)',
     },
 
     // Everything behind ONE row, opened by clicking it. A row on its own is a

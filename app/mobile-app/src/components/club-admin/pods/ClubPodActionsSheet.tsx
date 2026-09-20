@@ -1,5 +1,10 @@
 import { YStack } from 'tamagui';
-import { canOpenPodAttendance, podRowStatus, podRowStatusLabel } from '@duncit/utils';
+import {
+  canOpenPodAttendance,
+  changeRequestMenuKey,
+  podRowStatus,
+  podRowStatusLabel,
+} from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { ActionRow } from '@/components/host-manage/ActionRow';
@@ -14,6 +19,8 @@ interface Props {
   onAttendance: () => void;
   onEdit: () => void;
   onActivity: () => void;
+  /** Ask Duncit for a different club admin — the one ask an admin has on a pod. */
+  onRequestChange: () => void;
   onDelete: () => void;
 }
 
@@ -30,6 +37,7 @@ export function ClubPodActionsSheet({
   onAttendance,
   onEdit,
   onActivity,
+  onRequestChange,
   onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -76,14 +84,32 @@ export function ClubPodActionsSheet({
           tint={warning}
           onPress={onActivity}
         />
-        <ActionRow
-          testID="club-pod-action-delete"
-          icon="delete-outline"
-          label={t('clubAdmin.pods.deletePod')}
-          tint={danger}
-          danger
-          onPress={onDelete}
-        />
+        {/* CLUB-level, despite sitting on a pod row: the pod's club carries the
+            assignment, so approving hands over the whole club. Offered here as
+            well as in Club Studio because this is where an admin is looking
+            when they decide they cannot run it (rule 27 — Partners' row menu
+            has had it all along). */}
+        {pod && !pod.is_deleted ? (
+          <ActionRow
+            testID="club-pod-action-request-change"
+            icon="published-with-changes"
+            label={t(changeRequestMenuKey('CLUB_ADMIN'))}
+            tint={warning}
+            onPress={onRequestChange}
+          />
+        ) : null}
+        {/* A cancelled pod has nothing left to delete; Partners and mWeb both
+            hide the row rather than let it fail on press. */}
+        {pod && !pod.is_deleted ? (
+          <ActionRow
+            testID="club-pod-action-delete"
+            icon="delete-outline"
+            label={t('clubAdmin.pods.deletePod')}
+            tint={danger}
+            danger
+            onPress={onDelete}
+          />
+        ) : null}
       </YStack>
     </DuncitDialog>
   );

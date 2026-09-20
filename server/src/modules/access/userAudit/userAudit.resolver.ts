@@ -1,4 +1,5 @@
 import { userAuditService } from './userAudit.service';
+import type { UserChangeLogScope } from './userAudit.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
@@ -14,11 +15,11 @@ export const userAuditResolvers = {
   Query: {
     userChangeLogsTable: async (
       _p: unknown,
-      args: { user_id: string; query?: TableQueryInput | null },
+      args: { user_id: string; scope: UserChangeLogScope; query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return userAuditService.table(args.user_id, args.query);
+      return userAuditService.table(args.user_id, args.scope, args.query);
     },
   },
 };

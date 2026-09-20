@@ -71,6 +71,11 @@ exports:
   - 'DistributionBucket'
   - 'FillViewport'
   - 'chartSeriesColor'
+  - 'chartTooltip'
+  - 'valueAxis'
+  - 'categoryAxis'
+  - 'lineTrendDataset'
+  - 'lineTrendOptions'
   - 'SidebarList'
   - 'SidebarItem'
   - 'SidebarFilter'
@@ -768,13 +773,39 @@ import {
   FillViewport,
   SectionCard,
   SidebarList,
+  categoryAxis,
   chartSeriesColor,
+  chartTooltip,
   countBadge,
+  lineTrendDataset,
+  lineTrendOptions,
+  valueAxis,
 } from '@duncit/ui';
 
 <SectionCard title="Daily requests" subtitle="Last 7 days" action={<RefreshButton />}>
-  <Bar data={{ datasets: [{ data: [12, 9], backgroundColor: chartSeriesColor(theme, 0) }] }} />
+  <Bar
+    data={{ datasets: [{ data: [12, 9], backgroundColor: chartSeriesColor(theme, 0) }] }}
+    options={{
+      plugins: { tooltip: chartTooltip(theme) },
+      scales: { x: categoryAxis(theme), y: valueAxis(theme, (value) => value.toLocaleString('en-IN')) },
+    }}
+  />
 </SectionCard>
+
+// A trend: one line is filled and needs no legend, several stay as lines with one.
+const single = series.length === 1;
+const base = lineTrendOptions(theme, single);
+<Line
+  data={{
+    labels: days,
+    datasets: series.map((s, i) => ({ label: s.label, data: s.values, ...lineTrendDataset(theme, i, single) })),
+  }}
+  options={{
+    ...base,
+    plugins: { ...base.plugins, tooltip: chartTooltip(theme) },
+    scales: { x: categoryAxis(theme), y: valueAxis(theme, (value) => value.toLocaleString('en-IN')) },
+  }}
+/>
 
 <DistributionCard
   title="Why nothing went out"
@@ -798,6 +829,11 @@ import {
 | `DistributionCard` | Horizontal bars for a set of `{ key, count }`, scaled to the largest; `emptyText` overrides `ui.distributionCard.empty`. |
 | `FillViewport` | A flex column that ends where the viewport ends (measured from its own top, floor 360px), so the panes inside scroll instead of the window. |
 | `chartSeriesColor(theme, index)` | The validated three-slot categorical palette for console charts, stepped per light/dark mode; index wraps after 3. |
+| `chartTooltip(theme)` | Chart.js tooltip options on the paper surface with the theme's text and divider colours. |
+| `valueAxis(theme, tickFormat)` | The value scale: starts at zero, at most five whole-number ticks formatted by `tickFormat`, divider gridlines. |
+| `categoryAxis(theme, maxTicks?)` | The category scale: no gridlines, labels thinned (default 12) instead of rotated. |
+| `lineTrendDataset(theme, index, single)` | The dataset style of one trend line: series colour `index`, filled when it is the only line, a plain line beside others. Spread it into the dataset after `label`/`data`. |
+| `lineTrendOptions(theme, single)` | The base options a trend line shares: fills its box, no animation, index tooltips, a legend only when `single` is false. Spread it, then add `plugins.tooltip` and `scales`. |
 | `SidebarList` | A searchable, sortable master list: status filter, an optional page-owned `filter` select, row numbers, badges and an "off" chip. Sorts appear only when a row carries `count` / `updatedAt`. |
 | `countBadge(count, title)` | A row badge that stays visible — and muted — at zero. |
 

@@ -22,6 +22,8 @@ export interface IShiprocketSession extends Document {
   cred_hash: string;
   token: string;
   expires_at: Date | null;
+  /** When the held token was issued — what caps how often a refused call may ask for a new one. */
+  issued_at: Date | null;
   refused_hash: string;
   refused_message: string;
   refused_at: Date | null;
@@ -34,6 +36,7 @@ const shiprocketSessionSchema = new Schema<IShiprocketSession>(
     cred_hash: { type: String, default: '' },
     token: { type: String, default: '', select: false },
     expires_at: { type: Date, default: null },
+    issued_at: { type: Date, default: null },
     refused_hash: { type: String, default: '' },
     refused_message: { type: String, default: '' },
     refused_at: { type: Date, default: null },

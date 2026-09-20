@@ -32,6 +32,7 @@ packages:
   - portals/communications
   - portals/logs
   - portals/analytics
+  - portals/localization
   # The pet store: its console and its storefront.
   - portals/ecomm-portal
   - website/ecomm-store

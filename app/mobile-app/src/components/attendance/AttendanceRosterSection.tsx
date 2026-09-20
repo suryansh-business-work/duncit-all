@@ -1,5 +1,5 @@
 import { Text, YStack } from 'tamagui';
-import type { PodAttendanceLabels, PodAttendanceRow } from '@duncit/utils';
+import type { PodAttendanceLabels, PodAttendanceRow, PodAttendanceViewer } from '@duncit/utils';
 
 import { AttendanceRow } from '@/components/attendance/AttendanceRow';
 
@@ -10,6 +10,8 @@ interface Props {
   rows: PodAttendanceRow[];
   labels: PodAttendanceLabels;
   canMark: boolean;
+  /** Who is reading the roster — only the host waits on the door companions. */
+  viewer: PodAttendanceViewer;
   busyId: string;
   formatDateTime: (iso: string) => string;
   /** Absent on the already-marked list — those rows have nothing left to do. */
@@ -26,6 +28,7 @@ export function AttendanceRosterSection({
   rows,
   labels,
   canMark,
+  viewer,
   busyId,
   formatDateTime,
   onMark,
@@ -49,6 +52,7 @@ export function AttendanceRosterSection({
           row={row}
           labels={labels}
           canMark={canMark}
+          viewer={viewer}
           busy={busyId === row.membership_id}
           formatDateTime={formatDateTime}
           onMark={onMark ?? noop}

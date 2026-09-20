@@ -80,6 +80,9 @@ export const MyAdminClubsTableDocument = gql(`
         followers_count
         total_pods
         upcoming_pods
+        # Venues whose category and city match this club — a club with none
+        # cannot book a pod anywhere, which is worth seeing from the list.
+        matched_venues_count
         is_verified
       }
     }
@@ -104,6 +107,18 @@ export const ClubAdminPodsTableDocument = gql(`
         is_deleted
         completed_at
         venue_approval_status
+        # What an admin triages a list on. Without these a row said only when a
+        # pod was and how full it is, so every pod had to be opened to learn
+        # where it is, what it charges and how many actually turned up — the
+        # last of which is what the host is paid on.
+        place_label
+        pod_type
+        pod_amount
+        attendance {
+          attended_seats
+          booked_seats
+          recorded
+        }
       }
     }
   }
@@ -243,12 +258,21 @@ export const ClubAdminClubDocument = gql(`
       matched_venues {
         id
       }
+      # The venues this club is explicitly attached to. They narrow the pod
+      # editor's venue picker — the same narrowing the portals apply — so the
+      # same club admin sees the same options on all three surfaces (rule 27).
+      meetup_venues_id
       club_feature_images_and_videos {
+        url
+        type
+      }
+      club_moments {
         url
         type
       }
       club_whats_app_community_link
       club_whats_app_group_link
+      club_whats_app_announcement_link
       who_we_are
       what_we_do
       perks

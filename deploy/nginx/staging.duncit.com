@@ -825,6 +825,27 @@ server {
     }
 }
 
+# --- Localization console: staging.localization.duncit.com (SPA on :2142) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.localization.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2142;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- E-commerce console: staging.ecomm-portal.duncit.com (SPA on :2138) ---
 server {
     listen 80;
@@ -867,12 +888,12 @@ server {
     }
 }
 
-# --- Duncit Lite: staging.luma.duncit.com (Node API + HTML server on :2140) ---
+# --- Duncit Lite: staging.lite.duncit.com (Node API + HTML server on :2140) ---
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name staging.luma.duncit.com;
+    server_name staging.lite.duncit.com;
     client_max_body_size 12m;
 
     location / {
@@ -888,12 +909,12 @@ server {
     }
 }
 
-# --- Duncit Lite console: staging.luma-portal.duncit.com (same process, :2140) ---
+# --- Duncit Lite console: staging.lite-portal.duncit.com (same process, :2140) ---
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name staging.luma-portal.duncit.com;
+    server_name staging.lite-portal.duncit.com;
     client_max_body_size 12m;
 
     location / {

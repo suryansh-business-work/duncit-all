@@ -18,6 +18,7 @@ import HostDashboardPage from './pages/host-dashboard-page/HostDashboardPage';
 import HostPodsPage from './pages/host-pods-page/HostPodsPage';
 import HostAutoPodsPage from './pages/host-auto-pods-page/HostAutoPodsPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
+import { BrandEditRedirect, BrandWizardRoute } from './pages/ecomm-brand-page/brand-wizard';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
@@ -89,6 +90,10 @@ export default function App() {
       <Route path="/be-a-host" element={authed(<EarnPage focus="HOST" />)} />
       <Route path="/become-a-brand-partner" element={authed(<EarnPage focus="ECOMM" />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
+      {/* The brand wizard: `new` mints an id on its first save and moves to `:brandId/edit`. */}
+      <Route path="/ecomm-brand/new" element={authed(<BrandWizardRoute />)} />
+      <Route path="/ecomm-brand/:brandId" element={authed(<BrandEditRedirect />)} />
+      <Route path="/ecomm-brand/:brandId/edit" element={authed(<BrandWizardRoute />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
       <Route path="/ecomm-brand/:brandId/settings" element={authed(<BrandSettingsPage />)} />
       <Route path="/pods" element={<Navigate to="/host/pods" replace />} />

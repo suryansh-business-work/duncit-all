@@ -9,6 +9,7 @@ import {
   AppStoreCard,
   CiCredentialsCard,
   PlayStoreCard,
+  ReleaseNoticesCard,
   type AppBuildSettingsValues,
 } from './settings';
 import { APP_BUILD_SETTINGS, UPDATE_APP_BUILD_SETTINGS, type AppBuildSettings } from './queries';
@@ -81,6 +82,7 @@ export default function AppBuildSettingsPage() {
       {settings && <CiCredentialsCard settings={settings} />}
       {settings && <PlayStoreCard settings={settings} />}
       {settings && <AppStoreCard settings={settings} onGenerated={settingsQuery.refetch} />}
+      <ReleaseNoticesCard />
     </Box>
   );
 }

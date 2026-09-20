@@ -1,14 +1,11 @@
 import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
-import { PrimaryButton } from '@/components/PrimaryButton';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
-import { fireAndForget } from '@/utils/fire-and-forget';
 import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
@@ -43,6 +40,7 @@ import { VenueSlotStep } from './steps/VenueSlotStep';
 import { PricingStep } from './steps/PricingStep';
 import { AiMonitorOverlay } from './AiMonitorOverlay';
 import { AssignHostsField } from './AssignHostsField';
+import { StepperActions } from './StepperActions';
 import { StepHeader } from './StepHeader';
 import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -66,9 +64,13 @@ interface Props {
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
   /**
-   * Club Admin mode — the club is pinned, drafts are off, hosts may be
-   * assigned and the last step writes through the club-admin mutations.
-   * Absent for the host flow.
+   * Club Admin mode — the club is pinned, hosts may be assigned, and the last
+   * step writes through the club-admin mutations. Absent for the host flow.
+   *
+   * The host's rolling autosave is off here; the Club Admin's draft is the
+   * deliberate "Save as Draft" button, which writes the pod INACTIVE. Two
+   * different things that happen to share a word — the portals draw the same
+   * distinction.
    */
   clubAdmin?: ClubAdminStepperMode;
 }
@@ -114,8 +116,10 @@ export function CreatePodStepper({
   const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
   let submitLabel = hostSubmitLabel;
   if (clubAdmin) submitLabel = busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
-  // Club Admin mode has no draft: the pod is written straight through the
-  // club-admin mutation, so nothing autosaves and nothing persists per step.
+  // The HOST's rolling autosave, which persists form state per step against a
+  // draft id. Off in Club Admin mode: their pod goes straight through the
+  // club-admin mutation, and their "Save as Draft" writes the pod inactive
+  // instead — a different thing that happens to share a word.
   const draftsOn = !clubAdmin;
   const [hosts, setHosts] = useState<PodHostOption[]>(clubAdmin?.initialHosts ?? []);
 
@@ -204,6 +208,28 @@ export function CreatePodStepper({
     const id = await persist(step);
     await onPublish(id, buildCreatePodInput(values));
   };
+
+  /**
+   * The Club Admin's "Save draft": the pod is written inactive and nothing is
+   * published, so the AI content check is skipped — the portals skip it too,
+   * and the server still refuses content that breaks the rules.
+   */
+  const saveDraft = form.handleSubmit(async (values) => {
+    if (!clubAdmin) return;
+    setBusy(true);
+    setError('');
+    try {
+      await clubAdmin.submit(
+        buildCreatePodInput(values),
+        hosts.map((host) => host.user_id),
+        { draft: true },
+      );
+    } catch (e: unknown) {
+      setError((e as Error)?.message ?? '');
+    } finally {
+      setBusy(false);
+    }
+  });
 
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
@@ -335,8 +361,7 @@ export function CreatePodStepper({
           {error}
         </Text>
       ) : null}
-      <XStack
-        gap={10}
+      <YStack
         marginHorizontal={-16}
         padding={16}
         paddingBottom={48}
@@ -344,34 +369,21 @@ export function CreatePodStepper({
         borderTopWidth={1}
         borderTopColor="$borderColor"
       >
-        {step > 0 ? (
-          <YStack flex={1}>
-            <DuncitButton
-              testID="create-pod-back"
-              label={t('mweb.createPod.back')}
-              onPress={() => goTo(step - 1)}
-              variant="soft"
-              tone="neutral"
-              size="lg"
-              fullWidth
-            />
-          </YStack>
-        ) : null}
-        {/* flex:2 is restated on the wrapper, not moved onto it: TourAnchor
-            renders nothing at all when no tour is on, so the child has to keep
-            sizing the row by itself. */}
-        <TourAnchor tour="create-pod" anchor="create-pod-publish" style={{ flex: 2 }}>
-          <YStack flex={2}>
-            <PrimaryButton
-              testID="create-pod-submit"
-              label={isLast ? submitLabel : t('mweb.createPod.next')}
-              loading={busy}
-              disabled={isLast && pricing.blocked}
-              onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}
-            />
-          </YStack>
-        </TourAnchor>
-      </XStack>
+        <StepperActions
+          showBack={step > 0}
+          backLabel={t('mweb.createPod.back')}
+          onBack={() => goTo(step - 1)}
+          isLast={isLast}
+          submitLabel={submitLabel}
+          nextLabel={t('mweb.createPod.next')}
+          busy={busy}
+          submitDisabled={isLast && pricing.blocked}
+          onSubmit={submit}
+          onNext={next}
+          draftLabel={clubAdmin?.draftLabel}
+          onSaveDraft={clubAdmin ? saveDraft : undefined}
+        />
+      </YStack>
       {/* The wait between pressing Create Pod and an answer IS the AI reading
           the pod, so it is named rather than left as a nameless spinner. */}
       <AiMonitorOverlay open={busy} />

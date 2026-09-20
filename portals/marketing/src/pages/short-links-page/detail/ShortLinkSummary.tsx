@@ -15,9 +15,11 @@ interface Props {
 interface StatProps {
   label: string;
   value: string;
+  /** Why the number is what it is, when that is not obvious. */
+  hint?: string;
 }
 
-function Stat({ label, value }: Readonly<StatProps>) {
+function Stat({ label, value, hint }: Readonly<StatProps>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>
@@ -31,6 +33,11 @@ function Stat({ label, value }: Readonly<StatProps>) {
         }}>
           {value}
         </Typography>
+        {hint && (
+          <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+            {hint}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
@@ -47,13 +54,20 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
         sx={{
           display: 'grid',
           gap: 2,
-          gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' },
         }}
       >
         <Stat label={t('marketing.shortLinks.totalClicks')} value={stats.total_clicks.toLocaleString()} />
         <Stat label={t('marketing.shortLinks.uniqueVisitors')} value={stats.unique_visitors.toLocaleString()} />
         <Stat label={t('marketing.common.countries')} value={stats.countries_reached.toLocaleString()} />
         <Stat label={t('marketing.shortLinks.lastClick')} value={when(link.last_clicked_at)} />
+        {/* Named rather than hidden: without it a thin device or city
+            breakdown reads as data loss instead of a visitor's choice. */}
+        <Stat
+          label={t('marketing.shortLinks.privacyMinimised')}
+          value={stats.consent_minimised.toLocaleString()}
+          hint={t('marketing.shortLinks.askedNotToBeTracked')}
+        />
       </Box>
 
       <Card variant="outlined">

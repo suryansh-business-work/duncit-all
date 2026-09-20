@@ -9,6 +9,7 @@ import {
   GRIEVANCE_BUNDLE,
   MAIL_PREFERENCE_BUNDLE,
   MWEB_BUNDLE,
+  POD_DETAILS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
   UI_BUNDLE,
@@ -54,6 +55,10 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...POD_TIMELINE_BUNDLE,
   ...GRIEVANCE_BUNDLE,
   ...MAIL_PREFERENCE_BUNDLE,
+  // The Club Admin's pod detail screen renders the SAME sections
+  // `@duncit/pod-details` draws on mWeb and in the Partners console, so the
+  // three surfaces read one set of sentences rather than three (rules 27 + 40).
+  ...POD_DETAILS_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
   ...POLICY_ACCEPTANCE_BUNDLE,
   // The scroll-rail arrow buttons' words — the same `ui.*` namespace

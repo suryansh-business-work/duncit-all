@@ -72,6 +72,9 @@ export interface AdminCategorySelectProps {
   legend?: string;
   /** Helper hint shown in the fieldset — explain what maps from the category. */
   hint?: string;
+  /** Sub unlocks only after the middle Category is chosen. By default it
+   * unlocks with the Super and offers every sub under it (skip-the-middle). */
+  strict?: boolean;
 }
 
 /**
@@ -91,6 +94,7 @@ export function AdminCategorySelect({
   errors,
   legend,
   hint,
+  strict = false,
 }: Readonly<AdminCategorySelectProps>) {
   const { categories, loading } = useAdminCategories();
 
@@ -136,7 +140,7 @@ export function AdminCategorySelect({
   const parentReady: Record<CategoryLevel, boolean> = {
     super: true,
     category: !!value.super_id,
-    sub: !!value.super_id,
+    sub: strict ? !!value.category_id : !!value.super_id,
   };
 
   const active = ALL_LEVELS.filter((level) => fields.includes(level));

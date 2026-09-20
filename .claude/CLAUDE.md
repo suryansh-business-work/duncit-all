@@ -1,3 +1,5 @@
+# DO NOT PUSH THE CODE
+
 TEMPARALLY PAUSE ON TEST CASES ABHI TEST CASES KE WAJAH SE KOI ACTION FAILED NAHI HONA CAHIYE ABHI KOI NAYE TEST CASE NAHI LIKHANA HAI AAGAR KUCH FAIL BHI HO RAHA HAI TO PLEASE IGNORE BELOW LIKHE HUE SABHI TEST KO IGNORE KARO saara focus feature development and all par and local test run nahi karana hai during dev no e2e, no integration no unit, Skip e2e For Now major focus on feature
 
 # Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
@@ -507,6 +509,22 @@ The runbook is `infra/terraform/README.md`; read it before touching the host lay
 - **Never commit state or `terraform.tfvars`.** Secrets are env vars only
   (`HOSTINGER_API_TOKEN`, `CLOUDFLARE_API_TOKEN`, `MONGODB_ATLAS_CLIENT_ID/SECRET`,
   `TF_VAR_old_server_password`); state holds the migration key.
+
+44. Copy changes (ENFORCED) — **every "change this text from X to Y" ask goes through
+the `update-copy` skill** (`.claude/skills/update-copy/SKILL.md`), start to finish, with
+no manual step left for the user.
+
+- **Reword the bundle value, never the admin table.** The key stays; only its English
+  changes, in `packages/i18n/src/bundles/` (or the server's email bundle).
+- **Regenerate `shipped-keys.ts`** with `node scripts/generate-shipped-keys.mjs`; CI
+  runs it with `--check`.
+- **A reworded key needs a `COPY_REVISIONS` entry** in
+  `server/src/modules/platform/localization/copy-revisions.ts` — the OLD English, byte
+  for byte. The boot seed only creates keys, so without it every deployed database
+  keeps serving the old text over the bundle. On boot, `reviseShippedCopy` moves rows
+  still holding the old text; a row an operator edited is left alone.
+- **Never ask anyone to retype copy in Admin > Localization** — that is the manual
+  step this rule exists to remove.
 
 Only Use staging for push no branch creation for any branch
 

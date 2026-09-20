@@ -5,13 +5,15 @@ import { BrandPickupLocationModel, type IBrandPickupLocation } from './brandPick
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { pickupProblems } from '@modules/commerce/shiprocket/shiprocket.address';
+import { getBrandShiprocketAccount } from '@modules/commerce/shiprocket/shiprocket.account';
+import { withShiprocketAccount } from '@modules/commerce/shiprocket/shiprocket.client';
 
 const notFound = () =>
   new GraphQLError('Pickup location not found', { extensions: { code: 'NOT_FOUND' } });
 
 /** Shown verbatim in both portals, so it names the fix rather than the symptom. */
 const SHIPROCKET_UNCONFIGURED =
-  'ShipRocket is not configured — add the account email and password in Tech portal > Env > SHIPROCKET.';
+  'ShipRocket is not connected — connect the brand\'s ShipRocket account in the brand wizard (Integration step).';
 
 /** Load a brand owned by the signed-in partner (404 otherwise) — the ownership
  * gate for every myBrandPickupLocation* op. */
@@ -97,7 +99,18 @@ export const brandPickupLocationService = {
     return docs.map(toPub);
   },
 
+  /**
+   * A Duncit warehouse IS a ShipRocket pickup address, so it is created on the
+   * account first and written here from what the account holds — the same one
+   * path the E-commerce console adds one through. A partner's warehouse is a
+   * request until a Products Manager approves it, so it is only recorded here
+   * and reaches ShipRocket on approval.
+   */
   async save(id: string | null | undefined, input: any) {
+    if (input.owner_kind === 'DUNCIT') {
+      const { saveDuncitPickup } = await import('@modules/commerce/shiprocket/shiprocket.ops');
+      return toPub(await saveDuncitPickup(id, input));
+    }
     const brandId =
       input.brand_id && Types.ObjectId.isValid(input.brand_id) ? new Types.ObjectId(input.brand_id) : null;
     const fields = {
@@ -219,8 +232,11 @@ export const brandPickupLocationService = {
     });
     if (docs.length === 0) return { attempted: 0, registered: 0 };
 
+    // A brand's warehouses live on the brand's own ShipRocket account; a brand
+    // that connected none (pre-wizard) still registers on the Tech portal's.
     const { isShiprocketConfigured } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
-    if (!(await isShiprocketConfigured())) {
+    const brandAccount = await getBrandShiprocketAccount(brandDocId);
+    if (!brandAccount && !(await isShiprocketConfigured())) {
       await BrandPickupLocationModel.updateMany(
         { _id: { $in: docs.map((d) => d._id) } },
         { $set: { shiprocket_error: SHIPROCKET_UNCONFIGURED } }
@@ -283,7 +299,8 @@ export const brandPickupLocationService = {
     const { addPickupLocation } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
     let result: { registered: boolean; pickup_id: string };
     try {
-      result = await addPickupLocation(payload);
+      const account = doc.owner_kind === 'BRAND' ? await getBrandShiprocketAccount(doc.brand_id) : null;
+      result = await withShiprocketAccount(account, () => addPickupLocation(payload));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'ShipRocket refused the pickup address';
       // The nickname is on the account already — it IS registered; a sync says whether it is verified.

@@ -6,6 +6,12 @@ export const backgroundJobTypeDefs = /* GraphQL */ `
     CANCELLED
   }
 
+  "What a background job does."
+  enum BackgroundJobKind {
+    BULK_DELETE
+    AI_TRANSLATE
+  }
+
   "SELECTED deletes the ticked rows; ALL deletes every row matching the table's current view."
   enum BulkDeleteMode {
     SELECTED
@@ -20,22 +26,26 @@ export const backgroundJobTypeDefs = /* GraphQL */ `
 
   """
   A long-running piece of work a person started from a console — a bulk
-  delete today. Kept on the server, so the header's progress survives page
-  changes, refreshes and server restarts.
+  delete, or an AI translation of one language. Kept on the server, so the
+  header's progress survives page changes, refreshes and server restarts.
   """
   type BackgroundJob {
     id: ID!
-    "The <name>Table query the rows come from."
+    kind: BackgroundJobKind!
+    "BULK_DELETE: the <name>Table query the rows come from. Empty otherwise."
     table: String!
-    "What the person was looking at when they started it."
+    "What the person was looking at when they started it — for AI_TRANSLATE, the language."
     label: String!
     "The page it was started from."
     url: String!
-    mode: BulkDeleteMode!
+    "BULK_DELETE only."
+    mode: BulkDeleteMode
     status: BackgroundJobStatus!
-    "Rows in scope when the job started."
+    "Rows (or translation keys) in scope when the job started."
     total: Int!
+    "Rows deleted, or keys translated."
     succeeded: Int!
+    "Rows refused, or keys that came back unusable."
     failed: Int!
     "The first refusals, capped — enough to say why."
     failures: [BackgroundJobFailure!]!

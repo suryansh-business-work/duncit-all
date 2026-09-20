@@ -1,12 +1,21 @@
 import { localizationService } from "./localization.service";
-import { autoTranslateService } from "./autoTranslate.service";
+import { aiTranslateService, type AiTranslationInput } from "./aiTranslate.service";
 import type { GraphQLContext } from "@context";
 import { requireRole } from "@middleware/rbac";
 import type { TableQueryInput } from "@utils/table-query";
 import { EMAIL_FALLBACK } from "@services/email/email-i18n";
 
-const ADMIN_READ = ["SUPER_ADMIN", "CITY_ADMIN", "ZONAL_ADMIN", "SUPPORT_USER", "TECH_MANAGER"];
-const ADMIN_WRITE = ["SUPER_ADMIN", "TECH_MANAGER"];
+// The Localization console's own role, beside the platform admins who managed
+// languages before it had one.
+const ADMIN_READ = [
+  "SUPER_ADMIN",
+  "CITY_ADMIN",
+  "ZONAL_ADMIN",
+  "SUPPORT_USER",
+  "TECH_MANAGER",
+  "LOCALIZATION_MANAGER",
+];
+const ADMIN_WRITE = ["SUPER_ADMIN", "TECH_MANAGER", "LOCALIZATION_MANAGER"];
 
 export const localizationResolvers = {
   Query: {
@@ -41,23 +50,15 @@ export const localizationResolvers = {
     },
     localeCoverage: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
-      return autoTranslateService.coverage();
+      return aiTranslateService.coverage();
     },
-    autoTranslatePending: async (
+    aiTranslationPending: async (
       _p: unknown,
-      args: { locale: string; replace_existing?: boolean | null },
+      args: { input: AiTranslationInput },
       ctx: GraphQLContext,
     ) => {
       requireRole(ctx, ADMIN_READ);
-      return autoTranslateService.pendingCount(args.locale, args.replace_existing === true);
-    },
-    autoTranslateJob: async (_p: unknown, args: { locale: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
-      return autoTranslateService.latestJob(args.locale);
-    },
-    autoTranslateJobs: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_READ);
-      return autoTranslateService.recentJobs();
+      return aiTranslateService.pending(args.input);
     },
   },
   Mutation: {
@@ -85,21 +86,10 @@ export const localizationResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return localizationService.importTranslationKeys(args.locale, args.entries);
     },
-    startAutoTranslate: async (
+    startAiTranslation: async (
       _p: unknown,
-      args: { locale: string; replace_existing?: boolean | null },
+      args: { input: AiTranslationInput; url?: string | null },
       ctx: GraphQLContext,
-    ) => {
-      requireRole(ctx, ADMIN_WRITE);
-      return autoTranslateService.start({
-        locale: args.locale,
-        replace_existing: args.replace_existing,
-        userId: ctx.user?.id ?? null,
-      });
-    },
-    cancelAutoTranslate: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
-      return autoTranslateService.cancel(args.id);
-    },
+    ) => aiTranslateService.start(requireRole(ctx, ADMIN_WRITE), args.input, args.url),
   },
 };

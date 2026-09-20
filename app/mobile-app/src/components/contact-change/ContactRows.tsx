@@ -1,6 +1,8 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import {
   CONTACT_CHANNELS,
+  contactValueVerified,
   currentContactValue,
   type ContactChangeLabels,
   type ContactChannel,
@@ -8,13 +10,40 @@ import {
 } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface RowProps {
   channel: ContactChannel;
   labels: ContactChangeLabels;
   value: string;
+  /** A one-time code proved this number (`contactValueVerified`). */
+  verified: boolean;
   onChange: (channel: ContactChannel) => void;
+}
+
+/** The tick beside a proved number — worded, so it never rests on colour alone. */
+function VerifiedBadge({ channel, label }: Readonly<{ channel: ContactChannel; label: string }>) {
+  const { success } = useThemeColors();
+  return (
+    <XStack
+      testID={`contact-change-${channel}-verified`}
+      alignItems="center"
+      gap={3}
+      flexShrink={0}
+    >
+      <MaterialIcons
+        name="check-circle"
+        size={16}
+        color={success}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      />
+      <Text fontSize={12} fontWeight="600" color="$success">
+        {label}
+      </Text>
+    </XStack>
+  );
 }
 
 /**
@@ -30,7 +59,7 @@ interface RowProps {
  * form's required boxes carry, and its empty line is coloured as the error it
  * is rather than greyed out like an optional blank.
  */
-function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
+function ContactRow({ channel, labels, value, verified, onChange }: Readonly<RowProps>) {
   const { t } = useTranslation();
   const copy = labels.channel(channel);
   const action = value ? labels.changeAction : labels.addAction;
@@ -40,9 +69,12 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
         <Text fontSize={12} color="$muted">
           {copy.name} <Text color="$danger">*</Text>
         </Text>
-        <Text fontSize={15} color={value ? '$color' : '$danger'} numberOfLines={1}>
-          {value || copy.emptyValue}
-        </Text>
+        <XStack alignItems="center" gap={6}>
+          <Text fontSize={15} color={value ? '$color' : '$danger'} numberOfLines={1} flexShrink={1}>
+            {value || copy.emptyValue}
+          </Text>
+          {verified ? <VerifiedBadge channel={channel} label={labels.verified} /> : null}
+        </XStack>
       </YStack>
       <XStack
         testID={`contact-change-${channel}`}
@@ -84,6 +116,7 @@ export function ContactRows({ labels, snapshot, onChange }: Readonly<Props>) {
             channel={channel}
             labels={labels}
             value={currentContactValue(snapshot, channel)}
+            verified={contactValueVerified(snapshot, channel)}
             onChange={onChange}
           />
         </YStack>

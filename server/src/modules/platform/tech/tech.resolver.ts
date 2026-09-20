@@ -5,7 +5,8 @@ import { databaseCollectionsTable, databaseInfo } from './tech.database';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+// Exported so the backup store's read-only metadata sits at this same gate.
+export const TECH_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 // The web terminal runs arbitrary commands in the API container, which holds the
 // docker socket → host-root-equivalent. Restrict it to the top role only.
 // Exported so the other host-level Tech operations (the data clone) guard

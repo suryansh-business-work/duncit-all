@@ -24,6 +24,9 @@ import {
   type ThemeTokensInput,
 } from "./theme-tokens";
 import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
+import { launchMediaOf } from "@modules/platform/location/location.model";
+import { launchMediaSchema, type LaunchMediaInput } from "@modules/platform/location/location.validator";
+import { validate } from "@utils/validate";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
 const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
@@ -390,6 +393,7 @@ const brandingToPub = (doc: any) => ({
   login_background_image_url: doc.login_background_image_url ?? "",
   login_background_video_enabled: !!doc.login_background_video_enabled,
   login_background_video_url: doc.login_background_video_url ?? "",
+  launch_media: launchMediaOf(doc.launch_media),
   mobile_font_family: doc.mobile_font_family ?? "",
   mweb_font_family: doc.mweb_font_family ?? "",
   portals_font_family: doc.portals_font_family ?? "",
@@ -1096,6 +1100,7 @@ export const settingsService = {
       home_show_all_vibe_categories?: boolean;
       login_background_image_enabled?: boolean;
       login_background_video_enabled?: boolean;
+      launch_media?: LaunchMediaInput | null;
       theme_token_source?: string;
       theme_tokens_light?: ThemeTokensInput | null;
       theme_tokens_dark?: ThemeTokensInput | null;
@@ -1123,6 +1128,12 @@ export const settingsService = {
     }
     if (input.login_background_video_enabled !== undefined) {
       update.login_background_video_enabled = !!input.login_background_video_enabled;
+    }
+    // The launch page media is one object, replaced whole; null clears every field.
+    if (input.launch_media !== undefined) {
+      update.launch_media = launchMediaOf(
+        await validate<LaunchMediaInput>(launchMediaSchema, input.launch_media ?? {}),
+      );
     }
     Object.assign(update, themeTokenUpdate(input));
     const doc = await BrandingModel.findOneAndUpdate(

@@ -11,6 +11,7 @@ import {
   contactNumberIsCurrent,
   contactSubmitAction,
   contactValueStepView,
+  contactValueVerified,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -110,6 +111,35 @@ describe('currentContactValue', () => {
     expect(currentContactValue({}, 'PHONE')).toBe('');
     expect(currentContactValue({}, 'WHATSAPP')).toBe('');
     expect(currentContactValue({ email: null }, 'EMAIL')).toBe('');
+  });
+});
+
+describe('contactValueVerified', () => {
+  const proved: ContactSnapshot = {
+    ...snapshot,
+    is_phone_verified: true,
+    whatsapp_verified_at: '2026-09-18T10:30:00.000Z',
+  };
+
+  it('badges each number a code proved', () => {
+    expect(contactValueVerified(proved, 'PHONE')).toBe(true);
+    expect(contactValueVerified(proved, 'WHATSAPP')).toBe(true);
+  });
+
+  it('does not badge a number that was typed but never answered', () => {
+    expect(contactValueVerified({ ...proved, is_phone_verified: false }, 'PHONE')).toBe(false);
+    expect(contactValueVerified({ ...proved, is_phone_verified: null }, 'PHONE')).toBe(false);
+    expect(contactValueVerified({ ...proved, whatsapp_verified_at: null }, 'WHATSAPP')).toBe(false);
+    expect(contactValueVerified(snapshot, 'PHONE')).toBe(false);
+  });
+
+  it('does not badge an empty row, whatever a stale stamp says', () => {
+    expect(contactValueVerified({ ...proved, phone_number: '' }, 'PHONE')).toBe(false);
+    expect(contactValueVerified({ ...proved, whatsapp_number: null }, 'WHATSAPP')).toBe(false);
+  });
+
+  it('never badges the email row', () => {
+    expect(contactValueVerified(proved, 'EMAIL')).toBe(false);
   });
 });
 
@@ -268,6 +298,7 @@ describe('buildContactChangeLabels', () => {
     expect(built.unchanged).toBe('t:mweb.contactChange.unchanged');
     expect(built.whyOtp).toBe('t:mweb.contactChange.whyOtp');
     expect(built.allRequired).toBe('t:mweb.contactChange.allRequired');
+    expect(built.verified).toBe('t:mweb.contactChange.verified');
   });
 
   it('names all three channels, each with its own field, empty line, title and hint', () => {
@@ -354,22 +385,32 @@ describe('applyContactDraft', () => {
       email: '  Asha@Duncit.com ',
       extension: '+91',
       number: '',
-    })).toEqual({ ...snapshot, email: 'asha@duncit.com' });
+    }, true)).toEqual({ ...snapshot, email: 'asha@duncit.com' });
   });
 
-  it('lands each number in its OWN pair of columns', () => {
+  it('lands each number in its OWN pair of columns, stamped as proved', () => {
     const draft = { email: '', extension: '+44', number: '7700900123' };
 
-    expect(applyContactDraft(snapshot, 'PHONE', draft)).toEqual({
+    expect(applyContactDraft(snapshot, 'PHONE', draft, true)).toEqual({
       ...snapshot,
       phone_extension: '+44',
       phone_number: '7700900123',
+      is_phone_verified: true,
     });
-    expect(applyContactDraft(snapshot, 'WHATSAPP', draft)).toEqual({
+    expect(applyContactDraft(snapshot, 'WHATSAPP', draft, true)).toEqual({
       ...snapshot,
       whatsapp_extension: '+44',
       whatsapp_number: '7700900123',
+      whatsapp_verified_at: expect.any(String),
     });
+  });
+
+  it('drops the badge from a number stored with no code behind it', () => {
+    const proved = { ...snapshot, is_phone_verified: true, whatsapp_verified_at: '2026-09-18T10:30:00.000Z' };
+    const draft = { email: '', extension: '+91', number: '9845099999' };
+
+    expect(applyContactDraft(proved, 'PHONE', draft, false).is_phone_verified).toBe(false);
+    expect(applyContactDraft(proved, 'WHATSAPP', draft, false).whatsapp_verified_at).toBeNull();
   });
 
   it('leaves the channels it was not asked about alone', () => {
@@ -377,14 +418,14 @@ describe('applyContactDraft', () => {
       email: '',
       extension: '+44',
       number: '7700900123',
-    });
+    }, false);
 
     expect(folded.email).toBe(snapshot.email);
     expect(folded.whatsapp_number).toBe(snapshot.whatsapp_number);
   });
 
   it('does not mutate the snapshot it was handed', () => {
-    applyContactDraft(snapshot, 'PHONE', { email: '', extension: '+44', number: '7700900123' });
+    applyContactDraft(snapshot, 'PHONE', { email: '', extension: '+44', number: '7700900123' }, false);
 
     expect(snapshot.phone_number).toBe('9876543210');
   });

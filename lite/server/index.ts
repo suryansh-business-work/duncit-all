@@ -23,7 +23,7 @@ import { log } from './utils/log';
 
 /**
  * Duncit Lite's one process: the GraphQL API, the upload and calendar routes,
- * and the HTML server for both hostnames. luma-portal.* (or any host that
+ * and the HTML server for both hostnames. lite-portal.* (or any host that
  * starts with `portal.`) gets the console shell; every other host gets the
  * web app, with the page's own head written in for crawlers and link previews.
  */
@@ -36,7 +36,7 @@ const isAllowedOrigin = (origin: string | undefined): boolean => !origin || LOCA
 
 const isPortalHost = (req: Request): boolean => {
   const host = String(req.headers.host ?? '').toLowerCase();
-  return host.startsWith('luma-portal.') || host.startsWith('portal.') || host.startsWith('staging.luma-portal.');
+  return host.startsWith('lite-portal.') || host.startsWith('portal.') || host.startsWith('staging.lite-portal.');
 };
 
 async function renderWebPage(path: string): Promise<string> {

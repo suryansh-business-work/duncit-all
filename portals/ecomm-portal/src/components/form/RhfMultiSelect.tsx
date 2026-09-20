@@ -10,6 +10,7 @@ interface RhfMultiSelectProps<T extends FieldValues> {
   label: string;
   options: readonly Option[];
   hint?: string;
+  required?: boolean;
   /** Let a value that matches no option be typed and chosen too — it is sent as typed. */
   freeSolo?: boolean;
   /** Stable hook for tests on the field's root. */
@@ -30,6 +31,7 @@ export default function RhfMultiSelect<T extends FieldValues>({
   options,
   hint,
   freeSolo = false,
+  required,
   testId,
 }: Readonly<RhfMultiSelectProps<T>>) {
   const { t } = useTranslation();
@@ -70,6 +72,7 @@ export default function RhfMultiSelect<T extends FieldValues>({
                 {...params}
                 inputRef={field.ref}
                 label={label}
+                required={required}
                 error={Boolean(fieldState.error)}
                 helperText={fieldState.error?.message ?? hint ?? ' '}
               />

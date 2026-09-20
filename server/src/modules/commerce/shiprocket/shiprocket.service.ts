@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { isShiprocketConfigured, getServiceability } from './shiprocket.gateway';
+import { getBrandShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
+import { withShiprocketAccount } from './shiprocket.client';
 import { createShipment } from './shiprocket.shipment';
 import { applyWebhookEvent, refreshTracking } from './shiprocket.tracking';
 import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
@@ -249,14 +251,27 @@ export const shiprocketService = {
     const warehouseIds = [
       ...new Set([...groups.values()].map((g) => g.warehouse_id)),
     ].filter((id) => id && Types.ObjectId.isValid(id));
-    const warehouses = await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('pincode');
+    const warehouses = await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('pincode brand_id');
     const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode)]));
-    const configured = await isShiprocketConfigured();
+    const brandByWarehouse = new Map(warehouses.map((w) => [String(w._id), w.brand_id ? String(w.brand_id) : '']));
+    const platformConfigured = await isShiprocketConfigured();
+    // A brand's warehouse is rated on the brand's own account; a Duncit
+    // warehouse on the Tech portal's. Resolved once per brand, not per group.
+    const accountByBrand = new Map<string, ShiprocketAccount | null>();
+    const accountFor = async (brandId: string) => {
+      if (!brandId) return null;
+      if (!accountByBrand.has(brandId)) accountByBrand.set(brandId, await getBrandShiprocketAccount(brandId));
+      return accountByBrand.get(brandId) ?? null;
+    };
 
     const breakup: ShipQuoteLine[] = [];
     for (const group of groups.values()) {
       const pincode = pincodeByWarehouse.get(group.warehouse_id) ?? '';
-      breakup.push(await quoteShipGroup(group, pincode, deliveryPincode, configured));
+      const account = await accountFor(brandByWarehouse.get(group.warehouse_id) ?? '');
+      const configured = account !== null || platformConfigured;
+      breakup.push(
+        await withShiprocketAccount(account, () => quoteShipGroup(group, pincode, deliveryPincode, configured)),
+      );
     }
     return {
       total: round2(breakup.reduce((sum, line) => sum + line.charge, 0)),

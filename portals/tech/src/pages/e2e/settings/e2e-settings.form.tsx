@@ -10,7 +10,7 @@ import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';
 import OverrideFields from './OverrideFields';
-import SwitchRow from './SwitchRow';
+import SwitchRow from '../../../components/SwitchRow';
 import {
   e2eSettingsSchema,
   toFormValues,

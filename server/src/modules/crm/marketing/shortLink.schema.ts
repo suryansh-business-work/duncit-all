@@ -114,6 +114,12 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     short_url: String!
     label: String!
     destination_url: String!
+    """
+    True when the destination is not one of our own sites or an app store.
+    Derived from the host, never chosen, so it always matches where the link
+    really goes.
+    """
+    is_external: Boolean!
     "Where the code actually lands, with the utm tags and dl marker applied."
     tagged_url: String!
     source: ShortLinkSource!
@@ -145,9 +151,15 @@ export const shortLinkTypeDefs = /* GraphQL */ `
 
   type ShortLinkStats {
     total_clicks: Int!
-    "Distinct visitors, counted by hashed address."
+    "Distinct visitors, counted by salted address hash."
     unique_visitors: Int!
     countries_reached: Int!
+    """
+    Clicks whose visitor asked not to be tracked, counted and then recorded
+    with nothing that could single them out. Shown so a thin breakdown is
+    explained rather than looking like data loss.
+    """
+    consent_minimised: Int!
     daily: [ShortLinkDailyPoint!]!
     "Where the click came from — Instagram, WhatsApp, Direct…"
     platforms: [ShortLinkBreakdown!]!
@@ -172,6 +184,8 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     country: String
     region: String
     city: String
+    "GPC or DNT when this visitor asked not to be tracked, else null."
+    consent_signal: String
   }
 
   "How far a click got. Ordered — a later step implies the earlier ones."
@@ -272,14 +286,53 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     shortLink(id: ID!): ShortLink!
     "A PNG data URL of the short link, rendered server-side."
     shortLinkQr(id: ID!): String!
-    "Aggregated click analytics for one link."
-    shortLinkStats(id: ID!): ShortLinkStats!
+    """
+    Aggregated click analytics for one link. The days argument narrows every number
+    together; 0 or omitted means all time.
+    """
+    shortLinkStats(id: ID!, days: Int): ShortLinkStats!
     "Individual clicks on one link."
     shortLinkClicks(id: ID!, query: TableQueryInput): ShortLinkClickTablePage!
     "Click -> signup -> checkout -> paid, for one link."
     shortLinkFunnel(id: ID!): ShortLinkFunnel!
     "One row per click, with the person it became and how far they got."
     shortLinkJourneys(id: ID!, query: TableQueryInput): ShortLinkJourneyTablePage!
+    "Destination rules and click-data retention, for the privacy console."
+    shortLinkPolicy: ShortLinkPolicy!
+  }
+
+  """
+  What short links are allowed to point at, and what may be kept about the
+  people who follow them. One policy for every link.
+  """
+  type ShortLinkPolicy {
+    "Hosts a link may never point at. Each entry covers its subdomains."
+    blocked_domains: [String!]!
+    "How long a recorded click is kept before the daily sweep deletes it."
+    retention_days: Int!
+    "Whether a visitor's Sec-GPC / DNT header is obeyed."
+    honour_consent_signals: Boolean!
+    """
+    When the address-hash salt was last rotated. Every hash written before
+    this is unlinkable to anything written after it.
+    """
+    ip_salt_rotated_at: String!
+    last_purge_at: String
+    last_purged_count: Int!
+    "Clicks older than this are deleted by the next sweep."
+    retention_cutoff: String!
+    clicks_stored: Int!
+    clicks_beyond_retention: Int!
+    "How many stored clicks were minimised because the visitor opted out."
+    consent_minimised: Int!
+    updated_at: String!
+  }
+
+  input ShortLinkPolicyInput {
+    "A full list, not a delta — what is sent replaces what is stored."
+    blocked_domains: [String!]
+    retention_days: Int
+    honour_consent_signals: Boolean
   }
 
   extend type Mutation {
@@ -302,5 +355,17 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     "Retire or revive a link without deleting its click history."
     setShortLinkActive(id: ID!, is_active: Boolean!): ShortLink!
     deleteShortLink(id: ID!): Boolean!
+    updateShortLinkPolicy(input: ShortLinkPolicyInput!): ShortLinkPolicy!
+    """
+    Rotate the address-hash salt. The strongest erasure available: every hash
+    written before it stops being comparable to anything after, so a visitor
+    recorded yesterday can never be recognised again. Unique-visitor counts
+    split across the rotation, which is the price of the guarantee.
+    """
+    rotateShortLinkIpSalt: ShortLinkPolicy!
+    "Run the retention sweep now instead of waiting for the daily one. Returns how many clicks went."
+    purgeShortLinkClicks: Int!
+    "Erase every recorded click for one link. The link and its lifetime count stay."
+    eraseShortLinkClicks(id: ID!): Int!
   }
 `;

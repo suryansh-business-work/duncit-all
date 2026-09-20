@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { dnsService, type DnsRecordInput, type DnsRecordRef } from './dns.service';
+import { dnsStagingService } from './dns.staging';
 
 // The same seats that hold the GoDaddy key in Environment Variables. A record
 // here can point every *.duncit.com host somewhere else, so nobody else writes.
@@ -11,6 +12,10 @@ export const dnsResolvers = {
     dnsZone: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return dnsService.zone();
+    },
+    dnsDomainInfo: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return dnsService.domain();
     },
   },
   Mutation: {
@@ -25,6 +30,10 @@ export const dnsResolvers = {
     deleteDnsRecord: (_p: unknown, args: { ref: DnsRecordRef }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, TECH_MANAGE);
       return dnsService.remove(args.ref, user.id);
+    },
+    syncStagingDns: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, TECH_MANAGE);
+      return dnsStagingService.sync(args.ids, user.id);
     },
   },
 };

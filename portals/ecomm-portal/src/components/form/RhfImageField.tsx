@@ -7,6 +7,7 @@ interface RhfImageFieldProps<T extends FieldValues> {
   name: Path<T>;
   label: string;
   hint?: string;
+  required?: boolean;
   /** Stable hook for tests on the upload control. */
   testId?: string;
 }
@@ -15,7 +16,7 @@ interface RhfImageFieldProps<T extends FieldValues> {
 export const STORE_MEDIA_FOLDER = '/pet-store';
 
 /** An image URL: paste one, or upload a file and the field fills itself. */
-export default function RhfImageField<T extends FieldValues>({ control, name, label, hint, testId }: Readonly<RhfImageFieldProps<T>>) {
+export default function RhfImageField<T extends FieldValues>({ control, name, label, hint, required, testId }: Readonly<RhfImageFieldProps<T>>) {
   return (
     <Controller
       control={control}
@@ -26,6 +27,7 @@ export default function RhfImageField<T extends FieldValues>({ control, name, la
           value={field.value ?? ''}
           onChange={field.onChange}
           folder={STORE_MEDIA_FOLDER}
+          required={required}
           error={Boolean(fieldState.error)}
           helperText={fieldState.error?.message ?? hint ?? ' '}
           uploadTestId={testId}

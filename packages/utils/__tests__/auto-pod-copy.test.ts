@@ -3,6 +3,7 @@ import type { AutoPodRole } from '../src/auto-pod';
 import {
   mwebAutoPodLabels,
   shellAutoPodLabels,
+  mwebPodKindLabels,
   shellPodKindLabels,
   type AutoPodLabels,
   type AutoPodTranslate,
@@ -275,6 +276,38 @@ describe('shellPodKindLabels', () => {
     shellPodKindLabels(t);
     expect(calls.map((c) => c.key).toSorted((a, b) => a.localeCompare(b))).toEqual(
       FIELDS.map((f) => `shell.podKind.${f}`),
+    );
+    expect(calls.every((c) => c.vars === undefined)).toBe(true);
+  });
+});
+
+describe('mwebPodKindLabels', () => {
+  const FIELDS = [
+    'autoDesc',
+    'autoTitle',
+    'dismiss',
+    'newPodCta',
+    'normalDesc',
+    'normalTitle',
+    'subtitle',
+    'title',
+  ];
+
+  it('offers mWeb and native the same button, question and answers, under mweb.podKind.<field>', () => {
+    const labels = mwebPodKindLabels(recorder().t);
+    expect(Object.keys(labels).toSorted((a, b) => a.localeCompare(b))).toEqual(FIELDS);
+    for (const [name, value] of Object.entries(labels)) {
+      expect(value).toBe(`t:mweb.podKind.${name}`);
+    }
+  });
+
+  // One namespace for both apps (rule 27); the portals' twin differs only in
+  // its prefix, so the two builders must never drift in shape.
+  it('mirrors the portal builder field for field, asking for each key once', () => {
+    const { t, calls } = recorder();
+    expect(Object.keys(mwebPodKindLabels(t))).toEqual(Object.keys(shellPodKindLabels(recorder().t)));
+    expect(calls.map((c) => c.key).toSorted((a, b) => a.localeCompare(b))).toEqual(
+      FIELDS.map((f) => `mweb.podKind.${f}`),
     );
     expect(calls.every((c) => c.vars === undefined)).toBe(true);
   });

@@ -60,8 +60,8 @@ export default function OccasionRow({ control, index, isFirst, isLast, onMoveUp,
           hint={t('ecommPortal.form.slugHint')}
           data-testid="settings-occasion-slug"
         />
-        <RhfDateTimeField control={control} name={`${path}.starts_at`} label={t('ecommPortal.settings.occasionStarts')} />
-        <RhfDateTimeField control={control} name={`${path}.ends_at`} label={t('ecommPortal.settings.occasionEnds')} />
+        <RhfDateTimeField control={control} name={`${path}.starts_at`} label={t('ecommPortal.settings.occasionStarts')} required />
+        <RhfDateTimeField control={control} name={`${path}.ends_at`} label={t('ecommPortal.settings.occasionEnds')} required />
         <RhfImageField control={control} name={`${path}.logo_url`} label={t('ecommPortal.settings.occasionLogo')} testId="settings-occasion-logo" />
         <RhfImageField control={control} name={`${path}.favicon_url`} label={t('ecommPortal.settings.occasionFavicon')} testId="settings-occasion-favicon" />
         <RhfImageField

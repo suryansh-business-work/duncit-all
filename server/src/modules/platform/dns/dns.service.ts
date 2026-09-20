@@ -1,15 +1,19 @@
 import { isIPv4, isIPv6 } from 'node:net';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
+import { scopeOf, stagingCompare, typeGroups } from './dns.compare';
 import {
   godaddyAddRecords,
   godaddyConfig,
   godaddyDeleteSet,
+  godaddyDomain,
   godaddyRecords,
   godaddyRecordSet,
   godaddyReplaceSet,
   requireGodaddyConfig,
   type GodaddyConfig,
+  type GodaddyContact,
+  type GodaddyDomain,
   type GodaddyRecord,
   type GodaddySetRecord,
 } from './godaddy.gateway';
@@ -119,16 +123,95 @@ const toRow = (record: Readonly<GodaddyRecord>) => ({
   ttl: record.ttl,
   priority: record.priority ?? null,
   editable: WRITABLE.has(record.type),
+  scope: scopeOf(record.name),
 });
+
+const MS_PER_DAY = 86_400_000;
+
+/** Whole days until a date, or null when GoDaddy reports none. Negative once it has passed. */
+function daysUntil(iso: string | undefined): number | null {
+  if (!iso) return null;
+  const at = Date.parse(iso);
+  if (Number.isNaN(at)) return null;
+  return Math.ceil((at - Date.now()) / MS_PER_DAY);
+}
+
+/** One registrar contact, flattened — who a renewal notice reaches. */
+const toContact = (role: string, contact: GodaddyContact | undefined) => ({
+  role,
+  name: [contact?.nameFirst, contact?.nameLast].filter(Boolean).join(' ') || null,
+  organization: contact?.organization ?? null,
+  email: contact?.email ?? null,
+  phone: contact?.phone ?? null,
+});
+
+/** The contacts GoDaddy filled in. A role it left blank is left out rather than shown empty. */
+function toContacts(domain: Readonly<GodaddyDomain>) {
+  return [
+    toContact('REGISTRANT', domain.contactRegistrant),
+    toContact('ADMIN', domain.contactAdmin),
+    toContact('TECH', domain.contactTech),
+    toContact('BILLING', domain.contactBilling),
+  ].filter((contact) => contact.name ?? contact.organization ?? contact.email);
+}
 
 export const dnsService = {
   /** The zone and the rules its editor follows. Unconfigured is an answer, not an error. */
   async zone() {
     const rules = { writable_types: WRITABLE_TYPES, min_ttl: MIN_TTL, max_ttl: MAX_TTL };
     const cfg = await godaddyConfig();
-    if (!cfg) return { configured: false, domain: '', records: [], ...rules };
+    if (!cfg) {
+      return {
+        configured: false,
+        domain: '',
+        records: [],
+        by_type: [],
+        staging: stagingCompare([], ''),
+        ...rules,
+      };
+    }
     const records = await godaddyRecords(cfg);
-    return { configured: true, domain: cfg.domain, records: records.map(toRow), ...rules };
+    return {
+      configured: true,
+      domain: cfg.domain,
+      records: records.map(toRow),
+      // Both are derived from the records already in hand — no second GoDaddy call.
+      by_type: typeGroups(records),
+      staging: stagingCompare(records, cfg.domain),
+      ...rules,
+    };
+  },
+
+  /**
+   * The domain itself at the registrar: when it expires, whether it renews
+   * itself, and what is stopping someone transferring it away.
+   *
+   * Its own query rather than a field on the zone, because it is a second
+   * GoDaddy call: a registrar hiccup should leave the records table working.
+   */
+  async domain() {
+    const cfg = await godaddyConfig();
+    if (!cfg) return { configured: false, domain: '', name_servers: [], contacts: [] };
+    const info = await godaddyDomain(cfg);
+    return {
+      configured: true,
+      domain: info.domain || cfg.domain,
+      domain_id: info.domainId ?? null,
+      status: info.status ?? null,
+      expires_at: info.expires ?? null,
+      created_at: info.createdAt ?? null,
+      days_to_expiry: daysUntil(info.expires),
+      renew_auto: info.renewAuto ?? null,
+      renew_deadline: info.renewDeadline ?? null,
+      renewable: info.renewable ?? null,
+      locked: info.locked ?? null,
+      privacy: info.privacy ?? null,
+      transfer_protected: info.transferProtected ?? null,
+      expiration_protected: info.expirationProtected ?? null,
+      hold_registrar: info.holdRegistrar ?? null,
+      name_servers: info.nameServers ?? [],
+      contacts: toContacts(info),
+    };
   },
 
   async add(input: Readonly<DnsRecordInput>, by: string) {

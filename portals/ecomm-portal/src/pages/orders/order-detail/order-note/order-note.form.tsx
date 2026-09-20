@@ -23,6 +23,7 @@ export default function OrderNoteForm({ busy, onSubmit }: Readonly<OrderNoteForm
           control={control}
           name="text"
           label={t('ecommPortal.orders.newNote')}
+          required
           multiline
           minRows={2}
           hint={t('ecommPortal.orders.notePrivate', { vars: { max: NOTE_MAX } })}

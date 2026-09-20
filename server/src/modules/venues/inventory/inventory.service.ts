@@ -447,9 +447,14 @@ function validateVariantsInput(input: any) {
 async function assertBrandActive(brandId: unknown) {
   const raw = brandId as string;
   if (!raw || !Types.ObjectId.isValid(String(raw))) return;
-  const brand = await EcommBrandModel.findById(String(raw)).select('is_active');
+  const brand = await EcommBrandModel.findById(String(raw)).select('is_active status');
   if (brand?.is_active === false) {
     throw new GraphQLError('This brand is deactivated and cannot list new products', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+  if (brand && brand.status !== 'APPROVED') {
+    throw new GraphQLError('This brand is not approved yet — products can be listed once it is', {
       extensions: { code: 'BAD_REQUEST' },
     });
   }
@@ -647,6 +652,8 @@ function applyPackagingFields(doc: IInventoryProduct, input: any) {
   if (input.is_liquid != null) doc.is_liquid = !!input.is_liquid;
   if (input.shelf_life_days !== undefined) doc.shelf_life_days = input.shelf_life_days ?? null;
   if (input.mrp != null) doc.mrp = Number(input.mrp) || 0;
+  // The GST rate ShipRocket prints on the invoice, beside the HSN code.
+  if (input.tax_percent != null) doc.tax_percent = Math.min(100, Math.max(0, Number(input.tax_percent) || 0));
 }
 
 /** The brand's display name, copied onto the product so tables and the store's Brand facet can read it. */
@@ -1154,12 +1161,15 @@ export const inventoryService = {
       const value = filter?.[key];
       if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
     }
-    // Hide products of deactivated brands (a deactivated brand + its products
-    // must not appear in the pod product picker). Duncit-owned products (no
-    // brand_id) are unaffected by the $nin.
-    const inactiveBrands = await EcommBrandModel.find({ is_active: false }).select('_id').lean();
-    if (inactiveBrands.length > 0) {
-      q.brand_id = { $nin: inactiveBrands.map((b) => b._id) };
+    // The pod shop follows the brand: a product shows only while its brand is
+    // APPROVED and active. A deactivated, withdrawn, rejected or deleted-and-
+    // recreated brand takes its products out of the picker with it.
+    // Duncit-owned products (no brand_id) are unaffected by the $nin.
+    const hiddenBrands = await EcommBrandModel.find({ $or: [{ is_active: false }, { status: { $ne: 'APPROVED' } }] })
+      .select('_id')
+      .lean();
+    if (hiddenBrands.length > 0) {
+      q.brand_id = { $nin: hiddenBrands.map((b) => b._id) };
     }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 }).limit(300);
     const podAvailability = await this.podAvailabilityByProduct(docs.map((d) => String(d._id)));
@@ -1339,6 +1349,7 @@ export const inventoryService = {
       is_liquid: !!input.is_liquid,
       shelf_life_days: input.shelf_life_days ?? null,
       mrp: Number(input.mrp) || 0,
+      tax_percent: Math.min(100, Math.max(0, Number(input.tax_percent) || 0)),
       brand_name: await brandNameOf(input.brand_id),
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,

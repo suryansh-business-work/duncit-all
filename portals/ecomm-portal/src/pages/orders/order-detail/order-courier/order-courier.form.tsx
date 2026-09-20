@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { Controller } from 'react-hook-form';
 import { useQuery } from '@apollo/client/react';
-import { Alert, FormControlLabel, FormHelperText, Radio, RadioGroup, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, FormControl, FormControlLabel, FormHelperText, FormLabel, Radio, RadioGroup, Skeleton, Stack, Typography } from '@mui/material';
 import FormDialog from '../../../../components/FormDialog';
 import { useSchemaForm } from '../../../../components/form/useSchemaForm';
 import { money } from '../../../../lib/format';
@@ -44,6 +44,7 @@ function CourierLabel({ courier, t }: Readonly<{ courier: CourierOption; t: Tran
 export default function OrderCourierForm({ orderId, busy, onClose, onSubmit }: Readonly<OrderCourierFormProps>) {
   const { t, form } = useSchemaForm<OrderCourierValues>(makeOrderCourierSchema, ORDER_COURIER_DEFAULTS);
   const { control, handleSubmit, setValue } = form;
+  const labelId = useId();
   const { data, loading, error } = useQuery(STORE_SHIPMENT_COURIERS, { variables: { id: orderId }, fetchPolicy: 'network-only' });
   const couriers = data?.storeShipmentCouriers ?? [];
   const recommended = couriers.find((c) => c.recommended)?.courier_company_id ?? '';
@@ -61,8 +62,11 @@ export default function OrderCourierForm({ orderId, busy, onClose, onSubmit }: R
       control={control}
       name="courier_id"
       render={({ field, fieldState }) => (
-        <>
-          <RadioGroup {...field} aria-label={t('ecommPortal.shipping.courier')}>
+        <FormControl component="fieldset" required error={Boolean(fieldState.error)} fullWidth>
+          <FormLabel component="legend" id={labelId}>
+            {t('ecommPortal.shipping.courier')}
+          </FormLabel>
+          <RadioGroup {...field} aria-labelledby={labelId}>
             {couriers.map((courier) => (
               <FormControlLabel
                 key={courier.courier_company_id}
@@ -72,8 +76,8 @@ export default function OrderCourierForm({ orderId, busy, onClose, onSubmit }: R
               />
             ))}
           </RadioGroup>
-          {fieldState.error ? <FormHelperText error>{fieldState.error.message}</FormHelperText> : null}
-        </>
+          {fieldState.error ? <FormHelperText>{fieldState.error.message}</FormHelperText> : null}
+        </FormControl>
       )}
     />
   );

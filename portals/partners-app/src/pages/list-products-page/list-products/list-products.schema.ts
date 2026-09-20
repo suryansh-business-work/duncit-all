@@ -21,6 +21,7 @@ const variantSchema = z.object({
   option_values: z
     .array(z.object({ name: z.string(), value: z.string() }))
     .default([]),
+  sku: z.string().trim().max(60).default(''),
   color: z.string().trim().max(80).default(''),
   size_label: z.string().trim().max(120, 'Size label is too long').default(''),
   description: z.string().trim().min(20, 'Description must be at least 20 characters').max(2000),
@@ -66,6 +67,7 @@ export const productListingSchema = z.object({
   is_fragile: z.boolean().default(false),
   is_liquid: z.boolean().default(false),
   shelf_life_days: z.preprocess((value) => (blank(value) ? null : Number(value)), z.number().nullable()),
+  tax_percent: z.coerce.number().min(0).max(28),
   options: z.array(optionSchema).default([]),
   variants: z
     .array(variantSchema)

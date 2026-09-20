@@ -55,6 +55,11 @@ export function PaymentStep({ controls, quoteState }: Readonly<PaymentStepProps>
       ) : null}
       <Divider />
       <PaymentMethodPicker quote={quote} method={controls.state.method} onChange={controls.setMethod} />
+      {settings.dummy_mode && controls.state.method !== 'COD' ? (
+        <Alert severity="warning" data-testid="checkout-test-mode">
+          {t('ecommStore.payment.testMode')}
+        </Alert>
+      ) : null}
       {controls.state.method === 'COD' && settings.cod_requires_otp ? (
         <CodOtpForm phone={phone} verified={!pendingCod} onVerified={(id) => controls.setCodChallenge(id, phone)} />
       ) : null}

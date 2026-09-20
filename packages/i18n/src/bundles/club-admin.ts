@@ -138,6 +138,9 @@ export const CLUB_ADMIN_BUNDLE: NestedCatalogue = {
       editClub: 'Edit Club Details',
       noClubs: 'No clubs are assigned to you yet.',
       search: 'Search clubs',
+      // Venues whose category and city match this club, so its pods can be
+      // booked into them. A club with none cannot schedule anywhere.
+      venues: 'Venues',
     },
     pods: {
       title: 'Club Admin · Pods',
@@ -189,6 +192,10 @@ export const CLUB_ADMIN_BUNDLE: NestedCatalogue = {
       hostNote: 'You are added as the pod host automatically unless you assign hosts below.',
       backLabel: 'Back to pods',
       podCreated: 'Pod created.',
+      // The button. Word-for-word `podForm.common.saveAsDraft`, which the
+      // portals' editor renders — it lives here too because the native app
+      // ships CLUB_ADMIN_BUNDLE and not POD_FORM_BUNDLE.
+      saveDraft: 'Save as Draft',
       draftSaved: 'Pod draft saved.',
       podUpdated: 'Pod updated.',
       notFound: 'Pod not found in this club.',

@@ -20,6 +20,7 @@ interface Props extends SingleImageState {
   onChange: (url: string) => void;
   helperText?: string;
   externalError?: boolean;
+  required?: boolean;
   disabled?: boolean;
   /** The hidden <input type="file"> element rendered by the parent field. */
   fileInput: ReactNode;
@@ -35,6 +36,7 @@ export default function UrlAdornmentVariant({
   onChange,
   helperText,
   externalError,
+  required,
   disabled,
   busy,
   error,
@@ -50,6 +52,7 @@ export default function UrlAdornmentVariant({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         fullWidth
+        required={required}
         disabled={disabled || busy}
         error={externalError || !!error}
         helperText={error || helperText}

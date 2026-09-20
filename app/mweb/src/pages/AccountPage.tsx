@@ -116,8 +116,10 @@ export default function AccountPage() {
           email: me.email,
           phone_extension: me.phone_extension,
           phone_number: me.phone_number,
+          is_phone_verified: me.is_phone_verified,
           whatsapp_extension: me.whatsapp_extension,
           whatsapp_number: me.whatsapp_number,
+          whatsapp_verified_at: me.whatsapp_verified_at,
         }}
         onSaved={() => {
           refetch();

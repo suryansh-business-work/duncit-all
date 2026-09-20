@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { LOGS_READER, requireRole } from '@middleware/rbac';
 import { callerEnvironment } from '@modules/ai/askBot/askBot.links';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { entityAnalyticsService } from './entityAnalytics.service';
@@ -9,6 +9,10 @@ import type { PeriodRequest } from './window';
 /** The Analytics console's staff, plus the admins who can open every console. */
 const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
 
+/** Who may read one page: the Logs dashboard is also the Logs console's home, so its staff read that page too. */
+export const entityReaders = (entity: AnalyticsEntity) =>
+  entity === 'LOGS' ? [...ANALYTICS_ROLES, LOGS_READER] : ANALYTICS_ROLES;
+
 export const entityAnalyticsResolvers = {
   Query: {
     entityAnalytics: (
@@ -16,7 +20,7 @@ export const entityAnalyticsResolvers = {
       args: PeriodRequest & { entity: AnalyticsEntity },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ANALYTICS_ROLES);
+      requireRole(ctx, entityReaders(args.entity));
       const { entity, ...period } = args;
       // Links open the console the reader is actually using — local, staging or production.
       return entityAnalyticsService.load(entity, period, callerEnvironment(ctx.req));

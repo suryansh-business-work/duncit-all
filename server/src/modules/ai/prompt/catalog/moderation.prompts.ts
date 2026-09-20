@@ -255,4 +255,57 @@ export const MODERATION_PROMPTS = [
     ],
     content: 'Action: {{action}} (by {{source}})\nPod: {{pod}}{{changes}}{{note}}',
   },
+  {
+    key: 'moderation.social_comment',
+    name: 'Social comment review',
+    description: 'Reads the comments people leave on Duncit’s own social posts and flags the ones that need a human.',
+    category: MODERATION,
+    role: 'SYSTEM',
+    tasks: ['moderation.social_comment'],
+    target_model: 'gpt-4o-mini',
+    variables: [],
+    usage: [
+      {
+        file: 'server/src/modules/crm/marketing/social/social.ai.ts',
+        surface: 'Marketing · Social Accounts → Monitoring',
+        trigger: 'A connected account syncs new comments, or a marketer presses Analyse',
+      },
+    ],
+    content: [
+      'You review public comments left on Duncit’s own social media posts (LinkedIn, Facebook, Instagram, X and YouTube) so the marketing team can find the ones that need action. Duncit is a platform for real-world social events ("pods").',
+      'For EACH comment decide:',
+      '- "sentiment": POSITIVE, NEUTRAL or NEGATIVE towards Duncit or the post.',
+      '- "flagged": true when a person should act on it — abuse, harassment, hate speech, threats, sexual or explicit content, spam, scams or phishing, unrelated self-promotion, personal information (phone numbers, addresses), false claims about Duncit, or a serious complaint that needs a reply. Polite, honest criticism is NOT flagged; it is NEGATIVE sentiment.',
+      '- "categories": short SCREAMING_SNAKE codes for why it is flagged, from ABUSE, HATE, THREAT, SEXUAL, SPAM, SCAM, PERSONAL_INFO, MISINFORMATION, COMPLAINT. An empty array when not flagged.',
+      '- "severity": LOW, MEDIUM or HIGH when flagged (HIGH = threats, hate, sexual content, scams, personal information); null when not flagged.',
+      '- "reason": one short English sentence a marketer can read, saying why it is flagged. An empty string when not flagged.',
+      'Comments can be in any language, including Hindi and Hinglish — judge the meaning, not the script. Emoji-only and short praise are NEUTRAL or POSITIVE, never flagged.',
+      'Return STRICT JSON only, no markdown, of shape {"results":[{"id":string,"sentiment":string,"flagged":boolean,"categories":[string],"severity":string|null,"reason":string}]} with exactly one entry for every input id.',
+    ].join('\n'),
+  },
+  {
+    key: 'moderation.social_comment.user',
+    name: 'Social comment review — comments',
+    description: 'Hands the reviewer one batch of comments, each with the post it was left on.',
+    category: MODERATION,
+    role: 'USER',
+    tasks: ['moderation.social_comment'],
+    target_model: 'gpt-4o-mini',
+    variables: [
+      required(
+        'comments',
+        'Comments',
+        'One JSON object per line: the comment id, the network, the start of the post and the comment text.',
+        '{"id":"66f0c1a2","platform":"INSTAGRAM","post":"Sunday pickleball at HSR Layout","text":"Loved it, see you next week!"}',
+      ),
+    ],
+    usage: [
+      {
+        file: 'server/src/modules/crm/marketing/social/social.ai.ts',
+        surface: 'Marketing · Social Accounts → Monitoring',
+        trigger: 'A connected account syncs new comments, or a marketer presses Analyse',
+      },
+    ],
+    content: 'Review these comments:\n{{comments}}',
+  },
 ] as const satisfies readonly InAppPromptDef[];

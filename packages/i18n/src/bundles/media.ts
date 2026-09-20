@@ -24,6 +24,7 @@ export const MEDIA_BUNDLE: NestedCatalogue = {
       pexelsVideos: 'Pexels videos',
       uploading: 'Uploading…',
       useThis: 'Use this image',
+      uploadDocument: 'Upload document',
       useTheseCount: 'Use these {count}',
       pickUpToDevice: 'Pick up to {max} from your device.',
       pickUpToAny: 'Pick up to {max} — from your device, from Pexels, or both.',

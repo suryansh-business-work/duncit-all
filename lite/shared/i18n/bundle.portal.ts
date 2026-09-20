@@ -1,6 +1,6 @@
 import type { NestedCatalogue } from '@duncit/i18n';
 
-/** The console's copy (luma-portal.duncit.com), namespaced by page. */
+/** The console's copy (lite-portal.duncit.com), namespaced by page. */
 export const LITE_PORTAL_BUNDLE: NestedCatalogue = {
   litePortal: {
     app: {

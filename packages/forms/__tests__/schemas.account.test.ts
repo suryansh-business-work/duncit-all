@@ -106,6 +106,27 @@ describe('makeContactValueSchema', () => {
     );
   });
 
+  it('refuses the account’s own number before looking at its shape, per channel', () => {
+    // A 9-digit number stored before today's rule: typed back it is refused as
+    // the current number, never as a malformed one — there is nothing to change.
+    const current = {
+      phone_extension: '+91',
+      phone_number: '982009820',
+      whatsapp_extension: '+91',
+      whatsapp_number: '9820098201',
+    };
+    const phone = makeContactValueSchema('PHONE', t, current);
+    const whatsapp = makeContactValueSchema('WHATSAPP', t, current);
+
+    expect(messagesFor(phone.safeParse({ ...blank, extension: '+91', number: ' 982009820 ' }))).toEqual([
+      'mweb.contactChange.phoneCurrent',
+    ]);
+    expect(messagesFor(whatsapp.safeParse({ ...blank, extension: '+91', number: '9820098201' }))).toEqual([
+      'mweb.contactChange.whatsappCurrent',
+    ]);
+    // Any other number on the same account is checked as usual.
+    expect(phone.safeParse({ ...blank, extension: '+91', number: '9820098200' }).success).toBe(true);
+  });
   it('treats WhatsApp as a phone channel too', () => {
     const schema = makeContactValueSchema('WHATSAPP', t);
     expect(schema.safeParse({ ...blank, extension: '+91', number: '9820098200' }).success).toBe(

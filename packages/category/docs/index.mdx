@@ -141,7 +141,8 @@ subOptions(categories, '', '')                            // nothing chosen ⇒ 
 
 The middle row is the one that makes the flow work: a user can open the Sub dropdown straight after
 picking a super and still land on a complete value, because picking the sub back-fills the middle
-from its `parent_id`.
+from its `parent_id`. Pass `strict` to the picker to switch that off: the Sub level then stays
+locked until a middle Category is chosen, which is what a filter row wants.
 
 ### `buildCategoryValue(categories, superId, subId)`
 
@@ -197,6 +198,7 @@ object is shared, and appending it directly makes every row the same object.
 | `errors` | `Partial<Record<CategoryLevel, string>>` | no | `undefined` | Per-level error text. |
 | `legend` | `string` | no | `undefined` | Setting it wraps the fields in a `<Fieldset>`. |
 | `hint` | `string` | no | `undefined` | Fieldset hint — say *why* the category matters. |
+| `strict` | `boolean` | no | `false` | Sub unlocks only after the middle Category is chosen — no skip-the-middle. Filters use it (Admin > Pods); forms keep the default so a host can pick a sub straight after the super. |
 
 ### `<RhfAdminCategory>`
 

@@ -17,6 +17,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CodeIcon from '@mui/icons-material/Code';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
@@ -95,6 +96,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   challenge: EmojiEventsIcon,
   chat: ForumIcon,
   code: CodeIcon,
+  compare: CompareArrowsIcon,
   community: GroupsIcon,
   construction: ConstructionIcon,
   contactMail: ContactMailIcon,

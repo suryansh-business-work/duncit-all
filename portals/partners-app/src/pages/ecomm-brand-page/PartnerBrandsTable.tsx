@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Stack, Tooltip } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -8,21 +9,16 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import type { EcommBrandRow } from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import type { EcommBrandRow } from './queries';
+import { BrandCell, IntegrationsCell, ProgressCell, StatusCell, connectedCount, percentOf } from './brand-table-cells';
 
-const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
-  DRAFT: 'warning',
-  SUBMITTED: 'info',
-  APPROVED: 'success',
-  REJECTED: 'error',
-};
+const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({ value, label: value }));
 
-const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({
-  value,
-  label: value,
-}));
+const getBrandRowId = (brand: EcommBrandRow) => brand.id;
+const categoriesValue = (brand: EcommBrandRow) => (brand.product_categories ?? []).join(', ') || '—';
+const updatedValue = (brand: EcommBrandRow) => formatDate(brand.updated_at) || '—';
 
 interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
@@ -32,46 +28,8 @@ interface Props {
   onManageProducts: (brand: EcommBrandRow) => void;
   onSettings: (brand: EcommBrandRow) => void;
   onToggleActive: (brand: EcommBrandRow) => void;
+  onDelete: (brand: EcommBrandRow) => void;
 }
-
-const getBrandRowId = (brand: EcommBrandRow) => brand.id;
-
-const renderBrand = (brand: EcommBrandRow) => (
-  <Stack direction="row" spacing={1} sx={{
-    alignItems: "center"
-  }}>
-    <Avatar src={brand.logo_url || undefined} alt="" variant="rounded" sx={{ width: 32, height: 32 }}>
-      {(brand.brand_name || '?').charAt(0).toUpperCase()}
-    </Avatar>
-    <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
-      <Typography variant="body2" noWrap component="div" sx={{
-        fontWeight: 700
-      }}>
-        {brand.brand_name || 'Untitled brand'}
-      </Typography>
-      <Typography variant="caption" noWrap component="div" sx={{
-        color: "text.secondary"
-      }}>
-        {brand.tagline || '—'}
-      </Typography>
-    </Box>
-  </Stack>
-);
-
-const categoriesValue = (brand: EcommBrandRow) =>
-  (brand.product_categories ?? []).join(', ') || '—';
-
-const renderStatus = (brand: EcommBrandRow) => (
-  <Stack direction="row" spacing={0.5} component="span">
-    <Chip size="small" color={STATUS_COLOR[brand.status]} label={brand.status} />
-    {brand.status === 'APPROVED' && brand.is_active === false && (
-      <Chip size="small" color="warning" variant="outlined" label="PAUSED" />
-    )}
-  </Stack>
-);
-
-const updatedValue = (brand: EcommBrandRow) =>
-  formatDate(brand.updated_at) || '—';
 
 export default function PartnerBrandsTable({
   fetchRows,
@@ -81,38 +39,44 @@ export default function PartnerBrandsTable({
   onManageProducts,
   onSettings,
   onToggleActive,
+  onDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     const renderActions = (brand: EcommBrandRow) => {
-      const locked = brand.status === 'SUBMITTED' || brand.status === 'APPROVED';
+      const approved = brand.status === 'APPROVED';
+      const locked = brand.status === 'SUBMITTED' || approved;
       const paused = brand.is_active === false;
+      const pauseTitle = paused ? t('partners.brandWizard.danger.reactivate') : t('partners.brandWizard.danger.deactivateTitle');
       return (
-        <Stack direction="row" component="span" sx={{
-          justifyContent: "flex-end"
-        }}>
-          {brand.status === 'APPROVED' && (
-            <Tooltip title={t('partners.common.productManagement')}>
-              <DuncitIconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
+        <Stack direction="row" component="span" sx={{ justifyContent: 'flex-end' }}>
+          {approved && (
+            <Tooltip title={t('partners.ecommBrandPage.products')}>
+              <DuncitIconButton size="small" color="primary" onClick={() => onManageProducts(brand)} data-testid="brand-row-products">
                 <Inventory2Icon fontSize="small" />
               </DuncitIconButton>
             </Tooltip>
           )}
-          {brand.status === 'APPROVED' && (
-            <Tooltip title={paused ? 'Reactivate' : 'Temporarily deactivate'}>
-              <DuncitIconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(brand)}>
+          {approved && (
+            <Tooltip title={pauseTitle}>
+              <DuncitIconButton size="small" color={paused ? 'success' : 'warning'} onClick={() => onToggleActive(brand)} data-testid="brand-row-pause">
                 {paused ? <PlayCircleOutlineIcon fontSize="small" /> : <PauseCircleOutlineIcon fontSize="small" />}
               </DuncitIconButton>
             </Tooltip>
           )}
-          <Tooltip title={locked ? 'View' : 'Edit'}>
-            <DuncitIconButton size="small" onClick={() => onOpen(brand)}>
+          <Tooltip title={locked ? t('partners.ecommBrandPage.view') : t('partners.ecommBrandPage.edit')}>
+            <DuncitIconButton size="small" onClick={() => onOpen(brand)} data-testid="brand-row-open">
               {locked ? <VisibilityIcon fontSize="small" /> : <EditIcon fontSize="small" />}
             </DuncitIconButton>
           </Tooltip>
           <Tooltip title={t('partners.ecommBrandPage.brandSettings')}>
-            <DuncitIconButton size="small" onClick={() => onSettings(brand)}>
+            <DuncitIconButton size="small" onClick={() => onSettings(brand)} data-testid="brand-row-settings">
               <SettingsIcon fontSize="small" />
+            </DuncitIconButton>
+          </Tooltip>
+          <Tooltip title={t('partners.ecommBrandPage.deleteBrand')}>
+            <DuncitIconButton size="small" color="error" onClick={() => onDelete(brand)} data-testid="brand-row-delete">
+              <DeleteOutlineIcon fontSize="small" />
             </DuncitIconButton>
           </Tooltip>
         </Stack>
@@ -125,15 +89,29 @@ export default function PartnerBrandsTable({
         flex: 1,
         minWidth: 220,
         type: 'text',
-        cellRenderer: renderBrand,
-        valueGetter: (brand) => brand.brand_name || 'Untitled brand',
+        cellRenderer: (brand) => <BrandCell brand={brand} />,
+        valueGetter: (brand) => brand.brand_name || t('partners.ecommBrandPage.untitledBrand'),
+      },
+      { field: 'categories', headerName: t('shell.nav.categories'), type: 'text', minWidth: 180, valueGetter: categoriesValue },
+      {
+        field: 'completion',
+        headerName: t('partners.ecommBrandPage.colCompletion'),
+        type: 'number',
+        width: 170,
+        sortable: false,
+        filterable: false,
+        cellRenderer: (brand) => <ProgressCell brand={brand} />,
+        valueGetter: percentOf,
       },
       {
-        field: 'categories',
-        headerName: t('shell.nav.categories'),
-        type: 'text',
-        minWidth: 180,
-        valueGetter: categoriesValue,
+        field: 'integrations',
+        headerName: t('partners.ecommBrandPage.colIntegration'),
+        type: 'number',
+        width: 150,
+        sortable: false,
+        filterable: false,
+        cellRenderer: (brand) => <IntegrationsCell brand={brand} />,
+        valueGetter: connectedCount,
       },
       {
         field: 'status',
@@ -141,13 +119,13 @@ export default function PartnerBrandsTable({
         width: 190,
         type: 'enum',
         options: STATUS_OPTIONS,
-        cellRenderer: renderStatus,
+        cellRenderer: (brand) => <StatusCell brand={brand} />,
         valueGetter: (brand) => brand.status,
       },
       { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, type: 'date', valueGetter: updatedValue },
-      { field: 'actions', headerName: t('partners.common.action'), type: 'actions', width: 160, cellRenderer: renderActions },
+      { field: 'actions', headerName: t('partners.common.action'), type: 'actions', width: 210, cellRenderer: renderActions },
     ];
-  }, [onOpen, onManageProducts, onSettings, onToggleActive]);
+  }, [t, onOpen, onManageProducts, onSettings, onToggleActive, onDelete]);
 
   return (
     <DuncitTable<EcommBrandRow>
@@ -160,7 +138,7 @@ export default function PartnerBrandsTable({
       toolbarActions={toolbarActions}
       emptyText={t('partners.ecommBrandPage.noBrandsYetCreateYourFirst')}
       defaultSort={{ field: 'updated_at', dir: 'desc' }}
-      searchPlaceholder="Search brand name or tagline"
+      searchPlaceholder={t('partners.ecommBrandPage.searchPlaceholder')}
       refetchRef={refetchRef}
     />
   );

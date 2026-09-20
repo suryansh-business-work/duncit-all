@@ -19,8 +19,14 @@ export interface AdminClubsState {
 /** Club Studio lists every club the admin runs; fifty is the ceiling mWeb reads. */
 const CLUBS_PAGE_SIZE = 50;
 
-/** The clubs the signed-in user administers, with the figures the row shows. */
-export function useClubAdminClubs(): AdminClubsState {
+/**
+ * The clubs the signed-in user administers, with the figures the row shows.
+ *
+ * `search` narrows SERVER-side. The list is capped at fifty, so filtering the
+ * rows already fetched would quietly hide clubs past the cap from an admin who
+ * runs more than that — which is exactly the admin who needs a search box.
+ */
+export function useClubAdminClubs(search = ''): AdminClubsState {
   const [clubs, setClubs] = useState<AdminClubRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -33,7 +39,7 @@ export function useClubAdminClubs(): AdminClubsState {
     setHasError(false);
     graphqlRequest(
       MyAdminClubsTableDocument,
-      { query: { page: 1, page_size: CLUBS_PAGE_SIZE } },
+      { query: { search: search || null, page: 1, page_size: CLUBS_PAGE_SIZE } },
       { auth: true },
     )
       .then((res) => active && setClubs(res.myAdminClubsTable.rows))
@@ -42,7 +48,7 @@ export function useClubAdminClubs(): AdminClubsState {
     return () => {
       active = false;
     };
-  }, [attempt]);
+  }, [attempt, search]);
 
   useRefreshRegistration(refetch);
 

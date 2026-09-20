@@ -6,6 +6,8 @@ export const locationSubscriptionTypeDefs = /* GraphQL */ `
     launch_target: Int!
     "Whether the signed-in viewer has already added their name; false when signed out."
     is_subscribed: Boolean!
+    "The backdrops the page plays: the city's own where it set one, else the global set from Branding."
+    launch_media: LaunchPageMedia!
   }
 
   "Where one subscriber's launch message stands."
@@ -28,6 +30,8 @@ export const locationSubscriptionTypeDefs = /* GraphQL */ `
     name: String!
     "Country code + number, digits only, as the launch message is sent to."
     whatsapp: String!
+    "Whether the member agreed to share their current location when they added their name."
+    location_shared: Boolean!
     status: LocationSubscriptionStatus!
     "Why a send was skipped or failed; empty otherwise."
     reason: String!
@@ -57,7 +61,7 @@ export const locationSubscriptionTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    "Public. Null when the city does not exist."
+    "Public. Takes the city's id or its slug (Location.location_id, e.g. agra) — the form a shared link carries. Null when the city does not exist."
     locationLaunchStatus(location_doc_id: ID!): LocationLaunchStatus
     "Admin: every subscriber, filterable by location_doc_id."
     locationSubscriptionsTable(query: TableQueryInput): LocationSubscriptionTablePage!
@@ -66,8 +70,8 @@ export const locationSubscriptionTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    "Signed in. Adds the viewer to a not-yet-launched city's waitlist; repeat taps are no-ops."
-    subscribeLocationLaunch(location_doc_id: ID!): LocationLaunchStatus!
+    "Signed in. Adds the viewer to a not-yet-launched city's waitlist (by id or slug); repeat taps are no-ops. location_shared records the answer to the app's share-your-location question."
+    subscribeLocationLaunch(location_doc_id: ID!, location_shared: Boolean = false): LocationLaunchStatus!
     "Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched."
     sendLocationLaunchMessage(location_doc_id: ID!): LocationLaunchSendResult!
   }

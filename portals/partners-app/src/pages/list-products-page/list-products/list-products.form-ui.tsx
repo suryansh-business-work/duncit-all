@@ -23,6 +23,7 @@ import {
   type WarehouseReviewStatus,
 } from '../../ecomm-brand-page/brand-settings/warehouse.queries';
 import type { ProductListingValues } from './list-products.types';
+import { GST_RATE_OPTIONS } from './list-products.map';
 import CategoryRows from './CategoryRows';
 import OptionsEditor from './OptionsEditor';
 import VariantTabs from './VariantTabs';
@@ -62,6 +63,22 @@ export function StepBody({ step, brandId, control, watch, setValue, onPickImage 
           hint="Use the exact product name hosts will understand during pod creation."
         />
         <PackagingSection control={control} setValue={setValue} productFields note={t('packaging.intro')} />
+        <RhfTextField
+          control={control}
+          name="tax_percent"
+          label={t('partners.listProductsPage.taxPercent')}
+          select
+          required
+          hint={t('partners.listProductsPage.taxPercentHint')}
+          sx={{ maxWidth: 240 }}
+          data-testid="product-tax-percent"
+        >
+          {GST_RATE_OPTIONS.map((rate) => (
+            <MenuItem key={rate} value={rate}>
+              {rate}%
+            </MenuItem>
+          ))}
+        </RhfTextField>
       </Stack>
     );
   }

@@ -3,12 +3,14 @@ import {
   OTP_MEDIUMS,
   attendanceProgress,
   attendanceRowState,
+  canDirectMark,
   canScanTickets,
   hasUnmarked,
   isOtpCodeShape,
   isOtpExtensionShape,
   isOtpPhoneShape,
   joinPhone,
+  matchAttendanceRows,
   needsOtp,
   showsCompleteDeadline,
   splitAttendance,
@@ -257,5 +259,65 @@ describe('showsCompleteDeadline', () => {
   it('says nothing when there is no deadline to count down to', () => {
     expect(showsCompleteDeadline({ ...board, complete_deadline: null })).toBe(false);
     expect(showsCompleteDeadline({ ...board, complete_deadline: '' })).toBe(false);
+  });
+});
+
+describe('canDirectMark', () => {
+  it('is the Club Admin door, and only while the roster still takes marks', () => {
+    expect(canDirectMark({ viewer: 'CLUB_ADMIN', can_mark: true })).toBe(true);
+    expect(canDirectMark({ viewer: 'CLUB_ADMIN', can_mark: false })).toBe(false);
+  });
+
+  it('is never offered to the host, whose by-hand mark the OTP setting gates', () => {
+    expect(canDirectMark({ viewer: 'HOST', can_mark: true })).toBe(false);
+  });
+});
+
+describe('matchAttendanceRows', () => {
+  const asha = row({
+    ticket_code: 'DUN-TKT-1001',
+    name: 'Asha Rao',
+    email: 'asha@example.com',
+    phone_number: '9876543210',
+    attended: true,
+    companions: [
+      { name: 'Ravi Menon', phone_extension: '+91', phone_number: '9000000001', added_at: '2026-09-20T10:00:00Z' },
+    ],
+  });
+  const bikram = row({
+    ticket_code: 'DUN-TKT-1002',
+    name: 'Bikram Singh',
+    email: 'bikram@example.com',
+    phone_number: '9123456789',
+    attended: false,
+  });
+  const rows = [asha, bikram];
+
+  it('hands back everyone, unmarked first, when nothing has been typed', () => {
+    expect(matchAttendanceRows(rows, '   ')).toEqual([bikram, asha]);
+  });
+
+  it('matches a name, an email or a ticket code, ignoring case and padding', () => {
+    expect(matchAttendanceRows(rows, '  ASHA ')).toEqual([asha]);
+    expect(matchAttendanceRows(rows, 'bikram@')).toEqual([bikram]);
+    expect(matchAttendanceRows(rows, 'tkt-1002')).toEqual([bikram]);
+  });
+
+  it('finds a booking through a companion who is not the ticket holder', () => {
+    expect(matchAttendanceRows(rows, 'ravi')).toEqual([asha]);
+  });
+
+  it('matches a phone once three digits are typed, however they are spaced', () => {
+    expect(matchAttendanceRows(rows, '654 32')).toEqual([asha]);
+    expect(matchAttendanceRows(rows, '+91 91234')).toEqual([bikram]);
+  });
+
+  it('treats one or two digits as part of a name, not a number search', () => {
+    expect(matchAttendanceRows(rows, '98')).toEqual([]);
+  });
+
+  it('matches nobody on text that is in no field, with or without digits', () => {
+    expect(matchAttendanceRows(rows, 'zzz')).toEqual([]);
+    expect(matchAttendanceRows(rows, '000000')).toEqual([]);
   });
 });

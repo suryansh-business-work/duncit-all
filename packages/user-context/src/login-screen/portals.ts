@@ -70,6 +70,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'logs', name: 'Logs', descriptionKey: 'session.portals.descriptions.logs', port: 2036, subdomain: 'logs', category: 'operations', image: PEXELS('546819') },
   { key: 'analytics', name: 'Analytics', descriptionKey: 'session.portals.descriptions.analytics', port: 2037, subdomain: 'analytics', category: 'operations', image: PEXELS('590022') },
   { key: 'ecomm-portal', name: 'E-commerce', descriptionKey: 'session.portals.descriptions.ecommPortal', port: 2038, subdomain: 'ecomm-portal', category: 'growth', image: PEXELS('1350593') },
+  { key: 'localization', name: 'Localization', descriptionKey: 'session.portals.descriptions.localization', port: 2042, subdomain: 'localization', category: 'operations', image: PEXELS('267669') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

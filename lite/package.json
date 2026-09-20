@@ -2,7 +2,7 @@
   "name": "duncit-lite",
   "version": "1.0.0",
   "private": true,
-  "description": "Duncit Lite — the event platform at luma.duncit.com (web app) and luma-portal.duncit.com (console). Its own API and its own database; nothing here touches the main Duncit stack.",
+  "description": "Duncit Lite — the event platform at lite.duncit.com (web app) and lite-portal.duncit.com (console). Its own API and its own database; nothing here touches the main Duncit stack.",
   "scripts": {
     "deps:check": "node ../scripts/deps.mjs check",
     "deps:update": "node ../scripts/deps.mjs update",

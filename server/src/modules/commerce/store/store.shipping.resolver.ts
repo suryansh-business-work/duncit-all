@@ -32,7 +32,6 @@ export const storeShippingResolvers = {
     storeSaveWarehouse: admin((a) => storeWarehouseService.save(a.id, a.input)),
     storeDeleteWarehouse: admin((a) => storeWarehouseService.remove(a.id)),
     storeRegisterWarehouse: admin((a) => storeWarehouseService.register(a.id)),
-    storeImportPickup: admin((a) => storeWarehouseService.importPickup(a.nickname)),
     storeBookReturnPickup: admin((a) => storeShippingService.bookReturnPickup(a.id)),
     storeRestockReturn: admin((a) => storeShippingService.restockReturn(a.id)),
   },

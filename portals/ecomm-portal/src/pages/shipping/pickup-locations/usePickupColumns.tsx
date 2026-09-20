@@ -21,9 +21,19 @@ const STATE_KEYS: Record<PickupState, string> = {
   UNKNOWN: 'ecommPortal.shipping.pickupUnknown',
 };
 
-const isOwn = (row: PickupRow) => row.warehouse.owner_kind === 'DUNCIT';
 /** Only a warehouse ShipRocket does not hold is corrected here; one it holds is changed there. */
-const editable = (row: PickupRow) => isOwn(row) && !row.warehouse.shiprocket_registered;
+const editable = (row: PickupRow) => !row.warehouse.shiprocket_registered;
+
+/**
+ * Why this row cannot be deleted here ('' = it can). An address ShipRocket
+ * holds goes from ShipRocket: their API cannot remove one, and the next sync
+ * would simply take it back in.
+ */
+const deleteBlockedKey = (row: PickupRow): string => {
+  if (row.warehouse.shiprocket_registered) return 'ecommPortal.shipping.deleteInShiprocket';
+  if (row.product_count > 0) return 'ecommPortal.shipping.warehouseInUse';
+  return '';
+};
 const pushable = (row: PickupRow) => row.shiprocket_state === 'NOT_IN_SHIPROCKET' && row.warehouse.review_status === 'APPROVED';
 
 const renderReason = (row: PickupRow) => (
@@ -41,15 +51,16 @@ interface PickupColumnActions {
 export function usePickupColumns({ actions, onEdit }: PickupColumnActions): DuncitColumn<PickupRow>[] {
   const { t } = useTranslation();
   return useMemo<DuncitColumn<PickupRow>[]>(() => {
-    const ownerLabel = (row: PickupRow) => (isOwn(row) ? t('ecommPortal.shipping.storeWarehouse') : t('ecommPortal.shipping.partnerWarehouse'));
     const renderName = (row: PickupRow) => (
       <Stack sx={{ py: 0.5 }}>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
           {row.warehouse.nickname}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {row.warehouse.is_default ? t('ecommPortal.shipping.defaultOwner', { vars: { owner: ownerLabel(row) } }) : ownerLabel(row)}
-        </Typography>
+        {row.warehouse.is_default ? (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('ecommPortal.shipping.defaultBadge')}
+          </Typography>
+        ) : null}
       </Stack>
     );
     const renderState = (row: PickupRow) => (
@@ -83,12 +94,12 @@ export function usePickupColumns({ actions, onEdit }: PickupColumnActions): Dunc
         edit: {
           ariaLabel: (row) => t('shell.a11y.editNamed', { vars: { name: row.warehouse.nickname } }),
           disabled: (row) => actions.busy || !editable(row),
-          disabledTitle: (row) => (isOwn(row) ? t('ecommPortal.shipping.editInShiprocket') : t('ecommPortal.shipping.partnerLocked')),
+          disabledTitle: () => t('ecommPortal.shipping.editInShiprocket'),
         },
         delete: {
           ariaLabel: (row) => t('shell.a11y.deleteNamed', { vars: { name: row.warehouse.nickname } }),
-          disabled: (row) => actions.busy || !isOwn(row) || row.product_count > 0,
-          disabledTitle: (row) => (isOwn(row) ? t('ecommPortal.shipping.warehouseInUse') : t('ecommPortal.shipping.partnerLocked')),
+          disabled: (row) => actions.busy || deleteBlockedKey(row) !== '',
+          disabledTitle: (row) => t(deleteBlockedKey(row) || 'ecommPortal.shipping.warehouseInUse'),
         },
       }),
     ];

@@ -6,6 +6,7 @@ import {
   type AttendanceRowState,
   type PodAttendanceLabels,
   type PodAttendanceRow as AttendanceRowData,
+  type PodAttendanceViewer,
 } from '@duncit/utils';
 
 import { AttendeeAvatar } from '@/components/attendance/AttendeeAvatar';
@@ -109,6 +110,8 @@ interface Props {
   row: AttendanceRowData;
   labels: PodAttendanceLabels;
   canMark: boolean;
+  /** Who is reading the roster: only the host waits on the door's companions. */
+  viewer: PodAttendanceViewer;
   busy: boolean;
   formatDateTime: (iso: string) => string;
   onMark: (row: AttendanceRowData) => void;
@@ -126,11 +129,15 @@ export function AttendanceRow({
   row,
   labels,
   canMark,
+  viewer,
   busy,
   formatDateTime,
   onMark,
 }: Readonly<Props>) {
-  const state = attendanceRowState(row, canMark);
+  // The viewer is not optional here: naming a multi-seat group is the HOST's
+  // door step, and defaulting to 'HOST' disabled the Mark button on exactly the
+  // bookings a Club Admin gets called about.
+  const state = attendanceRowState(row, canMark, viewer);
   const marked = state === 'MARKED';
 
   return (

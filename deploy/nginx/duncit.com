@@ -913,6 +913,27 @@ server {
     }
 }
 
+# --- Localization console: localization.duncit.com (SPA on :2042) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name localization.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2042;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- E-commerce console: ecomm-portal.duncit.com (SPA on :2038) ---
 server {
     listen 80;
@@ -958,7 +979,7 @@ server {
     }
 }
 
-# --- Duncit Lite: luma.duncit.com (Node API + HTML server on :2040) ---
+# --- Duncit Lite: lite.duncit.com (Node API + HTML server on :2040) ---
 # One process serves the web app, its same-origin /graphql, /upload and the
 # calendar feeds. Node rather than nginx inside the image: every event, calendar
 # and city page gets its own title, social card and JSON-LD written into the
@@ -967,7 +988,7 @@ server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name luma.duncit.com;
+    server_name lite.duncit.com;
     client_max_body_size 12m;
 
     location / {
@@ -983,13 +1004,13 @@ server {
     }
 }
 
-# --- Duncit Lite console: luma-portal.duncit.com (same process, :2040) ---
+# --- Duncit Lite console: lite-portal.duncit.com (same process, :2040) ---
 # The Host header is what picks the console shell over the web app.
 server {
     listen 80;
     listen [::]:80;
     http2 on;
-    server_name luma-portal.duncit.com;
+    server_name lite-portal.duncit.com;
     client_max_body_size 12m;
 
     location / {

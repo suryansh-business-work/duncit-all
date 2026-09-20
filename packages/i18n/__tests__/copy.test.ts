@@ -180,6 +180,9 @@ describe('policyAcceptanceMethodLabel', () => {
     expect(policyAcceptanceMethodLabel(t, 'GOOGLE_SIGNUP')).toBe(
       't:legalAcceptanceLogs.methods.googleSignup',
     );
+    expect(policyAcceptanceMethodLabel(t, 'BRAND_CONSENT')).toBe(
+      't:legalAcceptanceLogs.methods.brandConsent',
+    );
   });
 
   // The copy is written from the reader's side, so both spellings of "accepted

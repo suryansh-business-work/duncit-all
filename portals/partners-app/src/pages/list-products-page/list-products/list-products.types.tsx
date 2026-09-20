@@ -24,6 +24,8 @@ export interface ProductOptionValues {
 export interface ProductVariantValues {
   option_label: string;
   option_values: VariantOptionValue[];
+  /** The partner's own stock code, sent to ShipRocket ('' = the server generates one). */
+  sku: string;
   color: string;
   size_label: string;
   description: string;
@@ -55,6 +57,8 @@ export interface ProductListingValues {
   is_liquid: boolean;
   /** Days a sealed unit stays good ('' = doesn't expire). */
   shelf_life_days: number | string;
+  /** GST rate on the product (0, 5, 12, 18 or 28) — printed on the invoice and sent to ShipRocket. */
+  tax_percent: number;
   /** Product-level option definitions; variants are their combinations. */
   options: ProductOptionValues[];
   variants: ProductVariantValues[];

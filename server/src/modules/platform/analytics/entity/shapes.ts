@@ -36,10 +36,15 @@ export type AnalyticsEntity =
   | 'API_PERFORMANCE'
   | 'SERVER'
   | 'APP_RELEASES'
-  | 'FUNNEL';
+  | 'FUNNEL'
+  | 'LOGS'
+  | 'WHATSAPP_COSTS'
+  | 'OPENAI_COSTS';
 /**
  * BYTES is a size, DURATION is milliseconds, GRADE is SonarQube's 1-5 rating
- * (1 is A) — the console writes each in the reader's units.
+ * (1 is A), USD is an amount in US dollars (what OpenAI bills in, while
+ * CURRENCY is rupees), and OUTCOME is a check's result — 1 passed, 0 failed,
+ * null never run. The console writes each in the reader's units.
  */
 export type AnalyticsFormat =
   | 'COUNT'
@@ -50,7 +55,9 @@ export type AnalyticsFormat =
   | 'DECIMAL'
   | 'BYTES'
   | 'DURATION'
-  | 'GRADE';
+  | 'GRADE'
+  | 'USD'
+  | 'OUTCOME';
 /** WINDOW follows the chosen period; ALL_TIME is the state of things right now. */
 export type AnalyticsScope = 'WINDOW' | 'ALL_TIME';
 

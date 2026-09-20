@@ -6,6 +6,7 @@ export interface ShiprocketStatus {
   login_refused: boolean;
   login_message: string;
   wallet_balance: number | null;
+  wallet_error: string;
   webhook_key_set: boolean;
   default_pickup: string;
   webhook_path: string;
@@ -17,6 +18,7 @@ const STATUS_FIELDS = `
   login_refused
   login_message
   wallet_balance
+  wallet_error
   webhook_key_set
   default_pickup
   webhook_path
@@ -43,7 +45,6 @@ export type PickupState = 'READY' | 'AWAITING_VERIFICATION' | 'NOT_IN_SHIPROCKET
 
 export interface Warehouse {
   id: string;
-  owner_kind: 'DUNCIT' | 'BRAND';
   review_status: string;
   nickname: string;
   contact_name: string;
@@ -65,23 +66,14 @@ export interface PickupRow {
   product_count: number;
 }
 
-export interface ShiprocketOnlyPickup {
-  nickname: string;
-  city: string;
-  pincode: string;
-  verified: boolean;
-}
-
 export interface PickupLocations {
   warehouses: PickupRow[];
-  shiprocket_only: ShiprocketOnlyPickup[];
   shiprocket_error: string;
   synced_at: string;
 }
 
 const WAREHOUSE_FIELDS = `
   id
-  owner_kind
   review_status
   nickname
   contact_name
@@ -108,12 +100,6 @@ export const STORE_PICKUP_LOCATIONS: TypedDocumentNode<{ storePickupLocations: P
         warehouse {
           ${WAREHOUSE_FIELDS}
         }
-      }
-      shiprocket_only {
-        nickname
-        city
-        pincode
-        verified
       }
     }
   }
@@ -152,14 +138,6 @@ export const DELETE_WAREHOUSE: TypedDocumentNode<{ storeDeleteWarehouse: boolean
 export const REGISTER_WAREHOUSE: TypedDocumentNode<{ storeRegisterWarehouse: Warehouse }, { id: string }> = gql`
   mutation StoreRegisterWarehouse($id: ID!) {
     storeRegisterWarehouse(id: $id) {
-      ${WAREHOUSE_FIELDS}
-    }
-  }
-`;
-
-export const IMPORT_PICKUP: TypedDocumentNode<{ storeImportPickup: Warehouse }, { nickname: string }> = gql`
-  mutation StoreImportPickup($nickname: String!) {
-    storeImportPickup(nickname: $nickname) {
       ${WAREHOUSE_FIELDS}
     }
   }

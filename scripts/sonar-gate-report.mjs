@@ -22,6 +22,7 @@ const FILE_MEASURE = new Map([
   ['new_line_coverage', 'new_uncovered_lines'],
   ['new_branch_coverage', 'new_uncovered_conditions'],
   ['new_duplicated_lines_density', 'new_duplicated_lines'],
+  ['new_security_hotspots_reviewed', 'new_security_hotspots'],
 ]);
 
 const { SONAR_HOST_URL, SONAR_TOKEN, GITHUB_STEP_SUMMARY } = process.env;
@@ -88,10 +89,15 @@ async function reportIssues(projectKey) {
 }
 
 async function reportFiles(projectKey, metric) {
-  const query = `component=${projectKey}&qualifiers=FIL&metricKeys=${metric}&s=metricPeriod&metricSort=${metric}&metricPeriod=1&asc=false&metricSortFilter=withMeasuresOnly&ps=${FILE_LIMIT}`;
+  const query = `component=${projectKey}&qualifiers=FIL&metricKeys=${metric}&s=metric&metricSort=${metric}&asc=false&metricSortFilter=withMeasuresOnly&ps=${FILE_LIMIT}`;
   const { components } = await api(`/api/measures/component_tree?${query}`);
   const rows = components
-    .map((component) => [component.path, Number(component.measures[0]?.period?.value ?? 0)])
+    // A new-code measure sits under `period` on some versions and is the
+    // plain `value` on others; read whichever this server sent.
+    .map((component) => [
+      component.path,
+      Number(component.measures[0]?.period?.value ?? component.measures[0]?.value ?? 0),
+    ])
     .filter(([, value]) => value > 0);
   if (rows.length === 0) return;
   lines.push(`### Files with the most \`${metric}\``, '');
@@ -110,12 +116,20 @@ async function reportAnalysis({ projectKey, ceTaskId, dashboardUrl }) {
   }
   const failed = await reportConditions(task.analysisId);
   // No hotspot list: the CI analysis token is refused /api/hotspots/search
-  // (HTTP 403), and the condition table above already carries
-  // new_security_hotspots_reviewed.
+  // (HTTP 403). The measures API is not, so a failed
+  // new_security_hotspots_reviewed reports the FILES holding the hotspots
+  // instead (FILE_MEASURE) — without that the condition names no file at
+  // all, and a hotspot has to be reviewed in the SonarQube UI to be found.
   await reportIssues(projectKey);
   const measures = new Set(failed.map((metric) => FILE_MEASURE.get(metric)).filter(Boolean));
   for (const metric of measures) {
-    await reportFiles(projectKey, metric);
+    // One section that cannot be read must not cost the reader the rest of
+    // the report — say which metric went missing and carry on.
+    try {
+      await reportFiles(projectKey, metric);
+    } catch (error) {
+      lines.push(`_No per-file \`${metric}\` list: ${error.message}_`, '');
+    }
   }
   lines.push(`[Open the analysis in SonarQube](${dashboardUrl})`);
 }

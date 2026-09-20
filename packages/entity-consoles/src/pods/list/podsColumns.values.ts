@@ -63,6 +63,14 @@ export const podSpotCounts = (p: PodRow): PodSpotCounts => {
   return { seats, people, extraSeats: Math.max(seats - people, 0), total: p.no_of_spots ?? 0 };
 };
 
+/**
+ * Fewer seats held than the activity needs — `minPax` is the club's
+ * sub-category floor (Admin > Categories > Edit Sub Category), 0 meaning none.
+ * A cancelled pod will never run, so it is never short.
+ */
+export const isBelowMinPax = (p: PodRow, minPax: number) =>
+  !p.is_deleted && minPax > 0 && podSeatsTaken(p) < minPax;
+
 export const spotsValue = (p: PodRow) => {
   const { seats, total } = podSpotCounts(p);
   return total > 0 ? `${seats} / ${total}` : String(seats);

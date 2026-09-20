@@ -7,20 +7,47 @@ import { InventoryProductModel } from '@modules/venues/inventory/inventory.model
 import { UserModel } from '@modules/access/user/user.model';
 import { makeContext } from '@test/harness';
 
+/**
+ * Every required wizard step filled — what `submit` and `approve` refuse
+ * without. The two vendor connections are flags the probes write, so a test
+ * sets them straight on the document (`connectBoth`) instead of dialling out.
+ */
+const READY = {
+  description: 'Handmade home decor and apparel.',
+  registered_business_name: 'Acme Co Pvt Ltd',
+  gstin: '29AABCA1234F1ZP',
+  address_line1: '12 Market Street, Koregaon Park',
+  city: 'Pune',
+  state: 'Maharashtra',
+  postal_code: '411001',
+  product_categories: ['Decor', 'Apparel'],
+  logo_url: 'https://ik.imagekit.io/duncit/brands/acme-logo.png',
+  documents: [{ type: 'GST certificate', url: 'https://ik.imagekit.io/duncit/brands/acme-gst.pdf' }],
+};
+
+const connectBoth = (brandId: unknown) =>
+  EcommBrandModel.updateOne(
+    { _id: brandId },
+    { $set: { 'integrations.shiprocket.connected': true, 'integrations.razorpay.connected': true } }
+  );
+
 describe('ecommBrandService integration', () => {
   const newOwner = () => new Types.ObjectId().toString();
 
   it('saves a draft, then submits it for review', async () => {
     const owner = newOwner();
     const draft = await ecommBrandService.save(owner, null, {
+      ...READY,
       brand_name: 'Acme Co',
-      description: 'Handmade home decor and apparel.',
       contact_email: 'owner@acme.com',
-      product_categories: ['Decor', 'Apparel'],
     });
     expect(draft.status).toBe('DRAFT');
     expect(draft.brand_name).toBe('Acme Co');
+    expect(draft.integrations.shiprocket.connected).toBe(false);
 
+    // Both vendor connections are the last required step before submitting.
+    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/ShipRocket and Razorpay/);
+    await connectBoth(draft.id);
     const submitted = await ecommBrandService.submit(owner, draft.id);
     expect(submitted.status).toBe('SUBMITTED');
     expect(submitted.submitted_at).toBeTruthy();
@@ -32,9 +59,11 @@ describe('ecommBrandService integration', () => {
 
   it('lets one partner submit multiple brands', async () => {
     const owner = newOwner();
-    const a = await ecommBrandService.save(owner, null, { brand_name: 'Brand A', description: 'first brand here', contact_email: 'a@x.com' });
+    const a = await ecommBrandService.save(owner, null, { ...READY, brand_name: 'Brand A', contact_email: 'a@x.com' });
+    await connectBoth(a.id);
     await ecommBrandService.submit(owner, a.id);
-    const b = await ecommBrandService.save(owner, null, { brand_name: 'Brand B', description: 'second brand here', contact_email: 'b@x.com' });
+    const b = await ecommBrandService.save(owner, null, { ...READY, brand_name: 'Brand B', contact_email: 'b@x.com' });
+    await connectBoth(b.id);
     await ecommBrandService.submit(owner, b.id);
 
     const mine = await ecommBrandService.listMine(owner);
@@ -57,10 +86,11 @@ describe('ecommBrandService integration', () => {
   it('rejects a brand with reviewer notes', async () => {
     const owner = newOwner();
     const draft = await ecommBrandService.save(owner, null, {
+      ...READY,
       brand_name: 'Rejectable',
-      description: 'something to review',
       contact_email: 'r@b.com',
     });
+    await connectBoth(draft.id);
     await ecommBrandService.submit(owner, draft.id);
     const rejected = await ecommBrandService.reject(draft.id, 'Logo resolution too low');
     expect(rejected.status).toBe('REJECTED');
@@ -74,10 +104,11 @@ describe('ecommBrandService integration', () => {
     const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
     const owner = newOwner();
     const draft = await ecommBrandService.save(owner, null, {
+      ...READY,
       brand_name: 'Approvable',
-      description: 'ready for review now',
       contact_email: 'ok@b.com',
     });
+    await connectBoth(draft.id);
     await ecommBrandService.submit(owner, draft.id);
     const approved = await ecommBrandService.approve(draft.id, 'Looks great');
     expect(approved.status).toBe('APPROVED');
@@ -100,12 +131,14 @@ describe('Brands Review inbox (products portal, PRODUCTS_MANAGER)', () => {
 
   const seedSubmitted = async (brandName: string) => {
     const brand = await EcommBrandModel.create({
+      ...READY,
       owner_user_id: new Types.ObjectId(),
       brand_name: brandName,
       status: 'SUBMITTED',
       submitted_at: new Date(),
       contact_email: `${brandName.toLowerCase().replaceAll(' ', '-')}@x.com`,
     });
+    await connectBoth(brand._id);
     return String(brand._id);
   };
 

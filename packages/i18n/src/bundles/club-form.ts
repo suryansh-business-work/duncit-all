@@ -15,6 +15,27 @@ export const CLUB_FORM_BUNDLE: NestedCatalogue = {
     },
     basicSection: {
       clubName: 'Club name',
+      // The Category and Location cascades. mWeb and the Partners console draw
+      // them with @duncit/category + @duncit/location; the native app draws the
+      // same two picks with Tamagui controls, so the copy is held once here
+      // rather than twice (rules 27 + 38). The level labels match the pickers'
+      // own defaults so a club reads identically on every surface.
+      category: 'Category',
+      categoryHint:
+        'Venues auto-match to this club by location + category — pick the same Super & Sub the venues sit under.',
+      superCategory: 'Super Category',
+      categoryLevel: 'Category',
+      subCategory: 'Sub Category',
+      superFirst: 'Pick a Super Category first.',
+      location: 'Location',
+      locationHint: 'Approved venues here in the same category auto-link to this club.',
+      city: 'City',
+      cityAria: 'City: {city}',
+      cityPlaceholder: 'Choose a city',
+      changeCity: 'Change',
+      locality: 'Locality',
+      anyLocality: 'Any area',
+      noLocalities: 'This city has no areas yet.',
     },
     clubSections: {
       basicInformation: 'Basic Information',

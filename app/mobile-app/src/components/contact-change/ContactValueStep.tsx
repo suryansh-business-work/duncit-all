@@ -72,7 +72,7 @@ export function ContactValueStep({
     formState: { isValid },
   } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues,
-    resolver: formResolver<ContactValueValues>(makeContactValueSchema(channel)),
+    resolver: formResolver<ContactValueValues>(makeContactValueSchema(channel, t, snapshot)),
     mode: 'onChange',
   });
 

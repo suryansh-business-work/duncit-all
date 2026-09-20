@@ -4,6 +4,7 @@ import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table'
 import { useTranslation } from '@duncit/app-settings';
 import { COLUMN_COPY, LEADERBOARD_COPY } from './copy';
 import { formatValue } from './format';
+import OutcomeChip from './OutcomeChip';
 import type { AnalyticsLeaderboard } from './queries';
 
 type LeaderRow = AnalyticsLeaderboard['rows'][number] & { rank: number };
@@ -20,6 +21,9 @@ function RowName({ row }: Readonly<{ row: LeaderRow }>) {
     </Link>
   );
 }
+
+/** A result column (the OUTCOME format) draws a chip; every other column is its formatted number. */
+const outcomeCell = (index: number) => (row: LeaderRow) => <OutcomeChip value={row.values[index]} />;
 
 const renderName = (row: LeaderRow) => (
   <Box sx={{ minWidth: 0 }}>
@@ -65,6 +69,7 @@ export default function LeaderboardTable({ leaderboard }: Readonly<{ leaderboard
         width: 130,
         type: 'number',
         valueGetter: (row) => formatValue(row.values[index], column.format),
+        cellRenderer: column.format === 'OUTCOME' ? outcomeCell(index) : undefined,
       })),
     ],
     [leaderboard.columns, copy, t]

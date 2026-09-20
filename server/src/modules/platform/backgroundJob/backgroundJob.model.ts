@@ -2,18 +2,22 @@ import mongoose, { Schema, type Document, type Types } from 'mongoose';
 import type { RequestIdentity } from '@observability/requestIdentity';
 
 /**
- * One long-running piece of work a person started from a console — today, a
- * bulk delete from a table.
+ * One long-running piece of work a person started from a console — a bulk
+ * delete from a table, or an AI translation of one language.
  *
  * It is a document rather than a promise in memory because the work outlives
  * everything around it: the page that started it, the tab, and the server
- * process itself (a deploy restarts the container mid-delete). The header's
+ * process itself (a deploy restarts the container mid-run). The header's
  * progress ring reads these rows, so a refresh shows the same percentage, and
  * the runner resumes every RUNNING row on boot from `cursor`.
  */
 
 export const JOB_STATUSES = ['RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'] as const;
 export type BackgroundJobStatus = (typeof JOB_STATUSES)[number];
+
+/** What a job does — the runner hands each kind to its own step. */
+export const JOB_KINDS = ['BULK_DELETE', 'AI_TRANSLATE'] as const;
+export type BackgroundJobKind = (typeof JOB_KINDS)[number];
 
 /** SELECTED acts on the ticked ids; ALL on every row matching the table's view. */
 export const DELETE_MODES = ['SELECTED', 'ALL'] as const;
@@ -33,16 +37,19 @@ export interface JobRowFailure {
 }
 
 export interface BackgroundJobFields {
-  kind: 'BULK_DELETE';
-  /** The `<name>Table` query the rows come from. */
+  kind: BackgroundJobKind;
+  /** BULK_DELETE: the `<name>Table` query the rows come from. */
   table: string;
   /** What the person was looking at, as their console named it. */
   label: string;
   /** The page it was started from, so the drawer can lead back to it. */
   url: string;
-  mode: BulkDeleteMode;
-  /** The table query's variables — search, filters and pinned arguments. */
+  /** BULK_DELETE only. */
+  mode: BulkDeleteMode | null;
+  /** BULK_DELETE: the table query's variables — search, filters and pinned arguments. */
   variables: Record<string, unknown>;
+  /** What the kind's step needs to carry on — the AI_TRANSLATE language, scope and namespace. */
+  params: Record<string, unknown>;
   /** SELECTED only: the ticked row ids. */
   ids: string[];
   status: BackgroundJobStatus;
@@ -88,12 +95,13 @@ const failureSchema = new Schema<JobRowFailure>(
 
 const backgroundJobSchema = new Schema<IBackgroundJob>(
   {
-    kind: { type: String, enum: ['BULK_DELETE'], default: 'BULK_DELETE' },
-    table: { type: String, required: true },
+    kind: { type: String, enum: JOB_KINDS, default: 'BULK_DELETE' },
+    table: { type: String, default: '' },
     label: { type: String, default: '' },
     url: { type: String, default: '' },
-    mode: { type: String, enum: DELETE_MODES, required: true },
+    mode: { type: String, enum: [...DELETE_MODES, null], default: null },
     variables: { type: Schema.Types.Mixed, default: {} },
+    params: { type: Schema.Types.Mixed, default: {} },
     ids: { type: [String], default: [] },
     status: { type: String, enum: JOB_STATUSES, default: 'RUNNING', index: true },
     total: { type: Number, default: 0 },

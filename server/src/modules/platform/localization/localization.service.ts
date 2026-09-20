@@ -7,6 +7,7 @@ import {
 } from "@utils/table-query";
 import { EMAIL_FALLBACK } from "@services/email/email-i18n";
 import { SHIPPED_CLIENT_KEYS } from "./shipped-keys";
+import { COPY_REVISIONS } from "./copy-revisions";
 import {
   LocaleModel,
   TranslationModel,
@@ -96,7 +97,7 @@ interface TranslationGroupAggregate {
 const localeCountField = (index: number) => `locale_${index}`;
 
 /** A locale code that is safe to use as a projection path segment. */
-const PROJECTABLE_LOCALE = /^[A-Za-z]{2,3}(?:[-_][A-Za-z\d]{2,8})*$/;
+export const PROJECTABLE_LOCALE =/^[A-Za-z]{2,3}(?:[-_][A-Za-z\d]{2,8})*$/;
 
 const badInput = (message: string) =>
   new GraphQLError(message, { extensions: { code: "BAD_USER_INPUT" } });
@@ -115,6 +116,29 @@ const localeToPub = (doc: ILocale) => ({
 
 const valuesToPub = (values: ITranslation["values"]) =>
   [...(values?.entries?.() ?? [])].map(([key, value]) => ({ key, value }));
+
+/**
+ * `synced_from.<code>` for every language this save CHANGED by hand: its new
+ * text was written against the default text as it stands after the save, so it
+ * is in sync with it. A language sent back unchanged keeps its record — the
+ * editor submits every language on each save, and fixing only the English must
+ * leave the others reading as out of date.
+ */
+function syncStamps(
+  source: string | null,
+  stored: Readonly<Record<string, string>>,
+  written: Readonly<Record<string, string>>,
+): Record<string, string> {
+  const stamps: Record<string, string> = {};
+  if (!source) return stamps;
+  const sourceText = written[source] ?? stored[source] ?? "";
+  if (sourceText.trim() === "") return stamps;
+  for (const [locale, value] of Object.entries(written)) {
+    if (locale === source || value.trim() === "" || value === stored[locale]) continue;
+    stamps[`synced_from.${locale}`] = sourceText;
+  }
+  return stamps;
+}
 
 const translationToPub = (doc: ITranslation) => ({
   id: String(doc._id),
@@ -240,7 +264,10 @@ export const localizationService = {
     if (doc.is_default) throw badInput("The default locale cannot be deleted");
     await LocaleModel.deleteOne({ _id: doc._id });
     // Drop the language's text so no catalogue keeps serving a dead locale.
-    await TranslationModel.updateMany({}, { $unset: { [`values.${doc.code}`]: "" } });
+    await TranslationModel.updateMany(
+      {},
+      { $unset: { [`values.${doc.code}`]: "", [`synced_from.${doc.code}`]: "" } },
+    );
     return true;
   },
 
@@ -259,10 +286,19 @@ export const localizationService = {
     }
     // Only the supplied locales are written, so editing one language never
     // clears another's text.
+    const written: Record<string, string> = {};
     for (const entry of input.values ?? []) {
       const locale = (entry.locale ?? "").trim();
-      if (locale) set[`values.${locale}`] = entry.value ?? "";
+      if (locale) written[locale] = entry.value ?? "";
     }
+    for (const [locale, value] of Object.entries(written)) set[`values.${locale}`] = value;
+
+    const [source, current] = await Promise.all([
+      this.defaultLocaleCode(),
+      TranslationModel.findOne({ key }).select("values").lean(),
+    ]);
+    const stored = ((current as unknown as { values?: Record<string, string> } | null)?.values ?? {});
+    Object.assign(set, syncStamps(source, stored, written));
 
     const doc = await TranslationModel.findOneAndUpdate({ key }, { $set: set }, {
       new: true,
@@ -312,6 +348,29 @@ export const localizationService = {
     }
 
     return this.importTranslationKeys(code, entries.map(([key, value]) => ({ key, value })));
+  },
+
+  /**
+   * Move rows still carrying English the code USED to ship to what it ships now
+   * (`copy-revisions.ts`), on boot. Matching the exact old text is what keeps an
+   * operator's own edit safe: it no longer matches, so it is left alone.
+   */
+  async reviseShippedCopy() {
+    const code = await this.defaultLocaleCode();
+    if (!code || !PROJECTABLE_LOCALE.test(code)) return 0;
+    const shipped: Record<string, string> = { ...SHIPPED_CLIENT_KEYS, ...EMAIL_FALLBACK };
+    const field = `values.${code}`;
+    const ops = Object.entries(COPY_REVISIONS)
+      .filter(([key]) => shipped[key] !== undefined)
+      .map(([key, previous]) => ({
+        updateOne: {
+          filter: { key, [field]: { $in: [...previous] } },
+          update: { $set: { [field]: shipped[key] } },
+        },
+      }));
+    if (ops.length === 0) return 0;
+    const result = await TranslationModel.bulkWrite(ops);
+    return result.modifiedCount;
   },
 
   /**

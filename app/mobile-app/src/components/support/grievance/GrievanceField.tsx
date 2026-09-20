@@ -13,6 +13,12 @@ interface Props {
   /** Marks the label with the red `*`, matching mWeb's MUI asterisk. */
   required?: boolean;
   multiline?: boolean;
+  /**
+   * Shown, not asked: the value came from the account. `readOnly` is the one
+   * prop Tamagui honours on both builds — it recomputes `editable` from it on
+   * native, and its web Input drops a passed `editable` altogether.
+   */
+  readOnly?: boolean;
 }
 
 /**
@@ -28,6 +34,7 @@ export function GrievanceField({
   hint,
   required,
   multiline,
+  readOnly,
 }: Readonly<Props>) {
   const testID = `grievance-${name}`;
   return (
@@ -51,6 +58,7 @@ export function GrievanceField({
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
+                readOnly={readOnly}
                 minHeight={96}
                 borderRadius={14}
                 backgroundColor="$surface"
@@ -65,6 +73,7 @@ export function GrievanceField({
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
+                readOnly={readOnly}
                 borderRadius={14}
                 backgroundColor="$surface"
                 borderColor={borderColor}

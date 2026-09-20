@@ -99,6 +99,12 @@ export interface PodAttendanceLabels {
   chooseDirectTitle: string;
   chooseDirectBody: string;
   chooseCancel: string;
+  /** Club Admin: the by-name mark, reached from the page rather than a row. */
+  directCta: string;
+  directTitle: string;
+  directBody: string;
+  directSearchLabel: string;
+  directNoMatch: string;
   /** Club Admin direct mark. */
   forceTitle: string;
   forceWarning: string;
@@ -180,6 +186,11 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     chooseDirectTitle: t('mweb.attendance.chooseDirectTitle'),
     chooseDirectBody: t('mweb.attendance.chooseDirectBody'),
     chooseCancel: t('mweb.attendance.chooseCancel'),
+    directCta: t('mweb.attendance.directCta'),
+    directTitle: t('mweb.attendance.directTitle'),
+    directBody: t('mweb.attendance.directBody'),
+    directSearchLabel: t('mweb.attendance.directSearchLabel'),
+    directNoMatch: t('mweb.attendance.directNoMatch'),
     forceTitle: t('mweb.attendance.forceTitle'),
     forceWarning: t('mweb.attendance.forceWarning'),
     forceConfirm: t('mweb.attendance.forceConfirm'),
@@ -282,6 +293,11 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     chooseDirectTitle: t('shell.attendance.chooseDirectTitle'),
     chooseDirectBody: t('shell.attendance.chooseDirectBody'),
     chooseCancel: t('shell.attendance.chooseCancel'),
+    directCta: t('shell.attendance.directCta'),
+    directTitle: t('shell.attendance.directTitle'),
+    directBody: t('shell.attendance.directBody'),
+    directSearchLabel: t('shell.attendance.directSearchLabel'),
+    directNoMatch: t('shell.attendance.directNoMatch'),
     forceTitle: t('shell.attendance.forceTitle'),
     forceWarning: t('shell.attendance.forceWarning'),
     forceConfirm: t('shell.attendance.forceConfirm'),

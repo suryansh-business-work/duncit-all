@@ -1,4 +1,4 @@
-import { asc } from './appStoreConnect.gateway';
+import { asc, AscError } from './appStoreConnect.gateway';
 
 /**
  * The App Store listing, as far as one release needs it: the app-level record
@@ -99,6 +99,16 @@ export async function setPrimaryCategory(token: string, appInfoId: string, categ
   });
 }
 
+export interface EnsuredVersion {
+  id: string;
+  /**
+   * No other version exists: this is the app's first. Apple refuses "What's
+   * New" on it (409 STATE_ERROR — there is nothing for it to be new since), so
+   * the caller leaves that field out, as fastlane's deliver does.
+   */
+  first: boolean;
+}
+
 /**
  * The App Store version this build goes out as: the editable one, renamed to
  * this version string if it differs, or a new one. Released after approval,
@@ -109,11 +119,12 @@ export async function ensureAppStoreVersion(
   appId: string,
   versionString: string,
   copyright: string
-): Promise<string> {
+): Promise<EnsuredVersion> {
   const query = new URLSearchParams({ 'filter[platform]': 'IOS', limit: '10' });
   const res = await asc.get(token, `/apps/${appId}/appStoreVersions?${query}`);
   const versions: any[] = Array.isArray(res.data) ? res.data : [];
   const editable = versions.find((v) => EDITABLE_STATES.has(stateOf(v)));
+  const first = versions.filter((v) => v !== editable).length === 0;
   const attributes = { versionString, copyright, releaseType: 'AFTER_APPROVAL' };
   if (editable) {
     await asc.patch(token, `/appStoreVersions/${editable.id}`, {
@@ -121,14 +132,14 @@ export async function ensureAppStoreVersion(
       id: String(editable.id),
       attributes,
     });
-    return String(editable.id);
+    return { id: String(editable.id), first };
   }
   const created = await asc.post(token, '/appStoreVersions', {
     type: 'appStoreVersions',
     attributes: { platform: 'IOS', ...attributes },
     relationships: { app: { data: { type: 'apps', id: appId } } },
   });
-  return String(created.data.id);
+  return { id: String(created.data.id), first };
 }
 
 /** Point the version at the processed build. */
@@ -171,7 +182,7 @@ export async function upsertVersionLocalization(
 export async function upsertReviewDetail(token: string, versionId: string, review: AppleReviewContact): Promise<void> {
   // Apple answers 404, not an empty body, for a version with no review detail yet.
   const current = await asc.get(token, `/appStoreVersions/${versionId}/appStoreReviewDetail`).catch((err) => {
-    if (err instanceof Error && err.message.includes('HTTP 404')) return { data: null };
+    if (err instanceof AscError && err.status === 404) return { data: null };
     throw err;
   });
   const attributes = {

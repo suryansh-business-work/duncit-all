@@ -26,6 +26,20 @@ export const USER_CHANGE_ACTIONS: UserChangeAction[] = ['CREATE', 'UPDATE', 'DEL
 export type UserChangeActorType = 'USER' | 'ADMIN' | 'SYSTEM';
 export const USER_CHANGE_ACTOR_TYPES: UserChangeActorType[] = ['USER', 'ADMIN', 'SYSTEM'];
 
+/**
+ * Which half of a user's history a reader asks for.
+ *
+ * Admin > User Details shows the trail as two tabs: what the user changed
+ * (or the system did on their behalf) and what an admin changed. The split is
+ * on the derived actor type, so an admin's edit can never surface under the
+ * user's own tab.
+ */
+export type UserChangeLogScope = 'USER' | 'ADMIN';
+export const USER_CHANGE_LOG_SCOPE_ACTORS: Record<UserChangeLogScope, UserChangeActorType[]> = {
+  USER: ['USER', 'SYSTEM'],
+  ADMIN: ['ADMIN'],
+};
+
 /** Which surface the change came from (the `x-duncit-surface` header). */
 export type UserChangeSource = 'NATIVE' | 'MWEB' | 'ADMIN_PORTAL' | 'PORTAL' | 'SERVER';
 export const USER_CHANGE_SOURCES: UserChangeSource[] = [
@@ -71,7 +85,8 @@ const userChangeLogSchema = new Schema<IUserChangeLog>(
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );
 
-// The only read this collection serves is "one user's history, newest first".
+// The only read this collection serves is "one user's history, newest first",
+// narrowed to one actor scope (the user tab or the admin tab).
 userChangeLogSchema.index({ user_id: 1, created_at: -1 });
 
 export const UserChangeLogModel = model<IUserChangeLog>('UserChangeLog', userChangeLogSchema);

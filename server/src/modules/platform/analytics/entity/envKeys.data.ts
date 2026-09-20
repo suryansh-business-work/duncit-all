@@ -8,6 +8,7 @@ import { EnvEntryModel, type EnvCategory } from '@modules/platform/envEntry/envE
 
 export interface EnvRow {
   _id: Types.ObjectId;
+  name: string;
   category: EnvCategory;
   is_default: boolean;
   is_active: boolean;
@@ -19,7 +20,7 @@ export interface EnvRow {
 
 export const loadEnvRows = () =>
   EnvEntryModel.find({})
-    .select('category is_default is_active assigned_portals last_tested_at last_test_ok created_at')
+    .select('name category is_default is_active assigned_portals last_tested_at last_test_ok created_at')
     .lean<EnvRow[]>();
 
 export type TestHealth = 'PASSING' | 'FAILING' | 'UNTESTED';

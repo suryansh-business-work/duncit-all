@@ -35,7 +35,7 @@ export default function OrderParcelForm({ parcel, busy, onClose, onSubmit }: Rea
     >
       <Stack spacing={2}>
         <Alert severity="info">{t('ecommPortal.shipping.parcelHint')}</Alert>
-        <PackagingFields control={control} setValue={setValue} t={t} productFields={false} />
+        <PackagingFields control={control} setValue={setValue} t={t} productFields={false} required />
       </Stack>
     </FormDialog>
   );

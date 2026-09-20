@@ -37,6 +37,7 @@ COPY portals/pods/package.json ./portals/pods/
 COPY portals/communications/package.json ./portals/communications/
 COPY portals/logs/package.json ./portals/logs/
 COPY portals/analytics/package.json ./portals/analytics/
+COPY portals/localization/package.json ./portals/localization/
 COPY portals/ecomm-portal/package.json ./portals/ecomm-portal/
 COPY website/ecomm-store/package.json ./website/ecomm-store/
 COPY website/status-website/package.json ./website/status-website/

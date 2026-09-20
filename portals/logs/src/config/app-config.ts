@@ -51,7 +51,16 @@ export const appConfig = {
       children: [
         { label: 'Email Logs', labelKey: 'shell.nav.emailLogs', to: '/emails/logs', icon: 'email' },
         { label: 'WhatsApp Logs', labelKey: 'shell.nav.whatsappLogs', to: '/whatsapp/logs', icon: 'whatsapp' },
-        { label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs', to: '/msg91-otp/logs', icon: 'phone' },
+        {
+          // The keys the log is read with sit beside it, as they do in the
+          // consoles this page is borrowed from.
+          label: 'MSG91 OTP Logs', labelKey: 'shell.nav.msg91OtpLogs',
+          icon: 'phone',
+          children: [
+            { label: 'Logs', labelKey: 'shell.nav.logs', to: '/msg91-otp/logs', icon: 'article' },
+            { label: 'MSG91 Settings', labelKey: 'shell.nav.msg91Settings', to: '/msg91-otp/settings', icon: 'tune' },
+          ],
+        },
       ],
     },
     {

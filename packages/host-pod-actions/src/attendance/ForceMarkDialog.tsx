@@ -19,12 +19,12 @@ import {
   type PodAttendanceLabels,
   type PodAttendanceRow,
 } from '@duncit/utils';
-import ForceCompanionFields from './ForceCompanionFields';
 import {
-  buildForceMarkSchema,
   forceMarkInitialValues,
+  makeForceMarkSchema,
   type ForceMarkValues,
-} from './force.form';
+} from '@duncit/forms/schemas';
+import ForceCompanionFields from './ForceCompanionFields';
 
 interface Props {
   row: PodAttendanceRow | null;
@@ -58,7 +58,7 @@ export default function ForceMarkDialog({
   onConfirm,
 }: Readonly<Props>) {
   const { control, handleSubmit, reset } = useForm<ForceMarkValues, any, ForceMarkValues>({
-    resolver: zodResolver(buildForceMarkSchema(labels)) as unknown as Resolver<
+    resolver: zodResolver(makeForceMarkSchema(labels)) as unknown as Resolver<
       ForceMarkValues,
       any,
       ForceMarkValues

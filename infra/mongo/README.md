@@ -7,8 +7,36 @@ stacks from `/opt/duncit-mongo`, installed from `docker-compose.yml` here.
 
 | Stack | Database | User | Roles |
 | --- | --- | --- | --- |
-| production | `test` (the name the old Atlas URI defaulted to) | `duncit_prod` | `readWrite` on `test` and `duncit-staging` (Data Clone writes staging) |
-| staging | `duncit-staging` | `duncit_staging` | `readWrite` on `duncit-staging` |
+| production | `test` (the name the old Atlas URI defaulted to) | `duncit_prod` | `readWrite` on `test`, `duncit-staging` (Data Clone writes staging) and `duncit-lite` |
+| staging | `duncit-staging` | `duncit_staging` | `readWrite` on `duncit-staging` and `duncit-lite-staging` |
+
+Without a `LITE_MONGO_URI` secret, Duncit Lite logs in as the stack's user above.
+That user needs the grant on the Lite database, or the container crash-loops at
+boot with `not authorized on duncit-lite`:
+
+```js
+// mongosh as root, in the admin database
+db.grantRolesToUser("duncit_prod", [{ role: "readWrite", db: "duncit-lite" }])
+db.grantRolesToUser("duncit_staging", [{ role: "readWrite", db: "duncit-lite-staging" }])
+```
+
+## Monitoring role for Tech → Database → Info
+
+The Info page lists every database the user can read, its stats and the
+mongod's container log with nothing beyond the grants above. Three parts need
+the read-only `clusterMonitor` role, which neither app user has by default:
+`serverStatus` (uptime, connections, operation counters, cache), `replSetGetStatus`
+/ `replSetGetConfig` (members, lag, priority) and `local.oplog.rs` (the oplog
+window). Until it is granted the page shows the server's refusal and this
+command in their place:
+
+```js
+// mongosh as root, in the admin database. No restart; the next page load fills in.
+db.grantRolesToUser("duncit_prod", [{ role: "clusterMonitor", db: "admin" }])
+db.grantRolesToUser("duncit_staging", [{ role: "clusterMonitor", db: "admin" }])
+```
+
+`clusterMonitor` cannot write, step a member down or change the config.
 
 ## Layout on the host
 

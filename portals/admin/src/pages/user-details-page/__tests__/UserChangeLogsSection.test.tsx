@@ -229,16 +229,16 @@ describe('UserChangeLogsSection — table wiring', () => {
   });
 
   it('scopes the table fetch to this user and labels the section', async () => {
-    renderWithProviders(<UserChangeLogsSection userId={USER_ID} />);
+    renderWithProviders(<UserChangeLogsSection userId={USER_ID} scope="USER" />);
 
     expect(screen.getByText('User Change Logs')).toBeInTheDocument();
     expect(tableFetchCalls.resultKey).toBe('userChangeLogsTable');
-    expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID });
+    expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID, scope: 'USER' });
     await waitFor(() => expect(screen.getByTestId('table-empty')).toBeInTheDocument());
   });
 
   it('shows the empty copy when there is no change history yet', async () => {
-    renderWithProviders(<UserChangeLogsSection userId={USER_ID} />);
+    renderWithProviders(<UserChangeLogsSection userId={USER_ID} scope="USER" />);
 
     await waitFor(() => expect(screen.getByTestId('table-empty')).toBeInTheDocument());
     expect(screen.getByTestId('table-empty')).toHaveTextContent('No profile changes recorded yet.');
@@ -246,7 +246,7 @@ describe('UserChangeLogsSection — table wiring', () => {
 
   it('never fetches rows when there is no user id yet', async () => {
     __setTableRows([makeRow()]);
-    renderWithProviders(<UserChangeLogsSection userId="" />);
+    renderWithProviders(<UserChangeLogsSection userId="" scope="USER" />);
 
     await waitFor(() => expect(screen.getByTestId('table-empty')).toBeInTheDocument());
     expect(screen.queryAllByTestId('table-row')).toHaveLength(0);
@@ -254,7 +254,7 @@ describe('UserChangeLogsSection — table wiring', () => {
 
   it('renders one row per change, keyed by its own id', async () => {
     __setTableRows([makeRow({ id: 'cl-1' }), makeRow({ id: 'cl-2', field: 'email' })]);
-    renderWithProviders(<UserChangeLogsSection userId={USER_ID} />);
+    renderWithProviders(<UserChangeLogsSection userId={USER_ID} scope="USER" />);
 
     await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(2));
   });

@@ -1,7 +1,6 @@
 import { cacheGet, cacheSet } from '@config/redis';
 import { logs } from '@observability/log';
-import { srRequest, shiprocketError, type Json } from './shiprocket.client';
-import { isShiprocketConfigured } from './shiprocket.account';
+import { hasShiprocketAccount, srRequest, shiprocketError, type Json } from './shiprocket.client';
 import { chargeableWeightKg } from './shiprocket.parcel';
 
 export { isShiprocketConfigured } from './shiprocket.account';
@@ -144,13 +143,25 @@ export async function generatePickup(shipmentId: string): Promise<PickupResult> 
  * Documents
  * ------------------------------------------------------------------ */
 
+/**
+ * Why ShipRocket made no document. The label and invoice endpoints answer 200
+ * with an empty URL and put the reason in `response` — not `message`, which
+ * is what its refusals use — and name the shipments they skipped in
+ * `not_created`. Reading only `message` printed "no URL" for every one.
+ */
+function documentRefusal(data: Json): string {
+  const reason = str(data.response) || str(data.message) || 'no URL';
+  const skipped = Array.isArray(data.not_created) ? data.not_created.map(String).filter(Boolean) : [];
+  return skipped.length ? `${reason} (shipments ${skipped.join(', ')})` : reason;
+}
+
 /** Shipping label PDF for one or more shipments. */
 export async function generateLabel(shipmentIds: string[]): Promise<string> {
   const data = await srRequest('/courier/generate/label', post({ shipment_id: shipmentIds.map(Number) }), {
     op: 'generateLabel',
     retry: true,
   });
-  if (!data.label_url) throw shiprocketError(`ShipRocket did not create the label: ${str(data.message) || 'no URL'}`);
+  if (!data.label_url) throw shiprocketError(`ShipRocket did not create the label: ${documentRefusal(data)}`);
   return str(data.label_url);
 }
 
@@ -160,7 +171,7 @@ export async function printInvoice(srOrderIds: string[]): Promise<string> {
     op: 'printInvoice',
     retry: true,
   });
-  if (!data.invoice_url) throw shiprocketError(`ShipRocket did not create the invoice: ${str(data.message) || 'no URL'}`);
+  if (!data.invoice_url) throw shiprocketError(`ShipRocket did not create the invoice: ${documentRefusal(data)}`);
   return str(data.invoice_url);
 }
 
@@ -429,7 +440,7 @@ async function lookupServiceability(args: ServiceabilityArgs, slab: number): Pro
  * and COD; a gateway failure is never cached.
  */
 export async function getServiceability(args: ServiceabilityArgs): Promise<ServiceabilityQuote | null> {
-  if (!(await isShiprocketConfigured())) return null;
+  if (!(await hasShiprocketAccount())) return null;
   const slab = weightSlab(args);
   const key = `sr:svc:${args.pickupPincode}:${args.deliveryPincode}:${slab}:${args.cod ? 1 : 0}`;
   const cached = await cacheGet<{ quote: ServiceabilityQuote | null }>(key);

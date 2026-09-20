@@ -7,3 +7,10 @@ export {
   meetingNotice,
 } from './state';
 export { EARN_JOURNEYS, EARN_KINDS, PARTNER_PORTAL_URL, partnerPortalUrl } from './journeys';
+export {
+  SOCIAL_HANDLE_KEYS,
+  socialHandleLinks,
+  type SocialHandleKey,
+  type SocialHandleLink,
+  type SocialHandles,
+} from './social-handles';

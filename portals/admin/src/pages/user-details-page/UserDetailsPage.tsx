@@ -108,7 +108,12 @@ export default function UserDetailsPage() {
           {
             value: 'change-logs',
             label: t('admin.profile.changeLogs'),
-            content: <UserChangeLogsSection userId={userId} />,
+            content: <UserChangeLogsSection userId={userId} scope="USER" />,
+          },
+          {
+            value: 'admin-change-logs',
+            label: t('admin.profile.adminChangeLogs'),
+            content: <UserChangeLogsSection userId={userId} scope="ADMIN" />,
           },
         ]}
       />

@@ -9,7 +9,7 @@ import {
   type IAppBuild,
   type IAppBuildAppStoreRelease,
 } from './appBuild.model';
-import { ascToken, findApp } from './appStoreConnect.gateway';
+import { ascToken, findApp, isTransientAscError } from './appStoreConnect.gateway';
 import { requireAscConfig } from './iosSigning.service';
 import * as uploads from './ascBuildUpload.gateway';
 import * as listings from './ascListing.gateway';
@@ -173,13 +173,15 @@ async function stepListing(build: IAppBuild, index: number, entry: IAppBuildAppS
   const appInfoId = await listings.editableAppInfo(token, entry.asc_app_id);
   await listings.upsertAppInfoLocalization(token, appInfoId, listing);
   await listings.setPrimaryCategory(token, appInfoId, listing.primaryCategory);
-  const versionId = await listings.ensureAppStoreVersion(token, entry.asc_app_id, build.version, listing.copyright);
-  await patch(build.id, index, { version_id: versionId });
-  const localizationId = await listings.upsertVersionLocalization(token, versionId, listing);
+  const version = await listings.ensureAppStoreVersion(token, entry.asc_app_id, build.version, listing.copyright);
+  await patch(build.id, index, { version_id: version.id });
+  // Apple refuses "What's New" on an app's first version; the field stays on the listing for the next one.
+  const copy = version.first ? { ...listing, whatsNew: '' } : listing;
+  const localizationId = await listings.upsertVersionLocalization(token, version.id, copy);
   await syncScreenshotSet(token, localizationId, 'APP_IPHONE_67', await fetchStoreAssets(doc.iphone_screenshots));
   await syncScreenshotSet(token, localizationId, 'APP_IPAD_PRO_3GEN_129', await fetchStoreAssets(doc.ipad_screenshots));
-  await listings.upsertReviewDetail(token, versionId, listing.review);
-  await listings.attachBuild(token, versionId, entry.asc_build_id);
+  await listings.upsertReviewDetail(token, version.id, listing.review);
+  await listings.attachBuild(token, version.id, entry.asc_build_id);
   return 'SUBMIT';
 }
 
@@ -208,6 +210,34 @@ async function runStep(build: IAppBuild, index: number, entry: IAppBuildAppStore
   }
 }
 
+/**
+ * What a step's failure means for the push. A dropped connection or an Apple
+ * that is busy is worth another go: the entry stays PUSHING with a note on
+ * its stage, and the scheduler hands it back to `drive` once the heartbeat
+ * is stale — every step re-reads what the row recorded, so it carries on
+ * rather than starting over. Only a refusal ends the push.
+ */
+async function settleFailure(build: IAppBuild, index: number, entry: IAppBuildAppStoreRelease, err: unknown): Promise<void> {
+  const reason = clip(err instanceof Error ? err.message : String(err), 500);
+  if (!isTransientAscError(err)) {
+    await finish(build, index, entry, reason);
+    return;
+  }
+  await patch(build.id, index, { stage: `${STAGE[entry.step]} — retrying shortly (${reason})` });
+  logs.server.warn('appBuild', 'appStoreDeferred', {
+    build_no: build.build_no,
+    track: entry.track,
+    step: entry.step,
+    reason,
+  });
+}
+
+/** After a deferral the stage still carries the note; a step that then ran and is waiting gets its own words back. */
+async function restoreStage(buildId: string, index: number, entry: IAppBuildAppStoreRelease): Promise<void> {
+  if (entry.stage === STAGE[entry.step]) return;
+  await patch(buildId, index, { stage: STAGE[entry.step] });
+}
+
 /** Run steps until one has to wait for Apple, or the push is over either way. */
 async function drive(buildId: string, index: number): Promise<void> {
   const key = `${buildId}:${index}`;
@@ -226,10 +256,13 @@ async function drive(buildId: string, index: number): Promise<void> {
       try {
         next = await runStep(build, index, entry);
       } catch (err) {
-        await finish(build, index, entry, clip(err instanceof Error ? err.message : String(err), 500));
+        await settleFailure(build, index, entry, err);
         return;
       }
-      if (next === 'WAIT') return;
+      if (next === 'WAIT') {
+        await restoreStage(buildId, index, entry);
+        return;
+      }
       if (next === 'DONE') {
         await finish(build, index, entry, '');
         return;

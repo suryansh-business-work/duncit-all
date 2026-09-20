@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, YStack } from 'tamagui';
 import {
+  canDirectMark,
   canScanTickets,
   earningsBodyFor,
   mwebAttendanceLabels,
@@ -17,6 +18,9 @@ import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { StackScreen } from '@/components/StackScreen';
 import { AttendanceOtpSheet } from '@/components/attendance/AttendanceOtpSheet';
 import { AttendanceRosterSection } from '@/components/attendance/AttendanceRosterSection';
+import { ClubAdminMarkSheet } from '@/components/attendance/ClubAdminMarkSheet';
+import { DirectMarkSheet } from '@/components/attendance/DirectMarkSheet';
+import { ForceMarkSheet } from '@/components/attendance/ForceMarkSheet';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { NoticeCard } from '@/components/attendance/NoticeCard';
 import {
@@ -93,6 +97,21 @@ export function PodAttendanceScreen() {
           />
         ) : null}
 
+        {/* On EVERY pod a Club Admin may still write to, empty roster included
+            — the whole point is that they no longer have to find a row to
+            start from. Never offered to a host: their by-hand mark is gated on
+            the admin's one-time-code setting, and a door that skipped it would
+            quietly undo the setting. */}
+        {canDirectMark(data) ? (
+          <PillButton
+            testID="attendance-direct-cta"
+            label={labels.directCta}
+            onPress={board.openDirect}
+            variant="ghost"
+            disabled={false}
+          />
+        ) : null}
+
         {data.rows.length === 0 ? (
           <Text fontSize={14} color="$muted">
             {labels.emptyRoster}
@@ -105,6 +124,7 @@ export function PodAttendanceScreen() {
           rows={unmarked}
           labels={labels}
           canMark={data.can_mark}
+          viewer={data.viewer}
           busyId={board.busyId}
           formatDateTime={formatDateTime}
           onMark={onMark}
@@ -121,6 +141,7 @@ export function PodAttendanceScreen() {
           rows={marked}
           labels={labels}
           canMark={data.can_mark}
+          viewer={data.viewer}
           busyId={board.busyId}
           formatDateTime={formatDateTime}
         />
@@ -138,7 +159,12 @@ export function PodAttendanceScreen() {
           />
         ) : null}
 
-        <ClubAdminHelpCard admins={data.club_admins} labels={labels} />
+        {/* Only useful to a host who has run out of options — a Club Admin
+            reading their own section does not need their own phone number.
+            The MUI twin gates it the same way (rule 27). */}
+        {data.viewer === 'HOST' ? (
+          <ClubAdminHelpCard admins={data.club_admins} labels={labels} />
+        ) : null}
       </YStack>
     );
   };
@@ -149,6 +175,31 @@ export function PodAttendanceScreen() {
         {body()}
       </RefreshScrollView>
 
+      {/* The Club Admin's doors. Asked in the order the shared MUI board asks
+          them (rule 27): which door, then either the code or the name — and
+          every by-name mark still lands on the warning that names the person
+          (rule 41). */}
+      <ClubAdminMarkSheet
+        row={board.choiceRow}
+        labels={labels}
+        onClose={board.cancelChoice}
+        onChooseOtp={board.chooseOtp}
+        onChooseDirect={board.chooseDirect}
+      />
+      <DirectMarkSheet
+        open={board.directOpen}
+        rows={data?.rows ?? []}
+        labels={labels}
+        onClose={board.cancelDirect}
+        onPick={board.pickDirect}
+      />
+      <ForceMarkSheet
+        row={board.forceRow}
+        labels={labels}
+        busy={!!board.busyId}
+        onClose={board.cancelForce}
+        onConfirm={board.confirmForce}
+      />
       <AttendanceOtpSheet
         podId={podId}
         row={board.otpRow}

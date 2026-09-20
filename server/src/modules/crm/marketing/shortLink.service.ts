@@ -19,20 +19,10 @@ import {
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { shortLinkClickService } from './shortLinkClick.service';
+import { classifyDestination, isDuncitHost } from './shortLink.destination';
+import { shortLinkPolicyService } from './shortLinkPolicy.service';
+import type { ConsentSignal } from './shortLinkClick.model';
 
-/**
- * Where a short link is allowed to point.
- *
- * duncit.com/<code> carries our own brand. An admin-authored destination is
- * not the classic open-redirect hole (nothing in the REQUEST picks it), but an
- * unrestricted one still lets a compromised or careless marketing account mint
- * duncit.com links that land on someone else's site. Our own properties plus
- * the two app stores cover every real campaign; anything else is refused with
- * a message that says so.
- */
-const ALLOWED_HOSTS = new Set(['play.google.com', 'apps.apple.com']);
-const isAllowedHost = (host: string) =>
-  host === 'duncit.com' || host.endsWith('.duncit.com') || ALLOWED_HOSTS.has(host);
 
 const inputSchema = yup.object({
   label: yup.string().trim().min(3).max(120).required(),
@@ -67,6 +57,10 @@ const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
     // share campaign and one filed by hand under the same campaign.
     utm_campaign: { type: 'enum' },
     share_target: { type: 'enum' },
+    // What the External Links page filters on: a link pointing somewhere that
+    // is not ours is a different thing to manage, even though it is the same
+    // row in the same table.
+    is_external: { type: 'boolean' },
     is_active: { type: 'boolean' },
     click_count: { type: 'number' },
     last_clicked_at: { type: 'date' },
@@ -74,29 +68,6 @@ const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { created_at: -1 },
 };
-
-function validateDestination(raw: string) {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new GraphQLError('Destination must be a full URL, including https://', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
-  }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    throw new GraphQLError('Destination must be an http or https URL', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
-  }
-  if (!isAllowedHost(url.hostname)) {
-    throw new GraphQLError(
-      'A duncit.com short link may only point at a Duncit site or an app store listing',
-      { extensions: { code: 'BAD_USER_INPUT' } },
-    );
-  }
-  return url.toString();
-}
 
 /** A free-text OTHER that slugs to nothing would silently produce
  * `utm_source=` — refuse it rather than emit an untagged link. */
@@ -174,6 +145,7 @@ async function toPub(doc: IShortLink) {
       utm_medium: doc.utm_medium,
       utm_campaign: doc.utm_campaign,
       share: !!doc.share_target,
+      external: !!doc.is_external,
     }),
     source: doc.source,
     source_other: doc.source_other ?? null,
@@ -183,6 +155,7 @@ async function toPub(doc: IShortLink) {
     utm_source: doc.utm_source,
     utm_medium: doc.utm_medium,
     utm_campaign: doc.utm_campaign ?? null,
+    is_external: !!doc.is_external,
     is_active: doc.is_active,
     click_count: doc.click_count,
     first_clicked_at: doc.first_clicked_at ? doc.first_clicked_at.toISOString() : null,
@@ -200,6 +173,19 @@ async function toPub(doc: IShortLink) {
  */
 const SHARE_SOURCE = 'DIRECT_LINK_SHARE' as const;
 const SHARE_MEDIUM = 'REFERRAL' as const;
+
+/**
+ * Whether a destination the SERVER built points off our own properties — the
+ * venue map a shared pod carries is the one that does. Never throws: this URL
+ * was not typed by anyone, so there is nothing to refuse, only to classify.
+ */
+function isExternalUrl(raw: string): boolean {
+  try {
+    return !isDuncitHost(new URL(raw).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
 
 const shortUrlFor = (websiteUrl: string, code: string) =>
   `${websiteUrl.replace(/\/$/, '')}/${code}`;
@@ -227,6 +213,10 @@ async function shareResult(doc: IShortLink) {
 async function refreshDestination(doc: IShortLink, destination: ShareDestination | null) {
   if (!destination || destination.url === doc.destination_url) return doc;
   doc.destination_url = destination.url;
+  // Re-derived with the URL rather than left as it was: a pod that moves to a
+  // venue we do not host turns its map link external, and the flag is what the
+  // External Links page and the dl/dlc tagging both read.
+  doc.is_external = isExternalUrl(destination.url);
   doc.label = destination.label;
   await doc.save();
   return doc;
@@ -247,6 +237,7 @@ async function createShareLink(
       // caller, so the destination allow-list a hand-typed link is held to
       // does not apply — a pod venue map legitimately points at Google Maps.
       destination_url: destination.url,
+      is_external: isExternalUrl(destination.url),
       source: SHARE_SOURCE,
       medium: SHARE_MEDIUM,
       campaign_id: campaign.campaign_id,
@@ -281,7 +272,8 @@ export const shortLinkService = {
           extensions: { code: 'BAD_USER_INPUT' },
         });
       });
-    const destination = validateDestination(payload.destination_url);
+    const { blocked_domains } = await shortLinkPolicyService.rules();
+    const destination = classifyDestination(payload.destination_url, blocked_domains);
     const utm_source = requireText(sourceUtm(payload.source, payload.source_other), 'source');
     const utm_medium = requireText(mediumUtm(payload.medium, payload.medium_other), 'medium');
     const campaign = await campaignUtm(payload.campaign_id);
@@ -289,7 +281,8 @@ export const shortLinkService = {
     const doc = await ShortLinkModel.create({
       code: await uniqueCode(),
       label: payload.label,
-      destination_url: destination,
+      destination_url: destination.url,
+      is_external: destination.is_external,
       source: payload.source,
       source_other: payload.source === 'OTHER' ? payload.source_other : null,
       medium: payload.medium,
@@ -409,6 +402,7 @@ export const shortLinkService = {
       utm_medium: doc.utm_medium,
       utm_campaign: doc.utm_campaign,
       share: !!doc.share_target,
+      external: !!doc.is_external,
     });
   },
 
@@ -428,6 +422,7 @@ export const shortLinkService = {
         utm_campaign: doc.utm_campaign,
         click_id: clickId,
         share: !!doc.share_target,
+        external: !!doc.is_external,
       }),
       shortLinkId: doc._id.toHexString(),
     };
@@ -447,6 +442,7 @@ export const shortLinkService = {
       userAgent?: string | null;
       forwardedFor?: string | null;
       remoteAddress?: string | null;
+      consentSignal?: ConsentSignal | null;
     },
     now = new Date(),
   ) {
@@ -462,15 +458,29 @@ export const shortLinkService = {
       userAgent: meta.userAgent,
       forwardedFor: meta.forwardedFor,
       remoteAddress: meta.remoteAddress,
+      consentSignal: meta.consentSignal ?? null,
       at: now,
       landed: true,
     });
     return clickId;
   },
 
-  /** Aggregated click analytics for one link. */
-  stats(id: string) {
-    return shortLinkClickService.stats(id);
+  /**
+   * Aggregated click analytics for one link. `days` of 0 — the default — is
+   * all time, which is the number the link's own lifetime counter shows.
+   */
+  stats(id: string, days = 0) {
+    return shortLinkClickService.stats(id, days);
+  },
+
+  /**
+   * Answer an erasure request for one link: every click row goes, the link
+   * and its lifetime count stay. Returns how many rows were removed, so the
+   * console can say what it did rather than only that it did something.
+   */
+  async eraseClicks(id: string) {
+    await this.byId(id);
+    return shortLinkClickService.erase(id);
   },
 
   /** A page of individual clicks for one link. */

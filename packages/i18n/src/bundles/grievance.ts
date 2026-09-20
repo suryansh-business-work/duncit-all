@@ -26,6 +26,10 @@ export const GRIEVANCE_BUNDLE: NestedCatalogue = {
       description: 'What happened?',
     },
     optional: 'Optional',
+    /** Under a name, email, phone or address the account already answered — the
+     *  field is shown, not asked again, so the person the officer writes back
+     *  to is the one signed in. */
+    fromAccount: 'From your Duncit account',
     descriptionHint: 'Include dates, pod names or order numbers if you have them.',
     submit: 'Submit grievance',
     submitting: 'Submitting…',

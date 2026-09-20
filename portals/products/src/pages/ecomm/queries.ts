@@ -43,6 +43,60 @@ export interface EcommBrandDocument {
   url: string;
 }
 
+export type BrandIntegrationProvider = 'SHIPROCKET' | 'RAZORPAY';
+
+/** One brand integration as the console reads it — the secret never leaves
+ * the server; `identifier` is the public half and `has_secret` says whether
+ * the other half is on file. */
+export interface BrandIntegrationStatus {
+  provider: BrandIntegrationProvider;
+  configured: boolean;
+  connected: boolean;
+  checked_at?: string | null;
+  message: string;
+  details: string[];
+  identifier: string;
+  has_secret: boolean;
+  /** ShipRocket: the default pickup nickname on that account. */
+  pickup_location: string;
+  /** Razorpay: the key id is a live key, so real money moves. */
+  live_mode: boolean;
+  has_webhook_secret: boolean;
+}
+
+export interface BrandIntegrations {
+  shiprocket: BrandIntegrationStatus;
+  razorpay: BrandIntegrationStatus;
+}
+
+/** The Brand Consent (Legal portal) as the partner signed it. */
+export interface BrandConsent {
+  accepted: boolean;
+  signed_name: string;
+  signed_at?: string | null;
+  policy_slug: string;
+  policy_title: string;
+  /** sha256 of the wording that was signed. */
+  content_hash: string;
+  /** Signed against the consent's CURRENT wording. False once Legal edits it. */
+  current: boolean;
+  /** Legal has published a Brand Consent to sign. */
+  available: boolean;
+}
+
+export interface BrandStepState {
+  key: string;
+  complete: boolean;
+  required: boolean;
+}
+
+/** Wizard progress — required steps done, as a percentage. */
+export interface BrandCompletion {
+  percent: number;
+  next_step: number;
+  steps: BrandStepState[];
+}
+
 /** Row shape consumed by the brands review table AND the review dialog — rows
  * carry the whole submission so approving needs no second round trip. */
 export interface EcommBrandRow {
@@ -71,9 +125,39 @@ export interface EcommBrandRow {
   website_url?: string | null;
   instagram_url?: string | null;
   documents?: EcommBrandDocument[] | null;
+  address_line1?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  established_year?: number | null;
+  account_holder_name?: string | null;
+  account_number?: string | null;
+  ifsc_code?: string | null;
+  upi_id?: string | null;
+  completion: BrandCompletion;
+  integrations: BrandIntegrations;
+  consent: BrandConsent;
   submitted_at?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
   created_at?: string | null;
 }
+
+/** Every field of one integration — read by the row AND returned by a re-check. */
+const BRAND_INTEGRATION_STATUS_FIELDS = gql`
+  fragment BrandIntegrationStatusFields on BrandIntegrationStatus {
+    provider
+    configured
+    connected
+    checked_at
+    message
+    details
+    identifier
+    has_secret
+    pickup_location
+    live_mode
+    has_webhook_secret
+  }
+`;
 
 /** Everything the review inbox shows plus everything the review dialog reads. */
 const ECOMM_BRAND_ROW_FIELDS = gql`
@@ -106,9 +190,47 @@ const ECOMM_BRAND_ROW_FIELDS = gql`
       type
       url
     }
+    address_line1
+    postal_code
+    country
+    established_year
+    account_holder_name
+    account_number
+    ifsc_code
+    upi_id
+    completion {
+      percent
+      next_step
+      steps {
+        key
+        complete
+        required
+      }
+    }
+    integrations {
+      shiprocket {
+        ...BrandIntegrationStatusFields
+      }
+      razorpay {
+        ...BrandIntegrationStatusFields
+      }
+    }
+    consent {
+      accepted
+      signed_name
+      signed_at
+      policy_slug
+      policy_title
+      content_hash
+      current
+      available
+    }
     submitted_at
+    approved_at
+    rejected_at
     created_at
   }
+  ${BRAND_INTEGRATION_STATUS_FIELDS}
 `;
 
 /**
@@ -158,6 +280,33 @@ export const REJECT_ECOMM_BRAND = gql`
       status
       reviewer_notes
     }
+  }
+`;
+
+/** Check a brand's saved credential against the vendor during review. */
+export const REVIEW_BRAND_INTEGRATION = gql`
+  mutation ReviewBrandIntegration($brand_doc_id: ID!, $provider: BrandIntegrationProvider!) {
+    reviewBrandIntegration(brand_doc_id: $brand_doc_id, provider: $provider) {
+      ...BrandIntegrationStatusFields
+    }
+  }
+  ${BRAND_INTEGRATION_STATUS_FIELDS}
+`;
+
+/** Reversible hide of the brand and its products from the shop and the pod picker. */
+export const SET_ECOMM_BRAND_ACTIVE = gql`
+  mutation SetEcommBrandActive($brand_doc_id: ID!, $active: Boolean!) {
+    setEcommBrandActive(brand_doc_id: $brand_doc_id, active: $active) {
+      id
+      is_active
+    }
+  }
+`;
+
+/** Delete a brand that is not approved (or approved with no products). The owner is told. */
+export const ADMIN_DELETE_ECOMM_BRAND = gql`
+  mutation AdminDeleteEcommBrand($brand_doc_id: ID!, $notes: String) {
+    adminDeleteEcommBrand(brand_doc_id: $brand_doc_id, notes: $notes)
   }
 `;
 

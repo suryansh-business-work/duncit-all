@@ -15,7 +15,8 @@ import {
 } from './onboarding-intro-settings';
 
 /** Onboarding Portal > Settings: the per-role intro copy shown first on each
- * of the four onboarding flows (native + mWeb), before the category picker. */
+ * of the four onboarding flows (native + mWeb), before the category picker,
+ * and beside it the social media handles the survey pages show. */
 export default function OnboardingSettingsPage() {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<OnboardingIntroQueryResult>(ONBOARDING_INTRO_SETTINGS, {
@@ -40,7 +41,7 @@ export default function OnboardingSettingsPage() {
   };
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 720 }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 1120 }}>
       <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
         <SettingsIcon color="primary" />
         <Box>

@@ -50,7 +50,7 @@ export const storeTypeDefs = /* GraphQL */ `
     about_html: String!
     social_links: [StoreSocialLink!]!
     currency_symbol: String!
-    "Finance's test switch — checkout captures without a real gateway."
+    "On: no Razorpay account is configured and Finance's test switch is on, so checkout captures without taking money."
     dummy_mode: Boolean!
     "On: delivery is limited to an operator-kept pincode list (storePincodeServiceable says which)."
     serviceable_pincodes_enabled: Boolean!

@@ -44,6 +44,12 @@ export function GrievanceForm({
   // Rebuilt when the language changes so the messages follow it.
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
   const noTickets = !ticketsLoading && tickets.length === 0;
+  // What the account already answered is shown, not asked again: the person
+  // the officer writes back to has to be the one signed in. A field the
+  // account left blank (no phone or address on file yet) stays typeable, so a
+  // required field is never a dead end.
+  const fromAccount = (field: keyof GrievanceValues) =>
+    prefill?.[field] ? { hint: t('grievance.fromAccount'), readOnly: true } : {};
 
   const { control, handleSubmit } = useForm<GrievanceValues, any, GrievanceValues>({
     defaultValues: grievanceDefaults,
@@ -57,15 +63,34 @@ export function GrievanceForm({
   return (
     <SurfaceCard testID="grievance-form" gap={12}>
       <GrievanceTicketField control={control} options={tickets} loading={ticketsLoading} />
-      <GrievanceField control={control} name="name" label={t('grievance.field.name')} required />
-      <GrievanceField control={control} name="email" label={t('grievance.field.email')} required />
-      <GrievanceField control={control} name="phone" label={t('grievance.field.phone')} required />
+      <GrievanceField
+        control={control}
+        name="name"
+        label={t('grievance.field.name')}
+        required
+        {...fromAccount('name')}
+      />
+      <GrievanceField
+        control={control}
+        name="email"
+        label={t('grievance.field.email')}
+        required
+        {...fromAccount('email')}
+      />
+      <GrievanceField
+        control={control}
+        name="phone"
+        label={t('grievance.field.phone')}
+        required
+        {...fromAccount('phone')}
+      />
       <GrievanceField
         control={control}
         name="address"
         label={t('grievance.field.address')}
         hint={t('grievance.optional')}
         multiline
+        {...fromAccount('address')}
       />
       <GrievanceField
         control={control}

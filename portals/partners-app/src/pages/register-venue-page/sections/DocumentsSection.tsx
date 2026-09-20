@@ -29,6 +29,9 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
   const listError = formState.errors.documents?.root?.message ?? formState.errors.documents?.message;
   const approvedEdit = mode === 'edit-approved';
   const isRowLocked = (index: number) => approvedEdit && index < lockedDocCount;
+  // A type already given to one row is offered to no other, and a new row starts on the first free type.
+  const usedTypes = new Set(documents.map((doc) => doc.type));
+  const nextType = config.doc_types.find((type) => !usedTypes.has(type));
 
   return (
     <Stack spacing={2.5}>
@@ -105,10 +108,11 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
                   size="small"
                   disabled={isRowLocked(index)}
                   sx={{ minWidth: 180 }}
+                  data-testid={`register-venue-document-type-${row.id}`}
                   error={Boolean(fieldState.error)}
                   helperText={fieldState.error?.message ?? (isRowLocked(index) ? 'Verified document' : ' ')}
                 >
-                  {config.doc_types.map((type) => (
+                  {config.doc_types.filter((type) => type === field.value || !usedTypes.has(type)).map((type) => (
                     <MenuItem key={type} value={type}>
                       {type}
                     </MenuItem>
@@ -147,13 +151,20 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
           )}
         </Stack>
       ))}
-      <DuncitButton
-        startIcon={<AddIcon />}
-        onClick={() => append({ type: config.doc_types[0] ?? '', url: '' })}
-        sx={{ alignSelf: 'flex-start' }}
-      >
-        {t('partners.ecommBrandPage.addDocument')}
-      </DuncitButton>
+      {nextType ? (
+        <DuncitButton
+          startIcon={<AddIcon />}
+          onClick={() => append({ type: nextType, url: '' })}
+          sx={{ alignSelf: 'flex-start' }}
+          data-testid="register-venue-add-document"
+        >
+          {t('partners.ecommBrandPage.addDocument')}
+        </DuncitButton>
+      ) : (
+        <FormHelperText data-testid="register-venue-all-document-types-added">
+          {t('partners.registerVenuePage.allDocumentTypesAdded')}
+        </FormHelperText>
+      )}
       <MediaPickerDialog
         open={pickerIndex !== null}
         onClose={() => setPickerIndex(null)}

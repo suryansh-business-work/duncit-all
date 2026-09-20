@@ -5,7 +5,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { useTranslation } from '../i18n/useTranslation';
 import { isRunning, jobPercent } from './job-progress';
-import type { BackgroundJob, BackgroundJobStatus } from './queries';
+import type { BackgroundJob, BackgroundJobKind, BackgroundJobStatus } from './queries';
 
 const STATUS_COLORS: StatusColorMap = {
   RUNNING: 'info',
@@ -15,11 +15,33 @@ const STATUS_COLORS: StatusColorMap = {
 };
 
 /** Literal keys per status, so the localization gate can see every one. */
-const STATUS_COPY: Readonly<Record<BackgroundJobStatus, { title: string; chip: string }>> = {
-  RUNNING: { title: 'shell.jobs.deleting', chip: 'shell.jobs.statusRunning' },
-  COMPLETED: { title: 'shell.jobs.deleted', chip: 'shell.jobs.statusCompleted' },
-  FAILED: { title: 'shell.jobs.stopped', chip: 'shell.jobs.statusFailed' },
-  CANCELLED: { title: 'shell.jobs.cancelled', chip: 'shell.jobs.statusCancelled' },
+const CHIP_COPY: Readonly<Record<BackgroundJobStatus, string>> = {
+  RUNNING: 'shell.jobs.statusRunning',
+  COMPLETED: 'shell.jobs.statusCompleted',
+  FAILED: 'shell.jobs.statusFailed',
+  CANCELLED: 'shell.jobs.statusCancelled',
+};
+
+/** What a job is called at each status — a delete counts rows, a translation keys. */
+const TITLE_COPY: Readonly<Record<BackgroundJobKind, Readonly<Record<BackgroundJobStatus, string>>>> = {
+  BULK_DELETE: {
+    RUNNING: 'shell.jobs.deleting',
+    COMPLETED: 'shell.jobs.deleted',
+    FAILED: 'shell.jobs.stopped',
+    CANCELLED: 'shell.jobs.cancelled',
+  },
+  AI_TRANSLATE: {
+    RUNNING: 'shell.jobs.translating',
+    COMPLETED: 'shell.jobs.translated',
+    FAILED: 'shell.jobs.translateStopped',
+    CANCELLED: 'shell.jobs.translateCancelled',
+  },
+};
+
+/** The line under the bar when some of the work did not land. */
+const FAILED_COPY: Readonly<Record<BackgroundJobKind, string>> = {
+  BULK_DELETE: 'shell.jobs.failedRows',
+  AI_TRANSLATE: 'shell.jobs.unusableKeys',
 };
 
 const BAR_COLOR: Readonly<Record<BackgroundJobStatus, 'info' | 'success' | 'error' | 'inherit'>> = {
@@ -38,7 +60,6 @@ export interface JobRowProps {
 /** One job in the drawer: what it is, where it came from, how far it got, and why it stopped. */
 export function JobRow({ job, onCancel, onDismiss }: Readonly<JobRowProps>) {
   const { t } = useTranslation();
-  const copy = STATUS_COPY[job.status];
   const percent = jobPercent(job);
   const running = isRunning(job);
   const count = running ? job.total : job.succeeded;
@@ -50,14 +71,14 @@ export function JobRow({ job, onCancel, onDismiss }: Readonly<JobRowProps>) {
     <Box sx={{ py: 1.5, borderBottom: 1, borderColor: 'divider' }} data-testid={`background-job-${job.id}`}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2">{t(copy.title, { count })}</Typography>
+          <Typography variant="subtitle2">{t(TITLE_COPY[job.kind][job.status], { count })}</Typography>
           {job.label && (
             <Link href={job.url} variant="caption" underline="hover" sx={{ display: 'block' }} noWrap>
               {job.label}
             </Link>
           )}
         </Box>
-        <StatusChip status={job.status} colorMap={STATUS_COLORS} label={t(copy.chip)} />
+        <StatusChip status={job.status} colorMap={STATUS_COLORS} label={t(CHIP_COPY[job.status])} />
         <Tooltip title={actionLabel}>
           <DuncitIconButton
             size="small"
@@ -83,7 +104,7 @@ export function JobRow({ job, onCancel, onDismiss }: Readonly<JobRowProps>) {
       </Typography>
       {job.failed > 0 && (
         <Typography variant="caption" sx={{ color: 'error.main', display: 'block' }}>
-          {t('shell.jobs.failedRows', { count: job.failed })}
+          {t(FAILED_COPY[job.kind], { count: job.failed })}
         </Typography>
       )}
       {reason && (

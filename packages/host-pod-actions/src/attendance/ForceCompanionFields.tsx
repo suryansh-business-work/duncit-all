@@ -1,7 +1,7 @@
 import { Controller, useFieldArray, type Control } from 'react-hook-form';
 import { Divider, Stack, TextField, Typography } from '@mui/material';
 import type { PodAttendanceLabels } from '@duncit/utils';
-import type { ForceMarkValues } from './force.form';
+import type { ForceMarkValues } from '@duncit/forms/schemas';
 
 interface Props {
   control: Control<ForceMarkValues>;

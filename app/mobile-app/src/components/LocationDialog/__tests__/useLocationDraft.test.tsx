@@ -16,6 +16,7 @@ const reverse = Location.reverseGeocodeAsync as jest.Mock;
 
 const loc = (over: Record<string, unknown>) => ({
   id: 'l1',
+  location_id: 'town',
   location_name: 'Town',
   city: 'Town',
   state: 'State',

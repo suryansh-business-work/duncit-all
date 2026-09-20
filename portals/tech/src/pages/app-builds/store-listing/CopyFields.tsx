@@ -37,12 +37,20 @@ function CategoryField({ control, categories, currentCategory }: Readonly<Props>
         name="primary_category"
         label={label}
         hint={t('tech.storeListing.primaryCategoryUnavailable')}
+        required
       />
     );
   }
   const options = categories.includes(currentCategory) || !currentCategory ? categories : [currentCategory, ...categories];
   return (
-    <RhfTextField control={control} name="primary_category" label={label} hint={t('tech.storeListing.primaryCategoryHint')} select>
+    <RhfTextField
+      control={control}
+      name="primary_category"
+      label={label}
+      hint={t('tech.storeListing.primaryCategoryHint')}
+      select
+      required
+    >
       {options.map((id) => (
         <MenuItem key={id} value={id}>
           {humanize(id)}
@@ -64,6 +72,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         name="name"
         label={t('tech.storeListing.name')}
         hint={t('tech.storeListing.nameHint', { vars: max(LISTING_LIMITS.name) })}
+        required
       />
       <RhfTextField
         control={control}
@@ -72,6 +81,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         hint={t('tech.storeListing.descriptionHint', { vars: max(LISTING_LIMITS.description) })}
         multiline
         minRows={6}
+        required
       />
       <RhfTextField
         control={control}
@@ -87,6 +97,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         label={t('tech.storeListing.privacyPolicyUrl')}
         hint={t('tech.storeListing.privacyPolicyUrlHint')}
         type="url"
+        required
       />
       <RhfTextField
         control={control}
@@ -94,6 +105,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         label={t('tech.storeListing.supportUrl')}
         hint={t('tech.storeListing.supportUrlHint')}
         type="url"
+        required
       />
       <SectionTitle label={t('tech.storeListing.sectionApple')} />
       <RhfTextField
@@ -113,6 +125,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         name="copyright"
         label={t('tech.storeListing.copyright')}
         hint={t('tech.storeListing.copyrightHint')}
+        required
       />
       <CategoryField control={control} categories={categories} currentCategory={currentCategory} />
       <RhfTextField
@@ -128,6 +141,7 @@ export default function CopyFields({ control, categories, currentCategory }: Rea
         name="short_description"
         label={t('tech.storeListing.shortDescription')}
         hint={t('tech.storeListing.shortDescriptionHint', { vars: max(LISTING_LIMITS.short_description) })}
+        required
       />
     </Stack>
   );

@@ -2,22 +2,17 @@ import { useCallback, useMemo, type MutableRefObject, type ReactNode } from 'rea
 import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitTable, type TableFetch } from '@duncit/table';
 import { useFeatureFlag } from '@duncit/app-settings';
-import { buildPodsColumns } from './podsColumns';
+import { buildPodsColumns, type PodsColumnDeps } from './podsColumns';
+import { isBelowMinPax } from './podsColumns.values';
 import type { PodRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
-interface Props {
+/** The column deps are the page's own callbacks; the table adds only what
+ *  it wires itself (the translator and the product flag come from hooks). */
+interface Props extends Omit<PodsColumnDeps, 't' | 'showProducts'> {
   fetchRows: TableFetch<PodRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
-  clubName: (id: string) => string;
-  venueName: (id: string) => string;
-  locName: (id: string) => string;
-  onEdit: (p: PodRow) => void;
-  onQuickEdit: (p: PodRow) => void;
-  onDelete: (p: PodRow) => void;
-  onComplete: (p: PodRow) => void;
-  onMonitor: (p: PodRow) => void;
   onView: (p: PodRow) => void;
 }
 
@@ -30,6 +25,7 @@ export default function PodsTable({
   clubName,
   venueName,
   locName,
+  minPax,
   onEdit,
   onQuickEdit,
   onDelete,
@@ -40,14 +36,15 @@ export default function PodsTable({
   const { t } = useTranslation();
   const theme = useTheme();
   const showProducts = useFeatureFlag('is_product_visible');
-  // A pod the auto-cancel sweep would cancel is the one row an admin must not
-  // scroll past — red across the whole row, not just a chip in one cell.
+  // A pod the auto-cancel sweep would cancel, or one short of its activity's
+  // minimum people, is a row an admin must not scroll past — red across the
+  // whole row, not just a chip in one cell.
   const getRowStyle = useCallback(
     (p: PodRow) =>
-      p.cancellation_risk?.at_risk && !p.is_deleted
+      (p.cancellation_risk?.at_risk && !p.is_deleted) || isBelowMinPax(p, minPax(p.club_id))
         ? { backgroundColor: alpha(theme.palette.error.main, 0.14) }
         : undefined,
-    [theme],
+    [theme, minPax],
   );
   const columns = useMemo(
     () =>
@@ -56,6 +53,7 @@ export default function PodsTable({
         clubName,
         venueName,
         locName,
+        minPax,
         onEdit,
         onQuickEdit,
         onDelete,
@@ -63,7 +61,7 @@ export default function PodsTable({
         onMonitor,
         t,
       }),
-    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t],
+    [showProducts, clubName, venueName, locName, minPax, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t],
   );
 
   return (

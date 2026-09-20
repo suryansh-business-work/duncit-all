@@ -88,11 +88,25 @@ describe('approval — ecomm change requests', () => {
     const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
     const ownerId = new Types.ObjectId();
     const brandId = new Types.ObjectId();
+    // approve() refuses a brand whose wizard is incomplete, so the sneaky
+    // brand is otherwise fully filled: only its status is being smuggled.
     await EcommBrandModel.collection.insertOne({
       _id: brandId,
       brand_name: 'Sneaky',
       status: 'SUBMITTED',
       owner_user_id: ownerId,
+      description: 'A brand trying to approve itself through a change request.',
+      contact_email: 'sneaky@example.com',
+      registered_business_name: 'Sneaky Pvt Ltd',
+      pan: 'AAAAA0000A',
+      address_line1: '1 Back Lane, Sector 5',
+      city: 'Gurugram',
+      state: 'Haryana',
+      postal_code: '122001',
+      product_categories: ['Decor'],
+      logo_url: 'https://ik.imagekit.io/duncit/brands/sneaky.png',
+      documents: [{ type: 'PAN', url: 'https://ik.imagekit.io/duncit/brands/sneaky-pan.pdf', uploaded_at: new Date() }],
+      integrations: { shiprocket: { connected: true }, razorpay: { connected: true } },
     } as never);
     const req = await approvalService.submitEcommChange(
       {

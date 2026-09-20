@@ -6,9 +6,14 @@ import type {
   VariantOptionValue,
 } from './list-products.types';
 
+/** The GST slabs a product can carry, and the one a new listing starts on. */
+export const GST_RATE_OPTIONS = [0, 5, 12, 18, 28] as const;
+export const DEFAULT_GST_RATE = 18;
+
 export const emptyVariant: ProductVariantValues = {
   option_label: '',
   option_values: [],
+  sku: '',
   color: '#000000',
   size_label: '',
   description: '',
@@ -34,6 +39,7 @@ export const emptyValues: ProductListingValues = {
   is_fragile: false,
   is_liquid: false,
   shelf_life_days: '',
+  tax_percent: DEFAULT_GST_RATE,
   options: [],
   variants: [{ ...emptyVariant }],
   commission_pct: 15,
@@ -85,6 +91,7 @@ const mapServerVariant = (variant: any): ProductVariantValues => ({
   option_values: Array.isArray(variant.option_values)
     ? variant.option_values.map((o: any) => ({ name: o.name ?? '', value: o.value ?? '' }))
     : [],
+  sku: variant.sku ?? '',
   color: variant.color || '#000000',
   size_label: variant.size_label ?? '',
   description: variant.description ?? '',
@@ -105,6 +112,7 @@ const variantFromFlat = (product: any): ProductVariantValues => {
   return {
     option_label: product.size_label || product.color || 'Default',
     option_values: [],
+    sku: product.sku ?? '',
     color: product.color || '#000000',
     size_label: product.size_label ?? '',
     description: product.description ?? '',
@@ -175,6 +183,7 @@ export function productToValues(product?: any): ProductListingValues {
     is_fragile: Boolean(product.is_fragile),
     is_liquid: Boolean(product.is_liquid),
     shelf_life_days: toNumberOrEmpty(product.shelf_life_days),
+    tax_percent: product.tax_percent ?? DEFAULT_GST_RATE,
     options: Array.isArray(product.options)
       ? product.options.map((option: any) => ({
           name: option.name ?? '',
@@ -191,9 +200,16 @@ export function productToValues(product?: any): ProductListingValues {
   };
 }
 
+/** A blank SKU is left out so the server generates one; a typed one is sent uppercase. */
+const skuInput = (sku: string) => {
+  const clean = sku.trim().toUpperCase();
+  return clean ? { sku: clean } : {};
+};
+
 const toVariantInput = (variant: ProductVariantValues) => ({
   option_label: variant.option_label,
   option_values: variant.option_values.map((value) => ({ name: value.name, value: value.value })),
+  ...skuInput(variant.sku),
   color: variant.color,
   size_label: variant.size_label,
   description: variant.description,
@@ -277,6 +293,7 @@ export function toSubmitInput(values: ProductListingValues, brandId: string) {
     is_fragile: values.is_fragile,
     is_liquid: values.is_liquid,
     shelf_life_days: toNullableNumber(values.shelf_life_days),
+    tax_percent: values.tax_percent,
     color: primary.color,
     inventory_count: totalStock,
     unit_cost: Number(primary.unit_cost) || 0,

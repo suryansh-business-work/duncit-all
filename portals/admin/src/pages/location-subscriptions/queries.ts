@@ -10,6 +10,8 @@ export interface LocationSubscriptionRow {
   user_id: string;
   name: string;
   whatsapp: string;
+  /** Whether they agreed to share their current location when they subscribed. */
+  location_shared: boolean;
   status: LocationSubscriptionStatus;
   reason: string;
   notified_at?: string | null;
@@ -68,6 +70,7 @@ export const LOCATION_SUBSCRIPTIONS_TABLE = gql`
         user_id
         name
         whatsapp
+        location_shared
         status
         reason
         notified_at

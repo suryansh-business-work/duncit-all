@@ -2,6 +2,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import StorageIcon from '@mui/icons-material/Storage';
 import { Paper, Stack } from '@mui/material';
+import { createTheme } from '@mui/material/styles';
 import { useEffect, useState } from 'react';
 import { DuncitButton } from '@duncit/buttons';
 import {
@@ -17,6 +18,12 @@ import {
   StatusChip,
   TicketDiscountField,
   TopProgressBar,
+  categoryAxis,
+  chartSeriesColor,
+  chartTooltip,
+  lineTrendDataset,
+  lineTrendOptions,
+  valueAxis,
   type LoaderVariant,
   type SpotsStepperLabels,
   type TicketDiscountFieldErrors,
@@ -33,6 +40,12 @@ import {
   type TicketDiscountTier,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+interface ChartFrameMock {
+  mode: 'light' | 'dark';
+  host_payouts: number;
+  max_ticks: number;
+}
 
 interface SeatsMock {
   seats_taken: number;
@@ -360,6 +373,25 @@ export default defineDemos('ui', [
         ))}
       </ScrollRail>
     ),
+  }),
+
+  defineDemo<ChartFrameMock>({
+    id: 'chart-frame',
+    title: 'chartTooltip, valueAxis, categoryAxis, lineTrend* — the frame every console chart shares',
+    note:
+      'Switch mode to dark and every colour follows the theme. host_payouts runs through the value axis tick formatter exactly as a ₹ axis prints it; max_ticks is how many day labels the category axis keeps before thinning. loneLine is how a single trend line is drawn, filled in the first series colour; legendForSeveral is whether a legend appears once lines can cross.',
+    mock: { mode: 'light', host_payouts: 482150, max_ticks: 10 },
+    compute: (mock) => {
+      const theme = createTheme({ palette: { mode: mock.mode } });
+      return {
+        tooltip: chartTooltip(theme),
+        valueTick: valueAxis(theme, formatMoney).ticks.callback(mock.host_payouts),
+        categoryAxis: categoryAxis(theme, mock.max_ticks),
+        firstSeriesColor: chartSeriesColor(theme, 0),
+        loneLine: lineTrendDataset(theme, 0, true),
+        legendForSeveral: lineTrendOptions(theme, false).plugins.legend.display,
+      };
+    },
   }),
 
   defineDemo<LoaderMock>({

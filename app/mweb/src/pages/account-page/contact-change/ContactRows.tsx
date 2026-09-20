@@ -1,7 +1,9 @@
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   CONTACT_CHANNELS,
+  contactValueVerified,
   currentContactValue,
   type ContactChangeLabels,
   type ContactChannel,
@@ -13,7 +15,26 @@ interface RowProps {
   channel: ContactChannel;
   labels: ContactChangeLabels;
   value: string;
+  /** A one-time code proved this number (`contactValueVerified`). */
+  verified: boolean;
   onChange: (channel: ContactChannel) => void;
+}
+
+/** The tick beside a proved number — worded, so it never rests on colour alone. */
+function VerifiedBadge({ channel, label }: Readonly<{ channel: ContactChannel; label: string }>) {
+  return (
+    <Stack
+      direction="row"
+      spacing={0.25}
+      data-testid={`contact-change-${channel}-verified`}
+      sx={{ alignItems: 'center', flexShrink: 0 }}
+    >
+      <CheckCircleIcon aria-hidden color="success" sx={{ fontSize: 16 }} />
+      <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
+        {label}
+      </Typography>
+    </Stack>
+  );
 }
 
 /**
@@ -28,7 +49,7 @@ interface RowProps {
  * form's required boxes carry, and its empty line is coloured as the error it
  * is rather than greyed out like an optional blank.
  */
-function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
+function ContactRow({ channel, labels, value, verified, onChange }: Readonly<RowProps>) {
   const { t } = useTranslation();
   const copy = labels.channel(channel);
   const action = value ? labels.changeAction : labels.addAction;
@@ -41,13 +62,16 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
             *
           </Box>
         </Typography>
-        <Typography
-          data-testid={`contact-change-${channel}-value`}
-          noWrap
-          sx={{ fontSize: 15, color: value ? 'text.primary' : 'error.main' }}
-        >
-          {value || copy.emptyValue}
-        </Typography>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
+          <Typography
+            data-testid={`contact-change-${channel}-value`}
+            noWrap
+            sx={{ fontSize: 15, minWidth: 0, color: value ? 'text.primary' : 'error.main' }}
+          >
+            {value || copy.emptyValue}
+          </Typography>
+          {verified && <VerifiedBadge channel={channel} label={labels.verified} />}
+        </Stack>
       </Stack>
       <DuncitButton
         type="button"
@@ -80,6 +104,7 @@ export default function ContactRows({ labels, snapshot, onChange }: Readonly<Pro
           channel={channel}
           labels={labels}
           value={currentContactValue(snapshot, channel)}
+          verified={contactValueVerified(snapshot, channel)}
           onChange={onChange}
         />
       ))}

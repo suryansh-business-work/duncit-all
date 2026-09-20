@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { MenuItem, TextField } from '@mui/material';
+import { ListItemText, MenuItem, TextField } from '@mui/material';
 import { useController, useFormContext } from 'react-hook-form';
 import { BRAND_PICKUP_LOCATIONS } from '../../ecomm/queries';
 import type { InventoryProductFormValues } from './types';
@@ -8,8 +8,20 @@ import { useTranslation } from '@duncit/shell';
 
 const DUNCIT_OWNER = { owner_kind: 'DUNCIT', brand_doc_id: null };
 
-/** Required warehouse (Duncit pickup location) picker for the product form. The
- * chosen warehouse is the product's ShipRocket rate + shipment origin. */
+interface PickupOption {
+  id: string;
+  nickname: string;
+  city: string;
+  is_default: boolean;
+  shiprocket_registered: boolean;
+}
+
+/**
+ * The warehouse a product's parcel leaves from — and so the origin ShipRocket
+ * quotes and collects from. Only an address on the ShipRocket account can be
+ * chosen: one it does not hold is shown, but not selectable, because a product
+ * pointing at it books an order no courier ever comes for.
+ */
 export default function WarehouseSelect() {
   const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
@@ -18,21 +30,21 @@ export default function WarehouseSelect() {
     variables: DUNCIT_OWNER,
     fetchPolicy: 'cache-and-network',
   });
-  const locations = data?.brandPickupLocations ?? [];
+  const locations: PickupOption[] = useMemo(() => data?.brandPickupLocations ?? [], [data]);
+  const ready = useMemo(() => locations.filter((loc) => loc.shiprocket_registered), [locations]);
 
-  // New product (nothing chosen yet): preselect the default Duncit warehouse
-  // (or the first one). `locations` is non-empty here, so `locations[0]` exists.
+  // New product (nothing chosen yet): preselect the default warehouse ShipRocket
+  // can collect from, else the first one that it can.
   useEffect(() => {
-    if (field.value || locations.length === 0) return;
-    const preset = locations.find((loc: any) => loc.is_default) ?? locations[0];
-    field.onChange(preset.id);
+    if (field.value || ready.length === 0) return;
+    field.onChange((ready.find((loc) => loc.is_default) ?? ready[0]).id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locations]);
+  }, [ready]);
 
-  const emptyHint =
-    !loading && locations.length === 0
-      ? 'No Duncit warehouses yet — add one in Settings › Duncit Warehouse Locations.'
-      : ' ';
+  const emptyHint = !loading && ready.length === 0 ? t('products.pickup.noReadyWarehouses') : ' ';
+  // Hoisted out of the option label below: a template literal nested inside
+  // another one is unreadable, and Sonar refuses it (S4624).
+  const defaultTag = ` (${t('products.pickup.default')})`;
 
   return (
     <TextField
@@ -47,11 +59,14 @@ export default function WarehouseSelect() {
       error={!!fieldState.error}
       helperText={fieldState.error?.message ?? emptyHint}
       disabled={loading && locations.length === 0}
+      data-testid="product-pickup-location"
     >
-      {locations.map((loc: any) => (
-        <MenuItem key={loc.id} value={loc.id}>
-          {loc.nickname} — {loc.city}
-          {loc.is_default ? ' (default)' : ''}
+      {locations.map((loc) => (
+        <MenuItem key={loc.id} value={loc.id} disabled={!loc.shiprocket_registered}>
+          <ListItemText
+            primary={`${loc.nickname} — ${loc.city}${loc.is_default ? defaultTag : ''}`}
+            secondary={loc.shiprocket_registered ? undefined : t('products.pickup.warehouseNotInShiprocket')}
+          />
         </MenuItem>
       ))}
     </TextField>

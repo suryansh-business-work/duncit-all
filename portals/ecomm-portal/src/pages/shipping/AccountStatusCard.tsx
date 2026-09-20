@@ -71,6 +71,9 @@ function StatusBody({ status, reconnecting, onReconnect }: Readonly<StatusBodyPr
           {t('ecommPortal.shipping.loginRefused', { vars: { reason: status.login_message } })}
         </Alert>
       ) : null}
+      {status.wallet_error ? (
+        <Alert severity="warning">{t('ecommPortal.shipping.walletUnread', { vars: { reason: status.wallet_error } })}</Alert>
+      ) : null}
       {status.webhook_key_set ? null : <Alert severity="info">{t('ecommPortal.shipping.webhookHint')}</Alert>}
       <InfoRows lines={lines} />
     </Stack>

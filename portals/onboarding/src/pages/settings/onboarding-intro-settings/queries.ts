@@ -12,6 +12,13 @@ export const ONBOARDING_INTRO_SETTINGS = gql`
       venue_intro_html
       ecomm_intro_html
       club_admin_intro_html
+      social_handles {
+        x_url
+        instagram_url
+        youtube_url
+        facebook_url
+        website_url
+      }
     }
   }
 `;
@@ -23,6 +30,13 @@ export const UPDATE_ONBOARDING_INTRO_SETTINGS = gql`
       venue_intro_html
       ecomm_intro_html
       club_admin_intro_html
+      social_handles {
+        x_url
+        instagram_url
+        youtube_url
+        facebook_url
+        website_url
+      }
     }
   }
 `;

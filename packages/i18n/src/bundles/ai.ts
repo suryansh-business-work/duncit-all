@@ -21,6 +21,11 @@ export const AI_BUNDLE: NestedCatalogue = {
       guest: 'there',
       body: 'This is the {portal}. Your console is set up and ready — features will appear here soon.',
       portalLabel: 'AI Portal',
+      /** The Automation tile on the welcome dashboard (the other tiles are
+       * still literals in the portal config — backlog, not a pattern). */
+      automationTitle: 'Automation',
+      automationDescription:
+        'WhatsApp and email flows drawn on a canvas — AI replies, branches and follow-ups the server runs for you.',
     },
 
     dashboard: {

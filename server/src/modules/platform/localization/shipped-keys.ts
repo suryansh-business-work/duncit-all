@@ -1805,6 +1805,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "ai.validation.promptMin": "Give the model at least 20 characters of instruction",
   "ai.validation.promptRequired": "The image prompt is required",
   "ai.validation.titleMax": "Keep the title under 160 characters",
+  "ai.welcome.automationDescription": "WhatsApp and email flows drawn on a canvas — AI replies, branches and follow-ups the server runs for you.",
+  "ai.welcome.automationTitle": "Automation",
   "ai.welcome.body": "This is the {portal}. Your console is set up and ready — features will appear here soon.",
   "ai.welcome.greeting": "Hi {name}",
   "ai.welcome.guest": "there",

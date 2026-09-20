@@ -68,10 +68,5 @@ export const appConfig = {
       description: 'Every uploaded image the platform screened, and the prompt it screened it with.',
       icon: 'shield',
     },
-    {
-      title: 'Automation',
-      description: 'WhatsApp and email flows drawn on a canvas — AI replies, branches and follow-ups the server runs for you.',
-      icon: 'hub',
-    },
   ],
 } satisfies AppConfig;

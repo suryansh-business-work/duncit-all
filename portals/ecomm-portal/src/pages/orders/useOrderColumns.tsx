@@ -7,6 +7,7 @@ import { OrderStatusChip, PaymentMethodChip } from '../../components/chips';
 import CodeWithDate from '../../components/CodeWithDate';
 import { money } from '../../lib/format';
 import { codeLabel, codeOptions, orderStatusOptions, PAYMENT_METHOD_KEYS } from '../../lib/status';
+import LabelActionsCell, { type LabelAction } from './LabelActionsCell';
 import type { OrderRow } from './queries';
 
 const unitsOf = (row: OrderRow) => row.line_items.reduce((sum, line) => sum + line.qty, 0);
@@ -18,13 +19,19 @@ const renderStatus = (row: OrderRow) => <OrderStatusChip status={row.fulfilment_
 
 /**
  * The order table's columns. `withBuyer: false` drops the buyer column for a
- * list that is already one customer's.
+ * list that is already one customer's; `onLabel` adds the per-row label
+ * buttons, for the list that ships. Pass a stable callback — the columns are
+ * rebuilt whenever it changes.
  */
-export function useOrderColumns(withBuyer = true): DuncitColumn<OrderRow>[] {
+export function useOrderColumns(withBuyer = true, onLabel?: LabelAction): DuncitColumn<OrderRow>[] {
   const { t } = useTranslation();
   return useMemo<DuncitColumn<OrderRow>[]>(() => {
     const buyer: DuncitColumn<OrderRow>[] = withBuyer
       ? [{ field: 'buyer_name', headerName: t('ecommPortal.common.buyer'), type: 'text', minWidth: 220, flex: 1, cellRenderer: renderBuyer, valueGetter: (row) => row.buyer_name }]
+      : [];
+    // Keyed on the AWB, so the icons wake up the moment a courier is assigned.
+    const label: DuncitColumn<OrderRow>[] = onLabel
+      ? [{ field: 'label', headerName: t('ecommPortal.shipping.label'), type: 'actions', width: 110, cellRenderer: (row) => <LabelActionsCell row={row} onLabel={onLabel} />, valueGetter: (row) => row.shiprocket.awb }]
       : [];
     return [
       { field: 'order_no', headerName: t('shell.common.order'), type: 'text', width: 180, cellRenderer: renderOrder, valueGetter: (row) => row.order_no },
@@ -50,8 +57,9 @@ export function useOrderColumns(withBuyer = true): DuncitColumn<OrderRow>[] {
         valueGetter: (row) => statusLabel(row.fulfilment_status, t),
       },
       { field: 'awb', headerName: t('ecommPortal.orders.awb'), type: 'text', width: 150, valueGetter: (row) => row.shiprocket.awb || EM_DASH },
+      ...label,
       { field: 'buyer_email', headerName: t('shell.common.email'), type: 'text', width: 200, hide: true },
       dateColumn<OrderRow>({ headerName: t('ecommPortal.orders.placed'), width: 150 }),
     ];
-  }, [t, withBuyer]);
+  }, [t, withBuyer, onLabel]);
 }

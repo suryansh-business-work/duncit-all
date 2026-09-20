@@ -967,6 +967,9 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       needsAwb: 'The label and the manifest are ready once a courier is assigned (AWB).',
       labels: 'Labels',
       invoices: 'Invoices',
+      printLabelFor: 'Print label for {order}',
+      downloadLabelFor: 'Download label for {order}',
+      labelNeedsAwb: 'The label is ready once a courier is assigned (AWB).',
       documentMissing: 'ShipRocket did not return the document',
       bulkDocuments: 'Documents for the selected orders',
       ordersSelected: {

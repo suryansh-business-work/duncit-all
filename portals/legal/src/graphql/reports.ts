@@ -1,5 +1,9 @@
 import { gql } from '@apollo/client';
-import type { ReportStatus, ReportTargetType } from '@duncit/utils';
+import type { ReportReasonOption, ReportStatus, ReportTargetType } from '@duncit/utils';
+
+export interface ContentReportReasonOptionsResult {
+  contentReportReasonOptions: ReportReasonOption[];
+}
 
 export const CONTENT_REPORT_REASON_OPTIONS = gql`
   query ContentReportReasonOptions {

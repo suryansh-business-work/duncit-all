@@ -48,9 +48,15 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
   }, [storyId]);
 
   useEffect(() => {
-    graphqlRequest(ContentReportReasonOptionsDocument, {}, { auth: true })
-      .then((result) => setReasons(result.contentReportReasonOptions))
-      .catch((reasonError: unknown) => setError(parseApiError(reasonError) || t('contentReport.submitFailed')));
+    graphqlRequest<{ availableReasons: ReportReasonOption[] }>(
+      ContentReportReasonOptionsDocument,
+      {},
+      { auth: true },
+    )
+      .then((result) => setReasons(result.availableReasons))
+      .catch((reasonError: unknown) =>
+        setError(parseApiError(reasonError) || t('contentReport.submitFailed')),
+      );
   }, [t]);
 
   const submit = async () => {

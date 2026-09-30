@@ -290,7 +290,9 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onConfirm={(trim) => fireAndForget(confirmVideo(trim))}
       />
       <StoryViewersSheet storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
-      {reportingStoryId ? <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} /> : null}
+      {reportingStoryId ? (
+        <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
+      ) : null}
       <ConfirmDialog
         testID="status-delete-confirm"
         open={pendingDelete !== null}

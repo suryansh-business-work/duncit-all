@@ -177,6 +177,6 @@ export const REPORT_STORY = gql`
 
 export const CONTENT_REPORT_REASON_OPTIONS = gql`
   query ContentReportReasonOptions {
-    contentReportReasonOptions { id label }
+    reasonOptions: contentReportReasonOptions { id label }
   }
 `;

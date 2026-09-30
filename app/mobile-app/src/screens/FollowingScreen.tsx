@@ -121,7 +121,9 @@ export function FollowingScreen() {
           }}
         />
       ) : null}
-      {reportPostId ? <ReportStorySheet storyId={reportPostId} onClose={() => setReportPostId(null)} /> : null}
+      {reportPostId ? (
+        <ReportStorySheet storyId={reportPostId} onClose={() => setReportPostId(null)} />
+      ) : null}
     </StackScreen>
   );
 }

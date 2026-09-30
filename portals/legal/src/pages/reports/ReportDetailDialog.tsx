@@ -21,6 +21,7 @@ import {
   REPORT_STATUS_KEY,
   REPORT_TARGET_KEY,
   type ReportStatus,
+  type ReportReasonOption,
 } from '@duncit/utils';
 import { UPDATE_CONTENT_REPORT_STATUS, type ContentReport } from '../../graphql/reports';
 import ReportPreview from './ReportPreview';
@@ -30,7 +31,7 @@ interface Props {
   formatDateTime: (value: Date) => string;
   onClose: () => void;
   onSaved: () => void;
-  reasonOptions: { id: string; label: string }[];
+  reasonOptions: ReportReasonOption[];
 }
 
 /**

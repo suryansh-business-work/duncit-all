@@ -17,6 +17,7 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   parseApiError,
   reportReasonNeedsDetails,
+  type ReportReasonOption,
   type ReportReason,
 } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -44,7 +45,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
   const [error, setError] = useState('');
   const [report, { loading }] = useMutation<any>(REPORT_STORY);
   const { data: reasonData } = useQuery<{
-    contentReportReasonOptions: { id: string; label: string }[];
+    contentReportReasonOptions: ReportReasonOption[];
   }>(CONTENT_REPORT_REASON_OPTIONS);
   const reasons = reasonData?.contentReportReasonOptions ?? [];
 
@@ -98,7 +99,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             value={reason ?? ''}
             onChange={(e) => setReason(e.target.value as ReportReason)}
           >
-            {reasons.map(({ id, label }: { id: string; label: string }) => (
+            {reasons.map(({ id, label }) => (
               <FormControlLabel
                 key={id}
                 data-testid={`report-reason-${id}`}

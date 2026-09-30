@@ -4,6 +4,7 @@ import { XStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { ScrollRail } from '@/components/ScrollRail';
 import { StatusViewer } from '@/components/status/StatusViewer';
+import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { PublicProfileStory } from '@/hooks/usePublicProfile';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -28,6 +29,7 @@ interface Props {
 export function PublicProfileStories({ authorId, name, photo, stories }: Readonly<Props>) {
   const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
 
   // The rail and the viewer read the same oldest → newest slides, so the ring
   // that was tapped is the slide that opens.
@@ -82,7 +84,9 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
         status={openIndex === null ? null : group}
         startIndex={openIndex ?? 0}
         onClose={() => setOpenIndex(null)}
+        onReport={setReportingStoryId}
       />
+      {reportingStoryId ? <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} /> : null}
     </>
   );
 }

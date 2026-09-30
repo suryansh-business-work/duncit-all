@@ -30,6 +30,7 @@ import {
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
+import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import { StoryViewersSheet } from '@/components/status/StoryViewersSheet';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -106,6 +107,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const [officialOpen, setOfficialOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
+  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
   const { ads } = useActiveAds('STATUS');
   const ad = ads[0];
   const adStory = useMemo(() => (ad ? buildAdStory(ad) : null), [ad]);
@@ -146,6 +148,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   // Followed people carry a `user-…` key; the own group and club items don't.
   const activeKey = (active as StoryRailItem | undefined)?.key;
   const activeIsPerson = !!activeKey && activeKey.startsWith('user-');
+  const canReportActive = !!active && !activeIsMine && !adOpen && !officialOpen;
   const openAt = (groupIndex: number) => setActiveIndex(groupIndex);
   const goNext = () => setActiveIndex((i) => (i != null && i < groups.length - 1 ? i + 1 : null));
   const goPrev = () => setActiveIndex((i) => (i != null && i > 0 ? i - 1 : i));
@@ -270,6 +273,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onOpenTarget={openTarget}
         onOpenLink={openOfficialLink}
         onDelete={activeIsMine ? setPendingDelete : undefined}
+        onReport={canReportActive ? setReportingStoryId : undefined}
         onViewers={activeIsMine ? setViewersStoryId : undefined}
         onToggleLike={activeIsPerson ? toggleLike : undefined}
         onSlideSeen={slideSeen}
@@ -286,6 +290,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onConfirm={(trim) => fireAndForget(confirmVideo(trim))}
       />
       <StoryViewersSheet storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
+      {reportingStoryId ? <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} /> : null}
       <ConfirmDialog
         testID="status-delete-confirm"
         open={pendingDelete !== null}

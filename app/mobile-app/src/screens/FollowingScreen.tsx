@@ -6,6 +6,7 @@ import { Text, XStack } from 'tamagui';
 import { FeedList } from '@/components/FeedList';
 import { FeedPostCard } from '@/components/following/FeedPostCard';
 import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
+import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useFollowing } from '@/hooks/useFollowing';
@@ -39,6 +40,7 @@ export function FollowingScreen() {
   const clubs = useFollowingFeed('CLUBS');
   const feed = tab === 'PEOPLE' ? people : clubs;
   const [viewerPostId, setViewerPostId] = useState<string | null>(null);
+  const [reportPostId, setReportPostId] = useState<string | null>(null);
 
   // Feed posts carry the club's doc id, not its slug — resolve it against the
   // followed clubs so the club link opens the same /club/:clubSlug URL as mWeb.
@@ -103,6 +105,7 @@ export function FollowingScreen() {
             onToggleLike={() => fireAndForget(feed.toggleLike(post))}
             onOpenComments={() => setViewerPostId(post.id)}
             onOpenAuthor={() => openAuthor(post)}
+            onReport={() => setReportPostId(post.id)}
           />
         )}
       />
@@ -118,6 +121,7 @@ export function FollowingScreen() {
           }}
         />
       ) : null}
+      {reportPostId ? <ReportStorySheet storyId={reportPostId} onClose={() => setReportPostId(null)} /> : null}
     </StackScreen>
   );
 }

@@ -12,7 +12,6 @@ import {
 } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import {
-  REPORT_REASON_KEY,
   REPORT_STATUSES,
   REPORT_STATUS_COLOR,
   REPORT_STATUS_KEY,
@@ -26,6 +25,7 @@ interface Props {
   /** Admin-configured date + time, so every screen reads the same clock. */
   formatDateTime: (value: Date) => string;
   onOpen: (report: ContentReport) => void;
+  reasonOptions: { id: string; label: string }[];
 }
 
 const getRowId = (r: ContentReport) => r.id;
@@ -42,6 +42,7 @@ export default function UserReportsTable({
   refetchRef,
   formatDateTime,
   onOpen,
+  reasonOptions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -109,10 +110,8 @@ export default function UserReportsTable({
         headerName: t('reportLogs.colReason'),
         minWidth: 200,
         type: 'enum',
-        options: (Object.keys(REPORT_REASON_KEY) as (keyof typeof REPORT_REASON_KEY)[]).map(
-          (value) => ({ value, label: t(REPORT_REASON_KEY[value]) }),
-        ),
-        valueGetter: (r) => t(REPORT_REASON_KEY[r.reason]),
+        options: reasonOptions.map(({ id, label }) => ({ value: id, label })),
+        valueGetter: (r) => reasonOptions.find(({ id }) => id === r.reason)?.label ?? r.reason,
       },
       {
         field: 'reporter_name',
@@ -156,7 +155,7 @@ export default function UserReportsTable({
         cellRenderer: renderActions,
       },
     ];
-  }, [formatDateTime, onOpen, t]);
+  }, [formatDateTime, onOpen, reasonOptions, t]);
 
   return (
     <DuncitTable<ContentReport>

@@ -15,15 +15,8 @@
 export type ReportTargetType = 'STORY' | 'POST' | 'POD' | 'CLUB' | 'PROFILE' | 'PRODUCT';
 
 /** Why the reporter says it should not be there. Mirrors `ReportReason`. */
-export type ReportReason =
-  | 'SPAM'
-  | 'NUDITY'
-  | 'VIOLENCE'
-  | 'HATE'
-  | 'HARASSMENT'
-  | 'MISINFORMATION'
-  | 'SCAM'
-  | 'OTHER';
+/** IDs are managed by the Legal portal; OTHER remains a required built-in ID. */
+export type ReportReason = string;
 
 /** Where the Legal team has taken it. Mirrors `ReportStatus`. */
 export type ReportStatus = 'RECEIVED' | 'IN_REVIEW' | 'ACTIONED' | 'DISMISSED';
@@ -48,7 +41,7 @@ export const REPORT_REASONS: readonly ReportReason[] = [
 ];
 
 /** Translation key per reason — the only place the wording is decided. */
-export const REPORT_REASON_KEY: Record<ReportReason, string> = {
+export const REPORT_REASON_KEY: Record<string, string> = {
   SPAM: 'contentReport.reasonSpam',
   NUDITY: 'contentReport.reasonNudity',
   VIOLENCE: 'contentReport.reasonViolence',

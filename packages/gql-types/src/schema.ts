@@ -4586,7 +4586,7 @@ export type ContentReport = {
   details: Scalars['String']['output'];
   handled_by_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  reason: ReportReason;
+  reason: Scalars['String']['output'];
   /** Permanent, globally unique handle (RPT-000001). Never edited, never reused. */
   report_no: Scalars['String']['output'];
   reporter_name: Scalars['String']['output'];
@@ -4607,6 +4607,17 @@ export type ContentReport = {
   target_preview_url: Scalars['String']['output'];
   target_type: ReportTargetType;
   updated_at: Scalars['String']['output'];
+};
+
+export type ContentReportReasonOption = {
+  __typename?: 'ContentReportReasonOption';
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type ContentReportReasonOptionInput = {
+  id: Scalars['ID']['input'];
+  label: Scalars['String']['input'];
 };
 
 export type ContentReportStats = {
@@ -12701,6 +12712,7 @@ export type Mutation = {
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
+  updateContentReportReasonOptions: Array<ContentReportReasonOption>;
   updateContentReportStatus: ContentReport;
   updateContract: Contract;
   updateCoupon: Coupon;
@@ -15158,7 +15170,7 @@ export type MutationReportE2eRunArgs = {
 export type MutationReportStoryArgs = {
   details?: InputMaybe<Scalars['String']['input']>;
   post_doc_id: Scalars['ID']['input'];
-  reason: ReportReason;
+  reason: Scalars['String']['input'];
 };
 
 
@@ -16913,6 +16925,11 @@ export type MutationUpdateCommsProviderArgs = {
 export type MutationUpdateContactStatusArgs = {
   contact_id: Scalars['ID']['input'];
   status: ContactStatus;
+};
+
+
+export type MutationUpdateContentReportReasonOptionsArgs = {
+  options: Array<ContentReportReasonOptionInput>;
 };
 
 
@@ -21717,6 +21734,7 @@ export type Query = {
    */
   contactsToInvitePage: ContactsToInvitePage;
   contentReport?: Maybe<ContentReport>;
+  contentReportReasonOptions: Array<ContentReportReasonOption>;
   contentReportStats: ContentReportStats;
   /** Legal-only queue of everything users have reported. */
   contentReportsTable: ContentReportTablePage;

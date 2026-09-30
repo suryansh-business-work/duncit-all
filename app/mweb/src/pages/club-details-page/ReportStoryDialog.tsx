@@ -43,7 +43,9 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
   const [report, { loading }] = useMutation<any>(REPORT_STORY);
-  const { data: reasonData } = useQuery(CONTENT_REPORT_REASON_OPTIONS);
+  const { data: reasonData } = useQuery<{
+    contentReportReasonOptions: { id: string; label: string }[];
+  }>(CONTENT_REPORT_REASON_OPTIONS);
   const reasons = reasonData?.contentReportReasonOptions ?? [];
 
   // Re-seed on every open: one dialog instance serves every story.
@@ -98,8 +100,8 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
           >
             {reasons.map(({ id, label }: { id: string; label: string }) => (
               <FormControlLabel
-                key={value}
-                data-testid={`report-reason-${value}`}
+                key={id}
+                data-testid={`report-reason-${id}`}
                 value={id}
                 control={<Radio size="small" />}
                 label={label}

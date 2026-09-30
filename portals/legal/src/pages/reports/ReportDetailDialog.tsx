@@ -17,7 +17,6 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import {
   parseApiError,
-  REPORT_REASON_KEY,
   REPORT_STATUSES,
   REPORT_STATUS_KEY,
   REPORT_TARGET_KEY,
@@ -31,6 +30,7 @@ interface Props {
   formatDateTime: (value: Date) => string;
   onClose: () => void;
   onSaved: () => void;
+  reasonOptions: { id: string; label: string }[];
 }
 
 /**
@@ -46,6 +46,7 @@ export default function ReportDetailDialog({
   formatDateTime,
   onClose,
   onSaved,
+  reasonOptions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<ReportStatus>('RECEIVED');
@@ -104,7 +105,7 @@ export default function ReportDetailDialog({
               {t('reportLogs.colReason')}
             </Typography>
             <Typography variant="body2">
-              {report ? t(REPORT_REASON_KEY[report.reason]) : ''}
+              {report ? reasonOptions.find(({ id }) => id === report.reason)?.label ?? report.reason : ''}
             </Typography>
           </Box>
           <Box>

@@ -63,7 +63,7 @@ export interface IContentReport extends Document {
    */
   target_preview_url: string;
   target_caption: string;
-  reason: ReportReason;
+  reason: string;
   /** The reporter's own words. Required when the reason is OTHER. */
   details: string;
   reporter_id: Types.ObjectId;
@@ -85,7 +85,7 @@ const contentReportSchema = new Schema<IContentReport>(
     club_id: { type: Schema.Types.ObjectId, ref: 'Club', default: null, index: true },
     target_preview_url: { type: String, default: '', trim: true, maxlength: 2000 },
     target_caption: { type: String, default: '', trim: true, maxlength: 2000 },
-    reason: { type: String, enum: REPORT_REASONS, required: true, index: true },
+    reason: { type: String, required: true, trim: true, maxlength: 80, index: true },
     details: { type: String, default: '', trim: true, maxlength: 2000 },
     reporter_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: REPORT_STATUSES, default: 'RECEIVED', index: true },

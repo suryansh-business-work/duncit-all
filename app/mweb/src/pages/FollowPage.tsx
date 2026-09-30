@@ -4,6 +4,7 @@ import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import PostDialog from './profile-page/post-dialog/PostDialog';
+import ReportStoryDialog from './club-details-page/ReportStoryDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
 import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
 import type { FeedClub, FollowingFeedSource } from './follow-page/queries';
@@ -30,6 +31,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
   const tabs = useTabParam<FollowingFeedSource>({ items: sourceTabs(t), fallback: 'CLUBS' });
   const tab = tabs.value;
   const [openPostId, setOpenPostId] = useState<string | null>(null);
+  const [reportPostId, setReportPostId] = useState<string | null>(null);
   // USER_INFO already holds these fields, so this answers from the cache.
   const meQuery = useQuery<any>(FOLLOW_ME, { fetchPolicy: 'cache-first' });
   const clubsQuery = useQuery<FeedClubsData>(FEED_CLUBS, {
@@ -81,6 +83,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         clubsById={tab === 'CLUBS' ? clubsById : undefined}
         superCategoryId={tab === 'CLUBS' ? superCategoryId : null}
         onOpenComments={setOpenPostId}
+        onReport={setReportPostId}
       />
 
       <PostDialog
@@ -89,6 +92,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         onClose={closePost}
         onDeleted={onPostDeleted}
       />
+      <ReportStoryDialog storyId={reportPostId} onClose={() => setReportPostId(null)} />
     </Stack>
   );
 }

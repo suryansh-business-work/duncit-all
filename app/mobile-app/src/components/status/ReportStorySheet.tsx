@@ -3,16 +3,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Button, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { ReportStoryDocument } from '@/graphql/status';
-import { ReportReason as GqlReportReason } from '@/generated/graphql/graphql';
+import { ContentReportReasonOptionsDocument, ReportStoryDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   parseApiError,
   reportReasonNeedsDetails,
-  REPORT_REASONS,
-  REPORT_REASON_KEY,
   type ReportReason,
 } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -39,6 +36,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [reasons, setReasons] = useState<{ id: string; label: string }[]>([]);
 
   // Re-seed on every open: one sheet instance serves every story.
   useEffect(() => {
@@ -47,6 +45,12 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
     setDetails('');
     setError('');
   }, [storyId]);
+
+  useEffect(() => {
+    graphqlRequest(ContentReportReasonOptionsDocument, {}, { auth: true })
+      .then((result) => setReasons(result.contentReportReasonOptions))
+      .catch((reasonError: unknown) => setError(parseApiError(reasonError) || t('contentReport.submitFailed')));
+  }, [t]);
 
   const submit = async () => {
     if (!reason) {
@@ -61,10 +65,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
     try {
       await graphqlRequest(
         ReportStoryDocument,
-        // Codegen emits a TS enum for the schema's ReportReason; the shared
-        // table in @duncit/utils is a plain union of the same members, so the
-        // cast crosses the two representations, not two sets of values.
-        { id: storyId as string, reason: reason as GqlReportReason, details: details.trim() },
+        { id: storyId as string, reason, details: details.trim() },
         { auth: true },
       );
       onReported?.();
@@ -94,27 +95,27 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
         <Text fontSize={12} fontWeight="600" color="$muted">
           {t('contentReport.reasonLabel')}
         </Text>
-        {REPORT_REASONS.map((value) => (
+        {reasons.map(({ id, label }) => (
           <XStack
-            key={value}
-            testID={`report-reason-${value}`}
+            key={id}
+            testID={`report-reason-${id}`}
             role="radio"
-            aria-checked={reason === value}
+            aria-checked={reason === id}
             tabIndex={0}
-            aria-label={t(REPORT_REASON_KEY[value])}
-            onPress={() => setReason(value)}
+            aria-label={label}
+            onPress={() => setReason(id)}
             alignItems="center"
             gap={10}
             paddingVertical={8}
             pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons
-              name={reason === value ? 'radio-button-checked' : 'radio-button-unchecked'}
+              name={reason === id ? 'radio-button-checked' : 'radio-button-unchecked'}
               size={20}
-              color={reason === value ? primary : color}
+              color={reason === id ? primary : color}
             />
             <Text fontSize={14} color="$color">
-              {t(REPORT_REASON_KEY[value])}
+              {label}
             </Text>
           </XStack>
         ))}

@@ -4,18 +4,29 @@ import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   ContentReportModel,
-  REPORT_REASONS,
   REPORT_STATUSES,
   REPORT_TARGET_TYPES,
   type IContentReport,
-  type ReportReason,
   type ReportStatus,
   type ReportTargetType,
 } from './contentReport.model';
+import { ContentReportReasonSettingsModel } from './reason-settings.model';
+import { notifyReportedContentOwner } from './report.email';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
 }
+
+const DEFAULT_REASON_OPTIONS = [
+  { id: 'SPAM', label: 'Spam or misleading' },
+  { id: 'NUDITY', label: 'Nudity or sexual content' },
+  { id: 'VIOLENCE', label: 'Violence or dangerous acts' },
+  { id: 'HATE', label: 'Hate speech or symbols' },
+  { id: 'HARASSMENT', label: 'Harassment or bullying' },
+  { id: 'MISINFORMATION', label: 'False information' },
+  { id: 'SCAM', label: 'Scam or fraud' },
+  { id: 'OTHER', label: 'Something else' },
+];
 
 const toPub = (r: IContentReport) => ({
   id: String(r._id),
@@ -78,6 +89,34 @@ const toOid = (value: string | null | undefined) =>
   value && Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : null;
 
 export const reportService = {
+  async reasonOptions() {
+    const doc = await ContentReportReasonSettingsModel.findOneAndUpdate(
+      { singleton_key: 'ugc' },
+      { $setOnInsert: { options: DEFAULT_REASON_OPTIONS } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+    return doc.options.map(({ id, label }) => ({ id, label }));
+  },
+
+  async updateReasonOptions(options: { id: string; label: string }[]) {
+    const normalized = options.map(({ id, label }) => ({ id: id.trim().toUpperCase(), label: label.trim() }));
+    const ids = new Set<string>();
+    if (normalized.length < 2 || normalized.length > 30) fail('BAD_USER_INPUT', 'Add between 2 and 30 report reasons');
+    for (const option of normalized) {
+      if (!/^[A-Z][A-Z0-9_]{1,39}$/.test(option.id) || !option.label || option.label.length > 100 || ids.has(option.id)) {
+        fail('BAD_USER_INPUT', 'Each reason needs a unique code and a label of at most 100 characters');
+      }
+      ids.add(option.id);
+    }
+    if (!ids.has('OTHER')) fail('BAD_USER_INPUT', 'The Other reason must remain available');
+    const doc = await ContentReportReasonSettingsModel.findOneAndUpdate(
+      { singleton_key: 'ugc' },
+      { $set: { options: normalized } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+    return doc.options.map(({ id, label }) => ({ id, label }));
+  },
+
   /**
    * File a report, or update the one this reporter already filed.
    *
@@ -97,8 +136,9 @@ export const reportService = {
     const targetId = toOid(snapshot.target_id);
     if (!targetId) fail('BAD_USER_INPUT', 'Invalid target id');
 
-    const reason = String(input.reason ?? '').toUpperCase() as ReportReason;
-    if (!REPORT_REASONS.includes(reason)) fail('BAD_USER_INPUT', 'Pick a reason for the report');
+    const reason = String(input.reason ?? '').trim().toUpperCase();
+    const options = await reportService.reasonOptions();
+    if (!options.some((option) => option.id === reason)) fail('BAD_USER_INPUT', 'Pick a reason for the report');
     const details = (input.details ?? '').trim();
     if (details.length > 2000) fail('BAD_USER_INPUT', 'Please shorten your description');
     // OTHER carries no meaning on its own — without the words there is nothing
@@ -135,6 +175,12 @@ export const reportService = {
       report_no: created.report_no,
       target_type: created.target_type,
       reason: created.reason,
+    });
+    await notifyReportedContentOwner(created).catch((error: unknown) => {
+      logs.server.error('report.service', 'owner-notification-failed', {
+        report_no: created.report_no,
+        error,
+      });
     });
     return toPub(created);
   },

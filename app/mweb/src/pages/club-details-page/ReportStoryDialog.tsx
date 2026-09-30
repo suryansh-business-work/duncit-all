@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -17,13 +17,11 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   parseApiError,
   reportReasonNeedsDetails,
-  REPORT_REASONS,
-  REPORT_REASON_KEY,
   type ReportReason,
 } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { notify } from '../../components/notify';
-import { REPORT_STORY } from '../ClubDetailsPage/clubDetailsQueries';
+import { CONTENT_REPORT_REASON_OPTIONS, REPORT_STORY } from '../ClubDetailsPage/clubDetailsQueries';
 
 interface Props {
   /** The story being reported; null keeps the dialog closed. */
@@ -45,6 +43,8 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
   const [report, { loading }] = useMutation<any>(REPORT_STORY);
+  const { data: reasonData } = useQuery(CONTENT_REPORT_REASON_OPTIONS);
+  const reasons = reasonData?.contentReportReasonOptions ?? [];
 
   // Re-seed on every open: one dialog instance serves every story.
   useEffect(() => {
@@ -96,13 +96,13 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             value={reason ?? ''}
             onChange={(e) => setReason(e.target.value as ReportReason)}
           >
-            {REPORT_REASONS.map((value) => (
+            {reasons.map(({ id, label }: { id: string; label: string }) => (
               <FormControlLabel
                 key={value}
                 data-testid={`report-reason-${value}`}
-                value={value}
+                value={id}
                 control={<Radio size="small" />}
-                label={t(REPORT_REASON_KEY[value])}
+                label={label}
               />
             ))}
           </RadioGroup>

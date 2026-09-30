@@ -34,6 +34,10 @@ export const contentReportResolvers = {
       requireRole(ctx, LEGAL_ROLES);
       return reportService.stats();
     },
+    contentReportReasonOptions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return reportService.reasonOptions();
+    },
   },
   Mutation: {
     reportStory: async (
@@ -57,6 +61,10 @@ export const contentReportResolvers = {
     ) => {
       const user = requireRole(ctx, LEGAL_ROLES);
       return reportService.updateStatus(user.id, args.id, args.input);
+    },
+    updateContentReportReasonOptions: (_p: unknown, args: { options: { id: string; label: string }[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      return reportService.updateReasonOptions(args.options);
     },
   },
 };

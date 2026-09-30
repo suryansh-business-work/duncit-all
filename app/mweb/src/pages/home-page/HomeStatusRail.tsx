@@ -9,6 +9,7 @@ import AdTile from '../../components/ads/AdTile';
 import { useActiveAds } from '../../components/ads/useActiveAds';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer from './HomeStatusViewer';
+import ReportStoryDialog from '../club-details-page/ReportStoryDialog';
 import MyStatusUploadTile from './MyStatusUploadTile';
 import StoryViewersDialog from './StoryViewersDialog';
 import { buildAdViewer, buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
@@ -46,6 +47,7 @@ export default function HomeStatusRail({
   const [officialOpen, setOfficialOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
+  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
   const { ads } = useActiveAds('STATUS');
   const ad = ads[0];
   const adViewer = useMemo(() => (ad ? buildAdViewer(ad) : null), [ad]);
@@ -179,11 +181,13 @@ export default function HomeStatusRail({
         onNext={pinnedOpen ? undefined : goNext}
         onPrev={pinnedOpen ? undefined : goPrev}
         onDelete={activeKind === 'mine' ? setPendingDelete : undefined}
+        onReport={activeKind && !['mine', 'official', 'ad'].includes(activeKind) ? setReportingStoryId : undefined}
         onViewers={activeKind === 'mine' ? setViewersStoryId : undefined}
         onToggleLike={activeKind === 'user' ? handleLike : undefined}
         onRecordView={recordViewOf}
       />
       <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
+      <ReportStoryDialog storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
       <ConfirmDialog
         testId="status-delete-confirm"
         open={pendingDelete !== null}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Avatar } from '@mui/material';
 import { ScrollRail } from '@duncit/ui';
 import HomeStatusViewer from '../home-page/HomeStatusViewer';
+import ReportStoryDialog from '../club-details-page/ReportStoryDialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import { buildStoryViewerItem } from '../home-page/storyViewerItem';
 
@@ -31,6 +32,7 @@ interface Props {
 export default function PublicProfileStories({ name, photo, stories }: Readonly<Props>) {
   const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
   // The rail and the viewer read the same oldest → newest slides, so the ring
   // that was tapped is the slide that opens.
   const item = useMemo(
@@ -75,8 +77,10 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
           item={item}
           startIndex={openIndex}
           onClose={() => setOpenIndex(null)}
+          onReport={setReportingStoryId}
         />
       )}
+      <ReportStoryDialog storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
     </>
   );
 }

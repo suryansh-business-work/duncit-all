@@ -86,7 +86,9 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
         onClose={() => setOpenIndex(null)}
         onReport={setReportingStoryId}
       />
-      {reportingStoryId ? <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} /> : null}
+      {reportingStoryId ? (
+        <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
+      ) : null}
     </>
   );
 }

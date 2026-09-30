@@ -99,7 +99,7 @@ export const ReportStoryDocument = gql(`
 
 export const ContentReportReasonOptionsDocument = gql(`
   query MobileContentReportReasonOptions {
-    contentReportReasonOptions { id label }
+    availableReasons: contentReportReasonOptions { id label }
   }
 `);
 

@@ -6,24 +6,23 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
-import { parseApiError } from '@duncit/utils';
+import { parseApiError, type ReportReasonOption } from '@duncit/utils';
 import { CONTENT_REPORT_REASON_OPTIONS, UPDATE_CONTENT_REPORT_REASON_OPTIONS } from '../../graphql/reports';
 
-type ReasonOption = { id: string; label: string };
 interface Props { open: boolean; onClose: () => void; }
 
 export default function ReportReasonSettingsDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { data, loading, error: loadError, refetch } = useQuery(CONTENT_REPORT_REASON_OPTIONS, { skip: !open });
   const [save, { loading: saving }] = useMutation(UPDATE_CONTENT_REPORT_REASON_OPTIONS);
-  const [options, setOptions] = useState<ReasonOption[]>([]);
+  const [options, setOptions] = useState<ReportReasonOption[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (data?.contentReportReasonOptions) setOptions(data.contentReportReasonOptions);
   }, [data]);
 
-  const update = (index: number, patch: Partial<ReasonOption>) => {
+  const update = (index: number, patch: Partial<ReportReasonOption>) => {
     setOptions((current) => current.map((option, position) => position === index ? { ...option, ...patch } : option));
   };
 

@@ -17,6 +17,10 @@ export type ReportTargetType = 'STORY' | 'POST' | 'POD' | 'CLUB' | 'PROFILE' | '
 /** Why the reporter says it should not be there. Mirrors `ReportReason`. */
 /** IDs are managed by the Legal portal; OTHER remains a required built-in ID. */
 export type ReportReason = string;
+export interface ReportReasonOption {
+  id: ReportReason;
+  label: string;
+}
 
 /** Where the Legal team has taken it. Mirrors `ReportStatus`. */
 export type ReportStatus = 'RECEIVED' | 'IN_REVIEW' | 'ACTIONED' | 'DISMISSED';

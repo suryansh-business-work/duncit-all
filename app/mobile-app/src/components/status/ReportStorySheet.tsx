@@ -10,6 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import {
   parseApiError,
   reportReasonNeedsDetails,
+  type ReportReasonOption,
   type ReportReason,
 } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -36,7 +37,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [reasons, setReasons] = useState<{ id: string; label: string }[]>([]);
+  const [reasons, setReasons] = useState<ReportReasonOption[]>([]);
 
   // Re-seed on every open: one sheet instance serves every story.
   useEffect(() => {

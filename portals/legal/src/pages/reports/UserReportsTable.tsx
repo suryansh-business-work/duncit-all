@@ -11,6 +11,7 @@ import {
   type TableFetch,
 } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
+import type { ReportReasonOption } from '@duncit/utils';
 import {
   REPORT_STATUSES,
   REPORT_STATUS_COLOR,
@@ -25,7 +26,7 @@ interface Props {
   /** Admin-configured date + time, so every screen reads the same clock. */
   formatDateTime: (value: Date) => string;
   onOpen: (report: ContentReport) => void;
-  reasonOptions: { id: string; label: string }[];
+  reasonOptions: ReportReasonOption[];
 }
 
 const getRowId = (r: ContentReport) => r.id;

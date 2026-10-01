@@ -9,7 +9,7 @@
 # The root .dockerignore already excludes node_modules/dist.
 
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24 AS builder
+FROM node:24 AS builder
 WORKDIR /repo
 # CYPRESS_INSTALL_BINARY=0 for the same reason as Dockerfile.android: `npm ci`
 # pulls devDependencies, and this image does an expo web export — it never runs
@@ -58,7 +58,7 @@ RUN npm run codegen
 RUN npx expo export --platform web --output-dir dist
 
 # --- runner ---
-FROM public.ecr.aws/docker/library/nginx:alpine AS runner
+FROM nginx:alpine AS runner
 COPY --from=builder /repo/app/mobile-app/dist /usr/share/nginx/html
 COPY app/mobile-app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

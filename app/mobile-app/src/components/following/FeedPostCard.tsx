@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -17,6 +18,7 @@ interface Props {
   onToggleLike: () => void;
   onOpenComments: () => void;
   onOpenAuthor: () => void;
+  onReport?: () => void;
 }
 
 /** One Following-feed card — author header, media, caption and a like/comment
@@ -26,50 +28,94 @@ export function FeedPostCard({
   onToggleLike,
   onOpenComments,
   onOpenAuthor,
+  onReport,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent, muted } = useThemeColors();
+  const [menuOpen, setMenuOpen] = useState(false);
   const name = post.author?.first_name || post.author?.full_name || 'Duncit member';
   const avatar = post.author?.profile_photo;
 
   return (
     <SurfaceCard testID={`feed-post-${post.id}`} padding={0} overflow="hidden">
-      <XStack
-        testID={`feed-author-${post.id}`}
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${name}`}
-        onPress={onOpenAuthor}
-        alignItems="center"
-        gap={10}
-        padding={12}
-        pressStyle={PRESS_STYLE.row}
-      >
-        {avatar ? (
-          <AppImage source={{ uri: avatar }} style={AVATAR_STYLE} />
-        ) : (
-          <YStack
-            width={40}
-            height={40}
-            borderRadius={20}
-            backgroundColor="$primary"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text fontSize={15} fontWeight="600" color="$onPrimary">
-              {name.charAt(0).toUpperCase()}
+      <XStack alignItems="center" paddingRight={8}>
+        <XStack
+          testID={`feed-author-${post.id}`}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open ${name}`}
+          onPress={onOpenAuthor}
+          flex={1}
+          alignItems="center"
+          gap={10}
+          padding={12}
+          pressStyle={PRESS_STYLE.row}
+        >
+          {avatar ? (
+            <AppImage source={{ uri: avatar }} style={AVATAR_STYLE} />
+          ) : (
+            <YStack
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor="$primary"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize={15} fontWeight="600" color="$onPrimary">
+                {name.charAt(0).toUpperCase()}
+              </Text>
+            </YStack>
+          )}
+          <YStack flex={1} minWidth={0}>
+            <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
+              {name}
+            </Text>
+            <Text fontSize={12} fontWeight="500" color="$muted">
+              {formatDateTime(post.created_at)}
             </Text>
           </YStack>
-        )}
-        <YStack flex={1} minWidth={0}>
-          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-            {name}
-          </Text>
-          <Text fontSize={12} fontWeight="500" color="$muted">
-            {formatDateTime(post.created_at)}
-          </Text>
-        </YStack>
+        </XStack>
+        <XStack
+          testID={`feed-post-menu-${post.id}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t('contentReport.menuLabel')}
+          onPress={() => setMenuOpen((open) => !open)}
+          padding={8}
+        >
+          <MaterialIcons name="more-vert" size={22} color={muted} />
+        </XStack>
       </XStack>
+      {menuOpen ? (
+        <XStack
+          position="absolute"
+          top={56}
+          right={12}
+          zIndex={10}
+          testID={`feed-post-report-${post.id}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t('contentReport.reportUnsafe')}
+          onPress={() => {
+            setMenuOpen(false);
+            onReport?.();
+          }}
+          alignItems="center"
+          gap={8}
+          paddingHorizontal={16}
+          paddingVertical={10}
+          backgroundColor="$surface"
+          borderRadius={10}
+          borderWidth={1}
+          borderColor="$borderColor"
+        >
+          <MaterialIcons name="flag" size={18} color={muted} />
+          <Text fontSize={14} color="$color">
+            {t('contentReport.reportUnsafe')}
+          </Text>
+        </XStack>
+      ) : null}
 
       {post.image_url ? (
         <YStack marginHorizontal={12} borderRadius={18} overflow="hidden" backgroundColor="$soft">

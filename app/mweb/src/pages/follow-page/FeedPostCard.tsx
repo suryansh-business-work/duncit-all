@@ -4,6 +4,10 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineRounded'
 import FavoriteIcon from '@mui/icons-material/FavoriteRounded';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorderRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Menu, MenuItem } from '@mui/material';
+import { useState } from 'react';
 import { DuncitIconButton } from '@duncit/buttons';
 import { formatDistanceToNow } from 'date-fns';
 import { getFeedCardHeader } from './feedHeader';
@@ -15,6 +19,7 @@ interface FeedPostCardProps {
   club?: FeedClub | null;
   onToggleLike: (post: FeedPost) => void;
   onOpenComments: (postId: string) => void;
+  onReport?: (postId: string) => void;
 }
 
 /** The media sits inset in the card with its own 18px corners. */
@@ -31,8 +36,10 @@ export default function FeedPostCard({
   club,
   onToggleLike,
   onOpenComments,
+  onReport,
 }: Readonly<FeedPostCardProps>) {
   const { t } = useTranslation();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const header = getFeedCardHeader(post, club);
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
   const avatarFallback = club ? (
@@ -43,6 +50,7 @@ export default function FeedPostCard({
 
   return (
     <Card data-testid={`feed-post-${post.id}`} sx={{ overflow: 'hidden' }}>
+      <Stack direction="row" sx={{ alignItems: 'center', pr: 1 }}>
       <Stack
         data-testid={`feed-author-${post.id}`}
         direction="row"
@@ -72,6 +80,15 @@ export default function FeedPostCard({
             {timeAgo}
           </Typography>
         </Box>
+      </Stack>
+      <DuncitIconButton data-testid={`feed-post-menu-${post.id}`} aria-label={t('contentReport.menuLabel')} onClick={(event) => setMenuAnchor(event.currentTarget)}>
+        <MoreVertIcon />
+      </DuncitIconButton>
+      <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+        <MenuItem onClick={() => { setMenuAnchor(null); onReport?.(post.id); }}>
+          <FlagOutlinedIcon fontSize="small" sx={{ mr: 1 }} />{t('contentReport.reportUnsafe')}
+        </MenuItem>
+      </Menu>
       </Stack>
 
       {post.media_type === 'VIDEO' ? (

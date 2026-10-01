@@ -89,11 +89,17 @@ export const DeleteClubStoryDocument = gql(`
 
 /** Flags a story for the Legal team. Open to any signed-in viewer. */
 export const ReportStoryDocument = gql(`
-  mutation MobileReportStory($id: ID!, $reason: ReportReason!, $details: String) {
+  mutation MobileReportStory($id: ID!, $reason: String!, $details: String) {
     reportStory(post_doc_id: $id, reason: $reason, details: $details) {
       id
       report_no
     }
+  }
+`);
+
+export const ContentReportReasonOptionsDocument = gql(`
+  query MobileContentReportReasonOptions {
+    availableReasons: contentReportReasonOptions { id label }
   }
 `);
 

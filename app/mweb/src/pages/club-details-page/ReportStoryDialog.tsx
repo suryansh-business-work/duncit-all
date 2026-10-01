@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
   Alert,
   Dialog,
@@ -12,18 +12,20 @@ import {
   Stack,
   TextField,
   Typography,
-} from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+} from "@mui/material";
+import { DuncitButton } from "@duncit/buttons";
 import {
   parseApiError,
   reportReasonNeedsDetails,
-  REPORT_REASONS,
-  REPORT_REASON_KEY,
+  type ReportReasonOption,
   type ReportReason,
-} from '@duncit/utils';
-import { useTranslation } from '../../i18n/useTranslation';
-import { notify } from '../../components/notify';
-import { REPORT_STORY } from '../ClubDetailsPage/clubDetailsQueries';
+} from "@duncit/utils";
+import { useTranslation } from "../../i18n/useTranslation";
+import { notify } from "../../components/notify";
+import {
+  CONTENT_REPORT_REASON_OPTIONS,
+  REPORT_STORY,
+} from "../ClubDetailsPage/clubDetailsQueries";
 
 interface Props {
   /** The story being reported; null keeps the dialog closed. */
@@ -39,19 +41,26 @@ interface Props {
  * edits their existing one rather than filing a second, so tapping it twice
  * cannot be used to manufacture a pile-on.
  */
-export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>) {
+export default function ReportStoryDialog({
+  storyId,
+  onClose,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [reason, setReason] = useState<ReportReason | null>(null);
-  const [details, setDetails] = useState('');
-  const [error, setError] = useState('');
+  const [details, setDetails] = useState("");
+  const [error, setError] = useState("");
   const [report, { loading }] = useMutation<any>(REPORT_STORY);
+  const { data: reasonData } = useQuery<{
+    reasonOptions: ReportReasonOption[];
+  }>(CONTENT_REPORT_REASON_OPTIONS);
+  const reasons = reasonData?.reasonOptions ?? [];
 
   // Re-seed on every open: one dialog instance serves every story.
   useEffect(() => {
     if (!storyId) return;
     setReason(null);
-    setDetails('');
-    setError('');
+    setDetails("");
+    setError("");
   }, [storyId]);
 
   const needsDetails = reportReasonNeedsDetails(reason);
@@ -66,43 +75,57 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
       return;
     }
     try {
-      await report({ variables: { id: storyId, reason, details: details.trim() } });
-      notify(t('contentReport.submitted'), 'success');
+      await report({
+        variables: { id: storyId, reason, details: details.trim() },
+      });
+      notify(t("contentReport.submitted"), "success");
       onClose();
     } catch (e) {
-      setError(parseApiError(e) || t('contentReport.submitFailed'));
+      setError(parseApiError(e) || t("contentReport.submitFailed"));
     }
   };
 
   return (
-    <Dialog data-testid="report-story-sheet" open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('contentReport.title')}</DialogTitle>
+    <Dialog
+      data-testid="report-story-sheet"
+      open={!!storyId}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+    >
+      <DialogTitle sx={{ fontWeight: 600 }}>
+        {t("contentReport.title")}
+      </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            {t('contentReport.subtitle')}
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+            }}
+          >
+            {t("contentReport.subtitle")}
           </Typography>
           <Typography
             variant="overline"
             sx={{
               color: "text.secondary",
-              fontWeight: 600
-            }}>
-            {t('contentReport.reasonLabel')}
+              fontWeight: 600,
+            }}
+          >
+            {t("contentReport.reasonLabel")}
           </Typography>
           <RadioGroup
-            value={reason ?? ''}
+            value={reason ?? ""}
             onChange={(e) => setReason(e.target.value as ReportReason)}
           >
-            {REPORT_REASONS.map((value) => (
+            {reasons.map(({ id, label }) => (
               <FormControlLabel
-                key={value}
-                data-testid={`report-reason-${value}`}
-                value={value}
+                key={id}
+                data-testid={`report-reason-${id}`}
+                value={id}
                 control={<Radio size="small" />}
-                label={t(REPORT_REASON_KEY[value])}
+                label={label}
               />
             ))}
           </RadioGroup>
@@ -112,18 +135,30 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             multiline
             minRows={2}
             required={needsDetails}
-            label={t('contentReport.detailsLabel')}
-            placeholder={t('contentReport.detailsPlaceholder')}
+            label={t("contentReport.detailsLabel")}
+            placeholder={t("contentReport.detailsPlaceholder")}
             value={details}
             onChange={(e) => setDetails(e.target.value)}
           />
-          {error && <Alert data-testid="report-story-error" severity="error">{error}</Alert>}
+          {error && (
+            <Alert data-testid="report-story-error" severity="error">
+              {error}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('contentReport.cancel')}</DuncitButton>
-        <DuncitButton data-testid="report-story-submit" variant="contained" color="error" disabled={loading} onClick={submit}>
-          {t('contentReport.submit')}
+        <DuncitButton onClick={onClose}>
+          {t("contentReport.cancel")}
+        </DuncitButton>
+        <DuncitButton
+          data-testid="report-story-submit"
+          variant="contained"
+          color="error"
+          disabled={loading}
+          onClick={submit}
+        >
+          {t("contentReport.submit")}
         </DuncitButton>
       </DialogActions>
     </Dialog>

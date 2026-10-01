@@ -33,7 +33,7 @@ export const appConfig = {
     // What users have reported from the app and mWeb. It sits beside
     // Grievance rather than under it: a grievance is someone complaining
     // about US, a report is someone flagging another user's content.
-    { label: 'Report By User', labelKey: 'shell.nav.reportByUser', to: '/reports', icon: 'flag' },
+    { label: 'UGC Content reporting', labelKey: 'reportLogs.title', to: '/reports', icon: 'flag' },
     {
       label: 'Grievance', labelKey: 'shell.nav.grievance',
       icon: 'flag',

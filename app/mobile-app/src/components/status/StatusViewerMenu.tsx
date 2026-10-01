@@ -61,7 +61,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
           testID="status-viewer-report"
           role="button"
           tabIndex={0}
-          aria-label={t('contentReport.report')}
+          aria-label={t('contentReport.reportUnsafe')}
           onPress={onReport}
           alignItems="center"
           gap={8}
@@ -71,7 +71,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
         >
           <MaterialIcons name="flag" size={18} color={color} />
           <Text fontSize={14} fontWeight="600" color="$color">
-            {t('contentReport.report')}
+            {t('contentReport.reportUnsafe')}
           </Text>
         </XStack>
       ) : null}

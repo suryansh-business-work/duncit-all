@@ -17,11 +17,11 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import {
   parseApiError,
-  REPORT_REASON_KEY,
   REPORT_STATUSES,
   REPORT_STATUS_KEY,
   REPORT_TARGET_KEY,
   type ReportStatus,
+  type ReportReasonOption,
 } from '@duncit/utils';
 import { UPDATE_CONTENT_REPORT_STATUS, type ContentReport } from '../../graphql/reports';
 import ReportPreview from './ReportPreview';
@@ -31,6 +31,7 @@ interface Props {
   formatDateTime: (value: Date) => string;
   onClose: () => void;
   onSaved: () => void;
+  reasonOptions: ReportReasonOption[];
 }
 
 /**
@@ -46,6 +47,7 @@ export default function ReportDetailDialog({
   formatDateTime,
   onClose,
   onSaved,
+  reasonOptions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<ReportStatus>('RECEIVED');
@@ -104,7 +106,7 @@ export default function ReportDetailDialog({
               {t('reportLogs.colReason')}
             </Typography>
             <Typography variant="body2">
-              {report ? t(REPORT_REASON_KEY[report.reason]) : ''}
+              {report ? reasonOptions.find(({ id }) => id === report.reason)?.label ?? report.reason : ''}
             </Typography>
           </Box>
           <Box>

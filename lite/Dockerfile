@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 # The public site URL and the console URL are compiled into the two bundles
@@ -117,7 +117,7 @@ RUN pnpm --filter duncit-lite build
 # Node, not nginx: this one process is the GraphQL API, the upload and calendar
 # routes, and the HTML server for BOTH hostnames (the console shell for
 # lite-portal.*, the web app with per-page head tags for lite.*).
-FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

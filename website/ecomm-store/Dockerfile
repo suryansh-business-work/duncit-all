@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
@@ -100,7 +100,7 @@ RUN pnpm --filter ecomm-store build
 # into the head before the HTML leaves — what search engines and link previews
 # read — and answers /sitemap.xml from the live catalogue. dist-server/main.mjs
 # is a self-contained bundle, so the image ships no node_modules.
-FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ARG VITE_GRAPHQL_URL
 ARG VITE_SITE_URL

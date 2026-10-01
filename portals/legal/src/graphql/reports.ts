@@ -1,5 +1,21 @@
 import { gql } from '@apollo/client';
-import type { ReportReason, ReportStatus, ReportTargetType } from '@duncit/utils';
+import type { ReportReasonOption, ReportStatus, ReportTargetType } from '@duncit/utils';
+
+export interface ContentReportReasonOptionsResult {
+  contentReportReasonOptions: ReportReasonOption[];
+}
+
+export const CONTENT_REPORT_REASON_OPTIONS = gql`
+  query ContentReportReasonOptions {
+    contentReportReasonOptions { id label }
+  }
+`;
+
+export const UPDATE_CONTENT_REPORT_REASON_OPTIONS = gql`
+  mutation UpdateContentReportReasonOptions($options: [ContentReportReasonOptionInput!]!) {
+    updateContentReportReasonOptions(options: $options) { id label }
+  }
+`;
 
 export const CONTENT_REPORT_FIELDS = gql`
   fragment ContentReportFields on ContentReport {
@@ -54,7 +70,7 @@ export interface ContentReport {
   /** Copied at report time — the story it names may already have expired. */
   target_preview_url: string;
   target_caption: string;
-  reason: ReportReason;
+  reason: string;
   details: string;
   reporter_name: string;
   target_owner_name: string;

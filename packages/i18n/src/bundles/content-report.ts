@@ -24,9 +24,10 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     // The 3-dot menu on an open story. Delete is only rendered for someone the
     // server said may delete it; Report is rendered for everybody, which is the
     // whole point of having it.
-    menuLabel: 'Story options',
+    menuLabel: 'Content options',
     delete: 'Delete story',
-    report: 'Report story',
+    report: 'Report content',
+    reportUnsafe: 'Report unsafe content',
     // Deleting a story is immediate and total — there is no bin to fish it out
     // of — so it asks first, on both surfaces.
     deleteConfirmTitle: 'Delete this story?',
@@ -38,7 +39,7 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     deleting: 'Deleting…',
     deleteFailed: 'Could not delete this story',
     // The report sheet/dialog.
-    title: 'Report this story',
+    title: 'Report this content',
     subtitle: 'Tell us what is wrong with it. Our Legal team reviews every report.',
     reasonLabel: 'What is wrong?',
     detailsLabel: 'Anything else we should know?',
@@ -59,10 +60,18 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     reasonMisinformation: 'False information',
     reasonScam: 'Scam or fraud',
     reasonOther: 'Something else',
+    settingsTitle: 'Report reasons',
+    addReason: 'Add reason',
+    reasonCode: 'Reason code',
+    reasonText: 'Reason shown to users',
+    saveReasons: 'Save reasons',
+    reasonSaveFailed: 'Could not save report reasons',
+    reasonCodeHint: 'Use letters, numbers and underscores. Codes are stored with reports.',
+    otherRequired: 'Keep the Other option available.',
   },
   // The Legal portal's queue of everything users have reported.
   reportLogs: {
-    title: 'Report By User',
+    title: 'UGC Content reporting',
     subtitle:
       'Everything users have reported from the app and mWeb, newest first. Each row keeps a copy of what was reported, because the original may already be gone.',
     colReportId: 'Report ID',
@@ -101,5 +110,15 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     targetClub: 'Club',
     targetProfile: 'Profile',
     targetProduct: 'Product',
+    settings: 'Report reasons',
+    reasonCode: 'Code',
+    reasonLabel: 'Reason label',
+    addReason: 'Add reason',
+    removeReason: 'Remove',
+    saveReasons: 'Save reasons',
+    reasonsSaved: 'Report reasons saved',
+    reasonsLoadFailed: 'Could not load report reasons',
+    reasonCodeHint: 'Use a unique code with letters, numbers or underscores.',
+    otherLocked: 'The Other option is required.',
   },
 };

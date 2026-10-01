@@ -92,6 +92,7 @@ export {
   REPORT_STATUS_KEY,
   REPORT_TARGET_KEY,
   type ReportReason,
+  type ReportReasonOption,
   type ReportStatus,
   type ReportTargetType,
 } from './content-report';

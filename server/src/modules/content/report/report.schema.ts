@@ -51,7 +51,7 @@ export const reportTypeDefs = /* GraphQL */ `
     """
     target_preview_url: String!
     target_caption: String!
-    reason: ReportReason!
+    reason: String!
     "The reporter's own words. Always present when the reason is OTHER."
     details: String!
     reporter_name: String!
@@ -87,11 +87,22 @@ export const reportTypeDefs = /* GraphQL */ `
     resolution: String
   }
 
+  type ContentReportReasonOption {
+    id: ID!
+    label: String!
+  }
+
+  input ContentReportReasonOptionInput {
+    id: ID!
+    label: String!
+  }
+
   extend type Query {
     "Legal-only queue of everything users have reported."
     contentReportsTable(query: TableQueryInput): ContentReportTablePage!
     contentReport(id: ID!): ContentReport
     contentReportStats: ContentReportStats!
+    contentReportReasonOptions: [ContentReportReasonOption!]!
   }
 
   extend type Mutation {
@@ -102,7 +113,8 @@ export const reportTypeDefs = /* GraphQL */ `
     story itself, so a reporter cannot file a row describing something the
     story never showed.
     """
-    reportStory(post_doc_id: ID!, reason: ReportReason!, details: String): ContentReport!
+    reportStory(post_doc_id: ID!, reason: String!, details: String): ContentReport!
+    updateContentReportReasonOptions(options: [ContentReportReasonOptionInput!]!): [ContentReportReasonOption!]!
     updateContentReportStatus(id: ID!, input: UpdateContentReportStatusInput!): ContentReport!
   }
 `;

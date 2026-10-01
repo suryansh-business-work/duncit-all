@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, ButtonBase, Dialog, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -102,6 +103,7 @@ interface HomeStatusViewerProps {
   onPrev?: () => void;
   /** Own story only — delete the currently shown slide by its post id (Bug 7). */
   onDelete?: (slideId: string) => void;
+  onReport?: (slideId: string) => void;
   /** Own story only — open the "seen by" viewers dialog for a slide (Bug 4). */
   onViewers?: (slideId: string) => void;
   /** Followers' stories only — like/unlike the current slide (Bug 5). */
@@ -128,6 +130,7 @@ export default function HomeStatusViewer({
   onNext,
   onPrev,
   onDelete,
+  onReport,
   onViewers,
   onToggleLike,
   onRecordView,
@@ -414,29 +417,24 @@ export default function HomeStatusViewer({
                 <VisibilityIcon />
               </DuncitRoundButton>
             )}
-            {onDelete && currentId && (
+            {(onDelete || onReport) && currentId && (
               <DuncitRoundButton
                 tone="overlay"
                 onClick={(event) => setMenuAnchor(event.currentTarget)}
-                aria-label={t('mweb.home.storyOptions')}
+                aria-label={t('contentReport.menuLabel')}
                 data-testid="status-kebab"
               >
                 <MoreVertIcon />
               </DuncitRoundButton>
             )}
-            {onDelete && currentId && (
+            {(onDelete || onReport) && currentId && (
               <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
-                <MenuItem
-                  data-testid="status-delete"
-                  onClick={() => {
-                    setMenuAnchor(null);
-                    onDelete(currentId);
-                  }}
-                  sx={{ color: 'error.main', fontWeight: 600 }}
-                >
-                  <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
-                  {t('mweb.common.delete')}
-                </MenuItem>
+                {onReport && <MenuItem data-testid="status-report" onClick={() => { setMenuAnchor(null); onReport(currentId); }}>
+                  <FlagOutlinedIcon fontSize="small" sx={{ mr: 1 }} />{t('contentReport.reportUnsafe')}
+                </MenuItem>}
+                {onDelete && <MenuItem data-testid="status-delete" onClick={() => { setMenuAnchor(null); onDelete(currentId); }} sx={{ color: 'error.main', fontWeight: 600 }}>
+                  <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />{t('mweb.common.delete')}
+                </MenuItem>}
               </Menu>
             )}
             <DuncitRoundButton data-testid="status-close" tone="overlay" onClick={onClose} aria-label={t('mweb.common.closeStatus')}>

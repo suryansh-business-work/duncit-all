@@ -679,6 +679,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       productsReviews: 'Products Reviews',
       rateLimiting: 'Rate Limiting',
       rateLimitBlocks: 'Rate Limit Blocks',
+      reelStudio: 'Reel Studio',
       referrals: 'Referrals',
       regionStructure: 'Region Structure',
       reminders: 'Reminders',

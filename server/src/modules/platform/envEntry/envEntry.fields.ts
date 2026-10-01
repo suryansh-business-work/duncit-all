@@ -168,6 +168,18 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     },
     { name: 'package_name', label: 'Package Name', hint: 'The app id on Google Play, e.g. com.duncit.mobile' },
   ],
+  // Reads the footage AI → Reel Studio edits. Read-only: the studio never
+  // writes to anyone's Drive. A folder is readable once it is shared with the
+  // service account's email (Viewer) or set to "Anyone with the link" — the
+  // key alone opens nothing, and the connection test says so.
+  GOOGLE_DRIVE: [
+    {
+      name: 'service_account_json',
+      label: 'Service Account Key (JSON)',
+      secret: true,
+      hint: 'Paste the whole JSON key file of a service account. Enable the Google Drive API on its project, then share each footage folder with its client_email as Viewer',
+    },
+  ],
   // The SMS carrier for every phone one-time code. MSG91's OTP widget makes,
   // sends and checks the code itself; the server only holds the request id.
   // Both values stay on the server — the apps never talk to MSG91 directly.
@@ -326,6 +338,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TURN: 'TURN relay (staff calls)',
   GITHUB: 'GitHub (app builds)',
   GOOGLE_PLAY: 'Google Play (store releases)',
+  GOOGLE_DRIVE: 'Google Drive (Reel Studio footage)',
   MSG91: 'MSG91 (SMS OTP)',
   APPLE_SIGNIN: 'Sign in with Apple',
   APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
@@ -352,6 +365,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   TURN: 'https://github.com/coturn/coturn',
   GITHUB: 'https://github.com/settings/personal-access-tokens',
   GOOGLE_PLAY: 'https://play.google.com/console/developers',
+  GOOGLE_DRIVE: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
   MSG91: 'https://control.msg91.com/app/m/l/settings/security/authkey',
   APPLE_SIGNIN: 'https://developer.apple.com/account/resources/identifiers/list',
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
@@ -440,6 +454,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_PLAY', field: 'service_account_json' },
   GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
+  GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_DRIVE', field: 'service_account_json' },
   MSG91_WIDGET_ID: { category: 'MSG91', field: 'widget_id' },
   MSG91_AUTH_KEY: { category: 'MSG91', field: 'auth_key' },
   APPLE_TEAM_ID: { category: 'APPLE_SIGNIN', field: 'team_id' },

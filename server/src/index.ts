@@ -46,6 +46,7 @@ import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
 import { buildAutomationRouter } from '@modules/ai/automation/automation.router';
 import { startAutomationScheduler } from '@modules/ai/automation/automation.scheduler';
+import { buildReelRouter } from '@modules/ai/reel/reel.router';
 import { buildSocialOAuthRouter } from '@modules/crm/marketing/social/social.router';
 import { buildAppleRelayRouter } from '@modules/access/auth/apple.relay';
 import { graphqlErrorLevel } from './observability/graphqlErrorLevel';
@@ -770,6 +771,10 @@ async function bootstrap() {
 
   // AI portal automation: where AiSensy posts each incoming WhatsApp message.
   app.use('/automation', buildAutomationRouter());
+
+  // AI portal Reel Studio: Drive footage streamed to the player. No session —
+  // the signed token in the path is the credential. See reel.router.ts.
+  app.use('/reels', buildReelRouter());
 
   // LinkedIn / Meta / X / Google's OAuth redirect after a marketer connects a
   // social account in the Marketing portal. A browser navigation, like Gmail's.

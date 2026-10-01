@@ -14,6 +14,7 @@ import {
   type PlayServiceAccount,
 } from '@modules/platform/appBuild/googlePlay.gateway';
 import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/appBuild/appStoreConnect.gateway';
+import { probeDriveAccount } from '@modules/ai/reel/reel.drive';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
@@ -396,6 +397,36 @@ export async function githubConnection(str: EnvConfigReader): Promise<EnvConnect
   return { ok: true, message: `Connected to ${String(res.data.full_name ?? slug)}`, details };
 }
 
+// --- Google Drive -----------------------------------------------------------
+
+/**
+ * Sign in as the service account and ask Drive who it is. Reads nothing from
+ * anyone's Drive: which folders the account can open is decided by sharing,
+ * folder by folder, and is checked where a folder is pasted — in Reel Studio.
+ */
+export async function googleDriveConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  if (!str('service_account_json')) {
+    return { ok: false, message: 'The service account key is required', details: [] };
+  }
+  try {
+    const email = await probeDriveAccount(str('service_account_json'));
+    return {
+      ok: true,
+      message: `Connected to Google Drive as ${email}`,
+      details: [
+        `Share each footage folder with ${email} as Viewer, or set it to "Anyone with the link".`,
+        'Read-only: Reel Studio never writes to, moves or deletes anything in Drive.',
+      ],
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+      details: ['If Google answered 403, enable the Google Drive API on the Cloud project the service account belongs to.'],
+    };
+  }
+}
+
 // --- Google Play ------------------------------------------------------------
 
 /**
@@ -680,6 +711,7 @@ const CONNECTION_CHECKS = {
   AISENSY: aisensyConnection,
   GITHUB: githubConnection,
   GOOGLE_PLAY: googlePlayConnection,
+  GOOGLE_DRIVE: googleDriveConnection,
   MSG91: msg91Connection,
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,

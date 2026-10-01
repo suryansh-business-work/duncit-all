@@ -63,6 +63,8 @@ const SHIPPED_KEYS = [
   'moderation.product.user',
   'pod.audit_review',
   'pod.audit_review.user',
+  'reels.director',
+  'reels.director.user',
   'release.changelog',
   'release.changelog.user',
   'stress.verdict',

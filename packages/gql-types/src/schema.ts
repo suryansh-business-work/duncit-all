@@ -7484,6 +7484,7 @@ export type EnvCategory =
   | 'GEMINI'
   | 'GITHUB'
   | 'GODADDY'
+  | 'GOOGLE_DRIVE'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'GOOGLE_PLAY'
@@ -10952,6 +10953,8 @@ export type Mutation = {
   addPodPartyMedia: PodMediaBoard;
   addPodStatus: Pod;
   addPostComment: Post;
+  /** Add Drive files to a reel's footage. Files it already holds are skipped. */
+  addReelDriveAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
   addUserRole: User;
@@ -11290,6 +11293,7 @@ export type Mutation = {
   createRazorpayOrder: RazorpayOrder;
   /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
   createRazorpayProductOrder: RazorpayOrder;
+  createReelProject: ReelProject;
   createReportCategory: ReportCategory;
   createRole: Role;
   createScheduledSocialPost: SocialScheduledPost;
@@ -11458,6 +11462,7 @@ export type Mutation = {
   deletePostComment: Post;
   deletePushSubscription: Scalars['Boolean']['output'];
   deleteRateLimitRule: Scalars['Boolean']['output'];
+  deleteReelProject: Scalars['Boolean']['output'];
   deleteReportCategory: Scalars['Boolean']['output'];
   deleteRole: Scalars['Boolean']['output'];
   /** Removes it from Duncit only; a post already out stays on the network. */
@@ -11916,6 +11921,8 @@ export type Mutation = {
   removeMeetingHoliday: Scalars['Boolean']['output'];
   /** Takes one item down — your own, or any of them if you host the pod. */
   removePodPartyMedia: PodMediaBoard;
+  /** Remove footage from a reel. Scenes that used it are dropped from the edit. */
+  removeReelAsset: ReelProject;
   removeRegionClubAdmin: Region;
   removeUserRole: User;
   /** Rename in place. Purging the CDN copy costs a purge credit, so it is opt-in. */
@@ -12111,6 +12118,8 @@ export type Mutation = {
    */
   restoreDbBackup: DbRestore;
   restoreInventoryProduct: InventoryProduct;
+  /** Put back the edit an earlier reply produced. */
+  restoreReelVersion: ReelProject;
   /** Answer a test run that is waiting for the contact, or let it time out. */
   resumeAutomationTest: AutomationRun;
   /**
@@ -12235,6 +12244,8 @@ export type Mutation = {
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
   sendPodMessage: PodMessage;
+  /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
+  sendReelMessage: ReelProject;
   /** Post a message to a Slack channel (full message surface). */
   sendSlackMessage: SlackSendResult;
   /** Send a message, a file, or both. Text may be empty when a file comes with it. */
@@ -12815,6 +12826,7 @@ export type Mutation = {
   updatePolicy: Policy;
   updateRateLimitRule: RateLimitRule;
   updateRateLimitSettings: RateLimitSettings;
+  updateReelProject: ReelProject;
   /** Finance: what a referral pays and what a member's share sheet says. */
   updateReferralSettings: ReferralSettings;
   updateReportCategory: ReportCategory;
@@ -13015,6 +13027,12 @@ export type MutationAddPodStatusArgs = {
 export type MutationAddPostCommentArgs = {
   post_doc_id: Scalars['ID']['input'];
   text: Scalars['String']['input'];
+};
+
+
+export type MutationAddReelDriveAssetsArgs = {
+  file_ids: Array<Scalars['ID']['input']>;
+  project_id: Scalars['ID']['input'];
 };
 
 
@@ -13807,6 +13825,11 @@ export type MutationCreateRazorpayProductOrderArgs = {
 };
 
 
+export type MutationCreateReelProjectArgs = {
+  input: ReelProjectInput;
+};
+
+
 export type MutationCreateReportCategoryArgs = {
   input: ReportCategoryInput;
 };
@@ -14334,6 +14357,11 @@ export type MutationDeletePushSubscriptionArgs = {
 
 export type MutationDeleteRateLimitRuleArgs = {
   rule_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteReelProjectArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -15153,6 +15181,12 @@ export type MutationRemovePodPartyMediaArgs = {
 };
 
 
+export type MutationRemoveReelAssetArgs = {
+  asset_id: Scalars['ID']['input'];
+  project_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveRegionClubAdminArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -15399,6 +15433,12 @@ export type MutationRestoreDbBackupArgs = {
 
 export type MutationRestoreInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRestoreReelVersionArgs = {
+  message_id: Scalars['ID']['input'];
+  project_id: Scalars['ID']['input'];
 };
 
 
@@ -15650,6 +15690,11 @@ export type MutationSendPodMessageArgs = {
   pod_id: Scalars['ID']['input'];
   text?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<PodMessageType>;
+};
+
+
+export type MutationSendReelMessageArgs = {
+  input: ReelMessageInput;
 };
 
 
@@ -17336,6 +17381,12 @@ export type MutationUpdateRateLimitRuleArgs = {
 
 export type MutationUpdateRateLimitSettingsArgs = {
   input: RateLimitSettingsInput;
+};
+
+
+export type MutationUpdateReelProjectArgs = {
+  id: Scalars['ID']['input'];
+  input: ReelProjectInput;
 };
 
 
@@ -22624,6 +22675,11 @@ export type Query = {
   rateLimitStats: RateLimitStats;
   /** Every system that has called, with what it has spent. */
   rateLimitSystems: Array<RateLimitSystem>;
+  /** The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id. */
+  reelDriveFolder: ReelDriveFolder;
+  reelDriveStatus: ReelDriveStatus;
+  reelProject?: Maybe<ReelProject>;
+  reelProjects: Array<ReelProjectSummary>;
   referralLookup?: Maybe<PodMember>;
   referralSettings: ReferralSettings;
   /** Admin: every redeemed referral, newest first. */
@@ -25245,6 +25301,16 @@ export type QueryRateLimitRulesTableArgs = {
 };
 
 
+export type QueryReelDriveFolderArgs = {
+  folder: Scalars['String']['input'];
+};
+
+
+export type QueryReelProjectArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryReferralLookupArgs = {
   token: Scalars['String']['input'];
 };
@@ -26493,6 +26559,261 @@ export type RecordUserContactActionInput = {
   target: Scalars['String']['input'];
   type: AdminContactActionType;
   user_id: Scalars['ID']['input'];
+};
+
+/** One clip, picture or sound file a reel can use. */
+export type ReelAsset = {
+  __typename?: 'ReelAsset';
+  /** DRIVE: the Drive file this is, so the folder browser can tell what the reel already holds. Empty for an upload. */
+  drive_file_id: Scalars['String']['output'];
+  /** 0 when Drive has not finished measuring the file. */
+  duration_ms: Scalars['Int']['output'];
+  height: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: ReelAssetKind;
+  mime_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size_bytes: Scalars['Float']['output'];
+  source: ReelAssetSource;
+  /** A preview frame; empty for a sound file. */
+  thumbnail_url: Scalars['String']['output'];
+  /** Where the player reads it from. For Drive footage this is a signed link that expires — refetch the project rather than storing it. */
+  url: Scalars['String']['output'];
+  width: Scalars['Int']['output'];
+};
+
+export type ReelAssetKind =
+  | 'AUDIO'
+  | 'IMAGE'
+  | 'VIDEO';
+
+export type ReelAssetSource =
+  /** Footage read from the project's Google Drive folder. */
+  | 'DRIVE'
+  /** A picture attached in the chat. */
+  | 'UPLOAD';
+
+export type ReelCorner =
+  | 'BOTTOM_LEFT'
+  | 'BOTTOM_RIGHT'
+  | 'CENTER'
+  | 'TOP_LEFT'
+  | 'TOP_RIGHT';
+
+export type ReelDriveEntry = {
+  __typename?: 'ReelDriveEntry';
+  duration_ms: Scalars['Int']['output'];
+  height: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: ReelDriveEntryKind;
+  mime_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  size_bytes: Scalars['Float']['output'];
+  /** A signed preview link; empty for a folder or a sound file. */
+  thumbnail_url: Scalars['String']['output'];
+  width: Scalars['Int']['output'];
+};
+
+export type ReelDriveEntryKind =
+  | 'AUDIO'
+  | 'FOLDER'
+  | 'IMAGE'
+  | 'VIDEO';
+
+export type ReelDriveFolder = {
+  __typename?: 'ReelDriveFolder';
+  entries: Array<ReelDriveEntry>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** True when the folder holds more than is listed. */
+  truncated: Scalars['Boolean']['output'];
+};
+
+/** Whether the server can read Google Drive, and the address a folder must be shared with. */
+export type ReelDriveStatus = {
+  __typename?: 'ReelDriveStatus';
+  configured: Scalars['Boolean']['output'];
+  service_account_email: Scalars['String']['output'];
+};
+
+export type ReelFit =
+  /** Show everything, letterboxed on the scene's background. */
+  | 'CONTAIN'
+  /** Fill the frame, cropping the edges. */
+  | 'COVER';
+
+export type ReelMessage = {
+  __typename?: 'ReelMessage';
+  /** USER: the pictures attached to this message. */
+  asset_ids: Array<Scalars['ID']['output']>;
+  at: Scalars['String']['output'];
+  /** ASSISTANT: true when the editor could not be reached or read. */
+  failed: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** ASSISTANT: true when this reply produced an edit that can be put back. */
+  restorable: Scalars['Boolean']['output'];
+  role: ReelMessageRole;
+  text: Scalars['String']['output'];
+};
+
+export type ReelMessageInput = {
+  project_id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+  uploads?: InputMaybe<Array<ReelUploadInput>>;
+};
+
+export type ReelMessageRole =
+  | 'ASSISTANT'
+  | 'USER';
+
+export type ReelMotion =
+  | 'NONE'
+  | 'PAN_LEFT'
+  | 'PAN_RIGHT'
+  | 'ZOOM_IN'
+  | 'ZOOM_OUT';
+
+/** A sound file played under the whole reel. */
+export type ReelMusic = {
+  __typename?: 'ReelMusic';
+  asset_id: Scalars['ID']['output'];
+  trim_start_ms: Scalars['Int']['output'];
+  volume: Scalars['Float']['output'];
+};
+
+/** A picture on top of a scene — a logo or a sticker. */
+export type ReelOverlay = {
+  __typename?: 'ReelOverlay';
+  asset_id: Scalars['ID']['output'];
+  corner: ReelCorner;
+  /** 0 = stays until the scene ends. */
+  duration_ms: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  opacity: Scalars['Float']['output'];
+  start_ms: Scalars['Int']['output'];
+  /** Width as a share of the frame, 5-100. */
+  width_pct: Scalars['Int']['output'];
+};
+
+/** A reel: its Drive folder, its footage, the conversation and the edit. */
+export type ReelProject = {
+  __typename?: 'ReelProject';
+  assets: Array<ReelAsset>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: Scalars['String']['output'];
+  drive_folder_id: Scalars['String']['output'];
+  drive_url: Scalars['String']['output'];
+  /** How long the reel plays. */
+  duration_ms: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  messages: Array<ReelMessage>;
+  name: Scalars['String']['output'];
+  spec: ReelSpec;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type ReelProjectInput = {
+  /** A Google Drive folder link, or empty for a reel built only from uploads. */
+  drive_url?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
+/** A reel as the list shows it — without its conversation. */
+export type ReelProjectSummary = {
+  __typename?: 'ReelProjectSummary';
+  asset_count: Scalars['Int']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: Scalars['String']['output'];
+  drive_url: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  scene_count: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type ReelScene = {
+  __typename?: 'ReelScene';
+  /** Empty for a colour card — a scene that is only its background and text. */
+  asset_id: Scalars['String']['output'];
+  background: Scalars['String']['output'];
+  duration_ms: Scalars['Int']['output'];
+  fit: ReelFit;
+  id: Scalars['ID']['output'];
+  motion: ReelMotion;
+  overlays: Array<ReelOverlay>;
+  playback_rate: Scalars['Float']['output'];
+  texts: Array<ReelText>;
+  /** How this scene arrives from the one before it. */
+  transition: ReelTransition;
+  /** How long the two scenes overlap; 0 for a cut. */
+  transition_ms: Scalars['Int']['output'];
+  /** VIDEO: where in the clip the scene starts. */
+  trim_start_ms: Scalars['Int']['output'];
+  volume: Scalars['Float']['output'];
+};
+
+/**
+ * The reel's edit, as data. The portal draws exactly this with Remotion; the
+ * server sanitizes it on every write and every read, so each field is always
+ * present and always in range.
+ */
+export type ReelSpec = {
+  __typename?: 'ReelSpec';
+  background: Scalars['String']['output'];
+  fps: Scalars['Int']['output'];
+  height: Scalars['Int']['output'];
+  music?: Maybe<ReelMusic>;
+  scenes: Array<ReelScene>;
+  width: Scalars['Int']['output'];
+};
+
+/** Words on top of a scene. Times are milliseconds from the start of that scene. */
+export type ReelText = {
+  __typename?: 'ReelText';
+  animation: ReelTextAnimation;
+  /** The colour of a pill behind the words; empty for none. */
+  background: Scalars['String']['output'];
+  color: Scalars['String']['output'];
+  /** 0 = stays until the scene ends. */
+  duration_ms: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  position: ReelTextPosition;
+  start_ms: Scalars['Int']['output'];
+  style: ReelTextStyle;
+  text: Scalars['String']['output'];
+};
+
+export type ReelTextAnimation =
+  | 'FADE'
+  | 'NONE'
+  | 'POP'
+  | 'SLIDE_UP'
+  | 'TYPEWRITER';
+
+export type ReelTextPosition =
+  | 'BOTTOM'
+  | 'CENTER'
+  | 'TOP';
+
+export type ReelTextStyle =
+  | 'CAPTION'
+  | 'SUBTITLE'
+  | 'TITLE';
+
+export type ReelTransition =
+  | 'FADE'
+  | 'NONE'
+  | 'SLIDE'
+  | 'WIPE';
+
+/** A picture already uploaded to the media store, attached to a chat message. */
+export type ReelUploadInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  size_bytes?: InputMaybe<Scalars['Float']['input']>;
+  url: Scalars['String']['input'];
+  width?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type ReferralEntry = {

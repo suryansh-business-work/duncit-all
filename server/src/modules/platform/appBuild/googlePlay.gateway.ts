@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, openAsBlob } from 'node:fs';
-import jwt from 'jsonwebtoken';
+import {
+  parseServiceAccount,
+  serviceAccountToken,
+  type GoogleServiceAccount,
+} from '@utils/googleServiceAccount';
 
 /**
  * The Google Play Developer API, as far as releasing one AAB goes.
@@ -17,7 +21,6 @@ import jwt from 'jsonwebtoken';
  * the row, the env connection test proves the key, and both call in here.
  */
 
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const SCOPE = 'https://www.googleapis.com/auth/androidpublisher';
 export const API = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
 export const UPLOAD_API = 'https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications';
@@ -28,10 +31,8 @@ const TIMEOUT_MS = 120_000;
 /** The Play tracks the portal can release to. Lower-case is what the API names them. */
 export type PlayTrack = 'internal' | 'production';
 
-export interface PlayServiceAccount {
-  client_email: string;
-  private_key: string;
-}
+/** The service account that signs in — the same key file every Google API takes. */
+export type PlayServiceAccount = GoogleServiceAccount;
 
 export interface PlayConfig {
   account: PlayServiceAccount;
@@ -43,23 +44,7 @@ export interface PlayBundle {
   sha256: string;
 }
 
-/** The JSON key file a service account downloads as, reduced to what signs in. */
-export function parseServiceAccount(json: string): PlayServiceAccount {
-  let parsed: { client_email?: unknown; private_key?: unknown };
-  try {
-    parsed = JSON.parse(json);
-  } catch {
-    throw new Error('The service account key is not valid JSON — paste the whole key file Google downloaded.');
-  }
-  const client_email = String(parsed.client_email ?? '').trim();
-  const private_key = String(parsed.private_key ?? '').trim();
-  if (!client_email || !private_key) {
-    throw new Error(
-      'The service account key has no client_email or private_key — it is not a service account JSON key.'
-    );
-  }
-  return { client_email, private_key };
-}
+export { parseServiceAccount };
 
 /** What Google said, in one line, without the credential. */
 function googleError(status: number, data: any): Error {
@@ -74,26 +59,8 @@ export async function call(url: string, init: RequestInit): Promise<any> {
   return data;
 }
 
-/**
- * An hour-long access token for the androidpublisher scope: a JWT the service
- * account signs with its own key, exchanged at Google's token endpoint.
- */
-export async function playAccessToken(account: PlayServiceAccount): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-  const assertion = jwt.sign(
-    { iss: account.client_email, scope: SCOPE, aud: TOKEN_URL, iat: now, exp: now + 3600 },
-    account.private_key,
-    { algorithm: 'RS256' }
-  );
-  const body = new URLSearchParams({
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion,
-  });
-  const data = await call(TOKEN_URL, { method: 'POST', body });
-  const token = String(data.access_token ?? '');
-  if (!token) throw new Error('Google answered without an access token.');
-  return token;
-}
+/** An hour-long access token for the androidpublisher scope. */
+export const playAccessToken = (account: PlayServiceAccount): Promise<string> => serviceAccountToken(account, SCOPE);
 
 export const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 

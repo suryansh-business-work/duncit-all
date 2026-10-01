@@ -33,6 +33,7 @@ const SDL_CATEGORIES = [
   'TURN',
   'GITHUB',
   'GOOGLE_PLAY',
+  'GOOGLE_DRIVE',
   'MSG91',
   'APPLE_SIGNIN',
   'APP_STORE_CONNECT',
@@ -66,6 +67,7 @@ export const envEntryTypeDefs = gql`
     TURN
     GITHUB
     GOOGLE_PLAY
+    GOOGLE_DRIVE
     MSG91
     APPLE_SIGNIN
     APP_STORE_CONNECT

@@ -58,7 +58,7 @@ services:
     container_name: duncit-staging-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2102:80"
+      - "127.0.0.1:2102:8080"
 
   mweb:
     image: ${DOCKERHUB_USERNAME}/duncit-mweb:${IMAGE_TAG:-staging}
@@ -81,42 +81,42 @@ services:
     container_name: duncit-staging-partners-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2104:80"
+      - "127.0.0.1:2104:8080"
 
   partners-app:
     image: ${DOCKERHUB_USERNAME}/duncit-partners-app:${IMAGE_TAG:-staging}
     container_name: duncit-staging-partners-app
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2105:80"
+      - "127.0.0.1:2105:8080"
 
   ads-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ads-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ads-portal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2106:80"
+      - "127.0.0.1:2106:8080"
 
   ads-website:
     image: ${DOCKERHUB_USERNAME}/duncit-ads-website:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ads-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2120:80"
+      - "127.0.0.1:2120:8080"
 
   native:
     image: ${DOCKERHUB_USERNAME}/duncit-native:${IMAGE_TAG:-staging}
     container_name: duncit-staging-native
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2122:80"
+      - "127.0.0.1:2122:8080"
 
   crm:
     image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-staging}
     container_name: duncit-staging-crm
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2107:80"
+      - "127.0.0.1:2107:8080"
 
   # Staging WhatsApp gateway — own session/auth volume under /opt/duncit-staging
   # so the staging WhatsApp account never collides with production's.
@@ -143,112 +143,112 @@ services:
     container_name: duncit-staging-finance
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2108:80"
+      - "127.0.0.1:2108:8080"
 
   tech:
     image: ${DOCKERHUB_USERNAME}/duncit-tech:${IMAGE_TAG:-staging}
     container_name: duncit-staging-tech
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2109:80"
+      - "127.0.0.1:2109:8080"
 
   support:
     image: ${DOCKERHUB_USERNAME}/duncit-support:${IMAGE_TAG:-staging}
     container_name: duncit-staging-support
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2110:80"
+      - "127.0.0.1:2110:8080"
 
   website-app:
     image: ${DOCKERHUB_USERNAME}/duncit-website-app:${IMAGE_TAG:-staging}
     container_name: duncit-staging-website-app
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2111:80"
+      - "127.0.0.1:2111:8080"
 
   legal:
     image: ${DOCKERHUB_USERNAME}/duncit-legal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-legal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2112:80"
+      - "127.0.0.1:2112:8080"
 
   ai:
     image: ${DOCKERHUB_USERNAME}/duncit-ai:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ai
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2113:80"
+      - "127.0.0.1:2113:8080"
 
   products:
     image: ${DOCKERHUB_USERNAME}/duncit-products:${IMAGE_TAG:-staging}
     container_name: duncit-staging-products
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2114:80"
+      - "127.0.0.1:2114:8080"
 
   marketing:
     image: ${DOCKERHUB_USERNAME}/duncit-marketing:${IMAGE_TAG:-staging}
     container_name: duncit-staging-marketing
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2115:80"
+      - "127.0.0.1:2115:8080"
 
   onboarding:
     image: ${DOCKERHUB_USERNAME}/duncit-onboarding:${IMAGE_TAG:-staging}
     container_name: duncit-staging-onboarding
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2116:80"
+      - "127.0.0.1:2116:8080"
 
   hr:
     image: ${DOCKERHUB_USERNAME}/duncit-hr:${IMAGE_TAG:-staging}
     container_name: duncit-staging-hr
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2117:80"
+      - "127.0.0.1:2117:8080"
 
   employee:
     image: ${DOCKERHUB_USERNAME}/duncit-employee:${IMAGE_TAG:-staging}
     container_name: duncit-staging-employee
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2118:80"
+      - "127.0.0.1:2118:8080"
 
   status:
     image: ${DOCKERHUB_USERNAME}/duncit-status:${IMAGE_TAG:-staging}
     container_name: duncit-staging-status
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2119:80"
+      - "127.0.0.1:2119:8080"
 
   earnwith:
     image: ${DOCKERHUB_USERNAME}/duncit-earnwith:${IMAGE_TAG:-staging}
     container_name: duncit-staging-earnwith
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2125:80"
+      - "127.0.0.1:2125:8080"
 
   challenge:
     image: ${DOCKERHUB_USERNAME}/duncit-challenge:${IMAGE_TAG:-staging}
     container_name: duncit-staging-challenge
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2126:80"
+      - "127.0.0.1:2126:8080"
 
   developers:
     image: ${DOCKERHUB_USERNAME}/duncit-developers:${IMAGE_TAG:-staging}
     container_name: duncit-staging-developers
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2127:80"
+      - "127.0.0.1:2127:8080"
 
   regional-club-admin:
     image: ${DOCKERHUB_USERNAME}/duncit-regional-club-admin:${IMAGE_TAG:-staging}
     container_name: duncit-staging-regional-club-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2129:80"
+      - "127.0.0.1:2129:8080"
 
   # The four directory consoles — production port + 100, as every staging
   # service is.
@@ -257,70 +257,70 @@ services:
     container_name: duncit-staging-venues
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2130:80"
+      - "127.0.0.1:2130:8080"
 
   clubs:
     image: ${DOCKERHUB_USERNAME}/duncit-clubs:${IMAGE_TAG:-staging}
     container_name: duncit-staging-clubs
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2131:80"
+      - "127.0.0.1:2131:8080"
 
   club-admins:
     image: ${DOCKERHUB_USERNAME}/duncit-club-admins:${IMAGE_TAG:-staging}
     container_name: duncit-staging-club-admins
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2132:80"
+      - "127.0.0.1:2132:8080"
 
   hosts:
     image: ${DOCKERHUB_USERNAME}/duncit-hosts:${IMAGE_TAG:-staging}
     container_name: duncit-staging-hosts
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2133:80"
+      - "127.0.0.1:2133:8080"
 
   pods:
     image: ${DOCKERHUB_USERNAME}/duncit-pods:${IMAGE_TAG:-staging}
     container_name: duncit-staging-pods
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2134:80"
+      - "127.0.0.1:2134:8080"
 
   communications:
     image: ${DOCKERHUB_USERNAME}/duncit-communications:${IMAGE_TAG:-staging}
     container_name: duncit-staging-communications
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2135:80"
+      - "127.0.0.1:2135:8080"
 
   logs:
     image: ${DOCKERHUB_USERNAME}/duncit-logs:${IMAGE_TAG:-staging}
     container_name: duncit-staging-logs
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2136:80"
+      - "127.0.0.1:2136:8080"
 
   analytics:
     image: ${DOCKERHUB_USERNAME}/duncit-analytics:${IMAGE_TAG:-staging}
     container_name: duncit-staging-analytics
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2137:80"
+      - "127.0.0.1:2137:8080"
 
   localization:
     image: ${DOCKERHUB_USERNAME}/duncit-localization:${IMAGE_TAG:-staging}
     container_name: duncit-staging-localization
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2142:80"
+      - "127.0.0.1:2142:8080"
 
   ecomm-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-portal:${IMAGE_TAG:-staging}
     container_name: duncit-staging-ecomm-portal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2138:80"
+      - "127.0.0.1:2138:8080"
 
   ecomm-store:
     image: ${DOCKERHUB_USERNAME}/duncit-ecomm-store:${IMAGE_TAG:-staging}

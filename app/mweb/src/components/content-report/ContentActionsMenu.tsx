@@ -17,9 +17,12 @@ interface Props {
   canDelete: boolean;
   /** False for the owner: nobody reviews a report against your own content. */
   canReport: boolean;
-  onDelete: () => void;
+  /** Left out where nothing can be deleted, such as a card in somebody's feed. */
+  onDelete?: () => void;
   onReport: () => void;
   tone?: MenuTone;
+  /** Appended to the test ids where the menu repeats — one per card in a feed. */
+  idSuffix?: string;
 }
 
 const TRIGGER_SX: Record<MenuTone, object> = {
@@ -48,14 +51,18 @@ export default function ContentActionsMenu({
   onDelete,
   onReport,
   tone = 'overlay',
+  idSuffix,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const copy = REPORT_COPY[kind];
   // `story-actions-menu-*` predates posts having a menu; a post gets `post-…`.
-  const id = `${kind.toLowerCase()}-actions-menu`;
+  const base = `${kind.toLowerCase()}-actions-menu`;
+  const id = idSuffix ? `${base}-${idSuffix}` : base;
+  // Delete needs both: the viewer may delete it, and this surface can.
+  const deleteAction = canDelete ? onDelete : undefined;
 
-  if (!canDelete && !canReport) return null;
+  if (!deleteAction && !canReport) return null;
 
   const run = (action: () => void) => () => {
     setAnchor(null);
@@ -76,8 +83,8 @@ export default function ContentActionsMenu({
         <MoreVertIcon fontSize={tone === 'surface' ? 'small' : 'medium'} />
       </DuncitIconButton>
       <Menu data-testid={id} anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
-        {canDelete && (
-          <MenuItem data-testid={`${id}-delete`} onClick={run(onDelete)}>
+        {deleteAction && (
+          <MenuItem data-testid={`${id}-delete`} onClick={run(deleteAction)}>
             <ListItemIcon>
               <DeleteOutlineIcon fontSize="small" color="error" />
             </ListItemIcon>

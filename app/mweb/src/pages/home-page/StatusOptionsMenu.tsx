@@ -16,7 +16,7 @@ interface Props {
 }
 
 /**
- * The 3-dot menu on an open status. Native twin: StatusViewerMenu (rule 27).
+ * The 3-dot menu on an open status. Native twin: ContentActionsMenu (rule 27).
  *
  * Delete is the owner's and Report is everybody else's, so a slide normally
  * shows one or the other. The viewer keys this by slide, which is what closes

@@ -13,28 +13,37 @@ interface Props {
   canDelete: boolean;
   /** False for the owner: nobody reviews a report against your own content. */
   canReport: boolean;
-  onDelete: () => void;
+  /** Left out where nothing can be deleted, such as a card in somebody's feed. */
+  onDelete?: () => void;
   onReport: () => void;
   /** Distance from the top of the surface it floats over, under its 3-dot button. */
   top?: number;
+  /** Appended to a post menu's test ids where it repeats — one per card in a feed. */
+  idSuffix?: string;
 }
 
-/**
- * The test ids each kind's menu answers to. A story's predate posts having a
- * menu at all; a post's are the same strings mWeb's twin uses.
- */
-const TEST_IDS: Record<ReportableKind, { menu: string; delete: string; report: string }> = {
-  STORY: {
-    menu: 'status-viewer-menu',
-    delete: 'status-viewer-delete',
-    report: 'status-viewer-report',
-  },
-  POST: {
-    menu: 'post-actions-menu',
-    delete: 'post-actions-menu-delete',
-    report: 'post-actions-menu-report',
-  },
+interface MenuTestIds {
+  menu: string;
+  delete: string;
+  report: string;
+}
+
+/** A story's ids predate posts having a menu at all, so they keep their names. */
+const STORY_TEST_IDS: MenuTestIds = {
+  menu: 'status-viewer-menu',
+  delete: 'status-viewer-delete',
+  report: 'status-viewer-report',
 };
+
+/**
+ * The test ids a menu answers to. A post's are the same strings mWeb's twin
+ * uses, with the post id appended where the menu repeats down a feed.
+ */
+function menuTestIds(kind: ReportableKind, idSuffix?: string): MenuTestIds {
+  if (kind === 'STORY') return STORY_TEST_IDS;
+  const menu = idSuffix ? `post-actions-menu-${idSuffix}` : 'post-actions-menu';
+  return { menu, delete: `${menu}-delete`, report: `${menu}-report` };
+}
 
 /**
  * The dropdown behind the 3-dot button on user-generated content — an open
@@ -51,11 +60,12 @@ export function ContentActionsMenu({
   onDelete,
   onReport,
   top = 92,
+  idSuffix,
 }: Readonly<Props>) {
   const { color, danger } = useThemeColors();
   const { t } = useTranslation();
   const copy = REPORT_COPY[kind];
-  const ids = TEST_IDS[kind];
+  const ids = menuTestIds(kind, idSuffix);
 
   return (
     <YStack
@@ -71,7 +81,7 @@ export function ContentActionsMenu({
       borderColor="$borderColor"
       overflow="hidden"
     >
-      {canDelete ? (
+      {canDelete && onDelete ? (
         <XStack
           testID={ids.delete}
           role="menuitem"

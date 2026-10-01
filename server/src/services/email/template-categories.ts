@@ -112,6 +112,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'grievance-rejected',
     'policy-acceptance',
     'policy-updated',
+    'ugc-content-reported',
   ],
 };
 
@@ -163,6 +164,7 @@ export const TEMPLATE_FOOTER_NOTES: Record<string, string> = {
   'faq-received': "You're receiving this because you contacted us.",
   'gift-card-received': '{{t:email.giftCard.footer}}',
   'grievance-received': "You're receiving this because you raised a grievance with us.",
+  'ugc-content-reported': '{{t:email.contentReported.footer}}',
   'host-request-acknowledged': "You're receiving this because you applied to host a new category on Duncit.",
   'host-request-approved': "You're receiving this because you applied to host a new category on Duncit.",
   'host-request-rejected': "You're receiving this because you applied to host a new category on Duncit.",

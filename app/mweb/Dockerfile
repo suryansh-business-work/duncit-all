@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
@@ -117,7 +117,7 @@ RUN pnpm --filter mweb-app build
 # crawlers need because they never run the SPA. dist-server/main.mjs is a
 # self-contained bundle — no node_modules in the image. Static assets keep
 # spa.conf's exact cache behaviour, reimplemented in server/static-files.ts.
-FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ARG VITE_GRAPHQL_URL
 ENV GRAPHQL_URL=${VITE_GRAPHQL_URL}

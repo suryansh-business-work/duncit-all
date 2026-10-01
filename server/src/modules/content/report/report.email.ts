@@ -1,5 +1,7 @@
+import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { escapeHtml } from '@utils/html';
+import type { IContentReport } from './contentReport.model';
 
 interface ReportMessageInput {
   to: string;
@@ -35,4 +37,32 @@ export async function sendContentReportMessage(input: ReportMessageInput): Promi
   });
   if (result.skipped) return result.reason ?? 'The email could not be sent';
   return null;
+}
+
+/**
+ * Tell the owner that their content was reported and is being reviewed.
+ *
+ * Sent when a report is first filed, never when the same person re-files it,
+ * and it names neither the reporter nor the reason: the owner learns that a
+ * review is happening, not who asked for it. An owner with no address on their
+ * account is simply not written to.
+ */
+export async function notifyReportedContentOwner(report: IContentReport): Promise<void> {
+  if (!report.target_owner_id) return;
+  const owner = await UserModel.findById(report.target_owner_id)
+    .select('auth.email profile.first_name')
+    .lean<{ auth?: { email?: string }; profile?: { first_name?: string } }>();
+  const email = owner?.auth?.email?.trim();
+  if (!email) return;
+
+  await sendEmail({
+    to: email,
+    subject: '{{t:email.contentReported.subject}}',
+    template: 'ugc-content-reported',
+    category: 'legal',
+    vars: {
+      name: owner?.profile?.first_name?.trim() || '',
+      report_no: report.report_no ?? '',
+    },
+  });
 }

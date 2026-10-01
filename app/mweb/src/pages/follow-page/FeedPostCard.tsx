@@ -5,6 +5,7 @@ import FavoriteIcon from '@mui/icons-material/FavoriteRounded';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorderRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { DuncitIconButton } from '@duncit/buttons';
+import ContentActionsMenu from '../../components/content-report/ContentActionsMenu';
 import { formatDistanceToNow } from 'date-fns';
 import { getFeedCardHeader } from './feedHeader';
 import type { FeedClub, FeedPost } from './queries';
@@ -15,6 +16,7 @@ interface FeedPostCardProps {
   club?: FeedClub | null;
   onToggleLike: (post: FeedPost) => void;
   onOpenComments: (postId: string) => void;
+  onReport?: (postId: string) => void;
 }
 
 /** The media sits inset in the card with its own 18px corners. */
@@ -31,6 +33,7 @@ export default function FeedPostCard({
   club,
   onToggleLike,
   onOpenComments,
+  onReport,
 }: Readonly<FeedPostCardProps>) {
   const { t } = useTranslation();
   const header = getFeedCardHeader(post, club);
@@ -43,35 +46,48 @@ export default function FeedPostCard({
 
   return (
     <Card data-testid={`feed-post-${post.id}`} sx={{ overflow: 'hidden' }}>
-      <Stack
-        data-testid={`feed-author-${post.id}`}
-        direction="row"
-        spacing={1.25}
-        component={RouterLink}
-        to={header.to}
-        sx={{
-          alignItems: 'center',
-          minWidth: 0,
-          p: 1.5,
-          textDecoration: 'none',
-          color: 'inherit',
-        }}
-      >
-        <Avatar
-          alt=""
-          src={header.avatarUrl ?? undefined}
-          sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+      <Stack direction="row" sx={{ alignItems: 'center', pr: 1 }}>
+        <Stack
+          data-testid={`feed-author-${post.id}`}
+          direction="row"
+          spacing={1.25}
+          component={RouterLink}
+          to={header.to}
+          sx={{
+            alignItems: 'center',
+            // Takes the row, so the 3-dot menu sits at the card's far edge.
+            flex: 1,
+            minWidth: 0,
+            p: 1.5,
+            textDecoration: 'none',
+            color: 'inherit',
+          }}
         >
-          {avatarFallback}
-        </Avatar>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }} noWrap>
-            {header.name}
-          </Typography>
-          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 500 }}>
-            {timeAgo}
-          </Typography>
-        </Box>
+          <Avatar
+            alt=""
+            src={header.avatarUrl ?? undefined}
+            sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+          >
+            {avatarFallback}
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }} noWrap>
+              {header.name}
+            </Typography>
+            <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              {timeAgo}
+            </Typography>
+          </Box>
+        </Stack>
+        {/* A feed holds other people's posts, so the menu is Report alone. */}
+        <ContentActionsMenu
+          kind="POST"
+          tone="surface"
+          idSuffix={post.id}
+          canDelete={false}
+          canReport={!!onReport}
+          onReport={() => onReport?.(post.id)}
+        />
       </Stack>
 
       {post.media_type === 'VIDEO' ? (

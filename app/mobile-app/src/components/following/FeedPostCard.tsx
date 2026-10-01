@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { ContentActionsMenu } from '@/components/content-report/ContentActionsMenu';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { FeedPost } from '@/hooks/useFollowingFeed';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { REPORT_COPY } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const AVATAR_STYLE = { width: 40, height: 40, borderRadius: 20 };
@@ -17,6 +20,7 @@ interface Props {
   onToggleLike: () => void;
   onOpenComments: () => void;
   onOpenAuthor: () => void;
+  onReport?: () => void;
 }
 
 /** One Following-feed card — author header, media, caption and a like/comment
@@ -26,50 +30,86 @@ export function FeedPostCard({
   onToggleLike,
   onOpenComments,
   onOpenAuthor,
+  onReport,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { accent, muted } = useThemeColors();
+  const [menuOpen, setMenuOpen] = useState(false);
   const name = post.author?.first_name || post.author?.full_name || 'Duncit member';
   const avatar = post.author?.profile_photo;
 
   return (
     <SurfaceCard testID={`feed-post-${post.id}`} padding={0} overflow="hidden">
-      <XStack
-        testID={`feed-author-${post.id}`}
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${name}`}
-        onPress={onOpenAuthor}
-        alignItems="center"
-        gap={10}
-        padding={12}
-        pressStyle={PRESS_STYLE.row}
-      >
-        {avatar ? (
-          <AppImage source={{ uri: avatar }} style={AVATAR_STYLE} />
-        ) : (
-          <YStack
-            width={40}
-            height={40}
-            borderRadius={20}
-            backgroundColor="$primary"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text fontSize={15} fontWeight="600" color="$onPrimary">
-              {name.charAt(0).toUpperCase()}
+      <XStack alignItems="center" paddingRight={8}>
+        <XStack
+          testID={`feed-author-${post.id}`}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open ${name}`}
+          onPress={onOpenAuthor}
+          flex={1}
+          alignItems="center"
+          gap={10}
+          padding={12}
+          pressStyle={PRESS_STYLE.row}
+        >
+          {avatar ? (
+            <AppImage source={{ uri: avatar }} style={AVATAR_STYLE} />
+          ) : (
+            <YStack
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor="$primary"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize={15} fontWeight="600" color="$onPrimary">
+                {name.charAt(0).toUpperCase()}
+              </Text>
+            </YStack>
+          )}
+          <YStack flex={1} minWidth={0}>
+            <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
+              {name}
+            </Text>
+            <Text fontSize={12} fontWeight="500" color="$muted">
+              {formatDateTime(post.created_at)}
             </Text>
           </YStack>
-        )}
-        <YStack flex={1} minWidth={0}>
-          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-            {name}
-          </Text>
-          <Text fontSize={12} fontWeight="500" color="$muted">
-            {formatDateTime(post.created_at)}
-          </Text>
-        </YStack>
+        </XStack>
+        {onReport ? (
+          <XStack
+            testID={`post-actions-menu-${post.id}-trigger`}
+            role="button"
+            tabIndex={0}
+            aria-label={t(REPORT_COPY.POST.menuLabel)}
+            aria-expanded={menuOpen}
+            onPress={() => setMenuOpen((open) => !open)}
+            width={44}
+            height={44}
+            alignItems="center"
+            justifyContent="center"
+            pressStyle={PRESS_STYLE.inline}
+          >
+            <MaterialIcons name="more-vert" size={22} color={muted} />
+          </XStack>
+        ) : null}
       </XStack>
+      {/* A feed holds other people's posts, so the menu is Report alone. */}
+      {onReport && menuOpen ? (
+        <ContentActionsMenu
+          kind="POST"
+          top={56}
+          idSuffix={post.id}
+          canDelete={false}
+          canReport
+          onReport={() => {
+            setMenuOpen(false);
+            onReport();
+          }}
+        />
+      ) : null}
 
       {post.image_url ? (
         <YStack marginHorizontal={12} borderRadius={18} overflow="hidden" backgroundColor="$soft">

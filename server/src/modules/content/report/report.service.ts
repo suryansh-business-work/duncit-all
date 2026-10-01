@@ -13,7 +13,7 @@ import {
   type ReportStatus,
   type ReportTargetType,
 } from './contentReport.model';
-import { sendContentReportMessage } from './report.email';
+import { notifyReportedContentOwner, sendContentReportMessage } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
 
 function fail(code: string, msg: string): never {
@@ -274,6 +274,14 @@ export const reportService = {
       report_no: created.report_no,
       target_type: created.target_type,
       reason: created.reason,
+    });
+    // Not awaited: the reporter's request must not wait on a mail server, and
+    // a notice that fails to send must not fail the report it is about.
+    notifyReportedContentOwner(created).catch((error: unknown) => {
+      logs.server.error('report.service', 'owner-notification-failed', {
+        report_no: created.report_no,
+        error,
+      });
     });
     return { id: String(created.id), report_no: created.report_no ?? '' };
   },

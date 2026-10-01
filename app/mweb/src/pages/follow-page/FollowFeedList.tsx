@@ -17,6 +17,7 @@ interface FollowFeedListProps {
   /** CLUBS tab only: header super-category filter (null = show all). */
   superCategoryId?: string | null;
   onOpenComments: (postId: string) => void;
+  onReport?: (postId: string) => void;
 }
 
 export default function FollowFeedList({
@@ -25,6 +26,7 @@ export default function FollowFeedList({
   clubsById,
   superCategoryId,
   onOpenComments,
+  onReport,
 }: Readonly<FollowFeedListProps>) {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ followingFeed: FeedPost[] }>(FOLLOWING_FEED, {
@@ -94,6 +96,7 @@ export default function FollowFeedList({
             club={club}
             onToggleLike={onToggleLike}
             onOpenComments={onOpenComments}
+            onReport={onReport}
           />
         );
       })}

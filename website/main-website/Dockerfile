@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
@@ -105,7 +105,7 @@ RUN pnpm --filter duncit.com build
 # page also gets its per-request meta block here. dist-server/main.mjs is a
 # self-contained bundle — no node_modules in the image — and static assets keep
 # spa.conf's exact cache behaviour, reimplemented in server/static-files.ts.
-FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 # Re-declared so the runner resolves against the same environment the pages
 # were built for; a staging image then points at staging.

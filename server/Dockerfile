@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 # Copy root manifests + workspace manifests for cached install
@@ -56,7 +56,7 @@ COPY server ./server
 RUN pnpm --filter server build
 
 # --- runner ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 

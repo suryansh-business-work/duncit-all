@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
@@ -80,7 +80,7 @@ COPY portals/ads-portal ./portals/ads-portal
 RUN pnpm --filter ads-portal build
 
 # --- runner ---
-FROM public.ecr.aws/docker/library/nginx:alpine AS runner
+FROM nginx:alpine AS runner
 COPY --from=builder /repo/portals/ads-portal/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

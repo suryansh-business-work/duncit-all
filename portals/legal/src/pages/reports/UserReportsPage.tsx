@@ -7,11 +7,11 @@ import { useApolloTableFetch } from "@duncit/table";
 import { useDateFormat, useTranslation } from "@duncit/app-settings";
 import { notifySuccess } from "@duncit/dialogs";
 import { PageHeader } from "@duncit/ui";
-import type { ContentReportReasonOptionsResult } from "../../graphql/reports";
 import {
   CONTENT_REPORT_REASON_OPTIONS,
   CONTENT_REPORTS_TABLE,
   type ContentReport,
+  type ContentReportReasonOptionsResult,
 } from "../../graphql/reports";
 import UserReportsTable from "./UserReportsTable";
 import ReportDetailDialog from "./ReportDetailDialog";

@@ -58,11 +58,19 @@ const LABEL_MAX = 80;
 const DESCRIPTION_MAX = 200;
 
 /** "Copyright issue" becomes COPYRIGHT_ISSUE — the handle a report stores. */
-const keyFromLabel = (label: string) =>
-  label
-    .toUpperCase()
-    .replaceAll(/[^A-Z\d]+/g, '_')
-    .replaceAll(/^_+|_+$/g, '');
+const keyFromLabel = (label: string) => trimUnderscores(label.toUpperCase().replaceAll(/[^A-Z\d]+/g, '_'));
+
+/**
+ * Drop leading and trailing underscores. A plain scan rather than
+ * `/^_+|_+$/`, which backtracks on long runs and is flagged as a ReDoS risk.
+ */
+function trimUnderscores(value: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && value[start] === '_') start += 1;
+  while (end > start && value[end - 1] === '_') end -= 1;
+  return value.slice(start, end);
+}
 
 function cleanLabel(value: string | null | undefined): string {
   const label = (value ?? '').trim();

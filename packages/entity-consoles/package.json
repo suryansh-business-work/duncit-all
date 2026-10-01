@@ -53,14 +53,14 @@
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@hookform/resolvers": "^5.9.1",
-    "@mui/x-date-pickers": "^9.12.0",
+    "@mui/x-date-pickers": "^9.14.0",
     "chart.js": "^4.5.1",
     "date-fns": "^4.4.0",
     "react-chartjs-2": "^5.3.1",
-    "react-hook-form": "^7.87.0",
-    "react-router": "^8.3.1",
+    "react-hook-form": "^7.89.0",
+    "react-router": "^8.4.0",
     "yup": "^1.7.1",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
@@ -74,24 +74,24 @@
     "react-router": ">=8"
   },
   "devDependencies": {
-    "@apollo/client": "^4.2.12",
+    "@apollo/client": "^4.3.1",
     "@duncit/app-settings": "workspace:*",
     "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.4.0",
-    "@testing-library/dom": "^10.4.1",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.6",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^4.1.11",
     "graphql": "^16.14.2",
-    "jsdom": "^30.0.1",
+    "jsdom": "^30.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router": "^8.3.1",
+    "react-router": "^8.4.0",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2",
+    "vite": "^8.3.2",
     "vitest": "^4.1.11"
   }
 }

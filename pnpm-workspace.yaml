@@ -63,7 +63,7 @@ allowBuilds:
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
-  - jscpd@5.1.0 || 5.1.1
+  - jscpd@5.1.0 || 5.1.1 || 5.4.0
   - nodemailer@9.1.0
   - '@tiptap/core@3.30.6'
   - '@tiptap/extension-blockquote@3.30.6'
@@ -95,16 +95,18 @@ minimumReleaseAgeExclude:
   - '@tiptap/pm@3.30.6'
   - '@tiptap/react@3.30.6'
   - '@tiptap/starter-kit@3.30.6'
-  - jscpd-darwin-arm64@5.1.1
-  - jscpd-darwin-x64@5.1.1
-  - jscpd-linux-arm64-gnu@5.1.1
-  - jscpd-linux-x64-gnu@5.1.1
-  - jscpd-linux-x64-musl@5.1.1
-  - jscpd-windows-arm64-msvc@5.1.1
-  - jscpd-windows-x64-msvc@5.1.1
+  - jscpd-darwin-arm64@5.1.1 || 5.4.0
+  - jscpd-darwin-x64@5.1.1 || 5.4.0
+  - jscpd-linux-arm64-gnu@5.1.1 || 5.4.0
+  - jscpd-linux-x64-gnu@5.1.1 || 5.4.0
+  - jscpd-linux-x64-musl@5.1.1 || 5.4.0
+  - jscpd-windows-arm64-msvc@5.1.1 || 5.4.0
+  - jscpd-windows-x64-msvc@5.1.1 || 5.4.0
   - '@astrojs/internal-helpers@0.11.0'
   - '@astrojs/markdown-satteri@0.4.0'
   - astro@7.2.10
+  - jscpd-linux-arm64-musl@5.4.0
+  - vite@8.3.2
 
 # pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
 # that field at all — it only WARNS that it ignored it — so an override left

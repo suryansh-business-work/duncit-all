@@ -5,6 +5,7 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { DuncitButton } from '@duncit/buttons';
 import RescheduleMeetingDialog from './RescheduleMeetingDialog';
 import CancelMeetingDialog from './CancelMeetingDialog';
+import { useEarnSurface } from './EarnSurfaceProvider';
 
 interface Props {
   kind: string;
@@ -18,6 +19,7 @@ interface Props {
 
 /** Reschedule / cancel actions for an Earn card with a pending onboarding meeting. */
 export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, onChanged }: Readonly<Props>) {
+  const { meetingLabels: labels } = useEarnSurface();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
@@ -53,7 +55,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
       </Stack>
       {!canReschedule && (
         <Alert severity="info" sx={{ py: 0 }}>
-          You have already used your one-time reschedule option.
+          {labels.rescheduleUsed}
         </Alert>
       )}
 

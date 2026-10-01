@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import {
   GSTIN_PATTERN,
   PAN_PATTERN,
@@ -11,144 +11,110 @@ const POSTAL_CODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
 
 const ownerPhonePattern = /^\+?\d{6,15}$/;
 
-export const venueStep1Schema: yup.ObjectSchema<Step1> = yup.object({
-  venue_name: yup
-    .string()
-    .trim()
-    .min(2, 'Venue name must be at least 2 characters')
-    .max(120, 'Venue name must be 120 characters or fewer')
-    .required('Venue name is required'),
-  venue_type: yup.string().trim().required('Venue type is required'),
-  capacity: yup
-    .number()
-    .typeError('Capacity must be a number')
-    .integer('Capacity must be a whole number')
+/** A missing value and a blank one are refused with the same message. */
+const requiredString = (message: string) => z.string({ error: message }).trim().min(1, message);
+
+const listItem = z.string().trim().min(1);
+const categoryText = z.string().trim().default('');
+
+export const venueStep1Schema: z.ZodType<Step1> = z.object({
+  venue_name: validationRules.requiredText('Venue name', 2, 120),
+  venue_type: requiredString('Venue type is required'),
+  capacity: z
+    .number({ error: (issue) => (issue.input == null ? 'Capacity is required' : 'Capacity must be a number') })
+    .int('Capacity must be a whole number')
     .min(1, 'Capacity must be at least 1')
-    .max(100_000, 'Capacity is unrealistic')
-    .required('Capacity is required'),
-  description: yup.string().trim().max(2000, 'Description must be 2000 characters or fewer').default(''),
-  amenities: yup.array(yup.string().trim().required()).default([]),
-  facilities: yup.array(yup.string().trim().required()).default([]),
-  security: yup.array(yup.string().trim().required()).default([]),
-  cover_image_url: yup.string().trim().max(1000).default(''),
-  gallery: yup.array(yup.string().trim().max(1000).required()).default([]),
-  address_line1: yup
-    .string()
+    .max(100_000, 'Capacity is unrealistic'),
+  description: validationRules.optionalText('Description', 2000),
+  amenities: z.array(listItem).default([]),
+  facilities: z.array(listItem).default([]),
+  security: z.array(listItem).default([]),
+  cover_image_url: z.string().trim().max(1000).default(''),
+  gallery: z.array(listItem.max(1000)).default([]),
+  address_line1: validationRules.requiredText('Address line 1', 3, 200),
+  address_line2: z.string().trim().max(200).default(''),
+  location_id: requiredString('Select a city from locations'),
+  country: requiredString('Country is required'),
+  country_code: requiredString('Country code is required').max(3, 'Country code must be 3 characters or fewer'),
+  city: requiredString('City is required'),
+  state: requiredString('State is required'),
+  state_code: z.string().trim().max(10).default(''),
+  locality: requiredString('Locality is required'),
+  postal_code: z
+    .string({ error: 'Postal code is required' })
     .trim()
-    .min(3, 'Address line 1 must be at least 3 characters')
-    .max(200, 'Address line 1 must be 200 characters or fewer')
-    .required('Address line 1 is required'),
-  address_line2: yup.string().trim().max(200).default(''),
-  location_id: yup.string().trim().required('Select a city from locations'),
-  country: yup.string().trim().required('Country is required'),
-  country_code: yup
-    .string()
-    .trim()
-    .max(3, 'Country code must be 3 characters or fewer')
-    .required('Country code is required'),
-  city: yup.string().trim().required('City is required'),
-  state: yup.string().trim().required('State is required'),
-  state_code: yup.string().trim().max(10).default(''),
-  locality: yup.string().trim().required('Locality is required'),
-  postal_code: yup
-    .string()
-    .trim()
-    .matches(POSTAL_CODE_PATTERN, 'Enter a valid postal/ZIP code (3–12 alphanumerics)')
-    .required('Postal code is required'),
+    .regex(POSTAL_CODE_PATTERN, 'Enter a valid postal/ZIP code (3–12 alphanumerics)'),
   // Optional Super → Category → Sub selection (validated server-side when set).
-  venue_category: yup
+  venue_category: z
     .object({
-      super_category_id: yup.string().trim().default(''),
-      super_category_name: yup.string().trim().default(''),
-      category_id: yup.string().trim().default(''),
-      category_name: yup.string().trim().default(''),
-      sub_category_id: yup.string().trim().default(''),
-      sub_category_name: yup.string().trim().default(''),
+      super_category_id: categoryText,
+      super_category_name: categoryText,
+      category_id: categoryText,
+      category_name: categoryText,
+      sub_category_id: categoryText,
+      sub_category_name: categoryText,
     })
-    .default({
-      super_category_id: '',
-      super_category_name: '',
-      category_id: '',
-      category_name: '',
-      sub_category_id: '',
-      sub_category_name: '',
-    }),
-  tags: yup.array(yup.string().trim().max(40).required()).default([]),
+    .prefault({}),
+  tags: z.array(listItem.max(40)).default([]),
 });
 
-export const venueStep2Schema = yup.object({
-  documents: yup
-    .array()
-    .of(
-      yup.object({
-        type: yup.string().trim().required('Document type is required'),
-        url: yup.string().trim().required('Document URL is required'),
+export const venueStep2Schema = z.object({
+  documents: z
+    .array(
+      z.object({
+        type: requiredString('Document type is required'),
+        url: requiredString('Document URL is required'),
       }),
     )
     .default([])
-    .test('valid-docs', 'Each document must have both a type and a URL', (docs) =>
-      // `.default([])` guarantees an array here; the `?? []` is defensive only.
-      /* v8 ignore next */
-      (docs ?? []).every((doc) => !!doc.type && !!doc.url),
-    ),
-  gstin: yup
+    .refine((docs) => docs.every((doc) => !!doc.type && !!doc.url), 'Each document must have both a type and a URL'),
+  gstin: z
     .string()
     .trim()
-    .uppercase()
+    .toUpperCase()
     .max(30)
-    .default('')
-    .test('gstin', 'GSTIN must follow format like 22ABCDE1234F1Z5', (value) => {
-      if (!value) return true;
-      return GSTIN_PATTERN.test(value);
-    }),
-  pan: yup
+    .refine((value) => !value || GSTIN_PATTERN.test(value), 'GSTIN must follow format like 22ABCDE1234F1Z5')
+    .default(''),
+  pan: z
     .string()
     .trim()
-    .uppercase()
+    .toUpperCase()
     .max(20)
-    .default('')
-    .test('pan', 'PAN must follow format ABCDE1234F', (value) => {
-      if (!value) return true;
-      return PAN_PATTERN.test(value);
-    }),
+    .refine((value) => !value || PAN_PATTERN.test(value), 'PAN must follow format ABCDE1234F')
+    .default(''),
 });
 
-export const venueStep3Schema: yup.ObjectSchema<Step3> = yup.object({
+export const venueStep3Schema: z.ZodType<Step3> = z.object({
   owner_name: validationRules.personName('Owner name'),
   owner_email: validationRules.email('Owner email'),
-  owner_phone: yup
-    .string()
+  owner_phone: z
+    .string({ error: 'Owner phone is required' })
     .trim()
-    .matches(ownerPhonePattern, 'Owner phone must contain only digits (6–15 digits) with optional + prefix')
-    .required('Owner phone is required'),
-  owner_dob: yup
+    .regex(ownerPhonePattern, 'Owner phone must contain only digits (6–15 digits) with optional + prefix'),
+  owner_dob: z
     .string()
     .default('')
-    .test('valid-dob', 'Enter a valid date of birth', (value) => {
+    .refine((value) => {
       if (!value) return true;
       const date = new Date(value);
       return !Number.isNaN(date.getTime()) && date <= new Date();
-    }),
-  owner_address: yup
-    .string()
-    .trim()
-    .max(500, 'Address must be 500 characters or fewer')
-    .default(''),
+    }, 'Enter a valid date of birth'),
+  owner_address: validationRules.optionalText('Address', 500),
   bank_account: bankAccountSchema,
 });
 
-export const venueCreateSchema = yup.object({
-  owner_user_id: yup.string().trim().required('Select an owner user'),
+export const venueCreateSchema = z.object({
+  owner_user_id: requiredString('Select an owner user'),
   step1: venueStep1Schema,
   step2: venueStep2Schema,
   step3: venueStep3Schema,
 });
 
-export const venueEditSchema = yup.object({
+export const venueEditSchema = z.object({
   step1: venueStep1Schema,
   step2: venueStep2Schema,
   step3: venueStep3Schema,
-  status: yup.string().trim().required('Status is required'),
+  status: requiredString('Status is required'),
 });
 
 export interface VenueStep2Values {
@@ -163,7 +129,7 @@ export function validateVenueCreate(input: {
   step2: VenueStep2Values;
   step3: Step3;
 }) {
-  return venueCreateSchema.validate(input, { abortEarly: false });
+  return venueCreateSchema.parseAsync(input);
 }
 
 export function validateVenueEdit(input: {
@@ -172,17 +138,24 @@ export function validateVenueEdit(input: {
   step3: Step3;
   status: string;
 }) {
-  return venueEditSchema.validate(input, { abortEarly: false });
+  return venueEditSchema.parseAsync(input);
 }
 
 export type VenueValidationErrors = Record<string, string>;
 
+/** `step2.documents[0].url` — the spelling the venue sections look a field's error up by. */
+const issuePath = (path: PropertyKey[]) =>
+  path.reduce<string>((joined, key) => {
+    if (typeof key === 'number') return `${joined}[${key}]`;
+    return joined ? `${joined}.${String(key)}` : String(key);
+  }, '');
+
 export function collectVenueValidationErrors(error: unknown): VenueValidationErrors {
-  if (!(error instanceof yup.ValidationError)) return {};
+  if (!(error instanceof z.ZodError)) return {};
   const errors: VenueValidationErrors = {};
-  const items = error.inner.length ? error.inner : [error];
-  for (const item of items) {
-    if (item.path && !errors[item.path]) errors[item.path] = item.message;
+  for (const issue of error.issues) {
+    const path = issuePath(issue.path);
+    if (path && !errors[path]) errors[path] = issue.message;
   }
   return errors;
 }

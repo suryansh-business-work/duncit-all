@@ -77,7 +77,7 @@ export default function FileManagerToolbar({
       >
         {FILE_TYPE_OPTIONS.map((option) => (
           <MenuItem key={option.value || 'all'} value={option.value}>
-            {option.label}
+            {t(option.labelKey)}
           </MenuItem>
         ))}
       </TextField>
@@ -91,7 +91,7 @@ export default function FileManagerToolbar({
       >
         {SORT_OPTIONS.map((option) => (
           <MenuItem key={option.value} value={option.value}>
-            {option.label}
+            {t(option.labelKey)}
           </MenuItem>
         ))}
       </TextField>

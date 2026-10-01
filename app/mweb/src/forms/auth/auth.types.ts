@@ -1,4 +1,4 @@
-import type * as yup from 'yup';
+import type { z } from 'zod';
 import type { googleSignupSchema } from './auth.form';
 
-export type GoogleSignupFormValues = yup.InferType<typeof googleSignupSchema>;
+export type GoogleSignupFormValues = z.infer<typeof googleSignupSchema>;

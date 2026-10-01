@@ -1,5 +1,6 @@
 import { Card, CardContent, Rating, Stack, Typography } from '@mui/material';
 import { POD_FEEDBACK_ASPECT_LABEL, type PodFeedbackAspect } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 import type { DashboardAspect } from './queries';
 
 interface Props {
@@ -15,11 +16,12 @@ interface Props {
  * "food 2.4" are the same pods, and only the second tells anyone what to do.
  */
 export default function PodRatingsCard({ aspects, total, days }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
       <CardContent>
         <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-          What guests scored
+          {t('admin.podsDashboard.guestScores')}
         </Typography>
         <Typography variant="caption" sx={{
           color: "text.secondary"

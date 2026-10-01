@@ -16,7 +16,7 @@ import { QueryGuard } from '@duncit/ui';
 import MediaPickerDialog from '@duncit/media-picker';
 import { AUTO_PODS_PATH } from '../../../shared/routes';
 import { FINANCE_FOR_PODS, INVENTORY_PRODUCTS } from '../../list/queries';
-import { MEETING_PLATFORMS, generateMeetingLink } from '../../list/meeting-platforms';
+import { generateMeetingLink, meetingPlatforms } from '../../list/meeting-platforms';
 import { AUTO_POD_FOR_EDIT, CREATE_AUTO_POD, UPDATE_AUTO_POD, type AutoPodEditRow } from '../queries';
 
 /** An Auto Pod has no club, so there is never a venue to narrow by. */
@@ -117,7 +117,7 @@ export default function AdminAutoPodEditorPage() {
             products={productsData?.inventoryProducts ?? []}
             finance={financeData?.publicFinanceSettings}
             getClubVenueIds={getClubVenueIds}
-            meetingPlatforms={[...MEETING_PLATFORMS]}
+            meetingPlatforms={[...meetingPlatforms(t)]}
             onGenerateMeetingLink={generateMeetingLink}
             onPickImage={picker.pickImage}
             onPickVideo={picker.pickVideo}

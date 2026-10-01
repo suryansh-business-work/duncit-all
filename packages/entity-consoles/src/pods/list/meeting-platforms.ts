@@ -13,16 +13,16 @@
  *   MS_GRAPH_CLIENT_ID, MS_GRAPH_CLIENT_SECRET, MS_GRAPH_TENANT_ID
  */
 
+import { meetingPlatformOptions } from '@duncit/utils';
 import { resolveGraphqlUrl } from '../../shared/graphql-url';
 
-export const MEETING_PLATFORMS = [
-  { value: 'GOOGLE_MEET', label: 'Google Meet' },
-  { value: 'ZOOM', label: 'Zoom' },
-  { value: 'TEAMS', label: 'Microsoft Teams' },
-  { value: 'OTHER', label: 'Other (paste link manually)' },
-] as const;
-
-export type MeetingPlatform = (typeof MEETING_PLATFORMS)[number]['value'];
+/**
+ * The platform picker's options. The product names are `@duncit/utils`' — the
+ * same words in every language — and only the manual-link row is copy, read
+ * through the editor's translator (rule 38).
+ */
+export const meetingPlatforms = (t: (key: string) => string) =>
+  meetingPlatformOptions(t('admin.pods.meetingPlatformOther'));
 
 export interface GenerateMeetingLinkInput {
   platform: string;

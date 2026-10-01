@@ -41,7 +41,7 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
-          Payouts are credited to the beneficiary wallets when the pod is completed.
+          {t('admin.completePod.payoutNote')}
         </Typography>
       </Stack>
     );
@@ -50,7 +50,7 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
   return (
     <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>
-        Settlement preview
+        {t('admin.completePod.previewTitle')}
       </Typography>
       <Divider sx={{ mb: 1 }} />
       {body()}

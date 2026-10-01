@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SLUG_KEY_PATTERN } from '@duncit/forms';
+import { fallbackT, type Translate } from '@duncit/shell';
 
 const isHttpUrl = (value: string) => {
   if (!value) return true;
@@ -23,29 +24,36 @@ export interface PodPlanFormValues {
   is_active: boolean;
 }
 
-export const podPlanFormSchema = z.object({
-  key: z
-    .string()
-    .trim()
-    .max(40, 'Key must be 40 characters or fewer')
-    .regex(SLUG_KEY_PATTERN, 'Key may contain lowercase letters, digits, dashes and underscores'),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Name is required')
-    .max(80, 'Name must be 80 characters or fewer'),
-  description: z.string().trim().max(500).default(''),
-  image_url: z.string().trim().default('').refine(isHttpUrl, 'Image URL must be a valid http(s) URL'),
-  features: z.array(z.string().trim().min(1).max(120)).max(20).default([]),
-  price_label: z.string().trim().max(60).default(''),
-  sort_order: z.coerce
-    .number()
-    .int('Sort order must be a whole number')
-    .min(0, 'Sort order must be 0 or greater')
-    .max(999, 'Sort order must be 999 or fewer'),
-  is_coming_soon: z.boolean().default(false),
-  is_active: z.boolean().default(true),
-});
+/** Built from the form's translator: a validation message is copy the admin
+ * reads, so it follows their language like the rest of the dialog (rule 38). */
+export const makePodPlanFormSchema = (t: Translate) =>
+  z.object({
+    key: z
+      .string()
+      .trim()
+      .max(40, t('admin.podPlans.errKeyMax'))
+      .regex(SLUG_KEY_PATTERN, t('admin.podPlans.errKeyPattern')),
+    name: z
+      .string()
+      .trim()
+      .min(1, t('admin.podPlans.errNameRequired'))
+      .max(80, t('admin.podPlans.errNameMax')),
+    description: z.string().trim().max(500).default(''),
+    image_url: z.string().trim().default('').refine(isHttpUrl, t('admin.podPlans.errImageUrl')),
+    features: z.array(z.string().trim().min(1).max(120)).max(20).default([]),
+    price_label: z.string().trim().max(60).default(''),
+    sort_order: z.coerce
+      .number()
+      .int(t('admin.podPlans.errSortWhole'))
+      .min(0, t('admin.podPlans.errSortMin'))
+      .max(999, t('admin.podPlans.errSortMax')),
+    is_coming_soon: z.boolean().default(false),
+    is_active: z.boolean().default(true),
+  });
+
+/** The schema outside React — `toPodPlanInput` and the form's own suite parse
+ * with no tree around them, so this one reads the shipped English. */
+export const podPlanFormSchema = makePodPlanFormSchema(fallbackT);
 
 export const podPlanFormDefaults: PodPlanFormValues = {
   key: '',

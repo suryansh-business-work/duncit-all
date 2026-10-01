@@ -10,23 +10,23 @@ const base = {
   is_active: true,
 };
 
+const messagesOf = (values: unknown) => {
+  const result = badgeFormSchema.safeParse(values);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('badgeFormSchema', () => {
-  it('rejects empty title', async () => {
-    const error = await badgeFormSchema.validate({ ...base, title: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects empty title', () => {
+    expect(messagesOf({ ...base, title: '' })).toMatch(/title/i);
   });
-  it('requires threshold when condition is not MANUAL', async () => {
-    const error = await badgeFormSchema
-      .validate({ ...base, threshold: undefined as any }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/threshold/i);
+  it('requires threshold when condition is not MANUAL', () => {
+    expect(messagesOf({ ...base, threshold: undefined })).toMatch(/threshold/i);
   });
-  it('allows missing threshold when condition is MANUAL', async () => {
-    await expect(badgeFormSchema.validate({ ...base, condition_type: 'MANUAL' as const, threshold: 0 })).resolves.toBeTruthy();
+  it('allows missing threshold when condition is MANUAL', () => {
+    expect(badgeFormSchema.safeParse({ ...base, condition_type: 'MANUAL' as const, threshold: 0 }).success).toBe(true);
   });
-  it('rejects negative threshold', async () => {
-    const error = await badgeFormSchema.validate({ ...base, threshold: -1 }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/threshold/i);
+  it('rejects negative threshold', () => {
+    expect(messagesOf({ ...base, threshold: -1 })).toMatch(/threshold/i);
   });
 });
 

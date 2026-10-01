@@ -2637,6 +2637,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueReceives: 'Venue receives',
       venueSlotPrice: 'Venue slot price',
       youReceive: 'You receive',
+      title: 'Your share (credited to your wallet on completion)',
+      shortfall:
+        "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
     },
     hostPodActions: {
       menuTooltip: 'Pod actions',
@@ -2707,6 +2710,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pasteTicketCode: 'Or paste the ticket code',
       scanFrameHint: 'Hold the attendee’s ticket QR inside the frame.',
       checkCode: 'Check',
+      venueRequired: 'Select a venue',
+      slotRequired: 'Select a time slot',
+      scanTitle: 'Scan attendee tickets',
+      scanChecking: 'Checking the ticket…',
+      // The completion dialog's roster — who the payout below was computed from.
+      rosterNoneScanned:
+        "Nobody has been scanned in yet, so this pod would settle at zero. Scan each guest's ticket to record who turned up.",
+      rosterUnmarkedNote: 'Not marked yet — their seats are not part of the payout below.',
+      rosterEmpty: 'Nobody booked this pod.',
     },
     /**
      * The onboarding-meeting dialogs in @duncit/earn — reschedule and cancel,
@@ -2733,6 +2745,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       moveCta: 'Move to this slot',
       pickSlot: 'Please pick an available slot.',
       rescheduleFailed: 'Could not reschedule — please try again.',
+      rescheduleUsed: 'You have already used your one-time reschedule option.',
       reasonRequired: 'Please tell us a reason.',
       reasonTooLong: 'Keep the reason under 500 characters.',
       // Word-for-word the shared chip's label; this namespace carries its own

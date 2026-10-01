@@ -11,6 +11,10 @@
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts"
+    },
+    "./media-list-row": {
+      "types": "./src/media-list-field/MediaListRow.tsx",
+      "import": "./src/media-list-field/MediaListRow.tsx"
     }
   },
   "files": [

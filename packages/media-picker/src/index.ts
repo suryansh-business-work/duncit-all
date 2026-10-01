@@ -49,6 +49,10 @@ export type { AttachmentInfo, AttachmentKind } from './attachment';
 
 // Ready-made upload fields.
 export { default as MediaListField } from './media-list-field/MediaListField';
+export { default as MediaListRow } from './media-list-field/MediaListRow';
+export type { MediaListRowLabels, MediaListRowProps } from './media-list-field/MediaListRow';
+export { default as MediaPickerField } from './MediaPickerField';
+export type { MediaPickerFieldLabels, MediaPickerFieldProps } from './MediaPickerField';
 export { default as SingleImageUploadField } from './SingleImageUploadField';
 export type {
   AvatarShape,

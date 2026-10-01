@@ -270,6 +270,16 @@ function deliveryOutcome(info: EmailDelivery): { status: 'SENT' | 'FAILED'; reas
 }
 
 /**
+ * Writes the log row without making the send wait on it. `record` reports its
+ * own failures; the catch covers a rejection it could not.
+ */
+const recordEmailLog = (entry: Parameters<typeof emailLogService.record>[0]): void => {
+  emailLogService.record(entry).catch((error: unknown) => {
+    logs.server.warn('emailLog', 'record', { error, subject: entry.subject });
+  });
+};
+
+/**
  * Send a templated email. THE method for anything with a template.
  *
  * Every outcome is recorded in the email log — sent, deliberately skipped, or
@@ -301,7 +311,7 @@ export async function sendEmail(opts: {
 
   const notSent = (reason: string, status: 'SKIPPED' | 'FAILED'): SendResult => {
     logs.server.warn('email', 'not-sent', { to: opts.to, template: opts.template, reason });
-    void emailLogService.record({
+    recordEmailLog({
       to: opts.to,
       subject: opts.subject,
       template: opts.template,
@@ -403,7 +413,7 @@ export async function sendEmail(opts: {
     });
 
     const outcome = deliveryOutcome(info);
-    void emailLogService.record({
+    recordEmailLog({
       to: opts.to,
       subject: rendered.subject || opts.subject,
       template: opts.template,
@@ -504,7 +514,7 @@ export async function sendHtmlEmail(opts: {
 
   const notSent = (reason: string, status: 'SKIPPED' | 'FAILED'): SendResult => {
     logs.server.warn('email', 'not-sent', { to: recipients.join(', '), reason });
-    void emailLogService.record({
+    recordEmailLog({
       template: opts.template,
       fragment_key: opts.fragment_key,
       to: recipients,
@@ -553,7 +563,7 @@ export async function sendHtmlEmail(opts: {
     const suppressedNote = audience.suppressed.length
       ? `${audience.suppressed.length} recipient(s) opted out of ${category} email`
       : '';
-    void emailLogService.record({
+    recordEmailLog({
       template: opts.template,
       fragment_key: opts.fragment_key,
       to: audience.to,

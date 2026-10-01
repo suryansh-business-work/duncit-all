@@ -15,7 +15,7 @@ export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonl
       <DialogTitle data-testid="pod-idea-delete-title">{t('admin.podIdeas.deleteTitle')}</DialogTitle>
       <DialogContent>
         <Typography>
-          This will permanently delete <b>{target?.title}</b> along with all its comments.
+          {t('admin.podIdeas.deleteBodyLead')} <b>{target?.title}</b> {t('admin.podIdeas.deleteBodyTail')}
         </Typography>
       </DialogContent>
       <DialogActions>

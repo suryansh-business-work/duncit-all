@@ -90,7 +90,7 @@ export const config = {
    * a request nobody can answer must still end, and the server now hears the
    * disconnect and abandons the work rather than finishing it for nobody.
    */
-  requestTimeoutMs: 30_000,
+  requestTimeoutMs: 60_000,
 } as const;
 
 export type AppConfig = typeof config;

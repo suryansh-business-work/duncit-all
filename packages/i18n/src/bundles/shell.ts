@@ -106,6 +106,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       densityStandard: 'Standard density',
       densityCompact: 'Compact density',
       empty: 'No rows to display',
+      loadFailed: 'Failed to load data',
       selectRow: 'Select row',
       selectAllRows: 'Select every row on this page',
       // A column's filter popover. `any` is the unset option of a boolean
@@ -408,6 +409,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     /** The e-mail sign-in panel on the portal login screen. */
     login: {
       emailAddress: 'e-mail address',
+      differentAddress: 'Use a different address',
+      usePassword: 'Use my password instead',
+      // What createSession answers when the signed-in account has no role for
+      // the console — {name} is that console's full name.
+      accessDenied: 'You do not have access to {name}. Please contact your administrator.',
     },
 
     /** Emoji picker category headings + the chat launcher. */
@@ -418,6 +424,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     },
 
     account: {
+      title: 'Your account',
       name: 'Name',
       email: 'Email',
       phone: 'Phone',
@@ -461,6 +468,26 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       infoUpdated: 'Updated',
       infoFileId: 'File ID',
       infoVersion: 'Version',
+      subtitle: 'Every file uploaded to ImageKit. Upload, find one, copy its link at any size.',
+      // Count-driven: the translator picks .one / .other from `count`.
+      uploadedCount: {
+        one: 'Uploaded {count} file',
+        other: 'Uploaded {count} files',
+      },
+      deletedCount: {
+        one: 'Deleted {count} file',
+        other: 'Deleted {count} files',
+      },
+      // ImageKit's own sort values, and the three kinds the Type filter offers.
+      sortNewest: 'Newest first',
+      sortOldest: 'Oldest first',
+      sortNameAsc: 'Name A–Z',
+      sortNameDesc: 'Name Z–A',
+      sortLargest: 'Largest first',
+      sortSmallest: 'Smallest first',
+      typeAll: 'Everything',
+      typeImages: 'Images',
+      typeOther: 'Other files',
     },
 
     /**
@@ -1052,6 +1079,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       improveError: 'AI could not improve this text. Please try again.',
     },
     profile: {
+      title: 'Your profile',
+      updated: 'Profile updated.',
       accessRoles: 'ACCESS ROLES',
       noRoles: 'No roles assigned.',
       // NOT mweb.common.languageHint: the portal wording differs from the app's,
@@ -1456,6 +1485,9 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       venueReceives: 'Venue receives',
       venueSlotPrice: 'Venue slot price',
       youReceive: 'You receive',
+      title: 'Your share (credited to your wallet on completion)',
+      shortfall:
+        "The venue's booked price is more than this pod took at the door. The venue is paid in full and your share is nil — it is never taken back from you.",
     },
     hostPodActions: {
       menuTooltip: 'Pod actions',
@@ -1524,6 +1556,15 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       pasteTicketCode: 'Or paste the ticket code',
       scanFrameHint: 'Hold the attendee’s ticket QR inside the frame.',
       checkCode: 'Check',
+      venueRequired: 'Select a venue',
+      slotRequired: 'Select a time slot',
+      scanTitle: 'Scan attendee tickets',
+      scanChecking: 'Checking the ticket…',
+      // The completion dialog's roster — who the payout below was computed from.
+      rosterNoneScanned:
+        "Nobody has been scanned in yet, so this pod would settle at zero. Scan each guest's ticket to record who turned up.",
+      rosterUnmarkedNote: 'Not marked yet — their seats are not part of the payout below.',
+      rosterEmpty: 'Nobody booked this pod.',
     },
     /**
      * The onboarding-meeting dialogs in @duncit/earn — reschedule and cancel,
@@ -1550,6 +1591,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       moveCta: 'Move to this slot',
       pickSlot: 'Please pick an available slot.',
       rescheduleFailed: 'Could not reschedule — please try again.',
+      rescheduleUsed: 'You have already used your one-time reschedule option.',
       reasonRequired: 'Please tell us a reason.',
       reasonTooLong: 'Keep the reason under 500 characters.',
       // Word-for-word the shared chip's label; this namespace carries its own
@@ -1631,6 +1673,31 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         noConsole: 'No staff console assigned.',
         localTime: '{time} local',
       },
+      // The consoles a coworker can be filtered by, and the chips under their
+      // name — one row per staff role the directory admits.
+      team: {
+        admin: 'Admin',
+        tech: 'Tech',
+        products: 'Products',
+        marketing: 'Marketing',
+        crm: 'CRM',
+        challenges: 'Challenges',
+        ai: 'AI',
+        website: 'Website',
+        hr: 'HR',
+        finance: 'Finance',
+        developers: 'Developers',
+        legal: 'Legal',
+        onboarding: 'Onboarding',
+        employee: 'Employee',
+        support: 'Support',
+        ads: 'Ads',
+        communications: 'Communications',
+        logs: 'Logs',
+        analytics: 'Analytics',
+        ecommerce: 'E-commerce',
+        localization: 'Localization',
+      },
       header: {
         back: 'Back to coworkers',
         audioCall: 'Audio call',
@@ -1654,6 +1721,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         newMessages: '{count} new messages — jump to latest',
         typing: '{name} is typing…',
         edited: 'edited',
+        deleted: 'This message was deleted',
+        editHint: 'Enter saves · Esc cancels',
       },
       composer: {
         placeholder: 'Write a message',
@@ -1789,6 +1858,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         settingsLabel: 'Audio and video settings',
         incomingAudio: '{name} — incoming audio',
         quality: 'Connection quality',
+        slow: 'Slow connection',
         endTitle: 'End this call?',
         endMessage:
           'Closing this window hangs up on {name}. Any recording still uploading will finish.',
@@ -1818,6 +1888,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         failed: 'The recording could not be saved.',
         close: 'Close',
         closeRecording: 'Close the recording',
+        // What the recorder says when it is the one that failed. A message the
+        // browser or the server threw is shown verbatim instead.
+        unsupported: 'This browser cannot record.',
+        nothingYet: 'There is nothing to record yet.',
+        startFailed: 'Could not start recording',
+        saveFailed: 'Could not save the recording',
+        conversionSlow: 'Conversion is taking too long',
+        conversionNotStarted: 'Conversion did not start',
       },
       devices: {
         title: 'Audio & video',
@@ -1831,6 +1909,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         test: 'Test',
         stopTest: 'Stop test',
         done: 'Done',
+        openFailed: 'Could not open that device',
       },
       voice: {
         discard: 'Discard',
@@ -1840,6 +1919,28 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         play: 'Play the voice note',
         pause: 'Pause the voice note',
         speed: 'Playback speed {rate} times',
+        unsupported: 'This browser cannot record audio.',
+        micFailed: 'Could not open the microphone',
+      },
+      // The downloaded transcript (export-chat.ts). Whole lines rather than
+      // fragments, so a translator can reorder what a line says.
+      export: {
+        title: 'Conversation between {me} and {peer}',
+        exported: 'Exported {when}',
+        counts: '{messages} messages · {calls} calls',
+        unknownTime: 'unknown time',
+        deletedLine: '[{when}] {name}: (message deleted)',
+        messageLine: '[{when}] {name}{edited}: {text}',
+        edited: ' (edited)',
+        fileLine: '[file: {name} — {url}]',
+        attachment: 'attachment',
+        callLine: '[{when}] {kind} call {from} → {to} — {outcome}',
+        audio: 'audio',
+        video: 'video',
+        answered: 'answered, {duration}',
+        missed: 'missed',
+        declined: 'declined',
+        cancelled: 'cancelled',
       },
       history: {
         title: 'Edit history',

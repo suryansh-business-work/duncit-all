@@ -1,15 +1,14 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { validationRules } from '../validation/rules';
 
 const locationName = (label: string) =>
-  yup
-    .string()
+  z
+    .string({ error: `${label} is required` })
     .trim()
     .min(2, `${label} must be at least 2 characters`)
-    .max(80, `${label} must be 80 characters or fewer`)
-    .required(`${label} is required`);
+    .max(80, `${label} must be 80 characters or fewer`);
 
-export const googleSignupSchema = yup.object({
+export const googleSignupSchema = z.object({
   phone_number: validationRules.phoneNumber('Phone number'),
   phone_extension: validationRules.phoneExtension('Phone code'),
   dob: validationRules.birthDate('Birth year'),

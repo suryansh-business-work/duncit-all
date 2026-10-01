@@ -7,6 +7,8 @@ import {
 
 const base = blankBankAccountValues();
 
+const isValid = (value: unknown) => bankAccountSchema.safeParse(value).success;
+
 describe('blankBankAccountValues', () => {
   it('returns an empty account', () => {
     expect(blankBankAccountValues()).toEqual({
@@ -20,19 +22,19 @@ describe('blankBankAccountValues', () => {
 });
 
 describe('bankAccountSchema', () => {
-  it('requires a payout method and holder name', async () => {
-    await expect(bankAccountSchema.isValid(base)).resolves.toBe(false);
+  it('requires a payout method and holder name', () => {
+    expect(isValid(base)).toBe(false);
+    expect(isValid({ ...base, payout_method: undefined })).toBe(false);
   });
 
-  it('validates a UPI payout', async () => {
+  it('validates a UPI payout', () => {
     const valid = { ...base, payout_method: 'UPI', account_holder_name: 'Asha', upi_id: 'asha@okhdfc' };
-    await expect(bankAccountSchema.isValid(valid)).resolves.toBe(true);
-    await expect(
-      bankAccountSchema.isValid({ ...valid, upi_id: 'invalid upi' }),
-    ).resolves.toBe(false);
+    expect(isValid(valid)).toBe(true);
+    expect(isValid({ ...valid, upi_id: 'invalid upi' })).toBe(false);
+    expect(isValid({ ...valid, upi_id: '' })).toBe(false);
   });
 
-  it('validates IMPS/NEFT bank rails', async () => {
+  it('validates IMPS/NEFT bank rails', () => {
     const valid = {
       ...base,
       payout_method: 'NEFT',
@@ -40,13 +42,9 @@ describe('bankAccountSchema', () => {
       account_number: '123456789',
       ifsc_code: 'HDFC0123456',
     };
-    await expect(bankAccountSchema.isValid(valid)).resolves.toBe(true);
-    await expect(
-      bankAccountSchema.isValid({ ...valid, ifsc_code: 'BAD' }),
-    ).resolves.toBe(false);
-    await expect(
-      bankAccountSchema.isValid({ ...valid, account_number: '12' }),
-    ).resolves.toBe(false);
+    expect(isValid(valid)).toBe(true);
+    expect(isValid({ ...valid, ifsc_code: 'BAD' })).toBe(false);
+    expect(isValid({ ...valid, account_number: '12' })).toBe(false);
   });
 });
 

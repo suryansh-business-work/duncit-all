@@ -1,10 +1,10 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
-const httpUrl = yup
+const httpUrl = z
   .string()
   .trim()
   .default('')
-  .test('http-url', 'Link must be a valid http(s) URL', (value) => {
+  .refine((value) => {
     if (!value) return true;
     try {
       const parsed = new URL(value);
@@ -12,25 +12,25 @@ const httpUrl = yup
     } catch {
       return false;
     }
-  });
+  }, 'Link must be a valid http(s) URL');
 
-export const profileLinkSchema = yup.object({
-  label: yup.string().trim().max(40, 'Label must be 40 characters or fewer').default(''),
+export const profileLinkSchema = z.object({
+  label: z.string().trim().max(40, 'Label must be 40 characters or fewer').default(''),
   url: httpUrl,
 });
 
-export const profileAboutFormSchema = yup.object({
-  bio: yup.string().trim().max(500, 'Bio must be 500 characters or fewer').default(''),
-  links: yup.array(profileLinkSchema).max(10, 'You can add up to 10 links').default([]),
+export const profileAboutFormSchema = z.object({
+  bio: z.string().trim().max(500, 'Bio must be 500 characters or fewer').default(''),
+  links: z.array(profileLinkSchema).max(10, 'You can add up to 10 links').default([]),
 });
 
-export type ProfileLinkValues = yup.InferType<typeof profileLinkSchema>;
-export type ProfileAboutFormValues = yup.InferType<typeof profileAboutFormSchema>;
+export type ProfileLinkValues = z.infer<typeof profileLinkSchema>;
+export type ProfileAboutFormValues = z.infer<typeof profileAboutFormSchema>;
 
 export function toProfileAboutInput(values: ProfileAboutFormValues) {
-  const cast = profileAboutFormSchema.cast(values, { stripUnknown: true });
+  const links = values.links.map((link) => ({ label: link.label.trim(), url: link.url.trim() }));
   return {
-    bio: cast.bio || null,
-    profile_links: (cast.links ?? []).filter((link) => link.label || link.url),
+    bio: values.bio.trim() || null,
+    profile_links: links.filter((link) => link.label || link.url),
   };
 }

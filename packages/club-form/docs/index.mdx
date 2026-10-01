@@ -354,7 +354,9 @@ The package resolves them from the consuming portal so there is exactly one MUI 
 react-hook-form instance in the bundle — two copies of RHF means `FormProvider` context does
 not reach the sections and every field silently reads `undefined`. Its only real dependencies
 are `@duncit/category` and `@duncit/location`, which supply the cascade pickers in the Basic
-section.
+section, and `@duncit/media-picker`, whose `MediaListRow` is the row the media fields render —
+imported from `@duncit/media-picker/media-list-row`, so the form loads the row and not the
+picker dialog behind the package root.
 
 ## Coverage
 

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { petProfileFormSchema, toPetProfileInput } from './pet-profile.form';
 
+const errorText = (result: { error?: { issues: { message: string }[] } }) =>
+  result.error?.issues.map((issue) => issue.message).join(' ');
+
 const base = {
   name: 'Buddy',
   species: 'DOG' as const,
@@ -11,24 +14,20 @@ const base = {
 };
 
 describe('petProfileFormSchema', () => {
-  it('rejects empty name', async () => {
-    const error = await petProfileFormSchema.validate({ ...base, name: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/name/i);
+  it('rejects empty name', () => {
+    expect(errorText(petProfileFormSchema.safeParse({ ...base, name: '' }))).toMatch(/name/i);
   });
-  it('rejects invalid species', async () => {
-    const error = await petProfileFormSchema.validate({ ...base, species: 'DINO' as any }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/species/i);
+  it('rejects invalid species', () => {
+    expect(errorText(petProfileFormSchema.safeParse({ ...base, species: 'DINO' as any }))).toMatch(/species/i);
   });
-  it('rejects negative age', async () => {
-    const error = await petProfileFormSchema.validate({ ...base, age_years: -1 }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/age/i);
+  it('rejects negative age', () => {
+    expect(errorText(petProfileFormSchema.safeParse({ ...base, age_years: -1 }))).toMatch(/age/i);
   });
-  it('rejects age over 40', async () => {
-    const error = await petProfileFormSchema.validate({ ...base, age_years: 100 }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/age/i);
+  it('rejects age over 40', () => {
+    expect(errorText(petProfileFormSchema.safeParse({ ...base, age_years: 100 }))).toMatch(/age/i);
   });
-  it('accepts valid input', async () => {
-    await expect(petProfileFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts valid input', () => {
+    expect(petProfileFormSchema.safeParse(base).success).toBe(true);
   });
 });
 

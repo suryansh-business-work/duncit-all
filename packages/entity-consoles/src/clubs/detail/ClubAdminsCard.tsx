@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { useTranslation } from '@duncit/shell';
 import type { ClubActor } from './types';
 
 interface Props {
@@ -57,6 +58,7 @@ function AdminRow({ admin, to }: Readonly<{ admin: ClubActor; to?: string }>) {
 
 /** Right/left column: users assigned to administer this club. */
 export default function ClubAdminsCard({ admins, adminPath }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardContent>
@@ -71,7 +73,7 @@ export default function ClubAdminsCard({ admins, adminPath }: Readonly<Props>) {
           <Typography variant="subtitle1" sx={{
             fontWeight: 900
           }}>
-            Club Admins
+            {t('admin.clubs.adminsTitle')}
           </Typography>
           <Chip size="small" label={admins.length} sx={{ ml: 0.5 }} />
         </Stack>
@@ -84,7 +86,7 @@ export default function ClubAdminsCard({ admins, adminPath }: Readonly<Props>) {
               color: "text.secondary",
               pt: 2
             }}>
-            No club admins assigned yet.
+            {t('admin.clubs.noAdmins')}
           </Typography>
         ) : (
           <List dense disablePadding>

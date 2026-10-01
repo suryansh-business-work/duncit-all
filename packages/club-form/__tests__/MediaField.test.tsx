@@ -121,6 +121,14 @@ describe('MediaField — picker mode (with onPickImage)', () => {
     expect(onChange).toHaveBeenCalledWith('https://x/b.jpg\nhttps://x/a.jpg');
   });
 
+  it('names the row controls from the club form copy', () => {
+    render(<MediaField label="Media" value="https://x/a.jpg" onChange={vi.fn()} onPickImage={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Move up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move down' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Replace')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove')).toBeInTheDocument();
+  });
+
   it('removes a row', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

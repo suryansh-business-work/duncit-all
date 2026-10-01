@@ -47,7 +47,7 @@ export default function ReleaseSummaryDialog({
             color: "text.secondary",
             mb: 1
           }}>
-          Each payout below has been credited to its beneficiary&apos;s wallet.
+          {t('admin.completePod.releasedBody')}
         </Typography>
         <List dense disablePadding>
           {(summary?.releases ?? []).map((release) => (

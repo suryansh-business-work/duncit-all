@@ -1,31 +1,29 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { SLUG_KEY_PATTERN } from '@duncit/forms';
 
-export const roleFormSchema = yup.object({
-  key: yup
-    .string()
+export const roleFormSchema = z.object({
+  key: z
+    .string({ error: 'Key is required' })
     .trim()
-    .matches(SLUG_KEY_PATTERN, 'Key may contain lowercase letters, digits, dashes and underscores')
-    .max(60, 'Key must be 60 characters or fewer')
-    .required('Key is required'),
-  name: yup
-    .string()
+    .regex(SLUG_KEY_PATTERN, 'Key may contain lowercase letters, digits, dashes and underscores')
+    .max(60, 'Key must be 60 characters or fewer'),
+  name: z
+    .string({ error: 'Name is required' })
     .trim()
     .min(2, 'Name must be at least 2 characters')
-    .max(120, 'Name must be 120 characters or fewer')
-    .required('Name is required'),
-  description: yup.string().trim().max(500).default(''),
-  permissions: yup.array(yup.string().trim().required()).default([]),
+    .max(120, 'Name must be 120 characters or fewer'),
+  description: z.string().trim().max(500).default(''),
+  permissions: z.array(z.string().trim().min(1)).default([]),
 });
 
-export type RoleFormValues = yup.InferType<typeof roleFormSchema>;
+export type RoleFormValues = z.infer<typeof roleFormSchema>;
 
-export function toRoleInput(values: RoleFormValues) {
-  const cast = roleFormSchema.cast(values, { stripUnknown: true });
+/** Normalises like the schema does (trim + defaults) without validating. */
+export function toRoleInput(values: z.input<typeof roleFormSchema>) {
   return {
-    key: cast.key,
-    name: cast.name,
-    description: cast.description || null,
-    permissions: cast.permissions,
+    key: values.key.trim(),
+    name: values.name.trim(),
+    description: (values.description ?? '').trim() || null,
+    permissions: (values.permissions ?? []).map((permission) => permission.trim()),
   };
 }

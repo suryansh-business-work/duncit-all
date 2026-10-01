@@ -9,19 +9,19 @@ const valid: RoleFormValues = {
   permissions: ['pods:read', 'pods:update'],
 };
 
-async function validationErrors(values: unknown): Promise<string[]> {
-  try {
-    await roleFormSchema.validate(values, { abortEarly: false });
-    return [];
-  } catch (error) {
-    return (error as { errors: string[] }).errors;
-  }
+function validationIssues(values: unknown) {
+  const result = roleFormSchema.safeParse(values);
+  return result.success ? [] : result.error.issues;
+}
+
+function validationErrors(values: unknown): string[] {
+  return validationIssues(values).map((issue) => issue.message);
 }
 
 describe('roles-page/role barrel', () => {
   describe('roleFormSchema', () => {
-    it('accepts a valid role and trims key and name on cast', async () => {
-      const result = await roleFormSchema.validate({
+    it('accepts a valid role and trims key and name on parse', () => {
+      const result = roleFormSchema.parse({
         ...valid,
         key: '  content-editor  ',
         name: '  Content Editor  ',
@@ -31,45 +31,49 @@ describe('roles-page/role barrel', () => {
       expect(result.permissions).toEqual(['pods:read', 'pods:update']);
     });
 
-    it('defaults description to empty string and permissions to an empty list', async () => {
-      const result = await roleFormSchema.validate({ key: 'viewer', name: 'Viewer' });
+    it('defaults description to empty string and permissions to an empty list', () => {
+      const result = roleFormSchema.parse({ key: 'viewer', name: 'Viewer' });
       expect(result.description).toBe('');
       expect(result.permissions).toEqual([]);
     });
 
-    it('rejects a key with uppercase letters or spaces', async () => {
-      const errors = await validationErrors({ ...valid, key: 'Content Editor' });
+    it('rejects a key with uppercase letters or spaces', () => {
+      const errors = validationErrors({ ...valid, key: 'Content Editor' });
       expect(errors).toContain('Key may contain lowercase letters, digits, dashes and underscores');
     });
 
-    it('rejects a key longer than 60 characters', async () => {
-      const errors = await validationErrors({ ...valid, key: 'a'.repeat(61) });
+    it('rejects a key longer than 60 characters', () => {
+      const errors = validationErrors({ ...valid, key: 'a'.repeat(61) });
       expect(errors).toContain('Key must be 60 characters or fewer');
     });
 
-    it('rejects a blank key', async () => {
-      const errors = await validationErrors({ ...valid, key: '   ' });
-      expect(errors).toContain('Key is required');
+    it('rejects a blank key, and reports a missing one as required', () => {
+      expect(validationErrors({ ...valid, key: '   ' })).toContain(
+        'Key may contain lowercase letters, digits, dashes and underscores'
+      );
+      expect(validationErrors({ ...valid, key: undefined })).toContain('Key is required');
     });
 
-    it('rejects a name shorter than 2 characters', async () => {
-      const errors = await validationErrors({ ...valid, name: 'A' });
+    it('rejects a name shorter than 2 characters', () => {
+      const errors = validationErrors({ ...valid, name: 'A' });
       expect(errors).toContain('Name must be at least 2 characters');
     });
 
-    it('rejects a name longer than 120 characters', async () => {
-      const errors = await validationErrors({ ...valid, name: 'n'.repeat(121) });
+    it('rejects a name longer than 120 characters', () => {
+      const errors = validationErrors({ ...valid, name: 'n'.repeat(121) });
       expect(errors).toContain('Name must be 120 characters or fewer');
     });
 
-    it('rejects a missing name', async () => {
-      const errors = await validationErrors({ ...valid, name: undefined });
+    it('rejects a missing name', () => {
+      const errors = validationErrors({ ...valid, name: undefined });
       expect(errors).toContain('Name is required');
     });
 
-    it('rejects a description longer than 500 characters', async () => {
-      const errors = await validationErrors({ ...valid, description: 'd'.repeat(501) });
-      expect(errors.some((message) => /description/i.test(message) && /500/.test(message))).toBe(true);
+    it('rejects a description longer than 500 characters', () => {
+      const issues = validationIssues({ ...valid, description: 'd'.repeat(501) });
+      expect(
+        issues.some((issue) => issue.path.join('.') === 'description' && /500/.test(issue.message))
+      ).toBe(true);
     });
   });
 

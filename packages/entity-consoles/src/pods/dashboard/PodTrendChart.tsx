@@ -75,7 +75,7 @@ export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
-          One bar per day, including the days nobody created anything.
+          {t('admin.podsDashboard.trendHint')}
         </Typography>
         <Box sx={{ height: 260, mt: 2 }}>
           {hasData ? (

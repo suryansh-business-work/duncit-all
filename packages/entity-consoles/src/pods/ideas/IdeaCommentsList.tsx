@@ -24,7 +24,7 @@ export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            No comments yet.
+            {t('admin.podIdeas.noComments')}
           </Typography>
         )}
         {comments.map((c) => (

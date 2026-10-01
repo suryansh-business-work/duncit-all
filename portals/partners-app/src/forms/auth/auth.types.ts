@@ -1,4 +1,4 @@
-import type * as yup from 'yup';
+import type { z } from 'zod';
 import type {
   loginSchema,
   registerSchema,
@@ -7,8 +7,8 @@ import type {
   whatsAppOtpVerifySchema,
 } from './auth.form';
 
-export type LoginFormValues = yup.InferType<typeof loginSchema>;
-export type RegisterFormValues = yup.InferType<typeof registerSchema>;
-export type GoogleSignupFormValues = yup.InferType<typeof googleSignupSchema>;
-export type WhatsAppOtpRequestValues = yup.InferType<typeof whatsAppOtpRequestSchema>;
-export type WhatsAppOtpVerifyValues = yup.InferType<typeof whatsAppOtpVerifySchema>;
+export type LoginFormValues = z.infer<typeof loginSchema>;
+export type RegisterFormValues = z.infer<typeof registerSchema>;
+export type GoogleSignupFormValues = z.infer<typeof googleSignupSchema>;
+export type WhatsAppOtpRequestValues = z.infer<typeof whatsAppOtpRequestSchema>;
+export type WhatsAppOtpVerifyValues = z.infer<typeof whatsAppOtpVerifySchema>;

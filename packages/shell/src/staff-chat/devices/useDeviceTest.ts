@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface DeviceLists {
   mics: MediaDeviceInfo[];
@@ -15,6 +16,7 @@ export interface DeviceLists {
  * a camera light left on after the dialog closes is alarming, and rightly so.
  */
 export function useDeviceTest(micId: string, camId: string, open: boolean) {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState<DeviceLists>({ mics: [], cams: [] });
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [level, setLevel] = useState(0);
@@ -81,10 +83,10 @@ export function useDeviceTest(micId: string, camId: string, open: boolean) {
         meter(opened);
         await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not open that device');
+        setError(err instanceof Error ? err.message : t('shell.chat.devices.openFailed'));
       }
     },
-    [micId, camId, stop, meter, refresh]
+    [micId, camId, stop, meter, refresh, t]
   );
 
   useEffect(() => {

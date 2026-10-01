@@ -14,27 +14,28 @@ const base = {
   ],
 };
 
+const messagesOf = (values: unknown) => {
+  const result = locationFormSchema.safeParse(values);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('locationFormSchema', () => {
-  it('rejects empty location name', async () => {
-    const error = await locationFormSchema.validate({ ...base, location_name: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/location name/i);
+  it('rejects empty location name', () => {
+    expect(messagesOf({ ...base, location_name: '' })).toMatch(/location name/i);
   });
-  it('rejects bad primary PIN code', async () => {
-    const error = await locationFormSchema.validate({ ...base, location_pincode: '!!' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/pin/i);
+  it('rejects bad primary PIN code', () => {
+    expect(messagesOf({ ...base, location_pincode: '!!' })).toMatch(/pin/i);
   });
-  it('rejects missing location_image', async () => {
-    const error = await locationFormSchema.validate({ ...base, location_image: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/location image/i);
+  it('rejects missing location_image', () => {
+    expect(messagesOf({ ...base, location_image: '' })).toMatch(/location image/i);
   });
-  it('rejects zone with bad pincode', async () => {
-    const error = await locationFormSchema
-      .validate({ ...base, zones: [{ zone_name: 'HSR', zone_code: '', pincode: '!!' }] }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/pin/i);
+  it('rejects zone with bad pincode', () => {
+    expect(
+      messagesOf({ ...base, zones: [{ zone_name: 'HSR', zone_code: '', pincode: '!!' }] })
+    ).toMatch(/pin/i);
   });
-  it('accepts fully valid input', async () => {
-    await expect(locationFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts fully valid input', () => {
+    expect(locationFormSchema.safeParse(base).success).toBe(true);
   });
 });
 

@@ -2,10 +2,12 @@ import type { PodRow } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { podSeatsTaken } from '@duncit/utils';
 
-export const POD_MODE_OPTIONS = [
-  { value: 'PHYSICAL', label: 'Physical' },
-  { value: 'VIRTUAL', label: 'Virtual' },
-] as const;
+/** The mode filter's options. The labels are copy, so they are read through the
+ * caller's translator rather than frozen here in English (rule 38). */
+export const podModeOptions = (t: (key: string) => string) => [
+  { value: 'PHYSICAL', label: t('podForm.podMode.physical') },
+  { value: 'VIRTUAL', label: t('podForm.podMode.virtual') },
+];
 
 export const POD_TYPE_OPTIONS = [
   'NATIVE_FREE',

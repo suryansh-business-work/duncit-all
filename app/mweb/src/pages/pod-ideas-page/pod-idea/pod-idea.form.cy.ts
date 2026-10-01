@@ -1,29 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { podIdeaFormSchema, toPodIdeaInput } from './pod-idea.form';
 
+const errorText = (result: { error?: { issues: { message: string }[] } }) =>
+  result.error?.issues.map((issue) => issue.message).join(' ');
+
 describe('podIdeaFormSchema', () => {
-  it('rejects empty title', async () => {
-    const error = await podIdeaFormSchema
-      .validate({ title: '', description: 'A solid description here.' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects empty title', () => {
+    const result = podIdeaFormSchema.safeParse({ title: '', description: 'A solid description here.' });
+    expect(errorText(result)).toMatch(/title/i);
   });
-  it('rejects title too long', async () => {
-    const error = await podIdeaFormSchema
-      .validate({ title: 'x'.repeat(161), description: 'A solid description here.' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects title too long', () => {
+    const result = podIdeaFormSchema.safeParse({ title: 'x'.repeat(161), description: 'A solid description here.' });
+    expect(errorText(result)).toMatch(/title/i);
   });
-  it('rejects short description', async () => {
-    const error = await podIdeaFormSchema
-      .validate({ title: 'Hiking', description: 'short' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/description/i);
+  it('rejects short description', () => {
+    const result = podIdeaFormSchema.safeParse({ title: 'Hiking', description: 'short' });
+    expect(errorText(result)).toMatch(/description/i);
   });
-  it('accepts a valid idea', async () => {
-    await expect(
-      podIdeaFormSchema.validate({ title: 'Sunday hike', description: 'A monthly Sunday hike around the city.' }),
-    ).resolves.toBeTruthy();
+  it('accepts a valid idea', () => {
+    const result = podIdeaFormSchema.safeParse({ title: 'Sunday hike', description: 'A monthly Sunday hike around the city.' });
+    expect(result.success).toBe(true);
   });
 });
 

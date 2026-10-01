@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { promptFormSchema, promptInitialValues } from '../src/schema';
+import { AI_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/app-settings';
+
+import { promptFormSchema as buildPromptFormSchema, promptInitialValues } from '../src/schema';
 import type { PromptVariable } from '../src/types';
+
+/** The shipped English, so each assertion below still reads the sentence an author sees. */
+const { t } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(AI_BUNDLE) });
+const promptFormSchema = (...variables: [variables?: readonly PromptVariable[]]) =>
+  buildPromptFormSchema(t, ...variables);
 
 const valid = (over: Record<string, unknown> = {}) => ({
   name: 'Navigation Knowledge Bot',

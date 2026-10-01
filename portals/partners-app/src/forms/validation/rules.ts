@@ -1,67 +1,35 @@
-import * as yup from 'yup';
-import {
-  OTP_PATTERN,
-  PERSON_NAME_PATTERN,
-  PHONE_EXTENSION_PATTERN,
-  PHONE_NUMBER_PATTERN,
-} from '@duncit/forms';
+import { z } from 'zod';
+import { OTP_PATTERN, zodRules } from '@duncit/forms';
 
-const optionalText = (label: string, max: number) =>
-  yup.string().trim().max(max, `${label} must be ${max} characters or fewer`).default('');
-
-const requiredText = (label: string, min: number, max: number) =>
-  yup
-    .string()
-    .trim()
-    .min(min, `${label} must be at least ${min} characters`)
-    .max(max, `${label} must be ${max} characters or fewer`)
-    .required(`${label} is required`);
+const optionalText = (label: string, max: number) => zodRules.optionalText(label, max, { defaultEmpty: true });
 
 const optionalUrl = (label: string, allowRelative = false) =>
-  yup
-    .string()
-    .trim()
-    .default('')
-    .test('url', `${label} must be a valid URL`, (value) => {
-      if (!value) return true;
-      if (allowRelative && /^\/[\w./?=&%#:+-]*$/.test(value)) return true;
-      try {
-        const parsed = new URL(value);
-        return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol);
-      } catch {
-        return false;
-      }
-    });
+  zodRules.optionalUrl(label, allowRelative, { defaultEmpty: true });
+
+const isAtLeast13 = (value: Date) => {
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 13);
+  return value <= minDate;
+};
 
 const birthDate = (label = 'Birth year') =>
-  yup
-    .date()
-    .typeError(`${label} is required`)
-    .max(new Date(), `${label} must be in the past`)
-    .test('minimum-age', 'You must be at least 13 years old', (value) => {
-      if (!value) return false;
-      const minDate = new Date();
-      minDate.setFullYear(minDate.getFullYear() - 13);
-      return value <= minDate;
-    })
-    .required(`${label} is required`);
+  z.preprocess(
+    // `new Date(null)` is the epoch, so a cleared date must not reach the coercion.
+    (value) => value ?? undefined,
+    z.coerce
+      .date({ error: `${label} is required` })
+      .max(new Date(), `${label} must be in the past`)
+      .refine(isAtLeast13, 'You must be at least 13 years old'),
+  );
 
 export const validationRules = {
-  personName: (label: string) =>
-    yup
-      .string()
-      .trim()
-      .matches(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes, periods and hyphens only`)
-      .required(`${label} is required`),
+  personName: zodRules.personName,
   optionalText,
-  requiredText,
-  email: (label = 'Email') =>
-    yup.string().trim().lowercase().email(`Enter a valid ${label.toLowerCase()}`).max(254).required(`${label} is required`),
-  phoneNumber: (label = 'Phone number') =>
-    yup.string().trim().matches(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`).required(`${label} is required`),
-  phoneExtension: (label = 'Phone code') =>
-    yup.string().trim().matches(PHONE_EXTENSION_PATTERN, `${label} is invalid`).required(`${label} is required`),
-  otp: () => yup.string().trim().matches(OTP_PATTERN, 'Enter the OTP we sent').required('OTP is required'),
+  requiredText: zodRules.requiredText,
+  email: zodRules.email,
+  phoneNumber: zodRules.phoneNumber,
+  phoneExtension: zodRules.phoneExtension,
+  otp: () => z.string({ error: 'OTP is required' }).trim().regex(OTP_PATTERN, 'Enter the OTP we sent'),
   birthDate,
   optionalUrl,
 };

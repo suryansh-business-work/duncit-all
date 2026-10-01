@@ -4,13 +4,22 @@ import {
   blankPodResubmitValues,
   buildHostResubmitInput,
   buildPodResubmitModerationInput,
+  buildPodResubmitSchema,
   podResubmitInitialValues,
-  podResubmitSchema,
 } from '../src/pod-resubmit/pod-resubmit.form';
+import { mwebHostPodLabels } from '../src/labels';
 import type { HostPodTarget } from '../src/types';
 
 const IMG = 'https://cdn.duncit.com/pod/cover.jpg';
 const VID = 'https://cdn.duncit.com/pod/clip.mp4';
+
+/**
+ * A validation message is copy the host reads, so the schema is built from the
+ * surface's labels (rule 38). Resolving them as `t:<key>` keeps the assertions
+ * about WHICH message was raised rather than about the English wording.
+ */
+const labels = mwebHostPodLabels((key) => `t:${key}`);
+const podResubmitSchema = buildPodResubmitSchema(labels);
 
 const values = (over: Partial<typeof blankPodResubmitValues> = {}) => ({
   pod_title: 'Sunday Badminton',
@@ -27,21 +36,21 @@ const errorsFor = (input: unknown) => {
   return Object.fromEntries(result.error.issues.map((i) => [i.path.join('.'), i.message]));
 };
 
-describe('podResubmitSchema', () => {
+describe('buildPodResubmitSchema', () => {
   it('accepts a resubmission with a fresh venue and slot', () => {
     expect(podResubmitSchema.safeParse(values()).success).toBe(true);
   });
 
   it('will not resubmit without a venue and a slot — that is the whole point of a rejection', () => {
-    expect(errorsFor(values({ venue_id: '' })).venue_id).toBe('Select a venue');
-    expect(errorsFor(values({ venue_slot_id: '' })).venue_slot_id).toBe('Select a time slot');
+    expect(errorsFor(values({ venue_id: '' })).venue_id).toBe(labels.venueRequired);
+    expect(errorsFor(values({ venue_slot_id: '' })).venue_slot_id).toBe(labels.slotRequired);
   });
 
   it('keeps the same content rules as an ordinary edit', () => {
-    expect(errorsFor(values({ pod_title: 'ab' })).pod_title).toBe('Title is too short');
-    expect(errorsFor(values({ pod_title: 'a'.repeat(121) })).pod_title).toBe('Title is too long');
-    expect(errorsFor(values({ pod_description: 'short' })).pod_description).toBe('Add a longer description');
-    expect(errorsFor(values({ media_text: VID })).media_text).toBe('Add at least one image URL');
+    expect(errorsFor(values({ pod_title: 'ab' })).pod_title).toBe(labels.titleTooShort);
+    expect(errorsFor(values({ pod_title: 'a'.repeat(121) })).pod_title).toBe(labels.titleTooLong);
+    expect(errorsFor(values({ pod_description: 'short' })).pod_description).toBe(labels.descriptionTooShort);
+    expect(errorsFor(values({ media_text: VID })).media_text).toBe(labels.imageRequired);
   });
 });
 

@@ -217,6 +217,21 @@ export const AI_BUNDLE: NestedCatalogue = {
         'Delete "{name}"? This cannot be undone, and anything fetching it by key stops finding it.',
       resetMessage:
         'Restore the shipped default for "{name}"? Your edits to this prompt will be lost, and the next call uses the original text.',
+      // What the form says when a field is refused. {named} is the list of
+      // placeholders a code prompt dropped, written as the author types them.
+      validation: {
+        nameMin: 'Name must be at least 2 characters',
+        nameMax: 'Keep the name under 80 characters',
+        keyMax: 'Keep the key under 80 characters',
+        keyPattern: 'Use lowercase letters, numbers, dots and dashes — it goes in a URL',
+        descriptionMax: 'Keep the description under 200 characters',
+        categoryMax: 'Keep the category under 40 characters',
+        modelMax: 'Keep the model under 60 characters',
+        contentMin: 'Add at least 10 characters of prompt content',
+        contentMax: 'Prompt is too long (max 20000 characters)',
+        missingVariables:
+          'Keep {named} in the body — the feature fills them in, and without them it runs with the facts missing.',
+      },
     },
 
     /**

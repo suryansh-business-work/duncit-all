@@ -737,7 +737,9 @@ enrolling partners supply. The same shape serves `createAutoPod` and `updateAuto
 ## Peer dependencies, not dependencies
 
 Everything — `react`, `@mui/material`, `@mui/x-date-pickers`, `react-hook-form`, `zod`,
-`@hookform/resolvers`, `date-fns`, `@apollo/client` and `@duncit/utils` — is a **peer**. The package
+`@hookform/resolvers`, `date-fns`, `@apollo/client`, `@duncit/utils` and `@duncit/media-picker`
+(whose `MediaListRow` is the row the media field renders, imported from
+`@duncit/media-picker/media-list-row`) — is a **peer**. The package
 ships no runtime deps of its own, so a consuming portal must already have all of them; adding this
 package to a portal that lacks `@mui/x-date-pickers` fails at resolve time, not at render.
 

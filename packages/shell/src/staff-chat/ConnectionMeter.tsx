@@ -85,7 +85,7 @@ export default function ConnectionMeter({
               color: "error.main",
               fontWeight: 700
             }}>
-            Slow connection
+            {t('shell.chat.call.slow')}
           </Typography>
         )}
       </Stack>

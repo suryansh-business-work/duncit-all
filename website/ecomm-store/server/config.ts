@@ -26,4 +26,4 @@ export const DIST_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'dis
 /** How long an answer from the API is reused before asking again. */
 export const API_TTL_MS = 60_000;
 
-export const API_TIMEOUT_MS = 2500;
+export const API_TIMEOUT_MS = 5000;

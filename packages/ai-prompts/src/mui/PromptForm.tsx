@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Chip, FormControlLabel, Stack, Switch } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { useTranslation } from '@duncit/app-settings';
 import { usePromptCopy } from '../i18n/useCopy';
 import { estimateTokens } from '../render';
 import { promptFormSchema, promptInitialValues, type PromptFormValues } from '../schema';
@@ -46,7 +47,8 @@ export function PromptForm({
   onContentChange,
 }: Readonly<PromptFormProps>) {
   const copy = usePromptCopy();
-  const schema = useMemo(() => promptFormSchema(variables), [variables]);
+  const { t } = useTranslation();
+  const schema = useMemo(() => promptFormSchema(t, variables), [t, variables]);
   const { control, handleSubmit, watch, formState } = useForm<PromptFormValues, any, PromptFormValues>({
     defaultValues: { ...promptInitialValues, ...initialValues },
     resolver: zodResolver(schema) as unknown as Resolver<PromptFormValues, any, PromptFormValues>,
@@ -122,7 +124,7 @@ export function PromptForm({
             size="small"
             color="primary"
             variant="outlined"
-            label={`≈ ${estimateTokens(content)} tokens`}
+            label={t('ai.settings.tokenCount', { vars: { count: estimateTokens(content) } })}
             data-testid="prompt-token-count"
           />
           {!code && (

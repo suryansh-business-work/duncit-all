@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { useWorkspaceWindow } from '../workspace';
 import ChatSidebar from './ChatSidebar';
 import ChatWindows from './ChatWindows';
-import { useCall } from './useCall';
-import { useCallRecorder } from './useCallRecorder';
+import { useChatCall } from './useChatCall';
 import { useChatState } from './useChatState';
 import { usePanelRestore } from './usePanelRestore';
-import { useRecordingAttach } from './useRecordingAttach';
 import { useStaffChatData } from './useStaffChatData';
 import type { Coworker, StaffMessage } from './queries';
 
@@ -90,59 +88,12 @@ export function StaffChatPanel({
     chat.setOpenPeerId(next?.id ?? null);
   };
 
-  const call = useCall(
-    data.socket,
+  const { call, recorder, callWindowOpen, busyStage } = useChatCall({
     meId,
-    {
-      micId: panel.micId,
-      camId: panel.camId,
-      micLabel: panel.micLabel,
-      camLabel: panel.camLabel,
-      onChoose: chat.setDevice,
-    },
-    data.iceServers
-  );
-  const recorder = useCallRecorder({
-    connected: call.phase === 'connected',
-    localStream: call.localStream,
-    remoteStream: call.remoteStream,
+    data,
+    chat,
+    onRequestOpen,
   });
-
-  /*
-    A call arriving is a reason to show the panel — on the way IN, once.
-
-    Held in a ref so the effect depends on the PHASE and nothing else. With the
-    callback in the dependencies, a caller passing an inline arrow re-ran this
-    on every render, and a phone that is still ringing would reopen the panel
-    the instant anyone closed it. A hook should not be that easy for its caller
-    to break by accident.
-  */
-  const requestOpen = useRef(onRequestOpen);
-  requestOpen.current = onRequestOpen;
-  const incoming = call.phase === 'incoming';
-  useEffect(() => {
-    if (incoming) requestOpen.current?.();
-  }, [incoming]);
-
-  useRecordingAttach({
-    readyUrl: recorder.stage === 'READY' ? recorder.url : null,
-    callId: call.lastCallId,
-    attach: data.attachRecording,
-    onAttached: data.refetchCalls,
-  });
-
-  /** The call window is up for anything that is not "nothing happening". */
-  const callWindowOpen =
-    call.phase !== 'idle' || Boolean(call.error) || recorder.stage !== 'IDLE';
-
-  /**
-   * A recording being saved pins the panel open.
-   *
-   * The upload and the FFmpeg pass run in this component, so closing it while
-   * either is in flight throws the recording away — and it would look exactly
-   * like a successful close.
-   */
-  const busyStage = recorder.stage === 'UPLOADING' || recorder.stage === 'CONVERTING';
 
   /*
     The panel is a running window, so it belongs on the taskbar too.

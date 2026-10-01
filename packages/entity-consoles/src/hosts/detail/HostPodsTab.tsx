@@ -5,7 +5,7 @@ import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import EntityPodsTab from '../../shared/EntityPodsTab';
 import { VENUE_APPROVAL_OPTIONS } from '../../shared/recordPods';
-import { POD_MODE_OPTIONS } from '../../pods/list/podsColumns.values';
+import { podModeOptions } from '../../pods/list/podsColumns.values';
 import { HOST_PODS_TABLE, type HostPodRow } from '../queries';
 
 /**
@@ -50,7 +50,7 @@ export default function HostPodsTab({ userId }: Readonly<{ userId: string }>) {
         field: 'pod_mode',
         headerName: t('directory.hostEditor.colMode'),
         type: 'enum',
-        options: POD_MODE_OPTIONS,
+        options: podModeOptions(t),
         width: 130,
         cellRenderer: renderMode,
         valueGetter: (p) => p.pod_mode,

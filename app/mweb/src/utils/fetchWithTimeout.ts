@@ -10,7 +10,7 @@
  * the point past which no answer is coming, and cutting a slow-but-working
  * checkout short would be worse than the wait.
  */
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 const timeoutMs = Number(import.meta.env.VITE_REQUEST_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
 

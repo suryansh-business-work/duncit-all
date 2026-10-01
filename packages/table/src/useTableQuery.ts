@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from './i18n';
 import type { TableFetch, TableFilterValue, TableQueryState, TableSortDir } from './types';
 
 const SEARCH_DEBOUNCE_MS = 400;
@@ -93,6 +94,11 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
   const seqRef = useRef(0);
   const fetchRef = useRef(fetchRows);
   fetchRef.current = fetchRows;
+  // Read through a ref for the same reason as `fetchRows`: a translator that
+  // changes identity when the catalogue lands must not re-run the fetch.
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
   const appliedSearchRef = useRef('');
 
   // Debounce the raw input into the applied search; cleared on change/unmount.
@@ -150,7 +156,7 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
       })
       .catch((err: unknown) => {
         if (seq !== seqRef.current) return;
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        setError(err instanceof Error ? err.message : tRef.current('shell.table.loadFailed'));
         setLoading(false);
       });
   }, [fetchQuery, reloadTick]);

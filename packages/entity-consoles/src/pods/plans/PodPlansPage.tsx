@@ -64,7 +64,7 @@ export default function PodPlansPage() {
         <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
-          Pod Plans
+          {t('admin.podPlans.title')}
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"

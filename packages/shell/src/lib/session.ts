@@ -1,4 +1,5 @@
 import { emitAuthChanged } from '@duncit/user-context';
+import { fallbackT, type Translate } from '../i18n/fallback';
 
 /** SUPER_ADMIN can access every Duncit console regardless of app role. */
 export const SUPER_ROLE = 'SUPER_ADMIN';
@@ -10,7 +11,12 @@ export interface PortalSession {
   clearToken(): void;
   /** Whether the given roles grant access to this app. */
   hasAppAccess(roles?: readonly string[] | null): boolean;
-  accessDeniedMessage(): string;
+  /**
+   * The sentence shown to an account with no role for this console. Pass the
+   * reader's `t` to say it in their language; without one it is the shipped
+   * English.
+   */
+  accessDeniedMessage(t?: Translate): string;
 }
 
 /**
@@ -46,8 +52,8 @@ export function createSession(tokenKey: string, requiredRoles: string[] = [], fu
       if (roles.includes(SUPER_ROLE)) return true;
       return requiredRoles.some((role) => roles.includes(role));
     },
-    accessDeniedMessage() {
-      return `You do not have access to ${fullName}. Please contact your administrator.`;
+    accessDeniedMessage(t: Translate = fallbackT) {
+      return t('shell.login.accessDenied', { vars: { name: fullName } });
     },
   };
 }

@@ -77,7 +77,7 @@ function overrideMongoDns(reason: string): void {
  * driver cursors (the database backup / restore streams) do not go through
  * Mongoose queries and are deliberately unaffected.
  */
-export const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 30_000;
+export const MONGO_MAX_TIME_MS = Number(process.env.MONGO_MAX_TIME_MS) || 60_000;
 
 /**
  * Warm connections to keep open.
@@ -100,7 +100,9 @@ function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
     // "ServerSelectionTimedOut" failures during startup.
     serverSelectionTimeoutMS: 60_000,
     connectTimeoutMS: 60_000,
-    socketTimeoutMS: 60_000,
+    // Twice MONGO_MAX_TIME_MS's default, so Mongo ends a runaway query itself
+    // before the socket dies under it.
+    socketTimeoutMS: 120_000,
     minPoolSize: MONGO_MIN_POOL_SIZE,
     maxPoolSize: MONGO_MAX_POOL_SIZE,
     family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues

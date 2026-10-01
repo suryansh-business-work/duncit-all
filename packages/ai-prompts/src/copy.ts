@@ -1,7 +1,10 @@
 import type { PromptKind } from './types';
 
 /** The translator the library reads its copy from (rule 38). */
-export type PromptTranslate = (key: string) => string;
+export type PromptTranslate = (
+  key: string,
+  options?: { vars?: Record<string, string | number> },
+) => string;
 
 /**
  * Every label the Prompt Library renders, in one place.

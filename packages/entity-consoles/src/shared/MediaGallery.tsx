@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import { videoSourceUrl } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 import MediaLightbox from './MediaLightbox';
 import { isVideoMedia, type ClubMedia } from '../clubs/detail/types';
 
@@ -15,6 +16,7 @@ interface Props {
 /** A titled card of media thumbnails. Clicking any tile opens the shared
  * lightbox at that position so the admin can review each asset full-size. */
 export default function MediaGallery({ title, icon, items, emptyText }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [index, setIndex] = useState<number | null>(null);
 
   return (
@@ -56,7 +58,7 @@ export default function MediaGallery({ title, icon, items, emptyText }: Readonly
                 key={media.url}
                 role="button"
                 tabIndex={0}
-                aria-label={`Open ${title} ${i + 1}`}
+                aria-label={t('admin.a11y.openMedia', { vars: { title, index: i + 1 } })}
                 onClick={() => setIndex(i)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') setIndex(i);

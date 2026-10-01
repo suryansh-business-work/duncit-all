@@ -1,21 +1,19 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
-export const podIdeaFormSchema = yup.object({
-  title: yup
-    .string()
+export const podIdeaFormSchema = z.object({
+  title: z
+    .string({ error: 'Title is required' })
     .trim()
     .min(3, 'Title must be at least 3 characters')
-    .max(160, 'Title must be 160 characters or fewer')
-    .required('Title is required'),
-  description: yup
-    .string()
+    .max(160, 'Title must be 160 characters or fewer'),
+  description: z
+    .string({ error: 'Description is required' })
     .trim()
     .min(10, 'Description must be at least 10 characters')
-    .max(2001, 'Description must be 2001 characters or fewer')
-    .required('Description is required'),
+    .max(2001, 'Description must be 2001 characters or fewer'),
 });
 
-export type PodIdeaFormValues = yup.InferType<typeof podIdeaFormSchema>;
+export type PodIdeaFormValues = z.infer<typeof podIdeaFormSchema>;
 
 export const podIdeaInitialValues: PodIdeaFormValues = {
   title: '',
@@ -23,5 +21,5 @@ export const podIdeaInitialValues: PodIdeaFormValues = {
 };
 
 export function toPodIdeaInput(values: PodIdeaFormValues) {
-  return podIdeaFormSchema.cast(values, { stripUnknown: true });
+  return { title: values.title.trim(), description: values.description.trim() };
 }

@@ -202,6 +202,8 @@ session.hasAppAccess(null)              // false
 
 session.accessDeniedMessage()
 // 'You do not have access to Duncit Admin. Please contact your administrator.'
+
+session.accessDeniedMessage(t)          // the same sentence (`shell.login.accessDenied`) in the reader's language
 ```
 
 The `SUPER_ADMIN` bypass lives here and nowhere else. A portal writing
@@ -342,7 +344,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 
 | Export | Signature | Returns |
 | --- | --- | --- |
-| `createSession` | `(tokenKey, requiredRoles?, fullName?) => PortalSession` | `{ getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage }`. Defaults: `[]`, `'this console'`. |
+| `createSession` | `(tokenKey, requiredRoles?, fullName?) => PortalSession` | `{ getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage }`. Defaults: `[]`, `'this console'`. `accessDeniedMessage(t?)` takes the reader's translator; without one it answers in the shipped English. |
 | `createAuthed` | `({ getToken, wrap }: CreateAuthedOptions) => (element: JSX.Element) => JSX.Element` | The `authed(element)` route-table helper; `wrap` absorbs per-portal chrome drift. |
 | `createApolloClient` | `(options: CreateApolloClientOptions) => ApolloClient` | Client with `apolloErrorLink` attached. `options.app` names the console (`appConfig.key`) on every request. |
 | `deriveSearchItems` | `(nav: AppNavItem[], section?: string) => SearchItem[]` | Flattened search entries. |

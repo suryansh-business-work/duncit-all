@@ -2,7 +2,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import { DuncitButton } from '@duncit/buttons';
-import MediaRow from './MediaRow';
+import MediaListRow from '@duncit/media-picker/media-list-row';
 import { splitAroundAction, useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -47,6 +47,15 @@ export default function MediaField({ label, value, onChange, helperText, error, 
     );
   }
 
+  // The shared row takes its control names from this form's own namespace, so
+  // the translations entered for `podForm.*` keep applying.
+  const rowLabels = {
+    replace: t('podForm.mediaRow.replace'),
+    moveUp: t('podForm.mediaRow.moveUp'),
+    moveDown: t('podForm.mediaRow.moveDown'),
+    remove: t('podForm.common.remove'),
+  };
+
   const setAt = (i: number, url: string) => {
     const copy = [...items];
     copy[i] = url;
@@ -55,7 +64,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i).join('\n'));
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
-    /* v8 ignore next -- defensive: MediaRow disables the reorder buttons at the list boundaries */
+    /* v8 ignore next -- defensive: MediaListRow disables the reorder buttons at the list boundaries */
     if (j < 0 || j >= items.length) return;
     const copy = [...items];
     [copy[i], copy[j]] = [copy[j], copy[i]];
@@ -109,7 +118,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
       ) : (
         <Stack spacing={1}>
           {items.map((url, i) => (
-            <MediaRow
+            <MediaListRow
               key={`${url}-${i}`}
               url={url}
               index={i}
@@ -117,6 +126,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
               onReplace={() => pickInto(i)}
               onMove={(dir) => move(i, dir)}
               onRemove={() => remove(i)}
+              labels={rowLabels}
             />
           ))}
         </Stack>

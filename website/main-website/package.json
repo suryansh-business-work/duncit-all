@@ -24,13 +24,13 @@
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "animejs": "^4.5.0",
-    "astro": "^7.2.10",
+    "astro": "^7.3.5",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "@vitest/coverage-v8": "^4.1.11",
-    "vite": "^8.2.2",
+    "vite": "^8.3.2",
     "vitest": "^4.1.11"
   }
 }

@@ -15,11 +15,6 @@
  * (rule 34), and it is the difference between one row to translate and sixty.
  */
 export const CATALOGUE_FALLBACK: Record<string, string> = {
-  'email.contentReported.title': 'Your content has been reported',
-  'email.contentReported.body': 'A member reported content you shared. Our team is reviewing it. If we find that it breaks our community guidelines, we will remove it.',
-  'email.contentReported.subject': 'We’re reviewing a report about your content',
-  'email.contentReported.reportRefLabel': 'Report reference',
-  'email.contentReported.footer': 'You’re receiving this because someone reported content you shared on Duncit.',
   // --- Shared field labels -------------------------------------------------
   'email.field.pod': 'Pod',
   'email.field.podTitle': 'Pod',

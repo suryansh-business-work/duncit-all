@@ -7,7 +7,7 @@ import { directReel, type DirectorTurn } from './reel.director';
 import { driveAccountEmail, driveFile, driveFolder, parseDriveFolderId, type DriveEntry } from './reel.drive';
 import { reelMediaLinks, type ReelMediaLinks } from './reel.media';
 import { ReelProjectModel, type IReelProject, type ReelAsset, type ReelMessage } from './reel.model';
-import { emptySpec, sanitizeSpec, specDurationMs } from './reel.spec';
+import { emptySpec, sanitizeSpec, specDurationMs } from './reel.edit';
 
 const badInput = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 const notFound = () => new GraphQLError('That reel no longer exists.', { extensions: { code: 'NOT_FOUND' } });

@@ -12,7 +12,18 @@
  * Entry points (`main.tsx`) and the test files themselves are excluded: one
  * bootstraps a real React root, and the others register their suites on import.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+/**
+ * Remotion's media decoder is stood in for, because it cannot be imported here
+ * at all: `@remotion/media` pulls in `mediabunny` through a path Node's own
+ * resolver refuses ("Cannot find module … did you mean mediabunny.node.cjs"),
+ * where Vite's browser build resolves it without complaint. Without this, the
+ * five Reel Studio modules that reach it fail to load for a reason that says
+ * nothing about them — and the check this suite exists for is their OWN
+ * top-level code.
+ */
+vi.mock('@remotion/media', () => ({ Video: () => null, Audio: () => null }));
 
 const modules = import.meta.glob([
   '../../src/**/*.{ts,tsx}',

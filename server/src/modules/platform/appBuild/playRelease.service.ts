@@ -1,9 +1,9 @@
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { parseServiceAccount } from '@utils/googleServiceAccount';
 import { clip } from '@utils/slack-blocks';
 import { AppBuildModel, type IAppBuild, type PlayStoreTrack } from './appBuild.model';
 import {
-  parseServiceAccount,
   releaseBundle,
   type PlayConfig,
   type PlayTrack,

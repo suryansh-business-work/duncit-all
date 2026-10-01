@@ -12,7 +12,7 @@ import mongoose, { Schema, type Document } from 'mongoose';
  * streamed through a signed route, so a 300 MB clip is not uploaded a second
  * time just to be previewed. Only chat uploads have a URL of their own.
  *
- * The spec is stored as written by `sanitizeSpec` (see `reel.spec.ts`) and is
+ * The spec is stored as written by `sanitizeSpec` (see `reel.edit.ts`) and is
  * sanitized again on the way out, so a project saved before the contract grew
  * a field still reads as a valid reel.
  */

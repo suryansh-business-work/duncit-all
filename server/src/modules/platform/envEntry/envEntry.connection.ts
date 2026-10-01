@@ -9,12 +9,12 @@ import { missingBotScopes } from '@modules/platform/slack/slack.gateway';
 import {
   discardEdit,
   openEdit,
-  parseServiceAccount,
   playAccessToken,
   type PlayServiceAccount,
 } from '@modules/platform/appBuild/googlePlay.gateway';
 import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/appBuild/appStoreConnect.gateway';
 import { probeDriveAccount } from '@modules/ai/reel/reel.drive';
+import { parseServiceAccount } from '@utils/googleServiceAccount';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';

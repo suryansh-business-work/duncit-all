@@ -21,6 +21,9 @@ export interface GoogleServiceAccount {
   private_key: string;
 }
 
+/** A JSON field as text: a string as it is, anything else as nothing. */
+const text = (value: unknown): string => (typeof value === 'string' ? value : '');
+
 /** The JSON key file a service account downloads as, reduced to what signs in. */
 export function parseServiceAccount(json: string): GoogleServiceAccount {
   let parsed: { client_email?: unknown; private_key?: unknown };
@@ -29,8 +32,8 @@ export function parseServiceAccount(json: string): GoogleServiceAccount {
   } catch {
     throw new Error('The service account key is not valid JSON — paste the whole key file Google downloaded.');
   }
-  const client_email = String(parsed.client_email ?? '').trim();
-  const private_key = String(parsed.private_key ?? '').trim();
+  const client_email = text(parsed.client_email).trim();
+  const private_key = text(parsed.private_key).trim();
   if (!client_email || !private_key) {
     throw new Error(
       'The service account key has no client_email or private_key — it is not a service account JSON key.'
@@ -61,10 +64,10 @@ export async function serviceAccountToken(account: GoogleServiceAccount, scope: 
     error_description?: unknown;
   };
   if (!res.ok) {
-    const reason = String(data.error_description ?? data.error ?? 'no reason given');
+    const reason = text(data.error_description) || text(data.error) || 'no reason given';
     throw new Error(`Google refused the service account sign-in (HTTP ${res.status}): ${reason}`);
   }
-  const token = String(data.access_token ?? '');
+  const token = text(data.access_token);
   if (!token) throw new Error('Google answered without an access token.');
   return token;
 }

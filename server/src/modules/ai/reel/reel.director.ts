@@ -3,7 +3,7 @@ import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { logs } from '@observability/log';
 import { driveThumbnail } from './reel.drive';
 import type { ReelAsset, ReelMessage } from './reel.model';
-import { sanitizeSpec, type ReelSpec } from './reel.spec';
+import { sanitizeSpec, type ReelSpec } from './reel.edit';
 
 /**
  * One turn of the Reel Studio editor.

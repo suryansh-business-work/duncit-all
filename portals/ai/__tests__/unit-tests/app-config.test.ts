@@ -24,12 +24,14 @@ describe('Duncit AI app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('lists two destinations and two groups, in that order', () => {
+  it('lists three destinations and three groups, in that order', () => {
     expect(appConfig.nav.map((n) => n.label)).toEqual([
       'Welcome',
       'AI Library',
       'OpenAI',
       'AI Monitoring',
+      'Automation',
+      'Reel Studio',
     ]);
   });
 
@@ -39,13 +41,15 @@ describe('Duncit AI app config', () => {
     const leaves = appConfig.nav.filter((n) => !n.children);
     const groups = appConfig.nav.filter((n) => n.children);
 
-    expect(leaves.map((n) => n.to)).toEqual(['/', '/library']);
+    expect(leaves.map((n) => n.to)).toEqual(['/', '/library', '/reels']);
     expect(groups.every((n) => n.to === undefined)).toBe(true);
     expect(groups.flatMap((n) => n.children!.map((c) => c.to))).toEqual([
       '/openai',
       '/openai/logs',
       '/monitoring',
       '/monitoring/settings',
+      '/automation/whatsapp',
+      '/automation/email',
     ]);
   });
 

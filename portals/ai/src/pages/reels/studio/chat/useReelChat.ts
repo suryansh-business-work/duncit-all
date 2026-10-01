@@ -14,8 +14,8 @@ export interface PendingTurn {
 /** The file's own name out of its address — what the editor is told the picture is called. */
 function fileNameOf(url: string): string {
   try {
-    const last = new URL(url).pathname.split('/').pop() ?? '';
-    return decodeURIComponent(last) || 'image';
+    const path = new URL(url).pathname;
+    return decodeURIComponent(path.slice(path.lastIndexOf('/') + 1)) || 'image';
   } catch {
     return 'image';
   }
@@ -41,16 +41,16 @@ export function useReelChat(projectId: string) {
   const send = useCallback(
     async (text: string, imageUrls: string[]): Promise<boolean> => {
       setPending({ text, imageUrls });
+      let sent = true;
       try {
         const uploads = imageUrls.map((url) => ({ url, name: fileNameOf(url) }));
         await sendMutation({ variables: { input: { project_id: projectId, text, uploads } } });
-        return true;
       } catch (error) {
         notifyError(parseApiError(error, t('ai.reels.chat.sendFailed')));
-        return false;
-      } finally {
-        setPending(null);
+        sent = false;
       }
+      setPending(null);
+      return sent;
     },
     [sendMutation, projectId, t]
   );

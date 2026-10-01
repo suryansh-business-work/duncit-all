@@ -12,6 +12,9 @@ interface Props {
 
 const getRowId = (row: ReelProjectSummary) => row.id;
 
+/** A reel's length, written the way the studio writes it everywhere else. */
+const lengthCell = (row: ReelProjectSummary) => <span>{formatReelDuration(row.duration_ms)}</span>;
+
 export default function ProjectsTable({ rows, onOpen, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -26,7 +29,7 @@ export default function ProjectsTable({ rows, onOpen, onDelete }: Readonly<Props
         width: 110,
         type: 'number',
         valueGetter: (row) => row.duration_ms,
-        cellRenderer: (row) => <span>{formatReelDuration(row.duration_ms)}</span>,
+        cellRenderer: lengthCell,
       },
       { field: 'created_by', headerName: t('ai.reels.list.colCreatedBy'), width: 220, type: 'text', valueGetter: (row) => row.created_by },
       dateColumn<ReelProjectSummary>({ field: 'updated_at', headerName: t('ai.reels.list.colUpdated'), width: 165, hide: false }),

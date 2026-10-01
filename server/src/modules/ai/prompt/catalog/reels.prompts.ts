@@ -12,7 +12,7 @@ const USAGE = [
 
 /**
  * The editor behind AI → Reel Studio. The contract it describes is the one
- * `reel.spec.ts` enforces: whatever the model returns is sanitized against it,
+ * `reel.edit.ts` enforces: whatever the model returns is sanitized against it,
  * so a body edited in the portal can loosen the STYLE of an edit but never
  * produce a reel the player cannot draw.
  */

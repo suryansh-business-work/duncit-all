@@ -1,10 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, openAsBlob } from 'node:fs';
-import {
-  parseServiceAccount,
-  serviceAccountToken,
-  type GoogleServiceAccount,
-} from '@utils/googleServiceAccount';
+import { serviceAccountToken, type GoogleServiceAccount } from '@utils/googleServiceAccount';
 
 /**
  * The Google Play Developer API, as far as releasing one AAB goes.
@@ -43,8 +39,6 @@ export interface PlayBundle {
   versionCode: number;
   sha256: string;
 }
-
-export { parseServiceAccount };
 
 /** What Google said, in one line, without the credential. */
 function googleError(status: number, data: any): Error {

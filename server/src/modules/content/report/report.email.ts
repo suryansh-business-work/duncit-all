@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { escapeHtml } from '@utils/html';
 
@@ -37,3 +39,46 @@ export async function sendContentReportMessage(input: ReportMessageInput): Promi
   return null;
 }
 
+
+/** The automatic emails a report sends — one template per moment, see catalogue.contentReport. */
+export type ReportNoticeTemplate =
+  | 'content-report-received'
+  | 'content-report-actioned'
+  | 'content-report-dismissed'
+  | 'content-removed-owner';
+
+export interface ReportNotice {
+  template: ReportNoticeTemplate;
+  userId: Types.ObjectId | string | null;
+  report_no: string;
+  /** The report category's current name. */
+  reason: string;
+}
+
+/**
+ * Send a report's automatic email to one person.
+ *
+ * The address and first name are read from the account here, so no caller
+ * carries anybody's email. An account with no address is skipped. Never
+ * throws: a mail that fails must not undo the report or the verdict it is
+ * about, and sendEmail already records every outcome in the email log.
+ */
+export async function sendReportNotice(notice: ReportNotice): Promise<void> {
+  if (!notice.userId) return;
+  const user = await UserModel.findById(notice.userId)
+    .select('auth.email profile.first_name')
+    .lean<{ auth?: { email?: string }; profile?: { first_name?: string } }>();
+  const to = user?.auth?.email?.trim();
+  if (!to) return;
+  await sendEmail({
+    to,
+    subject: notice.report_no,
+    template: notice.template,
+    category: 'legal',
+    vars: {
+      name: user?.profile?.first_name?.trim() || 'there',
+      report_no: notice.report_no,
+      reason: notice.reason,
+    },
+  });
+}

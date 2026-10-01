@@ -13,7 +13,7 @@ import {
   type ReportStatus,
   type ReportTargetType,
 } from './contentReport.model';
-import { sendContentReportMessage } from './report.email';
+import { sendContentReportMessage, sendReportNotice, type ReportNotice } from './report.email';
 import { reportCategoryService } from './reportCategory.service';
 
 function fail(code: string, msg: string): never {
@@ -109,6 +109,36 @@ async function contextFor(docs: readonly IContentReport[]): Promise<ReportContex
 }
 
 const pubOne = async (doc: IContentReport) => toPub(doc, await contextFor([doc]));
+
+/**
+ * Send a report's automatic emails without holding up the request that caused
+ * them. A mail that fails is logged and never undoes the report or verdict.
+ */
+function sendNotices(notices: readonly ReportNotice[]) {
+  for (const notice of notices) {
+    sendReportNotice(notice).catch((error: unknown) => {
+      logs.server.error('report.service', 'notice-failed', {
+        template: notice.template,
+        report_no: notice.report_no,
+        error,
+      });
+    });
+  }
+}
+
+/** One reporter's notice per report a verdict moved. */
+async function reporterNotices(
+  docs: readonly IContentReport[],
+  template: 'content-report-actioned' | 'content-report-dismissed'
+): Promise<ReportNotice[]> {
+  const labels = await reportCategoryService.labelMap();
+  return docs.map((doc) => ({
+    template,
+    userId: doc.reporter_id,
+    report_no: doc.report_no ?? '',
+    reason: labels.get(doc.reason) ?? doc.reason,
+  }));
+}
 
 /**
  * Allowlists for the shared table engine (contentReportsTable — DUNCIT TABLE
@@ -209,7 +239,7 @@ async function closeTarget(acted: IContentReport, handlerId: string, verdict: Ve
     for (const doc of siblings) doc.target_removed_at = now;
   }
   await Promise.all((verdict.removed ? siblings : moved).map((doc) => doc.save()));
-  return moved.length;
+  return moved;
 }
 
 export const reportService = {
@@ -275,6 +305,16 @@ export const reportService = {
       target_type: created.target_type,
       reason: created.reason,
     });
+    // A first report only: a repeat is an edit, and mailing again would read
+    // as a second report.
+    sendNotices([
+      {
+        template: 'content-report-received',
+        userId: created.reporter_id,
+        report_no: created.report_no ?? '',
+        reason: category.label,
+      },
+    ]);
     return { id: String(created.id), report_no: created.report_no ?? '' };
   },
 
@@ -355,7 +395,7 @@ export const reportService = {
 
     const removed = await postService.takeDown(doc.target_id.toString());
     if (!removed) fail('CONFLICT', 'This content is already gone, so there is nothing to take down');
-    const closed = await closeTarget(doc, handlerId, {
+    const moved = await closeTarget(doc, handlerId, {
       status: 'ACTIONED',
       action: 'TAKEN_DOWN',
       note: cleanNote(note),
@@ -364,8 +404,16 @@ export const reportService = {
     logs.server.info('report.service', 'takeDown', {
       report_no: doc.report_no,
       target_type: doc.target_type,
-      closed,
+      closed: moved.length,
     });
+    // Every reporter whose report this closed, and the owner once — under the
+    // report the reviewer acted on, which is the reference Legal will quote.
+    const notices = await reporterNotices(moved, 'content-report-actioned');
+    const [ownerNotice] = await reporterNotices([doc], 'content-report-actioned');
+    sendNotices([
+      ...notices,
+      { ...ownerNotice, template: 'content-removed-owner', userId: doc.target_owner_id },
+    ]);
     return this.getById(id);
   },
 
@@ -375,12 +423,14 @@ export const reportService = {
     if (doc.target_removed_at) {
       fail('CONFLICT', 'This content was taken down, so it cannot be marked as fine');
     }
-    await closeTarget(doc, handlerId, {
+    const moved = await closeTarget(doc, handlerId, {
       status: 'DISMISSED',
       action: 'LOOKS_GOOD',
       note: cleanNote(note),
       removed: false,
     });
+    // The owner is not written to: they were never told about the report.
+    sendNotices(await reporterNotices(moved, 'content-report-dismissed'));
     return this.getById(id);
   },
 

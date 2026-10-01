@@ -682,7 +682,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       referrals: 'Referrals',
       regionStructure: 'Region Structure',
       reminders: 'Reminders',
-      reportByUser: 'Report By User',
+      ugcMonitoring: 'UGC Monitoring',
       blocked: 'Blocked',
       reportedProblems: 'Reported Problems',
       roles: 'Roles',

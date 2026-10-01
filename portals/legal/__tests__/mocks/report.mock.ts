@@ -1,6 +1,6 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import type { ContentReport } from '@duncit/gql-types';
-import { UPDATE_CONTENT_REPORT_STATUS } from '../../src/graphql/reports';
+import { REPORT_CATEGORIES_TABLE, UPDATE_CONTENT_REPORT_STATUS } from '../../src/graphql/reports';
 
 /**
  * Content-report mocks: the `ContentReportFields` projection the Legal queue
@@ -18,6 +18,7 @@ export type ContentReportMock = Pick<
   | 'target_preview_url'
   | 'target_caption'
   | 'reason'
+  | 'reason_label'
   | 'details'
   | 'reporter_name'
   | 'target_owner_name'
@@ -25,6 +26,10 @@ export type ContentReportMock = Pick<
   | 'resolution'
   | 'resolved_at'
   | 'handled_by_name'
+  | 'target_live'
+  | 'target_removed_at'
+  | 'report_count'
+  | 'history'
   | 'created_at'
   | 'updated_at'
 > & { __typename: 'ContentReport' };
@@ -39,6 +44,7 @@ export const makeContentReport = (over: Partial<ContentReportMock> = {}): Conten
   target_preview_url: 'https://ik.imagekit.io/duncit/stories/court-2.jpg',
   target_caption: 'Saturday doubles at Court 2',
   reason: 'SPAM',
+  reason_label: 'Spam or misleading',
   details: 'Keeps posting the same promo link.',
   reporter_name: 'Asha Rao',
   target_owner_name: 'Rahul Mehta',
@@ -46,9 +52,21 @@ export const makeContentReport = (over: Partial<ContentReportMock> = {}): Conten
   resolution: '',
   resolved_at: null,
   handled_by_name: '',
+  target_live: true,
+  target_removed_at: null,
+  report_count: 1,
+  history: [],
   created_at: ISO,
   updated_at: ISO,
   ...over,
+});
+
+/** The categories the queue's Reason filter lists — none, which is enough to render. */
+export const reportCategoriesMock = (): MockedResponse => ({
+  request: { query: REPORT_CATEGORIES_TABLE, variables: () => true },
+  result: {
+    data: { reportCategoriesTable: { __typename: 'ReportCategoryTablePage', total: 0, rows: [] } },
+  },
 });
 
 export const updateReportStatusMock = (

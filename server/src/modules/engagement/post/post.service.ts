@@ -275,6 +275,39 @@ export const postService = {
   },
 
   /**
+   * Legal's removal of a reported post or story.
+   *
+   * No viewer check, unlike `remove`: the caller is the report module, which
+   * has already established that a Legal reviewer asked for it. Answers false
+   * when there was nothing left to remove — a story that expired, or a post
+   * its author deleted first — so the report can still be closed.
+   */
+  async takeDown(id: string): Promise<boolean> {
+    assertId(id);
+    const result = await PostModel.deleteOne({ _id: new Types.ObjectId(id) });
+    return result.deletedCount > 0;
+  },
+
+  /**
+   * Which of these posts and stories are still up, in ONE query.
+   *
+   * The Legal queue asks this for a whole page of reports at once; a lookup
+   * per row would be a query per row. An expired story counts as gone even
+   * before the TTL sweep reaches it, for the same reason every by-id read does.
+   */
+  async liveIds(ids: readonly string[]): Promise<Set<string>> {
+    const valid = ids.filter((id) => Types.ObjectId.isValid(id));
+    if (valid.length === 0) return new Set();
+    const docs = await PostModel.find({
+      _id: { $in: valid.map((id) => new Types.ObjectId(id)) },
+      $or: [{ expires_at: null }, { expires_at: { $gt: new Date() } }],
+    })
+      .select('_id')
+      .lean();
+    return new Set(docs.map((doc) => doc._id.toString()));
+  },
+
+  /**
    * Record that `viewerId` opened story `id`. Idempotent (a viewer is stored
    * once) and the author's own views never count — so `seen_by_me` stays false
    * for the owner and the viewers list excludes them (Bugs 2 & 4).

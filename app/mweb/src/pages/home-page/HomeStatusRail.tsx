@@ -179,6 +179,7 @@ export default function HomeStatusRail({
         onNext={pinnedOpen ? undefined : goNext}
         onPrev={pinnedOpen ? undefined : goPrev}
         onDelete={activeKind === 'mine' ? setPendingDelete : undefined}
+        canReport={activeKind === 'user' || activeKind === 'club'}
         onViewers={activeKind === 'mine' ? setViewersStoryId : undefined}
         onToggleLike={activeKind === 'user' ? handleLike : undefined}
         onRecordView={recordViewOf}

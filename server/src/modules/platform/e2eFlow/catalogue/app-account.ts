@@ -1361,18 +1361,29 @@ export const APP_ACCOUNT_FLOWS: readonly CatalogueFlow[] = [
   {
     name: 'App: Report Content',
     description:
-      'Reporting a club story to the Legal team from the story viewer on mWeb (club page) and native. Stories are the only reportable content in the app today.',
+      'Reporting user-generated content — a post or a story — to the Legal team from its 3-dot menu on mWeb and native. The reasons offered are the report categories managed in Legal > UGC Monitoring > Settings.',
     sub_flows: [
       {
         name: 'Report a club story',
         description: 'Any signed-in viewer can report an open story.',
         steps: [
           ['Open a club page and open a story in the viewer', 'A story options menu is available on the open story'],
-          ['Choose "Report story"', 'The "Report this story" dialog lists reasons (Spam or misleading, Nudity or sexual content, Harassment or bullying, …, Something else), a details box, "Cancel" and "Submit report"'],
+          ['Choose "Report story"', 'The "Report this story" dialog lists the report categories managed in Legal > UGC Monitoring > Settings (Spam or misleading, Nudity or sexual content, Harassment or bullying, …, Something else), a details box, "Cancel" and "Submit report"'],
           ['Tap "Submit report" with no reason', '"Pick a reason first" shows'],
           ['Pick "Something else" with empty details and submit', '"Tell us what is wrong with this content" shows'],
-          ['Pick "Spam or misleading" and submit', 'A toast "Thanks — our Legal team will review this" shows and the report appears in Legal > Report By User as Received'],
+          ['Pick "Spam or misleading" and submit', 'A toast "Thanks — our Legal team will review this" shows and the report appears in Legal > UGC Monitoring as Received'],
           ['Report the same story again', 'The existing report is updated rather than a second one filed'],
+        ],
+      },
+      {
+        name: 'Report a post',
+        description: 'Any signed-in viewer can report another member’s post from the full post view.',
+        steps: [
+          ['Open another member’s profile and tap a post', 'The full post view opens with the like button, the comment thread and the comment box'],
+          ['Tap the 3-dot "Post options" button', 'The menu shows "Report post"; on your own post it shows "Delete post" instead'],
+          ['Tap "Report post"', 'The "Report this post" dialog lists the same report categories as a story report'],
+          ['Pick a category that requires a description, leave the details empty and submit', '"Tell us what is wrong with this content" shows'],
+          ['Pick "Spam or misleading" and submit', 'The dialog closes and the report appears in Legal > UGC Monitoring with target Post and status Received'],
         ],
       },
     ],

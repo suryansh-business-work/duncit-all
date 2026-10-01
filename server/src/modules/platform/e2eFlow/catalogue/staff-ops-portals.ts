@@ -14,7 +14,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Sign in to legal.duncit.com with an account that has no LEGAL_MANAGER role', 'Access is refused by the shell and no legal page renders'],
           ['Call a legal query such as legalDocumentsTable with that account token', 'The server answers FORBIDDEN; legal resolvers allow only SUPER_ADMIN and LEGAL_MANAGER'],
-          ['Sign in with a LEGAL_MANAGER account', 'The Legal Dashboard opens at / with the nav: Dashboard, Documents, Policies, Policy Acceptance Logs, Contracts, Report By User, Grievance'],
+          ['Sign in with a LEGAL_MANAGER account', 'The Legal Dashboard opens at / with the nav: Dashboard, Documents, Policies, Policy Acceptance Logs, Contracts, UGC Monitoring, Grievance'],
         ],
       },
       {
@@ -235,20 +235,62 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
     ],
   },
   {
-    name: 'Legal: Report By User',
-    description: 'Queue of content reports filed from the app and mWeb, at /reports.',
+    name: 'Legal: UGC Monitoring',
+    description: 'Reported posts and stories from the app and mWeb, and the report categories the app offers, at /ugc-monitoring.',
     sub_flows: [
       {
         name: 'Review and action a content report',
         description: 'Open a report, set status and a resolution note.',
         steps: [
-          ['Open /reports', 'Header "Report By User" with columns Report ID, Reported, Reason, Reported by, Posted by, Status, Received, Actions; empty text "Nobody has reported anything yet."'],
+          ['Open /ugc-monitoring', 'Header "UGC Monitoring" with tabs "Reported content" and "Settings"; the Reported content table has columns Report ID, Reported, Reason, Reported by, Posted by, Reports, Content, Status, Received, Actions; empty text "Nobody has reported anything yet."'],
           ['Search by report ID', 'The matching report row is shown'],
-          ['Click Open on a report', 'Dialog "Report <report_no>" with target type and received time, "What was reported" preview, Reason, "In the reporter’s words"'],
+          ['Click Open on a report', 'Dialog "Report <report_no>" with target type and received time, a Live / Taken down / No longer available chip, the four action buttons, "What was reported" preview, Reason, "In the reporter’s words" and the Activity log'],
           ['Open a report without captured preview', '"No preview was captured for this report." shows'],
           ['Set Status to "In review", add a note in "What we did about it", click Save', 'The dialog closes and the row status chip reads "In review"'],
           ['Reopen and set Status to "Actioned" and save', 'Status chip reads "Actioned"; other statuses available are Received and Dismissed'],
           ['Force the save to fail (e.g. revoked role)', 'Error alert shows the API error or "Could not update this report"'],
+        ],
+      },
+      {
+        name: 'Take reported content down',
+        description: 'Remove a reported post or story for everyone and close its reports.',
+        steps: [
+          ['Click "Take down" on a row whose Content chip reads "Live"', 'Dialog "Take this content down?" shows a warning that it cannot be brought back, the preview and a Note field'],
+          ['Add a note and click "Take down"', 'A toast "Content taken down" shows; the row reads Status "Actioned" and Content "Taken down", and every other open report on the same content is Actioned too'],
+          ['Open the post or story in the app', 'It is gone for everyone'],
+          ['Look at the same row again', 'The "Take down" and "Looks good" buttons are disabled'],
+        ],
+      },
+      {
+        name: 'Mark reported content as fine',
+        description: 'Dismiss the reports on content that breaks no rule.',
+        steps: [
+          ['Click "Looks good" on a row with status Received', 'Dialog "Mark this content as fine?" explains the content stays up and open reports are dismissed'],
+          ['Click "Looks good"', 'A toast "Reports closed as fine" shows; the row reads Status "Dismissed" and Content "Live"'],
+        ],
+      },
+      {
+        name: 'Mail the reporter or the content owner',
+        description: 'Write to either person about a report.',
+        steps: [
+          ['Click "Mail reporter" on a row', 'Dialog "Mail the reporter" names who it goes to and the report reference, with Subject and Message fields'],
+          ['Click "Send mail" with both fields empty', '"Add a subject" and "Write a message" show under the fields'],
+          ['Fill both and click "Send mail"', 'A toast "Mail sent" shows; the email arrives from Duncit Legal quoting the report reference, and the Activity log of the report gains "Mailed the reporter" with the subject and message'],
+          ['Click "Mail owner" and send', 'The content owner receives the mail and the Activity log gains "Mailed the content owner"'],
+          ['Mail a person whose account has no email address', 'Error alert "This person has no email address on their account"'],
+        ],
+      },
+      {
+        name: 'Manage report categories',
+        description: 'Decide which reasons the report dialog offers in the app and mWeb.',
+        steps: [
+          ['Open the "Settings" tab', 'Header "Report categories" with an "Add category" button and a table with columns Order, Category, Description from reporter, Shown in app, Updated, Actions'],
+          ['Click "Add category", leave the name empty and click Save', '"Give the category a name" shows'],
+          ['Enter "Copyright issue", turn on "Ask the reporter to describe the problem" and Save', 'A toast "Category saved" shows and the category is listed last'],
+          ['Open the report dialog in the app or mWeb', 'The new category is offered, and it requires a description'],
+          ['Edit the category and switch off "Show in the report dialog"', 'The category leaves the report dialog in the app; reports already filed under it keep it'],
+          ['Delete a category that reports were filed under', 'Error "Reports were filed under this category. Switch it off instead of deleting it."'],
+          ['Delete a category nobody has used', 'A toast "Category deleted" shows and the row is gone'],
         ],
       },
     ],

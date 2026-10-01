@@ -7,6 +7,7 @@ import { CLUB_ADMIN_EMAILS, ECOMM_EMAILS, HOST_EMAILS, VENUE_EMAILS } from './ca
 import { COMMERCE_EMAILS, SECURITY_EMAILS, SUPPORT_EMAILS } from './catalogue.support';
 import { RECEIPT_EMAILS } from './catalogue.receipts';
 import { GRIEVANCE_EMAILS } from './catalogue.grievance';
+import { CONTENT_REPORT_EMAILS } from './catalogue.contentReport';
 import { STORE_EMAILS } from './catalogue.store';
 import { ANALYTICS_EMAILS } from './catalogue.analytics';
 import { AUTOMATION_EMAILS } from './catalogue.automation';
@@ -38,6 +39,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...RECEIPT_EMAILS,
   ...STORE_EMAILS,
   ...GRIEVANCE_EMAILS,
+  ...CONTENT_REPORT_EMAILS,
   ...ANALYTICS_EMAILS,
   ...AUTOMATION_EMAILS,
   ...APP_BUILD_EMAILS,

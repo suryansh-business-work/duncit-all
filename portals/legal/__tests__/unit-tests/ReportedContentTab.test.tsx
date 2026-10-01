@@ -2,9 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { notifySuccess } from '@duncit/dialogs';
-import UserReportsPage from '../../src/pages/reports/UserReportsPage';
+import ReportedContentTab from '../../src/pages/ugc-monitoring/reported/ReportedContentTab';
 import { renderWithProviders } from '../testkit';
-import { makeContentReport, updateReportStatusErrorMock, updateReportStatusMock } from '../mocks';
+import {
+  makeContentReport,
+  reportCategoriesMock,
+  updateReportStatusErrorMock,
+  updateReportStatusMock,
+} from '../mocks';
 import { __setTableRows } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
@@ -26,6 +31,7 @@ const VIDEO = makeContentReport({
   target_preview_url: 'https://ik.imagekit.io/duncit/posts/rally.mp4?tr=orig',
   target_caption: '',
   reason: 'OTHER',
+  reason_label: 'Something else',
   details: '',
   reporter_name: '',
   target_owner_name: '',
@@ -40,7 +46,9 @@ const NO_PREVIEW = makeContentReport({
   status: 'ACTIONED',
 });
 
-const renderPage = (mocks: MockedResponse[] = []) => renderWithProviders(<UserReportsPage />, { mocks });
+// The tab also reads the report categories, for the Reason filter's options.
+const renderPage = (mocks: MockedResponse[] = []) =>
+  renderWithProviders(<ReportedContentTab />, { mocks: [reportCategoriesMock(), ...mocks] });
 
 const openRow = async (index: number) => {
   await screen.findByText('RPT-000123');
@@ -53,7 +61,7 @@ beforeEach(() => {
   __setTableRows([PHOTO, VIDEO, NO_PREVIEW]);
 });
 
-describe('UserReportsPage — the queue', () => {
+describe('ReportedContentTab — the queue', () => {
   it('shows each report with its snapshot and status', async () => {
     renderPage();
     await screen.findByText('RPT-000123');
@@ -70,7 +78,7 @@ describe('UserReportsPage — the queue', () => {
   });
 });
 
-describe('UserReportsPage — the dialog', () => {
+describe('ReportedContentTab — the dialog', () => {
   it('shows a photo snapshot with its caption and the people involved', async () => {
     renderPage();
     const dialog = await openRow(0);

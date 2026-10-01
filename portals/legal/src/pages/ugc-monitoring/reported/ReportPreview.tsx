@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
-import type { ContentReport } from '../../graphql/reports';
+import type { ContentReport } from '../../../graphql/reports';
 
 const VIDEO_RE = /\.(mp4|mov|webm)(\?|$)/i;
 

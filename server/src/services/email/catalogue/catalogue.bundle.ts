@@ -76,6 +76,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.label.giftCard': 'Gift card',
   'email.label.signIn': 'Sign-in',
   'email.label.grievance': 'Grievance',
+  'email.label.report': 'Report',
 
   // --- Shared buttons ------------------------------------------------------
   'email.cta.viewPod': 'View the pod',
@@ -408,6 +409,13 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.grievanceRejected.title': 'About your grievance',
   'email.grievanceRejected.body':
     'Our Grievance Officer has reviewed your grievance and closed it without action. The reason is below.',
+
+  // --- Content reports: a Legal reviewer writing about one ---------------------
+  'email.contentReportMessage.title': 'About a content report',
+  'email.contentReportMessage.body':
+    'Our Legal team is writing to you about content that was reported on Duncit. Their message is below.',
+  'email.contentReportMessage.help':
+    'Reply to this email if you want to tell us more, and quote the report reference so we can find it.',
 
   // --- Security ----------------------------------------------------------------
   'email.recentAccountLogin.title': 'A new sign-in to your account',

@@ -52,8 +52,10 @@ export function PublicProfileScreen() {
   const {
     user,
     isOwner,
+    meId,
     badges,
     posts,
+    reloadPosts,
     stories,
     canView,
     followStatus,
@@ -112,6 +114,8 @@ export function PublicProfileScreen() {
           authorPhoto={user.profile_photo}
           isHost={Boolean(user.is_host)}
           isOwner={isOwner}
+          meId={meId}
+          onPostsChanged={reloadPosts}
         />
       </RefreshScrollView>
     );

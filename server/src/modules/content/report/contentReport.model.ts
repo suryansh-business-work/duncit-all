@@ -19,30 +19,39 @@ export const REPORT_TARGET_TYPES: ReportTargetType[] = [
   'PRODUCT',
 ];
 
-/** Why the reporter says it should not be there. */
-export type ReportReason =
-  | 'SPAM'
-  | 'NUDITY'
-  | 'VIOLENCE'
-  | 'HATE'
-  | 'HARASSMENT'
-  | 'MISINFORMATION'
-  | 'SCAM'
-  | 'OTHER';
-export const REPORT_REASONS: ReportReason[] = [
-  'SPAM',
-  'NUDITY',
-  'VIOLENCE',
-  'HATE',
-  'HARASSMENT',
-  'MISINFORMATION',
-  'SCAM',
-  'OTHER',
-];
-
 /** Where the Legal team has taken it. */
 export type ReportStatus = 'RECEIVED' | 'IN_REVIEW' | 'ACTIONED' | 'DISMISSED';
 export const REPORT_STATUSES: ReportStatus[] = ['RECEIVED', 'IN_REVIEW', 'ACTIONED', 'DISMISSED'];
+
+/**
+ * Something a reviewer did to a report, in the order it happened.
+ *
+ * TAKEN_DOWN and LOOKS_GOOD are the two verdicts; the MAIL pair records that
+ * somebody was written to (and what was said), because "did we tell them?" is
+ * the first question asked when a take-down is disputed.
+ */
+export type ReportActionType =
+  | 'TAKEN_DOWN'
+  | 'LOOKS_GOOD'
+  | 'MAIL_REPORTER'
+  | 'MAIL_OWNER'
+  | 'STATUS_CHANGED';
+export const REPORT_ACTION_TYPES: ReportActionType[] = [
+  'TAKEN_DOWN',
+  'LOOKS_GOOD',
+  'MAIL_REPORTER',
+  'MAIL_OWNER',
+  'STATUS_CHANGED',
+];
+
+export interface IReportAction {
+  _id: Types.ObjectId;
+  action: ReportActionType;
+  by: Types.ObjectId;
+  at: Date;
+  /** The reviewer's note, or the message that was mailed. */
+  note: string;
+}
 
 export interface IContentReport extends Document {
   /** The permanent handle: RPT-000001. Minted on insert, never reused. */
@@ -63,8 +72,14 @@ export interface IContentReport extends Document {
    */
   target_preview_url: string;
   target_caption: string;
-  reason: ReportReason;
-  /** The reporter's own words. Required when the reason is OTHER. */
+  /**
+   * The `key` of the report category the reporter picked.
+   *
+   * A string, not an enum: the categories are data Legal manages (see
+   * `reportCategory.model`), so a new one must not need a schema change.
+   */
+  reason: string;
+  /** The reporter's own words. Required when the category says so. */
   details: string;
   reporter_id: Types.ObjectId;
   status: ReportStatus;
@@ -72,6 +87,10 @@ export interface IContentReport extends Document {
   resolution: string;
   handled_by: Types.ObjectId | null;
   resolved_at: Date | null;
+  /** Stamped when Legal took the reported content down. */
+  target_removed_at: Date | null;
+  /** Everything reviewers did to this report, oldest first. Staff-only. */
+  history: IReportAction[];
   created_at: Date;
   updated_at: Date;
 }
@@ -85,13 +104,25 @@ const contentReportSchema = new Schema<IContentReport>(
     club_id: { type: Schema.Types.ObjectId, ref: 'Club', default: null, index: true },
     target_preview_url: { type: String, default: '', trim: true, maxlength: 2000 },
     target_caption: { type: String, default: '', trim: true, maxlength: 2000 },
-    reason: { type: String, enum: REPORT_REASONS, required: true, index: true },
+    reason: { type: String, required: true, trim: true, uppercase: true, index: true },
     details: { type: String, default: '', trim: true, maxlength: 2000 },
     reporter_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: REPORT_STATUSES, default: 'RECEIVED', index: true },
     resolution: { type: String, default: '', trim: true, maxlength: 5000 },
     handled_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     resolved_at: { type: Date, default: null },
+    target_removed_at: { type: Date, default: null },
+    history: {
+      type: [
+        {
+          action: { type: String, enum: REPORT_ACTION_TYPES, required: true },
+          by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+          at: { type: Date, required: true },
+          note: { type: String, default: '', trim: true, maxlength: 5000 },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

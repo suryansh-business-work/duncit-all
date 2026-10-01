@@ -32,6 +32,9 @@ export type PublicProfileStory = PostsData['stories'][number];
 export function usePublicProfile(userId: string) {
   const [user, setUser] = useState<PublicProfileUser | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  // The signed-in viewer — the post viewer needs it to offer Delete on their
+  // own posts and to open the comment box.
+  const [meId, setMeId] = useState<string | undefined>(undefined);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('NONE');
   const [followBusy, setFollowBusy] = useState(false);
   const [answerBusy, setAnswerBusy] = useState(false);
@@ -64,6 +67,7 @@ export function usePublicProfile(userId: string) {
     const owner = !!d.me?.user_id && d.me.user_id === profile?.user_id;
     setUser(profile);
     setIsOwner(owner);
+    setMeId(d.me?.user_id ?? undefined);
     setFollowStatus(profile ? readFollowStatus(profile) : 'NONE');
     setCanView(owner || profile?.can_view_content !== false);
   }, [userId]);
@@ -137,8 +141,10 @@ export function usePublicProfile(userId: string) {
   return {
     user,
     isOwner,
+    meId,
     badges,
     posts,
+    reloadPosts: loadPosts,
     stories,
     canView,
     followStatus,

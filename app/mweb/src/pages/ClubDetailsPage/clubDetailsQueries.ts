@@ -164,13 +164,3 @@ export const DELETE_CLUB_STORY = gql`
     deletePost(post_doc_id: $id)
   }
 `;
-
-/** Flag a story for the Legal team. Open to any signed-in viewer. */
-export const REPORT_STORY = gql`
-  mutation ReportStory($id: ID!, $reason: ReportReason!, $details: String) {
-    reportStory(post_doc_id: $id, reason: $reason, details: $details) {
-      id
-      report_no
-    }
-  }
-`;

@@ -76,6 +76,7 @@ export const LABEL = {
   giftCard: 'email.label.giftCard',
   signIn: 'email.label.signIn',
   grievance: 'email.label.grievance',
+  report: 'email.label.report',
 } as const;
 
 /** Button captions. One per action, never one per template. */

@@ -236,10 +236,10 @@ export const APP_SOCIAL_COMMERCE_FLOWS: readonly CatalogueFlow[] = [
         description: 'Any signed-in viewer can report a club story to the Legal team; a repeat report edits the reporter\'s existing report.',
         steps: [
           ['Open a club story and tap the 3-dot "Story options" button', 'The menu shows "Report story" (and "Delete story" only if you may delete it)'],
-          ['Tap "Report story"', 'The "Report this story" dialog opens with "What is wrong?" and eight reasons starting with "Spam or misleading"'],
+          ['Tap "Report story"', 'The "Report this story" dialog opens with "What is wrong?" and the report categories from Legal > UGC Monitoring > Settings, starting with "Spam or misleading"'],
           ['Tap "Submit report" without choosing a reason', 'An error says "Pick a reason first"'],
           ['Choose "Harassment or bullying" and tap "Submit report"', 'A toast says "Thanks — our Legal team will review this" and the dialog closes'],
-          ['Check the Legal portal "Report By User" queue', 'A report RPT-###### with target Story, status Received and a copy of the media and caption is listed'],
+          ['Check the Legal portal "UGC Monitoring" queue', 'A report RPT-###### with target Story, status Received and a copy of the media and caption is listed'],
           ['Report the same story again with a different reason', 'The existing report is updated; no second row is created'],
         ],
       },

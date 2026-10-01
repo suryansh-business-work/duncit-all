@@ -3,6 +3,7 @@ import { mergeSx } from '@duncit/ui';
 import { useTranslation } from './i18n';
 import { tabIds } from './tabPanelProps';
 import { TabSearchField } from './TabSearchField';
+import { useTabSearchDefault } from './tabSearchDefault';
 import type { DuncitTabsState, TabValue } from './types';
 import { useTabSearch } from './useTabSearch';
 
@@ -16,9 +17,10 @@ export interface DuncitTabsProps<T extends TabValue>
    */
   idPrefix?: string;
   /**
-   * The search box at the head of the strip. On by default, so every strip
-   * filters the same way; pass `false` for one that would be worse for it —
-   * a two-tab segmented control has nothing to search.
+   * The search box at the head of the strip. Left out, the strip follows its
+   * surface (`TabSearchDefaultProvider`): on in the portals, off in mWeb. Pass
+   * `false` for a strip that would be worse for it — a two-tab segmented
+   * control has nothing to search.
    */
   searchable?: boolean;
   /** Placeholder override, when "Search tabs" is not what this strip holds. */
@@ -52,7 +54,8 @@ const NO_MATCH_SX = { flexShrink: 0, color: 'text.secondary', '&:empty': { displ
  *    inserted;
  *  - the strip carries its own debounced search, which filters the TABS
  *    client-side (see `filterTabItems`). The open tab is never filtered away,
- *    so the panel below always still has its tab.
+ *    so the panel below always still has its tab. A surface turns the box off
+ *    for all of its strips at once with `TabSearchDefaultProvider` — mWeb does.
  *
  * Pair it with `useTabParam` for a strip that owns its selection:
  *
@@ -66,12 +69,14 @@ export function DuncitTabs<T extends TabValue>({
   value,
   onChange,
   idPrefix,
-  searchable = true,
+  searchable: searchableProp,
   searchPlaceholder,
   sx,
   ...tabsProps
 }: Readonly<DuncitTabsProps<T>>) {
   const { t } = useTranslation();
+  const surfaceDefault = useTabSearchDefault();
+  const searchable = searchableProp ?? surfaceDefault;
   const search = useTabSearch(items, value);
   const shown = searchable ? search.visible : items;
   const stripSx = searchable ? mergeSx(STRIP_SX, sx) : sx;

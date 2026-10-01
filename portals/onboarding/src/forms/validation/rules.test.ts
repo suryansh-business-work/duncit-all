@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { validationRules } from './rules';
 
-const ok = (schema: { isValidSync: (v: unknown) => boolean }, value: unknown) =>
-  schema.isValidSync(value);
+const ok = (schema: { safeParse: (v: unknown) => { success: boolean } }, value: unknown) =>
+  schema.safeParse(value).success;
 
 describe('validationRules', () => {
   it('personName accepts names and rejects junk', () => {
@@ -11,7 +11,7 @@ describe('validationRules', () => {
   });
 
   it('optionalText caps length and defaults empty', () => {
-    expect(validationRules.optionalText('T', 5).cast(undefined)).toBe('');
+    expect(validationRules.optionalText('T', 5).parse(undefined)).toBe('');
     expect(ok(validationRules.optionalText('T', 5), 'toolong!!')).toBe(false);
   });
 
@@ -19,15 +19,18 @@ describe('validationRules', () => {
     expect(ok(validationRules.requiredText('R', 2, 5), 'ok')).toBe(true);
     expect(ok(validationRules.requiredText('R', 2, 5), 'a')).toBe(false);
     expect(ok(validationRules.requiredText('R', 2, 5), 'toolong')).toBe(false);
+    expect(ok(validationRules.requiredText('R', 0, 5), '  ')).toBe(false);
   });
 
   it('email works with default and custom label', () => {
     expect(ok(validationRules.email(), 'a@b.com')).toBe(true);
     expect(ok(validationRules.email('Work email'), 'nope')).toBe(false);
+    expect(ok(validationRules.email(), '')).toBe(false);
   });
 
   it('optionalEmail allows blank with default and custom label', () => {
-    expect(validationRules.optionalEmail().cast(undefined)).toBe('');
+    expect(validationRules.optionalEmail().parse(undefined)).toBe('');
+    expect(ok(validationRules.optionalEmail(), '')).toBe(true);
     expect(ok(validationRules.optionalEmail('Alt'), 'x@y.com')).toBe(true);
   });
 
@@ -49,7 +52,7 @@ describe('validationRules', () => {
   });
 
   it('optionalUrl covers blank, absolute, relative and invalid values', () => {
-    expect(validationRules.optionalUrl('U').cast(undefined)).toBe('');
+    expect(validationRules.optionalUrl('U').parse(undefined)).toBe('');
     expect(ok(validationRules.optionalUrl('U'), '')).toBe(true);
     expect(ok(validationRules.optionalUrl('U'), 'https://duncit.com')).toBe(true);
     expect(ok(validationRules.optionalUrl('U'), 'mailto:a@b.com')).toBe(true);

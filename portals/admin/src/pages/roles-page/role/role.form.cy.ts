@@ -8,17 +8,20 @@ const base = {
   permissions: ['pods:read', 'pods:update'],
 };
 
+const messagesOf = (values: unknown) => {
+  const result = roleFormSchema.safeParse(values);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('roleFormSchema', () => {
-  it('rejects bad key', async () => {
-    const error = await roleFormSchema.validate({ ...base, key: 'Editor Pro' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/key/i);
+  it('rejects bad key', () => {
+    expect(messagesOf({ ...base, key: 'Editor Pro' })).toMatch(/key/i);
   });
-  it('rejects empty name', async () => {
-    const error = await roleFormSchema.validate({ ...base, name: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/name/i);
+  it('rejects empty name', () => {
+    expect(messagesOf({ ...base, name: '' })).toMatch(/name/i);
   });
-  it('accepts valid input', async () => {
-    await expect(roleFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts valid input', () => {
+    expect(roleFormSchema.safeParse(base).success).toBe(true);
   });
 });
 

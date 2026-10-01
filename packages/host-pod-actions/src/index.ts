@@ -49,8 +49,8 @@ export { default as PodResubmitDialog } from './pod-resubmit/PodResubmitDialog';
 export {
   blankPodResubmitValues,
   buildHostResubmitInput,
+  buildPodResubmitSchema,
   podResubmitInitialValues,
-  podResubmitSchema,
 } from './pod-resubmit/pod-resubmit.form';
 export type { PodResubmitValues } from './pod-resubmit/pod-resubmit.form';
 

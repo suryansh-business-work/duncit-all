@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { isAllowedExt, maxSizeBytes, uploadFormSchema, validateUpload } from './upload.form';
 
+const errorText = (result: { error?: { issues: { message: string }[] } }) =>
+  result.error?.issues.map((issue) => issue.message).join(' ');
+
 describe('uploadFormSchema', () => {
-  it('rejects empty file name', async () => {
-    const error = await uploadFormSchema
-      .validate({ kind: 'IMAGE', file_name: '', size_bytes: 100 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/file name/i);
+  it('rejects empty file name', () => {
+    const result = uploadFormSchema.safeParse({ kind: 'IMAGE', file_name: '', size_bytes: 100 });
+    expect(errorText(result)).toMatch(/file name/i);
   });
-  it('rejects invalid kind', async () => {
-    const error = await uploadFormSchema
-      .validate({ kind: 'AUDIO' as any, file_name: 'x.mp3', size_bytes: 100 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/kind/i);
+  it('rejects invalid kind', () => {
+    const result = uploadFormSchema.safeParse({ kind: 'AUDIO' as any, file_name: 'x.mp3', size_bytes: 100 });
+    expect(errorText(result)).toMatch(/kind/i);
   });
 });
 

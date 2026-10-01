@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { directUploadToImagekit } from '@duncit/media-picker';
+import { useTranslation } from '../i18n/useTranslation';
 import { START_VIDEO_COMPRESSION, VIDEO_COMPRESSION_JOB } from './queries';
 
 export type RecordStage = 'IDLE' | 'RECORDING' | 'UPLOADING' | 'CONVERTING' | 'READY' | 'FAILED';
@@ -46,6 +47,7 @@ const pickMimeType = (hasVideo: boolean): string => {
  */
 export function useCallRecorder(call: Readonly<CallSource>) {
   const client = useApolloClient();
+  const { t } = useTranslation();
   const [stage, setStage] = useState<RecordStage>('IDLE');
   const [pct, setPct] = useState(0);
   const [url, setUrl] = useState<string | null>(null);
@@ -91,13 +93,13 @@ export function useCallRecorder(call: Readonly<CallSource>) {
       setError(null);
       setUrl(null);
       if (!globalThis.MediaRecorder) {
-        setError('This browser cannot record.');
+        setError(t('shell.chat.recorder.unsupported'));
         return;
       }
       try {
         const stream = mix(local, remote);
         if (stream.getTracks().length === 0) {
-          setError('There is nothing to record yet.');
+          setError(t('shell.chat.recorder.nothingYet'));
           return;
         }
         const mimeType = pickMimeType(stream.getVideoTracks().length > 0);
@@ -122,11 +124,11 @@ export function useCallRecorder(call: Readonly<CallSource>) {
         media.start(2000);
         setStage('RECORDING');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not start recording');
+        setError(err instanceof Error ? err.message : t('shell.chat.recorder.startFailed'));
         setStage('FAILED');
       }
     },
-    [mix]
+    [mix, t]
   );
 
   /** Poll the transcode until it produces the mp4. */
@@ -146,9 +148,9 @@ export function useCallRecorder(call: Readonly<CallSource>) {
           globalThis.setTimeout(resolve, 2000);
         });
       }
-      throw new Error('Conversion is taking too long');
+      throw new Error(t('shell.chat.recorder.conversionSlow'));
     },
-    [client]
+    [client, t]
   );
 
   const stop = useCallback(async () => {
@@ -186,16 +188,16 @@ export function useCallRecorder(call: Readonly<CallSource>) {
         variables: { remoteUrl: raw, folder: RECORDING_FOLDER, surface: 'PORTALS' },
       });
       const jobId = job.data?.startVideoCompression?.job_id;
-      if (!jobId) throw new Error('Conversion did not start');
+      if (!jobId) throw new Error(t('shell.chat.recorder.conversionNotStarted'));
 
       const mp4 = await awaitMp4(jobId);
       setUrl(mp4);
       setStage('READY');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the recording');
+      setError(err instanceof Error ? err.message : t('shell.chat.recorder.saveFailed'));
       setStage('FAILED');
     }
-  }, [client, awaitMp4]);
+  }, [client, awaitMp4, t]);
 
   const reset = useCallback(() => {
     setStage('IDLE');

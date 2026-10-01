@@ -5,8 +5,8 @@ import { toCategoryInput, type CategoryFormValues } from '../category/category.f
 // min/max rules and toCategoryInput's per-level branch (undefined/SUB/CATEGORY/
 // SUPER). This file fills in the truthy/falsy sides of toCategoryInput's own
 // `||` fallbacks that file never happens to flip: a real icon, a real
-// description, a non-zero sort order, and a co-host limit cast() lets through
-// falsy (cast() coerces types but does not enforce the schema's min/max).
+// description, a non-zero sort order, and a co-host limit that arrives falsy
+// (toCategoryInput normalises its input but does not enforce the schema's min/max).
 const base: CategoryFormValues = {
   name: 'Sports',
   iconMode: 'ICON',
@@ -47,8 +47,8 @@ describe('toCategoryInput — truthy/falsy field coercion', () => {
   });
 
   it('falls back to a co-host limit of 1 when the value is falsy', () => {
-    // .cast() coerces types but does not enforce min/max, so a value the
-    // schema's validate() would reject can still reach this fallback.
+    // toCategoryInput does not enforce min/max, so a value the schema's
+    // parse() would reject can still reach this fallback.
     const input = toCategoryInput({ ...base, allow_co_hosts: true, max_co_hosts: 0 }, 'SUB');
     expect(input).toMatchObject({ max_co_hosts: 1 });
   });

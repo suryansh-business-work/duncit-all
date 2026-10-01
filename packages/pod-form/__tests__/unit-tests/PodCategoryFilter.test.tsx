@@ -144,9 +144,9 @@ describe('PodCategoryFilter', () => {
     const user = userEvent.setup({ delay: null });
     renderForm({ initialValues: { ...values(), club_id: 'c1' } });
 
-    expect(screen.getByLabelText('Super Category')).toHaveTextContent('Sports');
-    expect(screen.getByLabelText('Category')).toHaveTextContent('Racket');
-    expect(screen.getByLabelText('Sub Category')).toHaveTextContent('Badminton');
+    expect(screen.getByLabelText('Super Category')).toHaveValue('Sports');
+    expect(screen.getByLabelText('Category')).toHaveValue('Racket');
+    expect(screen.getByLabelText('Sub Category')).toHaveValue('Badminton');
     expect(await clubOptions(user)).toEqual(['Badminton Club']);
   });
 
@@ -158,7 +158,7 @@ describe('PodCategoryFilter', () => {
     await pick(user, 'Category', 'Dogs');
     await pick(user, 'Sub Category', 'Walks');
 
-    expect(screen.getByLabelText('Super Category')).toHaveTextContent('Pets');
+    expect(screen.getByLabelText('Super Category')).toHaveValue('Pets');
     expect(await clubOptions(user)).toEqual(['Badminton Club', 'Dog Club']);
   });
 

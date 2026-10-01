@@ -5,6 +5,7 @@ import {
 } from '@modules/platform/whatsapp/whatsapp.manualLog';
 import { GraphQLError } from 'graphql';
 import { emailLogService } from '@modules/content/emailLog/emailLog.service';
+import { logs } from '@observability/log';
 import { uploadToImagekit } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { EnvEntryModel, type EnvCategory } from './envEntry.model';
@@ -213,17 +214,21 @@ const impl = {
    */
   async email(id: string, to: string): Promise<EnvTestRichResult> {
     const logged = (result: EnvTestRichResult, reason?: string) => {
-      void emailLogService.record({
-        to: to.trim(),
-        subject: SMTP_TEST_SUBJECT,
-        category: 'internal',
-        status: result.ok ? 'SENT' : 'FAILED',
-        reason,
-        provider: 'smtp',
-        message_id: result.data ?? undefined,
-        source: 'TEST',
-        source_detail: 'SMTP connection test',
-      });
+      emailLogService
+        .record({
+          to: to.trim(),
+          subject: SMTP_TEST_SUBJECT,
+          category: 'internal',
+          status: result.ok ? 'SENT' : 'FAILED',
+          reason,
+          provider: 'smtp',
+          message_id: result.data ?? undefined,
+          source: 'TEST',
+          source_detail: 'SMTP connection test',
+        })
+        .catch((error: unknown) => {
+          logs.server.warn('emailLog', 'record', { error, subject: SMTP_TEST_SUBJECT });
+        });
       return result;
     };
 

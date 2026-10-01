@@ -102,8 +102,7 @@ export default function AttendanceRoster({
 
       {attendedSeats === 0 && (
         <Alert severity="warning" data-testid="pod-complete-attendance-warning">
-          Nobody has been scanned in yet, so this pod would settle at zero. Scan each guest&apos;s
-          ticket to record who turned up.
+          {labels.rosterNoneScanned}
         </Alert>
       )}
 
@@ -121,7 +120,7 @@ export default function AttendanceRoster({
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            Not marked yet — their seats are not part of the payout below.
+            {labels.rosterUnmarkedNote}
           </Typography>
           <Stack spacing={0.75}>
             {pending.map((row) => (
@@ -147,7 +146,7 @@ export default function AttendanceRoster({
         <Typography variant="body2" data-testid="pod-complete-attendance-empty" sx={{
           color: "text.secondary"
         }}>
-          Nobody booked this pod.
+          {labels.rosterEmpty}
         </Typography>
       )}
     </Stack>

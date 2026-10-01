@@ -40,7 +40,7 @@ export default function PodMonitoringPage() {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Every pod edit, status change and critical action — risk-scored by AI for auditability.
+            {t('admin.podMonitoring.subtitle')}
           </Typography>
         </Box>
       </Stack>

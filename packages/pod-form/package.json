@@ -12,6 +12,7 @@
     "@apollo/client": ">=3",
     "@duncit/app-settings": "workspace:*",
     "@duncit/category": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/table": "workspace:*",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@apollo/client": "^4.3.1",
     "@duncit/app-settings": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/slots": "workspace:*",
     "@duncit/table": "workspace:*",

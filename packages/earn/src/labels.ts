@@ -39,6 +39,8 @@ export interface EarnMeetingLabels {
   moveCta: string;
   pickSlot: string;
   rescheduleFailed: string;
+  /** Shown on a card whose one reschedule is already spent. */
+  rescheduleUsed: string;
   reasonRequired: string;
   reasonTooLong: string;
   aiMonitoring: string;
@@ -66,6 +68,7 @@ export function mwebEarnMeetingLabels(t: EarnTranslate): EarnMeetingLabels {
     moveCta: t('mweb.earnMeeting.moveCta'),
     pickSlot: t('mweb.earnMeeting.pickSlot'),
     rescheduleFailed: t('mweb.earnMeeting.rescheduleFailed'),
+    rescheduleUsed: t('mweb.earnMeeting.rescheduleUsed'),
     reasonRequired: t('mweb.earnMeeting.reasonRequired'),
     reasonTooLong: t('mweb.earnMeeting.reasonTooLong'),
     aiMonitoring: t('mweb.earnMeeting.aiMonitoring'),
@@ -94,6 +97,7 @@ export function shellEarnMeetingLabels(t: EarnTranslate): EarnMeetingLabels {
     moveCta: t('shell.earnMeeting.moveCta'),
     pickSlot: t('shell.earnMeeting.pickSlot'),
     rescheduleFailed: t('shell.earnMeeting.rescheduleFailed'),
+    rescheduleUsed: t('shell.earnMeeting.rescheduleUsed'),
     reasonRequired: t('shell.earnMeeting.reasonRequired'),
     reasonTooLong: t('shell.earnMeeting.reasonTooLong'),
     aiMonitoring: t('shell.earnMeeting.aiMonitoring'),

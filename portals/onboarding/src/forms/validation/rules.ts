@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
@@ -9,22 +9,23 @@ export const AADHAR_PATTERN = /^\d{12}$/;
 export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
 const optionalText = (label: string, max: number) =>
-  yup.string().trim().max(max, `${label} must be ${max} characters or fewer`).default('');
+  z.string().trim().max(max, `${label} must be ${max} characters or fewer`).default('');
 
-const requiredText = (label: string, min: number, max: number) =>
-  yup
-    .string()
+const requiredText = (label: string, min: number, max: number) => {
+  const required = `${label} is required`;
+  return z
+    .string({ error: required })
     .trim()
     .min(min, `${label} must be at least ${min} characters`)
     .max(max, `${label} must be ${max} characters or fewer`)
-    .required(`${label} is required`);
+    .min(1, required);
+};
 
 const optionalUrl = (label: string, allowRelative = false) =>
-  yup
+  z
     .string()
     .trim()
-    .default('')
-    .test('url', `${label} must be a valid URL`, (value) => {
+    .refine((value) => {
       if (!value) return true;
       if (allowRelative && /^\/[\w./?=&%#:+-]*$/.test(value)) return true;
       try {
@@ -33,33 +34,50 @@ const optionalUrl = (label: string, allowRelative = false) =>
       } catch {
         return false;
       }
-    });
+    }, `${label} must be a valid URL`)
+    .default('');
 
-/** Shared, reusable Yup field rules so every form validates consistently. */
+/** Blank passes: whether an address is required is the caller's rule, not this one's. */
+const isBlankOrEmail = (value: string) => !value || z.regexes.html5Email.test(value);
+
+/** Shared, reusable Zod field rules so every form validates consistently. */
 export const validationRules = {
   personName: (label: string) =>
-    yup
-      .string()
+    z
+      .string({ error: `${label} is required` })
       .trim()
-      .matches(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes, periods and hyphens only`)
-      .required(`${label} is required`),
+      .regex(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes, periods and hyphens only`),
   optionalText,
   requiredText,
-  email: (label = 'Email') =>
-    yup.string().trim().lowercase().email(`Enter a valid ${label.toLowerCase()}`).max(254).required(`${label} is required`),
+  email: (label = 'Email') => {
+    const required = `${label} is required`;
+    return z
+      .string({ error: required })
+      .trim()
+      .toLowerCase()
+      .refine(isBlankOrEmail, `Enter a valid ${label.toLowerCase()}`)
+      .min(1, required)
+      // Piped so the length cap reports its own message rather than the required one.
+      .pipe(z.string().max(254));
+  },
   optionalEmail: (label = 'Email') =>
-    yup.string().trim().lowercase().email(`Enter a valid ${label.toLowerCase()}`).max(254).default(''),
+    z.string().trim().toLowerCase().refine(isBlankOrEmail, `Enter a valid ${label.toLowerCase()}`).max(254).default(''),
   password: (label = 'Password') =>
-    yup
-      .string()
+    z
+      .string({ error: `${label} is required` })
       .min(8, `${label} must be at least 8 characters`)
-      .max(128, `${label} is too long`)
-      .required(`${label} is required`),
+      .max(128, `${label} is too long`),
   phoneNumber: (label = 'Phone number') =>
-    yup.string().trim().matches(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`).required(`${label} is required`),
+    z
+      .string({ error: `${label} is required` })
+      .trim()
+      .regex(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`),
   phoneExtension: (label = 'Phone code') =>
-    yup.string().trim().matches(PHONE_EXTENSION_PATTERN, `${label} is invalid`).required(`${label} is required`),
+    z.string({ error: `${label} is required` }).trim().regex(PHONE_EXTENSION_PATTERN, `${label} is invalid`),
   slugKey: (label: string) =>
-    yup.string().trim().matches(SLUG_KEY_PATTERN, `${label} may contain lowercase letters, digits, dashes and underscores`).required(`${label} is required`),
+    z
+      .string({ error: `${label} is required` })
+      .trim()
+      .regex(SLUG_KEY_PATTERN, `${label} may contain lowercase letters, digits, dashes and underscores`),
   optionalUrl,
 };

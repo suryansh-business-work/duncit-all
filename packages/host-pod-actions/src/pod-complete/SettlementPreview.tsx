@@ -113,8 +113,7 @@ export default function SettlementPreview({
         )}
         {settlement.waterfall.host_receives < 0 && (
           <Typography variant="caption" color="error" data-testid="settlement-shortfall">
-            The venue&apos;s booked price is more than this pod took at the door. The venue is paid
-            in full and your share is nil — it is never taken back from you.
+            {labels.shareShortfall}
           </Typography>
         )}
       </Stack>
@@ -127,7 +126,7 @@ export default function SettlementPreview({
       sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-        Your share (credited to your wallet on completion)
+        {labels.shareTitle}
       </Typography>
       <Divider sx={{ mb: 1 }} />
       {body()}

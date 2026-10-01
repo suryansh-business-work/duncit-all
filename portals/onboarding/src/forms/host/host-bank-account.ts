@@ -74,9 +74,9 @@ function checkUpi(value: BankAccountShape, ctx: z.RefinementCtx) {
 }
 
 /**
- * Zod mirror of the shared yup `bankAccountSchema`, scoped to the host form's
- * RHF migration. The shared yup version stays in place for the venue/login
- * forms; this keeps the validation rules and messages byte-for-byte identical.
+ * The host form's variant of the shared `bankAccountSchema`: the same rules and
+ * messages, but `payout_method` is read as plain text because the RHF field
+ * starts blank, and each field reports a single message.
  */
 export const hostBankAccountSchema = z
   .object({

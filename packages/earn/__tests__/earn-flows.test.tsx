@@ -169,7 +169,7 @@ describe('EarnJourneyList with the schema answering', () => {
     // Venue + club keep their one reschedule; ecomm has spent it.
     expect(screen.getAllByText('Cancel meeting')).toHaveLength(3);
     expect(screen.getAllByText('Reschedule meeting')).toHaveLength(2);
-    expect(screen.getByText('You have already used your one-time reschedule option.')).toBeInTheDocument();
+    expect(screen.getByText('mweb.earnMeeting.rescheduleUsed')).toBeInTheDocument();
   });
 
   it('asks the page to refetch after a cancel, and survives that refetch failing', async () => {

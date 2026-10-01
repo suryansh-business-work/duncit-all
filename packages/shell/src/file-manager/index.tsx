@@ -2,21 +2,20 @@ import { useState } from 'react';
 import {
   Alert,
   Box,
-  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
   LinearProgress,
   Snackbar,
-  Stack,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import FileCard from './FileCard';
+import { DuncitIconButton } from '@duncit/buttons';
 import FileDetailsView from './FileDetailsView';
+import FileGrid from './FileGrid';
 import FileManagerToolbar from './FileManagerToolbar';
-import { PAGE_SIZE, type MediaItem } from './queries';
+import FilePager from './FilePager';
+import type { MediaItem } from './queries';
 import { useFileManager } from './useFileManager';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -26,17 +25,6 @@ const WRITE_ROLES = new Set(['SUPER_ADMIN', 'TECH_MANAGER']);
 /** Narrow enough that the grid keeps most of the dialog, wide enough for the
  * transformation fields to sit two to a row. */
 const DETAILS_WIDTH = 350;
-
-const GRID_SX = {
-  display: 'grid',
-  gap: 1.5,
-  gridTemplateColumns: {
-    xs: 'repeat(2, 1fr)',
-    sm: 'repeat(3, 1fr)',
-    md: 'repeat(5, 1fr)',
-    lg: 'repeat(6, 1fr)',
-  },
-};
 
 /**
  * Everything the product has uploaded, in one place.
@@ -81,14 +69,14 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
   const upload = (list: FileList) => {
     manager
       .uploadFiles(list)
-      .then(() => say(`Uploaded ${list.length} file${list.length === 1 ? '' : 's'}`))
+      .then(() => say(t('shell.fileManager.uploadedCount', { count: list.length })))
       .catch((err: Error) => say(err.message, 'error'));
   };
 
   const deleteSelected = () => {
     manager
       .removeSelected()
-      .then((gone) => say(`Deleted ${gone} file${gone === 1 ? '' : 's'}`))
+      .then((gone) => say(t('shell.fileManager.deletedCount', { count: gone })))
       .catch((err: Error) => say(err.message, 'error'));
   };
 
@@ -108,7 +96,7 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            Every file uploaded to ImageKit. Upload, find one, copy its link at any size.
+            {t('shell.fileManager.subtitle')}
           </Typography>
         </Box>
         <DuncitIconButton onClick={onClose} aria-label={t('shell.fileManager.close')}>
@@ -140,69 +128,23 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
           </Alert>
         )}
 
-        {manager.files.length === 0 && !manager.loading ? (
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              py: 6,
-              textAlign: 'center'
-            }}>
-            {manager.search ? t('shell.fileManager.noMatches', { vars: { query: manager.search } }) : t('shell.fileManager.emptyUploads')}
-          </Typography>
-        ) : (
-          <Box
-            sx={{
-              ...GRID_SX,
-              opacity: manager.loading ? 0.5 : 1,
-              transition: (theme) => theme.transitions.create('opacity'),
-            }}
-          >
-            {manager.files.map((file) => (
-              <FileCard
-                key={file.fileId}
-                file={file}
-                selected={manager.selected.includes(file.fileId)}
-                onToggle={manager.toggle}
-                onOpen={setActive}
-                onCopy={(item) => copy(item.url)}
-              />
-            ))}
-          </Box>
-        )}
+        <FileGrid
+          files={manager.files}
+          selected={manager.selected}
+          loading={manager.loading}
+          search={manager.search}
+          onToggle={manager.toggle}
+          onOpen={setActive}
+          onCopy={copy}
+        />
 
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            justifyContent: "center",
-            pt: 3
-          }}>
-          <DuncitButton
-            size="small"
-            disabled={manager.page === 0 || manager.loading}
-            onClick={() => manager.setPage(manager.page - 1)}
-          >
-            Previous
-          </DuncitButton>
-          {/* The spinner sits in the pager, where the click was — a bar at the
-              top of a scrolled dialog is somewhere nobody is looking. */}
-          {manager.loading ? (
-            <CircularProgress size={18} />
-          ) : (
-            <Typography variant="body2">
-              {manager.page * PAGE_SIZE + 1}–{manager.page * PAGE_SIZE + manager.files.length}
-            </Typography>
-          )}
-          <DuncitButton
-            size="small"
-            disabled={!manager.hasMore || manager.loading}
-            onClick={() => manager.setPage(manager.page + 1)}
-          >
-            Next
-          </DuncitButton>
-        </Stack>
+        <FilePager
+          page={manager.page}
+          count={manager.files.length}
+          loading={manager.loading}
+          hasMore={manager.hasMore}
+          onPage={manager.setPage}
+        />
         </Box>
 
         {active && (

@@ -159,7 +159,7 @@ export default function OtpLoginPanel({
               fontSize: 13,
               fontWeight: 600
             }}>
-            Use a different address
+            {t('shell.login.differentAddress')}
           </Link>
         </>
       ) : (
@@ -192,7 +192,7 @@ export default function OtpLoginPanel({
           fontSize: 13,
           fontWeight: 600
         }}>
-        Use my password instead
+        {t('shell.login.usePassword')}
       </Link>
     </Stack>
   );

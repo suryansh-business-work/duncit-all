@@ -78,7 +78,7 @@ export default function ClubOverviewCard({ club, podCount }: Readonly<Props>) {
               color: "text.secondary",
               mb: 2
             }}>
-            No description added yet.
+            {t('admin.venueDetails.noDescription')}
           </Typography>
         )}
 

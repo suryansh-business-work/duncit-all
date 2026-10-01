@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export interface SupportFormValues {
   name: string;
@@ -27,43 +27,45 @@ export const supportInitialValues: SupportFormValues = {
   attachments: [],
 };
 
-export const supportSchema: yup.ObjectSchema<SupportFormValues> = yup.object({
-  name: yup.string().trim().min(2, 'Name must be at least 2 characters').max(120).required('Name is required'),
-  email: yup.string().trim().lowercase().email('Enter a valid email').required('Email is required'),
-  category: yup
-    .string()
-    .oneOf(
-      SUPPORT_CATEGORIES.map((category) => category.value),
-      'Select a valid category',
-    )
-    .required('Category is required'),
-  subject: yup
-    .string()
+export const supportSchema = z.object({
+  name: z
+    .string({ error: (issue) => (issue.code === 'invalid_type' ? 'Name is required' : undefined) })
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .max(120),
+  email: z
+    .string({ error: 'Email is required' })
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email is required')
+    .email({ pattern: z.regexes.html5Email, error: 'Enter a valid email' }),
+  category: z.enum(
+    SUPPORT_CATEGORIES.map((category) => category.value),
+    { error: (issue) => (issue.input === undefined ? 'Category is required' : 'Select a valid category') },
+  ),
+  subject: z
+    .string({ error: 'Subject is required' })
     .trim()
     .min(3, 'Subject must be at least 3 characters')
-    .max(120, 'Subject must be 120 characters or fewer')
-    .required('Subject is required'),
-  message: yup
-    .string()
+    .max(120, 'Subject must be 120 characters or fewer'),
+  message: z
+    .string({ error: 'Message is required' })
     .trim()
     .min(10, 'Please describe in at least 10 characters')
-    .max(2000, 'Message must be 2000 characters or fewer')
-    .required('Message is required'),
-  attachments: yup
-    .array()
-    .of(yup.string().url('Invalid URL').required())
+    .max(2000, 'Message must be 2000 characters or fewer'),
+  attachments: z
+    .array(z.httpUrl('Invalid URL'))
     .max(5, 'Up to 5 images')
     .default([]),
-});
+}) satisfies z.ZodType<SupportFormValues>;
 
 export function toSupportTicketInput(values: SupportFormValues) {
-  const cast = supportSchema.cast(values, { stripUnknown: true });
   return {
-    name: cast.name,
-    email: cast.email,
-    category: cast.category,
-    subject: cast.subject,
-    message: cast.message,
-    attachments: cast.attachments,
+    name: values.name.trim(),
+    email: values.email.trim().toLowerCase(),
+    category: values.category,
+    subject: values.subject.trim(),
+    message: values.message.trim(),
+    attachments: values.attachments,
   };
 }

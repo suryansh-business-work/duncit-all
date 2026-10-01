@@ -7,7 +7,7 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import { DuncitIconButton } from '@duncit/buttons';
 import { formatInTimeZone } from 'date-fns-tz';
 import { useTranslation } from '../i18n/useTranslation';
-import { ROLE_LABEL, type Coworker } from './queries';
+import { roleLabel, type Coworker } from './queries';
 
 interface Props {
   person: Coworker;
@@ -163,7 +163,7 @@ export default function CoworkerInfoButton({ person }: Readonly<Props>) {
               flexWrap: "wrap"
             }}>
               {person.roles.map((role) => (
-                <Chip key={role} size="small" label={ROLE_LABEL[role] ?? role} />
+                <Chip key={role} size="small" label={roleLabel(role, t)} />
               ))}
             </Stack>
           )}

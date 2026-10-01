@@ -16,8 +16,8 @@ import { SlotField, VenueField } from './VenueSlotFields';
 import {
   buildHostResubmitInput,
   buildPodResubmitModerationInput,
+  buildPodResubmitSchema,
   podResubmitInitialValues,
-  podResubmitSchema,
   type PodResubmitValues,
 } from './pod-resubmit.form';
 import ContentCheckAlert from '../ContentCheckAlert';
@@ -47,7 +47,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
     watch,
     formState: { errors },
   } = useForm<PodResubmitValues, any, PodResubmitValues>({
-    resolver: zodResolver(podResubmitSchema) as unknown as Resolver<PodResubmitValues, any, PodResubmitValues>,
+    resolver: zodResolver(buildPodResubmitSchema(labels)) as unknown as Resolver<PodResubmitValues, any, PodResubmitValues>,
     defaultValues: podResubmitInitialValues(pod),
   });
   const venueId = watch('venue_id');

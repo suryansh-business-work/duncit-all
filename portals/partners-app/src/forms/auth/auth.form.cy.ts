@@ -22,76 +22,66 @@ const validRegister = {
   zone: 'HSR',
 };
 
+interface Parseable {
+  safeParse: (values: unknown) => { error?: { issues: { message: string }[] } };
+}
+
+const messagesOf = (schema: Parseable, values: unknown) =>
+  (schema.safeParse(values).error?.issues ?? []).map((issue) => issue.message).join(' ');
+
 describe('loginSchema', () => {
-  it('rejects empty fields', async () => {
-    const error = await loginSchema.validate({ email: '', password: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/email/i);
-    expect(error.errors.join(' ')).toMatch(/password/i);
+  it('rejects empty fields', () => {
+    const messages = messagesOf(loginSchema, { email: '', password: '' });
+    expect(messages).toMatch(/email/i);
+    expect(messages).toMatch(/min 8 characters/i);
   });
-  it('rejects invalid email', async () => {
-    const error = await loginSchema.validate({ email: 'bad', password: 'longenough' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('reports a missing password as required', () => {
+    expect(messagesOf(loginSchema, { email: 'jane@example.com' })).toMatch(/password/i);
+  });
+  it('rejects invalid email', () => {
+    expect(messagesOf(loginSchema, { email: 'bad', password: 'longenough' })).toMatch(/email/i);
   });
 });
 
 describe('registerSchema', () => {
-  it('rejects names with special chars', async () => {
-    const error = await registerSchema
-      .validate({ ...validRegister, first_name: 'Jane@!' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/first name/i);
+  it('rejects names with special chars', () => {
+    expect(messagesOf(registerSchema, { ...validRegister, first_name: 'Jane@!' })).toMatch(/first name/i);
   });
-  it('rejects phone with alphabetic characters', async () => {
-    const error = await registerSchema
-      .validate({ ...validRegister, phone_number: 'abc123' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/digits/i);
+  it('rejects phone with alphabetic characters', () => {
+    expect(messagesOf(registerSchema, { ...validRegister, phone_number: 'abc123' })).toMatch(/digits/i);
   });
-  it('rejects users younger than 13', async () => {
+  it('rejects users younger than 13', () => {
     const tooYoung = new Date(today.getFullYear() - 10, 0, 1);
-    const error = await registerSchema
-      .validate({ ...validRegister, dob: tooYoung }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/13/);
+    expect(messagesOf(registerSchema, { ...validRegister, dob: tooYoung })).toMatch(/13/);
   });
-  it('rejects city shorter than 2 chars', async () => {
-    const error = await registerSchema
-      .validate({ ...validRegister, city: 'A' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/city/i);
+  it('rejects city shorter than 2 chars', () => {
+    expect(messagesOf(registerSchema, { ...validRegister, city: 'A' })).toMatch(/city/i);
   });
-  it('accepts a fully valid register payload', async () => {
-    await expect(registerSchema.validate(validRegister, { abortEarly: false })).resolves.toBeTruthy();
+  it('accepts a fully valid register payload', () => {
+    expect(registerSchema.safeParse(validRegister).success).toBe(true);
   });
 });
 
 describe('googleSignupSchema', () => {
-  it('rejects empty phone', async () => {
-    const error = await googleSignupSchema
-      .validate({ phone_number: '', phone_extension: '+91', dob: minus18, city: 'Bengaluru', zone: 'HSR' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/phone/i);
+  it('rejects empty phone', () => {
+    expect(
+      messagesOf(googleSignupSchema, { phone_number: '', phone_extension: '+91', dob: minus18, city: 'Bengaluru', zone: 'HSR' })
+    ).toMatch(/phone/i);
   });
 });
 
 describe('whatsAppOtpRequestSchema', () => {
-  it('requires a 6+ digit number', async () => {
-    const error = await whatsAppOtpRequestSchema
-      .validate({ phone_extension: '+91', phone_number: '12' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/digits/i);
+  it('requires a 6+ digit number', () => {
+    expect(messagesOf(whatsAppOtpRequestSchema, { phone_extension: '+91', phone_number: '12' })).toMatch(/digits/i);
   });
 });
 
 describe('whatsAppOtpVerifySchema', () => {
-  it('rejects non-numeric OTP', async () => {
-    const error = await whatsAppOtpVerifySchema
-      .validate({ otp: 'abcd' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/otp/i);
+  it('rejects non-numeric OTP', () => {
+    expect(messagesOf(whatsAppOtpVerifySchema, { otp: 'abcd' })).toMatch(/otp/i);
   });
-  it('accepts 4-8 digit OTP', async () => {
-    await expect(whatsAppOtpVerifySchema.validate({ otp: '1234' })).resolves.toBeTruthy();
-    await expect(whatsAppOtpVerifySchema.validate({ otp: '12345678' })).resolves.toBeTruthy();
+  it('accepts 4-8 digit OTP', () => {
+    expect(whatsAppOtpVerifySchema.safeParse({ otp: '1234' }).success).toBe(true);
+    expect(whatsAppOtpVerifySchema.safeParse({ otp: '12345678' }).success).toBe(true);
   });
 });

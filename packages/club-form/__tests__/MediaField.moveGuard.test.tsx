@@ -7,10 +7,10 @@ interface RowProps {
   onMove: (dir: -1 | 1) => void;
 }
 
-// Replace MediaRow with one whose move controls are never disabled, so the
-// out-of-range guard inside MediaField.move (which the real disabled buttons
-// make unreachable) can be exercised.
-vi.mock('../src/components/MediaRow', () => ({
+// Replace the shared MediaListRow with one whose move controls are never
+// disabled, so the out-of-range guard inside MediaField.move (which the real
+// disabled buttons make unreachable) can be exercised.
+vi.mock('@duncit/media-picker/media-list-row', () => ({
   default: ({ index, onMove }: Readonly<RowProps>) => (
     <div>
       <button type="button" onClick={() => onMove(-1)}>{`up-${index}`}</button>

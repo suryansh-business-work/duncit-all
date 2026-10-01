@@ -265,12 +265,17 @@ describe('exportChat', () => {
     const { result } = mount({ meName: undefined });
 
     await act(() => result.current.exportChat());
-    expect(exporter.build).toHaveBeenCalledWith({
-      me: { id: 'me', name: 'You' },
-      peer: asha,
-      messages: [expect.objectContaining({ id: 'm1' })],
-      calls: [{ id: 'c1' }],
-    });
+    // The second argument is the panel's translator, so the file reads in the
+    // language the conversation does.
+    expect(exporter.build).toHaveBeenCalledWith(
+      {
+        me: { id: 'me', name: 'You' },
+        peer: asha,
+        messages: [expect.objectContaining({ id: 'm1' })],
+        calls: [{ id: 'c1' }],
+      },
+      expect.any(Function)
+    );
     expect(exporter.download).toHaveBeenCalledWith('EXPORT', 'Asha Rao');
   });
 
@@ -287,7 +292,8 @@ describe('exportChat', () => {
     await act(() => result.current.exportChat());
 
     expect(exporter.build).toHaveBeenCalledWith(
-      expect.objectContaining({ messages: [], calls: [] })
+      expect.objectContaining({ messages: [], calls: [] }),
+      expect.any(Function)
     );
   });
 });

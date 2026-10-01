@@ -6,13 +6,12 @@ import {
   type PodMode,
   type PodPlaceCharge,
 } from '@duncit/pod-form';
-import { MEETING_PLATFORMS } from './meeting-platforms';
+import { MEETING_PLATFORM_VALUES } from '@duncit/utils';
 import { aiChips, aiOneOf, aiText } from '../../shared/aiFillSanitize';
 
 const POD_TYPE_VALUES = POD_TYPES.map((option) => option.value);
 const OCCURRENCE_VALUES = OCCURRENCES.map((option) => option.value);
 const POD_MODE_VALUES = POD_MODES.map((option) => option.value as PodMode);
-const MEETING_PLATFORM_VALUES = MEETING_PLATFORMS.map((option) => option.value);
 
 /** The lists the pod pickers are populated from. Resolving against exactly
  * these is what guarantees a filled club / venue / host is one the field can

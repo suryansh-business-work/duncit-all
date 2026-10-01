@@ -6,17 +6,14 @@ import {
 } from '../bankAccount';
 
 const errorsOf = async (values: unknown): Promise<string[]> => {
-  const error = await bankAccountSchema
-    .validate(values, { abortEarly: false })
-    .then(() => null)
-    .catch((e) => e);
-  return error ? error.errors : [];
+  const result = await bankAccountSchema.safeParseAsync(values);
+  return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
 
 describe('bankAccountSchema', () => {
   it('requires a payout method and account holder name', async () => {
-    // An empty string fails oneOf() before required() ever gets a chance to
-    // report a blank value, so the reported message names the allowed values.
+    // Only a missing payout method reads as "required"; an empty string is a
+    // value outside the list, so the reported message names the allowed values.
     const errors = (await errorsOf({ payout_method: '', account_holder_name: '' })).join(' ');
     expect(errors).toMatch(/select upi, imps or neft/i);
     expect(errors).toMatch(/account holder/i);
@@ -100,7 +97,7 @@ describe('bankAccountSchema', () => {
   });
 
   it('accepts valid NEFT details and normalises IFSC to uppercase', async () => {
-    const values = await bankAccountSchema.validate({
+    const values = await bankAccountSchema.parseAsync({
       payout_method: 'NEFT',
       account_holder_name: 'Riya Sharma',
       account_number: '123456789012',
@@ -112,7 +109,7 @@ describe('bankAccountSchema', () => {
   });
 
   it('accepts valid IMPS details', async () => {
-    const values = await bankAccountSchema.validate({
+    const values = await bankAccountSchema.parseAsync({
       payout_method: 'IMPS',
       account_holder_name: 'Riya Sharma',
       account_number: '654321',

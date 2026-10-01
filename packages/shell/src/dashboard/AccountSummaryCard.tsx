@@ -57,7 +57,7 @@ export function AccountSummaryCard({ user }: Readonly<{ user?: AccountSummaryUse
           <Typography variant="subtitle1" sx={{
             fontWeight: 700
           }}>
-            Your account
+            {t('shell.account.title')}
           </Typography>
           <Grid container spacing={2}>
             <Detail label={t('shell.account.name')} value={name} />

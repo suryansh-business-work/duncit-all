@@ -17,6 +17,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
   admin: {
     a11y: {
       mediaViewer: 'Media viewer',
+      openMedia: 'Open {title} {index}',
     },
     filters: {
       // Clubs and Venues are both classified under a Super Category, so one
@@ -254,6 +255,8 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       place: 'Place',
       offerCodes: 'Offer codes',
       deleteCoupon: 'Delete coupon',
+      subtitle: 'Events organised inside a club. Hosts are attendees by default.',
+      meetingPlatformOther: 'Other (paste link manually)',
     },
 
     /** The cancellation-risk report on the admin pod detail page. */
@@ -310,6 +313,8 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       needsAttention: 'Needs attention',
       needsAttentionHint: 'Rated below four — look at these first',
       nothingBad: 'Nothing is scoring badly.',
+      guestScores: 'What guests scored',
+      trendHint: 'One bar per day, including the days nobody created anything.',
     },
 
     podIdeas: {
@@ -326,6 +331,13 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       deleteTitle: 'Delete idea?',
       notFound: 'Idea not found.',
       deleteComment: 'Delete this comment?',
+      title: 'Pod Ideas',
+      noComments: 'No comments yet.',
+      deleteCommentBody:
+        'This permanently removes the comment from the idea. You cannot undo this action.',
+      // One sentence around the idea's title, which the dialog sets in bold.
+      deleteBodyLead: 'This will permanently delete',
+      deleteBodyTail: 'along with all its comments.',
     },
 
     podPlans: {
@@ -339,6 +351,15 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       features: 'Features',
       featuresField: 'Features (one per line)',
       comingSoon: 'Coming soon',
+      title: 'Pod Plans',
+      errKeyMax: 'Key must be 40 characters or fewer',
+      errKeyPattern: 'Key may contain lowercase letters, digits, dashes and underscores',
+      errNameRequired: 'Name is required',
+      errNameMax: 'Name must be 80 characters or fewer',
+      errImageUrl: 'Image URL must be a valid http(s) URL',
+      errSortWhole: 'Sort order must be a whole number',
+      errSortMin: 'Sort order must be 0 or greater',
+      errSortMax: 'Sort order must be 999 or fewer',
     },
 
     podMonitoring: {
@@ -349,6 +370,8 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colChanges: 'Changes',
       colAiRisk: 'AI Risk',
       colAiSummary: 'AI Summary',
+      subtitle:
+        'Every pod edit, status change and critical action — risk-scored by AI for auditability.',
     },
 
     eventTickets: {
@@ -363,6 +386,9 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       valid: 'Valid',
       cancelled: 'Cancelled',
       downloadTicket: 'Download ticket',
+      title: 'Event Tickets',
+      subtitle: 'Issued tickets, QR check-in and downloads.',
+      checkInByQr: 'Check-in by QR',
     },
 
 changeRequests: {
@@ -565,11 +591,16 @@ changeRequests: {
       mediaRequired: 'Upload at least one party photo or video',
       notesTooLong: 'Notes must be 1000 characters or fewer',
       released: 'Pod completed — payouts released',
+      previewTitle: 'Settlement preview',
+      payoutNote: 'Payouts are credited to the beneficiary wallets when the pod is completed.',
+      releasedBody: "Each payout below has been credited to its beneficiary's wallet.",
+      submitted: 'Pod completion submitted for approval',
     },
 
     companions: {
       title: 'Who else is coming in?',
       incomplete: 'Fill in every name and phone number.',
+      body: 'Ticket {ticket} admits more than one person. Add the other {required} to mark attendance.',
     },
 
     branding: {
@@ -994,6 +1025,8 @@ changeRequests: {
     ai: {
       fill: 'Fill with AI',
       tip: 'Tip: Cmd/Ctrl + Enter to generate',
+      noData: 'No data returned',
+      invalidJson: 'AI returned invalid JSON',
     },
 
     badgesPage: {
@@ -1057,6 +1090,10 @@ changeRequests: {
       whatWeDo: 'What we do',
       values: 'Values',
       perks: 'Perks',
+      subtitle: 'Manage clubs. Pods are organised inside a club.',
+      adminsTitle: 'Club Admins',
+      noAdmins: 'No club admins assigned yet.',
+      detailContent: 'Club Detail content',
     },
 
     dashboard: {

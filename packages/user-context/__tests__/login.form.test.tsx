@@ -10,19 +10,19 @@ const loginSchema = buildLoginSchema(sessionT);
 
 describe('loginSchema', () => {
   it('accepts a valid email + password', async () => {
-    await expect(loginSchema.validate({ email: 'a@b.co', password: 'pw' })).resolves.toBeTruthy();
+    await expect(loginSchema.parseAsync({ email: 'a@b.co', password: 'pw' })).resolves.toBeTruthy();
   });
 
   it('rejects a missing email', async () => {
-    await expect(loginSchema.validate({ email: '', password: 'pw' })).rejects.toThrow(/E-mail address is required/);
+    await expect(loginSchema.parseAsync({ email: '', password: 'pw' })).rejects.toThrow(/E-mail address is required/);
   });
 
   it('rejects an invalid email', async () => {
-    await expect(loginSchema.validate({ email: 'nope', password: 'pw' })).rejects.toThrow(/valid e-mail/i);
+    await expect(loginSchema.parseAsync({ email: 'nope', password: 'pw' })).rejects.toThrow(/valid e-mail/i);
   });
 
   it('rejects a missing password', async () => {
-    await expect(loginSchema.validate({ email: 'a@b.co', password: '' })).rejects.toThrow(/Password is required/);
+    await expect(loginSchema.parseAsync({ email: 'a@b.co', password: '' })).rejects.toThrow(/Password is required/);
   });
 });
 

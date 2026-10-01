@@ -1,0 +1,163 @@
+import { useState } from 'react';
+import FormatClearIcon from '@mui/icons-material/FormatClear';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import LinkIcon from '@mui/icons-material/Link';
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import RedoIcon from '@mui/icons-material/Redo';
+import UndoIcon from '@mui/icons-material/Undo';
+import { Box, Divider } from '@mui/material';
+import type { Editor } from '@tiptap/react';
+import { useTranslation } from '@duncit/app-settings';
+import { ImageButton } from '../ImageButton';
+import { LinkDialog } from '../LinkDialog';
+import { TableMenu } from '../TableMenu';
+import { ToolbarButton } from '../ToolbarButton';
+import { MarkButtons } from './MarkButtons';
+import { run } from './run';
+
+/**
+ * Module-level key references for the verification scanner.
+ * The toolbar uses dynamic template literal construction (t(`shell.richText.${name}`))
+ * which the static scanner cannot detect. These explicit references ensure
+ * the scanner knows all keys are used (rule 38). Do not remove.
+ */
+const KEY_REFERENCES = {
+  toolbarLabel: 'shell.richText.toolbarLabel',
+  bold: 'shell.richText.bold',
+  italic: 'shell.richText.italic',
+  underline: 'shell.richText.underline',
+  strike: 'shell.richText.strike',
+  heading: 'shell.richText.heading',
+  bulletList: 'shell.richText.bulletList',
+  numberedList: 'shell.richText.numberedList',
+  quote: 'shell.richText.quote',
+  addLink: 'shell.richText.addLink',
+  removeLink: 'shell.richText.removeLink',
+  clearFormatting: 'shell.richText.clearFormatting',
+  undo: 'shell.richText.undo',
+  redo: 'shell.richText.redo',
+} as const;
+
+interface Props {
+  compact: boolean;
+  editor: Editor;
+  /** ImageKit folder for pictures dropped into this editor. */
+  imageFolder: string;
+  /** Raised when an image upload fails, so the editor can say so. */
+  onImageError: (failed: boolean) => void;
+}
+
+const DIVIDER_SX = { display: { xs: 'none', sm: 'block' }, mx: 0.25 };
+
+export function RichTextToolbar({
+  compact,
+  editor,
+  imageFolder,
+  onImageError,
+}: Readonly<Props>) {
+  const { t } = useTranslation();
+  const [linkOpen, setLinkOpen] = useState(false);
+  const label = (name: string) => t(`shell.richText.${name}`);
+
+  return (
+    <>
+      <Box
+        role="toolbar"
+        aria-label={label('toolbarLabel')}
+        sx={{
+          alignItems: 'center',
+          bgcolor: 'action.hover',
+          // The containing block for the image upload bar, which sits along this
+          // bar's bottom edge while a picture is on its way to ImageKit.
+          position: 'relative',
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 0.25,
+          minHeight: 44,
+          px: 0.75,
+          py: compact ? 0.25 : 0.5,
+        }}
+      >
+        <MarkButtons editor={editor} label={label} />
+        <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
+        <ToolbarButton
+          label={label('bulletList')}
+          active={editor.isActive('bulletList')}
+          onPress={() => run(() => editor.chain().focus().toggleBulletList().run())}
+        >
+          <FormatListBulletedIcon fontSize="small" />
+        </ToolbarButton>
+        <ToolbarButton
+          label={label('numberedList')}
+          active={editor.isActive('orderedList')}
+          onPress={() => run(() => editor.chain().focus().toggleOrderedList().run())}
+        >
+          <FormatListNumberedIcon fontSize="small" />
+        </ToolbarButton>
+        <ToolbarButton
+          label={label('quote')}
+          active={editor.isActive('blockquote')}
+          onPress={() => run(() => editor.chain().focus().toggleBlockquote().run())}
+        >
+          <FormatQuoteIcon fontSize="small" />
+        </ToolbarButton>
+        <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
+        <ToolbarButton
+          label={label('addLink')}
+          active={editor.isActive('link')}
+          onPress={() => setLinkOpen(true)}
+        >
+          <LinkIcon sx={{
+            fontSize: "small"
+          }} />
+        </ToolbarButton>
+        <ToolbarButton
+          label={label('removeLink')}
+          disabled={!editor.isActive('link')}
+          onPress={() => run(() => editor.chain().focus().unsetLink().run())}
+        >
+          <LinkOffIcon fontSize="small" />
+        </ToolbarButton>
+        <ToolbarButton
+          label={label('clearFormatting')}
+          onPress={() => run(() => editor.chain().focus().unsetAllMarks().clearNodes().run())}
+        >
+          <FormatClearIcon fontSize="small" />
+        </ToolbarButton>
+        <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
+        {/* Table and picture sit together: everything before them formats a
+            selection, and these two insert a BLOCK. */}
+        <TableMenu editor={editor} />
+        <ImageButton editor={editor} folder={imageFolder} onError={onImageError} />
+        <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
+        <ToolbarButton
+          label={label('undo')}
+          disabled={!editor.can().undo()}
+          onPress={() => run(() => editor.chain().focus().undo().run())}
+        >
+          <UndoIcon fontSize="small" />
+        </ToolbarButton>
+        <ToolbarButton
+          label={label('redo')}
+          disabled={!editor.can().redo()}
+          onPress={() => run(() => editor.chain().focus().redo().run())}
+        >
+          <RedoIcon fontSize="small" />
+        </ToolbarButton>
+      </Box>
+      <LinkDialog
+        currentUrl={String(editor.getAttributes('link').href ?? '')}
+        open={linkOpen}
+        onApply={(url) => {
+          editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+          setLinkOpen(false);
+        }}
+        onClose={() => setLinkOpen(false)}
+      />
+    </>
+  );
+}

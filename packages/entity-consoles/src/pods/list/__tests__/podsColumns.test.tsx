@@ -125,8 +125,8 @@ describe('buildPodsColumns / column set', () => {
     expect(filterOf('pod_mode')).toEqual({
       type: 'enum',
       options: [
-        { value: 'PHYSICAL', label: 'Physical' },
-        { value: 'VIRTUAL', label: 'Virtual' },
+        { value: 'PHYSICAL', label: 'podForm.podMode.physical' },
+        { value: 'VIRTUAL', label: 'podForm.podMode.virtual' },
       ],
     });
     expect(filterOf('pod_type')).toEqual({

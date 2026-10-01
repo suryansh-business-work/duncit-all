@@ -75,7 +75,7 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
    - Use constants only for reusable configuration, not business data.
 
 3. Form Validation:
-   - Use YUP for all form validations.
+   - Use Zod (with React Hook Form) for all form validations.
    - Ensure proper schema-based validation.
    - Cover:
      - Required fields
@@ -211,7 +211,7 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 30. Is mWeb, Native App, Portal, Native web use React Hooks Form and Zod
 31. No UTF Icons For Native Icons use @expo/vector-icons and mWeb & Portals me @mui/icons-material Icon ka use karo
 32. Branching & deployment flow (ENFORCED): NEVER push directly to `main`/`master` — a husky pre-push hook blocks it (emergency bypass: ALLOW_MAIN_PUSH=1). All changes go feature-branch -> `staging` branch first. Pushing `staging` deploys the full replica stack to https://staging.<sub>.duncit.com (same VPS, /opt/duncit-staging, host ports = production + 100, images tagged :staging with staging URLs baked in, separate Mongo database `duncit-staging`). After verifying on staging, open a PR `staging` -> `main`; merging deploys production. PR base for feature work is `staging`, not `main`.
-33. App versioning (ENFORCED): a single app version lives in app/mobile-app/app.json (expo.version) mirrored to app/mobile-app/package.json + app/mweb/package.json (keep all three equal). The husky pre-commit hook asks major/minor/patch on EVERY commit (no skip; interactive via /dev/tty, else $VERSION_BUMP env, else patch) and runs scripts/bump-version.mjs to bump all three. The deploy workflow passes app.json's version as APP_VERSION into server.env; the server upserts it into the DB (branding.app_latest_version) on boot, exposed via the public `appVersionInfo { latest_version android_store_url ios_store_url }` query. The mobile app force-update gate blocks (Play Store) when its baked-in version < DB latest_version. Version is shown on both login screens + both sidebars. pre-commit no longer runs typecheck/tests (CI does). CAVEAT: since the DB version bumps every push but the Play Store build publishes separately, only bump toward a release you will actually publish, or the gate can block users before the new build is live.
+33. App versioning (ENFORCED): a single app version lives in app/mobile-app/app.json (expo.version) mirrored to app/mobile-app/package.json + app/mweb/package.json (keep all three equal). The husky pre-commit hook asks major/minor/patch on EVERY commit (no skip; interactive via /dev/tty, else $VERSION_BUMP env, else patch) and runs scripts/bump-version.mjs to bump all three. The deploy workflow passes app.json's version as APP_VERSION into server.env; the server upserts it into the DB (branding.app_latest_version) on boot, exposed via the public `appVersionInfo { latest_version min_supported_version android_store_url ios_store_url }` query. The mobile app force-update gate blocks (Play Store) when its baked-in version < DB `min_supported_version` (branding.app_min_supported_version) — NOT `latest_version`, which moves on every deploy while the store build publishes separately. `min_supported_version` is raised by hand in Admin > Branding once a release is actually live; blank blocks nobody, and the Tech portal's `force_app_update` flag is the master switch. Version is shown on both login screens + both sidebars. pre-commit no longer runs typecheck/tests (CI does).
 34. No Duplicate Code Deep think on the same use common module generic jo multiple place me use ho sake, Create Common Utils, Common Packages, Shared File etc
 35. SonarQube Coding Standards — write clean the first time
 
@@ -404,10 +404,12 @@ keep the screen tidy.
   `mediums` carries `SMS`, `WHATSAPP` or both — never write a second code path
   per channel, and never write a second `verifyOtp`. A duplicate drifts on
   exactly the parts that matter (expiry, attempt limit, single use).
-  - Delivery is stubbed: `otp.delivery.ts` is the ONE seam a code leaves through,
-    it returns `STUBBED` for both mediums today, and the server then hands the
-    fixed test code back as `test_code` for the client to display. Wiring a real
-    transport is one branch there; nothing above it changes.
+  - `otp.delivery.ts` is the ONE seam a code leaves through: SMS goes out over
+    MSG91 and WhatsApp over the AiSensy authentication template. A medium whose
+    transport is not configured reports `STUBBED`, and only when EVERY delivery
+    of a request is stubbed does the server hand the fixed test code back as
+    `test_code` for the client to display. A new transport is one branch there;
+    nothing above it changes.
   - `consume` is single-use and bound to its context — one verified code marks
     one booking, never a roster.
   - There is deliberately **no generic `requestOtp` mutation**. Each flow

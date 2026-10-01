@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { Translate } from '../i18n/fallback';
 
 export interface Coworker {
   id: string;
@@ -431,31 +432,42 @@ export const VIDEO_COMPRESSION_JOB = gql`
  * lists the portals — "who is on the finance team" is the question this answers.
  */
 export const ROLE_FILTERS = [
-  { value: '', label: 'Everyone' },
-  { value: 'SUPER_ADMIN', label: 'Admin' },
-  { value: 'TECH_MANAGER', label: 'Tech' },
-  { value: 'PRODUCTS_MANAGER', label: 'Products' },
-  { value: 'MARKETING_MANAGER', label: 'Marketing' },
-  { value: 'CRM_MANAGER', label: 'CRM' },
-  { value: 'CHALLENGE_MANAGER', label: 'Challenges' },
-  { value: 'AI_MANAGER', label: 'AI' },
-  { value: 'WEBSITE_MANAGER', label: 'Website' },
-  { value: 'HR_MANAGER', label: 'HR' },
-  { value: 'FINANCE_MANAGER', label: 'Finance' },
-  { value: 'DEVELOPERS_MANAGER', label: 'Developers' },
-  { value: 'LEGAL_MANAGER', label: 'Legal' },
-  { value: 'ONBOARDING_MANAGER', label: 'Onboarding' },
-  { value: 'EMPLOYEE', label: 'Employee' },
-  { value: 'SUPPORT_MANAGER', label: 'Support' },
-  { value: 'ADS_MANAGER', label: 'Ads' },
-  { value: 'COMMUNICATIONS_MANAGER', label: 'Communications' },
-  { value: 'LOGS_MANAGER', label: 'Logs' },
-  { value: 'ANALYTICS_MANAGER', label: 'Analytics' },
-  { value: 'ECOMM_MANAGER', label: 'E-commerce' },
-  { value: 'LOCALIZATION_MANAGER', label: 'Localization' },
+  { value: '', labelKey: 'shell.chat.list.everyone' },
+  { value: 'SUPER_ADMIN', labelKey: 'shell.chat.team.admin' },
+  { value: 'TECH_MANAGER', labelKey: 'shell.chat.team.tech' },
+  { value: 'PRODUCTS_MANAGER', labelKey: 'shell.chat.team.products' },
+  { value: 'MARKETING_MANAGER', labelKey: 'shell.chat.team.marketing' },
+  { value: 'CRM_MANAGER', labelKey: 'shell.chat.team.crm' },
+  { value: 'CHALLENGE_MANAGER', labelKey: 'shell.chat.team.challenges' },
+  { value: 'AI_MANAGER', labelKey: 'shell.chat.team.ai' },
+  { value: 'WEBSITE_MANAGER', labelKey: 'shell.chat.team.website' },
+  { value: 'HR_MANAGER', labelKey: 'shell.chat.team.hr' },
+  { value: 'FINANCE_MANAGER', labelKey: 'shell.chat.team.finance' },
+  { value: 'DEVELOPERS_MANAGER', labelKey: 'shell.chat.team.developers' },
+  { value: 'LEGAL_MANAGER', labelKey: 'shell.chat.team.legal' },
+  { value: 'ONBOARDING_MANAGER', labelKey: 'shell.chat.team.onboarding' },
+  { value: 'EMPLOYEE', labelKey: 'shell.chat.team.employee' },
+  { value: 'SUPPORT_MANAGER', labelKey: 'shell.chat.team.support' },
+  { value: 'ADS_MANAGER', labelKey: 'shell.chat.team.ads' },
+  { value: 'COMMUNICATIONS_MANAGER', labelKey: 'shell.chat.team.communications' },
+  { value: 'LOGS_MANAGER', labelKey: 'shell.chat.team.logs' },
+  { value: 'ANALYTICS_MANAGER', labelKey: 'shell.chat.team.analytics' },
+  { value: 'ECOMM_MANAGER', labelKey: 'shell.chat.team.ecommerce' },
+  { value: 'LOCALIZATION_MANAGER', labelKey: 'shell.chat.team.localization' },
 ];
 
-/** Human labels for the chips under a coworker's name. */
-export const ROLE_LABEL: Record<string, string> = Object.fromEntries(
-  ROLE_FILTERS.filter((r) => r.value).map((r) => [r.value, r.label])
+/** Label KEYS for the chips under a coworker's name, by role. */
+const ROLE_LABEL_KEY: Record<string, string> = Object.fromEntries(
+  ROLE_FILTERS.filter((r) => r.value).map((r) => [r.value, r.labelKey])
 );
+
+/**
+ * A role as the reader's language names it.
+ *
+ * A role this table has not caught up with is shown as the server sent it — a
+ * raw key is still an answer to "which console", and a blank chip is not.
+ */
+export const roleLabel = (role: string, t: Translate): string => {
+  const key = ROLE_LABEL_KEY[role];
+  return key ? t(key) : role;
+};

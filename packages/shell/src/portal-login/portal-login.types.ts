@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { LoginScreenConfig } from '@duncit/user-context';
+import type { Translate } from '../i18n/fallback';
 
 export type { RedirectLocation } from '../lib/redirect';
 
@@ -38,7 +39,7 @@ export interface PortalLoginAppConfig {
 export interface PortalLoginSession {
   setToken(token: string): void;
   hasAppAccess(roles?: readonly string[] | null): boolean;
-  accessDeniedMessage(): string;
+  accessDeniedMessage(t?: Translate): string;
 }
 
 export interface PortalLoginPageProps {

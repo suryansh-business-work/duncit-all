@@ -10,7 +10,10 @@ import CategoriesPage from '../CategoriesPage';
 import { CREATE_CATEGORY, DELETE_CATEGORY } from '../queries';
 import { brandingMock, catNode, categoriesMock, renderWithProviders } from './testkit';
 
-vi.mock('@duncit/media-picker', () => ({ default: () => null }));
+vi.mock('@duncit/media-picker', async () => ({
+  default: () => null,
+  MediaPickerField: (await import('../../branding-page/__tests__/form-harness')).MediaPickerFieldStub,
+}));
 
 const human = catNode({ id: 's1', name: 'Human', level: 'SUPER' });
 

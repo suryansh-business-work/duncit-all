@@ -77,18 +77,19 @@ export const UPDATE_MEDIA_FILE = gql`
 
 /** ImageKit's own sort values, in the order a person would want them. */
 export const SORT_OPTIONS = [
-  { value: 'DESC_CREATED', label: 'Newest first' },
-  { value: 'ASC_CREATED', label: 'Oldest first' },
-  { value: 'ASC_NAME', label: 'Name A–Z' },
-  { value: 'DESC_NAME', label: 'Name Z–A' },
-  { value: 'DESC_SIZE', label: 'Largest first' },
-  { value: 'ASC_SIZE', label: 'Smallest first' },
+  { value: 'DESC_CREATED', labelKey: 'shell.fileManager.sortNewest' },
+  { value: 'ASC_CREATED', labelKey: 'shell.fileManager.sortOldest' },
+  { value: 'ASC_NAME', labelKey: 'shell.fileManager.sortNameAsc' },
+  { value: 'DESC_NAME', labelKey: 'shell.fileManager.sortNameDesc' },
+  { value: 'DESC_SIZE', labelKey: 'shell.fileManager.sortLargest' },
+  { value: 'ASC_SIZE', labelKey: 'shell.fileManager.sortSmallest' },
 ];
 
+/** `labelKey` rather than a label: the toolbar resolves it in the reader's language. */
 export const FILE_TYPE_OPTIONS = [
-  { value: '', label: 'Everything' },
-  { value: 'image', label: 'Images' },
-  { value: 'non-image', label: 'Other files' },
+  { value: '', labelKey: 'shell.fileManager.typeAll' },
+  { value: 'image', labelKey: 'shell.fileManager.typeImages' },
+  { value: 'non-image', labelKey: 'shell.fileManager.typeOther' },
 ];
 
 /** A page big enough to scroll, small enough to arrive quickly. */

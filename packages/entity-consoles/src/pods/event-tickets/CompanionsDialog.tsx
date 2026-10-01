@@ -82,7 +82,7 @@ export default function CompanionsDialog({
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            {`Ticket ${ticketCode ?? ''} admits more than one person. Add the other ${required} to mark attendance.`}
+            {t('admin.companions.body', { vars: { ticket: ticketCode ?? '', required } })}
           </Typography>
           {rows.map((row, index) => (
             // The index IS the identity: these are positional slots created from

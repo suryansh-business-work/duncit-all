@@ -192,6 +192,32 @@ describe('MediaListRow', () => {
     expect(container.querySelector('video')).toBeNull();
   });
 
+  it('names its controls with the shared media copy by default', () => {
+    row(A);
+
+    expect(screen.getByRole('button', { name: 'Move up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move down' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Replace')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove')).toBeInTheDocument();
+  });
+
+  it("takes the host form's own names for its controls", () => {
+    row(A, {
+      labels: {
+        replace: 'Swap picture',
+        moveUp: 'Earlier',
+        moveDown: 'Later',
+        remove: 'Take out',
+      },
+    });
+
+    expect(screen.getByRole('button', { name: 'Earlier' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Later' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Swap picture')).toBeInTheDocument();
+    expect(screen.getByLabelText('Take out')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Move up' })).toBeNull();
+  });
+
   it('reports each control to the caller', () => {
     const onReplace = vi.fn();
     const onMove = vi.fn();

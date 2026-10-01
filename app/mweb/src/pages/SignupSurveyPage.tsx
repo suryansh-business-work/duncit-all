@@ -83,8 +83,12 @@ export default function SignupSurveyPage() {
   const submit = async () => {
     setOpError(null);
     const category_ids = Array.from(selected);
+    const checked = surveySchema.safeParse({ category_ids });
+    if (!checked.success) {
+      setOpError(checked.error.issues[0].message);
+      return;
+    }
     try {
-      await surveySchema.validate({ category_ids }, { abortEarly: false });
       await saveInterests({ variables: { category_ids } });
       // Reported from the submit success itself, not from leaving the page —
       // navigating away without saving is not a finished survey.

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
+import { useTranslation } from '@duncit/shell';
 import { COMPLETE_POD_SETTLEMENT } from './queries';
 import { buildCompleteInput, type CompletePodValues } from './complete-pod-dialog';
 import type { ReleaseSummary } from './ReleaseSummaryDialog';
@@ -10,6 +11,7 @@ interface Args {
 }
 
 export default function usePodReleaseRequest({ refetch, setToast }: Args) {
+  const { t } = useTranslation();
   const [completePodSettlement] = useMutation<any>(COMPLETE_POD_SETTLEMENT);
   const [completePod, setCompletePod] = useState<any>(null);
   const [releaseBusy, setReleaseBusy] = useState(false);
@@ -31,7 +33,7 @@ export default function usePodReleaseRequest({ refetch, setToast }: Args) {
           releases: result.releases,
         });
       }
-      setToast('Pod completion submitted for approval');
+      setToast(t('admin.completePod.submitted'));
       setCompletePod(null);
       await refetch();
     } catch (e: any) {

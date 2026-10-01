@@ -16,7 +16,7 @@ const sock = vi.hoisted(() => {
 vi.mock('socket.io-client', () => ({ io: sock.io }));
 // Force socketOrigin() down its catch branch with an unparseable URL.
 vi.mock('../../src/config/url-configs', () => ({
-  urlConfigs: { isDevelopment: true, graphqlUrl: 'not a valid url', appUrl: '' },
+  urlConfigs: { isDevelopment: true, graphqlUrl: 'not a valid url' },
 }));
 
 beforeEach(() => {

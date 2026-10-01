@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export const UPLOAD_KINDS = ['IMAGE', 'VIDEO', 'DOCUMENT'] as const;
 export type UploadKind = (typeof UPLOAD_KINDS)[number];
@@ -11,25 +11,22 @@ export const MAX_IMAGE_SIZE_MB = 10;
 export const MAX_VIDEO_SIZE_MB = 100;
 export const MAX_DOC_SIZE_MB = 25;
 
-export const uploadFormSchema = yup.object({
-  kind: yup
-    .mixed<UploadKind>()
-    .oneOf([...UPLOAD_KINDS], 'Select a valid upload kind')
-    .required('Kind is required'),
-  file_name: yup
-    .string()
+export const uploadFormSchema = z.object({
+  kind: z.enum(UPLOAD_KINDS, {
+    error: (issue) => (issue.input === undefined ? 'Kind is required' : 'Select a valid upload kind'),
+  }),
+  file_name: z
+    .string({ error: 'File name is required' })
     .trim()
     .min(1, 'File name is required')
-    .max(255, 'File name too long')
-    .required('File name is required'),
-  size_bytes: yup
-    .number()
-    .integer('Size must be an integer')
-    .min(1, 'Size must be greater than 0')
-    .required('Size is required'),
+    .max(255, 'File name too long'),
+  size_bytes: z
+    .number({ error: 'Size is required' })
+    .int('Size must be an integer')
+    .min(1, 'Size must be greater than 0'),
 });
 
-export type UploadFormValues = yup.InferType<typeof uploadFormSchema>;
+export type UploadFormValues = z.infer<typeof uploadFormSchema>;
 
 export function isAllowedExt(name: string, kind: UploadKind) {
   const lower = name.toLowerCase();

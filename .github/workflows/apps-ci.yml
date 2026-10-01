@@ -12,8 +12,10 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/apps-ci.yml'
+  # No `main` here: a PR into main is the staging tip (rule 32), which the push
+  # run above already checks on the same commit — listing it ran every job twice.
   pull_request:
-    branches: [main, master, develop, staging]
+    branches: [master, develop, staging]
     paths:
       - 'app/**'
       - 'packages/**'

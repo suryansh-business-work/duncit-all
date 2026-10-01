@@ -9,8 +9,10 @@ name: A11Y Report
 # and the last step fails the run when either lint found anything. The contrast
 # gate blocks separately, in shared-gates.yml (docs/accessibility.md).
 on:
+  # No `main` here: a PR into main is the staging tip (rule 32), which the push
+  # run above already checks on the same commit — listing it ran every job twice.
   pull_request:
-    branches: [main, master, develop, staging]
+    branches: [master, develop, staging]
   push:
     branches: [staging]
   workflow_dispatch:

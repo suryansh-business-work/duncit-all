@@ -1,6 +1,6 @@
 name: Portals CI
 
-# All 15 consoles, one matrix job each, with the same ordered pipeline:
+# Every console, grouped into four shard jobs, with the same ordered pipeline:
 #   Test → Typecheck → Lint → Build
 # (Replaces the old "Form Tests" workflow, which only ran vitest + a separate
 # typecheck job for the same set.)
@@ -14,8 +14,10 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/portals-ci.yml'
+  # No `main` here: a PR into main is the staging tip (rule 32), which the push
+  # run above already checks on the same commit — listing it ran every job twice.
   pull_request:
-    branches: [main, master, develop, staging]
+    branches: [master, develop, staging]
     paths:
       - 'portals/**'
       - 'packages/**'
@@ -27,46 +29,29 @@ on:
 
 concurrency:
   group: portals-ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  # Four shards, not one runner per portal. Each portal's real work (typecheck,
+  # lint, build) is about a minute, but every runner also pays a full workspace
+  # install and a wait in the shared runner queue — 28 of them per push is what
+  # kept every other workflow queued. Each shard checks all of its portals and
+  # fails at the end with the list, so one red portal never hides another.
   portal:
-    name: ${{ matrix.name }} (test → typecheck → lint → build)
+    name: Portals ${{ matrix.shard.name }} (typecheck → lint → build)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { name: admin, dir: portals/admin }
-          - { name: ads-portal, dir: portals/ads-portal }
-          - { name: ai, dir: portals/ai }
-          - { name: crm, dir: portals/crm }
-          - { name: employee, dir: portals/employee }
-          - { name: finance, dir: portals/finance }
-          - { name: hr, dir: portals/hr }
-          - { name: legal, dir: portals/legal }
-          - { name: marketing, dir: portals/marketing }
-          - { name: onboarding, dir: portals/onboarding }
-          - { name: products, dir: portals/products }
-          - { name: support, dir: portals/support }
-          - { name: tech, dir: portals/tech }
-          - { name: website-app, dir: portals/website-app }
-          - { name: partners-app, dir: portals/partners-app }
-          - { name: challenge-portal, dir: portals/challenge-portal }
-          - { name: developers-portal, dir: portals/developers }
-          - { name: regional-club-admin, dir: portals/regional-club-admin }
-          - { name: venues, dir: portals/venues }
-          - { name: clubs, dir: portals/clubs }
-          - { name: club-admins, dir: portals/club-admins }
-          - { name: hosts, dir: portals/hosts }
-          - { name: pods, dir: portals/pods }
-          - { name: communications, dir: portals/communications }
-          - { name: logs-portal, dir: portals/logs }
-          - { name: analytics, dir: portals/analytics }
-          - { name: ecomm-portal, dir: portals/ecomm-portal }
-          - { name: localization, dir: portals/localization }
+        shard:
+          - name: '1/4'
+            dirs: portals/admin portals/finance portals/hr portals/support portals/challenge-portal portals/hosts portals/analytics
+          - name: '2/4'
+            dirs: portals/tech portals/ads-portal portals/legal portals/website-app portals/developers portals/pods portals/ecomm-portal
+          - name: '3/4'
+            dirs: portals/partners-app portals/marketing portals/employee portals/regional-club-admin portals/clubs portals/communications portals/localization
+          - name: '4/4'
+            dirs: portals/crm portals/products portals/onboarding portals/ai portals/venues portals/club-admins portals/logs
 
     steps:
       - name: Checkout
@@ -87,29 +72,25 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-      # - name: Test (vitest schema/form/unit)
-      #   working-directory: ${{ matrix.dir }}
-      #   run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=${{ github.workspace }}/test-results/${{ matrix.name }}-junit.xml
-
-      - name: Typecheck
-        working-directory: ${{ matrix.dir }}
-        run: pnpm exec tsc -b --noEmit
-
-      # Runs the portal's lint script when one is defined (no-op otherwise),
+      # Vitest stays off here; sonar.yml runs every portal's suite for coverage.
+      #
+      # Lint runs the portal's script when one is defined (no-op otherwise),
       # so wiring ESLint later needs no workflow change.
-      - name: Lint
-        working-directory: ${{ matrix.dir }}
-        run: pnpm run --if-present lint
-
-      - name: Build
-        working-directory: ${{ matrix.dir }}
-        run: pnpm run build
-
-      # Nothing writes a JUnit report while the test step above is paused.
-      # - name: Upload JUnit report
-      #   if: always()
-      #   uses: actions/upload-artifact@v6
-      #   with:
-      #     name: portal-tests-${{ matrix.name }}
-      #     path: test-results/${{ matrix.name }}-junit.xml
-      #     if-no-files-found: ignore
+      - name: Typecheck → lint → build
+        shell: bash
+        run: |
+          failed=()
+          for dir in ${{ matrix.shard.dirs }}; do
+            echo "::group::$dir"
+            if (cd "$dir" && pnpm exec tsc -b --noEmit && pnpm run --if-present lint && pnpm run build); then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error::$dir failed typecheck, lint or build"
+              failed+=("$dir")
+            fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "Failed: ${failed[*]}"
+            exit 1
+          fi

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Full Stack Monorepo (React + GraphQL + Node.js)",
-  "packageManager": "pnpm@11.28.3",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "deps:check": "node scripts/deps.mjs check --all",
     "deps:update": "node scripts/deps.mjs update --all",

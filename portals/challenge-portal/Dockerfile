@@ -81,7 +81,7 @@ COPY portals/challenge-portal ./portals/challenge-portal
 RUN pnpm --filter challenge-portal build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/challenge-portal/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

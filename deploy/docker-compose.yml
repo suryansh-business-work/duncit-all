@@ -55,7 +55,7 @@ services:
     container_name: duncit-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2002:80"
+      - "127.0.0.1:2002:8080"
 
   mweb:
     image: ${DOCKERHUB_USERNAME}/duncit-mweb:${IMAGE_TAG:-latest}
@@ -78,42 +78,42 @@ services:
     container_name: duncit-partners-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2004:80"
+      - "127.0.0.1:2004:8080"
 
   partners-app:
     image: ${DOCKERHUB_USERNAME}/duncit-partners-app:${IMAGE_TAG:-latest}
     container_name: duncit-partners-app
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2005:80"
+      - "127.0.0.1:2005:8080"
 
   ads-portal:
     image: ${DOCKERHUB_USERNAME}/duncit-ads-portal:${IMAGE_TAG:-latest}
     container_name: duncit-ads-portal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2006:80"
+      - "127.0.0.1:2006:8080"
 
   ads-website:
     image: ${DOCKERHUB_USERNAME}/duncit-ads-website:${IMAGE_TAG:-latest}
     container_name: duncit-ads-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2020:80"
+      - "127.0.0.1:2020:8080"
 
   native:
     image: ${DOCKERHUB_USERNAME}/duncit-native:${IMAGE_TAG:-latest}
     container_name: duncit-native
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2022:80"
+      - "127.0.0.1:2022:8080"
 
   crm:
     image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-latest}
     container_name: duncit-crm
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2007:80"
+      - "127.0.0.1:2007:8080"
 
   # WhatsApp gateway for the CRM "WhatsApp Lead Generator" (NestJS + Chromium).
   # Stateful: session/auth data persists under /app/data so a connected WhatsApp
@@ -143,105 +143,105 @@ services:
     container_name: duncit-finance
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2008:80"
+      - "127.0.0.1:2008:8080"
 
   tech:
     image: ${DOCKERHUB_USERNAME}/duncit-tech:${IMAGE_TAG:-latest}
     container_name: duncit-tech
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2009:80"
+      - "127.0.0.1:2009:8080"
 
   support:
     image: ${DOCKERHUB_USERNAME}/duncit-support:${IMAGE_TAG:-latest}
     container_name: duncit-support
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2010:80"
+      - "127.0.0.1:2010:8080"
 
   website-app:
     image: ${DOCKERHUB_USERNAME}/duncit-website-app:${IMAGE_TAG:-latest}
     container_name: duncit-website-app
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2011:80"
+      - "127.0.0.1:2011:8080"
 
   legal:
     image: ${DOCKERHUB_USERNAME}/duncit-legal:${IMAGE_TAG:-latest}
     container_name: duncit-legal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2012:80"
+      - "127.0.0.1:2012:8080"
 
   ai:
     image: ${DOCKERHUB_USERNAME}/duncit-ai:${IMAGE_TAG:-latest}
     container_name: duncit-ai
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2013:80"
+      - "127.0.0.1:2013:8080"
 
   products:
     image: ${DOCKERHUB_USERNAME}/duncit-products:${IMAGE_TAG:-latest}
     container_name: duncit-products
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2014:80"
+      - "127.0.0.1:2014:8080"
 
   marketing:
     image: ${DOCKERHUB_USERNAME}/duncit-marketing:${IMAGE_TAG:-latest}
     container_name: duncit-marketing
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2015:80"
+      - "127.0.0.1:2015:8080"
 
   onboarding:
     image: ${DOCKERHUB_USERNAME}/duncit-onboarding:${IMAGE_TAG:-latest}
     container_name: duncit-onboarding
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2016:80"
+      - "127.0.0.1:2016:8080"
 
   hr:
     image: ${DOCKERHUB_USERNAME}/duncit-hr:${IMAGE_TAG:-latest}
     container_name: duncit-hr
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2017:80"
+      - "127.0.0.1:2017:8080"
 
   employee:
     image: ${DOCKERHUB_USERNAME}/duncit-employee:${IMAGE_TAG:-latest}
     container_name: duncit-employee
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2018:80"
+      - "127.0.0.1:2018:8080"
 
   status:
     image: ${DOCKERHUB_USERNAME}/duncit-status:${IMAGE_TAG:-latest}
     container_name: duncit-status
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2019:80"
+      - "127.0.0.1:2019:8080"
 
   earnwith:
     image: ${DOCKERHUB_USERNAME}/duncit-earnwith:${IMAGE_TAG:-latest}
     container_name: duncit-earnwith
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2025:80"
+      - "127.0.0.1:2025:8080"
 
   challenge:
     image: ${DOCKERHUB_USERNAME}/duncit-challenge:${IMAGE_TAG:-latest}
     container_name: duncit-challenge
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2026:80"
+      - "127.0.0.1:2026:8080"
 
   developers:
     image: ${DOCKERHUB_USERNAME}/duncit-developers:${IMAGE_TAG:-latest}
     container_name: duncit-developers
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2027:80"
+      - "127.0.0.1:2027:8080"
 
   # regional-club-admin.duncit.com — the Regional Club Admin console. Split out
   # of the Partners app: the role is an internal appointment, not a partner
@@ -251,7 +251,7 @@ services:
     container_name: duncit-regional-club-admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2029:80"
+      - "127.0.0.1:2029:8080"
 
   # The four directory consoles. Each is the whole of one entity — every venue,
   # every club, every club admin, every host — rendered from ONE shared console
@@ -262,56 +262,56 @@ services:
     container_name: duncit-venues
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2030:80"
+      - "127.0.0.1:2030:8080"
 
   clubs:
     image: ${DOCKERHUB_USERNAME}/duncit-clubs:${IMAGE_TAG:-latest}
     container_name: duncit-clubs
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2031:80"
+      - "127.0.0.1:2031:8080"
 
   club-admins:
     image: ${DOCKERHUB_USERNAME}/duncit-club-admins:${IMAGE_TAG:-latest}
     container_name: duncit-club-admins
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2032:80"
+      - "127.0.0.1:2032:8080"
 
   hosts:
     image: ${DOCKERHUB_USERNAME}/duncit-hosts:${IMAGE_TAG:-latest}
     container_name: duncit-hosts
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2033:80"
+      - "127.0.0.1:2033:8080"
 
   pods:
     image: ${DOCKERHUB_USERNAME}/duncit-pods:${IMAGE_TAG:-latest}
     container_name: duncit-pods
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2034:80"
+      - "127.0.0.1:2034:8080"
 
   communications:
     image: ${DOCKERHUB_USERNAME}/duncit-communications:${IMAGE_TAG:-latest}
     container_name: duncit-communications
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2035:80"
+      - "127.0.0.1:2035:8080"
 
   logs:
     image: ${DOCKERHUB_USERNAME}/duncit-logs:${IMAGE_TAG:-latest}
     container_name: duncit-logs
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2036:80"
+      - "127.0.0.1:2036:8080"
 
   analytics:
     image: ${DOCKERHUB_USERNAME}/duncit-analytics:${IMAGE_TAG:-latest}
     container_name: duncit-analytics
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2037:80"
+      - "127.0.0.1:2037:8080"
 
   # The Localization console (localization.duncit.com).
   localization:
@@ -319,7 +319,7 @@ services:
     container_name: duncit-localization
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2042:80"
+      - "127.0.0.1:2042:8080"
 
   # The pet store's console (ecomm-portal.duncit.com).
   ecomm-portal:
@@ -327,7 +327,7 @@ services:
     container_name: duncit-ecomm-portal
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2038:80"
+      - "127.0.0.1:2038:8080"
 
   # The pet store itself (ecomm.duncit.com).
   ecomm-store:

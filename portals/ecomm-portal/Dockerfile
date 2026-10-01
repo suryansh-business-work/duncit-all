@@ -89,7 +89,7 @@ COPY portals/ecomm-portal ./portals/ecomm-portal
 RUN pnpm --filter ecomm-portal build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/ecomm-portal/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

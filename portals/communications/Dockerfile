@@ -92,7 +92,7 @@ COPY portals/tech/src ./portals/tech/src
 RUN pnpm --filter communications build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/communications/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

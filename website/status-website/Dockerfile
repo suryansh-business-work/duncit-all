@@ -85,7 +85,7 @@ ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/website/status-website/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

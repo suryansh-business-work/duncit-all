@@ -80,7 +80,7 @@ COPY portals/regional-club-admin ./portals/regional-club-admin
 RUN pnpm --filter regional-club-admin build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/regional-club-admin/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

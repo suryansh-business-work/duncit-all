@@ -86,7 +86,7 @@ COPY portals/venues ./portals/venues
 RUN pnpm --filter venues build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/venues/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

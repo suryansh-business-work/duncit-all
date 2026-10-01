@@ -86,7 +86,7 @@ COPY portals/hosts ./portals/hosts
 RUN pnpm --filter hosts build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 COPY --from=builder /repo/portals/hosts/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080

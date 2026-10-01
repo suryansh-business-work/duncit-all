@@ -11,8 +11,8 @@ import { notify } from '../../components/notify';
 import { RECORD_STORY_VIEW } from '../home-page/queries';
 import { CLUB_STORIES, DELETE_CLUB_STORY } from '../ClubDetailsPage/clubDetailsQueries';
 import ClubStoryTiles, { type ClubStory } from './ClubStoryTiles';
-import ReportStoryDialog from './ReportStoryDialog';
-import StoryActionsMenu from './StoryActionsMenu';
+import ContentActionsMenu from '../../components/content-report/ContentActionsMenu';
+import ReportContentDialog from '../../components/content-report/ReportContentDialog';
 
 interface Props {
   clubId: string;
@@ -83,8 +83,10 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
   };
 
   const actions = open ? (
-    <StoryActionsMenu
+    <ContentActionsMenu
+      kind="STORY"
       canDelete={!!open.can_delete}
+      canReport
       onDelete={() => setConfirmDelete(true)}
       onReport={() => setReporting(open.id)}
     />
@@ -103,7 +105,7 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
         onIndexChange={showStory}
         actions={actions}
       />
-      <ReportStoryDialog storyId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentDialog kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
       <ConfirmDialog
         testId="club-story-delete"
         open={confirmDelete}

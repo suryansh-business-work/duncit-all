@@ -15,11 +15,6 @@
  * (rule 34), and it is the difference between one row to translate and sixty.
  */
 export const CATALOGUE_FALLBACK: Record<string, string> = {
-  'email.contentReported.title': 'Your content has been reported',
-  'email.contentReported.body': 'A member reported content you shared. Our team is reviewing it. If we find that it breaks our community guidelines, we will remove it.',
-  'email.contentReported.subject': 'We’re reviewing a report about your content',
-  'email.contentReported.reportRefLabel': 'Report reference',
-  'email.contentReported.footer': 'You’re receiving this because someone reported content you shared on Duncit.',
   // --- Shared field labels -------------------------------------------------
   'email.field.pod': 'Pod',
   'email.field.podTitle': 'Pod',
@@ -81,6 +76,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.label.giftCard': 'Gift card',
   'email.label.signIn': 'Sign-in',
   'email.label.grievance': 'Grievance',
+  'email.label.report': 'Report',
 
   // --- Shared buttons ------------------------------------------------------
   'email.cta.viewPod': 'View the pod',
@@ -413,6 +409,34 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.grievanceRejected.title': 'About your grievance',
   'email.grievanceRejected.body':
     'Our Grievance Officer has reviewed your grievance and closed it without action. The reason is below.',
+
+  // --- Content reports: a Legal reviewer writing about one ---------------------
+  'email.contentReportMessage.title': 'About a content report',
+  'email.contentReportMessage.body':
+    'Our Legal team is writing to you about content that was reported on Duncit. Their message is below.',
+  'email.contentReportReceived.title': 'We have your report',
+  'email.contentReportReceived.body':
+    'Thanks for telling us. Our Legal team reviews every report, and we will email you again when we have decided what to do.',
+  'email.contentReportReceived.help':
+    'You do not need to report the same content again. If you report it twice, we update your first report.',
+  'email.contentReportActioned.title': 'We removed the content you reported',
+  'email.contentReportActioned.body':
+    'Our Legal team reviewed your report and took the content down. Thank you for helping keep Duncit safe.',
+  'email.contentReportActioned.help': 'Reply to this email if you want to tell us more, and quote the report reference.',
+  'email.contentReportDismissed.title': 'We reviewed the content you reported',
+  'email.contentReportDismissed.body':
+    'Our Legal team reviewed your report and found that the content does not break our community guidelines, so it stays up.',
+  'email.contentReportDismissed.help':
+    'If you think we missed something, reply to this email with the report reference and tell us more.',
+  'email.contentRemovedOwner.title': 'We removed content you shared',
+  'email.contentRemovedOwner.body':
+    'Our Legal team reviewed a report about content you shared on Duncit and took it down, because it breaks our community guidelines.',
+  'email.contentRemovedOwner.help':
+    'If you think this was a mistake, reply to this email with the report reference and we will look at it again.',
+  'email.contentReport.footerReporter': "You're receiving this because you reported content on Duncit.",
+  'email.contentReport.footerOwner': "You're receiving this because it concerns content you shared on Duncit.",
+  'email.contentReportMessage.help':
+    'Reply to this email if you want to tell us more, and quote the report reference so we can find it.',
 
   // --- Security ----------------------------------------------------------------
   'email.recentAccountLogin.title': 'A new sign-in to your account',

@@ -1,6 +1,6 @@
 ---
 name: '@duncit/tabs'
-summary: 'The MUI tab strip every surface renders — DuncitTabs plus useTabParam, which keeps the selection in the URL (?selectedtab=) instead of component state, and the debounced client-side search in every strip header.'
+summary: 'The MUI tab strip every surface renders — DuncitTabs plus useTabParam, which keeps the selection in the URL (?selectedtab=) instead of component state, and the debounced client-side search in every portal strip header (mWeb switches it off).'
 category: 'ui'
 zeroDeps: false
 frameworkFree: false
@@ -35,6 +35,8 @@ exports:
   - 'TAB_SEARCH_DEBOUNCE_MS'
   - 'FilteredTabs'
   - 'TabSearchState'
+  - 'TabSearchDefaultProvider'
+  - 'TabSearchDefaultProviderProps'
 ---
 
 ## Why this exists
@@ -93,12 +95,12 @@ straight through, and each item carries its own `icon`, `iconPosition`, `disable
 
 ## The strip searches itself
 
-Every strip carries a search box at the start of its header, and what it filters is the **tabs**,
-client-side. The strip already holds every tab it could ever show, so there is nothing to ask a
-server for; a round trip could only tell it what it already knows.
+Every **portal** strip carries a search box at the start of its header, and what it filters is the
+**tabs**, client-side. The strip already holds every tab it could ever show, so there is nothing to
+ask a server for; a round trip could only tell it what it already knows.
 
 ```tsx
-// On by default — this strip already has the box:
+// On by default in a portal — this strip already has the box:
 <DuncitTabs {...tabs} variant="scrollable" />
 
 // A two-tab segmented control has nothing to search:
@@ -108,9 +110,30 @@ server for; a round trip could only tell it what it already knows.
 <DuncitTabs {...tabs} searchPlaceholder={t('admin.cities.searchCity')} />
 ```
 
+### Portals only — mWeb turns it off for the whole surface
+
+mWeb's strips are two to four tabs across a phone: the box only takes the room the tabs need, and
+the native app, which mWeb has to match (rule 27), never had one. So mWeb switches the default off
+**once**, at its root, instead of passing `searchable={false}` to every strip:
+
+```tsx
+// app/mweb/src/App.tsx
+import { TabSearchDefaultProvider } from '@duncit/tabs';
+
+<TabSearchDefaultProvider searchable={false}>
+  <ConfirmProvider>{/* …the rest of the app… */}</ConfirmProvider>
+</TabSearchDefaultProvider>
+```
+
+It is a context rather than a prop per strip because some strips are not the surface's to edit:
+`@duncit/media-picker`'s dialog renders the same `<DuncitTabs>` under a portal and under mWeb, and
+only the tree it is mounted in knows which. A portal mounts no provider and keeps the box. Do not
+add `searchable={false}` to a new mWeb strip — it already has none.
+
 | Prop / field | Type | What it does |
 | --- | --- | --- |
-| `searchable` | `boolean` (default `true`) | The box. `false` renders exactly the strip this package shipped before it existed — no wrapper, no row. |
+| `TabSearchDefaultProvider` | `{ searchable: boolean; children }` | Sets what every strip below falls back to when it passes no `searchable`. With no provider above it, a strip is searchable. |
+| `searchable` | `boolean` (default: the surface's — on in portals, off in mWeb) | The box. A strip's own value wins over the provider. `false` renders exactly the strip this package shipped before it existed — no wrapper, no row. |
 | `searchPlaceholder` | `string` | Overrides `tabs.search.placeholder` ("Search tabs"). It is also the field's accessible name, so it must read as a label. |
 | `searchText` (per item) | `string` | What that tab is matched on when its `label` is not a plain string. |
 

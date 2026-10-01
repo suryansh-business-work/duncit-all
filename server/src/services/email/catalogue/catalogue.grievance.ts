@@ -86,26 +86,3 @@ const grievanceEmail = (step: GrievanceStep): EmailDef =>
   });
 
 export const GRIEVANCE_EMAILS: readonly EmailDef[] = GRIEVANCE_STEPS.map(grievanceEmail);
-
-export const UGC_CONTENT_REPORTED_EMAIL: EmailDef = defineEmail({
-  slug: 'ugc-content-reported',
-  name: 'UGC Content Reported',
-  description: 'The owner of a post or status, after another member reports their content.',
-  audience: 'USER',
-  category: 'legal',
-  fires: 'A member reports a post or status for unsafe content',
-  subject: '{{t:email.contentReported.subject}}',
-  footerNote: '{{t:email.contentReported.footer}}',
-  vars: [
-    v('name', 'The content owner’s first name.', 'Aarav'),
-    v('report_no', 'The reference for this content report.', 'RPT-000042'),
-  ],
-  body: {
-    copyKey: 'email.contentReported',
-    nameVar: 'name',
-    tone: CALM,
-    calloutLabelKey: 'email.contentReported.reportRefLabel',
-    calloutVar: 'report_no',
-    helpKey: 'email.contentReported.footer',
-  },
-});

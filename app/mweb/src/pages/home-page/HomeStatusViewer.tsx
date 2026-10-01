@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, ButtonBase, Dialog, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Dialog, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -13,7 +10,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router';
 import { formatDistanceToNowStrict } from 'date-fns';
+import ReportContentDialog from '../../components/content-report/ReportContentDialog';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
+import StatusOptionsMenu from './StatusOptionsMenu';
 import StatusSlideVideo from './StatusSlideVideo';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -103,7 +102,11 @@ interface HomeStatusViewerProps {
   onPrev?: () => void;
   /** Own story only — delete the currently shown slide by its post id (Bug 7). */
   onDelete?: (slideId: string) => void;
-  onReport?: (slideId: string) => void;
+  /** Somebody else's story — offer "Report story" in the 3-dot menu. Unlike
+   * delete, reporting is for anyone who can see the story except its owner.
+   * The viewer runs the report dialog itself and holds the story while it is
+   * open, so a slide cannot advance away from under a half-written report. */
+  canReport?: boolean;
   /** Own story only — open the "seen by" viewers dialog for a slide (Bug 4). */
   onViewers?: (slideId: string) => void;
   /** Followers' stories only — like/unlike the current slide (Bug 5). */
@@ -130,7 +133,7 @@ export default function HomeStatusViewer({
   onNext,
   onPrev,
   onDelete,
-  onReport,
+  canReport = false,
   onViewers,
   onToggleLike,
   onRecordView,
@@ -143,11 +146,12 @@ export default function HomeStatusViewer({
   const [index, setIndex] = useState(startIndex);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   // A story video plays with its sound. The browser may refuse that on the
   // first slide, in which case the clip reports back and the speaker below
   // switches to "muted" rather than lying about it.
   const [muted, setMuted] = useState(false);
+  // The slide being reported; the story is held for as long as this is set.
+  const [reporting, setReporting] = useState<string | null>(null);
   const frameRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const startedAtRef = useRef<number | null>(null);
@@ -165,10 +169,13 @@ export default function HomeStatusViewer({
   // has to advance — nothing else would.
   const videoSrc = current?.mediaType === 'VIDEO' ? current.mediaUrl : null;
   const isVideo = !!videoSrc;
+  // A press holds the story, and so does an open report dialog.
+  const held = paused || reporting !== null;
 
   useEffect(() => {
     setProgress(0);
     setPaused(false);
+    setReporting(null);
     setIndex(startIndex);
     elapsedRef.current = 0;
     startedAtRef.current = null;
@@ -188,13 +195,12 @@ export default function HomeStatusViewer({
   useEffect(() => {
     setLiked(currentLiked);
     setLikeCount(currentLikeCount);
-    setMenuAnchor(null);
     if (currentId && onRecordView) onRecordView(currentId);
   }, [currentId, currentLiked, currentLikeCount, onRecordView]);
 
   useEffect(() => {
     // Videos drive their own progress/advance from the <video> element below.
-    if (!item || paused || isVideo) return undefined;
+    if (!item || held || isVideo) return undefined;
     startedAtRef.current = performance.now() - elapsedRef.current;
     const tick = (now: number) => {
       const startedAt = startedAtRef.current ?? now;
@@ -212,7 +218,7 @@ export default function HomeStatusViewer({
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [index, item, goNextStory, paused, slides.length, isVideo]);
+  }, [index, item, goNextStory, held, slides.length, isVideo]);
 
   // Stable, so flipping the speaker does not re-run the clip's play() effect
   // on every render of the viewer.
@@ -248,6 +254,10 @@ export default function HomeStatusViewer({
   // sit there until the viewer closed it by hand.
   const handleVideoError = () => goNext();
 
+  // Delete is the owner's and Report is everybody else's; a story that offers
+  // neither (an ad, a pod, Duncit's own) has no menu to open.
+  const onReport = canReport ? setReporting : undefined;
+  const hasMenu = !!onDelete || canReport;
   const chrome = viewerChrome(item.kind);
   const target = slideTarget(item, current);
   const openTarget = () => {
@@ -323,7 +333,7 @@ export default function HomeStatusViewer({
           <StatusSlideVideo
             key={`video-${index}`}
             src={videoSrc}
-            paused={paused}
+            paused={held}
             muted={muted}
             onBlocked={handleAutoplayBlocked}
             onTimeUpdate={handleVideoTime}
@@ -417,25 +427,9 @@ export default function HomeStatusViewer({
                 <VisibilityIcon />
               </DuncitRoundButton>
             )}
-            {(onDelete || onReport) && currentId && (
-              <DuncitRoundButton
-                tone="overlay"
-                onClick={(event) => setMenuAnchor(event.currentTarget)}
-                aria-label={t('contentReport.menuLabel')}
-                data-testid="status-kebab"
-              >
-                <MoreVertIcon />
-              </DuncitRoundButton>
-            )}
-            {(onDelete || onReport) && currentId && (
-              <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
-                {onReport && <MenuItem data-testid="status-report" onClick={() => { setMenuAnchor(null); onReport(currentId); }}>
-                  <FlagOutlinedIcon fontSize="small" sx={{ mr: 1 }} />{t('contentReport.reportUnsafe')}
-                </MenuItem>}
-                {onDelete && <MenuItem data-testid="status-delete" onClick={() => { setMenuAnchor(null); onDelete(currentId); }} sx={{ color: 'error.main', fontWeight: 600 }}>
-                  <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />{t('mweb.common.delete')}
-                </MenuItem>}
-              </Menu>
+            {/* Keyed by slide: an open menu closes when the story moves on. */}
+            {hasMenu && currentId && (
+              <StatusOptionsMenu key={currentId} slideId={currentId} onDelete={onDelete} onReport={onReport} />
             )}
             <DuncitRoundButton data-testid="status-close" tone="overlay" onClick={onClose} aria-label={t('mweb.common.closeStatus')}>
               <CloseIcon />
@@ -465,6 +459,7 @@ export default function HomeStatusViewer({
           </DuncitButton>
         )}
       </Box>
+      <ReportContentDialog kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
     </Dialog>
   );
 }

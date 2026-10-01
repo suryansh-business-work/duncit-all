@@ -4,11 +4,8 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineRounded'
 import FavoriteIcon from '@mui/icons-material/FavoriteRounded';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorderRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
-import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Menu, MenuItem } from '@mui/material';
-import { useState } from 'react';
 import { DuncitIconButton } from '@duncit/buttons';
+import ContentActionsMenu from '../../components/content-report/ContentActionsMenu';
 import { formatDistanceToNow } from 'date-fns';
 import { getFeedCardHeader } from './feedHeader';
 import type { FeedClub, FeedPost } from './queries';
@@ -39,7 +36,6 @@ export default function FeedPostCard({
   onReport,
 }: Readonly<FeedPostCardProps>) {
   const { t } = useTranslation();
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const header = getFeedCardHeader(post, club);
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
   const avatarFallback = club ? (
@@ -51,44 +47,47 @@ export default function FeedPostCard({
   return (
     <Card data-testid={`feed-post-${post.id}`} sx={{ overflow: 'hidden' }}>
       <Stack direction="row" sx={{ alignItems: 'center', pr: 1 }}>
-      <Stack
-        data-testid={`feed-author-${post.id}`}
-        direction="row"
-        spacing={1.25}
-        component={RouterLink}
-        to={header.to}
-        sx={{
-          alignItems: 'center',
-          minWidth: 0,
-          p: 1.5,
-          textDecoration: 'none',
-          color: 'inherit',
-        }}
-      >
-        <Avatar
-          alt=""
-          src={header.avatarUrl ?? undefined}
-          sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+        <Stack
+          data-testid={`feed-author-${post.id}`}
+          direction="row"
+          spacing={1.25}
+          component={RouterLink}
+          to={header.to}
+          sx={{
+            alignItems: 'center',
+            // Takes the row, so the 3-dot menu sits at the card's far edge.
+            flex: 1,
+            minWidth: 0,
+            p: 1.5,
+            textDecoration: 'none',
+            color: 'inherit',
+          }}
         >
-          {avatarFallback}
-        </Avatar>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }} noWrap>
-            {header.name}
-          </Typography>
-          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 500 }}>
-            {timeAgo}
-          </Typography>
-        </Box>
-      </Stack>
-      <DuncitIconButton data-testid={`feed-post-menu-${post.id}`} aria-label={t('contentReport.menuLabel')} onClick={(event) => setMenuAnchor(event.currentTarget)}>
-        <MoreVertIcon />
-      </DuncitIconButton>
-      <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
-        <MenuItem onClick={() => { setMenuAnchor(null); onReport?.(post.id); }}>
-          <FlagOutlinedIcon fontSize="small" sx={{ mr: 1 }} />{t('contentReport.reportUnsafe')}
-        </MenuItem>
-      </Menu>
+          <Avatar
+            alt=""
+            src={header.avatarUrl ?? undefined}
+            sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 600 }}
+          >
+            {avatarFallback}
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }} noWrap>
+              {header.name}
+            </Typography>
+            <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              {timeAgo}
+            </Typography>
+          </Box>
+        </Stack>
+        {/* A feed holds other people's posts, so the menu is Report alone. */}
+        <ContentActionsMenu
+          kind="POST"
+          tone="surface"
+          idSuffix={post.id}
+          canDelete={false}
+          canReport={!!onReport}
+          onReport={() => onReport?.(post.id)}
+        />
       </Stack>
 
       {post.media_type === 'VIDEO' ? (

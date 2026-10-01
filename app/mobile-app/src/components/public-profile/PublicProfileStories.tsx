@@ -4,7 +4,7 @@ import { XStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import { ScrollRail } from '@/components/ScrollRail';
 import { StatusViewer } from '@/components/status/StatusViewer';
-import { ReportStorySheet } from '@/components/status/ReportStorySheet';
+import { ReportContentSheet } from '@/components/content-report/ReportContentSheet';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { PublicProfileStory } from '@/hooks/usePublicProfile';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -15,6 +15,8 @@ interface Props {
   name: string;
   photo?: string | null;
   stories: PublicProfileStory[];
+  /** False on your own profile: nobody reviews a report against your own story. */
+  canReport: boolean;
 }
 
 /**
@@ -26,10 +28,16 @@ interface Props {
  * app. It used to open the plain image viewer: a still frame with a close
  * button and no progress bar at all.
  */
-export function PublicProfileStories({ authorId, name, photo, stories }: Readonly<Props>) {
+export function PublicProfileStories({
+  authorId,
+  name,
+  photo,
+  stories,
+  canReport,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
 
   // The rail and the viewer read the same oldest → newest slides, so the ring
   // that was tapped is the slide that opens.
@@ -84,11 +92,9 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
         status={openIndex === null ? null : group}
         startIndex={openIndex ?? 0}
         onClose={() => setOpenIndex(null)}
-        onReport={setReportingStoryId}
+        onReport={canReport ? setReporting : undefined}
       />
-      {reportingStoryId ? (
-        <ReportStorySheet storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
-      ) : null}
+      <ReportContentSheet kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
     </>
   );
 }

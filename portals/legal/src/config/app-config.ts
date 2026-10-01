@@ -30,10 +30,11 @@ export const appConfig = {
     { label: 'Brand Consent', labelKey: 'shell.nav.brandConsent', to: '/brand-consent', icon: 'storefront' },
     { label: 'Policy Acceptance Logs', labelKey: 'shell.nav.policyAcceptanceLogs', to: '/policy-acceptance-logs', icon: 'verified-user' },
     { label: 'Contracts', labelKey: 'shell.nav.contracts', to: '/contracts', icon: 'handshake' },
-    // What users have reported from the app and mWeb. It sits beside
-    // Grievance rather than under it: a grievance is someone complaining
-    // about US, a report is someone flagging another user's content.
-    { label: 'UGC Content reporting', labelKey: 'reportLogs.title', to: '/reports', icon: 'flag' },
+    // The posts and stories users have reported from the app and mWeb, and
+    // the report categories the app offers. It sits beside Grievance rather
+    // than under it: a grievance is someone complaining about US, a report is
+    // someone flagging another user's content.
+    { label: 'UGC Monitoring', labelKey: 'shell.nav.ugcMonitoring', to: '/ugc-monitoring', icon: 'flag' },
     {
       label: 'Grievance', labelKey: 'shell.nav.grievance',
       icon: 'flag',

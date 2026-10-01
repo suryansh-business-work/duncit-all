@@ -5,7 +5,7 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
 import { PublicProfileStories } from '@/components/public-profile/PublicProfileStories';
 import { ProfilePodsPanel } from '@/components/profile/ProfilePodsPanel';
 import { ProfileTabs, type ProfileTab } from '@/components/profile/ProfileTabs';
@@ -25,6 +25,8 @@ export function PublicProfilePosts({
   authorPhoto,
   isHost,
   isOwner,
+  meId,
+  onPostsChanged,
 }: Readonly<{
   posts: PublicProfilePost[];
   stories: PublicProfileStory[];
@@ -36,11 +38,18 @@ export function PublicProfilePosts({
   /** Whether the profile holds the HOST role — the third tab exists only then. */
   isHost: boolean;
   isOwner: boolean;
+  /** The signed-in viewer, so the post viewer can offer Delete on their own
+   * post and Report on anyone else's. */
+  meId?: string;
+  /** Fired after a post is deleted from the viewer, so the grid reloads. */
+  onPostsChanged?: () => void;
 }>) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
-  const [postIndex, setPostIndex] = useState<number | null>(null);
+  // The post open in the full viewer — the same like/comment viewer the own
+  // profile grid opens, and what mWeb's PostDialog is on this page (rule 27).
+  const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [tab, setTab] = useState<ProfileTab>('posts');
 
   if (!canView) {
@@ -74,7 +83,6 @@ export function PublicProfilePosts({
   }
 
   const cell = Math.floor((Math.min(width, 520) - 32 - 8) / 3);
-  const postImages = posts.map((post) => post.image_url);
 
   return (
     <YStack gap={12}>
@@ -83,6 +91,7 @@ export function PublicProfilePosts({
         name={authorName}
         photo={authorPhoto}
         stories={stories}
+        canReport={!isOwner}
       />
 
       <ProfileTabs value={tab} onChange={setTab} isHost={isHost} isOwner={isOwner} />
@@ -111,7 +120,7 @@ export function PublicProfilePosts({
                 role="button"
                 tabIndex={0}
                 aria-label={t('mweb.common.openPost')}
-                onPress={() => setPostIndex(index)}
+                onPress={() => setOpenPostId(post.id)}
               >
                 <AppImage
                   source={{ uri: post.image_url }}
@@ -123,7 +132,17 @@ export function PublicProfilePosts({
           </XStack>
         ))}
 
-      <ImageViewerModal images={postImages} index={postIndex} onClose={() => setPostIndex(null)} />
+      {openPostId ? (
+        <PostViewerSheet
+          postId={openPostId}
+          meId={meId}
+          onClose={() => setOpenPostId(null)}
+          onDeleted={() => {
+            setOpenPostId(null);
+            onPostsChanged?.();
+          }}
+        />
+      ) : null}
     </YStack>
   );
 }

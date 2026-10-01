@@ -1,5 +1,6 @@
 import { GRIEVANCE_SOURCES, GRIEVANCE_STATUSES } from '@modules/content/grievance/grievanceTicket.model';
-import { REPORT_REASONS, REPORT_STATUSES, REPORT_TARGET_TYPES } from '@modules/content/report/contentReport.model';
+import { REPORT_STATUSES, REPORT_TARGET_TYPES } from '@modules/content/report/contentReport.model';
+import { reportCategoryService } from '@modules/content/report/reportCategory.service';
 import type { AnalyticsWindow } from './window';
 import { consoleLink } from './links';
 import {
@@ -10,6 +11,7 @@ import {
   linkEverything,
   mean,
   pct,
+  topSlices,
   total,
   trend,
   type AnalyticsBreakdown,
@@ -43,7 +45,7 @@ import {
 
 const HOME = consoleLink('legal', '/');
 const GRIEVANCES = consoleLink('legal', '/grievance/tickets');
-const REPORTS = consoleLink('legal', '/reports');
+const REPORTS = consoleLink('legal', '/ugc-monitoring');
 const DOCUMENTS = consoleLink('legal', '/documents');
 const POLICIES = consoleLink('legal', '/policies');
 const ACCEPTANCE_LOG = consoleLink('logs', '/policy-acceptance-logs');
@@ -112,7 +114,11 @@ function policyLeaderboard(accounts: number, policies: readonly PolicyStanding[]
 type GrievanceMix = Awaited<ReturnType<typeof loadGrievanceMix>>;
 type ReportMix = Awaited<ReturnType<typeof loadReportMix>>;
 
-function legalBreakdowns(grievances: GrievanceMix, reports: ReportMix): AnalyticsBreakdown[] {
+function legalBreakdowns(
+  grievances: GrievanceMix,
+  reports: ReportMix,
+  reasonLabels: ReadonlyMap<string, string>
+): AnalyticsBreakdown[] {
   const grievance = { link: GRIEVANCES };
   const report = { link: REPORTS };
   return [
@@ -125,7 +131,9 @@ function legalBreakdowns(grievances: GrievanceMix, reports: ReportMix): Analytic
       ...grievance,
       ordered: true,
     }),
-    breakdown('leg_report_reason', fixedSlices(REPORT_REASONS, countMap(reports.reason)), report),
+    // Report categories are data Legal manages, so the slices are named from
+    // the categories themselves rather than from a fixed list of keys.
+    breakdown('leg_report_reason', topSlices(countMap(reports.reason), reasonLabels), report),
     breakdown('leg_report_outcome', fixedSlices(REPORT_STATUSES, countMap(reports.status)), { ...report, ordered: true }),
     breakdown('leg_report_target', fixedSlices(REPORT_TARGET_TYPES, countMap(reports.target)), report),
   ];
@@ -143,6 +151,7 @@ export async function legalAnalytics(window: AnalyticsWindow): Promise<EntityAna
     signing,
     standing,
     acceptances,
+    reasonLabels,
   ] = await Promise.all([
       loadFiledGrievances(window),
       loadClosedGrievances(window),
@@ -154,6 +163,7 @@ export async function legalAnalytics(window: AnalyticsWindow): Promise<EntityAna
       loadSigning(window),
       loadPolicyStanding(),
       loadAcceptances(window),
+      reportCategoryService.labelMap(),
     ]);
   const [openGrievances, overdueGrievances, openReports] = open;
   const filed = splitPeriod(filedRows, window, countOf);
@@ -215,7 +225,7 @@ export async function legalAnalytics(window: AnalyticsWindow): Promise<EntityAna
         ACCEPTANCE_LOG
       ),
     ],
-    breakdowns: legalBreakdowns(grievanceMix, reportMix),
+    breakdowns: legalBreakdowns(grievanceMix, reportMix, reasonLabels),
     leaderboard: policyLeaderboard(standing.accounts, standing.policies),
   };
   return linkEverything(sections, HOME);

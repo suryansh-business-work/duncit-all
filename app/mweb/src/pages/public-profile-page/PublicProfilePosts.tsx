@@ -159,7 +159,7 @@ export default function PublicProfilePosts({
 
   return (
     <Stack spacing={1.5}>
-      <PublicProfileStories name={name} photo={photo} stories={stories} />
+      <PublicProfileStories name={name} photo={photo} stories={stories} canReport={!isOwner} />
 
       <ProfileTabs tabs={tabs} />
       {tabs.value === 'posts' && grid}

@@ -13,6 +13,7 @@ import SplashScreen from './components/SplashScreen';
 import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ConfirmProvider } from '@duncit/dialogs';
+import { TabSearchDefaultProvider } from '@duncit/tabs';
 import { NotifyHost } from './components/notify';
 import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
@@ -83,6 +84,7 @@ export default function App() {
   useShortLinkJourney(isAuthed);
 
   return (
+    <TabSearchDefaultProvider searchable={false}>
     <ConfirmProvider>
     <StatusUploadProvider>
     <CartProvider>
@@ -188,5 +190,6 @@ export default function App() {
     </CartProvider>
     </StatusUploadProvider>
     </ConfirmProvider>
+    </TabSearchDefaultProvider>
   );
 }

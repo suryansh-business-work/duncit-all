@@ -432,6 +432,13 @@ async function bootstrap() {
     const { managedOptionService } = await import('@modules/crm/managedOption/managedOption.service');
     await managedOptionService.seedDefaults();
   });
+  // The reasons the report dialog offers. Seeded into an empty collection
+  // only, so a category Legal removed stays removed across deploys.
+  await safeSeed('reportCategories', async () => {
+    const { reportCategoryService } = await import('@modules/content/report/reportCategory.service');
+    const created = await reportCategoryService.seedDefaults();
+    if (created > 0) logs.server.info('bootstrap', 'reportCategories', { created });
+  });
   await safeSeed('podPlan', async () => {
     const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();

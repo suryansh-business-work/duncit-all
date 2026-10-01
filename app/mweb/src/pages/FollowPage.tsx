@@ -4,7 +4,7 @@ import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import PostDialog from './profile-page/post-dialog/PostDialog';
-import ReportStoryDialog from './club-details-page/ReportStoryDialog';
+import ReportContentDialog from '../components/content-report/ReportContentDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
 import { FEED_CLUBS, FOLLOW_ME } from './follow-page/queries';
 import type { FeedClub, FollowingFeedSource } from './follow-page/queries';
@@ -92,7 +92,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         onClose={closePost}
         onDeleted={onPostDeleted}
       />
-      <ReportStoryDialog storyId={reportPostId} onClose={() => setReportPostId(null)} />
+      <ReportContentDialog kind="POST" postId={reportPostId} onClose={() => setReportPostId(null)} />
     </Stack>
   );
 }

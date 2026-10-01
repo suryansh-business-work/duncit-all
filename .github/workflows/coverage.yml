@@ -1,8 +1,7 @@
 name: Coverage
 
 # Coverage for the four product surfaces — Portal, mWeb, Native app, Website —
-# uploaded to Codecov and posted back as ONE sticky comment from
-# github-actions[bot] on every staging and production PR.
+# uploaded to Codecov, with the table on the run's summary page.
 #
 # WHY A DEDICATED WORKFLOW
 # ------------------------
@@ -19,22 +18,19 @@ name: Coverage
 # of suites are red today. Every coverage step is therefore best-effort: a red
 # suite lowers the reported number rather than blocking the merge. Codecov's own
 # statuses are `informational` for the same reason (see codecov.yml).
+#
+# NIGHTLY, NOT PER PUSH. sonar.yml already runs these exact suites (same runner
+# script) on every staging push, so running them here too doubled the test load
+# and queued every other job behind a 49-minute Portal box. Codecov only needs a
+# daily figure; run it by hand from the Actions tab when a fresh one is needed.
 on:
-  push:
-    branches: [main, staging]
-  pull_request:
-    branches: [main, staging]
+  schedule:
+    - cron: '30 20 * * *' # 02:00 IST
   workflow_dispatch:
 
-# The sticky comment is written with the default GITHUB_TOKEN, which needs write
-# on pull-requests. Everything else is read-only.
 permissions:
   contents: read
-  pull-requests: write
 
-# A PR branch takes a push every few minutes and a full run is expensive, so a
-# superseded run is cancelled — unlike sonar.yml, nothing here has to publish
-# once per commit, the comment is always rewritten in place from the latest run.
 concurrency:
   group: coverage-${{ github.ref }}
   cancel-in-progress: true
@@ -267,40 +263,9 @@ jobs:
 
       - name: Build the report
         env:
-          COVERAGE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          COVERAGE_COMMIT: ${{ github.sha }}
           COVERAGE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: node scripts/coverage-surfaces.mjs comment --dir cov-summary --out coverage-comment.md
 
-      # The run page gets the same table, so a push to staging (which has no PR
-      # to comment on) is not a dead end.
       - name: Job summary
         run: cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
-
-      # Sticky: the marker comment is REWRITTEN, never appended, so a PR with 30
-      # pushes carries one coverage comment rather than 30.
-      - name: Comment on the pull request
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('node:fs');
-            const body = fs.readFileSync('coverage-comment.md', 'utf8');
-            const marker = '<!-- duncit-coverage-report -->';
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner,
-              repo,
-              issue_number,
-              per_page: 100,
-            });
-            const existing = comments.find((c) => c.user?.type === 'Bot' && (c.body ?? '').includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
-              core.info(`updated coverage comment ${existing.id}`);
-            } else {
-              await github.rest.issues.createComment({ owner, repo, issue_number, body });
-              core.info('created the coverage comment');
-            }

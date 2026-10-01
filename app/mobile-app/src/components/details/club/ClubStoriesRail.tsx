@@ -5,7 +5,7 @@ import { isStoryLive, parseApiError } from '@duncit/utils';
 import { ConfirmSheet } from '@/components/DuncitDialog';
 import { ScrollRail } from '@/components/ScrollRail';
 import { SectionHeader } from '@/components/SectionHeader';
-import { ReportStorySheet } from '@/components/status/ReportStorySheet';
+import { ReportContentSheet } from '@/components/content-report/ReportContentSheet';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
@@ -157,7 +157,7 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
         onDelete={setPendingDelete}
         onReport={setReporting}
       />
-      <ReportStorySheet storyId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentSheet kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
       <ConfirmSheet
         open={!!pendingDelete}
         busy={deleting}

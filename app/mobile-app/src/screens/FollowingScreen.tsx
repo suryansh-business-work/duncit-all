@@ -6,7 +6,7 @@ import { Text, XStack } from 'tamagui';
 import { FeedList } from '@/components/FeedList';
 import { FeedPostCard } from '@/components/following/FeedPostCard';
 import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
-import { ReportStorySheet } from '@/components/status/ReportStorySheet';
+import { ReportContentSheet } from '@/components/content-report/ReportContentSheet';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useFollowing } from '@/hooks/useFollowing';
@@ -121,9 +121,7 @@ export function FollowingScreen() {
           }}
         />
       ) : null}
-      {reportPostId ? (
-        <ReportStorySheet storyId={reportPostId} onClose={() => setReportPostId(null)} />
-      ) : null}
+      <ReportContentSheet kind="POST" postId={reportPostId} onClose={() => setReportPostId(null)} />
     </StackScreen>
   );
 }

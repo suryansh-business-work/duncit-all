@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DuncitTabs } from '../src/DuncitTabs';
+import { TabSearchDefaultProvider } from '../src/tabSearchDefault';
 import type { DuncitTabItem } from '../src/types';
 
 const ITEMS: DuncitTabItem<string>[] = [
@@ -69,5 +70,17 @@ describe('DuncitTabs search', () => {
 
     expect(screen.queryByRole('textbox')).toBeNull();
     expect(tabNames()).toEqual(['Upcoming', 'Previous', 'Cancelled']);
+  });
+
+  it('follows the surface default, which a strip of its own can still override', () => {
+    render(
+      <TabSearchDefaultProvider searchable={false}>
+        <DuncitTabs items={ITEMS} value="upcoming" onChange={vi.fn()} idPrefix="mweb" />
+        <DuncitTabs items={ITEMS} value="upcoming" onChange={vi.fn()} idPrefix="asked" searchable />
+      </TabSearchDefaultProvider>
+    );
+
+    expect(screen.queryByTestId('mweb-tabs-search')).toBeNull();
+    expect(screen.getByTestId('asked-tabs-search')).toBeTruthy();
   });
 });

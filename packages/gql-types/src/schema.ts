@@ -4582,11 +4582,17 @@ export type ContentReport = {
   __typename?: 'ContentReport';
   club_id?: Maybe<Scalars['ID']['output']>;
   created_at: Scalars['String']['output'];
-  /** The reporter's own words. Always present when the reason is OTHER. */
+  /** The reporter's own words. Always present when the category requires them. */
   details: Scalars['String']['output'];
   handled_by_name: Scalars['String']['output'];
+  history: Array<ContentReportAction>;
   id: Scalars['ID']['output'];
+  /** The key of the report category the reporter picked. */
   reason: Scalars['String']['output'];
+  /** That category's current name; the key itself when the category is gone. */
+  reason_label: Scalars['String']['output'];
+  /** How many different people reported this same piece of content. */
+  report_count: Scalars['Int']['output'];
   /** Permanent, globally unique handle (RPT-000001). Never edited, never reused. */
   report_no: Scalars['String']['output'];
   reporter_name: Scalars['String']['output'];
@@ -4596,6 +4602,8 @@ export type ContentReport = {
   status: ReportStatus;
   target_caption: Scalars['String']['output'];
   target_id: Scalars['ID']['output'];
+  /** True while the reported content is still up for everyone to see. */
+  target_live: Scalars['Boolean']['output'];
   target_owner_name: Scalars['String']['output'];
   /**
    * What the reporter was looking at, copied at report time.
@@ -4605,19 +4613,34 @@ export type ContentReport = {
    * anyone reviewed it.
    */
   target_preview_url: Scalars['String']['output'];
+  /** When Legal took the content down. Null if it was never taken down by us. */
+  target_removed_at?: Maybe<Scalars['String']['output']>;
   target_type: ReportTargetType;
   updated_at: Scalars['String']['output'];
 };
 
-export type ContentReportReasonOption = {
-  __typename?: 'ContentReportReasonOption';
+/** One entry in a report's staff-only activity log. */
+export type ContentReportAction = {
+  __typename?: 'ContentReportAction';
+  action: ReportActionType;
+  at: Scalars['String']['output'];
+  by_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  label: Scalars['String']['output'];
+  /** The reviewer's note, or the message that was mailed. */
+  note: Scalars['String']['output'];
 };
 
-export type ContentReportReasonOptionInput = {
-  id: Scalars['ID']['input'];
-  label: Scalars['String']['input'];
+export type ContentReportMailInput = {
+  message: Scalars['String']['input'];
+  recipient: ReportMailRecipient;
+  subject: Scalars['String']['input'];
+};
+
+/** What a reporter gets back: proof the report was filed, and nothing staff-only. */
+export type ContentReportReceipt = {
+  __typename?: 'ContentReportReceipt';
+  id: Scalars['ID']['output'];
+  report_no: Scalars['String']['output'];
 };
 
 export type ContentReportStats = {
@@ -11267,6 +11290,7 @@ export type Mutation = {
   createRazorpayOrder: RazorpayOrder;
   /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
   createRazorpayProductOrder: RazorpayOrder;
+  createReportCategory: ReportCategory;
   createRole: Role;
   createScheduledSocialPost: SocialScheduledPost;
   createShortLink: ShortLink;
@@ -11434,6 +11458,7 @@ export type Mutation = {
   deletePostComment: Post;
   deletePushSubscription: Scalars['Boolean']['output'];
   deleteRateLimitRule: Scalars['Boolean']['output'];
+  deleteReportCategory: Scalars['Boolean']['output'];
   deleteRole: Scalars['Boolean']['output'];
   /** Removes it from Duncit only; a post already out stays on the network. */
   deleteScheduledSocialPost: Scalars['Boolean']['output'];
@@ -11734,6 +11759,8 @@ export type Mutation = {
   markAllNotificationsRead: Scalars['Boolean']['output'];
   markBouncerCallbackContacted: BouncerCallbackRequest;
   markNotificationRead: Scalars['Boolean']['output'];
+  /** The content is fine: close every open report on it as DISMISSED. */
+  markReportedContentOk: ContentReport;
   /** Mark what they sent you as read. Returns how many that was. */
   markStaffThreadRead: Scalars['Int']['output'];
   markSupportChatRead: SupportChatSession;
@@ -11923,13 +11950,13 @@ export type Mutation = {
    */
   reportE2eRun: E2eRun;
   /**
-   * Report a story. Open to any signed-in viewer — that is the point of it.
+   * Report a post or a story. Open to any signed-in viewer — that is the point.
    *
-   * The snapshot (media, caption, author, club) is taken server-side from the
-   * story itself, so a reporter cannot file a row describing something the
-   * story never showed.
+   * The reason is a report category key. The snapshot (media, caption, author,
+   * club) is taken server-side from the post itself, so a reporter cannot file a
+   * row describing something it never showed.
    */
-  reportStory: ContentReport;
+  reportPost: ContentReportReceipt;
   /** CI: a runner's periodic report. The answer says whether to stop. */
   reportStressRun: StressReportResult;
   /**
@@ -12201,6 +12228,8 @@ export type Mutation = {
    * admin only; SMTP + OpenAI credentials come from the Tech portal env entries.
    */
   sendAppReleaseEmail: AppReleaseEmailResult;
+  /** Write to the reporter or to the content's owner about this report. */
+  sendContentReportMail: ContentReport;
   sendCrmTestEmail: CrmEmailTestResult;
   /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
   sendLocationLaunchMessage: LocationLaunchSendResult;
@@ -12597,6 +12626,11 @@ export type Mutation = {
   syncSocialAccount: SocialAccount;
   /** Points the named staging hosts at whatever production holds. Never writes production. */
   syncStagingDns: DnsSyncResult;
+  /**
+   * Remove the reported content for everyone and close every open report on it
+   * as ACTIONED. Cannot be undone.
+   */
+  takeDownReportedContent: ContentReport;
   /** Run a shell command in the API container and return its output. SUPER_ADMIN only — host-root-equivalent via the mounted docker socket, and audited. */
   techExec: TechExecResult;
   /** Send the month of server history to OpenAI and keep its recommendation (SUPER_ADMIN / TECH_MANAGER). */
@@ -12712,7 +12746,6 @@ export type Mutation = {
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
-  updateContentReportReasonOptions: Array<ContentReportReasonOption>;
   updateContentReportStatus: ContentReport;
   updateContract: Contract;
   updateCoupon: Coupon;
@@ -12784,6 +12817,7 @@ export type Mutation = {
   updateRateLimitSettings: RateLimitSettings;
   /** Finance: what a referral pays and what a member's share sheet says. */
   updateReferralSettings: ReferralSettings;
+  updateReportCategory: ReportCategory;
   /** Support portal: edit the chips and prompt the app renders. */
   updateReportProblemConfig: ReportProblemConfig;
   /** Support portal: choose whether reports are announced on Slack, and where. */
@@ -13773,6 +13807,11 @@ export type MutationCreateRazorpayProductOrderArgs = {
 };
 
 
+export type MutationCreateReportCategoryArgs = {
+  input: ReportCategoryInput;
+};
+
+
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
 };
@@ -14298,6 +14337,11 @@ export type MutationDeleteRateLimitRuleArgs = {
 };
 
 
+export type MutationDeleteReportCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteRoleArgs = {
   role_id: Scalars['ID']['input'];
 };
@@ -14809,6 +14853,12 @@ export type MutationMarkNotificationReadArgs = {
 };
 
 
+export type MutationMarkReportedContentOkArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationMarkStaffThreadReadArgs = {
   peer_id: Scalars['ID']['input'];
 };
@@ -15167,7 +15217,7 @@ export type MutationReportE2eRunArgs = {
 };
 
 
-export type MutationReportStoryArgs = {
+export type MutationReportPostArgs = {
   details?: InputMaybe<Scalars['String']['input']>;
   post_doc_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
@@ -15569,6 +15619,12 @@ export type MutationSendAnalyticsMailNowArgs = {
 
 export type MutationSendAppReleaseEmailArgs = {
   input: SendAppReleaseEmailInput;
+};
+
+
+export type MutationSendContentReportMailArgs = {
+  id: Scalars['ID']['input'];
+  input: ContentReportMailInput;
 };
 
 
@@ -16647,6 +16703,12 @@ export type MutationSyncStagingDnsArgs = {
 };
 
 
+export type MutationTakeDownReportedContentArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationTechExecArgs = {
   command: Scalars['String']['input'];
 };
@@ -16925,11 +16987,6 @@ export type MutationUpdateCommsProviderArgs = {
 export type MutationUpdateContactStatusArgs = {
   contact_id: Scalars['ID']['input'];
   status: ContactStatus;
-};
-
-
-export type MutationUpdateContentReportReasonOptionsArgs = {
-  options: Array<ContentReportReasonOptionInput>;
 };
 
 
@@ -17284,6 +17341,12 @@ export type MutationUpdateRateLimitSettingsArgs = {
 
 export type MutationUpdateReferralSettingsArgs = {
   input: ReferralSettingsInput;
+};
+
+
+export type MutationUpdateReportCategoryArgs = {
+  id: Scalars['ID']['input'];
+  input: ReportCategoryInput;
 };
 
 
@@ -21734,7 +21797,6 @@ export type Query = {
    */
   contactsToInvitePage: ContactsToInvitePage;
   contentReport?: Maybe<ContentReport>;
-  contentReportReasonOptions: Array<ContentReportReasonOption>;
   contentReportStats: ContentReportStats;
   /** Legal-only queue of everything users have reported. */
   contentReportsTable: ContentReportTablePage;
@@ -22616,6 +22678,10 @@ export type Query = {
    */
   renderEmailTemplate: EmailTemplateRender;
   renderMarketingCampaign: MarketingCampaignRender;
+  /** The categories the report dialog offers — active ones, in Legal's order. */
+  reportCategories: Array<ReportCategory>;
+  /** Legal-only: every category, for the UGC Monitoring settings table. */
+  reportCategoriesTable: ReportCategoryTablePage;
   /** The Report a Problem form config. Readable by any signed-in user — the app renders from it. */
   reportProblemConfig: ReportProblemConfig;
   /** Support portal: where reports are announced on Slack, and the channels to choose from. */
@@ -25260,6 +25326,11 @@ export type QueryRenderMarketingCampaignArgs = {
 };
 
 
+export type QueryReportCategoriesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryReportedProblemArgs = {
   id: Scalars['ID']['input'];
 };
@@ -26647,6 +26718,14 @@ export type ReleaseStore =
   | 'APP_STORE'
   | 'GOOGLE_PLAY';
 
+/** Something a reviewer did to a report. */
+export type ReportActionType =
+  | 'LOOKS_GOOD'
+  | 'MAIL_OWNER'
+  | 'MAIL_REPORTER'
+  | 'STATUS_CHANGED'
+  | 'TAKEN_DOWN';
+
 export type ReportAppBuildInput = {
   /**
    * Why the artifact is missing on an otherwise successful build. Send this
@@ -26698,6 +26777,44 @@ export type ReportAppBuildInput = {
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**
+ * A reason a person can pick when reporting content.
+ *
+ * Managed in Legal > UGC Monitoring > Settings. The report dialog on mWeb and
+ * the native app renders the active ones, so a new category needs no release.
+ */
+export type ReportCategory = {
+  __typename?: 'ReportCategory';
+  created_at: Scalars['String']['output'];
+  /** Optional line under the label saying what belongs in this category. */
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** Immutable handle stored on each report, e.g. COPYRIGHT. */
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** True when the reporter must describe the problem in their own words. */
+  requires_details: Scalars['Boolean']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type ReportCategoryInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  requires_details?: InputMaybe<Scalars['Boolean']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ReportCategoryTablePage = {
+  __typename?: 'ReportCategoryTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ReportCategory>;
+  total: Scalars['Int']['output'];
+};
+
 export type ReportE2eRunInput = {
   commit_sha?: InputMaybe<Scalars['String']['input']>;
   dispatch_id?: InputMaybe<Scalars['String']['input']>;
@@ -26720,6 +26837,13 @@ export type ReportE2eRunInput = {
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** Who a reviewer is writing to about a report. */
+export type ReportMailRecipient =
+  /** The person whose content was reported. */
+  | 'OWNER'
+  /** The person who filed the report. */
+  | 'REPORTER';
 
 /** One selectable chip on the app's Report a Problem form. */
 export type ReportProblemCategory = {
@@ -26780,17 +26904,6 @@ export type ReportProblemSlackSettings = {
   slack_configured: Scalars['Boolean']['output'];
 };
 
-/** Why the reporter says it should not be there. */
-export type ReportReason =
-  | 'HARASSMENT'
-  | 'HATE'
-  | 'MISINFORMATION'
-  | 'NUDITY'
-  | 'OTHER'
-  | 'SCAM'
-  | 'SPAM'
-  | 'VIOLENCE';
-
 /** Where the Legal team has taken it. */
 export type ReportStatus =
   | 'ACTIONED'
@@ -26827,9 +26940,9 @@ export type ReportStressRunInput = {
 /**
  * What was reported.
  *
- * A story is the only surface that raises one today; the type exists so the
- * next surface files into the same record and the same Legal queue rather than
- * growing a second reports table.
+ * Posts and stories raise one today; the type exists so the next surface files
+ * into the same record and the same Legal queue rather than growing a second
+ * reports table.
  */
 export type ReportTargetType =
   | 'CLUB'

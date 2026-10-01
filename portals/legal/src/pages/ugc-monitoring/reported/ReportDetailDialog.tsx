@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import {
   Alert,
-  Box,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,33 +21,39 @@ import {
   REPORT_STATUS_KEY,
   REPORT_TARGET_KEY,
   type ReportStatus,
-  type ReportReasonOption,
 } from '@duncit/utils';
-import { UPDATE_CONTENT_REPORT_STATUS, type ContentReport } from '../../graphql/reports';
+import { UPDATE_CONTENT_REPORT_STATUS, type ContentReport } from '../../../graphql/reports';
+import { contentStateKey } from './contentState';
+import ReportFact from './ReportFact';
+import ReportHistory from './ReportHistory';
 import ReportPreview from './ReportPreview';
+import ReportRowActions, { type ReportActionHandlers } from './ReportRowActions';
 
 interface Props {
   report: ContentReport | null;
   formatDateTime: (value: Date) => string;
+  /** The same four actions the row offers, so a reviewer can act from here. */
+  handlers: ReportActionHandlers;
   onClose: () => void;
   onSaved: () => void;
-  reasonOptions: ReportReasonOption[];
 }
 
 /**
- * One report, and the only two things staff can change about it.
+ * One report: what was reported, what was said about it, what was done.
  *
  * What the reporter wrote is shown but never editable — a report a reviewer can
  * rewrite is not a report. The status and the resolution note are the response,
  * and they live together because closing a report without saying what was done
- * is how a queue becomes untrustworthy.
+ * is how a queue becomes untrustworthy. The verdicts themselves (take down,
+ * looks good) and the two mails are the buttons at the top; each one is logged
+ * in the activity list at the bottom.
  */
 export default function ReportDetailDialog({
   report,
   formatDateTime,
+  handlers,
   onClose,
   onSaved,
-  reasonOptions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<ReportStatus>('RECEIVED');
@@ -77,15 +83,14 @@ export default function ReportDetailDialog({
   const subtitle = report ? `${t(REPORT_TARGET_KEY[report.target_type])} · ${received}` : '';
 
   return (
-    <Dialog open={!!report} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog data-testid="report-detail-dialog" open={!!report} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {t('reportLogs.detailTitle', { vars: { report_no: report?.report_no ?? '' } })}
-        <Typography variant="caption" component="div" sx={{
-          color: "text.secondary"
-        }}>
+        <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
           {subtitle}
         </Typography>
         <DuncitIconButton
+          data-testid="report-detail-close"
           aria-label={t('reportLogs.detailClose')}
           onClick={onClose}
           sx={{ position: 'absolute', right: 8, top: 8 }}
@@ -95,39 +100,34 @@ export default function ReportDetailDialog({
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
+          {report && (
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+              <Chip
+                data-testid="report-detail-content-state"
+                size="small"
+                variant={report.target_live ? 'filled' : 'outlined'}
+                color={report.target_live ? 'warning' : 'default'}
+                label={t(contentStateKey(report))}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', flex: 1 }}>
+                {t('reportLogs.detailReportCount', { vars: { count: report.report_count } })}
+              </Typography>
+              <ReportRowActions report={report} handlers={handlers} />
+            </Stack>
+          )}
           <ReportPreview report={report} />
-          <Box>
-            <Typography
-              variant="overline"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              {t('reportLogs.colReason')}
-            </Typography>
-            <Typography variant="body2">
-              {report ? reasonOptions.find(({ id }) => id === report.reason)?.label ?? report.reason : ''}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography
-              variant="overline"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              {t('reportLogs.detailDetails')}
-            </Typography>
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-              {report?.details || t('reportLogs.detailNoDetails')}
-            </Typography>
-          </Box>
+          <ReportFact label={t('reportLogs.colReason')} value={report?.reason_label ?? ''} />
+          <ReportFact
+            label={t('reportLogs.detailDetails')}
+            value={report?.details || t('reportLogs.detailNoDetails')}
+          />
           <TextField
             select
             fullWidth
             label={t('reportLogs.detailStatus')}
             value={status}
             onChange={(e) => setStatus(e.target.value as ReportStatus)}
+            slotProps={{ htmlInput: { 'data-testid': 'report-detail-status' } }}
           >
             {REPORT_STATUSES.map((value) => (
               <MenuItem key={value} value={value}>
@@ -143,13 +143,21 @@ export default function ReportDetailDialog({
             placeholder={t('reportLogs.detailResolutionPlaceholder')}
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
+            slotProps={{ htmlInput: { 'data-testid': 'report-detail-resolution' } }}
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <Alert data-testid="report-detail-error" severity="error">
+              {error}
+            </Alert>
+          )}
+          <ReportHistory history={report?.history ?? []} formatDateTime={formatDateTime} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('reportLogs.detailClose')}</DuncitButton>
-        <DuncitButton variant="contained" disabled={loading} onClick={apply}>
+        <DuncitButton data-testid="report-detail-cancel" onClick={onClose}>
+          {t('reportLogs.detailClose')}
+        </DuncitButton>
+        <DuncitButton data-testid="report-detail-save" variant="contained" disabled={loading} onClick={apply}>
           {t('reportLogs.detailSave')}
         </DuncitButton>
       </DialogActions>

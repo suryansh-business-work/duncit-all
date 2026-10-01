@@ -11,7 +11,7 @@ import { StatusVideo } from '@/components/status/StatusVideo';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { StoryTarget } from '@/hooks/useStoryRail';
 import { StatusViewerFooter } from '@/components/status/StatusViewerFooter';
-import { StatusViewerMenu } from '@/components/status/StatusViewerMenu';
+import { ContentActionsMenu } from '@/components/content-report/ContentActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import { statusRemainingLabel } from '@/utils/date-format';
 import { resolveSwipe } from '@/utils/swipe';
@@ -397,7 +397,8 @@ export function StatusViewer({
               />
             </XStack>
             {hasMenu && menuOpen && current ? (
-              <StatusViewerMenu
+              <ContentActionsMenu
+                kind="STORY"
                 canDelete={canDeleteSlide}
                 canReport={!!onReport}
                 onDelete={() => {

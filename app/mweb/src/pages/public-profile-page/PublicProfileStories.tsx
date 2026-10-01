@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Avatar } from '@mui/material';
 import { ScrollRail } from '@duncit/ui';
 import HomeStatusViewer from '../home-page/HomeStatusViewer';
-import ReportStoryDialog from '../club-details-page/ReportStoryDialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import { buildStoryViewerItem } from '../home-page/storyViewerItem';
 
@@ -19,6 +18,8 @@ interface Props {
   name: string;
   photo?: string | null;
   stories: ProfileStory[];
+  /** False on your own profile: nobody reviews a report against your own story. */
+  canReport: boolean;
 }
 
 /**
@@ -29,10 +30,14 @@ interface Props {
  * It used to open the plain moments lightbox — a still image with a close
  * button and no progress bar at all.
  */
-export default function PublicProfileStories({ name, photo, stories }: Readonly<Props>) {
+export default function PublicProfileStories({
+  name,
+  photo,
+  stories,
+  canReport,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [reportingStoryId, setReportingStoryId] = useState<string | null>(null);
   // The rail and the viewer read the same oldest → newest slides, so the ring
   // that was tapped is the slide that opens.
   const item = useMemo(
@@ -76,11 +81,10 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
         <HomeStatusViewer
           item={item}
           startIndex={openIndex}
+          canReport={canReport}
           onClose={() => setOpenIndex(null)}
-          onReport={setReportingStoryId}
         />
       )}
-      <ReportStoryDialog storyId={reportingStoryId} onClose={() => setReportingStoryId(null)} />
     </>
   );
 }

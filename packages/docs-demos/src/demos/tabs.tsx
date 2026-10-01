@@ -1,11 +1,22 @@
 import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { DuncitTabs, TAB_PARAM, TAB_SEARCH_DEBOUNCE_MS, filterTabItems } from '@duncit/tabs';
+import {
+  DuncitTabs,
+  TAB_PARAM,
+  TAB_SEARCH_DEBOUNCE_MS,
+  TabSearchDefaultProvider,
+  filterTabItems,
+} from '@duncit/tabs';
 import { defineDemo, defineDemos } from '../types';
 
 interface TabsMock {
   items: { value: string; label: string; disabled?: boolean }[];
   initial: string;
+}
+
+interface SurfaceMock extends TabsMock {
+  /** What the surface's root says: a portal leaves it on, mWeb turns it off. */
+  searchByDefault: boolean;
 }
 
 interface TabSearchMock extends TabsMock {
@@ -18,7 +29,7 @@ export default defineDemos('tabs', [
     id: 'strip',
     title: 'The one tab strip every portal and mWeb renders',
     note:
-      'Built from an items array, never from hand-written children — which is what guarantees each tab has a real value instead of a bare index in the URL. Add an item to the mock and it appears. The search box at the head of the strip is on by default; `searchable={false}` is how a two-tab segmented control opts out.',
+      'Built from an items array, never from hand-written children — which is what guarantees each tab has a real value instead of a bare index in the URL. Add an item to the mock and it appears. The search box at the head of the strip is on by default in a portal; `searchable={false}` is how a two-tab segmented control opts out, and mWeb turns it off for every strip at once (see the last demo).',
     mock: {
       items: [
         { value: 'upcoming', label: 'Upcoming' },
@@ -65,6 +76,25 @@ export default defineDemos('tabs', [
         'Debounce before the strip redraws': `${TAB_SEARCH_DEBOUNCE_MS}ms`,
       };
     },
+  }),
+  defineDemo<SurfaceMock>({
+    id: 'surface-default',
+    title: 'One switch per surface — portals search, mWeb does not',
+    note:
+      'Set `searchByDefault` to true and the box comes back: that is a portal, which mounts no provider at all. False is mWeb, whose root wraps the app in `TabSearchDefaultProvider` once — so every strip below it, including one a shared package renders, loses the box without a prop on any of them.',
+    mock: {
+      items: [
+        { value: 'followers', label: 'Followers' },
+        { value: 'following', label: 'Following' },
+      ],
+      initial: 'followers',
+      searchByDefault: false,
+    },
+    render: (mock) => (
+      <TabSearchDefaultProvider searchable={mock.searchByDefault}>
+        <TabsStage mock={mock} />
+      </TabSearchDefaultProvider>
+    ),
   }),
 ]);
 

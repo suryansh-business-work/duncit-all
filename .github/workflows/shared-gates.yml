@@ -11,8 +11,10 @@ name: Shared Gates
 on:
   push:
     branches: [main, master, develop, staging]
+  # No `main` here: a PR into main is the staging tip (rule 32), which the push
+  # run above already checks on the same commit — listing it ran every job twice.
   pull_request:
-    branches: [main, master, develop, staging]
+    branches: [master, develop, staging]
   workflow_dispatch:
 
 concurrency:

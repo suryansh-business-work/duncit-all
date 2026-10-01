@@ -3,11 +3,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { ContentActionsMenu } from '@/components/content-report/ContentActionsMenu';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { FeedPost } from '@/hooks/useFollowingFeed';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { REPORT_COPY } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const AVATAR_STYLE = { width: 40, height: 40, borderRadius: 20 };
@@ -76,45 +78,37 @@ export function FeedPostCard({
             </Text>
           </YStack>
         </XStack>
-        <XStack
-          testID={`feed-post-menu-${post.id}`}
-          role="button"
-          tabIndex={0}
-          aria-label={t('contentReport.menuLabel')}
-          onPress={() => setMenuOpen((open) => !open)}
-          padding={8}
-        >
-          <MaterialIcons name="more-vert" size={22} color={muted} />
-        </XStack>
+        {onReport ? (
+          <XStack
+            testID={`post-actions-menu-${post.id}-trigger`}
+            role="button"
+            tabIndex={0}
+            aria-label={t(REPORT_COPY.POST.menuLabel)}
+            aria-expanded={menuOpen}
+            onPress={() => setMenuOpen((open) => !open)}
+            width={44}
+            height={44}
+            alignItems="center"
+            justifyContent="center"
+            pressStyle={PRESS_STYLE.inline}
+          >
+            <MaterialIcons name="more-vert" size={22} color={muted} />
+          </XStack>
+        ) : null}
       </XStack>
-      {menuOpen ? (
-        <XStack
-          position="absolute"
+      {/* A feed holds other people's posts, so the menu is Report alone. */}
+      {onReport && menuOpen ? (
+        <ContentActionsMenu
+          kind="POST"
           top={56}
-          right={12}
-          zIndex={10}
-          testID={`feed-post-report-${post.id}`}
-          role="button"
-          tabIndex={0}
-          aria-label={t('contentReport.reportUnsafe')}
-          onPress={() => {
+          idSuffix={post.id}
+          canDelete={false}
+          canReport
+          onReport={() => {
             setMenuOpen(false);
-            onReport?.();
+            onReport();
           }}
-          alignItems="center"
-          gap={8}
-          paddingHorizontal={16}
-          paddingVertical={10}
-          backgroundColor="$surface"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <MaterialIcons name="flag" size={18} color={muted} />
-          <Text fontSize={14} color="$color">
-            {t('contentReport.reportUnsafe')}
-          </Text>
-        </XStack>
+        />
       ) : null}
 
       {post.image_url ? (

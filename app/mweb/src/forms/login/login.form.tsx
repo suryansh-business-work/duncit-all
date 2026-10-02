@@ -1,18 +1,17 @@
 import { useMemo, useState } from 'react';
-import { useForm, type Control, type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Stack } from '@mui/material';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { DuncitTabs } from '@duncit/tabs';
 import { LOGIN_CHANNELS, type LoginChannel } from '@duncit/forms/schemas';
-import CountryCodeField from '../components/CountryCodeField';
 import RhfTextField from '../components/RhfTextField';
 import { CHANNEL_TABS_SX } from '../../components/password-recovery/channelTabs';
 import { useTranslation } from '../../i18n/useTranslation';
+import LoginIdentityFields from './LoginIdentityFields';
 import {
   loginDefaults,
   makeLoginSchema,
@@ -26,67 +25,6 @@ interface Props {
   errorMessage?: string | null;
   onSubmit: (values: LoginSubmitValues) => Promise<void> | void;
   submitLabel?: string;
-}
-
-const numericInput = { inputMode: 'numeric' as const, maxLength: 15 };
-
-/**
- * The destination boxes for the chosen channel.
- *
- * Module scope, not nested (S6478), and the parent remounts it per channel so
- * the two channels never share a resolver — the same reason the recovery step
- * keys its form.
- */
-function LoginIdentityFields({
-  channel,
-  control,
-}: Readonly<{ channel: LoginChannel; control: Control<LoginFormValues> }>) {
-  const { t } = useTranslation();
-
-  if (channel === 'PHONE') {
-    return (
-      <Stack direction="row" spacing={1}>
-        <CountryCodeField
-          control={control}
-          name="phoneExtension"
-          label={t('mweb.common.code')}
-          testId="login-code"
-        />
-        <RhfTextField
-          control={control}
-          name="phoneNumber"
-          label={t('mweb.passwordRecovery.phoneField')}
-          required
-          placeholder={t('mweb.passwordRecovery.phonePlaceholder')}
-          autoComplete="tel-national"
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, htmlInput: numericInput }}
-        />
-      </Stack>
-    );
-  }
-
-  return (
-    <RhfTextField
-      control={control}
-      name="email"
-      type="email"
-      label={t('mweb.auth.emailLabel')}
-      required
-      placeholder={t('mweb.auth.emailPlaceholder')}
-      autoComplete="email"
-      size="small"
-      slotProps={{
-        input: {
-          startAdornment: (
-            <InputAdornment position="start">
-              <EmailOutlinedIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        },
-      }}
-    />
-  );
 }
 
 /** One channel's form. Remounted by the parent when the channel changes. */

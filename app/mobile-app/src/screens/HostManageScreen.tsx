@@ -105,7 +105,7 @@ export function HostManageScreen() {
           open
           busy={deleting}
           onCancel={() => setTarget(null)}
-          onConfirm={() => void doDelete(target)}
+          onConfirm={() => fireAndForget(doDelete(target))}
         />
       ) : null}
     </StackScreen>

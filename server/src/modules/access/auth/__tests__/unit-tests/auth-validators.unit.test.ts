@@ -26,7 +26,7 @@ describe('auth validators — the signup contract', () => {
   };
 
   it('accepts a verified number and leaves last_name optional', async () => {
-    const value = await registerSchema.validate(registration);
+    const value = await registerSchema.parseAsync(registration);
     expect(value.first_name).toBe('Riya');
     expect(value.phone_number).toBe('9876543210');
     expect(value.last_name).toBeUndefined();
@@ -36,7 +36,7 @@ describe('auth validators — the signup contract', () => {
 
   it('still requires first_name, email, password and dob', async () => {
     await expect(
-      registerSchema.validate({ email: 'x@duncit.com', password: 'StrongPass123' })
+      registerSchema.parseAsync({ email: 'x@duncit.com', password: 'StrongPass123' })
     ).rejects.toThrow();
   });
 
@@ -44,24 +44,24 @@ describe('auth validators — the signup contract', () => {
   // created through this door actually carries one.
   it('refuses a registration with no phone at all', async () => {
     const { phone_number, ...withoutPhone } = registration;
-    await expect(registerSchema.validate(withoutPhone)).rejects.toThrow();
+    await expect(registerSchema.parseAsync(withoutPhone)).rejects.toThrow();
   });
 
   it('refuses a registration whose number was never answered on', async () => {
     const { whatsapp_token, ...unproven } = registration;
-    await expect(registerSchema.validate(unproven)).rejects.toThrow(/whatsapp_token/i);
+    await expect(registerSchema.parseAsync(unproven)).rejects.toThrow(/whatsapp_token/i);
   });
 
   it('rejects a phone number that is not one', async () => {
     await expect(
-      registerSchema.validate({ ...registration, phone_number: 'abc' }),
+      registerSchema.parseAsync({ ...registration, phone_number: 'abc' }),
     ).rejects.toThrow(/invalid phone/i);
   });
 
   // Google proves an email address and nothing else, so this door asks for the
   // same number and the same proof as the form does.
   it('makes the Google door ask for the number, its proof and a birthday', async () => {
-    const value = await googleSignupSchema.validate({
+    const value = await googleSignupSchema.parseAsync({
       id_token: 'a'.repeat(24),
       phone_number: '9876543210',
       phone_extension: '+91',
@@ -70,7 +70,7 @@ describe('auth validators — the signup contract', () => {
     });
     expect(value.id_token).toHaveLength(24);
     expect(value.phone_number).toBe('9876543210');
-    // A Date, not the exact instant: yup parses a bare date in the RUNNER's
+    // A Date, not the exact instant: the bare date is read in the RUNNER's
     // zone, so pinning the timestamp would pass in UTC and fail in IST.
     expect(value.dob).toBeInstanceOf(Date);
     expect((value.dob as Date).getFullYear()).toBe(2000);
@@ -83,7 +83,7 @@ describe('auth validators — the signup contract', () => {
   */
   it('refuses a Google signup with no date of birth', async () => {
     await expect(
-      googleSignupSchema.validate({
+      googleSignupSchema.parseAsync({
         id_token: 'a'.repeat(24),
         phone_number: '9876543210',
         phone_extension: '+91',
@@ -93,21 +93,21 @@ describe('auth validators — the signup contract', () => {
   });
 
   it('refuses a Google signup carrying only the id_token', async () => {
-    await expect(googleSignupSchema.validate({ id_token: 'a'.repeat(24) })).rejects.toThrow();
-    await expect(googleSignupSchema.validate({})).rejects.toThrow();
+    await expect(googleSignupSchema.parseAsync({ id_token: 'a'.repeat(24) })).rejects.toThrow();
+    await expect(googleSignupSchema.parseAsync({})).rejects.toThrow();
   });
 
   it('requestPasswordResetSchema requires a valid email', async () => {
     await expect(
-      requestPasswordResetSchema.validate({ email: 'riya@duncit.com' }),
+      requestPasswordResetSchema.parseAsync({ email: 'riya@duncit.com' }),
     ).resolves.toMatchObject({ email: 'riya@duncit.com' });
-    await expect(requestPasswordResetSchema.validate({ email: 'nope' })).rejects.toThrow();
-    await expect(requestPasswordResetSchema.validate({})).rejects.toThrow();
+    await expect(requestPasswordResetSchema.parseAsync({ email: 'nope' })).rejects.toThrow();
+    await expect(requestPasswordResetSchema.parseAsync({})).rejects.toThrow();
   });
 
   it('resetPasswordSchema requires email, a 6-digit OTP and an 8+ char password', async () => {
     await expect(
-      resetPasswordSchema.validate({
+      resetPasswordSchema.parseAsync({
         email: 'riya@duncit.com',
         otp: '123456',
         new_password: 'StrongPass123',
@@ -115,11 +115,11 @@ describe('auth validators — the signup contract', () => {
     ).resolves.toMatchObject({ otp: '123456' });
 
     await expect(
-      resetPasswordSchema.validate({ email: 'riya@duncit.com', otp: '12', new_password: 'StrongPass123' }),
+      resetPasswordSchema.parseAsync({ email: 'riya@duncit.com', otp: '12', new_password: 'StrongPass123' }),
     ).rejects.toThrow(/6 digit/i);
 
     await expect(
-      resetPasswordSchema.validate({ email: 'riya@duncit.com', otp: '123456', new_password: 'short' }),
+      resetPasswordSchema.parseAsync({ email: 'riya@duncit.com', otp: '123456', new_password: 'short' }),
     ).rejects.toThrow();
   });
 
@@ -133,21 +133,21 @@ describe('auth validators — the signup contract', () => {
   */
   it('requestPasswordChangeSchema takes an 8+ char current_password, or none at all', async () => {
     await expect(
-      requestPasswordChangeSchema.validate({ current_password: 'StrongPass123' }),
+      requestPasswordChangeSchema.parseAsync({ current_password: 'StrongPass123' }),
     ).resolves.toMatchObject({ current_password: 'StrongPass123' });
-    await expect(requestPasswordChangeSchema.validate({ current_password: 'short' })).rejects.toThrow();
-    await expect(requestPasswordChangeSchema.validate({})).resolves.toBeTruthy();
+    await expect(requestPasswordChangeSchema.parseAsync({ current_password: 'short' })).rejects.toThrow();
+    await expect(requestPasswordChangeSchema.parseAsync({})).resolves.toBeTruthy();
   });
 
   it('changePasswordSchema requires a 6-digit OTP and an 8+ char new_password', async () => {
     await expect(
-      changePasswordSchema.validate({ otp: '123456', new_password: 'BrandNew123' }),
+      changePasswordSchema.parseAsync({ otp: '123456', new_password: 'BrandNew123' }),
     ).resolves.toMatchObject({ otp: '123456' });
     await expect(
-      changePasswordSchema.validate({ otp: '12', new_password: 'BrandNew123' }),
+      changePasswordSchema.parseAsync({ otp: '12', new_password: 'BrandNew123' }),
     ).rejects.toThrow(/6 digit/i);
     await expect(
-      changePasswordSchema.validate({ otp: '123456', new_password: 'short' }),
+      changePasswordSchema.parseAsync({ otp: '123456', new_password: 'short' }),
     ).rejects.toThrow();
   });
 

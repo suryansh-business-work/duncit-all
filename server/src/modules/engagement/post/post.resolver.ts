@@ -1,18 +1,17 @@
 import { postService } from './post.service';
 import { userService } from '@modules/access/user/user.service';
+import { loadPublicUser } from '@modules/access/user/user.loaders';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 
+/** A post's, comment's or viewer's user: every row of the page asks in the
+ * same tick, so the page is one batched read instead of `getById` per row. An
+ * unknown or malformed id is null, as `getById`'s throw used to be. */
+const userOf = (id: unknown, ctx: GraphQLContext) => (id ? loadPublicUser(ctx, String(id)) : null);
+
 export const postResolvers = {
   Post: {
-    author: async (parent: any) => {
-      if (!parent.author_id) return null;
-      try {
-        return await userService.getById(parent.author_id);
-      } catch {
-        return null;
-      }
-    },
+    author: (parent: { author_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
     // The delete rule lives here, not in the two apps: mWeb and native would
     // otherwise each carry their own copy of "author, or an admin of the club
     // it was posted to" and drift the moment one of them changed.
@@ -24,24 +23,10 @@ export const postResolvers = {
     },
   },
   PostComment: {
-    author: async (parent: any) => {
-      if (!parent.author_id) return null;
-      try {
-        return await userService.getById(parent.author_id);
-      } catch {
-        return null;
-      }
-    },
+    author: (parent: { author_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
   },
   StoryView: {
-    user: async (parent: any) => {
-      if (!parent.user_id) return null;
-      try {
-        return await userService.getById(parent.user_id);
-      } catch {
-        return null;
-      }
-    },
+    user: (parent: { user_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.user_id, ctx),
   },
   Query: {
     posts: async (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) => {

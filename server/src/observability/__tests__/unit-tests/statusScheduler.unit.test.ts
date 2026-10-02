@@ -1,3 +1,6 @@
+// The loop only runs on the scheduler leader; this process is it.
+jest.mock('@utils/schedulerLeader', () => ({ isSchedulerLeader: () => true }));
+
 import { StatusCheckModel } from '../../statusHistory.model';
 import { logs } from '../../log';
 import { runStatusSweep, startStatusScheduler } from '../../statusScheduler';

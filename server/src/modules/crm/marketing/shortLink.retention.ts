@@ -13,6 +13,7 @@
  * No-ops under NODE_ENV=test.
  */
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { shortLinkPolicyService } from './shortLinkPolicy.service';
 
 const TICK_MS = 24 * 60 * 60_000;
@@ -30,25 +31,11 @@ async function sweep(): Promise<void> {
 }
 
 export function startShortLinkRetentionScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  let running = false;
-  const tick = () => {
-    if (running) return;
-    running = true;
-    sweep()
-      .catch((error) => {
-        logs.server.error('shortLink', 'retentionSweep', { error });
-      })
-      .finally(() => {
-        running = false;
-      });
-  };
-  const first = setTimeout(tick, FIRST_DELAY_MS);
-  const interval = setInterval(tick, TICK_MS);
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'shortLink',
+    operation: 'retentionSweep',
+    firstDelayMs: FIRST_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: sweep,
+  });
 }

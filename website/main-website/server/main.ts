@@ -23,7 +23,7 @@ import { injectSiteMeta } from '@duncit/brand/site-meta';
 import { SHORT_CODE_PATTERN, trimSlashes } from '../src/lib/short-link';
 import { POLICY_PAGE_PATTERN, POLICY_READER_PATH, policyPagePath } from '../src/lib/policy-page';
 import { blogPostMeta, fetchLivePolicy, policyMeta } from './page-meta';
-import { acceptsGzip, resolveDistFile, sendFile } from './static-files';
+import { acceptsGzip, resolveDistFile, sendFile, setSecurityHeaders } from './static-files';
 
 const PORT = Number.parseInt(process.env.PORT ?? '8080', 10);
 const DIST_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
@@ -206,6 +206,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 }
 
 const server = createServer((req, res) => {
+  setSecurityHeaders(res);
   handle(req, res).catch(() => {
     if (!res.headersSent) res.writeHead(500);
     res.end();

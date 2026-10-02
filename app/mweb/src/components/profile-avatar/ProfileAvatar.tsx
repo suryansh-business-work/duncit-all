@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Snackbar } from '@mui/material';
-import { logs } from '@duncit/logs';
+import { fireAndForget, logs } from '@duncit/logs';
 import ConfirmDialog from '../ConfirmDialog';
 import HomeStatusViewer from '../../pages/home-page/HomeStatusViewer';
 import AvatarButton from './AvatarButton';
@@ -84,7 +84,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         src={a.cropSrc}
         saving={a.saving}
         onCancel={() => a.setCropSrc(null)}
-        onConfirm={(dataUrl) => void a.saveCropped(dataUrl)}
+        onConfirm={(dataUrl) => fireAndForget(a.saveCropped(dataUrl), logs.mWeb, 'ProfileAvatar', 'saveCropped')}
       />
 
       <ConfirmDialog
@@ -94,7 +94,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         message={t('mweb.common.yourProfilePictureWillBeRemoved')}
         confirmLabel={t('mweb.common.remove')}
         destructive
-        onConfirm={() => void a.confirmRemove()}
+        onConfirm={() => fireAndForget(a.confirmRemove(), logs.mWeb, 'ProfileAvatar', 'confirmRemove')}
         onClose={() => a.setRemoveOpen(false)}
       />
 

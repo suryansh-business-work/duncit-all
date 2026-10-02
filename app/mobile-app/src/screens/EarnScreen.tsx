@@ -62,7 +62,7 @@ export function EarnScreen() {
     fireAndForget(loadMeetings());
     // Reload whenever the screen regains focus (e.g. returning from the
     // onboarding gate after booking) so the cards lock/unlock immediately.
-    const unsubscribe = navigation.addListener('focus', () => void loadMeetings());
+    const unsubscribe = navigation.addListener('focus', () => fireAndForget(loadMeetings()));
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation]);
@@ -120,7 +120,7 @@ export function EarnScreen() {
                         kind={box.kind}
                         rescheduleCount={scheduledMeeting.reschedule_count}
                         currentSlot={scheduledMeeting.scheduled_at ?? scheduledMeeting.requested_at}
-                        onChanged={() => void loadMeetings()}
+                        onChanged={() => fireAndForget(loadMeetings())}
                       />
                     ) : null}
                   </YStack>

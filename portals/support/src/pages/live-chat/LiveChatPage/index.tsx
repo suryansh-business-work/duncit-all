@@ -6,20 +6,16 @@ import {
   MARK_SUPPORT_CHAT_READ,
   SEND_SUPPORT_CHAT_MESSAGE,
   SUPPORT_CHAT_MESSAGES,
-  SUPPORT_CHAT_SESSIONS,
   type SupportChatMessage,
   type SupportChatSession,
-  type SupportChatSessionPage,
-  type SupportChatStatus,
 } from '../../../graphql/supportChat';
-import { useTabParam } from '@duncit/tabs';
 import { useSupportSocket, type ChatTypingPayload } from '../../../lib/useSupportSocket';
 import CreateUserDialog from '../CreateUserDialog';
 import SessionInbox from './SessionInbox';
-import { sessionFilters } from './SessionFilter';
 import ChatPane from './ChatPane';
 import { useTranslation } from '@duncit/shell';
 import { useChatActions } from './useChatActions';
+import { useSessionList } from './useSessionList';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -30,36 +26,19 @@ function typingLabelFor(p: ChatTypingPayload, fallbackName: string, t: Translate
 
 export default function LiveChatPage() {
   const { t } = useTranslation();
-  const sessionTabs = useTabParam<SupportChatStatus>({
-    items: sessionFilters(t),
-    fallback: 'OPEN',
-  });
-  const statusFilter = sessionTabs.value;
-  const setStatusFilter = sessionTabs.onChange;
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(0);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  const sessionsQuery = useQuery<{ supportChatSessions: SupportChatSessionPage }>(SUPPORT_CHAT_SESSIONS, {
-    variables: {
-      status: statusFilter,
-      search: search || null,
-      page: page + 1,
-      page_size: pageSize,
-    },
-    fetchPolicy: 'cache-and-network',
-  });
-  const sessions = sessionsQuery.data?.supportChatSessions.items ?? [];
-  const totalSessions = sessionsQuery.data?.supportChatSessions.total ?? 0;
+  const {
+    statusFilter,
+    setStatusFilter,
+    searchInput,
+    setSearchInput,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    sessionsQuery,
+    sessions,
+    totalSessions,
+  } = useSessionList(t);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<SupportChatMessage[]>([]);

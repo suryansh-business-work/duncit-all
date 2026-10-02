@@ -1,5 +1,6 @@
 export { logs, configureLogs, createLogger, serializeError, type LogContext } from './logs';
 export { httpTransport, consoleTransport } from './transport';
+export { fireAndForget } from './fire-and-forget';
 export type { HttpTransportOptions } from './transport';
 export { browserClientInfo, sessionId } from './client-info';
 export { APPS, PORTALS, WEBSITES, detectEnvironment } from './config';

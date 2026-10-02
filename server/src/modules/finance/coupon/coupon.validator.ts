@@ -1,45 +1,85 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import {
+  bool,
+  filled,
+  finite,
+  gt,
+  gte,
+  int,
+  lte,
+  matches,
+  maxLen,
+  num,
+  obj,
+  shape,
+  str,
+  trim,
+  type FieldRules,
+} from '@utils/zod-fields';
 
 const codeRegex = /^[A-Z0-9][A-Z0-9_-]{2,29}$/;
 
-export const createCouponSchema = yup.object({
-  code: yup
-    .string()
-    .trim()
-    .transform((v) => (typeof v === 'string' ? v.toUpperCase() : v))
-    .matches(codeRegex, 'Code must be 3-30 chars: A-Z, 0-9, - or _')
-    .required('Code is required'),
-  description: yup.string().trim().max(300).default(''),
-  discount_pct: yup
-    .number()
-    .typeError('Discount must be a number')
-    .min(1, 'Min 1%')
-    .max(100, 'Max 100%')
-    .required('Discount is required'),
-  scope: yup.string().oneOf(['GLOBAL', 'POD', 'STORE']).required(),
-  pod_id: yup
-    .string()
-    .trim()
-    .nullable()
-    .when('scope', {
-      is: 'POD',
-      then: (s) => s.required('Pod is required for a pod-scoped coupon'),
-      otherwise: (s) => s.nullable().default(null),
-    }),
-  valid_from: yup.string().trim().nullable().default(null),
-  valid_until: yup.string().trim().nullable().default(null),
-  max_uses: yup.number().typeError('Must be a number').integer().min(1).nullable().default(null),
-  per_user_limit: yup.number().typeError('Must be a number').integer().min(1).nullable().default(null),
-  min_order_amount: yup.number().typeError('Must be a number').min(0).default(0),
-  is_active: yup.boolean().default(true),
-});
+const SCOPES = ['GLOBAL', 'POD', 'STORE'] as const;
+const POD_REQUIRED = 'Pod is required for a pod-scoped coupon';
 
-export const updateCouponSchema = createCouponSchema.partial();
+const toUpperCase = (v: unknown) => (typeof v === 'string' ? v.toUpperCase() : v);
+const optionalText = () => str(z.string().nullable(), { transforms: [trim], default: null });
+const atLeastOne = () => num(finite().check(int(), gte(1)).nullable(), { typeError: 'Must be a number', default: null });
 
-export const couponPreviewSchema = yup.object({
-  code: yup.string().trim().required('Code is required'),
-  pod_id: yup.string().trim().nullable().default(null),
-  amount: yup.number().typeError('Amount must be a number').moreThan(0).required(),
-});
+const code = () => z.string().check(matches(codeRegex, 'Code must be 3-30 chars: A-Z, 0-9, - or _'), filled('Code is required'));
+const codeRules: FieldRules = { required: 'Code is required', transforms: [trim, toUpperCase] };
+const discount = () => finite().check(gte(1, 'Min 1%'), lte(100, 'Max 100%'));
+const discountRules: FieldRules = { typeError: 'Discount must be a number', required: 'Discount is required' };
+const scopeRules: FieldRules = { oneOf: SCOPES, required: true };
 
-export type CreateCouponDTO = yup.InferType<typeof createCouponSchema>;
+const couponFields = {
+  code: str(code(), codeRules),
+  description: str(z.string().check(maxLen(300)), { transforms: [trim], default: '' }),
+  discount_pct: num(discount(), discountRules),
+  scope: str(z.enum(SCOPES), scopeRules),
+  pod_id: optionalText(),
+  valid_from: optionalText(),
+  valid_until: optionalText(),
+  max_uses: atLeastOne(),
+  per_user_limit: atLeastOne(),
+  min_order_amount: num(finite().check(gte(0)), { typeError: 'Must be a number', default: 0 }),
+  is_active: bool(z.boolean(), { default: true }),
+};
+
+const couponRules = {
+  when: {
+    pod_id: (coupon: Record<string, unknown>) =>
+      coupon.scope === 'POD'
+        ? str(z.string().check(filled(POD_REQUIRED)), { transforms: [trim], required: POD_REQUIRED })
+        : undefined,
+  },
+};
+
+export const createCouponSchema = obj(shape(couponFields, couponRules));
+
+/**
+ * The same fields with the required ones made optional. A field that IS sent is
+ * still held to the create rules (null and '' included), and the defaults still
+ * fill whatever was left out.
+ */
+export const updateCouponSchema = obj(
+  shape(
+    {
+      ...couponFields,
+      code: str(code().optional(), codeRules),
+      discount_pct: num(discount().optional(), discountRules),
+      scope: str(z.enum(SCOPES).optional(), scopeRules),
+    },
+    couponRules
+  )
+);
+
+export const couponPreviewSchema = obj(
+  shape({
+    code: str(z.string().check(filled('Code is required')), { required: 'Code is required', transforms: [trim] }),
+    pod_id: optionalText(),
+    amount: num(finite().check(gt(0)), { typeError: 'Amount must be a number', required: true }),
+  })
+);
+
+export type CreateCouponDTO = z.infer<typeof createCouponSchema>;

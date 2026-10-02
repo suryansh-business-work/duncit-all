@@ -1,0 +1,1 @@
+export { ScannedAttendeeCard } from './ScannedAttendeeCard';

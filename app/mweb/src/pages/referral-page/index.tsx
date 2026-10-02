@@ -15,7 +15,8 @@ import { notifySuccess } from '../../components/notify';
 import { formatRelative } from '../../components/app-header/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import ReferralCodeCard from './ReferralCodeCard';
-import { MY_REFERRAL, type MyReferral } from './queries';
+import { MY_REFERRAL, type MyReferral } from './queries';
+import { fireAndForget, logs } from '@duncit/logs';
 
 /**
  * Refer & Earn — my code and the three ways to pass it on.
@@ -94,9 +95,9 @@ export default function ReferralPage() {
     <Stack data-testid="referral-page" spacing={3} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
       <ReferralCodeCard
         referral={referral}
-        onCopyCode={() => void copy(referral.code, t('mweb.referral.codeCopied'))}
-        onCopyLink={() => void copy(link, t('mweb.referral.linkCopied'))}
-        onShare={() => void share()}
+        onCopyCode={() => fireAndForget(copy(referral.code, t('mweb.referral.codeCopied')), logs.mWeb, 'referral-page', 'copy')}
+        onCopyLink={() => fireAndForget(copy(link, t('mweb.referral.linkCopied')), logs.mWeb, 'referral-page', 'copy')}
+        onShare={() => fireAndForget(share(), logs.mWeb, 'referral-page', 'share')}
       />
 
       <Stack spacing={1.5}>

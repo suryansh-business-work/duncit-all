@@ -26,18 +26,71 @@ export type CacheCarrier = object;
 
 const STORE_KEY = '__duncitRequestCache';
 
-type Store = Map<string, Map<string, unknown>>;
+type Fetcher<T> = (missing: string[]) => Promise<Map<string, T>>;
 
-function bucket(carrier: CacheCarrier, name: string): Map<string, unknown> {
+/** The ids asked for during one tick, fetched together. */
+interface Batch {
+  ids: string[];
+  done: Promise<void>;
+}
+
+interface Bucket {
+  /** id → record, or null for "looked, nothing there". */
+  values: Map<string, unknown>;
+  /** id → the batch already fetching it. */
+  inflight: Map<string, Promise<void>>;
+  /** The batch still collecting ids this tick, if any. */
+  open: Batch | null;
+}
+
+type Store = Map<string, Bucket>;
+
+function bucket(carrier: CacheCarrier, name: string): Bucket {
   const bag = carrier as Record<string, unknown>;
   bag[STORE_KEY] ??= new Map();
   const store = bag[STORE_KEY] as Store;
   let found = store.get(name);
   if (!found) {
-    found = new Map<string, unknown>();
+    found = { values: new Map(), inflight: new Map(), open: null };
     store.set(name, found);
   }
   return found;
+}
+
+/**
+ * Queue `id` on the bucket's open batch, opening one if there is none.
+ *
+ * GraphQL calls a list's field resolvers one row after another in the same
+ * tick, each asking for one id. The batch waits until that pass is over —
+ * after the current promise jobs, like DataLoader — and then fetches every id
+ * it collected in ONE call. Without it, rows nobody primed each saw their id
+ * missing and each issued its own query: the N+1 this file exists to stop.
+ *
+ * A bucket name always pairs with one fetcher, so the batch uses the fetcher of
+ * whichever caller opened it.
+ */
+function enqueue<T>(cache: Bucket, id: string, fetchMissing: Fetcher<T>): Promise<void> {
+  if (!cache.open) {
+    const batch: Batch = { ids: [], done: Promise.resolve() };
+    batch.done = new Promise<void>((resolve) => {
+      Promise.resolve().then(() => process.nextTick(resolve));
+    })
+      .then(() => {
+        cache.open = null;
+        return fetchMissing(batch.ids);
+      })
+      .then((fetched) => {
+        for (const key of batch.ids) cache.values.set(key, fetched.get(key) ?? null);
+      })
+      .finally(() => {
+        // A failed fetch caches nothing, so the next ask tries again.
+        for (const key of batch.ids) cache.inflight.delete(key);
+      });
+    cache.open = batch;
+  }
+  cache.open.ids.push(id);
+  cache.inflight.set(id, cache.open.done);
+  return cache.open.done;
 }
 
 /**
@@ -46,26 +99,25 @@ function bucket(carrier: CacheCarrier, name: string): Map<string, unknown> {
  * `fetchMissing` receives just the unknown ids and returns what it found. An id
  * with no record is cached as `null` so a second ask for the same missing row
  * does not re-query — "we looked and there is nothing" is an answer worth
- * remembering for the length of one request.
+ * remembering for the length of one request. Ids asked for by sibling
+ * resolvers in the same tick share one fetch (see enqueue).
  */
 export async function loadMany<T>(
   carrier: CacheCarrier,
   name: string,
   ids: readonly string[],
-  fetchMissing: (missing: string[]) => Promise<Map<string, T>>,
+  fetchMissing: Fetcher<T>,
 ): Promise<Map<string, T>> {
   const cache = bucket(carrier, name);
   const wanted = Array.from(new Set(ids.filter(Boolean).map(String)));
-  const missing = wanted.filter((id) => !cache.has(id));
-
-  if (missing.length > 0) {
-    const fetched = await fetchMissing(missing);
-    for (const id of missing) cache.set(id, fetched.get(id) ?? null);
-  }
+  const waits = wanted
+    .filter((id) => !cache.values.has(id))
+    .map((id) => cache.inflight.get(id) ?? enqueue(cache, id, fetchMissing));
+  await Promise.all(waits);
 
   const out = new Map<string, T>();
   for (const id of wanted) {
-    const value = cache.get(id);
+    const value = cache.values.get(id);
     if (value !== null && value !== undefined) out.set(id, value as T);
   }
   return out;
@@ -82,7 +134,7 @@ export async function primeMany<T>(
   carrier: CacheCarrier,
   name: string,
   ids: readonly string[],
-  fetchMissing: (missing: string[]) => Promise<Map<string, T>>,
+  fetchMissing: Fetcher<T>,
 ): Promise<void> {
   if (ids.length === 0) return;
   await loadMany(carrier, name, ids, fetchMissing).catch(() => undefined);
@@ -93,7 +145,7 @@ export async function loadOne<T>(
   carrier: CacheCarrier,
   name: string,
   id: string | null | undefined,
-  fetchMissing: (missing: string[]) => Promise<Map<string, T>>,
+  fetchMissing: Fetcher<T>,
 ): Promise<T | null> {
   if (!id) return null;
   const found = await loadMany<T>(carrier, name, [String(id)], fetchMissing);

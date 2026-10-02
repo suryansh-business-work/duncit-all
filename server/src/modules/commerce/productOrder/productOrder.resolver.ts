@@ -1,5 +1,5 @@
 import { productOrderService } from './productOrder.service';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
@@ -9,18 +9,7 @@ const OPS_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGE
 
 export const productOrderResolvers = {
   ProductOrder: {
-    pod: async (parent: any) => {
-      if (!parent.pod_id) return null;
-      const p = await PodModel.findById(parent.pod_id);
-      if (!p) return null;
-      return {
-        id: String(p._id),
-        pod_id: (p as any).pod_id,
-        pod_title: (p as any).pod_title,
-        pod_date_time: (p as any).pod_date_time?.toISOString?.() ?? null,
-        pod_amount: (p as any).pod_amount,
-      };
-    },
+    pod: (parent: { pod_id?: unknown }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
   },
   Query: {
     myProductOrders: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

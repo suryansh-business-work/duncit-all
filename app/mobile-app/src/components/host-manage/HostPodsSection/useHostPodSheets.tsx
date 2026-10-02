@@ -1,26 +1,20 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { canAmendPod, canCompletePod, podScanWindow } from '@duncit/utils';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { RootStackParamList } from '@/navigation/types';
 import { useFeedbackLinkActions, usePodMediaLinkActions } from '@/hooks/usePodLinkActions';
 import type { HostPod } from '@/hooks/useHostPods';
-import { isVenueRejected } from '@/utils/venue-approval';
-import { PodActionsSheet } from '@/components/host-manage/PodActionsSheet';
-import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSheet';
 import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PodClubAdminSheet } from '@/components/host-manage/PodClubAdminSheet';
-import { TicketScanDialog, type ScanTarget } from '@/components/host-manage/ticket-scan';
-import { PodDeleteDialog } from '@/components/host-manage/PodDeleteDialog';
-import { PodEditDialog } from '@/components/host-manage/PodEditDialog';
-import { PodCompleteDialog } from '@/components/host-manage/PodCompleteDialog';
-import { PodResubmitDialog } from '@/components/host-manage/PodResubmitDialog';
+import type { ScanTarget } from '@/components/host-manage/ticket-scan';
 import type { HostPodSummary } from '@/components/host-manage/pod-edit.form';
 import type { HostPodForComplete } from '@/components/host-manage/pod-complete.form';
 import type { HostPodForResubmit } from '@/components/host-manage/pod-resubmit.form';
+
+import { HostPodActionsSheet } from './HostPodActionsSheet';
+import { HostPodDialogs } from './HostPodDialogs';
 
 interface Options {
   /** Re-reads the host's pods after anything that alters one. */
@@ -71,152 +65,35 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
     refetch().catch(() => undefined);
   };
 
-  /** Run one of the rating-link actions on the pod the sheet is open for. */
-  const withActionsPod = (action: (pod: HostPod) => Promise<unknown> | void) => () => {
-    // A dismissed share sheet rejects on iOS — that is the host closing it,
-    // not a failure worth showing them.
-    if (actionsPod) Promise.resolve(action(actionsPod)).catch(() => undefined);
-    setActionsPod(null);
+  const s = {
+    navigation,
+    feedbackLink,
+    mediaLink,
+    actionsPod,
+    setActionsPod,
+    changePod,
+    setChangePod,
+    change,
+    t,
+    scanPod,
+    setScanPod,
+    editPod,
+    setEditPod,
+    resubmitPod,
+    setResubmitPod,
+    deletePod,
+    setDeletePod,
+    completePod,
+    setCompletePod,
+    clubAdminPod,
+    setClubAdminPod,
+    reload,
   };
 
   const sheets = (
     <>
-      <PodActionsSheet
-        open={!!actionsPod}
-        podTitle={actionsPod?.pod_title ?? ''}
-        venueRejected={isVenueRejected(actionsPod?.venue_approval_status)}
-        canComplete={canCompletePod(actionsPod ?? {})}
-        scanWindow={podScanWindow(actionsPod ?? {})}
-        canAmend={canAmendPod(actionsPod ?? {})}
-        onClose={() => setActionsPod(null)}
-        onScan={() => {
-          if (actionsPod) setScanPod({ id: actionsPod.id, pod_title: actionsPod.pod_title });
-          setActionsPod(null);
-        }}
-        onSeeAttendance={() => {
-          if (actionsPod) navigation.navigate('PodAttendance', { podId: actionsPod.id });
-          setActionsPod(null);
-        }}
-        onSlotRequest={() => {
-          if (actionsPod) navigation.navigate('PodPending', { podId: actionsPod.id });
-          setActionsPod(null);
-        }}
-        onComplete={() => {
-          if (actionsPod) {
-            setCompletePod({
-              id: actionsPod.id,
-              pod_title: actionsPod.pod_title,
-              venue_id: actionsPod.venue_id,
-            });
-          }
-          setActionsPod(null);
-        }}
-        // A venue-rejected pod opens the FULL edit + resubmission flow; every
-        // other pod keeps the limited title/description/media edit.
-        onEdit={() => {
-          if (actionsPod) {
-            const target = isVenueRejected(actionsPod.venue_approval_status)
-              ? setResubmitPod
-              : setEditPod;
-            target(actionsPod);
-          }
-          setActionsPod(null);
-        }}
-        onOpenPodMedia={withActionsPod(mediaLink.open)}
-        onSharePodMedia={withActionsPod(mediaLink.share)}
-        onCopyPodMedia={withActionsPod(mediaLink.copy)}
-        onOpenFeedback={withActionsPod(feedbackLink.open)}
-        onShareFeedback={withActionsPod(feedbackLink.share)}
-        onCopyFeedback={withActionsPod(feedbackLink.copy)}
-        onCancel={() => {
-          if (actionsPod) setDeletePod({ id: actionsPod.id, title: actionsPod.pod_title });
-          setActionsPod(null);
-        }}
-        onClubAdmin={() => {
-          setClubAdminPod(actionsPod);
-          setActionsPod(null);
-        }}
-        onRequestChange={() => {
-          setChangePod(actionsPod);
-          setActionsPod(null);
-        }}
-      />
-      <RequestChangeSheet
-        open={!!changePod}
-        role="HOST"
-        penalty={change.board.penalties.host_penalty}
-        attendeeCount={changePod?.seats_taken ?? 0}
-        busy={change.busy}
-        errorText={change.feedback?.ok === false ? change.feedback.text : null}
-        onClose={() => setChangePod(null)}
-        onConfirm={(reason) => {
-          const pod = changePod;
-          if (!pod) return;
-          change
-            .file(pod.id, 'HOST', reason, t('changeRequest.filed'))
-            .then((ok) => {
-              if (ok) setChangePod(null);
-              return undefined;
-            })
-            .catch(() => undefined);
-        }}
-      />
-      <PodClubAdminSheet
-        pod={clubAdminPod}
-        onClose={() => setClubAdminPod(null)}
-        onSupport={() => {
-          if (clubAdminPod) {
-            navigation.navigate('SupportTickets', {
-              podId: clubAdminPod.id,
-              podTitle: clubAdminPod.pod_title,
-            });
-          }
-          setClubAdminPod(null);
-        }}
-      />
-      <TicketScanDialog
-        pod={scanPod}
-        onClose={() => setScanPod(null)}
-        onOpenProfile={(userId) => {
-          setScanPod(null);
-          navigation.navigate('PublicProfile', { userId });
-        }}
-      />
-      <PodEditDialog
-        pod={editPod}
-        onClose={() => setEditPod(null)}
-        onSaved={() => {
-          setEditPod(null);
-          reload();
-        }}
-      />
-      <PodResubmitDialog
-        pod={resubmitPod}
-        onClose={() => setResubmitPod(null)}
-        onSaved={() => {
-          setResubmitPod(null);
-          reload();
-        }}
-      />
-      <PodDeleteDialog
-        podId={deletePod?.id ?? null}
-        podTitle={deletePod?.title ?? ''}
-        onClose={() => setDeletePod(null)}
-        onDeleted={() => {
-          setDeletePod(null);
-          reload();
-        }}
-      />
-      <PodCompleteDialog
-        key={completePod?.id ?? 'none'}
-        pod={completePod}
-        onClose={() => setCompletePod(null)}
-        onCompleted={() => {
-          setCompletePod(null);
-          reload();
-          onPodCompleted?.();
-        }}
-      />
+      <HostPodActionsSheet s={s} />
+      <HostPodDialogs s={s} onPodCompleted={onPodCompleted} />
     </>
   );
 
@@ -226,4 +103,31 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
     notice: feedbackLink.notice ?? mediaLink.notice ?? null,
     sheets,
   };
+}
+
+/** The state every Host Studio sheet reads and writes — built once per render
+ * by `useHostPodSheets` and handed to the sheet components it renders. */
+export interface HostPodSheetState {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  feedbackLink: ReturnType<typeof useFeedbackLinkActions>;
+  mediaLink: ReturnType<typeof usePodMediaLinkActions>;
+  actionsPod: HostPod | null;
+  setActionsPod: (pod: HostPod | null) => void;
+  changePod: HostPod | null;
+  setChangePod: (pod: HostPod | null) => void;
+  change: ReturnType<typeof usePodChangeRequests>;
+  t: ReturnType<typeof useTranslation>['t'];
+  scanPod: ScanTarget | null;
+  setScanPod: (pod: ScanTarget | null) => void;
+  editPod: HostPodSummary | null;
+  setEditPod: (pod: HostPodSummary | null) => void;
+  resubmitPod: HostPodForResubmit | null;
+  setResubmitPod: (pod: HostPodForResubmit | null) => void;
+  deletePod: { id: string; title: string } | null;
+  setDeletePod: (pod: { id: string; title: string } | null) => void;
+  completePod: HostPodForComplete | null;
+  setCompletePod: (pod: HostPodForComplete | null) => void;
+  clubAdminPod: HostPod | null;
+  setClubAdminPod: (pod: HostPod | null) => void;
+  reload: () => void;
 }

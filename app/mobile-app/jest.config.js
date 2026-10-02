@@ -46,7 +46,7 @@ module.exports = {
     // Codegen output — not hand-written, validated by the compiler.
     '!src/generated/**',
     // Pure navigation wiring — exercised at runtime, not in unit tests (typechecked).
-    '!src/navigation/RootNavigator.tsx',
+    '!src/navigation/RootNavigator/**',
     '!src/navigation/MainTabs.tsx',
     '!src/navigation/navigationRef.ts',
     // Platform `.web` variants — jest runs the native platform, so these shims

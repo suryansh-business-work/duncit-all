@@ -87,7 +87,7 @@
     "build:ecomm-store": "pnpm --filter ecomm-store build",
     "build:lite": "pnpm --filter duncit-lite build",
     "typecheck": "pnpm --recursive --if-present build",
-    "test:forms": "pnpm --filter admin test:forms && pnpm --filter mweb-app test:forms && pnpm --filter ads-portal test:forms && pnpm --filter crm test:forms && pnpm --filter finance test:forms && pnpm --filter tech test:forms && pnpm --filter support test:forms && pnpm --filter website-app test:forms && pnpm --filter legal test:forms && pnpm --filter ai test:forms && pnpm --filter products test:forms && pnpm --filter marketing test:forms && pnpm --filter onboarding test:forms && pnpm --filter hr test:forms && pnpm --filter employee test:forms && pnpm --filter challenge-portal test:forms && pnpm --filter developers-portal test:forms",
+    "test:forms": "pnpm --recursive --if-present test:forms",
     "test:forms:admin": "pnpm --filter admin test:forms",
     "test:forms:mweb": "pnpm --filter mweb-app test:forms",
     "test:forms:ads-portal": "pnpm --filter ads-portal test:forms",
@@ -138,7 +138,9 @@
     "dup": "node scripts/verify-duplication.mjs",
     "dup:report": "node scripts/verify-duplication.mjs --summary=duplication-report.md",
     "dup:update": "node scripts/verify-duplication.mjs --update",
-    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 app/mweb/src portals packages lite/web lite/portal lite/shared"
+    "lint:a11y": "eslint -c eslint.a11y.config.mjs --no-warn-ignored --max-warnings 0 app/mweb/src portals packages lite/web lite/portal lite/shared",
+    "lint": "eslint -c eslint.code.config.mjs --suppressions-location eslint-code-suppressions.json --max-warnings 0 --no-warn-ignored --pass-on-unpruned-suppressions app/mweb portals packages website lite server",
+    "lint:prune": "eslint -c eslint.code.config.mjs --suppressions-location eslint-code-suppressions.json --no-warn-ignored --prune-suppressions app/mweb portals packages website lite server"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
@@ -146,6 +148,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.39.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "jscpd": "5.1.1",
     "lint-staged": "^17.6.0",
@@ -154,6 +157,6 @@
     "vitest": "^4.1.11"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md,yml,yaml}": []
+    "*.{ts,tsx}": "eslint -c eslint.code.config.mjs --suppressions-location eslint-code-suppressions.json --max-warnings 0 --no-warn-ignored --pass-on-unpruned-suppressions"
   }
 }

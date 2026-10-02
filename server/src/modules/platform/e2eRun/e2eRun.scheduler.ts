@@ -18,7 +18,7 @@
  *
  * No-ops under NODE_ENV=test.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { e2eRunService } from './e2eRun.service';
 
 const TICK_MS = 60_000;
@@ -32,20 +32,11 @@ const FIRST_TICK_DELAY_MS = 120_000;
  * picked up on the next tick anyway.
  */
 export function startE2eRunScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const tick = () => {
-    // The interval must survive any failure (GitHub, the DB, a bad setting).
-    e2eRunService.runIfDue().catch((err) => {
-      logs.server.error('e2e-scheduler', 'tick', { error: err, msg: 'tick failed' });
-    });
-  };
-  const first = setTimeout(tick, FIRST_TICK_DELAY_MS);
-  const interval = setInterval(tick, TICK_MS);
-  // Never keep the process alive just for the e2e timer.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'e2e-scheduler',
+    operation: 'tick',
+    firstDelayMs: FIRST_TICK_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: () => e2eRunService.runIfDue(),
+  });
 }

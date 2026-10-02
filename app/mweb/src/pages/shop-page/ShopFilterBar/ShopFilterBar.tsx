@@ -1,0 +1,155 @@
+import { useState } from 'react';
+import {
+  Badge,
+  Box,
+  Checkbox,
+  Collapse,
+  FormControlLabel,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+} from '@mui/material';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import { DuncitIconButton } from '@duncit/buttons';
+import { SHOP_SORT_OPTIONS, type ShopSort } from '../queries';
+import { SHOP_RATING_OPTIONS, type ShopFilters } from '../useShopFilters';
+import { useTranslation } from '../../../i18n/useTranslation';
+import { testIdProps } from '../../../utils/testIdProps';
+import FilterChipRow, { withAll } from './FilterChipRow';
+import FilterSection from './FilterSection';
+
+/** The pill search field — white on the page ground, borderless in light mode. */
+const SEARCH_SX = {
+  flex: 1,
+  '& .MuiOutlinedInput-root': { height: 52, borderRadius: 999, bgcolor: 'background.paper', pl: '18px' },
+  '& .MuiOutlinedInput-input::placeholder': { color: 'text.secondary', opacity: 1 },
+  '& .MuiOutlinedInput-root fieldset': { borderColor: 'var(--duncit-card-border)' },
+  '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: 'primary.main' },
+} as const;
+
+/** Search field + a filter button that reveals the Super → Category → Sub
+ * cascade, rating buckets, an include-out-of-stock toggle and sort. Filters live
+ * behind the button (with an active-count badge) to keep the header clean. Twin
+ * of the native ShopFilterBar. */
+export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilters }>) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return (
+    <Box data-testid="shop-filter-bar">
+      <Stack direction="row" spacing={1} sx={{
+        alignItems: "center"
+      }}>
+        <TextField
+          size="small"
+          data-testid="shop-search"
+          placeholder={t('mweb.shop.searchPlaceholder')}
+          value={filters.query}
+          onChange={(e) => filters.setQuery(e.target.value)}
+          sx={SEARCH_SX}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            },
+            htmlInput: { 'data-testid': 'shop-search-input', 'aria-label': t('mweb.shop.searchProducts') },
+          }}
+        />
+        {/* The round green filter button; a darker green while the panel is open. */}
+        <DuncitIconButton
+          data-testid="shop-filter-toggle"
+          aria-label={t('mweb.common.filters')}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          sx={{
+            width: 52,
+            height: 52,
+            flexShrink: 0,
+            bgcolor: open ? 'primary.dark' : 'primary.main',
+            color: 'primary.contrastText',
+            '&:hover': { bgcolor: 'primary.dark' },
+          }}
+        >
+          <Badge
+            badgeContent={filters.activeCount}
+            color="secondary"
+            slotProps={{ badge: { ...testIdProps('shop-filter-count') } }}
+          >
+            <TuneRoundedIcon sx={{ fontSize: 24 }} />
+          </Badge>
+        </DuncitIconButton>
+      </Stack>
+      <Collapse in={open}>
+        <Stack spacing={1.5} sx={{ pt: 1.5 }}>
+          {filters.superOptions.length > 0 && (
+            <FilterSection title={t('mweb.common.superCategory')}>
+              <FilterChipRow
+                options={withAll(filters.superOptions)}
+                value={filters.superId}
+                onSelect={filters.selectSuper}
+                idPrefix="shop-super"
+              />
+            </FilterSection>
+          )}
+          {filters.categoryOptions.length > 0 && (
+            <FilterSection title={t('mweb.common.category')}>
+              <FilterChipRow
+                options={withAll(filters.categoryOptions)}
+                value={filters.categoryId}
+                onSelect={filters.selectCategory}
+                idPrefix="shop-cat"
+              />
+            </FilterSection>
+          )}
+          {filters.subOptions.length > 0 && (
+            <FilterSection title="Sub-category">
+              <FilterChipRow
+                options={withAll(filters.subOptions)}
+                value={filters.subId}
+                onSelect={filters.setSubId}
+                idPrefix="shop-sub"
+              />
+            </FilterSection>
+          )}
+          <FilterSection title={t('mweb.shop.rating')}>
+            <FilterChipRow
+              options={SHOP_RATING_OPTIONS}
+              value={filters.minRating}
+              onSelect={filters.setMinRating}
+              idPrefix="shop-rating"
+            />
+          </FilterSection>
+          <FormControlLabel
+            control={
+              <Checkbox
+                data-testid="shop-oos-toggle"
+                checked={filters.includeOutOfStock}
+                onChange={(e) => filters.setIncludeOutOfStock(e.target.checked)}
+              />
+            }
+            label={t('mweb.shop.includeOutOfStock')}
+          />
+          <TextField
+            select
+            size="small"
+            data-testid="shop-sort-select"
+            label={t('mweb.common.sort')}
+            value={filters.sort}
+            onChange={(e) => filters.setSort(e.target.value as ShopSort)}
+            sx={{ maxWidth: 220 }}
+          >
+            {SHOP_SORT_OPTIONS.map((option) => (
+              <MenuItem key={option.value} data-testid={`shop-sort-${option.value}`} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
+      </Collapse>
+    </Box>
+  );
+}

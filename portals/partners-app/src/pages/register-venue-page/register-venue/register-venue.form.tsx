@@ -12,7 +12,8 @@ import PayoutMethodSection from '../sections/PayoutMethodSection';
 import LeavesSection from '../sections/LeavesSection';
 import ReviewSection from '../sections/ReviewSection';
 import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
-import type { RegisterVenueMode, VenueRegistrationConfig } from './register-venue.types';
+import type { RegisterVenueMode, VenueRegistrationConfig } from './register-venue.types';
+import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
   venue: any;
@@ -118,8 +119,8 @@ export default function RegisterVenueForm({
                 mode={mode}
                 active={active as EditableSectionKey | 'review'}
                 busy={busy}
-                onSave={() => void saveSection(active as EditableSectionKey)}
-                onSaveApproved={() => void saveApprovedSection(active as EditableSectionKey)}
+                onSave={() => fireAndForget(saveSection(active as EditableSectionKey), logs.portal['partners-app'], 'register-venue', 'saveSection')}
+                onSaveApproved={() => fireAndForget(saveApprovedSection(active as EditableSectionKey), logs.portal['partners-app'], 'register-venue', 'saveApprovedSection')}
                 onSubmit={() => {
                   submitAll()
                     .then((id) => {

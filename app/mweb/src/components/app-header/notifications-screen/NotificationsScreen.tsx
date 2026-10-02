@@ -11,7 +11,7 @@ import {
 import ConfirmDialog from '../../ConfirmDialog';
 import { isPushSupported, unsubscribePush } from '../../../pwa';
 import NotificationFilterChips from './NotificationFilterChips';
-import NotificationRow from './NotificationRow';
+import NotificationsList from './NotificationsList';
 import NotificationsHero from './NotificationsHero';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../theme';
@@ -165,25 +165,13 @@ export default function NotificationsScreen({
             </Paper>
           )}
           {visible.length > 0 && (
-            <Paper
-              data-testid="notifications-list"
-              sx={{
-                ...SURFACE_SX,
-                overflow: 'hidden',
-                // Hairlines between rows, drawn by the list (rows stay self-contained).
-                '& > * + *': { borderTop: 1, borderColor: 'divider' },
-              }}
-            >
-              {visible.map((item: any) => (
-                <NotificationRow
-                  key={item.id}
-                  item={item}
-                  busy={busyId === item.id || markAllBusy}
-                  onClick={() => onNotifClick(item)}
-                  onAnswered={onRefresh}
-                />
-              ))}
-            </Paper>
+            <NotificationsList
+              visible={visible}
+              busyId={busyId}
+              markAllBusy={markAllBusy}
+              onNotifClick={onNotifClick}
+              onRefresh={onRefresh}
+            />
           )}
         </Box>
       </Stack>

@@ -7,6 +7,7 @@ import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 const MAX_ATTACHMENTS = 5;
 
@@ -46,7 +47,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
           tabIndex={0}
           aria-label={t('mweb.support.addFiles')}
           aria-disabled={disabled}
-          onPress={disabled ? undefined : () => void add()}
+          onPress={disabled ? undefined : () => fireAndForget(add())}
           alignItems="center"
           gap={6}
           paddingHorizontal={10}

@@ -25,6 +25,7 @@
  * No-ops under NODE_ENV=test.
  */
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { VenueSlotModel } from './venueSlot.model';
 import { venueSlotService } from './venueSlot.service';
 
@@ -81,31 +82,16 @@ export async function runSlotRequestExpirySweep(): Promise<number> {
 /** Start the expiry loop (first sweep ~1.5 min after boot). Returns a stop
  * function. No-ops under NODE_ENV=test. */
 export function startSlotRequestExpiryScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  // Each decline fans out a notification and an audit write — never let a long
-  // sweep overlap the next tick.
-  let sweeping = false;
-  const sweep = () => {
-    if (sweeping) return;
-    sweeping = true;
-    runSlotRequestExpirySweep()
-      .then((declined) => {
-        if (declined > 0) logs.server.info('venue-slot-expiry', 'sweep', { declined });
-      })
-      .catch((error) => {
-        logs.server.error('venue-slot-expiry', 'sweep', { error, msg: 'sweep failed' });
-      })
-      .finally(() => {
-        sweeping = false;
-      });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for the expiry sweep.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  // Each decline fans out a notification and an audit write; startClusterJob
+  // never lets a long sweep overlap the next tick.
+  return startClusterJob({
+    component: 'venue-slot-expiry',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: async () => {
+      const declined = await runSlotRequestExpirySweep();
+      if (declined > 0) logs.server.info('venue-slot-expiry', 'sweep', { declined });
+    },
+  });
 }

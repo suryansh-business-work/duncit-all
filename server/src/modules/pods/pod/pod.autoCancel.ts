@@ -37,6 +37,7 @@ import {
 } from '@modules/venues/venue/venue.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const SWEEP_INTERVAL_MS = 10 * 60_000; // every 10 minutes
 const FIRST_SWEEP_DELAY_MS = 90_000; // ~1.5 min after boot
@@ -213,24 +214,13 @@ async function runBothSweeps(): Promise<void> {
 /** Start the auto-cancel + cancellation-risk loop (first sweep ~1.5 min after
  * boot). Returns a stop function. No-ops under NODE_ENV=test. */
 export function startPodAutoCancelScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  // Refund + notification fan-out is slow, sequential I/O — never let a long
-  // sweep overlap the next tick.
-  let sweeping = false;
-  const sweep = () => {
-    if (sweeping) return;
-    sweeping = true;
-    runBothSweeps().finally(() => {
-      sweeping = false;
-    });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for the auto-cancel sweep.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  // Refund + notification fan-out is slow, sequential I/O; startClusterJob never
+  // lets a long sweep overlap the next tick, nor run on two processes.
+  return startClusterJob({
+    component: 'pod-auto-cancel',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: runBothSweeps,
+  });
 }

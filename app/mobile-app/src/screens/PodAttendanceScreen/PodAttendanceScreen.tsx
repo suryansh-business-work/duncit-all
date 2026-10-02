@@ -2,34 +2,17 @@ import { useMemo, useState } from 'react';
 import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, YStack } from 'tamagui';
-import {
-  canDirectMark,
-  canScanTickets,
-  earningsBodyFor,
-  mwebAttendanceLabels,
-  showsCompleteDeadline,
-  splitAttendance,
-} from '@duncit/utils';
+import { YStack } from 'tamagui';
+import { mwebAttendanceLabels, splitAttendance } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { StackScreen } from '@/components/StackScreen';
 import { AttendanceOtpSheet } from '@/components/attendance/AttendanceOtpSheet';
-import { AttendanceRosterSection } from '@/components/attendance/AttendanceRosterSection';
 import { ClubAdminMarkSheet } from '@/components/attendance/ClubAdminMarkSheet';
 import { DirectMarkSheet } from '@/components/attendance/DirectMarkSheet';
 import { ForceMarkSheet } from '@/components/attendance/ForceMarkSheet';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { NoticeCard } from '@/components/attendance/NoticeCard';
-import {
-  AttendanceSummary,
-  ClubAdminHelpCard,
-  DeadlineNotice,
-  EarningsNotice,
-  LockedNotice,
-} from '@/components/attendance/AttendanceNotices';
 import { TicketScanDialog } from '@/components/host-manage/ticket-scan';
 import { useAttendanceBoard } from '@/hooks/useAttendanceBoard';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -37,6 +20,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+
+import { AttendanceBoardBody } from './AttendanceBoardBody';
 
 /**
  * Host Studio > Your Pods > ⋮ > See Marked Attendance.
@@ -82,90 +67,17 @@ export function PodAttendanceScreen() {
       );
     }
     return (
-      <YStack gap={16}>
-        <AttendanceSummary board={data} labels={labels} />
-        {data.can_mark ? (
-          <EarningsNotice labels={labels} body={earningsBodyFor(data, labels)} />
-        ) : (
-          <LockedNotice lock={data.lock} labels={labels} />
-        )}
-        {showsCompleteDeadline(data) ? (
-          <DeadlineNotice
-            labels={labels}
-            when={formatDateTime(data.complete_deadline ?? '')}
-            hours={data.complete_timeout_hours}
-          />
-        ) : null}
-
-        {/* On EVERY pod a Club Admin may still write to, empty roster included
-            — the whole point is that they no longer have to find a row to
-            start from. Never offered to a host: their by-hand mark is gated on
-            the admin's one-time-code setting, and a door that skipped it would
-            quietly undo the setting. */}
-        {canDirectMark(data) ? (
-          <PillButton
-            testID="attendance-direct-cta"
-            label={labels.directCta}
-            onPress={board.openDirect}
-            variant="ghost"
-            disabled={false}
-          />
-        ) : null}
-
-        {data.rows.length === 0 ? (
-          <Text fontSize={14} color="$muted">
-            {labels.emptyRoster}
-          </Text>
-        ) : null}
-
-        <AttendanceRosterSection
-          testID="attendance-unmarked"
-          heading={labels.unmarkedHeading}
-          rows={unmarked}
-          labels={labels}
-          canMark={data.can_mark}
-          viewer={data.viewer}
-          busyId={board.busyId}
-          formatDateTime={formatDateTime}
-          onMark={onMark}
-        />
-        {unmarked.length === 0 && data.rows.length > 0 ? (
-          <NoticeCard tone="success" title={labels.allMarked} />
-        ) : null}
-        {marked.length > 0 && unmarked.length > 0 ? (
-          <YStack height={1} backgroundColor="$borderColor" />
-        ) : null}
-        <AttendanceRosterSection
-          testID="attendance-marked"
-          heading={labels.markedHeading}
-          rows={marked}
-          labels={labels}
-          canMark={data.can_mark}
-          viewer={data.viewer}
-          busyId={board.busyId}
-          formatDateTime={formatDateTime}
-        />
-
-        {/* A virtual pod has no door: its members are marked when they open the
-            meeting link, so there is nothing to scan. */}
-        {canScanTickets(data) ? (
-          <DuncitButton
-            testID="attendance-scan-cta"
-            label={labels.scanCta}
-            onPress={() => setScanOpen(true)}
-            size="lg"
-            fullWidth
-            icon={<MaterialIcons name="qr-code-scanner" size={20} color={onPrimary} />}
-          />
-        ) : null}
-
-        {/* Only useful to a host who has run out of options — a Club Admin
-            reading their own section does not need their own phone number.
-            The MUI twin gates it the same way (rule 27). */}
-        {data.viewer === 'HOST' ? (
-          <ClubAdminHelpCard admins={data.club_admins} labels={labels} />
-        ) : null}
-      </YStack>
+      <AttendanceBoardBody
+        data={data}
+        board={board}
+        labels={labels}
+        marked={marked}
+        unmarked={unmarked}
+        onMark={onMark}
+        formatDateTime={formatDateTime}
+        onPrimary={onPrimary}
+        onScan={() => setScanOpen(true)}
+      />
     );
   };
 

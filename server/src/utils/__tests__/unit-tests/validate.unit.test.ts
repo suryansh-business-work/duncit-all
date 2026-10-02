@@ -1,19 +1,22 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { validate } from '../../validate';
+import { finite, gte, num, obj, shape, str } from '../../zod-fields';
 
-const schema = yup.object({
-  name: yup.string().required(),
-  age: yup.number().required().min(0),
-});
+const schema = obj(
+  shape({
+    name: str(z.string(), { required: true }),
+    age: num(finite().check(gte(0)), { required: true }),
+  })
+);
 
-/** A schema stub whose `validate` rejects with whatever we want to throw. */
-const throwingSchema = (thrown: unknown): yup.Schema<unknown> =>
+/** A schema stub whose `safeParseAsync` rejects with whatever we want to throw. */
+const throwingSchema = (thrown: unknown): z.ZodType<unknown> =>
   ({
-    validate: async () => {
+    safeParseAsync: async () => {
       throw thrown;
     },
-  }) as unknown as yup.Schema<unknown>;
+  }) as unknown as z.ZodType<unknown>;
 
 describe('validate', () => {
   it('returns the validated value and strips unknown keys', async () => {
@@ -27,7 +30,7 @@ describe('validate', () => {
     expect(value).toEqual({ name: 'Riya', age: 42 });
   });
 
-  it('throws a BAD_USER_INPUT GraphQLError collecting every failure (abortEarly: false)', async () => {
+  it('throws a BAD_USER_INPUT GraphQLError collecting every failure', async () => {
     expect.assertions(4);
     try {
       // Both fields invalid: name missing + age below the minimum.
@@ -37,11 +40,14 @@ describe('validate', () => {
       expect(gqlErr).toBeInstanceOf(GraphQLError);
       expect(gqlErr.message).toBe('Validation failed');
       expect(gqlErr.extensions.code).toBe('BAD_USER_INPUT');
-      expect((gqlErr.extensions.errors as string[]).length).toBeGreaterThan(1);
+      expect(gqlErr.extensions.errors).toEqual([
+        'name is a required field',
+        'age must be greater than or equal to 0',
+      ]);
     }
   });
 
-  it('falls back to the stringified error when the thrown error has no `errors` array', async () => {
+  it('falls back to the stringified error when parsing itself throws', async () => {
     expect.assertions(2);
     try {
       await validate(throwingSchema(new Error('boom')), {});
@@ -52,7 +58,7 @@ describe('validate', () => {
     }
   });
 
-  it('handles a nullish thrown value via the optional chain', async () => {
+  it('stringifies a nullish thrown value', async () => {
     expect.assertions(1);
     try {
       await validate(throwingSchema(null), {});

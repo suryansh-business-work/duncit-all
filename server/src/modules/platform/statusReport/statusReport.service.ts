@@ -1,6 +1,7 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { email, filled, maxLen, minLen, obj, shape, str, trim } from '@utils/zod-fields';
 import { findStatusService, getStatusEnvironment } from '@observability/statusServices';
 import type { CaptchaCarrier } from '@modules/platform/captcha/captcha.guard';
 import { uploadReportImages, type StatusReportImageInput } from './statusReport.images';
@@ -18,17 +19,26 @@ import {
  * than pattern-guessed, and the service key is checked against the catalogue —
  * an unknown slug becomes "not sure" instead of a row nobody can group.
  */
-const submitSchema = yup.object({
-  service_key: yup.string().trim().max(60).default(''),
-  impact: yup
-    .string()
-    .oneOf(STATUS_REPORT_IMPACTS)
-    .default('OTHER'),
-  name: yup.string().trim().required('Name is required').max(120),
-  email: yup.string().trim().required('Email is required').email('Invalid email').max(160),
-  page_url: yup.string().trim().max(500).default(''),
-  message: yup.string().trim().required('Message is required').min(10).max(4000),
-});
+const requiredText = (message: string, ...checks: z.core.$ZodCheck<string>[]) =>
+  str(z.string().check(filled(message), ...checks), { required: message, transforms: [trim] });
+
+// `loose`: keys beyond these (the captcha, the images) ride through untouched.
+const submitSchema = obj(
+  shape(
+    {
+      service_key: str(z.string().check(maxLen(60)), { transforms: [trim], default: '' }),
+      impact: str(z.string(), {
+        oneOf: STATUS_REPORT_IMPACTS,
+        default: 'OTHER',
+      }),
+      name: requiredText('Name is required', maxLen(120)),
+      email: requiredText('Email is required', email('Invalid email'), maxLen(160)),
+      page_url: str(z.string().check(maxLen(500)), { transforms: [trim], default: '' }),
+      message: requiredText('Message is required', minLen(10), maxLen(4000)),
+    },
+    { loose: true }
+  )
+);
 
 /** Who sent it, as the SERVER read the request — never as the body claimed. */
 export interface StatusReportOrigin {
@@ -114,13 +124,15 @@ export const statusReportService = {
    * worst possible last impression.
    */
   async submit(input: SubmitStatusReportInput, origin: StatusReportOrigin = {}) {
-    let payload: yup.InferType<typeof submitSchema>;
+    let parsed: z.ZodSafeParseResult<z.infer<typeof submitSchema>>;
     try {
-      payload = await submitSchema.validate(input, { abortEarly: false });
-    } catch (error) {
-      const message = error instanceof yup.ValidationError ? error.errors[0] : 'Invalid input';
-      throw badInput(message ?? 'Invalid input');
+      parsed = await submitSchema.safeParseAsync(input);
+    } catch {
+      // A value the trim could not read — refused, never a 500.
+      throw badInput('Invalid input');
     }
+    if (!parsed.success) throw badInput(parsed.error.issues[0]?.message ?? 'Invalid input');
+    const payload = parsed.data;
 
     // An unknown slug is treated as "not sure" rather than rejected: the
     // catalogue changes with deploys, and a stale dropdown must not lose a

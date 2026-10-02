@@ -7,6 +7,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { IconDisc } from './IconDisc';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 /** Account privacy toggle — a private profile hides posts and status from people
  * who don't follow you (Instagram-style). Name + avatar stay visible. */
 export function PrivacyToggleCard({
@@ -43,7 +45,7 @@ export function PrivacyToggleCard({
         aria-label={t('mweb.account.togglePrivateAccount')}
         value={isPrivate}
         disabled={busy}
-        onValueChange={(next) => void onValueChange(next)}
+        onValueChange={(next) => fireAndForget(onValueChange(next))}
         trackColor={{ true: primary }}
       />
     </SurfaceCard>

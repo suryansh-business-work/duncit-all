@@ -1,4 +1,4 @@
-import { detectEnvironment, serializeError } from '@duncit/logs';
+import { detectEnvironment, fireAndForget, logs, serializeError } from '@duncit/logs';
 import { defineDemo, defineDemos } from '../types';
 
 interface LogMock {
@@ -27,6 +27,27 @@ export default defineDemos('logs', [
       'serializeError of a thrown string': serializeError(mock.error_message),
       'serializeError(null)': serializeError(null),
       'The call a page actually writes': `logs.admin.error('${mock.page}', '${mock.component}', { error })`,
+    }),
+  }),
+  defineDemo<LogMock>({
+    id: 'fire-and-forget',
+    title: 'Starting async work from a click without dropping its failure',
+    note:
+      'fireAndForget returns nothing, so a handler stays synchronous — but a rejected promise becomes an error record filed against the page and component you name. Open the browser console: this demo rejects on purpose.',
+    mock: {
+      url: 'https://mweb.duncit.com/pods/DUN-POD-4821',
+      page: 'PodDetailsPage',
+      component: 'joinPod',
+      error_message: 'This pod is full',
+    },
+    compute: (mock) => ({
+      'fireAndForget(Promise.reject(...))': fireAndForget(
+        Promise.reject(new Error(mock.error_message)),
+        logs.mWeb,
+        mock.page,
+        mock.component
+      ),
+      'The call a handler actually writes': `onClick={() => fireAndForget(join(), logs.mWeb, '${mock.page}', '${mock.component}')}`,
     }),
   }),
 ]);

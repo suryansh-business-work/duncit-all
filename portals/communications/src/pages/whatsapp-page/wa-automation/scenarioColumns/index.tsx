@@ -1,0 +1,1 @@
+export { getScenarioColumns } from './scenarioColumns';

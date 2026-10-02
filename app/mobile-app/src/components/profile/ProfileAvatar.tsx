@@ -7,6 +7,8 @@ import { CropDialog } from './crop/CropDialog';
 import { useProfileAvatar } from './useProfileAvatar';
 import { useTranslation } from '@/hooks/useTranslation';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 interface Props {
   photo?: string | null;
   initial: string;
@@ -67,7 +69,7 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
         confirmLabel={t('mweb.common.remove')}
         cancelLabel={t('mweb.common.cancel')}
         destructive
-        onConfirm={() => void a.confirmRemove()}
+        onConfirm={() => fireAndForget(a.confirmRemove())}
         onCancel={() => a.setRemoveOpen(false)}
         testID="remove-photo-confirm"
       />
@@ -88,7 +90,7 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
           confirmLabel={t('mweb.common.delete')}
           cancelLabel={t('mweb.common.cancel')}
           destructive
-          onConfirm={() => void a.confirmDeleteStory(deleteId)}
+          onConfirm={() => fireAndForget(a.confirmDeleteStory(deleteId))}
           onCancel={() => a.setDeleteId(null)}
           testID="delete-story-confirm"
         />

@@ -9,6 +9,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/auth.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 /**
  * The referral question for accounts Google finished on its own. mWeb's twin.
  *
@@ -72,7 +74,7 @@ export function ReferralPromptScreen() {
           label={t('mweb.referral.apply')}
           loading={applyBusy}
           disabled={!trimmed || malformed}
-          onPress={() => void apply()}
+          onPress={() => fireAndForget(apply())}
         />
         <Text
           pressStyle={PRESS_STYLE.inline}

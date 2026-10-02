@@ -1,0 +1,1 @@
+export { CoverPickerDialog } from './CoverPickerDialog';

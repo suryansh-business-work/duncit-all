@@ -1,0 +1,6632 @@
+{
+  "app/mweb/server/main.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/app/useActivePing.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/app/useClickstreamTracking.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/AuthLogo.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/BrandFontLoader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/DeletionNoticeDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/FollowListDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/components/LottiePlayer.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/OpenInAppBanner.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/PhoneExtensionField.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/PolicyPdfButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/PolicyRenderer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/ads/useActiveAds.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/AppHeader/AppHeader.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/HeaderNotificationsBell.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/components/app-header/LocationCityCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/NotificationsBell.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/app-header/SuperCategoryTabs.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/app-header/notifications-screen/FollowRequestActions/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/components/app-header/notifications-screen/NotificationRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/notifications-screen/NotificationsScreen.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/app-header/profile-drawer/MenuPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/profile-drawer/UserModeContent.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/useGeoLocation.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/app-header/useHeaderLocation.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-header/useHeaderQueries.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/app-popup/AppPopupDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/issue-notice/IssueNotice.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/password-recovery/RecoveryChannelStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/password-recovery/RecoveryCodeStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/payment-failure/usePaymentFailure.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/pod-comments-sheet/CommentsList.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/pod-comments-sheet/PodCommentsSheet.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "app/mweb/src/components/pod-details/PodClubSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/components/pod-details/PodMapSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/components/pod-feedback/PodFeedbackPrompt.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/policy-acceptance/useSignupPolicies.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/profile-avatar/useProfileAvatar.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/components/profile-tabs/ProfilePodsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/components/status-upload/StatusUploadProvider/StatusUploadProvider.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/components/status-upload/statusPipeline.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/forms/change-password/change-password.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/forms/delete-account/delete-account.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/forms/feedback/feedback.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/forms/feedback/useReportProblemConfig.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/forms/grievance/grievance.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/forms/login/login.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/forms/register/register.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/forms/support-form/AttachmentsField.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/forms/support-form/SupportForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/hooks/useBrandingAssets.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/hooks/useFollowedClubs.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/hooks/usePodClubAdminHelp.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/hooks/usePricing.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/hooks/useRoleLabels.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/hooks/useSavedPodHearts.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/lib/short-link-journey.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/main.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/ChatsPage/ActivePodsStrip.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/ChatsPage/ChatRoomList.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/ChatsPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/ClubDetailsPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/ClubsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "app/mweb/src/pages/FaqsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/FollowPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/HostDraftsCard/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/HostManagePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/HostsVenuesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "app/mweb/src/pages/OrdersHistoryPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/PodDetailsPage/PodDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "app/mweb/src/pages/PodDetailsPage/usePodDetailsData.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/PostPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/ProductDetailPage/ProductDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/SavedItemsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/SignupSurveyPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/VenueDetailsPage/VenueDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/VenueDetailsPage/venueDetailsHelpers.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/VenueManagePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/account-page/AccountDetailsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/AccountProfileHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/AddressBookSection/AddressBookSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/account-page/ChangePasswordDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/ConnectedAccountsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/DeleteAccountDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/DeletionRequestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/account-page/EditAccountDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/LanguageSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/PrivacyToggleCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/account-edit/account-edit.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/address-book-form/address-book.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/comm-preference/useCommPreference.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/account-page/contact-change/ContactOtpStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/contact-change/ContactValueStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/account-page/contact-change/useContactChange.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/chat-room-page/ChatRoomPage/ChatRoomPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "app/mweb/src/pages/chat-room-page/MessageBubble.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/chat-room-page/usePodSocket.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/checkout-page/CheckoutPage/CheckoutPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/checkout-page/CheckoutSuccess/CheckoutSuccess.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/checkout-page/GatewayChip.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/checkout-page/OrderSummaryCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/checkout-page/SavedAddressPicker.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/checkout-page/checkoutMath.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/checkout-page/useCheckoutSession.ts": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "app/mweb/src/pages/checkout-page/usePodCheckoutBill.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-admin-dashboard-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-auto-pod-editor-page/ClubAutoPodEditor.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/club-auto-pod-editor-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubFriendsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubMeetupVenuesSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubMembersSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubMomentsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubPodRailCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubPodsScheduleSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubRatingSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubSegments.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubSocialLinks.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubStoriesSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/club-details-page/ClubSummaryHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-edit-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/club-pod-editor-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/club-pods-page/ClubPodActivityDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-pods-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/club-pods-page/useDeletePod.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-studio/ClubPodsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/club-studio/YourClubsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/clubs-page/ClubListCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/clubs-page/ClubsGrid.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/clubs-page/ClubsGroupedBody.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/contacts-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/contacts-page/useClearContacts.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/contacts-page/useContactsInvite.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/contacts-page/useContactsList.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/contacts-page/useContactsSync.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/create-pod-page/create-pod/CreatePodStepper/useCreatePodForm.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/create-pod-page/create-pod/fields/PodReelAccordion.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/create-pod-page/create-pod/price-panel/SuggestedPricesDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/create-pod-page/create-pod/price-panel/useEarningsPreview.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/create-pod-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "app/mweb/src/pages/duncit-coin-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/explore-page/ExploreFilterSheet.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/explore-page/ExplorePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "app/mweb/src/pages/explore-page/ExplorePodCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/explore-page/ExplorePodOverlay.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/explore-page/ExploreReels.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/explore-page/LikesListDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/explore-page/exploreFilters.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "app/mweb/src/pages/explore-page/explorePodActions.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/explore-page/useExploreLike.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/follow-page/FollowFeedList.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/forgot-password-page/RecoveryPasswordStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/forgot-password-page/usePasswordRecovery.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/gift-card-checkout-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/gift-card-checkout-page/useGiftCardPayment.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/gift-card-claim-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/gift-card-redeem-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/gift-cards-page/BuyTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/gift-cards-page/MyCardsTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/ClubRecommendationRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/home-page/ClubSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/home-page/FilterBar.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/home-page/FilterMenu.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/HomeFeaturedPods.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/home-page/HomePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/home-page/HomeStatusRail.tsx": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "app/mweb/src/pages/home-page/MyStatusUploadTile.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/OngoingPodsRail.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/home-page/PodCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/PreviousPodsRail.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/home-page/StoryViewersDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/homeStatusItems.ts": {
+    "no-restricted-syntax": {
+      "count": 14
+    }
+  },
+  "app/mweb/src/pages/home-page/useHomeData.ts": {
+    "no-restricted-syntax": {
+      "count": 68
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/home-page/useOfficialStatuses.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/host-apply-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/host-dashboard-page/HostInsights.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/host-dashboard-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/HostPodRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/HostPodSections.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/HostPodsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/HostShareCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/PodClubAdminDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/venue-requests/VenueRequestRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/host-manage-page/venue-requests/VenueRequestsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/interview-booking-page/InterviewBookingPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/login-page/LoginPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/login-page/useOtpLogin.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/login-page/useSocialLogin.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/mail-preference-page/useMailPreferences.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/membership-page/NotifyCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/BookingPriceLabel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/BrandDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/PodActionPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/PodCommercePreview/PodCommercePreview.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/PodDetailAccordions.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/PodOverview.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/PodSocialBar.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/ProductDetailDialog/ProductDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/ProductDetailDialog/deriveProductMedia.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/ProductReviews/ProductReviews.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/ReferralRefillPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/StickyPodActionPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/usePodDetailActions.ts": {
+    "no-restricted-syntax": {
+      "count": 14
+    }
+  },
+  "app/mweb/src/pages/pod-details-page/usePodProductSelection.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/pod-feedback-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-history-page/PodHistoryDetails/usePodHistoryDownloads.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/pod-history-page/PodHistoryDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/pod-history-page/PodHistoryPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-history-page/PodProductOrdersCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/IdeaCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/IdeaCommentsList.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/IdeaDetailsBody.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/IdeaDetailsDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/IdeasList.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/PodIdeasPage/PodIdeasPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/pod-ideas-page/PodIdeasPage/usePodIdeasData.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/pod-list/PodListPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/pod-list/VirtualPodRows.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/pod-pending-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/product-checkout-page/ProductOrderSummaryCard/ProductOrderSummaryCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/product-checkout-page/useProductPayment.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/product-checkout-page/useProductShippingQuote.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/products-manage-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/HostPodsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfileAboutEditForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfileAboutSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfileAccordions.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfileHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfilePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/profile-page/ProfilePostsGrid.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/UploadDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/UserHostPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/UserVenuePanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/profile-page/email-verification-form/email-verification.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/profile-page/pet-profile-section/PetForm/PetForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/profile-page/post-dialog/PostActions.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/profile-page/post-dialog/PostCommentList.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/profile-page/post-dialog/PostDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "app/mweb/src/pages/profile-page/post-dialog/PostDialogHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/public-profile-page/ProfileFollowActions.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/public-profile-page/PublicProfileBadges.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/public-profile-page/PublicProfilePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/public-profile-page/PublicProfilePosts.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/register-page/GoogleDetailsStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/register-page/VerifyWhatsappStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/pages/register-page/useSignupFlow.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/search-page/SearchBar.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/search-page/SearchClubCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/search-page/SearchResults.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/search-page/SearchResultsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/search-page/useSearchDiscovery.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/shop-page/PodShopSlider.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/shop-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/signup-referral-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-chat/ChatComposer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-chat/EmailTranscriptDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/support-chat/FeedbackDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-chat/SupportChatPage/useSupportChat.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "app/mweb/src/pages/support-chat/useSupportChatSocket.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/support-hub/CallbackContent.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/support-hub/CreateTicketDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-hub/FaqSearch.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-hub/FeedbackPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-hub/GrievancePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-hub/SosContent.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/support-hub/SupportHubPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-hub/SupportTicketsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/support-tickets/TicketDetailPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "app/mweb/src/pages/support-tickets/TicketEmailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/support-tickets/TicketFeedbackDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/survey-gate/MeetingForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/survey-gate/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/tour-guide-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-earnings-page/VenueEarningsLinkCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-earnings-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-manage-page/VenueCancelPodDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/venue-manage-page/VenueListBody.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-manage-page/VenuePodDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-manage-page/VenuePodsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-manage-page/venue-cancel-pod-form/venue-cancel-pod.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/venue-settings-page/cancellation-policy-form/cancellation-policy.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/venue-settings-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venue-slot-requests-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/venues-page/VenuePodsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/venues-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/verification-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/pages/wallet-page/WalletPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/wallet-page/WalletRows.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pages/wallet-page/withdraw/withdraw.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/pages/whatsapp-preference-page/useWhatsAppPreferences.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "app/mweb/src/pwa.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "app/mweb/src/tours/TourContext.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "app/mweb/src/utils/dateFormat.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "app/mweb/src/utils/imagekit.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/graphql/resolvers.admin.ts": {
+    "no-negated-condition": {
+      "count": 1
+    },
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "lite/server/graphql/resolvers.public.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/services/admin.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "lite/server/services/auth.service.ts": {
+    "no-negated-condition": {
+      "count": 1
+    }
+  },
+  "lite/server/services/envEntry.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/services/event.service.ts": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "lite/server/services/localization.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/services/projections.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "lite/server/services/registration.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/services/user.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "lite/server/utils/table-query.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "lite/web/pages/event/WhereBlock.tsx": {
+    "no-nested-ternary": {
+      "count": 1
+    }
+  },
+  "packages/ad-request-form/src/AdRequestForm/AdScheduleFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/ad-request-form/src/AdRequestForm/AdTypeField.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/ad-request-form/src/AdRequestForm/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/ai-prompts/src/mui/PromptDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/ai-prompts/src/mui/PromptForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/ai-prompts/src/mui/PromptLibraryView/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/app-settings/src/useDateFormat.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/app-settings/src/useTranslation/LocaleProvider.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/auto-pods/src/AutoPodWithdrawDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/auto-pods/src/club/ClubClaimDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/auto-pods/src/host/HostClaimDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/auto-pods/src/venue/VenueAcceptDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/club-form/src/ClubForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/club-form/src/build-input.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/club-form/src/sections/AdminsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "packages/club-form/src/sections/LinkedHostsField.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/club-form/src/sections/LinksSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/coupons/src/CouponFormDialog/CouponFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/coupons/src/CouponFormDialog/CouponScopeFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/coupons/src/CouponsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/dashboard/src/useDashboardController.ts": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "packages/dashboard/src/useDashboardLayout.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/earn/src/CancelMeetingDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/earn/src/EarnJourneyList.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/earn/src/RescheduleMeetingDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/earn/src/meeting-reason/meeting-reason.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/clubs/editor/clubFormAi.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/clubs/editor/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/clubs/list/ClubsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/entity-consoles/src/clubs/list/ClubsTable/index.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/auto/AutoPodsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/entity-consoles/src/pods/auto/editor/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/pods/change-requests/AssignDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/entity-consoles/src/pods/change-requests/CancelPodDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/dashboard/PodsDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/detail/PodCouponsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/pods/event-tickets/EventTicketsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "packages/entity-consoles/src/pods/event-tickets/EventTicketsTable/index.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/ideas/DetailsDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/entity-consoles/src/pods/ideas/IdeaCommentsList.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/ideas/IdeaDeleteDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/ideas/IdeasTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/ideas/PodIdeasPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/entity-consoles/src/pods/list/PodActionButtons.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/entity-consoles/src/pods/list/QuickEditPodDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/entity-consoles/src/pods/list/complete-pod-dialog/SettlementPreview.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/list/complete-pod-dialog/complete-pod.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/list/complete-pod-dialog/complete-pod.types.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/pods/list/meeting-platforms.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/list/pod-editor-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/pods/list/pod-editor-page/usePodAiFill.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "packages/entity-consoles/src/pods/list/podFormAi.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "packages/entity-consoles/src/pods/list/usePodDelete.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/pods/list/usePodPageData.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "packages/entity-consoles/src/pods/list/usePodReleaseRequest.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/pods/monitoring/PodActivityDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/plans/PodPlanFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/pods/plans/PodPlansPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/entity-consoles/src/pods/plans/PodPlansTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/settings/NumberSettingCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/settings/PodSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/entity-consoles/src/pods/settings/ToggleSettingCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/pods/settings/queries.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/entity-consoles/src/shared/AiFillButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/entity-consoles/src/shared/SuperCategoryFilter.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/forms/src/PackagingFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/PodCancelDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/host-pod-actions/src/PodEditDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/host-pod-actions/src/PodTicketDiscountField.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/attendance/AttendanceOtpDialog/OtpCodeField.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/attendance/AttendanceOtpDialog/OtpRecipientFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/attendance/AttendanceOtpDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/host-pod-actions/src/attendance/ForceMarkDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/host-pod-actions/src/attendance/useAttendanceBoard.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/host-pod-actions/src/pod-complete/PodCompleteDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/host-pod-actions/src/pod-complete/SettlementPreview.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/pod-media/usePodMediaBoard.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/host-pod-actions/src/pod-resubmit/PodResubmitDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/host-pod-actions/src/ticket-scan/CompanionsForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/host-pod-actions/src/ticket-scan/TicketScanDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/host-pod-actions/src/ticket-scan/useCompanionOtp.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/host-pod-actions/src/useContentCheck.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/media-picker/src/PexelsPhotoCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/media-picker/src/PexelsPhotosTab/PexelsPhotosTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "packages/media-picker/src/PexelsVideoCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/media-picker/src/PexelsVideosTab/PexelsVideosTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "packages/media-picker/src/useDeviceUpload.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/media-picker/src/useImagekitDirectUpload.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/media-picker/src/utils.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/pod-change-requests/src/ChangeRequestBoard/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/pod-change-requests/src/useRequestPodChange.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/pod-details/src/PodClubAdminsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodClubCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodDetailsPage/PodDetailsHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodDetailsPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/pod-details/src/PodFeedbackSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodFinanceSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodHostsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/pod-details/src/PodOverviewCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodPaymentsSection.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodStatusChips.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-details/src/PodTimelineSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/pod-form/src/PodForm/PodForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/pod-form/src/PodForm/types.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/pod-form/src/auto-pod/AutoPodReviewStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/build-input.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "packages/pod-form/src/club-admin/config.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/club-admin/useClubAdminPodEditor.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "packages/pod-form/src/editor/PodEditorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/pod-form/src/editor/useAutoPodEditorState.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/editor/usePodEditorState.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/pod-form/src/preview/pod-preview-model.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/pod-form/src/sections/MeetingSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/sections/WhenWhereSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/types.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "packages/pod-form/src/usePodCategoryClub.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/pod-form/src/usePodCategoryFilter.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/pod-form/src/useSpotsBounds.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/portal-pod-form/src/PodContentFormDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/shell/src/PortalBranding.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/chrome/ProfilePage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/shell/src/chrome/jump-to-portal/JumpToPortalDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/shell/src/chrome/usePortalAppFeatures.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/dashboard/WelcomeDashboard/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/file-manager/FileDetailsView/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/shell/src/hooks/useBranding.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/i18n/useLocalePreference.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/portal-login/PortalLoginPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/shell/src/staff-chat/LinkCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/staff-chat/sounds.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/staff-chat/useCall.ts": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/staff-chat/useCallRecorder.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/shell/src/staff-chat/useChatState.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/shell/src/staff-chat/useStaffChatData.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "packages/shell/src/workspace/useWorkspaceState.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/table/src/DuncitTable/useTableBridges.ts": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "packages/table/src/apolloFetch.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/utils/src/product-category.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "packages/verification/src/mui/AddressCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/verification/src/mui/IdentityCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/components/SendAdminCredentials.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/DashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/approvals-page/ApprovalsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/approvals-page/ApprovalsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/badges-page/BadgeCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/badges-page/BadgesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "portals/admin/src/pages/branding-page/OccasionalIconsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/branding-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/categories-page/AllVibeIconCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/categories-page/CategoriesPage/CategoriesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/categories-page/VibeHeadingCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/location-subscriptions/LaunchCitiesTable.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/locations-page/LocationZonesField.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/locations-page/LocationsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/admin/src/pages/locations-page/LocationsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/membership/BenefitFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/membership/BenefitsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/admin/src/pages/membership/BenefitsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/membership/MembershipSubscribersPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/membership/PlanFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/membership/PlansPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/admin/src/pages/membership/PlansTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/partners-page/PartnersPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/portal-access-page/PortalAccessPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/portal-app-settings/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/roles-page/RolesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/admin/src/pages/roles-page/RolesTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/roles-page/SuperAdminsManager.tsx": {
+    "no-restricted-syntax": {
+      "count": 15
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/settings-page/DisplayFormatsSection/DisplayFormatsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/settings-page/MinAgeSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/settings-page/TimeSourceSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/settings-page/account-deletion/useAccountDeletionSettings.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/admin/src/pages/settings-page/time-source.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/something-for-you/SomethingForYouPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/admin/src/pages/upload-settings/UploadSettingPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ActivityJourneyDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ContactActionDialog/ContactActionFormContent.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ContactActionDialog/contactActionDialogHelpers.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ContactActionDialog/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ContactActionsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/ProfileForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/user-details-page/RolesSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserActivitySection.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserBadgesSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserHealthSection/AdjustHealthDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserHealthSection/HealthScoreCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserInterestsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserSummaryCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/UserVerificationsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/useUserDetailsState.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/user-details-page/user-profile/user-profile.form.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/users-page/CreateUserDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/admin/src/pages/users-page/UsersPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/admin/src/pages/users-page/helpers.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/ai-monitoring/ai-monitoring.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/automation-contact/automation-contact.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/automation-flow/automation-flow.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/reel-chat/reel-chat.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/reel-project/reel-project.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/forms/reel-prompt/reel-prompt.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/ai/src/pages/ai-monitoring/settings/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/ai/src/pages/automation/builder/inspector/AiConfigs.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/ai/src/pages/automation/builder/inspector/useNodeForm.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/ai/src/pages/openai-dashboard/RateCardDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/ai/src/pages/openai-dashboard/TaskSpendTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/challenges/ChallengeFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/challenge-portal/src/pages/challenges/ChallengesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/leaderboard/BoardStatsCards.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/leaderboard/BoardViewer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/leaderboard/LeaderboardSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/leaderboard/PointsPerActionCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/challenge-portal/src/pages/leaderboard/RewardsEditor.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/components/MjmlAiButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/email-fragments-page/useEmailFragments.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "portals/communications/src/pages/email-logs-page/EmailLogsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/email-templates-page/CreateTemplateDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/email-templates-page/SendTestDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/communications/src/pages/email-templates-page/useEmailTemplateEditor.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 3
+    }
+  },
+  "portals/communications/src/pages/mail-automation/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/msg91-otp/date-window/date-window.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/slack/ConversationPane.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/slack/JoinChannelNotice.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/slack/SlackComposer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/slack/SlackSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/campaign-name-form/campaign-name.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/useWaCampaignActions.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-aisensy/AisensyTemplates.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-aisensy/create-campaign-form/create-campaign.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-aisensy/create-template-form/create-template.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-aisensy/useAisensyDrafts.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-automation/MediaDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-automation/useWhatsappBoard.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-campaign-detail/RecipientTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-campaign-detail/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-campaign-form/useWaReach.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-campaign-form/wa-campaign.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-settings/DefaultMediaCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-settings/default-media-form/default-media.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-settings/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-settings/wa-pricing-form/wa-pricing.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/communications/src/pages/whatsapp-page/wa-test-form/wa-test.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/api/useCrmConfig.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/CommsLogsSection/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/CommsProviderSelect.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/ContactComposeDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/FillWithAiDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/components/ManualLogsTab/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/ai-records/AiRecordsTable.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/ai-records/aiLeadInput.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/crm/src/components/calendar/CalendarSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/calendar/useCalendarEvents.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/call/CallWave.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/compose/TemplateBodyPicker.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/lead-survey/LeadSurveyFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/lead-survey/LeadSurveyTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/components/reminders-tab/ReminderFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/components/reminders-tab/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/components/website-pages-tab/WebsitePageRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/components/website-pages-tab/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/forms/call-prompt/call-prompt.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/forms/ecomm-lead/ecomm-lead.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/forms/fields/CategorySelectors.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/forms/fields/DynamicFieldsRenderer.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/crm/src/forms/fields/LinkedHostsField.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/forms/fields/ServicesField.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/forms/fields/ServicesOfferedPicker.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/forms/flattenErrors.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/forms/getNested.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/forms/host-lead/host-lead.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/forms/venue-lead/venue-lead.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/hooks/useCallReconcile.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/ManageDynamicFieldsPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/crm/src/pages/call-prompts/CallPromptDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/pages/call-prompts/CallPromptsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/call-prompts/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/dashboard/ServicesChart.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/dashboard/StageChart.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/dashboard/SuperCategoryChart.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/dashboard/useDashboardData.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/pages/data/services-offered/EditServiceOfferedDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/data/services-offered/ServicesOfferedTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/data/services-offered/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/pages/ecomm-leads/EcommLeadEditorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/ecomm-leads/EcommLeadsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/CreateTemplateDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/ImageLibraryDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/crm/src/pages/email-templates/MjmlAiButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/SendTestDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/TemplatesTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/email-templates/useEmailTemplateEditor.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/host-leads/HostLeadEditorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/host-leads/HostLeadsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/public-survey/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/tools/whatsapp/GroupMembersDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/tools/whatsapp/WhatsAppBrowser.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/crm/src/pages/tools/whatsapp/WhatsAppConnectCard/WhatsAppConnectCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/crm/src/pages/tools/whatsapp/WhatsAppLeadGeneratorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/tools/whatsapp/extraction/ExtractionContext.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/user-leads/CleanDataButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/user-leads/CreateLeadDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/user-leads/DeleteLeadsDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/user-leads/EditLeadDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/user-leads/LeadsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/crm/src/pages/user-leads/UserLeadDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/user-leads/UserLeadsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/venue-leads/VenueLeadEditorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/crm/src/pages/venue-leads/VenueLeadsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/developers/src/pages/api-docs/TryItPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/developers/src/pages/api-keys/ApiKeysPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/ecomm-portal/src/components/ProductPicker/index.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "portals/ecomm-portal/src/pages/orders/OrdersPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/multi/MultiPodEditor.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/multi/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/saved/EmailReportDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/saved/ReportActions.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/single/SingleCalculatorPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/single/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/calculators/pod-profit/useCalculatorDefaults.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/backout-refund-page/BackoutRefundPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/backout-refund-page/BackoutRefundTable/BackoutRefundTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/cancellations-page/CancellationsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/default-deductions-page/DefaultDeductionsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/duncit-coin/CoinDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/duncit-coin/CoinGrantCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/finance/src/pages/finance/duncit-coin/CoinSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/finance/src/pages/finance/duncit-coin/CoinTransactionsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/duncit-coin/PodPicker.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/expense-management-page/RefundTimeline.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/finance/gift-cards/GiftCardCardsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/gift-cards/GiftCardDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/gift-cards/GiftCardLogsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/gift-cards/GiftCardSettingsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/invoice-management-page/InvoiceManagementPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/invoice-template-page/InvoiceTemplatePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/payment-logs-page/PaymentLogsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/finance/src/pages/finance/payment-logs-page/RefundDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/payment-release-page/PaymentReleasePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/finance/payment-release-page/PaymentReleaseTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/payment-release-page/payment-release-review/ReleaseBreakdownLines.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/payment-release-page/payment-release-review/payment-release-review.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/finance/payment-release-page/payment-release-review/payment-release-review.types.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/payout-cycles-page/PayoutCyclesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/pod-expense-page/PodExpenseDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/finance/src/pages/finance/pod-expense-page/pod-expense-form/pod-expense.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/finance/pod-finance-page/PodFinancePage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/referrals-page/ReferralsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/finance/src/pages/finance/startup-dashboard/StartupDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/user-refund-logs-page/UserRefundLogsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/withdrawals-page/PodWithdrawalDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/finance/src/pages/finance/withdrawals-page/RejectWithdrawalDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/finance/src/pages/finance/withdrawals-page/WithdrawalSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/finance/src/pages/finance/withdrawals-page/WithdrawalsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/brand-consent/BrandConsentPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/legal/src/pages/brand-consent/brand-consent-form/brand-consent.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/legal/src/pages/contracts/ContractsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/legal/src/pages/documents/DocumentActiveSwitch.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/documents/DocumentsListPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/documents/EditDocumentDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/grievance/GrievanceDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/grievance/GrievanceInfoPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/grievance/GrievanceTicketsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/legal/src/pages/grievance/grievance-officer-form/grievance-officer.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/legal/src/pages/policies/PoliciesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/legal/src/pages/ugc-monitoring/reported/ReportDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/localization/src/pages/locales/LocaleDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/components/MjmlAiButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/ads-approvals-page/AdsApprovalsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/ads-settings-page/AdsSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/ads-settings-page/ads-pricing-form/ads-pricing.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/app-popups-page/AppPopupsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/app-popups-page/AppPopupsTable/AppPopupsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/app-popups-page/app-popup-form/app-popup.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/dashboard-page/DashboardPage/DashboardPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/external-links-page/link-privacy-form/link-privacy.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/external-links-page/privacy/LinkPrivacyTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/external-links-page/privacy/PrivacyActions.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/live-ads-page/LiveAdsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/marketing-campaigns-page/CampaignTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/marketing-campaigns-page/CreateCampaignPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/marketing-campaigns-page/MarketingCampaignsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/marketing-campaigns-page/marketing-campaign-form/marketing-campaign.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/notifications-page/NotificationFormDialog/AudienceTargetFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/marketing/src/pages/notifications-page/NotificationFormDialog/NotificationFormDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/marketing/src/pages/notifications-page/NotificationsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "portals/marketing/src/pages/notifications-page/NotificationsTable/NotificationsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/short-links-page/CreateShortLinkDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/short-links-page/detail/DetailActions.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/short-links-page/link-list/LinkList.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/short-links-page/short-link-form/short-link.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/social-accounts-page/idea-generate-form/idea-generate.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/social-accounts-page/social-post-form/social-post.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/status-page/status-form/status.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/marketing/src/pages/target-audience-page/AudienceListsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/target-audience-page/CreateAudienceListPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/target-audience-page/RemoveMemberDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/target-audience-page/add-users-dialog/AddUsersDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/marketing/src/pages/target-audience-page/audience-list-form/audience-list.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/components/admin-venue-create-dialog/VenueChecklistFields.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/components/host-form/HostBankAccountSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/components/host-form/useHostFieldProps.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/components/pods-table/PodsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/components/useEntityLifecycle.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/onboarding/src/forms/host/host.form.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/onboarding/src/pages/DashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/club-admins-page/ClubAdminEditDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/club-admins-page/ClubAdminsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/onboarding/src/pages/club-admins-page/ClubAdminsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandEditDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandReviewDialog/types.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/host-details-page/HostDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/host-requests/HostRequestsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/onboarding/src/pages/host-requests/HostRequestsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/hosts-page/HostCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/hosts-page/HostEditDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/onboarding/src/pages/hosts-page/HostsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/hosts-page/HostsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/hosts-page/useHostReview.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/onboarding/src/pages/meetings/CancelMeetingDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/meetings/DecisionDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/meetings/MeetingAvailabilityPage/MeetingAvailabilityPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/meetings/MeetingCalendarPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/meetings/MeetingHolidaysCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/meetings/MeetingSchedulePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/meetings/ScheduleMeetingDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/surveys/SurveyBuilderPage/SurveyBuilderPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/onboarding/src/pages/surveys/SurveysListPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/surveys/SurveysTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/user-details-page/UserHealthSection/AdjustHealthDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/venue-details-page/VenueSlotAvailabilityTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueDeductionsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueEditDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueReviewDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueReviewSummary.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenueSettingsPanels.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenuesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/VenuesTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/onboarding/src/pages/venues-page/cancellation-trigger/cancellation-trigger.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/forms/support/support.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/PartnerFaqsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/RegisterVenuePage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/become-host-page/BecomeHostPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-auto-pod-editor-page/ClubAutoPodEditor.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-auto-pod-editor-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-club-pods-page/ClubAdminClubPodsPage/ClubAdminClubPodsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-club-pods-page/PodActivityDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-dashboard-page/ClubAdminDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-edit-club-page/ClubAdminEditClubPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/partners-app/src/pages/club-admin-pod-editor-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/BrandPauseDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/EcommBrandPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-settings/BrandSettingsPage/BrandSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-settings/warehouse-form/warehouse.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/BrandDangerZone.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/BrandWizardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/steps/ConsentStep.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/steps/IntegrationCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/useBrandWizard.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-brand-page/brand-wizard/useBrandWizardActions.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/partners-app/src/pages/ecomm-dashboard-page/EcommDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/host-dashboard-page/HostDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/host-pods-page/HostPodsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/host-pods-page/NewPodDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ListProductsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ListingPauseDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductAnalyticsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductDetailView.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductListingEditorPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductListingsTable/ProductListingsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductReviewsPanel/ProductReviewsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/ProductSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/RunAdDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/list-products/ListProductsPreview.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/list-products/list-products.form-ui.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/list-products/list-products.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/list-products/list-products.map.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/partners-app/src/pages/list-products-page/list-products/useProductModeration.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/pods-page/PartnerPodsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/partners-app/src/pages/policies-page/PartnerPoliciesPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/policies-page/PartnerPolicyArticle.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/register-venue/register-venue.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/register-venue/register-venue.mappers.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/register-venue/useRegisterVenueForm.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/sections/LeavesSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/sections/ReviewSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/register-venue-page/useVenueGeocoder.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/slot-decision-page/SlotDecisionPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/slot-requests-page/SlotRequestsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/partners-app/src/pages/support-page/SupportPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/venue-dashboard-page/VenueDashboardPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/venue-pods-page/VenueCancelPodDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/partners-app/src/pages/venue-pods-page/VenuePodDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/venue-pods-page/VenuePodsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/venue-pods-page/VenuePodsTable/VenuePodsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/venue-settings-page/VenueSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/venue-settings-page/cancellation-policy/cancellation-policy.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/partners-app/src/pages/verification-page/VerificationPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/wallet-page/WalletPage/WalletPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/partners-app/src/pages/wallet-page/withdraw/withdraw.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/products/src/pages/WelcomePage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/products/src/pages/catalog-brands/BrandCommercePanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/products/src/pages/catalog-brands/CatalogBrandDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/catalog-brands/CatalogBrandProductsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/products/src/pages/catalog-brands/CatalogBrandProductsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/catalog-brands/CatalogBrandsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/catalog-brands/brand-form/brand.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/catalog-brands/brand-form/brand.types.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/BrandPickupRow.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/BrandProductsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/PickupLocationsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "portals/products/src/pages/ecomm/ProductsReviewTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/ReviewBrandDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/products/src/pages/ecomm/ReviewListingDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/ecomm/brand-review-detail/BrandIntegrationsPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/brand-review-detail/BrandStatusPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/ecomm/brand-review-detail/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/ecomm-requests/ChangeRequestList.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/ecomm/ecomm-requests/EcommRequestPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "portals/products/src/pages/ecomm/pickup-location-form/pickup-location.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/ecomm/pickup-location-form/pickup-location.types.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/inventory-page/InventoryDeleteDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/products/src/pages/inventory-page/InventoryPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/inventory-page/InventoryTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/AdvancedSettingsSection.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/AiDescribeButton.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/InventoryAnalyticsChart.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/InventoryProductPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/ProductAccordion.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/ProductFormBody.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/ProductPageHeader.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/WarehouseSelect.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/inventory-page/inventory-product-page/types.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/orders/OrderFulfilmentPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/orders/OrderShipmentDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 8
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/products/src/pages/orders/OrderSummaryCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/orders/OrderTrackingTimeline.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/orders/ProductOrderDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/products/src/pages/settings/PodShopSliderPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/products/src/pages/warehouse-approval/WarehouseApprovalPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/lib/useSupportSocket.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "portals/support/src/pages/DashboardPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/callbacks/CallbackDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/pages/faqs/faq-form/faq.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/support/src/pages/faqs/faq-submissions/FaqSubmissionsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/faqs/useFaqCrud.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/pages/live-chat/CreateUserDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/live-chat/LiveChatPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/pages/live-chat/LiveChatPage/useChatActions.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/pages/mail-automation/mail-automation-rule/useMailAutomationRule.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/reported-problems/ReportProblemSettingsPage/FormFieldsCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/reported-problems/ReportProblemSettingsPage/SlackRoutingCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/reported-problems/ReportedProblemDetailPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/support/src/pages/sos/SosDetailsPage/SosDetailsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/support/src/pages/tickets/TicketDetailPage/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/support/src/pages/tickets/TicketDetailPage/useTicketActions.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "portals/support/src/pages/tickets/TicketsListPage/NewTicketDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/JwtExpirySection.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/tech/src/pages/account-deletions/DeletionSettingsDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/tech/src/pages/account-deletions/useDeletionDetail.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/tech/src/pages/app-builds/AppBuildSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/app-builds/create-build/CreateBuildDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/app-builds/create-build/create-build.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/app-builds/releases/log-rejection/log-rejection.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/releases/reviewer-message/reviewer-message.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/releases/useReleaseActions.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/tech/src/pages/app-builds/settings/ReleaseNoticesCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/app-builds/settings/app-build-settings.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/settings/release-notices/release-notices.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/store-listing/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/app-builds/store-listing/store-listing.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/app-builds/useStorePush.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/bug-detail-page/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/bugs-page/BugsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/data-clone/settings/data-clone-connection.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/database/backups/BackupScheduleCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/database/backups/useBackupDownload.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/database/backups/useBackupUpload.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/database/backups/useBackups.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/tech/src/pages/domain/dns-records/dns-record/dns-record.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/FlowDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/detail/SubFlowDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/detail/SubFlowReview.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/detail/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/e2e-flow/e2e-flow.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/e2e-sub-flow/e2e-sub-flow.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/flows/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/run-tests/RunTestsDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/run-tests/run-tests.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/e2e/settings/E2eSettingsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/e2e/settings/e2e-settings.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/EnvEntriesTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/EnvVariablesTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/PortalEnvDrawer.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/PortalMappingTab.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/env-entry/env-entry.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/portal-mapping/PortalMappingTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/AiTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/CallTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/ConnectionTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/EmailTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/GoogleMapsTest.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/ImagekitTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/PexelsTestPanel.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/environment/test-panels/msg91/Msg91StepForm.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/error-logs-page/ErrorLogsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/feature-flags-page/FeatureFlagsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "portals/tech/src/pages/feature-flags-page/FeatureFlagsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/google-analytics/google-analytics-site/google-analytics-site.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/package-updates/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/portal-modes/PortalModesTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/portal-modes/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/rate-limiting/blocked/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/rate-limiting/rules/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/tech/src/pages/rate-limiting/rules/rate-limit-rule/rate-limit-rule.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/rate-limiting/settings/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/rate-limiting/settings/rate-limit-settings.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/tech/src/pages/status-reports-page/StatusReportDetailDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/stress-testing/new-run/new-stress-run.form.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/stress-testing/run-detail/index.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/telemetry-dashboard/RecentLogsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/telemetry-logs-page/LogsTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/telemetry-logs-settings/PublicApiKeyCard.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "portals/tech/src/pages/telemetry-logs-settings/index.tsx": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "portals/website-app/src/pages/website/contact-submissions/ContactSubmissionsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/website-app/src/pages/website/content/ContentManager.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/website-app/src/pages/website/content/ContentTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/website-app/src/pages/website/content/website-content/website-content.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/website-app/src/pages/website/job-applications/JobApplicationsPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/website-app/src/pages/website/navigation/NavItemDialog.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "portals/website-app/src/pages/website/navigation/NavigationPage.tsx": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "portals/website-app/src/pages/website/navigation/NavigationTable.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "portals/website-app/src/pages/website/newsletter/NewsletterPage.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "server/src/config/db.ts": {
+    "no-console": {
+      "count": 2
+    }
+  },
+  "server/src/config/ngrok.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/accountDeletion/accountDeletion.purge.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/access/accountDeletion/accountDeletion.trace.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/access/accountHealth/accountHealth.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/accountHealth/accountHealth.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/access/addressBook/addressBook.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/addressBook/addressBook.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/commPreference/commPreference.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/access/contactChange/contactChange.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/access/contacts/contacts.invite.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/contacts/contacts.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/access/profile/profile.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/access/role/rbac.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/role/rbac.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/access/role/rbac.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/effective-roles.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/user/relations/clubFollower.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/followRequest.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/podFollower.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/userInterest.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/userRelationship.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/userRole.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/relations/userSavedPod.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/user.accounts.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/access/user/user.admin.ts": {
+    "no-restricted-syntax": {
+      "count": 28
+    }
+  },
+  "server/src/modules/access/user/user.auth.ts": {
+    "no-restricted-syntax": {
+      "count": 22
+    }
+  },
+  "server/src/modules/access/user/user.contact.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/access/user/user.credentials.ts": {
+    "no-restricted-syntax": {
+      "count": 19
+    }
+  },
+  "server/src/modules/access/user/user.display.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/user.follows.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/access/user/user.loaders.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/user/user.mirrors.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/user/user.model.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/access/user/user.profile.ts": {
+    "no-restricted-syntax": {
+      "count": 20
+    }
+  },
+  "server/src/modules/access/user/user.public.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/access/user/user.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/access/user/user.roles.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/access/user/user.saved.ts": {
+    "no-restricted-syntax": {
+      "count": 23
+    }
+  },
+  "server/src/modules/access/user/user.signin.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/verification/verification.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/verification/verification.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/access/verification/verification.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/ads/ads.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/ads/ads.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/ai/ai/ai-fill-context.ts": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "server/src/modules/ai/ai/ai.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/ai/aiMonitoring/aiMonitoring.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/ai/automation/automation.inbound.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/ai/automation/automation.options.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/ai/automation/automation.vars.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/ai/prompt/prompt.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/ai/prompt/prompt.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/ai/reel/reel.drive.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/approval/approval.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/approval/approval.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/clubs/club/club.loaders.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/clubs/club/club.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/clubs/club/club.service.ts": {
+    "no-restricted-syntax": {
+      "count": 16
+    }
+  },
+  "server/src/modules/clubs/clubAdmin/clubAdmin.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/clubs/clubAdmin/clubAdmin.service.ts": {
+    "no-restricted-syntax": {
+      "count": 53
+    }
+  },
+  "server/src/modules/clubs/clubAdminProfile/clubAdminProfile.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/clubs/clubAdminProfile/clubAdminProfile.service.ts": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "server/src/modules/commerce/productOrder/productOrder.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/commerce/productOrder/productOrder.service.ts": {
+    "no-restricted-syntax": {
+      "count": 31
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.client.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.ops.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.shipment.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.tracking.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/commerce/shiprocket/shiprocket.webhook.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.admin.catalog.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/commerce/store/store.admin.merch.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/commerce/store/store.admin.packaging.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.admin.products.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/commerce/store/store.admin.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/commerce/store/store.autoship.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/commerce/store/store.cart.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/commerce/store/store.catalog.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/commerce/store/store.dashboard.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.order.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/commerce/store/store.pricing.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.product.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/commerce/store/store.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.return.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/commerce/store/store.shipping.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.shipping.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/commerce/store/store.storefront.service.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/content/contract/contract.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/content/emailFragment/emailFragment.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/content/emailLog/emailLog.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/emailTemplate/emailTemplate.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/content/emailTemplate/emailTemplate.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/grievance/grievance.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/content/jobApplication/jobApplication.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/jobApplication/jobApplication.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/content/legalDocument/legalDocument.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/content/legalDocument/legalDocument.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/content/mailPreference/mailPreference.analytics.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/policy/policy.notify.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/content/policy/policy.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/content/policy/policy.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/content/policyAcceptance/policyAcceptance.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/report/report.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/content/signing/signing.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/websiteContent/websiteContent.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/websiteContent/websiteContent.service.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/content/websiteNav/websiteNav.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/content/websiteNav/websiteNav.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/call/call.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/crm/callPrompt/callPrompt.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/callPrompt/callPrompt.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/callPrompt/callPrompt.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/commsProvider/commsProvider.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/commsProvider/commsProvider.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/commsProvider/commsProvider.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/crm/communicationLog/communicationLog.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/communicationLog/communicationLog.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/crm/contact/contact.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/crm/contact/contact.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/crm/crm.ai.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/crm/crm/crm.excel.ts": {
+    "no-restricted-syntax": {
+      "count": 23
+    }
+  },
+  "server/src/modules/crm/crm/crm.model.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/crm/crm.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 24
+    }
+  },
+  "server/src/modules/crm/crm/crm.service.ts": {
+    "no-restricted-syntax": {
+      "count": 43
+    }
+  },
+  "server/src/modules/crm/emailTemplate/crmEmailTemplate.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/emailTemplate/crmEmailTemplate.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/emailTemplate/crmEmailTemplate.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/crm/hostRequest/hostRequest.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/hostRequest/hostRequest.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/managedOption/managedOption.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/managedOption/managedOption.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/crm/marketing/audience.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/crm/marketing/audienceList.service.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/crm/marketing/marketing.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/crm/marketing/marketing.service.ts": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "server/src/modules/crm/marketing/shortLink.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/crm/marketing/shortLink.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/marketing/shortLink.share.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/crm/marketing/shortLinkJourney.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/marketing/social/social.ideas.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/marketing/social/social.model.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/marketing/social/social.publish.model.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/marketing/social/social.publish.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/crm/marketing/social/social.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/crm/marketing/waCampaign.dashboard.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/marketing/waCampaign.recipients.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/marketing/waCampaign.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/crm/marketing/waCampaign.service.ts": {
+    "no-restricted-syntax": {
+      "count": 24
+    }
+  },
+  "server/src/modules/crm/newsletter/newsletter.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/reminder/reminder.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/crm/reminder/reminder.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/crm/serviceOffered/serviceOffered.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/serviceOffered/serviceOffered.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/serviceOffered/serviceOffered.service.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/crm/websitePage/websitePage.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/crm/websitePage/websitePage.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/crm/whatsapp/whatsapp.client.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/crm/whatsapp/whatsapp.data.ts": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "server/src/modules/crm/whatsapp/whatsapp.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/engagement/appPopup/appPopup.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/engagement/appPopup/appPopup.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/engagement/badge/badge.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/engagement/badge/badge.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/engagement/challenge/challenge.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/engagement/challenge/challenge.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/engagement/chat/chat.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 14
+    }
+  },
+  "server/src/modules/engagement/chat/chat.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/engagement/chat/chat.socket.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/engagement/leaderboard/leaderboard.admin.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/engagement/leaderboard/leaderboard.service.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/engagement/notification/notification.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/engagement/notification/notification.service.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/engagement/officialStatus/officialStatus.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/engagement/officialStatus/officialStatus.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/engagement/post/post.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/engagement/post/post.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/engagement/referral/referral.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/engagement/referral/referral.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/engagement/staffChat/staffChat.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/finance/coin/coin.admin.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/finance/coupon/coupon.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/finance/coupon/coupon.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/finance/expense/expense.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/finance/expense/expense.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/finance/expenseOption/expenseOption.sources.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/finance/finance/bankAccount.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/finance/finance/breakdown.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/finance/finance/finance.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/finance/finance/paymentRelease.service.ts": {
+    "no-restricted-syntax": {
+      "count": 21
+    }
+  },
+  "server/src/modules/finance/finance/podCancellation.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/finance/finance/productInvoice.service.ts": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "server/src/modules/finance/finance/settlement.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/finance/giftcard/giftcard.admin.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/finance/giftcard/giftcard.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/finance/payment/payment.finalize.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/finance/payment/payment.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/finance/payment/payment.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/finance/payment/payment.service.ts": {
+    "no-restricted-syntax": {
+      "count": 53
+    }
+  },
+  "server/src/modules/finance/payment/razorpay.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/finance/podExpense/podExpense.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/finance/podExpense/podExpense.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/finance/wallet/wallet.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/finance/wallet/wallet.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/finance/wallet/withdrawalPods.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/moderation/moderation.ai.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/aisensy/aisensy.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/aisensy/aisensy.project.ts": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "server/src/modules/platform/aisensy/aisensy.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/aisensy/aisensy.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/aisensy/aisensy.transport.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/analytics/analytics.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/analytics/analytics.service.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/platform/analytics/entity/logs.data.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/apiKey/apiKey.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/appBuild/appBuild.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/appBuild/appBuild.service.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/platform/appBuild/appStoreConnect.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/appBuild/ascBuildUpload.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/appBuild/ascListing.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/platform/appBuild/ascReview.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/appBuild/ascScreenshots.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/appBuild/googlePlay.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/appBuild/storeRelease.apple.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/platform/e2eRun/e2eRun.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/platform/e2eRun/e2eRun.service.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/platform/envEntry/envEntry.connection.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/envEntry/envEntry.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/envEntry/envEntry.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/platform/envEntry/envEntry.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/platform/envEntry/envEntry.tests.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/platform/localization/localization.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/localization/localization.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/location/location.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/location/location.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/mailAutomation/mailAutomation.tickets.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/msg91/msg91.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/portalMode/portalMode.model.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/portalMode/portalMode.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/platform/portalMode/portalMode.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/settings/settings.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/platform/settings/settings.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/platform/slack/slack.gateway.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/platform/slack/slack.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/slack/slack.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/stressTest/stressTest.ci.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/platform/stressTest/stressTest.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/platform/stressTest/stressTest.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/platform/tech/tech.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/upload/mediaLibrary.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/platform/upload/upload.service.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/platform/whatsapp/whatsapp.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/platform/whatsapp/whatsapp.scheduler.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/platform/whatsapp/whatsapp.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.audience.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.claims.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.location.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.notify.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 15
+    }
+  },
+  "server/src/modules/pods/autoPod/autoPod.service.ts": {
+    "no-restricted-syntax": {
+      "count": 27
+    }
+  },
+  "server/src/modules/pods/category/category.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/category/category.service.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/pods/interview/interview.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/interview/interview.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/pods/pod-draft/pod-draft.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/pod-draft/pod-draft.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/pod-plan/pod-plan.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/pod-plan/pod-plan.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/pod/coHost.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/pods/pod/pod.autoCancel.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/pod/pod.cancelRefund.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/pods/pod/pod.cancellation.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/pods/pod/pod.cancellationRisk.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/pods/pod/pod.capacity.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/pods/pod/pod.dashboard.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/pod/pod.edit.ts": {
+    "no-restricted-syntax": {
+      "count": 32
+    }
+  },
+  "server/src/modules/pods/pod/pod.engagement.ts": {
+    "no-restricted-syntax": {
+      "count": 22
+    }
+  },
+  "server/src/modules/pods/pod/pod.listing.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/pods/pod/pod.model.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/pod/pod.place.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/pods/pod/pod.products.ts": {
+    "no-restricted-syntax": {
+      "count": 11
+    }
+  },
+  "server/src/modules/pods/pod/pod.reelAudio.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/pod/pod.refundHold.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/pod/pod.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 31
+    }
+  },
+  "server/src/modules/pods/pod/pod.seats.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/pods/pod/pod.shared.ts": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "server/src/modules/pods/pod/pod.slug.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/pod/pod.validation.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/pods/pod/pod.venue.ts": {
+    "no-restricted-syntax": {
+      "count": 28
+    }
+  },
+  "server/src/modules/pods/pod/pod.write.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/pods/pod/podMedia.service.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/pods/pod/studio-summary.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/pods/podAudit/podAudit.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/podAudit/podAudit.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.assign.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.candidates.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.common.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.notify.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.rows.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/pods/podChangeRequest/podChangeRequest.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/pods/podHelp/podHelp.service.ts": {
+    "no-restricted-syntax": {
+      "count": 7
+    }
+  },
+  "server/src/modules/pods/podIdea/podIdea.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/pods/podIdea/podIdea.service.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/podMember/podMember.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/podMember/podMember.service.ts": {
+    "no-restricted-syntax": {
+      "count": 34
+    }
+  },
+  "server/src/modules/pods/podPendingView/podPendingView.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/pods/search/search.service.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/pods/ticket/attendance.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/pods/ticket/attendance.service.ts": {
+    "no-restricted-syntax": {
+      "count": 22
+    }
+  },
+  "server/src/modules/pods/ticket/ticket.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/pods/ticket/ticket.service.ts": {
+    "no-restricted-syntax": {
+      "count": 34
+    }
+  },
+  "server/src/modules/portals/portalAccess.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/support/bouncer/bouncer.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/support/bouncer/bouncer.service.ts": {
+    "no-restricted-syntax": {
+      "count": 16
+    }
+  },
+  "server/src/modules/support/faq/faq.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/support/faq/faq.service.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/support/faq/faqSubmission.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/support/feedback/feedback.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/support/feedback/feedback.service.ts": {
+    "no-restricted-syntax": {
+      "count": 10
+    }
+  },
+  "server/src/modules/support/support.pagination.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/support/supportChat/supportChat.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/support/supportChat/supportChat.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/support/supportChat/supportChat.socket.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/support/supportChat/unifiedTickets.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/support/ticket/ticket.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/support/ticket/ticket.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/survey/leadSurvey.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/modules/survey/leadSurvey.service.ts": {
+    "no-restricted-syntax": {
+      "count": 31
+    }
+  },
+  "server/src/modules/survey/meeting.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 5
+    }
+  },
+  "server/src/modules/survey/meeting.service.ts": {
+    "no-restricted-syntax": {
+      "count": 25
+    }
+  },
+  "server/src/modules/survey/survey.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/survey/survey.service.ts": {
+    "no-restricted-syntax": {
+      "count": 26
+    }
+  },
+  "server/src/modules/venues/brandPickupLocation/brandPickupLocation.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/modules/venues/brandPickupLocation/brandPickupLocation.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/venues/ecommBrand/ecommBrand.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/venues/ecommBrand/ecommBrand.service.ts": {
+    "no-restricted-syntax": {
+      "count": 9
+    }
+  },
+  "server/src/modules/venues/host/host.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 12
+    }
+  },
+  "server/src/modules/venues/host/host.service.ts": {
+    "no-restricted-syntax": {
+      "count": 23
+    }
+  },
+  "server/src/modules/venues/inventory/inventory.packaging.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/venues/inventory/inventory.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 8
+    }
+  },
+  "server/src/modules/venues/inventory/inventory.service.ts": {
+    "no-restricted-syntax": {
+      "count": 57
+    }
+  },
+  "server/src/modules/venues/partnerDashboard/partnerDashboard.service.ts": {
+    "no-restricted-syntax": {
+      "count": 24
+    }
+  },
+  "server/src/modules/venues/productReview/productReview.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/venues/slotTemplate/slotTemplate.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/modules/venues/slotTemplate/slotTemplate.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/venues/venue/venue.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 13
+    }
+  },
+  "server/src/modules/venues/venue/venue.service.ts": {
+    "no-restricted-syntax": {
+      "count": 42
+    }
+  },
+  "server/src/modules/venues/venue/venuePods.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/modules/venues/venueSlot/venueSlot.resolver.ts": {
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "server/src/modules/venues/venueSlot/venueSlot.service.ts": {
+    "no-restricted-syntax": {
+      "count": 19
+    }
+  },
+  "server/src/routes/upload.router.ts": {
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "server/src/services/comms/comms.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/services/email/email.service.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "server/src/services/notify/notify.service.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/services/servam/servam.service.ts": {
+    "no-restricted-syntax": {
+      "count": 4
+    }
+  },
+  "server/src/utils/admin-ledger.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/utils/contact.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/utils/github-actions.ts": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "server/src/utils/table-query.ts": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "website/main-website/server/main.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "website/status-website/src/forms/report-issue/report-issue.form.tsx": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  }
+}

@@ -48,6 +48,14 @@ const COMPRESSIBLE = new Set([
 const cacheControl = (urlPath: string): string =>
   urlPath.startsWith('/_astro/') ? 'public, max-age=31536000, immutable' : 'public, max-age=2592000';
 
+/** The security headers spa.conf sends on every response — see the reasoning there. */
+export function setSecurityHeaders(res: ServerResponse): void {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+}
+
 export const acceptsGzip = (req: IncomingMessage): boolean =>
   (req.headers['accept-encoding'] ?? '').includes('gzip');
 

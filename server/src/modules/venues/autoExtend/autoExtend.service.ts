@@ -3,6 +3,7 @@ import { SlotTemplateModel, type ISlotTemplate } from '@modules/venues/slotTempl
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { buildRecurringSlots, venueDateEndUtc } from './slotGenerator';
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -84,19 +85,27 @@ async function runAll(): Promise<{ venues: number; created: number }> {
   return { venues: venues.length, created };
 }
 
+/** The first run waits a minute: a boot-time run would land before this
+ * process knows whether it is the scheduler leader, and be skipped. */
+const FIRST_RUN_DELAY_MS = 60_000;
+
 let started = false;
 
 export const autoExtendService = {
   runForVenue,
   runAll,
-  /** Registered once at server bootstrap: run immediately, then daily. Never
-   * called from tests (the test harness skips bootstrap), so no timer leaks. */
+  /** Registered once at server bootstrap: a minute after boot, then daily, on
+   * the scheduler leader only. Never called from tests (the test harness skips
+   * bootstrap), so no timer leaks. */
   async resumeSchedules() {
     if (started) return;
     started = true;
-    await runAll().catch((e) => log('initial run failed:', e));
-    setInterval(() => {
-      runAll().catch((e) => log('daily run failed:', e));
-    }, DAY_MS);
+    startClusterJob({
+      component: 'autoExtend',
+      operation: 'daily run',
+      firstDelayMs: FIRST_RUN_DELAY_MS,
+      intervalMs: DAY_MS,
+      run: runAll,
+    });
   },
 };

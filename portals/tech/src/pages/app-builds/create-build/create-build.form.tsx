@@ -1,26 +1,25 @@
 import { useEffect, useRef } from 'react';
-import { Controller, useForm, type Control, type Resolver } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Checkbox,
   FormControl,
   FormControlLabel,
-  FormGroup,
   FormHelperText,
-  FormLabel,
   MenuItem,
   Stack,
   TextField,
 } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import type { AppBuildArtifactKind, AppBuildPlatform, AppBuildTriggerConfig } from '../queries';
+import type { AppBuildPlatform, AppBuildTriggerConfig } from '../queries';
 import {
   createBuildSchema,
   defaultRefFor,
   PLATFORM_ARTIFACTS,
   type CreateBuildValues,
 } from './create-build.types';
+import ArtifactField from './ArtifactField';
 
 interface Props {
   platform: AppBuildPlatform;
@@ -30,63 +29,6 @@ interface Props {
 
 /** Submits this form from outside it — the dialog owns the action buttons. */
 export const CREATE_BUILD_FORM_ID = 'create-build-form';
-
-interface ArtifactFieldProps {
-  control: Control<CreateBuildValues>;
-  kinds: AppBuildArtifactKind[];
-  label: string;
-}
-
-/**
- * Adds or removes one kind from the selection. Rebuilt from the platform's own
- * order, so the primary artifact stays first however the boxes were ticked.
- */
-function toggleKind(
-  current: readonly AppBuildArtifactKind[],
-  kind: AppBuildArtifactKind,
-  checked: boolean,
-  kinds: readonly AppBuildArtifactKind[]
-): AppBuildArtifactKind[] {
-  if (checked) return kinds.filter((k) => k === kind || current.includes(k));
-  return current.filter((k) => k !== kind);
-}
-
-/**
- * Which files to produce. Android only — iOS can make exactly one thing, and a
- * choice with a single option is a question not worth asking.
- */
-function ArtifactField({ control, kinds, label }: Readonly<ArtifactFieldProps>) {
-  return (
-    <Controller
-      control={control}
-      name="artifacts"
-      render={({ field, fieldState }) => (
-        <FormControl component="fieldset" error={!!fieldState.error}>
-          <FormLabel component="legend" sx={{ fontSize: 14 }}>
-            {label}
-          </FormLabel>
-          <FormGroup row>
-            {kinds.map((kind) => (
-              <FormControlLabel
-                key={kind}
-                control={
-                  <Checkbox
-                    checked={field.value.includes(kind)}
-                    onChange={(e) =>
-                      field.onChange(toggleKind(field.value, kind, e.target.checked, kinds))
-                    }
-                  />
-                }
-                label={kind}
-              />
-            ))}
-          </FormGroup>
-          {fieldState.error && <FormHelperText>{fieldState.error.message}</FormHelperText>}
-        </FormControl>
-      )}
-    />
-  );
-}
 
 export default function CreateBuildForm({ platform, config, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();

@@ -35,6 +35,7 @@ import { autoPodNotify } from './autoPod.notify';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const SWEEP_INTERVAL_MS = 10 * 60 * 1000; // every 10 minutes
 const FIRST_SWEEP_DELAY_MS = 60_000; // ~1 min after boot
@@ -255,19 +256,11 @@ export async function runAutoPodSweep(): Promise<{
 
 /** Start the Auto Pod sweep loop. Returns a stop function. No-ops under tests. */
 export function startAutoPodSweepScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const sweep = () => {
-    runAutoPodSweep().catch((error) => {
-      logs.server.error('autoPod', 'sweep', { error, msg: 'auto pod sweep failed' });
-    });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for this sweep.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'autoPod',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: runAutoPodSweep,
+  });
 }

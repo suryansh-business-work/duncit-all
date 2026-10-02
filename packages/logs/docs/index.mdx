@@ -18,6 +18,7 @@ exports:
   - 'httpTransport'
   - 'consoleTransport'
   - 'serializeError'
+  - 'fireAndForget'
   - 'detectEnvironment'
   - 'browserClientInfo'
   - 'sessionId'
@@ -203,6 +204,7 @@ build cannot pollute the production environment filter.
 | `createLogger` | `(app: string, portal?: string) => LevelFns` | — | A bound file/surface logger. |
 | `logs` | `{ server, mWeb, mobileApp, portal.<key>, website.<key> }` | — | Pre-bound loggers for every console. |
 | `serializeError` | `(err: unknown) => SerializedError \| undefined` | — | Flattens any thrown value. |
+| `fireAndForget` | `(promise: Promise<unknown>, logger: LevelFns, page: string, component: string) => void` | — | Runs a promise without awaiting it and logs a rejection as `logger.error(page, component, { error })`. Replaces `void promise()`. |
 | `httpTransport` | `(endpoint: string, opts?: HttpTransportOptions) => Transport` | — | Fire-and-forget `keepalive` POST. Never throws, never blocks. `opts.getToken` / `opts.getDeviceId` add the `Authorization` / `x-duid` headers the server reads identity from. |
 | `consoleTransport` | `Transport` | — | Default sink; mirrors to the console so logs are not lost before configuration. |
 | `detectEnvironment` | `(hostOrUrl?: string \| null) => Environment` | — | `localhost` / `staging` / `production`. |
@@ -282,6 +284,20 @@ a screen down. Do not `await` a log call; the level functions return `void`.
 
 Before `configureLogs` runs, the active transport is `consoleTransport`, so logs emitted during
 module init are still visible locally rather than lost.
+
+## `fireAndForget` — never `void` a promise
+
+A click handler that starts async work and does not wait for it used to write
+`onClick={() => void save()}`. `void` throws the rejection away (Sonar S3735), so a failed save left
+no trace. Hand the promise to `fireAndForget` with the caller's logger, page and component instead:
+
+```tsx
+import { fireAndForget, logs } from '@duncit/logs';
+
+<DuncitButton onClick={() => fireAndForget(save(), logs.mWeb, 'ProfileAvatar', 'save')} />
+```
+
+A resolved promise logs nothing; a rejection becomes one `error` record filed against that screen.
 
 ## `logs.*` vs `createLogger`
 

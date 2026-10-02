@@ -166,6 +166,11 @@ jobs:
           # and the analyze job verifies the count and fails loudly if it is
           # short. Failing HERE only threw the partial results away.
           if-no-files-found: warn
+      # LAST, after every artifact is up, so a red ratchet never costs the scan
+      # its coverage. Fails only on a test file that is not already in
+      # scripts/test-failure-baseline.json — see the script for why.
+      - name: Test failure ratchet
+        run: node scripts/verify-test-baseline.mjs test-logs
 
   coverage-mobile:
     name: Coverage — mobile app
@@ -239,6 +244,9 @@ jobs:
           # warn, not error: analyze verifies the overall report count and a
           # partial app report is still worth scanning.
           if-no-files-found: warn
+      # LAST, for the same reason as the workspace jobs' ratchet step.
+      - name: Test failure ratchet
+        run: node scripts/verify-test-baseline.mjs mobile-app=app/mobile-app/jest-coverage.log
 
   # ---------------------------------------------------------------------------
   # The scan itself. Needs the full history (fetch-depth: 0) for accurate
@@ -457,3 +465,17 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: node scripts/sonar-gate-report.mjs
+
+      # This job is the required check, so a coverage job that went red — today
+      # that means its test-failure ratchet caught a NEW failing test file —
+      # must fail it too. Last, so the scan above has already published.
+      - name: Coverage jobs held the test ratchet
+        env:
+          WORKSPACES: ${{ needs.coverage-workspaces.result }}
+          MOBILE: ${{ needs.coverage-mobile.result }}
+        run: |
+          echo "coverage-workspaces: $WORKSPACES, coverage-mobile: $MOBILE"
+          if [ "$WORKSPACES" = "failure" ] || [ "$MOBILE" = "failure" ]; then
+            echo "::error::A coverage job failed — open its 'Test failure ratchet' step for the test files that newly fail."
+            exit 1
+          fi

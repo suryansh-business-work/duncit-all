@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { NewsletterSubscriberModel, type INewsletterSubscriber } from './newsletter.model';
 import { sendEmail } from '@services/email/email.service';
@@ -6,14 +6,22 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { email, filled, maxLen, mixed, obj, shape, str, summaryOf } from '@utils/zod-fields';
 
-const subscribeSchema = yup.object({
-  email: yup.string().required('Email required').email('Invalid email').max(160),
-  source: yup
-    .mixed<'WEBSITE_FOOTER' | 'WEBSITE_PAGE' | 'MWEB' | 'ADMIN' | 'OTHER'>()
-    .oneOf(['WEBSITE_FOOTER', 'WEBSITE_PAGE', 'MWEB', 'ADMIN', 'OTHER'])
-    .default('WEBSITE_FOOTER'),
-});
+const SOURCES = ['WEBSITE_FOOTER', 'WEBSITE_PAGE', 'MWEB', 'ADMIN', 'OTHER'] as const;
+
+// `loose`: keys beyond these ride through untouched, as they always have.
+const subscribeSchema = obj(
+  shape(
+    {
+      email: str(z.string().check(filled('Email required'), email('Invalid email'), maxLen(160)), {
+        required: 'Email required',
+      }),
+      source: mixed(z.enum(SOURCES), { oneOf: SOURCES, default: 'WEBSITE_FOOTER' }),
+    },
+    { loose: true }
+  )
+);
 
 const toPub = (s: INewsletterSubscriber) => ({
   id: String(s._id),
@@ -62,14 +70,13 @@ export const newsletterService = {
   },
 
   async subscribe(input: { email: string; source?: string }) {
-    let payload: { email: string; source: any };
-    try {
-      payload = await subscribeSchema.validate(input, { abortEarly: false });
-    } catch (e: any) {
-      throw new GraphQLError(e.message || 'Invalid input', {
+    const parsed = await subscribeSchema.safeParseAsync(input);
+    if (!parsed.success) {
+      throw new GraphQLError(summaryOf(parsed.error) || 'Invalid input', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const payload = parsed.data;
     const existing = await NewsletterSubscriberModel.findOne({ email: payload.email }).exec();
     if (existing) {
       if (existing.unsubscribed_at) {

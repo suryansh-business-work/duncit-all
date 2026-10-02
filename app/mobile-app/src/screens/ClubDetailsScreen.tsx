@@ -23,6 +23,7 @@ import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
@@ -84,7 +85,7 @@ export function ClubDetailsScreen() {
           categoryCrumbs={categoryCrumbs}
           following={following}
           followBusy={followBusy}
-          onToggleFollow={() => void toggleFollow()}
+          onToggleFollow={() => fireAndForget(toggleFollow())}
           onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
           onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
           onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}

@@ -71,8 +71,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-      # Vitest stays off here; sonar.yml runs every portal's suite for coverage.
+      # Vitest is not run here: sonar.yml runs every portal's suite on the same
+      # push and fails on any test file outside scripts/test-failure-baseline.json.
       #
       # Lint runs the portal's script when one is defined (no-op otherwise),
       # so wiring ESLint later needs no workflow change.

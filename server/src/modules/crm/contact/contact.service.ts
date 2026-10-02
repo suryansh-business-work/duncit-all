@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { ContactSubmissionModel, type IContactSubmission, type ContactStatus } from './contact.model';
 import { sendEmail } from '@services/email/email.service';
@@ -7,14 +7,27 @@ import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { ticketFromContact } from '@modules/support/ticket/ticket.fromContact';
+import { arr, email, filled, maxItems, maxLen, minLen, obj, shape, str, summaryOf, url } from '@utils/zod-fields';
 
-const submitSchema = yup.object({
-  name: yup.string().required('Name is required').max(120),
-  email: yup.string().required('Email is required').email('Invalid email').max(160),
-  subject: yup.string().max(200).default(''),
-  message: yup.string().required('Message is required').min(5).max(5000),
-  attachments: yup.array().of(yup.string().url().required()).max(10).default([]),
-});
+// `loose`: keys the form adds beyond these ride through to the row, as they always have.
+const submitSchema = obj(
+  shape(
+    {
+      name: str(z.string().check(filled('Name is required'), maxLen(120)), { required: 'Name is required' }),
+      email: str(z.string().check(filled('Email is required'), email('Invalid email'), maxLen(160)), {
+        required: 'Email is required',
+      }),
+      subject: str(z.string().check(maxLen(200)), { default: '' }),
+      message: str(z.string().check(filled('Message is required'), minLen(5), maxLen(5000)), {
+        required: 'Message is required',
+      }),
+      attachments: arr(z.array(str(z.string().check(url(), filled()), { required: true })).check(maxItems(10)), {
+        default: [],
+      }),
+    },
+    { loose: true }
+  )
+);
 
 const toPub = (c: IContactSubmission) => ({
   id: String(c._id),
@@ -70,14 +83,13 @@ export const contactService = {
   },
 
   async submit(input: { name: string; email: string; subject?: string; message: string; attachments?: string[] }) {
-    let payload: { name: string; email: string; subject: string; message: string; attachments: string[] };
-    try {
-      payload = await submitSchema.validate(input, { abortEarly: false });
-    } catch (e: any) {
-      throw new GraphQLError(e.message || 'Invalid input', {
+    const parsed = await submitSchema.safeParseAsync(input);
+    if (!parsed.success) {
+      throw new GraphQLError(summaryOf(parsed.error) || 'Invalid input', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const payload = parsed.data;
     const doc = await ContactSubmissionModel.create(payload);
 
     /*

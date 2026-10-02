@@ -1,4 +1,25 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import {
+  arr,
+  date,
+  email,
+  filled,
+  finite,
+  gte,
+  int,
+  lte,
+  matches,
+  maxLen,
+  minItems,
+  minLen,
+  notAfter,
+  num,
+  obj,
+  shape,
+  str,
+  trim,
+  url,
+} from '@utils/zod-fields';
 import { STATUSES } from './user.constants';
 
 // Shared by the auth (signup) and profile (self-service edit) validators too —
@@ -12,73 +33,92 @@ export const extRegex = /^\+?\d{1,5}$/;
 // this one, so a hand-rolled mutation cannot store a surname like "Doe_123".
 export const personNameRegex = /^[A-Za-z][A-Za-z .'’]{0,79}$/;
 
-export const createUserSchema = yup.object({
-  first_name: yup.string().min(1).max(60).required(),
-  last_name: yup.string().min(1).max(60).required(),
-  email: yup.string().email().optional(),
-  phone_number: yup.string().matches(phoneRegex).required(),
-  phone_extension: yup.string().matches(extRegex).required(),
-  password: yup.string().min(8).required(),
-  dob: yup.date().max(new Date()).required(),
-  roles: yup.array().of(yup.string().required()).min(1).required(),
-  city: yup.string().optional(),
-  zone: yup.string().optional(),
-  assigned_city: yup.string().optional(),
-  assigned_zones: yup.array().of(yup.string()).optional(),
-});
+/** The latest date of birth these forms accept — fixed when the server boots. */
+const BOOTED_AT = new Date();
+
+const optionalText = () => str(z.string().optional());
+const roleList = () => z.array(str(z.string().check(filled()), { required: true }));
+const zoneList = () => arr(z.array(str(z.string().optional())).optional());
+
+export const createUserSchema = obj(
+  shape({
+    first_name: str(z.string().check(minLen(1), maxLen(60), filled()), { required: true }),
+    last_name: str(z.string().check(minLen(1), maxLen(60), filled()), { required: true }),
+    email: str(z.string().check(email()).optional()),
+    phone_number: str(z.string().check(matches(phoneRegex), filled()), { required: true }),
+    phone_extension: str(z.string().check(matches(extRegex), filled()), { required: true }),
+    password: str(z.string().check(minLen(8), filled()), { required: true }),
+    dob: date(z.date().check(notAfter(BOOTED_AT)), { required: true }),
+    roles: arr(roleList().check(minItems(1)), { required: true }),
+    city: optionalText(),
+    zone: optionalText(),
+    assigned_city: optionalText(),
+    assigned_zones: zoneList(),
+  })
+);
 
 /*
   An admin may CLEAR a contact field, so every one of them accepts '' as well
   as a well-formed value.
 
-  yup's `.matches()` tests the empty string against the pattern unless it is
-  told not to, and `.email()` does the same. Without `excludeEmptyString` the
-  admin form — which sends all three contact fields on every save — could not
-  save ANY account that has no phone number: the blank it faithfully echoed
-  back failed validation before the write was ever attempted.
+  A pattern is tested against the empty string unless it is told not to, and
+  `email()` lets '' through. Without `excludeEmptyString` the admin form —
+  which sends all three contact fields on every save — could not save ANY
+  account that has no phone number: the blank it faithfully echoed back failed
+  validation before the write was ever attempted.
 */
 const optionalOrBlank = (pattern: RegExp) =>
-  yup.string().matches(pattern, { excludeEmptyString: true }).optional();
+  str(z.string().check(matches(pattern, { excludeEmptyString: true })).optional());
 
-export const updateUserSchema = yup.object({
-  first_name: yup.string().min(1).max(60).optional(),
-  last_name: yup.string().min(1).max(60).optional(),
-  email: yup.string().email().optional(),
-  phone_number: optionalOrBlank(phoneRegex),
-  phone_extension: optionalOrBlank(extRegex),
-  whatsapp_number: optionalOrBlank(phoneRegex),
-  whatsapp_extension: optionalOrBlank(extRegex),
-  dob: yup.date().max(new Date()).optional(),
-  city: yup.string().optional(),
-  zone: yup.string().optional(),
-  bio: yup.string().max(500).optional(),
-  profile_photo: yup.string().url().optional(),
-  status: yup.string().oneOf(STATUSES).optional(),
-  roles: yup.array().of(yup.string().required()).optional(),
-  assigned_city: yup.string().optional(),
-  assigned_zones: yup.array().of(yup.string()).optional(),
-  host_share_pct: yup.number().min(0).max(100).optional(),
-  host_commission_pct: yup.number().min(0).max(100).optional(),
-});
+const percentage = () => num(finite().check(gte(0), lte(100)).optional());
 
-export const recordUserContactActionSchema = yup.object({
-  user_id: yup.string().required(),
-  type: yup.string().oneOf(['CALL', 'EMAIL']).required(),
-  target: yup.string().trim().min(3).max(254).required(),
-  subject: yup.string().trim().max(160).default(''),
-  notes: yup.string().trim().max(2000).default(''),
-  status: yup.string().trim().max(40).default('LOGGED'),
-  duration_seconds: yup.number().integer().min(0).default(0),
-  recording_url: yup.string().trim().url().max(2048).default(''),
-});
+export const updateUserSchema = obj(
+  shape({
+    first_name: str(z.string().check(minLen(1), maxLen(60)).optional()),
+    last_name: str(z.string().check(minLen(1), maxLen(60)).optional()),
+    email: str(z.string().check(email()).optional()),
+    phone_number: optionalOrBlank(phoneRegex),
+    phone_extension: optionalOrBlank(extRegex),
+    whatsapp_number: optionalOrBlank(phoneRegex),
+    whatsapp_extension: optionalOrBlank(extRegex),
+    dob: date(z.date().check(notAfter(BOOTED_AT)).optional()),
+    city: optionalText(),
+    zone: optionalText(),
+    bio: str(z.string().check(maxLen(500)).optional()),
+    profile_photo: str(z.string().check(url()).optional()),
+    status: str(z.enum(STATUSES).optional(), { oneOf: STATUSES }),
+    roles: arr(roleList().optional()),
+    assigned_city: optionalText(),
+    assigned_zones: zoneList(),
+    host_share_pct: percentage(),
+    host_commission_pct: percentage(),
+  })
+);
 
-export const startRecordedUserCallSchema = yup.object({
-  user_id: yup.string().required(),
-  target: yup.string().trim().min(3).max(64).required(),
-  notes: yup.string().trim().max(2000).default(''),
-});
+const CONTACT_TYPES = ['CALL', 'EMAIL'] as const;
 
-export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
-export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;
-export type RecordUserContactActionDTO = yup.InferType<typeof recordUserContactActionSchema>;
-export type StartRecordedUserCallDTO = yup.InferType<typeof startRecordedUserCallSchema>;
+export const recordUserContactActionSchema = obj(
+  shape({
+    user_id: str(z.string().check(filled()), { required: true }),
+    type: str(z.enum(CONTACT_TYPES), { oneOf: CONTACT_TYPES, required: true }),
+    target: str(z.string().check(minLen(3), maxLen(254), filled()), { required: true, transforms: [trim] }),
+    subject: str(z.string().check(maxLen(160)), { transforms: [trim], default: '' }),
+    notes: str(z.string().check(maxLen(2000)), { transforms: [trim], default: '' }),
+    status: str(z.string().check(maxLen(40)), { transforms: [trim], default: 'LOGGED' }),
+    duration_seconds: num(finite().check(int(), gte(0)), { default: 0 }),
+    recording_url: str(z.string().check(url(), maxLen(2048)), { transforms: [trim], default: '' }),
+  })
+);
+
+export const startRecordedUserCallSchema = obj(
+  shape({
+    user_id: str(z.string().check(filled()), { required: true }),
+    target: str(z.string().check(minLen(3), maxLen(64), filled()), { required: true, transforms: [trim] }),
+    notes: str(z.string().check(maxLen(2000)), { transforms: [trim], default: '' }),
+  })
+);
+
+export type CreateUserDTO = z.infer<typeof createUserSchema>;
+export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
+export type RecordUserContactActionDTO = z.infer<typeof recordUserContactActionSchema>;
+export type StartRecordedUserCallDTO = z.infer<typeof startRecordedUserCallSchema>;

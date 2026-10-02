@@ -1,0 +1,168 @@
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
+import {
+  Alert,
+  Card,
+  CardContent,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
+import { parseApiError } from '@duncit/utils';
+import { MY_BRANDS, type EcommBrand } from '../../queries';
+import {
+  WarehouseForm, toSaveWarehouseVariables, warehouseToValues, type WarehouseFormValues,
+} from '../warehouse-form';
+import WarehouseList from '../WarehouseList';
+import {
+  DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE, SET_DEFAULT_MY_WAREHOUSE,
+  type BrandWarehouse,
+} from '../warehouse.queries';
+import { useTranslation } from '@duncit/shell';
+import BrandSettingsHero from './BrandSettingsHero';
+import DeleteWarehouseDialog from './DeleteWarehouseDialog';
+
+type Editing = BrandWarehouse | 'new' | null;
+
+/** Full-screen Brand Settings: the brand's warehouses (pickup locations) with
+ * add/edit/delete/set-default. ShipRocket registration stays admin-side — a
+ * pending warehouse ships with the manual delivery charge until registered. */
+export default function BrandSettingsPage() {
+  const { t } = useTranslation();
+  const { brandId = '' } = useParams<{ brandId: string }>();
+  const navigate = useNavigate();
+  const { data: brandsData, loading: brandsLoading } = useQuery<any>(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery<any>(MY_BRAND_WAREHOUSES, {
+    variables: { brand_doc_id: brandId },
+    fetchPolicy: 'cache-and-network',
+  });
+  const [saveWarehouse, saveState] = useMutation<any>(SAVE_MY_WAREHOUSE);
+  const [deleteWarehouse, deleteState] = useMutation<any>(DELETE_MY_WAREHOUSE);
+  const [setDefaultWarehouse, defaultState] = useMutation<any>(SET_DEFAULT_MY_WAREHOUSE);
+  const [editing, setEditing] = useState<Editing>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BrandWarehouse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const brand: EcommBrand | null =
+    brandsData?.myEcommBrands?.find((item: EcommBrand) => item.id === brandId) ?? null;
+  const warehouses: BrandWarehouse[] = data?.myBrandPickupLocations ?? [];
+  const busy = saveState.loading || deleteState.loading || defaultState.loading;
+  const editingWarehouse = editing && editing !== 'new' ? editing : null;
+  const defaultValues = useMemo(() => warehouseToValues(editingWarehouse), [editingWarehouse]);
+  const brandMissing = !brandsLoading && brandsData && !brand;
+
+  const closeDialog = () => {
+    setEditing(null);
+    setApiError(null);
+  };
+  const save = async (values: WarehouseFormValues) => {
+    setApiError(null);
+    try {
+      await saveWarehouse({
+        variables: toSaveWarehouseVariables(brandId, editingWarehouse?.id ?? null, values),
+      });
+      setMessage(t('partners.ecommBrandPage.warehouseSaved'));
+      closeDialog();
+      await refetch();
+    } catch (saveError) {
+      setApiError(parseApiError(saveError));
+    }
+  };
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteWarehouse({ variables: { brand_doc_id: brandId, id: deleteTarget.id } });
+      setMessage(t('partners.ecommBrandPage.warehouseDeleted'));
+      await refetch();
+    } catch (deleteError) {
+      setMessage(parseApiError(deleteError));
+    }
+    setDeleteTarget(null);
+  };
+  const makeDefault = async (warehouse: BrandWarehouse) => {
+    try {
+      await setDefaultWarehouse({ variables: { brand_doc_id: brandId, id: warehouse.id } });
+      setMessage(`${warehouse.nickname} is now the default warehouse.`);
+      await refetch();
+    } catch (defaultError) {
+      setMessage(parseApiError(defaultError));
+    }
+  };
+
+  if ((brandsLoading && !brandsData) || (loading && !data)) {
+    return (
+      <Stack
+        sx={{
+          alignItems: "center",
+          py: 5
+        }}>
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack spacing={2.25} sx={{ width: '100%' }}>
+      <BrandSettingsHero brand={brand} onBack={() => navigate('/ecomm-brand')} />
+      {brandMissing && <Alert severity="warning">{t('partners.ecommBrandPage.brandWasNotFoundInYour')}</Alert>}
+      {error && !brandMissing && <Alert severity="error">{parseApiError(error)}</Alert>}
+      {!brandMissing && (
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6" component="h2" sx={{
+                fontWeight: 950
+              }}>{t('partners.ecommBrandPage.warehouses')}</Typography>
+              <Alert severity="info">
+                Every new warehouse — and every edit to an existing one — is reviewed by the Duncit team.
+                A product can only be listed against an approved warehouse, so saving changes here sends
+                it back for review.
+              </Alert>
+              <WarehouseList
+                warehouses={warehouses}
+                busy={busy}
+                onAdd={() => { setApiError(null); setEditing('new'); }}
+                onEdit={(warehouse) => { setApiError(null); setEditing(warehouse); }}
+                onDelete={setDeleteTarget}
+                onSetDefault={makeDefault}
+              />
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm" aria-labelledby="warehouse-dialog-title">
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <span id="warehouse-dialog-title">{editingWarehouse ? 'Edit warehouse' : 'New warehouse'}</span>
+          <DuncitIconButton size="small" onClick={closeDialog} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <WarehouseForm
+            key={editingWarehouse?.id ?? 'new'}
+            defaultValues={defaultValues}
+            busy={saveState.loading}
+            apiError={apiError}
+            onSave={save}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteWarehouseDialog
+        deleteTarget={deleteTarget}
+        busy={deleteState.loading}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
+      <Snackbar open={!!message} autoHideDuration={3000} message={message ?? ''} onClose={() => setMessage(null)} />
+    </Stack>
+  );
+}

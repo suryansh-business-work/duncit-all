@@ -29,6 +29,7 @@ import { TicketSummaryCard } from './TicketSummaryCard';
 import { useTicketActions } from './useTicketActions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLoadingRegion } from '@/components/Skeleton';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** One support ticket — subject, status and the full reply thread. Users land
  * here right after creating a ticket so they can track it immediately. */
@@ -93,8 +94,8 @@ export function TicketDetailsScreen() {
     <TicketHeaderActions
       canResolve={!!canResolve}
       onResolve={() => a.confirm.setOpen(true)}
-      onDownloadTxt={() => void a.download(TranscriptFormat.Txt)}
-      onDownloadDocx={() => void a.download(TranscriptFormat.Docx)}
+      onDownloadTxt={() => fireAndForget(a.download(TranscriptFormat.Txt))}
+      onDownloadDocx={() => fireAndForget(a.download(TranscriptFormat.Docx))}
       onEmail={openEmail}
     />
   );
@@ -164,7 +165,7 @@ export function TicketDetailsScreen() {
       <ResolveConfirmModal
         open={a.confirm.open}
         busy={a.confirm.busy}
-        onConfirm={() => void a.confirm.run()}
+        onConfirm={() => fireAndForget(a.confirm.run())}
         onCancel={() => a.confirm.setOpen(false)}
       />
       <SupportFeedbackModal
@@ -174,7 +175,7 @@ export function TicketDetailsScreen() {
         error={a.feedback.error}
         rating={ticket?.rating}
         feedbackComment={ticket?.feedback_comment}
-        onSubmit={(r, c) => void a.feedback.submit(r, c)}
+        onSubmit={(r, c) => fireAndForget(a.feedback.submit(r, c))}
         onClose={() => a.feedback.setOpen(false)}
       />
       <EmailTranscriptModal
@@ -182,7 +183,7 @@ export function TicketDetailsScreen() {
         busy={a.email.busy}
         done={a.email.done}
         error={a.email.error}
-        onSend={(em) => void a.email.send(em)}
+        onSend={(em) => fireAndForget(a.email.send(em))}
         onClose={() => a.email.setOpen(false)}
       />
       <ReopenReasonModal
@@ -190,7 +191,7 @@ export function TicketDetailsScreen() {
         busy={a.reopen.busy}
         error={a.reopen.error}
         deadlineLabel={reopenDeadlineLabel}
-        onSubmit={(reason) => void a.reopen.submit(reason)}
+        onSubmit={(reason) => fireAndForget(a.reopen.submit(reason))}
         onClose={() => a.reopen.setOpen(false)}
       />
     </StackScreen>

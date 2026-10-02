@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Box, Chip, Fade, Link, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Chip, Fade, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -8,12 +8,9 @@ import { glass, inkCta } from './glass';
 import LoginForm from './login.form';
 import PromoCard from './PromoCard';
 import OtherPortalsDialog from './OtherPortalsDialog';
+import LoginLegalLinks from './LoginLegalLinks';
 import { sessionT } from '../i18n';
 import type { LoginScreenProps } from './login.types';
-
-const DEFAULT_PRIVACY = 'https://duncit.com/policy/privacy-policy';
-const DEFAULT_TERMS = 'https://duncit.com/policy/terms-and-conditions';
-const DEFAULT_CONTACT = 'admin@duncit.com';
 
 export default function LoginScreen({
   config,
@@ -29,9 +26,6 @@ export default function LoginScreen({
   const [snack, setSnack] = useState<string | null>(null);
   const [portalsOpen, setPortalsOpen] = useState(false);
   const dark = mode === 'dark';
-  const contact = config.contactEmail ?? DEFAULT_CONTACT;
-
-  const legalLink = { fontSize: 12, fontWeight: 600 } as const;
 
   return (
     <Box data-testid="login-screen" sx={{ position: 'relative', minHeight: '100dvh', width: '100%', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
@@ -126,55 +120,7 @@ export default function LoginScreen({
               {altSlot && <Box sx={{ mt: 2 }}>{altSlot}</Box>}
               {footerSlot && <Box sx={{ mt: 2 }}>{footerSlot}</Box>}
 
-              <Stack
-                direction="row"
-                spacing={1.5}
-                sx={{
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  mt: 2.5
-                }}>
-                <Link
-                  href={config.privacyUrl ?? DEFAULT_PRIVACY}
-                  target="_blank"
-                  rel="noopener"
-                  underline="none"
-                  sx={[{
-                    color: "text.secondary"
-                  }, legalLink]}>
-                  {t('session.login.privacyPolicy')}
-                </Link>
-                <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
-                <Link
-                  href={config.termsUrl ?? DEFAULT_TERMS}
-                  target="_blank"
-                  rel="noopener"
-                  underline="none"
-                  sx={[{
-                    color: "text.secondary"
-                  }, legalLink]}>
-                  {t('session.login.termsOfUse')}
-                </Link>
-                <Box aria-hidden sx={{ color: 'text.disabled' }}>·</Box>
-                <Link component="button" type="button" onClick={() => setPortalsOpen(true)} underline="none" color="primary" sx={legalLink}>
-                  {t('session.login.otherPortals')}
-                </Link>
-              </Stack>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  display: 'block',
-                  mt: 1
-                }}>
-                {t('session.login.supportPrefix')}{' '}
-                <Link href={`mailto:${contact}`} underline="none" color="primary" sx={{
-                  fontWeight: 700
-                }}>
-                  {contact}
-                </Link>{' '}
-                {t('session.login.supportSuffix')}
-              </Typography>
+              <LoginLegalLinks config={config} t={t} onOpenPortals={() => setPortalsOpen(true)} />
             </Box>
 
             <Box sx={{ bgcolor: inkCta.bgcolor, color: inkCta.color, borderRadius: 3, px: 2.5, py: 1.75, textAlign: 'center' }}>

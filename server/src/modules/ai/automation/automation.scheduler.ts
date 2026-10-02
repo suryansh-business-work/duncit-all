@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { AutomationRunModel } from './automation.model';
 import { resumeDelay, resumeTimeout } from './automation.engine';
 
@@ -8,8 +9,9 @@ import { resumeDelay, resumeTimeout } from './automation.engine';
  * A delay step parks the run with `resume_at`; a wait-for-reply step parks it
  * with `wait_until`. Nothing else ever moves those runs — an incoming reply is
  * the only other event, and it goes through `automation.inbound`. So this
- * sweep is the whole of "time passing" for automation, and like every other
- * sweep in this server it assumes ONE replica (see whatsapp.scheduler.ts).
+ * sweep is the whole of "time passing" for automation; it runs on the
+ * scheduler leader only (utils/clusterJob.ts), so a second replica never wakes
+ * a run twice.
  */
 
 const TICK_MS = 60_000;
@@ -36,27 +38,11 @@ export async function runAutomationSweep(): Promise<void> {
 }
 
 export function startAutomationScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  let running = false;
-  const tick = async () => {
-    if (running) return;
-    running = true;
-    try {
-      await runAutomationSweep();
-    } catch (error) {
-      logs.server.error('automation', 'sweep', { error });
-    } finally {
-      running = false;
-    }
-  };
-  const first = setTimeout(() => {
-    tick().catch(() => undefined);
-  }, FIRST_TICK_DELAY_MS);
-  const interval = setInterval(() => {
-    tick().catch(() => undefined);
-  }, TICK_MS);
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'automation',
+    operation: 'sweep',
+    firstDelayMs: FIRST_TICK_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: runAutomationSweep,
+  });
 }

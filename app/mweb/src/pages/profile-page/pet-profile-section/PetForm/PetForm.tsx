@@ -1,0 +1,135 @@
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@apollo/client/react';
+import { Alert, Grid, Stack, TextField } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
+import PetPhotoField from '../PetPhotoField';
+import { PetFormValues, PetProfile, UPDATE_PET, petSchema } from '../petQueries';
+import { useTranslation } from '../../../../i18n/useTranslation';
+import PetAutocompleteFields from './PetAutocompleteFields';
+
+interface PetFormProps {
+  pet?: PetProfile | null;
+  onCancel: () => void;
+  onSaved: () => void;
+}
+
+export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProps>) {
+  const { t } = useTranslation();
+  const [updateMut, { loading, error }] = useMutation<any>(UPDATE_PET);
+
+  const { control, handleSubmit, watch, setValue, formState } = useForm<z.input<typeof petSchema>, any, PetFormValues>({
+    resolver: zodResolver(petSchema),
+    defaultValues: {
+      name: pet?.name ?? '',
+      species: pet?.species ?? '',
+      breed: pet?.breed ?? '',
+      age: pet?.age ?? '',
+      photo_url: pet?.photo_url ?? '',
+      bio: pet?.bio ?? '',
+    },
+  });
+
+  const species = watch('species');
+
+  const submit = handleSubmit(async (values) => {
+    await updateMut({
+      variables: {
+        input: {
+          name: values.name || null,
+          species: values.species || null,
+          breed: values.breed || null,
+          age: values.age === '' ? null : Number(values.age),
+          photo_url: values.photo_url || null,
+          bio: values.bio || null,
+        },
+      },
+    });
+    onSaved();
+  });
+
+  return (
+    <form data-testid="pet-form" onSubmit={submit}>
+      <Grid container spacing={2}>
+        <Grid size={12}>
+          <Controller
+            control={control}
+            name="photo_url"
+            render={({ field, fieldState }) => (
+              <PetPhotoField
+                value={field.value}
+                touched={fieldState.isTouched}
+                error={fieldState.error?.message}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </Grid>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                data-testid="pet-form-name"
+                fullWidth
+                label={t('mweb.profile.petName')}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+        </Grid>
+        <PetAutocompleteFields control={control} setValue={setValue} species={species} />
+        <Grid size={12}>
+          <Controller
+            control={control}
+            name="bio"
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                data-testid="pet-form-bio"
+                fullWidth
+                label={t('mweb.profile.aboutYourPet')}
+                multiline
+                minRows={2}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+        </Grid>
+      </Grid>
+      {error && (
+        <Alert data-testid="pet-form-error" severity="error" sx={{ mt: 2 }}>
+          {error.message}
+        </Alert>
+      )}
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "flex-end",
+          mt: 2
+        }}>
+        <DuncitButton data-testid="pet-form-cancel" onClick={onCancel} disabled={loading}>
+          Cancel
+        </DuncitButton>
+        <DuncitButton
+          data-testid="pet-form-save"
+          type="submit"
+          variant="contained"
+          disabled={loading || formState.isSubmitting}
+        >
+          {loading ? 'Saving…' : 'Save'}
+        </DuncitButton>
+      </Stack>
+    </form>
+  );
+}

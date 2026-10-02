@@ -77,7 +77,7 @@ describe('assertPortalLogin — server-side portal login gate', () => {
 
 describe('loginSchema — optional portal_key', () => {
   it('accepts a login payload without portal_key', async () => {
-    const value = await loginSchema.validate({
+    const value = await loginSchema.parseAsync({
       email: 'riya@duncit.com',
       password: 'StrongPass123',
     });
@@ -85,7 +85,7 @@ describe('loginSchema — optional portal_key', () => {
   });
 
   it('accepts and keeps a supplied portal_key', async () => {
-    const value = await loginSchema.validate({
+    const value = await loginSchema.parseAsync({
       email: 'riya@duncit.com',
       password: 'StrongPass123',
       portal_key: 'tech',

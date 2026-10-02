@@ -13,10 +13,12 @@
  * and fetches whatever was not primed, which is what keeps single-pod reads
  * (`pod`, `podBySlugs`) correct without a priming step of their own.
  */
+import { Types } from 'mongoose';
 import { primeUserActors } from '@modules/access/user/user.loaders';
 import { primeClubs } from '@modules/clubs/club/club.loaders';
 import { primePodPlaces } from './pod.place';
-import type { CacheCarrier } from '@utils/request-cache';
+import { PodModel } from './pod.model';
+import { loadOne, type CacheCarrier } from '@utils/request-cache';
 
 interface PodRowRelations {
   club_id?: string | null;
@@ -50,4 +52,43 @@ export async function primePodRelations(
     primeUserActors(carrier, userIds),
     primePodPlaces(carrier, rows),
   ]);
+}
+
+/** The pod a payment, coupon or product order points at, as those rows show it. */
+export interface PodSummary {
+  id: string;
+  pod_id: string;
+  pod_title: string;
+  pod_date_time: string | null;
+  pod_amount: number;
+}
+
+const POD_SUMMARY_BUCKET = 'podSummary';
+
+async function fetchPodSummaries(ids: string[]): Promise<Map<string, PodSummary>> {
+  const valid = ids.filter((id) => Types.ObjectId.isValid(id));
+  const pods = await PodModel.find({ _id: { $in: valid } })
+    .select('pod_id pod_title pod_date_time pod_amount')
+    .lean();
+  return new Map(
+    pods.map((p) => [
+      String(p._id),
+      {
+        id: String(p._id),
+        pod_id: p.pod_id,
+        pod_title: p.pod_title,
+        pod_date_time: p.pod_date_time?.toISOString?.() ?? null,
+        pod_amount: p.pod_amount,
+      },
+    ])
+  );
+}
+
+/**
+ * `Payment.pod`, `Coupon.pod` and `ProductOrder.pod`. Each was a `findById` per
+ * row — three identical copies — so a 50-row payments table cost 50 reads.
+ * Rows asking in the same tick now share one `$in` read.
+ */
+export function loadPodSummary(carrier: CacheCarrier, id: unknown): Promise<PodSummary | null> {
+  return loadOne(carrier, POD_SUMMARY_BUCKET, id ? String(id) : null, fetchPodSummaries);
 }

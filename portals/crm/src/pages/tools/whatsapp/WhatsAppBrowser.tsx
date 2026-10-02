@@ -24,7 +24,8 @@ import { DuncitButton } from '@duncit/buttons';
 import { WA_COMMUNITIES, WA_CONTACTS, WA_GROUPS } from './whatsappQueries';
 import { useExtraction } from './extraction';
 import GroupMembersDialog, { type GroupRef } from './GroupMembersDialog';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation } from '@duncit/shell';
+import { fireAndForget, logs } from '@duncit/logs';
 
 const TAB_KEYS = ['communities', 'groups', 'users'] as const;
 type BrowserTab = (typeof TAB_KEYS)[number];
@@ -100,7 +101,7 @@ export default function WhatsAppBrowser() {
           mb: 1
         }}>
         <DuncitTabs {...tabs} />
-        <DuncitButton size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => void startExtraction()}>
+        <DuncitButton size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => fireAndForget(startExtraction(), logs.portal.crm, 'WhatsAppBrowser', 'startExtraction')}>
           {running ? 'Extracting…' : 'Extract'}
         </DuncitButton>
       </Stack>

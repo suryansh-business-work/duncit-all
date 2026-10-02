@@ -8,7 +8,7 @@
  */
 import { PodDraftModel } from './pod-draft.model';
 import { DAY_MS, draftRetentionDays } from './pod-draft.retention';
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const SWEEP_INTERVAL_MS = DAY_MS; // once every 24h (off-peak-agnostic)
 const FIRST_SWEEP_DELAY_MS = 60_000; // ~1 min after boot
@@ -25,22 +25,11 @@ export async function runPodDraftCleanup(): Promise<number> {
 /** Start the daily draft-cleanup loop (first sweep ~1 min after boot). Returns a
  * stop function. No-ops under NODE_ENV=test. */
 export function startPodDraftCleanupScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const sweep = () => {
-    runPodDraftCleanup().catch((err) => {
-      logs.server.error('pod-draft-cleanup', 'sweep', {
-        error: err,
-        msg: 'sweep failed',
-      });
-    });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for draft cleanup.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'pod-draft-cleanup',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: runPodDraftCleanup,
+  });
 }

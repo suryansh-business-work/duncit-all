@@ -6,7 +6,7 @@
  *
  * No-ops under NODE_ENV=test.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { checkDueAlerts } from './analyticsAlert.check';
 
 const TICK_MS = 5 * 60_000;
@@ -14,25 +14,11 @@ const TICK_MS = 5 * 60_000;
 const FIRST_TICK_DELAY_MS = 240_000;
 
 export function startAnalyticsAlertScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  let running = false;
-  const tick = () => {
-    if (running) return;
-    running = true;
-    checkDueAlerts()
-      .catch((err) => {
-        logs.server.error('analytics-alert-scheduler', 'tick', { error: err, msg: 'tick failed' });
-      })
-      .finally(() => {
-        running = false;
-      });
-  };
-  const first = setTimeout(tick, FIRST_TICK_DELAY_MS);
-  const interval = setInterval(tick, TICK_MS);
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'analytics-alert-scheduler',
+    operation: 'tick',
+    firstDelayMs: FIRST_TICK_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: checkDueAlerts,
+  });
 }

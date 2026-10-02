@@ -1,15 +1,22 @@
 import { GraphQLError } from 'graphql';
-import type { Schema } from 'yup';
+import type { z } from 'zod';
+import { messagesOf } from './zod-fields';
 
-export async function validate<T>(schema: Schema<T>, data: unknown): Promise<T> {
+const invalid = (errors: string[]) =>
+  new GraphQLError('Validation failed', {
+    extensions: {
+      code: 'BAD_USER_INPUT',
+      errors,
+    },
+  });
+
+export async function validate<T>(schema: z.ZodType<T>, data: unknown): Promise<T> {
+  let result: z.ZodSafeParseResult<T>;
   try {
-    return (await schema.validate(data, { abortEarly: false, stripUnknown: true })) as T;
-  } catch (err: any) {
-    throw new GraphQLError('Validation failed', {
-      extensions: {
-        code: 'BAD_USER_INPUT',
-        errors: err?.errors ?? [String(err)],
-      },
-    });
+    result = await schema.safeParseAsync(data);
+  } catch (err) {
+    throw invalid([String(err)]);
   }
+  if (!result.success) throw invalid(messagesOf(result.error));
+  return result.data;
 }

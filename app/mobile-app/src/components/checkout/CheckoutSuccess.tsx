@@ -14,6 +14,7 @@ import type { CheckoutPod } from '@/hooks/useCheckout';
 import { formatMoney } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 export interface CheckoutSuccessProps {
   /** The pod payment, or the product checkout's — which never carries a ticket discount. */
@@ -126,7 +127,7 @@ export function CheckoutSuccess({
           testID="download-ticket"
           ariaLabel={t('mweb.ticket.download')}
           busy={ticketBusy}
-          onPress={() => void downloadTicket()}
+          onPress={() => fireAndForget(downloadTicket())}
           label={t('mweb.ticket.download')}
           iconName="confirmation-number"
           variant="filled"
@@ -137,7 +138,7 @@ export function CheckoutSuccess({
         testID="download-invoice"
         ariaLabel={invoiceLabel}
         busy={busy}
-        onPress={() => void download()}
+        onPress={() => fireAndForget(download())}
         label={invoiceLabel}
         iconName="download"
         variant="outlined"

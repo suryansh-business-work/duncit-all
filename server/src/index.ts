@@ -58,6 +58,8 @@ import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import type { ApolloServerPlugin } from '@apollo/server';
 import { unwrapResolverError } from '@apollo/server/errors';
+import { depthLimitRule, MAX_QUERY_DEPTH } from '@utils/graphqlDepthLimit';
+import { startSchedulerLease } from '@utils/schedulerLeader';
 import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
@@ -472,6 +474,12 @@ async function bootstrap() {
     await seedStatusIncidents();
   });
 
+  // One process in the cluster runs the jobs below that must not run twice
+  // (utils/clusterJob.ts). Started first, so the lease is settled before the
+  // earliest of them ticks. The samplers and flushers further down are per
+  // process by nature and do not take part.
+  startSchedulerLease();
+
   // Status-page history: probe every monitored service every 5 minutes.
   if (process.env.NODE_ENV !== 'test' && process.env.STATUS_PROBES_DISABLED !== '1') {
     startStatusScheduler();
@@ -586,7 +594,7 @@ async function bootstrap() {
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released
   // seat nobody took, and the four feedback asks once a pod has ended. Runs on
-  // a single replica only; see the note at the top of whatsapp.scheduler.ts.
+  // the scheduler leader only, like every job above.
   startWhatsappScheduler();
 
   const app = express();
@@ -617,6 +625,16 @@ async function bootstrap() {
 
   // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
   app.set('trust proxy', 1);
+
+  // Do not advertise the framework, and pin every response to its declared
+  // type. The front-ends get the same headers from deploy/nginx/spa.conf; there
+  // is no X-Frame-Options here because the API serves no page worth framing.
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+    next();
+  });
 
   // Carry the caller (verified account, address, user agent, device id) through
   // the whole request, so every `logs.server.*` written while handling it is
@@ -667,6 +685,9 @@ async function bootstrap() {
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
+    // Rate limiting counts requests, not their cost: one cyclic, deeply nested
+    // query is a single request that can still make thousands of reads.
+    validationRules: [depthLimitRule(MAX_QUERY_DEPTH)],
     // Node's fetch reports every outbound transport failure as the same bare
     // "fetch failed" and hides the reason (DNS, refused, TLS, timeout) in
     // error.cause. Any resolver that lets one escape would hand clients those

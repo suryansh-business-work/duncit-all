@@ -1,16 +1,10 @@
 import { useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {
-  DuncitButton,
-  DuncitIconButton,
-  DuncitRoundButton,
-  PRESS,
-  pressCss,
-  type RoundButtonTone,
-} from '@duncit/buttons';
+import { DuncitButton, DuncitIconButton, PRESS, pressCss } from '@duncit/buttons';
 import { defineDemo, defineDemos } from '../types';
+// The round close button's stage lives beside this file.
+import { RoundStage, type RoundMock } from './buttons/RoundStage';
 
 type MuiVariant = 'contained' | 'outlined' | 'text';
 
@@ -72,12 +66,6 @@ export default defineDemos('buttons', [
   }),
 ]);
 
-interface RoundMock {
-  label: string;
-  tone: RoundButtonTone;
-  thumbnail: number;
-}
-
 interface AsyncMock {
   label: string;
   serverMs: number;
@@ -119,51 +107,6 @@ function AsyncStage({ mock }: Readonly<{ mock: AsyncMock }>) {
   );
 }
 
-/** Hoisted for the same reason as `ButtonStage`. */
-function RoundStage({ mock }: Readonly<{ mock: RoundMock }>) {
-  return (
-    <Stack spacing={2}>
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-        {(['small', 'medium', 'large'] as const).map((size) => (
-          <DuncitRoundButton key={size} size={size} tone={mock.tone} aria-label={`Close ${size}`}>
-            <CloseIcon />
-          </DuncitRoundButton>
-        ))}
-        <Typography variant="body2" noWrap>
-          24px · 36px · 44px
-        </Typography>
-      </Stack>
-      <Box
-        sx={{
-          position: 'relative',
-          width: mock.thumbnail,
-          height: mock.thumbnail,
-          borderRadius: '16px',
-          bgcolor: 'action.hover',
-          border: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <DuncitRoundButton
-          size="small"
-          tone={mock.tone}
-          aria-label="Remove pod media"
-          sx={{ position: 'absolute', top: 2, right: 2 }}
-        >
-          <CloseIcon />
-        </DuncitRoundButton>
-      </Box>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {mock.label}
-        </Typography>
-        <DuncitRoundButton tone={mock.tone} aria-label="Close sheet">
-          <CloseIcon />
-        </DuncitRoundButton>
-      </Stack>
-    </Stack>
-  );
-}
 
 const INTENT_BY_VARIANT = {
   contained: 'solid',

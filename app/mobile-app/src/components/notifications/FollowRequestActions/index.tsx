@@ -17,6 +17,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AnswerActions, FollowBackAction } from './FollowActionRows';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Props {
   /** The notification's action kind — FOLLOW_REQUEST or NEW_FOLLOWER; anything
@@ -144,8 +145,8 @@ export function FollowRequestActions({
           accentInk={accentInk}
           quietInk={quietInk}
           dimQuiet={Boolean(unreadRow)}
-          onAccept={() => void answer(true)}
-          onDeny={() => void answer(false)}
+          onAccept={() => fireAndForget(answer(true))}
+          onDeny={() => fireAndForget(answer(false))}
         />
       ) : null}
       {!open && settledLabel ? (

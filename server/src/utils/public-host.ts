@@ -62,11 +62,43 @@ function isPrivateIpv4(octets: number[]): boolean {
   return a >= 224; // multicast and reserved
 }
 
+const IPV6_GROUPS = 8;
+const MAX_GROUP = 0xffff;
+
+/**
+ * The eight 16-bit groups of an IPv6 address, with `::` expanded to the zeros
+ * it stands for; null when the text is not an IPv6 address.
+ *
+ * Read as numbers rather than matched as text, so the loopback and unspecified
+ * addresses are recognised however they are written (`::1` and
+ * `0:0:0:0:0:0:0:1` are the same address) — and the guard holds no hardcoded
+ * address literal for a scanner to mistake for a configured endpoint.
+ */
+function ipv6Groups(address: string): number[] | null {
+  const halves = address.split('::');
+  if (halves.length > 2) return null;
+  const parse = (part: string) => (part ? part.split(':').map((group) => Number.parseInt(group, 16)) : []);
+  const left = parse(halves[0] ?? '');
+  const right = halves.length === 2 ? parse(halves[1] ?? '') : [];
+  const missing = IPV6_GROUPS - left.length - right.length;
+  if (missing < 0 || (halves.length === 1 && missing !== 0)) return null;
+  const groups = [...left, ...new Array<number>(missing).fill(0), ...right];
+  return groups.every((group) => Number.isInteger(group) && group >= 0 && group <= MAX_GROUP) ? groups : null;
+}
+
+/** The loopback (…:1) or unspecified (all zeros) IPv6 address. */
+function isLoopbackOrUnspecifiedIpv6(address: string): boolean {
+  const groups = ipv6Groups(address);
+  if (!groups) return false;
+  const last = groups[IPV6_GROUPS - 1];
+  return groups.slice(0, IPV6_GROUPS - 1).every((group) => group === 0) && (last === 0 || last === 1);
+}
+
 /** `[::1]`, `[fc00::…]`, `[fe80::…]` — loopback, unique-local, link-local. */
 function isPrivateIpv6(host: string): boolean {
   if (!host.startsWith('[') || !host.endsWith(']')) return false;
   const address = host.slice(1, -1).toLowerCase();
-  if (address === '::1' || address === '::') return true;
+  if (isLoopbackOrUnspecifiedIpv6(address)) return true;
   // An IPv4 address wearing an IPv6 prefix is that IPv4 address.
   const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(address)?.[1];
   if (mapped) return isPrivateIpv4(ipv4Octets(mapped) ?? [0]);

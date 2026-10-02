@@ -2162,6 +2162,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewClubDetails: 'View club details',
       closeClubDetails: 'Close club details',
       noDescription: 'No description yet.',
+      // View club details: rating, WhatsApp chats and the admins' contacts.
+      clubRatingsCount: {
+        one: '{count} rating',
+        other: '{count} ratings',
+      },
+      clubNoRatings: 'No ratings yet',
+      clubAdmins: 'Club admins',
+      clubDetailsLoadFailed: 'Could not load the club details. Please try again.',
       // Open venue slots per club — a physical pod cannot be planned without one.
       clubSlots: {
         one: '{count} open slot',

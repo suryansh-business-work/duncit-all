@@ -108,3 +108,19 @@ export const REQUEST_CLUB_VENUE_SLOTS = gql`
     }
   }
 `;
+
+/** The selected club's "View club details" dialog — rating, WhatsApp chats and
+ * the admins' contact details. Read on demand for one club, so the step-1 club
+ * list stays free of contact details it would otherwise carry for every row. */
+export const CREATE_POD_CLUB_DETAILS = gql`
+  query CreatePodClubDetails($club_doc_id: ID!) {
+    club(club_doc_id: $club_doc_id) {
+      id
+      rating
+      ratings_count
+      club_whats_app_community_link
+      club_whats_app_group_link
+      club_admins { id name avatar_url email phone whatsapp }
+    }
+  }
+`;

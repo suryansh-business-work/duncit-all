@@ -52,7 +52,8 @@ async function credentials() {
 const MSG91_ZONE_OFFSET = '+05:30';
 
 function toInstant(value: unknown): string {
-  const local = String(value ?? '').trim().replace(' ', 'T');
+  const text = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+  const local = text.trim().replace(' ', 'T');
   const date = new Date(local + MSG91_ZONE_OFFSET);
   return local && !Number.isNaN(date.getTime()) ? date.toISOString() : '';
 }

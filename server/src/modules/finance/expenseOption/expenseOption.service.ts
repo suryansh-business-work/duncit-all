@@ -35,7 +35,8 @@ const KIND_FIELD: Record<ExpenseOptionKind, string> = {
   COMPENSATION_METHOD: 'compensation_method',
 };
 
-const clean = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
+const clean = (value: unknown, max: number) =>
+  (typeof value === 'string' || typeof value === 'number' ? String(value) : '').trim().slice(0, max);
 
 /** CONSTANT_CASE, because the key is what an expense row carries forever. */
 const toKey = (value: unknown) =>

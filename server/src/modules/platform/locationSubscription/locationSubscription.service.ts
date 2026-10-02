@@ -171,7 +171,8 @@ export const locationSubscriptionService = {
     );
     const ids = [...new Set(docs.map((doc) => doc.location_id.toHexString()))];
     const cities = await locationService.listByIds(ids);
-    const cityById = new Map(cities.map((city) => [city!.id, cityOf(city!)]));
+    const cityById = new Map<string, string>();
+    for (const city of cities) if (city) cityById.set(city.id, cityOf(city));
     return { rows: docs.map((doc) => subscriptionPub(doc, cityById)), total, page, page_size };
   },
 

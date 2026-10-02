@@ -76,7 +76,7 @@ const ADMIN_TABLE_CONFIG: TableEntityConfig = {
 };
 
 /** The one place a live request is recognised. */
-const LIVE_STATUSES = ['OPEN', 'OFFERED'];
+const LIVE_STATUSES = new Set(['OPEN', 'OFFERED']);
 
 const DUPLICATE_MESSAGE =
   'You already have an open change request for this pod. Duncit is working on it.';
@@ -104,7 +104,7 @@ async function actorName(userId: string | null): Promise<string> {
  * releases the unique index so the partner may ask again later. */
 function setStatus(doc: IPodChangeRequest, status: IPodChangeRequest['status']) {
   doc.status = status;
-  doc.is_open = LIVE_STATUSES.includes(status);
+  doc.is_open = LIVE_STATUSES.has(status);
 }
 
 /**
@@ -278,19 +278,19 @@ export const podChangeRequestService = {
     passReason: string
   ) {
     const doc = await loadRequest(requestId);
-    if (doc.status !== 'OFFERED' || !doc.offer || doc.offer.status !== 'PENDING') {
+    if (doc.status !== 'OFFERED' || doc.offer?.status !== 'PENDING') {
       changeRequestFail('BAD_REQUEST', 'This request is no longer waiting on you');
     }
-    if (String(doc.offer!.user_id) !== userId) {
+    if (String(doc.offer.user_id) !== userId) {
       changeRequestFail('FORBIDDEN', 'This offer was not made to you');
     }
     const name = await actorName(userId);
 
     if (decision === 'PASS') {
-      doc.offer!.status = 'PASSED';
-      doc.offer!.responded_at = new Date();
-      doc.offer!.pass_reason = String(passReason ?? '').trim().slice(0, 500);
-      doc.offer_history.push(doc.offer! as any);
+      doc.offer.status = 'PASSED';
+      doc.offer.responded_at = new Date();
+      doc.offer.pass_reason = String(passReason ?? '').trim().slice(0, 500);
+      doc.offer_history.push(doc.offer as any);
       doc.offer = null;
       setStatus(doc, 'OPEN');
       appendEvent(doc, 'PASSED', userId, name, doc.offer_history.at(-1)?.pass_reason ?? '');
@@ -309,15 +309,15 @@ export const podChangeRequestService = {
 
     let outcome;
     try {
-      outcome = await applyReplacement(doc, pod, doc.offer!);
+      outcome = await applyReplacement(doc, pod, doc.offer);
     } catch (error) {
       logAssignFailure(doc, error);
       throw error;
     }
 
-    doc.offer!.status = 'APPROVED';
-    doc.offer!.responded_at = new Date();
-    doc.offer_history.push(doc.offer! as any);
+    doc.offer.status = 'APPROVED';
+    doc.offer.responded_at = new Date();
+    doc.offer_history.push(doc.offer as any);
     setStatus(doc, 'RESOLVED');
     doc.resolution = 'REPLACED';
     doc.resolved_at = new Date();

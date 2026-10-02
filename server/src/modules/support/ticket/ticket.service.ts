@@ -407,7 +407,7 @@ export const ticketService = {
     const doc = await TicketModel.findById(input.ticket_id);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     assertCanReply(doc, actorId, isAgent);
-    const asAgent = actsAsAgent(doc!, actorId, isAgent);
+    const asAgent = actsAsAgent(doc, actorId, isAgent);
 
     const meta = await actorMeta(actorId, asAgent ? 'AGENT' : 'USER');
     doc!.messages.push({
@@ -448,7 +448,7 @@ export const ticketService = {
       fail('FORBIDDEN', 'Cannot read another user’s ticket');
     }
     const now = new Date();
-    const asAgent = actsAsAgent(doc!, actorId, isAgent);
+    const asAgent = actsAsAgent(doc, actorId, isAgent);
     if (asAgent) doc!.agent_last_read_at = now;
     else doc!.user_last_read_at = now;
     await doc.save();
@@ -507,7 +507,7 @@ export const ticketService = {
       fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
     }
     // Log the reopen (with reason) into the thread for history.
-    const meta = await actorMeta(actorId, actsAsAgent(doc!, actorId, isAgent) ? 'AGENT' : 'USER');
+    const meta = await actorMeta(actorId, actsAsAgent(doc, actorId, isAgent) ? 'AGENT' : 'USER');
     const trimmed = (reason || '').trim();
     doc!.messages.push({
       ...meta.author,
@@ -593,7 +593,7 @@ export const ticketService = {
     const authors = await userDisplayMap(doc!.messages.map((m) => String(m.author_id)));
     const lines = doc!.messages.map((m) => {
       let who: string;
-      const role = authorRoleOf(doc!, m);
+      const role = authorRoleOf(doc, m);
       if (role === 'USER') who = userName || 'You';
       else if (role === 'SYSTEM') who = 'System';
       else who = displayFrom(authors, m.author_id).name || 'Support';

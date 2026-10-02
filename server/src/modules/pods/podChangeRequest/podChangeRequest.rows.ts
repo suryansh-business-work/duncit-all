@@ -129,7 +129,7 @@ function podRefOf(pod: any, clubById: Map<string, any>): PodRef {
   };
 }
 
-function named(map: Map<string, any>, id: unknown, key: string) {
+function named(map: Map<string, any>, id: Types.ObjectId | string | null | undefined, key: string) {
   if (!id) return { id: null as string | null, name: '' };
   const doc = map.get(String(id));
   return { id: String(id), name: doc?.[key] ?? '' };

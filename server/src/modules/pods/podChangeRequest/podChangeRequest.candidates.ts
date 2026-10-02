@@ -205,9 +205,9 @@ export async function candidatesForRequest(
       'This pod’s club has no category, so Duncit cannot match a replacement. Set the club’s category first.'
     );
   }
-  if (role === 'VENUE') return venueCandidates(subCategoryId!, locationId, exclude.venueId);
-  if (role === 'HOST') return hostCandidates(subCategoryId!, exclude.userIds);
-  return clubAdminCandidates(subCategoryId!, locationId, exclude.userIds);
+  if (role === 'VENUE') return venueCandidates(subCategoryId, locationId, exclude.venueId);
+  if (role === 'HOST') return hostCandidates(subCategoryId, exclude.userIds);
+  return clubAdminCandidates(subCategoryId, locationId, exclude.userIds);
 }
 
 /**

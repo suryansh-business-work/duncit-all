@@ -139,7 +139,8 @@ async function bookedPhoneKeys(membership: any): Promise<Set<string>> {
   // same person. Inert here (a stored number is 6-15 digits, so it can never
   // collide with a bare code) but the same trap, one edit from being live.
   const add = (extension: unknown, number: unknown) => {
-    if (!String(number ?? '').trim()) return;
+    const digits = typeof number === 'string' || typeof number === 'number' ? String(number) : '';
+    if (!digits.trim()) return;
     const key = phoneKey(extension, number);
     if (key) keys.add(key);
   };

@@ -43,10 +43,10 @@ const CONSOLE_ROLE: Record<ConsoleEntity, string> = {
 };
 
 /** Which entities the onboarding desk reviews (a club is not an application). */
-const ONBOARDED: ConsoleEntity[] = ['VENUE', 'HOST', 'CLUB_ADMIN'];
+const ONBOARDED: ReadonlySet<ConsoleEntity> = new Set<ConsoleEntity>(['VENUE', 'HOST', 'CLUB_ADMIN']);
 
 const governors = (entity: ConsoleEntity): string[] =>
-  ONBOARDED.includes(entity) ? [...PLATFORM, ONBOARDING] : [...PLATFORM];
+  ONBOARDED.has(entity) ? [...PLATFORM, ONBOARDING] : [...PLATFORM];
 
 /**
  * Approving, money and the live switch. The console role is absent on purpose.

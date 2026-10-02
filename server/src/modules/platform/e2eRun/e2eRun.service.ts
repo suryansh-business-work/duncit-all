@@ -889,7 +889,7 @@ export const e2eRunService = {
     const run = (await E2eRunModel.findById(found._id)) ?? found;
     const stage = str(input.stage);
     const status: E2eRunStatus | null = input.status ?? null;
-    run.totals = totalsOf(run.results ?? []) as IE2eRun['totals'];
+    run.totals = totalsOf(run.results ?? []);
 
     const stages = nextStages(run, stage);
     if (stages.stages) run.stages = stages.stages;

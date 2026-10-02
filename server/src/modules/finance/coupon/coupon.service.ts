@@ -171,6 +171,29 @@ function redeemerFilter(userId: string | null | undefined, email: string | null 
   return address ? { user_email: address } : null;
 }
 
+/** Why an active coupon's own terms (scope, window, minimum, usage cap) rule
+ * this order out, or null when they all allow it. */
+function couponTermsRejection(
+  coupon: ICoupon,
+  podId: string | null,
+  original: number,
+  channel: CouponRedeemContext['channel']
+): string | null {
+  if (coupon.scope === 'POD' && String(coupon.pod_id) !== String(podId))
+    return 'This coupon is not valid for this pod';
+  if (coupon.scope === 'STORE' && channel !== 'STORE')
+    return 'This coupon is only valid on the Duncit Pet Store';
+
+  const now = Date.now();
+  if (coupon.valid_from && now < coupon.valid_from.getTime()) return 'Coupon is not active yet';
+  if (coupon.valid_until && now > coupon.valid_until.getTime()) return 'Coupon has expired';
+  if (coupon.min_order_amount && original < coupon.min_order_amount)
+    return `Minimum order of ₹${coupon.min_order_amount} required`;
+  if (coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
+    return 'Coupon usage limit reached';
+  return null;
+}
+
 async function evaluate(
   code: string,
   podId: string | null,
@@ -191,18 +214,8 @@ async function evaluate(
 
   const coupon = await CouponModel.findOne({ code: String(code).toUpperCase().trim() });
   if (!coupon?.is_active) return fail('Invalid or inactive coupon code');
-  if (coupon.scope === 'POD' && String(coupon.pod_id) !== String(podId))
-    return fail('This coupon is not valid for this pod');
-  if (coupon.scope === 'STORE' && redeem?.channel !== 'STORE')
-    return fail('This coupon is only valid on the Duncit Pet Store');
-
-  const now = Date.now();
-  if (coupon.valid_from && now < coupon.valid_from.getTime()) return fail('Coupon is not active yet');
-  if (coupon.valid_until && now > coupon.valid_until.getTime()) return fail('Coupon has expired');
-  if (coupon.min_order_amount && original < coupon.min_order_amount)
-    return fail(`Minimum order of ₹${coupon.min_order_amount} required`);
-  if (coupon.max_uses != null && coupon.used_count >= coupon.max_uses)
-    return fail('Coupon usage limit reached');
+  const rejection = couponTermsRejection(coupon, podId, original, redeem?.channel);
+  if (rejection) return fail(rejection);
   const redeemer = redeemerFilter(userId, redeem?.email);
   if (coupon.per_user_limit != null && redeemer) {
     const used = await PaymentModel.countDocuments({

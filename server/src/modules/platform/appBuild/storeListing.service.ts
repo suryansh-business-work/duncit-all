@@ -83,6 +83,10 @@ const isHttpsUrl = (value: string): boolean => {
 const URL_LIKE = /https?:\/\/|www\.|\b[\w-]+\.[a-z]{2,}\b/i;
 const COPYRIGHT_NO_URL = 'copyright must not contain a URL or web address — Apple wants the year and the owner, e.g. 2026 Duncit.';
 
+/** A sent scalar field as trimmed text; anything that is not a string or number reads as blank. */
+const inputText = (value: unknown): string =>
+  (typeof value === 'string' || typeof value === 'number' ? String(value) : '').trim();
+
 /** The one listing, created empty the first time anyone asks. */
 export async function getStoreListing(): Promise<IStoreListing> {
   return StoreListingModel.findOneAndUpdate(
@@ -105,7 +109,7 @@ function assertUrlList(field: string, values: unknown, max: number): string[] {
 function applyTextFields(doc: IStoreListing, input: Record<string, unknown>): void {
   for (const [field, max] of Object.entries(TEXT_LIMITS)) {
     if (input[field] === undefined) continue;
-    const value = String(input[field] ?? '').trim();
+    const value = inputText(input[field]);
     if (value.length > max) throw badInput(`${field} is ${value.length} characters; the stores allow ${max}.`);
     doc.set(field, value);
   }
@@ -116,7 +120,7 @@ function applyTextFields(doc: IStoreListing, input: Record<string, unknown>): vo
 function applyUrlFields(doc: IStoreListing, input: Record<string, unknown>): void {
   for (const field of URL_FIELDS) {
     if (input[field] === undefined) continue;
-    const value = String(input[field] ?? '').trim();
+    const value = inputText(input[field]);
     if (value && !isHttpsUrl(value)) throw badInput(`${field} must be an https URL.`);
     doc.set(field, value);
   }
@@ -134,7 +138,7 @@ export async function updateStoreListing(input: Record<string, unknown>, by: str
   applyUrlFields(doc, input);
   for (const field of PLAIN_FIELDS) {
     if (input[field] === undefined) continue;
-    doc.set(field, String(input[field] ?? '').trim());
+    doc.set(field, inputText(input[field]));
   }
   if (input.demo_account_required !== undefined) doc.demo_account_required = Boolean(input.demo_account_required);
   if (!doc.locale) doc.locale = 'en-US';

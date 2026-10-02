@@ -15,10 +15,10 @@
  * also pass an explicit `tz` override.
  */
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
-import { DEFAULT_APP_ZONE, getAppTimeZone, setAppTimeSettings } from '@utils/app-time';
+import { getAppTimeZone, setAppTimeSettings } from '@utils/app-time';
 
 export const REOPEN_WINDOW_DAYS = 3;
-export const DEFAULT_REOPEN_ZONE = DEFAULT_APP_ZONE;
+export { DEFAULT_APP_ZONE as DEFAULT_REOPEN_ZONE } from '@utils/app-time';
 
 /** Refresh the cached IANA zone used for calendar-day math — the app-wide one. */
 export function setReopenWindowZone(tz?: string | null): void {

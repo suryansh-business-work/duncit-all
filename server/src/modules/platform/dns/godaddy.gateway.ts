@@ -153,7 +153,7 @@ async function zoneCall(cfg: Readonly<GodaddyConfig>, method: string, path: stri
   });
   const payload = await readBody(res);
   if (!res.ok) {
-    const reason = godaddyReason((payload ?? {}) as GodaddyErrorBody);
+    const reason = godaddyReason(payload ?? {});
     const message = refusal(res.status, cfg.domain);
     throw new GraphQLError(reason ? `${message} GoDaddy said: ${reason}` : message, {
       extensions: { code: res.status === 422 ? 'BAD_USER_INPUT' : 'BAD_GATEWAY', godaddy_status: res.status },

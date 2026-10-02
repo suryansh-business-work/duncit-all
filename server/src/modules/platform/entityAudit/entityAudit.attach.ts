@@ -1,4 +1,4 @@
-import type { Model, Query, Schema } from 'mongoose';
+import type { Model, Query, Schema, Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { updatePaths } from '@utils/doc-diff';
 import { ENTITY_AUDIT_CONFIG } from './entityAudit.fields';
@@ -100,7 +100,7 @@ function attachUpdateHooks(schema: Schema, entityType: EntityAuditType): void {
 
     schema.post(op, async function writeAfter(this: AuditQuery) {
       if (this.entityAuditSkip) return;
-      const before = this.entityAuditBefore as { _id?: unknown } | null;
+      const before = this.entityAuditBefore as { _id?: Types.ObjectId | string } | null;
       if (!before?._id) return;
       const after = await this.model.findById(before._id).lean();
       logChange(entityType, String(before._id), before, after, 'UPDATE');
@@ -116,7 +116,7 @@ function attachDeleteHooks(schema: Schema, entityType: EntityAuditType): void {
     });
 
     schema.post(op, function writeAfter(this: AuditQuery) {
-      const before = this.entityAuditBefore as { _id?: unknown } | null;
+      const before = this.entityAuditBefore as { _id?: Types.ObjectId | string } | null;
       if (!before?._id) return;
       logChange(entityType, String(before._id), before, null, 'DELETE');
     });

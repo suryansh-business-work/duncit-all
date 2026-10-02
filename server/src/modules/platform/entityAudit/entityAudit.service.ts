@@ -60,19 +60,25 @@ export function entityActorType(
   return ownerId && actorId === ownerId ? 'OWNER' : 'ADMIN';
 }
 
+/** A stored id or scalar as text; null when it is empty or anything else. */
+function storedText(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Types.ObjectId) return value.toHexString();
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return null;
+}
+
 /** The id of the account a record belongs to, when its entity has one. */
 function ownerIdOf(entityType: EntityAuditType, doc: unknown): string | null {
   const { ownerPath } = ENTITY_AUDIT_CONFIG[entityType];
   if (!ownerPath) return null;
-  const value = readPath(doc, ownerPath);
-  return value ? String(value) : null;
+  return storedText(readPath(doc, ownerPath));
 }
 
 /** The record's human name, from whichever side of the write has one. */
 function labelOf(entityType: EntityAuditType, after: unknown, before: unknown): string {
   const { labelPath } = ENTITY_AUDIT_CONFIG[entityType];
-  const value = readPath(after, labelPath) ?? readPath(before, labelPath);
-  return value ? String(value) : '';
+  return storedText(readPath(after, labelPath) ?? readPath(before, labelPath)) ?? '';
 }
 
 const toPub = (doc: IEntityChangeLog) => ({

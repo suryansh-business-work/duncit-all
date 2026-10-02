@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EMAIL } from '@duncit/regex';
 import { GSTIN_PATTERN, PAN_PATTERN, PHONE_NUMBER_PATTERN, POSTAL_CODE_PATTERN, PUBLIC_URL_PATTERN } from '@duncit/forms';
 import type { EcommBrand } from './queries';
 
@@ -40,7 +41,6 @@ export type BrandFormValues = z.infer<typeof brandSchema>;
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const UPI_PATTERN = /^[\w.-]+@[\w-]+$/;
 const YEAR_PATTERN = /^\d{4}$/;
-const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 type Translate = (key: string) => string;
 
@@ -62,7 +62,7 @@ export const makeBrandSchema = (t: Translate) =>
       .refine((value) => value === '' || value.length >= 20, t('partners.brandWizard.validation.descriptionMin')),
     website_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
     instagram_url: whenFilled(PUBLIC_URL_PATTERN, t('partners.brandWizard.validation.url')),
-    contact_email: whenFilled(EMAIL_PATTERN, t('partners.brandWizard.validation.email')),
+    contact_email: whenFilled(EMAIL, t('partners.brandWizard.validation.email')),
     contact_phone: whenFilled(PHONE_NUMBER_PATTERN, t('partners.brandWizard.validation.phone')),
     gstin: whenFilled(GSTIN_PATTERN, t('partners.brandWizard.validation.gstin')),
     pan: whenFilled(PAN_PATTERN, t('partners.brandWizard.validation.pan')),

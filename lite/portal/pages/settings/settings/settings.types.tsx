@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EMAIL } from '@duncit/regex';
 import type { Translate } from '@duncit/forms/schemas';
 import type { LiteAdminSettings } from '../../../graphql/admin';
 
@@ -27,7 +28,6 @@ const TIME_ZONE_SET: ReadonlySet<string> = new Set(TIME_ZONES);
 const DIGITS = /^\d+$/;
 const HOURS_LIST = /^\d+(\s*,\s*\d+)*$/;
 const CURRENCY = /^[A-Z]{3}$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const splitList = (text: string): string[] =>
   text

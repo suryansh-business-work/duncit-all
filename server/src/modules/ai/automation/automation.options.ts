@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { trimTrailingSlash } from '@utils/url';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
@@ -50,7 +51,7 @@ async function whatsappOptions() {
     campaigns,
     templates,
     saved_campaign_names: saved.map((row: any) => ({ id: String(row._id), name: row.name, description: row.description ?? '' })),
-    webhook_url: `${serverUrl.replace(/\/+$/, '')}${WHATSAPP_WEBHOOK_PATH}`,
+    webhook_url: `${trimTrailingSlash(serverUrl)}${WHATSAPP_WEBHOOK_PATH}`,
     webhook_secret_set: Boolean(secret),
   };
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EMAIL } from '@duncit/regex';
 import type { DocumentNode } from '@apollo/client';
 import { CONNECT_BRAND_RAZORPAY, CONNECT_BRAND_SHIPROCKET, type BrandIntegrationProvider, type BrandIntegrationStatus } from '../../queries';
 import type { Translate } from '../wizard-steps';
@@ -21,8 +22,6 @@ export interface IntegrationFieldDef {
   /** A secret the server keeps: blank leaves the saved one in place. */
   secret?: boolean;
 }
-
-const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 /** The inputs each provider's card shows — labels are literal keys for the localization gate. */
 export const integrationFields = (t: Translate, provider: BrandIntegrationProvider): IntegrationFieldDef[] => {
@@ -90,7 +89,7 @@ export const makeIntegrationSchema = (t: Translate, provider: BrandIntegrationPr
       };
       if (provider === 'SHIPROCKET') {
         need('email', values.email.length > 0);
-        need('email', values.email.length === 0 || EMAIL_PATTERN.test(values.email), t('partners.brandWizard.validation.email'));
+        need('email', values.email.length === 0 || EMAIL.test(values.email), t('partners.brandWizard.validation.email'));
         need('password', hasSecret || values.password.length > 0);
         return;
       }

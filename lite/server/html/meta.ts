@@ -27,8 +27,9 @@ export function buildMetaTags(meta: PageMeta): string {
   const description = escapeHtml(meta.description);
   const url = escapeHtml(meta.url);
   const namesItself = meta.title.toLowerCase().includes(meta.siteName.toLowerCase());
+  const fullTitle = namesItself ? title : `${title} | ${siteName}`;
   const tags = [
-    `<title>${namesItself ? title : `${title} | ${siteName}`}</title>`,
+    `<title>${fullTitle}</title>`,
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${url}" />`,
     `<meta property="og:type" content="${meta.type ?? 'website'}" />`,
@@ -57,5 +58,7 @@ export function injectMeta(html: string, block: string): string {
 
 /** JSON-LD for an event, so search engines list it as one. */
 export function jsonLdTag(data: unknown): string {
-  return `<script type="application/ld+json">${JSON.stringify(data).replaceAll('<', String.raw`<`)}</script>`;
+  // Every `<` written as its JSON escape, so a value carrying `</script>` cannot close the tag.
+  const json = JSON.stringify(data).replaceAll('<', String.raw`\u003c`);
+  return `<script type="application/ld+json">${json}</script>`;
 }

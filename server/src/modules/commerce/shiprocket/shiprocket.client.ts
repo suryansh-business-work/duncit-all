@@ -228,6 +228,16 @@ async function send(path: string, init: RequestInit, bearer: string, opts: Reque
 }
 
 /**
+ * ShipRocket's reason without its closing full stop — the sentence it is pasted
+ * into adds its own. Walked rather than matched: `/\s*\.\s*$/` backtracks
+ * super-linearly on a long run of spaces (Sonar S5852).
+ */
+function withoutClosingStop(message: string): string {
+  const text = message.trimEnd();
+  return text.endsWith('.') ? text.slice(0, -1).trimEnd() : message;
+}
+
+/**
  * A refusal an operator can act on: which call, which endpoint, what ShipRocket
  * said. "ShipRocket: Unauthorized" on its own names neither the step that
  * stopped nor the thing to change.
@@ -237,7 +247,7 @@ async function parse<T>(res: Response, path: string, opts: RequestOptions): Prom
   if (res.ok) return data as T;
   const message = reasonOf(data, res.status);
   logs.server.error('shiprocket', opts.op, { status: res.status, path: route(path), msg: message });
-  const said = message.replace(/\s*\.\s*$/, '');
+  const said = withoutClosingStop(message);
   const hint = res.status === 403 ? ` ${PERMISSION_HINT}` : '';
   throw shiprocketError(`ShipRocket refused ${opts.op} (${route(path)}, HTTP ${res.status}): ${said}.${hint}`, res.status);
 }

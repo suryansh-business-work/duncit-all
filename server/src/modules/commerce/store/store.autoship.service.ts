@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { trimTrailingSlash } from '@utils/url';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 import { logs } from '@observability/log';
@@ -234,7 +235,7 @@ async function remind(sub: IStoreSubscription) {
       product_name: sub.product_name,
       qty: String(sub.qty),
       frequency: String(sub.frequency_weeks),
-      autoship_url: `${ecommUrl.replace(/\/+$/, '')}/autoship`,
+      autoship_url: `${trimTrailingSlash(ecommUrl)}/autoship`,
     },
   });
 }

@@ -3,6 +3,7 @@
  * and the WhatsApp/email notices each cancellation path sends.
  */
 import { podSeatsTaken } from './pod.seats';
+import { trimTrailingSlash } from '@utils/url';
 import { PodModel } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
@@ -332,7 +333,7 @@ async function whatsappPodCancellation(
     loadClubSlugMap([doc]),
   ]);
   const path = podNotificationLink(doc, clubSlugById);
-  const podLink = path ? `${mwebUrl.replace(/\/+$/, '')}${path}` : '';
+  const podLink = path ? `${trimTrailingSlash(mwebUrl)}${path}` : '';
   // `notifyEach`, not `sendEach`: the same fan-out now also sends
   // `user-pod-cancelled-by-host` / `-venue` / `-duncit`, filled from this very
   // array. `podAudience` already carries each attendee's address.

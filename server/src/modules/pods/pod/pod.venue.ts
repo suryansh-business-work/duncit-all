@@ -4,6 +4,7 @@
  * venue-slot booking or hold a new pod takes.
  */
 import { GraphQLError } from 'graphql';
+import { trimTrailingSlash } from '@utils/url';
 import { Types } from 'mongoose';
 import { type PodMode } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -95,8 +96,8 @@ export async function emailVenueSlotRequested(pod: any, slot: any) {
     // The two CTAs open the same decision page with the intent pre-selected.
     // The page is auth-gated, so a mail scanner following the link cannot
     // decide anything — and the venue owner lands back on it after logging in.
-    const decisionUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/requests/${String(slot._id)}`;
-    const reviewUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/requests`;
+    const decisionUrl = `${trimTrailingSlash(partnersUrl)}/venues/requests/${String(slot._id)}`;
+    const reviewUrl = `${trimTrailingSlash(partnersUrl)}/venues/requests`;
     await sendVenueSlotRequestEmail({
       to,
       owner_name: ownerName,

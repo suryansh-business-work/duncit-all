@@ -46,7 +46,14 @@ const MAX_DESCRIPTION = 500;
 const EMPTY: OpenGraphTags = { title: null, description: null, image: null, site_name: null };
 
 const META_TAG = /<meta\b[^>]*>/gi;
-const ATTRIBUTE = /([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+/**
+ * One `name="value"` pair. The lookbehind starts a match only at the head of a
+ * name: without it a fetched page's `<meta aaaa…a>` restarts the name at every
+ * character and rescans the run each time — quadratic on input we do not
+ * control (Sonar S5852). A start inside a name could never match where the
+ * head of that same name did not, so the pairs found are unchanged.
+ */
+const ATTRIBUTE = /(?<![\w:-])([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 const TITLE_TAG = /<title[^>]*>([^<]{1,400})<\/title>/i;
 const HEAD_END = /<\/head>/i;
 

@@ -567,6 +567,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       chatWithUs: 'Chat with Us',
       clubAdminMeetings: 'Club Admin Meetings',
       clubs: 'Clubs',
+      clubSlotRequests: 'Requests for Club Admins',
       coinSettings: 'Coin Settings',
       coinsRewards: 'Coins & Rewards',
       coinTransactions: 'Coin Transactions',

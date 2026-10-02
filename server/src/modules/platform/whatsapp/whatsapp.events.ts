@@ -630,6 +630,14 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Pod', 'Date', 'Time', 'Venue', 'Venue Contact'],
   },
   {
+    key: 'CLUB_ADMIN_VENUE_SLOTS_NEEDED',
+    campaign: 'clubadmin_venue_slots_needed',
+    audience: 'CLUB_ADMIN',
+    category: 'notification',
+    fires: 'A host cannot create a pod because no venue of the club has an open slot',
+    params: ['Recipient name', 'Club', 'Host', 'Host Contact', 'Club Link'],
+  },
+  {
     key: 'CLUB_ADMIN_FEEDBACK',
     campaign: 'feedback_club_admin',
     audience: 'CLUB_ADMIN',

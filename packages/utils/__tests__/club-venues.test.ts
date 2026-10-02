@@ -6,7 +6,13 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { clubAdminVenueOptions, type BookableVenue } from '../src/club-venues';
+import {
+  CLUB_SLOT_REQUEST_NOTICE_KEY,
+  clubAdminVenueOptions,
+  clubLacksOpenSlots,
+  clubSlotsLabel,
+  type BookableVenue,
+} from '../src/club-venues';
 
 const publicVenues: BookableVenue[] = [
   // publicVenues never selects `status`: the server already vouched for it.
@@ -44,5 +50,50 @@ describe('clubAdminVenueOptions', () => {
   it('narrows to the venues the club has linked, ignoring links to venues it may not book', () => {
     const club = { meetup_venues_id: ['v-5', 'v-3', 'v-9'] };
     expect(ids(clubAdminVenueOptions(publicVenues, owned, club))).toEqual(['v-5']);
+  });
+});
+
+describe('clubLacksOpenSlots', () => {
+  it('stops a physical pod in a club whose venues have no open slot', () => {
+    expect(clubLacksOpenSlots({ available_slots_count: 0 }, 'PHYSICAL')).toBe(true);
+    expect(clubLacksOpenSlots({ available_slots_count: null }, 'PHYSICAL')).toBe(true);
+    expect(clubLacksOpenSlots({}, 'PHYSICAL')).toBe(true);
+  });
+
+  it('lets a physical pod through once any venue has an open slot', () => {
+    expect(clubLacksOpenSlots({ available_slots_count: 3 }, 'PHYSICAL')).toBe(false);
+  });
+
+  it('never stops a virtual pod, nor a step with no club picked yet', () => {
+    expect(clubLacksOpenSlots({ available_slots_count: 0 }, 'VIRTUAL')).toBe(false);
+    expect(clubLacksOpenSlots(null, 'PHYSICAL')).toBe(false);
+    expect(clubLacksOpenSlots(undefined, 'PHYSICAL')).toBe(false);
+  });
+});
+
+describe('CLUB_SLOT_REQUEST_NOTICE_KEY', () => {
+  it('names one createPod notice per request outcome', () => {
+    expect(Object.keys(CLUB_SLOT_REQUEST_NOTICE_KEY)).toEqual(['SENT', 'ALREADY_REQUESTED', 'NO_CLUB_ADMIN']);
+    for (const key of Object.values(CLUB_SLOT_REQUEST_NOTICE_KEY)) {
+      expect(key.startsWith('mweb.createPod.slotRequest')).toBe(true);
+    }
+  });
+});
+
+describe('clubSlotsLabel', () => {
+  const t = (key: string, options?: { count?: number }) =>
+    options?.count === undefined ? key : `${key}:${options.count}`;
+
+  it('counts the open slots, plural-aware through t()', () => {
+    expect(clubSlotsLabel({ available_slots_count: 4 }, t)).toEqual({
+      open: true,
+      label: 'mweb.createPod.clubSlots:4',
+    });
+  });
+
+  it('says there are none when the count is zero or missing', () => {
+    for (const club of [{ available_slots_count: 0 }, { available_slots_count: null }, {}]) {
+      expect(clubSlotsLabel(club, t)).toEqual({ open: false, label: 'mweb.createPod.clubNoSlots' });
+    }
   });
 });

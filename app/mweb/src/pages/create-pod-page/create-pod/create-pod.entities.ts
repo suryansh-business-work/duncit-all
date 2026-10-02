@@ -1,5 +1,7 @@
+import type { ClubOpenSlots } from '@duncit/utils';
+
 /** The catalogue entities the host Create Pod stepper picks from. */
-export interface CreatePodClub {
+export type CreatePodClub = ClubOpenSlots & {
   id: string;
   club_name: string;
   location_id?: string | null;
@@ -14,7 +16,7 @@ export interface CreatePodClub {
   matched_venues?: { id: string }[] | null;
   club_description?: string | null;
   club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
-}
+};
 
 /** Rich location shape — enough for the header-style LocationDialog picker. */
 export interface CreatePodLocation {

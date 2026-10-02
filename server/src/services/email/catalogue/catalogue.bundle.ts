@@ -77,6 +77,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.label.signIn': 'Sign-in',
   'email.label.grievance': 'Grievance',
   'email.label.report': 'Report',
+  'email.label.club': 'Club',
 
   // --- Shared buttons ------------------------------------------------------
   'email.cta.viewPod': 'View the pod',
@@ -375,6 +376,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.clubAdminVenueHelp.title': 'A venue needs your help',
   'email.clubAdminVenueHelp.body':
     'The venue for the pod below has asked for help. Their contact is here so you can reach them directly.',
+  'email.clubAdminVenueSlotsNeeded.title': 'Your club has no open venue slots',
+  'email.clubAdminVenueSlotsNeeded.body':
+    'A host tried to create a pod in the club below, but none of its venues has an open slot right now, so the pod could not be planned. Please speak to the venues of this club and ask them to publish available slots. The host’s contact is here if you would like to reach them directly.',
   'email.clubAdminPodFeedback.title': 'How did the pod go?',
   'email.clubAdminPodFeedback.body':
     'You looked after the pod below. Tell us how the host, the venue and the group were — it is what we act on.',

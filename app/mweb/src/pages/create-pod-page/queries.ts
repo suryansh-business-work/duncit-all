@@ -12,6 +12,7 @@ export const CREATE_POD_OPTIONS = gql`
       super_category_id
       category_id
       matched_venues_count
+      available_slots_count
       matched_venues { id }
       club_description
       club_feature_images_and_videos { url type }
@@ -94,6 +95,16 @@ export const MODERATE_POD_CONTENT = gql`
     moderatePodContent(input: $input) {
       allowed
       violations { field step type message evidence }
+    }
+  }
+`;
+
+/** Step 1 — ask a club's admins to get its venues to open slots. */
+export const REQUEST_CLUB_VENUE_SLOTS = gql`
+  mutation RequestClubVenueSlots($club_doc_id: ID!) {
+    requestClubVenueSlots(club_doc_id: $club_doc_id) {
+      status
+      notified
     }
   }
 `;

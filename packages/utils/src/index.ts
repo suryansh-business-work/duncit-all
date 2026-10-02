@@ -1,7 +1,13 @@
 export { copyToClipboard } from './clipboard';
 export {
+  CLUB_SLOT_REQUEST_NOTICE_KEY,
   clubAdminVenueOptions,
+  clubLacksOpenSlots,
+  clubSlotsLabel,
   type BookableVenue,
+  type ClubOpenSlots,
+  type ClubSlotRequestOutcome,
+  type ClubSlotsTranslate,
   type ClubVenueLinks,
 } from './club-venues';
 export {

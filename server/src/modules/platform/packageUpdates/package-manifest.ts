@@ -587,6 +587,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     dependencies: [
       { name: "@duncit/captcha", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/i18n", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "astro", range: ">=7", kind: "peerDependencies" },
     ],
   },

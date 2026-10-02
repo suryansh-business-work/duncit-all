@@ -64,3 +64,49 @@ export function clubAdminVenueOptions<T extends BookableVenue>(
   const allowed = new Set(linked);
   return [...byId.values()].filter((venue) => allowed.has(venue.id));
 }
+
+/** The club field the open-slot gate reads (`Club.available_slots_count`). */
+export interface ClubOpenSlots {
+  available_slots_count?: number | null;
+}
+
+/**
+ * Whether Create Pod must stop a host from picking this club: a physical pod
+ * books a venue slot, and none of the club's venues has one open. A virtual pod
+ * needs no venue, so it is never stopped. Both apps ask this on step 1.
+ */
+export function clubLacksOpenSlots(
+  club: Readonly<ClubOpenSlots> | null | undefined,
+  podMode: string
+): boolean {
+  if (!club || podMode !== 'PHYSICAL') return false;
+  return (club.available_slots_count ?? 0) <= 0;
+}
+
+/** What the "message the club admin" outcome reads as, per `PodHelpStatus`. */
+export const CLUB_SLOT_REQUEST_NOTICE_KEY = {
+  SENT: 'mweb.createPod.slotRequestSent',
+  ALREADY_REQUESTED: 'mweb.createPod.slotRequestAlready',
+  NO_CLUB_ADMIN: 'mweb.createPod.slotRequestNoAdmin',
+} as const;
+
+export type ClubSlotRequestOutcome = keyof typeof CLUB_SLOT_REQUEST_NOTICE_KEY;
+
+/** The translator `clubSlotsLabel` takes — both apps' `t()` fit it. */
+export type ClubSlotsTranslate = (
+  key: string,
+  options?: { count?: number; vars?: Record<string, string | number> },
+) => string;
+
+/**
+ * "4 open slots" / "No open slots" — the line under each club on step 1 and in
+ * the picked club's preview. `open` drives the warning tint.
+ */
+export function clubSlotsLabel(
+  club: Readonly<ClubOpenSlots>,
+  t: ClubSlotsTranslate
+): { open: boolean; label: string } {
+  const count = club.available_slots_count ?? 0;
+  if (count > 0) return { open: true, label: t('mweb.createPod.clubSlots', { count }) };
+  return { open: false, label: t('mweb.createPod.clubNoSlots') };
+}

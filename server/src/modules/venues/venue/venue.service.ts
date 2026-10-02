@@ -796,6 +796,18 @@ export const venueService = {
     if (!q) return 0;
     return VenueModel.countDocuments(q);
   },
+  /** Ids only, for counts that hang off the matched venues (open slots). */
+  async matchingIdsForClub(criteria: {
+    location_id?: string | null;
+    locality?: string | null;
+    super_category_id?: string | null;
+    category_id?: string | null;
+  }): Promise<string[]> {
+    const q = buildClubMatchQuery(criteria);
+    if (!q) return [];
+    const docs = await VenueModel.find(q).select('_id').lean();
+    return docs.map((doc) => String(doc._id));
+  },
   async getById(id: string) {
     const v = await VenueModel.findById(id);
     return v ? toPub(v) : null;

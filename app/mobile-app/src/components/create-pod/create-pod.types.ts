@@ -1,6 +1,6 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
-import type { PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
+import type { ClubOpenSlots, PodPickerProduct, TicketDiscountTier } from '@duncit/utils';
 
 import type { CreatePodInput } from '@/generated/graphql/graphql';
 import { fallbackT } from '@/i18n/fallback';
@@ -103,7 +103,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   agreed_to_terms: false,
 };
 
-export interface CreatePodClub {
+export interface CreatePodClub extends ClubOpenSlots {
   id: string;
   club_name: string;
   location_id?: string | null;

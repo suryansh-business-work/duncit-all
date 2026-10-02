@@ -35,17 +35,17 @@ const EVENT: Readonly<Record<PodHelpSide, string>> = {
   VENUE: 'CLUB_ADMIN_VENUE_HELP',
 };
 
-const CONTACT_FIELDS =
+export const CONTACT_FIELDS =
   'profile.first_name profile.last_name auth.email auth.phone communication.whatsapp';
 
 const fail = (code: string, message: string) =>
   new GraphQLError(message, { extensions: { code } });
 
-const nameOf = (user: any): string =>
+export const nameOf = (user: any): string =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
 
 /** A number the admin can dial straight from the message, else the address. */
-function contactOf(user: any): string {
+export function contactOf(user: any): string {
   const number = destinationFor(user ?? {});
   return number ? `+${number}` : String(user?.auth?.email ?? '');
 }

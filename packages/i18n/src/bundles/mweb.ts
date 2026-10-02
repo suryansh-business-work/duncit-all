@@ -2162,6 +2162,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewClubDetails: 'View club details',
       closeClubDetails: 'Close club details',
       noDescription: 'No description yet.',
+      // Open venue slots per club — a physical pod cannot be planned without one.
+      clubSlots: {
+        one: '{count} open slot',
+        other: '{count} open slots',
+      },
+      clubNoSlots: 'No open slots',
+      noSlotsTitle: 'No slots available in this club',
+      noSlotsBody:
+        'None of the venues in {club} has an open slot right now, so you cannot create a physical pod in this club. Please select another club.',
+      noSlotsAskHint:
+        'You can also message the club admin. They will be asked to talk to the venues of this club and get slots opened.',
+      noSlotsChooseAnother: 'Choose another club',
+      noSlotsNotifyAdmin: 'Message the club admin',
+      slotRequestSent: 'Message sent. The club admin has been asked on WhatsApp and email to get slots opened.',
+      slotRequestAlready: 'You have already messaged the admin of this club today.',
+      slotRequestNoAdmin: 'This club has no club admin yet. Our team has been told and will follow up.',
+      slotRequestFailed: 'Could not send the message. Please try again.',
       // Step 3 — Venue & Slot.
       selectVenue: 'Select venue',
       noVenues: 'No venues match this club yet — pick another club or go virtual.',

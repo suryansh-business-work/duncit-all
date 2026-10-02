@@ -11,14 +11,17 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { clubSlotsLabel } from '@duncit/utils';
 
 interface Props {
   club: CreatePodClub | null;
+  /** Physical pods only — a virtual pod books no venue slot. */
+  showSlots?: boolean;
 }
 
 /** Selected-club preview — photo + name with a "View club details" dialog
  * showing the club's gallery and description. Mirrors mWeb's ClubPreview. */
-export function ClubPreview({ club }: Readonly<Props>) {
+export function ClubPreview({ club, showSlots = false }: Readonly<Props>) {
   const { color: ink, muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -33,6 +36,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
     venueCount === 1
       ? t('mweb.createPod.venueOne')
       : t('mweb.createPod.venueMany', { vars: { count: venueCount } });
+  const slots = clubSlotsLabel(club, t);
 
   return (
     <XStack
@@ -67,6 +71,19 @@ export function ClubPreview({ club }: Readonly<Props>) {
             {venueLabel}
           </Text>
         </XStack>
+        {showSlots ? (
+          <XStack alignItems="center" gap={4}>
+            <MaterialIcons name="event-available" size={13} color={muted} />
+            <Text
+              testID="club-preview-slot-count"
+              fontSize={12}
+              fontWeight="500"
+              color={slots.open ? '$muted' : '$warning'}
+            >
+              {slots.label}
+            </Text>
+          </XStack>
+        ) : null}
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="club-preview-details"

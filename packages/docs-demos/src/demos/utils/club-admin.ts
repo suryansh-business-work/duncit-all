@@ -1,7 +1,10 @@
 import {
+  CLUB_SLOT_REQUEST_NOTICE_KEY,
   POD_ROW_STATUS_COLORS,
   canOpenPodAttendance,
   clubAdminVenueOptions,
+  clubLacksOpenSlots,
+  clubSlotsLabel,
   clubAdminGroupHeadings,
   clubAdminKpiGroups,
   clubAdminKpiLabels,
@@ -21,6 +24,13 @@ import {
 import { defineDemo, type PackageDemo } from '../../types';
 import type { ClubAdminMock } from './mocks';
 import { clubAdminT } from './translators';
+
+interface ClubSlotsMock {
+  club_name: string;
+  available_slots_count: number;
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
+  outcome: keyof typeof CLUB_SLOT_REQUEST_NOTICE_KEY;
+}
 
 export const clubAdminDemos: PackageDemo[] = [
   defineDemo<ClubAdminMock>({
@@ -99,4 +109,21 @@ export const clubAdminDemos: PackageDemo[] = [
     },
   }),
 
+  defineDemo<ClubSlotsMock>({
+    id: 'club-open-slots',
+    title: 'Whether Create Pod lets a host pick a club with no open slots',
+    note:
+      'A physical pod books a venue slot, so a club whose venues have none open is stopped on step 1 and the host is offered a message to the club admin. Raise available_slots_count above 0, or switch pod_mode to VIRTUAL, and the club goes through. Change outcome to see which notice each answer from requestClubVenueSlots shows.',
+    mock: {
+      club_name: 'Noida Badminton Club',
+      available_slots_count: 0,
+      pod_mode: 'PHYSICAL',
+      outcome: 'SENT',
+    },
+    compute: (mock) => ({
+      'Stopped on step 1': clubLacksOpenSlots(mock, mock.pod_mode),
+      'Slot line under the club': clubSlotsLabel(mock, clubAdminT).label,
+      'Notice after messaging the admin': CLUB_SLOT_REQUEST_NOTICE_KEY[mock.outcome],
+    }),
+  }),
 ];

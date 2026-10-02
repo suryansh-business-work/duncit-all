@@ -2,6 +2,7 @@ import { clubService } from './club.service';
 import { loadClubStats, primeClubStats } from './club.loaders';
 import { throwIfClientGone } from '@utils/clientPresence';
 import { venueService } from '@modules/venues/venue/venue.service';
+import { countOpenSlotsForClub } from './club.slots';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
@@ -40,6 +41,8 @@ export const clubResolvers = {
       venueService.findMatchingForClub(matchCriteria(parent)),
     matched_venues_count: (parent: ClubMatchParent) =>
       venueService.countMatchingForClub(matchCriteria(parent)),
+    available_slots_count: (parent: ClubMatchParent, _a: unknown, ctx: GraphQLContext) =>
+      countOpenSlotsForClub(ctx, matchCriteria(parent)),
   },
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {

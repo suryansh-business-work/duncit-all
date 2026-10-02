@@ -1028,6 +1028,39 @@ export const CLUB_ADMIN_EMAILS: readonly EmailDef[] = [
     },
   }),
 
+  defineEmail({
+    slug: 'club-admin-venue-slots-needed',
+    name: 'Club Admin: Venue Slots Needed',
+    description:
+      'The club admin, when a host cannot create a pod because no venue of the club has an open slot.',
+    audience: 'CLUB_ADMIN',
+    category: 'notification',
+    fires: 'A host cannot create a pod because no venue of the club has an open slot',
+    waEvent: 'CLUB_ADMIN_VENUE_SLOTS_NEEDED',
+    subject: 'No open venue slots in {{club}}',
+    footerNote: FOOTER.clubAdmin,
+    vars: [
+      v('name', 'The club admin’s first name.', 'Rohit'),
+      v('club', 'The club with no open venue slots.', 'Noida Badminton Club'),
+      v('who', 'The host who asked.', 'Meera Nair'),
+      v('contact', 'How to reach the host.', '+91 98765 43210'),
+      v('app_url', 'The club in the Partners console.', 'https://partners-app.duncit.com/club-admin/clubs/66f1c2a9e4b0a1d2c3f4e5a6'),
+    ],
+    body: {
+      copyKey: 'email.clubAdminVenueSlotsNeeded',
+      nameVar: 'name',
+      tone: PAUSED,
+      calloutLabelKey: LABEL.club,
+      calloutVar: 'club',
+      rows: [
+        { labelKey: FIELD.host, valueVar: 'who' },
+        { labelKey: FIELD.hostContact, valueVar: 'contact' },
+      ],
+      ctaKey: CTA.openPartners,
+      ctaVar: 'app_url',
+    },
+  }),
+
   podFeedback({
     slug: 'club-admin-pod-feedback',
     name: 'Club Admin: Pod Feedback',

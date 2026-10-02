@@ -3602,6 +3602,8 @@ export type Club = {
   __typename?: 'Club';
   /** Users who administer this club (assigned by an admin) — the CLUB_ADMIN scope. */
   admin_user_ids: Array<Scalars['ID']['output']>;
+  /** Open (AVAILABLE, not yet started) slots across the matched venues; 0 means a physical pod cannot be booked here yet. */
+  available_slots_count: Scalars['Int']['output'];
   category_id?: Maybe<Scalars['ID']['output']>;
   /** Resolved profiles of the club's assigned admins. */
   club_admins: Array<ClubActor>;
@@ -4003,6 +4005,37 @@ export type ClubRating = {
   user_id: Scalars['ID']['output'];
   user_name?: Maybe<Scalars['String']['output']>;
   user_photo?: Maybe<Scalars['String']['output']>;
+};
+
+/** A host's request that a club's admins get its venues to open slots. */
+export type ClubSlotRequest = {
+  __typename?: 'ClubSlotRequest';
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  /** The number or email the club admins were sent. */
+  host_contact: Scalars['String']['output'];
+  host_name: Scalars['String']['output'];
+  host_user_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  /** How many club admins were messaged. */
+  notified: Scalars['Int']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  status: ClubSlotRequestStatus;
+  updated_at: Scalars['String']['output'];
+};
+
+/** OPEN until staff close it once the club's venues have published slots. */
+export type ClubSlotRequestStatus =
+  | 'OPEN'
+  | 'RESOLVED';
+
+export type ClubSlotRequestTablePage = {
+  __typename?: 'ClubSlotRequestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ClubSlotRequest>;
+  total: Scalars['Int']['output'];
 };
 
 /** Server-side table page for the shared table engine (clubsTable). */
@@ -11980,6 +12013,13 @@ export type Mutation = {
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
   /**
+   * Tell the club's admins, over email and WhatsApp, that none of its venues has
+   * an open slot. ALREADY_REQUESTED when this host asked about this club in the
+   * last day; NO_CLUB_ADMIN when the club has nobody to tell (the request is
+   * still recorded for staff).
+   */
+  requestClubVenueSlots: PodHelpRequestResult;
+  /**
    * Triggers (or retries) the Servam-AI transcript pipeline for a CALL log.
    * Returns the log with transcript_status flipped to PENDING.
    */
@@ -12104,6 +12144,8 @@ export type Mutation = {
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
   resolveBouncerSos: BouncerSosAlert;
+  /** Close a request once the club's venues have published slots. */
+  resolveClubSlotRequest: ClubSlotRequest;
   /** Close an issue by hand — the reminders stop. */
   resolveStoreIssue: StoreReleaseIssue;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
@@ -15274,6 +15316,11 @@ export type MutationRequestBouncerCallbackArgs = {
 };
 
 
+export type MutationRequestClubVenueSlotsArgs = {
+  club_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRequestCommunicationTranscriptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -15400,6 +15447,11 @@ export type MutationResetRateLimitRuleCountersArgs = {
 
 
 export type MutationResolveBouncerSosArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationResolveClubSlotRequestArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -21808,6 +21860,8 @@ export type Query = {
    */
   clubFollowers: Array<PublicProfile>;
   clubRatings: Array<ClubRating>;
+  /** Every venue-slot request hosts have raised — the Clubs console's list. */
+  clubSlotRequestsTable: ClubSlotRequestTablePage;
   /** Active (non-expired) stories attached to a club, newest first (Bug 6). */
   clubStories: Array<Post>;
   clubs: Array<Club>;
@@ -23619,6 +23673,11 @@ export type QueryClubFollowersArgs = {
 
 export type QueryClubRatingsArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubSlotRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 

@@ -104,5 +104,20 @@ export const UI_BUNDLE: NestedCatalogue = {
       previous: 'Scroll left',
       next: 'Scroll right',
     },
+    /**
+     * What a page shows in place of itself after it crashed — in mWeb and in
+     * every portal, so one set of words. Never the error itself: the details
+     * go to the Tech portal, the person gets a way forward.
+     */
+    errorBoundary: {
+      title: 'Something went wrong',
+      body: 'This part of Duncit ran into a problem. Try again, or tell us about it so we can fix it.',
+      retry: 'Retry',
+      report: 'Report an issue',
+      reporting: 'Sending report…',
+      reported: 'Thanks — the report reached our team.',
+      reportFailed: 'The report could not be sent. Try again in a moment.',
+      reference: 'Reference: {id}',
+    },
   },
 };

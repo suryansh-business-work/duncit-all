@@ -1100,3 +1100,14 @@ export {
   type BrandWizardStep,
   type BrandWizardStepKey,
 } from './brand-wizard';
+export {
+  BOUNDARY_LOG_COMPONENT,
+  buildCrashReport,
+  buildCrashReportMessage,
+  crashLogData,
+  crashLogError,
+  redactSensitive,
+  type BoundaryEvent,
+  type BoundaryScope,
+  type CrashReport,
+} from './crash-report';

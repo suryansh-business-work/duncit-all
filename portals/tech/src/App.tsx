@@ -14,6 +14,7 @@ import BugDetailPage from './pages/bug-detail-page';
 import TelemetryLogsPage from './pages/telemetry-logs-page';
 import TelemetryLogDetailPage from './pages/telemetry-log-detail-page';
 import ErrorLogsPage from './pages/error-logs-page';
+import ErrorBoundariesPage from './pages/error-boundaries-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
@@ -85,6 +86,7 @@ export default function App() {
         {/* One log at its own address — reloadable, bookmarkable, pasteable. */}
         <Route path="/telemetry/log/:logId" element={authed(<TelemetryLogDetailPage />)} />
         <Route path="/telemetry/error-logs" element={authed(<ErrorLogsPage />)} />
+        <Route path="/error-boundaries" element={authed(<ErrorBoundariesPage />)} />
         <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
         {/* The old paths, kept working for bookmarks. */}
         <Route path="/bugs" element={<Navigate to="/telemetry/bugs" replace />} />

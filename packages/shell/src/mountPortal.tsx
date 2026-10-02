@@ -19,7 +19,8 @@ import {
 } from '@duncit/user-context';
 import { useTranslation } from './i18n/useTranslation';
 import { DuncitThemeProvider } from '@duncit/theme';
-import { configureLogs, httpTransport } from '@duncit/logs';
+import { configureLogs, createLogger, httpTransport } from '@duncit/logs';
+import { DuncitErrorBoundary } from '@duncit/ui';
 import { getOrCreateDuid } from '@duncit/user-core';
 import { startWebShortLinkAttribution } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
@@ -155,8 +156,12 @@ export function mountPortal(opts: MountPortalOptions): void {
     // the same empty value and renders its "not configured" state.
     const withGoogle = clientId ? <GoogleOAuthProvider clientId={clientId}>{router}</GoogleOAuthProvider> : router;
 
+    // The page boundary (createAuthed) keeps the chrome up when a page throws;
+    // this one is for everything above it — a provider, the gate, the login
+    // screen — so nothing in a console can end on a white screen.
     ReactDOM.createRoot(mountNode).render(
       <React.StrictMode>
+        <DuncitErrorBoundary logger={createLogger('portal', config.key)} surface={config.key} scope="root">
         <ApolloProvider client={apolloClient}>
           <ShellRuntimeProvider graphqlUrl={graphqlUrl} tokenKey={config.tokenKey}>
             <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
@@ -174,6 +179,7 @@ export function mountPortal(opts: MountPortalOptions): void {
             </UserProvider>
           </ShellRuntimeProvider>
         </ApolloProvider>
+        </DuncitErrorBoundary>
       </React.StrictMode>,
     );
   };

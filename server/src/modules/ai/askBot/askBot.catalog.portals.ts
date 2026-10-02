@@ -92,6 +92,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Browse error logs rolled up into bugs by page and platform with occurrence counts, open one for its per-environment breakdown, and mark it resolved, ignored or reopened.' },
   { surface: 'tech', path: '/telemetry/logs-settings', label: 'Logs Settings', group: 'Telemetry',
     description: 'Turn SigNoz forwarding on or off, choose which log levels get persisted to the database, and set how many days logs are retained.' },
+  { surface: 'tech', path: '/error-boundaries', label: 'Error Boundaries', group: 'Error Boundaries',
+    description: 'Read every page or screen that crashed into an error boundary on mWeb, the native app or a portal, and every Report an Issue pressed on one, as bug rows with the route, build, user and scrubbed stack, and open a row for its full detail.' },
   { surface: 'tech', path: '/server/info', label: 'Info', group: 'Server',
     description: 'Read live host metrics for the machine running the API — CPU usage and cores, memory, disk, uptime, OS/distro plus SSH and SSL detail — and refresh them on demand.' },
   { surface: 'tech', path: '/server/docker', label: 'Docker', group: 'Server',

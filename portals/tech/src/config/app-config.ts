@@ -41,6 +41,9 @@ export const appConfig = {
         { label: 'Logs Settings', labelKey: 'shell.nav.logsSettings', to: '/telemetry/logs-settings', icon: 'tune' },
       ],
     },
+    // Every page / screen that crashed into an error boundary on mWeb, the app
+    // or a portal, and every Report an Issue pressed on one.
+    { label: 'Error Boundaries', labelKey: 'shell.nav.errorBoundaries', to: '/error-boundaries', icon: 'shield' },
     {
       // Beside Telemetry: both watch the platform run, one through the logs it
       // writes, the other through what every GraphQL operation costs.

@@ -241,6 +241,10 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     kind: 'data.kind',
     code: 'data.code',
     operation: 'data.operation',
+    // What an error boundary writes beside a crash (@duncit/utils crashLogData).
+    event: 'data.event',
+    scope: 'data.scope',
+    crash_id: 'data.crash_id',
   },
   filterFields: {
     level: { type: 'enum' },
@@ -252,6 +256,9 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     kind: { path: 'data.kind', type: 'enum' },
     code: { path: 'data.code', type: 'string' },
     operation: { path: 'data.operation', type: 'string' },
+    event: { path: 'data.event', type: 'enum' },
+    scope: { path: 'data.scope', type: 'enum' },
+    crash_id: { path: 'data.crash_id', type: 'string' },
     app: { type: 'string' },
     platform: { type: 'string' },
     os: { type: 'string' },

@@ -2862,3 +2862,28 @@ page loaded, `rememberShortLinkAttribution` fills it in then, without reporting 
 | `onWebConsentChange` / `whenWebConsentAllows` | listener / `(category, start, doc?) => () => void` | React to an answer given later on the page. |
 | `clearWithdrawnStorage` | `(choice, storage?) => void` | Deletes what a withdrawn category kept (`OPTIONAL_STORAGE_KEYS`). |
 | `startWebShortLinkAttribution` | `(serverUrl, search?, doc?) => Promise<string \| null>` | Consent-aware landing capture + link decorator. |
+
+## Crash reports — `crash-report`
+
+This is the framework-free half of every error boundary. The web `DuncitErrorBoundary` (`@duncit/ui`)
+and the native Tamagui twin both build their report here, so a crash reaches the Tech portal in the
+same shape from any surface.
+
+```ts
+import { BOUNDARY_LOG_COMPONENT, buildCrashReport, crashLogData, crashLogError } from '@duncit/utils';
+
+const report = buildCrashReport({ error, componentStack, scope: 'page', route: location.pathname, surface: 'mWeb', platform: 'web' });
+logs.mWeb.error(report.route, BOUNDARY_LOG_COMPONENT, { error: crashLogError(report), ...crashLogData(report, 'CAUGHT') });
+```
+
+`redactSensitive` runs over the message, both stacks and the route before anything leaves the
+device. It replaces JWTs, bearer tokens, `token=`/`password=`/`otp=`-style values, email addresses
+and phone-length digit runs. The route keeps only its path. Stacks are cut to their first 12 lines.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `BOUNDARY_LOG_COMPONENT` | `'errorBoundary'` | The log marker the Tech portal's Error Boundaries page filters on. |
+| `buildCrashReport` | `(input) => CrashReport` | Scrubbed report with a `crash_id` that pairs CAUGHT and REPORTED rows. |
+| `crashLogError` / `crashLogData` | `(report) => Error` / `(report, event) => Record<string, string>` | The log's `error` and `data`. |
+| `buildCrashReportMessage` | `(report) => string` | Body for `submitAppFeedback` when a member reports it. |
+| `redactSensitive` | `(text) => string` | The scrubber on its own. |

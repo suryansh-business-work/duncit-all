@@ -1,6 +1,7 @@
 import { Paper } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import {
+  ErrorFallback,
   InfoRow,
   PodSeatsCell,
   ScrollRail,
@@ -19,6 +20,12 @@ import { RowsAndChipsDemo, type RowsMock } from './ui/RowsAndChipsDemo';
 import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
 import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
 import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
+
+interface ErrorFallbackMock {
+  reference: string;
+  full_screen: boolean;
+  report_fails: boolean;
+}
 
 interface ChartFrameMock {
   mode: 'light' | 'dark';
@@ -151,5 +158,20 @@ export default defineDemos('ui', [
       'Press Refresh venues. The overlay keeps the rows readable underneath, which is what makes a refetch feel like a refresh rather than a reload — swap `variant` to block and watch the same wait blank the panel instead. `serverMs` is the round trip; under about 180ms the top bar never appears at all, because a bar that flashes reads as a glitch rather than as progress. In a real app the same bar is `RequestProgressBar`, driven by `trackingFetch` on the Apollo HttpLink — the portals mount it through the shell, the pet store mounts it itself.',
     mock: { variant: 'overlay', serverMs: 1400, rows: ['Play Arena, HSR Layout', 'Smashtress, Raj Nagar Extension', 'The Turf Club, Indiranagar'] },
     render: (mock) => <LoaderDemo mock={mock} />,
+  }),
+  defineDemo<ErrorFallbackMock>({
+    id: 'error-fallback',
+    title: 'ErrorFallback — what DuncitErrorBoundary shows in place of a crashed page',
+    note:
+      'The boundary renders exactly this when what it wraps throws. Retry re-renders the page (a root boundary reloads the app); Report an Issue writes a REPORTED row the Tech portal lists under Error Boundaries and, for a signed-in mWeb member, files a support feedback ticket. Set report_fails to true to see the failed-send message; reference is the crash id a person can quote to support. Flip full_screen for the app-level variant.',
+    mock: { reference: 'mg3k2x9a-1', full_screen: false, report_fails: false },
+    render: (mock) => (
+      <ErrorFallback
+        reference={mock.reference}
+        fullScreen={mock.full_screen}
+        onRetry={() => undefined}
+        onReport={() => (mock.report_fails ? Promise.reject(new Error('offline')) : Promise.resolve())}
+      />
+    ),
   }),
 ]);

@@ -3615,11 +3615,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       whyAreYouRescheduling: 'Why are you rescheduling?',
       subtitle: 'Pick a way to start earning on Duncit.',
     },
-    errorBoundary: {
-      anUnexpectedError: 'An unexpected error occurred. Please try again.',
-      somethingWentWrong: 'Something went wrong',
-      tryAgain: 'Try again',
-    },
     faqs: {
       searchFaqs: 'Search FAQs',
     },

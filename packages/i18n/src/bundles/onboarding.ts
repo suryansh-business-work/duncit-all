@@ -136,7 +136,11 @@ export const ONBOARDING_BUNDLE: NestedCatalogue = {
       aadharNumber: 'Aadhar number',
       addedByAdmin: 'Added by admin',
       commaSeparatedHostTags: 'Comma separated host tags.',
+      fromHostRequest: 'From host request {requestNo}',
       fullAddress: 'Full address',
+      hostCategories: 'Host categories',
+      detailsNotSubmitted:
+        'This host has not submitted their identity and bank details yet. Phone, DOB and address are filled from their account where it has them.',
       linkToExistingUser: 'Link to existing user',
       panNumber: 'PAN number',
       personal: 'Personal',

@@ -1,21 +1,13 @@
 import { useMemo, useState } from 'react';
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Autocomplete,
-  Box,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Autocomplete, Box, Stack, TextField } from '@mui/material';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { DuncitButton } from '@duncit/buttons';
 import { useFormContext, useWatch } from 'react-hook-form';
 import DateField from '../DateField';
 import HostBankAccountSection from './HostBankAccountSection';
+import HostCategoriesSection from './HostCategoriesSection';
+import HostFormPanel from './HostFormPanel';
 import HostIdentitySection from './HostIdentitySection';
 import HostVerificationSection from './HostVerificationSection';
 import { useHostFieldProps } from './useHostFieldProps';
@@ -37,14 +29,18 @@ interface Props {
   userOptions?: UserOption[];
 }
 
-type PanelKey = 'personal' | 'identity' | 'verification' | 'bank';
-const ALL_PANELS: PanelKey[] = ['personal', 'identity', 'verification', 'bank'];
+type PanelKey = 'personal' | 'identity' | 'verification' | 'bank' | 'categories';
+const CREATE_PANELS: PanelKey[] = ['personal', 'identity', 'verification', 'bank'];
+// Categories are edited on an existing host only, as a section like the rest so
+// Expand/Collapse all covers it too.
+const EDIT_PANELS: PanelKey[] = [...CREATE_PANELS, 'categories'];
 
 type Values = HostCreateValues & Partial<HostEditValues>;
 
 /**
  * Unified Host form with accordion sections so Create + Edit share the same
- * layout. Sections: Personal / Identity / Verification.
+ * layout. Sections: Personal / Identity / Verification / Bank, plus Categories
+ * when editing.
  *
  * In create-on-behalf mode the admin picks an existing user and the personal
  * details auto-fill from that user's profile.
@@ -57,7 +53,8 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
   const dob = useWatch({ control, name: 'step1.dob' });
 
   const [expanded, setExpanded] = useState<Set<PanelKey>>(new Set(['personal']));
-  const allExpanded = useMemo(() => ALL_PANELS.every((p) => expanded.has(p)), [expanded]);
+  const panels = mode === 'edit' ? EDIT_PANELS : CREATE_PANELS;
+  const allExpanded = useMemo(() => panels.every((p) => expanded.has(p)), [panels, expanded]);
 
   const toggle = (panel: PanelKey) =>
     setExpanded((prev) => {
@@ -69,7 +66,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
       }
       return next;
     });
-  const expandAll = () => setExpanded(new Set(ALL_PANELS));
+  const expandAll = () => setExpanded(new Set(panels));
   const collapseAll = () => setExpanded(new Set());
 
   const opts = { shouldValidate: true, shouldDirty: true } as const;
@@ -106,88 +103,70 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
         </DuncitButton>
       </Stack>
 
-      <Accordion expanded={expanded.has('personal')} onChange={() => toggle('personal')} disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">{t('onboarding.hostForm.personal')}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={1.5}>
-            {mode === 'create' && userOptions && (
-              <Autocomplete
-                options={userOptions}
-                getOptionLabel={(option) =>
-                  `${option.full_name ?? ''} · ${option.email ?? option.phone_number ?? ''}`.trim()
-                }
-                value={selectedUser}
-                isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
-                onChange={(_event, value) => handlePickUser(value)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t('onboarding.hostForm.linkToExistingUser')}
-                    size="small"
-                    required
-                    error={hasError('target_user_id')}
-                    helperText={targetUserHelper}
-                  />
-                )}
+      <HostFormPanel title={t('onboarding.hostForm.personal')} expanded={expanded.has('personal')} onToggle={() => toggle('personal')}>
+        {mode === 'create' && userOptions && (
+          <Autocomplete
+            options={userOptions}
+            getOptionLabel={(option) =>
+              `${option.full_name ?? ''} · ${option.email ?? option.phone_number ?? ''}`.trim()
+            }
+            value={selectedUser}
+            isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
+            onChange={(_event, value) => handlePickUser(value)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={t('onboarding.hostForm.linkToExistingUser')}
+                size="small"
+                required
+                error={hasError('target_user_id')}
+                helperText={targetUserHelper}
               />
             )}
-            <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-              <TextField label={t('onboarding.common.fullName')} required {...tfProps('step1.full_name')} />
-              <TextField label={t('shell.common.email')} type="email" required {...tfProps('step1.email')} />
-              <TextField label={t('shell.common.phone')} required {...tfProps('step1.phone', '6–15 digits, optional + prefix')} />
-              <DateField
-                size="small"
-                label="DOB"
-                value={dob ?? ''}
-                onChange={(iso) => setValue('step1.dob', iso, opts)}
-                error={hasError('step1.dob')}
-                helperText={hasError('step1.dob') ? errorMessage('step1.dob') : ' '}
-                minDate={getHostDobMinDate()}
-                maxDate={getHostDobMaxDate()}
-              />
-            </Box>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+          />
+        )}
+        <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+          <TextField label={t('onboarding.common.fullName')} required {...tfProps('step1.full_name')} />
+          <TextField label={t('shell.common.email')} type="email" required {...tfProps('step1.email')} />
+          <TextField label={t('shell.common.phone')} required {...tfProps('step1.phone', '6–15 digits, optional + prefix')} />
+          <DateField
+            size="small"
+            label="DOB"
+            value={dob ?? ''}
+            onChange={(iso) => setValue('step1.dob', iso, opts)}
+            error={hasError('step1.dob')}
+            helperText={hasError('step1.dob') ? errorMessage('step1.dob') : ' '}
+            minDate={getHostDobMinDate()}
+            maxDate={getHostDobMaxDate()}
+          />
+        </Box>
+      </HostFormPanel>
 
-      <Accordion expanded={expanded.has('identity')} onChange={() => toggle('identity')} disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">{t('onboarding.common.identity')}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={1.5}>
-            <HostIdentitySection />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+      <HostFormPanel title={t('onboarding.common.identity')} expanded={expanded.has('identity')} onToggle={() => toggle('identity')}>
+        <HostIdentitySection />
+      </HostFormPanel>
 
-      <Accordion
-        expanded={expanded.has('verification')}
-        onChange={() => toggle('verification')}
-        disableGutters
+      <HostFormPanel title={t('shell.nav.verification')} expanded={expanded.has('verification')} onToggle={() => toggle('verification')}>
+        <HostVerificationSection />
+      </HostFormPanel>
+
+      <HostFormPanel
+        title={t('onboarding.common.bankAccountVerification')}
+        expanded={expanded.has('bank')}
+        onToggle={() => toggle('bank')}
       >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">{t('shell.nav.verification')}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={1.5}>
-            <HostVerificationSection />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+        <HostBankAccountSection />
+      </HostFormPanel>
 
-      <Accordion expanded={expanded.has('bank')} onChange={() => toggle('bank')} disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1">{t('onboarding.common.bankAccountVerification')}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack spacing={1.5}>
-            <HostBankAccountSection />
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+      {mode === 'edit' && (
+        <HostFormPanel
+          title={t('onboarding.hostForm.hostCategories')}
+          expanded={expanded.has('categories')}
+          onToggle={() => toggle('categories')}
+        >
+          <HostCategoriesSection />
+        </HostFormPanel>
+      )}
     </Stack>
   );
 }

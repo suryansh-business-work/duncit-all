@@ -30,6 +30,10 @@ export const hostResolvers = {
   // host, so only the single-host Review query pays for it.
   Host: {
     survey_category: (parent: { user_id: string }) => hostService.surveyCategoryForUser(parent.user_id),
+    // Personal data, and Host is also served by the unauthenticated
+    // publicHosts — so only a hosts-console reader gets an answer.
+    account_profile: (parent: { user_id: string }, _a: unknown, ctx: GraphQLContext) =>
+      ctx.user && hasRole(ctx.user, HOST_READ) ? hostService.accountProfileForUser(parent.user_id) : null,
   },
   Query: {
     myHost: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => hostService.getMine(uid(ctx)),

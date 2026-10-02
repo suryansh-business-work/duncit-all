@@ -12,6 +12,17 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { userContactNumber } from '@utils/contact';
+
+type AddressParts = Partial<
+  Record<'line1' | 'line2' | 'landmark' | 'city' | 'state' | 'pincode', string | number | null>
+>;
+
+/** The slice of a user document `accountProfileForUser` selects. */
+interface AccountProfileSource {
+  auth?: { phone?: { extension?: string | null; number?: string | null } | null } | null;
+  profile?: { dob?: Date | string | null; address?: AddressParts | null } | null;
+}
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -649,6 +660,28 @@ export const hostService = {
     h.status = 'DRAFT';
     await h.save();
     return toPub(h);
+  },
+
+  /** Phone, DOB and a one-line address off the host's user account. Backs
+   * `Host.account_profile`. Empty strings rather than null for what the user
+   * never filled, so the Edit dialog treats every "blank" the same way. */
+  async accountProfileForUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    const u = await UserModel.findById(userId)
+      .select('auth.phone profile.dob profile.address')
+      .lean<AccountProfileSource>();
+    if (!u) return null;
+    const phone = userContactNumber(u) ?? '';
+    const a: AddressParts = u.profile?.address ?? {};
+    const full_address = [a.line1, a.line2, a.landmark, a.city, a.state, a.pincode]
+      .map((part) => (part == null ? '' : String(part).trim()))
+      .filter(Boolean)
+      .join(', ');
+    return {
+      phone,
+      dob: u.profile?.dob ? new Date(u.profile.dob).toISOString() : null,
+      full_address,
+    };
   },
 
   /** The Super → Category → Sub the applicant picked in the Earn with Duncit

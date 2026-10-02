@@ -18,7 +18,7 @@ import { accountAverage, analyzePost, periodInsights } from './social.insights';
 
 /** The latest comments the post detail lists under the post. */
 const RECENT_COMMENTS = 20;
-import type { DiscoveredAccount, SocialProvider, SocialReviewStatus } from './social.types';
+import type { DiscoveredAccount, SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
 
 const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : null);
 
@@ -222,14 +222,14 @@ export const socialService = {
   },
 
   /** The provider's consent screen, for the button the marketer just pressed. */
-  async connectUrl(provider: SocialProvider, userId: string): Promise<string> {
+  async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn): Promise<string> {
     const creds = await socialCredentials(provider);
     if (!creds) {
       throw new GraphQLError('This network is not set up yet — Tech adds it under Environment Variables › Social apps.', {
         extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' },
       });
     }
-    const { state, challenge } = startConnect(provider, userId);
+    const { state, challenge } = startConnect(provider, userId, returnTo);
     return CONNECTORS[provider].authorizeUrl({ creds, state, challenge });
   },
 

@@ -1,6 +1,8 @@
 import { gql } from '@apollo/client';
 
 export type SocialProvider = 'LINKEDIN' | 'META' | 'X' | 'YOUTUBE';
+/** The page the OAuth callback brings the marketer back to — the one they pressed Connect on. */
+export type SocialConnectReturn = 'ACCOUNTS' | 'CALENDAR';
 export type SocialPlatform = 'LINKEDIN' | 'FACEBOOK' | 'INSTAGRAM' | 'X' | 'YOUTUBE';
 export type SocialAccountStatus = 'CONNECTED' | 'EXPIRED' | 'ERROR';
 export type SocialAiStatus = 'PENDING' | 'CLEAN' | 'FLAGGED';
@@ -164,8 +166,8 @@ export const SOCIAL_SETUP = gql`
 `;
 
 export const SOCIAL_CONNECT_URL = gql`
-  mutation SocialConnectUrl($provider: SocialProvider!) {
-    socialConnectUrl(provider: $provider)
+  mutation SocialConnectUrl($provider: SocialProvider!, $return_to: SocialConnectReturn!) {
+    socialConnectUrl(provider: $provider, return_to: $return_to)
   }
 `;
 

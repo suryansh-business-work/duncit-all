@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { PROVIDERS } from '../copy';
-import type { SocialAccount, SocialProviderStatus } from '../queries';
+import type { SocialAccount, SocialConnectReturn, SocialProviderStatus } from '../queries';
 import ProviderCard from './ProviderCard';
 import { useSocialAccountActions } from './useSocialAccountActions';
 
@@ -11,12 +11,17 @@ interface Props {
   providers: SocialProviderStatus[];
   accounts: SocialAccount[];
   onChanged: () => void;
+  /** The page this is shown on, so a connection lands back on it. */
+  returnTo: SocialConnectReturn;
+  /** One column, for a drawer; two side by side on a wide page otherwise. */
+  narrow?: boolean;
 }
 
 /** A card per network, in a fixed order, with its connected accounts inside. */
-export default function AccountsTab({ providers, accounts, onChanged }: Readonly<Props>) {
+export default function AccountsTab({ providers, accounts, onChanged, returnTo, narrow = false }: Readonly<Props>) {
   const { t } = useTranslation();
-  const actions = useSocialAccountActions(onChanged);
+  const actions = useSocialAccountActions(onChanged, returnTo);
+  const columns = narrow ? '1fr' : { xs: '1fr', lg: '1fr 1fr' };
   const [leaving, setLeaving] = useState<SocialAccount | null>(null);
   const configured = new Set(providers.filter((p) => p.configured).map((p) => p.provider));
 
@@ -26,7 +31,7 @@ export default function AccountsTab({ providers, accounts, onChanged }: Readonly
 
   return (
     <>
-      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, alignItems: 'start' }}>
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: columns, alignItems: 'start' }}>
         {PROVIDERS.map((provider) => (
           <ProviderCard
             key={provider}

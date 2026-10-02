@@ -55,6 +55,9 @@ export const appConfig = {
     // Its own section: the accounts are connected once and then watched —
     // how posts perform and what people say under them — not sent to.
     { label: 'Social Accounts', labelKey: 'shell.nav.socialAccounts', to: '/social-accounts', icon: 'hub' },
+    // The same publishing calendar as Social Accounts › Publish, on its own
+    // page: planning posts is a daily job, connecting accounts a one-off.
+    { label: 'Social Calendar', labelKey: 'shell.nav.socialCalendar', to: '/social-calendar', icon: 'calendar' },
     // A discount code is a promotion, so it belongs to whoever runs promotions.
     // It sits beside Campaigns rather than inside one: a code is as likely to be
     // handed out at an event or printed on a poster as it is to be emailed.

@@ -2,6 +2,12 @@ import gql from 'graphql-tag';
 
 /** Marketing → Social Accounts. Enum bodies are spelled out so codegen can read them. */
 export const socialTypeDefs = gql`
+  "The Marketing page a finished connection lands back on: the one Connect was pressed on."
+  enum SocialConnectReturn {
+    ACCOUNTS
+    CALENDAR
+  }
+
   "The app a marketer connects through. META covers Facebook Pages and Instagram Business."
   enum SocialProvider {
     LINKEDIN
@@ -254,8 +260,8 @@ export const socialTypeDefs = gql`
   }
 
   extend type Mutation {
-    "The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback."
-    socialConnectUrl(provider: SocialProvider!): String!
+    "The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback, which sends it on to the return_to page."
+    socialConnectUrl(provider: SocialProvider!, return_to: SocialConnectReturn!): String!
     "Read the account now instead of waiting for the scheduler."
     syncSocialAccount(id: ID!): SocialAccount!
     "Remove the account, its tokens and everything read from it."

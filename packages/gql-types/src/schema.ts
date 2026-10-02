@@ -12429,7 +12429,7 @@ export type Mutation = {
   signLegalDocument: LegalDocument;
   signupWithApple: AuthPayload;
   signupWithGoogle: AuthPayload;
-  /** The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback. */
+  /** The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback, which sends it on to the return_to page. */
   socialConnectUrl: Scalars['String']['output'];
   /** The AI's read of a period — not stored, so a mutation: every call is a paid AI call. */
   socialInsights: SocialInsights;
@@ -16137,6 +16137,7 @@ export type MutationSignupWithGoogleArgs = {
 
 export type MutationSocialConnectUrlArgs = {
   provider: SocialProvider;
+  return_to: SocialConnectReturn;
 };
 
 
@@ -28383,6 +28384,11 @@ export type SocialCommentTablePage = {
   rows: Array<SocialComment>;
   total: Scalars['Int']['output'];
 };
+
+/** The Marketing page a finished connection lands back on: the one Connect was pressed on. */
+export type SocialConnectReturn =
+  | 'ACCOUNTS'
+  | 'CALENDAR';
 
 export type SocialIdea = {
   __typename?: 'SocialIdea';

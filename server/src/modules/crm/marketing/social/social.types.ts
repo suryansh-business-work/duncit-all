@@ -10,7 +10,11 @@
 export const SOCIAL_PROVIDERS = ['LINKEDIN', 'META', 'X', 'YOUTUBE'] as const;
 export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
 
-export const SOCIAL_PLATFORMS = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'X', 'YOUTUBE'] as const;
+/** The Marketing page the OAuth callback lands the marketer back on — the one they pressed Connect from. */
+export const SOCIAL_CONNECT_RETURNS = ['ACCOUNTS', 'CALENDAR'] as const;
+export type SocialConnectReturn = (typeof SOCIAL_CONNECT_RETURNS)[number];
+
+export const SOCIAL_PLATFORMS =['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'X', 'YOUTUBE'] as const;
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 
 /** EXPIRED needs a person to reconnect; ERROR is retried on the next sync. */

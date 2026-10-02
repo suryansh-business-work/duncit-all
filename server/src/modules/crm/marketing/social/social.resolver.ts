@@ -3,7 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { socialService } from './social.service';
 import type { SocialAnalyticsInput } from './social.analytics';
-import type { SocialProvider, SocialReviewStatus } from './social.types';
+import type { SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
 
 /** Same gate as the rest of the marketing console. */
 const ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
@@ -38,9 +38,9 @@ export const socialResolvers = {
     },
   },
   Mutation: {
-    socialConnectUrl: (_p: unknown, args: { provider: SocialProvider }, ctx: Ctx) => {
+    socialConnectUrl: (_p: unknown, args: { provider: SocialProvider; return_to: SocialConnectReturn }, ctx: Ctx) => {
       const user = requireRole(ctx, ROLES);
-      return socialService.connectUrl(args.provider, user.id);
+      return socialService.connectUrl(args.provider, user.id, args.return_to);
     },
     syncSocialAccount: (_p: unknown, args: { id: string }, ctx: Ctx) => {
       requireRole(ctx, ROLES);

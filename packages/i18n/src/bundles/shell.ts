@@ -732,6 +732,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       shortLinks: 'Short Links',
       slack: 'Slack',
       socialAccounts: 'Social Accounts',
+      socialCalendar: 'Social Calendar',
       somethingForYou: 'Something for you',
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',

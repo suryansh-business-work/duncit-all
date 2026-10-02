@@ -15,7 +15,9 @@ export default function ExportDialog({ exporter }: Readonly<{ exporter: ReelExpo
   const { state, cancel, dismiss, start } = exporter;
   if (state.phase === 'idle') return null;
   const failed = state.phase === 'failed';
-  const percent = state.phase === 'rendering' ? Math.round(state.progress * 100) : 0;
+  const percent = failed ? 0 : Math.round(state.progress * 100);
+  // The footage is fetched into the tab first, then the frames are drawn.
+  const statusKey = state.phase === 'downloading' ? 'ai.reels.export.downloading' : 'ai.reels.export.progress';
 
   return (
     <Dialog open fullWidth maxWidth="xs" aria-labelledby="reel-export-title" data-testid="reel-export-dialog">
@@ -32,7 +34,7 @@ export default function ExportDialog({ exporter }: Readonly<{ exporter: ReelExpo
             </Typography>
             <LinearProgress variant="determinate" value={percent} aria-label={t('ai.reels.export.progressLabel')} />
             <Typography variant="caption" role="status" sx={{ color: 'text.secondary' }}>
-              {t('ai.reels.export.progress', { vars: { percent } })}
+              {t(statusKey, { vars: { percent } })}
             </Typography>
           </Stack>
         )}

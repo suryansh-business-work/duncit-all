@@ -48,7 +48,10 @@ const WORKFLOW_FILE = 'e2e.yml';
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
 const str = (v: string | null | undefined): string => String(v ?? '').trim();
+/** A finite number, else null. Null/undefined/blank are "not given" — `Number(null)`
+ * is 0, which saved a cleared weekday as Sunday instead of falling to its default. */
 const num = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };

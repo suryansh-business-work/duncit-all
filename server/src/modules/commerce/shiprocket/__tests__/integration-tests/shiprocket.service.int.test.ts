@@ -11,6 +11,7 @@ import { isShiprocketConfigured, getServiceability } from '../../shiprocket.gate
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 
 const mockConfigured = isShiprocketConfigured as jest.Mock;
 const mockServ = getServiceability as jest.Mock;
@@ -78,6 +79,36 @@ describe('shiprocketService.quoteShipping', () => {
     expect(mockServ).toHaveBeenCalledWith(
       expect.objectContaining({ pickupPincode: '110001', deliveryPincode: '560001', weightKg: 4 })
     );
+  });
+
+  it('rates the packed parcel — its footprint and stacked height, not only the dead weight', async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue({ serviceable: true, courier_name: 'Blue', courier_company_id: '1', freight_charge: 96, etd: '3' });
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { weight_kg: 0.5, length_cm: 30, breadth_cm: 20, height_cm: 10 });
+    await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 2 }], '560001');
+    expect(mockServ).toHaveBeenCalledWith(
+      expect.objectContaining({ weightKg: 1, lengthCm: 30, breadthCm: 20, heightCm: 20 })
+    );
+  });
+
+  it("quotes a brand whose shipping account is missing at its manual charge — never on Duncit's account", async () => {
+    mockConfigured.mockResolvedValue(true);
+    const brand = await EcommBrandModel.create({
+      owner_user_id: new Types.ObjectId(),
+      brand_name: 'Yonex',
+      shipping_mode: 'DUNCIT_COURIER',
+    });
+    const wh = await BrandPickupLocationModel.create({
+      owner_kind: 'BRAND',
+      brand_id: brand._id,
+      nickname: `SQWH-${++seq}`,
+      pincode: '560034',
+    });
+    const product = await seedShip(wh._id, { delivery_charge: 60 });
+    const quote = await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 1 }], '560001');
+    expect(mockServ).not.toHaveBeenCalled();
+    expect(quote.breakup[0]).toMatchObject({ charge: 60, quoted: false });
   });
 
   it('falls back to the manual delivery charge when ShipRocket has no quote', async () => {

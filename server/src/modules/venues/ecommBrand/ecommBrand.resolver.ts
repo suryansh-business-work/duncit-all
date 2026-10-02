@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { ecommBrandService } from './ecommBrand.service';
+import type { BrandShippingMode } from './ecommBrand.model';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -148,6 +149,8 @@ export const ecommBrandResolvers = {
       await userService.assertPasswordConfirmation(uid(ctx), args.email, args.password);
       return ecommBrandService.deleteBrand(args.brand_doc_id);
     },
+    setBrandShippingMode: (_p: unknown, args: { brand_doc_id: string; mode: BrandShippingMode }, ctx: GraphQLContext) =>
+      ecommBrandService.setShippingMode(uid(ctx), args.brand_doc_id, args.mode),
     connectBrandShiprocket: (_p: unknown, args: { brand_doc_id: string; input: any }, ctx: GraphQLContext) =>
       ecommBrandService.connectIntegration(uid(ctx), args.brand_doc_id, 'SHIPROCKET', args.input),
     connectBrandRazorpay: (_p: unknown, args: { brand_doc_id: string; input: any }, ctx: GraphQLContext) =>

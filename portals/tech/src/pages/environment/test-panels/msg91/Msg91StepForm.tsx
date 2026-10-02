@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useEnvTestMutation } from '../useEnvTestMutation';
 import { useForm, type FieldValues, type Path, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Divider, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -64,7 +64,7 @@ export default function Msg91StepForm<T extends FieldValues>({
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const [result, setResult] = useState<EnvTestRichResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_MSG91);
+  const [run, { loading }] = useEnvTestMutation(TEST_ENV_MSG91);
   const { control, handleSubmit } = useForm<T, any, T>({
     values,
     resolver: zodResolver(schema) as unknown as Resolver<T, any, T>,

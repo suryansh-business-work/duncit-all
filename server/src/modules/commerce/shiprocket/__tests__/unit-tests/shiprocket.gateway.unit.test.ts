@@ -4,6 +4,7 @@ jest.mock('@config/redis', () => ({
   cacheSet: jest.fn(),
 }));
 jest.mock('../../shiprocket.account', () => ({
+  DEFAULT_SESSION_KEY: 'default',
   getShiprocketAccount: jest.fn(),
   isShiprocketConfigured: jest.fn(),
 }));
@@ -14,7 +15,7 @@ jest.mock('../../shiprocket.client', () => ({
 
 import { cacheGet, cacheSet } from '@config/redis';
 import { isShiprocketConfigured } from '../../shiprocket.account';
-import { shiprocketError, srRequest } from '../../shiprocket.client';
+import { shiprocketError, srRequest, withShiprocketAccount } from '../../shiprocket.client';
 import { getServiceability, weightSlab, type ServiceabilityArgs } from '../../shiprocket.gateway';
 
 /**
@@ -108,8 +109,15 @@ describe('getServiceability', () => {
   it('caches the answer per lane, slab and COD for six hours', async () => {
     mockRequest.mockResolvedValue(couriers([{ courier_company_id: 12, courier_name: 'Delhivery Surface', rate: 68 }]));
     const quote = await getServiceability({ ...lane, cod: true });
-    expect(mockGet).toHaveBeenCalledWith('sr:svc:201301:560034:0.5:1');
-    expect(mockSet).toHaveBeenCalledWith('sr:svc:201301:560034:0.5:1', { quote }, 6 * 3600);
+    expect(mockGet).toHaveBeenCalledWith('sr:svc:default:201301:560034:0.5:1');
+    expect(mockSet).toHaveBeenCalledWith('sr:svc:default:201301:560034:0.5:1', { quote }, 6 * 3600);
+  });
+
+  it('keeps each account apart — a brand never reads a rate cached for another account', async () => {
+    mockRequest.mockResolvedValue(couriers([{ courier_company_id: 12, courier_name: 'Delhivery Surface', rate: 68 }]));
+    const brand = { email: 'ops@yonex.in', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'brand:b1' };
+    await withShiprocketAccount(brand, () => getServiceability(lane));
+    expect(mockGet).toHaveBeenCalledWith('sr:svc:brand:b1:201301:560034:0.5:0');
   });
 
   it('answers from the cache without calling ShipRocket', async () => {

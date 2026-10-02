@@ -115,3 +115,17 @@ export function diffSnapshots(
   }
   return changes;
 }
+
+/** Every field path an update payload names, across its operators. */
+export function updatePaths(update: unknown): string[] {
+  if (!update || typeof update !== 'object') return [];
+  const paths: string[] = [];
+  for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
+    if (!key.startsWith('$')) {
+      paths.push(key);
+      continue;
+    }
+    if (value && typeof value === 'object') paths.push(...Object.keys(value));
+  }
+  return paths;
+}

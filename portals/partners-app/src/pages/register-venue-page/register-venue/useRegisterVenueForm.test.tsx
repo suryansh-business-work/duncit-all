@@ -33,6 +33,8 @@ const savedVenue = {
   documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
   gstin: '22ABCDE1234F1Z5',
   pan: 'ABCDE1234F',
+  has_gstin: true,
+  has_pan: true,
   owner_name: 'Owner Name',
   owner_phone: '+919876543210',
   owner_dob: '1990-05-10T00:00:00.000Z',
@@ -218,6 +220,17 @@ describe('useRegisterVenueForm — saving a section', () => {
     expect(apiRef.current?.venueId).toBe('venue-1');
     expect(apiRef.current?.active).toBe('type-capacity');
     expect(onPersisted).toHaveBeenCalledTimes(1);
+  });
+
+  it('saves amenities through step 1, where the server stores them — never step 3', async () => {
+    const { apiRef, sent } = mount({ venue: draftVenue });
+
+    expect(await save(apiRef, 'amenities')).toBe(true);
+
+    expect(sent.map((call) => call.name)).toEqual(['V1']);
+    expect(sent[0].variables.input).toHaveProperty('amenities');
+    expect(sent[0].variables.input).toHaveProperty('facilities');
+    expect(sent[0].variables.input).toHaveProperty('security');
   });
 
   it('saves step 1 first for a documents save so the server step gate is satisfied', async () => {

@@ -13,7 +13,8 @@ vi.mock('@apollo/client/react', async (io) => {
 // ---- @duncit deps -------------------------------------------------------
 const confirmMock = vi.fn();
 vi.mock('@duncit/dialogs', () => ({ useConfirm: () => confirmMock }));
-vi.mock('@duncit/utils', () => ({
+vi.mock('@duncit/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/utils')>()),
   parseApiError: (e: unknown) => (e instanceof Error ? e.message : 'err'),
   fileToDataUrl: async () => 'data:image/png;base64,AAA',
 }));
@@ -321,20 +322,31 @@ describe('GoogleOAuthTab + GoogleOAuthTest', () => {
 
 describe('TestDrawer', () => {
   it('renders nothing interactive when closed (no entry)', () => {
-    render(<TestDrawer entry={null} onClose={vi.fn()} />);
+    render(<TestDrawer entry={null} onClose={vi.fn()} onTested={vi.fn()} />);
     expect(screen.queryByText(/This test is running/i)).not.toBeInTheDocument();
   });
   it('routes each category to its panel and shows the default hint', () => {
-    const { rerender } = render(<TestDrawer entry={entry({ category: 'EMAIL', is_default: true })} onClose={vi.fn()} />);
+    const { rerender } = render(<TestDrawer entry={entry({ category: 'EMAIL', is_default: true })} onClose={vi.fn()} onTested={vi.fn()} />);
     expect(screen.getByText(/\(default\)/)).toBeInTheDocument();
     expect(screen.getByLabelText('Recipient email')).toBeInTheDocument();
     for (const c of ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_OAUTH', 'TWILIO', 'OPENAI', 'GEMINI'] as const) {
-      rerender(<TestDrawer entry={entry({ category: c, config: [] })} onClose={vi.fn()} />);
+      rerender(<TestDrawer entry={entry({ category: c, config: [] })} onClose={vi.fn()} onTested={vi.fn()} />);
       expect(screen.getByText(c)).toBeInTheDocument();
     }
   });
+  it('tells the entries table after every test call, passed or failed', async () => {
+    const onTested = vi.fn();
+    render(<TestDrawer entry={entry({ category: 'EMAIL' })} onClose={vi.fn()} onTested={onTested} />);
+    fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'a@b.c' } });
+    h.run.mockResolvedValueOnce({ data: { testEnvEmail: { ok: true, message: 'Sent' } } });
+    fireEvent.click(screen.getByRole('button', { name: /send test email/i }));
+    await waitFor(() => expect(onTested).toHaveBeenCalledTimes(1));
+    h.run.mockRejectedValueOnce(new Error('smtp down'));
+    fireEvent.click(screen.getByRole('button', { name: /send test email/i }));
+    await waitFor(() => expect(onTested).toHaveBeenCalledTimes(2));
+  });
   it('renders no panel for an unknown category', () => {
-    render(<TestDrawer entry={entry({ category: 'UNKNOWN' as unknown as EnvEntry['category'] })} onClose={vi.fn()} />);
+    render(<TestDrawer entry={entry({ category: 'UNKNOWN' as unknown as EnvEntry['category'] })} onClose={vi.fn()} onTested={vi.fn()} />);
     expect(screen.getByText(/This test is running/i)).toBeInTheDocument();
   });
 });

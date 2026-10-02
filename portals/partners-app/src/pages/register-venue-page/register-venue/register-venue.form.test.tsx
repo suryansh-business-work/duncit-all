@@ -145,11 +145,12 @@ describe('RegisterVenueForm — navigation', () => {
   it('opens on Venue Details and swaps the panel when another section is picked', async () => {
     mount();
     expect(screen.getByLabelText(/Venue name/)).toBeTruthy();
-    expect(screen.queryByLabelText(/^GSTIN/)).toBeNull();
+    expect(screen.queryByLabelText(/This venue has a GSTIN/)).toBeNull();
 
     openSection('Venue Documents');
 
-    expect(await screen.findByLabelText(/^GSTIN/)).toBeTruthy();
+    // A fresh draft opens with the tax-id switches off — GSTIN is optional.
+    expect(await screen.findByLabelText(/This venue has a GSTIN/)).toBeTruthy();
     expect(screen.queryByLabelText(/Venue name/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Save & continue' })).toBeTruthy();
   });

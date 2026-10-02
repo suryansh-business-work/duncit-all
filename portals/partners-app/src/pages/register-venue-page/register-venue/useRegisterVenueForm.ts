@@ -37,7 +37,10 @@ const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
 
 /** Fields the approved-edit form locks and never persists — a venue approved
  * before they became mandatory must still be able to save its section. */
-const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>(['gstin', 'pan']);
+const APPROVED_LOCKED_FIELDS = new Set<keyof RegisterVenueValues>(['gstin', 'pan', 'has_gstin', 'has_pan']);
+
+/** Sections the server stores in step 1 (`submitVenueStep1`). */
+const STEP1_SECTIONS = new Set<EditableSectionKey>(['details', 'type-capacity', 'amenities']);
 
 interface Options {
   venue: any;
@@ -132,7 +135,10 @@ export function useRegisterVenueForm({ venue, locations, account, mode, onPersis
   };
 
   const persistSection = async (section: EditableSectionKey) => {
-    if (section === 'details' || section === 'type-capacity') {
+    // Amenities, facilities and security are step-1 data on the server. Sent
+    // through step 3 they were never stored, and the server refused the save
+    // ("Complete documentation step first") before Documents had been saved.
+    if (STEP1_SECTIONS.has(section)) {
       await persistStep1();
     } else {
       // Details are validated by now; saving them first keeps the server's

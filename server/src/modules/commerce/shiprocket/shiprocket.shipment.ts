@@ -108,8 +108,9 @@ function assertParcel(order: IProductOrder, parcel: Parcel) {
 }
 
 /**
- * The account an order is booked on: its brand's own when the brand connected
- * one, else the Tech portal's. Every ShipRocket call for the order runs inside
+ * The account an order is booked on: the account its brand ships on (its own,
+ * or Duncit's courier); a Duncit-owned order on the Tech portal's. Throws when the
+ * brand's account cannot be resolved. Every ShipRocket call for the order runs inside
  * `withShiprocketAccount(accountForOrder(order), …)`.
  */
 export const accountForOrder = (order: IProductOrder): Promise<ShiprocketAccount | null> => {
@@ -232,10 +233,19 @@ async function book(order: IProductOrder) {
   addEvent(order, 'AWAITING_SHIPMENT', `ShipRocket order ${booked.order_id} created`);
 }
 
+/**
+ * The courier booked when nobody picked one: the cheapest, because that is the
+ * rate the checkout quoted (`getServiceability`) and the buyer paid. Booking
+ * ShipRocket's "recommended" one instead debited the wallet more than the
+ * delivery charge collected. On a tie the recommended courier wins.
+ */
+const cheapestCourier = (options: CourierOption[]): CourierOption =>
+  options.reduce((best, o) => (o.rate < best.rate || (o.rate === best.rate && o.recommended) ? o : best));
+
 async function pickCourier(order: IProductOrder, courierId?: string | null): Promise<CourierOption> {
   const options = await couriersForOrder(order.shiprocket.order_id);
   if (options.length === 0) throw shiprocketError('No courier can carry this shipment right now — check the pincode and parcel, then retry');
-  if (!courierId) return options.find((o) => o.recommended) ?? options[0];
+  if (!courierId) return cheapestCourier(options);
   return options.find((o) => o.courier_company_id === courierId) ?? bad('That courier is no longer offered for this shipment — pick another');
 }
 
@@ -317,7 +327,24 @@ async function schedulePickup(order: IProductOrder) {
  */
 export async function createShipment(order: IProductOrder, courierId?: string | null): Promise<IProductOrder> {
   if (order.fulfilment_method !== 'SHIP' || order.cancelled_at) return order;
-  return withShiprocketAccount(await accountForOrder(order), () => bookOnAccount(order, courierId));
+  let account: ShiprocketAccount | null;
+  try {
+    account = await accountForOrder(order);
+  } catch (error) {
+    // The brand's shipping account cannot be resolved: the order says what to
+    // fix rather than booking on another business's account.
+    return recordBookingFailure(order, error);
+  }
+  return withShiprocketAccount(account, () => bookOnAccount(order, courierId));
+}
+
+async function recordBookingFailure(order: IProductOrder, error: unknown): Promise<IProductOrder> {
+  order.last_error = (error as Error).message;
+  if (!order.shiprocket.awb) order.fulfilment_status = 'FAILED';
+  logs.server.warn('shiprocket', 'createShipment', { order_no: order.order_no, msg: order.last_error });
+  order.shiprocket.last_synced_at = new Date();
+  await order.save();
+  return order;
 }
 
 async function bookOnAccount(order: IProductOrder, courierId?: string | null): Promise<IProductOrder> {
@@ -331,9 +358,7 @@ async function bookOnAccount(order: IProductOrder, courierId?: string | null): P
     }
     order.last_error = '';
   } catch (error) {
-    order.last_error = (error as Error).message;
-    if (!order.shiprocket.awb) order.fulfilment_status = 'FAILED';
-    logs.server.warn('shiprocket', 'createShipment', { order_no: order.order_no, msg: order.last_error });
+    return recordBookingFailure(order, error);
   }
   order.shiprocket.last_synced_at = new Date();
   await order.save();

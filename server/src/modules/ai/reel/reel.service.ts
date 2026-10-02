@@ -326,6 +326,31 @@ export const reelService = {
     return toPub(updated);
   },
 
+  /**
+   * An edit made by hand on the timeline. It is sanitized exactly as the
+   * editor's own answers are, and written in one update — not a save of a
+   * document read earlier — so it cannot clobber a chat reply landing at the
+   * same moment. The edit arrives as JSON text: the same shape the stored spec
+   * and the director use, with `sanitizeSpec` as its one validator.
+   */
+  async saveSpec(projectId: string, specJson: string, actor: ReelActor) {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(specJson);
+    } catch {
+      throw badInput('The edit could not be read.');
+    }
+    const doc = await load(projectId);
+    const spec = sanitizeSpec(raw, doc.assets);
+    const updated = await ReelProjectModel.findByIdAndUpdate(
+      doc._id,
+      { $set: { spec, updated_by: actor.email } },
+      { new: true }
+    );
+    if (!updated) throw notFound();
+    return toPub(updated);
+  },
+
   async restoreVersion(projectId: string, messageId: string, actor: ReelActor) {
     const doc = await load(projectId);
     const message = doc.messages.find((item) => item.id === messageId);

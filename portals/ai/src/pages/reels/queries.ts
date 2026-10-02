@@ -24,6 +24,58 @@ export const REEL_PROJECTS = gql`
   }
 `;
 
+/**
+ * The edit as the studio reads it. One selection, shared by the reel query and
+ * the hand-edit save, so the timeline and the player can never read a
+ * different shape of the same spec.
+ */
+export const REEL_SPEC_FIELDS = gql`
+  fragment ReelSpecFields on ReelSpec {
+    fps
+    width
+    height
+    background
+    music {
+      asset_id
+      volume
+      trim_start_ms
+    }
+    scenes {
+      id
+      asset_id
+      duration_ms
+      trim_start_ms
+      volume
+      playback_rate
+      fit
+      motion
+      transition
+      transition_ms
+      background
+      texts {
+        id
+        text
+        position
+        style
+        animation
+        start_ms
+        duration_ms
+        color
+        background
+      }
+      overlays {
+        id
+        asset_id
+        corner
+        width_pct
+        opacity
+        start_ms
+        duration_ms
+      }
+    }
+  }
+`;
+
 export const REEL_PROJECT = gql`
   query ReelProject($id: ID!) {
     reelProject(id: $id) {
@@ -50,48 +102,7 @@ export const REEL_PROJECT = gql`
         size_bytes
       }
       spec {
-        fps
-        width
-        height
-        background
-        music {
-          asset_id
-          volume
-          trim_start_ms
-        }
-        scenes {
-          id
-          asset_id
-          duration_ms
-          trim_start_ms
-          volume
-          playback_rate
-          fit
-          motion
-          transition
-          transition_ms
-          background
-          texts {
-            id
-            text
-            position
-            style
-            animation
-            start_ms
-            duration_ms
-            color
-            background
-          }
-          overlays {
-            id
-            asset_id
-            corner
-            width_pct
-            opacity
-            start_ms
-            duration_ms
-          }
-        }
+        ...ReelSpecFields
       }
       messages {
         id
@@ -104,6 +115,7 @@ export const REEL_PROJECT = gql`
       }
     }
   }
+  ${REEL_SPEC_FIELDS}
 `;
 
 export const REEL_DRIVE_STATUS = gql`
@@ -197,4 +209,22 @@ export const RESTORE_REEL_VERSION = gql`
       id
     }
   }
+`;
+
+/**
+ * A hand edit from the timeline. It answers with the sanitized spec, which the
+ * cache writes onto the reel, so no refetch follows every keystroke.
+ */
+export const SAVE_REEL_SPEC = gql`
+  mutation SaveReelSpec($project_id: ID!, $spec_json: String!) {
+    saveReelSpec(project_id: $project_id, spec_json: $spec_json) {
+      id
+      duration_ms
+      updated_at
+      spec {
+        ...ReelSpecFields
+      }
+    }
+  }
+  ${REEL_SPEC_FIELDS}
 `;

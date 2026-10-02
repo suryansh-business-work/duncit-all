@@ -48,12 +48,18 @@ const noDuplicateDocuments = (documents: z.infer<typeof documentSchema>[], ctx: 
   });
 };
 
-const requiredPattern = (pattern: RegExp, requiredMessage: string, formatMessage: string) =>
-  z
-    .string()
-    .trim()
-    .min(1, requiredMessage)
-    .refine((value) => !value || pattern.test(value.toUpperCase()), formatMessage);
+/** An optional tax id: required, and checked against its format, only while
+ * its switch says the venue has one. Returns the message to show, or null. */
+const taxIdIssue = (
+  has: boolean,
+  value: string,
+  pattern: RegExp,
+  messages: Readonly<{ required: string; format: string }>,
+) => {
+  if (!has) return null;
+  if (!value) return messages.required;
+  return pattern.test(value.toUpperCase()) ? null : messages.format;
+};
 
 /** Payout Method's messages depend on the reader's language (`t` from the form
  * that renders it); every other field here is pre-existing, unlocalized debt
@@ -91,12 +97,10 @@ export const registerVenueSchema = (t: Translate = fallbackT) => z.object({
   facilities: z.array(z.string().trim()),
   security: z.array(z.string().trim()),
   documents: z.array(documentSchema).min(1, 'Upload at least one document').superRefine(noDuplicateDocuments),
-  gstin: requiredPattern(
-    GSTIN_PATTERN,
-    'GSTIN is required',
-    'GSTIN must follow format like 22ABCDE1234F1Z5'
-  ),
-  pan: requiredPattern(PAN_PATTERN, 'PAN is required', 'PAN must follow format ABCDE1234F'),
+  has_gstin: z.boolean(),
+  gstin: z.string().trim(),
+  has_pan: z.boolean(),
+  pan: z.string().trim(),
   owner_name: zodRules.personName('Owner name'),
   owner_email: zodRules.email('Owner email', { lengthFirst: true }),
   owner_phone: z
@@ -138,6 +142,16 @@ export const registerVenueSchema = (t: Translate = fallbackT) => z.object({
   // is a superRefine rather than per-field .min() — RHF keeps every payout
   // field registered while the reader switches the Payout Method dropdown.
   .superRefine((values, ctx) => {
+    const gstinIssue = taxIdIssue(values.has_gstin, values.gstin, GSTIN_PATTERN, {
+      required: 'GSTIN is required',
+      format: 'GSTIN must follow format like 22ABCDE1234F1Z5',
+    });
+    if (gstinIssue) ctx.addIssue({ code: 'custom', path: ['gstin'], message: gstinIssue });
+    const panIssue = taxIdIssue(values.has_pan, values.pan, PAN_PATTERN, {
+      required: 'PAN is required',
+      format: 'PAN must follow format ABCDE1234F',
+    });
+    if (panIssue) ctx.addIssue({ code: 'custom', path: ['pan'], message: panIssue });
     if (values.payout_method === 'UPI') {
       if (!values.upi_id) {
         ctx.addIssue({ code: 'custom', path: ['upi_id'], message: t('partners.registerVenuePage.upiIdRequired') });
@@ -196,7 +210,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'
   ],
   'type-capacity': ['venue_type', 'capacity_items'],
   amenities: ['amenities', 'facilities', 'security'],
-  documents: ['documents', 'gstin', 'pan'],
+  documents: ['documents', 'has_gstin', 'gstin', 'has_pan', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],
   payout: ['payout_method', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id'],
 };

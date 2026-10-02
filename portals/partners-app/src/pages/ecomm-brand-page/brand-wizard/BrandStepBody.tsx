@@ -59,6 +59,7 @@ export default function BrandStepBody({
       return (
         <IntegrationStep
           brandId={brandId}
+          shippingMode={brand?.shipping_mode}
           integrations={brand?.integrations}
           locked={locked}
           ensureBrandId={ensureBrandId}
@@ -66,7 +67,16 @@ export default function BrandStepBody({
         />
       );
     case 'review':
-      return <ReviewStep values={watch()} states={states} integrations={brand?.integrations} locked={locked} onJump={onJump} />;
+      return (
+        <ReviewStep
+          values={watch()}
+          states={states}
+          shippingMode={brand?.shipping_mode}
+          integrations={brand?.integrations}
+          locked={locked}
+          onJump={onJump}
+        />
+      );
     default:
       return (
         <ConsentStep brandId={brandId} consent={brand?.consent} locked={locked} ensureBrandId={ensureBrandId} onChanged={onChanged} />

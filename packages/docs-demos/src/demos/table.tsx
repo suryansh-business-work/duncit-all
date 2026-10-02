@@ -13,6 +13,7 @@ import { defineDemo, defineDemos } from '../types';
 import { TypedColumnsDemo, type TypedColumnsMock } from './table/TypedColumnsDemo';
 import { RowUpdateDemo, type RowUpdateMock } from './table/RowUpdateDemo';
 import { BulkScopeDemo, type ScopeMock } from './table/BulkScopeDemo';
+import { CHANGE_LOG_MOCK, ChangeLogDemo, type ChangeLogMock } from './table/ChangeLogDemo';
 
 interface QueryMock {
   query: TableQueryState;
@@ -143,6 +144,15 @@ export default defineDemos('table', [
       ],
     },
     render: (mock) => <BulkScopeDemo rows={mock.rows} />,
+  }),
+
+  defineDemo<ChangeLogMock>({
+    id: 'change-log',
+    title: 'Who changed what, in every grid',
+    note:
+      'The History button beside Download carries how many changes a person made to the rows this view holds. Open it: each entry names who, when, the record, the field and the value before and after. Set detailed to false and the account’s email, roles, surface, address and browser drop out — only the Finance console asks for them.',
+    mock: CHANGE_LOG_MOCK,
+    render: (mock) => <ChangeLogDemo rows={mock.rows} logs={mock.logs} detailed={mock.detailed} />,
   }),
 
   defineDemo<RowsMock>({

@@ -275,5 +275,11 @@ export const reelTypeDefs = gql`
     sendReelMessage(input: ReelMessageInput!): ReelProject!
     "Put back the edit an earlier reply produced."
     restoreReelVersion(project_id: ID!, message_id: ID!): ReelProject!
+    """
+    Save an edit made by hand on the timeline. spec_json is the whole ReelSpec as
+    JSON; it is sanitized against the project's footage exactly as the editor's
+    answers are, and the reel comes back as it now stands.
+    """
+    saveReelSpec(project_id: ID!, spec_json: String!): ReelProject!
   }
 `;

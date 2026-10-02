@@ -153,26 +153,33 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     setReachedStart(false);
   }, [peer?.id]);
 
+  // The bound `refetch`es, never the query results: a result object changes
+  // identity on every fetch, so a callback depending on it re-ran the mark-read
+  // effect below after each refetch it caused — an endless request loop.
+  const refetchThreads = threadsQuery.refetch;
+  const refetchMessages = messagesQuery.refetch;
+  const peerId = peer?.id;
+
   const refreshAll = useCallback(() => {
-    threadsQuery.refetch().catch(() => undefined);
+    refetchThreads().catch(() => undefined);
     client.refetchQueries({ include: [STAFF_UNREAD] }).catch(() => undefined);
-  }, [threadsQuery, client]);
+  }, [refetchThreads, client]);
 
   // Opening a conversation is what marks it read — not receiving it.
   useEffect(() => {
-    if (!peer) return;
-    markRead({ variables: { peerId: peer.id } })
+    if (!peerId) return;
+    markRead({ variables: { peerId } })
       .then(refreshAll)
       .catch(() => undefined);
-  }, [peer, markRead, refreshAll]);
+  }, [peerId, markRead, refreshAll]);
 
   const onMessage = useCallback(
     (message: StaffMessage) => {
       const involved = peer && (message.from_user_id === peer.id || message.to_user_id === peer.id);
-      if (involved) messagesQuery.refetch().catch(() => undefined);
+      if (involved) refetchMessages().catch(() => undefined);
       refreshAll();
     },
-    [peer, messagesQuery, refreshAll]
+    [peer, refetchMessages, refreshAll]
   );
 
   const { socket, typing, typingAt } = useStaffSocket({
@@ -261,7 +268,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
       })
         .then(() => {
           setOutbox((current) => withoutMessage(current, localId));
-          messagesQuery.refetch().catch(() => undefined);
+          refetchMessages().catch(() => undefined);
           refreshAll();
         })
         .catch(() => {
@@ -270,7 +277,7 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
           setOutbox((current) => markFailed(current, localId));
         });
     },
-    [peer, meId, sendMessage, messagesQuery, refreshAll]
+    [peer, meId, sendMessage, refetchMessages, refreshAll]
   );
 
   /** Send it again, and forget the attempt that failed. */
@@ -396,12 +403,12 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
     (mutate: typeof editMessage, variables: Record<string, unknown>) => {
       mutate({ variables })
         .then(() => {
-          messagesQuery.refetch().catch(() => undefined);
+          refetchMessages().catch(() => undefined);
           refreshAll();
         })
         .catch(() => undefined);
     },
-    [messagesQuery, refreshAll]
+    [refetchMessages, refreshAll]
   );
 
   /** Empty this conversation for both people, then re-read what is left. */
@@ -413,11 +420,11 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
         setOlder([]);
         setOutbox([]);
         setReachedStart(true);
-        messagesQuery.refetch().catch(() => undefined);
+        refetchMessages().catch(() => undefined);
         refreshAll();
       })
       .catch((err: Error) => setError(describeFailure(err, 'shell.chat.failure.unknown')));
-  }, [peer, clearThread, messagesQuery, refreshAll]);
+  }, [peer, clearThread, refetchMessages, refreshAll]);
 
   const hideForMe = useCallback(
     (id: string) => setHiddenIds((current) => new Set(current).add(id)),

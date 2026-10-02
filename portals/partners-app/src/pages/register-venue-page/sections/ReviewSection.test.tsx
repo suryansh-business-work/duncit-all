@@ -54,6 +54,8 @@ const complete: Partial<RegisterVenueValues> = {
   ],
   gstin: '29ABCDE1234F1Z5',
   pan: 'ABCDE1234F',
+  has_gstin: true,
+  has_pan: true,
   owner_name: 'Asha Rao',
   owner_email: 'asha@duncit.com',
   owner_phone: '+919876543210',

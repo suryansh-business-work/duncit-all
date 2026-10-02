@@ -8,6 +8,8 @@ vi.mock('@apollo/client', () => ({ gql: (s: TemplateStringsArray) => s }));
 vi.mock('@apollo/client/react', () => ({
   useQuery: () => ({ data: undefined, loading: false }),
   useMutation: () => [vi.fn(), { loading: false }],
+  // AppShell gives every grid its change log, which reads through the client.
+  useApolloClient: () => ({ query: vi.fn() }),
 }));
 vi.mock('@duncit/breadcrumb', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/breadcrumb')>()),

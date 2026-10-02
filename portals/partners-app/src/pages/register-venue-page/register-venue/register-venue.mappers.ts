@@ -77,6 +77,8 @@ export function venueToValues(
     documents: (venue.documents ?? []).map((doc: any) => ({ type: doc.type, url: doc.url })),
     gstin: venue.gstin || '',
     pan: venue.pan || '',
+    has_gstin: Boolean(venue.gstin),
+    has_pan: Boolean(venue.pan),
     owner_name: venue.owner_name || account.name,
     owner_email: account.email || venue.owner_email || '',
     owner_phone: venue.owner_phone || '',
@@ -135,8 +137,8 @@ export function toStep2Input(values: RegisterVenueValues) {
     documents: values.documents
       .filter((doc) => doc.type && doc.url)
       .map((doc) => ({ type: doc.type, url: doc.url })),
-    gstin: values.gstin,
-    pan: values.pan,
+    gstin: values.has_gstin ? values.gstin : '',
+    pan: values.has_pan ? values.pan : '',
   };
 }
 

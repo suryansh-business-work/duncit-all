@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import express from 'express';
 import { timingSafeEqual } from 'node:crypto';
 import { logs } from '@observability/log';
-import { getShiprocketAccount } from './shiprocket.account';
+import { getPartnerCourierAccount, getShiprocketAccount } from './shiprocket.account';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { applyWebhookEvent } from './shiprocket.tracking';
 
@@ -30,16 +30,17 @@ function safeEqual(a: string, b: string): boolean {
   return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
 
-/** Every key a webhook may carry: the Tech portal's, and each connected brand's. */
+/** Every key a webhook may carry: the Tech portal's, Duncit's partner courier's, and each connected brand's. */
 async function acceptedKeys(): Promise<string[]> {
   const platform = (await getShiprocketAccount())?.webhookSecret ?? '';
+  const partnerCourier = (await getPartnerCourierAccount())?.webhookSecret ?? '';
   const brands = await EcommBrandModel.find({
     'integrations.shiprocket.connected': true,
     'integrations.shiprocket.webhook_secret': { $nin: ['', null] },
   })
     .select('integrations.shiprocket.webhook_secret')
     .lean();
-  return [platform, ...brands.map((b) => b.integrations?.shiprocket?.webhook_secret ?? '')].filter(Boolean);
+  return [platform, partnerCourier, ...brands.map((b) => b.integrations?.shiprocket?.webhook_secret ?? '')].filter(Boolean);
 }
 
 export function buildShiprocketWebhookRouter(): Router {

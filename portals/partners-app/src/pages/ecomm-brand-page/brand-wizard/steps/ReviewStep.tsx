@@ -5,8 +5,8 @@ import { InfoRow, SectionCard } from '@duncit/ui';
 import type { BrandStepState, BrandWizardStepKey } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { BrandFormValues } from '../../schema';
-import type { BrandIntegrations } from '../../queries';
-import { stepLabels } from '../wizard-steps';
+import type { BrandIntegrations, BrandShippingMode } from '../../queries';
+import { integrationReady, stepLabels } from '../wizard-steps';
 import { reviewSections, type ReviewSection } from './review-sections';
 
 interface SectionProps {
@@ -39,16 +39,17 @@ function ReviewSectionCard({ section, title, locked, notProvided, editLabel, onE
 interface Props {
   values: BrandFormValues;
   states: BrandStepState[];
+  shippingMode: BrandShippingMode | null | undefined;
   integrations: BrandIntegrations | undefined;
   locked: boolean;
   onJump: (key: BrandWizardStepKey) => void;
 }
 
 /** Step 9 — everything at a glance, an Edit link per section, and what still blocks submission. */
-export default function ReviewStep({ values, states, integrations, locked, onJump }: Readonly<Props>) {
+export default function ReviewStep({ values, states, shippingMode, integrations, locked, onJump }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = stepLabels(t);
-  const bothConnected = integrations?.shiprocket.connected === true && integrations?.razorpay.connected === true;
+  const ready = integrationReady(shippingMode, integrations);
   const blocking = states.filter((state) => state.required && !state.complete);
   const notProvided = t('partners.brandWizard.review.notProvided');
   const editLabel = t('partners.brandWizard.review.edit');
@@ -58,8 +59,8 @@ export default function ReviewStep({ values, states, integrations, locked, onJum
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {t('partners.brandWizard.review.intro')}
       </Typography>
-      <Alert severity={bothConnected ? 'success' : 'warning'} data-testid="brand-review-integrations">
-        {bothConnected ? t('partners.brandWizard.review.integrationsOk') : t('partners.brandWizard.review.integrationsMissing')}
+      <Alert severity={ready ? 'success' : 'warning'} data-testid="brand-review-integrations">
+        {ready ? t('partners.brandWizard.review.integrationsOk') : t('partners.brandWizard.review.integrationsMissing')}
       </Alert>
       {blocking.length > 0 && (
         <Alert severity="warning" data-testid="brand-review-blocked">

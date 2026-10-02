@@ -38,6 +38,13 @@ function isTransient(error: unknown): boolean {
   return true;
 }
 
+/** The request never got an answer: no connection, DNS, TLS. Not a timeout, not
+ * an HTTP status — those reached (or left) the server and are reported as such. */
+function isConnectionError(error: unknown): boolean {
+  if (error instanceof ClientError) return false;
+  return !(error instanceof Error && error.name === 'AbortError');
+}
+
 /** Normalise any failure into an {@link ApiError} with a user-facing message. */
 function toApiError(error: unknown): ApiError {
   // NB: check `Error` + name, NOT `instanceof DOMException` — React Native
@@ -83,11 +90,17 @@ async function attempt<TResult>(
  * TypedDocumentNodes to the same server mWeb uses, attaches the bearer token
  * when `auth` is set, enforces a per-attempt timeout, retries transient query
  * failures, and normalises every failure into an {@link ApiError}.
+ *
+ * A mutation is never retried by default — repeating one whose answer was lost
+ * could book or pay twice. `retryOnNetworkError` opts a mutation that is safe to
+ * repeat (a sign-in) into ONE retry after a connection failure: a dropped
+ * connection or a brief TLS gap during a deploy then recovers on its own instead
+ * of showing "Network error" on the first screen a store reviewer sees.
  */
 export async function graphqlRequest<TResult, TVars extends object = Record<string, never>>(
   document: TypedDocumentNode<TResult, TVars> | DocumentNode,
   variables?: TVars,
-  options: { auth?: boolean } = {},
+  options: { auth?: boolean; retryOnNetworkError?: boolean } = {},
 ): Promise<TResult> {
   const headers: Record<string, string> = {};
   if (options.auth) {
@@ -119,7 +132,10 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
     } catch (error) {
       lastError = error;
       const hasNextAttempt = i < MAX_ATTEMPTS - 1;
-      if (!canRetry || !isTransient(error) || !hasNextAttempt) break;
+      const retryable = canRetry
+        ? isTransient(error)
+        : options.retryOnNetworkError === true && i === 0 && isConnectionError(error);
+      if (!retryable || !hasNextAttempt) break;
       await sleep(BASE_RETRY_DELAY_MS * 3 ** i); // 400ms, then 1200ms
     }
   }

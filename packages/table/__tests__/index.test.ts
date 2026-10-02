@@ -23,6 +23,8 @@ describe('package entry point', () => {
     expect(typeof api.useTranslation).toBe('function');
     expect(typeof api.isColumnFilterable).toBe('function');
     expect(typeof api.isColumnSortable).toBe('function');
+    expect(typeof api.useTableChangeLogApi).toBe('function');
+    expect(api.TableChangeLogProvider).toBeTruthy();
     expect(api.EM_DASH).toBe('—');
   });
 });

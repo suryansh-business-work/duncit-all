@@ -61,6 +61,8 @@ export interface BrandWizardFacts {
   account_number?: string | null;
   ifsc_code?: string | null;
   upi_id?: string | null;
+  /** OWN_SHIPROCKET | DUNCIT_COURIER — null until the brand chooses. */
+  shipping_mode?: string | null;
   shiprocket_connected?: boolean | null;
   razorpay_connected?: boolean | null;
   consent_signed?: boolean | null;
@@ -86,7 +88,7 @@ const STEP_CHECK: Record<Exclude<BrandWizardStepKey, 'review'>, (f: BrandWizardF
   categories: (f) => some(f.product_categories),
   media: (f) => filled(f.logo_url),
   documents: (f) => some(f.documents),
-  integration: (f) => f.shiprocket_connected === true && f.razorpay_connected === true,
+  integration: (f) => f.razorpay_connected === true && brandShippingReady(f.shipping_mode, f.shiprocket_connected === true),
   consent: (f) => f.consent_signed === true,
 };
 
@@ -123,3 +125,14 @@ export function brandNextStepIndex(facts: BrandWizardFacts): number {
 
 /** The slug of the Legal-portal policy a brand partner signs at the last step. */
 export const BRAND_CONSENT_POLICY_SLUG = 'brand-partner-consent';
+
+/**
+ * Whether a brand's shipping is settled: Duncit's courier needs nothing from
+ * the brand, its own ShipRocket must be connected. No mode (a brand from
+ * before the choice) counts as its own account. Server twin: `shippingReady`
+ * in ecommBrand.completion.ts.
+ */
+export function brandShippingReady(mode: string | null | undefined, ownConnected: boolean): boolean {
+  if (mode === 'DUNCIT_COURIER') return true;
+  return ownConnected;
+}

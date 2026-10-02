@@ -60,6 +60,7 @@ export type BrandFacts = Partial<Record<BrandTextFact, string | null>> & {
   product_categories?: readonly string[] | null;
   documents?: readonly unknown[] | null;
   integrations?: { shiprocket?: { connected?: boolean | null }; razorpay?: { connected?: boolean | null } } | null;
+  shipping_mode?: string | null;
   consent?: { accepted?: boolean | null } | null;
 };
 
@@ -84,7 +85,9 @@ const CHECK: Record<Exclude<BrandStepKey, 'review'>, Check> = {
   categories: (b) => some(b.product_categories),
   media: (b) => filled(b.logo_url),
   documents: (b) => some(b.documents),
-  integration: (b) => b.integrations?.shiprocket?.connected === true && b.integrations?.razorpay?.connected === true,
+  integration: (b) =>
+    b.integrations?.razorpay?.connected === true &&
+    shippingReady(b.shipping_mode, b.integrations?.shiprocket?.connected === true),
   // No published consent = nothing to sign; the step is satisfied so a brand
   // is never blocked on a page Legal has not written yet.
   consent: (b, c) => !c.available || (b.consent?.accepted === true && c.current),
@@ -120,3 +123,14 @@ export const missingBrandSteps = (brand: BrandFacts, consent: ConsentContext): B
   brandCompletion(brand, consent)
     .steps.filter((s) => s.required && !s.complete)
     .map((s) => s.key);
+
+/**
+ * Whether a brand's shipping is settled. Duncit's courier needs nothing from
+ * the brand; its own ShipRocket must be connected. A brand from before the
+ * choice existed (no mode) counts as OWN — it can only have passed this step
+ * by connecting one. Twin: `brandShippingReady` in `@duncit/utils`.
+ */
+export function shippingReady(mode: string | null | undefined, ownConnected: boolean): boolean {
+  if (mode === 'DUNCIT_COURIER') return true;
+  return ownConnected;
+}

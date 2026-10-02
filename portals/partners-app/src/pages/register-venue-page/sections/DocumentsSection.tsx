@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
+import TaxIdField from './TaxIdField';
 import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 import { useTranslation } from '@duncit/shell';
 
@@ -35,33 +36,27 @@ export default function DocumentsSection({ form, config, mode, lockedDocCount = 
 
   return (
     <Stack spacing={2.5}>
-      <Controller
+      <TaxIdField
+        form={form}
+        toggleName="has_gstin"
         name="gstin"
-        control={control}
-        render={({ field, fieldState }) => (
-          <TextField
-            {...field}
-            label="GSTIN"
-            required
-            disabled={approvedEdit}
-            error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? (approvedEdit ? 'Locked after approval' : '15-character GST number, e.g. 22ABCDE1234F1Z5')}
-          />
-        )}
+        label="GSTIN"
+        toggleLabel={t('partners.registerVenuePage.hasGstin')}
+        toggleHint={t('partners.registerVenuePage.hasGstinHint')}
+        hint="15-character GST number, e.g. 22ABCDE1234F1Z5"
+        locked={approvedEdit}
+        lockedHint="Locked after approval"
       />
-      <Controller
+      <TaxIdField
+        form={form}
+        toggleName="has_pan"
         name="pan"
-        control={control}
-        render={({ field, fieldState }) => (
-          <TextField
-            {...field}
-            label="PAN"
-            required
-            disabled={approvedEdit}
-            error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? (approvedEdit ? 'Locked after approval' : '10-character PAN, e.g. ABCDE1234F')}
-          />
-        )}
+        label="PAN"
+        toggleLabel={t('partners.registerVenuePage.hasPan')}
+        toggleHint={t('partners.registerVenuePage.hasPanHint')}
+        hint="10-character PAN, e.g. ABCDE1234F"
+        locked={approvedEdit}
+        lockedHint="Locked after approval"
       />
       <Box>
         <Typography variant="subtitle2" sx={{

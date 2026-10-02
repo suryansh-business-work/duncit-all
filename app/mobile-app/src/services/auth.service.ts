@@ -123,7 +123,8 @@ export async function login(values: LoginValues): Promise<AuthOutcome> {
           email: values.email.trim().toLowerCase(),
           password: values.password,
         };
-  const data = await graphqlRequest(LoginDocument, { input });
+  // A sign-in is safe to repeat, so a dropped connection gets one retry.
+  const data = await graphqlRequest(LoginDocument, { input }, { retryOnNetworkError: true });
   await setAuthToken(data.login.token);
   return { token: data.login.token, surveyCompleted: data.login.user.onboarding_survey_completed };
 }
@@ -301,7 +302,11 @@ export async function signupWithGoogle(
 
 /** Token-only Google login for existing accounts (mirrors mWeb LOGIN_GOOGLE). */
 export async function loginWithGoogle(idToken: string): Promise<AuthOutcome> {
-  const data = await graphqlRequest(LoginWithGoogleDocument, { input: { id_token: idToken } });
+  const data = await graphqlRequest(
+    LoginWithGoogleDocument,
+    { input: { id_token: idToken } },
+    { retryOnNetworkError: true },
+  );
   await setAuthToken(data.loginWithGoogle.token);
   return {
     token: data.loginWithGoogle.token,
@@ -358,7 +363,11 @@ export async function signupWithApple(
 
 /** Token-only Apple login for existing accounts (mirrors mWeb LOGIN_APPLE). */
 export async function loginWithApple(idToken: string): Promise<AuthOutcome> {
-  const data = await graphqlRequest(LoginWithAppleDocument, { input: { id_token: idToken } });
+  const data = await graphqlRequest(
+    LoginWithAppleDocument,
+    { input: { id_token: idToken } },
+    { retryOnNetworkError: true },
+  );
   await setAuthToken(data.loginWithApple.token);
   return {
     token: data.loginWithApple.token,

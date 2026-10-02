@@ -13,6 +13,7 @@ import { AgentLauncher } from '../agent';
 import { usePortalAppFeatures } from '../usePortalAppFeatures';
 import { Taskbar, WorkspaceProvider } from '../../workspace';
 import { BackgroundJobsProvider } from '../../background-jobs';
+import { TableChangeLogsProvider } from '../../change-logs/TableChangeLogsProvider';
 import { AppShellMain, MAIN_ID } from './AppShellMain';
 import { SkipLink } from './SkipLink';
 import type { AppShellProps } from './types';
@@ -32,6 +33,7 @@ export function AppShell({
   onDenied,
   breadcrumbLabelMap,
   tools,
+  detailedChangeLogs = false,
   children,
 }: Readonly<AppShellProps>) {
   const navigate = useNavigate();
@@ -94,86 +96,88 @@ export function AppShell({
     */
     <WorkspaceProvider enabled={Boolean(user)}>
       <BackgroundJobsProvider enabled={Boolean(user)}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100dvh',
-            overflow: 'hidden',
-            bgcolor: 'background.default',
-          }}
-        >
-          <Box sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
-            <SkipLink targetId={MAIN_ID} label={t('shell.chrome.skipToContent')} />
-            <AppShellNav
-              name={config.name}
-              footerCaption={config.footerCaption}
-              nav={localizedNav}
-              user={user}
-              mobileOpen={mobileOpen}
-              onCloseMobile={closeMobileNav}
-            />
-            <Box sx={CONTENT_PANEL_SX}>
-              <AppHeader
-                title={config.fullName ?? config.name}
+        <TableChangeLogsProvider enabled={Boolean(user)} detailed={detailedChangeLogs}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100dvh',
+              overflow: 'hidden',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Box sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}>
+              <SkipLink targetId={MAIN_ID} label={t('shell.chrome.skipToContent')} />
+              <AppShellNav
                 name={config.name}
+                footerCaption={config.footerCaption}
                 nav={localizedNav}
-                searchItems={localizedSearch}
                 user={user}
-                profileTo={profileTo}
-                onLogout={onLogout}
-                onOpenMobileNav={() => setMobileOpen(true)}
-                tools={tools}
-                chatOpen={chatOpen}
-                onToggleChat={toggleChat}
-                chatEnabled={features.chat}
-                appsEnabled={features.apps}
+                mobileOpen={mobileOpen}
+                onCloseMobile={closeMobileNav}
               />
-              <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
-                <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                  <AppShellMain
-                    nav={localizedNav}
-                    shortName={config.name}
-                    appName={config.fullName ?? config.name}
-                    labelMap={breadcrumbLabelMap}
-                    mainRef={mainRef}
-                  >
-                    {children}
-                  </AppShellMain>
+              <Box sx={CONTENT_PANEL_SX}>
+                <AppHeader
+                  title={config.fullName ?? config.name}
+                  name={config.name}
+                  nav={localizedNav}
+                  searchItems={localizedSearch}
+                  user={user}
+                  profileTo={profileTo}
+                  onLogout={onLogout}
+                  onOpenMobileNav={() => setMobileOpen(true)}
+                  tools={tools}
+                  chatOpen={chatOpen}
+                  onToggleChat={toggleChat}
+                  chatEnabled={features.chat}
+                  appsEnabled={features.apps}
+                />
+                <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
+                  <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <AppShellMain
+                      nav={localizedNav}
+                      shortName={config.name}
+                      appName={config.fullName ?? config.name}
+                      labelMap={breadcrumbLabelMap}
+                      mainRef={mainRef}
+                    >
+                      {children}
+                    </AppShellMain>
+                  </Box>
+                  {/* Mounted whether or not it is showing: the socket that carries an
+                      incoming call lives inside it, and a chat that only listens while
+                      its sidebar is open is a phone that only rings while you hold it.
+                      `open` decides what is on screen; the call window is separate and
+                      appears over the page either way. */}
+                  {showChat && (
+                    <StaffChatPanel
+                      open={chatOpen}
+                      meId={user?.user_id ?? ''}
+                      meName={user?.full_name ?? user?.first_name ?? undefined}
+                      // Optional on the panel, which defaults it to []. `showChat`
+                      // already implies a matching `roles` array, so the fallback
+                      // never applies — but asserting that with `!` tells the reader
+                      // nothing the narrowing above did not already do.
+                      meRoles={roles}
+                      onClose={closeChat}
+                      onRequestOpen={openChat}
+                    />
+                  )}
                 </Box>
-                {/* Mounted whether or not it is showing: the socket that carries an
-                    incoming call lives inside it, and a chat that only listens while
-                    its sidebar is open is a phone that only rings while you hold it.
-                    `open` decides what is on screen; the call window is separate and
-                    appears over the page either way. */}
-                {showChat && (
-                  <StaffChatPanel
-                    open={chatOpen}
-                    meId={user?.user_id ?? ''}
-                    meName={user?.full_name ?? user?.first_name ?? undefined}
-                    // Optional on the panel, which defaults it to []. `showChat`
-                    // already implies a matching `roles` array, so the fallback
-                    // never applies — but asserting that with `!` tells the reader
-                    // nothing the narrowing above did not already do.
-                    meRoles={roles}
-                    onClose={closeChat}
-                    onRequestOpen={openChat}
-                  />
-                )}
               </Box>
             </Box>
+  
+            {/* The taskbar is a ROW of this column, not a bar fixed over the page:
+                the content above it is genuinely shorter, so the last line of a long
+                table is readable instead of sitting underneath the clock. */}
+            <Taskbar />
+  
+            {/* Every console gets the Agent. Its tab is fixed-positioned, so it sits
+                outside the layout above and covers nothing until opened; what it will
+                actually DO is decided by the caller's own roles, server-side. */}
+            <AgentLauncher />
           </Box>
-
-          {/* The taskbar is a ROW of this column, not a bar fixed over the page:
-              the content above it is genuinely shorter, so the last line of a long
-              table is readable instead of sitting underneath the clock. */}
-          <Taskbar />
-
-          {/* Every console gets the Agent. Its tab is fixed-positioned, so it sits
-              outside the layout above and covers nothing until opened; what it will
-              actually DO is decided by the caller's own roles, server-side. */}
-          <AgentLauncher />
-        </Box>
+        </TableChangeLogsProvider>
       </BackgroundJobsProvider>
     </WorkspaceProvider>
   );

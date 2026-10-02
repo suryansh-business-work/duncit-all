@@ -4,6 +4,7 @@ jest.mock('@config/redis', () => ({
   cacheSet: jest.fn(),
 }));
 jest.mock('../../shiprocket.account', () => ({
+  DEFAULT_SESSION_KEY: 'default',
   getShiprocketAccount: jest.fn(),
   isShiprocketConfigured: jest.fn(),
 }));

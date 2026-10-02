@@ -45,6 +45,9 @@ export interface RegisterVenueValues extends VenueLocationValues {
   documents: DocRow[];
   gstin: string;
   pan: string;
+  /** GSTIN and PAN are optional: a switch per number says whether one is given. */
+  has_gstin: boolean;
+  has_pan: boolean;
   owner_name: string;
   owner_email: string;
   owner_phone: string;
@@ -110,6 +113,8 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   documents: [],
   gstin: '',
   pan: '',
+  has_gstin: false,
+  has_pan: false,
   owner_name: '',
   owner_email: '',
   owner_phone: '',

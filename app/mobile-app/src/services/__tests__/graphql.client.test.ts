@@ -110,6 +110,44 @@ describe('graphqlRequest', () => {
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 
+  it('retries an opted-in mutation once after a connection failure', async () => {
+    mockRequest
+      .mockRejectedValueOnce(new Error('Network request failed'))
+      .mockResolvedValueOnce({ login: 'ok' });
+    await expect(
+      graphqlRequest(MUTATION_DOC, undefined, { retryOnNetworkError: true }),
+    ).resolves.toEqual({
+      login: 'ok',
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives an opted-in mutation only one retry', async () => {
+    mockRequest.mockRejectedValue(new Error('Network request failed'));
+    await expect(
+      graphqlRequest(MUTATION_DOC, undefined, { retryOnNetworkError: true }),
+    ).rejects.toThrow(/network error/i);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('never retries an opted-in mutation the server answered, or one that timed out', async () => {
+    mockRequest.mockRejectedValueOnce(
+      new ClientError({ status: 502, errors: [] } as never, { query: 'q' } as never),
+    );
+    await expect(
+      graphqlRequest(MUTATION_DOC, undefined, { retryOnNetworkError: true }),
+    ).rejects.toThrow('Request failed.');
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+
+    const aborted = new Error('aborted');
+    aborted.name = 'AbortError';
+    mockRequest.mockRejectedValueOnce(aborted);
+    await expect(
+      graphqlRequest(MUTATION_DOC, undefined, { retryOnNetworkError: true }),
+    ).rejects.toThrow(/timed out/i);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
   it('does not retry a 4xx GraphQL error and surfaces it at once', async () => {
     mockRequest.mockRejectedValue(
       new ClientError(

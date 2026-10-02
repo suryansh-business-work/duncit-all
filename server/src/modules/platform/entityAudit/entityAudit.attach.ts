@@ -1,5 +1,6 @@
 import type { Model, Query, Schema } from 'mongoose';
 import { logs } from '@observability/log';
+import { updatePaths } from '@utils/doc-diff';
 import { ENTITY_AUDIT_CONFIG } from './entityAudit.fields';
 import { entityAuditService } from './entityAudit.service';
 import type { EntityAuditType } from './entityAudit.model';
@@ -42,20 +43,6 @@ function isTracked(entityType: EntityAuditType, path: string): boolean {
 
 const touchesTracked = (entityType: EntityAuditType, paths: readonly string[]): boolean =>
   paths.some((path) => isTracked(entityType, path));
-
-/** Every field path an update payload names, across its operators. */
-function updatePaths(update: unknown): string[] {
-  if (!update || typeof update !== 'object') return [];
-  const paths: string[] = [];
-  for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
-    if (!key.startsWith('$')) {
-      paths.push(key);
-      continue;
-    }
-    if (value && typeof value === 'object') paths.push(...Object.keys(value));
-  }
-  return paths;
-}
 
 /** Fire-and-forget: a change log must never fail the edit that caused it. */
 function logChange(

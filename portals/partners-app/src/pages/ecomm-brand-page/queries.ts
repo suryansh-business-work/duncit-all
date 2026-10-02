@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { BrandShippingMode } from '@duncit/gql-types';
 
 const BRAND_FIELDS = `
   id
@@ -70,6 +71,7 @@ const BRAND_COMPLETION_FIELDS = `
 /** The wizard's brand: the saved facts plus the server-judged integrations, consent and progress. */
 const BRAND_WIZARD_FIELDS = `
   ${BRAND_FIELDS}
+  shipping_mode
   integrations {
     shiprocket { ${BRAND_INTEGRATION_FIELDS} }
     razorpay { ${BRAND_INTEGRATION_FIELDS} }
@@ -205,6 +207,8 @@ export interface BrandIntegrationStatus {
   has_webhook_secret: boolean;
 }
 
+export type { BrandShippingMode };
+
 export interface BrandIntegrations {
   shiprocket: BrandIntegrationStatus;
   razorpay: BrandIntegrationStatus;
@@ -261,6 +265,8 @@ export interface EcommBrand {
   submitted_at: string | null;
   approved_at: string | null;
   /** Present on the wizard's `myEcommBrand` read and on table rows (connected flags only). */
+  /** OWN_SHIPROCKET | DUNCIT_COURIER — who ships the brand's parcels; null until chosen. */
+  shipping_mode?: BrandShippingMode | null;
   integrations?: BrandIntegrations;
   consent?: BrandConsent;
   completion?: BrandCompletion;
@@ -271,3 +277,9 @@ export interface EcommBrandRow extends EcommBrand {
   created_at?: string | null;
   updated_at?: string | null;
 }
+
+export const SET_BRAND_SHIPPING_MODE = gql`
+  mutation SetBrandShippingMode($brand_doc_id: ID!, $mode: BrandShippingMode!) {
+    setBrandShippingMode(brand_doc_id: $brand_doc_id, mode: $mode) { id shipping_mode }
+  }
+`;

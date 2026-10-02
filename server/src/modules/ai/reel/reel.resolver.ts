@@ -46,5 +46,7 @@ export const reelResolvers = {
       reelService.sendMessage(args.input, actorOf(ctx)),
     restoreReelVersion: (_p: unknown, args: { project_id: string; message_id: string }, ctx: GraphQLContext) =>
       reelService.restoreVersion(args.project_id, args.message_id, actorOf(ctx)),
+    saveReelSpec: (_p: unknown, args: { project_id: string; spec_json: string }, ctx: GraphQLContext) =>
+      reelService.saveSpec(args.project_id, args.spec_json, actorOf(ctx)),
   },
 };

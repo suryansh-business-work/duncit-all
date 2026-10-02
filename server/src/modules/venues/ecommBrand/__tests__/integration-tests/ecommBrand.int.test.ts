@@ -46,7 +46,7 @@ describe('ecommBrandService integration', () => {
     expect(draft.integrations.shiprocket.connected).toBe(false);
 
     // Both vendor connections are the last required step before submitting.
-    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/ShipRocket and Razorpay/);
+    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/Integration \(Razorpay connected/);
     await connectBoth(draft.id);
     const submitted = await ecommBrandService.submit(owner, draft.id);
     expect(submitted.status).toBe('SUBMITTED');
@@ -55,6 +55,35 @@ describe('ecommBrandService integration', () => {
     const mine = await ecommBrandService.listMine(owner);
     expect(mine).toHaveLength(1);
     expect(mine[0].status).toBe('SUBMITTED');
+  });
+
+  it('submits a brand that ships with the Duncit courier — no ShipRocket account of its own', async () => {
+    const owner = newOwner();
+    const draft = await ecommBrandService.save(owner, null, {
+      ...READY,
+      brand_name: 'Yonex',
+      contact_email: 'ops@yonex.in',
+    });
+    await EcommBrandModel.updateOne({ _id: draft.id }, { $set: { 'integrations.razorpay.connected': true } });
+    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/Integration/);
+
+    const chosen = await ecommBrandService.setShippingMode(owner, draft.id, 'DUNCIT_COURIER');
+    expect(chosen.shipping_mode).toBe('DUNCIT_COURIER');
+    const submitted = await ecommBrandService.submit(owner, draft.id);
+    expect(submitted.status).toBe('SUBMITTED');
+
+    // In review, what was submitted stays what the reviewer sees.
+    await expect(ecommBrandService.setShippingMode(owner, draft.id, 'OWN_SHIPROCKET')).rejects.toThrow(
+      /Withdraw the brand from review/
+    );
+  });
+
+  it('refuses a shipping mode it does not know', async () => {
+    const owner = newOwner();
+    const draft = await ecommBrandService.save(owner, null, { ...READY, brand_name: 'Acme', contact_email: 'a@acme.com' });
+    await expect(ecommBrandService.setShippingMode(owner, draft.id, 'POSTCARD' as never)).rejects.toThrow(
+      /Unknown shipping mode/
+    );
   });
 
   it('lets one partner submit multiple brands', async () => {

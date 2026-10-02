@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
+import { BRAND_SHIPPING_MODES, EcommBrandModel, type BrandShippingMode, type IEcommBrand } from './ecommBrand.model';
 import { effectiveRoleKeys } from '@modules/access/user/effective-roles';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -30,6 +30,8 @@ import {
 } from './ecommBrand.integrations';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+
+const SHIPPING_MODES = new Set<string>(BRAND_SHIPPING_MODES);
 
 const toPub = (b: IEcommBrand) => ({
   id: String(b._id),
@@ -67,6 +69,7 @@ const toPub = (b: IEcommBrand) => ({
   reviewer_notes: b.reviewer_notes ?? '',
   default_pickup_location_id: b.default_pickup_location_id ? String(b.default_pickup_location_id) : null,
   // Secrets stay behind: only whether each half is on file and what the vendor said.
+  shipping_mode: b.shipping_mode ?? null,
   integrations: integrationsOf(b),
   // `current` and `available` need the published consent; the field resolver
   // adds them (`consentField`) so a list of brands reads the policy once.
@@ -198,7 +201,7 @@ const STEP_NAME: Record<BrandStepKey, string> = {
   categories: 'Product categories',
   media: 'Brand media (logo)',
   documents: 'Documents',
-  integration: 'Integration (ShipRocket and Razorpay must both be connected)',
+  integration: 'Integration (Razorpay connected, and ShipRocket connected or the Duncit courier chosen)',
   review: 'Review',
   consent: 'Final consent (sign the Brand Consent)',
 };
@@ -665,6 +668,42 @@ export const ecommBrandService = {
     const status = await probeBrandIntegration(brand, provider);
     await brand.save();
     return status;
+  },
+
+  /**
+   * Choose who ships the brand's parcels — its own ShipRocket account or the
+   * Duncit courier. Same window as the credentials. A pickup address
+   * registered on one ShipRocket account does not exist on another, so a real
+   * change re-registers the brand's warehouses on the new account (at once for
+   * a live brand; on approval otherwise).
+   */
+  async setShippingMode(userId: string, brandId: string, mode: BrandShippingMode) {
+    if (!SHIPPING_MODES.has(mode)) {
+      throw new GraphQLError('Unknown shipping mode', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const brand = await loadOwned(userId, brandId);
+    if (brand.status === 'SUBMITTED') {
+      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const { brandShippingMode } = await import('@modules/commerce/shiprocket/shiprocket.account');
+    const before = brandShippingMode(brand);
+    brand.shipping_mode = mode;
+    await brand.save();
+    if (before !== mode) {
+      await BrandPickupLocationModel.updateMany(
+        { owner_kind: 'BRAND', brand_id: brand._id },
+        { $set: { shiprocket_registered: false, shiprocket_error: '' } }
+      );
+      if (brand.status === 'APPROVED') {
+        const { brandPickupLocationService } = await import(
+          '@modules/venues/brandPickupLocation/brandPickupLocation.service'
+        );
+        await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
+      }
+    }
+    return toPub(brand);
   },
 
   /** Check the saved credential again — the vendor's answer today, not the one on file. */

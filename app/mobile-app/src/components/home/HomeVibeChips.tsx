@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
-import { VibeCategoryTab } from '@/components/home/VibeCategoryTab';
+import { VibeCategoryTab, VibeChipMark } from '@/components/home/VibeCategoryTab';
 import type { VibeCategory } from '@/hooks/useHomeFeed';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -16,15 +16,20 @@ interface HomeVibeChipsProps {
   action?: ReactNode;
 }
 
+/** A sub-category pill's icon circle — smaller, to sit inside the 32px pill. */
+const SUB_CIRCLE = 20;
+
 interface VibeSubChipProps {
   testID: string;
   label: string;
+  /** Admin-set sub-category icon; the pill stays label-only without one. */
+  icon?: string;
   selected: boolean;
   onPress: () => void;
 }
 
 /** A small pill used for the sub-category row below the category chips. */
-function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipProps>) {
+function VibeSubChip({ testID, label, icon, selected, onPress }: Readonly<VibeSubChipProps>) {
   return (
     <XStack
       testID={testID}
@@ -35,7 +40,9 @@ function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipP
       tabIndex={0}
       onPress={onPress}
       height={32}
-      paddingHorizontal={14}
+      gap={6}
+      paddingLeft={icon ? 6 : 14}
+      paddingRight={14}
       alignItems="center"
       borderRadius={999}
       borderWidth={1}
@@ -43,6 +50,9 @@ function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipP
       borderColor={selected ? '$primary' : '$cardBorder'}
       pressStyle={PRESS_STYLE.control}
     >
+      {icon ? (
+        <VibeChipMark testID={`${testID}-icon`} icon={icon} selected={selected} size={SUB_CIRCLE} />
+      ) : null}
       <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
@@ -124,6 +134,7 @@ export function HomeVibeChips({
               key={sub.id}
               testID={`vibe-sub-${sub.id}`}
               label={sub.name}
+              icon={sub.icon}
               selected={selectedId === sub.id}
               onPress={() => onSelect(selectedId === sub.id ? activeCategory.id : sub.id)}
             />

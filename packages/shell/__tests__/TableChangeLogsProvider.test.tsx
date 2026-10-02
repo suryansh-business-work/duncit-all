@@ -58,6 +58,6 @@ describe('TableChangeLogsProvider', () => {
   it('fails readably when the server answers with no data', async () => {
     client.query.mockResolvedValue({ data: undefined });
     mount(true);
-    await expect(seen.api?.fetch('payoutsTable', {}, QUERY)).rejects.toThrow('The change log could not be loaded.');
+    await expect(seen.api?.fetch('payoutsTable', {}, QUERY)).rejects.toThrow('The change log could not be loaded. Please try again.');
   });
 });

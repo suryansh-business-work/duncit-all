@@ -8,6 +8,7 @@ import {
   type TableChangeLogRow,
   type TablePage,
 } from '@duncit/table';
+import { useTranslation } from '../i18n/useTranslation';
 
 export const TABLE_CHANGE_LOGS = gql`
   query TableChangeLogs($table: String!, $variables: String!, $query: TableQueryInput) {
@@ -47,6 +48,7 @@ export interface TableChangeLogsProviderProps {
  */
 export function TableChangeLogsProvider({ enabled, detailed, children }: Readonly<TableChangeLogsProviderProps>) {
   const client = useApolloClient();
+  const { t } = useTranslation();
   const api = useMemo<TableChangeLogApi | null>(() => {
     if (!enabled) return null;
     return {
@@ -57,10 +59,10 @@ export function TableChangeLogsProvider({ enabled, detailed, children }: Readonl
           variables: { table, variables: JSON.stringify(variables), query: tableQueryToGql(query).query },
           fetchPolicy: 'network-only',
         });
-        if (!data) throw new Error('The change log could not be loaded.');
+        if (!data) throw new Error(t('shell.table.changeLogsLoadFailed'));
         return data.tableChangeLogs;
       },
     };
-  }, [client, enabled, detailed]);
+  }, [client, enabled, detailed, t]);
   return <TableChangeLogProvider value={api}>{children}</TableChangeLogProvider>;
 }

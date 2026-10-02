@@ -15272,6 +15272,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "shell.table.changeLogsCount": "Change logs ({count})",
   "shell.table.changeLogsEmpty": "No changes recorded yet.",
   "shell.table.changeLogsIntro": "Every change a person made to the rows this table shows you: who, what, when and from where. Newest first.",
+  "shell.table.changeLogsLoadFailed": "The change log could not be loaded. Please try again.",
   "shell.table.changeLogSource": "Surface",
   "shell.table.changeLogsTitle": "Change logs — {table}",
   "shell.table.changeLogUpdated": "Updated",

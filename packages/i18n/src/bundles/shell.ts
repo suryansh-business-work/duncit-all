@@ -109,6 +109,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       changeLogsTitle: 'Change logs — {table}',
       changeLogsIntro: 'Every change a person made to the rows this table shows you: who, what, when and from where. Newest first.',
       changeLogsEmpty: 'No changes recorded yet.',
+      changeLogsLoadFailed: 'The change log could not be loaded. Please try again.',
       changeLogsClose: 'Close change logs',
       changeLogWhen: 'When',
       changeLogWho: 'Changed by',

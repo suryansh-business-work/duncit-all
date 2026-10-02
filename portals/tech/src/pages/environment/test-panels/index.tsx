@@ -11,6 +11,7 @@ import GoogleMapsTest from './GoogleMapsTest';
 import GoogleOAuthTab from './GoogleOAuthTab';
 import ConnectionTestPanel from './ConnectionTestPanel';
 import Msg91TestPanel from './msg91';
+import { EnvTestedContext } from './useEnvTestMutation';
 
 function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const { t } = useTranslation();
@@ -67,10 +68,12 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
 interface Props {
   entry: EnvEntry | null;
   onClose: () => void;
+  /** Called after every test call settles, so the entries table re-reads the stamped result. */
+  onTested: () => void;
 }
 
 /** Right-side drawer hosting the category-specific interactive test. */
-export default function TestDrawer({ entry, onClose }: Readonly<Props>) {
+export default function TestDrawer({ entry, onClose, onTested }: Readonly<Props>) {
   const titleId = useId();
   return (
     <Drawer anchor="right" open={!!entry} onClose={onClose} slotProps={{
@@ -92,7 +95,9 @@ export default function TestDrawer({ entry, onClose }: Readonly<Props>) {
               This test is running using config: <strong>{entry.name}</strong>
               {entry.is_default ? ' (default)' : ''}. Keys are read from the saved config — you don't enter them here.
             </Alert>
-            <Panel entry={entry} />
+            <EnvTestedContext.Provider value={onTested}>
+              <Panel entry={entry} />
+            </EnvTestedContext.Provider>
           </Box>
         </Stack>
       )}

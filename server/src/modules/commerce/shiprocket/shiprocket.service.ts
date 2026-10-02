@@ -4,6 +4,8 @@ import { isShiprocketConfigured, getServiceability } from './shiprocket.gateway'
 import { getBrandShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
 import { withShiprocketAccount } from './shiprocket.client';
 import { createShipment } from './shiprocket.shipment';
+import { buildParcel, type ParcelLine } from './shiprocket.parcel';
+import { effectiveDims } from '@modules/venues/inventory/inventory.packaging';
 import { applyWebhookEvent, refreshTracking } from './shiprocket.tracking';
 import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -33,7 +35,7 @@ export interface ShipQuote {
 interface ShipGroup {
   pod_id: string;
   warehouse_id: string;
-  weight: number;
+  parcel_lines: ParcelLine[];
   manual: number;
   free: boolean;
 }
@@ -102,16 +104,16 @@ async function loadSnapshotUnitCosts(podIds: string[]): Promise<Map<string, numb
 const findVariant = (product: any, variantId: string) =>
   variantId ? (product.variants.find((v: any) => String(v._id) === variantId) ?? null) : null;
 
-/** Shipment weight of one product's cart lines. A variant carries its OWN
- * weight_kg and the flat product field only ever mirrors the FIRST variant, so
- * rating every line at the flat weight mis-charges the moment a buyer picks any
- * other one. A variant left at 0 (never entered) falls back to the product. */
-function productLinesWeight(product: any, lines: CartLineSelection[]): number {
-  return lines.reduce((sum, line) => {
-    const variant = findVariant(product, line.variant_id);
-    const weight = Number(variant?.weight_kg) || Number(product.weight_kg) || 0;
-    return sum + weight * line.quantity;
-  }, 0);
+/** The parcel lines of one product's cart lines — every unit with its own
+ * packaging, the variant's own values falling back to the product's
+ * (`effectiveDims`, the same rule the order lines are built with). Quoting on
+ * these is what makes the quote the parcel the booking will declare: a courier
+ * bills the box's volumetric weight, not only what the scale reads. */
+function productParcelLines(product: any, lines: CartLineSelection[]): ParcelLine[] {
+  return lines.map((line) => ({
+    qty: line.quantity,
+    ...effectiveDims(product, findVariant(product, line.variant_id)),
+  }));
 }
 
 /** Free-delivery rule (per cart line): a line qualifies when its goods value
@@ -139,7 +141,7 @@ function productLinesQualifyFree(
 }
 
 /** Bucket only SHIPROCKET-delivered products by (pod, warehouse), accumulating
- * total shipment weight and the manual delivery-charge fallback. Each pod ships
+ * the parcel's lines and the manual delivery-charge fallback. Each pod ships
  * separately even from a shared warehouse — one group per physical shipment.
  * Weight scales with quantity; the manual charge is a flat per-shipment fee, so
  * a bucket takes the highest product delivery_charge (one courier pickup,
@@ -159,14 +161,36 @@ function buildShipGroups(
     const warehouseId = product.pickup_location_id ? String(product.pickup_location_id) : '';
     const key = `${podId}|${warehouseId}`;
     const group =
-      groups.get(key) ?? { pod_id: podId, warehouse_id: warehouseId, weight: 0, manual: 0, free: true };
-    group.weight += productLinesWeight(product, lines);
+      groups.get(key) ?? { pod_id: podId, warehouse_id: warehouseId, parcel_lines: [], manual: 0, free: true };
+    group.parcel_lines.push(...productParcelLines(product, lines));
     group.manual = Math.max(group.manual, Number(product.delivery_charge || 0));
     group.free =
       group.free && productLinesQualifyFree(product, lines, snapshotUnitCosts.get(`${podId}|${productId}`));
     groups.set(key, group);
   }
   return groups;
+}
+
+/** The account a group is rated on, and whether a live rate can be asked for at all. */
+interface Rating {
+  account: ShiprocketAccount | null;
+  configured: boolean;
+}
+
+/** A brand's rating account. One whose account cannot be resolved is quoted at
+ * its manual charge — never rated on another business's account. */
+async function brandRating(brandId: string, platformConfigured: boolean): Promise<Rating> {
+  try {
+    const account = await getBrandShiprocketAccount(brandId);
+    return { account, configured: account !== null || platformConfigured };
+  } catch (error) {
+    logs.server.warn('shiprocket', 'quoteShipping', {
+      msg: 'brand shipping account unavailable; using the manual delivery charge',
+      brand_id: brandId,
+      reason: (error as Error).message,
+    });
+    return { account: null, configured: false };
+  }
 }
 
 /** Quote one (pod, warehouse) bucket: free when every line qualified, else the
@@ -200,10 +224,14 @@ async function quoteShipGroup(
   };
   if (!configured || !pickupPincode || !deliveryPincode) return fallback;
   try {
+    const parcel = buildParcel(group.parcel_lines);
     const quote = await getServiceability({
       pickupPincode,
       deliveryPincode,
-      weightKg: Math.max(0.1, group.weight),
+      weightKg: Math.max(0.1, parcel.weight_kg),
+      lengthCm: parcel.length_cm,
+      breadthCm: parcel.breadth_cm,
+      heightCm: parcel.height_cm,
     });
     if (!quote) return fallback;
     return {
@@ -242,7 +270,7 @@ export const shiprocketService = {
     if (productIds.length === 0) return { total: 0, breakup: [], all_quoted: true };
 
     const products = await InventoryProductModel.find({ _id: { $in: productIds } }).select(
-      'pickup_location_id delivery_target delivery_charge weight_kg free_delivery_above unit_cost variants',
+      'pickup_location_id delivery_target delivery_charge weight_kg length_cm breadth_cm height_cm free_delivery_above unit_cost variants',
     );
     const snapshotUnitCosts = await loadSnapshotUnitCosts(rows.map((r) => r.pod_id));
     const groups = buildShipGroups(products, linesByPodProduct, snapshotUnitCosts);
@@ -255,20 +283,23 @@ export const shiprocketService = {
     const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode)]));
     const brandByWarehouse = new Map(warehouses.map((w) => [String(w._id), w.brand_id ? String(w.brand_id) : '']));
     const platformConfigured = await isShiprocketConfigured();
-    // A brand's warehouse is rated on the brand's own account; a Duncit
-    // warehouse on the Tech portal's. Resolved once per brand, not per group.
-    const accountByBrand = new Map<string, ShiprocketAccount | null>();
-    const accountFor = async (brandId: string) => {
-      if (!brandId) return null;
-      if (!accountByBrand.has(brandId)) accountByBrand.set(brandId, await getBrandShiprocketAccount(brandId));
-      return accountByBrand.get(brandId) ?? null;
+    // A brand's warehouse is rated on the account the brand ships on (its own,
+    // or Duncit's courier); a Duncit warehouse on the Tech portal's. Resolved
+    // once per brand, not per group.
+    const ratingByBrand = new Map<string, Rating>();
+    const ratingFor = async (brandId: string): Promise<Rating> => {
+      if (!brandId) return { account: null, configured: platformConfigured };
+      const known = ratingByBrand.get(brandId);
+      if (known) return known;
+      const rating = await brandRating(brandId, platformConfigured);
+      ratingByBrand.set(brandId, rating);
+      return rating;
     };
 
     const breakup: ShipQuoteLine[] = [];
     for (const group of groups.values()) {
       const pincode = pincodeByWarehouse.get(group.warehouse_id) ?? '';
-      const account = await accountFor(brandByWarehouse.get(group.warehouse_id) ?? '');
-      const configured = account !== null || platformConfigured;
+      const { account, configured } = await ratingFor(brandByWarehouse.get(group.warehouse_id) ?? '');
       breakup.push(
         await withShiprocketAccount(account, () => quoteShipGroup(group, pincode, deliveryPincode, configured)),
       );

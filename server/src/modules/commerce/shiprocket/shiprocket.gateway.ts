@@ -1,6 +1,6 @@
 import { cacheGet, cacheSet } from '@config/redis';
 import { logs } from '@observability/log';
-import { hasShiprocketAccount, srRequest, shiprocketError, type Json } from './shiprocket.client';
+import { currentAccountKey, hasShiprocketAccount, srRequest, shiprocketError, type Json } from './shiprocket.client';
 import { chargeableWeightKg } from './shiprocket.parcel';
 
 export { isShiprocketConfigured } from './shiprocket.account';
@@ -436,13 +436,15 @@ async function lookupServiceability(args: ServiceabilityArgs, slab: number): Pro
 /**
  * The cheapest courier for a lane and parcel, or null when none serves it (or
  * ShipRocket is not configured — callers fall back to the store's flat fee).
- * Answers are cached for six hours per pickup, delivery pincode, weight slab
+ * Answers are cached for six hours per account, pickup, delivery pincode, weight slab
  * and COD; a gateway failure is never cached.
  */
 export async function getServiceability(args: ServiceabilityArgs): Promise<ServiceabilityQuote | null> {
   if (!(await hasShiprocketAccount())) return null;
   const slab = weightSlab(args);
-  const key = `sr:svc:${args.pickupPincode}:${args.deliveryPincode}:${slab}:${args.cod ? 1 : 0}`;
+  // Per account: each brand rates on its own ShipRocket contract, and Duncit's
+  // courier and the pet store on theirs — one account's rate is not another's.
+  const key = `sr:svc:${currentAccountKey()}:${args.pickupPincode}:${args.deliveryPincode}:${slab}:${args.cod ? 1 : 0}`;
   const cached = await cacheGet<{ quote: ServiceabilityQuote | null }>(key);
   if (cached) return cached.quote;
   const quote = await lookupServiceability(args, slab);

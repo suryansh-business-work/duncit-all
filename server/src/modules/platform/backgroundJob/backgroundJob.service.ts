@@ -32,7 +32,7 @@ export interface StartBulkDeleteInput {
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 const forbidden = () => new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } });
 
-function parseVariables(text: string): Record<string, unknown> {
+export function parseVariables(text: string): Record<string, unknown> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);

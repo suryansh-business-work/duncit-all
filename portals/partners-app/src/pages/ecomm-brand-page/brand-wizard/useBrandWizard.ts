@@ -30,7 +30,11 @@ export function useBrandWizard(brand: EcommBrand | null, accountEmail: string) {
   }, [brandId]);
 
   const values = watch();
-  const facts = toFacts(values, { integrations: brand?.integrations, consent: brand?.consent });
+  const facts = toFacts(values, {
+    shipping_mode: brand?.shipping_mode,
+    integrations: brand?.integrations,
+    consent: brand?.consent,
+  });
   const states = brandStepStates(facts);
   const percent = brandCompletionPercent(facts);
 

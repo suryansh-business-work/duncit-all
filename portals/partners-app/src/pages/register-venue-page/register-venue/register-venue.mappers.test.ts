@@ -109,6 +109,8 @@ describe('venueToValues — a stored venue', () => {
       gallery: ['https://cdn.duncit.com/1.jpg'],
       gstin: '29ABCDE1234F1Z5',
       pan: 'ABCDE1234F',
+      has_gstin: true,
+      has_pan: true,
       owner_dob: '1991-02-03',
       documents: [{ type: 'PAN Card', url: 'https://cdn.duncit.com/pan.pdf' }],
     });
@@ -222,6 +224,8 @@ const filled: RegisterVenueValues = {
   ],
   gstin: '29ABCDE1234F1Z5',
   pan: 'ABCDE1234F',
+  has_gstin: true,
+  has_pan: true,
   owner_name: 'Asha Rao',
   owner_email: 'owner@duncit.com',
   owner_phone: '+919876543210',
@@ -261,6 +265,18 @@ describe('toStep2Input', () => {
       gstin: '29ABCDE1234F1Z5',
       pan: 'ABCDE1234F',
     });
+  });
+});
+
+describe('toStep2Input — optional tax ids', () => {
+  it('sends a blank GSTIN and PAN when their switches are off, whatever the fields still hold', () => {
+    expect(toStep2Input({ ...filled, has_gstin: false, has_pan: false })).toMatchObject({ gstin: '', pan: '' });
+  });
+});
+
+describe('venueToValues — tax id switches', () => {
+  it('starts both switches off for a venue that has neither number', () => {
+    expect(venueToValues({ id: 'v1' }, [], account)).toMatchObject({ has_gstin: false, has_pan: false });
   });
 });
 

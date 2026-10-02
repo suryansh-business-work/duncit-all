@@ -4,6 +4,7 @@ import {
   BRAND_WIZARD_STEPS,
   brandCompletionPercent,
   brandNextStepIndex,
+  brandShippingReady,
   brandStepComplete,
   brandStepStates,
   type BrandWizardFacts,
@@ -98,6 +99,15 @@ describe('brandStepComplete', () => {
     expect(brandStepComplete({ ...complete, razorpay_connected: false }, 'integration')).toBe(false);
     expect(brandStepComplete({ ...complete, shiprocket_connected: false }, 'integration')).toBe(false);
     expect(brandStepComplete({ ...complete, shiprocket_connected: null, razorpay_connected: null }, 'integration')).toBe(false);
+  });
+
+  it('needs no ShipRocket account from a brand that ships with the Duncit courier', () => {
+    const duncit = { ...complete, shipping_mode: 'DUNCIT_COURIER', shiprocket_connected: false };
+    expect(brandStepComplete(duncit, 'integration')).toBe(true);
+    expect(brandStepComplete({ ...duncit, razorpay_connected: false }, 'integration')).toBe(false);
+    expect(brandStepComplete({ ...complete, shipping_mode: 'OWN_SHIPROCKET', shiprocket_connected: false }, 'integration')).toBe(false);
+    expect(brandShippingReady('OWN_SHIPROCKET', true)).toBe(true);
+    expect(brandShippingReady(null, false)).toBe(false);
   });
 
   it('counts review as done once every required step before the consent is', () => {

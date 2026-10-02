@@ -31,5 +31,7 @@ export interface AppShellProps {
   breadcrumbLabelMap?: Record<string, string>;
   /** Extra entries for the header's apps drawer, beside the platform's own. */
   tools?: ShellTool[];
+  /** Change logs also show who-by email and roles, surface, address and browser (the Finance console). */
+  detailedChangeLogs?: boolean;
   children: ReactNode;
 }

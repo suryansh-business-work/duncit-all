@@ -3109,6 +3109,15 @@ export type BrandRazorpayInput = {
   webhook_secret?: InputMaybe<Scalars['String']['input']>;
 };
 
+/**
+ * Who carries a brand's parcels: its OWN ShipRocket account, or Duncit's
+ * courier service (the ShipRocket account the Tech portal maps to the
+ * Partners console — never the pet store's).
+ */
+export type BrandShippingMode =
+  | 'DUNCIT_COURIER'
+  | 'OWN_SHIPROCKET';
+
 export type BrandShiprocketInput = {
   /** The ShipRocket API user's email (Settings → API → Configure). */
   email: Scalars['String']['input'];
@@ -6934,6 +6943,8 @@ export type EcommBrand = {
   registered_business_name: Scalars['String']['output'];
   rejected_at?: Maybe<Scalars['String']['output']>;
   reviewer_notes: Scalars['String']['output'];
+  /** Who ships this brand's parcels; null until the brand chooses. */
+  shipping_mode?: Maybe<BrandShippingMode>;
   state: Scalars['String']['output'];
   status: EcommBrandStatus;
   submitted_at?: Maybe<Scalars['String']['output']>;
@@ -12317,6 +12328,8 @@ export type Mutation = {
   setAutomationFlowStatus: AutomationFlow;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
+  /** Partner: choose who ships the brand's parcels — its own ShipRocket account, or the Duncit courier. */
+  setBrandShippingMode: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
   setClubAdminCommission: ClubAdminProfile;
   setClubAdminProfileActive: ClubAdminProfile;
@@ -15829,6 +15842,12 @@ export type MutationSetAutomationFlowStatusArgs = {
 export type MutationSetBrandCommissionArgs = {
   brand_doc_id: Scalars['ID']['input'];
   product_commission_pct: Scalars['Float']['input'];
+};
+
+
+export type MutationSetBrandShippingModeArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  mode: BrandShippingMode;
 };
 
 
@@ -23052,6 +23071,13 @@ export type Query = {
   surveys: Array<Survey>;
   /** Server-side table page (search/filter/sort/paginate) over surveys. */
   surveysTable: SurveyTablePage;
+  /**
+   * The change log of a portal table: every change a person made to the records
+   * that table shows the caller. The table is named by its <name>Table query and
+   * the variables (JSON text) its view sends; that read runs as the caller first,
+   * so its own access rules decide what history they may see.
+   */
+  tableChangeLogs: TableChangeLogPage;
   /** Recent logs for one container (demuxed) — polled by the restart log panel. */
   techContainerLogs: Scalars['String']['output'];
   /** Per-collection storage of the live database, for the shared table engine. */
@@ -25938,6 +25964,13 @@ export type QuerySurveysArgs = {
 
 export type QuerySurveysTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryTableChangeLogsArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  table: Scalars['String']['input'];
+  variables: Scalars['String']['input'];
 };
 
 
@@ -31854,6 +31887,38 @@ export type TableApiAccess = {
   last_used_at?: Maybe<Scalars['String']['output']>;
   /** Null until generated. Treat it as a password. */
   token?: Maybe<Scalars['String']['output']>;
+};
+
+/** One field of one record a portal table lists, changed once by a signed-in person. */
+export type TableChangeLog = {
+  __typename?: 'TableChangeLog';
+  action: EntityChangeAction;
+  actor_email: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  actor_roles: Array<Scalars['String']['output']>;
+  actor_user_id?: Maybe<Scalars['ID']['output']>;
+  /** The Mongo collection the record lives in. */
+  collection_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  /** The record's id. */
+  doc_id: Scalars['String']['output'];
+  /** Document path of the field; empty on a CREATE or DELETE entry. */
+  field: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The address and browser the change came from. */
+  ip: Scalars['String']['output'];
+  new_value: Scalars['String']['output'];
+  old_value: Scalars['String']['output'];
+  source: EntityChangeSource;
+  user_agent: Scalars['String']['output'];
+};
+
+export type TableChangeLogPage = {
+  __typename?: 'TableChangeLogPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TableChangeLog>;
+  total: Scalars['Int']['output'];
 };
 
 export type TableFilterInput = {

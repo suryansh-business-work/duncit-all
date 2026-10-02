@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Alert, LinearProgress, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -70,6 +70,9 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
     { extraFilters: [{ field: 'category', op: 'eq', value: active }] },
     [active],
   );
+
+  // Stable so the test panels' `run` callbacks keep their identity across renders.
+  const refetchTable = useCallback(() => refetchRef.current?.(), []);
 
   const def = useMemo(() => categories.find((c) => c.category === active), [categories, active]);
   const busy = createState.loading || updateState.loading;
@@ -173,7 +176,7 @@ export default function EnvVariablesTab({ category }: Readonly<Props>) {
       />
 
 
-      <TestDrawer entry={testing} onClose={() => setTesting(null)} />
+      <TestDrawer entry={testing} onClose={() => setTesting(null)} onTested={refetchTable} />
     </Stack>
   );
 }

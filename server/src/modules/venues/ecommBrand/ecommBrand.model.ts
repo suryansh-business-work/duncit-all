@@ -26,6 +26,15 @@ export interface IBrandShiprocketIntegration {
   details: string[];
 }
 
+/**
+ * Who carries a brand's parcels. A brand either ships on its OWN ShipRocket
+ * account (connected in the wizard), or hands its parcels to DUNCIT's courier
+ * service — the ShipRocket account the Tech portal maps to the Partners
+ * console. Never the pet store's account: the two businesses do not share one.
+ */
+export const BRAND_SHIPPING_MODES = ['OWN_SHIPROCKET', 'DUNCIT_COURIER'] as const;
+export type BrandShippingMode = (typeof BRAND_SHIPPING_MODES)[number];
+
 export interface IBrandRazorpayIntegration {
   key_id: string;
   key_secret: string;
@@ -89,6 +98,8 @@ export interface IEcommBrand extends Document {
   tags: string[];
   // E-commerce: default ShipRocket pickup/warehouse for this brand's SHIP orders.
   default_pickup_location_id: Types.ObjectId | null;
+  // Who ships this brand's parcels; null on a brand that has not chosen yet.
+  shipping_mode: BrandShippingMode | null;
   // The brand's own ShipRocket + Razorpay accounts (wizard step 8).
   integrations: {
     shiprocket: IBrandShiprocketIntegration;
@@ -189,6 +200,7 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     documents: { type: [brandDocumentSchema], default: [] },
     tags: { type: [String], default: [] },
     default_pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null },
+    shipping_mode: { type: String, enum: [...BRAND_SHIPPING_MODES, null], default: null },
     integrations: {
       shiprocket: { type: shiprocketIntegrationSchema, default: () => ({}) },
       razorpay: { type: razorpayIntegrationSchema, default: () => ({}) },

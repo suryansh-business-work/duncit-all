@@ -1,7 +1,7 @@
 import type { Path } from 'react-hook-form';
-import type { BrandWizardFacts, BrandWizardStepKey } from '@duncit/utils';
+import { brandShippingReady, type BrandWizardFacts, type BrandWizardStepKey } from '@duncit/utils';
 import type { BrandFormValues } from '../schema';
-import type { BrandConsent, BrandIntegrations } from '../queries';
+import type { BrandConsent, BrandIntegrations, BrandShippingMode } from '../queries';
 
 export type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
 
@@ -44,6 +44,7 @@ export const stepLabels = (t: Translate): Record<BrandWizardStepKey, string> => 
 
 /** The facts only the server knows — what the wizard cannot judge from the form. */
 export interface BrandServerFacts {
+  shipping_mode?: BrandShippingMode | null;
   integrations?: BrandIntegrations;
   consent?: BrandConsent;
 }
@@ -57,7 +58,15 @@ export const consentSigned = (consent: BrandConsent | undefined): boolean => {
 /** Live form values + server facts, in the shape `@duncit/utils` judges a step on. */
 export const toFacts = (values: BrandFormValues, server: BrandServerFacts): BrandWizardFacts => ({
   ...values,
+  shipping_mode: server.shipping_mode ?? null,
   shiprocket_connected: server.integrations?.shiprocket.connected ?? false,
   razorpay_connected: server.integrations?.razorpay.connected ?? false,
   consent_signed: consentSigned(server.consent),
 });
+
+/** The Integration step's verdict: Razorpay connected, and shipping settled (the Duncit courier, or ShipRocket connected). */
+export const integrationReady = (
+  shippingMode: BrandShippingMode | null | undefined,
+  integrations: BrandIntegrations | undefined,
+): boolean =>
+  integrations?.razorpay.connected === true && brandShippingReady(shippingMode, integrations?.shiprocket.connected === true);

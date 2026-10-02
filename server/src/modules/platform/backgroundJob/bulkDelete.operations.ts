@@ -63,6 +63,23 @@ function buildDocument(schema: GraphQLSchema, text: string): DocumentNode | null
   return null;
 }
 
+
+const scopeDocuments = new Map<string, DocumentNode | null>();
+
+/**
+ * The `<name>Table` read that captures what a table shows its caller, asking
+ * only for `total`. Null when no such table query exists. Built once per process.
+ */
+export function tableScopeDocument(table: string): DocumentNode | null {
+  const schema = currentSchema();
+  if (!schema || !table.endsWith('Table')) return null;
+  if (!scopeDocuments.has(table)) {
+    const tableField = schema.getQueryType()?.getFields()[table];
+    const read = tableField ? fieldInvocation(tableField) : null;
+    scopeDocuments.set(table, read && buildDocument(schema, `query TableScope${read.signature} { ${read.call} { total } }`));
+  }
+  return scopeDocuments.get(table) ?? null;
+}
 function build(schema: GraphQLSchema, table: string): BulkDeleteOperations | null {
   const target = BULK_DELETE_TARGETS[table];
   const tableField = schema.getQueryType()?.getFields()[table];
@@ -115,7 +132,7 @@ export async function runAs(
 }
 
 /** The table's variables, asking for the smallest page — only the scope is wanted. */
-function onePage(variables: Record<string, unknown>): Record<string, unknown> {
+export function onePage(variables: Record<string, unknown>): Record<string, unknown> {
   const query = (variables.query ?? {}) as Record<string, unknown>;
   return { ...variables, query: { ...query, page: 1, page_size: 1 } };
 }

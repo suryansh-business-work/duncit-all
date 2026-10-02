@@ -28,6 +28,8 @@ const validValues: RegisterVenueValues = {
   documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
   gstin: '22ABCDE1234F1Z5',
   pan: 'ABCDE1234F',
+  has_gstin: true,
+  has_pan: true,
   owner_name: 'Owner Name',
   owner_email: 'owner@example.com',
   owner_phone: '+919876543210',
@@ -84,7 +86,14 @@ describe('registerVenueSchema', () => {
     );
   });
 
-  it('requires GSTIN and PAN, and validates their formats', () => {
+  it('treats GSTIN and PAN as optional while their switches are off', () => {
+    const none = { ...validValues, has_gstin: false, gstin: '', has_pan: false, pan: '' };
+    expect(registerVenueSchema().safeParse(none).success).toBe(true);
+    // A stale value behind an off switch is not judged — it is never sent.
+    expect(registerVenueSchema().safeParse({ ...none, gstin: 'nope', pan: 'nope' }).success).toBe(true);
+  });
+
+  it('requires GSTIN and PAN once switched on, and validates their formats', () => {
     const blank = messagesOf({ ...validValues, gstin: '', pan: '' });
     expect(blank).toContain('GSTIN is required');
     expect(blank).toContain('PAN is required');

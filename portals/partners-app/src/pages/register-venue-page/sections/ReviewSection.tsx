@@ -97,8 +97,8 @@ export default function ReviewSection({ form }: Readonly<Props>) {
         </Box>
         <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('shell.nav.documents')} value={documentsLine} />
-        <Row label="GSTIN" value={values.gstin} />
-        <Row label="PAN" value={values.pan} />
+        <Row label="GSTIN" value={values.has_gstin ? values.gstin : ''} />
+        <Row label="PAN" value={values.has_pan ? values.pan : ''} />
         <Divider flexItem sx={{ my: 0.5 }} />
         <Row label={t('partners.registerVenuePage.owner')} value={values.owner_name} />
         <Row label={t('partners.registerVenuePage.ownerEmail')} value={values.owner_email} />

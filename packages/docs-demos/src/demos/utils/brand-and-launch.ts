@@ -19,6 +19,7 @@ import {
   brandCompletionPercent,
   brandNextStepIndex,
   brandStepStates,
+  brandShippingReady,
 } from '@duncit/utils';
 import { dark, light } from '@duncit/auth-tokens';
 import { defineDemo, type PackageDemo } from '../../types';
@@ -75,7 +76,7 @@ export const brandAndLaunchDemos: PackageDemo[] = [
     id: 'brand-wizard',
     title: 'How far a brand is through onboarding',
     note:
-      'Yonex has filled six of the eight required steps. Flip razorpay_connected to true and the percentage moves to 88 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number.',
+      'Yonex has filled six of the eight required steps. Flip razorpay_connected to true and the percentage moves to 88 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number. Set shipping_mode to DUNCIT_COURIER and shipping is settled even with shiprocket_connected false — the Duncit courier carries the parcels.',
     mock: {
       brand_name: 'Yonex',
       description: 'Badminton racquets, shuttles and grips for club players.',
@@ -93,6 +94,7 @@ export const brandAndLaunchDemos: PackageDemo[] = [
       account_number: '',
       ifsc_code: '',
       upi_id: '',
+      shipping_mode: 'OWN_SHIPROCKET',
       shiprocket_connected: true,
       razorpay_connected: false,
       consent_signed: false,
@@ -100,6 +102,7 @@ export const brandAndLaunchDemos: PackageDemo[] = [
     compute: (mock) => ({
       'Completion (%)': brandCompletionPercent(mock),
       'Opens on step': brandNextStepIndex(mock) + 1,
+      'Shipping settled': brandShippingReady(mock.shipping_mode, mock.shiprocket_connected === true) ? 'yes' : 'no',
       'Still to do': brandStepStates(mock)
         .filter((step) => step.required && !step.complete)
         .map((step) => step.key)

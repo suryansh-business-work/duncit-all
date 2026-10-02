@@ -13,6 +13,8 @@ vi.mock('@apollo/client', () => ({
 vi.mock('@apollo/client/react', () => ({
   useQuery: vi.fn(),
   useMutation: () => [vi.fn(), { loading: false }],
+  // AppShell gives every grid its change log, which reads through the client.
+  useApolloClient: () => ({ query: vi.fn() }),
 }));
 // A factory mock REPLACES the module, so anything the shell imports and this
 // object omits arrives as undefined — which is how `useBreadcrumbOverride`

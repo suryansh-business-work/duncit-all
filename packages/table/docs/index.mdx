@@ -53,6 +53,11 @@ exports:
   - 'TableBulkDeleteApi'
   - 'BulkDeleteRequest'
   - 'BulkDeleteMode'
+  - 'TableChangeLogProvider'
+  - 'useTableChangeLogApi'
+  - 'TableChangeLogApi'
+  - 'TableChangeLogRow'
+  - 'TableChangeAction'
 ---
 
 ## Why this exists
@@ -655,6 +660,34 @@ A table joins by adding one line to `BULK_DELETE_TARGETS` in
 `server/src/modules/platform/backgroundJob/bulkDelete.targets.ts`: its query name, its delete
 mutation, the id argument and the roles offered the controls. It qualifies only when its rows
 come from `runTableQuery` and its delete takes the row `_id` alone.
+
+## Every grid keeps a change log
+
+Beside Download, a grid fed by `makeApolloTableFetch`/`useApolloTableFetch` shows a **Change logs
+(N)** button: how many changes a person made to the rows this view holds, and — opened — every one
+of them: who, when, the record, the field, the value before and after. No page opts in; the shell
+provides a `TableChangeLogApi` to every grid (`TableChangeLogProvider`), and a grid with no
+`<name>Table` query behind it (`clientTableFetch`) shows no button.
+
+```tsx
+// packages/shell — what AppShell mounts. The Finance console passes detailedChangeLogs,
+// which adds the account's email and roles, the surface, the IP address and the browser.
+<TableChangeLogsProvider enabled={Boolean(user)} detailed={detailedChangeLogs}>
+  {children}
+</TableChangeLogsProvider>
+```
+
+Where the entries come from (`server/src/modules/platform/tableChangeLog/`):
+
+- ONE global mongoose plugin on every model diffs each `save()`, `findOneAndUpdate`/`updateOne`
+  and delete against what was stored a moment earlier, one row per field that moved, into
+  `table_change_logs`. Only a signed-in person's writes are logged — a cron sweep or a webhook has
+  nobody to name. Log-like collections (`*logs`, `*sessions`, `*counters`…) and timestamp fields
+  are skipped; a password, token or secret is logged as changed with its value masked.
+- `tableChangeLogs(table, variables, query)` re-runs the grid's own `<name>Table` read as the
+  caller, exactly as bulk delete does. The resolver's role check decides whether they may see the
+  history at all, and its filter decides whose: the log of a row the caller is not shown is not
+  shown either.
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

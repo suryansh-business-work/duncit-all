@@ -61,7 +61,7 @@ const mount = (props: Omit<HarnessProps, 'formRef'>) => {
   return formRef;
 };
 
-// Both tax ids are required now, so their labels carry MUI's required asterisk.
+// A switched-on tax id is required, so its label carries MUI's required asterisk.
 const GSTIN_LABEL = /^GSTIN/;
 const PAN_LABEL = /^PAN/;
 
@@ -75,7 +75,7 @@ const GSTIN_ERROR = 'GSTIN must follow format like 22ABCDE1234F1Z5';
 
 describe('DocumentsSection — GSTIN rule', () => {
   it('enforces the 15-character Z-at-position-14 GSTIN, not the 14-character checkout variant', async () => {
-    mount({ mode: 'register' });
+    mount({ mode: 'register', defaults: { has_gstin: true, has_pan: true } });
 
     // 14 characters — accepted by the checkout GSTIN pattern, rejected here.
     typeAndBlur(GSTIN_LABEL, '22ABCDE1234F1Z');
@@ -92,7 +92,7 @@ describe('DocumentsSection — GSTIN rule', () => {
   });
 
   it('accepts a lowercase GSTIN, requires one, and rejects a malformed PAN', async () => {
-    mount({ mode: 'register' });
+    mount({ mode: 'register', defaults: { has_gstin: true, has_pan: true } });
 
     typeAndBlur(GSTIN_LABEL, '22abcde1234f1z5');
     await waitFor(() => expect(screen.queryByText(GSTIN_ERROR)).toBeNull());
@@ -106,6 +106,18 @@ describe('DocumentsSection — GSTIN rule', () => {
 
     typeAndBlur(PAN_LABEL, 'ABCDE1234F');
     await waitFor(() => expect(screen.queryByText('PAN must follow format ABCDE1234F')).toBeNull());
+  });
+});
+
+describe('DocumentsSection — optional tax ids', () => {
+  it('hides each number until its switch is turned on', async () => {
+    mount({ mode: 'register' });
+    expect(screen.queryByLabelText(GSTIN_LABEL)).toBeNull();
+    expect(screen.queryByLabelText(PAN_LABEL)).toBeNull();
+
+    fireEvent.click(screen.getByTestId('register-venue-has_gstin').querySelector('input') as HTMLInputElement);
+    expect(await screen.findByLabelText(GSTIN_LABEL)).toBeTruthy();
+    expect(screen.queryByLabelText(PAN_LABEL)).toBeNull();
   });
 });
 
@@ -196,7 +208,9 @@ describe('DocumentsSection — document rows', () => {
 
 describe('DocumentsSection — edit-approved mode', () => {
   const approvedDefaults = {
+    has_gstin: true,
     gstin: '22ABCDE1234F1Z5',
+    has_pan: true,
     documents: [
       { type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' },
       { type: 'Fire NOC', url: 'https://cdn.example.com/noc.pdf' },

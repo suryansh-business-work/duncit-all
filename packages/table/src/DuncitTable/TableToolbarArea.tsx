@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import { TableBulkDelete } from '../bulk/TableBulkDelete';
+import { TableChangeLog } from '../changeLog/TableChangeLog';
 import type { BulkDeleteBinding } from '../bulk/useBulkDelete';
 import { DuncitTableToolbar } from '../toolbar/DuncitTableToolbar';
 import { TableDataActions } from '../toolbar/TableDataActions';
@@ -67,6 +68,13 @@ export function TableToolbarArea<T>(props: Readonly<TableToolbarAreaProps<T>>) {
                 onStarted={clearSelection}
               />
             )}
+            <TableChangeLog
+              tableId={tableId}
+              fetchRows={fetchRows}
+              query={appliedQuery}
+              loading={table.loading}
+              label={ariaLabel}
+            />
             <TableDataActions
               tableId={tableId}
               columns={columns}

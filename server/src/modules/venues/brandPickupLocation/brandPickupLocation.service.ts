@@ -15,6 +15,15 @@ const notFound = () =>
 const SHIPROCKET_UNCONFIGURED =
   'ShipRocket is not connected — connect the brand\'s ShipRocket account in the brand wizard (Integration step).';
 
+/** Why a brand's warehouses cannot be registered right now — '' when they can. */
+async function brandAccountProblem(brandId: string): Promise<string> {
+  try {
+    return (await getBrandShiprocketAccount(brandId)) ? '' : SHIPROCKET_UNCONFIGURED;
+  } catch (error) {
+    return error instanceof Error ? error.message : SHIPROCKET_UNCONFIGURED;
+  }
+}
+
 /** Load a brand owned by the signed-in partner (404 otherwise) — the ownership
  * gate for every myBrandPickupLocation* op. */
 async function loadOwnedBrand(userId: string, brandId: string) {
@@ -232,19 +241,20 @@ export const brandPickupLocationService = {
     });
     if (docs.length === 0) return { attempted: 0, registered: 0 };
 
-    // A brand's warehouses live on the brand's own ShipRocket account; a brand
-    // that connected none (pre-wizard) still registers on the Tech portal's.
-    const { isShiprocketConfigured } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
-    const brandAccount = await getBrandShiprocketAccount(brandDocId);
-    if (!brandAccount && !(await isShiprocketConfigured())) {
+    // A brand's warehouses live on the account the brand ships on — its own,
+    // or Duncit's courier. One that cannot be resolved leaves them unregistered
+    // with the reason, never registered on another business's account.
+    const unavailable = await brandAccountProblem(brandDocId);
+    if (unavailable) {
       await BrandPickupLocationModel.updateMany(
         { _id: { $in: docs.map((d) => d._id) } },
-        { $set: { shiprocket_error: SHIPROCKET_UNCONFIGURED } }
+        { $set: { shiprocket_error: unavailable } }
       );
       logs.server.warn('brandPickupLocation', 'registerBrandWarehouses', {
-        msg: 'ShipRocket is not configured — warehouses stay unregistered',
+        msg: 'brand shipping account unavailable — warehouses stay unregistered',
         brandDocId,
         count: docs.length,
+        reason: unavailable,
       });
       return { attempted: docs.length, registered: 0 };
     }

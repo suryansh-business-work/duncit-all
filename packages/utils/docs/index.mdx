@@ -55,6 +55,7 @@ exports:
   - 'BRAND_CONSENT_POLICY_SLUG'
   - 'brandStepStates'
   - 'brandStepComplete'
+  - 'brandShippingReady'
   - 'brandCompletionPercent'
   - 'brandNextStepIndex'
   - 'BrandWizardFacts'
@@ -2465,10 +2466,13 @@ readout while the partner is still typing.
 | `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to submit |
 | `brandNextStepIndex(facts)` | Where a saved draft opens — the first required step still to do |
 | `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy the last step signs |
+| `brandShippingReady(mode, ownConnected)` | Is shipping settled? `DUNCIT_COURIER` needs nothing from the brand; its own ShipRocket must be connected |
 
 Payout is optional (it never lowers the percentage) and Review is derived. Integration needs
-BOTH ShipRocket and Razorpay connected, which only the server can say — pass the brand's
-`integrations.*.connected` and `consent.accepted` through as facts.
+Razorpay connected plus the brand's shipping settled: `shipping_mode` is `DUNCIT_COURIER` (Duncit's
+courier carries the parcels) or the brand's own ShipRocket is connected. Connection is something
+only the server can say — pass the brand's `shipping_mode`, `integrations.*.connected` and
+`consent.accepted` through as facts.
 
 ```ts
 import { brandCompletionPercent, brandStepStates } from '@duncit/utils';

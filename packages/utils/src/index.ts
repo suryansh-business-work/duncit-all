@@ -1079,6 +1079,7 @@ export {
   brandCompletionPercent,
   brandNextStepIndex,
   brandStepComplete,
+  brandShippingReady,
   brandStepStates,
   type BrandStepState,
   type BrandWizardFacts,

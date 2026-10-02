@@ -50,6 +50,16 @@ export const ecommBrandTypeDefs = gql`
     has_webhook_secret: Boolean!
   }
 
+  """
+  Who carries a brand's parcels: its OWN ShipRocket account, or Duncit's
+  courier service (the ShipRocket account the Tech portal maps to the
+  Partners console — never the pet store's).
+  """
+  enum BrandShippingMode {
+    OWN_SHIPROCKET
+    DUNCIT_COURIER
+  }
+
   type BrandIntegrations {
     shiprocket: BrandIntegrationStatus!
     razorpay: BrandIntegrationStatus!
@@ -142,6 +152,8 @@ export const ecommBrandTypeDefs = gql`
     default_pickup_location_id: ID
     # E-commerce: number of this brand's APPROVED products (resolved).
     approved_product_count: Int!
+    "Who ships this brand's parcels; null until the brand chooses."
+    shipping_mode: BrandShippingMode
     "The brand's own ShipRocket and Razorpay accounts, and whether each connects."
     integrations: BrandIntegrations!
     "The Brand Consent as signed by the owner."
@@ -235,6 +247,8 @@ export const ecommBrandTypeDefs = gql`
     setMyEcommBrandActive(brand_doc_id: ID!, active: Boolean!): EcommBrand!
     "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products."
     deleteEcommBrand(brand_doc_id: ID!, email: String!, password: String!): Boolean!
+    "Partner: choose who ships the brand's parcels — its own ShipRocket account, or the Duncit courier."
+    setBrandShippingMode(brand_doc_id: ID!, mode: BrandShippingMode!): EcommBrand!
     "Partner: save the brand's ShipRocket API user and check it against ShipRocket right away."
     connectBrandShiprocket(brand_doc_id: ID!, input: BrandShiprocketInput!): BrandIntegrationStatus!
     "Partner: save the brand's Razorpay keys and check them against Razorpay right away."

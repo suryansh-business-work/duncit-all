@@ -53,6 +53,9 @@ export function withShiprocketAccount<T>(account: ShiprocketAccount | null, fn: 
   return account ? accountContext.run(account, fn) : fn();
 }
 
+/** The session key of the account this call chain runs on — what a per-account cache keys on. */
+export const currentAccountKey = (): string => accountContext.getStore()?.sessionKey ?? DEFAULT_SESSION_KEY;
+
 /** Whether ANY account can take the next call: the chosen brand's, else the Tech portal's. */
 export async function hasShiprocketAccount(): Promise<boolean> {
   return !!accountContext.getStore() || (await getShiprocketAccount()) !== null;

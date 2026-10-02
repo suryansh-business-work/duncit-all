@@ -181,6 +181,13 @@ describe('createShipment — booking', () => {
     expect(booked.parcel?.sent_at).toBeInstanceOf(Date);
   });
 
+  it('books the cheapest courier, the rate the checkout quoted — not a dearer recommended one', async () => {
+    mockCouriers.mockResolvedValue([courier('24', 'Xpressbees Surface', 74, true), courier('12', 'Delhivery Surface', 68)]);
+    const order = await paidOrder();
+    await createShipment(order);
+    expect(mockAwb).toHaveBeenCalledWith('6300001', '12');
+  });
+
   it("assigns the courier the operator picked, and records ShipRocket's courier name fallback", async () => {
     const order = await paidOrder();
     await createShipment(order, '24');

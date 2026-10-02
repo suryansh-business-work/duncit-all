@@ -12,6 +12,9 @@ export { clientTableFetch } from './clientFetch';
 // The server-side bulk delete a console's shell provides to every grid.
 export { TableBulkDeleteProvider, useTableBulkDeleteApi } from './bulk/bulkDeleteContext';
 export type { BulkDeleteMode, BulkDeleteRequest, TableBulkDeleteApi } from './bulk/bulkDeleteContext';
+// The change log a console's shell provides to every grid.
+export { TableChangeLogProvider, useTableChangeLogApi } from './changeLog/changeLogContext';
+export type { TableChangeAction, TableChangeLogApi, TableChangeLogRow } from './changeLog/changeLogContext';
 export {
   actionsColumn,
   activeChipColumn,

@@ -74,4 +74,14 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   // The composer also opens from Social Calendar now, which has no Accounts tab.
   "marketing.social.connectFirst": ["Connect an account on the Accounts tab first."],
+  // A brand may now ship with the Duncit courier instead of its own ShipRocket
+  // account, so "both must connect" stopped being true.
+  "partners.brandWizard.integration.intro": [
+    "Connect the ShipRocket and Razorpay accounts this brand ships and gets paid through. Both must connect before the brand can be submitted.",
+  ],
+  "partners.brandWizard.integration.bothRequired": [
+    "Both connections must succeed before the brand can be submitted for review.",
+  ],
+  "partners.brandWizard.review.integrationsOk": ["ShipRocket and Razorpay are connected."],
+  "partners.brandWizard.review.integrationsMissing": ["Connect both ShipRocket and Razorpay in the Integration step."],
 };

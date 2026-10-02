@@ -29,6 +29,9 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       onDenied={clearToken}
       profileTo="/profile"
       onLogout={logout}
+      // Money moves here: every table's change log also names the account's
+      // email and roles, the surface, the address and the browser.
+      detailedChangeLogs
     >
       {children}
     </ShellAppShell>

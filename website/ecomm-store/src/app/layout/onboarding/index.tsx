@@ -62,7 +62,7 @@ export function OnboardingSplash() {
           size="large"
           endIcon={<ArrowForwardRoundedIcon />}
           onClick={last ? finish : () => setPage((p) => p + 1)}
-          sx={{ bgcolor: T.navBar, '&:hover': { bgcolor: T.ink }, fontSize: '1.1rem', py: 1.5 }}
+          sx={{ bgcolor: T.navBar, '&:hover': { bgcolor: T.navBarHover }, fontSize: '1.1rem', py: 1.5 }}
         >
           {last ? t('ecommStore.onboarding.start') : t('ecommStore.onboarding.next')}
         </DuncitButton>

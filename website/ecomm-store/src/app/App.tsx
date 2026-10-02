@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { RouterProvider } from 'react-router';
 import { ApolloProvider } from '@apollo/client/react';
-import { CssBaseline, ThemeProvider } from '@mui/material';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LocaleProvider } from '@duncit/app-settings';
 import { ConfirmProvider, NotifyProvider } from '@duncit/dialogs';
@@ -10,16 +9,15 @@ import { RequestProgressBar } from '@duncit/ui';
 import { GOOGLE_CLIENT_ID } from '../config/env';
 import { STORE_FALLBACK } from '../i18n';
 import { StoreClosedPage } from '../pages/closed/StoreClosedPage';
-import { buildStoreTheme } from '../theme/storeTheme';
 import { createStoreClient } from './apolloClient';
 import { CartProvider } from './providers/CartProvider';
+import { ColorModeProvider } from './providers/ColorModeProvider';
 import { SessionProvider, useStoreSession } from './providers/SessionProvider';
 import { StoreSettingsProvider, useStoreSettings } from './providers/StoreSettingsProvider';
 import { WishlistProvider } from './providers/WishlistProvider';
 import { router } from './router';
 
 const client = createStoreClient();
-const theme = buildStoreTheme();
 
 /** The account's saved language wins over the browser's. */
 function StoreLocale({ children }: Readonly<{ children: ReactNode }>) {
@@ -55,8 +53,7 @@ export function App() {
       <WithGoogle>
         <SessionProvider>
           <StoreLocale>
-            <ThemeProvider theme={theme}>
-              <CssBaseline />
+            <ColorModeProvider>
               {/* The floor under every wait on the server — the settings load,
                   a shelf, a checkout — before any page draws its own loader. */}
               <RequestProgressBar />
@@ -67,7 +64,7 @@ export function App() {
                   </StoreSettingsProvider>
                 </NotifyProvider>
               </ConfirmProvider>
-            </ThemeProvider>
+            </ColorModeProvider>
           </StoreLocale>
         </SessionProvider>
       </WithGoogle>

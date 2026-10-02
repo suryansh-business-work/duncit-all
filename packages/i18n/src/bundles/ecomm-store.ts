@@ -30,6 +30,7 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
       back: 'Go back',
       cart: { one: 'Cart, {count} item', other: 'Cart, {count} items' },
       wishlist: { one: 'Wishlist, {count} saved product', other: 'Wishlist, {count} saved products' },
+      darkMode: 'Dark mode',
     },
     menu: {
       main: 'Shop menu',

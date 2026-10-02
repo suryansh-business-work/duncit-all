@@ -28,7 +28,6 @@ export function FilterPanel({ page, controls, scope }: Readonly<FilterPanelProps
       <PriceFilter
         floor={page?.price_min ?? 0}
         ceiling={page?.price_max ?? 0}
-        min={filters.min}
         max={filters.max}
         onCommit={controls.setPrice}
       />

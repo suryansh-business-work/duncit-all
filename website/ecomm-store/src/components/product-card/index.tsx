@@ -99,7 +99,7 @@ export function ProductCard({ product, position }: Readonly<ProductCardProps>) {
           </Box>
         </Link>
         {badge ? (
-          <Chip size="small" label={badge} sx={{ position: 'absolute', top: 8, left: 8, bgcolor: T.ink, color: T.onBrand }} />
+          <Chip size="small" label={badge} sx={{ position: 'absolute', top: 8, left: 8, bgcolor: T.navBar, color: T.onBrand }} />
         ) : null}
         <WishlistButton productId={product.id} productTitle={product.title} sx={{ position: 'absolute', top: 4, right: 4 }} />
       </Box>

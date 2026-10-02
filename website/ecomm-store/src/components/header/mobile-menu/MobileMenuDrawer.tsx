@@ -4,6 +4,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 import { useStoreT } from '../../../i18n';
 import { CircleButton } from '../../CircleButton';
+import { ColorModeButton } from '../ColorModeButton';
 import { useNavigationData } from '../navigation';
 import { SearchForm } from '../search-form';
 import { AccountSection, HelpSection, ShopLinks } from './MenuSections';
@@ -33,9 +34,12 @@ export function MobileMenuDrawer({ id, open, onClose }: Readonly<MobileMenuDrawe
           <Typography id={titleId} variant="h3" component="h2">
             {t('ecommStore.menu.title')}
           </Typography>
-          <CircleButton aria-label={t('ecommStore.menu.close')} onClick={onClose} data-testid="mobile-menu-close">
-            <CloseRoundedIcon />
-          </CircleButton>
+          <Stack direction="row" spacing={1}>
+            <ColorModeButton />
+            <CircleButton aria-label={t('ecommStore.menu.close')} onClick={onClose} data-testid="mobile-menu-close">
+              <CloseRoundedIcon />
+            </CircleButton>
+          </Stack>
         </Stack>
         <Box sx={{ px: 2, pb: 1.5 }}>
           <SearchForm id="mobile-menu-search" onDone={onClose} />

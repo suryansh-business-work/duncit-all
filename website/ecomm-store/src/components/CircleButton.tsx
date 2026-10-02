@@ -28,6 +28,7 @@ interface CircleButtonProps {
   'aria-haspopup'?: 'dialog' | 'menu';
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
+  'aria-pressed'?: boolean;
 }
 
 /** The 44px round white icon button of the design: back, cart, bell. */

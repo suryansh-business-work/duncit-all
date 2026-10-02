@@ -29,7 +29,7 @@ function ProfileCard() {
         rel="noopener noreferrer"
         variant="contained"
         startIcon={<EditRoundedIcon />}
-        sx={{ bgcolor: T.navBar, color: T.onBrand, '&:hover': { bgcolor: T.ink } }}
+        sx={{ bgcolor: T.navBar, color: T.onBrand, '&:hover': { bgcolor: T.navBarHover } }}
       >
         {t('ecommStore.account.editProfile')}
       </DuncitButton>

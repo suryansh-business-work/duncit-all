@@ -1,30 +1,34 @@
-import { createTheme, type Theme } from '@mui/material/styles';
-import { light } from '@duncit/auth-tokens';
+import { createTheme, responsiveFontSizes, type Theme } from '@mui/material/styles';
+import { dark, light } from '@duncit/auth-tokens';
 import { focusVisibleGlobalCss, reducedMotionGlobalCss, withPress } from '@duncit/buttons';
 
-import { STORE_TOKENS as T } from './tokens';
+import { STORE_PALETTES, STORE_TOKENS as T, storeCssVars, type StoreColorMode } from './tokens';
 
 const FONT_STACK = '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
 /**
- * The store's MUI theme. `primary` is the 4.8:1 call-to-action red, so every
- * contained button and filled chip with ordinary-size white text is readable;
- * the brighter brand red is reserved for fills without small text (see tokens).
- * Controls are pills, cards are 24px, and the page sits on a light grey.
+ * The store's MUI theme for one colour mode. `primary` is the 4.8:1
+ * call-to-action red, so every contained button and filled chip with
+ * ordinary-size white text is readable; the brighter brand red is reserved for
+ * fills without small text (see tokens). Controls are pills, cards are 24px.
+ * The palette takes real colours (press states mix them); the `--store-*`
+ * variables that `STORE_TOKENS` reads are declared on `:root` for the mode.
  */
-export function buildStoreTheme(): Theme {
-  return createTheme({
+export function buildStoreTheme(mode: StoreColorMode): Theme {
+  const modeColors = mode === 'dark' ? dark : light;
+  const C = STORE_PALETTES[mode];
+  const theme = createTheme({
     palette: {
-      mode: 'light',
-      primary: { main: T.cta, dark: light.primaryActive, contrastText: T.onBrand },
-      secondary: { main: light.accent, contrastText: light.onAccent },
-      success: { main: light.success, contrastText: light.onSemantic },
-      warning: { main: light.warning, contrastText: light.onSemantic },
-      error: { main: light.error, contrastText: light.onSemantic },
-      info: { main: light.info, contrastText: light.onSemantic },
-      background: { default: T.page, paper: T.surface },
-      text: { primary: T.ink, secondary: T.muted },
-      divider: T.border,
+      mode,
+      primary: { main: C.cta, dark: modeColors.primaryActive, contrastText: C.onBrand },
+      secondary: { main: modeColors.accent, contrastText: modeColors.onAccent },
+      success: { main: modeColors.success, contrastText: modeColors.onSemantic },
+      warning: { main: modeColors.warning, contrastText: modeColors.onSemantic },
+      error: { main: modeColors.error, contrastText: modeColors.onSemantic },
+      info: { main: modeColors.info, contrastText: modeColors.onSemantic },
+      background: { default: C.page, paper: C.surface },
+      text: { primary: C.ink, secondary: C.muted },
+      divider: C.border,
     },
     shape: { borderRadius: 8 },
     typography: {
@@ -40,8 +44,9 @@ export function buildStoreTheme(): Theme {
     components: withPress({
       MuiCssBaseline: {
         styleOverrides: {
-          body: { backgroundColor: T.page },
-          ...focusVisibleGlobalCss(light.accent),
+          ':root': storeCssVars(mode),
+          body: { backgroundColor: C.page, overflowWrap: 'break-word' },
+          ...focusVisibleGlobalCss(modeColors.accent),
           ...reducedMotionGlobalCss,
           '@media (pointer: coarse)': {
             'button, a[role="button"], [role="button"]': { minHeight: 44 },
@@ -59,9 +64,9 @@ export function buildStoreTheme(): Theme {
       },
       MuiOutlinedInput: {
         styleOverrides: {
-          root: { borderRadius: T.radius.pill, backgroundColor: T.surface },
+          root: { borderRadius: T.radius.pill, backgroundColor: C.surface },
           multiline: { borderRadius: T.radius.panel },
-          notchedOutline: { borderColor: T.inputBorder },
+          notchedOutline: { borderColor: C.inputBorder },
         },
       },
       MuiLink: { defaultProps: { color: 'secondary', underline: 'hover' } },
@@ -70,11 +75,13 @@ export function buildStoreTheme(): Theme {
         styleOverrides: { rounded: { borderRadius: T.radius.card } },
       },
       MuiCard: {
-        styleOverrides: { root: { borderRadius: T.radius.card, boxShadow: T.shadow } },
+        styleOverrides: { root: { borderRadius: T.radius.card, boxShadow: C.shadow } },
       },
       MuiDialog: {
         styleOverrides: { paper: { borderRadius: T.radius.card } },
       },
-    }, { ink: T.ink, accent: light.accent }),
+    }, { ink: C.ink, accent: modeColors.accent }),
   });
+  // Headings step down on phones so a long title doesn't fill the screen.
+  return responsiveFontSizes(theme);
 }

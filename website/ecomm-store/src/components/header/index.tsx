@@ -14,6 +14,7 @@ import { DeliverToPill } from '../DeliverToPill';
 import { StoreLogo } from '../StoreLogo';
 import { AccountMenu } from './AccountMenu';
 import { AnnouncementBar } from './AnnouncementBar';
+import { ColorModeButton } from './ColorModeButton';
 import { MegaMenu } from './mega-menu';
 import { MobileMenuButton } from './mobile-menu';
 import { SearchForm } from './search-form';
@@ -58,6 +59,7 @@ export function Header() {
           </Box>
           <Box sx={{ flexGrow: 1 }} />
           <Stack direction="row" spacing={1}>
+            <ColorModeButton />
             <AccountMenu />
             <CircleButton to={paths.wishlist} aria-label={t('ecommStore.header.wishlist', { count: savedCount })}>
               <Badge badgeContent={savedCount} color="primary">

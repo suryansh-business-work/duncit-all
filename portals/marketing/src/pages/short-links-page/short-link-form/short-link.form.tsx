@@ -1,6 +1,6 @@
-import { useForm, useWatch, type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Grid, MenuItem } from '@mui/material';
+import { Grid } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { FormActionsRow } from '@duncit/ui';
@@ -10,25 +10,29 @@ import {
   type ShortLinkFormProps,
   type ShortLinkFormValues,
 } from './short-link.types';
+import ShortLinkUtmFields from './ShortLinkUtmFields';
+import LinkPreviewSection from './LinkPreviewSection';
 
 export {
   blankShortLinkValues,
   isAllowedDestination,
   isAllowedExternalDestination,
   shortLinkSchema,
+  shortLinkValuesFrom,
   toShortLinkInput,
+  toShortLinkUpdateInput,
 } from './short-link.types';
 import { useTranslation } from '@duncit/app-settings';
-
-const NO_CAMPAIGN = '';
 
 const DUNCIT_HINT = 'The page this link should open, e.g. https://mweb.duncit.com/club/…/pod/…';
 const EXTERNAL_HINT =
   'The public https:// page this link should open, e.g. https://partner.example.com/offer';
 
 export default function ShortLinkForm({
-  options,
-  campaigns,
+  utm,
+  initialValues,
+  lockDestination = false,
+  submitLabel,
   busy,
   errorMessage,
   external = false,
@@ -36,15 +40,14 @@ export default function ShortLinkForm({
   onSubmit,
 }: Readonly<ShortLinkFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, formState } = useForm<ShortLinkFormValues, any, ShortLinkFormValues>({
-    defaultValues: blankShortLinkValues(),
+  const { control, handleSubmit, formState, setValue } = useForm<ShortLinkFormValues, any, ShortLinkFormValues>({
+    defaultValues: initialValues ?? blankShortLinkValues(),
     resolver: zodResolver(shortLinkSchema(t, external)) as unknown as Resolver<ShortLinkFormValues, any, ShortLinkFormValues>,
     mode: 'onChange',
   });
 
-  const destinationHint = external ? EXTERNAL_HINT : DUNCIT_HINT;
-  const source = useWatch({ control, name: 'source' });
-  const medium = useWatch({ control, name: 'medium' });
+  const typedHint = external ? EXTERNAL_HINT : DUNCIT_HINT;
+  const destinationHint = lockDestination ? t('marketing.shortLinks.shareDestinationLocked') : typedHint;
 
   const submit = handleSubmit((values) => onSubmit(values));
 
@@ -66,90 +69,20 @@ export default function ShortLinkForm({
             name="destination_url"
             label={t('marketing.common.destination')}
             required
+            disabled={lockDestination}
             hint={destinationHint}
           />
         </Grid>
 
-        <Grid
-          size={{
-            xs: 12,
-            sm: 6
-          }}>
-          <RhfTextField control={control} name="source" label={t('marketing.shortLinks.linkCreatingFor')} select required>
-            {options.sources.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </RhfTextField>
-        </Grid>
-        {source === 'OTHER' && (
-          <Grid
-            size={{
-              xs: 12,
-              sm: 6
-            }}>
-            <RhfTextField
-              control={control}
-              name="source_other"
-              label={t('marketing.shortLinks.whichChannel')}
-              required
-              hint="Becomes the utm_source"
-            />
-          </Grid>
-        )}
+        {utm && <ShortLinkUtmFields control={control} options={utm.options} campaigns={utm.campaigns} />}
 
-        <Grid
-          size={{
-            xs: 12,
-            sm: 6
-          }}>
-          <RhfTextField control={control} name="medium" label={t('marketing.shortLinks.medium')} select required>
-            {options.mediums.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </RhfTextField>
-        </Grid>
-        {medium === 'OTHER' && (
-          <Grid
-            size={{
-              xs: 12,
-              sm: 6
-            }}>
-            <RhfTextField
-              control={control}
-              name="medium_other"
-              label={t('marketing.shortLinks.whichMedium')}
-              required
-              hint="Becomes the utm_medium"
-            />
-          </Grid>
-        )}
-
-        <Grid size={12}>
-          <RhfTextField
-            control={control}
-            name="campaign_id"
-            label={t('marketing.common.campaign')}
-            select
-            hint="Optional — tags the link with utm_campaign"
-          >
-            <MenuItem value={NO_CAMPAIGN}>{t('marketing.shortLinks.noCampaign')}</MenuItem>
-            {campaigns.map((campaign) => (
-              <MenuItem key={campaign.campaign_id} value={campaign.campaign_id}>
-                {campaign.name}
-              </MenuItem>
-            ))}
-          </RhfTextField>
-        </Grid>
+        <LinkPreviewSection control={control} setValue={setValue} external={external} />
 
         <FormActionsRow
           errorMessage={errorMessage}
           busy={busy}
           disabled={!formState.isValid}
-          submitLabel={t('marketing.shortLinks.createLink')}
+          submitLabel={submitLabel}
           secondaryAction={
             <DuncitButton onClick={onCancel} disabled={busy}>
               Cancel

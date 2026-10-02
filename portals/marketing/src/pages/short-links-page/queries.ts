@@ -8,6 +8,11 @@ const SHORT_LINK_FIELDS = gql`
     label
     destination_url
     is_external
+    share_target
+    meta_override_enabled
+    meta_title
+    meta_description
+    meta_image_url
     tagged_url
     source
     source_other
@@ -90,6 +95,37 @@ export const CREATE_SHORT_LINK = gql`
   }
   ${SHORT_LINK_FIELDS}
 `;
+
+/** Rename, re-point, or change the link-preview card. The utm tags are not
+ * editable: a printed link keeps the attribution it went out with. */
+export const UPDATE_SHORT_LINK = gql`
+  mutation UpdateShortLink($id: ID!, $input: ShortLinkUpdateInput!) {
+    updateShortLink(id: $id, input: $input) {
+      ...ShortLinkFields
+    }
+  }
+  ${SHORT_LINK_FIELDS}
+`;
+
+/** The card a destination publishes right now — read the way an unfurler
+ * reads it, so what the form shows is what WhatsApp will show. */
+export const SHORT_LINK_DESTINATION_META = gql`
+  query ShortLinkDestinationMeta($destination_url: String!) {
+    shortLinkDestinationMeta(destination_url: $destination_url) {
+      title
+      description
+      image_url
+      site_name
+    }
+  }
+`;
+
+export interface ShortLinkDestinationMeta {
+  title?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  site_name?: string | null;
+}
 
 export const SET_SHORT_LINK_ACTIVE = gql`
   mutation SetShortLinkActive($id: ID!, $is_active: Boolean!) {
@@ -326,6 +362,13 @@ export interface ShortLinkRow {
   destination_url: string;
   /** True when the link points somewhere that is not ours. */
   is_external: boolean;
+  /** Set on a link minted by a member's share; its destination is not editable. */
+  share_target?: string | null;
+  /** Off: the link-preview card is read live from the destination. */
+  meta_override_enabled: boolean;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  meta_image_url?: string | null;
   tagged_url: string;
   source: string;
   source_other?: string | null;

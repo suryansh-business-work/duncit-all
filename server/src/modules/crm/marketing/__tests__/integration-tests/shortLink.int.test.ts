@@ -118,6 +118,73 @@ describe('shortLinkService.create', () => {
   });
 });
 
+describe('shortLinkService.update', () => {
+  const forced = {
+    meta_override_enabled: true,
+    meta_title: 'Diwali night run',
+    meta_description: 'Lights, 5K, chai after',
+    meta_image_url: 'https://ik.imagekit.io/duncit/diwali.jpg',
+  };
+
+  it('renames, re-points and stores a forced card', async () => {
+    const link = await shortLinkService.create(base, null);
+    const updated = await shortLinkService.update(link.id, {
+      label: 'Diwali run push',
+      destination_url: 'https://mweb.duncit.com/club/c2/pod/p9',
+      ...forced,
+    });
+    expect(updated).toMatchObject({
+      label: 'Diwali run push',
+      destination_url: 'https://mweb.duncit.com/club/c2/pod/p9',
+      utm_source: link.utm_source,
+      ...forced,
+    });
+  });
+
+  it('clears a forced card when the link moves and no card is sent with it', async () => {
+    const link = await shortLinkService.create({ ...base, ...forced }, null);
+    const moved = await shortLinkService.update(link.id, {
+      label: base.label,
+      destination_url: 'https://mweb.duncit.com/club/c2',
+    });
+    expect(moved).toMatchObject({ meta_override_enabled: false, meta_title: null, meta_image_url: null });
+  });
+
+  it('keeps a forced card when only the label changes', async () => {
+    const link = await shortLinkService.create({ ...base, ...forced }, null);
+    const renamed = await shortLinkService.update(link.id, { label: 'Renamed', destination_url: base.destination_url });
+    expect(renamed.meta_title).toBe(forced.meta_title);
+  });
+
+  it('refuses a move between a Duncit and an external destination', async () => {
+    const link = await shortLinkService.create(base, null);
+    await expect(
+      shortLinkService.update(link.id, { label: base.label, destination_url: 'https://www.partner-site.com/offer' }),
+    ).rejects.toThrow(/External Links/);
+  });
+
+  it('refuses to re-point a share link, but lets its card be forced', async () => {
+    const link = await shortLinkService.create(base, null);
+    await ShortLinkModel.updateOne({ _id: link.id }, { $set: { share_target: 'POD', share_key: 'POD:p1' } });
+    await expect(
+      shortLinkService.update(link.id, { label: base.label, destination_url: 'https://mweb.duncit.com/club/c2' }),
+    ).rejects.toThrow(/cannot be changed/);
+    const card = await shortLinkService.update(link.id, {
+      label: base.label,
+      destination_url: base.destination_url,
+      ...forced,
+    });
+    expect(card.meta_override_enabled).toBe(true);
+  });
+
+  it('refuses an override with no title', async () => {
+    const link = await shortLinkService.create(base, null);
+    await expect(
+      shortLinkService.update(link.id, { ...base, meta_override_enabled: true, meta_title: ' ' }),
+    ).rejects.toThrow(/title/);
+  });
+});
+
 describe('shortLinkService.resolve', () => {
   it('returns the tagged destination and counts the click', async () => {
     const link = await shortLinkService.create(base, null);
@@ -327,5 +394,63 @@ describe('the public /r/:code route', () => {
     expect(res.status).toBe(404);
     expect(res.text).not.toMatch(/mongo/i);
     resolve.mockRestore();
+  });
+
+  describe('a link-preview crawler', () => {
+    const WHATSAPP = 'WhatsApp/2.24.1 A';
+
+    it('gets the forced card, uncached, and the visit is not counted', async () => {
+      const link = await shortLinkService.create(
+        {
+          ...base,
+          meta_override_enabled: true,
+          meta_title: 'Diwali night run',
+          meta_description: 'Lights, 5K, chai after',
+          meta_image_url: 'https://ik.imagekit.io/duncit/diwali.jpg',
+        },
+        null,
+      );
+      const res = await request(app).get(`/r/${link.code}`).set('User-Agent', WHATSAPP);
+      expect(res.status).toBe(200);
+      expect(res.headers['cache-control']).toBe('no-cache');
+      expect(res.text).toContain('<meta property="og:title" content="Diwali night run" />');
+      expect(res.text).toContain('https://ik.imagekit.io/duncit/diwali.jpg');
+      expect((await shortLinkService.byId(link.id)).click_count).toBe(0);
+    });
+
+    it('shows the new card on the very next unfurl after an edit', async () => {
+      const link = await shortLinkService.create(
+        { ...base, meta_override_enabled: true, meta_title: 'First', meta_description: 'd', meta_image_url: 'https://ik.imagekit.io/duncit/a.jpg' },
+        null,
+      );
+      await shortLinkService.update(link.id, {
+        label: base.label,
+        destination_url: base.destination_url,
+        meta_override_enabled: true,
+        meta_title: 'Second',
+        meta_description: 'd',
+        meta_image_url: 'https://ik.imagekit.io/duncit/a.jpg',
+      });
+      const res = await request(app).get(`/r/${link.code}`).set('User-Agent', WHATSAPP);
+      expect(res.text).toContain('content="Second"');
+      expect(res.text).not.toContain('content="First"');
+    });
+
+    // A short link pointing at another short link would otherwise have each
+    // card fetch the other forever.
+    it('does not read the destination page for a request that is our own unfurl', async () => {
+      const fetchSpy = jest.spyOn(globalThis, 'fetch');
+      const link = await shortLinkService.create(
+        { ...base, destination_url: 'https://mweb.duncit.com/explore' },
+        null,
+      );
+      const res = await request(app)
+        .get(`/r/${link.code}`)
+        .set('User-Agent', WHATSAPP)
+        .set('x-duncit-unfurl', '1');
+      expect(res.status).toBe(302);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      fetchSpy.mockRestore();
+    });
   });
 });

@@ -12905,6 +12905,8 @@ export type Mutation = {
   updateReportProblemSlack: ReportProblemSlackSettings;
   updateRole: Role;
   updateScheduledSocialPost: SocialScheduledPost;
+  /** Rename a link, re-point it, or change its link-preview card. */
+  updateShortLink: ShortLink;
   updateShortLinkPolicy: ShortLinkPolicy;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
@@ -17517,6 +17519,12 @@ export type MutationUpdateRoleArgs = {
 export type MutationUpdateScheduledSocialPostArgs = {
   id: Scalars['ID']['input'];
   input: SocialScheduledPostInput;
+};
+
+
+export type MutationUpdateShortLinkArgs = {
+  id: Scalars['ID']['input'];
+  input: ShortLinkUpdateInput;
 };
 
 
@@ -22881,6 +22889,11 @@ export type Query = {
   shortLinkCampaigns: Array<ShortLinkCampaign>;
   /** Individual clicks on one link. */
   shortLinkClicks: ShortLinkClickTablePage;
+  /**
+   * The link-preview card a destination publishes right now, read the same way
+   * an unfurler reads it. What the console shows before anything is forced.
+   */
+  shortLinkDestinationMeta: ShortLinkDestinationMeta;
   /** Click -> signup -> checkout -> paid, for one link. */
   shortLinkFunnel: ShortLinkFunnel;
   /** One row per click, with the person it became and how far they got. */
@@ -25565,6 +25578,11 @@ export type QueryShortLinkClicksArgs = {
 };
 
 
+export type QueryShortLinkDestinationMetaArgs = {
+  destination_url: Scalars['String']['input'];
+};
+
+
 export type QueryShortLinkFunnelArgs = {
   id: Scalars['ID']['input'];
 };
@@ -27841,6 +27859,19 @@ export type ShortLink = {
   last_clicked_at?: Maybe<Scalars['String']['output']>;
   medium: ShortLinkMedium;
   medium_other?: Maybe<Scalars['String']['output']>;
+  /** The forced description; null keeps the destination's own. */
+  meta_description?: Maybe<Scalars['String']['output']>;
+  /** The forced image; null keeps the destination's own. */
+  meta_image_url?: Maybe<Scalars['String']['output']>;
+  /**
+   * True when the marketer forced the link-preview card. Off, the card is read
+   * live from the destination on every unfurl, so it follows the destination.
+   */
+  meta_override_enabled: Scalars['Boolean']['output'];
+  /** The forced card title. Always set while the override is on. */
+  meta_title?: Maybe<Scalars['String']['output']>;
+  /** Set when a member's share minted the link. Its destination follows the thing shared. */
+  share_target?: Maybe<ShareLinkTarget>;
   /** The link you hand out, e.g. https://duncit.com/aB3xY9Zq */
   short_url: Scalars['String']['output'];
   source: ShortLinkSource;
@@ -27915,6 +27946,15 @@ export type ShortLinkDailyPoint = {
   date: Scalars['String']['output'];
 };
 
+/** What a destination says about itself — the card an unfurler would show. */
+export type ShortLinkDestinationMeta = {
+  __typename?: 'ShortLinkDestinationMeta';
+  description?: Maybe<Scalars['String']['output']>;
+  image_url?: Maybe<Scalars['String']['output']>;
+  site_name?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
 export type ShortLinkFunnel = {
   __typename?: 'ShortLinkFunnel';
   /** Percentage of clicks that ended in a payment. */
@@ -27937,6 +27977,12 @@ export type ShortLinkInput = {
   medium: ShortLinkMedium;
   /** Required when medium is OTHER. */
   medium_other?: InputMaybe<Scalars['String']['input']>;
+  meta_description?: InputMaybe<Scalars['String']['input']>;
+  meta_image_url?: InputMaybe<Scalars['String']['input']>;
+  /** Force the link-preview card. Off or omitted, it is read from the destination. */
+  meta_override_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Required while the override is on. */
+  meta_title?: InputMaybe<Scalars['String']['input']>;
   source: ShortLinkSource;
   /** Required when source is OTHER. */
   source_other?: InputMaybe<Scalars['String']['input']>;
@@ -28116,6 +28162,24 @@ export type ShortLinkTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<ShortLink>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * An edit to an existing link. The utm tags are not here on purpose: a link
+ * already printed keeps the attribution it went out with.
+ */
+export type ShortLinkUpdateInput = {
+  /**
+   * Refused for a share link, and for a move between a Duncit and an external
+   * destination. Moving without sending the override clears the old one.
+   */
+  destination_url: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+  meta_description?: InputMaybe<Scalars['String']['input']>;
+  meta_image_url?: InputMaybe<Scalars['String']['input']>;
+  /** Omit to leave the stored override as it is. */
+  meta_override_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  meta_title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SignContractInput = {

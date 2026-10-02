@@ -749,6 +749,13 @@ export {
   type StoredMedia,
 } from './media-url';
 export {
+  isReelPreloaded,
+  REEL_PRELOAD_DISTANCE,
+  reelFeed,
+  shouldExtendReelFeed,
+  type ReelFeedEntry,
+} from './reel-feed';
+export {
   allZero,
   buildEarningsBars,
   buildParticipantTrend,
@@ -1053,6 +1060,11 @@ export {
   type GroupableClub,
   type LocalityClubCount,
 } from './club-grouping';
+export {
+  groupCategoriesBySuper,
+  type GroupableCategory,
+  type SuperCategoryGroup,
+} from './category-grouping';
 export {
   E2E_GOOGLE_CREDENTIAL_QUERY,
   E2E_GRANT_ROLES_MUTATION,

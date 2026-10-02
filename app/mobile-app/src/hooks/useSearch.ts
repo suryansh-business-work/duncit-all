@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { groupCategoriesBySuper } from '@duncit/utils';
 
 import {
   SearchCategoriesDocument,
@@ -141,6 +142,8 @@ export function useSearchCategories() {
       : all.filter((category) => category.level === 'SUPER');
   }, [all]);
 
+  const groups = useMemo(() => groupCategoriesBySuper(all), [all]);
+
   const nameById = useMemo(
     () => new Map(all.map((category) => [category.id, category.name])),
     [all],
@@ -155,5 +158,5 @@ export function useSearchCategories() {
     [nameById],
   );
 
-  return { categories, nameOf };
+  return { categories, groups, nameOf };
 }

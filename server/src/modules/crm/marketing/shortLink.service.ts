@@ -21,16 +21,27 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { shortLinkClickService } from './shortLinkClick.service';
 import { classifyDestination, isDuncitHost } from './shortLink.destination';
 import { shortLinkPolicyService } from './shortLinkPolicy.service';
+import { metaOverrideFrom, NO_META_OVERRIDE, type StoredMetaOverride } from './shortLink.meta';
+import { destinationMeta, type DestinationMeta, type MetaOverride } from './shortLink.preview';
+
+/** The ShortLinkUpdateInput GraphQL input. */
+export interface ShortLinkUpdateInput extends MetaOverride {
+  label: string;
+  destination_url: string;
+}
 import type { ConsentSignal } from './shortLinkClick.model';
 import { filled, maxLen, messagesOf, minLen, mixed, obj, shape, str, trim } from '@utils/zod-fields';
 
 const optionalTrimmed = (...checks: z.core.$ZodCheck<string>[]) =>
   str(z.string().check(...checks).nullable().optional(), { transforms: [trim] });
 
+const labelField = str(z.string().check(minLen(3), maxLen(120), filled()), { required: true, transforms: [trim] });
+const destinationField = str(z.string().check(filled()), { required: true, transforms: [trim] });
+
 const inputSchema = obj(
   shape({
-    label: str(z.string().check(minLen(3), maxLen(120), filled()), { required: true, transforms: [trim] }),
-    destination_url: str(z.string().check(filled()), { required: true, transforms: [trim] }),
+    label: labelField,
+    destination_url: destinationField,
     source: mixed(z.enum(SHORT_LINK_SOURCES), { oneOf: SHORT_LINK_SOURCES, required: true }),
     source_other: optionalTrimmed(maxLen(60)),
     medium: mixed(z.enum(SHORT_LINK_MEDIUMS), { oneOf: SHORT_LINK_MEDIUMS, required: true }),
@@ -38,6 +49,20 @@ const inputSchema = obj(
     campaign_id: optionalTrimmed(),
   })
 );
+
+/** What an edit may change: the name, where it goes and its preview card.
+ * The utm tags stay frozen — a link already printed keeps its attribution. */
+const updateSchema = obj(shape({ label: labelField, destination_url: destinationField }));
+
+const badInput = (message: string) =>
+  new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
+
+const NO_DESTINATION_META: DestinationMeta = {
+  title: null,
+  description: null,
+  image_url: null,
+  site_name: null,
+};
 
 const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['label', 'code', 'destination_url', 'utm_campaign'],
@@ -161,6 +186,11 @@ async function toPub(doc: IShortLink) {
     utm_medium: doc.utm_medium,
     utm_campaign: doc.utm_campaign ?? null,
     is_external: !!doc.is_external,
+    share_target: doc.share_target ?? null,
+    meta_override_enabled: !!doc.meta_override_enabled,
+    meta_title: doc.meta_title ?? null,
+    meta_description: doc.meta_description ?? null,
+    meta_image_url: doc.meta_image_url ?? null,
     is_active: doc.is_active,
     click_count: doc.click_count,
     first_clicked_at: doc.first_clicked_at ? doc.first_clicked_at.toISOString() : null,
@@ -225,6 +255,34 @@ async function refreshDestination(doc: IShortLink, destination: ShareDestination
   doc.label = destination.label;
   await doc.save();
   return doc;
+}
+
+/**
+ * Validate a new destination for an existing link and set it. Refused for a
+ * share link and for a change of class (Duncit <-> external) — see update().
+ */
+async function applyDestination(doc: IShortLink, raw: string) {
+  const { blocked_domains } = await shortLinkPolicyService.rules();
+  const destination = classifyDestination(raw, blocked_domains);
+  if (destination.url === doc.destination_url) return;
+  if (doc.share_target) {
+    throw badInput('A shared link follows the thing it was made for, so its destination cannot be changed');
+  }
+  if (destination.is_external !== !!doc.is_external) {
+    throw badInput(
+      doc.is_external
+        ? 'This is an external link — a Duncit destination belongs on the Short Links page'
+        : 'This is a Duncit short link — an outside destination belongs on the External Links page',
+    );
+  }
+  doc.destination_url = destination.url;
+}
+
+/** The override an edit stores: what it sent, or — when the link moved and it
+ * sent nothing — none at all. Null leaves the stored override as it is. */
+function overrideForUpdate(input: MetaOverride, moved: boolean): StoredMetaOverride | null {
+  if (typeof input.meta_override_enabled === 'boolean') return metaOverrideFrom(input);
+  return moved ? NO_META_OVERRIDE : null;
 }
 
 async function createShareLink(
@@ -293,9 +351,50 @@ export const shortLinkService = {
       ...campaign,
       utm_source,
       utm_medium,
+      ...metaOverrideFrom(input),
       created_by: userId ?? null,
     });
     return toPub(doc);
+  },
+
+  /**
+   * Re-point a link, rename it, or change its preview card.
+   *
+   * A link stays on the page it was made on: one to a Duncit site cannot be
+   * turned into an external one (or back), because the two are tagged and
+   * measured differently. A share link's destination is not editable at all —
+   * it follows the thing it was minted for and would be re-pointed on the
+   * next share anyway.
+   *
+   * Moving a link without sending an override clears the old one: a card
+   * forced for the previous destination must never go on describing the new.
+   */
+  async update(id: string, input: ShortLinkUpdateInput) {
+    const parsed = await updateSchema.safeParseAsync(input);
+    if (!parsed.success) throw badInput(messagesOf(parsed.error).join(', '));
+    const doc = await ShortLinkModel.findById(id).exec();
+    if (!doc) {
+      throw new GraphQLError('Short link not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const moved = parsed.data.destination_url !== doc.destination_url;
+    if (moved) await applyDestination(doc, parsed.data.destination_url);
+    doc.label = parsed.data.label;
+    const override = overrideForUpdate(input, doc.isModified('destination_url'));
+    if (override) Object.assign(doc, override);
+    await doc.save();
+    return toPub(doc);
+  },
+
+  /**
+   * The card a destination would get with no override — what the console
+   * loads under the destination field so the marketer sees it before forcing
+   * anything. The same function the crawler card is built from, so what is
+   * shown here is what an unfurler gets.
+   */
+  async previewDestination(raw: string): Promise<DestinationMeta> {
+    const { blocked_domains } = await shortLinkPolicyService.rules();
+    const { url } = classifyDestination(raw, blocked_domains);
+    return (await destinationMeta(url, { readPage: true })) ?? NO_DESTINATION_META;
   },
 
   /**
@@ -399,7 +498,7 @@ export const shortLinkService = {
   async peek(code: string) {
     const doc = await ShortLinkModel.findOne({ code, is_active: true }).lean().exec();
     if (!doc) return null;
-    return buildDestination(doc.destination_url, {
+    const destination = buildDestination(doc.destination_url, {
       code: doc.code,
       utm_source: doc.utm_source,
       utm_medium: doc.utm_medium,
@@ -407,6 +506,7 @@ export const shortLinkService = {
       share: !!doc.share_target,
       external: !!doc.is_external,
     });
+    return { destination, link: doc };
   },
 
   /**

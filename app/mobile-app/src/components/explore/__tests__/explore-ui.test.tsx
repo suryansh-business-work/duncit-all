@@ -13,8 +13,10 @@ jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
 const mockNavigate = jest.fn();
+let mockFocused = true;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  useIsFocused: () => mockFocused,
 }));
 jest.mock('@/components/details/pod-comments', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -480,7 +482,30 @@ describe('ExploreReels', () => {
     mockNavigate.mockClear();
     bumpComment.mockClear();
     mockAds = [];
+    mockFocused = true;
     mockedExplore.mockReturnValue(base);
+  });
+
+  it('plays nothing while another screen is on top of Explore', () => {
+    mockFocused = false;
+    renderWithProviders(<ExploreReels />);
+    layout();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.pause).toHaveBeenCalled();
+    expect(player.play).not.toHaveBeenCalled();
+  });
+
+  it('deals another shuffled pass when the viewer nears the end, so the feed loops', () => {
+    mockedExplore.mockReturnValue({ ...base, pods: [pod('1'), pod('2')] });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    expect(screen.UNSAFE_getByType(FlatList).props.data).toHaveLength(2);
+    act(() => screen.UNSAFE_getByType(FlatList).props.onEndReached());
+    const list = screen.UNSAFE_getByType(FlatList);
+    expect(list.props.data).toHaveLength(4);
+    const keys = list.props.data.map(list.props.keyExtractor);
+    expect(new Set(keys).size).toBe(4);
+    expect(keys.slice(2).every((key: string) => key.endsWith('~1'))).toBe(true);
   });
 
   it('renders a reel after layout and opens pod details', () => {
@@ -612,7 +637,8 @@ describe('ExploreReels', () => {
     // 5 pods + 1 woven ad, uniform full-height pages either way.
     expect(list.props.data).toHaveLength(6);
     expect(list.props.getItemLayout(null, 5)).toEqual({ length: 700, offset: 3500, index: 5 });
-    expect(list.props.keyExtractor(list.props.data[0])).toBe('1');
+    // Pods come in a shuffled order, keyed by pod id + pass.
+    expect(list.props.keyExtractor(list.props.data[0])).toMatch(/^[1-5]~0$/);
     expect(list.props.keyExtractor(list.props.data[5])).toBe('ad-ax-4');
 
     // The ad renders through the ExploreAdCard branch, video gated on activeIndex.

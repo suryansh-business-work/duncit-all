@@ -34,7 +34,9 @@ interface Props {
   onToggleSave: () => void;
   viewerId?: string | null;
   /** The feed's sound choice; only the reel on screen ever plays it. */
-  sound: Readonly<{ on: boolean; active: boolean; onToggle: () => void }>;
+  sound: Readonly<{ on: boolean; active: boolean; onToggle: () => void; onBlocked: () => void }>;
+  /** Near enough to the reel on screen to buffer ahead. */
+  preload: boolean;
 }
 
 export default function ExplorePodCard({
@@ -46,6 +48,7 @@ export default function ExplorePodCard({
   onToggleSave,
   viewerId,
   sound,
+  preload,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -92,7 +95,14 @@ export default function ExplorePodCard({
         overflow: 'hidden',
       }}
     >
-      <ExploreReelVideo src={pod.reel_url} muted={!(soundAction.audible && sound.active)} testId={`reel-video-${pod.pod_id}`} />
+      <ExploreReelVideo
+        src={pod.reel_url}
+        muted={!(soundAction.audible && sound.active)}
+        active={sound.active}
+        preload={preload}
+        onSoundBlocked={sound.onBlocked}
+        testId={`reel-video-${pod.pod_id}`}
+      />
 
       <ExplorePodOverlay pod={pod} club={club} location={location} />
 

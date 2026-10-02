@@ -98,6 +98,11 @@ exports:
   - 'isVideoUrl'
   - 'mediaTypeForUrl'
   - 'isVideoMedia'
+  - 'reelFeed'
+  - 'ReelFeedEntry'
+  - 'shouldExtendReelFeed'
+  - 'isReelPreloaded'
+  - 'REEL_PRELOAD_DISTANCE'
   - 'coverImageUrl'
   - 'podPhase'
   - 'canCompletePod'
@@ -388,6 +393,9 @@ exports:
   - 'clubCityName'
   - 'clubOptionLabel'
   - 'clubPlaceLabel'
+  - 'groupCategoriesBySuper'
+  - 'GroupableCategory'
+  - 'SuperCategoryGroup'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
   - 'localitiesByClubCount'
@@ -951,6 +959,32 @@ because native's codegen refuses an interpolated one.
 | `mediaTypeForUrl` | `(url) => 'IMAGE' \| 'VIDEO'` | — | The type a stored media row gets when the writer did not say. |
 | `isVideoMedia` | `(media) => boolean` | — | Whether a stored row plays. The recorded `type` wins; the URL answers for rows written before it was recorded correctly. |
 | `coverImageUrl` | `(media) => string \| undefined` | — | The first still in a cover list — what a card or avatar shows. `undefined` when the cover is video only, so the caller draws its placeholder. |
+
+### The Explore reel feed — `reel-feed`
+
+The Explore reels play in a random order that never runs out. Each pass over
+the pods is a *cycle*, shuffled on its own; when the viewer gets within
+`REEL_PRELOAD_DISTANCE` of the end, the surface deals one more. mWeb and the
+native app share this and nothing else — the players stay separate.
+
+The order is a hash of `seed` + cycle + pod key, so a refetch (a like, a save)
+moves nothing; a new `seed` (a new visit) deals a new order. Where a cycle
+would open on the reel the last one closed on, it is rotated by one.
+
+```ts
+const [seed] = useState(() => Date.now());
+const [cycles, setCycles] = useState(1);
+const reels = useMemo(() => reelFeed(pods, (pod) => pod.id, seed, cycles), [pods, seed, cycles]);
+// Swiped near the end → deal the next shuffled pass.
+if (shouldExtendReelFeed(activeIndex, reels.length)) setCycles((count) => count + 1);
+```
+
+| Export | Signature | Returns | Notes |
+| --- | --- | --- | --- |
+| `reelFeed` | `(items, keyOf, seed, cycles) => ReelFeedEntry[]` | — | `cycles` shuffled passes; each entry's `key` is `<pod key>~<cycle>`, unique across passes. |
+| `shouldExtendReelFeed` | `(activeIndex, length) => boolean` | — | True once the reel on screen is within the preload distance of the end. |
+| `isReelPreloaded` | `(index, activeIndex) => boolean` | — | Whether a reel should be buffering — the ones within `REEL_PRELOAD_DISTANCE` either side. |
+| `REEL_PRELOAD_DISTANCE` | `2` | — | Reels kept loading ahead of and behind the one on screen. |
 
 ### Pod phase — the Home rails
 
@@ -2715,6 +2749,27 @@ Cities and localities sort A→Z; the clubs inside a group keep the order they a
 list that was already searched and sorted stays that way. A city with no clubs gets no card,
 and a club whose `location_id` is not among the locations is left out of the city cards. The
 no-area group (`locality: ''`) always comes last — each app labels it "Other areas".
+
+## Categories grouped by super category
+
+`category-grouping.ts` decides how Search's landing grid groups the interests: one section per
+SUPER category, its CATEGORY tiles beneath. mWeb's and the native app's `CategoryActions`
+render it; which category lands under which super is decided here.
+
+```ts
+const categories = [
+  { id: 'sup-sports', name: 'Sports', level: 'SUPER', parent_id: null },
+  { id: 'cat-badminton', name: 'Badminton', level: 'CATEGORY', parent_id: 'sup-sports' },
+  { id: 'sup-wellness', name: 'Wellness', level: 'SUPER', parent_id: null },
+  { id: 'cat-running', name: 'Running', level: 'CATEGORY', parent_id: 'sup-sports' },
+];
+
+groupCategoriesBySuper(categories);
+// [{ superCategory: Sports, categories: [Badminton, Running] }]
+```
+
+Supers and categories keep the order they arrive in. A super with no categories gets no
+section, and SUB rows or a category whose parent is not a known super are left out.
 
 ## Theme tokens — bundled, or the admin's
 

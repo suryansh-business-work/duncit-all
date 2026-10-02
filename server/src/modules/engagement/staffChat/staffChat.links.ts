@@ -1,5 +1,5 @@
 import { getUrlConfigs } from '@config/url-configs';
-import { logs } from '@observability/log';
+import { fetchOpenGraph } from '@utils/open-graph';
 
 /**
  * What a link in a chat message turns into on screen.
@@ -59,65 +59,6 @@ const PORTAL_ROLES: Record<string, string[]> = {
 /** Opens everything, by definition. */
 const MASTER_ROLE = 'SUPER_ADMIN';
 
-/** Hostnames a server-side fetch must never be pointed at. */
-const BLOCKED_HOST = /^(localhost|127\.|0\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$)/i;
-
-const MAX_BYTES = 512 * 1024;
-const TIMEOUT_MS = 4000;
-
-/** One `<meta>` value, whichever attribute order the page used. */
-function metaContent(html: string, key: string): string | null {
-  const pattern = new RegExp(
-    String.raw`<meta[^>]+(?:property|name)=["']${key}["'][^>]*content=["']([^"']+)["']|<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["']${key}["']`,
-    'i'
-  );
-  const found = pattern.exec(html);
-  return found ? (found[1] ?? found[2] ?? null) : null;
-}
-
-function titleOf(html: string): string | null {
-  const og = metaContent(html, 'og:title');
-  if (og) return og;
-  const found = /<title[^>]*>([^<]{1,300})<\/title>/i.exec(html);
-  return found?.[1]?.trim() ?? null;
-}
-
-/**
- * Read a page's Open Graph tags.
- *
- * Deliberately narrow: https/http only, no private or loopback host, one
- * request with no redirect chasing beyond what fetch does by default, a hard
- * timeout and a byte cap. A chat message is user-supplied input pointing this
- * server at a URL, which is the definition of SSRF — the answer is to make the
- * fetch boring rather than to trust the sender.
- */
-async function fetchOpenGraph(url: URL): Promise<Partial<StaffLinkPreview>> {
-  if (BLOCKED_HOST.test(url.hostname)) return {};
-  const abort = new AbortController();
-  const timer = globalThis.setTimeout(() => abort.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url.toString(), {
-      signal: abort.signal,
-      redirect: 'follow',
-      headers: { accept: 'text/html', 'user-agent': 'duncit-link-preview' },
-    });
-    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('text/html')) return {};
-    const raw = await res.text();
-    const html = raw.slice(0, MAX_BYTES);
-    return {
-      title: titleOf(html),
-      description: metaContent(html, 'og:description') ?? metaContent(html, 'description'),
-      image: metaContent(html, 'og:image'),
-    };
-  } catch (err) {
-    // A dead link is a normal thing to paste; it is not worth an error.
-    logs.server.warn('staffChat', 'linkPreview', { error: err, url: url.hostname });
-    return {};
-  } finally {
-    globalThis.clearTimeout(timer);
-  }
-}
-
 /** The portal a `<name>.duncit.com` host belongs to, or null when it is outside. */
 function portalOf(hostname: string, ourHosts: string[]): string | null {
   const host = hostname.toLowerCase();
@@ -163,7 +104,8 @@ export async function previewLink(url: string, viewerRoles: string[]): Promise<S
 
   const portal = portalOf(parsed.hostname, ourHosts);
   if (!portal) {
-    return { ...empty, ...(await fetchOpenGraph(parsed)) };
+    const tags = await fetchOpenGraph(parsed.toString());
+    return { ...empty, title: tags.title, description: tags.description, image: tags.image };
   }
 
   // Inside: say which console, and whether they will get in. No OG fetch — a

@@ -3,6 +3,7 @@ import {
   linkPreviewService,
   type LinkPreviewKind,
 } from '@modules/platform/linkPreview/linkPreview.service';
+import { fetchOpenGraph } from '@utils/open-graph';
 
 /**
  * What a link-preview crawler should see for a short link.
@@ -54,24 +55,36 @@ function matchRoute(pattern: string, path: string): string[] | null {
   return ids;
 }
 
+/** What a destination says about itself — the part of a card that is not ours. */
+export interface DestinationMeta {
+  title: string | null;
+  description: string | null;
+  image_url: string | null;
+  /** The destination's own og:site_name; null for our entity pages. */
+  site_name: string | null;
+}
+
 export interface ShortLinkCard {
   title: string;
   description: string | null;
   image_url: string | null;
-  /** True when the picture belongs to the entity rather than being the brand
-   * logo standing in — only then is a wide card an improvement on a small one. */
+  /** True when the picture belongs to the destination rather than being the
+   * brand logo standing in — only then is a wide card an improvement. */
   large_image: boolean;
   site_name: string;
   theme_color: string;
 }
 
-/**
- * The card for a destination, or null when the destination is not one of our
- * entity pages — a campaign landing page, an app store, a page whose entity
- * has been deleted. Null is not a failure: the caller redirects instead, and
- * the destination gets to describe itself with its own meta tags.
- */
-export async function cardForDestination(destination: string): Promise<ShortLinkCard | null> {
+/** The override fields a link carries — see IShortLink.meta_override_enabled. */
+export interface MetaOverride {
+  meta_override_enabled?: boolean | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  meta_image_url?: string | null;
+}
+
+/** One of our entity pages, described straight from the database. */
+async function entityMeta(destination: string): Promise<DestinationMeta | null> {
   let path: string;
   try {
     path = new URL(destination).pathname;
@@ -83,15 +96,71 @@ export async function cardForDestination(destination: string): Promise<ShortLink
     if (!ids) continue;
     const preview = await linkPreviewService.resolve(route.kind, ids[0] ?? '', ids[1] ?? null);
     if (!preview) return null;
-    const branding = await settingsService.getBranding();
     return {
       title: preview.title,
       description: preview.description,
-      image_url: preview.image_url ?? branding.logo_url ?? null,
-      large_image: !!preview.image_url,
-      site_name: branding.app_name,
-      theme_color: branding.primary_color,
+      image_url: preview.image_url ?? null,
+      site_name: null,
     };
   }
   return null;
+}
+
+/**
+ * What the destination says about itself RIGHT NOW — never a stored copy, so
+ * a link re-pointed somewhere else is described as the new place on its very
+ * next unfurl.
+ *
+ * Our entity pages are read from the database; anything else — another of
+ * our pages, a partner's site, an app store listing — is asked for its own
+ * tags. `readPage: false` skips that request, which is how a card being built
+ * FOR another card's fetch stops the two asking each other forever.
+ */
+export async function destinationMeta(
+  destination: string,
+  options: { readPage: boolean },
+): Promise<DestinationMeta | null> {
+  const entity = await entityMeta(destination);
+  if (entity) return entity;
+  if (!options.readPage) return null;
+  const page = await fetchOpenGraph(destination);
+  if (!page.title) return null;
+  return {
+    title: page.title,
+    description: page.description,
+    image_url: page.image,
+    site_name: page.site_name,
+  };
+}
+
+/** Every override field filled: the destination has nothing left to add. */
+const fullyOverridden = (link: MetaOverride) =>
+  !!(link.meta_override_enabled && link.meta_title && link.meta_description && link.meta_image_url);
+
+/**
+ * The card a link-preview crawler gets for a short link, or null when there
+ * is nothing to describe it with — the caller redirects instead, so the
+ * destination still gets the last word.
+ *
+ * The marketer's override, when switched on, replaces the destination's value
+ * field by field; a field left blank keeps the destination's own.
+ */
+export async function cardForLink(
+  link: MetaOverride & { destination_url: string },
+  options: { readPage: boolean },
+): Promise<ShortLinkCard | null> {
+  const live = fullyOverridden(link) ? null : await destinationMeta(link.destination_url, options);
+  const forced: MetaOverride = link.meta_override_enabled ? link : {};
+  const title = forced.meta_title ?? live?.title;
+  if (!title) return null;
+  const image = forced.meta_image_url ?? live?.image_url ?? null;
+  const branding = await settingsService.getBranding();
+  return {
+    title,
+    description: forced.meta_description ?? live?.description ?? null,
+    image_url: image ?? branding.logo_url ?? null,
+    large_image: !!image,
+    site_name: live?.site_name ?? branding.app_name,
+    theme_color: branding.primary_color,
+  };
 }

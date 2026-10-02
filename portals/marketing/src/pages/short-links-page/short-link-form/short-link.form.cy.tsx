@@ -3,8 +3,11 @@ import {
   blankShortLinkValues,
   isAllowedDestination,
   shortLinkSchema,
+  shortLinkValuesFrom,
   toShortLinkInput,
+  toShortLinkUpdateInput,
 } from './short-link.form';
+import type { ShortLinkRow } from '../queries';
 
 const valid = {
   ...blankShortLinkValues(),
@@ -94,6 +97,10 @@ describe('toShortLinkInput', () => {
       medium: 'SOCIAL',
       medium_other: undefined,
       campaign_id: undefined,
+      meta_override_enabled: false,
+      meta_title: '',
+      meta_description: '',
+      meta_image_url: '',
     });
   });
 
@@ -117,5 +124,72 @@ describe('toShortLinkInput', () => {
   it('passes a chosen campaign and omits an unchosen one', () => {
     expect(toShortLinkInput({ ...valid, campaign_id: 'camp-1' }).campaign_id).toBe('camp-1');
     expect(toShortLinkInput(valid).campaign_id).toBeUndefined();
+  });
+});
+
+describe('the link-preview override', () => {
+  const issuePaths = (values: typeof valid) => {
+    const result = schema.safeParse(values);
+    return result.success ? [] : result.error.issues.map((issue) => issue.path.join('.'));
+  };
+
+  it('ignores the override fields while it is switched off', () => {
+    expect(issuePaths({ ...valid, meta_title: 'x'.repeat(500), meta_image_url: 'not a url' })).toEqual([]);
+  });
+
+  it('needs a title once it is on, and holds the server limits', () => {
+    const on = { ...valid, meta_override_enabled: true };
+    expect(issuePaths(on)).toEqual(['meta_title']);
+    expect(issuePaths({ ...on, meta_title: 'x'.repeat(121) })).toEqual(['meta_title']);
+    expect(issuePaths({ ...on, meta_title: 'Diwali run', meta_description: 'x'.repeat(301) })).toEqual([
+      'meta_description',
+    ]);
+    expect(issuePaths({ ...on, meta_title: 'Diwali run', meta_image_url: 'http://cdn.example.org/a.png' })).toEqual([
+      'meta_image_url',
+    ]);
+    expect(
+      issuePaths({ ...on, meta_title: 'Diwali run', meta_image_url: 'https://ik.imagekit.io/duncit/a.png' }),
+    ).toEqual([]);
+  });
+});
+
+describe('editing a link', () => {
+  const row: ShortLinkRow = {
+    id: 'l1',
+    code: 'aB3xY9Zq',
+    short_url: 'https://duncit.com/aB3xY9Zq',
+    label: 'Diwali pod push',
+    destination_url: 'https://mweb.duncit.com/club/c1/pod/p1',
+    is_external: false,
+    share_target: null,
+    meta_override_enabled: true,
+    meta_title: 'Diwali night run',
+    meta_description: null,
+    meta_image_url: null,
+    tagged_url: 'https://mweb.duncit.com/club/c1/pod/p1?dl=aB3xY9Zq',
+    source: 'INSTAGRAM',
+    medium: 'SOCIAL',
+    utm_source: 'instagram',
+    utm_medium: 'social',
+    is_active: true,
+    click_count: 4,
+    created_at: '2026-10-01T10:00:00.000Z',
+  };
+
+  it('starts the form from the link, blanks for what was never set', () => {
+    const values = shortLinkValuesFrom(row);
+    expect(values).toMatchObject({ meta_override_enabled: true, meta_title: 'Diwali night run', meta_description: '' });
+    expect(schema.safeParse(values).success).toBe(true);
+  });
+
+  it('sends the name, destination and card — never the utm tags', () => {
+    expect(toShortLinkUpdateInput(shortLinkValuesFrom(row))).toEqual({
+      label: 'Diwali pod push',
+      destination_url: 'https://mweb.duncit.com/club/c1/pod/p1',
+      meta_override_enabled: true,
+      meta_title: 'Diwali night run',
+      meta_description: '',
+      meta_image_url: '',
+    });
   });
 });

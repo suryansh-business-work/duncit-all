@@ -86,8 +86,8 @@ export const DYNAMIC_ROUTES: DynamicRoute[] = [
   {
     // What "Send this to your friends" hands out, so the card names the city.
     // No twin row in the API's shortLink.preview.ts on purpose: that card shows
-    // the bare entity title ("Agra"), while with no row a short link 302s here
-    // and gets this templated one.
+    // the bare entity title ("Agra"), while with no row the API reads this
+    // page's own tags for a short link's card and gets this templated one.
     pattern: '/city-launch/:citySlug',
     kind: 'LOCATION',
     idParams: ['citySlug'],

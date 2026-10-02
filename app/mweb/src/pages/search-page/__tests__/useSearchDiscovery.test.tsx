@@ -93,6 +93,8 @@ describe('useSearchCategories', () => {
     });
     await waitFor(() => expect(result.current.all).toHaveLength(3));
     expect(result.current.buttons.map((b) => b.id)).toEqual(['cat1']);
+    expect(result.current.groups.map((g) => g.superCategory.id)).toEqual(['sup1']);
+    expect(result.current.groups[0].categories.map((c) => c.id)).toEqual(['cat1']);
 
     // nameOf: category_id hit, super_category_id hit, and no match
     expect(result.current.nameOf({ category_id: 'sub1' })).toBe('Badminton');

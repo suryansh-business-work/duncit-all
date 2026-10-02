@@ -35,6 +35,11 @@ if (typeof URL.revokeObjectURL !== 'function') {
 // "Not implemented: window.open" is thrown, not returned.
 window.open = vi.fn();
 
+// The Explore reels start and stop their videos themselves; jsdom's play()
+// returns nothing instead of the browser's promise.
+HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+HTMLMediaElement.prototype.pause = vi.fn();
+
 if (!HTMLCanvasElement.prototype.getContext) {
   HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as never;
 }

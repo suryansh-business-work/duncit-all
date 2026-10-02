@@ -1,20 +1,25 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ExploreReels from '../ExploreReels';
 import { ACTIVE_ADS, type PublicAd } from '../../../components/ads/useActiveAds';
 
-// Passthrough for react-slick so children render synchronously in jsdom.
+// Passthrough for react-slick so children render synchronously in jsdom; the
+// swipe callback is kept so a spec can move the feed along.
+let mockAfterChange: (index: number) => void = () => undefined;
 vi.mock('react-slick', () => ({
-  default: ({ children }: { children: ReactNode }) => <div data-testid="slider">{children}</div>,
+  default: ({ children, afterChange }: { children: ReactNode; afterChange: (index: number) => void }) => {
+    mockAfterChange = afterChange;
+    return <div data-testid="slider">{children}</div>;
+  },
 }));
 
 // Light stubs so we test ExploreReels' wiring, not the heavy child trees.
 vi.mock('../ExplorePodCard', () => ({
-  default: ({ pod, club, location, saved, savePending, onToggleSave, viewerId }: any) => (
-    <div data-testid="pod-card">
+  default: ({ pod, club, location, saved, savePending, onToggleSave, viewerId, sound, preload }: any) => (
+    <div data-testid="pod-card" data-active={String(sound.active)} data-preload={String(preload)}>
       <span>title:{pod.pod_title}</span>
       <span>club:{club?.name ?? 'none'}</span>
       <span>loc:{location?.name ?? 'none'}</span>
@@ -124,5 +129,20 @@ describe('ExploreReels', () => {
     await waitFor(() => expect(screen.getAllByTestId('pod-card')).toHaveLength(2));
     expect(screen.getAllByText('club:none')).toHaveLength(2);
     expect(screen.getAllByText('viewer:anon')).toHaveLength(2);
+  });
+
+  it('plays the reel on screen, buffers its neighbours, and loops the feed past the last reel', async () => {
+    setup(baseProps({ pods: makePods(4) }), [adsMock([])]);
+    await waitFor(() => expect(screen.getAllByTestId('pod-card')).toHaveLength(4));
+    const cards = () => screen.getAllByTestId('pod-card');
+    expect(cards().map((card) => card.dataset.active)).toEqual(['true', 'false', 'false', 'false']);
+    expect(cards().map((card) => card.dataset.preload)).toEqual(['true', 'true', 'true', 'false']);
+
+    act(() => mockAfterChange(0));
+    expect(cards()).toHaveLength(4);
+    // Within two of the end, the next shuffled pass is dealt.
+    act(() => mockAfterChange(1));
+    expect(cards()).toHaveLength(8);
+    expect(cards()[1]?.dataset.active).toBe('true');
   });
 });

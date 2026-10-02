@@ -6,15 +6,16 @@ import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
 import { ERASE_SHORT_LINK_CLICKS, SET_SHORT_LINK_ACTIVE, type ShortLinkRow } from '../queries';
+import EditShortLinkDialog from '../EditShortLinkDialog';
 
-type PendingAction = 'ERASE';
+type PendingAction = 'ERASE' | 'EDIT';
 
 interface Props {
   link: ShortLinkRow;
   onChanged: () => void;
 }
 
-/** Retire or revive the link, and answer an erasure request for its clicks. */
+/** Edit, retire or revive the link, and answer an erasure request for its clicks. */
 export default function DetailActions({ link, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const [pending, setPending] = useState<PendingAction | null>(null);
@@ -52,6 +53,9 @@ export default function DetailActions({ link, onChanged }: Readonly<Props>) {
 
   return (
     <Stack direction="row" spacing={1}>
+      <DuncitButton variant="outlined" onClick={() => setPending('EDIT')} data-testid="short-link-edit">
+        {t('marketing.shortLinks.editLink')}
+      </DuncitButton>
       <DuncitButton
         variant="outlined"
         color="error"
@@ -73,7 +77,18 @@ export default function DetailActions({ link, onChanged }: Readonly<Props>) {
         {toggleLabel}
       </DuncitButton>
 
-      {pending && (
+      {pending === 'EDIT' && (
+        <EditShortLinkDialog
+          link={link}
+          onClose={() => setPending(null)}
+          onSaved={() => {
+            setPending(null);
+            onChanged();
+          }}
+        />
+      )}
+
+      {pending === 'ERASE' && (
         <ConfirmDialog
           open
           title={t('marketing.shortLinks.eraseClicksTitle')}

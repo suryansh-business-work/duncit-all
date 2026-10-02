@@ -26,6 +26,10 @@ const modules = import.meta.glob([
 
 const paths = Object.keys(modules).sort((a, b) => a.localeCompare(b));
 
+// The first import in a file transforms its whole graph cold (apollo.ts pulls
+// in the client and the shell); on a busy CI runner that alone outran 5s.
+const MODULE_LOAD_TIMEOUT_MS = 30_000;
+
 describe('every module loads', () => {
   it('has modules to load — an empty glob would make the suite below vacuous', () => {
     expect(paths.length).toBeGreaterThan(0);
@@ -35,5 +39,5 @@ describe('every module loads', () => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+  }, MODULE_LOAD_TIMEOUT_MS);
 });

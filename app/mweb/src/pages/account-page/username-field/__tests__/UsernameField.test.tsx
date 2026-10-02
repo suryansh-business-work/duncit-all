@@ -80,7 +80,9 @@ describe('UsernameField', () => {
     expect(screen.getByTestId('username-link-preview')).toHaveTextContent(
       `${origin()}/u/ravi-plays`,
     );
-    expect(save()).toBeEnabled();
+    // Save enables a render after the "available" line (form validity settles
+    // asynchronously) — asserting it in the same tick flaked on CI.
+    await waitFor(() => expect(save()).toBeEnabled());
   });
 
   it('disables Save on a taken handle, and keeps the link the account still has', async () => {

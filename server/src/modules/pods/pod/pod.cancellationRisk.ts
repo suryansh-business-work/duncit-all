@@ -477,20 +477,28 @@ async function alertPodAtRisk(
   return true;
 }
 
-/** Persist a verdict. Only the verdict fields: the alert stamps are the
- * claim's to write, and a `$set` of the whole subdocument would wipe them. */
+/** Persist a verdict. The alert stamps are the claim's to write, so they are
+ * carried over from the stored flag rather than reset.
+ *
+ * The subdocument is set WHOLE, not path by path: every pod written through
+ * the model stores `cancellation_risk: null` (its schema default), and Mongo
+ * refuses a dotted `$set` into a null parent ("Cannot create field 'at_risk'
+ * in element {cancellation_risk: null}") — which left every such pod unflagged
+ * and its host and club admins never alerted. */
 async function flagPod(pod: any, assessment: PodCancellationRiskAssessment, now: number) {
   const stored: IPodCancellationRisk | null = pod.cancellation_risk ?? null;
   await PodModel.updateOne(
     { _id: pod._id },
     {
       $set: {
-        'cancellation_risk.at_risk': true,
-        'cancellation_risk.evaluated_at': new Date(now),
-        'cancellation_risk.shortfall': assessment.shortfall,
-        'cancellation_risk.spots_needed': assessment.spots_needed,
-        'cancellation_risk.alerted_at': stored?.alerted_at ?? null,
-        'cancellation_risk.alert_count': stored?.alert_count ?? 0,
+        cancellation_risk: {
+          at_risk: true,
+          evaluated_at: new Date(now),
+          shortfall: assessment.shortfall,
+          spots_needed: assessment.spots_needed,
+          alerted_at: stored?.alerted_at ?? null,
+          alert_count: stored?.alert_count ?? 0,
+        },
       },
     }
   );

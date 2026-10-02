@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import type { PlayerRef } from '@remotion/player';
 import { useTranslation } from '@duncit/shell';
@@ -86,8 +86,8 @@ export default function TimelinePanel({ assets, player, selection, onSelect, edi
     ? [{ id: 'music', startMs: 0, endMs: lengthMs, lane: 0, text: songName, label: t('ai.reels.editor.musicBlock', { vars: { name: songName } }), selected: selection?.kind === 'music', onSelect: () => onSelect({ kind: 'music' }) }]
     : [];
 
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (isTyping(event.target)) return;
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!event.target || isTyping(event.target)) return;
     const mod = event.ctrlKey || event.metaKey;
     const key = event.key.toLowerCase();
     if (mod && (key === 'y' || (key === 'z' && event.shiftKey))) editor.redo();
@@ -96,9 +96,22 @@ export default function TimelinePanel({ assets, player, selection, onSelect, edi
     else return;
     event.preventDefault();
   };
+  // The shortcuts arrive from the focused block, scene or ruler inside, bubbling
+  // to the section. Listened for natively: the section itself is a landmark,
+  // not a control, so it carries no JSX key handler of its own.
+  const shortcuts = useRef(onKeyDown);
+  shortcuts.current = onKeyDown;
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return undefined;
+    const listener = (event: KeyboardEvent) => shortcuts.current(event);
+    section.addEventListener('keydown', listener);
+    return () => section.removeEventListener('keydown', listener);
+  }, []);
 
   return (
-    <Stack component="section" aria-label={t('ai.reels.editor.timelineLabel')} onKeyDown={onKeyDown} sx={{ height: '100%', minHeight: 0 }} data-testid="reel-timeline">
+    <Stack ref={sectionRef} component="section" aria-label={t('ai.reels.editor.timelineLabel')} sx={{ height: '100%', minHeight: 0 }} data-testid="reel-timeline">
       <TimelineToolbar assets={assets} actions={actions} editor={editor} zoom={zoom} onZoom={setZoom} />
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         <Box sx={{ position: 'relative', minWidth: '100%', width: 'max-content' }}>

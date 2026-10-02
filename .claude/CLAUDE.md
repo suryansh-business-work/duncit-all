@@ -42,7 +42,7 @@
 27. **GraphQL Optimization:** Request only required fields, avoid unnecessary nesting and duplicate requests, reuse fragments and operations, prevent N+1 queries, use pagination/filtering, and verify resolver/database performance.
 28. **Alerts & Dialogs:** Never use browser `alert`, `confirm`, or `prompt`; use MUI-based UI for mWeb/Portals and Tamagui-based UI for Native.
 29. **mWeb & Mobile:** Keep business logic and behavior identical and shared where appropriate while keeping MUI and Tamagui UI separate.
-30. **SonarQube:** Follow SonarQube clean-code standards; keep cognitive complexity ≤15 and avoid known flagged patterns.
+30. **SonarQube:** Follow SonarQube clean-code standards; keep cognitive complexity ≤15 and avoid known flagged patterns. Overall coverage should be 85%+
 31. **TypeScript:** Use strict, accurate types; avoid unnecessary assertions, `any`, redundant casts, and non-null assertions.
 32. **Security:** Never hardcode secrets, credentials, passwords, tokens, or IP addresses.
 33. **Performance:** Avoid unnecessary renders, API calls, N+1 queries, expensive computations, and unnecessary bundle growth.

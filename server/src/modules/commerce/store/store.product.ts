@@ -17,7 +17,7 @@ type ProductLike = Pick<IStoreProduct, 'product_name' | 'unit_cost' | 'inventory
 
 export const listingOf = (p: { store?: IStoreListing | null }): IStoreListing => ({
   ...EMPTY_STORE_LISTING,
-  ...((p.store as any)?.toObject?.() ?? p.store ?? {}),
+  ...((p.store as any)?.toObject?.() ?? p.store),
 });
 
 /** The product-level units free to sell. */

@@ -18,7 +18,7 @@ const escapeLittle = (text: string) => text.replaceAll(RESERVED, (char) => `\\${
 export function littleText(text: string): string {
   return text
     .split(HASHTAG)
-    .map((part, index) => (index % 2 === 1 ? `{hashtag|\\#|${escapeLittle(part.slice(1))}}` : escapeLittle(part)))
+    .map((part, index) => (index % 2 === 1 ? String.raw`{hashtag|\#|${escapeLittle(part.slice(1))}}` : escapeLittle(part)))
     .join('');
 }
 

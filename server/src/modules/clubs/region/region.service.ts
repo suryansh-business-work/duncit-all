@@ -16,7 +16,7 @@ import { RegionModel, type IRegion } from './region.model';
 import { buildRegionTree } from './region.tree';
 import { loadPeople, ownRegion, personName, type NamedUser } from './region.scope';
 
-const clean = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
+const clean = (value: string | null | undefined, max: number) => (value ?? '').trim().slice(0, max);
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 function toPub(doc: IRegion) {

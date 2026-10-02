@@ -18,7 +18,9 @@ import { inboundWhatsapp, parseWhatsappInbound } from './automation.inbound';
  * AiSensy retries a slow webhook, and a retry is a duplicate message.
  */
 function secretMatches(given: string, expected: string): boolean {
-  if (!given || !expected || given.length !== expected.length) return false;
+  // An unset secret refuses everything — it must never match an empty header.
+  if (!given || !expected) return false;
+  if (given.length !== expected.length) return false;
   return timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }
 

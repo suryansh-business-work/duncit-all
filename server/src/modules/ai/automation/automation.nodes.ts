@@ -2,6 +2,7 @@ import { openaiChat } from '@services/openai/openai.client';
 import { AiPromptModel } from '@modules/ai/prompt/prompt.model';
 import { outboundFetch } from '@utils/outboundFetch';
 import { evaluateCondition, readVar, renderVars } from './automation.vars';
+import { list, str } from './automation.graph';
 import { sendEmailStep, sendWhatsappStep } from './automation.send';
 import type { StepContext, StepResult } from './automation.types';
 
@@ -12,8 +13,6 @@ import type { StepContext, StepResult } from './automation.types';
  * plus whatever provider it calls.
  */
 
-const str = (v: unknown): string => String(v ?? '').trim();
-const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(str) : []);
 const HOUR_MS = 60 * 60_000;
 const UNIT_MS: Record<string, number> = { MINUTES: 60_000, HOURS: HOUR_MS, DAYS: 24 * HOUR_MS };
 const UNIT_LABEL: Record<string, string> = { MINUTES: 'minutes', HOURS: 'hours', DAYS: 'days' };
@@ -156,7 +155,10 @@ function setVariableStep(ctx: StepContext): StepResult {
 }
 
 /** Hosts a webhook may never be pointed at: the server itself and every private range. */
-const PRIVATE_HOST = /^(localhost|0\.0\.0\.0|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|.*\.(internal|local)$)/i;
+const PRIVATE_PREFIX = /^(localhost|0\.0\.0\.0|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/i;
+/** The IPv6 loopback, and the internal-only DNS suffixes. */
+const PRIVATE_EXACT = /^(\[?::1\]?|.*\.(internal|local))$/i;
+const isPrivateHost = (host: string): boolean => PRIVATE_PREFIX.test(host) || PRIVATE_EXACT.test(host);
 
 async function httpRequestStep(ctx: StepContext): Promise<StepResult> {
   const { node, vars } = ctx;
@@ -172,7 +174,7 @@ async function httpRequestStep(ctx: StepContext): Promise<StepResult> {
   } catch {
     return { handle: 'next', status: 'FAILED', detail: `Not an https URL: ${url}` };
   }
-  if (PRIVATE_HOST.test(host)) return { handle: 'next', status: 'FAILED', detail: `Refused: ${host} is not a public host` };
+  if (isPrivateHost(host)) return { handle: 'next', status: 'FAILED', detail: `Refused: ${host} is not a public host` };
   if (!ctx.live) {
     return {
       handle: 'next',

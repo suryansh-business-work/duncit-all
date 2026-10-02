@@ -2,6 +2,7 @@ import { logs } from '@observability/log';
 import { AutomationFlowModel, AutomationRunModel, type AutomationFlowFields } from './automation.model';
 import { resumeWithReply, startRun } from './automation.engine';
 import { hasKeywords, matchesKeywords } from './automation.vars';
+import { scalarText, str } from './automation.graph';
 
 /**
  * Where a message from outside enters the automation.
@@ -14,8 +15,7 @@ import { hasKeywords, matchesKeywords } from './automation.vars';
  * "pricing please".
  */
 
-const digits = (value: unknown): string => String(value ?? '').replaceAll(/\D/g, '');
-const str = (value: unknown): string => String(value ?? '').trim();
+const digits = (value: unknown): string => scalarText(value).replaceAll(/\D/g, '');
 
 export interface InboundWhatsapp {
   from: string;

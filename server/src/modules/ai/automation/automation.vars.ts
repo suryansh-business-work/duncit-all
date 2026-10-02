@@ -2,6 +2,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { WA_VARIABLES } from '@modules/crm/marketing/waCampaign.recipients';
 import { appDateTime } from '@utils/app-time';
 import type { AutomationContact, IAutomationRun } from './automation.model';
+import { scalarText } from './automation.graph';
 
 /**
  * The variables a step may write `{{like.this}}` into any text field.
@@ -23,11 +24,8 @@ export function readPath(source: Record<string, unknown>, path: string): unknown
   return current;
 }
 
-const asText = (value: unknown): string => {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value as string | number | boolean);
-};
+const asText = (value: unknown): string =>
+  typeof value === 'object' && value !== null ? JSON.stringify(value) : scalarText(value);
 
 /** `{{name}}` → value. An unknown placeholder is left standing, so a typo is
  * visible in the test transcript rather than silently blanked. */
@@ -84,8 +82,8 @@ export async function initialVars(input: {
 
 /** A reply from the contact becomes the current message. */
 export function withReply(run: IAutomationRun, text: string): Record<string, unknown> {
-  const vars = { ...(run.variables ?? {}) } as Record<string, unknown>;
-  const message = { ...((vars.message as Record<string, unknown>) ?? {}), text };
+  const vars: Record<string, unknown> = { ...run.variables };
+  const message = { ...(vars.message as Record<string, unknown> | undefined), text };
   return { ...vars, message, now: appDateTime(new Date()) };
 }
 
@@ -136,6 +134,6 @@ export function matchesKeywords(text: string, keywords: string): boolean {
 
 /** Whether a trigger's keyword list is non-empty — a keyworded flow outranks a catch-all. */
 export const hasKeywords = (keywords: unknown): boolean =>
-  String(keywords ?? '')
+  scalarText(keywords)
     .split(',')
     .some((word) => word.trim() !== '');

@@ -13,14 +13,14 @@ import {
   type IAutomationFlow,
   type IAutomationRun,
 } from './automation.model';
-import { normalizeGraph, triggerOf, validateGraph, type GraphIssue } from './automation.graph';
+import { normalizeGraph, str, triggerOf, validateGraph, type GraphIssue } from './automation.graph';
 import { advance, cancelRun, resumeTimeout, resumeWithReply, startRun } from './automation.engine';
 import { isWhatsappDestination } from '@utils/phone';
+import { isEmailAddress } from '@utils/email';
 
 const badInput = (message: string) => new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 const notFound = (message: string) => new GraphQLError(message, { extensions: { code: 'NOT_FOUND' } });
 
-const str = (value: unknown): string => String(value ?? '').trim();
 const iso = (value: Date | null | undefined): string | null => (value ? value.toISOString() : null);
 
 export interface GraphInput {
@@ -118,7 +118,7 @@ function toContact(channel: AutomationChannel, input: ContactInput): AutomationC
     return { name, phone, email: '' };
   }
   const email = str(input.email).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw badInput('Enter a valid email address');
+  if (!isEmailAddress(email)) throw badInput('Enter a valid email address');
   return { name, phone: '', email };
 }
 

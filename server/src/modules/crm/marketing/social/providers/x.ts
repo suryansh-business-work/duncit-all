@@ -26,8 +26,10 @@ const TOKEN_URL = `${API}/oauth2/token`;
 /** Read the timeline and replies; post, with media. */
 const SCOPES = ['tweet.read', 'tweet.write', 'users.read', 'media.write', 'offline.access'];
 
-const basicAuth = (creds: SocialAppCredentials) =>
-  `Basic ${Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64')}`;
+const basicAuth = (creds: SocialAppCredentials) => {
+  const pair = `${creds.clientId}:${creds.clientSecret}`;
+  return `Basic ${Buffer.from(pair).toString('base64')}`;
+};
 
 /** X judges the client (Basic auth) before the code, so a refused code proves the keys. */
 export async function probeXApp(creds: SocialAppCredentials): Promise<ProbeOutcome> {

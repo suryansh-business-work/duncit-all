@@ -70,9 +70,18 @@ export interface GraphIssue {
   message: string;
 }
 
-const str = (v: unknown): string => String(v ?? '').trim();
-const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(str) : []);
-const num = (v: unknown): number => Number(v);
+/** A JSON scalar: the only node-data values whose String() reads as what was saved. */
+function isScalar(v: unknown): v is string | number | boolean | bigint {
+  const kind = typeof v;
+  return kind === 'string' || kind === 'number' || kind === 'boolean' || kind === 'bigint';
+}
+
+/** A value as text: a scalar as written; absent or object-shaped is blank, never "[object Object]". */
+export const scalarText = (v: unknown): string => (isScalar(v) ? String(v) : '');
+/** A node-data or API field as trimmed text. */
+export const str = (v: unknown): string => scalarText(v).trim();
+/** A node-data list as trimmed texts; anything but an array is empty. */
+export const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(str) : []);
 
 /** The exits a node offers, by kind and data — what an edge's source_handle may name. */
 export function exitsOf(node: AutomationNode): string[] {
@@ -129,7 +138,7 @@ function checkCondition(node: AutomationNode, out: GraphIssue[]) {
 }
 
 function checkDelay(node: AutomationNode, out: GraphIssue[]) {
-  const amount = num(node.data.amount);
+  const amount = Number(node.data.amount);
   if (!Number.isInteger(amount) || amount < 1 || amount > MAX_DELAY_AMOUNT) {
     out.push({ node_id: node.id, message: `Wait for a whole number from 1 to ${MAX_DELAY_AMOUNT}` });
   }
@@ -139,7 +148,7 @@ function checkDelay(node: AutomationNode, out: GraphIssue[]) {
 }
 
 function checkWait(node: AutomationNode, out: GraphIssue[]) {
-  const hours = num(node.data.timeout_hours);
+  const hours = Number(node.data.timeout_hours);
   if (!Number.isFinite(hours) || hours < 1 || hours > MAX_WAIT_HOURS) {
     out.push({ node_id: node.id, message: `Give up after 1 to ${MAX_WAIT_HOURS} hours` });
   }
@@ -198,10 +207,16 @@ function reachable(trigger: AutomationNode, edges: AutomationEdge[]): Set<string
  */
 export function validateGraph(graph: AutomationGraph, channel: AutomationChannel): GraphIssue[] {
   const out: GraphIssue[] = [];
-  const ids = new Set(graph.nodes.map((node) => node.id));
   const triggers = graph.nodes.filter((node) => node.kind === 'trigger');
   if (triggers.length !== 1) out.push({ node_id: null, message: 'A flow has exactly one trigger' });
+  checkNodes(graph, channel, out);
+  checkEdges(graph, out);
+  if (triggers.length === 1) checkConnected(graph, triggers[0], out);
+  return out;
+}
 
+/** Every step is one this channel offers, and is filled in. */
+function checkNodes(graph: AutomationGraph, channel: AutomationChannel, out: GraphIssue[]) {
   for (const node of graph.nodes) {
     if (!isNodeKind(node.kind) || !CHANNEL_KINDS[channel].has(node.kind)) {
       out.push({ node_id: node.id, message: `This step is not available on a ${channel.toLowerCase()} flow` });
@@ -209,7 +224,11 @@ export function validateGraph(graph: AutomationGraph, channel: AutomationChannel
     }
     CHECKS[node.kind](node, channel, out);
   }
+}
 
+/** Every arrow joins two real steps, and no exit leads to two of them. */
+function checkEdges(graph: AutomationGraph, out: GraphIssue[]) {
+  const ids = new Set(graph.nodes.map((node) => node.id));
   const seenEdges = new Set<string>();
   for (const edge of graph.edges) {
     if (!ids.has(edge.source) || !ids.has(edge.target)) {
@@ -220,17 +239,17 @@ export function validateGraph(graph: AutomationGraph, channel: AutomationChannel
     if (seenEdges.has(key)) out.push({ node_id: edge.source, message: 'One exit leads to two steps' });
     seenEdges.add(key);
   }
+}
 
-  if (triggers.length === 1) {
-    const live = reachable(triggers[0], graph.edges);
-    for (const node of graph.nodes) {
-      if (!live.has(node.id)) out.push({ node_id: node.id, message: 'This step is not connected to the flow' });
-    }
-    if (graph.nodes.length > 1 && !graph.edges.some((edge) => edge.source === triggers[0].id)) {
-      out.push({ node_id: triggers[0].id, message: 'Connect the trigger to a first step' });
-    }
+/** Every step is reachable from the one trigger, and the trigger leads somewhere. */
+function checkConnected(graph: AutomationGraph, trigger: AutomationNode, out: GraphIssue[]) {
+  const live = reachable(trigger, graph.edges);
+  for (const node of graph.nodes) {
+    if (!live.has(node.id)) out.push({ node_id: node.id, message: 'This step is not connected to the flow' });
   }
-  return out;
+  if (graph.nodes.length > 1 && !graph.edges.some((edge) => edge.source === trigger.id)) {
+    out.push({ node_id: trigger.id, message: 'Connect the trigger to a first step' });
+  }
 }
 
 /** The graph as the API received it, with every field coerced to its shape. */

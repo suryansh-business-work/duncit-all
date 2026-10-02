@@ -84,6 +84,10 @@ async function refreshOnAccount(order: IProductOrder): Promise<IProductOrder> {
   return order;
 }
 
+/** A scan field as text: a string or number as sent; absent or object-shaped is blank. */
+const scanText = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+
 /** A webhook body as a tracking answer: its scans, status and ETA. */
 function webhookTracking(payload: Record<string, any>): TrackResult {
   const scans = Array.isArray(payload.scans) ? payload.scans : [];
@@ -92,10 +96,10 @@ function webhookTracking(payload: Record<string, any>): TrackResult {
     status_id: Number(payload.current_status_id ?? payload.shipment_status_id) || 0,
     etd: String(payload.etd ?? ''),
     activities: scans.map((s: Record<string, unknown>) => ({
-      status: String(s['sr-status-label'] ?? s.status ?? ''),
-      location: String(s.location ?? ''),
-      note: String(s.activity ?? ''),
-      date: String(s.date ?? ''),
+      status: scanText(s['sr-status-label'] ?? s.status),
+      location: scanText(s.location),
+      note: scanText(s.activity),
+      date: scanText(s.date),
     })),
   };
 }

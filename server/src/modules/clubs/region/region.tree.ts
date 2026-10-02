@@ -207,44 +207,58 @@ export async function buildRegionTree(
       addEdge(cityId, localityId);
 
       for (const [admin, adminClubs] of byAdmin) {
-        const adminId = `${localityId}/admin:${admin}`;
-        const person = people.get(admin);
-        nodes.push({
-          id: adminId,
-          kind: 'CLUB_ADMIN',
-          parent_id: localityId,
-          label: person?.name || admin,
-          sub_label: adminClubs.map((club) => club.club_name).join(', '),
-          count: adminClubs.length,
-          ref_id: admin,
-        });
-        addEdge(localityId, adminId);
-
-        // One host may run pods for two of this admin's clubs; the branch shows
-        // them once, with the pods added up.
-        const podsByHost = new Map<string, number>();
-        for (const club of adminClubs) {
-          for (const row of hostsByClub.get(String(club._id)) ?? []) {
-            podsByHost.set(row.host, (podsByHost.get(row.host) ?? 0) + row.pods);
-          }
-        }
-        for (const [host, pods] of podsByHost) {
-          const hostId = `${adminId}/host:${host}`;
-          const hostPerson = people.get(host);
-          nodes.push({
-            id: hostId,
-            kind: 'HOST',
-            parent_id: adminId,
-            label: hostPerson?.name || host,
-            sub_label: hostPerson?.email ?? '',
-            count: pods,
-            ref_id: host,
-          });
-          addEdge(adminId, hostId);
-        }
+        addAdminBranch({ nodes, addEdge, people, hostsByClub }, localityId, admin, adminClubs);
       }
     }
   }
 
   return { nodes, edges };
+}
+
+interface BranchContext {
+  nodes: RegionTreeNode[];
+  addEdge: (source: string, target: string) => void;
+  people: ReadonlyMap<string, { name: string; email: string }>;
+  /** club id -> [{ host, pods }] */
+  hostsByClub: ReadonlyMap<string, Array<{ host: string; pods: number }>>;
+}
+
+/** One club admin's node under a locality, and the hosts running pods for their clubs. */
+function addAdminBranch(ctx: BranchContext, localityId: string, admin: string, adminClubs: ClubRow[]) {
+  const { nodes, addEdge, people, hostsByClub } = ctx;
+  const adminId = `${localityId}/admin:${admin}`;
+  const person = people.get(admin);
+  nodes.push({
+    id: adminId,
+    kind: 'CLUB_ADMIN',
+    parent_id: localityId,
+    label: person?.name || admin,
+    sub_label: adminClubs.map((club) => club.club_name).join(', '),
+    count: adminClubs.length,
+    ref_id: admin,
+  });
+  addEdge(localityId, adminId);
+
+  // One host may run pods for two of this admin's clubs; the branch shows
+  // them once, with the pods added up.
+  const podsByHost = new Map<string, number>();
+  for (const club of adminClubs) {
+    for (const row of hostsByClub.get(String(club._id)) ?? []) {
+      podsByHost.set(row.host, (podsByHost.get(row.host) ?? 0) + row.pods);
+    }
+  }
+  for (const [host, pods] of podsByHost) {
+    const hostId = `${adminId}/host:${host}`;
+    const hostPerson = people.get(host);
+    nodes.push({
+      id: hostId,
+      kind: 'HOST',
+      parent_id: adminId,
+      label: hostPerson?.name || host,
+      sub_label: hostPerson?.email ?? '',
+      count: pods,
+      ref_id: host,
+    });
+    addEdge(adminId, hostId);
+  }
 }

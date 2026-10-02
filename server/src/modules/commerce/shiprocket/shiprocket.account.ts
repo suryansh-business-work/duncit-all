@@ -64,17 +64,21 @@ export async function getShiprocketAccount(): Promise<ShiprocketAccount | null> 
   return accountFromConfig((entry?.config ?? {}) as Record<string, unknown>);
 }
 
+/** A config value as text: a string or number as saved; absent or object-shaped is blank. */
+const configText = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+
 /** A Tech-portal SHIPROCKET entry's config as an account, or null without an email and password. */
 function accountFromConfig(config: Record<string, unknown>): ShiprocketAccount | null {
-  const email = String(config.email ?? '').trim();
-  const password = String(config.password ?? '');
+  const email = configText(config.email).trim();
+  const password = configText(config.password);
   if (!email || !password) return null;
   const ttl = Number(config.token_ttl_hours);
   return {
     email,
     password,
-    pickupLocation: String(config.pickup_location ?? '').trim(),
-    webhookSecret: String(config.webhook_secret ?? '').trim(),
+    pickupLocation: configText(config.pickup_location).trim(),
+    webhookSecret: configText(config.webhook_secret).trim(),
     tokenTtlHours: ttl > 0 ? ttl : DEFAULT_TTL_HOURS,
     hash: createHash('sha256').update(`${email}:${password}`).digest('hex'),
     sessionKey: DEFAULT_SESSION_KEY,

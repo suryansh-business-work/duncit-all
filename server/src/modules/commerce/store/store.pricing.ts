@@ -234,10 +234,11 @@ async function quoteGroup(
       opts.cod ? getServiceability({ ...lane, cod: true }) : null,
     ]);
     if (!prepaid) return { ...base, reachable: false, codReachable: false };
+    const codCharge = opts.cod ? cod?.freight_charge : undefined;
     return {
       ...base,
       courier_name: prepaid.courier_name,
-      charge: opts.free ? 0 : round2((opts.cod ? cod?.freight_charge : undefined) ?? prepaid.freight_charge),
+      charge: opts.free ? 0 : round2(codCharge ?? prepaid.freight_charge),
       quoted: true,
       etd: prepaid.etd,
       codReachable: !opts.cod || !!cod,

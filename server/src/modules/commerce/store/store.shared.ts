@@ -43,16 +43,28 @@ export function slugify(value: string): string {
     .slice(0, 120);
 }
 
+/** A JSON scalar: the only values whose String() reads as what was sent. */
+function isScalar(value: unknown): value is string | number | boolean | bigint {
+  const kind = typeof value;
+  return kind === 'string' || kind === 'number' || kind === 'boolean' || kind === 'bigint';
+}
+
+/** An input as text: a scalar as written; absent or object-shaped is blank, never "[object Object]". */
+export const scalarText = (value: unknown): string => (isScalar(value) ? String(value) : '');
+
+/** An id as text: an ObjectId as its hex, a scalar as written, anything else blank. */
+export const idText = (id: unknown): string => (id instanceof Types.ObjectId ? id.toHexString() : scalarText(id));
+
 /** Only well-formed ids, as ObjectIds. A malformed id is dropped, never thrown on. */
 export function toObjectIds(ids: readonly unknown[] | null | undefined): Types.ObjectId[] {
   return (ids ?? [])
-    .map((id) => String(id ?? ''))
+    .map((id) => idText(id))
     .filter((id) => Types.ObjectId.isValid(id))
     .map((id) => new Types.ObjectId(id));
 }
 
 export function toObjectId(id: unknown): Types.ObjectId | null {
-  const value = String(id ?? '');
+  const value = idText(id);
   return Types.ObjectId.isValid(value) ? new Types.ObjectId(value) : null;
 }
 
@@ -99,7 +111,7 @@ export function searchRegex(text: string): RegExp {
 export function cleanList(values: readonly unknown[] | null | undefined, max = 50): string[] {
   const seen = new Set<string>();
   for (const value of values ?? []) {
-    const text = String(value ?? '').trim();
+    const text = scalarText(value).trim();
     if (text) seen.add(text);
     if (seen.size >= max) break;
   }

@@ -160,7 +160,7 @@ export async function advance(run: IAutomationRun): Promise<IAutomationRun> {
 /** The parked step becomes done with the outcome that woke it, and the pointer moves on. */
 function wake(run: IAutomationRun, handle: string, detail: string): void {
   const last = run.steps.at(-1);
-  if (last && last.status === 'WAITING') {
+  if (last?.status === 'WAITING') {
     last.status = 'OK';
     last.detail = detail;
     run.markModified('steps');

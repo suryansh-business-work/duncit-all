@@ -3,7 +3,7 @@ import { logs } from '@observability/log';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
 import { PACKAGING_LIMITS } from '@modules/venues/inventory/inventory.packaging';
-import type { IProductOrder, IOrderParcel } from '@modules/commerce/productOrder/productOrder.model';
+import type { IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { getBrandShiprocketAccount, getShiprocketAccount, type ShiprocketAccount } from './shiprocket.account';
 import { addressProblems } from './shiprocket.address';
 import { hasShiprocketAccount, shiprocketError, withShiprocketAccount, type Json } from './shiprocket.client';
@@ -228,7 +228,7 @@ async function book(order: IProductOrder) {
   order.pickup_location_id = pickup;
   order.shiprocket.order_id = booked.order_id;
   order.shiprocket.shipment_id = booked.shipment_id;
-  order.parcel = { ...parcel, source: order.parcel?.source ?? 'AUTO', sent_at: new Date() } as IOrderParcel;
+  order.parcel = { ...parcel, source: order.parcel?.source ?? 'AUTO', sent_at: new Date() };
   order.fulfilment_status = 'AWAITING_SHIPMENT';
   addEvent(order, 'AWAITING_SHIPMENT', `ShipRocket order ${booked.order_id} created`);
 }
@@ -240,7 +240,7 @@ async function book(order: IProductOrder) {
  * delivery charge collected. On a tie the recommended courier wins.
  */
 const cheapestCourier = (options: CourierOption[]): CourierOption =>
-  options.reduce((best, o) => (o.rate < best.rate || (o.rate === best.rate && o.recommended) ? o : best));
+  options.reduce((best, o) => (o.rate < best.rate || (o.rate === best.rate && o.recommended) ? o : best), options[0]);
 
 async function pickCourier(order: IProductOrder, courierId?: string | null): Promise<CourierOption> {
   const options = await couriersForOrder(order.shiprocket.order_id);
@@ -377,7 +377,7 @@ export function setParcelOverride(order: IProductOrder, dims: ParcelDims) {
   const parcel = withWeights(dims);
   if (!complete(parcel)) bad(`Enter a weight of at least ${PACKAGING_LIMITS.minWeightKg} kg and every side of at least ${PACKAGING_LIMITS.minSideCm} cm`);
   if (parcel.weight_kg > PACKAGING_LIMITS.maxWeightKg) bad(`A parcel can weigh at most ${PACKAGING_LIMITS.maxWeightKg} kg`);
-  order.parcel = { ...parcel, source: 'OVERRIDE', sent_at: null } as IOrderParcel;
+  order.parcel = { ...parcel, source: 'OVERRIDE', sent_at: null };
 }
 
 /** Drop an override so the computed parcel is used again. */

@@ -19,6 +19,7 @@ import {
   iso,
   nonNegative,
   notFound,
+  scalarText,
   slugify,
   toObjectId,
   toObjectIds,
@@ -333,7 +334,7 @@ const present = (value: unknown) => value !== undefined && value !== null;
 
 function scalarPatch(input: Doc) {
   const patch: Doc = {};
-  for (const key of SETTINGS_STRINGS) if (present(input[key])) patch[key] = String(input[key]).trim();
+  for (const key of SETTINGS_STRINGS) if (present(input[key])) patch[key] = scalarText(input[key]).trim();
   for (const key of SETTINGS_FLAGS) if (typeof input[key] === 'boolean') patch[key] = input[key];
   for (const key of SETTINGS_NUMBERS) if (present(input[key])) patch[key] = nonNegative(input[key]);
   return patch;
@@ -376,7 +377,7 @@ function sectionItems(items: Doc[] | null | undefined) {
 
 const dateOrNull = (value: unknown) => {
   if (!value) return null;
-  const d = new Date(String(value));
+  const d = new Date(scalarText(value));
   return Number.isNaN(d.getTime()) ? null : d;
 };
 

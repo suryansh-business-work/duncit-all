@@ -132,6 +132,29 @@ function ticketDiscountRow(
   return { label: `Multi-ticket discount (${pct}% on ${tickets} tickets)`, value: `- ${fmt(amount)}` };
 }
 
+/** The brand header band across the top of the page: logo mark, business name and the invoice label. */
+function drawBrandHeader(doc: PDFKit.PDFDocument, data: InvoiceData, logo: Buffer | null, L: number, R: number): void {
+  doc.rect(0, 0, doc.page.width, 96).fill(ACCENT);
+  let brandX = L;
+  // Prefer the admin-configured logo; otherwise fall back to the bundled
+  // white brand mark so the invoice always carries the Duncit logo.
+  const headerLogo = logo ?? BRAND_MARK;
+  if (headerLogo) {
+    try {
+      doc.image(headerLogo, L, 26, { fit: [44, 44], valign: 'center' });
+      brandX = L + 54;
+    } catch {
+      brandX = L;
+    }
+  }
+  doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold').text(data.business_name, brandX, 36);
+  doc
+    .fillColor('#ffffff')
+    .fontSize(20)
+    .font('Helvetica-Bold')
+    .text(data.invoice_label || 'TAX INVOICE', L, 36, { width: R - L, align: 'right' });
+}
+
 /** The invoice page. Exported so a combined document can add a page of the
  * right size before the invoice is drawn onto it. */
 export const INVOICE_PAGE = { size: 'A4' as const, margin: 0 };
@@ -157,26 +180,7 @@ export function drawInvoice(
   const cur = data.currency_symbol;
   const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
 
-  // ---- Brand header band (logo mark + business name) ----
-  doc.rect(0, 0, W, 96).fill(ACCENT);
-  let brandX = L;
-  // Prefer the admin-configured logo; otherwise fall back to the bundled
-  // white brand mark so the invoice always carries the Duncit logo.
-  const headerLogo = logo ?? BRAND_MARK;
-  if (headerLogo) {
-    try {
-      doc.image(headerLogo, L, 26, { fit: [44, 44], valign: 'center' });
-      brandX = L + 54;
-    } catch {
-      brandX = L;
-    }
-  }
-  doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold').text(data.business_name, brandX, 36);
-  doc
-    .fillColor('#ffffff')
-    .fontSize(20)
-    .font('Helvetica-Bold')
-    .text(data.invoice_label || 'TAX INVOICE', L, 36, { width: R - L, align: 'right' });
+  drawBrandHeader(doc, data, logo, L, R);
 
   // ---- Business + invoice meta row ----
   let y = 116;

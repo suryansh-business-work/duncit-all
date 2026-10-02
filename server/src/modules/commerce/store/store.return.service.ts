@@ -41,7 +41,7 @@ const NEXT: Record<StoreReturnStatus, StoreReturnStatus[]> = {
 
 const newReturnNo = () => `RET-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
-export const toReturnPub = (r: IStoreReturn | any) => ({
+export const toReturnPub = (r: Record<string, any>) => ({
   id: String(r._id),
   return_no: r.return_no,
   order_id: String(r.order_id),

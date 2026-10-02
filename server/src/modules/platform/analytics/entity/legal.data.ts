@@ -152,7 +152,8 @@ interface RequiredPolicy {
   _id: Types.ObjectId;
   title: string;
   content: string;
-  versions: Array<{ _id: Types.ObjectId }>;
+  /** Absent on policies saved before wordings were kept — lean reads skip the schema default. */
+  versions?: Array<{ _id: Types.ObjectId }>;
 }
 
 /** The policies signup asks for, how many accounts accepted each as it reads now, and how many accepted all. */
@@ -183,7 +184,7 @@ export async function loadPolicyStanding() {
   const policies: PolicyStanding[] = required.map((policy) => ({
     id: String(policy._id),
     title: policy.title,
-    wordings: policy.versions.length + 1,
+    wordings: (policy.versions?.length ?? 0) + 1,
     accepted: accepted.get(String(policy._id)) ?? 0,
   }));
   return { accounts, complete: counts.complete.at(0)?.users ?? 0, policies };

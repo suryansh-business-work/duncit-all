@@ -41,7 +41,7 @@ function SettingsSection({ control, title, toggle, fields }: Readonly<SectionPro
                     <Switch
                       checked={field.value}
                       onChange={(event) => field.onChange(event.target.checked)}
-                      inputProps={{ 'aria-describedby': `${toggle.name}-hint` }}
+                      slotProps={{ input: { 'aria-describedby': `${toggle.name}-hint` } }}
                     />
                   }
                   label={toggle.label}

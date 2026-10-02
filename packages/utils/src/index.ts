@@ -379,6 +379,22 @@ export {
   type CartEntry,
 } from './cart-entry';
 export {
+  CART_NUDGE_MUTED_KEY,
+  CART_SETTINGS_BOUNDS,
+  DEFAULT_CART_NUDGE_SETTINGS,
+  addToWishlist,
+  canShowCartNudge,
+  cartNudgeDelayMs,
+  cartNudgeHideMs,
+  removeFromWishlist,
+  toCartSyncLines,
+  wishlistKey,
+  type CartNudgeSettings,
+  type CartNudgeState,
+  type CartSyncLine,
+  type WishlistKeyed,
+} from './cart-reminder';
+export {
   MEETING_PLATFORM_VALUES,
   isMeetingPlatform,
   meetingPlatformName,

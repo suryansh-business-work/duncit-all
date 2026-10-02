@@ -45,6 +45,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       view: 'View',
       edit: 'Edit',
       copy: 'Copy',
+      retry: 'Try again',
       yes: 'Yes',
       no: 'No',
 
@@ -577,6 +578,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       cancelAndRefunds: 'Cancel & Refunds',
       cards: 'Cards',
       career: 'Career',
+      cart: 'Cart',
+      cartSettings: 'Cart Settings',
       catalog: 'Catalog',
       categories: 'Categories',
       challenges: 'Challenges',

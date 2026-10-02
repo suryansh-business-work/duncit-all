@@ -9,6 +9,7 @@ import { RECEIPT_EMAILS } from './catalogue.receipts';
 import { GRIEVANCE_EMAILS } from './catalogue.grievance';
 import { CONTENT_REPORT_EMAILS } from './catalogue.contentReport';
 import { STORE_EMAILS } from './catalogue.store';
+import { PRODUCT_CART_EMAILS } from './catalogue.productCart';
 import { ANALYTICS_EMAILS } from './catalogue.analytics';
 import { AUTOMATION_EMAILS } from './catalogue.automation';
 import { APP_BUILD_EMAILS } from './catalogue.appBuilds';
@@ -37,6 +38,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...SECURITY_EMAILS,
   ...COMMERCE_EMAILS,
   ...RECEIPT_EMAILS,
+  ...PRODUCT_CART_EMAILS,
   ...STORE_EMAILS,
   ...GRIEVANCE_EMAILS,
   ...CONTENT_REPORT_EMAILS,

@@ -414,5 +414,36 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
       subheadingPlaceholder: 'Top picks for every champion.',
       ctaPlaceholder: 'Shop Now',
     },
+
+    // Cart > Cart Settings: the in-app cart nudge and the cart reminder email.
+    cartSettings: {
+      title: 'Cart Settings',
+      description:
+        'Remind members about products waiting in their Pod Shop cart — with a short nudge in the app and on mWeb, and by email.',
+      loadFailed: 'Could not load the cart settings.',
+      saved: 'Cart settings saved',
+      saveFailed: 'Could not save the cart settings',
+      // {min} and {max} are the field's accepted range.
+      range: 'Enter a whole number between {min} and {max}.',
+      nudgeSection: 'In-app nudge',
+      nudgeEnabled: 'Show the "Your cart is calling" nudge',
+      nudgeEnabledHint:
+        'A small card slides up above the bottom bar while the cart has products. It never shows on the cart or checkout.',
+      nudgeDelay: 'Show after (minutes)',
+      nudgeDelayHint:
+        'How long after the app opens — and after each nudge — before the next one appears.',
+      nudgeAutoHide: 'Hide after (seconds)',
+      nudgeAutoHideHint: 'How long the nudge stays on screen before it hides itself.',
+      emailSection: 'Reminder email',
+      emailEnabled: 'Send the "Your cart is calling" email',
+      emailEnabledHint:
+        'Lists what is still in the cart. Members can unsubscribe from marketing mail, and checking out stops it.',
+      emailFirstDelay: 'First email after (hours)',
+      emailFirstDelayHint: 'Counted from the last time the cart changed.',
+      emailRepeat: 'Then every (hours)',
+      emailRepeatHint: 'Gap between reminder emails while the cart stays unchanged.',
+      emailMaxCount: 'At most (emails)',
+      emailMaxCountHint: 'Most reminder emails one unchanged cart gets. Changing the cart starts the count over.',
+    },
   },
 };

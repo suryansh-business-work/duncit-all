@@ -60,6 +60,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import RuleIcon from '@mui/icons-material/Rule';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SpeedIcon from '@mui/icons-material/Speed';
 import ShieldIcon from '@mui/icons-material/Shield';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -157,6 +158,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   speed: SpeedIcon,
   shield: ShieldIcon,
   shipping: LocalShippingIcon,
+  shopping_cart: ShoppingCartIcon,
   sos: WarningAmberIcon,
   storefront: StorefrontIcon,
   support: SupportAgentIcon,

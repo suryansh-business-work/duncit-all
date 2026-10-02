@@ -661,6 +661,34 @@ isCartFlowRoute('/pod/DUN-POD-8842')      // false
 The web path and the native screen name reduce to the same key, which is what keeps the
 header identical on both surfaces (rule 27).
 
+### Cart reminder and wishlist
+
+The "your cart is calling" nudge and the Cart / Wishlist tabs follow the same rules on mWeb and
+native. Timing comes from Products portal > Cart > Cart Settings (`productCartSettings`).
+
+```ts
+const settings = DEFAULT_CART_NUDGE_SETTINGS
+// { nudge_enabled: true, nudge_delay_minutes: 10, nudge_auto_hide_seconds: 8 }
+
+cartNudgeDelayMs(settings)  // 600000 — wait after launch, and after each nudge
+cartNudgeHideMs(settings)   // 8000   — the nudge hides itself after this
+
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: false, route: '/home' }) // true
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: false, route: '/cart' }) // false — already there
+canShowCartNudge({ settings, itemCount: 2, muted: true,  snoozed: false, route: '/home' }) // false — "Don't remind me again"
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: true,  route: '/home' }) // false — "Remind me next time"
+
+const tee = { pod_id: 'pod-1', product_id: 'p-7', variant_id: 'xl' }
+addToWishlist([], tee)                  // [tee]
+addToWishlist([tee], tee)               // [tee] — never twice
+removeFromWishlist([tee], wishlistKey(tee)) // []
+
+toCartSyncLines(cartLines) // ids + quantity only — all a cart sync sends to the server
+```
+
+`CART_SETTINGS_BOUNDS` is the range each Cart Setting accepts; the portal form validates against
+it and the server clamps to the same numbers.
+
 ### Club ↔ product matching
 
 ```ts

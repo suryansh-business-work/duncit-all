@@ -2,6 +2,7 @@ import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigat
 
 import { BottomNav } from '@/components/BottomNav';
 import { DeletionNoticeDialog } from '@/components/account/DeletionNoticeDialog';
+import { CartReminder } from '@/components/cart/CartReminder';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
 import { usePushNotificationDeepLink } from '@/hooks/usePushNotificationDeepLink';
 import { useProductVisibility } from '@/hooks/useProductVisibility';
@@ -36,6 +37,7 @@ export function MainTabs() {
         <Tab.Screen name="Venues" component={VenuesScreen} />
         {productsVisible ? <Tab.Screen name="Cart" component={CartScreen} /> : null}
       </Tab.Navigator>
+      <CartReminder />
       <PodFeedbackPrompt />
       <DeletionNoticeDialog />
     </>

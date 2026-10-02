@@ -19,6 +19,7 @@ import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
 import WarehouseApprovalPage from './pages/warehouse-approval';
 import DuncitWarehousesPage from './pages/settings/DuncitWarehousesPage';
 import PodShopSliderPage from './pages/settings/PodShopSliderPage';
+import CartSettingsPage from './pages/cart-settings/CartSettingsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -69,6 +70,7 @@ export default function App() {
       <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />
       <Route path="/settings/warehouses" element={products(<DuncitWarehousesPage />)} />
       <Route path="/settings/pod-shop-slider" element={products(<PodShopSliderPage />)} />
+      <Route path="/cart/settings" element={products(<CartSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

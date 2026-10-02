@@ -56,6 +56,13 @@ export const appConfig = {
       children: [{ label: 'Orders', labelKey: 'shell.nav.orders', to: '/orders', icon: 'local_shipping' }],
     },
     {
+      label: 'Cart', labelKey: 'shell.nav.cart',
+      icon: 'shopping_cart',
+      children: [
+        { label: 'Cart Settings', labelKey: 'shell.nav.cartSettings', to: '/cart/settings', icon: 'settings' },
+      ],
+    },
+    {
       label: 'Settings', labelKey: 'shell.nav.settings',
       icon: 'settings',
       children: [

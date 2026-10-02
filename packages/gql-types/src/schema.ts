@@ -8863,6 +8863,13 @@ export type HolidayType =
 export type Host = {
   __typename?: 'Host';
   aadhar_number: Scalars['String']['output'];
+  /**
+   * Phone, DOB and address from the host's own user account. Resolved on demand
+   * for the Edit Host dialog, which fills the host fields still blank from it:
+   * hosts drafted from an approved meeting carry only a name, email and phone.
+   * Null for anyone without hosts-console read access (it is personal data).
+   */
+  account_profile?: Maybe<HostAccountProfile>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
   created_at: Scalars['String']['output'];
@@ -8898,6 +8905,14 @@ export type Host = {
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/** The account-side copy of a host's personal details (see Host.account_profile). */
+export type HostAccountProfile = {
+  __typename?: 'HostAccountProfile';
+  dob?: Maybe<Scalars['String']['output']>;
+  full_address: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
 };
 
 export type HostCategory = {
@@ -12702,6 +12717,8 @@ export type Mutation = {
    * slice, and the replacing happens when the slice marked `last` arrives.
    */
   syncContacts: ContactsSyncResult;
+  /** Mirror the signed-in member's device cart so the reminder email knows what is waiting. An empty list clears it. */
+  syncMyProductCart: Scalars['Boolean']['output'];
   /** Read the account now instead of waiting for the scheduler. */
   syncSocialAccount: SocialAccount;
   /** Points the named staging hosts at whatever production holds. Never writes production. */
@@ -12893,6 +12910,7 @@ export type Mutation = {
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
+  updateProductCartSettings: ProductCartSettings;
   updateRateLimitRule: RateLimitRule;
   updateRateLimitSettings: RateLimitSettings;
   updateReelProject: ReelProject;
@@ -16837,6 +16855,11 @@ export type MutationSyncContactsArgs = {
 };
 
 
+export type MutationSyncMyProductCartArgs = {
+  lines: Array<ProductCartLineInput>;
+};
+
+
 export type MutationSyncSocialAccountArgs = {
   id: Scalars['ID']['input'];
 };
@@ -17469,6 +17492,11 @@ export type MutationUpdatePodShopSliderArgs = {
 export type MutationUpdatePolicyArgs = {
   input: UpdatePolicyInput;
   policy_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateProductCartSettingsArgs = {
+  input: UpdateProductCartSettingsInput;
 };
 
 
@@ -21127,6 +21155,34 @@ export type ProductCartItemInput = {
   variant_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** One Pod Shop cart line as the device holds it — ids and quantity only. */
+export type ProductCartLineInput = {
+  pod_id: Scalars['ID']['input'];
+  product_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Products portal > Cart > Cart Settings: the in-app cart nudge and the cart reminder email. */
+export type ProductCartSettings = {
+  __typename?: 'ProductCartSettings';
+  /** Send the cart reminder email. */
+  email_enabled: Scalars['Boolean']['output'];
+  /** Hours after the cart last changed before the first reminder email (1-720). */
+  email_first_delay_hours: Scalars['Int']['output'];
+  /** Most reminder emails one unchanged cart gets (1-20). */
+  email_max_count: Scalars['Int']['output'];
+  /** Hours between reminder emails for the same unchanged cart (1-720). */
+  email_repeat_hours: Scalars['Int']['output'];
+  /** Seconds a nudge stays on screen before hiding itself (3-60). */
+  nudge_auto_hide_seconds: Scalars['Int']['output'];
+  /** Minutes after the app opens (and after each nudge hides) before the next nudge (1-1440). */
+  nudge_delay_minutes: Scalars['Int']['output'];
+  /** Show the bottom 'your cart is calling' nudge on mWeb and the app. */
+  nudge_enabled: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 /** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
 export type ProductCategory = {
   __typename?: 'ProductCategory';
@@ -22713,6 +22769,8 @@ export type Query = {
   posts: Array<Post>;
   potentialPodEarnings: PodEarningsProjection;
   previewCoupon: CouponPreview;
+  /** Public: the apps read it to time the cart nudge. */
+  productCartSettings: ProductCartSettings;
   productListingRequests: Array<InventoryProduct>;
   /** Server-side table sibling of productListingRequests (shared table engine). */
   productListingRequestsTable: InventoryProductTablePage;
@@ -33770,6 +33828,16 @@ export type UpdatePolicyInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateProductCartSettingsInput = {
+  email_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  email_first_delay_hours?: InputMaybe<Scalars['Int']['input']>;
+  email_max_count?: InputMaybe<Scalars['Int']['input']>;
+  email_repeat_hours?: InputMaybe<Scalars['Int']['input']>;
+  nudge_auto_hide_seconds?: InputMaybe<Scalars['Int']['input']>;
+  nudge_delay_minutes?: InputMaybe<Scalars['Int']['input']>;
+  nudge_enabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateReportProblemConfigInput = {

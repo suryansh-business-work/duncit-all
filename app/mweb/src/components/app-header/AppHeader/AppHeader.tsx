@@ -10,6 +10,7 @@ import HeaderVerifyEmail from '../HeaderVerifyEmail';
 import LocationDialog from '../LocationDialog';
 import StudioSwitchDialog from '../profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from '../SuperCategoryTabs';
+import { useComingSoonPage } from '../../city-launch/useComingSoonPage';
 import { useHeaderLocation } from '../useHeaderLocation';
 import { useHeaderQueries } from '../useHeaderQueries';
 import SurveyHeaderActions from '../SurveyHeaderActions';
@@ -67,6 +68,8 @@ export default function AppHeader({
   // Mounted with the header — the whole point of the counts is that the role
   // switch never waits on a network round trip to decide where to land.
   const autoPods = useAutoPodCounts(me?.roles ?? []);
+  // A "Coming soon" city has nothing for the switch to narrow until it launches.
+  const comingSoon = useComingSoonPage(selectedLocationId);
 
   // The location default, picker draft and window events. Called before the
   // super-category default below so both defaults land in one commit.
@@ -176,7 +179,7 @@ export default function AppHeader({
         <HeaderVerifyEmail onOpen={() => navigate('/profile?verifyEmail=1')} />
       )}
 
-      {!minimal && (
+      {!minimal && !comingSoon && (
         <SuperCategoryTabs
           loading={staticLoading}
           superCats={superCats}

@@ -1,23 +1,23 @@
-import { showsWaitlist } from '@duncit/utils';
-
 import { TabScreen } from '@/components/TabScreen';
 import { CityLaunchView } from '@/components/city-launch';
 import { HomeFeed } from '@/components/home/HomeFeed';
-import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
+import { useBottomInset } from '@/hooks/useBottomNavSpace';
+import { useComingSoonCity } from '@/hooks/useComingSoonCity';
 import { useLocations } from '@/hooks/useLocations';
 
 /** Authenticated home — the shared tab scaffold (gradient + header) above the
  * live pod feed, or above the launch waitlist when the chosen city is not live
- * yet. RN counterpart of mWeb's HomePage. */
+ * yet (no bottom nav there, so only the system inset is reserved). RN
+ * counterpart of mWeb's HomePage. */
 export function HomeScreen() {
-  const { locations, selectedId } = useLocations();
-  const bottomSpace = useBottomNavSpace();
-  const selected = locations.find((loc) => loc.id === selectedId);
+  const { selectedId } = useLocations();
+  const comingSoon = useComingSoonCity();
+  const bottomInset = useBottomInset();
 
   return (
     <TabScreen testID="home-screen">
-      {selected && showsWaitlist(selected) ? (
-        <CityLaunchView locationId={selected.id} bottomSpace={bottomSpace} />
+      {selectedId && comingSoon ? (
+        <CityLaunchView locationId={selectedId} bottomSpace={bottomInset} />
       ) : (
         <HomeFeed />
       )}

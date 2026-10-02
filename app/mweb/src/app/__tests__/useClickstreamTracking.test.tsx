@@ -25,6 +25,7 @@ class MockIntersectionObserver {
   takeRecords = () => [];
 }
 
+import { CONSENT_COOKIE, makeConsent, writeWebConsent } from '@duncit/utils';
 import { useClickstreamTracking } from '../useClickstreamTracking';
 
 const render = (args: { enabled: boolean; path?: string; superCategory?: string }) =>
@@ -49,13 +50,23 @@ beforeEach(() => {
   document.body.innerHTML = '';
   (globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver =
     MockIntersectionObserver;
+  // Clickstream is analytics: these cases describe a visitor who allowed it.
+  writeWebConsent(makeConsent({ analytics: true, marketing: false }));
 });
 
 afterEach(() => {
   localStorage.clear();
+  document.cookie = `${CONSENT_COOKIE}=; path=/; max-age=0`;
 });
 
 describe('useClickstreamTracking', () => {
+  it('sends nothing without analytics consent', () => {
+    document.cookie = `${CONSENT_COOKIE}=; path=/; max-age=0`;
+    localStorage.setItem('token', 't');
+    render({ enabled: true });
+    expect(recordSpy).not.toHaveBeenCalled();
+  });
+
   it('does nothing when disabled', () => {
     localStorage.setItem('token', 't');
     render({ enabled: false });

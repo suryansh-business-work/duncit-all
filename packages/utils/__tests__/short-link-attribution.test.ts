@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   SHORT_LINK_CLICK_KEY,
+  SHORT_LINK_CONSENT_PARAM,
   SHORT_LINK_SHARE_KEY,
   SHORT_LINK_UTM_KEY,
   captureShortLinkAttribution,
   installAttributionLinkDecorator,
   isAttributableLink,
   parseShortLinkParams,
+  rememberShortLinkAttribution,
   storedAttributionParams,
   storedMemberShare,
   storedShortLinkClickId,
@@ -77,6 +79,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dl=aB3xY9Zq&dlc=c-1',
       referrer: 'https://l.instagram.com/',
       serverUrl: SERVER,
+      consent: true,
       fetchFn,
     });
     expect(id).toBe('c-1');
@@ -98,6 +101,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?utm_source=instagram&dl=aB3xY9Zq',
       referrer: '',
       serverUrl: `${SERVER}/`,
+      consent: true,
       fetchFn,
     });
     expect(id).toBe('c-minted');
@@ -111,7 +115,7 @@ describe('captureShortLinkAttribution', () => {
   it('does nothing at all for ordinary traffic', async () => {
     const fetchFn = okFetch();
     expect(
-      await captureShortLinkAttribution({ search: '', referrer: '', serverUrl: SERVER, fetchFn }),
+      await captureShortLinkAttribution({ search: '', referrer: '', serverUrl: SERVER, consent: true, fetchFn }),
     ).toBeNull();
     expect(fetchFn).not.toHaveBeenCalled();
   });
@@ -125,6 +129,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dlc=c-second',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn,
     });
     expect(id).toBe('c-first');
@@ -137,6 +142,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dl=aB3xY9Zq',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch(null),
     });
     expect(id).toBeNull();
@@ -149,6 +155,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dlc=c-2',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: vi.fn().mockRejectedValue(new Error('offline')),
     });
     expect(id).toBe('c-kept');
@@ -159,6 +166,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dlc=c-2',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: vi.fn().mockResolvedValue({ json: () => Promise.reject(new Error('opaque')) }),
     });
     expect(id).toBeNull();
@@ -172,6 +180,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dlc=c-1',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch('c-1'),
     });
     expect(id).toBe('c-1');
@@ -181,7 +190,7 @@ describe('captureShortLinkAttribution', () => {
   it('does nothing when no fetch exists at all', async () => {
     vi.stubGlobal('fetch', undefined);
     expect(
-      await captureShortLinkAttribution({ search: '?dlc=c-1', referrer: '', serverUrl: SERVER }),
+      await captureShortLinkAttribution({ search: '?dlc=c-1', referrer: '', serverUrl: SERVER, consent: true }),
     ).toBeNull();
   });
 
@@ -190,6 +199,7 @@ describe('captureShortLinkAttribution', () => {
       search: '?dl=aB3xY9Zq',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: vi.fn().mockResolvedValue({ json: () => Promise.resolve(null) }),
     });
     expect(id).toBeNull();
@@ -202,6 +212,7 @@ describe('utm persistence through capture', () => {
       search: '?utm_source=newsletter&utm_medium=email&utm_campaign=aug&x=1',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch(),
     });
     expect(JSON.parse(localStorage.getItem(SHORT_LINK_UTM_KEY) as string)).toEqual({
@@ -218,6 +229,7 @@ describe('utm persistence through capture', () => {
       search: '?utm_source=second',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch(),
     });
     expect(JSON.parse(localStorage.getItem(SHORT_LINK_UTM_KEY) as string)).toEqual({
@@ -230,6 +242,7 @@ describe('utm persistence through capture', () => {
       search: '?ref=abc',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch(),
     });
     expect(localStorage.getItem(SHORT_LINK_UTM_KEY)).toBeNull();
@@ -242,6 +255,7 @@ describe('utm persistence through capture', () => {
         search: '?utm_source=x&dlc=c-1',
         referrer: '',
         serverUrl: SERVER,
+        consent: true,
         fetchFn: okFetch('c-1'),
       }),
     ).resolves.toBe('c-1');
@@ -426,6 +440,7 @@ describe('member-share markers through a capture', () => {
       search: '?dl=aB3xY9Zq&dlc=c-1&dls=1',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch('c-1'),
     });
 
@@ -440,6 +455,7 @@ describe('member-share markers through a capture', () => {
       search: '?dl=aB3xY9Zq&dlc=c-2',
       referrer: '',
       serverUrl: SERVER,
+      consent: true,
       fetchFn: okFetch('c-2'),
     });
 
@@ -457,5 +473,57 @@ describe('member-share markers through a capture', () => {
     localStorage.setItem(SHORT_LINK_SHARE_KEY, '1');
 
     expect(storedAttributionParams()).toEqual({});
+  });
+});
+
+describe('capture without marketing consent', () => {
+  it('still reports the landing anonymously but keeps nothing on the device', async () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-old');
+    const fetchFn = okFetch('c-1');
+    const id = await captureShortLinkAttribution({
+      search: '?utm_source=instagram&dlc=c-1',
+      referrer: '',
+      serverUrl: SERVER,
+      consent: false,
+      fetchFn,
+    });
+    expect(id).toBe('c-1');
+    const url = new URL(fetchFn.mock.calls[0][0]);
+    expect(url.searchParams.has(SHORT_LINK_CONSENT_PARAM)).toBe(false);
+    expect(localStorage.getItem(SHORT_LINK_CLICK_KEY)).toBe('c-old');
+    expect(localStorage.getItem(SHORT_LINK_UTM_KEY)).toBeNull();
+  });
+
+  it('flags the report when the visitor allowed attribution', async () => {
+    const fetchFn = okFetch('c-1');
+    await captureShortLinkAttribution({
+      search: '?dlc=c-1',
+      referrer: '',
+      serverUrl: SERVER,
+      consent: true,
+      fetchFn,
+    });
+    const url = new URL(fetchFn.mock.calls[0][0]);
+    expect(url.searchParams.get(SHORT_LINK_CONSENT_PARAM)).toBe('1');
+  });
+});
+
+describe('rememberShortLinkAttribution', () => {
+  it('fills in a landing reported before consent was given', () => {
+    rememberShortLinkAttribution('?utm_source=instagram&dls=1', 'c-1');
+    expect(storedShortLinkClickId()).toBe('c-1');
+    expect(storedMemberShare()).toBe(true);
+    expect(JSON.parse(localStorage.getItem(SHORT_LINK_UTM_KEY) as string)).toEqual({
+      utm_source: 'instagram',
+    });
+  });
+
+  it('keeps the first click and stores nothing for a landing with no click', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-first');
+    rememberShortLinkAttribution('', 'c-second');
+    expect(storedShortLinkClickId()).toBe('c-first');
+    localStorage.clear();
+    rememberShortLinkAttribution('', null);
+    expect(storedShortLinkClickId()).toBeNull();
   });
 });

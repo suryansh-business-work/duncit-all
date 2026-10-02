@@ -1,30 +1,43 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import { email, filled, lowercase, maxLen, minLen, obj, shape, str, trim } from '@utils/zod-fields';
 
-const urlOrEmpty = yup
-  .string()
-  .trim()
-  .max(1000)
-  .test('url-or-empty', 'Must be an http(s) link', (value) => {
-    if (!value) return true;
-    try {
-      const parsed = new URL(value);
-      return ['http:', 'https:'].includes(parsed.protocol);
-    } catch {
-      return false;
-    }
+const isWebLinkOrEmpty = (value: string) => {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
+const urlOrEmpty = () =>
+  str(z.string().check(maxLen(1000)).refine(isWebLinkOrEmpty, 'Must be an http(s) link'), {
+    transforms: [trim],
+    default: '',
   });
 
-export const jobApplicationInputSchema = yup.object({
-  role_content_id: yup.string().trim().nullable().default(null),
-  role_title: yup.string().trim().required('Role is required').max(160),
-  name: yup.string().trim().required('Name is required').min(2).max(120),
-  email: yup.string().trim().lowercase().required('Email is required').email('Enter a valid email').max(254),
-  phone: yup
-    .string()
-    .trim()
-    .default('')
-    .test('phone-or-empty', 'Phone must be digits with optional + prefix', (value) => !value || /^\+?\d{6,15}$/.test(value)),
-  resume_url: urlOrEmpty.default(''),
-  portfolio_url: urlOrEmpty.default(''),
-  cover_note: yup.string().trim().max(4000).default(''),
-});
+export const jobApplicationInputSchema = obj(
+  shape({
+    role_content_id: str(z.string().nullable(), { transforms: [trim], default: null }),
+    role_title: str(z.string().check(filled('Role is required'), maxLen(160)), {
+      required: 'Role is required',
+      transforms: [trim],
+    }),
+    name: str(z.string().check(filled('Name is required'), minLen(2), maxLen(120)), {
+      required: 'Name is required',
+      transforms: [trim],
+    }),
+    email: str(z.string().check(filled('Email is required'), email('Enter a valid email'), maxLen(254)), {
+      required: 'Email is required',
+      transforms: [trim, lowercase],
+    }),
+    phone: str(
+      z.string().refine((value) => !value || /^\+?\d{6,15}$/.test(value), 'Phone must be digits with optional + prefix'),
+      { transforms: [trim], default: '' }
+    ),
+    resume_url: urlOrEmpty(),
+    portfolio_url: urlOrEmpty(),
+    cover_note: str(z.string().check(maxLen(4000)), { transforms: [trim], default: '' }),
+  })
+);

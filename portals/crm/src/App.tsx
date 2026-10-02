@@ -25,17 +25,12 @@ import PublicSurveyPage from './pages/public-survey';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
-import ErrorBoundary from './components/ErrorBoundary';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { getToken } from './lib/session';
 
 const authed = createAuthed({
   getToken,
-  wrap: (el) => (
-    <AppShell>
-      <ErrorBoundary>{el}</ErrorBoundary>
-    </AppShell>
-  ),
+  wrap: (el) => <AppShell>{el}</AppShell>,
 });
 
 export default function App() {

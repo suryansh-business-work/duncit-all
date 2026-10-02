@@ -1,7 +1,13 @@
 export { copyToClipboard } from './clipboard';
 export {
+  CLUB_SLOT_REQUEST_NOTICE_KEY,
   clubAdminVenueOptions,
+  clubLacksOpenSlots,
+  clubSlotsLabel,
   type BookableVenue,
+  type ClubOpenSlots,
+  type ClubSlotRequestOutcome,
+  type ClubSlotsTranslate,
   type ClubVenueLinks,
 } from './club-venues';
 export {
@@ -127,7 +133,9 @@ export { playNotificationBeep } from './notification-beep';
 export {
   SHORT_LINK_CLICK_KEY,
   SHORT_LINK_UTM_KEY,
+  SHORT_LINK_CONSENT_PARAM,
   captureShortLinkAttribution,
+  rememberShortLinkAttribution,
   installAttributionLinkDecorator,
   isAttributableLink,
   parseShortLinkParams,
@@ -139,6 +147,27 @@ export {
   type CaptureOptions,
   type ShortLinkParams,
 } from './short-link-attribution';
+export {
+  CONSENT_CHANGE_EVENT,
+  CONSENT_COOKIE,
+  CONSENT_HEADER,
+  CONSENT_MAX_AGE_DAYS,
+  OPTIONAL_STORAGE_KEYS,
+  clearWithdrawnStorage,
+  consentAllows,
+  consentCookieDomain,
+  consentHeaderValue,
+  makeConsent,
+  onWebConsentChange,
+  parseConsent,
+  readWebConsent,
+  serializeConsent,
+  whenWebConsentAllows,
+  writeWebConsent,
+  type ConsentCategory,
+  type ConsentChoice,
+} from './consent';
+export { startWebShortLinkAttribution } from './web-attribution';
 export {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,

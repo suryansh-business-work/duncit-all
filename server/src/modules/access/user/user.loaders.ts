@@ -15,7 +15,7 @@
  * projection rather than widening this one.
  */
 import { UserModel } from './user.model';
-import { loadMany, primeMany, type CacheCarrier } from '@utils/request-cache';
+import { loadMany, loadOne, primeMany, type CacheCarrier } from '@utils/request-cache';
 
 /** Name + avatar only — everything a public list row renders. */
 const ACTOR_PROJECTION = 'profile.first_name profile.last_name profile.profile_photo';
@@ -55,4 +55,23 @@ export function primeUserActors(
   ids: readonly string[],
 ): Promise<void> {
   return primeMany<UserActor>(carrier, BUCKET, ids, fetchActors);
+}
+
+const PUBLIC_BUCKET = 'publicUser';
+
+async function fetchPublicUsers(ids: string[]) {
+  // Lazy: user.service pulls in most of the access module, which this file's
+  // other callers (the pod loaders) do not need.
+  const { userService } = await import('./user.service');
+  return userService.getPublicByIds(ids);
+}
+
+/**
+ * The full public `User` behind a `User`-typed field on a list row — a post's
+ * author, a comment's, a story viewer. Every row of the page asks in the same
+ * tick, so the whole page is one batched read (see utils/request-cache.ts)
+ * instead of `getById` per row.
+ */
+export function loadPublicUser(carrier: CacheCarrier, id: string | null | undefined) {
+  return loadOne(carrier, PUBLIC_BUCKET, id, fetchPublicUsers);
 }

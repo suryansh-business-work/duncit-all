@@ -1766,6 +1766,8 @@ export type AppleSignupInput = {
   first_name: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
   whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3600,6 +3602,8 @@ export type Club = {
   __typename?: 'Club';
   /** Users who administer this club (assigned by an admin) — the CLUB_ADMIN scope. */
   admin_user_ids: Array<Scalars['ID']['output']>;
+  /** Open (AVAILABLE, not yet started) slots across the matched venues; 0 means a physical pod cannot be booked here yet. */
+  available_slots_count: Scalars['Int']['output'];
   category_id?: Maybe<Scalars['ID']['output']>;
   /** Resolved profiles of the club's assigned admins. */
   club_admins: Array<ClubActor>;
@@ -4001,6 +4005,37 @@ export type ClubRating = {
   user_id: Scalars['ID']['output'];
   user_name?: Maybe<Scalars['String']['output']>;
   user_photo?: Maybe<Scalars['String']['output']>;
+};
+
+/** A host's request that a club's admins get its venues to open slots. */
+export type ClubSlotRequest = {
+  __typename?: 'ClubSlotRequest';
+  club_id: Scalars['ID']['output'];
+  club_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  /** The number or email the club admins were sent. */
+  host_contact: Scalars['String']['output'];
+  host_name: Scalars['String']['output'];
+  host_user_id: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  /** How many club admins were messaged. */
+  notified: Scalars['Int']['output'];
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  status: ClubSlotRequestStatus;
+  updated_at: Scalars['String']['output'];
+};
+
+/** OPEN until staff close it once the club's venues have published slots. */
+export type ClubSlotRequestStatus =
+  | 'OPEN'
+  | 'RESOLVED';
+
+export type ClubSlotRequestTablePage = {
+  __typename?: 'ClubSlotRequestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ClubSlotRequest>;
+  total: Scalars['Int']['output'];
 };
 
 /** Server-side table page for the shared table engine (clubsTable). */
@@ -8471,6 +8506,8 @@ export type GoogleSignupInput = {
    */
   dob: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   phone_extension: Scalars['String']['input'];
   /**
    * The WhatsApp number joining Duncit, and the proof it answered.
@@ -11976,6 +12013,13 @@ export type Mutation = {
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
   /**
+   * Tell the club's admins, over email and WhatsApp, that none of its venues has
+   * an open slot. ALREADY_REQUESTED when this host asked about this club in the
+   * last day; NO_CLUB_ADMIN when the club has nobody to tell (the request is
+   * still recorded for staff).
+   */
+  requestClubVenueSlots: PodHelpRequestResult;
+  /**
    * Triggers (or retries) the Servam-AI transcript pipeline for a CALL log.
    * Returns the log with transcript_status flipped to PENDING.
    */
@@ -12100,6 +12144,8 @@ export type Mutation = {
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
   resolveBouncerSos: BouncerSosAlert;
+  /** Close a request once the club's venues have published slots. */
+  resolveClubSlotRequest: ClubSlotRequest;
   /** Close an issue by hand — the reminders stop. */
   resolveStoreIssue: StoreReleaseIssue;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
@@ -12326,6 +12372,8 @@ export type Mutation = {
   setMyProductListingActive: InventoryProduct;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
+  /** Record the signed-in member's tracking choice. Every answer is kept. */
+  setMyTrackingConsent: TrackingConsent;
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
@@ -15268,6 +15316,11 @@ export type MutationRequestBouncerCallbackArgs = {
 };
 
 
+export type MutationRequestClubVenueSlotsArgs = {
+  club_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRequestCommunicationTranscriptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -15394,6 +15447,11 @@ export type MutationResetRateLimitRuleCountersArgs = {
 
 
 export type MutationResolveBouncerSosArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationResolveClubSlotRequestArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -15904,6 +15962,11 @@ export type MutationSetMyProductListingActiveArgs = {
 
 export type MutationSetMySelectedLocationArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationSetMyTrackingConsentArgs = {
+  input: TrackingConsentInput;
 };
 
 
@@ -21797,6 +21860,8 @@ export type Query = {
    */
   clubFollowers: Array<PublicProfile>;
   clubRatings: Array<ClubRating>;
+  /** Every venue-slot request hosts have raised — the Clubs console's list. */
+  clubSlotRequestsTable: ClubSlotRequestTablePage;
   /** Active (non-expired) stories attached to a club, newest first (Bug 6). */
   clubStories: Array<Post>;
   clubs: Array<Club>;
@@ -22327,6 +22392,11 @@ export type Query = {
    * preference and is never readable for anybody else.
    */
   myDashboardLayout?: Maybe<DashboardLayout>;
+  /**
+   * Everything Duncit holds about the signed-in member, as a JSON document
+   * (GDPR right of access and portability). Credentials are never included.
+   */
+  myDataExport: Scalars['String']['output'];
   /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
   myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
@@ -22415,6 +22485,8 @@ export type Query = {
   mySurveyResponse?: Maybe<SurveyResponse>;
   myTableApiAccess: TableApiAccess;
   myTickets: Array<Ticket>;
+  /** The signed-in member's current tracking choice. Null while they have made none. */
+  myTrackingConsent?: Maybe<TrackingConsent>;
   /** All of the signed-in user's support items (tickets, SOS, callbacks, chats). */
   myUnifiedSupportTickets: Array<UnifiedSupportTicket>;
   myUnreadNotificationCount: Scalars['Int']['output'];
@@ -23601,6 +23673,11 @@ export type QueryClubFollowersArgs = {
 
 export type QueryClubRatingsArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubSlotRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -26981,6 +27058,8 @@ export type RegisterInput = {
   email: Scalars['String']['input'];
   first_name: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   password: Scalars['String']['input'];
   /** The dial code the number belongs to, such as +91. Chosen from a list. */
   phone_extension: Scalars['String']['input'];
@@ -27753,7 +27832,7 @@ export type ShortLinkClick = {
   city?: Maybe<Scalars['String']['output']>;
   click_id: Scalars['String']['output'];
   clicked_at: Scalars['String']['output'];
-  /** GPC or DNT when this visitor asked not to be tracked, else null. */
+  /** GPC or DNT when the browser asked not to be tracked, NO_CONSENT when the visitor has not allowed marketing attribution, else null. */
   consent_signal?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   device_type: Scalars['String']['output'];
@@ -32680,6 +32759,32 @@ export type TrackedWebsite =
   | 'MAIN'
   | 'PARTNERS'
   | 'STATUS';
+
+/**
+ * What a member allowed Duncit to store beyond what the service needs.
+ * Both categories are off until the member turns them on.
+ */
+export type TrackingConsent = {
+  __typename?: 'TrackingConsent';
+  /** Usage analytics — page views, taps, daily-active pings, Google Analytics. */
+  analytics: Scalars['Boolean']['output'];
+  /** ISO instant of the answer. */
+  decided_at: Scalars['String']['output'];
+  /** Campaign attribution — which link or campaign brought the member here. */
+  marketing: Scalars['Boolean']['output'];
+};
+
+export type TrackingConsentInput = {
+  analytics: Scalars['Boolean']['input'];
+  marketing: Scalars['Boolean']['input'];
+  surface: TrackingConsentSurface;
+};
+
+/** Where a member answered the tracking-consent question. */
+export type TrackingConsentSurface =
+  | 'MWEB'
+  | 'NATIVE'
+  | 'WEBSITE';
 
 /** Export format for support chat / ticket transcripts. */
 export type TranscriptFormat =

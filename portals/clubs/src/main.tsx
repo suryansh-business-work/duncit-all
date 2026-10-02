@@ -14,6 +14,7 @@ import {
 } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
+import ClubSlotRequestsPage from './pages/club-slot-requests-page';
 
 /**
  * The clubs console — admin's Clubs section and its editor, on its own
@@ -33,12 +34,21 @@ mountDirectoryPortal({
   logsPortal: logs.portal.clubs,
   console: {
     listPath: '/clubs',
-    nav: [{ label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'community' }],
+    nav: [
+      { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'community' },
+      {
+        label: 'Requests for Club Admins',
+        labelKey: 'shell.nav.clubSlotRequests',
+        to: '/club-admin-requests',
+        icon: 'feedback',
+      },
+    ],
     routes: (authed) => (
       <>
         {/* Static before dynamic so /clubs/new is never read as a club id. */}
         <Route path="/clubs/new" element={authed(<ClubEditorPage />)} />
         <Route path="/clubs" element={authed(<ClubsPage />)} />
+        <Route path="/club-admin-requests" element={authed(<ClubSlotRequestsPage />)} />
         <Route path="/clubs/:id" element={authed(<ClubDetailsPage />)} />
         <Route path="/clubs/:id/edit" element={authed(<ClubEditorPage />)} />
         <Route path="/clubs/:clubId/hosts/:hostId" element={authed(<HostInClubPage />)} />

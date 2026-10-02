@@ -17,6 +17,7 @@ export const CreatePodOptionsDocument = gql(`
       super_category_id
       category_id
       matched_venues_count
+      available_slots_count
       matched_venues {
         id
       }

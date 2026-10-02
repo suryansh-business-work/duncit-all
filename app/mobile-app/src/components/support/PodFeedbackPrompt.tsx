@@ -15,6 +15,7 @@ import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Scrim padding — the bottom edge also has to clear the on-screen keyboard. */
 const SCRIM_PADDING = 24;
@@ -164,7 +165,7 @@ export function PodFeedbackPrompt() {
               tabIndex={0}
               aria-label={t('mweb.podFeedback.submit')}
               aria-disabled={!ready || busy}
-              onPress={!ready || busy ? undefined : () => void submit()}
+              onPress={!ready || busy ? undefined : () => fireAndForget(submit())}
               height={42}
               paddingHorizontal={18}
               alignItems="center"

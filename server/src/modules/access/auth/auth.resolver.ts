@@ -32,17 +32,19 @@ import type { GraphQLContext } from '@context';
 import type { SignInContext } from '@modules/access/user/user.signin';
 
 /** What a signup door carries besides the account itself. Never part of the
- * validated DTO — the yup schemas strip unknown keys on purpose, so acceptance
+ * validated DTO — the validator schemas strip unknown keys on purpose, so acceptance
  * stays out of the user document it has no business being in (referral_code
  * rides alongside for exactly the same reason). */
 interface SignupPolicyInput {
   accepted_policy_ids?: string[] | null;
   accepted_policy_surface?: PolicyAcceptanceSurface | null;
+  marketing_opt_in?: boolean | null;
 }
 
 const acceptanceIntent = (input?: SignupPolicyInput | null): PolicyAcceptanceIntent => ({
   policy_ids: input?.accepted_policy_ids ?? [],
   surface: input?.accepted_policy_surface ?? 'UNKNOWN',
+  marketing_opt_in: input?.marketing_opt_in === true,
 });
 
 /** The signed-in user's id, or the standard UNAUTHENTICATED refusal. */
@@ -85,7 +87,7 @@ export const authResolvers = {
     ) => {
       const data = await validate(registerSchema, args.input);
       // The age gate is admin-configured, so it lives here rather than in the
-      // static yup schema — and it must be server-side: the client rule only
+      // static validator schema — and it must be server-side: the client rule only
       // shapes the form, it cannot stop a hand-rolled mutation.
       await assertEligibleDob(data.dob);
       // Same reasoning, same place: the tick boxes shape the form, they cannot

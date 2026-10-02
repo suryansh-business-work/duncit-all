@@ -7,11 +7,8 @@ import {
   Box,
   Card,
   CardContent,
-  Checkbox,
   Divider,
   FormControlLabel,
-  FormGroup,
-  FormHelperText,
   Snackbar,
   Stack,
   Switch,
@@ -21,9 +18,10 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
-import { LEVELS, TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
+import { TELEMETRY_SETTINGS, UPDATE_TELEMETRY_SETTINGS } from './queries';
 import { telemetrySettingsSchema, type TelemetrySettingsForm } from './schema';
 import PublicApiKeyCard from './PublicApiKeyCard';
+import PersistedLevelsField from './PersistedLevelsField';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 
 const DEFAULTS: TelemetrySettingsForm = {
@@ -31,15 +29,6 @@ const DEFAULTS: TelemetrySettingsForm = {
   persisted_levels: ['error', 'warn'],
   retention_days: 30,
 };
-
-type PersistedLevels = TelemetrySettingsForm['persisted_levels'];
-
-/** Add or remove one level, keeping the field's declared order. */
-const toggleLevel = (
-  levels: PersistedLevels,
-  level: PersistedLevels[number],
-  checked: boolean,
-): PersistedLevels => (checked ? [...levels, level] : levels.filter((l) => l !== level));
 
 export default function TelemetryLogsSettingsPage() {
   const { t } = useTranslation();
@@ -109,38 +98,11 @@ export default function TelemetryLogsSettingsPage() {
           )}
         />
         <Divider />
-        <Box>
-          <Typography variant="body2" gutterBottom sx={{
-            fontWeight: 600
-          }}>
-            Levels persisted to the database
-          </Typography>
-          <Controller
-            name="persisted_levels"
-            control={control}
-            render={({ field }) => (
-              <FormGroup row>
-                {LEVELS.map((lvl) => (
-                  <FormControlLabel
-                    key={lvl}
-                    control={
-                      <Checkbox
-                        checked={field.value.includes(lvl)}
-                        onChange={(e) =>
-                          field.onChange(toggleLevel(field.value, lvl, e.target.checked))
-                        }
-                      />
-                    }
-                    label={lvl}
-                  />
-                ))}
-              </FormGroup>
-            )}
-          />
-          {errors.persisted_levels && (
-            <FormHelperText error>{errors.persisted_levels.message}</FormHelperText>
-          )}
-        </Box>
+        <PersistedLevelsField
+          control={control}
+          hasError={!!errors.persisted_levels}
+          errorMessage={errors.persisted_levels?.message}
+        />
         <Divider />
         <Controller
           name="retention_days"

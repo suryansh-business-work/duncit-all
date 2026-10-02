@@ -9,6 +9,7 @@ import {
   getOrCreateDuid,
   resolveNoRedisFlag,
 } from '@duncit/user-core';
+import { CONSENT_HEADER, consentHeaderValue, readWebConsent } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { ABORT_ERROR_NAME, apolloErrorLink } from './utils/apolloErrorLink';
 import { fetchWithTimeout } from './utils/fetchWithTimeout';
@@ -29,6 +30,9 @@ const authLink = setContext((_op, { headers }) => {
       ...headers,
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(duid ? { 'x-duid': duid } : {}),
+      // What this visitor allowed us to store (consent banner). The server
+      // writes no analytics or attribution without it.
+      [CONSENT_HEADER]: consentHeaderValue(readWebConsent()),
       // Names this surface on the server, which stamps it onto the admin user
       // change log — mWeb and the native app are otherwise indistinguishable.
       [SURFACE_HEADER]: 'MWEB',

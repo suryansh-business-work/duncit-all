@@ -121,8 +121,8 @@
     "sharp": "^0.35.5",
     "socket.io": "^4.8.4",
     "web-push": "^3.6.7",
-    "xlsx": "^0.18.5",
-    "yup": "^1.7.1"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.4.3",

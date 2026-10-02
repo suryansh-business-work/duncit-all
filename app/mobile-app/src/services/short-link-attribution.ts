@@ -1,10 +1,13 @@
 import * as Linking from 'expo-linking';
 import { parse } from 'graphql';
+import { consentAllows, SHORT_LINK_CONSENT_PARAM } from '@duncit/utils';
 import { getItem, setItem } from './secure-storage';
 import { graphqlRequest } from './graphql.client';
 import { getAuthToken } from './auth-token';
+import { SHORT_LINK_CLICK_KEY } from './short-link-click-key';
 import { config } from '../constants/config';
 import { navigationRef } from '../navigation/navigationRef';
+import { useConsentStore } from '../stores/consent.store';
 
 /**
  * Short-link attribution — the native twin of
@@ -18,8 +21,12 @@ import { navigationRef } from '../navigation/navigationRef';
  * skipped). The visit is reported to the API's /r/v — which verifies the
  * marker against the database before recording anything — and the click id is
  * kept so later funnel steps can be tied back to the exact click.
+ *
+ * Keeping the click is attribution, so it happens only with marketing consent
+ * (@duncit/utils consent.ts). Without it the landing is still reported — the
+ * server counts it anonymously — but nothing is read or written on the device.
  */
-export const SHORT_LINK_CLICK_KEY = 'duncit.short_link_click';
+export { SHORT_LINK_CLICK_KEY };
 
 export type JourneyStep = 'SIGNED_UP' | 'SURVEY_DONE' | 'VIEWED_POD' | 'CHECKOUT_STARTED';
 
@@ -66,26 +73,64 @@ export async function storedClickId(): Promise<string | null> {
   }
 }
 
+const marketingAllowed = (): boolean =>
+  consentAllows(useConsentStore.getState().choice, 'marketing');
+
+/**
+ * A click resolved while marketing consent was not given. Held in memory only,
+ * so a yes given later in the same session can still keep it — the device
+ * never wrote it anywhere. First touch wins here too.
+ */
+let pendingClickId: string | null = null;
+
+/** The /r/v query a landing URL reports, or null when it carries no marker. */
+function landingParams(url: string | null): URLSearchParams | null {
+  if (!url) return null;
+  const { code, clickId } = shortLinkParamsFromUrl(url);
+  if (!code && !clickId) return null;
+  const params = new URLSearchParams();
+  // The guard above proved one of the two exists; dlc is the stronger marker.
+  if (clickId) params.set('dlc', clickId);
+  else params.set('dl', code as string);
+  return params;
+}
+
+/** Report a landing; answers the click id the server resolved it to. */
+async function reportLanding(params: URLSearchParams): Promise<string | null> {
+  const response = await fetch(`${config.apiUrl}/r/v?${params.toString()}`);
+  const body = await response.json();
+  return body?.click_id ?? null;
+}
+
+/** Without marketing consent: counted by the server, kept by nobody. */
+async function captureAnonymously(params: URLSearchParams | null): Promise<string | null> {
+  if (!params) return null;
+  try {
+    const resolved = await reportLanding(params);
+    pendingClickId ??= resolved;
+    return resolved;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Report a landing URL to the API and remember which click this device
  * belongs to. FIRST TOUCH WINS, exactly as on web — the link that started the
  * journey keeps it. Never throws; attribution is not worth a crash.
  */
 export async function captureFromUrl(url: string | null): Promise<string | null> {
-  if (!url) return storedClickId();
-  const { code, clickId } = shortLinkParamsFromUrl(url);
+  // The stored choice must be known before anything is read or kept.
+  await useConsentStore.getState().hydrate();
+  const params = landingParams(url);
+  if (!marketingAllowed()) return captureAnonymously(params);
   const existing = await storedClickId();
-  if (!code && !clickId) return existing;
-
-  const params = new URLSearchParams();
-  // The guard above proved one of the two exists; dlc is the stronger marker.
-  if (clickId) params.set('dlc', clickId);
-  else params.set('dl', code as string);
+  if (!params) return existing;
+  // Tells the server it may bind the click to this visit, not just count it.
+  params.set(SHORT_LINK_CONSENT_PARAM, '1');
 
   try {
-    const response = await fetch(`${config.apiUrl}/r/v?${params.toString()}`);
-    const body = await response.json();
-    const resolved: string | null = body?.click_id ?? null;
+    const resolved = await reportLanding(params);
     if (existing) return existing;
     if (resolved) await setItem(SHORT_LINK_CLICK_KEY, resolved);
     return resolved;
@@ -114,7 +159,9 @@ let capture: Promise<string | null> = storedClickId();
 export function reportJourneyStep(step: JourneyStep): void {
   capture
     .then((clickId) => {
-      if (!clickId) return null;
+      // A step binds the click to the account — attribution, so only with
+      // marketing consent (the server refuses it without, too).
+      if (!clickId || !marketingAllowed()) return null;
       return graphqlRequest<
         { recordShortLinkJourney: boolean },
         { click_id: string; step: string }
@@ -151,8 +198,23 @@ function captureAndBind(url: string | null): Promise<string | null> {
 }
 
 /**
+ * Marketing consent was just given: keep the click this session landed on
+ * while it was not, unless the device already holds an earlier one.
+ * Answers the click the device is now attributed to.
+ */
+async function adoptPendingClick(): Promise<string | null> {
+  const pending = pendingClickId;
+  pendingClickId = null;
+  const existing = await storedClickId();
+  if (existing || !pending) return existing;
+  await setItem(SHORT_LINK_CLICK_KEY, pending);
+  return pending;
+}
+
+/**
  * Root wiring: capture the URL the app was opened with, and every URL it
- * receives while running. Returns the unsubscribe for the listener.
+ * receives while running, and keep a pending click the moment marketing
+ * consent is given. Returns the unsubscribe for both listeners.
  */
 export function initShortLinkAttribution(): () => void {
   // getInitialURL itself can reject; captureFromUrl cannot (every failure
@@ -163,5 +225,13 @@ export function initShortLinkAttribution(): () => void {
   const subscription = Linking.addEventListener('url', (event) => {
     captureAndBind(event.url);
   });
-  return () => subscription.remove();
+  const stopConsent = useConsentStore.subscribe((state, previous) => {
+    const granted = consentAllows(state.choice, 'marketing');
+    if (!granted || consentAllows(previous.choice, 'marketing')) return;
+    capture = adoptPendingClick().catch(() => null);
+  });
+  return () => {
+    subscription.remove();
+    stopConsent();
+  };
 }

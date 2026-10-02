@@ -1,5 +1,5 @@
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -56,7 +56,7 @@ export function RejoinConfirmDialog({
             borderTopLeftRadius={28}
             borderTopRightRadius={28}
           >
-            <SafeAreaView edges={['bottom']}>
+            <ModalSafeArea edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text role="heading" fontSize={18} fontWeight="700" color="$color">
                   {t('mweb.podHistory.rejoinTitle')}
@@ -127,7 +127,7 @@ export function RejoinConfirmDialog({
                   </Text>
                 </XStack>
               </XStack>
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

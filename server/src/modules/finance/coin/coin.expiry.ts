@@ -22,6 +22,7 @@ import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { CoinBalanceModel, CoinTransactionModel } from './coin.model';
 import { coinSettingsService } from './coin.settings.service';
 import { appDate, getAppTimeZone } from '@utils/app-time';
+import { startClusterJob } from '@utils/clusterJob';
 import { logs } from '@observability/log';
 
 const SWEEP_INTERVAL_MS = 10 * 60_000; // every 10 minutes
@@ -182,29 +183,14 @@ export async function runCoinExpirySweep(now: Date = new Date()): Promise<number
 /** Start the expiry loop (first sweep ~2 min after boot). Returns a stop
  * function. No-ops under NODE_ENV=test. */
 export function startCoinExpiryScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  let sweeping = false;
-  const sweep = () => {
-    if (sweeping) return;
-    sweeping = true;
-    runCoinExpirySweep()
-      .then((expired) => {
-        if (expired > 0) logs.server.info('coin-expiry', 'sweep', { expired });
-      })
-      .catch((error) => {
-        logs.server.error('coin-expiry', 'sweep', { error, msg: 'sweep failed' });
-      })
-      .finally(() => {
-        sweeping = false;
-      });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for the expiry sweep.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'coin-expiry',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: async () => {
+      const expired = await runCoinExpirySweep();
+      if (expired > 0) logs.server.info('coin-expiry', 'sweep', { expired });
+    },
+  });
 }

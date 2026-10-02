@@ -3,6 +3,7 @@ import { ClientError } from 'graphql-request';
 
 import { getAuthToken } from '@/services/auth-token';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useConsentStore } from '@/stores/consent.store';
 import { ApiError } from '@/utils/errors';
 
 const mockRequest = jest.fn();
@@ -148,6 +149,19 @@ describe('graphqlRequest', () => {
     mockRequest.mockResolvedValue({});
     await graphqlRequest(DOC, undefined, { auth: true });
     expect(ctorCalls[0]?.[1].headers?.Authorization).toBe('Bearer jwt-123');
+  });
+
+  it('declares the tracking choice on every request', async () => {
+    mockRequest.mockResolvedValue({});
+    await graphqlRequest(DOC);
+    expect(ctorCalls[0]?.[1].headers?.['x-consent']).toBe('none');
+
+    useConsentStore.setState({
+      choice: { analytics: true, marketing: false, decided_at: '2026-10-01T00:00:00.000Z' },
+    });
+    await graphqlRequest(DOC);
+    expect(ctorCalls[1]?.[1].headers?.['x-consent']).toBe('analytics');
+    useConsentStore.setState({ choice: null });
   });
 
   it('omits the auth header when no token is stored', async () => {

@@ -9,7 +9,8 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { DuncitButton } from '@duncit/buttons';
 import { UPDATE_VENUE_HOLIDAYS } from '../queries';
 import { formatDay } from '@duncit/app-settings';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation } from '@duncit/shell';
+import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
   venueId: string | null;
@@ -127,7 +128,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
           startIcon={<SaveIcon />}
           variant="contained"
           disabled={!venueId || !dirty || saveState.loading}
-          onClick={() => void persist()}
+          onClick={() => fireAndForget(persist(), logs.portal['partners-app'], 'LeavesSection', 'persist')}
           sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
         >
           {saveState.loading ? 'Saving…' : 'Save leaves & holidays'}

@@ -11,6 +11,7 @@ import {
   ConnectedAccountsSection,
   EditAccountDialog,
   LanguageSection,
+  PrivacyDataEntryCard,
   PrivacyToggleCard,
   SecuritySection,
 } from '@/components/account';
@@ -109,6 +110,7 @@ export function AccountScreen() {
             with the link it produces — on the profile itself, which is where
             somebody goes to share it. */}
         <CommPreferenceEntryCard onPress={() => navigation.navigate('CommPreference')} />
+        <PrivacyDataEntryCard onPress={() => navigation.navigate('Privacy')} />
         <ConnectedAccountsSection />
         <SecuritySection />
       </RefreshScrollView>

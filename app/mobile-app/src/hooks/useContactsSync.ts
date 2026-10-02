@@ -64,7 +64,7 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
   const [stage, setStage] = useState<ContactSyncStage | null>(null);
   const [failure, setFailure] = useState<ContactsSyncFailure | null>(null);
 
-  const request = useCallback(async () => {
+  const sync = useCallback(async () => {
     setFailure(null);
     setStage({ phase: 'READING', done: 0, total: 0 });
     try {
@@ -100,5 +100,16 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
     }
   }, [onSynced]);
 
-  return { supported: true, request, busy: stage !== null, stage, failure };
+  // The phone book holds OTHER people's names and numbers, so the person is
+  // told exactly what is read and kept before anything is (GDPR). `request`
+  // only asks; nothing is read until they agree, and "Not now" does nothing.
+  const [asking, setAsking] = useState(false);
+  const request = useCallback(() => setAsking(true), []);
+  const decline = useCallback(() => setAsking(false), []);
+  const agree = useCallback(() => {
+    setAsking(false);
+    return sync();
+  }, [sync]);
+
+  return { supported: true, request, asking, agree, decline, busy: stage !== null, stage, failure };
 }

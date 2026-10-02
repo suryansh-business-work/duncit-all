@@ -12,6 +12,8 @@
  * the React sites (status, the pet store) from their entry module.
  */
 
+import { whenWebConsentAllows } from '@duncit/utils';
+
 /** Every Duncit website that can load a tag — the server's `TrackedWebsite` enum. */
 export type TrackedWebsite = 'MAIN' | 'PARTNERS' | 'ADS' | 'EARNWITH' | 'STATUS' | 'ECOMM';
 
@@ -57,15 +59,23 @@ function installGtag(measurementId: string): void {
 }
 
 /**
- * Asks which tag this website loads and installs it. Fire-and-forget: a page
- * never waits on analytics, and a failure is logged rather than shown.
+ * Asks which tag this website loads and installs it — but only once the
+ * visitor has allowed analytics on the consent banner (GDPR / ePrivacy): GA
+ * sets cookies and sends the visitor's address to Google, so nothing of it is
+ * even requested before then. A visitor who allows it later gets it at that
+ * moment, without a reload.
+ *
+ * Fire-and-forget: a page never waits on analytics, and a failure is logged
+ * rather than shown.
  */
 export function loadGoogleAnalytics(graphqlUrl: string, site: TrackedWebsite): void {
-  fetchMeasurementId(graphqlUrl, site)
-    .then((measurementId) => {
-      if (measurementId) installGtag(measurementId);
-    })
-    .catch((error: unknown) => {
-      console.warn('Google Analytics did not load', error);
-    });
+  whenWebConsentAllows('analytics', () => {
+    fetchMeasurementId(graphqlUrl, site)
+      .then((measurementId) => {
+        if (measurementId) installGtag(measurementId);
+      })
+      .catch((error: unknown) => {
+        console.warn('Google Analytics did not load', error);
+      });
+  });
 }

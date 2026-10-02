@@ -10,7 +10,7 @@
  *
  * Each loop runs one pass at a time. No-ops under NODE_ENV=test.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { syncDueAccounts } from './social.sync';
 import { publishDue, recoverStuckPosts } from './social.publisher';
 
@@ -19,29 +19,7 @@ const SYNC_TICK_MS = 15 * 60_000;
 const SYNC_FIRST_DELAY_MS = 180_000;
 const PUBLISH_TICK_MS = 60_000;
 const PUBLISH_FIRST_DELAY_MS = 30_000;
-
-function every(name: string, tickMs: number, firstDelayMs: number, pass: () => Promise<void>): () => void {
-  let running = false;
-  const tick = () => {
-    if (running) return;
-    running = true;
-    pass()
-      .catch((err) => {
-        logs.server.error('social-accounts-scheduler', name, { error: err, msg: `${name} tick failed` });
-      })
-      .finally(() => {
-        running = false;
-      });
-  };
-  const first = setTimeout(tick, firstDelayMs);
-  const interval = setInterval(tick, tickMs);
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
-}
+const COMPONENT = 'social-accounts-scheduler';
 
 async function publishPass(): Promise<void> {
   await recoverStuckPosts();
@@ -49,9 +27,20 @@ async function publishPass(): Promise<void> {
 }
 
 export function startSocialAccountsScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const stopSync = every('sync', SYNC_TICK_MS, SYNC_FIRST_DELAY_MS, syncDueAccounts);
-  const stopPublish = every('publish', PUBLISH_TICK_MS, PUBLISH_FIRST_DELAY_MS, publishPass);
+  const stopSync = startClusterJob({
+    component: COMPONENT,
+    operation: 'sync',
+    firstDelayMs: SYNC_FIRST_DELAY_MS,
+    intervalMs: SYNC_TICK_MS,
+    run: syncDueAccounts,
+  });
+  const stopPublish = startClusterJob({
+    component: COMPONENT,
+    operation: 'publish',
+    firstDelayMs: PUBLISH_FIRST_DELAY_MS,
+    intervalMs: PUBLISH_TICK_MS,
+    run: publishPass,
+  });
   return () => {
     stopSync();
     stopPublish();

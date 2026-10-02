@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import type { Types } from 'mongoose';
 import QRCode from 'qrcode';
@@ -22,17 +22,22 @@ import { shortLinkClickService } from './shortLinkClick.service';
 import { classifyDestination, isDuncitHost } from './shortLink.destination';
 import { shortLinkPolicyService } from './shortLinkPolicy.service';
 import type { ConsentSignal } from './shortLinkClick.model';
+import { filled, maxLen, messagesOf, minLen, mixed, obj, shape, str, trim } from '@utils/zod-fields';
 
+const optionalTrimmed = (...checks: z.core.$ZodCheck<string>[]) =>
+  str(z.string().check(...checks).nullable().optional(), { transforms: [trim] });
 
-const inputSchema = yup.object({
-  label: yup.string().trim().min(3).max(120).required(),
-  destination_url: yup.string().trim().required(),
-  source: yup.mixed<(typeof SHORT_LINK_SOURCES)[number]>().oneOf([...SHORT_LINK_SOURCES]).required(),
-  source_other: yup.string().trim().max(60).nullable(),
-  medium: yup.mixed<(typeof SHORT_LINK_MEDIUMS)[number]>().oneOf([...SHORT_LINK_MEDIUMS]).required(),
-  medium_other: yup.string().trim().max(60).nullable(),
-  campaign_id: yup.string().trim().nullable(),
-});
+const inputSchema = obj(
+  shape({
+    label: str(z.string().check(minLen(3), maxLen(120), filled()), { required: true, transforms: [trim] }),
+    destination_url: str(z.string().check(filled()), { required: true, transforms: [trim] }),
+    source: mixed(z.enum(SHORT_LINK_SOURCES), { oneOf: SHORT_LINK_SOURCES, required: true }),
+    source_other: optionalTrimmed(maxLen(60)),
+    medium: mixed(z.enum(SHORT_LINK_MEDIUMS), { oneOf: SHORT_LINK_MEDIUMS, required: true }),
+    medium_other: optionalTrimmed(maxLen(60)),
+    campaign_id: optionalTrimmed(),
+  })
+);
 
 const SHORT_LINK_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['label', 'code', 'destination_url', 'utm_campaign'],
@@ -263,15 +268,13 @@ export const shortLinkService = {
   options: shortLinkOptions,
 
   async create(input: any, userId?: string | null) {
-    // A rejected yup validate always carries `errors`, so there is nothing to
-    // fall back to here.
-    const payload = await inputSchema
-      .validate(input, { abortEarly: false, stripUnknown: true })
-      .catch((e: yup.ValidationError) => {
-        throw new GraphQLError(e.errors.join(', '), {
-          extensions: { code: 'BAD_USER_INPUT' },
-        });
+    const parsed = await inputSchema.safeParseAsync(input);
+    if (!parsed.success) {
+      throw new GraphQLError(messagesOf(parsed.error).join(', '), {
+        extensions: { code: 'BAD_USER_INPUT' },
       });
+    }
+    const payload = parsed.data;
     const { blocked_domains } = await shortLinkPolicyService.rules();
     const destination = classifyDestination(payload.destination_url, blocked_domains);
     const utm_source = requireText(sourceUtm(payload.source, payload.source_other), 'source');

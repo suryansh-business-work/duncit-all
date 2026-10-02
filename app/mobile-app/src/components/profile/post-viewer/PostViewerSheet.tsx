@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { CommentComposer } from '@/components/details/pod-comments/CommentComposer';
@@ -75,7 +75,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
             backgroundColor="$background"
             onAccessibilityEscape={onClose}
           >
-            <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+            <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
               <PostViewerHeader
                 post={post}
                 canDelete={canDelete}
@@ -114,7 +114,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   />
                 </>
               ) : null}
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </KeyboardScreen>
       </ModalThemeScope>

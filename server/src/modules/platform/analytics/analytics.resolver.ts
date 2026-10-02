@@ -42,11 +42,14 @@ export const analyticsResolvers = {
     },
   },
   Mutation: {
+    // Both writes are usage analytics: without the caller's consent nothing is
+    // stored, and the answer is `false` — the same as a ping with no device.
     recordActivePing: (
       _p: unknown,
       args: { super_category_slug?: string | null },
       ctx: GraphQLContext
     ) => {
+      if (!ctx.consent.analytics) return false;
       return analyticsService.recordPing({
         device_id: ctx.device_id ?? null,
         user_id: ctx.user?.id ?? null,
@@ -55,6 +58,7 @@ export const analyticsResolvers = {
     },
     recordAppEvent: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
+      if (!ctx.consent.analytics) return false;
       const input = await validate(recordAppEventSchema, args.input);
       return analyticsService.recordAppEvent({
         input,

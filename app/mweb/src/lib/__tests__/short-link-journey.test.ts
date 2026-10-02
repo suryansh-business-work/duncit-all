@@ -9,9 +9,13 @@ import {
   storedClickId,
 } from '../short-link-journey';
 import { stepForPath } from '../../app/useShortLinkJourney';
+import { CONSENT_COOKIE, makeConsent, writeWebConsent } from '@duncit/utils';
 
 beforeEach(() => {
   localStorage.clear();
+  // These cases describe a visitor who allowed marketing attribution; the
+  // refusal has its own block below.
+  writeWebConsent(makeConsent({ analytics: false, marketing: true }));
   apolloMock.mutate.mockReset();
   apolloMock.mutate.mockResolvedValue({});
   // Echo dlc like the real /r/v does; a dl-only visit gets a minted id.
@@ -25,6 +29,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
+  document.cookie = `${CONSENT_COOKIE}=; path=/; max-age=0`;
 });
 
 describe('captureShortLinkClick', () => {
@@ -114,6 +119,18 @@ describe('reportJourneyStep', () => {
     apolloMock.mutate.mockRejectedValue(new Error('offline'));
     expect(() => reportJourneyStep('SURVEY_DONE')).not.toThrow();
     await vi.waitFor(() => expect(apolloMock.mutate).toHaveBeenCalled());
+  });
+});
+
+describe('without marketing consent', () => {
+  it('counts the landing but neither keeps the click nor reports a step', async () => {
+    document.cookie = `${CONSENT_COOKIE}=; path=/; max-age=0`;
+    expect(await captureShortLinkClick('?dlc=c-anon')).toBe('c-anon');
+    expect(storedClickId()).toBeNull();
+    reportJourneyStep('VIEWED_POD');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(apolloMock.mutate).not.toHaveBeenCalled();
   });
 });
 

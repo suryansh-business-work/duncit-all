@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -78,7 +78,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
           testID="crop-dialog"
           onAccessibilityEscape={cancel}
         >
-          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+          <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack alignItems="center" justifyContent="space-between" padding={16}>
               <Text role="heading" color="#ffffff" fontSize={17} fontWeight="700">
                 Adjust photo
@@ -170,7 +170,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 </Text>
               </XStack>
             </XStack>
-          </SafeAreaView>
+          </ModalSafeArea>
         </YStack>
       </ModalThemeScope>
     </Modal>

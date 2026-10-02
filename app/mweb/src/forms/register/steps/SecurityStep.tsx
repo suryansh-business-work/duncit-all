@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { Controller, type Control } from 'react-hook-form';
+import RhfCheckbox from '../../components/RhfCheckbox';
 import RhfTextField from '../../components/RhfTextField';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { PolicyAcceptanceField } from '../../../components/policy-acceptance';
@@ -90,6 +91,13 @@ export default function SecurityStep({
             failed={policiesFailed}
           />
         )}
+      />
+      {/* Opt-in, unticked: marketing starts OFF unless the person asks for it. */}
+      <RhfCheckbox
+        control={control}
+        name="marketingOptIn"
+        label={t('privacy.signup.marketingOptIn')}
+        data-testid="signup-marketing-opt-in"
       />
     </Stack>
   );

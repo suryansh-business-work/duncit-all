@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import { FaqSubmissionModel, type IFaqSubmission, type FaqSubmissionStatus } from './faqSubmission.model';
 import { sendEmail } from '@services/email/email.service';
@@ -6,12 +6,21 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
+import { email, filled, maxLen, minLen, obj, shape, str, summaryOf } from '@utils/zod-fields';
 
-const submitSchema = yup.object({
-  question: yup.string().required('Question is required').min(5).max(2000),
-  email: yup.string().nullable().notRequired().email('Invalid email').max(160),
-  super_category_slug: yup.string().nullable().notRequired().max(80),
-});
+// `loose`: keys beyond these ride through untouched, as they always have.
+const submitSchema = obj(
+  shape(
+    {
+      question: str(z.string().check(filled('Question is required'), minLen(5), maxLen(2000)), {
+        required: 'Question is required',
+      }),
+      email: str(z.string().check(email('Invalid email'), maxLen(160)).nullable().optional()),
+      super_category_slug: str(z.string().check(maxLen(80)).nullable().optional()),
+    },
+    { loose: true }
+  )
+);
 
 const toPub = (f: IFaqSubmission) => ({
   id: String(f._id),
@@ -64,14 +73,13 @@ export const faqSubmissionService = {
   },
 
   async submit(input: { question: string; email?: string | null; super_category_slug?: string | null }) {
-    let payload: { question: string; email: string | null; super_category_slug: string | null };
-    try {
-      payload = (await submitSchema.validate(input, { abortEarly: false })) as any;
-    } catch (e: any) {
-      throw new GraphQLError(e.message || 'Invalid input', {
+    const parsed = await submitSchema.safeParseAsync(input);
+    if (!parsed.success) {
+      throw new GraphQLError(summaryOf(parsed.error) || 'Invalid input', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const payload = parsed.data;
     await FaqSubmissionModel.create({
       question: payload.question,
       email: payload.email || null,

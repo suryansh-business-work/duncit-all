@@ -12,7 +12,8 @@ let mockUploadUrl: string | null = 'https://cdn/new.jpg';
 jest.mock('@/hooks/useMediaUpload', () => ({
   useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => {
     // pick() simulates the full pick → crop → confirm → upload round-trip.
-    mockPick.mockImplementation(() => {
+    // Async like the real hook: the component hands its promise to fireAndForget.
+    mockPick.mockImplementation(async () => {
       if (mockUploadUrl) onUploaded(mockUploadUrl);
     });
     return {

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { resolvePageMeta, type PageMeta } from './page-meta';
 import { buildMetaBlock, injectMetaBlock } from './render-html';
-import { acceptsGzip, serveStatic } from './static-files';
+import { acceptsGzip, serveStatic, setSecurityHeaders } from './static-files';
 import { getTranslator } from './i18n';
 
 const PORT = Number.parseInt(process.env.PORT ?? '80', 10);
@@ -91,6 +91,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 }
 
 const server = createServer((req, res) => {
+  setSecurityHeaders(res);
   handle(req, res).catch(() => {
     if (!res.headersSent) res.writeHead(500);
     res.end();

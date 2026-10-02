@@ -7,6 +7,7 @@ import { TicketAttachments } from '@/components/support/TicketAttachments';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Props {
   /** Locked (reply hidden) once the ticket is resolved/closed (B7). */
@@ -79,7 +80,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
           tabIndex={0}
           aria-label={t('mweb.ticketDetails.sendReply')}
           aria-busy={busy}
-          onPress={() => void submit()}
+          onPress={() => fireAndForget(submit())}
           width={44}
           height={44}
           alignItems="center"

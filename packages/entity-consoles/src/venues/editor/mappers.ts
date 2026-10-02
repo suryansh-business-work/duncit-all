@@ -161,7 +161,12 @@ export const valuesToStep3 = (values: VenueFormValues) => ({
   owner_phone: values.owner_phone,
   owner_dob: values.owner_dob || undefined,
   owner_address: values.owner_address,
-  bank_account: values.bank_account,
+  // `BankPayoutMethod` is an enum: an unchosen method is omitted, never sent as
+  // the select's empty "None" value, which the server rejects outright.
+  bank_account: {
+    ...values.bank_account,
+    payout_method: values.bank_account.payout_method || undefined,
+  },
 });
 
 /** The settings mutation's input — hours, rules, auto-extend, cancellation. */

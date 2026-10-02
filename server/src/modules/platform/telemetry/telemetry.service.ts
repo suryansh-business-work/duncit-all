@@ -123,16 +123,10 @@ const settingsPub = (d: ITelemetrySettings) => ({
 const mapError = (e?: { name: string; message: string; stack?: string }) =>
   e ? { name: e.name, message: e.message, stack: e.stack } : null;
 
+// Name, email and phone are not stored (telemetryUser.ts); the TelemetryUser
+// field resolvers look them up when the Tech portal reads the row.
 const mapUser = (u?: ITelemetryUser | null) =>
-  u?.id
-    ? {
-        id: u.id,
-        name: u.name ?? null,
-        email: u.email ?? null,
-        phone: u.phone ?? null,
-        roles: u.roles ?? [],
-      }
-    : null;
+  u?.id ? { id: u.id, roles: u.roles ?? [] } : null;
 
 const mapClient = (c?: ITelemetryClient | null) =>
   c
@@ -217,15 +211,13 @@ const bugPub = (d: IBug) => ({
 /* --------------------------- table configs ----------------------------- */
 
 const LOG_TABLE_CONFIG: TableEntityConfig = {
-  // Searching a person by name or address is how a reported problem is found
-  // again, so the identity fields are part of the free-text search too.
+  // A person is found by their account id: logs keep no name or address (GDPR
+  // minimisation — see telemetryUser.ts), so those are not searchable here.
   searchFields: [
     'page',
     'component',
     'source',
     'error.message',
-    'user.name',
-    'user.email',
     'user_id',
     'ip',
   ],
@@ -235,9 +227,8 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     source: 'source',
     environment: 'environment',
     page: 'page',
-    user: 'user.name',
+    user: 'user_id',
     component: 'component',
-    user_email: 'user.email',
     message: 'error.message',
     error: 'error.message',
     app_version: 'client.app_version',
@@ -255,7 +246,7 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     level: { type: 'enum' },
     source: { type: 'string' },
     environment: { type: 'enum' },
-    user: { path: 'user.name', type: 'string' },
+    user: { path: 'user_id', type: 'string' },
     message: { path: 'error.message', type: 'string' },
     error: { path: 'error.message', type: 'string' },
     kind: { path: 'data.kind', type: 'enum' },
@@ -269,7 +260,6 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
     // Tech portal's Error Logs section filters on.
     component: { type: 'string' },
     user_id: { type: 'string' },
-    user_email: { path: 'user.email', type: 'string' },
     duid: { type: 'string' },
     session_id: { type: 'string' },
     ip: { type: 'string' },
@@ -280,7 +270,7 @@ const LOG_TABLE_CONFIG: TableEntityConfig = {
 };
 
 const BUG_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['title', 'message', 'page', 'source', 'last_user.name', 'last_user.email'],
+  searchFields: ['title', 'message', 'page', 'source', 'last_user.id'],
   sortFields: {
     last_seen_at: 'last_seen_at',
     occurrence_count: 'occurrence_count',
@@ -291,7 +281,7 @@ const BUG_TABLE_CONFIG: TableEntityConfig = {
     source: 'source',
     page: 'page',
     platform: 'platform',
-    last_user: 'last_user.name',
+    last_user: 'last_user.id',
   },
   filterFields: {
     status: { type: 'enum' },
@@ -305,7 +295,7 @@ const BUG_TABLE_CONFIG: TableEntityConfig = {
     title: { type: 'string' },
     occurrence_count: { type: 'number' },
     affected_user_count: { type: 'number' },
-    last_user: { path: 'last_user.name', type: 'string' },
+    last_user: { path: 'last_user.id', type: 'string' },
     first_seen_at: { type: 'date' },
     last_seen_at: { type: 'date' },
   },
@@ -705,9 +695,6 @@ function logImportDoc(entry: TelemetryLogImportEntry): Record<string, unknown> {
     user: userId
       ? {
           id: userId,
-          name: trimmed(entry.user?.name),
-          email: trimmed(entry.user?.email),
-          phone: trimmed(entry.user?.phone),
           roles: entry.user?.roles ?? undefined,
         }
       : undefined,
@@ -1106,9 +1093,6 @@ export const telemetryService = {
             last_user: entry.last_user?.id
               ? {
                   id: entry.last_user.id,
-                  name: entry.last_user.name ?? undefined,
-                  email: entry.last_user.email ?? undefined,
-                  phone: entry.last_user.phone ?? undefined,
                   roles: entry.last_user.roles ?? undefined,
                 }
               : undefined,

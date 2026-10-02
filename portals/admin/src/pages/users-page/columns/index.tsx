@@ -1,0 +1,1 @@
+export { getUsersColumns } from './columns';

@@ -89,7 +89,21 @@ describe('SignupForm — one step at a time', () => {
       email: 'riya@duncit.com',
       phoneNumber: '9845012345',
       password: 'StrongPass123',
+      // Unticked by default: marketing is opt-in.
+      marketingOptIn: false,
     });
+  });
+
+  it('submits the marketing opt-in when it is ticked', async () => {
+    const onSubmit = jest.fn();
+    renderWithProviders(<Harness onSubmit={onSubmit} />);
+    await toSecurity();
+    fillSecurity();
+    fireEvent.press(screen.getByTestId('signup-marketing-opt-in'));
+    fireEvent.press(next());
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ marketingOptIn: true });
   });
 });
 

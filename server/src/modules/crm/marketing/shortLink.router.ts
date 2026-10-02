@@ -9,6 +9,7 @@ import { isLinkPreviewCrawler, renderCardHtml } from './shortLink.crawler';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import type { ConsentSignal } from './shortLinkClick.model';
+import { consentFromCookie } from '@utils/consent';
 
 /**
  * The privacy signal this visitor's browser sent, if any.
@@ -23,11 +24,20 @@ import type { ConsentSignal } from './shortLinkClick.model';
  * written. An admin can switch that off, which is why the header is read here
  * and judged there.
  */
-function consentSignalFrom(req: Request): ConsentSignal | null {
+function consentSignalFrom(req: Request, consented: boolean): ConsentSignal | null {
   if (req.get('sec-gpc') === '1') return 'GPC';
   if (req.get('dnt') === '1') return 'DNT';
-  return null;
+  return consented ? null : 'NO_CONSENT';
 }
+
+/**
+ * Whether this visitor allowed marketing attribution. The redirect is a
+ * navigation, so it carries the shared `.duncit.com` consent cookie; the
+ * landing report is a credential-less fetch, so it carries `?c=1` instead
+ * (SHORT_LINK_CONSENT_PARAM in @duncit/utils).
+ */
+const redirectConsented = (req: Request) => consentFromCookie(req.get('cookie')).marketing;
+const landingConsented = (req: Request) => req.query.c === '1';
 
 /** The card document, or null when this destination has nothing to describe. */
 async function crawlerCardHtml(code: string, destination: string): Promise<string | null> {
@@ -109,7 +119,7 @@ export function buildShortLinkRouter() {
           userAgent: req.get('user-agent'),
           forwardedFor: req.get('x-forwarded-for'),
           remoteAddress: req.socket.remoteAddress,
-          consentSignal: consentSignalFrom(req),
+          consentSignal: consentSignalFrom(req, landingConsented(req)),
         });
         res.json({ click_id: clickId });
         return;
@@ -169,7 +179,7 @@ export function buildShortLinkRouter() {
         userAgent: req.get('user-agent'),
         forwardedFor: req.get('x-forwarded-for'),
         remoteAddress: req.socket.remoteAddress,
-        consentSignal: consentSignalFrom(req),
+        consentSignal: consentSignalFrom(req, redirectConsented(req)),
       })
       .catch((error) => logs.server.error('shortLink', 'recordClick', { error }));
   });

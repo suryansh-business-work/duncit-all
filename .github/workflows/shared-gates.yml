@@ -269,3 +269,32 @@ jobs:
       - name: Duplication report on the run summary
         if: always()
         run: cat "$RUNNER_TEMP/duplication.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+  # ---------------------------------------------------------------------------
+  # Code lint (eslint.code.config.mjs) for every workspace but the native app, which
+  # lints in apps-ci.yml. Before this, no workspace had a lint script, so every
+  # CI "Lint" step was a silent no-op. Another RATCHET: eslint-code-suppressions.json
+  # holds the violations that existed when it was switched on, so only new code
+  # must pass. ~25 seconds over the whole tree.
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Code lint (ESLint ratchet)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint (new violations only)
+        run: pnpm lint

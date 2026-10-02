@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import {
   MailAutomationAccountModel,
   MailAutomationThreadModel,
@@ -301,18 +302,11 @@ export async function pollAllMailboxes(): Promise<void> {
 /** Start the poll loop. Returns a stop function. No-ops under NODE_ENV=test,
  * mirroring the telemetry and pod-draft schedulers. */
 export function startMailAutomationScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const sweep = () => {
-    pollAllMailboxes().catch((error) => {
-      logs.server.error('mail-automation', 'sweep', { error, msg: 'sweep failed' });
-    });
-  };
-  const first = setTimeout(sweep, FIRST_POLL_DELAY_MS);
-  const interval = setInterval(sweep, POLL_INTERVAL_MS);
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'mail-automation',
+    operation: 'sweep',
+    firstDelayMs: FIRST_POLL_DELAY_MS,
+    intervalMs: POLL_INTERVAL_MS,
+    run: pollAllMailboxes,
+  });
 }

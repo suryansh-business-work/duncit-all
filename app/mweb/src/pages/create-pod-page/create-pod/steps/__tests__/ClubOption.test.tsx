@@ -41,4 +41,23 @@ describe('ClubOption', () => {
     expect(option).toHaveTextContent(/^Who Even Are We\?$/);
     expect(screen.queryByTestId('create-pod-club-option-club-wea-place')).not.toBeInTheDocument();
   });
+
+  it('names the open slots for a physical pod, aloud too', () => {
+    render(
+      <ul>
+        <ClubOption club={{ ...whoEvenAreWe, available_slots_count: 3 }} place="" showSlots role="option" aria-selected={false} />
+      </ul>,
+    );
+    expect(screen.getByTestId('create-pod-club-option-club-wea-slots')).toHaveTextContent('3 open slots');
+    expect(screen.getByTestId('create-pod-club-option-club-wea')).toHaveAccessibleName('Who Even Are We?, 3 open slots');
+  });
+
+  it('warns when the club has no open slot', () => {
+    render(
+      <ul>
+        <ClubOption club={whoEvenAreWe} place="Gomti Nagar, Lucknow" showSlots role="option" aria-selected={false} />
+      </ul>,
+    );
+    expect(screen.getByTestId('create-pod-club-option-club-wea-slots')).toHaveTextContent('No open slots');
+  });
 });

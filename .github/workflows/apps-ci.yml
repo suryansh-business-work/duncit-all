@@ -52,10 +52,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-      # - name: Test
-      #   working-directory: app/mweb
-      #   run: pnpm exec vitest run
+      # No test step here: sonar.yml's "Coverage — mweb" runs this suite on the
+      # same push and fails on any test file outside
+      # scripts/test-failure-baseline.json. Running it twice costs ~10 minutes.
 
       - name: Typecheck
         working-directory: app/mweb
@@ -99,11 +98,9 @@ jobs:
         working-directory: app/mobile-app
         run: npm run codegen
 
-      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-      # The 100% coverage gate is part of the suite, so it pauses with it.
-      # - name: Test (jest, 100% coverage gate)
-      #   working-directory: app/mobile-app
-      #   run: npm run test:coverage
+      # No test step here: sonar.yml's "Coverage — mobile app" runs the jest
+      # suite on the same push and fails on any test file outside
+      # scripts/test-failure-baseline.json.
 
       - name: Typecheck
         working-directory: app/mobile-app

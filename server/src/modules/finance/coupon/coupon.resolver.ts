@@ -1,6 +1,7 @@
 import { couponService } from './coupon.service';
 import { createCouponSchema, updateCouponSchema, couponPreviewSchema } from './coupon.validator';
-import { PodModel } from '@modules/pods/pod/pod.model';
+import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
+import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
@@ -19,18 +20,7 @@ const ADMIN_RW = [
 
 export const couponResolvers = {
   Coupon: {
-    pod: async (parent: any) => {
-      if (!parent.pod_id) return null;
-      const p = await PodModel.findById(parent.pod_id);
-      if (!p) return null;
-      return {
-        id: String(p._id),
-        pod_id: (p as any).pod_id,
-        pod_title: (p as any).pod_title,
-        pod_date_time: (p as any).pod_date_time?.toISOString?.() ?? null,
-        pod_amount: (p as any).pod_amount,
-      };
-    },
+    pod: (parent: { pod_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
   },
   Query: {
     coupons: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -87,7 +87,7 @@ export function HomeFilterSheet({
             borderTopRightRadius={28}
             maxHeight="82%"
           >
-            <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
+            <ModalSafeArea edges={['bottom']} style={SHEET_SAFE_AREA}>
               <HomeFilterSheetHeader onClose={onClose} />
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
@@ -170,7 +170,7 @@ export function HomeFilterSheet({
                   </Text>
                 </XStack>
               </XStack>
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

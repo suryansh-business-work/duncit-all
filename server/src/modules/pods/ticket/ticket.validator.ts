@@ -1,5 +1,8 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
+import { arr, filled, matches, maxLen, minLen, obj, shape, str, trim } from '@utils/zod-fields';
+
+const PHONE_DIGITS = 'Phone must contain only digits (6-15 digits)';
 
 /**
  * Who else is coming in on this ticket.
@@ -13,30 +16,22 @@ import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 /** Who they are, and what to dial before the number. Identical on both doors —
  * only whether a NUMBER is owed differs, which is the field below. */
 const companionIdentityFields = {
-  name: yup
-    .string()
-    .trim()
-    .min(2, 'Enter the full name')
-    .max(120, 'Name is too long')
-    .required('Name is required'),
-  phone_extension: yup
-    .string()
-    .trim()
-    .matches(PHONE_EXTENSION_REGEX, {
-      message: 'Phone code is invalid',
-      excludeEmptyString: true,
-    })
-    .nullable()
-    .default(null),
+  name: str(z.string().check(minLen(2, 'Enter the full name'), maxLen(120, 'Name is too long'), filled('Name is required')), {
+    required: 'Name is required',
+    transforms: [trim],
+  }),
+  phone_extension: str(
+    z.string().check(matches(PHONE_EXTENSION_REGEX, { message: 'Phone code is invalid', excludeEmptyString: true })).nullable(),
+    { transforms: [trim], default: null }
+  ),
 };
 
-export const podCompanionSchema = yup.object({
+const podCompanionShape = shape({
   ...companionIdentityFields,
-  phone_number: yup
-    .string()
-    .trim()
-    .matches(PHONE_NUMBER_REGEX, 'Phone must contain only digits (6-15 digits)')
-    .required('Phone number is required'),
+  phone_number: str(z.string().check(matches(PHONE_NUMBER_REGEX, PHONE_DIGITS), filled('Phone number is required')), {
+    required: 'Phone number is required',
+    transforms: [trim],
+  }),
   /**
    * A verified POD_COMPANION challenge, when the host proved this number.
    *
@@ -45,12 +40,14 @@ export const podCompanionSchema = yup.object({
    * it IS supplied the service spends it, which is what stops one proof being
    * replayed across the rest of the group.
    */
-  otp_challenge_id: yup.string().trim().nullable().default(null),
+  otp_challenge_id: str(z.string().nullable(), { transforms: [trim], default: null }),
 });
 
-export const podCompanionsSchema = yup.object({
-  companions: yup.array().of(podCompanionSchema.required()).default([]),
-});
+export const podCompanionSchema = obj(podCompanionShape);
+
+export const podCompanionsSchema = obj(
+  shape({ companions: arr(z.array(obj(podCompanionShape, { required: true })), { default: [] }) })
+);
 
 /**
  * The same people, as a Club Admin is given them.
@@ -67,22 +64,20 @@ export const podCompanionsSchema = yup.object({
  * and `validate()` strips anything not declared here, so it cannot be smuggled
  * in through this one.
  */
-export const podForcedCompanionSchema = yup.object({
+const podForcedCompanionShape = shape({
   ...companionIdentityFields,
-  phone_number: yup
-    .string()
-    .trim()
-    .matches(PHONE_NUMBER_REGEX, {
-      message: 'Phone must contain only digits (6-15 digits)',
-      excludeEmptyString: true,
-    })
-    .default(''),
+  phone_number: str(
+    z.string().check(matches(PHONE_NUMBER_REGEX, { message: PHONE_DIGITS, excludeEmptyString: true })),
+    { transforms: [trim], default: '' }
+  ),
 });
 
-export const podForcedCompanionsSchema = yup.object({
-  companions: yup.array().of(podForcedCompanionSchema.required()).default([]),
-});
+export const podForcedCompanionSchema = obj(podForcedCompanionShape);
 
-export type PodForcedCompanionDTO = yup.InferType<typeof podForcedCompanionSchema>;
+export const podForcedCompanionsSchema = obj(
+  shape({ companions: arr(z.array(obj(podForcedCompanionShape, { required: true })), { default: [] }) })
+);
 
-export type PodCompanionDTO = yup.InferType<typeof podCompanionSchema>;
+export type PodForcedCompanionDTO = z.infer<typeof podForcedCompanionSchema>;
+
+export type PodCompanionDTO = z.infer<typeof podCompanionSchema>;

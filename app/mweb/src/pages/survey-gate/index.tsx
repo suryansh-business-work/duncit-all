@@ -12,6 +12,7 @@ import {
   type OnboardingIntro,
   type SurveyKind,
 } from './queries';
+import { gateHeading, introFieldFor, taxonomyOf, type Step } from './gateSteps';
 import CategoryStep, { type CategoryLabels, type CategoryScope } from './CategoryStep';
 import CategorySummaryBanner from './CategorySummaryBanner';
 import IntroStep from './IntroStep';
@@ -24,24 +25,6 @@ import SocialHandlesSection from './SocialHandlesSection';
 import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
-
-type Step = 'loading' | 'intro' | 'category' | 'survey' | 'meeting' | 'thanks';
-
-/** Which OnboardingIntro field a kind's intro copy is authored under. */
-const introFieldFor = (kind: SurveyKind, intro?: OnboardingIntro | null): string => {
-  if (!intro) return '';
-  if (kind === 'HOST') return intro.host_intro_html;
-  if (kind === 'VENUE') return intro.venue_intro_html;
-  if (kind === 'ECOMM') return intro.ecomm_intro_html;
-  return intro.club_admin_intro_html;
-};
-
-const KIND_HEADINGS: Record<SurveyKind, string> = {
-  VENUE: 'Register your venue',
-  HOST: 'Become a host',
-  ECOMM: 'List your product',
-  CLUB_ADMIN: 'Be a Club Admin',
-};
 
 /**
  * Gate before "Register a Venue" / "Become a Host" / "List your product": pick
@@ -153,11 +136,7 @@ export default function SurveyGatePage() {
   const onMeeting = async (input: MeetingInput) => {
     setMeetingError(null);
     try {
-      const taxonomy = {
-        super_category_id: scope?.super_category_id || null,
-        category_id: scope?.category_id || null,
-        sub_category_id: scope?.sub_category_id || null,
-      };
+      const taxonomy = taxonomyOf(scope);
       await requestMeeting({ variables: { kind, input: { ...input, ...taxonomy } } });
       setBookedSlot(input.requested_at);
       setStep('thanks');
@@ -170,13 +149,7 @@ export default function SurveyGatePage() {
     return <Box data-testid="survey-gate-loading" sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
-  // The phase names itself; the old subtitle under it restated the phase.
-  const kindHeading = KIND_HEADINGS[kind];
-  let heading: string;
-  if (step === 'intro' || step === 'category') heading = kindHeading;
-  else if (step === 'survey') heading = survey?.title || kindHeading;
-  else if (step === 'thanks') heading = t('mweb.surveyGate.youReBooked');
-  else heading = t('mweb.surveyGate.bookYourOnboardingMeeting');
+  const heading = gateHeading(step, kind, survey, t);
 
   const slotLabel = bookedSlot
     ? formatDateTime(bookedSlot)

@@ -21,6 +21,8 @@ exports:
   - 'site-meta'
   - 'GoogleAnalytics.astro'
   - 'google-analytics'
+  - 'ConsentBanner.astro'
+  - 'consent-banner'
 ---
 
 ## Why this exists
@@ -223,6 +225,46 @@ loadGoogleAnalytics(`${SERVER_BASE}/graphql`, 'STATUS');
 | --- | --- | --- |
 | `loadGoogleAnalytics` | `(graphqlUrl: string, site: TrackedWebsite) => void` | Fire-and-forget: a page never waits on it, and a failure is logged, not shown. |
 | `TrackedWebsite` | `'MAIN' \| 'PARTNERS' \| 'ADS' \| 'EARNWITH' \| 'STATUS' \| 'ECOMM'` | Mirrors the server's `TrackedWebsite` enum. |
+
+**GA waits for consent.** Nothing of gtag.js is requested until the visitor has allowed
+`analytics` on the consent banner (`whenWebConsentAllows` from `@duncit/utils`). A visitor
+who allows it later gets the tag at that moment, without a reload; one who never answers
+never loads it.
+
+### `ConsentBanner.astro` and `consent-banner`
+
+The tracking-consent banner (GDPR / ePrivacy), one implementation for all six websites.
+The Astro sites render the component in `<head>` beside `GoogleAnalytics`; the two React
+sites call `mountConsentBanner` from their entry module.
+
+```astro
+---
+import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
+---
+
+<ConsentBanner policyUrl="/policies" t={t} />
+```
+
+```ts
+import { consentBannerCopy, mountConsentBanner } from '@duncit/brand/consent-banner';
+import { siteT } from '@duncit/brand/site-i18n';
+
+mountConsentBanner(consentBannerCopy(siteT), { policyUrl: `${MAIN_SITE_URL}/policies` });
+```
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `ConsentBanner.astro` | `{ policyUrl: string; t?: SiteTranslate }` | Copy resolved at build time from `privacy.*`. |
+| `mountConsentBanner` | `(copy, { policyUrl }, doc?) => void` | Shows itself while the browser has no answer, and again on any `[data-consent-open]` click. |
+| `consentBannerCopy` | `(t) => ConsentBannerCopy` | Every line through the site's translator. |
+| `CONSENT_BANNER_KEYS` | `Record<keyof ConsentBannerCopy, string>` | The `privacy.*` key behind each line. |
+
+What makes the consent valid, and must not be designed away: the optional boxes start
+unticked, "Reject all" is a first-level button as prominent as "Accept all", and
+`PolicyStrip` carries a "Privacy choices" button (`data-consent-open`) on every page, so
+withdrawing is as easy as agreeing. The answer is the shared `.duncit.com` cookie from
+`@duncit/utils`, so it covers mWeb and every other subdomain too. Withdrawing analytics also
+deletes GA's `_ga*` cookies.
 
 ## The wordmark is plain CSS on purpose
 

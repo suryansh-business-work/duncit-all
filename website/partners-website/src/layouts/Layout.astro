@@ -9,6 +9,7 @@ import { getSiteTranslator } from '@duncit/brand/site-i18n';
 import { urlConfigs } from '../config/url-configs';
 import SiteMeta from '@duncit/brand/SiteMeta.astro';
 import GoogleAnalytics from '@duncit/brand/GoogleAnalytics.astro';
+import ConsentBanner from '@duncit/brand/ConsentBanner.astro';
 import '../styles/global.css';
 
 const { t } = await getSiteTranslator(urlConfigs.graphqlUrl);
@@ -26,6 +27,7 @@ const favicon =
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <GoogleAnalytics site="PARTNERS" graphqlUrl={urlConfigs.graphqlUrl} />
+    <ConsentBanner policyUrl={`${urlConfigs.mainSiteUrl}/policies`} t={t} />
     <SiteMeta
       title={title}
       description={description}
@@ -44,19 +46,12 @@ const favicon =
     // Short-link attribution: a duncit.com marketing link may land on this
     // site carrying dl/dlc markers. The shared helper verifies them against
     // the API and records the visit; ordinary traffic costs one no-op call.
-    import {
-      captureShortLinkAttribution,
-      installAttributionLinkDecorator,
-    } from '@duncit/utils';
+    // Only with marketing consent is the click remembered (consent banner).
+    import { startWebShortLinkAttribution } from '@duncit/utils';
     import { urlConfigs } from '../config/url-configs';
-    captureShortLinkAttribution({
-      search: window.location.search,
-      referrer: document.referrer,
-      serverUrl: urlConfigs.graphqlUrl.replace('/graphql', ''),
-    });
-    // Keep the tags on every hyperlink out to another duncit surface —
-    // storage does not cross origins, the URL does.
-    installAttributionLinkDecorator();
+    startWebShortLinkAttribution(urlConfigs.graphqlUrl.replace('/graphql', '')).catch((error) =>
+      console.warn('Attribution did not start', error)
+    );
   </script>
     <slot />
       <script>

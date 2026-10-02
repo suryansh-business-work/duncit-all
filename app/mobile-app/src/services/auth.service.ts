@@ -43,6 +43,8 @@ export interface SignupValues {
   /** Every policy ticked in the acceptance sheet. Re-verified by the server
    * before the account exists, so a refusal leaves nothing behind. */
   acceptedPolicyIds: string[];
+  /** The signup opt-in box: marketing consent, off unless ticked. */
+  marketingOptIn: boolean;
 }
 
 export interface LoginValues {
@@ -92,6 +94,7 @@ export async function register(values: SignupValues, whatsappToken: string): Pro
       ...(referralCode ? { referral_code: referralCode } : {}),
       accepted_policy_ids: values.acceptedPolicyIds,
       accepted_policy_surface: PolicyAcceptanceSurface.App,
+      marketing_opt_in: values.marketingOptIn,
     },
   });
   await setAuthToken(data.register.token);

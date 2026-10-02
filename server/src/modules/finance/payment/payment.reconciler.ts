@@ -21,6 +21,7 @@ import type { HydratedDocument } from 'mongoose';
 import { PaymentModel, type IPayment } from './payment.model';
 import { findCapturedPaymentForOrder } from './razorpay.gateway';
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const MINUTE_MS = 60_000;
 const SWEEP_INTERVAL_MS = 5 * MINUTE_MS;
@@ -43,8 +44,6 @@ const SIDE_EFFECT_GRACE_MS = 2 * MINUTE_MS;
  */
 const MAX_SIDE_EFFECT_ATTEMPTS = 6;
 const BATCH_LIMIT = 50;
-
-let sweeping = false;
 
 /** The finalizer pulls in the whole booking stack (seats, memberships, tickets,
  * coins), which reaches back into this module's neighbours — importing it
@@ -260,24 +259,15 @@ async function sweep(): Promise<void> {
 /** Start the 5-minute reconciliation loop (first sweep ~1 min after boot).
  * No-ops under NODE_ENV=test. */
 export function startPaymentReconciler(): void {
-  if (process.env.NODE_ENV === 'test') return;
-  const tick = () => {
-    // Strictly one pass at a time: a slow gateway can make a sweep outrun the
-    // interval, and a second pass over the same batch only doubles the
-    // Razorpay calls — the finalizer would reject the duplicate work anyway.
-    if (sweeping) return;
-    sweeping = true;
-    sweep()
-      .catch((err) => {
-        logs.server.error('payment-reconciler', 'sweep', { error: err, msg: 'sweep failed' });
-      })
-      .finally(() => {
-        sweeping = false;
-      });
-  };
-  const first = setTimeout(tick, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(tick, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for payment reconciliation.
-  first.unref?.();
-  interval.unref?.();
+  // Strictly one pass at a time, on one process: a slow gateway can make a
+  // sweep outrun the interval, and a second pass over the same batch only
+  // doubles the Razorpay calls — the finalizer would reject the duplicate work
+  // anyway. startClusterJob guarantees both.
+  startClusterJob({
+    component: 'payment-reconciler',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: sweep,
+  });
 }

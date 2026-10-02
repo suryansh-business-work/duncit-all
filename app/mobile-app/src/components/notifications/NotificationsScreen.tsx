@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import {
@@ -82,7 +82,7 @@ export function NotificationsScreen({
       <ModalThemeScope>
         <YStack flex={1} testID="notifications-screen" onAccessibilityEscape={onClose}>
           <AppBackground />
-          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+          <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
               <XStack
                 testID="notifications-close"
@@ -173,7 +173,7 @@ export function NotificationsScreen({
                 </SurfaceCard>
               }
             />
-          </SafeAreaView>
+          </ModalSafeArea>
         </YStack>
         <ConfirmDialog
           testID="notif-toggle-confirm"

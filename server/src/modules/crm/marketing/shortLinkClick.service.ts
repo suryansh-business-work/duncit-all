@@ -145,6 +145,9 @@ function minimise(input: ClickInput, signal: ConsentSignal) {
 /** The facts to store for one click, with the privacy rules already applied. */
 function factsFor(input: ClickInput, rules: ShortLinkPrivacyRules) {
   const signal = input.consentSignal ?? null;
+  // A visitor who never consented is minimised whatever the admin switch says:
+  // the switch governs only the browser-level GPC/DNT headers.
+  if (signal === 'NO_CONSENT') return minimise(input, signal);
   if (signal && rules.honour_consent_signals) return minimise(input, signal);
   return observe(input, rules);
 }

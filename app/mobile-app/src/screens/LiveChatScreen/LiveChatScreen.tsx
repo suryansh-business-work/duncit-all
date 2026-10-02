@@ -11,11 +11,10 @@ import { SupportChatComposer } from '@/components/support-chat/SupportChatCompos
 import { JumpToLatestButton } from '@/components/support-chat/JumpToLatestButton';
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { useAppSettings } from '@/hooks/useAppSettings';
-import { TranscriptFormat } from '@/generated/graphql/graphql';
 import { canReopen } from '@/utils/support-chat';
 import { formatDateTime } from '@/utils/date-format';
 import { ChatBody } from './ChatBody';
-import { ChatHeaderActions } from './ChatHeaderActions';
+import { LiveChatHeader } from './LiveChatHeader';
 import { ClosedNote } from './ClosedNote';
 import { ChatModals } from './ChatModals';
 import { useLiveChatActions } from './useLiveChatActions';
@@ -96,30 +95,8 @@ export function LiveChatScreen() {
     setAttachments([]);
   };
 
-  const showToggle = closed ? reopenAllowed : true;
-  const onToggle = () => {
-    if (closed) {
-      a.reopen.setError('');
-      a.reopen.setOpen(true);
-    } else {
-      a.confirm.setOpen(true);
-    }
-  };
-  const openEmail = () => {
-    a.email.setDone(false);
-    a.email.setError('');
-    a.email.setOpen(true);
-  };
-
   const headerActions = (
-    <ChatHeaderActions
-      showToggle={!!showToggle}
-      closed={!!closed}
-      onToggle={onToggle}
-      onDownloadTxt={() => void a.download(TranscriptFormat.Txt)}
-      onDownloadDocx={() => void a.download(TranscriptFormat.Docx)}
-      onEmail={openEmail}
-    />
+    <LiveChatHeader actions={a} closed={!!closed} reopenAllowed={!!reopenAllowed} />
   );
 
   return (
@@ -186,8 +163,8 @@ export function LiveChatScreen() {
           attachments={attachments}
           onRemoveAttachment={(url) => setAttachments((prev) => prev.filter((u) => u !== url))}
           onSendText={onSendText}
-          onAttach={() => void attach()}
-          onAttachDocument={() => void attachDocument()}
+          onAttach={() => fireAndForget(attach())}
+          onAttachDocument={() => fireAndForget(attachDocument())}
           onTyping={emitTyping}
         />
       </YStack>

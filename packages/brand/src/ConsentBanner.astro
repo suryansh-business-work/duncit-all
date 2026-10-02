@@ -1,0 +1,33 @@
+---
+/**
+ * The tracking-consent banner for the Astro websites — see consent-banner.ts.
+ *
+ * The copy is resolved at BUILD time with the site's translator, like every
+ * other piece of website chrome, and handed to the bundled script through a
+ * data attribute because a bundled script cannot read component props.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+import { consentBannerCopy } from './consent-banner';
+
+interface Props {
+  /** Where the privacy policy lives on this site (or the main site). */
+  policyUrl: string;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
+}
+
+const { policyUrl, t = siteT } = Astro.props;
+const copy = JSON.stringify(consentBannerCopy((key) => t(key)));
+---
+
+<meta name="duncit-consent" content={policyUrl} data-copy={copy} />
+
+<script>
+  import { mountConsentBanner, type ConsentBannerCopy } from './consent-banner';
+
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="duncit-consent"]');
+  if (meta?.dataset.copy) {
+    const copy = JSON.parse(meta.dataset.copy) as ConsentBannerCopy;
+    mountConsentBanner(copy, { policyUrl: meta.content });
+  }
+</script>

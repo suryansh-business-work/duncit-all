@@ -11,6 +11,7 @@ import RowGroup from '../host-manage-page/RowGroup';
 import DraftRow from './DraftRow';
 import ExpiringDraftsPanel from './ExpiringDraftsPanel';
 import { DELETE_POD_DRAFT, MY_POD_DRAFTS, type DraftRowData } from './drafts';
+import { fireAndForget, logs } from '@duncit/logs';
 
 /**
  * Resumable Create Pod drafts for the signed-in host. Drafts the retention
@@ -74,7 +75,7 @@ export default function HostDraftsCard() {
         confirmLabel={t('mweb.common.delete')}
         destructive
         busy={deleting}
-        onConfirm={() => void confirmDelete()}
+        onConfirm={() => fireAndForget(confirmDelete(), logs.mWeb, 'HostDraftsCard', 'confirmDelete')}
         onClose={() => setTarget(null)}
       />
     </Stack>

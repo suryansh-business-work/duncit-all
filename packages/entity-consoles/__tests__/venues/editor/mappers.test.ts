@@ -212,6 +212,14 @@ describe('valuesToStep3', () => {
     expect(step3.owner_dob).toBe('1989-04-17');
     expect(step3.bank_account.payout_method).toBe('IMPS');
   });
+
+  it('omits an unchosen payout method — "" is not a BankPayoutMethod', () => {
+    const values = venueToValues(venueRecord);
+    values.bank_account.payout_method = '';
+    const step3 = valuesToStep3(values);
+    expect(step3.bank_account.payout_method).toBeUndefined();
+    expect(step3.bank_account.ifsc_code).toBe('HDFC0001234');
+  });
 });
 
 describe('valuesToSettingsInput', () => {

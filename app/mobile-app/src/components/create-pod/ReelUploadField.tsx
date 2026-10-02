@@ -13,6 +13,8 @@ import { MB, useUploadLimits } from '@/hooks/useUploadLimits';
 import { ReelPanelBody } from './ReelPanelBody';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 /** Reels stream directly to ImageKit (multipart) — the cap is the admin's
  * `max_video_mb` for the app, checked client-side from the picked asset
  * before any bytes leave the device. */
@@ -150,7 +152,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
             uploading={uploading}
             busyLabel={busyLabel}
             error={error}
-            onPick={() => void pickAndUpload()}
+            onPick={() => fireAndForget(pickAndUpload())}
             onRemove={removeReel}
           />
         </YStack>

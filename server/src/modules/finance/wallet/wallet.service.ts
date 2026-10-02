@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import {
   WalletModel,
   WalletTransactionModel,
@@ -22,6 +22,7 @@ import {
 } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { withTransaction } from '@utils/mongoTransaction';
 import { allocateWithdrawal, consumedByRelease, type PodCredit } from './withdrawal-allocation';
 
 const withdrawalId = () => `wd_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
@@ -288,31 +289,88 @@ async function ensureWallet(userId: string, currency: string) {
   );
 }
 
+/**
+ * Atomic, overdraw-safe debit. The floor rides in the filter as well as in the
+ * eligibility guard so two concurrent requests cannot both pass the read and
+ * leave the balance under the minimum.
+ */
+async function debitWallet(userId: string, amount: number, minimum: number, session: ClientSession | undefined) {
+  const wallet = await WalletModel.findOneAndUpdate(
+    { user_id: new Types.ObjectId(userId), balance: { $gte: Math.max(amount, minimum) } },
+    { $inc: { balance: -amount } },
+    { new: true, session }
+  );
+  if (!wallet) {
+    throw new GraphQLError('Insufficient wallet balance', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return wallet;
+}
+
+/** Hands a rejected withdrawal's amount back to the wallet, with its ledger row. */
+async function refundWithdrawal(doc: IWalletWithdrawal, reason: string, session: ClientSession | undefined) {
+  const wallet = await WalletModel.findOneAndUpdate(
+    { user_id: doc.user_id },
+    { $inc: { balance: doc.amount } },
+    { new: true, upsert: true, setDefaultsOnInsert: true, session }
+  );
+  await WalletTransactionModel.create(
+    [
+      {
+        user_id: doc.user_id,
+        type: 'CREDIT',
+        amount: doc.amount,
+        balance_after: round2(wallet!.balance),
+        source: 'WITHDRAWAL_REVERSAL',
+        // Clamped to the transaction's own 300-char `reason` limit: a 500-char
+        // reject reason made this insert fail validation AFTER the wallet had
+        // already been credited, leaving the row PENDING with the money back —
+        // and every retry credited it again.
+        reason: clean(`Withdrawal rejected: ${reason}`, 300),
+        withdrawal_id: doc.withdrawal_id,
+      },
+    ],
+    { session }
+  );
+}
+
 export const walletService = {
   /** Credit a host's wallet for an approved pod-completion payout. Idempotent
    * per release_id so a re-review never double-credits. */
   async creditPodPayout(userId: string, amount: number, opts: { pod_id?: any; release_id?: string; reason?: string }) {
     const value = round2(amount);
     if (!Types.ObjectId.isValid(userId) || value <= 0) return;
-    if (opts.release_id) {
-      const exists = await WalletTransactionModel.exists({ release_id: opts.release_id, type: 'CREDIT' });
-      if (exists) return;
-    }
     const fs = await getFinanceSettings();
-    const wallet = await WalletModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId) },
-      { $inc: { balance: value }, $setOnInsert: { currency_symbol: fs.currency_symbol } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    await WalletTransactionModel.create({
-      user_id: new Types.ObjectId(userId),
-      type: 'CREDIT',
-      amount: value,
-      balance_after: round2(wallet!.balance),
-      source: 'POD_COMPLETION',
-      reason: opts.reason ?? 'Pod completion payout',
-      pod_id: opts.pod_id ?? null,
-      release_id: opts.release_id ?? null,
+    // Balance and ledger row commit together: a crash between them would leave
+    // money in the wallet with no CREDIT behind it, and the release_id check
+    // would then let a retry credit it a second time. The check sits inside so
+    // two concurrent credits conflict on the wallet and the retry sees the row.
+    await withTransaction(async (session) => {
+      if (opts.release_id) {
+        const exists = await WalletTransactionModel.exists({ release_id: opts.release_id, type: 'CREDIT' }).session(
+          session ?? null
+        );
+        if (exists) return;
+      }
+      const wallet = await WalletModel.findOneAndUpdate(
+        { user_id: new Types.ObjectId(userId) },
+        { $inc: { balance: value }, $setOnInsert: { currency_symbol: fs.currency_symbol } },
+        { upsert: true, new: true, setDefaultsOnInsert: true, session }
+      );
+      await WalletTransactionModel.create(
+        [
+          {
+            user_id: new Types.ObjectId(userId),
+            type: 'CREDIT',
+            amount: value,
+            balance_after: round2(wallet!.balance),
+            source: 'POD_COMPLETION',
+            reason: opts.reason ?? 'Pod completion payout',
+            pod_id: opts.pod_id ?? null,
+            release_id: opts.release_id ?? null,
+          },
+        ],
+        { session }
+      );
     });
   },
 
@@ -385,45 +443,51 @@ export const walletService = {
       role,
       currency: fs.currency_symbol,
     });
-    // Atomic, overdraw-safe debit. The floor rides in the filter as well as in
-    // the guard above so two concurrent requests cannot both pass the read and
-    // leave the balance under the minimum.
-    const wallet = await WalletModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId), balance: { $gte: Math.max(amount, minimum) } },
-      { $inc: { balance: -amount } },
-      { new: true }
-    );
-    if (!wallet) {
-      throw new GraphQLError('Insufficient wallet balance', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
     const name = [user?.profile?.first_name, user?.profile?.last_name].filter(Boolean).join(' ').trim();
-    // Which pods this money came from, decided here and frozen on the record.
-    // Read AFTER the debit succeeded so a request that lost the balance race
-    // never consumes credits, and never re-derived afterwards.
-    const allocations = await allocationsFor(userId, amount);
-    const doc = await WalletWithdrawalModel.create({
-      withdrawal_id: withdrawalId(),
-      user_id: new Types.ObjectId(userId),
-      allocations,
-      beneficiary_name: name || user?.auth?.email || 'Host',
-      beneficiary_email: user?.auth?.email ?? '',
-      amount,
-      withdrawer_role: role,
-      payout_method: method,
-      account_holder_name: clean(input.account_holder_name),
-      account_number: clean(input.account_number, 40),
-      ifsc_code: clean(input.ifsc_code, 20),
-      upi_id: clean(input.upi_id, 120),
-      scheduled_for: nextPayoutDate(fs.host_payout_mode, fs.payout_day_of_week, fs.payout_time),
-    });
-    await WalletTransactionModel.create({
-      user_id: new Types.ObjectId(userId),
-      type: 'DEBIT',
-      amount,
-      balance_after: round2(wallet.balance),
-      source: 'WITHDRAWAL',
-      reason: 'Withdrawal requested',
-      withdrawal_id: doc.withdrawal_id,
+    // The debit, the withdrawal record and its DEBIT ledger row are one unit: a
+    // failure after the debit must not leave the balance reduced with no
+    // withdrawal for Finance to pay or reject.
+    const doc = await withTransaction(async (session) => {
+      const wallet = await debitWallet(userId, amount, minimum, session);
+      // Which pods this money came from, decided here and frozen on the record.
+      // Read AFTER the debit succeeded so a request that lost the balance race
+      // never consumes credits, and never re-derived afterwards.
+      const allocations = await allocationsFor(userId, amount);
+      const [created] = await WalletWithdrawalModel.create(
+        [
+          {
+            withdrawal_id: withdrawalId(),
+            user_id: new Types.ObjectId(userId),
+            allocations,
+            beneficiary_name: name || user?.auth?.email || 'Host',
+            beneficiary_email: user?.auth?.email ?? '',
+            amount,
+            withdrawer_role: role,
+            payout_method: method,
+            account_holder_name: clean(input.account_holder_name),
+            account_number: clean(input.account_number, 40),
+            ifsc_code: clean(input.ifsc_code, 20),
+            upi_id: clean(input.upi_id, 120),
+            scheduled_for: nextPayoutDate(fs.host_payout_mode, fs.payout_day_of_week, fs.payout_time),
+          },
+        ],
+        { session }
+      );
+      await WalletTransactionModel.create(
+        [
+          {
+            user_id: new Types.ObjectId(userId),
+            type: 'DEBIT',
+            amount,
+            balance_after: round2(wallet.balance),
+            source: 'WITHDRAWAL',
+            reason: 'Withdrawal requested',
+            withdrawal_id: created.withdrawal_id,
+          },
+        ],
+        { session }
+      );
+      return created;
     });
     return withdrawalPub(doc);
   },
@@ -465,49 +529,39 @@ export const walletService = {
   },
 
   async reviewWithdrawal(id: string, status: string, reason: string | undefined, reviewerId?: string | null) {
-    const doc = await WalletWithdrawalModel.findById(id);
-    if (!doc) throw new GraphQLError('Withdrawal not found', { extensions: { code: 'NOT_FOUND' } });
-    if (doc.status !== 'PENDING') {
-      throw new GraphQLError('Only pending withdrawals can be reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
     if (!['PAID', 'REJECTED'].includes(status)) {
       throw new GraphQLError('Select PAID or REJECTED', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    if (status === 'REJECTED') {
-      const cleaned = clean(reason, 500);
-      if (!cleaned) throw new GraphQLError('A reason is required to reject', { extensions: { code: 'BAD_USER_INPUT' } });
-      // Refund the held amount back to the wallet.
-      const wallet = await WalletModel.findOneAndUpdate(
-        { user_id: doc.user_id },
-        { $inc: { balance: doc.amount } },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      await WalletTransactionModel.create({
-        user_id: doc.user_id,
-        type: 'CREDIT',
-        amount: doc.amount,
-        balance_after: round2(wallet!.balance),
-        source: 'WITHDRAWAL_REVERSAL',
-        // Clamped to the transaction's own 300-char `reason` limit: a 500-char
-        // reject reason made this insert fail validation AFTER the wallet had
-        // already been credited, leaving the row PENDING with the money back —
-        // and every retry credited it again.
-        reason: clean(`Withdrawal rejected: ${cleaned}`, 300),
-        withdrawal_id: doc.withdrawal_id,
-      });
-      doc.reject_reason = cleaned;
-      // The money is back in the wallet, so the pod earnings behind it are
-      // spendable again. Clearing the attribution is what makes the NEXT
-      // withdrawal able to draw those same releases — and it drops the
-      // rejected row out of the Finance pod view, where it would otherwise
-      // read as a live claim on a pod that was never paid.
-      doc.set('allocations', []);
+    const cleaned = clean(reason, 500);
+    if (status === 'REJECTED' && !cleaned) {
+      throw new GraphQLError('A reason is required to reject', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    doc.status = status as IWalletWithdrawal['status'];
-    doc.reviewed_by = reviewerId ? new Types.ObjectId(reviewerId) : null;
-    doc.reviewed_at = new Date();
-    if (status === 'PAID') doc.paid_at = new Date();
-    await doc.save();
+    // Read, refund and status flip in one transaction: two reviewers rejecting
+    // the same row at once conflict on it, and the retry sees it is no longer
+    // PENDING instead of refunding a second time.
+    const doc = await withTransaction(async (session) => {
+      const row = await WalletWithdrawalModel.findById(id).session(session ?? null);
+      if (!row) throw new GraphQLError('Withdrawal not found', { extensions: { code: 'NOT_FOUND' } });
+      if (row.status !== 'PENDING') {
+        throw new GraphQLError('Only pending withdrawals can be reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      if (status === 'REJECTED') {
+        await refundWithdrawal(row, cleaned, session);
+        row.reject_reason = cleaned;
+        // The money is back in the wallet, so the pod earnings behind it are
+        // spendable again. Clearing the attribution is what makes the NEXT
+        // withdrawal able to draw those same releases — and it drops the
+        // rejected row out of the Finance pod view, where it would otherwise
+        // read as a live claim on a pod that was never paid.
+        row.set('allocations', []);
+      }
+      row.status = status as IWalletWithdrawal['status'];
+      row.reviewed_by = reviewerId ? new Types.ObjectId(reviewerId) : null;
+      row.reviewed_at = new Date();
+      if (status === 'PAID') row.paid_at = new Date();
+      await row.save({ session });
+      return row;
+    });
     return withdrawalPub(doc);
   },
 };

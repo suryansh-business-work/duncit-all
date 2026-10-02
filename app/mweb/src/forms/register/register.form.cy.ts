@@ -15,6 +15,7 @@ const valid = {
   dob: ELIGIBLE_DOB,
   referralCode: '',
   acceptedPolicyIds: [],
+  marketingOptIn: false,
 };
 
 const firstError = (result: ReturnType<typeof registerSchema.safeParse>) =>

@@ -167,7 +167,7 @@ export function ChatRoomScreen() {
               value={text}
               onChangeText={setText}
               onSend={handleSend}
-              onPickImage={() => void handlePickImage()}
+              onPickImage={() => fireAndForget(handlePickImage())}
               onToggleEmoji={() =>
                 setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
               }

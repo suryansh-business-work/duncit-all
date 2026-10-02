@@ -6,7 +6,7 @@
  * `prober` is injectable (same pattern as buildStatusProbeRouter) so the
  * sweep can be unit-tested without hitting the network.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { probe, type ProbeResult } from './statusProbe';
 import { listStatusServices } from './statusServices';
 import { StatusCheckModel } from './statusHistory.model';
@@ -62,21 +62,12 @@ export async function runStatusSweep(prober: Prober = probe): Promise<number> {
  * guard here makes an accidental start in a test run impossible.
  */
 export function startStatusScheduler(options: StatusSchedulerOptions = {}): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
   const prober = options.prober ?? probe;
-  const sweep = () => {
-    // The interval must survive any failure (network, DB, catalog).
-    runStatusSweep(prober).catch((err) => {
-      logs.server.error('status-scheduler', 'sweep', { error: err, msg: 'sweep failed' });
-    });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for status sweeps.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'status-scheduler',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: () => runStatusSweep(prober),
+  });
 }

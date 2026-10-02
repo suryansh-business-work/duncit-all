@@ -108,7 +108,7 @@ export function ContactsScreen() {
     <ContactsHeader
       status={status}
       sync={sync}
-      onAllow={() => fireAndForget(sync.request())}
+      onAllow={sync.request}
       scope={scope}
       onScope={setScope}
       search={search}
@@ -177,6 +177,16 @@ export function ContactsScreen() {
         onConfirm={() => fireAndForget(removal.confirm())}
         onCancel={() => removal.setOpen(false)}
         testID="contacts-clear-dialog"
+      />
+      <ConfirmDialog
+        open={sync.asking}
+        title={t('privacy.contacts.title')}
+        message={t('privacy.contacts.body')}
+        confirmLabel={t('privacy.contacts.agree')}
+        cancelLabel={t('privacy.contacts.cancel')}
+        onConfirm={() => fireAndForget(sync.agree())}
+        onCancel={sync.decline}
+        testID="contacts-consent-dialog"
       />
     </StackScreen>
   );

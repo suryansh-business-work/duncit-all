@@ -13,6 +13,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Danger SOS button with a busy spinner; disabled until a pod is selected. */
 function SosSendButton({
@@ -144,7 +145,11 @@ export function SosScreen() {
                 {error}
               </Text>
             ) : null}
-            <SosSendButton disabled={!selected || busy} busy={busy} onSend={() => void send()} />
+            <SosSendButton
+              disabled={!selected || busy}
+              busy={busy}
+              onSend={() => fireAndForget(send())}
+            />
           </>
         )}
       </RefreshScrollView>

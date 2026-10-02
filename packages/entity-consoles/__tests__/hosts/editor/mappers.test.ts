@@ -113,6 +113,14 @@ describe('valuesToHostStep2 and Step3', () => {
     expect(step3.tags).toEqual(['repeat-host']);
     expect(step3.bank_account.payout_method).toBe('UPI');
   });
+
+  it('omits an unchosen payout method — "" is not a BankPayoutMethod', () => {
+    const values = hostToValues(hostRecord);
+    values.bank_account.payout_method = '';
+    const step3 = valuesToHostStep3(values);
+    expect(step3.bank_account.payout_method).toBeUndefined();
+    expect(step3.bank_account.upi_id).toBe('ananya@okhdfcbank');
+  });
 });
 
 describe('valuesToHostCategories', () => {

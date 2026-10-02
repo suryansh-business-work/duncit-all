@@ -69,9 +69,9 @@ async function resolveLocationIds(raw: readonly string[]): Promise<Types.ObjectI
 
 /** The stored shape for a create or an update — both paths enforce it. */
 async function toDoc(input: OfficialStatusDTO) {
-  // yup's oneOf() already refused anything else; its InferType simply does not
-  // narrow a string schema to the union the model stores.
-  const scope = input.scope as OfficialStatusScope;
+  // The validator's one-of rule already refused anything else, and its type
+  // is the union the model stores.
+  const scope: OfficialStatusScope = input.scope;
   validateMediaUrl(input.media_url, 'media_url');
 
   return {

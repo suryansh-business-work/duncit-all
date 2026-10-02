@@ -241,6 +241,24 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Meera, our support team has opened your ticket ST-4F2A9C about Refund not received for my pod booking and is working on it. ' +
       'We will reply in the ticket as soon as we can. — Team Duncit',
   },
+  /*
+   * A host picked a club on Create Pod step 1 and none of its venues has an
+   * open slot, so the pod cannot be planned there. The club admin is the one
+   * who can get the club's venues to publish availability.
+   */
+  CLUB_ADMIN_VENUE_SLOTS_NEEDED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a host could not create a pod in your club {{2}} because none of its venues has an open slot right now. ' +
+      'Please speak to the venues of this club and ask them to publish available slots so hosts can plan pods there. ' +
+      'The host who asked is {{3}}, and you can reach them on {{4}}. Open the club: {{5}} — Team Duncit',
+    sample:
+      'Hi Rohit, a host could not create a pod in your club Noida Badminton Club because none of its venues has an open slot right now. ' +
+      'Please speak to the venues of this club and ask them to publish available slots so hosts can plan pods there. ' +
+      'The host who asked is Meera Nair, and you can reach them on +91 98765 43210. ' +
+      'Open the club: https://partners-app.duncit.com/club-admin/clubs/66f1c2a9e4b0a1d2c3f4e5a6 — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

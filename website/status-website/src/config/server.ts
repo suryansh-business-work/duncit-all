@@ -9,3 +9,10 @@ export function resolveServerBase(env: ServerEnv): string {
 }
 
 export const SERVER_BASE = resolveServerBase(import.meta.env);
+
+/** The main website, where the privacy policy the consent banner links to lives. */
+export function resolveMainSiteUrl(env: ServerEnv & { VITE_MAIN_SITE_URL?: string }): string {
+  return env.VITE_MAIN_SITE_URL || (env.DEV ? 'http://localhost:2000' : 'https://duncit.com');
+}
+
+export const MAIN_SITE_URL = resolveMainSiteUrl(import.meta.env);

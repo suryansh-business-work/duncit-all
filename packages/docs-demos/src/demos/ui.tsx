@@ -1,45 +1,24 @@
-import GroupsIcon from '@mui/icons-material/Groups';
-import PaymentsIcon from '@mui/icons-material/Payments';
-import StorageIcon from '@mui/icons-material/Storage';
-import { Paper, Stack } from '@mui/material';
+import { Paper } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
-import { useEffect, useState } from 'react';
-import { DuncitButton } from '@duncit/buttons';
 import {
-  ChipList,
   InfoRow,
-  Loader,
-  LoadingOverlay,
-  PageHeader,
   PodSeatsCell,
   ScrollRail,
-  SpotsStepper,
-  StatCard,
-  StatusChip,
-  TicketDiscountField,
-  TopProgressBar,
   categoryAxis,
   chartSeriesColor,
   chartTooltip,
   lineTrendDataset,
   lineTrendOptions,
   valueAxis,
-  type LoaderVariant,
-  type SpotsStepperLabels,
-  type TicketDiscountFieldErrors,
 } from '@duncit/ui';
-import { POD_FORM_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
-import {
-  TICKET_DISCOUNT_MAX_TIERS,
-  formatMoney,
-  podFormTicketDiscountLabels,
-  ticketDiscountMaxTickets,
-  ticketDiscountTierIssues,
-  type TicketDiscountIssue,
-  type TicketDiscountLimits,
-  type TicketDiscountTier,
-} from '@duncit/utils';
+import { formatMoney } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+// Each rendered demo's component and mock shape live beside this file.
+import { StatCardsDemo, type TilesMock } from './ui/StatCardsDemo';
+import { RowsAndChipsDemo, type RowsMock } from './ui/RowsAndChipsDemo';
+import { SpotsDemo, type SpotsMock } from './ui/SpotsDemo';
+import { TicketDiscountDemo, type TicketDiscountMock } from './ui/TicketDiscountDemo';
+import { LoaderDemo, type LoaderMock } from './ui/LoaderDemo';
 
 interface ChartFrameMock {
   mode: 'light' | 'dark';
@@ -53,185 +32,8 @@ interface SeatsMock {
   no_of_spots: number;
 }
 
-interface TilesMock {
-  disk_used_gb: number;
-  disk_total_gb: number;
-  pods_completed: number;
-  host_payouts: number;
-}
-
-interface RowsMock {
-  pod_id: string;
-  venue: string;
-  spots: string;
-  total: number;
-  perks: string[];
-  statuses: string[];
-}
-
-interface SpotsMock {
-  no_of_spots: number;
-  min_pax: number;
-  venue_capacity: number;
-  seats_taken: number;
-}
-
-/** The words a surface hands the control — mWeb passes `mwebSpotsLabels(t)`. */
-const SPOTS_LABELS: SpotsStepperLabels = {
-  totalSpots: 'Total spots',
-  hint: 'Number of available tickets.',
-  fixedHint: 'Set by the venue space you picked.',
-  increase: 'Increase spots',
-  decrease: 'Decrease spots',
-};
-
-/**
- * The control is uncontrolled-by-design: it owns no value, so a demo has to
- * hold one. Hoisted to module scope — a component defined inside `render`
- * remounts on every keystroke in the mock editor (S6478).
- */
-function SpotsDemo({ mock }: Readonly<{ mock: SpotsMock }>) {
-  const [spots, setSpots] = useState(mock.no_of_spots);
-  useEffect(() => {
-    setSpots(mock.no_of_spots);
-  }, [mock.no_of_spots]);
-  // Exactly what the server's `podSpotLimits` returns for a Club Admin: the
-  // floor is whichever is higher, the activity's minimum or the seats sold.
-  const min = Math.max(mock.min_pax, mock.seats_taken);
-  const boundsHint = `The space this pod booked holds ${mock.venue_capacity} people. ${mock.seats_taken} seats are already taken.`;
-  return (
-    <SpotsStepper
-      labels={SPOTS_LABELS}
-      value={spots}
-      onChange={setSpots}
-      min={min}
-      max={mock.venue_capacity}
-      slidable={mock.venue_capacity > min}
-      boundsHint={boundsHint}
-    />
-  );
-}
-
-interface TicketDiscountMock {
-  pod_id: string;
-  pod_amount: number;
-  no_of_spots: number;
-  /** `publicAppSettings.ticket_discount_max_pct`. */
-  ticket_discount_max_pct: number;
-  ticket_discount_enabled: boolean;
-  ticket_discount_tiers: TicketDiscountTier[];
-}
-
-/** The portal pod form's own English for `podForm.ticketDiscount.*`, resolved the way the form does. */
-const { t: podFormT } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(POD_FORM_BUNDLE) });
-const TICKET_DISCOUNT_LABELS = podFormTicketDiscountLabels(podFormT);
-
-const formatPaise = (amount: number) => formatMoney(amount, { decimals: 2 });
-
-/**
- * What a surface's Zod superRefine does with the shared issue list: one
- * translated message per path, the first issue on a field winning.
- */
-function toFieldErrors(
-  issues: readonly TicketDiscountIssue[],
-  limits: TicketDiscountLimits,
-): TicketDiscountFieldErrors {
-  const rows: Array<{ min_tickets?: string; discount_pct?: string }> = [];
-  let list: string | undefined;
-  for (const issue of issues) {
-    const message = TICKET_DISCOUNT_LABELS.errors[issue.code](limits);
-    if (issue.index === null) {
-      list ??= message;
-    } else {
-      rows[issue.index] = { [issue.field]: message, ...rows[issue.index] };
-    }
-  }
-  return { list, rows };
-}
-
-/** Holds the ladder the way a form would — hoisted for the same reason as `SpotsDemo`. */
-function TicketDiscountDemo({ mock }: Readonly<{ mock: TicketDiscountMock }>) {
-  const [enabled, setEnabled] = useState(mock.ticket_discount_enabled);
-  const [tiers, setTiers] = useState(mock.ticket_discount_tiers);
-  useEffect(() => {
-    setEnabled(mock.ticket_discount_enabled);
-    setTiers(mock.ticket_discount_tiers);
-  }, [mock.ticket_discount_enabled, mock.ticket_discount_tiers]);
-  const limits: TicketDiscountLimits = {
-    maxPct: mock.ticket_discount_max_pct,
-    maxTickets: ticketDiscountMaxTickets(mock.no_of_spots),
-    maxTiers: TICKET_DISCOUNT_MAX_TIERS,
-  };
-  const issues = ticketDiscountTierIssues({
-    enabled,
-    tiers,
-    maxPct: limits.maxPct,
-    maxTickets: limits.maxTickets,
-  });
-  return (
-    <TicketDiscountField
-      enabled={enabled}
-      tiers={tiers}
-      onEnabledChange={setEnabled}
-      onTiersChange={setTiers}
-      maxPct={limits.maxPct}
-      maxTickets={limits.maxTickets}
-      labels={TICKET_DISCOUNT_LABELS}
-      unitPrice={mock.pod_amount}
-      formatPrice={formatPaise}
-      errors={toFieldErrors(issues, limits)}
-    />
-  );
-}
-
 interface RailMock {
   pods: { pod_id: string; title: string; price: number }[];
-}
-
-interface LoaderMock {
-  variant: LoaderVariant;
-  serverMs: number;
-  rows: string[];
-}
-
-/**
- * The wait every console page has: a list that is already on screen, refreshing.
- * Hoisted for the same reason as `SpotsDemo`.
- */
-function LoaderDemo({ mock }: Readonly<{ mock: LoaderMock }>) {
-  const [busy, setBusy] = useState(false);
-  const refresh = () =>
-    new Promise<void>((resolve) => {
-      setBusy(true);
-      setTimeout(() => {
-        setBusy(false);
-        resolve();
-      }, mock.serverMs);
-    });
-  const rows = (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-      <Stack spacing={1}>
-        {mock.rows.map((row) => (
-          <InfoRow key={row} variant="split" label={row} value="APPROVED" />
-        ))}
-      </Stack>
-    </Paper>
-  );
-  return (
-    <Stack spacing={2}>
-      <TopProgressBar busy={busy} />
-      <DuncitButton variant="contained" onClick={refresh}>
-        Refresh venues
-      </DuncitButton>
-      {mock.variant === 'overlay' ? (
-        <LoadingOverlay open={busy} showLabel label="Refreshing venues…">
-          {rows}
-        </LoadingOverlay>
-      ) : (
-        <>{busy ? <Loader variant={mock.variant} showLabel /> : rows}</>
-      )}
-    </Stack>
-  );
 }
 
 export default defineDemos('ui', [
@@ -240,42 +42,7 @@ export default defineDemos('ui', [
     title: 'StatCard — the three layouts a dashboard uses',
     note: 'One tile per layout, with the numbers a real dashboard shows. Edit the mock to see the percent ring move.',
     mock: { disk_used_gb: 205, disk_total_gb: 250, pods_completed: 1284, host_payouts: 482150 },
-    render: (mock) => (
-      <Stack
-        direction="row"
-        sx={{
-          flexWrap: "wrap",
-          gap: 2
-        }}>
-        <StatCard
-          label="Disk usage"
-          value={`${mock.disk_used_gb} GB`}
-          sub={`of ${mock.disk_total_gb} GB`}
-          percent={Math.round((mock.disk_used_gb / mock.disk_total_gb) * 100)}
-          icon={<StorageIcon fontSize="small" />}
-          iconColor="text.secondary"
-          sx={{ flex: '1 1 220px' }}
-        />
-        <StatCard
-          layout="valueFirst"
-          label="Pods completed"
-          value={mock.pods_completed.toLocaleString('en-IN')}
-          icon={<GroupsIcon />}
-          iconBox={{ color: '#7c3aed' }}
-          sx={{ flex: '1 1 220px' }}
-        />
-        <StatCard
-          layout="split"
-          label="Host payouts — July"
-          value={formatMoney(mock.host_payouts)}
-          hint="+12% vs June"
-          hintColor="success.main"
-          icon={<PaymentsIcon />}
-          iconBox={{ color: '#0ea5e9', size: 44 }}
-          sx={{ flex: '1 1 220px' }}
-        />
-      </Stack>
-    ),
+    render: (mock) => <StatCardsDemo mock={mock} />,
   }),
 
   defineDemo<RowsMock>({
@@ -291,24 +58,7 @@ export default defineDemos('ui', [
       perks: ['Water', 'Parking', 'Rackets provided'],
       statuses: ['ACTIVE', 'PENDING', 'CANCELLED', 'COMPLETED', 'REFUNDED'],
     },
-    render: (mock) => (
-      <Stack spacing={2}>
-        <PageHeader title="Pod detail" subtitle={mock.pod_id} />
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-          <InfoRow label="Venue" value={mock.venue} />
-          <InfoRow label="Spots" value={mock.spots} />
-          <InfoRow variant="split" bold label="Collected" value={formatMoney(mock.total)} />
-          <InfoRow label="Available perks" value={<ChipList items={mock.perks} empty="—" />} />
-        </Paper>
-        <Stack direction="row" spacing={1} useFlexGap sx={{
-          flexWrap: "wrap"
-        }}>
-          {mock.statuses.map((status) => (
-            <StatusChip key={status} status={status} />
-          ))}
-        </Stack>
-      </Stack>
-    ),
+    render: (mock) => <RowsAndChipsDemo mock={mock} />,
   }),
 
   defineDemo<SpotsMock>({

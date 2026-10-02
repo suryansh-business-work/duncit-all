@@ -1,7 +1,7 @@
 import { FlatList, Modal, useWindowDimensions } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -65,7 +65,7 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
               />
             )}
           />
-          <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, right: 0 }}>
+          <ModalSafeArea edges={['top']} style={{ position: 'absolute', top: 0, right: 0 }}>
             <XStack
               pressStyle={PRESS_STYLE.surface}
               testID="image-viewer-close"
@@ -84,10 +84,10 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
             >
               <MaterialIcons name="close" size={22} color="#ffffff" />
             </XStack>
-          </SafeAreaView>
+          </ModalSafeArea>
 
           {action ? (
-            <SafeAreaView
+            <ModalSafeArea
               edges={['bottom']}
               style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}
             >
@@ -120,7 +120,7 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
                   </Text>
                 </XStack>
               </YStack>
-            </SafeAreaView>
+            </ModalSafeArea>
           ) : null}
         </YStack>
       </ModalThemeScope>

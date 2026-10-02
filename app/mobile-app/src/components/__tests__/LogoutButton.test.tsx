@@ -3,7 +3,8 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { LogoutButton } from '@/components/LogoutButton';
 import { renderWithProviders } from '@/utils/test-utils';
 
-const mockLogout = jest.fn();
+// The real hook returns a promise; the button hands it to fireAndForget.
+const mockLogout = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => mockLogout }));
 
 beforeEach(() => jest.clearAllMocks());

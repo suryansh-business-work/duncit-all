@@ -15,7 +15,7 @@
  * because every day skipped is a day past a date a member was promised.
  * No-ops under NODE_ENV=test.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { accountDeletionCron } from './accountDeletion.cron';
 
 const TICK_MS = 60_000;
@@ -30,22 +30,13 @@ const FIRST_TICK_DELAY_MS = 120_000;
  * nothing and risks doing irreversible work with a half-warm process.
  */
 export function startAccountDeletionScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const tick = () => {
-    // The interval must survive any failure (a bad setting, a database blip, a
-    // single account that cannot be purged). runIfDue already contains the
-    // per-account failures; this only catches the run itself falling over.
-    accountDeletionCron.runIfDue().catch((error) => {
-      logs.server.error('account-deletion', 'scheduler-tick', { error });
-    });
-  };
-  const first = setTimeout(tick, FIRST_TICK_DELAY_MS);
-  const interval = setInterval(tick, TICK_MS);
-  // Never keep the process alive just for this timer.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  // runIfDue already contains the per-account failures; the job only catches the
+  // run itself falling over.
+  return startClusterJob({
+    component: 'account-deletion',
+    operation: 'scheduler-tick',
+    firstDelayMs: FIRST_TICK_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: () => accountDeletionCron.runIfDue(),
+  });
 }

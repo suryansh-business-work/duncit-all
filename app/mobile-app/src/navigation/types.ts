@@ -33,6 +33,9 @@ export type RootStackParamList = {
   /** Profile Settings → Communication Preferences: the hub that lists the
    * three channels. Twin of mWeb's /account/communication. */
   CommPreference: undefined;
+  /** Profile Settings → Privacy & data: tracking choices and the data download.
+   * Twin of mWeb's /account/privacy. */
+  Privacy: undefined;
   /** Communication Preferences → Mail, the twin of mWeb's /account/mail-preference. */
   MailPreference: undefined;
   /** Profile → WhatsApp Preference, mWeb's /account/whatsapp-preference. */

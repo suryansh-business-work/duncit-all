@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { WebView } from 'react-native-webview';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -33,7 +33,7 @@ export function ZoomableImageModal({
   return (
     <Modal visible={index != null} transparent animationType="fade" onRequestClose={onClose}>
       <YStack flex={1} backgroundColor="#000000" testID="zoom-image-modal">
-        <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+        <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
           <XStack
             alignItems="center"
             justifyContent="space-between"
@@ -106,7 +106,7 @@ export function ZoomableImageModal({
               </XStack>
             </XStack>
           ) : null}
-        </SafeAreaView>
+        </ModalSafeArea>
       </YStack>
     </Modal>
   );

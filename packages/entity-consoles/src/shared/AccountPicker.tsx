@@ -60,6 +60,12 @@ export default function AccountPicker<T extends FieldValues>({
   onPicked,
 }: Readonly<AccountPickerProps<T>>) {
   const [search, setSearch] = useState('');
+  // The chosen account is HELD, not looked up in the current page of results:
+  // after a pick the input shows its label, a search for that label can come
+  // back without it, and a value that blinks to null resets the input, which
+  // searches again — with cached pages that cycle runs synchronously and React
+  // aborts with "Maximum update depth exceeded" (#185).
+  const [picked, setPicked] = useState<AccountCandidate | null>(null);
 
   const { data, loading } = useQuery<{ usersTable: { rows: AccountCandidate[] } }>(
     ACCOUNT_CANDIDATES,
@@ -75,7 +81,10 @@ export default function AccountPicker<T extends FieldValues>({
       control={control}
       name={name}
       render={({ field, fieldState }) => {
-        const chosen = options.find((account) => account.user_id === field.value) ?? null;
+        const chosen =
+          picked?.user_id === field.value
+            ? picked
+            : (options.find((account) => account.user_id === field.value) ?? null);
         return (
           <Stack spacing={0.5}>
             <Autocomplete
@@ -87,8 +96,13 @@ export default function AccountPicker<T extends FieldValues>({
               filterOptions={(all) => all}
               getOptionLabel={accountLabel}
               isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
-              onInputChange={(_event, next) => setSearch(next)}
+              // Only what the person types (or clears) is a search; the input
+              // filling in a picked label is not.
+              onInputChange={(_event, next, reason) => {
+                if (reason !== 'reset') setSearch(next);
+              }}
               onChange={(_event, account) => {
+                setPicked(account);
                 field.onChange(account?.user_id ?? '');
                 if (account) onPicked(account);
               }}

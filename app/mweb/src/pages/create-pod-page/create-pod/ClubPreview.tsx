@@ -15,14 +15,17 @@ import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
+import ClubSlotsChip from './steps/ClubSlotsChip';
 
 interface Props {
   club: CreatePodClub | null;
+  /** Physical pods only — a virtual pod books no venue slot. */
+  showSlots?: boolean;
 }
 
 /** Selected-club preview — photo + name with a "View club details" dialog
  * showing the club's gallery and description (create-pod step 2). */
-export default function ClubPreview({ club }: Readonly<Props>) {
+export default function ClubPreview({ club, showSlots = false }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   if (!club) return null;
@@ -73,6 +76,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             icon={<StorefrontOutlinedIcon />}
             label={venueLabel}
           />
+          {showSlots && <ClubSlotsChip club={club} />}
           <DuncitButton data-testid="club-preview-details" size="small" onClick={() => setOpen(true)} sx={{ p: 0 }}>
             {t('mweb.createPod.viewClubDetails')}
           </DuncitButton>

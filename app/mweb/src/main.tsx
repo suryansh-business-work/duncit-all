@@ -20,7 +20,6 @@ import { apolloClient } from './apollo';
 import { captureShortLinkClick } from './lib/short-link-journey';
 import { requireAuthForShortLinkLanding } from './lib/session-guard';
 import { loadUserInfo } from './user-info/load';
-import { installAttributionLinkDecorator } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
@@ -103,10 +102,8 @@ captureShortLinkClick(globalThis.window.location.search);
 // account it produces. Runs AFTER the capture so the click id is already on
 // its way: this only rewrites the URL, it does not reload.
 requireAuthForShortLinkLanding();
-// Re-attach the stored tags to every outbound duncit link at click time —
-// storage does not cross origins, so the URL is the only vehicle to a
-// website, another surface, or the native app.
-installAttributionLinkDecorator();
+// (The capture above also installs the link decorator that re-attaches the
+// stored tags to every outbound duncit link — see startWebShortLinkAttribution.)
 
 /**
  * The portal-mode gate with mWeb's live translator attached.

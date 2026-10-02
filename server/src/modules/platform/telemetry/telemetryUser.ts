@@ -57,65 +57,63 @@ function displayPhone(row: UserLookupRow): string | undefined {
   return phone.extension ? `${phone.extension}${phone.number}` : phone.number;
 }
 
-/**
- * Everything known about the account behind a log, cached.
- *
- * The database wins wherever it answers. A Duncit token never expires, so the
- * email and roles inside one are a snapshot of whenever it was minted — a role
- * granted or revoked since then is not in it, and attributing a bug to
- * yesterday's permissions is how a triager reaches the wrong conclusion about
- * who could even reach the screen. The token is the fallback, for the account
- * the lookup could not find: deleted, or from another environment. Losing the
- * whole attribution over a missing row would be the worse answer.
- */
-export async function resolveLogUser(claimed: {
-  id: string;
-  email?: string;
-  roles?: string[];
-}): Promise<ITelemetryUser> {
-  const fromToken: ITelemetryUser = {
-    id: claimed.id,
-    email: claimed.email,
-    roles: claimed.roles?.length ? claimed.roles : undefined,
-  };
-  if (!isValidObjectId(claimed.id)) return fromToken;
-
-  const hit = cache.get(claimed.id);
-  if (hit && Date.now() - hit.at < TTL_MS) return merge(hit.user, fromToken);
+/** The account behind an id, cached in memory only. Null when it cannot be found. */
+async function lookupAccount(id: string): Promise<ITelemetryUser | null> {
+  if (!isValidObjectId(id)) return null;
+  const hit = cache.get(id);
+  if (hit && Date.now() - hit.at < TTL_MS) return hit.user;
 
   let row: UserLookupRow | null = null;
   try {
-    row = await UserModel.findById(claimed.id)
+    row = await UserModel.findById(id)
       .select('profile.first_name profile.last_name auth.email auth.phone metadata.role_keys')
       .lean<UserLookupRow>();
   } catch {
     // Telemetry must never be the reason a request fails; an unenriched user
     // is a complete answer, just a less useful one.
-    return fromToken;
+    return null;
   }
-  if (!row) return fromToken;
+  if (!row) return null;
 
   const resolved: ITelemetryUser = {
-    id: claimed.id,
+    id,
     name: displayName(row),
     email: row.auth?.email ?? undefined,
     phone: displayPhone(row),
     roles: row.metadata?.role_keys?.length ? row.metadata.role_keys : undefined,
   };
   evictIfFull();
-  cache.set(claimed.id, { user: resolved, at: Date.now() });
-  return merge(resolved, fromToken);
+  cache.set(id, { user: resolved, at: Date.now() });
+  return resolved;
 }
 
-/** The looked-up account, falling back to the token for anything it lacked. */
-function merge(resolved: ITelemetryUser, fromToken: ITelemetryUser): ITelemetryUser {
-  return {
-    id: resolved.id,
-    name: resolved.name,
-    email: resolved.email ?? fromToken.email,
-    phone: resolved.phone,
-    roles: resolved.roles ?? fromToken.roles,
-  };
+/**
+ * What a log STORES about the account behind it: the id and the roles, nothing
+ * that names or reaches the person (GDPR data minimisation).
+ *
+ * The name, email and phone used to be copied onto every log, which meant a
+ * second copy of them in a collection kept for months that account deletion
+ * could not see. They are now looked up when a triager READS the log
+ * ({@link describeLogUser}), so they are always current, and gone the moment
+ * the account is.
+ *
+ * Roles are kept because they are what the log was ABOUT — which screens the
+ * caller could reach — and must be the roles at the time, not today's. The
+ * database wins over the token, which is a snapshot of whenever it was minted;
+ * the token is the fallback for an account the lookup could not find.
+ */
+export async function resolveLogUser(claimed: {
+  id: string;
+  roles?: string[];
+}): Promise<ITelemetryUser> {
+  const account = await lookupAccount(claimed.id);
+  const roles = account?.roles ?? (claimed.roles?.length ? claimed.roles : undefined);
+  return { id: claimed.id, roles };
+}
+
+/** The current name, email and phone behind a stored log user, for the Tech portal. */
+export async function describeLogUser(id: string): Promise<ITelemetryUser> {
+  return (await lookupAccount(id)) ?? { id };
 }
 
 /** Test/ops seam: drop everything remembered so far. */

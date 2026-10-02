@@ -14,6 +14,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 type SupportTarget = { phone: string; available: boolean } | null;
 
@@ -154,7 +155,7 @@ export function CallbackScreen() {
             aria-disabled={busy}
             aria-busy={busy}
             tabIndex={0}
-            onPress={busy ? undefined : () => void request()}
+            onPress={busy ? undefined : () => fireAndForget(request())}
             height={52}
             alignItems="center"
             justifyContent="center"

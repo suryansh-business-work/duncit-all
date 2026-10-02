@@ -6,6 +6,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 /** Clears the session and returns to login — mirrors mWeb's header logout. */
 export function LogoutButton() {
   const { t } = useTranslation();
@@ -19,7 +21,7 @@ export function LogoutButton() {
       aria-label={t('mweb.common.logout')}
       tabIndex={0}
       hitSlop={2}
-      onPress={() => void onLogout()}
+      onPress={() => fireAndForget(onLogout())}
       width={40}
       height={40}
       alignItems="center"

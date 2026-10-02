@@ -13,7 +13,7 @@
  * a server that boots at 03:14 having missed a 03:00 window runs within the
  * minute rather than waiting a day. No-ops under NODE_ENV=test.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { dbBackupService } from './dbBackup.service';
 
 const TICK_MS = 60_000;
@@ -28,20 +28,11 @@ const FIRST_TICK_DELAY_MS = 90_000;
  * nothing.
  */
 export function startDbBackupScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const tick = () => {
-    // The interval must survive any failure (disk, DB, a bad setting).
-    dbBackupService.runIfDue().catch((err) => {
-      logs.server.error('db-backup-scheduler', 'tick', { error: err, msg: 'tick failed' });
-    });
-  };
-  const first = setTimeout(tick, FIRST_TICK_DELAY_MS);
-  const interval = setInterval(tick, TICK_MS);
-  // Never keep the process alive just for the backup timer.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'db-backup-scheduler',
+    operation: 'tick',
+    firstDelayMs: FIRST_TICK_DELAY_MS,
+    intervalMs: TICK_MS,
+    run: () => dbBackupService.runIfDue(),
+  });
 }

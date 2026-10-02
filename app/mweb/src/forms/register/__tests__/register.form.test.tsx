@@ -253,6 +253,7 @@ describe('RegisterForm — errors and toggles', () => {
         dob: '2000-04-23',
         referralCode: 'DUN-A1B2C3',
         acceptedPolicyIds: [],
+        marketingOptIn: false,
       },
     });
     expect(field('^Name')).toHaveValue('Seed User');

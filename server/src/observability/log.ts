@@ -301,7 +301,8 @@ const CLIENT_KEYS: ReadonlyArray<keyof LogClient> = [
   'screen',
   'viewport',
   'network',
-  'referrer',
+  // No 'referrer': where a visitor came from is not needed to fix a bug, and a
+  // full referrer URL can carry somebody else's identifiers (GDPR minimisation).
 ];
 
 /**
@@ -342,7 +343,9 @@ export function ingestRemoteLog(raw: unknown, caller: RequestIdentity = {}): voi
     platform: clampEnum(r.platform, PLATFORMS) ?? 'web',
     os: clampEnum(r.os, DEVICE_OSES),
     environment: clampEnum(r.environment, ENVIRONMENTS) ?? 'production',
-    url: optionalString(r.url),
+    // Path only — a query string or fragment can carry tokens, emails and
+    // campaign ids, none of which a bug report needs (GDPR minimisation).
+    url: optionalString(r.url)?.split(/[?#]/)[0],
     host: optionalString(r.host),
     level: clampEnum(r.level, LEVELS) ?? 'info',
     page: r.page,

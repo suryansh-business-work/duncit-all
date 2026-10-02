@@ -68,7 +68,7 @@ server {
     add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
     add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
     add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
-    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
+    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Consent, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
     add_header Access-Control-Expose-Headers    "Content-Length, Content-Range, Accept-Ranges, Content-Type, Authorization, X-DUID, X-Redis-Cache" always;
     add_header Access-Control-Max-Age           "600"                  always;
     add_header Vary                             "Origin"               always;
@@ -110,7 +110,7 @@ server {
             add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
             add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
             add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
-            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Consent, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
             add_header Access-Control-Max-Age           "600"                  always;
             add_header Vary                             "Origin"               always;
             add_header Content-Length 0;
@@ -148,7 +148,7 @@ server {
             add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
             add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
             add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
-            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Consent, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
             add_header Access-Control-Max-Age           "600"                  always;
             add_header Vary                             "Origin"               always;
             add_header Content-Length 0;

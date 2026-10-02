@@ -22,6 +22,7 @@ import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { APP_BG } from '@/components/AppBackground';
 import { AppPopup } from '@/components/AppPopup';
+import { ConsentHost } from '@/components/consent';
 import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
 import {
@@ -37,6 +38,7 @@ import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { useCartStore } from '@/stores/cart.store';
+import { useConsentStore } from '@/stores/consent.store';
 import config, { LOCAL_PALETTES, createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
 import { resolveThemeTokens } from '@duncit/utils';
@@ -93,6 +95,7 @@ export default function App() {
   const hydrateTheme = useThemeStore((s) => s.hydrate);
   const hydrateStudioMode = useStudioModeStore((s) => s.hydrate);
   const hydrateCart = useCartStore((s) => s.hydrate);
+  const hydrateConsent = useConsentStore((s) => s.hydrate);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
@@ -121,6 +124,9 @@ export default function App() {
     hydrateTheme();
     hydrateStudioMode();
     hydrateCart().catch(() => undefined);
+    // The tracking choice: until it is read, nothing optional runs and the
+    // consent sheet stays closed.
+    hydrateConsent().catch(() => undefined);
     bootstrap();
     // Pull Google/Maps config from the server (Tech portal source); best-effort,
     // the env fallback applies until it resolves.
@@ -128,7 +134,15 @@ export default function App() {
     // Fetch the latest published app version for the force-update gate (public,
     // best-effort — a failure leaves the gate open, never locking users out).
     loadAppVersion();
-  }, [hydrateTheme, hydrateStudioMode, hydrateCart, bootstrap, loadConfig, loadAppVersion]);
+  }, [
+    hydrateTheme,
+    hydrateStudioMode,
+    hydrateCart,
+    hydrateConsent,
+    bootstrap,
+    loadConfig,
+    loadAppVersion,
+  ]);
 
   // Short-link attribution: capture the URL the app was opened with (an App
   // Link from a duncit.com short link carries dl/dlc markers) and every URL
@@ -163,6 +177,9 @@ export default function App() {
                 {/* Below the update gate on purpose: a blocked build must see
                     the store prompt, not a campaign image over it. */}
                 <AppPopup />
+                {/* The first-launch tracking question, and the signed-in sync
+                    that records the answer on the server. */}
+                <ConsentHost />
                 <ForceUpdateGate />
                 {/* Global, like the two above: the back button is pressed from
                     every screen, so the guard cannot live inside one. */}

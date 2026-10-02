@@ -23,6 +23,9 @@ export const MWEB_URL = withoutTrailingSlash(pick(import.meta.env.VITE_MWEB_URL,
 
 export const SIGNUP_URL = `${MWEB_URL}/signup`;
 
+/** The main website, where the privacy policy the consent banner links to lives. */
+export const MAIN_SITE_URL = withoutTrailingSlash(pick(import.meta.env.VITE_MAIN_SITE_URL, 'https://duncit.com'));
+
 /** The app key the API's rate limiter and change log file this client under. */
 export const APP_KEY = 'ecomm';
 

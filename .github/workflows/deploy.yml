@@ -23,6 +23,17 @@ permissions:
 
 env:
   IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+  # ---- base-image pulls go through Google's Docker Hub mirror --------------------
+  # Every build job runs on a fresh runner, so each push pulled node:24-alpine /
+  # nginx:alpine from Docker Hub ~39 times (more with retries). Several pushes an
+  # hour exhausted the account's pull quota and EVERY build died on
+  # "429 Too Many Requests". mirror.gcr.io serves the same official images with no
+  # Docker Hub quota; BuildKit falls back to docker.io on its own if the mirror
+  # misses. Pushes still go to Docker Hub (pushes are not rate-limited), and the
+  # layer cache stays on GHA (type=gha), so nothing else changes.
+  BUILDKITD_CONFIG: |
+    [registry."docker.io"]
+      mirrors = ["mirror.gcr.io"]
   # ---- branch-aware deployment identity --------------------------------------
   # Pushes to `staging` deploy the full replica stack to staging.*.duncit.com:
   # images are tagged :staging with the staging URLs baked into every frontend
@@ -583,6 +594,8 @@ jobs:
           typecheck: 'tsc -p tsconfig.json --noEmit'
           test: 'test:ci'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -615,6 +628,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -650,6 +665,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -686,6 +703,8 @@ jobs:
           workspace: duncit.com
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -725,6 +744,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -759,6 +780,8 @@ jobs:
           workspace: partners-website
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -795,6 +818,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -828,6 +853,8 @@ jobs:
           workspace: ads-website
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -860,6 +887,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -963,6 +992,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -994,6 +1025,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1026,6 +1059,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1060,6 +1095,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1094,6 +1131,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1129,6 +1168,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1164,6 +1205,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1199,6 +1242,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1235,6 +1280,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1270,6 +1317,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1305,6 +1354,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1340,6 +1391,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1375,6 +1428,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1410,6 +1465,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1443,6 +1500,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1478,6 +1537,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1513,6 +1574,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1548,6 +1611,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1583,6 +1648,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1618,6 +1685,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1653,6 +1722,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1688,6 +1759,8 @@ jobs:
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1722,6 +1795,8 @@ jobs:
           workspace: communications
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1747,6 +1822,8 @@ jobs:
           workspace: logs-portal
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1772,6 +1849,8 @@ jobs:
           workspace: analytics
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1797,6 +1876,8 @@ jobs:
           workspace: localization
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1831,6 +1912,8 @@ jobs:
           workspace: ecomm-portal
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1866,6 +1949,8 @@ jobs:
           workspace: ecomm-store
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1902,6 +1987,8 @@ jobs:
           workspace: duncit-lite
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -1935,6 +2022,8 @@ jobs:
           workspace: earnwith-website
           typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: ${{ env.BUILDKITD_CONFIG }}
       - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

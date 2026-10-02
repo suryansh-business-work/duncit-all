@@ -51,9 +51,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # No jest step here: sonar.yml's "Coverage — server" runs the identical
-      # `test:coverage` suite on every staging push, and this copy could not
-      # fail the job anyway (the `| tee` pipe had no pipefail). It cost ~10
-      # serial minutes per push for a result nothing read.
+      # `test:coverage` suite on every staging push and fails on any test file
+      # outside scripts/test-failure-baseline.json. A copy here cost ~10 serial
+      # minutes per push.
 
       - name: Typecheck
         working-directory: server

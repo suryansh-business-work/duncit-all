@@ -2,6 +2,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { FormCheckbox } from '@/forms/components/FormCheckbox';
 import { PolicyAcceptanceField } from '@/components/policy-acceptance';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SignupFormValues } from '../signup.types';
@@ -54,6 +55,13 @@ export function SecurityStep({ control, policiesAccepted }: Readonly<Props>) {
             errorMessage={fieldState.error?.message}
           />
         )}
+      />
+      {/* Opt-in, unticked: marketing starts OFF unless the person asks for it. */}
+      <FormCheckbox
+        control={control}
+        name="marketingOptIn"
+        label={t('privacy.signup.marketingOptIn')}
+        testID="signup-marketing-opt-in"
       />
       {policiesAccepted ? null : (
         <Text testID="signup-policies-hint" fontSize={12.5} color="$muted" textAlign="center">

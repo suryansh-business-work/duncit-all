@@ -1,5 +1,5 @@
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -82,7 +82,7 @@ export function RescheduleDialog({
               padding={20}
               gap={10}
             >
-              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
                 <Text
                   testID="reschedule-title"
                   role="heading"
@@ -184,7 +184,7 @@ export function RescheduleDialog({
                     </Text>
                   </XStack>
                 </XStack>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </KeyboardScreen>

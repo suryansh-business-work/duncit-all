@@ -9,7 +9,11 @@ function loadConfig(hostUri?: string) {
     default: { expoConfig: hostUri ? { hostUri } : {} },
   }));
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require('@/constants/config').config as { apiUrl: string };
+  return require('@/constants/config').config as {
+    apiUrl: string;
+    webUrl: string;
+    mainSiteUrl: string;
+  };
 }
 
 afterEach(() => {
@@ -46,6 +50,18 @@ describe('config.apiUrl resolution', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { config } = require('@/constants/config') as { config: { apiUrl: string } };
     expect(config.apiUrl).toBe('http://localhost:2001');
+  });
+
+  it('derives the mWeb and main-site origins from the API origin', () => {
+    process.env.EXPO_PUBLIC_API_URL = 'https://staging.server.duncit.com';
+    const deployed = loadConfig(undefined);
+    expect(deployed.webUrl).toBe('https://staging.mweb.duncit.com');
+    expect(deployed.mainSiteUrl).toBe('https://staging.duncit.com');
+
+    delete process.env.EXPO_PUBLIC_API_URL;
+    const local = loadConfig(undefined);
+    expect(local.webUrl).toBe('http://localhost:2003');
+    expect(local.mainSiteUrl).toBe('http://localhost:2000');
   });
 
   it('skips the dev origin log outside development', () => {

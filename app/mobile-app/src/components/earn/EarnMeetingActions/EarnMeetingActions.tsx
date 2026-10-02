@@ -16,6 +16,8 @@ import { RescheduleDialog } from './RescheduleDialog';
 import { CancelDialog } from './CancelDialog';
 import { useTranslation } from '@/hooks/useTranslation';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 interface Props {
   kind: string;
   /** Times the meeting has been rescheduled — reschedule is one-time. */
@@ -154,7 +156,7 @@ export function EarnMeetingActions({
         busy={busy}
         error={error}
         onClose={closeReschedule}
-        onConfirm={() => void reschedule()}
+        onConfirm={() => fireAndForget(reschedule())}
       />
 
       <CancelDialog
@@ -164,7 +166,7 @@ export function EarnMeetingActions({
         busy={busy}
         error={error}
         onClose={closeCancel}
-        onConfirm={() => void cancel()}
+        onConfirm={() => fireAndForget(cancel())}
       />
     </XStack>
   );

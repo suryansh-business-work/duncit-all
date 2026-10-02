@@ -63,6 +63,7 @@ describe('auth.service mutations', () => {
         whatsappIsMobile: true,
         password: 'StrongPass123',
         acceptedPolicyIds: ['pol-1'],
+        marketingOptIn: true,
       },
       'wa-proof-1',
     );
@@ -82,6 +83,7 @@ describe('auth.service mutations', () => {
         dob: '1995-01-01T00:00:00.000Z',
         accepted_policy_ids: ['pol-1'],
         accepted_policy_surface: 'APP',
+        marketing_opt_in: true,
       },
     });
     expect(mockedSetToken).toHaveBeenCalledWith('tok-1');

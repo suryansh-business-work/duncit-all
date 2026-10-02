@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, Modal } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
@@ -142,7 +142,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
             borderTopLeftRadius={28}
             borderTopRightRadius={28}
           >
-            <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+            <ModalSafeArea edges={['bottom']} style={{ flex: 1 }}>
               <XStack
                 alignItems="center"
                 justifyContent="space-between"
@@ -189,7 +189,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
               ) : (
                 likersList
               )}
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

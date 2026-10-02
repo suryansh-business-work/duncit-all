@@ -7,6 +7,7 @@ import {
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
 import { LOGS_READER, requireRole } from '@middleware/rbac';
+import { describeLogUser } from './telemetryUser';
 
 // Telemetry is managed from the Tech portal.
 const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER'];
@@ -22,7 +23,18 @@ const LOG_READ = [...TELEMETRY_READ, LOGS_READER];
  */
 const DELETE_ALL_ROLES = ['SUPER_ADMIN'];
 
+/** Looked up at read time — a stored log holds only the id (telemetryUser.ts). */
+const describeField =
+  (field: 'name' | 'email' | 'phone') =>
+  async (user: { id: string }) =>
+    (await describeLogUser(user.id))[field] ?? null;
+
 export const telemetryResolvers = {
+  TelemetryUser: {
+    name: describeField('name'),
+    email: describeField('email'),
+    phone: describeField('phone'),
+  },
   Query: {
     telemetrySettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, LOG_READ);

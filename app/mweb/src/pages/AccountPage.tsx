@@ -21,6 +21,7 @@ import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
 import CommPreferenceEntryCard from './account-page/comm-preference';
+import PrivacyDataEntryCard from './account-page/PrivacyDataEntryCard';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useUserInfo } from '../user-info/useUserInfo';
 import { useTranslation } from '../i18n/useTranslation';
@@ -88,6 +89,7 @@ export default function AccountPage() {
           Edit profile, beside the name it belongs to, and shown — with the
           link it produces — on the profile somebody goes to share. */}
       <CommPreferenceEntryCard />
+      <PrivacyDataEntryCard />
       <ConnectedAccountsSection />
       <SecuritySection />
       <EditAccountDialog

@@ -21,7 +21,7 @@ import { useTranslation } from './i18n/useTranslation';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
-import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
+import { startWebShortLinkAttribution } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { GlobalProgress } from './chrome/GlobalProgress';
 import { loadGoogleClientId } from './lib/google-client-id';
@@ -97,14 +97,9 @@ export function mountPortal(opts: MountPortalOptions): void {
   // render, because an auth guard immediately rewrites the URL and takes the
   // markers with it. Rejection-free by contract (every failure path inside
   // resolves), so no .catch — which would only add an uncoverable dead branch.
-  captureShortLinkAttribution({
-    search: globalThis.location.search,
-    referrer: globalThis.document.referrer,
-    serverUrl: graphqlUrl.replace(/\/graphql$/, ''),
-  });
-  // And keep the tags on every hyperlink out to another duncit surface —
-  // storage does not cross origins, the URL does.
-  installAttributionLinkDecorator();
+  // The starter applies the shared `.duncit.com` consent cookie (answered on
+  // the website or mWeb) and installs the link decorator.
+  startWebShortLinkAttribution(graphqlUrl.replace(/\/graphql$/, ''));
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);
 

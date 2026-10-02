@@ -11,6 +11,10 @@ export interface ChipOption {
   label: string;
   /** Where the option is, shown after the label as "| (pin) place" — only clubs set it. */
   place?: string;
+  /** A trailing status line — the club's open slots on Create Pod step 1. */
+  note?: string;
+  /** Draw the note as a warning (no open slots). */
+  noteWarn?: boolean;
 }
 
 interface ChipPlaceProps {
@@ -33,6 +37,26 @@ function ChipPlace({ place, ink, iconColor, testID }: Readonly<ChipPlaceProps>) 
         {place}
       </Text>
     </XStack>
+  );
+}
+
+type NoteColor = '$onPrimary' | '$warning' | '$muted';
+
+function noteColor(selected: boolean, warn: boolean): NoteColor {
+  if (selected) return '$onPrimary';
+  return warn ? '$warning' : '$muted';
+}
+
+/** "4 open slots" after a club's place. mWeb twin: the slot chip in steps/ClubOption. */
+function ChipNote({
+  note,
+  color,
+  testID,
+}: Readonly<{ note: string; color: NoteColor; testID: string }>) {
+  return (
+    <Text testID={testID} fontSize={12} fontWeight="600" color={color} numberOfLines={1}>
+      {note}
+    </Text>
   );
 }
 
@@ -81,11 +105,12 @@ export function ChipSelectField({
         <XStack gap={8} flexWrap="wrap" role="radiogroup" aria-label={label}>
           {options.map((option) => {
             const selected = value === option.value;
-            const ariaLabel = option.place
+            const named = option.place
               ? t('mweb.createPod.clubOptionAria', {
                   vars: { club: option.label, place: option.place },
                 })
               : option.label;
+            const ariaLabel = option.note ? [named, option.note].join(', ') : named;
             return (
               <XStack
                 key={option.value}
@@ -112,6 +137,13 @@ export function ChipSelectField({
                     ink={selected ? '$onPrimary' : '$muted'}
                     iconColor={selected ? onPrimary : muted}
                     testID={`${testID}-${option.value}-place`}
+                  />
+                ) : null}
+                {option.note ? (
+                  <ChipNote
+                    note={option.note}
+                    color={noteColor(selected, option.noteWarn === true)}
+                    testID={`${testID}-${option.value}-note`}
                   />
                 ) : null}
               </XStack>

@@ -25,6 +25,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { sendPodRefundEmail } from '@services/email/email.service';
 import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 
 const SWEEP_INTERVAL_MS = 5 * 60_000;
 const FIRST_SWEEP_DELAY_MS = 60_000;
@@ -213,25 +214,11 @@ export async function runRefundHoldReleaseSweep(): Promise<number> {
 /** Start the release loop (first sweep ~1 min after boot). Returns a stop
  * function. No-ops under NODE_ENV=test. */
 export function startRefundHoldReleaseScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  let sweeping = false;
-  const sweep = () => {
-    if (sweeping) return;
-    sweeping = true;
-    runRefundHoldReleaseSweep()
-      .catch((error) => {
-        logs.server.error('pod-refund-hold', 'sweep', { error, msg: 'sweep failed' });
-      })
-      .finally(() => {
-        sweeping = false;
-      });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'pod-refund-hold',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: runRefundHoldReleaseSweep,
+  });
 }

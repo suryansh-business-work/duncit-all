@@ -6,6 +6,8 @@ import {
 } from '@/components/support-chat/SupportChatModals';
 import type { useLiveChatActions } from './useLiveChatActions';
 
+import { fireAndForget } from '@/utils/fire-and-forget';
+
 interface Props {
   actions: ReturnType<typeof useLiveChatActions>;
   rating?: number | null;
@@ -25,7 +27,7 @@ export function ChatModals({
       <ResolveConfirmModal
         open={a.confirm.open}
         busy={a.confirm.busy}
-        onConfirm={() => void a.confirm.run()}
+        onConfirm={() => fireAndForget(a.confirm.run())}
         onCancel={() => a.confirm.setOpen(false)}
       />
       <SupportFeedbackModal
@@ -35,7 +37,7 @@ export function ChatModals({
         error={a.feedback.error}
         rating={rating}
         feedbackComment={feedbackComment}
-        onSubmit={(r, c) => void a.feedback.submit(r, c)}
+        onSubmit={(r, c) => fireAndForget(a.feedback.submit(r, c))}
         onClose={() => a.feedback.setOpen(false)}
       />
       <EmailTranscriptModal
@@ -43,7 +45,7 @@ export function ChatModals({
         busy={a.email.busy}
         done={a.email.done}
         error={a.email.error}
-        onSend={(em) => void a.email.send(em)}
+        onSend={(em) => fireAndForget(a.email.send(em))}
         onClose={() => a.email.setOpen(false)}
       />
       <ReopenReasonModal
@@ -51,7 +53,7 @@ export function ChatModals({
         busy={a.reopen.busy}
         error={a.reopen.error}
         deadlineLabel={reopenDeadlineLabel}
-        onSubmit={(reason) => void a.reopen.submit(reason)}
+        onSubmit={(reason) => fireAndForget(a.reopen.submit(reason))}
         onClose={() => a.reopen.setOpen(false)}
       />
     </>

@@ -3,11 +3,13 @@ import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { APP_HEADER, SURFACE_HEADER } from '@duncit/user-core';
+import { CONSENT_HEADER, consentHeaderValue } from '@duncit/utils';
 
 import { config } from '@/constants/config';
 import { ApiError } from '@/utils/errors';
 import { getAuthToken } from '@/services/auth-token';
 import { getDuid } from '@/services/device';
+import { useConsentStore } from '@/stores/consent.store';
 
 /**
  * Up to 2 retries (3 attempts) for transient transport failures on read-only
@@ -103,6 +105,11 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
   headers[SURFACE_HEADER] = 'NATIVE';
   // Which app inside that surface, for the platform rate limiter.
   headers[APP_HEADER] = 'native';
+  // The device's tracking choice, on every request — the server refuses to
+  // store analytics or attribution unless the category is named here, so a
+  // call that forgot to check consent still cannot write it (twin of mWeb's
+  // apollo.ts).
+  headers[CONSENT_HEADER] = consentHeaderValue(useConsentStore.getState().choice);
 
   const canRetry = isQuery(document as DocumentNode);
   let lastError: unknown;

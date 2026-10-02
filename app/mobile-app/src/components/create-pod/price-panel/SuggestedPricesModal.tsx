@@ -1,5 +1,5 @@
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -102,7 +102,7 @@ export function SuggestedPricesModal({
             padding={20}
             gap={12}
           >
-            <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+            <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" gap={12}>
                 <Text
                   testID="suggested-prices-title"
@@ -146,7 +146,7 @@ export function SuggestedPricesModal({
                   </YStack>
                 </YStack>
               </ScrollView>
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

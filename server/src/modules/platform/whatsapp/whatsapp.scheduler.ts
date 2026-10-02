@@ -7,12 +7,10 @@
  * could be asked how it went. Those are all the passage of time, so they need a
  * sweep rather than a call site.
  *
- * SINGLE REPLICA ONLY. There is no distributed lock anywhere in this server —
- * `src/config` has redis.ts and redisResponseCache.ts and neither offers one,
- * and `deploy/docker-compose.yml` declares no replicas. Every replica added
- * would run its own copy of these sweeps. The send log's unique index makes the
- * duplicate a wasted insert rather than a second billed message, so the failure
- * is noise and not money, but SCALING THIS SERVICE OUT NEEDS A LOCK FIRST.
+ * ONE PROCESS RUNS IT. The sweep is a cluster job (utils/clusterJob.ts), so
+ * only the scheduler leader runs it however many replicas there are. The send
+ * log's unique index stays as the second line: a duplicate would be a wasted
+ * insert rather than a second billed message.
  *
  * Two things keep a sweep safe:
  *   - THE CUTOFF. On the first tick nothing has ever been messaged, so a naive
@@ -24,7 +22,7 @@
  *     (event_key, entity_id, destination) is keyed on. Running a sweep twice is
  *     a rejected insert, not a second bill.
  */
-import { logs } from '@observability/log';
+import { startClusterJob } from '@utils/clusterJob';
 import { getUrlConfigs } from '@config/url-configs';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -558,20 +556,11 @@ export async function runWhatsappSweeps(): Promise<void> {
  * start in a test run, which would post to AiSensy for real, impossible.
  */
 export function startWhatsappScheduler(): () => void {
-  if (process.env.NODE_ENV === 'test') return () => undefined;
-  const sweep = () => {
-    // The interval must survive any failure (Mongo, AiSensy, a bad document).
-    runWhatsappSweeps().catch((err) => {
-      logs.server.error('whatsapp-scheduler', 'sweep', { error: err, msg: 'sweep failed' });
-    });
-  };
-  const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
-  const interval = setInterval(sweep, SWEEP_INTERVAL_MS);
-  // Never keep the process alive just for WhatsApp sweeps.
-  first.unref?.();
-  interval.unref?.();
-  return () => {
-    clearTimeout(first);
-    clearInterval(interval);
-  };
+  return startClusterJob({
+    component: 'whatsapp-scheduler',
+    operation: 'sweep',
+    firstDelayMs: FIRST_SWEEP_DELAY_MS,
+    intervalMs: SWEEP_INTERVAL_MS,
+    run: runWhatsappSweeps,
+  });
 }

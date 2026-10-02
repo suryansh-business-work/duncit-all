@@ -76,6 +76,8 @@ export const clubTypeDefs = /* GraphQL */ `
     matched_venues: [Venue!]!
     "How many venues auto-match this club (location + category)."
     matched_venues_count: Int!
+    "Open (AVAILABLE, not yet started) slots across the matched venues; 0 means a physical pod cannot be booked here yet."
+    available_slots_count: Int!
     "Hosts explicitly linked by an admin (Bug 5)."
     host_ids: [ID!]!
     "Resolved host profiles — linked hosts, or the hosts of the club's pods as a fallback."

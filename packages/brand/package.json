@@ -17,6 +17,8 @@
     "./SiteMeta.astro": "./src/SiteMeta.astro",
     "./GoogleAnalytics.astro": "./src/GoogleAnalytics.astro",
     "./google-analytics": "./src/google-analytics.ts",
+    "./ConsentBanner.astro": "./src/ConsentBanner.astro",
+    "./consent-banner": "./src/consent-banner.ts",
     "./site-meta": "./src/site-meta.ts"
   },
   "files": [
@@ -32,6 +34,7 @@
   },
   "dependencies": {
     "@duncit/captcha": "workspace:*",
-    "@duncit/i18n": "workspace:*"
+    "@duncit/i18n": "workspace:*",
+    "@duncit/utils": "workspace:*"
   }
 }

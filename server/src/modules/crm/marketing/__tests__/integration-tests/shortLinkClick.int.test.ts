@@ -323,3 +323,75 @@ describe('the public /r/:code route records the click', () => {
     record.mockRestore();
   });
 });
+
+describe('the consent banner decides what a click keeps', () => {
+  const app = express();
+  app.use('/r', buildShortLinkRouter());
+  const consentCookie = (marketing: boolean) =>
+    `duncit_consent=${encodeURIComponent(
+      JSON.stringify({ analytics: false, marketing, decided_at: new Date().toISOString() })
+    )}`;
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+  it('counts a visitor who never consented without anything that identifies them', async () => {
+    const link = await newLink();
+    await request(app)
+      .get(`/r/${link.code}`)
+      .query({ dr: 'https://www.instagram.com/p/1' })
+      .set('user-agent', ANDROID_CHROME)
+      .set('x-forwarded-for', '103.21.244.0');
+
+    await settle();
+    const doc = await ShortLinkClickModel.findOne({ code: link.code }).exec();
+    expect(doc?.consent_signal).toBe('NO_CONSENT');
+    expect(doc?.ip_hash).toBeNull();
+    expect(doc?.user_agent).toBeNull();
+    expect(doc?.referrer_url).toBeNull();
+    expect(doc?.platform).toBe('Instagram');
+  });
+
+  it('keeps the full click for a visitor whose consent cookie allows marketing', async () => {
+    const link = await newLink();
+    await request(app)
+      .get(`/r/${link.code}`)
+      .set('cookie', consentCookie(true))
+      .set('user-agent', ANDROID_CHROME)
+      .set('x-forwarded-for', '103.21.244.0');
+
+    await settle();
+    const doc = await ShortLinkClickModel.findOne({ code: link.code }).exec();
+    expect(doc?.consent_signal).toBeNull();
+    expect(doc?.ip_hash).toBeTruthy();
+    expect(doc?.user_agent).toBe(ANDROID_CHROME);
+  });
+
+  it('minimises a cookie that refuses marketing, and honours ?c=1 on the landing report', async () => {
+    const refused = await newLink();
+    await request(app).get(`/r/${refused.code}`).set('cookie', consentCookie(false));
+    await settle();
+    expect((await ShortLinkClickModel.findOne({ code: refused.code }).exec())?.consent_signal).toBe(
+      'NO_CONSENT'
+    );
+
+    const landed = await newLink();
+    const res = await request(app)
+      .get('/r/v')
+      .query({ dl: landed.code, c: '1' })
+      .set('user-agent', ANDROID_CHROME);
+    const doc = await ShortLinkClickModel.findOne({ click_id: res.body.click_id }).exec();
+    expect(doc?.consent_signal).toBeNull();
+    expect(doc?.user_agent).toBe(ANDROID_CHROME);
+  });
+
+  it('lets GPC win over a consent cookie', async () => {
+    const link = await newLink();
+    await request(app)
+      .get(`/r/${link.code}`)
+      .set('cookie', consentCookie(true))
+      .set('sec-gpc', '1');
+    await settle();
+    expect((await ShortLinkClickModel.findOne({ code: link.code }).exec())?.consent_signal).toBe(
+      'GPC'
+    );
+  });
+});

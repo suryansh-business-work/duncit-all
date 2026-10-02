@@ -15,6 +15,7 @@ import {
   REJECT_FOLLOW_REQUEST,
 } from '../../../../pages/hosts-venues-page/queries';
 import { AnswerButtons, FollowBackButton } from './FollowActionButtons';
+import { fireAndForget, logs } from '@duncit/logs';
 
 interface Props {
   /** The notification's action kind — FOLLOW_REQUEST or NEW_FOLLOWER; anything
@@ -139,8 +140,8 @@ export default function FollowRequestActions({
             spinning={inFlight === 'answer'}
             acceptLabel={t('mweb.follow.accept')}
             denyLabel={t('mweb.follow.reject')}
-            onAccept={() => void run('answer', () => accept({ variables: { request_id: requestId } }))}
-            onDeny={() => void run('answer', () => reject({ variables: { request_id: requestId } }))}
+            onAccept={() => fireAndForget(run('answer', () => accept({ variables: { request_id: requestId } })), logs.mWeb, 'FollowRequestActions', 'run')}
+            onDeny={() => fireAndForget(run('answer', () => reject({ variables: { request_id: requestId } })), logs.mWeb, 'FollowRequestActions', 'run')}
           />
         )}
         {!open && settledLabel && (
@@ -155,7 +156,7 @@ export default function FollowRequestActions({
             spinning={inFlight === 'followBack'}
             pending={!canFollowBack(followBackStatus)}
             label={t(followBackLabelKey(followBackStatus))}
-            onFollowBack={() => void run('followBack', () => followBack({ variables: { user_id: actorId } }))}
+            onFollowBack={() => fireAndForget(run('followBack', () => followBack({ variables: { user_id: actorId } })), logs.mWeb, 'FollowRequestActions', 'run')}
           />
         )}
       </Stack>

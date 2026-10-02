@@ -86,7 +86,7 @@ export default function LocationClubStep({ form, hostCategories, clubs, cityClub
           locality={locality}
           locked={pickLocality && !locality}
         />
-        <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
+        <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} showSlots={physical} />
       </Card>
     </Box>
   );

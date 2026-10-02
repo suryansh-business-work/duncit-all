@@ -2,6 +2,7 @@ import {
   createTranslator,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,
+  PRIVACY_BUNDLE,
   WEBSITE_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -31,7 +32,12 @@ import {
  * namespaces are disjoint (`website` and `grievance`), so a shallow merge is the
  * whole of it.
  */
-export const WEBSITE_FALLBACK: NestedCatalogue = { ...WEBSITE_BUNDLE, ...GRIEVANCE_BUNDLE };
+export const WEBSITE_FALLBACK: NestedCatalogue = {
+  ...WEBSITE_BUNDLE,
+  ...GRIEVANCE_BUNDLE,
+  // The consent banner — the same sentences mWeb and the app show.
+  ...PRIVACY_BUNDLE,
+};
 
 export const WEBSITE_FALLBACK_FLAT = flattenCatalogue(WEBSITE_FALLBACK);
 

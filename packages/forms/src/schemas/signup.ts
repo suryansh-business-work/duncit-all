@@ -231,6 +231,12 @@ export function makeSignupSchema(
         hand-rolled mutation.
       */
       acceptedPolicyIds: z.array(z.string()),
+      /*
+        Marketing email and WhatsApp. Opt-IN (GDPR): unticked by default and
+        never required, so leaving it alone is a valid signup that receives no
+        marketing. The server starts the `marketing` category off unless true.
+      */
+      marketingOptIn: z.boolean(),
     })
     .refine((values) => values.password === values.confirmPassword, {
       message: t('mweb.auth.validation.passwordsMismatch'),
@@ -260,4 +266,5 @@ export const signupDefaults: SignupFormValues = {
   confirmPassword: '',
   referralCode: '',
   acceptedPolicyIds: [],
+  marketingOptIn: false,
 };

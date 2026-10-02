@@ -184,7 +184,7 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     country: String
     region: String
     city: String
-    "GPC or DNT when this visitor asked not to be tracked, else null."
+    "GPC or DNT when the browser asked not to be tracked, NO_CONSENT when the visitor has not allowed marketing attribution, else null."
     consent_signal: String
   }
 

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import * as yup from 'yup';
+import { z } from 'zod';
 import { GraphQLError } from 'graphql';
 import {
   MarketingCampaignModel,
@@ -23,25 +23,55 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { instrumentCampaignHtml } from './tracking.service';
 import { logs } from '@observability/log';
 import { appDateTime } from '@utils/app-time';
+import { bool, filled, maxLen, messagesOf, minLen, mixed, obj, shape, str, trim } from '@utils/zod-fields';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
 
-const inputSchema = yup.object({
-  name: yup.string().trim().min(3).max(120).required(),
-  channel: yup.mixed<'EMAIL'>().oneOf(['EMAIL']).required(),
-  audience: yup
-    .mixed<'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS' | 'AUDIENCE_LIST'>()
-    .oneOf(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'])
-    .required(),
-  audience_list_id: yup.string().trim().nullable(),
-  subject: yup.string().trim().min(3).max(180).required(),
-  mjml: yup.string().trim().min(20).required(),
-  card_type: yup.mixed<'POD' | 'CLUB'>().oneOf(['POD', 'CLUB']).nullable(),
-  card_ref_id: yup.string().trim().nullable(),
-  scheduled_at: yup.string().trim().nullable(),
-  send_now: yup.boolean().default(false),
-});
+const CHANNELS = ['EMAIL'] as const;
+const AUDIENCES = ['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'] as const;
+const CARD_TYPES = ['POD', 'CLUB'] as const;
+
+const trimmedText = (...checks: z.core.$ZodCheck<string>[]) =>
+  str(z.string().check(...checks, filled()), { required: true, transforms: [trim] });
+const optionalTrimmed = () => str(z.string().nullable().optional(), { transforms: [trim] });
+
+const inputSchema = obj(
+  shape({
+    name: trimmedText(minLen(3), maxLen(120)),
+    channel: mixed(z.enum(CHANNELS), { oneOf: CHANNELS, required: true }),
+    audience: mixed(z.enum(AUDIENCES), { oneOf: AUDIENCES, required: true }),
+    audience_list_id: optionalTrimmed(),
+    subject: trimmedText(minLen(3), maxLen(180)),
+    mjml: trimmedText(minLen(20)),
+    card_type: mixed(z.enum(CARD_TYPES).nullable().optional(), { oneOf: CARD_TYPES }),
+    card_ref_id: optionalTrimmed(),
+    scheduled_at: optionalTrimmed(),
+    send_now: bool(z.boolean(), { default: false }),
+  })
+);
+
+const PREVIEW_KEYS = ['subject', 'mjml', 'card_type', 'card_ref_id'];
+
+/**
+ * The one problem a preview reports: fields are checked last-to-first and the
+ * check stops at the first failure, so the last failing field speaks.
+ */
+function firstPreviewProblem(error: z.ZodError): string {
+  const rank = (issue: z.core.$ZodIssue) => PREVIEW_KEYS.indexOf(String(issue.path[0]));
+  const last = Math.max(...error.issues.map(rank));
+  return (error.issues.find((issue) => rank(issue) === last) ?? error.issues[0]).message;
+}
+
+/** What a preview needs — the first problem is reported on its own. */
+const previewSchema = obj(
+  shape({
+    subject: str(z.string().check(filled()), { required: true }),
+    mjml: str(z.string().check(filled()), { required: true }),
+    card_type: str(z.string().nullable().optional()),
+    card_ref_id: str(z.string().nullable().optional()),
+  })
+);
 
 function toPub(doc: IMarketingCampaign) {
   return {
@@ -219,7 +249,9 @@ async function renderCampaign(input: {
 
 async function validateInput(input: any) {
   try {
-    const payload = await inputSchema.validate(input, { abortEarly: false, stripUnknown: true });
+    const parsed = await inputSchema.safeParseAsync(input);
+    if (!parsed.success) throw new Error(messagesOf(parsed.error).join(', '));
+    const payload = parsed.data;
     if (payload.card_type && !payload.card_ref_id) throw new Error('Card selection is required');
     if (payload.audience === 'AUDIENCE_LIST' && !payload.audience_list_id) {
       throw new Error('Pick the audience list to send to');
@@ -460,9 +492,9 @@ export const marketingService = {
   },
 
   async renderPreview(input: any) {
-    const payload = await yup
-      .object({ subject: yup.string().required(), mjml: yup.string().required(), card_type: yup.string().nullable(), card_ref_id: yup.string().nullable() })
-      .validate(input, { stripUnknown: true });
+    const parsed = await previewSchema.safeParseAsync(input);
+    if (!parsed.success) throw new Error(firstPreviewProblem(parsed.error));
+    const payload = parsed.data;
     const rendered = await renderCampaign(payload as any);
     return {
       subject: rendered.subject,

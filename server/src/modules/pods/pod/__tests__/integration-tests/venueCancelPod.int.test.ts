@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { podService } from '../../pod.service';
 import { PodModel } from '../../pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { paymentService } from '@modules/finance/payment/payment.service';
@@ -368,6 +369,27 @@ describe('podService.venueCancelPod — cancellation', () => {
     expect((notifyEach as jest.Mock).mock.calls.at(-1)![0]).toHaveLength(2);
     expect(emailService.sendPodRefundEmail).toHaveBeenCalledTimes(1);
     expect((await PaymentModel.findById(payment._id))?.status).toBe('REFUNDED');
+  });
+
+  it('still refunds and notifies when releasing the venue slot fails after the delete is claimed', async () => {
+    const errorSpy = jest.spyOn(logs.server, 'error').mockImplementation(() => {});
+    jest.spyOn(venueSlotService, 'releaseForPod').mockRejectedValue(new Error('slot store offline'));
+    const { pod, payment } = await seedBookedPod();
+
+    const result = await podService.venueCancelPod(String(pod._id), String(ownerId), 'Kitchen fire in the hall');
+
+    expect(result).toMatchObject({ health_penalty: 5, refunded_count: 1 });
+    expect((await PaymentModel.findById(payment._id))?.status).toBe('REFUNDED');
+    expect(await PodModel.findById(pod._id).setOptions({ includeDeleted: true })).toMatchObject({
+      is_active: false,
+      deleted_at: expect.any(Date),
+    });
+    expect(emailService.sendPodRefundEmail).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'pod',
+      'softDeletePod',
+      expect.objectContaining({ pod_id: String(pod._id), msg: expect.stringMatching(/releasing/) })
+    );
   });
 });
 

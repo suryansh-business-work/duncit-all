@@ -70,17 +70,29 @@ export async function softDeletePod(
   const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
   if (!doc) notFound();
   if (doc!.deleted_at) return false;
-  // Release the venue slot + reserved inventory, then claim the delete. The
-  // filter carries deleted_at itself, so the soft-delete hook leaves it alone
-  // and the write only lands while the pod is still live.
-  await applyProductDeltas(doc!.product_requests ?? [], []);
-  await venueSlotService.releaseForPod(String(doc!._id));
+  // Claim the delete FIRST, then release. The filter carries deleted_at itself,
+  // so the soft-delete hook leaves it alone and the write only lands while the
+  // pod is still live — only the winner goes on to release. Releasing before
+  // the claim let two racing cancels both hand the reserved units back,
+  // crediting the pool twice.
   const claimed = await PodModel.findOneAndUpdate(
     { _id: doc!._id, deleted_at: null },
     { $set: { deleted_at: new Date(), is_active: false } },
     { new: true }
   ).setOptions({ includeDeleted: true });
   if (!claimed) return false;
+  // The cancellation is committed; a failed release must not stop the refunds
+  // that follow it. It is logged for an operator to put right.
+  try {
+    await applyProductDeltas(doc!.product_requests ?? [], []);
+    await venueSlotService.releaseForPod(String(doc!._id));
+  } catch (err) {
+    logs.server.error('pod', 'softDeletePod', {
+      error: err,
+      pod_id: String(doc!._id),
+      msg: 'releasing the slot or reserved inventory failed',
+    });
+  }
   await podAuditService.record({
     pod: claimed,
     action: 'DELETE',
@@ -143,8 +155,8 @@ async function claimCancellationRefund(input: {
 
 /**
  * The money-and-mail half of a pod cancellation, shared by the host delete and
- * the venue-owner cancel flows: refund every SUCCESS payment, snapshot the
- * audience, commit the soft delete, then best-effort email a cancellation note
+ * the venue-owner cancel flows: snapshot the audience, commit the soft delete,
+ * refund every SUCCESS payment, then best-effort email a cancellation note
  * to each attendee and a refund note to each payer. Returns the refunded count,
  * or null when a concurrent cancel had already committed the delete — the
  * caller must then skip every follow-up effect rather than double-apply it.
@@ -172,6 +184,20 @@ export async function refundAndNotifyCancellation(
   const podTitle = doc.pod_title;
   const logComponent = CANCEL_LOG_COMPONENT[initiatedBy];
   const pct = Math.min(100, Math.max(0, Number(refundPct) || 0));
+
+  // The delete is claimed BEFORE any money moves, so of two cancels racing on
+  // one pod exactly one refunds, mails and reports the count — the loser stops
+  // here with nothing done. Refunding first let the loser claim the payments
+  // while the other call won the delete, and then neither of them sent the
+  // refund notes or quoted the refund. The audience is snapshotted from `doc`.
+  const audience = await podAudience(doc, excludeUserId);
+  const won = await softDeletePod(String(doc._id), {
+    actorUserId,
+    source: initiatedBy,
+    note: reason,
+  });
+  // Another cancel committed first and owns the refunds and the notices.
+  if (!won) return null;
 
   const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
   // Null pays now; a Date holds every refund until the pod's start, which is
@@ -212,16 +238,6 @@ export async function refundAndNotifyCancellation(
       currency_symbol: payment.currency_symbol,
     });
   }
-
-  const audience = await podAudience(doc, excludeUserId);
-  const won = await softDeletePod(String(doc._id), {
-    actorUserId,
-    source: initiatedBy,
-    note: reason,
-  });
-  // Another cancel committed first: it already emailed this audience, so
-  // sending again would double-notify every attendee and payer.
-  if (!won) return null;
 
   // A cancelled pod can never fill a released seat, and the payments behind any
   // open Backout were just flipped to REFUNDED above — left IN_PROCESS, the

@@ -110,7 +110,12 @@ export function ClubDetailsSheet({ club, open, onClose }: Readonly<Props>) {
             padding={20}
           >
             <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
-              <XStack alignItems="center" justifyContent="space-between" gap={12} paddingBottom={12}>
+              <XStack
+                alignItems="center"
+                justifyContent="space-between"
+                gap={12}
+                paddingBottom={12}
+              >
                 <Text
                   testID="club-preview-title"
                   role="heading"

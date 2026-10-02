@@ -29,14 +29,32 @@ export function ClubAdminContactRow({ admin }: Readonly<{ admin: ClubAdmin }>) {
   const { accent } = useThemeColors();
   const lines: ContactLine[] = [];
   if (admin.phone) {
-    lines.push({ key: 'phone', icon: 'phone', label: t('mweb.podPending.phone'), value: admin.phone, url: telUrl(admin.phone) });
+    lines.push({
+      key: 'phone',
+      icon: 'phone',
+      label: t('mweb.podPending.phone'),
+      value: admin.phone,
+      url: telUrl(admin.phone),
+    });
   }
   const wa = whatsappUrl(admin.whatsapp ?? '');
   if (wa && admin.whatsapp) {
-    lines.push({ key: 'whatsapp', icon: 'chat', label: t('mweb.podPending.whatsapp'), value: admin.whatsapp, url: wa });
+    lines.push({
+      key: 'whatsapp',
+      icon: 'chat',
+      label: t('mweb.podPending.whatsapp'),
+      value: admin.whatsapp,
+      url: wa,
+    });
   }
   if (admin.email) {
-    lines.push({ key: 'email', icon: 'email', label: t('mweb.podPending.email'), value: admin.email, url: mailtoUrl(admin.email) });
+    lines.push({
+      key: 'email',
+      icon: 'email',
+      label: t('mweb.podPending.email'),
+      value: admin.email,
+      url: mailtoUrl(admin.email),
+    });
   }
 
   return (
@@ -44,7 +62,12 @@ export function ClubAdminContactRow({ admin }: Readonly<{ admin: ClubAdmin }>) {
       {admin.avatar_url ? (
         <AppImage source={{ uri: admin.avatar_url }} style={AVATAR_STYLE} />
       ) : (
-        <YStack {...AVATAR_STYLE} alignItems="center" justifyContent="center" backgroundColor="$soft">
+        <YStack
+          {...AVATAR_STYLE}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$soft"
+        >
           <Text fontSize={14} fontWeight="700" color="$color">
             {(admin.name?.[0] ?? '?').toUpperCase()}
           </Text>

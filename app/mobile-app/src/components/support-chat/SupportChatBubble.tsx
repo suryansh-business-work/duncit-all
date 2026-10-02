@@ -4,12 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AttachmentView } from '@/components/AttachmentView';
 import type { SupportChatMessage } from '@/hooks/useSupportChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import {
-  MINE_BUBBLE_SIDE,
-  THEIRS_BUBBLE_SIDE,
-  formatTime,
-  tickState,
-} from '@/utils/support-chat';
+import { MINE_BUBBLE_SIDE, THEIRS_BUBBLE_SIDE, formatTime, tickState } from '@/utils/support-chat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 

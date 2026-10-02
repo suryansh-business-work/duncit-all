@@ -72,7 +72,9 @@ describe('native ErrorBoundary', () => {
     renderWithProviders(screenLayout({ children: <Crash />, route: { name: 'Wallet' } }));
 
     fireEvent.press(screen.getByTestId('error-boundary-report'));
-    expect(await screen.findByText('The report could not be sent. Try again in a moment.')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('The report could not be sent. Try again in a moment.'),
+    ).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('error-boundary-report'));
     expect(await screen.findByText('Thanks — the report reached our team.')).toBeOnTheScreen();
 

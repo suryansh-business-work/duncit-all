@@ -92,6 +92,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override render() {
     if (!this.state.error) return this.props.children;
-    return <ErrorPanel reference={this.state.report?.crash_id} onRetry={this.reset} onReport={this.report} />;
+    return (
+      <ErrorPanel
+        reference={this.state.report?.crash_id}
+        onRetry={this.reset}
+        onReport={this.report}
+      />
+    );
   }
 }

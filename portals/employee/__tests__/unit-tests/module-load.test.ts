@@ -35,5 +35,7 @@ describe('every module loads', () => {
     const load = modules[modulePath] as () => Promise<Record<string, unknown>>;
 
     await expect(load()).resolves.toBeDefined();
-  });
+    // The first import transforms its whole graph cold; on a busy runner that
+    // alone outran vitest's 5s. Same allowance the other portals give it.
+  }, 45_000);
 });

@@ -52,19 +52,33 @@ export function ErrorPanel({
       backgroundColor="$background"
     >
       <MaterialIcons name="error-outline" size={48} color={semantic.error} />
-      <Text testID="error-boundary-title" role="alert" fontSize={20} fontWeight="600" color="$color" textAlign="center">
+      <Text
+        testID="error-boundary-title"
+        role="alert"
+        fontSize={20}
+        fontWeight="600"
+        color="$color"
+        textAlign="center"
+      >
         {title}
       </Text>
       <Text fontSize={14} color="$muted" textAlign="center">
         {t('ui.errorBoundary.body')}
       </Text>
       <YStack gap={12} alignSelf="stretch">
-        <DuncitButton testID="error-boundary-retry" label={t('ui.errorBoundary.retry')} onPress={onRetry} size="lg" />
+        <DuncitButton
+          testID="error-boundary-retry"
+          label={t('ui.errorBoundary.retry')}
+          onPress={onRetry}
+          size="lg"
+        />
         {status === 'sent' ? null : (
           <DuncitButton
             testID="error-boundary-report"
             variant="outline"
-            label={status === 'sending' ? t('ui.errorBoundary.reporting') : t('ui.errorBoundary.report')}
+            label={
+              status === 'sending' ? t('ui.errorBoundary.reporting') : t('ui.errorBoundary.report')
+            }
             loading={status === 'sending'}
             onPress={report}
             size="lg"

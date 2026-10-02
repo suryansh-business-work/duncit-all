@@ -15,7 +15,10 @@ import { ScreenRefreshProvider } from '@/components/PullToRefresh';
  *
  * Module scope, so the identity is stable and no screen ever remounts because of it.
  */
-export const screenLayout = ({ children, route }: Readonly<{ children: ReactNode; route: { name: string } }>) => (
+export const screenLayout = ({
+  children,
+  route,
+}: Readonly<{ children: ReactNode; route: { name: string } }>) => (
   <ErrorBoundary scope="page" route={route.name}>
     <ScreenRefreshProvider>{children}</ScreenRefreshProvider>
   </ErrorBoundary>

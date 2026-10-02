@@ -82,13 +82,13 @@ describe('05 Change password', { testIsolation: false }, () => {
   it('CP-05 a wrong code is refused', () => {
     fillNewPassword(wrongCode(firstCode), next);
     submitNewPassword();
-    newPasswordError().should('contain.text', 'Invalid OTP');
+    cy.byTestId('new-password-error').should('contain.text', 'Invalid OTP');
   });
 
   it('CP-06 the current password is refused as the new one', () => {
     fillNewPassword(firstCode, current);
     updateButton().click();
-    newPasswordError().should('contain.text', 'New password must be different from your current password');
+    cy.byTestId('new-password-error').should('contain.text', 'New password must be different from your current password');
   });
 
   it('CP-07 the new pair needs 8 characters and must match', () => {

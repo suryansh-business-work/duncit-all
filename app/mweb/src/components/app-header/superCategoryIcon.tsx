@@ -26,7 +26,7 @@ let iconSetLoad: Promise<IconSet> | null = null;
 function loadIconSet(): Promise<IconSet> {
   iconSetLoad ??= import('@mui/icons-material').then(
     (mod) => {
-      iconSet = mod as unknown as IconSet;
+      iconSet = mod;
       return iconSet;
     },
     (error: unknown) => {

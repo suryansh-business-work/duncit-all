@@ -91,7 +91,7 @@ describe('08 Delete account', { testIsolation: false }, () => {
   it('AD-03 a wrong code is refused', () => {
     fill('field-otp', wrongCode(firstCode));
     submitDeletion();
-    deletionError().should('contain.text', 'Invalid OTP');
+    cy.byTestId('delete-account-error').should('contain.text', 'Invalid OTP');
   });
 
   it('AD-04 a reason over 1,000 characters is refused', () => {

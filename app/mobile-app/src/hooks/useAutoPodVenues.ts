@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import type { AutoPodVenueSpace } from '@duncit/utils';
 
@@ -33,6 +34,31 @@ export function venueCategoryPath(venue: AutoPodVenueOption | null): string {
     .join(' › ');
 }
 
+type MyVenue = ResultOf<typeof MyVenuesForAutoPodDocument>['myVenues'][number];
+
+/** One fetched venue, shaped as the queue and the accept sheet read it. */
+function toVenueOption(venue: MyVenue): AutoPodVenueOption {
+  return {
+    id: venue.id,
+    venue_name: venue.venue_name,
+    location_id: venue.location_id ?? null,
+    city: venue.city,
+    capacity: venue.capacity ?? 0,
+    capacity_items: (venue.capacity_items ?? []).map((item) => ({
+      label: item.label,
+      capacity: item.capacity,
+    })),
+    venue_category: venue.venue_category
+      ? {
+          sub_category_id: venue.venue_category.sub_category_id ?? null,
+          super_category_name: venue.venue_category.super_category_name,
+          category_name: venue.venue_category.category_name,
+          sub_category_name: venue.venue_category.sub_category_name,
+        }
+      : null,
+  };
+}
+
 /**
  * The owner's approved, active venues — the ones that can be offered an Auto
  * Pod. The RN twin of the query `@duncit/auto-pods`' `AutoPodVenuePicker`
@@ -53,25 +79,7 @@ export function useAutoPodVenues() {
         setVenues(
           res.myVenues
             .filter((venue) => String(venue.status) === 'APPROVED' && venue.is_active)
-            .map((venue) => ({
-              id: venue.id,
-              venue_name: venue.venue_name,
-              location_id: venue.location_id ?? null,
-              city: venue.city,
-              capacity: venue.capacity ?? 0,
-              capacity_items: (venue.capacity_items ?? []).map((item) => ({
-                label: item.label,
-                capacity: item.capacity,
-              })),
-              venue_category: venue.venue_category
-                ? {
-                    sub_category_id: venue.venue_category.sub_category_id ?? null,
-                    super_category_name: venue.venue_category.super_category_name,
-                    category_name: venue.venue_category.category_name,
-                    sub_category_name: venue.venue_category.sub_category_name,
-                  }
-                : null,
-            })),
+            .map(toVenueOption),
         );
       })
       .catch(() => undefined)

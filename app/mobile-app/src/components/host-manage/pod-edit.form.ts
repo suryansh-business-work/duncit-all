@@ -43,7 +43,7 @@ export interface HostPodSummary {
 /** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount — the
  * sheet hides the field for it. mWeb twin: @duncit/host-pod-actions. */
 export const podEditIsFree = (pod: HostPodSummary | null): boolean =>
-  !pod || (pod.pod_type ?? '').includes('FREE') || !(Number(pod.pod_amount) > 0);
+  !pod || (pod.pod_type ?? '').includes('FREE') || (Number(pod.pod_amount) || 0) <= 0;
 
 /** The range a live pod may be resized within — one definition, in @duncit/utils. */
 export type { PodSpotLimits } from '@duncit/utils';

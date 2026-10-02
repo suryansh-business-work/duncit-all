@@ -30,7 +30,7 @@ function usePenalty(): number | null {
   const [penalty, setPenalty] = useState<number | null>(null);
   useEffect(() => {
     let active = true;
-    graphqlRequest(VenueCancelPenaltyDocument, undefined)
+    graphqlRequest(VenueCancelPenaltyDocument)
       .then((data) => active && setPenalty(data.publicAppSettings.venue_cancel_health_penalty))
       .catch(() => undefined);
     return () => {

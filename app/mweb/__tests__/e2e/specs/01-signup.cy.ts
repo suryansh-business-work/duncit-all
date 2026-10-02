@@ -241,7 +241,7 @@ describe('01 Sign up', () => {
       sendCode('VerifySignupWhatsAppOtp', () => {
         verifyButton().should('be.enabled').click();
       });
-      verifyError().should('contain.text', 'Incorrect code — 4 attempts left');
+      cy.byTestId('signup-verify-error').should('contain.text', 'Incorrect code — 4 attempts left');
     });
 
     it('SU-17 Send again inside 30 seconds is refused', () => {

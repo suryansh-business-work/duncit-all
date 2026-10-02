@@ -4,7 +4,12 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AttachmentView } from '@/components/AttachmentView';
 import type { SupportChatMessage } from '@/hooks/useSupportChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { formatTime, tickState } from '@/utils/support-chat';
+import {
+  MINE_BUBBLE_SIDE,
+  THEIRS_BUBBLE_SIDE,
+  formatTime,
+  tickState,
+} from '@/utils/support-chat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -66,6 +71,15 @@ interface Props {
   onRetry?: (message: SupportChatMessage) => void;
 }
 
+/** Who wrote a support-side message: the AI assistant or the named agent. */
+function AuthorName({ message }: Readonly<{ message: SupportChatMessage }>) {
+  return (
+    <Text fontSize={12} fontWeight="600" color={message.is_ai ? '$accent' : '$muted'}>
+      {message.is_ai ? 'Duncit Assistant' : message.sender_name || 'Support'}
+    </Text>
+  );
+}
+
 export function SupportChatBubble({
   message,
   agentLastReadAt,
@@ -97,34 +111,28 @@ export function SupportChatBubble({
 
   const mine = message.sender_role === 'USER';
   const tick = mine ? tickState(message, agentLastReadAt) : null;
+  const side = mine ? MINE_BUBBLE_SIDE : THEIRS_BUBBLE_SIDE;
 
   return (
-    <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`support-msg-${message.id}`}>
+    <XStack justifyContent={side.justify} testID={`support-msg-${message.id}`}>
       <YStack
         maxWidth="80%"
         gap={6}
         paddingHorizontal={12}
         paddingVertical={8}
         borderRadius={18}
-        borderBottomRightRadius={mine ? 6 : 18}
-        borderBottomLeftRadius={mine ? 18 : 6}
-        backgroundColor={mine ? '$primary' : '$surface'}
-        borderWidth={mine ? 0 : 1}
+        {...side.frame}
         borderColor="$cardBorder"
       >
-        {!mine && (
-          <Text fontSize={12} fontWeight="600" color={message.is_ai ? '$accent' : '$muted'}>
-            {message.is_ai ? 'Duncit Assistant' : message.sender_name || 'Support'}
-          </Text>
-        )}
+        {!mine && <AuthorName message={message} />}
         <AttachmentView urls={message.attachments} />
         {message.text ? (
-          <Text fontSize={14} color={mine ? '$onPrimary' : '$color'}>
+          <Text fontSize={14} color={side.ink}>
             {message.text}
           </Text>
         ) : null}
         <XStack justifyContent="flex-end" alignItems="center" gap={4}>
-          <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'}>
+          <Text fontSize={10} color={side.subtleInk}>
             {formatTime(message.created_at, timeZone)}
           </Text>
           {tick && tick !== 'failed' ? <Tick id={message.id} state={tick} /> : null}

@@ -1,13 +1,11 @@
-import { useCallback, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { useState } from 'react';
 import { Alert, Box, LinearProgress } from '@mui/material';
 import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { PageHeader } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
-import { SOCIAL_SETUP, type SocialAccount, type SocialProviderStatus } from './queries';
 import type { SocialIdea } from './publish.queries';
-import { useConnectResult } from './useConnectResult';
+import { useSocialSetup } from './useSocialSetup';
 import AccountsTab from './accounts/AccountsTab';
 import PublishTab from './publish/PublishTab';
 import ComposerDialog, { type ComposerRequest } from './publish/ComposerDialog';
@@ -31,14 +29,6 @@ const socialTabs = (t: Translate): DuncitTabItem<Tab>[] => [
   { value: 'ideas', label: t('marketing.social.tabIdeas') },
 ];
 
-const NO_PROVIDERS: SocialProviderStatus[] = [];
-const NO_ACCOUNTS: SocialAccount[] = [];
-
-interface SetupData {
-  socialProviders: SocialProviderStatus[];
-  socialAccounts: SocialAccount[];
-}
-
 /**
  * Marketing → Social Accounts: Duncit's Buffer. Connect the pages and
  * channels, write and schedule posts to them, see every post and how it did,
@@ -51,16 +41,9 @@ interface SetupData {
 export default function SocialAccountsPage() {
   const { t } = useTranslation();
   const tabs = useTabParam<Tab>({ items: socialTabs(t), fallback: 'accounts' });
-  const { data, loading, error, refetch } = useQuery<SetupData>(SOCIAL_SETUP, { fetchPolicy: 'cache-and-network' });
-  const providers = data?.socialProviders ?? NO_PROVIDERS;
-  const accounts = data?.socialAccounts ?? NO_ACCOUNTS;
+  const { providers, accounts, loading, error, reload } = useSocialSetup();
   const [composer, setComposer] = useState<ComposerRequest | null>(null);
   const [openPostId, setOpenPostId] = useState<string | null>(null);
-
-  const reload = useCallback(() => {
-    refetch().catch(() => undefined);
-  }, [refetch]);
-  useConnectResult(reload);
 
   const pickIdea = (idea: SocialIdea) => setComposer({ text: ideaText(idea), idea_id: idea.id });
 
@@ -68,14 +51,14 @@ export default function SocialAccountsPage() {
     <Box sx={{ p: 2 }} data-testid="social-accounts-page">
       <PageHeader title={t('marketing.social.title')} subtitle={t('marketing.social.subtitle')} sx={{ mb: 2 }} />
       <DuncitTabs {...tabs} idPrefix="social" variant="scrollable" scrollButtons="auto" sx={{ mb: 2 }} />
-      {loading && !data && <LinearProgress sx={{ mb: 2 }} />}
+      {loading && <LinearProgress sx={{ mb: 2 }} />}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {parseApiError(error)}
         </Alert>
       )}
       <Box {...tabPanelProps('social', tabs.value)}>
-        {tabs.value === 'accounts' && <AccountsTab providers={providers} accounts={accounts} onChanged={reload} />}
+        {tabs.value === 'accounts' && <AccountsTab providers={providers} accounts={accounts} onChanged={reload} returnTo="ACCOUNTS" />}
         {tabs.value === 'publish' && <PublishTab onCompose={setComposer} onOpenPost={setOpenPostId} />}
         {tabs.value === 'posts' && <PostsTab accounts={accounts} onOpenPost={setOpenPostId} />}
         {tabs.value === 'analytics' && <AnalyticsTab accounts={accounts} />}

@@ -8,11 +8,12 @@ import {
   SOCIAL_CONNECT_URL,
   SYNC_SOCIAL_ACCOUNT,
   type SocialAccount,
+  type SocialConnectReturn,
   type SocialProvider,
 } from '../queries';
 
-/** Connect, sync now and disconnect — each one reports its own outcome. */
-export function useSocialAccountActions(onChanged: () => void) {
+/** Connect, sync now and disconnect — each one reports its own outcome. `returnTo` is the page the connection lands back on. */
+export function useSocialAccountActions(onChanged: () => void, returnTo: SocialConnectReturn) {
   const { t } = useTranslation();
   const [connectMut] = useMutation<{ socialConnectUrl: string }>(SOCIAL_CONNECT_URL);
   const [syncMut] = useMutation<{ syncSocialAccount: SocialAccount }>(SYNC_SOCIAL_ACCOUNT);
@@ -22,13 +23,13 @@ export function useSocialAccountActions(onChanged: () => void) {
   const connect = useCallback(
     async (provider: SocialProvider) => {
       try {
-        const { data } = await connectMut({ variables: { provider } });
+        const { data } = await connectMut({ variables: { provider, return_to: returnTo } });
         if (data?.socialConnectUrl) window.location.assign(data.socialConnectUrl);
       } catch (error) {
         notify(parseApiError(error), 'error');
       }
     },
-    [connectMut]
+    [connectMut, returnTo]
   );
 
   const sync = useCallback(

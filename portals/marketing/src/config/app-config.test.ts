@@ -21,6 +21,7 @@ describe('Duncit Marketing app config', () => {
         '/audience',
         '/campaigns/email',
         '/notifications',
+        '/social-calendar',
         '/ads-approvals',
         '/live-ads',
         '/ads-settings',

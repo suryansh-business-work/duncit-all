@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Box, Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, ButtonBase, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { SocialCalendarItem } from '../publish.queries';
 import CalendarItemButton from './CalendarItemButton';
@@ -20,20 +19,22 @@ interface Props {
   onOpen: (item: SocialCalendarItem) => void;
 }
 
-/** One day of the month: its date, a "+" for days that have not passed, and its posts. */
+/** One day of the month: its date — a button on days that have not passed — and its posts. */
 export default function CalendarDayCell({ day, today, inMonth, items, onAdd, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? items : items.slice(0, VISIBLE);
   const hidden = items.length - shown.length;
   const isToday = day === today;
+  const numberColor = inMonth ? 'text.primary' : 'text.secondary';
 
   return (
     <Box
       role="cell"
       aria-label={dayTitle(day)}
       sx={{
-        minHeight: 120,
+        // Six weeks share whatever the screen has below the header, so the month fills it.
+        minHeight: 'max(120px, calc((100dvh - 300px) / 6))',
         p: 0.75,
         borderRight: 1,
         borderBottom: 1,
@@ -42,18 +43,25 @@ export default function CalendarDayCell({ day, today, inMonth, items, onAdd, onO
         minWidth: 0,
       }}
     >
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="caption" sx={isToday ? TODAY_SX : { fontWeight: 500, color: inMonth ? 'text.primary' : 'text.secondary' }}>
+      {day >= today ? (
+        <Tooltip title={t('marketing.social.addPostOn', { vars: { day: dayTitle(day) } })}>
+          {/* The whole date row is the button: pressing a day starts a post dated that day. */}
+          <ButtonBase
+            onClick={() => onAdd(day)}
+            data-testid={`social-calendar-add-${day}`}
+            sx={{ width: '100%', minHeight: 32, justifyContent: 'space-between', borderRadius: 1, px: 0.25, mb: 0.5, '&:hover': { bgcolor: 'action.hover' } }}
+          >
+            <Typography variant="caption" sx={isToday ? TODAY_SX : { fontWeight: 500, color: numberColor }}>
+              {dayNumber(day)}
+            </Typography>
+            <AddIcon fontSize="small" color="action" />
+          </ButtonBase>
+        </Tooltip>
+      ) : (
+        <Typography variant="caption" component="div" sx={{ fontWeight: 500, color: numberColor, minHeight: 32, px: 0.25, mb: 0.5, display: 'flex', alignItems: 'center' }}>
           {dayNumber(day)}
         </Typography>
-        {day >= today && (
-          <Tooltip title={t('marketing.social.addPostOn', { vars: { day: dayTitle(day) } })}>
-            <DuncitIconButton size="small" onClick={() => onAdd(day)} data-testid={`social-calendar-add-${day}`}>
-              <AddIcon fontSize="small" />
-            </DuncitIconButton>
-          </Tooltip>
-        )}
-      </Stack>
+      )}
       <Stack spacing={0.5}>
         {shown.map((item) => (
           <CalendarItemButton key={`${item.kind}-${item.id}`} item={item} onOpen={onOpen} />

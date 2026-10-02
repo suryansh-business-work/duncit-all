@@ -666,7 +666,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       createPost: 'Create post',
       editPost: 'Edit post',
       postTo: 'Post to',
-      connectFirst: 'Connect an account on the Accounts tab first.',
+      connectFirst: 'Connect an account first.',
       postText: 'What do you want to say?',
       postTextHint: 'One text goes to every account you pick.',
       charCount: '{network}: {used} / {max}',
@@ -778,6 +778,15 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       dismissIdea: 'Dismiss',
       restoreIdea: 'Restore',
       deleteIdeaTitle: 'Delete this idea?',
+    },
+    // Marketing → Social Calendar: the publishing calendar on its own page,
+    // with the accounts it posts to one button away.
+    socialCalendar: {
+      title: 'Social Calendar',
+      subtitle: 'Plan, schedule and publish to Instagram, Facebook, LinkedIn, X and YouTube. Press a date to write a post for that day.',
+      connectAccounts: 'Connect accounts',
+      accountsTitle: 'Connected accounts',
+      noAccounts: 'No social account is connected yet. Connect Instagram, Facebook or LinkedIn to start posting.',
     },
   },
 };

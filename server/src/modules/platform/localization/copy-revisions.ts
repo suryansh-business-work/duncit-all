@@ -72,4 +72,6 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "ecommPortal.shipping.deleteWarehouseMessage": [
     "The warehouse is removed here. ShipRocket keeps its own copy of the pickup address.",
   ],
+  // The composer also opens from Social Calendar now, which has no Accounts tab.
+  "marketing.social.connectFirst": ["Connect an account on the Accounts tab first."],
 };

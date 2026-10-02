@@ -17,6 +17,7 @@ import NotificationsPage from './pages/notifications-page/NotificationsPage';
 import AppPopupsPage from './pages/app-popups-page/AppPopupsPage';
 import StatusPage from './pages/status-page/StatusPage';
 import SocialAccountsPage from './pages/social-accounts-page';
+import SocialCalendarPage from './pages/social-calendar-page';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
@@ -50,6 +51,7 @@ export default function App() {
             analytics, and it reads which list to go Back to off the path. */}
         <Route path="/external-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/social-accounts" element={authed(<SocialAccountsPage />)} />
+        <Route path="/social-calendar" element={authed(<SocialCalendarPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/app-popups" element={authed(<AppPopupsPage />)} />
         <Route path="/status" element={authed(<StatusPage />)} />

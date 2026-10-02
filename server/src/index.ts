@@ -24,6 +24,8 @@ import { startGraphqlMonitorFlusher } from '@modules/platform/graphqlMonitor/gra
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startSocialAccountsScheduler } from '@modules/crm/marketing/social/social.scheduler';
 import { startShortLinkRetentionScheduler } from '@modules/crm/marketing/shortLink.retention';
+import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/analytics.retention';
+import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
@@ -535,6 +537,11 @@ async function bootstrap() {
   // admin set in Marketing > External Links > Privacy. A stated window that
   // nothing enforces is not a retention policy.
   startShortLinkRetentionScheduler();
+
+  // Usage analytics and stale contact invites: the GDPR storage limits —
+  // clickstream and daily pings for 13 months, non-members' numbers for 90 days.
+  startAnalyticsRetentionScheduler();
+  startContactInviteRetentionScheduler();
 
   // Payments: adopt captures Razorpay took while the client was gone, and
   // re-run finalization side effects that failed the first time round.

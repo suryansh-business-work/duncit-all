@@ -9,6 +9,7 @@ import {
   type GraphQLSchema,
 } from 'graphql';
 import type { GraphQLContext } from '@context';
+import { NO_CONSENT } from '@utils/consent';
 import { logs } from '@observability/log';
 import { requestIdentity, type RequestIdentity } from '@observability/requestIdentity';
 import { captureTableScope, type TableScope } from '@utils/table-query';
@@ -46,6 +47,7 @@ export function jobContext(actor: JobActor): JobContext {
   return {
     user: { id: actor.id, email: actor.email, roles: actor.roles },
     device_id: null,
+    consent: NO_CONSENT,
     noRedis: true,
     isClientGone: () => false,
   };

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { watchClientPresence } from '@utils/clientPresence';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { isSessionSealed } from '@modules/access/auth/session-seal';
+import { consentFromRequest, type TrackingConsent } from '@utils/consent';
 
 export interface AuthUser {
   id: string;
@@ -17,6 +18,12 @@ export interface GraphQLContext {
   res: Response;
   user: AuthUser | null;
   device_id: string | null;
+  /**
+   * What the caller allowed us to store (`x-consent`, see utils/consent.ts).
+   * Optional data — usage analytics, campaign attribution — is written only
+   * when the matching category is true.
+   */
+  consent: TrackingConsent;
   /**
    * `x-no-redis: true` — the client asked to skip the Redis response cache
    * (portals/mWeb send it when the URL carried `?noRedis=true`). Read by the
@@ -94,5 +101,13 @@ export async function buildContext({
       : duidFromArray;
   const rawNoRedis = req.headers['x-no-redis'];
   const noRedis = (Array.isArray(rawNoRedis) ? rawNoRedis[0] : rawNoRedis) === 'true';
-  return { req, res, user, device_id, noRedis, isClientGone: watchClientPresence(res) };
+  return {
+    req,
+    res,
+    user,
+    device_id,
+    consent: consentFromRequest(req),
+    noRedis,
+    isClientGone: watchClientPresence(res),
+  };
 }

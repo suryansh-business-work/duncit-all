@@ -93,6 +93,11 @@ describe('AccountScreen', () => {
     fireEvent.press(screen.getByTestId('account-health'));
     expect(mockNavigate).toHaveBeenCalledWith('AccountHealth');
 
+    // Privacy & data sits right after Communication Preferences.
+    fireEvent.press(screen.getByTestId('privacy-entry'));
+    expect(mockNavigate).toHaveBeenCalledWith('Privacy');
+    expect(screen.getByText('Tracking choices and a copy of your data')).toBeOnTheScreen();
+
     fireEvent.press(screen.getByTestId('avatar-changed'));
     expect(refresh).toHaveBeenCalled();
 

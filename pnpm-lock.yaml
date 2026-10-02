@@ -982,6 +982,9 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
       astro:
         specifier: '>=7'
         version: 7.3.5(@types/node@26.6.3)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.1)

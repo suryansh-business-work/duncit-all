@@ -117,6 +117,7 @@ export {
   REGIONAL_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRIVACY_BUNDLE,
   PRODUCTS_BUNDLE,
   policyAcceptanceMethodLabel,
   resolveLocale,

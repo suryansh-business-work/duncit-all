@@ -60,6 +60,8 @@ export const authTypeDefs = gql`
     accepted_policy_ids: [ID!]
     "Which app they accepted in. Recorded on every acceptance row."
     accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
+    "The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in)."
+    marketing_opt_in: Boolean = false
   }
 
   input LoginInput {
@@ -243,6 +245,8 @@ export const authTypeDefs = gql`
     accepted_policy_ids: [ID!]
     "Which app they accepted in. Recorded on every acceptance row."
     accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
+    "The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in)."
+    marketing_opt_in: Boolean = false
   }
 
   "An Apple id_token, from the iOS app's native sheet or the web flow."
@@ -271,6 +275,8 @@ export const authTypeDefs = gql`
     zone: String
     accepted_policy_ids: [ID!]
     accepted_policy_surface: PolicyAcceptanceSurface = UNKNOWN
+    "The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in)."
+    marketing_opt_in: Boolean = false
   }
 
   "The Google account currently linked to a Duncit account."

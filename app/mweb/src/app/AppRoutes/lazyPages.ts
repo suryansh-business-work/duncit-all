@@ -79,6 +79,7 @@ export const CommPreferencePage = lazy(() => import('../../pages/comm-preference
 export const MailPreferencePage = lazy(() => import('../../pages/mail-preference-page'));
 export const WhatsAppPreferencePage = lazy(() => import('../../pages/whatsapp-preference-page'));
 export const SmsPreferencePage = lazy(() => import('../../pages/sms-preference-page'));
+export const PrivacyPage = lazy(() => import('../../pages/privacy-page'));
 export const AccountHealthPage = lazy(() => import('../../pages/AccountHealthPage'));
 export const VenueHealthPage = lazy(() => import('../../pages/VenueHealthPage'));
 export const CheckoutPage = lazy(() => import('../../pages/CheckoutPage'));

@@ -21,10 +21,12 @@ export type JourneyStep = (typeof JOURNEY_STEPS)[number];
  * The privacy signal a visitor's browser sent, when it sent one.
  *
  * GPC is `Sec-GPC: 1` (Global Privacy Control), DNT the older Do-Not-Track
- * header. Stored so the console can say how much of its data was minimised,
- * rather than leaving the gap in a breakdown unexplained.
+ * header. NO_CONSENT is a visitor who has not allowed marketing attribution
+ * on the Duncit consent banner — the GDPR default, which no admin switch
+ * overrides. Stored so the console can say how much of its data was
+ * minimised, rather than leaving the gap in a breakdown unexplained.
  */
-export const CONSENT_SIGNALS = ['GPC', 'DNT'] as const;
+export const CONSENT_SIGNALS = ['GPC', 'DNT', 'NO_CONSENT'] as const;
 
 export type ConsentSignal = (typeof CONSENT_SIGNALS)[number];
 
@@ -128,7 +130,8 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
     ip_hash: { type: String, default: null, index: true },
     user_agent: { type: String, default: null },
     consent_signal: { type: String, enum: [...CONSENT_SIGNALS, null], default: null },
-    user_id: { type: Schema.Types.ObjectId, default: null, index: true },
+    // ref: 'User' is what lets account deletion find these rows (accountDeletion.trace.ts).
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     journey: {
       type: [
         {

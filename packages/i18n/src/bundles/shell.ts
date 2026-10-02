@@ -405,6 +405,14 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       accountMenu: 'account menu',
     },
 
+    /** The panel a crashed page shows instead of a white screen (PageErrorBoundary). */
+    pageError: {
+      title: 'Something went wrong',
+      unexpected: 'An unexpected error occurred. Try again or reload the page.',
+      tryAgain: 'Try again',
+      reload: 'Reload',
+    },
+
     /** The signed-in account card on every portal welcome dashboard. */
     /** The e-mail sign-in panel on the portal login screen. */
     login: {

@@ -9,6 +9,7 @@ import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 import BrandFontLoader from './components/BrandFontLoader';
 import OpenInAppBanner from './components/OpenInAppBanner';
+import { ConsentHost } from './components/consent';
 import SplashScreen from './components/SplashScreen';
 import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -182,6 +183,7 @@ export default function App() {
       {isAuthed && <AppPopupDialog />}
       {isAuthed && <DeletionNoticeDialog />}
       <OpenInAppBanner />
+      <ConsentHost isAuthed={isAuthed} />
       <BrandFontLoader />
       <NotifyHost />
     </Box>

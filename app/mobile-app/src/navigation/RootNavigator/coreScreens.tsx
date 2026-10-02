@@ -27,6 +27,7 @@ import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
 import { MailPreferenceScreen } from '@/screens/MailPreferenceScreen';
+import { PrivacyScreen } from '@/screens/PrivacyScreen';
 import { MainTabs } from '@/navigation/MainTabs';
 import { MenuScreen } from '@/screens/MenuScreen';
 import { PodAttendanceScreen } from '@/screens/PodAttendanceScreen';
@@ -73,6 +74,7 @@ export function renderCoreScreens() {
       <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />
       <Stack.Screen name="CommPreference" component={CommPreferenceScreen} />
       <Stack.Screen name="MailPreference" component={MailPreferenceScreen} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} />
       <Stack.Screen name="WhatsAppPreference" component={WhatsAppPreferenceScreen} />
       <Stack.Screen name="SmsPreference" component={SmsPreferenceScreen} />
       <Stack.Screen name="VenueHealth" component={VenueHealthScreen} />

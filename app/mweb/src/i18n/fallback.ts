@@ -10,6 +10,7 @@ import {
   MWEB_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRIVACY_BUNDLE,
   SESSION_BUNDLE,
   UI_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -53,6 +54,7 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...MAIL_PREFERENCE_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
   ...POLICY_ACCEPTANCE_BUNDLE,
+  ...PRIVACY_BUNDLE,
   ...SESSION_BUNDLE,
   // @duncit/ui's own words — the one spinner's label among them. mWeb mounts
   // those components too, so without this every wait announced itself to a

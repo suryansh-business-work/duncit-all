@@ -1766,6 +1766,8 @@ export type AppleSignupInput = {
   first_name: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
   whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
@@ -8471,6 +8473,8 @@ export type GoogleSignupInput = {
    */
   dob: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   phone_extension: Scalars['String']['input'];
   /**
    * The WhatsApp number joining Duncit, and the proof it answered.
@@ -12326,6 +12330,8 @@ export type Mutation = {
   setMyProductListingActive: InventoryProduct;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
+  /** Record the signed-in member's tracking choice. Every answer is kept. */
+  setMyTrackingConsent: TrackingConsent;
   /** Change the signed-in account's @handle. Rejects a taken or reserved one. */
   setMyUsername: User;
   setMyWhatsappPreference: WaPreference;
@@ -15904,6 +15910,11 @@ export type MutationSetMyProductListingActiveArgs = {
 
 export type MutationSetMySelectedLocationArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationSetMyTrackingConsentArgs = {
+  input: TrackingConsentInput;
 };
 
 
@@ -22327,6 +22338,11 @@ export type Query = {
    * preference and is never readable for anybody else.
    */
   myDashboardLayout?: Maybe<DashboardLayout>;
+  /**
+   * Everything Duncit holds about the signed-in member, as a JSON document
+   * (GDPR right of access and portability). Credentials are never included.
+   */
+  myDataExport: Scalars['String']['output'];
   /** Partner: one of the caller's own brands, at any status — what the brand wizard opens. */
   myEcommBrand?: Maybe<EcommBrand>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
@@ -22415,6 +22431,8 @@ export type Query = {
   mySurveyResponse?: Maybe<SurveyResponse>;
   myTableApiAccess: TableApiAccess;
   myTickets: Array<Ticket>;
+  /** The signed-in member's current tracking choice. Null while they have made none. */
+  myTrackingConsent?: Maybe<TrackingConsent>;
   /** All of the signed-in user's support items (tickets, SOS, callbacks, chats). */
   myUnifiedSupportTickets: Array<UnifiedSupportTicket>;
   myUnreadNotificationCount: Scalars['Int']['output'];
@@ -26981,6 +26999,8 @@ export type RegisterInput = {
   email: Scalars['String']['input'];
   first_name: Scalars['String']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
+  /** The signup form's marketing box. Marketing email and WhatsApp start OFF unless it is ticked (GDPR opt-in). */
+  marketing_opt_in?: InputMaybe<Scalars['Boolean']['input']>;
   password: Scalars['String']['input'];
   /** The dial code the number belongs to, such as +91. Chosen from a list. */
   phone_extension: Scalars['String']['input'];
@@ -27753,7 +27773,7 @@ export type ShortLinkClick = {
   city?: Maybe<Scalars['String']['output']>;
   click_id: Scalars['String']['output'];
   clicked_at: Scalars['String']['output'];
-  /** GPC or DNT when this visitor asked not to be tracked, else null. */
+  /** GPC or DNT when the browser asked not to be tracked, NO_CONSENT when the visitor has not allowed marketing attribution, else null. */
   consent_signal?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   device_type: Scalars['String']['output'];
@@ -32680,6 +32700,32 @@ export type TrackedWebsite =
   | 'MAIN'
   | 'PARTNERS'
   | 'STATUS';
+
+/**
+ * What a member allowed Duncit to store beyond what the service needs.
+ * Both categories are off until the member turns them on.
+ */
+export type TrackingConsent = {
+  __typename?: 'TrackingConsent';
+  /** Usage analytics — page views, taps, daily-active pings, Google Analytics. */
+  analytics: Scalars['Boolean']['output'];
+  /** ISO instant of the answer. */
+  decided_at: Scalars['String']['output'];
+  /** Campaign attribution — which link or campaign brought the member here. */
+  marketing: Scalars['Boolean']['output'];
+};
+
+export type TrackingConsentInput = {
+  analytics: Scalars['Boolean']['input'];
+  marketing: Scalars['Boolean']['input'];
+  surface: TrackingConsentSurface;
+};
+
+/** Where a member answered the tracking-consent question. */
+export type TrackingConsentSurface =
+  | 'MWEB'
+  | 'NATIVE'
+  | 'WEBSITE';
 
 /** Export format for support chat / ticket transcripts. */
 export type TranscriptFormat =

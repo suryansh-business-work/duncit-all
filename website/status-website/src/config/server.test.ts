@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveServerBase } from './server';
+import { resolveMainSiteUrl, resolveServerBase } from './server';
 
 describe('resolveServerBase', () => {
   it('prefers an explicit VITE_SERVER_URL', () => {
@@ -19,5 +19,15 @@ describe('resolveServerBase', () => {
 
   it('treats an empty VITE_SERVER_URL as unset', () => {
     expect(resolveServerBase({ VITE_SERVER_URL: '', DEV: false })).toBe('https://server.duncit.com');
+  });
+});
+
+describe('resolveMainSiteUrl', () => {
+  it('prefers an explicit VITE_MAIN_SITE_URL, then localhost in dev, then production', () => {
+    expect(resolveMainSiteUrl({ VITE_MAIN_SITE_URL: 'https://staging.duncit.com' })).toBe(
+      'https://staging.duncit.com',
+    );
+    expect(resolveMainSiteUrl({ DEV: true })).toBe('http://localhost:2000');
+    expect(resolveMainSiteUrl({})).toBe('https://duncit.com');
   });
 });

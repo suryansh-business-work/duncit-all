@@ -531,3 +531,66 @@ no manual step left for the user.
 Only Use staging for push no branch creation for any branch
 
 Make sure that anything you create follows WCAG 2.2 AA accessibility standards by default.
+
+Before Writing Code
+
+Before implementing anything, stop and think whether writing new code is actually necessary.
+
+Search first, code second.
+
+Look for existing functions, utilities, hooks, components, services, helpers, types, and modules that already solve the problem.
+
+Search the entire relevant codebase, not just the current directory.
+
+Prefer reuse over duplication.
+
+If an existing module can be extended or reused, use it instead of creating a parallel implementation.
+
+Do not create a new helper when an existing common utility can reasonably be used.
+
+Do not create a new component/service/module merely because the existing one needs a small extension.
+
+Check for common modules.
+Before creating a new abstraction, ask:
+
+Is there already a common module for this?
+
+Is there an existing utility with similar responsibility?
+
+Is this logic already implemented elsewhere?
+
+Can the existing implementation be parameterized or extended cleanly?
+
+Avoid premature abstraction.
+
+Do not create abstractions just to make the code "cleaner."
+
+Create a new abstraction only when there is a clear, repeated, or genuinely shared responsibility.
+
+Prefer simple reuse over introducing another layer.
+
+Avoid duplicate implementations.
+
+Do not implement the same business logic in multiple places.
+
+If duplicate logic is discovered, consider consolidating it into the existing appropriate module.
+
+Minimize changes.
+
+Make the smallest change that correctly solves the problem.
+
+Do not refactor unrelated code unless it is necessary for the requested change.
+
+Required Thought Process
+
+Before writing new code, determine:
+
+"Is this absolutely necessary, or does the codebase already have something I can reuse or extend?"
+
+If an existing implementation can solve the problem with a reasonable modification, reuse or extend it instead of creating a new one.
+
+Important
+
+Do not assume that a new file, class, function, hook, component, service, or utility is needed.
+
+Inspect first. Reuse second. Extend third. Create new code last.

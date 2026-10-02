@@ -43,6 +43,7 @@ exports:
   - 'AuthSplitLayout'
   - 'RequireAuth'
   - 'createAuthed'
+  - 'PageErrorBoundary'
   - 'PortalLoginPage'
   - 'createSession'
   - 'createApolloClient'
@@ -345,7 +346,8 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | Export | Signature | Returns |
 | --- | --- | --- |
 | `createSession` | `(tokenKey, requiredRoles?, fullName?) => PortalSession` | `{ getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage }`. Defaults: `[]`, `'this console'`. `accessDeniedMessage(t?)` takes the reader's translator; without one it answers in the shipped English. |
-| `createAuthed` | `({ getToken, wrap }: CreateAuthedOptions) => (element: JSX.Element) => JSX.Element` | The `authed(element)` route-table helper; `wrap` absorbs per-portal chrome drift. |
+| `createAuthed` | `({ getToken, wrap }: CreateAuthedOptions) => (element: JSX.Element) => JSX.Element` | The `authed(element)` route-table helper; `wrap` absorbs per-portal chrome drift. Every page is rendered inside a `PageErrorBoundary`, inside the chrome. |
+| `PageErrorBoundary` | `({ children }: { children: JSX.Element }) => JSX.Element` | Catches a page crash and shows a "Try again / Reload" panel instead of a white screen; logs it and clears itself when the path changes. Must render inside a router. |
 | `createApolloClient` | `(options: CreateApolloClientOptions) => ApolloClient` | Client with `apolloErrorLink` attached. `options.app` names the console (`appConfig.key`) on every request. |
 | `deriveSearchItems` | `(nav: AppNavItem[], section?: string) => SearchItem[]` | Flattened search entries. |
 | `getSafeRedirectPath` | `(value?: string \| null) => string` | The path, or `''` if unsafe. |
@@ -411,6 +413,19 @@ Same guard, two ergonomics. `createAuthed({ getToken, wrap })` returns an `authe
 for route tables and is what most portals use; `RequireAuth` is the component form, used where the
 guard wraps a whole subtree (`portals/admin/src/App.tsx` wraps its entire authed route block in one
 `<RequireAuth>`). Pick `createAuthed` unless you need a single guard around many routes.
+
+`createAuthed` already wraps every page in `PageErrorBoundary`, so a crashing page keeps the
+sidebar alive. The component form does not — put the boundary inside your chrome yourself:
+
+```tsx
+<RequireAuth getToken={getToken}>
+  <AppShell>
+    <PageErrorBoundary>
+      <Routes>{/* … */}</Routes>
+    </PageErrorBoundary>
+  </AppShell>
+</RequireAuth>
+```
 
 ## Localization: your fallback layers over the shell's
 

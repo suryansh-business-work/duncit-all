@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router';
-import { ProfilePage, RequireAuth } from '@duncit/shell';
+import { PageErrorBoundary, ProfilePage, RequireAuth } from '@duncit/shell';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
@@ -33,31 +33,33 @@ export default function App() {
         element={
           <RequireAuth getToken={getToken}>
             <AppShell>
-              <Routes>
-                <Route path="/hub" element={<HubPage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/users/:user_id" element={<UserDetailsPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/location-subscriptions" element={<LocationSubscriptionsPage />} />
-                <Route path="/partners" element={<PartnersPage />} />
-                <Route path="/badges" element={<BadgesPage />} />
-                <Route path="/something-for-you" element={<SomethingForYouPage />} />
-                <Route path="/membership/plans" element={<MembershipPlansPage />} />
-                <Route path="/membership/subscribers" element={<MembershipSubscribersPage />} />
-                <Route path="/approvals" element={<ApprovalsPage />} />
-                <Route path="/portal-access" element={<PortalAccessPage />} />
-                <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
-                <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
-                <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />
-                <Route path="/branding" element={<BrandingPage />} />
-                <Route path="/rbac/roles" element={<RolesPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/portal-app-settings" element={<PortalAppSettingsPage />} />
-                <Route path="*" element={<Navigate to="/hub" replace />} />
-              </Routes>
+              <PageErrorBoundary>
+                <Routes>
+                  <Route path="/hub" element={<HubPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/:user_id" element={<UserDetailsPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/locations" element={<LocationsPage />} />
+                  <Route path="/location-subscriptions" element={<LocationSubscriptionsPage />} />
+                  <Route path="/partners" element={<PartnersPage />} />
+                  <Route path="/badges" element={<BadgesPage />} />
+                  <Route path="/something-for-you" element={<SomethingForYouPage />} />
+                  <Route path="/membership/plans" element={<MembershipPlansPage />} />
+                  <Route path="/membership/subscribers" element={<MembershipSubscribersPage />} />
+                  <Route path="/approvals" element={<ApprovalsPage />} />
+                  <Route path="/portal-access" element={<PortalAccessPage />} />
+                  <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
+                  <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
+                  <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />
+                  <Route path="/branding" element={<BrandingPage />} />
+                  <Route path="/rbac/roles" element={<RolesPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/portal-app-settings" element={<PortalAppSettingsPage />} />
+                  <Route path="*" element={<Navigate to="/hub" replace />} />
+                </Routes>
+              </PageErrorBoundary>
             </AppShell>
           </RequireAuth>
         }

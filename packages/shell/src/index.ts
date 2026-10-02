@@ -98,6 +98,7 @@ export { getGoogleClientId, setGoogleClientId, loadGoogleClientId } from './lib/
 
 // Auth route guard + `authed()` route-table helper (previously in every App.tsx).
 export { RequireAuth, createAuthed, type RequireAuthProps, type CreateAuthedOptions } from './auth/RequireAuth';
+export { PageErrorBoundary } from './auth/PageErrorBoundary';
 
 // The login page every console previously hand-rolled (wraps user-context's LoginScreen).
 export { PortalLoginPage } from './portal-login';

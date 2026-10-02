@@ -1,5 +1,10 @@
 import { gql } from '@apollo/client';
-import { captureShortLinkAttribution, storedShortLinkClickId } from '@duncit/utils';
+import {
+  consentAllows,
+  readWebConsent,
+  startWebShortLinkAttribution,
+  storedShortLinkClickId,
+} from '@duncit/utils';
 import { apolloClient } from '../apollo';
 import { urlConfigs } from '../config/url-configs';
 
@@ -48,11 +53,9 @@ let capture: Promise<string | null> = Promise.resolve(storedShortLinkClickId());
  * gone from location.search. Resolution-only promise; nothing awaits it.
  */
 export function captureShortLinkClick(search: string): Promise<string | null> {
-  capture = captureShortLinkAttribution({
-    search,
-    referrer: globalThis.document?.referrer ?? '',
-    serverUrl: urlConfigs.apiBaseUrl,
-  });
+  // The shared starter applies the visitor's consent: the landing is always
+  // counted, but the click is kept only with marketing consent.
+  capture = startWebShortLinkAttribution(urlConfigs.apiBaseUrl, search);
   return capture;
 }
 
@@ -64,7 +67,9 @@ export function captureShortLinkClick(search: string): Promise<string | null> {
 export function reportJourneyStep(step: JourneyStep): void {
   capture
     .then((clickId) => {
-      if (!clickId) return null;
+      // A funnel step binds the click to the account — attribution, so only
+      // with marketing consent (the server refuses it without, too).
+      if (!clickId || !consentAllows(readWebConsent(), 'marketing')) return null;
       return apolloClient.mutate<any>({
         mutation: RECORD_STEP,
         variables: { click_id: clickId, step },

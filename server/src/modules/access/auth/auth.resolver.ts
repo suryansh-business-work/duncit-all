@@ -38,11 +38,13 @@ import type { SignInContext } from '@modules/access/user/user.signin';
 interface SignupPolicyInput {
   accepted_policy_ids?: string[] | null;
   accepted_policy_surface?: PolicyAcceptanceSurface | null;
+  marketing_opt_in?: boolean | null;
 }
 
 const acceptanceIntent = (input?: SignupPolicyInput | null): PolicyAcceptanceIntent => ({
   policy_ids: input?.accepted_policy_ids ?? [],
   surface: input?.accepted_policy_surface ?? 'UNKNOWN',
+  marketing_opt_in: input?.marketing_opt_in === true,
 });
 
 /** The signed-in user's id, or the standard UNAUTHENTICATED refusal. */

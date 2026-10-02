@@ -87,6 +87,7 @@ export function useSignupFlow() {
         password: values.password,
         referralCode: values.referralCode,
         acceptedPolicyIds: values.acceptedPolicyIds,
+        marketingOptIn: values.marketingOptIn,
       },
       whatsappToken,
     );

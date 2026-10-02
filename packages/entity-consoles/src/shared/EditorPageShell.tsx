@@ -1,4 +1,4 @@
-import type { FormEventHandler, ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Alert, Stack } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import { BackHeader } from '@duncit/ui';
 import MediaPickerDialog from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import type useMediaPicker from './useMediaPicker';
+import { revealFirstInvalid } from './revealFirstInvalid';
 
 /**
  * The chrome every console's record editor wears.
@@ -30,7 +31,8 @@ export interface EditorPageShellProps {
   saveLabel: string;
   busy: boolean;
   error: string | null;
-  onSubmit: FormEventHandler<HTMLFormElement>;
+  /** The form's `handleSubmit(...)` — its promise settles once validation has run. */
+  onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   /** The editor's media-picker bridge, so its upload fields resolve. */
   picker: ReturnType<typeof useMediaPicker>;
   children: ReactNode;
@@ -49,6 +51,19 @@ export default function EditorPageShell({
 }: Readonly<EditorPageShellProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  // Bumped after every Save; the effect runs once the errors that Save set have
+  // rendered, so the field it reveals is already marked. With no field in error
+  // the server refused it, and its message sits at the top of a tall page.
+  const [attempts, setAttempts] = useState(0);
+  useEffect(() => {
+    if (!attempts || revealFirstInvalid(formRef.current)) return;
+    errorRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [attempts]);
+
+  const submit = (event: FormEvent<HTMLFormElement>) =>
+    onSubmit(event).then(() => setAttempts((count) => count + 1));
 
   const save = (
     <DuncitButton type="submit" variant="contained" startIcon={<SaveIcon />} loading={busy}>
@@ -58,7 +73,7 @@ export default function EditorPageShell({
 
   return (
     <>
-      <form onSubmit={onSubmit} noValidate>
+      <form ref={formRef} onSubmit={submit} noValidate>
         <Stack spacing={2.5}>
           <BackHeader
             backTo={backTo}
@@ -71,7 +86,11 @@ export default function EditorPageShell({
             actions={save}
           />
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <Alert ref={errorRef} severity="error">
+              {error}
+            </Alert>
+          )}
 
           {children}
 

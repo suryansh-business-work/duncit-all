@@ -27,6 +27,7 @@ const valid = {
   confirmPassword: 'StrongPass123',
   referralCode: '',
   acceptedPolicyIds: [],
+  marketingOptIn: false,
 };
 
 const errorsOf = (input: Record<string, unknown>) => {
@@ -229,5 +230,13 @@ describe('the default minimum age', () => {
   it('falls back to the shared constant when none is given', () => {
     const relaxed = makeSignupSchema(t);
     expect(relaxed.safeParse({ ...valid, dob: '1990-04-23' }).success).toBe(true);
+  });
+});
+
+describe('the marketing opt-in (GDPR)', () => {
+  it('starts unticked and is never required', () => {
+    expect(signupDefaults.marketingOptIn).toBe(false);
+    expect(schema.safeParse({ ...valid, marketingOptIn: false }).success).toBe(true);
+    expect(schema.safeParse({ ...valid, marketingOptIn: true }).success).toBe(true);
   });
 });

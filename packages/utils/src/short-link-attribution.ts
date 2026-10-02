@@ -27,6 +27,13 @@ export const SHORT_LINK_UTM_KEY = 'duncit_short_link_utm';
  * from a marketing link. It changes nothing about the counting — only what a
  * landing is allowed to do to the visitor's session. */
 export const SHORT_LINK_SHARE_KEY = 'duncit_short_link_share';
+/**
+ * The flag on the landing report that says the visitor allowed marketing
+ * attribution. Without it the server counts the visit anonymously. A query
+ * flag rather than the x-consent header, because the report is a
+ * credential-less GET that must not trigger a CORS preflight.
+ */
+export const SHORT_LINK_CONSENT_PARAM = 'c';
 
 /** The campaign tags worth carrying across surfaces. */
 const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
@@ -94,6 +101,12 @@ export interface CaptureOptions {
   referrer: string;
   /** API origin, e.g. https://server.duncit.com */
   serverUrl: string;
+  /**
+   * Whether the visitor allowed marketing attribution (see consent.ts). Without
+   * it the landing is still reported — the server counts it with nothing that
+   * identifies anyone — but nothing is remembered on the device.
+   */
+  consent: boolean;
   /** Injectable for tests. */
   fetchFn?: typeof fetch;
 }
@@ -109,8 +122,8 @@ export async function captureShortLinkAttribution(options: CaptureOptions): Prom
   // The utm tags persist independently of the markers: a landing tagged by an
   // external campaign (no short link involved) still deserves to keep its
   // campaign identity across the hops the visitor makes afterwards.
-  rememberUtmParams(options.search);
-  const existing = storedShortLinkClickId();
+  if (options.consent) rememberUtmParams(options.search);
+  const existing = options.consent ? storedShortLinkClickId() : null;
   if (!code && !clickId) return existing;
 
   const fetchFn = options.fetchFn ?? globalThis.fetch;
@@ -122,6 +135,7 @@ export async function captureShortLinkAttribution(options: CaptureOptions): Prom
   if (clickId) params.set('dlc', clickId);
   else if (code) params.set('dl', code);
   if (options.referrer) params.set('dr', options.referrer);
+  if (options.consent) params.set(SHORT_LINK_CONSENT_PARAM, '1');
 
   // Linear strip, not /\/+$/ — that quantifier backtracks super-linearly.
   let base = options.serverUrl;
@@ -132,12 +146,24 @@ export async function captureShortLinkAttribution(options: CaptureOptions): Prom
     const body = await response.json();
     const resolved: string | null = body?.click_id ?? null;
     if (existing) return existing;
-    if (resolved) store(resolved, memberShare);
+    if (resolved && options.consent) store(resolved, memberShare);
     return resolved;
   } catch {
     // Offline, opaque response, or the API is down — the visit is lost, the
     // page is not.
     return existing;
+  }
+}
+
+/**
+ * Remember a landing that was reported before the visitor allowed marketing
+ * attribution — the banner is answered after the page has loaded. The visit is
+ * not reported again; only what the device keeps is filled in now.
+ */
+export function rememberShortLinkAttribution(search: string, clickId: string | null): void {
+  rememberUtmParams(search);
+  if (clickId && !storedShortLinkClickId()) {
+    store(clickId, parseShortLinkParams(search).memberShare);
   }
 }
 

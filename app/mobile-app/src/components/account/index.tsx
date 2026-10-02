@@ -6,6 +6,7 @@ export { EditAccountDialog } from './EditAccountDialog';
 export { EmailVerificationSection } from './EmailVerificationSection';
 export { AddressBookSection } from './AddressBookSection';
 export { PrivacyToggleCard } from './PrivacyToggleCard';
+export { PrivacyDataEntryCard } from './PrivacyDataEntryCard';
 export { SecuritySection } from './SecuritySection';
 export { ChangePasswordDialog } from './ChangePasswordDialog';
 export { DeleteAccountDialog } from './DeleteAccountDialog';

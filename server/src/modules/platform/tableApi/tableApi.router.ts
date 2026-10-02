@@ -8,6 +8,7 @@ import { logs } from '@observability/log';
 import { createTableOperations, type SdlSource } from './tableApi.operation';
 import { pageUrl, TOKEN_HEADER, TOKEN_PARAM, tokenOf, variablesOf } from './tableApi.request';
 import { tableApiService } from './tableApi.service';
+import { NO_CONSENT } from '@utils/consent';
 
 /**
  * The GET API behind every portal table's "GET API" dialog.
@@ -126,6 +127,7 @@ export function buildTableApiRouter({ apollo, typeDefs, resolvers }: TableApiDep
         res,
         user,
         device_id: null,
+        consent: NO_CONSENT,
         noRedis: true,
         isClientGone: watchClientPresence(res),
       };

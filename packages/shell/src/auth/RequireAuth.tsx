@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { redirectPathFromLocation } from '../lib/redirect';
+import { PageErrorBoundary } from './PageErrorBoundary';
 
 export interface RequireAuthProps {
   /** Auth-token accessor — pass the portal session's `getToken`. */
@@ -32,9 +33,15 @@ export interface CreateAuthedOptions {
 /**
  * Builds the `authed(<Page />)` helper the portals' route tables use:
  * `const authed = createAuthed({ getToken: session.getToken, wrap: (el) => <AppShell>{el}</AppShell> })`.
- * The `wrap` slot absorbs per-portal drift (CRM adds an ErrorBoundary inside its AppShell).
+ * The `wrap` slot absorbs per-portal drift. Every page renders inside a
+ * `PageErrorBoundary` placed INSIDE the chrome, so a crashing page shows a
+ * recoverable message under a working sidebar instead of a white screen.
  */
 export function createAuthed(options: Readonly<CreateAuthedOptions>) {
   const { getToken, wrap } = options;
-  return (element: JSX.Element) => <RequireAuth getToken={getToken}>{wrap(element)}</RequireAuth>;
+  return (element: JSX.Element) => (
+    <RequireAuth getToken={getToken}>
+      {wrap(<PageErrorBoundary>{element}</PageErrorBoundary>)}
+    </RequireAuth>
+  );
 }

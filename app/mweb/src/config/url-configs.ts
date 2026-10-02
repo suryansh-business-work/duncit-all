@@ -9,10 +9,12 @@ const urls = isDevelopment
   ? {
       graphqlUrl: 'http://localhost:2001/graphql',
       appUrl: 'http://localhost:2003',
+      mainSiteUrl: 'http://localhost:2000',
     }
   : {
       graphqlUrl: 'https://server.duncit.com/graphql',
       appUrl: 'https://mweb.duncit.com',
+      mainSiteUrl: 'https://duncit.com',
     };
 
 const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || urls.graphqlUrl;
@@ -23,4 +25,6 @@ export const urlConfigs = {
   graphqlUrl,
   apiBaseUrl,
   appUrl: import.meta.env.VITE_MWEB_URL || urls.appUrl,
+  /** The main website — where the policies a signed-out visitor can read live. */
+  mainSiteUrl: import.meta.env.VITE_MAIN_SITE_URL || urls.mainSiteUrl,
 };

@@ -445,6 +445,27 @@ exports:
   - 'EMPLOYEE_EXPENSE_STATUS_KEYS'
   - 'EMPLOYEE_EXPENSE_SELECTION'
   - 'coinLedgerLabelKey'
+  - 'ConsentCategory'
+  - 'ConsentChoice'
+  - 'CONSENT_COOKIE'
+  - 'CONSENT_HEADER'
+  - 'CONSENT_CHANGE_EVENT'
+  - 'CONSENT_MAX_AGE_DAYS'
+  - 'OPTIONAL_STORAGE_KEYS'
+  - 'makeConsent'
+  - 'consentAllows'
+  - 'serializeConsent'
+  - 'parseConsent'
+  - 'consentHeaderValue'
+  - 'consentCookieDomain'
+  - 'readWebConsent'
+  - 'writeWebConsent'
+  - 'onWebConsentChange'
+  - 'whenWebConsentAllows'
+  - 'clearWithdrawnStorage'
+  - 'startWebShortLinkAttribution'
+  - 'rememberShortLinkAttribution'
+  - 'SHORT_LINK_CONSENT_PARAM'
 ---
 
 ## Why this exists
@@ -2723,3 +2744,53 @@ the caller passes its own `{ light, dark }`.
 | `ThemePalettes<T>` | `{ light: T; dark: T }` |
 | `ThemeTokenOverrides<T>` | `{ [K in keyof T]?: string \| null }` |
 | `ThemeTokenSettings<T>` | `{ theme_token_source?, theme_tokens_light?, theme_tokens_dark? }` — the `branding` query's fields |
+
+## Tracking consent — `consent` + `web-attribution`
+
+GDPR / ePrivacy: nothing optional is stored about a visitor until they say yes. Two optional
+categories exist — `analytics` (page views, taps, daily-active pings, Google Analytics) and
+`marketing` (short-link click ids, utm tags, the cross-site link decorator). Everything else the
+apps keep — the session, the cart, the language, the choice itself — is strictly necessary.
+
+"Undecided" and "declined" behave the same: nothing optional runs. The only difference is that
+an undecided visitor still sees the banner. A choice older than `CONSENT_MAX_AGE_DAYS` (365)
+reads as undecided, so the question is asked again yearly.
+
+The web surfaces keep the answer in ONE first-party cookie on `.duncit.com`, so answering on the
+website answers on mWeb and every portal too. The native app keeps the same serialised string in
+secure storage. Every request carries it to the server as `x-consent`, and the server refuses to
+store analytics or attribution without it — a call site that forgets to gate still cannot write.
+
+```ts
+import {
+  consentAllows,
+  consentHeaderValue,
+  makeConsent,
+  readWebConsent,
+  whenWebConsentAllows,
+  writeWebConsent,
+} from '@duncit/utils';
+
+writeWebConsent(makeConsent({ analytics: true, marketing: false }));
+consentHeaderValue(readWebConsent()); // 'analytics'
+consentAllows(readWebConsent(), 'marketing'); // false
+whenWebConsentAllows('analytics', () => loadAnalytics()); // runs now, or the moment it is allowed
+```
+
+`startWebShortLinkAttribution(serverUrl, search?)` is how every web surface starts attribution.
+The landing is always reported, so the link's click count stays honest. The server stores it with
+nothing that identifies the visitor unless `?c=1` (`SHORT_LINK_CONSENT_PARAM`) says marketing was
+allowed. The click id is kept on the device only with that consent. If consent arrives after the
+page loaded, `rememberShortLinkAttribution` fills it in then, without reporting the visit again.
+`captureShortLinkAttribution` now takes a required `consent` flag.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `makeConsent` | `(categories, now?) => ConsentChoice` | A choice stamped with its decision time. |
+| `consentAllows` | `(choice \| null, category) => boolean` | A missing choice allows nothing. |
+| `parseConsent` / `serializeConsent` | `(raw) => ConsentChoice \| null` / `(choice) => string` | Storage format; expired or malformed reads as `null`. |
+| `consentHeaderValue` | `(choice \| null) => string` | `analytics,marketing`, `analytics`, `marketing` or `none`. |
+| `readWebConsent` / `writeWebConsent` | `(doc?) => ConsentChoice \| null` / `(choice, doc?) => void` | The shared cookie. Writing also fires `CONSENT_CHANGE_EVENT`. |
+| `onWebConsentChange` / `whenWebConsentAllows` | listener / `(category, start, doc?) => () => void` | React to an answer given later on the page. |
+| `clearWithdrawnStorage` | `(choice, storage?) => void` | Deletes what a withdrawn category kept (`OPTIONAL_STORAGE_KEYS`). |
+| `startWebShortLinkAttribution` | `(serverUrl, search?, doc?) => Promise<string \| null>` | Consent-aware landing capture + link decorator. |

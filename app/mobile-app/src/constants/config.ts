@@ -9,6 +9,8 @@ import { logs } from '@duncit/logs';
 const LOCAL_API_PORT = 2001;
 /** mWeb's dev-server port (app/mweb vite.config.ts). */
 const LOCAL_WEB_PORT = 2003;
+/** The main website's dev-server port (mWeb's urlConfigs.mainSiteUrl). */
+const LOCAL_SITE_PORT = 2000;
 
 /** True for `localhost` / `127.0.0.1` origins, which a phone or emulator can't
  * reach (there `localhost` is the device itself, not the dev machine). */
@@ -51,10 +53,18 @@ const apiUrl = resolveApiUrl();
  * label (server.duncit.com ↔ mweb.duncit.com, staging included).
  */
 function resolveWebUrl(): string {
+  return siblingOrigin(LOCAL_WEB_PORT, 'mweb.');
+}
+
+/**
+ * The origin of a sibling surface of THIS build's API: the local port in dev,
+ * otherwise the API host with its `server.` label swapped for `label`.
+ */
+function siblingOrigin(localPort: number, label: string): string {
   if (apiUrl.includes(`:${LOCAL_API_PORT}`)) {
-    return apiUrl.replace(`:${LOCAL_API_PORT}`, `:${LOCAL_WEB_PORT}`);
+    return apiUrl.replace(`:${LOCAL_API_PORT}`, `:${localPort}`);
   }
-  return apiUrl.replace('server.', 'mweb.');
+  return apiUrl.replace('server.', label);
 }
 
 if (__DEV__) {
@@ -70,6 +80,8 @@ export const config = {
   apiUrl,
   // Where a link shared out of the app points — see resolveWebUrl.
   webUrl: resolveWebUrl(),
+  // The main website (duncit.com), where the policies live — same derivation.
+  mainSiteUrl: siblingOrigin(LOCAL_SITE_PORT, ''),
   endpoints: {
     location: '/api/location',
   },

@@ -67,6 +67,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // Both preference screens use mWeb's paths. MailPreference was shipped
       // without a URL, so the web export had no address for it at all.
       MailPreference: 'account/mail-preference',
+      Privacy: 'account/privacy',
       WhatsAppPreference: 'account/whatsapp-preference',
       SmsPreference: 'account/sms-preference',
       VenueHealth: 'venues/:venueId/health',

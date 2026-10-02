@@ -65,7 +65,12 @@ export const valuesToHostStep2 = (values: HostFormValues) => ({
 export const valuesToHostStep3 = (values: HostFormValues) => ({
   police_verification_url: values.police_verification_url,
   full_address: values.full_address,
-  bank_account: values.bank_account,
+  // `BankPayoutMethod` is an enum: an unchosen method is omitted, never sent as
+  // the select's empty "None" value, which the server rejects outright.
+  bank_account: {
+    ...values.bank_account,
+    payout_method: values.bank_account.payout_method || undefined,
+  },
   tags: values.tags,
 });
 

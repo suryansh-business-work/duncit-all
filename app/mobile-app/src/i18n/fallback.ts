@@ -12,6 +12,7 @@ import {
   POD_DETAILS_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
+  PRIVACY_BUNDLE,
   UI_BUNDLE,
   VERIFICATION_BUNDLE,
   WHATSAPP_BUNDLE,
@@ -61,6 +62,7 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...POD_DETAILS_BUNDLE,
   ...POD_PRODUCT_BUNDLE,
   ...POLICY_ACCEPTANCE_BUNDLE,
+  ...PRIVACY_BUNDLE,
   // The scroll-rail arrow buttons' words — the same `ui.*` namespace
   // @duncit/ui's ScrollRail resolves on mWeb and every portal (rule 27/40).
   ...UI_BUNDLE,

@@ -1,5 +1,5 @@
 import { Navigate, Route } from 'react-router';
-import { AccountHealthPage, AllTicketsPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
+import { AccountHealthPage, AllTicketsPage, BadgesPage, BookingPage, CallbackPage, CommPreferencePage, DuncitCoinPage, FaqsPage, FeedbackPage, GiftCardCheckoutPage, GiftCardClaimPage, GiftCardRedeemPage, GiftCardsPage, GrievancePage, LeaderboardPage, LiveTicketsPage, MailPreferencePage, MembershipPage, PodHistoryDetailsPage, PodHistoryPage, PodIdeasPage, PodPlansPage, PolicyPage, PrivacyPage, ReferralPage, SignupReferralPage, SignupSurveyPage, SmsPreferencePage, SosPage, SupportChatPage, SupportHubPage, SupportTicketsPage, TicketDetailPage, VenueHealthPage, WhatsAppPreferencePage } from './lazyPages';
 import { withAuth } from './routeGuards';
 
 /** Rewards, support and account-settings routes. */
@@ -55,6 +55,7 @@ export function accountRoutes() {
           element={withAuth(<WhatsAppPreferencePage />)}
         />
         <Route path="/account/sms-preference" element={withAuth(<SmsPreferencePage />)} />
+        <Route path="/account/privacy" element={withAuth(<PrivacyPage />)} />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
         <Route path="/signup-referral" element={withAuth(<SignupReferralPage />)} />

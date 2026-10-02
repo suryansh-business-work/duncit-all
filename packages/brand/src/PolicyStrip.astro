@@ -40,6 +40,7 @@ const {
 } = Astro.props;
 const headingText = heading ?? t('website.brand.policyStrip.heading');
 const allText = allLabel ?? t('website.footer.allPolicies');
+const consentText = t('privacy.banner.label');
 
 const root = baseUrl.replace(/\/+$/, '');
 // A link that leaves this site says so; on the main site these are local.
@@ -63,6 +64,13 @@ const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
           <a class="policy-strip-all" href={`${root}/policies`} {...outward}>
             {allText}
           </a>
+        </li>
+        {/* Reopens the consent banner (ConsentBanner.astro) — withdrawing
+            consent must be as easy as giving it. */}
+        <li>
+          <button type="button" class="policy-strip-consent" data-consent-open>
+            {consentText}
+          </button>
         </li>
       </ul>
     </div>
@@ -127,6 +135,20 @@ const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
     color: var(--color-primary, #ff5757) !important;
   }
   .policy-strip-all:hover {
+    text-decoration: underline;
+  }
+  /* A button (it opens a dialog, it goes nowhere) dressed as its neighbours. */
+  .policy-strip-consent {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft, #4b4651);
+    cursor: pointer;
+  }
+  .policy-strip-consent:hover {
+    color: var(--color-primary, #ff5757);
     text-decoration: underline;
   }
 </style>

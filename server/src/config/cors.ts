@@ -23,6 +23,7 @@ export const corsOptions: CorsOptions = {
     'Apollo-Require-Preflight',
     'X-Apollo-Operation-Name',
     'X-DUID',
+    'X-Consent',
   ],
   maxAge: 600,
   optionsSuccessStatus: 204,

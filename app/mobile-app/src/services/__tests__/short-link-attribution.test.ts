@@ -2,6 +2,7 @@ import * as Linking from 'expo-linking';
 import { getItem, setItem } from '@/services/secure-storage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { navigationRef } from '@/navigation/navigationRef';
+import { useConsentStore } from '@/stores/consent.store';
 import {
   SHORT_LINK_CLICK_KEY,
   captureFromUrl,
@@ -26,6 +27,22 @@ jest.mock('@/constants/config', () => ({ config: { apiUrl: 'https://server.dunci
 jest.mock('@/navigation/navigationRef', () => ({
   navigationRef: { getCurrentRoute: jest.fn() },
 }));
+// A real zustand store with the consent store's shape, already hydrated, so
+// a case sets the choice directly and the attribution subscription sees real
+// (state, previous) updates.
+jest.mock('@/stores/consent.store', () => {
+  const { create } = jest.requireActual('zustand');
+  return {
+    useConsentStore: create(() => ({
+      choice: null,
+      hydrated: true,
+      hydrate: () => Promise.resolve(),
+    })),
+  };
+});
+
+const GRANTED = { analytics: false, marketing: true, decided_at: '2026-10-01T00:00:00.000Z' };
+const REFUSED = { analytics: true, marketing: false, decided_at: '2026-10-01T00:00:00.000Z' };
 
 const parseMock = jest.mocked(Linking.parse);
 const getInitialURLMock = jest.mocked(Linking.getInitialURL);
@@ -46,6 +63,8 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Every pre-consent case below ran with attribution allowed.
+  useConsentStore.setState({ choice: GRANTED });
   getItemMock.mockResolvedValue(null);
   setItemMock.mockResolvedValue(undefined);
   graphqlRequestMock.mockResolvedValue({ recordShortLinkJourney: true } as never);
@@ -240,7 +259,116 @@ describe('initShortLinkAttribution', () => {
   it('survives the launch URL being unreadable', async () => {
     getInitialURLMock.mockRejectedValue(new Error('no activity'));
     addEventListenerMock.mockReturnValue({ remove: jest.fn() } as never);
-    expect(() => initShortLinkAttribution()).not.toThrow();
+    const unsubscribe = initShortLinkAttribution();
     await settle();
+    expect(addEventListenerMock).toHaveBeenCalled();
+    unsubscribe();
+  });
+});
+
+describe('without marketing consent', () => {
+  /** Wire the root listeners with no launch URL; answers the cleanup. */
+  const init = () => {
+    getInitialURLMock.mockResolvedValue(null);
+    addEventListenerMock.mockReturnValue({ remove: jest.fn() } as never);
+    return initShortLinkAttribution();
+  };
+
+  beforeEach(() => {
+    useConsentStore.setState({ choice: REFUSED });
+  });
+
+  // Runs first in this block: it is the one that leaves a pending click,
+  // and the grant at its end is what adopts (and clears) it.
+  it('counts the landing anonymously, keeps nothing, and keeps the first click once allowed', async () => {
+    okFetch('c-anon');
+    expect(await captureFromUrl('https://mweb.duncit.com/x?dlc=c-anon')).toBe('c-anon');
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get('dlc')).toBe('c-anon');
+    expect(url.searchParams.has('c')).toBe(false);
+    expect(getItemMock).not.toHaveBeenCalled();
+    expect(setItemMock).not.toHaveBeenCalled();
+
+    // A later landing is still counted, but the first one stays pending.
+    okFetch('c-later');
+    expect(await captureFromUrl('https://mweb.duncit.com/y?dlc=c-later')).toBe('c-later');
+
+    const stop = init();
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    expect(setItemMock).toHaveBeenCalledTimes(1);
+    expect(setItemMock).toHaveBeenCalledWith(SHORT_LINK_CLICK_KEY, 'c-anon');
+    stop();
+  });
+
+  it('answers null for no URL, an unmarked URL and an unreachable API', async () => {
+    expect(await captureFromUrl(null)).toBeNull();
+    expect(await captureFromUrl('https://mweb.duncit.com/plain')).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    fetchMock.mockRejectedValue(new Error('offline'));
+    expect(await captureFromUrl('https://mweb.duncit.com/x?dlc=c-1')).toBeNull();
+    expect(getItemMock).not.toHaveBeenCalled();
+  });
+
+  it('never reports a journey step', async () => {
+    getItemMock.mockResolvedValue('c-1');
+    reportJourneyStep('VIEWED_POD');
+    await settle();
+    expect(graphqlRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps an earlier stored click over the pending one when consent arrives', async () => {
+    okFetch('c-new');
+    await captureFromUrl('https://mweb.duncit.com/x?dlc=c-new');
+    getItemMock.mockResolvedValue('c-old');
+    const stop = init();
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    expect(setItemMock).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it('has nothing to keep when no click is pending, and survives a refused write', async () => {
+    const stop = init();
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    expect(setItemMock).not.toHaveBeenCalled();
+    stop();
+
+    okFetch('c-2');
+    useConsentStore.setState({ choice: REFUSED });
+    await captureFromUrl('https://mweb.duncit.com/x?dlc=c-2');
+    setItemMock.mockRejectedValue(new Error('no keystore'));
+    const stopAgain = init();
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    expect(setItemMock).toHaveBeenCalledWith(SHORT_LINK_CLICK_KEY, 'c-2');
+    stopAgain();
+  });
+
+  it('only acts on the change to granted, and stops listening on cleanup', async () => {
+    const stop = init();
+    // Refused → refused, then granted → granted: neither is a new yes.
+    useConsentStore.setState({ choice: { ...REFUSED } });
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    getItemMock.mockClear();
+    useConsentStore.setState({ choice: { ...GRANTED } });
+    await settle();
+    expect(getItemMock).not.toHaveBeenCalled();
+    stop();
+
+    useConsentStore.setState({ choice: REFUSED });
+    useConsentStore.setState({ choice: GRANTED });
+    await settle();
+    expect(getItemMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('with marketing consent', () => {
+  it('tells the server it may keep the click', async () => {
+    okFetch('c-1');
+    await captureFromUrl('https://mweb.duncit.com/x?dlc=c-1');
+    expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get('c')).toBe('1');
   });
 });

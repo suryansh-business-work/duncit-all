@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
+import { consentAllows } from '@duncit/utils';
+import { useWebConsent } from './useWebConsent';
 
 type EventType = 'PAGE_VIEW' | 'IMPRESSION' | 'CLICK';
 
@@ -55,8 +57,12 @@ function metadataJson(extra: Record<string, unknown>) {
   });
 }
 
-export function useClickstreamTracking({ enabled, path, superCategory }: Args) {
+export function useClickstreamTracking({ enabled: wanted, path, superCategory }: Args) {
   const [recordEvent] = useMutation<any>(RECORD_APP_EVENT);
+  // Clickstream is usage analytics: nothing is sent without the visitor's
+  // consent, and it starts the moment they give it.
+  const consent = useWebConsent();
+  const enabled = wanted && consentAllows(consent, 'analytics');
 
   const send = (eventType: EventType, target: Element | null, extra: Record<string, unknown> = {}) => {
     if (!enabled || !localStorage.getItem('token')) return;

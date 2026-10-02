@@ -186,7 +186,7 @@ export const mailPreferenceService = {
    * otherwise last-write-wins the whole array and silently restore a category
    * the other one just switched off.
    */
-  async apply(email: string, categories: string[], enabled: boolean) {
+  async apply(email: string, categories: string[], enabled: boolean, confirm = true) {
     const surface = currentEmailSource();
     const change = enabled
       ? { $pullAll: { opted_out: categories } }
@@ -217,8 +217,9 @@ export const mailPreferenceService = {
     });
 
     // Only on the way out. Confirming an opt-IN would be an email somebody just
-    // told us they wanted fewer of.
-    if (!enabled) confirmByEmail(email);
+    // told us they wanted fewer of. Signup passes `confirm = false`: a new
+    // member who left the marketing box unticked never opted out of anything.
+    if (!enabled && confirm) confirmByEmail(email);
     return sheet(email, doc);
   },
 };

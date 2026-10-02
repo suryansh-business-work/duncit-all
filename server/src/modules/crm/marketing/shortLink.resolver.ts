@@ -68,7 +68,12 @@ export const shortLinkResolvers = {
       _p: unknown,
       args: { click_id: string; step: JourneyStep },
       ctx: GraphQLContext
-    ) => shortLinkJourneyService.recordStep(args.click_id, args.step, ctx.user?.id ?? null),
+    ) =>
+      // A funnel step joins a campaign click to an account — marketing
+      // attribution, so it is written only with the caller's consent.
+      ctx.consent.marketing
+        ? shortLinkJourneyService.recordStep(args.click_id, args.step, ctx.user?.id ?? null)
+        : false,
     // Ungated for the same reason the journey report is: a pod, a club or a
     // profile is shared by signed-out visitors too, and requiring a session
     // would leave exactly those shares untracked. `ref` names a thing, not a

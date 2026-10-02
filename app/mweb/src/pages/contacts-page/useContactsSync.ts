@@ -6,6 +6,8 @@ import {
   type ContactSyncStage,
 } from '@duncit/utils';
 import { logs } from '@duncit/logs';
+import { useConfirm } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/app-settings';
 import { SYNC_CONTACTS } from './queries';
 
 /** Why a sync did not happen — mapped to copy by the page, never shown raw. */
@@ -43,6 +45,8 @@ const contactsManager = (): ContactsManager | null => {
  */
 export function useContactsSync(onSynced: () => Promise<unknown>) {
   const [syncContacts] = useMutation<any>(SYNC_CONTACTS);
+  const confirm = useConfirm();
+  const { t } = useTranslation();
   const [stage, setStage] = useState<ContactSyncStage | null>(null);
   const [failure, setFailure] = useState<ContactsSyncFailure | null>(null);
   const supported = contactsManager() !== null;
@@ -50,6 +54,15 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
   const request = useCallback(async () => {
     const manager = contactsManager();
     if (!manager) return;
+    // The phone book holds OTHER people's names and numbers, so the person is
+    // told exactly what is read and kept before anything is (GDPR).
+    const agreed = await confirm({
+      title: t('privacy.contacts.title'),
+      message: t('privacy.contacts.body'),
+      confirmLabel: t('privacy.contacts.agree'),
+      cancelLabel: t('privacy.contacts.cancel'),
+    });
+    if (!agreed) return;
     setFailure(null);
     try {
       const picked = await manager.select(['name', 'tel'], { multiple: true });
@@ -79,7 +92,7 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
     } finally {
       setStage(null);
     }
-  }, [onSynced, syncContacts]);
+  }, [confirm, onSynced, syncContacts, t]);
 
   return { supported, request, busy: stage !== null, stage, failure };
 }

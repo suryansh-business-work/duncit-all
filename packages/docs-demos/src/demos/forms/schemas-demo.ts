@@ -118,6 +118,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
           confirmPassword: mock.confirm_password,
           referralCode: '',
           acceptedPolicyIds: [],
+          marketingOptIn: false,
         }),
       ),
       // The Google door asks for the same row on its own — untick

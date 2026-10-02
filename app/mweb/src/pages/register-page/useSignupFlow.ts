@@ -114,6 +114,7 @@ export function useSignupFlow(linkedCode: string) {
           ...(code ? { referral_code: code } : {}),
           accepted_policy_ids: values.acceptedPolicyIds,
           accepted_policy_surface: ACCEPTANCE_SURFACE,
+          marketing_opt_in: values.marketingOptIn,
         },
       },
     });

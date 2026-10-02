@@ -63,6 +63,8 @@ export interface IPolicyAcceptance extends Document {
 export interface PolicyAcceptanceIntent {
   policy_ids: string[];
   surface: PolicyAcceptanceSurface;
+  /** The marketing box on the same form — see applySignupMarketingChoice. */
+  marketing_opt_in: boolean;
 }
 
 /**

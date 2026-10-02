@@ -40,6 +40,7 @@ import {
 import { assertPortalLogin } from '@modules/portals';
 import { noteSignIn, type SignInContext } from './user.signin';
 import { authPayload } from './user.public';
+import { applySignupMarketingChoice } from '@modules/access/privacy/privacy.service';
 import type { IdLike } from '@utils/request-cache';
 import {
   isPlaceholderPhone,
@@ -231,6 +232,7 @@ export const userAuthMethods = {
 
     await welcomeNewAccount(created, 'register');
     await recordSignupAcceptance(created, 'SIGNUP_FORM', acceptance);
+    await applySignupMarketingChoice(created, acceptance?.marketing_opt_in === true);
     await userAuditService.recordCreate(String(created._id), created);
     return authPayload(created);
   },
@@ -734,6 +736,7 @@ export const userAuthMethods = {
     }
     await welcomeNewAccount(created, `signupWith${spec.label}`);
     await recordSignupAcceptance(created, spec.acceptanceMethod, acceptance);
+    await applySignupMarketingChoice(created, acceptance?.marketing_opt_in === true);
     await UserModel.updateOne(
       { _id: created._id },
       {

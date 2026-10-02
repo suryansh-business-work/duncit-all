@@ -15,6 +15,7 @@ jest.mock('../../reel.service', () => ({
     removeAsset: jest.fn(),
     sendMessage: jest.fn(),
     restoreVersion: jest.fn(),
+    saveSpec: jest.fn(),
   },
 }));
 
@@ -38,6 +39,7 @@ const CALLS: Array<[string, (ctx: ReturnType<typeof makeContext>) => unknown]> =
   ['removeReelAsset', (ctx) => Mutation.removeReelAsset(null, { project_id: 'p1', asset_id: 'a1' }, ctx)],
   ['sendReelMessage', (ctx) => Mutation.sendReelMessage(null, { input: { project_id: 'p1', text: 'hi' } }, ctx)],
   ['restoreReelVersion', (ctx) => Mutation.restoreReelVersion(null, { project_id: 'p1', message_id: 'm1' }, ctx)],
+  ['saveReelSpec', (ctx) => Mutation.saveReelSpec(null, { project_id: 'p1', spec_json: '{}' }, ctx)],
 ];
 
 describe('reelResolvers — who may call them', () => {
@@ -75,6 +77,7 @@ describe('reelResolvers — what they hand the service', () => {
     Mutation.removeReelAsset(null, { project_id: 'p1', asset_id: 'a1' }, manager);
     Mutation.sendReelMessage(null, { input: { project_id: 'p1', text: 'hi' } }, manager);
     Mutation.restoreReelVersion(null, { project_id: 'p1', message_id: 'm1' }, manager);
+    Mutation.saveReelSpec(null, { project_id: 'p1', spec_json: '{}' }, manager);
     expect(service.create).toHaveBeenCalledWith(INPUT, ACTOR);
     expect(service.update).toHaveBeenCalledWith('p1', INPUT, ACTOR);
     expect(service.remove).toHaveBeenCalledWith('p1');
@@ -82,6 +85,7 @@ describe('reelResolvers — what they hand the service', () => {
     expect(service.removeAsset).toHaveBeenCalledWith('p1', 'a1', ACTOR);
     expect(service.sendMessage).toHaveBeenCalledWith({ project_id: 'p1', text: 'hi' }, ACTOR);
     expect(service.restoreVersion).toHaveBeenCalledWith('p1', 'm1', ACTOR);
+    expect(service.saveSpec).toHaveBeenCalledWith('p1', '{}', ACTOR);
   });
 
   it('names an operator whose account has no email by id alone', () => {

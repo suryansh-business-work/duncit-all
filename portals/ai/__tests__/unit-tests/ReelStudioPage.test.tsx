@@ -128,6 +128,21 @@ describe('ReelStudioPage — the studio', () => {
     expect(screen.getByTestId('reel-player')).toBeInTheDocument();
   });
 
+  it('puts the timeline under the panes, and opens a selected scene in the Edit tab', () => {
+    answerQuery(REEL_PROJECT, { data: { reelProject: project() } });
+    mount();
+    expect(screen.getByTestId('reel-timeline')).toBeInTheDocument();
+    expect(screen.getByTestId('reel-chat-panel')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('reel-timeline-scene-s1'));
+    expect(screen.queryByTestId('reel-chat-panel')).not.toBeInTheDocument();
+    expect(screen.getByTestId('reel-scene-form')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Edit' })).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Chat' }));
+    expect(screen.getByTestId('reel-chat-panel')).toBeInTheDocument();
+  });
+
   it('renames the reel from the toolbar and closes the dialog once it is saved', async () => {
     mount();
     fireEvent.click(screen.getByTestId('reel-studio-edit-details'));

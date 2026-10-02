@@ -12276,6 +12276,12 @@ export type Mutation = {
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   /**
+   * Save an edit made by hand on the timeline. spec_json is the whole ReelSpec as
+   * JSON; it is sanitized against the project's footage exactly as the editor's
+   * answers are, and the reel comes back as it now stands.
+   */
+  saveReelSpec: ReelProject;
+  /**
    * Store the caller's chrome arrangement. Only the fields present in the input
    * are written, so two consoles open at once cannot overwrite each other's
    * unrelated preferences.
@@ -15705,6 +15711,12 @@ export type MutationSavePodDraftArgs = {
 
 export type MutationSavePushSubscriptionArgs = {
   input: PushSubscriptionInput;
+};
+
+
+export type MutationSaveReelSpecArgs = {
+  project_id: Scalars['ID']['input'];
+  spec_json: Scalars['String']['input'];
 };
 
 

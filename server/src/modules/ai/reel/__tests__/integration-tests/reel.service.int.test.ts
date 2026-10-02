@@ -353,6 +353,25 @@ describe('reelService — the conversation', () => {
     expect(restored.duration_ms).toBe(2000);
   });
 
+  it('saves an edit made by hand, sanitized against the footage the reel holds', async () => {
+    const reel = await newReel();
+    const saved = await reelService.saveSpec(
+      reel.id,
+      JSON.stringify(specOf([card(2000), { duration_ms: 99_999_999 }, { asset_id: 'not-in-this-reel', duration_ms: 1000 }])),
+      EDITOR
+    );
+    // The clip the reel does not hold is dropped; the over-long card is cut to the longest scene allowed.
+    expect(saved.spec.scenes.map((scene) => scene.duration_ms)).toEqual([2000, 60_000]);
+    const stored = await ReelProjectModel.findById(reel.id).lean();
+    expect(stored?.updated_by).toBe(EDITOR.email);
+  });
+
+  it('refuses an edit that is not JSON, and a reel that does not exist', async () => {
+    const reel = await newReel();
+    await expect(reelService.saveSpec(reel.id, '{not json', ACTOR)).rejects.toMatchObject(BAD_INPUT);
+    await expect(reelService.saveSpec(unknownId(), '{}', ACTOR)).rejects.toMatchObject(NOT_FOUND);
+  });
+
   it('refuses to restore from a message that holds no version', async () => {
     const reel = await newReel();
     mockDirect.mockResolvedValue(reply('Nothing to change.'));

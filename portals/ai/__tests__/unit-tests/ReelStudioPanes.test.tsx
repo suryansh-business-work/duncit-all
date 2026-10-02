@@ -412,7 +412,6 @@ describe('PreviewPane', () => {
     const { unmount } = renderWithProviders(<PreviewPane project={project({ assets })} />);
     const empty = screen.getByTestId('reel-preview-empty').textContent;
     expect(screen.queryByTestId('reel-player')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('reel-scene-strip')).not.toBeInTheDocument();
     unmount();
 
     // The hint differs: one says add footage, the other says ask for a first cut.
@@ -420,7 +419,7 @@ describe('PreviewPane', () => {
     expect(screen.getByTestId('reel-preview-empty').textContent).not.toBe(empty);
   });
 
-  it('plays the reel and jumps to a scene from the strip', () => {
+  it('plays the reel and hands the mounted player to the studio', () => {
     const spec = {
       fps: 30,
       width: 1080,
@@ -429,7 +428,8 @@ describe('PreviewPane', () => {
       music: null,
       scenes: [scene({}), scene({ id: 's2', asset_id: '', transition: 'FADE', transition_ms: 500 })],
     } as ReelProject['spec'];
-    renderWithProviders(<PreviewPane project={project({ assets: [asset({})], spec })} />);
+    const onPlayer = vi.fn();
+    renderWithProviders(<PreviewPane project={project({ assets: [asset({})], spec })} onPlayer={onPlayer} />);
 
     expect(screen.getByTestId('reel-player')).toBeInTheDocument();
     expect(player.props).toMatchObject({
@@ -440,11 +440,8 @@ describe('PreviewPane', () => {
       inputProps: { spec, assets: [expect.objectContaining({ id: 'a1' })] },
     });
 
-    fireEvent.click(screen.getByTestId('reel-scene-s1'));
-    expect(player.seekTo).toHaveBeenLastCalledWith(0);
-    // Past the overlap, so the jump lands on the scene itself.
-    fireEvent.click(screen.getByTestId('reel-scene-s2'));
-    expect(player.seekTo).toHaveBeenLastCalledWith(60);
+    // The timeline follows and moves the playhead through this handle.
+    expect(onPlayer).toHaveBeenCalledWith(expect.objectContaining({ seekTo: player.seekTo }));
   });
 });
 

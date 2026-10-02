@@ -45,7 +45,8 @@ interface State {
   report: CrashReport | null;
 }
 
-const currentPath = () => globalThis.location?.pathname ?? '';
+/** Only ever read in componentDidCatch, which React runs in the browser alone — never during SSR. */
+const currentPath = () => globalThis.location.pathname;
 
 /**
  * The one error boundary for mWeb and every portal: a crash in what it wraps

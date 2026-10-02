@@ -5,6 +5,7 @@ const createRootSpy = vi.hoisted(() => vi.fn(() => ({ render: renderSpy })));
 const logs = vi.hoisted(() => ({
   configureLogs: vi.fn(),
   httpTransport: vi.fn(() => 'transport'),
+  createLogger: vi.fn(() => ({ error: vi.fn(), warn: vi.fn() })),
 }));
 
 vi.mock('@fontsource/nunito/400.css', () => ({}));
@@ -71,6 +72,7 @@ describe('mountPortal', () => {
     createRootSpy.mockClear();
     logs.configureLogs.mockClear();
     logs.httpTransport.mockClear();
+    logs.createLogger.mockClear();
     localStorage.clear();
     setGoogleClientId('');
   });
@@ -95,6 +97,10 @@ describe('mountPortal', () => {
     expect(logs.configureLogs).toHaveBeenCalledWith('transport', { platform: 'web', portal: 'crm' });
     await mounted();
     expect(createRootSpy).toHaveBeenCalledWith(root);
+    // Everything above the page boundary sits in a root boundary logging as this portal.
+    const boundary = renderSpy.mock.calls[0][0].props.children;
+    expect(boundary.props).toMatchObject({ surface: 'crm', scope: 'root' });
+    expect(logs.createLogger).toHaveBeenCalledWith('portal', 'crm');
 
     // The `isAuthed` closure handed to UserProvider reads the token key.
     //

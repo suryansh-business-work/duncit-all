@@ -14,6 +14,22 @@ import {
 } from '../error-logs-page/errorLogCells';
 import { BOUNDARY_FILTER, parseBoundaryData, surfaceOf } from './boundary-data';
 
+/** A crash the boundary caught, or a Report an Issue pressed on one — told apart by colour. */
+function EventChip({ row }: Readonly<{ row: ErrorLogRow }>) {
+  const { t } = useTranslation();
+  const reported = parseBoundaryData(row).event === 'REPORTED';
+  return (
+    <Chip
+      size="small"
+      variant={reported ? 'filled' : 'outlined'}
+      color={reported ? 'warning' : 'error'}
+      label={reported ? t('tech.errorBoundaries.reported') : t('tech.errorBoundaries.caught')}
+    />
+  );
+}
+
+const renderEvent = (row: ErrorLogRow) => <EventChip row={row} />;
+
 /** One row per crash a boundary caught, and one per Report an Issue pressed on it. */
 export default function ErrorBoundariesTable({
   fetchRows,
@@ -41,17 +57,7 @@ export default function ErrorBoundariesTable({
           { value: 'REPORTED', label: t('tech.errorBoundaries.reported') },
         ],
         valueGetter: (row) => eventLabel(parseBoundaryData(row).event),
-        cellRenderer: (row) => {
-          const event = parseBoundaryData(row).event;
-          return (
-            <Chip
-              size="small"
-              variant={event === 'REPORTED' ? 'filled' : 'outlined'}
-              color={event === 'REPORTED' ? 'warning' : 'error'}
-              label={eventLabel(event)}
-            />
-          );
-        },
+        cellRenderer: renderEvent,
       },
       {
         field: 'environment',

@@ -7,13 +7,12 @@ import { createAuthed } from '../src/auth/RequireAuth';
 
 /**
  * A crash in one page must not white-screen the portal: the boundary shows a
- * recoverable panel, logs the crash, and clears itself on navigation.
+ * recoverable panel, and clears itself on navigation.
  */
 let shouldThrow = true;
-let message = 'Venue form exploded';
 
 function Flaky() {
-  if (shouldThrow) throw new Error(message);
+  if (shouldThrow) throw new Error('Venue form exploded');
   return <p>Venue editor</p>;
 }
 
@@ -42,7 +41,6 @@ function renderAt(path: string) {
 
 beforeEach(() => {
   shouldThrow = true;
-  message = 'Venue form exploded';
   // React reports every caught render error to console.error; keep the run quiet.
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
 });
@@ -59,28 +57,16 @@ describe('PageErrorBoundary', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('shows the crash message instead of a white screen, and Try again re-renders', async () => {
+  it('shows Retry and Report an Issue instead of a white screen, never the raw error, and Retry re-renders', async () => {
     renderAt('/venues/new');
-    expect(screen.getByRole('alert')).toHaveTextContent('Venue form exploded');
+    const panel = screen.getByRole('alert');
+    expect(panel).toHaveAttribute('data-testid', 'error-boundary-fallback');
+    expect(panel).not.toHaveTextContent('Venue form exploded');
+    expect(screen.getByTestId('error-boundary-report')).toBeInTheDocument();
 
     shouldThrow = false;
-    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await userEvent.click(screen.getByTestId('error-boundary-retry'));
     expect(screen.getByText('Venue editor')).toBeInTheDocument();
-  });
-
-  it('falls back to the generic copy when the error has no message', () => {
-    message = '';
-    renderAt('/venues/new');
-    expect(screen.getByRole('alert')).toHaveTextContent('An unexpected error occurred');
-  });
-
-  it('reloads the page from the panel', async () => {
-    const reload = vi.fn();
-    vi.stubGlobal('location', { ...globalThis.location, reload });
-    renderAt('/venues/new');
-    await userEvent.click(screen.getByRole('button', { name: 'Reload' }));
-    expect(reload).toHaveBeenCalledTimes(1);
-    vi.unstubAllGlobals();
   });
 
   it('clears itself when the person navigates to another page', async () => {

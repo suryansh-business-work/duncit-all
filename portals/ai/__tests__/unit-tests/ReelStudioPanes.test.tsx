@@ -469,6 +469,12 @@ describe('ExportDialog', () => {
     expect(running.cancel).toHaveBeenCalledTimes(1);
   });
 
+  it('says the footage is downloading before any frame is drawn', () => {
+    renderWithProviders(<ExportDialog exporter={exporter({ phase: 'downloading', progress: 0.5 })} />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+    expect(screen.getByRole('status')).toHaveTextContent('Downloading the footage — 50%');
+  });
+
   it('says why a render failed, and offers to try again or close', () => {
     const failed = exporter({ phase: 'failed', message: 'This browser cannot encode H.264.' });
     renderWithProviders(<ExportDialog exporter={failed} />);

@@ -1837,6 +1837,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "ai.reels.chat.transcript": "Conversation with the editor",
   "ai.reels.chat.working": "The editor is working on your reel…",
   "ai.reels.export.done": "Reel exported — check your downloads",
+  "ai.reels.export.downloadFailed": "Could not download \"{name}\" from Google Drive. Check the file is still shared, then try again.",
+  "ai.reels.export.downloading": "Downloading the footage — {percent}%",
   "ai.reels.export.failed": "The export failed",
   "ai.reels.export.failedWith": "The reel could not be exported: {reason}",
   "ai.reels.export.keepOpen": "The reel is rendered in this browser tab. Keep the tab open until it finishes.",

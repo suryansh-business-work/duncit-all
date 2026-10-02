@@ -394,6 +394,44 @@ describe('useReelExport', () => {
     expect(downloadBlob).not.toHaveBeenCalled();
   });
 
+  it('downloads the footage into the tab and renders from those copies', async () => {
+    const withClip = {
+      ...project,
+      assets: [{ id: 'a1', name: 'jam.mp4', url: 'https://server.duncit.com/reels/media/t1' }],
+      spec: { ...project.spec, scenes: [{ id: 's1', asset_id: 'a1', overlays: [], duration_ms: 2000, transition_ms: 0 }] },
+    } as unknown as ReelProject;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(new Blob(['clip'])));
+    const created = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local-jam');
+    const revoked = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
+    renderer.renderMediaOnWeb.mockResolvedValue(rendered);
+    const { result } = renderHook(() => useReelExport(withClip));
+    await act(() => result.current.start());
+    expect(fetchSpy).toHaveBeenCalledWith('https://server.duncit.com/reels/media/t1', expect.anything());
+    expect(renderer.renderMediaOnWeb).toHaveBeenCalledWith(
+      expect.objectContaining({ inputProps: expect.objectContaining({ assets: [expect.objectContaining({ url: 'blob:local-jam' })] }) })
+    );
+    expect(revoked).toHaveBeenCalledWith('blob:local-jam');
+    fetchSpy.mockRestore();
+    created.mockRestore();
+    revoked.mockRestore();
+  });
+
+  it('names the file that could not be downloaded', async () => {
+    const withClip = {
+      ...project,
+      assets: [{ id: 'a1', name: 'jam.mp4', url: 'https://server.duncit.com/reels/media/t1' }],
+      spec: { ...project.spec, scenes: [{ id: 's1', asset_id: 'a1', overlays: [], duration_ms: 2000, transition_ms: 0 }] },
+    } as unknown as ReelProject;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('gone', { status: 404 }));
+    renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
+    const { result } = renderHook(() => useReelExport(withClip));
+    await act(() => result.current.start());
+    expect(renderer.renderMediaOnWeb).not.toHaveBeenCalled();
+    expect(result.current.state).toEqual({ phase: 'failed', message: expect.stringContaining('jam.mp4') });
+    fetchSpy.mockRestore();
+  });
+
   it('goes quietly back to idle when the operator cancels', async () => {
     renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
     renderer.renderMediaOnWeb.mockImplementation(

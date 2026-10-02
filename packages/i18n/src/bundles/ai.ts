@@ -781,6 +781,8 @@ export const AI_BUNDLE: NestedCatalogue = {
         keepOpen: 'The reel is rendered in this browser tab. Keep the tab open until it finishes.',
         progressLabel: 'Export progress',
         progress: '{percent}% rendered',
+        downloading: 'Downloading the footage — {percent}%',
+        downloadFailed: 'Could not download "{name}" from Google Drive. Check the file is still shared, then try again.',
         done: 'Reel exported — check your downloads',
         unsupported: 'This browser cannot export video. Use a recent Chrome or Edge.',
         failed: 'The export failed',

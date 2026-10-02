@@ -13,6 +13,12 @@ interface Props extends HTMLAttributes<HTMLLIElement> {
   showSlots?: boolean;
 }
 
+/** The option's spoken name — only when it adds to the visible text; a bare name needs none. */
+function optionAriaLabel(named: string, place: string, slots: string): string | undefined {
+  if (slots) return [named, slots].join(', ');
+  return place ? named : undefined;
+}
+
 /**
  * One club in step 1's picker, read as "Who Even Are We? | (pin) Gomti Nagar,
  * Lucknow · 4 open slots": two clubs can share a name, and the place is what
@@ -22,8 +28,10 @@ interface Props extends HTMLAttributes<HTMLLIElement> {
 export default function ClubOption({ club, place, showSlots = false, ...optionProps }: Readonly<Props>) {
   const { t } = useTranslation();
   const slots = useClubSlotsLabel(club);
-  const named = place ? t('mweb.createPod.clubOptionAria', { vars: { club: club.club_name, place } }) : club.club_name;
-  const ariaLabel = showSlots ? `${named}, ${slots.label}` : named;
+  const named = place
+    ? t('mweb.createPod.clubOptionAria', { vars: { club: club.club_name, place } })
+    : club.club_name;
+  const ariaLabel = optionAriaLabel(named, place, showSlots ? slots.label : '');
   return (
     <Box
       component="li"

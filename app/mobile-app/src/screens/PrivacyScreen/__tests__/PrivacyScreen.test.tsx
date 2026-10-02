@@ -16,7 +16,8 @@ jest.mock('@react-navigation/native', () => ({
 }));
 const mockLogError = jest.fn();
 jest.mock('@duncit/logs', () => ({
-  logs: { mobileApp: { error: (...args: unknown[]) => mockLogError(...args) } },
+  // config.ts logs its API origin with .info at import time.
+  logs: { mobileApp: { error: (...args: unknown[]) => mockLogError(...args), info: jest.fn(), warn: jest.fn() } },
 }));
 
 const mockedExport = useDataExport as jest.Mock;

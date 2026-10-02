@@ -357,6 +357,9 @@ describe('every route mounts with no data behind it', () => {
    * half that only exists once data arrives — the rows, the cards, the chips, the
    * formatted money and dates. See ./schema-mock for what it answers with.
    */
+  // Every control on a data-filled screen is filled and pressed; the largest
+  // (/branding) outruns the global 30s on a busy CI runner.
+  const WITH_DATA_TIMEOUT_MS = 90_000;
   it.each(ROUTES)('renders %s with data behind it', async (route) => {
     const { container, unmount } = mountRoute(route, schemaMockLink());
 
@@ -369,5 +372,5 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     unmount();
-  });
+  }, WITH_DATA_TIMEOUT_MS);
 });

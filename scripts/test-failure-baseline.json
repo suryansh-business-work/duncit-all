@@ -224,7 +224,6 @@
     "src/pages/__tests__/VenueDetailsPage.test.tsx",
     "src/pages/account-page/__tests__/LanguageSection.test.tsx",
     "src/pages/account-page/account-edit/account-edit.form.cy.ts",
-    "src/pages/account-page/username-field/__tests__/UsernameField.test.tsx",
     "src/pages/cart-page/__tests__/CartPage.test.tsx",
     "src/pages/chat-room-page/__tests__/ChatRoomHeader.test.tsx",
     "src/pages/chat-room-page/__tests__/ChatRoomNotice.test.tsx",

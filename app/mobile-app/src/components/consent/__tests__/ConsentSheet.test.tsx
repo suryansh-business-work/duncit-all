@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Linking, Switch } from 'react-native';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { ConsentHost, ConsentSheet } from '@/components/consent';
@@ -79,9 +79,12 @@ describe('ConsentSheet', () => {
 
     expect(screen.getByTestId('consent-switch-essential-switch').props.value).toBe(true);
     expect(screen.getByTestId('consent-switch-analytics-switch').props.value).toBe(false);
-    // The essential switch is locked on: its handler changes nothing.
+    // The essential switch is locked on: its handler changes nothing. The host
+    // element carries no handler, so reach the Switch component's own props.
+    const [essential] = screen.UNSAFE_getAllByType(Switch);
+    expect(essential?.props.disabled).toBe(true);
     act(() => {
-      screen.getByTestId('consent-switch-essential-switch').props.onValueChange(false);
+      essential?.props.onValueChange(false);
     });
     fireEvent(screen.getByTestId('consent-switch-analytics-switch'), 'valueChange', true);
     fireEvent(screen.getByTestId('consent-switch-marketing-switch'), 'valueChange', true);

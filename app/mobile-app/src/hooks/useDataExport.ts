@@ -21,8 +21,8 @@ export function useDataExport() {
       const day = new Date().toISOString().slice(0, 10);
       const uri = `${FileSystem.cacheDirectory}duncit-my-data-${day}.json`;
       await FileSystem.writeAsStringAsync(uri, data.myDataExport);
-      if (!(await Sharing.isAvailableAsync()))
-        throw new Error('Sharing is not available on this device');
+      // A code, not copy: the screen shows privacy.page.downloadFailed.
+      if (!(await Sharing.isAvailableAsync())) throw new Error('SHARING_UNAVAILABLE');
       await Sharing.shareAsync(uri, { mimeType: 'application/json' });
     } finally {
       setBusy(false);

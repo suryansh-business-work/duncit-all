@@ -67,7 +67,7 @@ export function useHostProjection(
 
   // One expression answers both "does this work" and "what is it worth", so
   // the two can never disagree about the same numbers.
-  const hostReceives = projection && projection.viable && inRange ? projection.host_receives : null;
+  const hostReceives = projection?.viable && inRange ? projection.host_receives : null;
 
   return {
     price,

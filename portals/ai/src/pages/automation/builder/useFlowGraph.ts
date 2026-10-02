@@ -4,6 +4,10 @@ import { NODE_KINDS, type NodeKind } from '../node-kinds';
 import { exitsOf, newId, nextPosition, toCanvasEdges, toCanvasNodes, type CanvasNode } from '../graph-io';
 import type { AutomationChannel, AutomationFlow, FlowIssue, NodeData } from '../types';
 
+/** What the server found wrong with one step, as the card lists it. */
+const issueMessagesFor = (issues: readonly FlowIssue[], nodeId: string): string[] =>
+  issues.filter((issue) => issue.node_id === nodeId).map((issue) => issue.message);
+
 /**
  * The canvas document: its steps, its arrows, which step is selected and
  * whether anything has changed since the last save.
@@ -22,7 +26,7 @@ export function useFlowGraph(channel: AutomationChannel) {
     setNodes((current) =>
       current.map((node) => ({
         ...node,
-        data: { ...node.data, issues: issues.filter((issue) => issue.node_id === node.id).map((issue) => issue.message) },
+        data: { ...node.data, issues: issueMessagesFor(issues, node.id) },
       }))
     );
   }, []);

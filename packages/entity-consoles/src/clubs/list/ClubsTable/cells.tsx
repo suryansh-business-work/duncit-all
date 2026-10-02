@@ -54,6 +54,13 @@ export function ClubNameCell({ club, t }: Readonly<{ club: ClubRow; t: Translate
   return <Tooltip title={t('admin.clubs.noAdminTooltip')}>{body}</Tooltip>;
 }
 
+/** The club-name column's renderer, bound to the page's translator. */
+export function clubNameRenderer(t: Translate) {
+  return function renderClubName(c: ClubRow) {
+    return <ClubNameCell club={c} t={t} />;
+  };
+}
+
 export const renderWhatsApp = (c: ClubRow) => (
   <Stack direction="row" spacing={0.5} component="span">
     {c.club_whats_app_community_link && <Chip size="small" label="C" />}

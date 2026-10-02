@@ -42,6 +42,44 @@ export interface HostClaimDialogProps {
   locationLabel?: string;
 }
 
+/** The offer being taken: its title, the city it is pinned to and the venue's slot. */
+type OfferSummaryProps = Pick<HostClaimDialogProps, 'labels' | 'formatWhen'> & { row: AutoPodRow };
+
+function OfferSummary({ row, labels, formatWhen }: Readonly<OfferSummaryProps>) {
+  return (
+    <>
+      <Typography variant="subtitle2">{row.pod_title}</Typography>
+      {row.location ? (
+        <Typography variant="body2">{labels.pinnedTo(autoPodCityLabel(row.location))}</Typography>
+      ) : null}
+      {row.venue_claim ? (
+        <Typography variant="body2">
+          {row.venue_claim.venue_name} · {formatWhen(row.venue_claim.pod_date_time)}
+        </Typography>
+      ) : null}
+    </>
+  );
+}
+
+/** Why the button is off (no city yet), which city it will pin, and a failed save. */
+function ClaimNotices({ labels, needsLocation, pinsCityTo, failure }: Readonly<{
+  labels: AutoPodLabels;
+  needsLocation: boolean;
+  /** The city an assignment pins the offer to, or null when it pins none. */
+  pinsCityTo: string | null;
+  failure: string | null;
+}>) {
+  return (
+    <>
+      {needsLocation ? <Alert severity="warning" data-testid="auto-pod-host-claim-needs-location">{labels.pickLocationFirst}</Alert> : null}
+      {pinsCityTo === null ? null : (
+        <Alert severity="info" data-testid="auto-pod-host-claim-pins-city">{labels.willPinTo(pinsCityTo)}</Alert>
+      )}
+      {failure ? <Alert severity="error" data-testid="auto-pod-host-claim-error">{failure}</Alert> : null}
+    </>
+  );
+}
+
 /**
  * "Assign Myself" — the host takes the pod, priced through the same potential-
  * earnings calculator Step 4 of Create a Pod uses: a ticket price and a spots
@@ -124,19 +162,7 @@ export function HostClaimDialog({
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {labels.confirmAssignBody}
           </Typography>
-          {row ? (
-            <>
-              <Typography variant="subtitle2">{row.pod_title}</Typography>
-              {row.location ? (
-                <Typography variant="body2">{labels.pinnedTo(autoPodCityLabel(row.location))}</Typography>
-              ) : null}
-              {row.venue_claim ? (
-                <Typography variant="body2">
-                  {row.venue_claim.venue_name} · {formatWhen(row.venue_claim.pod_date_time)}
-                </Typography>
-              ) : null}
-            </>
-          ) : null}
+          {row ? <OfferSummary row={row} labels={labels} formatWhen={formatWhen} /> : null}
 
           {virtual ? (
             <HostMeetingFields value={meeting} onChange={setMeeting} labels={labels} now={now} />
@@ -144,11 +170,12 @@ export function HostClaimDialog({
 
           <HostEarningsFields state={pricing} labels={labels} formatMoney={formatMoney} />
 
-          {needsLocation ? <Alert severity="warning" data-testid="auto-pod-host-claim-needs-location">{labels.pickLocationFirst}</Alert> : null}
-          {pinsCity ? (
-            <Alert severity="info" data-testid="auto-pod-host-claim-pins-city">{labels.willPinTo(locationLabel || locationId)}</Alert>
-          ) : null}
-          {failure ? <Alert severity="error" data-testid="auto-pod-host-claim-error">{failure}</Alert> : null}
+          <ClaimNotices
+            labels={labels}
+            needsLocation={needsLocation}
+            pinsCityTo={pinsCity ? locationLabel || locationId : null}
+            failure={failure}
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

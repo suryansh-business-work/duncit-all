@@ -6,6 +6,10 @@ import { Controller, type Control } from 'react-hook-form';
 import { useTranslation } from '@duncit/shell';
 import type { VenueFormValues } from '../types';
 
+/** The gallery without the image at `index`, everything else in its order. */
+const withoutIndex = (urls: readonly string[], index: number): string[] =>
+  urls.filter((_, i) => i !== index);
+
 /**
  * The venue's gallery: a plain list of URLs, shown as what it is.
  *
@@ -45,7 +49,7 @@ export default function GalleryField({
                     <DuncitIconButton
                       size="small"
                       aria-label={t('directory.venueEditor.removeImage')}
-                      onClick={() => field.onChange(urls.filter((_, i) => i !== index))}
+                      onClick={() => field.onChange(withoutIndex(urls, index))}
                       sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'background.paper' }}
                     >
                       <DeleteOutlineIcon fontSize="small" />

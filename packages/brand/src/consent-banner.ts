@@ -60,7 +60,7 @@ export const CONSENT_BANNER_KEYS: Readonly<Record<keyof ConsentBannerCopy, strin
 /** Resolve the banner's copy through a site's translator. */
 export function consentBannerCopy(t: (key: string) => string): ConsentBannerCopy {
   const entries = Object.entries(CONSENT_BANNER_KEYS).map(([field, key]) => [field, t(key)]);
-  return Object.fromEntries(entries) as unknown as ConsentBannerCopy;
+  return Object.fromEntries(entries);
 }
 
 const STYLE_ID = 'duncit-consent-style';

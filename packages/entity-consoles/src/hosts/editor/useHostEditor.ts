@@ -77,17 +77,13 @@ export function useHostEditor(hostId: string) {
           step3: valuesToHostStep3(values),
         };
         const categories = valuesToHostCategories(values);
+        // Omitted rather than sent: the server refuses a status from a
+        // caller who cannot govern, even one that did not move.
+        const status = canGovern ? values.status : undefined;
         let id = values.id;
         if (isEdit) {
           await updateHost({
-            variables: {
-              host_doc_id: id,
-              ...payload,
-              // Omitted rather than sent: the server refuses a status from a
-              // caller who cannot govern, even one that did not move.
-              status: canGovern ? values.status : undefined,
-              categories,
-            },
+            variables: { host_doc_id: id, ...payload, status, categories },
           });
         } else {
           const created = await createHost({
@@ -101,12 +97,7 @@ export function useHostEditor(hostId: string) {
             (created.data as { adminCreateHost?: { id: string } } | null)?.adminCreateHost?.id ?? '';
           if (id && categories.length > 0) {
             await updateHost({
-              variables: {
-                host_doc_id: id,
-                ...payload,
-                status: canGovern ? values.status : undefined,
-                categories,
-              },
+              variables: { host_doc_id: id, ...payload, status, categories },
             });
           }
         }

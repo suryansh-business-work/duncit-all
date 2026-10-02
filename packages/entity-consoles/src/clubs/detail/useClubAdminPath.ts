@@ -28,7 +28,7 @@ export function useClubAdminPath(clubId: string, admins: ClubActor[]) {
   });
 
   return useMemo(() => {
-    const recordIdByUser = new Map(
+    const recordIdByUser = new Map<string, string>(
       (data?.clubAdminProfilesTable.rows ?? []).map((row) => [row.user_id, row.id]),
     );
     return (admin: ClubActor) => {

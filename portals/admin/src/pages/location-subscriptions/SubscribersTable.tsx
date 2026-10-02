@@ -56,6 +56,13 @@ function StatusChip({ row, label }: Readonly<StatusChipProps>) {
   );
 }
 
+/** The status column's renderer, bound to the page's translated status labels. */
+function statusChipRenderer(labels: Record<LocationSubscriptionStatus, string>) {
+  return function renderStatusChip(row: LocationSubscriptionRow) {
+    return <StatusChip row={row} label={labels[row.status]} />;
+  };
+}
+
 /** Every subscriber of the chosen city, paged and filtered on the server. */
 export default function SubscribersTable({ city, refetchRef }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -114,7 +121,7 @@ export default function SubscribersTable({ city, refetchRef }: Readonly<Props>) 
         type: 'enum',
         options: statusOptions,
         minWidth: 130,
-        cellRenderer: (row) => <StatusChip row={row} label={labels[row.status]} />,
+        cellRenderer: statusChipRenderer(labels),
         valueGetter: (row) => labels[row.status],
       },
       // The answer to the app's "share your current location?" question, asked

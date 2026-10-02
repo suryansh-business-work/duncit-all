@@ -151,3 +151,32 @@ export function canScanPodTickets(pod: PodPhaseFields, now: number = Date.now())
 export function canAmendPod(pod: PodPhaseFields, now: number = Date.now()): boolean {
   return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';
 }
+
+/** How many days ahead Home's "Happening nearby" looks until the admin's own
+ * setting (Pods > Pod Settings) has loaded. */
+export const DEFAULT_HAPPENING_NEARBY_DAYS = 7;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The pods "Happening nearby" shows: those starting within the next `days`
+ * days of `now`. The feed it is given is already upcoming-only, so this only
+ * caps how far ahead it reaches — a pod a month out belongs to its club's
+ * section, not to what is happening around the reader soon.
+ *
+ * A pod with no usable start cannot be placed inside a window, so it is left
+ * out here (its club section still lists it). A days value that is not a
+ * positive number reads as the default rather than as "nothing ever".
+ */
+export function withinHappeningNearbyWindow<T extends PodPhaseFields>(
+  pods: readonly T[],
+  days: number,
+  now: number = Date.now(),
+): T[] {
+  const span = Number.isFinite(days) && days > 0 ? days : DEFAULT_HAPPENING_NEARBY_DAYS;
+  const until = now + span * DAY_MS;
+  return pods.filter((pod) => {
+    const start = Date.parse(pod.pod_date_time ?? '');
+    return Number.isFinite(start) && start <= until;
+  });
+}

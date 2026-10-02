@@ -1664,6 +1664,8 @@ export type AppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there. */
+  happening_nearby_days: Scalars['Int']['output'];
   /** Account Health points a HOST loses for filing a Request Change on a pod they host (0-10, 0 disables it). */
   host_change_request_health_penalty: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
@@ -21455,6 +21457,8 @@ export type PublicAppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there. */
+  happening_nearby_days: Scalars['Int']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
   max_backout_attempts: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
@@ -33116,6 +33120,8 @@ export type UpdateAppSettingsInput = {
   date_format?: InputMaybe<Scalars['String']['input']>;
   /** Days a Create-Pod draft is kept before auto-deletion (min 1). */
   draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
+  /** How many days ahead Home's Happening nearby looks (1-60). */
+  happening_nearby_days?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a host loses for filing a Request Change (0-10, 0 disables it). */
   host_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;

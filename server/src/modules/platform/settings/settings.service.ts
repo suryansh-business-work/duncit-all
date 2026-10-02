@@ -75,6 +75,9 @@ const DEFAULT_POD_FEEDBACK_DELAY_HOURS = 1;
 /** Days of free slots a venue is offered when accepting an Auto Pod — short,
  * because the host and the club admin still need time to enrol before the date. */
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
+/** Days ahead Home's "Happening nearby" looks — a week, so it reads as what is
+ * on soon rather than everything ever scheduled. */
+const DEFAULT_HAPPENING_NEARBY_DAYS = 7;
 /** Hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
 const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
 /** Hours an Auto Pod's venue, host and club admin have to all enrol before it is released. */
@@ -144,6 +147,10 @@ const cleanPodFeedbackDelayHours = (value: unknown) => {
 const cleanAutoPodSlotWindowDays = (value: unknown) =>
   Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS));
 
+/** Happening nearby window, clamped to 1 – 60 days. */
+const cleanHappeningNearbyDays = (value: unknown) =>
+  Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_HAPPENING_NEARBY_DAYS));
+
 /** Auto Pod venue window, clamped to 1 hour – 30 days. */
 const cleanAutoPodVenueExpiryHours = (value: unknown) =>
   Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS));
@@ -210,6 +217,7 @@ const toAppPub = (d: any) => ({
   pod_cancel_risk_window_hours: cleanPodCancelRiskWindowHours(d?.pod_cancel_risk_window_hours),
   pod_cancel_risk_alert_hours: cleanPodCancelRiskAlertHours(d?.pod_cancel_risk_alert_hours),
   auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
+  happening_nearby_days: cleanHappeningNearbyDays(d?.happening_nearby_days),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
     d?.auto_pod_assignment_expiry_hours,
@@ -597,6 +605,7 @@ type AppSettingsUpdateInput = {
   pod_cancel_risk_window_hours?: number;
   pod_cancel_risk_alert_hours?: number;
   auto_pod_slot_window_days?: number;
+  happening_nearby_days?: number;
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
@@ -675,6 +684,8 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     );
   if (input.auto_pod_slot_window_days !== undefined)
     update.auto_pod_slot_window_days = cleanAutoPodSlotWindowDays(input.auto_pod_slot_window_days);
+  if (input.happening_nearby_days !== undefined)
+    update.happening_nearby_days = cleanHappeningNearbyDays(input.happening_nearby_days);
   if (input.auto_pod_venue_expiry_hours !== undefined)
     update.auto_pod_venue_expiry_hours = cleanAutoPodVenueExpiryHours(
       input.auto_pod_venue_expiry_hours,
@@ -730,6 +741,7 @@ export const settingsService = {
         doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
       pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(doc.pod_complete_timeout_hours),
       ticket_discount_max_pct: cleanTicketDiscountMaxPct(doc.ticket_discount_max_pct),
+      happening_nearby_days: cleanHappeningNearbyDays(doc.happening_nearby_days),
     };
   },
 

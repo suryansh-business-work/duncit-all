@@ -40,13 +40,13 @@ describe('HappeningNearbyScreen', () => {
   });
 
   it('shows the empty state when there are no live pods', () => {
-    mockedFeed.mockReturnValue({ activePods: [] });
+    mockedFeed.mockReturnValue({ nearbyPods: [] });
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('happening-nearby-empty')).toBeOnTheScreen();
   });
 
   it('lists live pods and opens one', () => {
-    mockedFeed.mockReturnValue({ activePods: [pod] });
+    mockedFeed.mockReturnValue({ nearbyPods: [pod] });
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('happening-nearby-screen')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-live'));
@@ -69,7 +69,7 @@ describe('HappeningNearbyScreen', () => {
       id,
       pod_id: `pod-${id}`,
     }));
-    mockedFeed.mockReturnValue({ activePods: pods });
+    mockedFeed.mockReturnValue({ nearbyPods: pods });
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('ad-card-ad1')).toBeOnTheScreen();
     expect(screen.getByText('Sponsored Pod')).toBeOnTheScreen();

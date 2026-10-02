@@ -9,6 +9,8 @@ import {
   podPhase,
   podScanWindow,
   splitPodsByPhase,
+  withinHappeningNearbyWindow,
+  DEFAULT_HAPPENING_NEARBY_DAYS,
   type PodPhaseFields,
 } from '../src/pod-phase';
 
@@ -170,5 +172,41 @@ describe('canAmendPod', () => {
 
   it('reads the clock when no `now` is passed', () => {
     expect(canAmendPod({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(true);
+  });
+});
+
+describe('withinHappeningNearbyWindow', () => {
+  const DAY = 24 * HOUR;
+  const pods = [
+    { id: 'DUN-POD-4821', pod_date_time: at(2 * HOUR) },
+    { id: 'DUN-POD-4822', pod_date_time: at(7 * DAY) },
+    { id: 'DUN-POD-4823', pod_date_time: at(7 * DAY + HOUR) },
+    { id: 'DUN-POD-4824', pod_date_time: at(30 * DAY) },
+    { id: 'DUN-POD-4825', pod_date_time: null },
+    { id: 'DUN-POD-4826', pod_date_time: 'not a date' },
+  ];
+  const ids = (list: { id: string }[]) => list.map((pod) => pod.id);
+
+  it('keeps only the pods starting within the next week, the last instant included', () => {
+    expect(ids(withinHappeningNearbyWindow(pods, 7, NOW))).toEqual(['DUN-POD-4821', 'DUN-POD-4822']);
+  });
+
+  it('reaches as far as the admin sets', () => {
+    expect(ids(withinHappeningNearbyWindow(pods, 30, NOW))).toEqual([
+      'DUN-POD-4821',
+      'DUN-POD-4822',
+      'DUN-POD-4823',
+      'DUN-POD-4824',
+    ]);
+  });
+
+  it('reads a missing or non-positive window as the default week, never as "nothing"', () => {
+    expect(DEFAULT_HAPPENING_NEARBY_DAYS).toBe(7);
+    expect(ids(withinHappeningNearbyWindow(pods, 0, NOW))).toEqual(['DUN-POD-4821', 'DUN-POD-4822']);
+    expect(ids(withinHappeningNearbyWindow(pods, Number.NaN, NOW))).toEqual(['DUN-POD-4821', 'DUN-POD-4822']);
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    expect(withinHappeningNearbyWindow([{ pod_date_time: new Date(Date.now() + HOUR).toISOString() }], 7)).toHaveLength(1);
   });
 });

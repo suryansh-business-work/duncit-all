@@ -25,6 +25,16 @@ describe('settingsService integration', () => {
     expect(pub.time_zone).toBe('Asia/Kolkata');
   });
 
+  it('keeps Happening nearby to a week by default, clamps an edit to 1–60 days and serves it publicly', async () => {
+    expect((await settingsService.getPublicAppSettings()).happening_nearby_days).toBe(7);
+
+    expect((await settingsService.updateAppSettings({ happening_nearby_days: 14 })).happening_nearby_days).toBe(14);
+    expect((await settingsService.getPublicAppSettings()).happening_nearby_days).toBe(14);
+
+    expect((await settingsService.updateAppSettings({ happening_nearby_days: 500 })).happening_nearby_days).toBe(60);
+    expect((await settingsService.updateAppSettings({ happening_nearby_days: 0 })).happening_nearby_days).toBe(7);
+  });
+
   it('defaults the time source to SERVER and stamps every public read with server_time', async () => {
     const pub = await settingsService.getPublicAppSettings();
     expect(pub.time_source).toBe('SERVER');

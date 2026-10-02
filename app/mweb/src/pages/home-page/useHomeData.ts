@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { splitPodsByPhase } from '@duncit/utils';
+import { splitPodsByPhase, withinHappeningNearbyWindow } from '@duncit/utils';
+import { useHappeningNearbyDays } from '../../utils/dateFormat';
 import { HEADER_STATIC, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useUserInfo } from '../../user-info/useUserInfo';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
@@ -318,15 +319,24 @@ export function useHomeData({
     return map;
   }, [activePods, sortBy]);
 
+  // "Happening nearby" (the rail, its count and its See all page) reaches only
+  // as far ahead as the admin's window (Pods > Pod Settings, a week by
+  // default). The club sections below keep every upcoming pod.
+  const nearbyDays = useHappeningNearbyDays();
+  const nearbyPods = useMemo(
+    () => withinHappeningNearbyWindow(activePods, nearbyDays),
+    [activePods, nearbyDays]
+  );
+
   const featuredPods = useMemo(() => {
-    return activePods
+    return nearbyPods
       .slice()
       .sort(
         (a: any, b: any) =>
           new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
       )
       .slice(0, 10);
-  }, [activePods]);
+  }, [nearbyPods]);
 
   const hostNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -528,8 +538,9 @@ export function useHomeData({
     clubStories,
     myStories,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
-    totalPods: activePods.length,
+    totalPods: nearbyPods.length,
     activePods,
+    nearbyPods,
     ongoingPods,
     previousPods,
     hostNameOf,

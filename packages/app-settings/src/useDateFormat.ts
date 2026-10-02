@@ -34,6 +34,7 @@ export const PUBLIC_APP_SETTINGS = gql`
       min_signup_age
       draft_retention_days
       ticket_discount_max_pct
+      happening_nearby_days
     }
   }
 `;

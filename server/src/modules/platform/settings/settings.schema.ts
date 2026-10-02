@@ -58,6 +58,8 @@ export const settingsTypeDefs = gql`
     pod_cancel_risk_alert_hours: Int!
     "How many days ahead a venue is shown its free slots when accepting an Auto Pod."
     auto_pod_slot_window_days: Int!
+    "How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there."
+    happening_nearby_days: Int!
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
     auto_pod_venue_expiry_hours: Int!
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol; past that it is released."
@@ -100,6 +102,8 @@ export const settingsTypeDefs = gql`
     pod_complete_timeout_hours: Int!
     "The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it."
     ticket_discount_max_pct: Int!
+    "How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there."
+    happening_nearby_days: Int!
   }
 
   type PublicClientConfig {
@@ -158,6 +162,8 @@ export const settingsTypeDefs = gql`
     pod_cancel_risk_alert_hours: Int
     "How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60)."
     auto_pod_slot_window_days: Int
+    "How many days ahead Home's Happening nearby looks (1-60)."
+    happening_nearby_days: Int
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."
     auto_pod_venue_expiry_hours: Int
     "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol before it is released (1-720)."

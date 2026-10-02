@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeData, useHomeFeed } from '@/hooks/useHomeFeed';
+import { useAppSettingsStore } from '@/stores/app-settings.store';
 
 const mockHomeState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
   data: undefined,
@@ -258,6 +259,31 @@ describe('useHomeFeed', () => {
     // A running pod is not counted as something still joinable nearby.
     expect(result.current.totalPods).toBe(1);
   });
+});
+
+it('keeps Happening nearby to the admin window, a week until the setting loads', () => {
+  mockHomeState.data = {
+    clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+    pods: [pod('soon', 'c1', future(2)), pod('later', 'c1', future(10))],
+    categories: [],
+  } as never;
+  const week = renderHook(() => useHomeFeed('')).result.current;
+  expect(week.nearbyPods.map((p) => p.id)).toEqual(['soon']);
+  expect(week.featuredPods.map((p) => p.id)).toEqual(['soon']);
+  expect(week.totalPods).toBe(1);
+  // The club section still lists the pod beyond the window.
+  expect(week.activePods.map((p) => p.id)).toEqual(['soon', 'later']);
+
+  useAppSettingsStore.setState({
+    data: { publicAppSettings: { happening_nearby_days: 14 } } as never,
+  });
+  try {
+    const fortnight = renderHook(() => useHomeFeed('')).result.current;
+    expect(fortnight.nearbyPods.map((p) => p.id)).toEqual(['soon', 'later']);
+    expect(fortnight.totalPods).toBe(2);
+  } finally {
+    useAppSettingsStore.setState({ data: undefined });
+  }
 });
 
 describe('useHomeFeed filters (bug 6)', () => {

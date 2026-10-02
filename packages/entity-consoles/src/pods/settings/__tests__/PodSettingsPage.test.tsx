@@ -31,6 +31,7 @@ const POD_SETTINGS = gql`
       pod_cancel_risk_window_hours
       pod_cancel_risk_alert_hours
       ticket_discount_max_pct
+      happening_nearby_days
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -61,6 +62,7 @@ const UPDATE_POD_SETTINGS = gql`
       pod_cancel_risk_window_hours
       pod_cancel_risk_alert_hours
       ticket_discount_max_pct
+      happening_nearby_days
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
       auto_pod_assignment_expiry_hours
@@ -91,6 +93,7 @@ const SAVED: SavedPodSettings = {
   pod_cancel_risk_window_hours: 72,
   pod_cancel_risk_alert_hours: 4,
   ticket_discount_max_pct: 50,
+  happening_nearby_days: 7,
   auto_pod_slot_window_days: 14,
   auto_pod_venue_expiry_hours: 48,
   auto_pod_assignment_expiry_hours: 72,
@@ -258,6 +261,24 @@ describe('PodSettingsPage — venue cancellation Account Health penalty', () => 
 
     fireEvent.change(retention, { target: { value: '7' } });
     fireEvent.click(saveIn(retention));
+
+    await waitForToast();
+  });
+});
+
+describe('PodSettingsPage — Happening nearby window', () => {
+  it('shows the saved week with its hint, refuses 0 and saves only its own field', async () => {
+    renderPage([settingsMock(), publicMock(), updateOk({ happening_nearby_days: 14 })]);
+
+    const days = screen.getByLabelText('Happening nearby window (days)');
+    await waitFor(() => expect(days).toHaveValue(7));
+    expect(cardOf(days).getByText('Between 1 and 60 days. 7 shows the pods happening this week.')).toBeInTheDocument();
+
+    fireEvent.change(days, { target: { value: '0' } });
+    expect(saveIn(days)).toBeDisabled();
+
+    fireEvent.change(days, { target: { value: '14' } });
+    fireEvent.click(saveIn(days));
 
     await waitForToast();
   });

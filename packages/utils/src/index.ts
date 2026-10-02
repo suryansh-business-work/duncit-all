@@ -357,6 +357,8 @@ export {
   podPhase,
   podScanWindow,
   splitPodsByPhase,
+  withinHappeningNearbyWindow,
+  DEFAULT_HAPPENING_NEARBY_DAYS,
   type PodPhase,
   type PodPhaseFields,
   type PodScanWindow,

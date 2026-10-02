@@ -105,6 +105,8 @@ exports:
   - 'podScanWindow'
   - 'POD_SCAN_LEAD_MINUTES'
   - 'splitPodsByPhase'
+  - 'withinHappeningNearbyWindow'
+  - 'DEFAULT_HAPPENING_NEARBY_DAYS'
   - 'hostPodSection'
   - 'splitHostPods'
   - 'POD_LIVE_TAIL_MS'
@@ -971,6 +973,7 @@ rails can never place the same pod differently.
 | `POD_LIVE_TAIL_MS` | `number` | 4h — how long a pod with no set end stays live. |
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
+| `withinHappeningNearbyWindow` | `(pods, days, now = Date.now()) => pods` | The Home "Happening nearby" rail and page: upcoming pods starting within the next `days` days (admin-set in Pods > Pod Settings, `DEFAULT_HAPPENING_NEARBY_DAYS` = 7 until it loads). A pod with no usable start is left out. |
 | `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
 | `POD_SCAN_LEAD_MINUTES` | `number` | 15 — how long before the start a pod's door opens to the host's scanner. |
 | `podScanWindow` | `(pod, now = Date.now()) => 'NOT_OPEN' \| 'OPEN' \| 'CLOSED'` | `NOT_OPEN` until `POD_SCAN_LEAD_MINUTES` before the start, `OPEN` through the end instant, `CLOSED` after. Host Studio keeps the scan row greyed either side of `OPEN`, saying "not yet" or "too late". No usable start ⇒ never opens. |

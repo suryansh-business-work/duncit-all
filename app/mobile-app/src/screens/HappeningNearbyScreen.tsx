@@ -17,7 +17,7 @@ export function HappeningNearbyScreen() {
   const podFilters = usePodListFilters();
   // The feed hook already applies category/price/date/sort, so the list here
   // narrows through the same rules Home uses — no second implementation.
-  const { activePods, categoryChips, hasContent } = useHomeFeed(
+  const { nearbyPods, categoryChips, hasContent } = useHomeFeed(
     podFilters.categoryId,
     podFilters.filters,
   );
@@ -28,7 +28,7 @@ export function HappeningNearbyScreen() {
   return (
     <StackScreen title={t('mweb.home.happeningNearbyTitle')} testID="happening-nearby-screen">
       <PodListView
-        pods={activePods}
+        pods={nearbyPods}
         ads={ads}
         initialIndex={route.params?.initialIndex}
         emptyText={t('mweb.home.happeningNearbyEmpty')}

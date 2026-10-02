@@ -37,7 +37,7 @@ vi.mock('../../components/ads/AdCard', () => ({
 import HappeningNearbyPage from '../HappeningNearbyPage';
 
 const baseHome = {
-  activePods: [] as any[],
+  nearbyPods: [] as any[],
   loading: false,
   error: undefined as Error | undefined,
   hostNameOf: (p: any) => `host-of-${p.pod_id}`,
@@ -85,13 +85,13 @@ describe('HappeningNearbyPage', () => {
   });
 
   it('shows the spinner while loading with no pods yet', () => {
-    setHome({ loading: true, activePods: [] });
+    setHome({ loading: true, nearbyPods: [] });
     renderPage();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders pods (not the spinner) while loading if some are already present', () => {
-    setHome({ loading: true, activePods: [{ id: '1', pod_id: 'P1', club_slug: 'c1' }] });
+    setHome({ loading: true, nearbyPods: [{ id: '1', pod_id: 'P1', club_slug: 'c1' }] });
     renderPage();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.getByTestId('pod-card')).toBeInTheDocument();
@@ -104,14 +104,14 @@ describe('HappeningNearbyPage', () => {
   });
 
   it('shows the empty state when there are no pods', () => {
-    setHome({ activePods: [] });
+    setHome({ nearbyPods: [] });
     renderPage();
     expect(screen.getByText('No live pods around you right now.')).toBeInTheDocument();
   });
 
   it('renders a pod card per pod with its host name and navigates on open', () => {
     setHome({
-      activePods: [
+      nearbyPods: [
         { id: '1', pod_id: 'P1', club_slug: 'club-a' },
         { id: '2', pod_id: 'P2', club_slug: 'club-b' },
       ],
@@ -126,7 +126,7 @@ describe('HappeningNearbyPage', () => {
 
   it('interleaves an ad card after every 4 pods', () => {
     setHome({
-      activePods: Array.from({ length: 4 }, (_, i) => ({
+      nearbyPods: Array.from({ length: 4 }, (_, i) => ({
         id: String(i),
         pod_id: `P${i}`,
         club_slug: 'c',

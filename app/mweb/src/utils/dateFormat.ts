@@ -6,7 +6,7 @@ import {
   type DateInput,
 } from '@duncit/app-settings';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
-import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
+import { DEFAULT_HAPPENING_NEARBY_DAYS, DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
 
 /**
  * mWeb's date/time entry point. The implementation lives in @duncit/datetime
@@ -62,6 +62,17 @@ export function useDraftRetentionDays(): number {
 export function useTicketDiscountMaxPct(): number {
   const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   return (data?.publicAppSettings?.ticket_discount_max_pct as number) ?? DEFAULT_TICKET_DISCOUNT_MAX_PCT;
+}
+
+/** Admin-configured "Happening nearby" window in days (Pods > Pod Settings): Home
+ * lists only upcoming pods starting within it. The shared default stands in while
+ * the settings load. */
+export function useHappeningNearbyDays(): number {
+  const { data } = useQuery<{ publicAppSettings?: { happening_nearby_days?: number | null } | null }>(
+    PUBLIC_APP_SETTINGS,
+    { fetchPolicy: 'cache-first' }
+  );
+  return data?.publicAppSettings?.happening_nearby_days ?? DEFAULT_HAPPENING_NEARBY_DAYS;
 }
 
 /** Human duration between two dates — "2d 3h", "2h 30m", "45m"; null when

@@ -3,6 +3,7 @@ import {
   formatDate,
   formatDateTime,
   formatDay,
+  formatDurationBetween,
   formatTime,
   hourChips,
   keyboardPattern,
@@ -97,5 +98,18 @@ export default defineDemos('datetime', [
           "A venue opens at nine on the venue's own clock. Reading that through a time zone would move it for anyone standing elsewhere.",
       };
     },
+  }),
+  defineDemo<{ start: string; end: string }>({
+    id: 'duration',
+    title: 'How long a pod runs',
+    note:
+      'Move end past start by days, hours or minutes — zero parts drop out. Set end before start, or type an invalid date, and the line disappears (null) instead of showing a negative length.',
+    mock: { start: '2026-06-07T12:00:00.000Z', end: '2026-06-09T15:00:00.000Z' },
+    compute: (mock) => ({
+      'formatDurationBetween(start, end)': formatDurationBetween(
+        new Date(mock.start),
+        new Date(mock.end),
+      ),
+    }),
   }),
 ]);

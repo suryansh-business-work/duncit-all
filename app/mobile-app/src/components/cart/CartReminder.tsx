@@ -21,6 +21,7 @@ function focusedRouteName(state: AnyState | undefined): string {
   let name = '';
   while (current?.routes?.length) {
     const route = current.routes[current.index ?? current.routes.length - 1];
+    if (!route) break;
     name = route.name;
     current = route.state as AnyState | undefined;
   }

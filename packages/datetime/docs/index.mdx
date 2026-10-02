@@ -34,6 +34,7 @@ exports:
   - 'ageInYears'
   - 'isEligibleDob'
   - 'latestEligibleDob'
+  - 'formatDurationBetween'
 ---
 
 ## Why this exists
@@ -447,4 +448,16 @@ isEligibleDob('2008-09-01', 18); // true — 18 today
 isEligibleDob('2008-09-02', 18); // false — 18 tomorrow
 ageInYears('1998-04-23'); // 28
 dobMinAgeMessage(18); // the one sentence every surface refuses with
+```
+
+## Duration
+
+`formatDurationBetween` is the length shown under the create-pod time pickers on mWeb and native — one
+rule, so the two apps never disagree about how long a pod runs. Zero parts are dropped, and a
+missing, invalid or non-positive range is `null` so the caller simply hides the line.
+
+```ts
+formatDurationBetween(new Date('2026-06-07T12:00Z'), new Date('2026-06-09T15:00Z')); // '2d 3h'
+formatDurationBetween(new Date('2026-06-07T12:00Z'), new Date('2026-06-07T12:45Z')); // '45m'
+formatDurationBetween(start, start); // null
 ```

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 import { sendEmail } from '@services/email/email.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -51,8 +52,13 @@ function cleanLines(input: ProductCartLineInput[]): IProductCartLine[] {
 
 /** Order-free, so the same cart synced from a re-sorted device is "unchanged". */
 const signatureOf = (lines: IProductCartLine[]): string =>
-  createHash('sha1')
-    .update(lines.map((line) => `${lineKey(line)}x${line.quantity}`).sort().join('|'))
+  createHash('sha256')
+    .update(
+      lines
+        .map((line) => `${lineKey(line)}x${line.quantity}`)
+        .sort((a, b) => a.localeCompare(b))
+        .join('|')
+    )
     .digest('hex');
 
 /** "Name × 2, Other × 1" from the catalogue — never from what a client sent. */
@@ -105,7 +111,7 @@ async function remindOne(cart: CartDoc, now: Date): Promise<boolean> {
       name: user?.profile?.first_name || 'there',
       items,
       item_count: String(cart.lines.reduce((sum, line) => sum + line.quantity, 0)),
-      cart_url: `${mwebUrl.replace(/\/+$/, '')}/cart`,
+      cart_url: `${trimTrailingSlash(mwebUrl)}/cart`,
     },
   });
   return !result.skipped;
@@ -118,12 +124,12 @@ export const productCartService = {
    * unchanged cart keeps its schedule, so a relaunch never pushes the next
    * reminder back; a changed one starts it over.
    */
-  async syncMine(userId: string, input: ProductCartLineInput[]): Promise<boolean> {
+  async syncMine(userId: string, input: ProductCartLineInput[]): Promise<void> {
     const user_id = new Types.ObjectId(userId);
     const lines = cleanLines(Array.isArray(input) ? input : []);
     if (lines.length === 0) {
       await ProductCartModel.deleteOne({ user_id });
-      return true;
+      return;
     }
     const signature = signatureOf(lines);
     await ProductCartModel.updateOne(
@@ -136,7 +142,6 @@ export const productCartService = {
       // Duplicate key = the mirror exists with this very signature: unchanged.
       if (error?.code !== 11000) throw error;
     });
-    return true;
   },
 
   /** Mail every cart whose next reminder is due. Returns how many went out. */

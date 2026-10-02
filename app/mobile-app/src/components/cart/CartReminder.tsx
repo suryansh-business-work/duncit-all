@@ -23,7 +23,7 @@ function focusedRouteName(state: AnyState | undefined): string {
     const route = current.routes[current.index ?? current.routes.length - 1];
     if (!route) break;
     name = route.name;
-    current = route.state as AnyState | undefined;
+    current = route.state;
   }
   return name;
 }

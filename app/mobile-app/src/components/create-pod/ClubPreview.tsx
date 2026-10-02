@@ -24,10 +24,9 @@ export function ClubPreview({ club, showSlots = false }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   if (!club) return null;
-  const images = (club.club_feature_images_and_videos ?? []).filter(
+  const cover = (club.club_feature_images_and_videos ?? []).find(
     (item) => (item.type ?? 'IMAGE') === 'IMAGE',
-  );
-  const cover = images[0]?.url;
+  )?.url;
   const venueCount = club.matched_venues_count ?? 0;
   const venueLabel =
     venueCount === 1

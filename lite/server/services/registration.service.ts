@@ -137,7 +137,8 @@ export const registrationService = {
     if (!event || event.status !== 'PUBLISHED' || event.hidden) throw notFound('Event');
     if (event.end_at.getTime() < Date.now()) throw badInput('This event has already ended');
     const existing = await LiteRegistrationModel.findOne({ event_id: event._id, user_id: user._id });
-    if (existing && !LAPSED_STATUSES.has(existing.status)) throw badInput('You are already registered for this event');
+    const existingStatus = existing?.status;
+    if (existingStatus !== undefined && !LAPSED_STATUSES.has(existingStatus)) throw badInput('You are already registered for this event');
     const ticket = event.tickets.find((t) => String(t._id) === input.ticket_id && t.is_active !== false);
     if (!ticket) throw badInput('Pick a ticket type');
     const quantity = Math.min(10, Math.max(1, Math.trunc(input.quantity ?? 1)));

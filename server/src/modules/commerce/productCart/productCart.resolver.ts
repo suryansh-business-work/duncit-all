@@ -19,13 +19,14 @@ export const productCartResolvers = {
       const user = requireRole(ctx, SETTINGS_WRITE);
       return productCartSettingsService.update(args.input ?? {}, String(user.id));
     },
-    syncMyProductCart: (
+    syncMyProductCart: async (
       _p: unknown,
       args: { lines: ProductCartLineInput[] },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
-      return productCartService.syncMine(String(user.id), args.lines);
+      await productCartService.syncMine(String(user.id), args.lines);
+      return true;
     },
   },
 };

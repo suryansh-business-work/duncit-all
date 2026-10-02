@@ -25,7 +25,7 @@ export const toDay = (date: Date) => format(date, 'yyyy-MM-dd');
 /** One calendar month, ending today when it is the current month — a range never reaches the future. */
 export function monthRange(month: Date, today = new Date()): DayRange {
   const end = endOfMonth(month);
-  return { from: toDay(startOfMonth(month)), to: toDay(end < today ? end : today) };
+  return { from: toDay(startOfMonth(month)), to: toDay(new Date(Math.min(end.getTime(), today.getTime()))) };
 }
 
 /** The range a preset stands for; null for the two that wait for the reader to pick dates. */

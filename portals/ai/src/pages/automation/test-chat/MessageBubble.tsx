@@ -35,6 +35,7 @@ export default function MessageBubble({ message, onOpenEmail }: Readonly<Props>)
   const mine = message.direction === 'OUT';
   const badge = message.delivered ? t('ai.automation.test.deliveredBadge') : t('ai.automation.test.previewBadge');
   const badgeColor = message.delivered ? 'success' : 'default';
+  const mineTint = theme.palette.mode === 'dark' ? 0.28 : 0.1;
 
   return (
     <Box
@@ -46,7 +47,7 @@ export default function MessageBubble({ message, onOpenEmail }: Readonly<Props>)
         borderRadius: 2.5,
         borderTopLeftRadius: mine ? 20 : 4,
         borderTopRightRadius: mine ? 4 : 20,
-        bgcolor: mine ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.28 : 0.1) : 'action.hover',
+        bgcolor: mine ? alpha(theme.palette.primary.main, mineTint) : 'action.hover',
       }}
       data-testid={`automation-message-${message.direction.toLowerCase()}`}
     >

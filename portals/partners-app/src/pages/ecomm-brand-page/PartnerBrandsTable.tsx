@@ -19,6 +19,10 @@ const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value
 const getBrandRowId = (brand: EcommBrandRow) => brand.id;
 const categoriesValue = (brand: EcommBrandRow) => (brand.product_categories ?? []).join(', ') || '—';
 const updatedValue = (brand: EcommBrandRow) => formatDate(brand.updated_at) || '—';
+const renderBrand = (brand: EcommBrandRow) => <BrandCell brand={brand} />;
+const renderProgress = (brand: EcommBrandRow) => <ProgressCell brand={brand} />;
+const renderIntegrations = (brand: EcommBrandRow) => <IntegrationsCell brand={brand} />;
+const renderStatus = (brand: EcommBrandRow) => <StatusCell brand={brand} />;
 
 interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
@@ -89,7 +93,7 @@ export default function PartnerBrandsTable({
         flex: 1,
         minWidth: 220,
         type: 'text',
-        cellRenderer: (brand) => <BrandCell brand={brand} />,
+        cellRenderer: renderBrand,
         valueGetter: (brand) => brand.brand_name || t('partners.ecommBrandPage.untitledBrand'),
       },
       { field: 'categories', headerName: t('shell.nav.categories'), type: 'text', minWidth: 180, valueGetter: categoriesValue },
@@ -100,7 +104,7 @@ export default function PartnerBrandsTable({
         width: 170,
         sortable: false,
         filterable: false,
-        cellRenderer: (brand) => <ProgressCell brand={brand} />,
+        cellRenderer: renderProgress,
         valueGetter: percentOf,
       },
       {
@@ -110,7 +114,7 @@ export default function PartnerBrandsTable({
         width: 150,
         sortable: false,
         filterable: false,
-        cellRenderer: (brand) => <IntegrationsCell brand={brand} />,
+        cellRenderer: renderIntegrations,
         valueGetter: connectedCount,
       },
       {
@@ -119,7 +123,7 @@ export default function PartnerBrandsTable({
         width: 190,
         type: 'enum',
         options: STATUS_OPTIONS,
-        cellRenderer: (brand) => <StatusCell brand={brand} />,
+        cellRenderer: renderStatus,
         valueGetter: (brand) => brand.status,
       },
       { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, type: 'date', valueGetter: updatedValue },

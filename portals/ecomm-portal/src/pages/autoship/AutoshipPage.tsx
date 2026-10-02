@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type ComponentProps } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Chip, Stack } from '@mui/material';
 import { useConfirm } from '@duncit/dialogs';
-import { useTranslation } from '@duncit/shell';
+import { useTranslation, type Translate } from '@duncit/shell';
 import { dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import { PageHeader, StatusChip, type StatusColorMap } from '@duncit/ui';
 import BuyerCell from '../../components/BuyerCell';
@@ -29,6 +29,20 @@ const STATUS_SUCCESS_KEYS: Record<SubscriptionStatus, string> = {
 };
 
 const renderBuyer = (row: StoreSubscriptionRow) => <BuyerCell name={row.buyer_name} email={row.buyer_email} guest={false} />;
+
+/** The status column's renderer, bound to the page's translator. */
+function statusRenderer(t: Translate) {
+  return function renderStatus(row: StoreSubscriptionRow) {
+    return <StatusChip status={row.status} label={codeLabel(SUBSCRIPTION_STATUS_KEYS, row.status, t)} colorMap={STATUS_COLORS} />;
+  };
+}
+
+/** The actions column's renderer, bound to the page's status change. */
+function actionsRenderer(onSet: ComponentProps<typeof SubscriptionActions>['onSet']) {
+  return function renderActions(row: StoreSubscriptionRow) {
+    return <SubscriptionActions row={row} onSet={onSet} />;
+  };
+}
 
 /** Subscribe-and-save plans: who gets what, how often, and what happened on the last run. */
 export default function AutoshipPage() {
@@ -83,7 +97,7 @@ export default function AutoshipPage() {
         type: 'enum',
         options: codeOptions(SUBSCRIPTION_STATUS_KEYS, t),
         width: 130,
-        cellRenderer: (row) => <StatusChip status={row.status} label={codeLabel(SUBSCRIPTION_STATUS_KEYS, row.status, t)} colorMap={STATUS_COLORS} />,
+        cellRenderer: statusRenderer(t),
         valueGetter: (row) => codeLabel(SUBSCRIPTION_STATUS_KEYS, row.status, t),
       },
       dateColumn<StoreSubscriptionRow>({ field: 'next_run_at', headerName: t('ecommPortal.autoship.nextRun'), hide: false, width: 150 }),
@@ -93,7 +107,7 @@ export default function AutoshipPage() {
       { field: 'failures', headerName: t('ecommPortal.autoship.failures'), type: 'number', width: 100, sortable: false, filterable: false },
       { field: 'buyer_email', headerName: t('shell.common.email'), type: 'text', width: 200, hide: true, sortable: false },
       dateColumn<StoreSubscriptionRow>(),
-      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 230, cellRenderer: (row) => <SubscriptionActions row={row} onSet={onSet} /> },
+      { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 230, cellRenderer: actionsRenderer(onSet) },
     ],
     [t, onSet],
   );

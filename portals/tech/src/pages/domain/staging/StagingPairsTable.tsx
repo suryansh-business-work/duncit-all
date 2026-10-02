@@ -7,36 +7,14 @@ import { DuncitTable, actionsColumn, clientTableFetch, type DuncitColumn } from 
 import { useTranslation } from '@duncit/app-settings';
 import type { DnsHostPair, DnsPairState } from '@duncit/gql-types';
 import { PAIR_LABEL_KEY, PAIR_TONE, isFixableState } from './pairState';
+import { EM_DASH, renderProductionValues, renderStagingValues } from './ValueCell';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
-
-const EM_DASH = '—';
-const MONO = { fontFamily: 'monospace', wordBreak: 'break-all', py: 0.5 } as const;
 
 const getRowId = (row: DnsHostPair) => row.id;
 
 const searchOf = (row: DnsHostPair) =>
   `${row.type} ${row.host} ${row.staging_host} ${row.production_values.join(' ')} ${row.staging_values.join(' ')}`;
-
-/** A side's values, or an em-dash when that stack answers for nothing here. */
-function ValueCell({ values, missing }: Readonly<{ values: string[]; missing: boolean }>) {
-  if (values.length === 0) {
-    return (
-      <Typography variant="body2" sx={{ ...MONO, color: missing ? 'error.main' : 'text.secondary', fontWeight: 700 }}>
-        {EM_DASH}
-      </Typography>
-    );
-  }
-  return (
-    <Stack sx={{ py: 0.5 }}>
-      {values.map((value) => (
-        <Typography key={value} variant="body2" sx={MONO}>
-          {value}
-        </Typography>
-      ))}
-    </Stack>
-  );
-}
 
 const renderHost = (host: string, name: string) => (
   <Stack sx={{ gap: 0.25, py: 0.5 }}>
@@ -109,7 +87,7 @@ export default function StagingPairsTable({ pairs, syncing, onSync, toolbarActio
         type: 'text' as const,
         sortable: false,
         filterable: false,
-        cellRenderer: (row) => <ValueCell values={row.production_values} missing={row.state === 'MISSING_PRODUCTION'} />,
+        cellRenderer: renderProductionValues,
         valueGetter: (row) => row.production_values.join(', ') || EM_DASH,
       },
       {
@@ -128,7 +106,7 @@ export default function StagingPairsTable({ pairs, syncing, onSync, toolbarActio
         type: 'text' as const,
         sortable: false,
         filterable: false,
-        cellRenderer: (row) => <ValueCell values={row.staging_values} missing={row.state === 'MISSING_STAGING'} />,
+        cellRenderer: renderStagingValues,
         valueGetter: (row) => row.staging_values.join(', ') || EM_DASH,
       },
       {

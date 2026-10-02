@@ -135,10 +135,9 @@ const compact = new Intl.NumberFormat(undefined, { notation: 'compact', maximumF
 
 export const formatCount = (n: number | null | undefined): string => compact.format(n ?? 0);
 
-export const formatMs = (n: number | null | undefined): string => {
-  const ms = n ?? 0;
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`;
-};
+const msLabel = (ms: number): string => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`);
+
+export const formatMs = (n: number | null | undefined): string => msLabel(n ?? 0);
 
 export const formatPct = (n: number | null | undefined): string => `${Math.round((n ?? 0) * 10) / 10}%`;
 

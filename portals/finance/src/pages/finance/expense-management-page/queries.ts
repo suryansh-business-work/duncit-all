@@ -146,22 +146,29 @@ const pinnedValue = (f: TableFilterValue): string | undefined => {
   return undefined;
 };
 
+/** The enum columns whose single picked option narrows the summary to that key. */
+const PINNED_FIELDS = ['category', 'payment_method', 'related_from_type', 'compensation_status'] as const;
+type PinnedField = (typeof PINNED_FIELDS)[number];
+const isPinnedField = (field: string): field is PinnedField =>
+  (PINNED_FIELDS as readonly string[]).includes(field);
+
+const applyDateRange = (filter: ExpenseSummaryFilter, f: TableFilterValue) => {
+  const [from, to] = rangeBounds(f);
+  if (from) filter.from = from;
+  if (to) filter.to = to;
+};
+
+const applyAmountRange = (filter: ExpenseSummaryFilter, f: TableFilterValue) => {
+  const [min, max] = rangeBounds(f);
+  if (min) filter.min_amount = Number(min);
+  if (max) filter.max_amount = Number(max);
+};
+
 const applyExpenseFilter = (filter: ExpenseSummaryFilter, f: TableFilterValue) => {
   const pinned = pinnedValue(f);
-  if (f.field === 'category' && pinned) filter.category = pinned;
-  if (f.field === 'payment_method' && pinned) filter.payment_method = pinned;
-  if (f.field === 'related_from_type' && pinned) filter.related_from_type = pinned;
-  if (f.field === 'compensation_status' && pinned) filter.compensation_status = pinned;
-  if (f.field === 'date') {
-    const [from, to] = rangeBounds(f);
-    if (from) filter.from = from;
-    if (to) filter.to = to;
-  }
-  if (f.field === 'amount') {
-    const [min, max] = rangeBounds(f);
-    if (min) filter.min_amount = Number(min);
-    if (max) filter.max_amount = Number(max);
-  }
+  if (isPinnedField(f.field) && pinned) filter[f.field] = pinned;
+  if (f.field === 'date') applyDateRange(filter, f);
+  if (f.field === 'amount') applyAmountRange(filter, f);
 };
 
 /** Maps the table's query state to ExpenseFilterInput so the summary chips

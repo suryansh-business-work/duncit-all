@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -37,13 +37,19 @@ export default function CartsPage() {
   );
   const tabs = useTabParam<CartView>({ items: views, fallback: 'abandoned' });
 
+  const sendReminder = useCallback(
+    (row: StoreCartRow) =>
+      run(() => remind({ variables: { id: row.id } }), t('ecommPortal.carts.reminded', { vars: { email: row.email } })),
+    [run, remind, t],
+  );
+
   const columns = useMemo<DuncitColumn<StoreCartRow>[]>(() => {
     const renderRemind = (row: StoreCartRow) => (
       <DuncitButton
         size="small"
         startIcon={<SendIcon fontSize="small" />}
         disabled={!row.email}
-        onClick={() => run(() => remind({ variables: { id: row.id } }), t('ecommPortal.carts.reminded', { vars: { email: row.email } }))}
+        onClick={() => sendReminder(row)}
         aria-label={t('ecommPortal.carts.remindNamed', { vars: { email: row.email || EM_DASH } })}
       >
         {t('ecommPortal.carts.remind')}
@@ -60,7 +66,7 @@ export default function CartsPage() {
       dateColumn<StoreCartRow>({ filterable: false }),
       { field: 'actions', headerName: t('shell.common.actions'), type: 'actions', width: 170, cellRenderer: renderRemind },
     ];
-  }, [t, run, remind]);
+  }, [t, sendReminder]);
 
   return (
     <Stack spacing={3}>

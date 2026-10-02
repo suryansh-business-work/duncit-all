@@ -1,7 +1,7 @@
 import { formResolver } from '../../utils/form-resolver';
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { useForm } from 'react-hook-form';
 import { formatMoney } from '@duncit/utils';
@@ -115,7 +115,7 @@ export function WithdrawDialog({
               borderRadius={28}
               padding={20}
             >
-              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
                 <Text
                   role="heading"
                   fontSize={17}
@@ -249,7 +249,7 @@ export function WithdrawDialog({
                     </Text>
                   </XStack>
                 </XStack>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </KeyboardScreen>

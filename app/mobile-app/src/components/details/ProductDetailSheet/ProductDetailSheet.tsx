@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -161,7 +161,7 @@ export function ProductDetailSheet({
       <ModalThemeScope>
         <KeyboardScreen>
           <YStack flex={1} backgroundColor="$background" testID="product-detail-sheet">
-            <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+            <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack paddingHorizontal={16} paddingVertical={8}>
                 <HeroButton
                   testID="product-detail-close"
@@ -178,7 +178,7 @@ export function ProductDetailSheet({
               ) : (
                 loadedBody
               )}
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </KeyboardScreen>
         <ZoomableImageModal images={images} index={zoomIndex} onClose={() => setZoomIndex(null)} />

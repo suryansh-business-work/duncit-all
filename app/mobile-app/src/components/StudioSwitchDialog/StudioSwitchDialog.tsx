@@ -1,6 +1,6 @@
 import { useEffect, useState, type ComponentProps } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -94,7 +94,7 @@ export function StudioSwitchDialog({
             padding={20}
             gap={14}
           >
-            <SafeAreaView edges={[]}>
+            <ModalSafeArea edges={[]}>
               <Text
                 testID="studio-switch-title"
                 role="heading"
@@ -167,7 +167,7 @@ export function StudioSwitchDialog({
                   onPress={() => onSelect(pending)}
                 />
               </YStack>
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { FlatList, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -142,7 +142,7 @@ export function PodCommentsSheet({
               borderTopLeftRadius={28}
               borderTopRightRadius={28}
             >
-              <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+              <ModalSafeArea edges={['bottom']} style={{ flex: 1 }}>
                 <XStack
                   alignItems="center"
                   justifyContent="space-between"
@@ -182,7 +182,7 @@ export function PodCommentsSheet({
                   posting={posting}
                   viewerPhoto={viewerPhoto}
                 />
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
 
             {deleteTarget ? (

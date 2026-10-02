@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { CommentComposer } from '@/components/details/pod-comments/CommentComposer';
@@ -74,7 +74,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
               borderTopLeftRadius={28}
               borderTopRightRadius={28}
             >
-              <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+              <ModalSafeArea edges={['bottom']} style={{ flex: 1 }}>
                 <IdeaSheetHeader
                   title={idea?.title ?? 'Pod idea'}
                   closeTestID="idea-details-close"
@@ -109,7 +109,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
                     posting={posting}
                   />
                 ) : null}
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </KeyboardScreen>

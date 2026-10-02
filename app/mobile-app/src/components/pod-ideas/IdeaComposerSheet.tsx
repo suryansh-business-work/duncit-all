@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -112,7 +112,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
               borderTopLeftRadius={28}
               borderTopRightRadius={28}
             >
-              <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <IdeaSheetHeader
                   title="Share a pod idea"
                   closeTestID="idea-composer-close"
@@ -186,7 +186,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                     </XStack>
                   </YStack>
                 </ScrollView>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </KeyboardScreen>

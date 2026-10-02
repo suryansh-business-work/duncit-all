@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -68,7 +68,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
             borderTopRightRadius={28}
             maxHeight="82%"
           >
-            <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
+            <ModalSafeArea edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text
                   testID="host-pods-filter-title"
@@ -163,7 +163,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   </Text>
                 </XStack>
               </XStack>
-            </SafeAreaView>
+            </ModalSafeArea>
           </YStack>
         </YStack>
       </ModalThemeScope>

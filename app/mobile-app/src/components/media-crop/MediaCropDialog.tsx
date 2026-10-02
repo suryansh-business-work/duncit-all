@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AiMonitoringChip } from '@/components/ai-monitoring';
@@ -256,7 +256,7 @@ export function MediaCropDialog({
           testID="media-crop-dialog"
           onAccessibilityEscape={uploading ? undefined : onCancel}
         >
-          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+          <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
             <CropHeader isImage={isImage} uploading={uploading} onCancel={onCancel} />
 
             <YStack
@@ -320,7 +320,7 @@ export function MediaCropDialog({
                 onConfirm={confirm}
               />
             </YStack>
-          </SafeAreaView>
+          </ModalSafeArea>
         </YStack>
       </ModalThemeScope>
     </Modal>

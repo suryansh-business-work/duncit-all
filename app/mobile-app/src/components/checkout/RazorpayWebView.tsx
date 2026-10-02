@@ -5,6 +5,7 @@ import { YStack } from 'tamagui';
 import type { RazorpayErrorLike } from '@duncit/utils';
 import { light } from '@duncit/auth-tokens';
 
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { RazorpayOrder, RazorpaySignature } from '@/hooks/useCheckout';
 
@@ -102,16 +103,23 @@ export function RazorpayWebView({ order, open, onSuccess, onFailure }: Readonly<
     >
       <ModalThemeScope>
         <YStack flex={1} backgroundColor="#0b0b0f" testID="razorpay-webview">
-          {order ? (
-            <WebView
-              testID="razorpay-webview-frame"
-              originWhitelist={['*']}
-              javaScriptEnabled
-              source={{ html: buildRazorpayHtml(order), baseUrl: 'https://checkout.razorpay.com' }}
-              onMessage={onMessage}
-              style={{ flex: 1, backgroundColor: '#0b0b0f' }}
-            />
-          ) : null}
+          {/* Razorpay draws its own close button at the top of the sheet; kept
+              clear of the status bar so a buyer can always get back out. */}
+          <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
+            {order ? (
+              <WebView
+                testID="razorpay-webview-frame"
+                originWhitelist={['*']}
+                javaScriptEnabled
+                source={{
+                  html: buildRazorpayHtml(order),
+                  baseUrl: 'https://checkout.razorpay.com',
+                }}
+                onMessage={onMessage}
+                style={{ flex: 1, backgroundColor: '#0b0b0f' }}
+              />
+            ) : null}
+          </ModalSafeArea>
         </YStack>
       </ModalThemeScope>
     </Modal>

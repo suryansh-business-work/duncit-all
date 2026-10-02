@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -150,7 +150,7 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
               padding={16}
               gap={6}
             >
-              <SafeAreaView edges={[]}>
+              <ModalSafeArea edges={[]}>
                 <Text
                   testID="venue-switcher-title"
                   role="heading"
@@ -175,7 +175,7 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
                     ))}
                   </YStack>
                 </ScrollView>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </ModalThemeScope>

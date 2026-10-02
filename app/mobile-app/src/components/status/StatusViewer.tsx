@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { Modal } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -348,7 +348,7 @@ export function StatusViewer({
     <Modal visible={!!status} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
         <YStack testID="status-viewer" flex={1} backgroundColor="rgba(0,0,0,0.94)">
-          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+          <ModalSafeArea edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack gap={4} paddingHorizontal={12} paddingTop={8}>
               {slides.map((slide, slideIndex) => {
                 let fill = 0;
@@ -460,7 +460,7 @@ export function StatusViewer({
               onOpenTarget={onOpenTarget}
               onOpenLink={onOpenLink}
             />
-          </SafeAreaView>
+          </ModalSafeArea>
         </YStack>
       </ModalThemeScope>
     </Modal>

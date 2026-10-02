@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { AppImage } from '@/components/AppImage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -112,7 +112,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
               borderRadius={28}
               padding={20}
             >
-              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
                 <XStack
                   alignItems="center"
                   justifyContent="space-between"
@@ -165,7 +165,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
                     {club.club_description?.trim() || t('mweb.createPod.noDescription')}
                   </Text>
                 </ScrollView>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </ModalThemeScope>

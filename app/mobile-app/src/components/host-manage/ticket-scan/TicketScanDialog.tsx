@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { useCameraPermissions } from 'expo-camera';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -193,7 +193,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
               borderRadius={28}
               padding={18}
             >
-              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
                 <Text
                   testID="ticket-scan-title"
                   role="heading"
@@ -337,7 +337,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     </XStack>
                   ) : null}
                 </XStack>
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
             <ScanConfirmation
               result={confirmed}

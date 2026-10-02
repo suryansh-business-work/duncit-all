@@ -1,7 +1,7 @@
 import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { Controller, useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
@@ -124,7 +124,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               borderRadius={28}
               padding={18}
             >
-              <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
+              <ModalSafeArea edges={[]} style={SHEET_SAFE_AREA}>
                 <Text
                   testID="pod-resubmit-title"
                   role="heading"
@@ -213,7 +213,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   onCancel={dismiss}
                   onSubmit={() => fireAndForget(submit())}
                 />
-              </SafeAreaView>
+              </ModalSafeArea>
             </YStack>
           </YStack>
         </KeyboardScreen>

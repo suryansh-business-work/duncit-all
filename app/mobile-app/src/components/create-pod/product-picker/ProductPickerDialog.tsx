@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -113,7 +113,7 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
   return (
     <Modal visible={open} animationType="slide" onRequestClose={close}>
       <ModalThemeScope>
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+        <ModalSafeArea style={{ flex: 1 }} edges={['top', 'bottom']}>
           <YStack flex={1} backgroundColor="$background">
             <XStack
               alignItems="center"
@@ -178,7 +178,7 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
               error={error}
             />
           </YStack>
-        </SafeAreaView>
+        </ModalSafeArea>
       </ModalThemeScope>
     </Modal>
   );

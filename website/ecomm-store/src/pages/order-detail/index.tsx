@@ -13,16 +13,16 @@ import { ReturnsList } from './ReturnsList';
 interface OrderDetailProps {
   order: StoreOrder;
   /** A guest's key; a signed-in owner needs none. */
-  accessKey?: string;
+  orderKey?: string;
   /** False for a contact lookup: it may read the order but not act on it. */
   canAct: boolean;
 }
 
 /** One order as its buyer sees it — shared by the account area and guest tracking. */
-export function OrderDetail({ order, accessKey, canAct }: Readonly<OrderDetailProps>) {
+export function OrderDetail({ order, orderKey, canAct }: Readonly<OrderDetailProps>) {
   const { t } = useStoreT();
   const { formatDateTime } = useDateFormat();
-  const { data } = useQuery(ORDER_RETURNS, { variables: { order_no: order.order_no, access_key: accessKey }, skip: !canAct });
+  const { data } = useQuery(ORDER_RETURNS, { variables: { order_no: order.order_no, access_key: orderKey }, skip: !canAct });
   const returns = data?.storeOrderReturns ?? [];
   return (
     <Stack spacing={2}>
@@ -39,7 +39,7 @@ export function OrderDetail({ order, accessKey, canAct }: Readonly<OrderDetailPr
           </Typography>
           <Typography>{t('ecommStore.order.payment', { vars: { state: t(PAYMENT_KEYS[order.payment_state]) } })}</Typography>
           {order.cancel_reason ? <Typography color="text.secondary">{t('ecommStore.order.cancelReason', { vars: { reason: order.cancel_reason } })}</Typography> : null}
-          {canAct ? <OrderActions order={order} accessKey={accessKey} /> : null}
+          {canAct ? <OrderActions order={order} orderKey={orderKey} /> : null}
         </Stack>
       </Paper>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: 'flex-start' }}>

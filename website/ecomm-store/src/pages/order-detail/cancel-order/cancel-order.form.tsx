@@ -15,12 +15,12 @@ import { makeCancelOrderSchema, type CancelOrderValues } from './cancel-order.ty
 
 interface CancelOrderDialogProps {
   orderNo: string;
-  accessKey?: string;
+  orderKey?: string;
   onClose: () => void;
 }
 
 /** Call the order off before it ships, with one of the store's reasons. */
-export function CancelOrderDialog({ orderNo, accessKey, onClose }: Readonly<CancelOrderDialogProps>) {
+export function CancelOrderDialog({ orderNo, orderKey, onClose }: Readonly<CancelOrderDialogProps>) {
   const { t } = useStoreT();
   const titleId = useId();
   const { cancel_reasons: reasons } = useStoreSettings();
@@ -34,7 +34,7 @@ export function CancelOrderDialog({ orderNo, accessKey, onClose }: Readonly<Canc
   const submit = handleSubmit(async ({ reason }) => {
     setError('');
     try {
-      await cancelOrder({ variables: { order_no: orderNo, reason, access_key: accessKey } });
+      await cancelOrder({ variables: { order_no: orderNo, reason, access_key: orderKey } });
       notifySuccess(t('ecommStore.cancel.done'));
       onClose();
     } catch (err) {

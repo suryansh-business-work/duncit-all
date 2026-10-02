@@ -15,7 +15,7 @@ import { ReturnRequestDialog } from './return-request';
 type Open = 'cancel' | 'return' | null;
 
 /** Invoice download, and — when the order still allows it — cancel or return. */
-export function OrderActions({ order, accessKey }: Readonly<{ order: StoreOrder; accessKey?: string }>) {
+export function OrderActions({ order, orderKey }: Readonly<{ order: StoreOrder; orderKey?: string }>) {
   const { t } = useStoreT();
   const client = useApolloClient();
   const { formatDate } = useDateFormat();
@@ -25,7 +25,7 @@ export function OrderActions({ order, accessKey }: Readonly<{ order: StoreOrder;
   const downloadInvoice = async () => {
     setDownloading(true);
     try {
-      const { data } = await client.query({ query: INVOICE_PDF, variables: { order_no: order.order_no, access_key: accessKey }, fetchPolicy: 'network-only' });
+      const { data } = await client.query({ query: INVOICE_PDF, variables: { order_no: order.order_no, access_key: orderKey }, fetchPolicy: 'network-only' });
       if (data?.storeInvoicePdf) downloadBase64File(data.storeInvoicePdf, `${order.invoice_no || order.order_no}.pdf`, 'application/pdf');
     } catch (error) {
       notifyError(parseApiError(error, t('ecommStore.order.invoiceFailed')));
@@ -58,8 +58,8 @@ export function OrderActions({ order, accessKey }: Readonly<{ order: StoreOrder;
           {t('ecommStore.order.returnBy', { vars: { date: formatDate(order.return_deadline) } })}
         </Typography>
       ) : null}
-      {open === 'cancel' ? <CancelOrderDialog orderNo={order.order_no} accessKey={accessKey} onClose={() => setOpen(null)} /> : null}
-      {open === 'return' ? <ReturnRequestDialog order={order} accessKey={accessKey} onClose={() => setOpen(null)} /> : null}
+      {open === 'cancel' ? <CancelOrderDialog orderNo={order.order_no} orderKey={orderKey} onClose={() => setOpen(null)} /> : null}
+      {open === 'return' ? <ReturnRequestDialog order={order} orderKey={orderKey} onClose={() => setOpen(null)} /> : null}
     </Stack>
   );
 }

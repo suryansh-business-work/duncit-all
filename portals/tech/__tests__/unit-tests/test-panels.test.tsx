@@ -13,7 +13,8 @@ vi.mock('@apollo/client/react', async (io) => {
 // ---- @duncit deps -------------------------------------------------------
 const confirmMock = vi.fn();
 vi.mock('@duncit/dialogs', () => ({ useConfirm: () => confirmMock }));
-vi.mock('@duncit/utils', () => ({
+vi.mock('@duncit/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/utils')>()),
   parseApiError: (e: unknown) => (e instanceof Error ? e.message : 'err'),
   fileToDataUrl: async () => 'data:image/png;base64,AAA',
 }));

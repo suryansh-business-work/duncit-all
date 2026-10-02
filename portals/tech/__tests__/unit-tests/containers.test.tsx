@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { MemoryRouter } from 'react-router';
+import { fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
 import type { EnvEntryFormValues } from '../../src/pages/environment/env-entry';
 import { makeEnvCategoryDef, makeEnvEntry } from '../mocks/env-entry.mock';
+
+// The category tabs keep their selection in the URL (useTabParam), so every page needs a router.
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 // ---- Apollo -------------------------------------------------------------
 const a = vi.hoisted(() => ({

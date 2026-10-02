@@ -1,5 +1,12 @@
 <!-- Temporarily pause all test-case-related work. No action should fail because of test cases. Do not write any new test cases for now. If anything is failing, please ignore all the tests mentioned below. Keep the primary focus on feature development and related work. Do not run local tests during development: no E2E, integration, or unit tests. Skip E2E testing for now and focus primarily on feature development. -->
 
+## Very Inportant Level Instruction
+1. Before writing or executing any code, continuously monitor the system’s CPU temperature, CPU utilization, RAM usage, and storage usage. If any of these resources reach a critically high level that could cause the system to hang, crash, shut down, or interrupt the workflow, temporarily pause all workflows and wait until the system resources return to safe and stable levels. Once everything is normalized, automatically resume the workflow from where it was paused. The primary goal is to prevent system overload, unexpected shutdowns, data loss, and workflow interruptions.
+
+2. Whenever you push any code, create a Pull Request (PR) and ensure that all changes are pushed to the appropriate staging branch/environment. Make sure every PR is properly created and all CI/CD checks, GitHub Actions, automated tests, builds, linting, security checks, and other configured validations are completely green before considering the task complete. Continuously monitor the PR and its CI/CD actions until all checks pass successfully. If any check fails or an issue is detected, investigate the root cause, fix the issue, commit the changes to the same working branch, push them again, and monitor the updated CI/CD run. Repeat this fix → push → monitor cycle until every required check and action is green. Do not consider the development workflow complete while any required PR check, test, build, or CI/CD action is failing or pending.
+
+3. For React mWeb, Portals, and React Native, every page/screen must have a proper Error Boundary—do not write or release code without it. Create a common reusable Duncit Error Boundary package with Retry and Report an Issue options. Errors should be safely logged with useful debugging details without exposing sensitive user data, and one page failure should never crash the entire application.
+
 ## Code-Specific Instructions
 
 1. **Think Before Coding:** State assumptions, surface ambiguity and tradeoffs, ask when unclear, and suggest simpler approaches when appropriate.
@@ -84,6 +91,7 @@
 80. No Silent Failures — Never swallow errors silently; provide appropriate user-facing feedback and developer-facing diagnostics/logging.
 81. Environment Separation — Never mix local, staging, and production configuration, credentials, or data.
 82. Always follow the Design System—never hard-code colors, shadows, spacing, borders, typography, radius, or any other design value; always use the respective design tokens from the token files.
+83. Use the Duncit Regex package for all form validations. Never hardcode regex patterns directly in application code. If a new regex is required, add and test it to the Duncit Regex package first, then use it across mWeb, Portals, and Native applications.
 
 ## Project Specific
 1. E-commerce (https://ecomm.duncit.com) and Partner Brand (https://partners-app.duncit.com/ecomm-brand) are separate things. Please keep this in mind and do not mix them up.

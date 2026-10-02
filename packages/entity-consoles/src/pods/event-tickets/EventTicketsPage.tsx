@@ -91,12 +91,12 @@ export default function EventTicketsPage() {
         <Typography variant="h5" component="h1" sx={{
           fontWeight: 900
         }}>
-          Event Tickets
+          {t('admin.eventTickets.title')}
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Issued tickets, QR check-in and downloads.
+          {t('admin.eventTickets.subtitle')}
         </Typography>
       </Box>
 
@@ -113,7 +113,7 @@ export default function EventTicketsPage() {
             <Typography variant="subtitle1" sx={{
               fontWeight: 900
             }}>
-              Check-in by QR
+              {t('admin.eventTickets.checkInByQr')}
             </Typography>
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>

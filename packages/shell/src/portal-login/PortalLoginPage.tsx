@@ -107,7 +107,7 @@ export default function PortalLoginPage({
   const acceptSession = (data?: { token?: string; user?: { roles?: string[] } } | null) => {
     if (!data?.token) throw new Error(LOGIN_FAILED_MESSAGE);
     if (!skipAccessGate && !session.hasAppAccess(data.user?.roles)) {
-      throw new Error(session.accessDeniedMessage());
+      throw new Error(session.accessDeniedMessage(t));
     }
     session.setToken(data.token);
     navigate(redirectAfterLogin(), { replace: true });
@@ -168,7 +168,7 @@ export default function PortalLoginPage({
 
   let deniedMessage: string | null = null;
   if (!skipAccessGate && deniedFromRedirect) {
-    deniedMessage = session.accessDeniedMessage();
+    deniedMessage = session.accessDeniedMessage(t);
   }
 
   return (

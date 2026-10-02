@@ -44,28 +44,34 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
   ),
 }));
 
+// The field itself lives in (and is tested by) @duncit/media-picker; the portal
+// only binds it to its own copy, so the stub shows exactly what it was handed.
 vi.mock('@duncit/media-picker', () => ({
-  default: ({
-    open,
-    onClose,
-    onPicked,
-    title,
+  default: () => null,
+  MediaPickerField: ({
+    label,
+    value,
+    onChange,
+    labels,
+    folder,
   }: {
-    open: boolean;
-    onClose: () => void;
-    onPicked: (url: string) => void;
-    title: string;
-  }) =>
-    open ? (
-      <div role="dialog" aria-label={title}>
-        <button type="button" onClick={() => onPicked('https://cdn.example.com/picked.png')}>
-          pick-image
-        </button>
-        <button type="button" onClick={onClose}>
-          close-picker
-        </button>
-      </div>
-    ) : null,
+    label: string;
+    value: string;
+    onChange: (url: string) => void;
+    labels: { placeholder: string; pick: string; open: string };
+    folder?: string;
+  }) => (
+    <div data-folder={folder}>
+      <input
+        aria-label={label}
+        value={value}
+        placeholder={labels.placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <span>{labels.pick}</span>
+      <span>{labels.open}</span>
+    </div>
+  ),
 }));
 
 const userCtxMock = vi.hoisted(() => ({
@@ -148,44 +154,25 @@ describe('DateTimeField', () => {
 
 // ===========================================================================
 describe('MediaPickerField', () => {
-  it('renders button-only mode and picks an image', () => {
-    const onChange = vi.fn();
-    renderWithProviders(
-      <MediaPickerField label="Banner" value="" onChange={onChange} buttonOnly buttonLabel="Upload" />,
+  it('binds the shared field to the marketing copy', () => {
+    renderWithProviders(<MediaPickerField label="Image" value="" onChange={vi.fn()} folder="/notifications" />);
+    expect(screen.getByLabelText('Image')).toHaveAttribute(
+      'placeholder',
+      'Click the image icon to upload, or paste a URL…',
     );
-    fireEvent.click(screen.getByText('Upload'));
-    fireEvent.click(screen.getByText('pick-image'));
-    expect(onChange).toHaveBeenCalledWith('https://cdn.example.com/picked.png');
-    fireEvent.click(screen.getByText('close-picker'));
-    expect(screen.queryByText('pick-image')).not.toBeInTheDocument();
+    expect(screen.getByText('Pick from device or Pexels')).toBeInTheDocument();
+    expect(screen.getByText('Open')).toBeInTheDocument();
+    expect(screen.getByLabelText('Image').parentElement).toHaveAttribute('data-folder', '/notifications');
   });
 
-  it('renders the field, opens the picker and shows a preview', () => {
-    renderWithProviders(
-      <MediaPickerField label="Image" value="https://cdn.example.com/x.png" onChange={vi.fn()} helperText="help" />,
-    );
-    expect(screen.getByAltText('preview')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button')[0]);
-    expect(screen.getByRole('dialog', { name: 'Choose · Image' })).toBeInTheDocument();
-    fireEvent.click(screen.getByText('close-picker'));
-  });
-
-  it('edits the value by typing and opens the url in a new tab', () => {
+  it('forwards the value and its changes', () => {
     const onChange = vi.fn();
-    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
     renderWithProviders(
-      <MediaPickerField label="Image" value="https://cdn.example.com/x.png" onChange={onChange} showPreview={false} />,
+      <MediaPickerField label="Image" value="https://cdn.example.com/x.png" onChange={onChange} />,
     );
+    expect(screen.getByLabelText('Image')).toHaveValue('https://cdn.example.com/x.png');
     fireEvent.change(screen.getByLabelText('Image'), { target: { value: 'https://cdn.example.com/y.png' } });
     expect(onChange).toHaveBeenCalledWith('https://cdn.example.com/y.png');
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
-    expect(openSpy).toHaveBeenCalledWith('https://cdn.example.com/x.png', '_blank');
-    openSpy.mockRestore();
-  });
-
-  it('hides the open adornment when the value is empty', () => {
-    renderWithProviders(<MediaPickerField label="Image" value="" onChange={vi.fn()} />);
-    expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument();
   });
 });
 

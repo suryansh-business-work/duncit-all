@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Best audio container the browser will give us, best first. */
 const CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
@@ -25,6 +26,7 @@ export interface VoiceNote {
  * on the way past costs nothing and produces the same picture.
  */
 export function useVoiceNote() {
+  const { t } = useTranslation();
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [level, setLevel] = useState(0);
@@ -79,7 +81,7 @@ export function useVoiceNote() {
   const start = useCallback(async () => {
     setError(null);
     if (!globalThis.MediaRecorder) {
-      setError('This browser cannot record audio.');
+      setError(t('shell.chat.voice.unsupported'));
       return;
     }
     try {
@@ -103,9 +105,9 @@ export function useVoiceNote() {
       watchLevel(stream);
       setRecording(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not open the microphone');
+      setError(err instanceof Error ? err.message : t('shell.chat.voice.micFailed'));
     }
-  }, [watchLevel]);
+  }, [watchLevel, t]);
 
   // A clock while it runs, so the person can see how long they have talked.
   useEffect(() => {

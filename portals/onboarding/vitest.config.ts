@@ -117,7 +117,6 @@ export default defineConfig({
         'src/pages/user-details-page/UserHealthSection/HealthScoreCard.tsx',
         // Media library: Pexels REST API, ImageKit device upload and the picker
         // dialog/fields that drive them — external SDKs, validated by e2e.
-        'src/components/MediaPickerDialog.tsx',
         'src/components/MediaPickerField.tsx',
         'src/components/MediaListField.tsx',
         'src/components/media-list-field/**',

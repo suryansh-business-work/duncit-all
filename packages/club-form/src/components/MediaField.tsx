@@ -2,7 +2,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import { DuncitButton } from '@duncit/buttons';
-import MediaRow from './MediaRow';
+import MediaListRow from '@duncit/media-picker/media-list-row';
 import { requiredLabel } from './requiredLabel';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -47,6 +47,15 @@ export default function MediaField({ label, value, onChange, helperText, error, 
       />
     );
   }
+
+  // The shared row takes its control names from this form's own namespace, so
+  // the translations entered for `clubForm.*` keep applying.
+  const rowLabels = {
+    replace: t('clubForm.mediaRow.replace'),
+    moveUp: t('clubForm.mediaRow.moveUp'),
+    moveDown: t('clubForm.mediaRow.moveDown'),
+    remove: t('clubForm.mediaRow.remove'),
+  };
 
   const setAt = (i: number, url: string) => {
     const copy = [...items];
@@ -104,7 +113,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
       ) : (
         <Stack spacing={1}>
           {items.map((url, i) => (
-            <MediaRow
+            <MediaListRow
               key={`${url}-${i}`}
               url={url}
               index={i}
@@ -112,6 +121,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
               onReplace={() => pickInto(i)}
               onMove={(dir) => move(i, dir)}
               onRemove={() => remove(i)}
+              labels={rowLabels}
             />
           ))}
         </Stack>

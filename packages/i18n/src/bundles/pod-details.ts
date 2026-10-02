@@ -70,6 +70,7 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       settled: 'Settled',
       // Why the collected total sits below face value: tiers already taken off.
       ticketDiscounts: 'Multi-ticket discounts given',
+      payoutNote: 'Payouts are released after Finance approval.',
     },
     podHostsCard: {
       hosts: 'Hosts',

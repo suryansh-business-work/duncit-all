@@ -39,7 +39,7 @@ exports:
   - 'createSessionUserLoader'
   - 'LoginScreen'
   - 'LoginForm'
-  - 'loginSchema'
+  - 'buildLoginSchema'
   - 'loginInitialValues'
   - 'PortalModeGate'
   - 'MaintenanceScreen'
@@ -215,11 +215,15 @@ one) reaches every portal by editing one builder.
 ```ts
 loginInitialValues        // { email: '', password: '' }
 
-await loginSchema.validate({ email: 'nope', password: '' }, { abortEarly: false });
-// throws — err.errors === ['Enter a valid e-mail address', 'Password is required']
+// A Zod schema, built from a translator so the messages follow the reader.
+const loginSchema = buildLoginSchema(sessionT);
 
-await loginSchema.validate({ email: 'ananya.iyer@duncit.com', password: 'correct-horse' });
-// → { email: 'ananya.iyer@duncit.com', password: 'correct-horse' }
+loginSchema.safeParse({ email: 'nope', password: '' });
+// → { success: false, error } — error.issues.map((issue) => issue.message)
+//   === ['Enter a valid e-mail address', 'Password is required']
+
+loginSchema.safeParse({ email: ' ananya.iyer@duncit.com ', password: 'correct-horse' });
+// → { success: true, data: { email: 'ananya.iyer@duncit.com', password: 'correct-horse' } }
 ```
 
 ### Events
@@ -293,7 +297,8 @@ Every storage helper is guarded for SSR and private mode; none of them throw.
 | Export | Props | Meaning |
 | --- | --- | --- |
 | `LoginScreen` | `config: LoginScreenConfig`, `mode: PaletteMode`, `onToggleMode: () => void`, `onSubmit: (values) => Promise<void> \| void`, `loading?`, `errorMessage?`, `footerSlot?` | The shared login design. |
-| `LoginForm` | `onSubmit`, `onForgotPassword`, `loading?` | Just the fields, if a portal frames them itself. |
+| `LoginForm` | `onSubmit`, `onForgotPassword`, `loading?`, `t?` | Just the fields, if a portal frames them itself. |
+| `buildLoginSchema` | `(t: SessionTranslate) => ZodObject<{ email, password }>` | The form's Zod schema: a trimmed, required, valid address and a required password, with messages from `t`. |
 | `UserDataNotLoadedDialog` | `open: boolean`, `onReload: () => void`, `onLogout: () => void`, `errorMessage?: string \| null` | Recovery dialog; auto-mounted by `UserProvider`. |
 | `PortalModeGate` | `portalKey: string`, `graphqlUrl: string`, `appName?`, `pollMs?` (60000), `children` | Blocks the app when Tech switches the portal off Live. **Fails open.** |
 | `MaintenanceScreen` / `UnderDevelopmentScreen` | `appName?` | The blocking screens. |
@@ -307,7 +312,7 @@ Every storage helper is guarded for SSR and private mode; none of them throw.
 
 The components here are real MUI, but none of them can mount as an isolated docs island:
 importing the package entry pulls `session-user.ts` → `@apollo/client`, and `LoginScreen`
-additionally needs Formik, Yup and a `PaletteMode` owner. Faking all of that would preview a
+additionally needs React Hook Form, Zod and a `PaletteMode` owner. Faking all of that would preview a
 harness rather than the package.
 
 To see the login screen as shipped, open any portal's `/login` — https://finance.duncit.com/
@@ -352,15 +357,25 @@ Any network error keeps the app **rendered**. A server blip must never lock ever
 every portal simultaneously, which is exactly what a fail-closed gate would do. It also re-polls,
 so apps recover on their own when set back to Live without anyone reloading.
 
-## The login form is still Formik + Yup
+## The login form is React Hook Form + Zod
 
-`login.form.tsx` uses `useFormik` and `yup`, and `formik`/`yup` are declared peer dependencies.
-That predates rule 30 (React Hook Form + Zod) and is the one place in the shared packages that
-has not migrated. Do not copy this pattern into a new form, and do not add a *second* form here
-in the old style — a migration of this file is its own change, with `login.form.cy.tsx` updated
-alongside it.
+`login.form.tsx` is `useForm` + `zodResolver` over `buildLoginSchema(t)`, and
+`react-hook-form`, `@hookform/resolvers` and `zod` are declared peer dependencies (rule 30).
 
-`loginSchema` and `loginInitialValues` are exported so a surface can reuse the validation
+- **It keeps its own schema rather than `makeLoginSchema` from `@duncit/forms/schemas`.** That
+  one is the mWeb/native contract: a phone channel, an 8-character password floor, `mweb.*`
+  copy, and an output carrying `phoneExtension`/`phoneNumber` — boxes the console login mutation
+  does not accept. Here the rule is a valid address and a non-empty password, with
+  `session.login.*` messages.
+- **The address is checked against the HTML5 pattern** (`z.regexes.html5Email`), not Zod's
+  stricter default — the same pattern the form checked before it moved to Zod, so no address it
+  accepted is now refused.
+- **`onSubmit` receives the values as typed.** The schema trims the address to judge it; the
+  resolver runs with `raw: true`, so the caller gets what was in the box.
+- **A box reports its error once it has been left** (`mode: 'onTouched'`), then on every
+  keystroke; a failed submit shows every error and focuses the first invalid box.
+
+`buildLoginSchema` and `loginInitialValues` are exported so a surface can reuse the validation
 without the screen; `LoginScreen` is the full page, `LoginForm` just the fields.
 
 ## `buildSessionMeQuery` — extend, do not fork

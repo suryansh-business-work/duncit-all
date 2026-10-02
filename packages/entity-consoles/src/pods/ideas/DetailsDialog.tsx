@@ -148,7 +148,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
         <DialogTitle>{t('admin.podIdeas.deleteComment')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
-            This permanently removes the comment from the idea. You cannot undo this action.
+            {t('admin.podIdeas.deleteCommentBody')}
           </Typography>
         </DialogContent>
         <DialogActions>

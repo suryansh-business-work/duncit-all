@@ -138,6 +138,30 @@ describe('PodCategoryFilter', () => {
     expect(screen.getByTestId('pod-category-no-clubs')).toBeInTheDocument();
   });
 
+  // Editing an existing pod: the picker opens on its club's category rather
+  // than blank, and the club list is already narrowed to it.
+  it("pre-fills the picker from the selected club's category", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderForm({ initialValues: { ...values(), club_id: 'c1' } });
+
+    expect(screen.getByLabelText('Super Category')).toHaveValue('Sports');
+    expect(screen.getByLabelText('Category')).toHaveValue('Racket');
+    expect(screen.getByLabelText('Sub Category')).toHaveValue('Badminton');
+    expect(await clubOptions(user)).toEqual(['Badminton Club']);
+  });
+
+  it("lets the admin's own pick override the club's category, keeping the chosen club listed", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderForm({ initialValues: { ...values(), club_id: 'c1' } });
+
+    await pick(user, 'Super Category', 'Pets');
+    await pick(user, 'Category', 'Dogs');
+    await pick(user, 'Sub Category', 'Walks');
+
+    expect(screen.getByLabelText('Super Category')).toHaveValue('Pets');
+    expect(await clubOptions(user)).toEqual(['Badminton Club', 'Dog Club']);
+  });
+
   it('shows no warning when there are no clubs at all to filter', () => {
     renderForm({ clubs: [] });
     expect(screen.queryByTestId('pod-category-no-clubs')).not.toBeInTheDocument();

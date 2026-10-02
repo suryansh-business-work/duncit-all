@@ -340,6 +340,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Browse the full history of AI Monitoring checks on uploaded images from every surface — the image itself, who uploaded it, when, how far the check got, the AI risk result, the reason or comment behind it, the action taken and the source module — and open a row for the full trail including the model and any failure detail.' },
   { surface: 'ai', path: '/monitoring/settings', label: 'Settings', group: 'AI Monitoring',
     description: 'Centralise every AI Monitoring setting: turn the AI Monitoring chip on or off, edit the label, title, intro, bullets, footnote and dismiss button shown beside every upload field on the app, mWeb and the portals, and edit the image upload prompt the AI analyses each uploaded image with.' },
+  { surface: 'ai', path: '/reels', label: 'Reel Studio',
+    description: 'Make vertical reels by chat: create a reel, link its Google Drive folder, add clips and pictures from Drive or attach pictures in the chat, tell the AI editor what to cut, watch the reel change live in the player, restore an earlier version, save prompts for reuse and export the reel as an MP4.' },
   { surface: 'ai', path: '/profile', label: 'Profile',
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
 

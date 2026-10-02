@@ -50,6 +50,7 @@ export const appConfig = {
         { label: 'Email', labelKey: 'shell.nav.email', to: '/automation/email', icon: 'email' },
       ],
     },
+    { label: 'Reel Studio', labelKey: 'shell.nav.reelStudio', to: '/reels', icon: 'movie' },
   ],
   modules: [
     {

@@ -1,32 +1,27 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { validationRules } from '../validation/rules';
 
-const locationName = (label: string) =>
-  yup
-    .string()
-    .trim()
-    .min(2, `${label} must be at least 2 characters`)
-    .max(80, `${label} must be 80 characters or fewer`)
-    .required(`${label} is required`);
+const locationName = (label: string) => validationRules.requiredText(label, 2, 80);
 
-export const registerSchema = yup.object({
+export const registerSchema = z.object({
   first_name: validationRules.personName('First name'),
   last_name: validationRules.personName('Last name'),
   email: validationRules.email('Email'),
   phone_number: validationRules.phoneNumber('Phone number'),
   phone_extension: validationRules.phoneExtension('Phone code'),
-  password: yup.string().min(8, 'Min 8 characters').max(128).required('Password is required'),
+  // Piped so the length cap reports its own message rather than the required one.
+  password: z.string({ error: 'Password is required' }).min(8, 'Min 8 characters').pipe(z.string().max(128)),
   dob: validationRules.birthDate('Birth year'),
   city: locationName('City'),
   zone: locationName('Zone'),
 });
 
-export const loginSchema = yup.object({
+export const loginSchema = z.object({
   email: validationRules.email('Email'),
-  password: yup.string().min(8, 'Min 8 characters').required('Password is required'),
+  password: z.string({ error: 'Password is required' }).min(8, 'Min 8 characters'),
 });
 
-export const googleSignupSchema = yup.object({
+export const googleSignupSchema = z.object({
   phone_number: validationRules.phoneNumber('Phone number'),
   phone_extension: validationRules.phoneExtension('Phone code'),
   dob: validationRules.birthDate('Birth year'),
@@ -34,11 +29,11 @@ export const googleSignupSchema = yup.object({
   zone: locationName('Zone'),
 });
 
-export const whatsAppOtpRequestSchema = yup.object({
+export const whatsAppOtpRequestSchema = z.object({
   phone_extension: validationRules.phoneExtension('Code'),
   phone_number: validationRules.phoneNumber('WhatsApp number'),
 });
 
-export const whatsAppOtpVerifySchema = yup.object({
+export const whatsAppOtpVerifySchema = z.object({
   otp: validationRules.otp(),
 });

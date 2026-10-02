@@ -31,7 +31,7 @@ export default function ClubsToolbar({
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Manage clubs. Pods are organised inside a club.
+          {t('admin.clubs.subtitle')}
         </Typography>
       </Box>
       <SuperCategoryFilter value={superCategoryId} onChange={onSuperCategoryChange} />

@@ -61,7 +61,7 @@ export default function PodsToolbar({
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Events organised inside a club. Hosts are attendees by default.
+          {t('admin.pods.subtitle')}
         </Typography>
       </Box>
       <Stack

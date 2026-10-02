@@ -5,9 +5,12 @@ import AllVibeIconCard from '../AllVibeIconCard';
 import { UPDATE_BRANDING } from '../../branding-page/queries';
 import { brandingMock, brandingNode, layoutNode, renderWithProviders } from './testkit';
 
-// The shared media picker dialog owns its own upload/Pexels queries; the field
-// wrapper (label + input) this card actually drives stays real.
-vi.mock('@duncit/media-picker', () => ({ default: () => null }));
+// The shared media picker owns its own upload/Pexels queries, so the field this
+// card drives is the same label + input stub the branding suites use.
+vi.mock('@duncit/media-picker', async () => ({
+  default: () => null,
+  MediaPickerField: (await import('../../branding-page/__tests__/form-harness')).MediaPickerFieldStub,
+}));
 
 interface SaveInput {
   home_all_vibe_icon_url: string;

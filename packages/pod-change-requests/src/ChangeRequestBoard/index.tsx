@@ -1,0 +1,168 @@
+import { useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { Alert, Skeleton, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
+import { useConfirm } from '@duncit/dialogs';
+import type { PodChangeRole, PodChangeRow } from '@duncit/utils';
+import { useTranslation } from '../i18n';
+import {
+  MY_POD_CHANGE_BOARD,
+  RESPOND_TO_POD_CHANGE,
+  WITHDRAW_POD_CHANGE,
+} from '../queries';
+import BoardList from './BoardList';
+
+interface Props {
+  /**
+   * Narrow the board to ONE role — what a studio section does, so the Venue
+   * Studio never shows a host's requests. Omitted, every role is listed, which
+   * is what the standalone mWeb page wants.
+   */
+  role?: PodChangeRole;
+  /** Set to drop the heading when the surface draws its own. */
+  hideHeader?: boolean;
+  /** Told after every successful answer, so a surface can toast + refetch. */
+  onChanged?: (message: string) => void;
+  /** Per-role on a studio, as native passes `change-requests-${role}`. */
+  testId?: string;
+}
+
+/**
+ * The Change Requests section every partner studio renders (rule 40).
+ *
+ * Two lists over ONE query: what Duncit is asking of you, and what you asked of
+ * Duncit. They come back together because they are one screen and because a
+ * second query would be a second place to decide whose request is whose — the
+ * server already answers that, per role, off the signed-in account.
+ */
+export default function ChangeRequestBoard({
+  role,
+  hideHeader = false,
+  onChanged,
+  testId = 'change-requests',
+}: Readonly<Props>) {
+  const { t } = useTranslation();
+  const confirm = useConfirm();
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const board = useQuery<any>(MY_POD_CHANGE_BOARD, { fetchPolicy: 'cache-and-network' });
+  const [respond, respondState] = useMutation<any>(RESPOND_TO_POD_CHANGE);
+  const [withdraw, withdrawState] = useMutation<any>(WITHDRAW_POD_CHANGE);
+
+  const data = board.data?.myPodChangeBoard;
+  const byRole = (rows: PodChangeRow[]) => (role ? rows.filter((r) => r.role === role) : rows);
+  const incoming = byRole(data?.incoming ?? []);
+  const mine = byRole(data?.mine ?? []);
+  const busy = respondState.loading || withdrawState.loading;
+
+  const run = (promise: Promise<unknown>, message: string) => {
+    setErrorText(null);
+    promise
+      .then(() => {
+        onChanged?.(message);
+        return board.refetch();
+      })
+      .catch((error: Error) => setErrorText(error.message));
+  };
+
+  const approve = (row: PodChangeRow) => {
+    run(
+      respond({ variables: { request_id: row.id, decision: 'APPROVE', reason: '' } }),
+      t('changeRequest.approved')
+    );
+  };
+
+  const pass = (row: PodChangeRow) => {
+    confirm({
+      title: t('changeRequest.passTitle'),
+      message: t('changeRequest.passBody'),
+      confirmLabel: t('changeRequest.pass'),
+    })
+      .then((ok) => {
+        if (ok) {
+          run(
+            respond({ variables: { request_id: row.id, decision: 'PASS', reason: '' } }),
+            t('changeRequest.passed')
+          );
+        }
+        return undefined;
+      })
+      .catch(() => undefined);
+  };
+
+  const pull = (row: PodChangeRow) => {
+    confirm({
+      title: t('changeRequest.withdrawTitle'),
+      message: t('changeRequest.withdrawBody'),
+      confirmLabel: t('changeRequest.withdraw'),
+      destructive: true,
+    })
+      .then((ok) => {
+        if (ok) {
+          run(withdraw({ variables: { request_id: row.id } }), t('changeRequest.withdrawn'));
+        }
+        return undefined;
+      })
+      .catch(() => undefined);
+  };
+
+  if (board.loading && !data) {
+    return <Skeleton data-testid={`${testId}-loading`} variant="rounded" height={180} />;
+  }
+
+  if (board.error && !data) {
+    return (
+      <Alert
+        data-testid={`${testId}-error`}
+        severity="error"
+        action={
+          <DuncitButton
+            data-testid={`${testId}-retry`}
+            color="inherit"
+            size="small"
+            onClick={() => {
+              board.refetch().catch(() => undefined);
+            }}
+          >
+            {t('changeRequest.retry')}
+          </DuncitButton>
+        }
+      >
+        {t('changeRequest.loadFailed')}
+      </Alert>
+    );
+  }
+
+  return (
+    <Stack data-testid={testId} spacing={2.5}>
+      {!hideHeader && (
+        <Stack>
+          <Typography data-testid={`${testId}-title`} variant="h6" sx={{ fontWeight: 900 }}>
+            {t('changeRequest.sectionTitle')}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {t('changeRequest.sectionSubtitle')}
+          </Typography>
+        </Stack>
+      )}
+      {errorText && <Alert data-testid={`${testId}-feedback`} severity="error">{errorText}</Alert>}
+      <BoardList
+        testId={`${testId}-incoming`}
+        title={t('changeRequest.incomingTitle')}
+        subtitle={t('changeRequest.incomingSubtitle')}
+        emptyText={t('changeRequest.incomingEmpty')}
+        rows={incoming}
+        busy={busy}
+        onApprove={approve}
+        onPass={pass}
+      />
+      <BoardList
+        testId={`${testId}-mine`}
+        title={t('changeRequest.mineTitle')}
+        emptyText={t('changeRequest.mineEmpty')}
+        rows={mine}
+        busy={busy}
+        onWithdraw={pull}
+      />
+    </Stack>
+  );
+}

@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.79.260",
+  "version": "1.79.265",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -74,7 +74,6 @@
     "country-region-data": "^4.1.0",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
-    "formik": "^2.4.9",
     "graphql": "^16.14.2",
     "jsqr": "^1.4.0",
     "lottie-react": "^3.1.2",
@@ -88,7 +87,6 @@
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.4",
-    "yup": "^1.7.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

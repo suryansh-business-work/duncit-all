@@ -60,12 +60,12 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
         variables: { entity, prompt: prompt.trim() || null },
       });
       const raw = res.data?.aiFillDummyData;
-      if (!raw) throw new Error('No data returned');
+      if (!raw) throw new Error(t('admin.ai.noData'));
       let parsed: any;
       try {
         parsed = JSON.parse(raw);
       } catch {
-        throw new Error('AI returned invalid JSON');
+        throw new Error(t('admin.ai.invalidJson'));
       }
       setFilling(true);
       await onFill(parsed);
@@ -100,7 +100,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           aria-expanded={open}
           onClick={(e) => setAnchorEl(e.currentTarget)}
         >
-          {label || 'Fill with AI'}
+          {label || t('admin.ai.fill')}
         </DuncitButton>
       )}
       <Popover
@@ -119,7 +119,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
         <Stack spacing={1.25}>
           <Box>
             <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <AutoAwesomeIcon fontSize="small" color="secondary" /> Fill with AI
+              <AutoAwesomeIcon fontSize="small" color="secondary" /> {t('admin.ai.fill')}
             </Typography>
             <Typography variant="caption" sx={{
               color: "text.secondary"

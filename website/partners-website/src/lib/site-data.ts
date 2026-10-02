@@ -13,7 +13,7 @@ import { urlConfigs } from '../config/url-configs';
  * forever is a CI job cancelled at its 15-minute timeout with no error to read.
  * That is what happened to the main website twice.
  */
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 20_000;
 
 /**
  * One request per distinct query for the whole build.

@@ -102,6 +102,14 @@ describe('MediaField (rich picker mode)', () => {
     expect(screen.queryByText('https://a.com/two.jpg')).not.toBeInTheDocument();
   });
 
+  it('names the row controls from the pod form copy', () => {
+    render(<MediaField label="Images" value="https://a.com/one.jpg" onChange={vi.fn()} onPickImage={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Move up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move down' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Replace')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove')).toBeInTheDocument();
+  });
+
   it('disables moving a single row past the list boundary', () => {
     const onChange = vi.fn();
     render(

@@ -24,6 +24,15 @@ vi.mock('@duncit/media-picker', () => ({
         pick
       </button>
     ) : null,
+  MediaPickerField: ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    onChange: (url: string) => void;
+  }) => <input aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />,
 }));
 const dialogsMock = vi.hoisted(() => ({
   confirm: vi.fn(),

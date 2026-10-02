@@ -5,9 +5,13 @@ WORKDIR /repo
 ARG VITE_GRAPHQL_URL
 ARG VITE_REQUIRED_ROLES
 ARG VITE_GOOGLE_CLIENT_ID
+# Reel Studio renders with Remotion. Empty is allowed (free-licence teams); a
+# Company Licence key is what the in-browser export reports its renders against.
+ARG VITE_REMOTION_LICENSE_KEY
 ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
 ENV VITE_REQUIRED_ROLES=${VITE_REQUIRED_ROLES}
 ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+ENV VITE_REMOTION_LICENSE_KEY=${VITE_REMOTION_LICENSE_KEY}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/

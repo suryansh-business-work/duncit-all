@@ -1,4 +1,5 @@
 import { Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import MessageAttachment from '../MessageAttachment';
 import MessageText from '../MessageText';
 import type { StaffMessage } from '../queries';
@@ -32,10 +33,11 @@ export default function BubbleBody({
   onCancel,
   onNavigate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (deleted) {
     return (
       <Typography variant="body2" sx={{ fontStyle: 'italic', opacity: 0.7 }}>
-        This message was deleted
+        {t('shell.chat.thread.deleted')}
       </Typography>
     );
   }
@@ -63,7 +65,7 @@ export default function BubbleBody({
           }}
         />
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-          Enter saves · Esc cancels
+          {t('shell.chat.thread.editHint')}
         </Typography>
       </Stack>
     );

@@ -9,9 +9,12 @@ import CategoryFormDialog, { MIN_PAX_CEILING, MIN_PAX_FLOOR, clampMinPax } from 
 import { blankForm, type FormState, type Level } from '../queries';
 import { renderWithProviders } from './testkit';
 
-// The shared media picker dialog owns its own upload/Pexels queries; the field
-// wrapper (label + input) that this dialog actually drives stays real.
-vi.mock('@duncit/media-picker', () => ({ default: () => null }));
+// The shared media picker owns its own upload/Pexels queries, so the field this
+// dialog drives is the same label + input stub the branding suites use.
+vi.mock('@duncit/media-picker', async () => ({
+  default: () => null,
+  MediaPickerField: (await import('../../branding-page/__tests__/form-harness')).MediaPickerFieldStub,
+}));
 
 interface DialogState {
   open: boolean;

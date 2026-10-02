@@ -1,4 +1,5 @@
-import * as yup from 'yup';
+import { z } from 'zod';
+import { zodRules } from '@duncit/forms';
 import { DIAL_CODE, EMAIL, OTP_6, PERSON_NAME, PHONE_INTL } from '@duncit/regex';
 
 /*
@@ -17,68 +18,56 @@ export const PHONE_EXTENSION_PATTERN = DIAL_CODE;
 export const OTP_PATTERN = OTP_6;
 export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
 
-const optionalText = (label: string, max: number) =>
-  yup.string().trim().max(max, `${label} must be ${max} characters or fewer`).default('');
+// @duncit/forms owns both optional rules; here a missing value has always meant ''.
+const optionalText = (label: string, max: number) => zodRules.optionalText(label, max, { defaultEmpty: true });
 
+// Not zodRules.requiredText: that one has no message for a missing value.
 const requiredText = (label: string, min: number, max: number) =>
-  yup
-    .string()
+  z
+    .string({ error: `${label} is required` })
     .trim()
     .min(min, `${label} must be at least ${min} characters`)
-    .max(max, `${label} must be ${max} characters or fewer`)
-    .required(`${label} is required`);
+    .max(max, `${label} must be ${max} characters or fewer`);
 
 const optionalUrl = (label: string, allowRelative = false) =>
-  yup
-    .string()
-    .trim()
-    .default('')
-    .test('url', `${label} must be a valid URL`, (value) => {
-      if (!value) return true;
-      if (allowRelative && /^\/[\w./?=&%#:+-]*$/.test(value)) return true;
-      try {
-        const parsed = new URL(value);
-        return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol);
-      } catch {
-        return false;
-      }
-    });
+  zodRules.optionalUrl(label, allowRelative, { defaultEmpty: true });
 
 const birthDate = (label = 'Birth year') =>
-  yup
-    .date()
-    .typeError(`${label} is required`)
+  z
+    .date({ error: `${label} is required` })
     .max(new Date(), `${label} must be in the past`)
-    .test('minimum-age', 'You must be at least 13 years old', (value) => {
-      if (!value) return false;
+    .refine((value) => {
       const minDate = new Date();
       minDate.setFullYear(minDate.getFullYear() - 13);
       return value <= minDate;
-    })
-    .required(`${label} is required`);
+    }, 'You must be at least 13 years old');
 
 export const validationRules = {
   personName: (label: string) =>
-    yup
-      .string()
+    z
+      .string({ error: `${label} is required` })
       .trim()
-      .matches(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes and periods only`)
-      .required(`${label} is required`),
+      .regex(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes and periods only`),
   optionalText,
   requiredText,
-  email: (label = 'Email') =>
-    yup
-      .string()
+  email: (label = 'Email') => {
+    const required = `${label} is required`;
+    return z
+      .string({ error: (issue) => (issue.code === 'invalid_type' ? required : undefined) })
       .trim()
-      .lowercase()
-      .test('email', `Enter a valid ${label.toLowerCase()}`, (value) => !value || EMAIL.test(value))
+      .toLowerCase()
+      .refine((value) => !value || EMAIL.test(value), `Enter a valid ${label.toLowerCase()}`)
       .max(254)
-      .required(`${label} is required`),
+      .min(1, required);
+  },
   phoneNumber: (label = 'Phone number') =>
-    yup.string().trim().matches(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`).required(`${label} is required`),
+    z
+      .string({ error: `${label} is required` })
+      .trim()
+      .regex(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`),
   phoneExtension: (label = 'Phone code') =>
-    yup.string().trim().matches(PHONE_EXTENSION_PATTERN, `${label} is invalid`).required(`${label} is required`),
-  otp: () => yup.string().trim().matches(OTP_PATTERN, 'Enter the OTP we sent').required('OTP is required'),
+    z.string({ error: `${label} is required` }).trim().regex(PHONE_EXTENSION_PATTERN, `${label} is invalid`),
+  otp: () => z.string({ error: 'OTP is required' }).trim().regex(OTP_PATTERN, 'Enter the OTP we sent'),
   birthDate,
   optionalUrl,
 };

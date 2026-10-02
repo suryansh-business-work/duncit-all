@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export const BADGE_CONDITIONS = [
   'PODS_HOSTED',
@@ -9,42 +9,43 @@ export const BADGE_CONDITIONS = [
 
 export type BadgeCondition = (typeof BADGE_CONDITIONS)[number];
 
-export const badgeFormSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(2, 'Title must be at least 2 characters')
-    .max(80, 'Title must be 80 characters or fewer')
-    .required('Title is required'),
-  description: yup.string().trim().max(500).default(''),
-  image_url: yup.string().trim().max(1000).default(''),
-  condition_type: yup
-    .mixed<BadgeCondition>()
-    .oneOf([...BADGE_CONDITIONS], 'Select a valid condition')
-    .required('Condition is required'),
-  threshold: yup
-    .number()
-    .integer('Threshold must be a whole number')
-    .min(0, 'Threshold must be 0 or greater')
-    .max(1_000_000)
-    .when('condition_type', {
-      is: (value: BadgeCondition) => value !== 'MANUAL',
-      then: (schema) => schema.required('Threshold is required'),
-      otherwise: (schema) => schema.default(0),
+export const badgeFormSchema = z
+  .object({
+    title: z
+      .string({ error: 'Title is required' })
+      .trim()
+      .min(2, 'Title must be at least 2 characters')
+      .max(80, 'Title must be 80 characters or fewer'),
+    description: z.string().trim().max(500).default(''),
+    image_url: z.string().trim().max(1000).default(''),
+    condition_type: z.enum(BADGE_CONDITIONS, {
+      error: (issue) => (issue.input == null ? 'Condition is required' : 'Select a valid condition'),
     }),
-  is_active: yup.boolean().default(true),
-});
+    threshold: z
+      .number()
+      .int('Threshold must be a whole number')
+      .min(0, 'Threshold must be 0 or greater')
+      .max(1_000_000)
+      .optional(),
+    is_active: z.boolean().default(true),
+  })
+  // A counted condition needs a threshold; MANUAL falls back to 0.
+  .refine((values) => values.condition_type === 'MANUAL' || values.threshold !== undefined, {
+    path: ['threshold'],
+    error: 'Threshold is required',
+  })
+  .transform((values) => ({ ...values, threshold: values.threshold ?? 0 }));
 
-export type BadgeFormValues = yup.InferType<typeof badgeFormSchema>;
+export type BadgeFormValues = z.infer<typeof badgeFormSchema>;
 
-export function toBadgeInput(values: BadgeFormValues) {
-  const cast = badgeFormSchema.cast(values, { stripUnknown: true });
+/** Normalises like the schema does (trim + defaults) without validating. */
+export function toBadgeInput(values: z.input<typeof badgeFormSchema>) {
   return {
-    title: cast.title,
-    description: cast.description || null,
-    image_url: cast.image_url || null,
-    condition_type: cast.condition_type,
-    threshold: cast.condition_type === 'MANUAL' ? 0 : Number(cast.threshold) || 0,
-    is_active: cast.is_active,
+    title: values.title.trim(),
+    description: (values.description ?? '').trim() || null,
+    image_url: (values.image_url ?? '').trim() || null,
+    condition_type: values.condition_type,
+    threshold: values.condition_type === 'MANUAL' ? 0 : Number(values.threshold) || 0,
+    is_active: values.is_active ?? true,
   };
 }

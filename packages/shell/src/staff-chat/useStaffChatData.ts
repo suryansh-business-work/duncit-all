@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useImagekitDirectUpload } from '@duncit/media-picker';
+import { useTranslation } from '../i18n/useTranslation';
 import { readToken, useShellRuntime } from '../lib/runtime';
 import { buildChatExport, downloadChatExport } from './export-chat';
 import {
@@ -77,6 +78,7 @@ const NO_ICE_SERVERS: RTCIceServer[] = [];
 export function useStaffChatData({ open, peer, meId, meName, search, role }: Options) {
   const runtime = useShellRuntime();
   const client = useApolloClient();
+  const { t } = useTranslation();
   const { upload, uploading } = useImagekitDirectUpload();
   const [error, setError] = useState<Failure | null>(null);
   /** 0–100 while a file is going up, null when nothing is. */
@@ -327,14 +329,17 @@ export function useStaffChatData({ open, peer, meId, meName, search, role }: Opt
       variables: { peerId: peer.id, limit: 200 },
       fetchPolicy: 'network-only',
     });
-    const text = buildChatExport({
-      me: { id: meId, name: meName || 'You' },
-      peer,
-      messages: messagesQuery.data?.staffMessages ?? [],
-      calls: calls.data?.staffCalls ?? [],
-    });
+    const text = buildChatExport(
+      {
+        me: { id: meId, name: meName || 'You' },
+        peer,
+        messages: messagesQuery.data?.staffMessages ?? [],
+        calls: calls.data?.staffCalls ?? [],
+      },
+      t
+    );
     downloadChatExport(text, peer.name);
-  }, [client, peer, meId, meName, messagesQuery.data]);
+  }, [client, peer, meId, meName, messagesQuery.data, t]);
 
   /**
    * What the thread renders: the history scrolled into view, then the live

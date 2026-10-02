@@ -1,5 +1,6 @@
 import { useMutation } from '@apollo/client/react';
 import { useConfirm, notifyError } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/shell';
 import { DELETE, type PodRow } from './queries';
 
 interface Args {
@@ -10,10 +11,11 @@ interface Args {
 export default function usePodDelete({ onChanged }: Args) {
   const [deleteMut] = useMutation<any>(DELETE);
   const confirm = useConfirm();
+  const { t } = useTranslation();
 
   return async (p: PodRow) => {
     const ok = await confirm({
-      title: 'Delete pod',
+      title: t('clubAdmin.pods.deletePod'),
       message: `Delete pod "${p.pod_title}"?`,
       destructive: true,
       confirmLabel: 'Delete',

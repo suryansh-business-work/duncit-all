@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { FormProvider, useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
@@ -6,8 +6,8 @@ import { usePodSchema } from './usePodSchema';
 import { useTranslation } from './i18n/useTranslation';
 import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
-import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import PodCategoryFilter from './PodCategoryFilter';
+import { usePodCategoryFilter } from './usePodCategoryFilter';
 import AutoPodStepper from './auto-pod/AutoPodStepper';
 import PodFormActions from './PodFormActions';
 import PodFormLayout from './PodFormLayout';
@@ -107,21 +107,10 @@ export default function PodForm({
 
   // The pod's category comes from its club, so this picker persists nothing of
   // its own — it just narrows which clubs are offered, and does it above every
-  // section so the category is chosen first (same order as the host apps).
-  const [categoryFilter, setCategoryFilter] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
-  const selectedClubId = methods.watch('club_id');
-  const clubsInCategory = useMemo(() => {
-    const key = { superId: categoryFilter.super_id, subId: categoryFilter.sub_id };
-    if (!key.superId || !key.subId) return clubs;
-    return clubs.filter(
-      (club: any) =>
-        // The club already chosen always stays listed: a filter that hides it
-        // leaves the Club select rendering blank over a value the form holds.
-        String(club?.id) === selectedClubId ||
-        (String(club?.super_category_id ?? '') === key.superId &&
-          String(club?.category_id ?? '') === key.subId),
-    );
-  }, [clubs, categoryFilter.super_id, categoryFilter.sub_id, selectedClubId]);
+  // section so the category is chosen first (same order as the host apps). It
+  // opens on the chosen club's category, so an edited pod shows it pre-filled.
+  const categoryFilter = usePodCategoryFilter(clubs, methods.watch('club_id'));
+  const { clubsInCategory } = categoryFilter;
 
   const data: PodFormData = useMemo(
     () => ({
@@ -173,8 +162,8 @@ export default function PodForm({
   const sections = (
     <Stack spacing={2}>
       <PodCategoryFilter
-        value={categoryFilter}
-        onChange={setCategoryFilter}
+        value={categoryFilter.value}
+        onChange={categoryFilter.onChange}
         matchCount={clubsInCategory.length}
         clubCount={clubs.length}
       />

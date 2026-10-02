@@ -113,7 +113,7 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
-            Payouts are released after Finance approval.
+            {t('podDetailsPanel.podFinanceSection.payoutNote')}
           </Typography>
         </Stack>
       )}

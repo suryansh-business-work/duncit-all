@@ -18,8 +18,12 @@ consumers:
   - 'portals/support'
   - 'portals/website-app'
   - 'packages/ad-request-form'
+  - 'packages/club-form'
+  - 'packages/pod-form'
 exports:
   - 'MediaPickerDialog'
+  - 'MediaPickerField'
+  - 'MediaListRow'
   - 'SingleImageUploadField'
   - 'AttachmentUploadField'
   - 'AttachmentPreview'
@@ -43,8 +47,9 @@ size check. Eleven copies of the upload path means eleven places that keep a sta
 Admin > Upload Settings changes one.
 
 The copies are now re-export shims — `app/mweb/src/components/MediaPickerDialog.tsx`,
-`portals/admin/src/components/MediaPickerDialog.tsx`, `portals/marketing/...`,
-`portals/onboarding/...` are all literally `export { default } from '@duncit/media-picker';`.
+`portals/marketing/...`, `portals/partners-app/...` and `portals/products/...` are all literally
+`export { default } from '@duncit/media-picker';`. The admin and onboarding portals no longer
+keep one: their only caller was `MediaPickerField`, which lives here now.
 The GraphQL documents live here too (`UPLOAD_IMAGE`, `GET_IMAGEKIT_AUTH`, `UPLOAD_SETTINGS`), so
 a portal never hand-rolls the upload mutation; `portals/admin/src/pages/upload-settings/queries.ts`
 re-exports `UPLOAD_SETTINGS` rather than declaring it again.
@@ -325,6 +330,82 @@ rule with Tamagui components (rules 27 and 40).
 | `errorVariant` | `'text' \| 'chip'` | no | `'text'` | Caption vs dismissible chip. |
 | `label` / `buttonLabel` / `buttonSx` / `disabled` | — | no | — | Field chrome. |
 | `oversizeMessage` / `videoOversizeMessage` | `(file: File) => string` / `string` | no | built-in | Custom over-size copy. |
+
+### `MediaPickerField`
+
+A URL `TextField` with the picker behind its icon (or, with `buttonOnly`, a single button). The
+admin, marketing and onboarding portals each had a copy; they now keep a ten-line adapter at
+`src/components/MediaPickerField.tsx` that binds this one to the portal's own copy:
+
+```tsx
+import { MediaPickerField, type MediaPickerFieldProps } from '@duncit/media-picker';
+
+export default function PortalMediaPickerField(props: Readonly<Omit<MediaPickerFieldProps, 'labels'>>) {
+  const { t } = useTranslation();
+  return (
+    <MediaPickerField
+      {...props}
+      labels={{
+        placeholder: t('marketing.mediaPickerField.clickTheImageIconToUpload'),
+        pick: t('marketing.mediaPickerField.pickFromDeviceOrPexels'),
+        open: t('marketing.mediaPickerField.open'),
+      }}
+    />
+  );
+}
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `string` | yes | — | Field label; also names the dialog (`Choose · {label}`, or the bare label with `buttonOnly`). |
+| `value` | `string` | yes | — | Current URL (controlled). |
+| `onChange` | `(url: string) => void` | yes | — | A typed URL or the picked one. |
+| `labels` | `MediaPickerFieldLabels` | yes | — | `{ placeholder, pick, open }`, already translated by the portal — each portal ships this wording under its own namespace, so it is passed in rather than read here. |
+| `folder` | `string` | no | — | ImageKit folder, forwarded to the dialog. |
+| `helperText` | `string` | no | — | Under the text field. |
+| `required` | `boolean` | no | `false` | Marks the text field required. |
+| `showPreview` | `boolean` | no | `true` | The thumbnail card under a non-empty field. |
+| `buttonOnly` | `boolean` | no | `false` | Render only a button, no text field. |
+| `buttonLabel` | `string` | no | `'Choose image'` | The `buttonOnly` button's label. |
+| `accept` | `string` | no | images + videos | Forwarded to the dialog, e.g. `'image/*'`. |
+
+### `MediaListRow`
+
+One row of a reorderable media list: thumbnail (a `<video>` when the URL ends in
+`mp4/webm/mov/m4v`), the URL, its 1-based position, and replace / move up / move down / remove
+controls. `MediaListField` renders it, and so do the media fields in `@duncit/club-form` and
+`@duncit/pod-form`, which used to carry a copy each.
+
+Those two packages import it from the narrow entry point, which loads the row alone rather than
+the dialog, Apollo documents and cropper behind the package root:
+
+```tsx
+import MediaListRow from '@duncit/media-picker/media-list-row';
+
+<MediaListRow
+  url={url}
+  index={i}
+  total={items.length}
+  onReplace={() => pickInto(i)}
+  onMove={(dir) => move(i, dir)}
+  onRemove={() => remove(i)}
+  labels={{
+    replace: t('podForm.mediaRow.replace'),
+    moveUp: t('podForm.mediaRow.moveUp'),
+    moveDown: t('podForm.mediaRow.moveDown'),
+    remove: t('podForm.common.remove'),
+  }}
+/>
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `url` | `string` | yes | — | The media URL; its extension decides picture vs clip. |
+| `index` / `total` | `number` | yes | — | Position and list length. Move up is disabled at `index === 0`, move down at `index === total - 1`. |
+| `onReplace` | `() => void` | yes | — | The replace control was pressed — open a picker. |
+| `onMove` | `(dir: -1 \| 1) => void` | yes | — | Move the row one place up (`-1`) or down (`1`). |
+| `onRemove` | `() => void` | yes | — | Remove the row. |
+| `labels` | `MediaListRowLabels` | no | shared `media.*` copy | `{ replace, moveUp, moveDown, remove }` — a host form's own translated wording for the four controls. |
 
 ### Upload plumbing and helpers
 

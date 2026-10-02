@@ -146,6 +146,9 @@ export interface HostPodActionLabels {
   resubmitCta: string;
   venue: string;
   venueHint: string;
+  /** A resubmission is a new booking — it does not go without a venue and a slot. */
+  venueRequired: string;
+  slotRequired: string;
   completeHint: string;
   venueBillAmount: string;
   venueBillRequired: string;
@@ -155,6 +158,10 @@ export interface HostPodActionLabels {
    * which is the right voice in a console and the wrong one on the screen where
    * a host is completing their own pod.
    */
+  /** Heads the host's settlement preview. */
+  shareTitle: string;
+  /** Under the waterfall when the venue's price is more than the pod took. */
+  shareShortfall: string;
   sharePreviewHint: string;
   sharePaid: string;
   shareGst: (pct: number) => string;
@@ -186,6 +193,13 @@ export interface HostPodActionLabels {
   pasteTicketCode: string;
   scanFrameHint: string;
   checkCode: string;
+  /** The door scanner's own heading, and its line while a code is in flight. */
+  scanTitle: string;
+  scanChecking: string;
+  /** The completion dialog's roster — who the payout below was computed from. */
+  rosterNoneScanned: string;
+  rosterUnmarkedNote: string;
+  rosterEmpty: string;
   /** aria-label naming the pod the menu belongs to. */
   menuAria: (title: string) => string;
   cancelIntro: (title: string) => string;
@@ -300,9 +314,13 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     resubmitCta: t('mweb.hostPodActions.resubmitCta'),
     venue: t('mweb.hostPodActions.venue'),
     venueHint: t('mweb.hostPodActions.venueHint'),
+    venueRequired: t('mweb.hostPodActions.venueRequired'),
+    slotRequired: t('mweb.hostPodActions.slotRequired'),
     completeHint: t('mweb.hostPodActions.completeHint'),
     venueBillAmount: t('mweb.hostPodActions.venueBillAmount'),
     venueBillRequired: t('mweb.hostPodActions.venueBillRequired'),
+    shareTitle: t('mweb.hostShare.title'),
+    shareShortfall: t('mweb.hostShare.shortfall'),
     sharePreviewHint: t('mweb.hostShare.previewHint'),
     sharePaid: t('mweb.hostShare.customerPaid'),
     shareGst: (pct) => t('mweb.hostShare.gst', { vars: { pct } }),
@@ -330,6 +348,11 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     pasteTicketCode: t('mweb.hostPodActions.pasteTicketCode'),
     scanFrameHint: t('mweb.hostPodActions.scanFrameHint'),
     checkCode: t('mweb.hostPodActions.checkCode'),
+    scanTitle: t('mweb.hostPodActions.scanTitle'),
+    scanChecking: t('mweb.hostPodActions.scanChecking'),
+    rosterNoneScanned: t('mweb.hostPodActions.rosterNoneScanned'),
+    rosterUnmarkedNote: t('mweb.hostPodActions.rosterUnmarkedNote'),
+    rosterEmpty: t('mweb.hostPodActions.rosterEmpty'),
     menuAria: (title) => t('mweb.hostPodActions.menuAria', { vars: { title } }),
     cancelIntro: (title) => t('mweb.hostPodActions.cancelIntro', { vars: { title } }),
     cancelOthers: (count) => t('mweb.hostPodActions.cancelOthers', { count }),
@@ -422,9 +445,13 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     resubmitCta: t('shell.hostPodActions.resubmitCta'),
     venue: t('shell.hostPodActions.venue'),
     venueHint: t('shell.hostPodActions.venueHint'),
+    venueRequired: t('shell.hostPodActions.venueRequired'),
+    slotRequired: t('shell.hostPodActions.slotRequired'),
     completeHint: t('shell.hostPodActions.completeHint'),
     venueBillAmount: t('shell.hostPodActions.venueBillAmount'),
     venueBillRequired: t('shell.hostPodActions.venueBillRequired'),
+    shareTitle: t('shell.hostShare.title'),
+    shareShortfall: t('shell.hostShare.shortfall'),
     sharePreviewHint: t('shell.hostShare.previewHint'),
     sharePaid: t('shell.hostShare.customerPaid'),
     shareGst: (pct) => t('shell.hostShare.gst', { vars: { pct } }),
@@ -452,6 +479,11 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     pasteTicketCode: t('shell.hostPodActions.pasteTicketCode'),
     scanFrameHint: t('shell.hostPodActions.scanFrameHint'),
     checkCode: t('shell.hostPodActions.checkCode'),
+    scanTitle: t('shell.hostPodActions.scanTitle'),
+    scanChecking: t('shell.hostPodActions.scanChecking'),
+    rosterNoneScanned: t('shell.hostPodActions.rosterNoneScanned'),
+    rosterUnmarkedNote: t('shell.hostPodActions.rosterUnmarkedNote'),
+    rosterEmpty: t('shell.hostPodActions.rosterEmpty'),
     menuAria: (title) => t('shell.hostPodActions.menuAria', { vars: { title } }),
     cancelIntro: (title) => t('shell.hostPodActions.cancelIntro', { vars: { title } }),
     cancelOthers: (count) => t('shell.hostPodActions.cancelOthers', { count }),

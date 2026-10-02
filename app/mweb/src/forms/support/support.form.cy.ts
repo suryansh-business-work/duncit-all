@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { supportSchema, supportInitialValues, toSupportTicketInput } from './support.form';
 
+const errorText = (result: { error?: { issues: { message: string }[] } }) =>
+  result.error?.issues.map((issue) => issue.message).join(' ');
+
 const valid = {
   ...supportInitialValues,
   name: 'Jane Doe',
@@ -10,38 +13,30 @@ const valid = {
 };
 
 describe('supportSchema', () => {
-  it('rejects empty name', async () => {
-    const error = await supportSchema.validate({ ...valid, name: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/name/i);
+  it('rejects empty name', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, name: '' }))).toMatch(/name/i);
   });
-  it('rejects invalid email', async () => {
-    const error = await supportSchema.validate({ ...valid, email: 'not-an-email' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('rejects invalid email', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, email: 'not-an-email' }))).toMatch(/email/i);
   });
-  it('rejects subject too short', async () => {
-    const error = await supportSchema.validate({ ...valid, subject: 'X' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/subject/i);
+  it('rejects subject too short', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, subject: 'X' }))).toMatch(/subject/i);
   });
-  it('rejects message too short', async () => {
-    const error = await supportSchema.validate({ ...valid, message: 'short' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/at least 10|message/i);
+  it('rejects message too short', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, message: 'short' }))).toMatch(/at least 10|message/i);
   });
-  it('rejects invalid category', async () => {
-    const error = await supportSchema.validate({ ...valid, category: 'INVALID' as any }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/category/i);
+  it('rejects invalid category', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, category: 'INVALID' as any }))).toMatch(/category/i);
   });
-  it('rejects more than 5 attachments', async () => {
-    const error = await supportSchema
-      .validate({ ...valid, attachments: Array.from({ length: 6 }, (_, i) => `https://x/${i}.png`) }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/5 images/i);
+  it('rejects more than 5 attachments', () => {
+    const result = supportSchema.safeParse({ ...valid, attachments: Array.from({ length: 6 }, (_, i) => `https://x/${i}.png`) });
+    expect(errorText(result)).toMatch(/5 images/i);
   });
-  it('rejects attachment URL that is not a URL', async () => {
-    const error = await supportSchema.validate({ ...valid, attachments: ['not-a-url'] as any }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/url/i);
+  it('rejects attachment URL that is not a URL', () => {
+    expect(errorText(supportSchema.safeParse({ ...valid, attachments: ['not-a-url'] as any }))).toMatch(/url/i);
   });
-  it('accepts valid input', async () => {
-    await expect(supportSchema.validate(valid)).resolves.toBeTruthy();
+  it('accepts valid input', () => {
+    expect(supportSchema.safeParse(valid).success).toBe(true);
   });
 });
 

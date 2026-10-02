@@ -69,7 +69,7 @@ export default function ClubContentSections({ club }: Readonly<{ club: ClubDetai
           <Typography variant="subtitle1" sx={{
             fontWeight: 900
           }}>
-            Club Detail content
+            {t('admin.clubs.detailContent')}
           </Typography>
         </Stack>
         <Divider sx={{ mb: 1.5 }} />

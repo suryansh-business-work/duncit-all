@@ -12,6 +12,7 @@
     "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
     "@duncit/location": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/utils": "workspace:*"
   },
   "peerDependencies": {

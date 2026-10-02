@@ -25,6 +25,7 @@ export const ENV_CATEGORIES = [
   'TURN',
   'GITHUB',
   'GOOGLE_PLAY',
+  'GOOGLE_DRIVE',
   'MSG91',
   'APPLE_SIGNIN',
   'APP_STORE_CONNECT',

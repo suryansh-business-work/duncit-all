@@ -8,7 +8,7 @@
  */
 const GRAPHQL_URL = process.env.GRAPHQL_URL ?? '';
 
-const REQUEST_TIMEOUT_MS = 2500;
+const REQUEST_TIMEOUT_MS = 5000;
 const MAX_CACHE_ENTRIES = 200;
 
 interface CacheEntry {

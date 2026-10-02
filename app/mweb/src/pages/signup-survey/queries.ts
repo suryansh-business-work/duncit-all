@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export const SURVEY_DATA = gql`
   query SignupSurveyData {
@@ -30,10 +30,8 @@ export const SAVE_INTERESTS = gql`
 
 export const MIN_PICKS = 3;
 
-export const surveySchema = yup.object({
-  category_ids: yup
-    .array()
-    .of(yup.string().required())
-    .min(MIN_PICKS, `Pick at least ${MIN_PICKS} interests to find your tribe`)
-    .required(),
+export const surveySchema = z.object({
+  category_ids: z
+    .array(z.string().min(1))
+    .min(MIN_PICKS, `Pick at least ${MIN_PICKS} interests to find your tribe`),
 });

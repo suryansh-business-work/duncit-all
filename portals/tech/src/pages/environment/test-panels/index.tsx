@@ -56,6 +56,9 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     // Reads only: the domain proves the key, the record list proves DNS API access.
     case 'GODADDY':
       return <ConnectionTestPanel entry={entry} description={t('tech.environment.godaddyConnectionHint')} />;
+    // Reads only: signing in proves the key, asking who it is proves the Drive API is on.
+    case 'GOOGLE_DRIVE':
+      return <ConnectionTestPanel entry={entry} description={t('tech.environment.googleDriveConnectionHint')} />;
     default:
       return null;
   }

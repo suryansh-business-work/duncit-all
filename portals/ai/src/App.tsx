@@ -9,6 +9,8 @@ import AiMonitoringLogsPage from './pages/ai-monitoring/logs';
 import AiMonitoringSettingsPage from './pages/ai-monitoring/settings';
 import AutomationFlowsPage from './pages/automation/flows-list';
 import AutomationBuilderPage from './pages/automation/builder';
+import ReelProjectsPage from './pages/reels/projects-list';
+import ReelStudioPage from './pages/reels/studio/lazy';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -27,6 +29,8 @@ export default function App() {
       <Route path="/monitoring/settings" element={authed(<AiMonitoringSettingsPage />)} />
       <Route path="/automation/:channel" element={authed(<AutomationFlowsPage />)} />
       <Route path="/automation/:channel/:flowId" element={authed(<AutomationBuilderPage />)} />
+      <Route path="/reels" element={authed(<ReelProjectsPage />)} />
+      <Route path="/reels/:projectId" element={authed(<ReelStudioPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

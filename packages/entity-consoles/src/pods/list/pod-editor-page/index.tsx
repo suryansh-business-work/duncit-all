@@ -14,7 +14,7 @@ import { notifySuccess } from '@duncit/dialogs';
 import { QueryGuard } from '@duncit/ui';
 import MediaPickerDialog from '@duncit/media-picker';
 import AiFillButton from '../../../shared/AiFillButton';
-import { MEETING_PLATFORMS, generateMeetingLink } from '../meeting-platforms';
+import { generateMeetingLink, meetingPlatforms } from '../meeting-platforms';
 import { CREATE, POD_FOR_EDIT, UPDATE } from '../queries';
 import usePodPageData from '../usePodPageData';
 import usePodAiFill from './usePodAiFill';
@@ -121,7 +121,7 @@ export default function AdminPodEditorPage({
             products={lookups.inventoryProducts}
             finance={lookups.finance}
             getClubVenueIds={getClubVenueIds}
-            meetingPlatforms={[...MEETING_PLATFORMS]}
+            meetingPlatforms={[...meetingPlatforms(t)]}
             onGenerateMeetingLink={generateMeetingLink}
             onPickImage={picker.pickImage}
             onPickVideo={picker.pickVideo}

@@ -45,6 +45,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import MovieIcon from '@mui/icons-material/Movie';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -132,6 +133,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   marketing: CampaignIcon,
   marketplace: StorefrontIcon,
   menuBook: MenuBookIcon,
+  movie: MovieIcon,
   newspaper: NewspaperIcon,
   northstar: InsightsIcon,
   notifications: NotificationsIcon,

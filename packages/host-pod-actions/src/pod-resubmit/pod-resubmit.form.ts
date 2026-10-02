@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { podModerationImageUrls } from '@duncit/utils';
 import { hasImageLine, mediaTextToInput, mediaToText } from '../media-text';
+import type { HostPodActionLabels } from '../labels';
 import type { HostPodTarget } from '../types';
 
 export interface PodResubmitValues {
@@ -19,13 +20,16 @@ export const blankPodResubmitValues: PodResubmitValues = {
   venue_slot_id: '',
 };
 
-export const podResubmitSchema = z.object({
-  pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
-  pod_description: z.string().trim().min(10, 'Add a longer description'),
-  media_text: z.string().refine(hasImageLine, 'Add at least one image URL'),
-  venue_id: z.string().min(1, 'Select a venue'),
-  venue_slot_id: z.string().min(1, 'Select a time slot'),
-});
+/** Built from the surface's labels, like the edit dialog's schema: a validation
+ *  message is copy the host reads, so it follows their language (rule 38). */
+export const buildPodResubmitSchema = (labels: HostPodActionLabels) =>
+  z.object({
+    pod_title: z.string().trim().min(3, labels.titleTooShort).max(120, labels.titleTooLong),
+    pod_description: z.string().trim().min(10, labels.descriptionTooShort),
+    media_text: z.string().refine(hasImageLine, labels.imageRequired),
+    venue_id: z.string().min(1, labels.venueRequired),
+    venue_slot_id: z.string().min(1, labels.slotRequired),
+  });
 
 /** Maps the validated values onto the server's HostResubmitPodInput. */
 export function buildHostResubmitInput(values: PodResubmitValues) {

@@ -4,9 +4,12 @@ import GiftCardArtworkSection from '../GiftCardArtworkSection';
 import { blankForm, type FormState } from '../queries';
 import { renderWithProviders } from './testkit';
 
-// The shared media picker dialog owns its own upload/Pexels queries; the field
-// wrapper (label + input) this section actually drives stays real.
-vi.mock('@duncit/media-picker', () => ({ default: () => null }));
+// The shared media picker owns its own upload/Pexels queries, so the field this
+// section drives is the same label + input stub the branding suites use.
+vi.mock('@duncit/media-picker', async () => ({
+  default: () => null,
+  MediaPickerField: (await import('../../branding-page/__tests__/form-harness')).MediaPickerFieldStub,
+}));
 
 const FRONT_LABEL = 'Gift card front image';
 const BACK_LABEL = 'Gift card back image';

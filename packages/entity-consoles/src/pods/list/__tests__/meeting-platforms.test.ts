@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fallbackT } from '@duncit/shell';
 import { resolveGraphqlUrl } from '../../../shared/graphql-url';
-import { generateMeetingLink, MEETING_PLATFORMS } from '../meeting-platforms';
+import { generateMeetingLink, meetingPlatforms } from '../meeting-platforms';
 
 const jsonResponse = (body: unknown, ok = true, status = 200) => ({
   ok,
@@ -17,9 +18,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('MEETING_PLATFORMS', () => {
+describe('meetingPlatforms', () => {
   it('offers Google Meet, Zoom, Teams and a manual fallback', () => {
-    expect(MEETING_PLATFORMS).toEqual([
+    expect(meetingPlatforms(fallbackT)).toEqual([
       { value: 'GOOGLE_MEET', label: 'Google Meet' },
       { value: 'ZOOM', label: 'Zoom' },
       { value: 'TEAMS', label: 'Microsoft Teams' },

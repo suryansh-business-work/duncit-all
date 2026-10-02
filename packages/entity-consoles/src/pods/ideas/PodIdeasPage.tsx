@@ -61,7 +61,7 @@ export default function PodIdeasPage() {
             fontWeight: 700,
             flex: 1
           }}>
-          Pod Ideas
+          {t('admin.podIdeas.title')}
         </Typography>
       </Stack>
 

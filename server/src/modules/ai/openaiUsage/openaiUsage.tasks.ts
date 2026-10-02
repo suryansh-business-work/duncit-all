@@ -50,6 +50,7 @@ export const OPENAI_TASKS = {
   'agent.console': { label: 'Agent console turn', module: 'Agent' },
   'automation.compose': { label: 'Automation AI reply', module: 'Automation' },
   'automation.classify': { label: 'Automation AI sorting', module: 'Automation' },
+  'reels.director': { label: 'Reel Studio edit', module: 'Reel Studio' },
 } as const satisfies Record<string, OpenAiTaskMeta>;
 
 export type OpenAiTaskKey = keyof typeof OPENAI_TASKS;

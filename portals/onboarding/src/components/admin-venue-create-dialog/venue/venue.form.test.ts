@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import * as yup from 'yup';
+import { z } from 'zod';
 // Import via the parent barrel so both venue.form.ts and the schema module are covered.
 import {
   venueStep1Schema,
@@ -40,33 +40,37 @@ const step3 = {
   bank_account: { payout_method: 'UPI', account_holder_name: 'Asha', account_number: '', ifsc_code: '', upi_id: 'asha@okhdfc' },
 };
 
+const isValid = (schema: { safeParse: (v: unknown) => { success: boolean } }, value: unknown) =>
+  schema.safeParse(value).success;
+
 describe('venue step schemas', () => {
-  it('validates step1 and rejects missing required fields', async () => {
-    await expect(venueStep1Schema.isValid(step1)).resolves.toBe(true);
-    await expect(venueStep1Schema.isValid({ ...step1, venue_name: '' })).resolves.toBe(false);
-    await expect(venueStep1Schema.isValid({ ...step1, postal_code: '!!' })).resolves.toBe(false);
+  it('validates step1 and rejects missing required fields', () => {
+    expect(isValid(venueStep1Schema, step1)).toBe(true);
+    expect(isValid(venueStep1Schema, { ...step1, venue_name: '' })).toBe(false);
+    expect(isValid(venueStep1Schema, { ...step1, postal_code: '!!' })).toBe(false);
+    // A missing capacity and a non-numeric one are both refused.
+    expect(isValid(venueStep1Schema, { ...step1, capacity: undefined })).toBe(false);
+    expect(isValid(venueStep1Schema, { ...step1, capacity: Number.NaN })).toBe(false);
   });
 
-  it('validates step2 documents, gstin and pan branches', async () => {
-    await expect(venueStep2Schema.isValid(step2)).resolves.toBe(true);
-    await expect(
-      venueStep2Schema.isValid({ ...step2, documents: [{ type: 'GST', url: '' }] }),
-    ).resolves.toBe(false);
+  it('validates step2 documents, gstin and pan branches', () => {
+    expect(isValid(venueStep2Schema, step2)).toBe(true);
+    expect(isValid(venueStep2Schema, { ...step2, documents: [{ type: 'GST', url: '' }] })).toBe(false);
     // Omitted documents default to [] and pass.
-    await expect(venueStep2Schema.isValid({ ...step2, documents: undefined })).resolves.toBe(true);
-    // Null documents exercise the `docs ?? []` guard inside the valid-docs test.
-    await expect(venueStep2Schema.isValid({ ...step2, documents: null })).resolves.toBe(false);
-    await expect(venueStep2Schema.isValid({ ...step2, gstin: '22ABCDE1234F1Z5' })).resolves.toBe(true);
-    await expect(venueStep2Schema.isValid({ ...step2, gstin: 'BAD' })).resolves.toBe(false);
-    await expect(venueStep2Schema.isValid({ ...step2, pan: 'ABCDE1234F' })).resolves.toBe(true);
-    await expect(venueStep2Schema.isValid({ ...step2, pan: 'BAD' })).resolves.toBe(false);
+    expect(isValid(venueStep2Schema, { ...step2, documents: undefined })).toBe(true);
+    // Null documents are not a list at all.
+    expect(isValid(venueStep2Schema, { ...step2, documents: null })).toBe(false);
+    expect(isValid(venueStep2Schema, { ...step2, gstin: '22ABCDE1234F1Z5' })).toBe(true);
+    expect(isValid(venueStep2Schema, { ...step2, gstin: 'BAD' })).toBe(false);
+    expect(isValid(venueStep2Schema, { ...step2, pan: 'ABCDE1234F' })).toBe(true);
+    expect(isValid(venueStep2Schema, { ...step2, pan: 'BAD' })).toBe(false);
   });
 
-  it('validates step3 owner and dob branches', async () => {
-    await expect(venueStep3Schema.isValid(step3)).resolves.toBe(true);
-    await expect(venueStep3Schema.isValid({ ...step3, owner_dob: '1990-01-01' })).resolves.toBe(true);
-    await expect(venueStep3Schema.isValid({ ...step3, owner_dob: '3000-01-01' })).resolves.toBe(false);
-    await expect(venueStep3Schema.isValid({ ...step3, owner_phone: 'abc' })).resolves.toBe(false);
+  it('validates step3 owner and dob branches', () => {
+    expect(isValid(venueStep3Schema, step3)).toBe(true);
+    expect(isValid(venueStep3Schema, { ...step3, owner_dob: '1990-01-01' })).toBe(true);
+    expect(isValid(venueStep3Schema, { ...step3, owner_dob: '3000-01-01' })).toBe(false);
+    expect(isValid(venueStep3Schema, { ...step3, owner_phone: 'abc' })).toBe(false);
   });
 });
 
@@ -85,12 +89,29 @@ describe('venue validate helpers', () => {
     }).catch((caught) => caught);
     const map = collectVenueValidationErrors(error);
     expect(map['owner_user_id']).toBeTruthy();
-    expect(map['step1.venue_name']).toBeTruthy();
+    // A field that fails twice keeps its first message.
+    expect(map['step1.venue_name']).toBe('Venue name must be at least 2 characters');
   });
 
-  it('handles a single ValidationError and non-yup errors', () => {
-    const single = new yup.ValidationError('Bad name', null, 'step1.venue_name');
+  it('collectVenueValidationErrors spells a list index the way the sections look it up', async () => {
+    const error = await validateVenueEdit({
+      step1,
+      step2: { ...step2, documents: [{ type: 'GST', url: '' }] },
+      step3,
+      status: 'APPROVED',
+    }).catch((caught) => caught);
+    const map = collectVenueValidationErrors(error);
+    expect(map['step2.documents[0].url']).toBe('Document URL is required');
+    expect(map['step2.documents']).toBe('Each document must have both a type and a URL');
+  });
+
+  it('handles a single issue, an issue with no path and non-validation errors', () => {
+    const single = new z.ZodError([
+      { code: 'custom', path: ['step1', 'venue_name'], message: 'Bad name', input: '' },
+    ]);
     expect(collectVenueValidationErrors(single)).toEqual({ 'step1.venue_name': 'Bad name' });
+    const rootOnly = new z.ZodError([{ code: 'custom', path: [], message: 'Bad input', input: null }]);
+    expect(collectVenueValidationErrors(rootOnly)).toEqual({});
     expect(collectVenueValidationErrors(new Error('plain'))).toEqual({});
   });
 

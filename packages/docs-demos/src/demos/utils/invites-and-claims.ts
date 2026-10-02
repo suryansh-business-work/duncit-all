@@ -113,7 +113,7 @@ export const invitesAndClaimsDemos: PackageDemo[] = [
     },
     compute: (mock) => {
       const status = mock.status as keyof typeof EMPLOYEE_EXPENSE_STATUS_COLORS;
-      const known = EMPLOYEE_EXPENSE_CATEGORIES.some((category) => category === mock.category);
+      const known = (EMPLOYEE_EXPENSE_CATEGORIES as readonly string[]).includes(mock.category);
       return {
         'Claim reads': `${mock.merchant} — ${formatMoney(mock.amount)}`,
         'Chip colour': EMPLOYEE_EXPENSE_STATUS_COLORS[status] ?? '(not a claim status)',

@@ -44,6 +44,7 @@ export function BulkScopeDemo({ rows }: Readonly<{ rows: ScopeRowMock[] }>) {
   const selection = useMemo(() => ({ onChange: setTicked, clearRef }), []);
   const onQueryChange = useCallback((snapshot: TableQuerySnapshot) => setView(snapshot), []);
   const total = view?.total ?? 0;
+  const viewFilters = view ? tableQueryToGql(view.query).query.filters : [];
 
   return (
     <Stack spacing={1.5}>
@@ -57,7 +58,7 @@ export function BulkScopeDemo({ rows }: Readonly<{ rows: ScopeRowMock[] }>) {
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {ticked.length > 0
           ? `Scope: { ids: [${ticked.map((row) => row.id).join(', ')}] }`
-          : `Scope: { query: ${JSON.stringify(view ? tableQueryToGql(view.query).query.filters : [])}, search: ${JSON.stringify(view?.query.search ?? '')} } — ${total} rows`}
+          : `Scope: { query: ${JSON.stringify(viewFilters)}, search: ${JSON.stringify(view?.query.search ?? '')} } — ${total} rows`}
       </Typography>
       <DuncitTable<ScopeRowMock>
         tableId="docs-demo-bulk-scope"

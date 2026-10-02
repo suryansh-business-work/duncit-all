@@ -17,8 +17,8 @@ export function MultiSelect({
       select
       label={label}
       value={value}
-      // MUI types a multiple Select's value as the array it always is here.
-      onChange={(e) => onChange(e.target.value as unknown as string[])}
+      // MUI types a multiple Select's value as a string; at runtime it is always the array.
+      onChange={(e) => onChange(e.target.value as unknown as string[])} // NOSONAR — S4325: the cast is required
       slotProps={{
         select: {
           multiple: true,

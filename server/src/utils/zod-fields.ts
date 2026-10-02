@@ -119,8 +119,11 @@ function castBoolean(value: unknown): unknown {
 }
 
 // ISO 8601 with progressive enhancement — a bare date or time is LOCAL time.
+// Yup's own parser, verbatim: splitting it changes which optional group a
+// string like "2026101230" falls back to. It is anchored and every group takes
+// a fixed number of digits, so backtracking is bounded (no ReDoS).
 const ISO_DATE =
-  /^(\d{4}|[+-]\d{6})(?:-?(\d{2})(?:-?(\d{2}))?)?(?:[ T]?(\d{2}):?(\d{2})(?::?(\d{2})(?:[,.](\d+))?)?(?:(Z)|([+-])(\d{2})(?::?(\d{2}))?)?)?$/;
+  /^(\d{4}|[+-]\d{6})(?:-?(\d{2})(?:-?(\d{2}))?)?(?:[ T]?(\d{2}):?(\d{2})(?::?(\d{2})(?:[,.](\d+))?)?(?:(Z)|([+-])(\d{2})(?::?(\d{2}))?)?)?$/; // NOSONAR — S5843, see above
 const part = (text: string | undefined, fallback = 0) => Number(text) || fallback;
 
 function parseIsoDate(value: unknown): number {
@@ -191,27 +194,49 @@ function initial(kind: Kind, rules: FieldRules): unknown {
   return kind === KINDS.object ? {} : undefined;
 }
 
-function internalProblems(
-  kind: Kind,
-  rules: FieldRules,
-  accepts: { readonly null: boolean; readonly undefined: boolean },
-  value: unknown,
-  original: unknown
-): Render[] {
-  const problems: Render[] = [];
-  const required: Render =
-    typeof rules.required === 'string' ? () => rules.required as string : (p) => `${p} is a required field`;
-  if (value != null && !kind.is(value)) {
-    const { typeError } = rules;
-    problems.push(typeError ? () => typeError : (p) => typeMessage(p, kind.type, value, original));
+interface Accepts {
+  readonly null: boolean;
+  readonly undefined: boolean;
+}
+
+function requiredMessage(rules: FieldRules): Render {
+  const { required } = rules;
+  if (typeof required === 'string') return () => required;
+  return (p) => `${p} is a required field`;
+}
+
+/** A present value of the wrong type. */
+function typeProblem(kind: Kind, rules: FieldRules, value: unknown, original: unknown): Render | null {
+  if (value == null || kind.is(value)) return null;
+  const { typeError } = rules;
+  if (typeError) return () => typeError;
+  return (p) => typeMessage(p, kind.type, value, original);
+}
+
+/** null or undefined where the inner schema refuses it. */
+function absenceProblem(rules: FieldRules, accepts: Accepts, value: unknown): Render | null {
+  if (value === null && !accepts.null) {
+    if (rules.required) return requiredMessage(rules);
+    return (p) => `${p} cannot be null`;
   }
-  if (value === null && !accepts.null) problems.push(rules.required ? required : (p) => `${p} cannot be null`);
-  if (value === undefined && !accepts.undefined) problems.push(required);
-  if (rules.oneOf && value != null && !rules.oneOf.includes(value)) {
-    const values = rules.oneOf.join(', ');
-    problems.push((p) => `${p} must be one of the following values: ${values}`);
-  }
-  return problems;
+  if (value === undefined && !accepts.undefined) return requiredMessage(rules);
+  return null;
+}
+
+/** A present value outside `oneOf`. */
+function oneOfProblem(rules: FieldRules, value: unknown): Render | null {
+  if (!rules.oneOf || value == null || rules.oneOf.includes(value)) return null;
+  const values = rules.oneOf.join(', ');
+  return (p) => `${p} must be one of the following values: ${values}`;
+}
+
+/** Yup's own checks for one field, in Yup's order. */
+function internalProblems(kind: Kind, rules: FieldRules, accepts: Accepts, value: unknown, original: unknown): Render[] {
+  return [
+    typeProblem(kind, rules, value, original),
+    absenceProblem(rules, accepts, value),
+    oneOfProblem(rules, value),
+  ].filter((problem): problem is Render => problem !== null);
 }
 
 function field<S extends z.ZodType>(kind: Kind, inner: S, rules: FieldRules = {}) {
@@ -318,12 +343,45 @@ export function shape<F extends z.ZodRawShape>(fields: F, options: ShapeOptions<
 
 // ---------------------------------------------------------------- checks
 
-const EMAIL =
-  // eslint-disable-next-line no-useless-escape
-  /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-const URL_PATTERN =
-  // eslint-disable-next-line no-useless-escape
-  /^((https?|ftp):)?\/\/(((([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[ -퟿豈-﷏ﷰ-￯])|(([a-z]|\d|[ -퟿豈-﷏ﷰ-￯])([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])*([a-z]|\d|[ -퟿豈-﷏ﷰ-￯])))\.)+(([a-z]|[ -퟿豈-﷏ﷰ-￯])|(([a-z]|[ -퟿豈-﷏ﷰ-￯])([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])*([a-z]|[ -퟿豈-﷏ﷰ-￯])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[-]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[ -퟿豈-﷏ﷰ-￯])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i;
+/** The characters Yup's email pattern allows before the @ (WHATWG's set). */
+const EMAIL_LOCAL = /^[\w.!#$%&'*+/=?^`{|}~-]+$/;
+/** One DNS label: 1–63 alphanumerics or hyphens, never starting or ending with a hyphen. */
+const DNS_LABEL = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+
+/**
+ * Yup's email rule, checked in parts instead of one regex: exactly one @, a
+ * local part from the allowed set, and a domain made of valid labels.
+ */
+function isEmail(value: string): boolean {
+  const at = value.indexOf('@');
+  if (at < 1 || value.includes('@', at + 1)) return false;
+  const labels = value.slice(at + 1).split('.');
+  return EMAIL_LOCAL.test(value.slice(0, at)) && labels.every((label) => DNS_LABEL.test(label));
+}
+
+const URL_PROTOCOLS = new Set(['http:', 'https:', 'ftp:']);
+const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
+/**
+ * A web address: http, https or ftp (or protocol-relative //host), with a dotted
+ * host or an IPv4 address, and no whitespace. Replaces Yup's URL regex, whose
+ * nested quantifiers could backtrack for seconds on a crafted 2 KB string.
+ */
+function isUrl(value: string): boolean {
+  // Whitespace, or a % that does not start a two-digit hex escape.
+  if (/\s|%(?![\da-f]{2})/i.test(value)) return false;
+  const absolute = value.startsWith('//') ? 'https:' + value : value;
+  let parsed: URL;
+  try {
+    parsed = new URL(absolute);
+  } catch {
+    return false;
+  }
+  if (!URL_PROTOCOLS.has(parsed.protocol)) return false;
+  const host = parsed.hostname;
+  if (IPV4.test(host)) return true;
+  return host.includes('.') && host.split('.').every((label) => !label.startsWith('-') && !label.endsWith('-'));
+}
 
 const rule = <T>(test: (value: T) => boolean, message: string | undefined, fallback: Render) =>
   z.refine<T>(test, { error: message ?? named(fallback) });
@@ -352,9 +410,9 @@ export function matches(pattern: RegExp, options: string | MatchOptions = {}) {
 }
 
 export const email = (message?: string) =>
-  rule<string>((v) => v === '' || v.search(EMAIL) !== -1, message, (p) => `${p} must be a valid email`);
+  rule<string>((v) => v === '' || isEmail(v), message, (p) => `${p} must be a valid email`);
 export const url = (message?: string) =>
-  rule<string>((v) => v === '' || v.search(URL_PATTERN) !== -1, message, (p) => `${p} must be a valid URL`);
+  rule<string>((v) => v === '' || isUrl(v), message, (p) => `${p} must be a valid URL`);
 
 export const gte = (min: number, message?: string) =>
   rule<number>((v) => v >= min, message, (p) => `${p} must be greater than or equal to ${printNumber(min)}`);

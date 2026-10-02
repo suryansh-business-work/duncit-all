@@ -263,7 +263,7 @@ describe('portal edit at any stage — slot re-route', () => {
     await podService.remove(String(pod._id), { actorUserId: adminId, source: 'ADMIN' });
     await expect(
       podService.remove(String(pod._id), { actorUserId: adminId, source: 'ADMIN' }),
-    ).resolves.toBe(true);
+    ).resolves.toBeUndefined();
   });
 
   it('leaves the booking untouched when no slot is supplied', async () => {

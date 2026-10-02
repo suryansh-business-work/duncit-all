@@ -22,7 +22,6 @@
  *     (event_key, entity_id, destination) is keyed on. Running a sweep twice is
  *     a rejected insert, not a second bill.
  */
-import { logs } from '@observability/log';
 import { startClusterJob } from '@utils/clusterJob';
 import { getUrlConfigs } from '@config/url-configs';
 import { ClubModel } from '@modules/clubs/club/club.model';

@@ -1,6 +1,7 @@
 import { couponService } from './coupon.service';
 import { createCouponSchema, updateCouponSchema, couponPreviewSchema } from './coupon.validator';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
+import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
@@ -19,7 +20,7 @@ const ADMIN_RW = [
 
 export const couponResolvers = {
   Coupon: {
-    pod: (parent: { pod_id?: unknown }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
+    pod: (parent: { pod_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
   },
   Query: {
     coupons: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {

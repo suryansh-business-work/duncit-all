@@ -411,7 +411,8 @@ export const podResolvers = {
     },
     deletePod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ADMIN_WRITE);
-      return podService.remove(args.pod_doc_id, { actorUserId: user.id, source: 'ADMIN' });
+      await podService.remove(args.pod_doc_id, { actorUserId: user.id, source: 'ADMIN' });
+      return true;
     },
     revokePodCancellation: async (
       _p: unknown,

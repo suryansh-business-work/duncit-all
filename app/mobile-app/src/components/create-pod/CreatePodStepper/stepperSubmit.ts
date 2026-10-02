@@ -31,8 +31,8 @@ export function buildStepperSubmit({ clubAdmin, onModerate, onPublish, state }: 
         message: violation.message,
         type: violation.type,
         stepIndex,
-        // stepIndex is always an in-range STEP_TITLE_KEYS index (the cast narrows the type).
-        stepTitle: t(STEP_TITLE_KEYS[stepIndex] as string),
+        // stepIndex is always in range; noUncheckedIndexedAccess still widens it to string | undefined.
+        stepTitle: t(STEP_TITLE_KEYS[stepIndex] as string), // NOSONAR — S4325: Sonar's tsconfig lacks noUncheckedIndexedAccess
       };
     });
     setBlocked(mapped);

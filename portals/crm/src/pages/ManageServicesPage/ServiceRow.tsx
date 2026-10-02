@@ -40,8 +40,8 @@ export function ServiceRow({
         {editing ? (
           <TextField
             size="small"
-            value={draft!.sort_order}
-            onChange={(e) => setDraft({ ...draft!, sort_order: e.target.value })}
+            value={draft.sort_order}
+            onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
             sx={{ width: 70 }}
             slotProps={{
               htmlInput: { inputMode: 'numeric', 'aria-label': t('shell.common.order') }
@@ -56,8 +56,8 @@ export function ServiceRow({
           <TextField
             size="small"
             fullWidth
-            value={draft!.name}
-            onChange={(e) => setDraft({ ...draft!, name: e.target.value })}
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             slotProps={{ htmlInput: { 'aria-label': t('crm.page.serviceName') } }}
           />
         ) : (
@@ -75,10 +75,10 @@ export function ServiceRow({
       </TableCell>
       <TableCell>
         <Switch
-          checked={editing ? draft!.is_active : row.is_active}
+          checked={editing ? draft.is_active : row.is_active}
           onChange={(e) => {
             if (editing) {
-              setDraft({ ...draft!, is_active: e.target.checked });
+              setDraft({ ...draft, is_active: e.target.checked });
             } else {
               toggleActive(row);
             }

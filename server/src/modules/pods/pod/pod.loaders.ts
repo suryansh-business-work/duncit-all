@@ -18,7 +18,7 @@ import { primeUserActors } from '@modules/access/user/user.loaders';
 import { primeClubs } from '@modules/clubs/club/club.loaders';
 import { primePodPlaces } from './pod.place';
 import { PodModel } from './pod.model';
-import { loadOne, type CacheCarrier } from '@utils/request-cache';
+import { loadOne, type CacheCarrier, type IdLike } from '@utils/request-cache';
 
 interface PodRowRelations {
   club_id?: string | null;
@@ -89,6 +89,6 @@ async function fetchPodSummaries(ids: string[]): Promise<Map<string, PodSummary>
  * row — three identical copies — so a 50-row payments table cost 50 reads.
  * Rows asking in the same tick now share one `$in` read.
  */
-export function loadPodSummary(carrier: CacheCarrier, id: unknown): Promise<PodSummary | null> {
+export function loadPodSummary(carrier: CacheCarrier, id: IdLike): Promise<PodSummary | null> {
   return loadOne(carrier, POD_SUMMARY_BUCKET, id ? String(id) : null, fetchPodSummaries);
 }

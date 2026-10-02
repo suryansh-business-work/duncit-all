@@ -4,6 +4,7 @@ import { paymentDetailService } from './payment.detail.service';
 import { paymentRefundService } from './payment.refund.service';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
+import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
 import { hasRole, LOGS_READER, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
@@ -29,7 +30,7 @@ const LOG_READ = [...ADMIN_READ, LOGS_READER];
 
 export const paymentResolvers = {
   Payment: {
-    pod: (parent: { pod_id?: unknown }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
+    pod: (parent: { pod_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
   },
   Query: {
     payments: (_p: unknown, args: { filter?: any; limit?: number }, ctx: GraphQLContext) => {

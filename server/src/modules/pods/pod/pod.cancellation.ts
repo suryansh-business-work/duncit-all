@@ -266,15 +266,14 @@ export const podCancellationMethods = {
       if (doc) {
         const reason = audit.note ?? DUNCIT_CANCEL_REASON;
         await refundAndNotifyCancellation(doc, String(audit.actorUserId ?? ''), reason, audit.source);
-        return true;
+        return;
       }
     }
     // Portals now list cancelled pods, so Delete can be pressed on one twice.
     // softDeletePod answers idempotently instead of a confusing 404 — the slot
-    // and inventory releases already ran the first time — so this stays `true`
-    // whether or not this particular call is the one that committed the delete.
+    // and inventory releases already ran the first time — so a repeat delete
+    // succeeds whether or not this call is the one that committed it.
     await softDeletePod(id, audit);
-    return true;
   },
 
   /**
@@ -365,13 +364,13 @@ export const podCancellationMethods = {
     }
     const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
     if (!doc) notFound();
-    const cancelledAt = doc!.deleted_at;
+    const cancelledAt = doc.deleted_at;
     if (!cancelledAt) notCancelled();
-    if (!isRevokeWindowOpen(doc!)) revokeWindowClosed();
+    if (!isRevokeWindowOpen(doc)) revokeWindowClosed();
     // The filter names deleted_at itself, so the soft-delete pre-find hook
     // stands down and this is the one write that can win the flip.
     const restored = await PodModel.findOneAndUpdate(
-      { _id: doc!._id, deleted_at: { $ne: null } },
+      { _id: doc._id, deleted_at: { $ne: null } },
       { $set: { deleted_at: null, is_active: isActiveAfterRevoke(doc) } },
       { new: true }
     ).setOptions({ includeDeleted: true });

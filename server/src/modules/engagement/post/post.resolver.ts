@@ -2,16 +2,17 @@ import { postService } from './post.service';
 import { userService } from '@modules/access/user/user.service';
 import { loadPublicUser } from '@modules/access/user/user.loaders';
 import type { GraphQLContext } from '@context';
+import type { IdLike } from '@utils/request-cache';
 import { requireAuth } from '@middleware/rbac';
 
 /** A post's, comment's or viewer's user: every row of the page asks in the
  * same tick, so the page is one batched read instead of `getById` per row. An
  * unknown or malformed id is null, as `getById`'s throw used to be. */
-const userOf = (id: unknown, ctx: GraphQLContext) => (id ? loadPublicUser(ctx, String(id)) : null);
+const userOf = (id: IdLike, ctx: GraphQLContext) => (id ? loadPublicUser(ctx, String(id)) : null);
 
 export const postResolvers = {
   Post: {
-    author: (parent: { author_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
+    author: (parent: { author_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
     // The delete rule lives here, not in the two apps: mWeb and native would
     // otherwise each carry their own copy of "author, or an admin of the club
     // it was posted to" and drift the moment one of them changed.
@@ -23,10 +24,10 @@ export const postResolvers = {
     },
   },
   PostComment: {
-    author: (parent: { author_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
+    author: (parent: { author_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => userOf(parent.author_id, ctx),
   },
   StoryView: {
-    user: (parent: { user_id?: unknown }, _a: unknown, ctx: GraphQLContext) => userOf(parent.user_id, ctx),
+    user: (parent: { user_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => userOf(parent.user_id, ctx),
   },
   Query: {
     posts: async (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) => {

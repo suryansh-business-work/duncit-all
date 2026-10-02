@@ -1,5 +1,6 @@
 import { productOrderService } from './productOrder.service';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
+import type { IdLike } from '@utils/request-cache';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
@@ -9,7 +10,7 @@ const OPS_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGE
 
 export const productOrderResolvers = {
   ProductOrder: {
-    pod: (parent: { pod_id?: unknown }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
+    pod: (parent: { pod_id?: IdLike }, _a: unknown, ctx: GraphQLContext) => loadPodSummary(ctx, parent.pod_id),
   },
   Query: {
     myProductOrders: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

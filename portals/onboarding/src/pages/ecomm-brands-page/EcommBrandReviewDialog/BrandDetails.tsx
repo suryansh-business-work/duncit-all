@@ -1,11 +1,11 @@
 import { Box, Chip, Link, Stack, Typography } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';
-import type { ReviewBrand } from './types';
+import type { ReviewBrand, ReviewDocument } from './types';
 
 interface Props {
   active: ReviewBrand;
-  documents: ReviewBrand[];
+  documents: ReviewDocument[];
   address: string;
   business: string;
   bank: string;
@@ -20,7 +20,7 @@ export function BrandDetails({ active, documents, address, business, bank }: Rea
         <Box
           component="img"
           src={active.cover_image_url}
-          alt={active.brand_name}
+          alt={active.brand_name ?? ''}
           sx={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 1.5 }}
         />
       )}

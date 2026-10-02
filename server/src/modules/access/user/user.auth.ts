@@ -40,6 +40,7 @@ import {
 import { assertPortalLogin } from '@modules/portals';
 import { noteSignIn, type SignInContext } from './user.signin';
 import { authPayload } from './user.public';
+import type { IdLike } from '@utils/request-cache';
 import {
   isPlaceholderPhone,
   nextFreeUsername,
@@ -137,7 +138,7 @@ function invalidCredentials(): GraphQLError {
  * would answer before bcrypt had run and the difference in timing would be the
  * leak the shared message exists to close.
  */
-function assertNotSealed(userId: unknown): void {
+function assertNotSealed(userId: IdLike): void {
   if (isAccountLocked(String(userId ?? ''))) throw invalidCredentials();
 }
 

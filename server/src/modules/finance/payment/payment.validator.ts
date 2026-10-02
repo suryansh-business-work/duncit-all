@@ -85,7 +85,7 @@ const hasBillingAddress = (value: BillingCarrier | null | undefined) =>
 
 const BILLING_REQUIRED = 'A billing address is required';
 const billingRule: ShapeOptions<z.ZodRawShape> = {
-  tests: [{ message: BILLING_REQUIRED, test: (value) => hasBillingAddress(value as BillingCarrier) }],
+  tests: [{ message: BILLING_REQUIRED, test: (value) => hasBillingAddress(value) }],
 };
 
 /**

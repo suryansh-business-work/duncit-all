@@ -20,9 +20,14 @@
  * memoises this way (`__podPlaceCache`) — this generalises the same idea.
  */
 
+import type { Types } from 'mongoose';
+
 /** Whatever carries the cache: the GraphQL context, or a plain object for the
  * one-off callers (share-link unfurling) that resolve a pod outside a request. */
 export type CacheCarrier = object;
+
+/** A reference as a parent row holds it: a stored ObjectId, its string, or nothing. */
+export type IdLike = string | Types.ObjectId | null | undefined;
 
 const STORE_KEY = '__duncitRequestCache';
 

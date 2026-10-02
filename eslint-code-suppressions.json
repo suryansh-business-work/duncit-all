@@ -3655,11 +3655,6 @@
       "count": 4
     }
   },
-  "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandReviewDialog/types.ts": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "portals/onboarding/src/pages/ecomm-brands-page/EcommBrandsPage.tsx": {
     "no-restricted-syntax": {
       "count": 8

@@ -766,7 +766,8 @@ export const clubAdminService = {
   /** Soft-delete a pod in the actor's clubs (same soft-delete as the admin path). */
   async deletePod(actor: Actor, podDocId: string) {
     await this.assertClubAdminForPod(actor, podDocId);
-    return podService.remove(podDocId, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
+    await podService.remove(podDocId, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
+    return true;
   },
 
   /** Edit a club the actor administers, from the Partners portal. Governance

@@ -130,7 +130,7 @@ export function startHttpBots(ctx, targetAt) {
     async drain() {
       clearInterval(timer);
       pool.target = 0;
-      await Promise.allSettled([...pool.active.values()]);
+      await Promise.allSettled(pool.active.values());
     },
   };
 }

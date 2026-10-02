@@ -17,6 +17,12 @@ export function isImageMime(mime: string): boolean {
   return IMAGE_MIME.test(mime);
 }
 
+/** ImageKit's Basic auth header: the private key as the user, no password. */
+function basicAuth(privateKey: string): string {
+  const credentials = Buffer.from(`${privateKey}:`).toString('base64');
+  return `Basic ${credentials}`;
+}
+
 /**
  * The one call that puts a file on ImageKit: the server uploads over Basic
  * auth with the private key, so the browser never holds a credential and there
@@ -31,7 +37,7 @@ export async function uploadImage(bytes: Buffer, fileName: string, privateKeyOve
   form.append('fileName', fileName);
   form.append('useUniqueFileName', 'true');
   form.append('folder', readString(config, 'folder') || '/lite');
-  const auth = `Basic ${Buffer.from(`${privateKey}:`).toString('base64')}`;
+  const auth = basicAuth(privateKey);
   const res = await fetch(IMAGEKIT_UPLOAD_URL, { method: 'POST', headers: { Authorization: auth }, body: form });
   const json = (await res.json().catch(() => ({}))) as { url?: string; fileId?: string; message?: string };
   if (!res.ok || !json.url) throw upstreamError(`ImageKit upload failed: ${json.message ?? res.statusText}`);
@@ -41,7 +47,7 @@ export async function uploadImage(bytes: Buffer, fileName: string, privateKeyOve
 /** Prove an ImageKit key without uploading anything. */
 export async function probeImagekit(privateKey: string): Promise<{ ok: boolean; message: string }> {
   if (!privateKey) return { ok: false, message: 'Private key is required' };
-  const auth = `Basic ${Buffer.from(`${privateKey}:`).toString('base64')}`;
+  const auth = basicAuth(privateKey);
   const res = await fetch('https://api.imagekit.io/v1/files?limit=1', { headers: { Authorization: auth } });
   return res.ok ? { ok: true, message: 'ImageKit credentials are valid' } : { ok: false, message: `ImageKit rejected the key (HTTP ${res.status})` };
 }

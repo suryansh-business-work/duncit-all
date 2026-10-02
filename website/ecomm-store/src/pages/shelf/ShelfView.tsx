@@ -61,7 +61,7 @@ export function ShelfView({ scope, header }: Readonly<ShelfViewProps>) {
           <ActiveFilterChips page={page} controls={controls} />
           {error ? <Alert severity="error">{parseApiError(error, t('ecommStore.common.loadFailed'))}</Alert> : null}
           {loading && !page ? <Loader label={t('ecommStore.common.loading')} /> : null}
-          {page && page.items.length === 0 ? (
+          {page?.items.length === 0 ? (
             <EmptyState
               icon={<SearchOffRoundedIcon />}
               title={t('ecommStore.shelf.emptyTitle')}

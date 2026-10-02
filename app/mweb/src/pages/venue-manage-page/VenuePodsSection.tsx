@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import {
-  canRequestPodChange,
-  changeRequestBlockedKey,
   changeRequestMenuKey,
   venueCancelSuccessMessage,
   type VenueCancelPodResult,

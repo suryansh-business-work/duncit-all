@@ -56,8 +56,8 @@ export default function ClubEditPage() {
       await updateClub({ variables: { club_doc_id: clubId, input } });
       notifySuccess(t('clubAdmin.editClub.saved'));
       navigate(backTo);
-    } catch (caught) {
-      setOpError(parseApiError(caught));
+    } catch (error_) {
+      setOpError(parseApiError(error_));
     }
   };
 

@@ -342,7 +342,8 @@ async function putBytes(url, file) {
   const res = await fetch(url, { method: 'POST', body: form });
   if (!res.ok) {
     const said = (await res.text().catch(() => '')).trim().slice(0, 200);
-    throw new Error(`Slack refused the upload of ${path.basename(file)}: HTTP ${res.status}${said ? ` — ${said}` : ''}`);
+    const detail = said ? ` — ${said}` : '';
+    throw new Error(`Slack refused the upload of ${path.basename(file)}: HTTP ${res.status}${detail}`);
   }
 }
 

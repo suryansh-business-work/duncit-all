@@ -64,7 +64,7 @@ export const duncitBridge = {
       { input: { channel: 'EMAIL', email } },
     );
     const result = reply?.data?.requestLoginOtp;
-    if (!result || !result.registered) return null;
+    if (!result?.registered) return null;
     return { registered: true, expires_in_minutes: result.expires_in_minutes, resend_after_seconds: result.resend_after_seconds };
   },
 

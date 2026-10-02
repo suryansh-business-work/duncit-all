@@ -83,7 +83,7 @@ const runIdentity = () => ({
  */
 const SUITE_ATTR_RE = /<testsuite\b[^>]*>/g;
 const attr = (tag, name) => {
-  const match = new RegExp(`\\b${name}="([^"]*)"`).exec(tag);
+  const match = new RegExp(String.raw`\b${name}="([^"]*)"`).exec(tag);
   return match ? match[1] : null;
 };
 
@@ -228,7 +228,7 @@ async function reportSuite(token) {
         suite: {
           key,
           status,
-          ...(counts ?? {}),
+          ...counts,
           error: env('SUITE_ERROR'),
           job_url: env('RUN_URL'),
         },

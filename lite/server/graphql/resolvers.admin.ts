@@ -34,12 +34,11 @@ async function testEntry(id: string, to: string | null | undefined, adminEmail: 
   let result: { ok: boolean; message: string };
   if (entry.category === 'EMAIL') {
     const smtp = smtpFromConfig(config);
-    if (!smtp) result = { ok: false, message: 'SMTP host is required' };
-    else {
+    if (smtp) {
       const settings = await settingsService.get();
       const outcome = await emailService.sendRaw(normalizeEmail(to || adminEmail), `${settings.site_name} test email`, 'This is a test email from the Lite console. If you can read it, the mailbox works.', settings.site_name, smtp);
       result = { ok: outcome.status === 'SENT', message: outcome.message };
-    }
+    } else result = { ok: false, message: 'SMTP host is required' };
   } else if (entry.category === 'IMAGEKIT') {
     result = await probeImagekit(readString(config, 'private_key'));
   } else {

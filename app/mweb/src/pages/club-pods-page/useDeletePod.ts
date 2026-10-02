@@ -22,8 +22,8 @@ export function useDeletePod(onDeleted: () => void) {
       await deletePod({ variables: { pod_doc_id: target.id } });
       notifySuccess(t('clubAdmin.pods.podDeleted'));
       onDeleted();
-    } catch (caught) {
-      notifyError(parseApiError(caught));
+    } catch (error_) {
+      notifyError(parseApiError(error_));
     } finally {
       setTarget(null);
     }

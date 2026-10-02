@@ -22,19 +22,15 @@
 import fs from 'node:fs';
 import process from 'node:process';
 
-/**
- * Every portal and app with a browser to drive, and where its preview serves.
- *
- * A row may name its own `build` and `e2e` scripts; the workflow falls back to
- * `build:e2e` / `e2e` when it does not. `live: true` marks the one leg that
- * talks to a real server instead of stubbing GraphQL — the workflow points its
- * build at the staging API and purges what the suite created afterwards.
- *
- * EMPTY since 2026-09-14: every browser suite was removed to be rebuilt batch
- * by batch (scripts/lib/e2e-awaiting-suite.mjs). Each rebuilt suite adds its
- * row here and its name to e2eRun.suites.ts in the same commit.
+/*
+ * Browser matrix legs: NONE since 2026-09-14 — every browser suite was removed
+ * to be rebuilt batch by batch (scripts/lib/e2e-awaiting-suite.mjs), so the
+ * matrix below is always empty. The first rebuilt suite brings back a
+ * `BROWSER_SUITES` list of `{ name, dir, port, build?, e2e?, live? }` rows (each
+ * row may name its own `build` and `e2e` scripts; the workflow falls back to
+ * `build:e2e` / `e2e`), adds their names to ALL, filters the matrix by
+ * `wanted`, and adds the name to e2eRun.suites.ts in the same commit.
  */
-const BROWSER_SUITES = [];
 
 /**
  * The legs that are not matrix rows. `accounts` is the live account lifecycle
@@ -44,7 +40,7 @@ const BROWSER_SUITES = [];
  */
 const STANDALONE_SUITES = ['accounts', 'no-surface'];
 
-const ALL = [...BROWSER_SUITES.map((s) => s.name), ...STANDALONE_SUITES];
+const ALL = [...STANDALONE_SUITES];
 
 const requested = (process.argv[2] ?? '')
   .split(',')
@@ -66,7 +62,6 @@ if (unknown.length > 0) {
 // use, so "all" is one shape rather than a list that has to stay in step.
 const wanted = new Set(requested.length > 0 ? requested : ALL);
 
-const matrix = BROWSER_SUITES.filter((suite) => wanted.has(suite.name));
 const selected = ALL.filter((name) => wanted.has(name));
 const skipped = ALL.filter((name) => !wanted.has(name));
 
@@ -74,8 +69,9 @@ console.log(`Running ${selected.length} of ${ALL.length} suites: ${selected.join
 if (skipped.length > 0) console.log(`Skipping: ${skipped.join(', ')}`);
 
 const outputs = {
-  matrix: JSON.stringify(matrix),
-  browser_count: String(matrix.length),
+  // No browser legs yet (see above), so the workflow's matrix job has nothing to run.
+  matrix: '[]',
+  browser_count: '0',
   selected: selected.join(','),
   skipped: skipped.join(','),
 };

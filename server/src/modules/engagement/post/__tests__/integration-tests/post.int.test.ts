@@ -28,7 +28,18 @@ afterEach(async () => {
   jest.restoreAllMocks();
 });
 
-const settleNotifs = () => Promise.all(notifyPromises);
+/**
+ * Waits until `expected` notifications have STARTED, then until all of them
+ * land. A notification starts only after a dynamic import and a lookup, so on
+ * a slow runner the second one may not have begun when the first has finished
+ * — awaiting only what has started read an inbox one notification short.
+ */
+async function settleNotifs(expected = 0): Promise<void> {
+  for (let tries = 0; tries < 100 && notifyPromises.length < expected; tries += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  await Promise.all(notifyPromises);
+}
 
 describe('postService integration', () => {
   it('creates a post and lists/fetches it', async () => {
@@ -122,7 +133,7 @@ describe('postService integration', () => {
 
     await postService.toggleLike(post.id, actor);
     await postService.addComment(post.id, actor, 'Love this');
-    await settleNotifs();
+    await settleNotifs(2);
 
     const inbox = await UserNotificationModel.find({
       user_id: new Types.ObjectId(owner),

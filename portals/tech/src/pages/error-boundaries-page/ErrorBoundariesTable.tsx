@@ -1,44 +1,18 @@
-import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch, type TableQuerySnapshot } from '@duncit/table';
-import { formatDateTime, useTranslation } from '@duncit/app-settings';
-import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
+import { useMemo } from 'react';
+import { Chip } from '@mui/material';
+import { DuncitTable, type DuncitColumn } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
+import { envOptions } from '../../components/telemetry-identity';
 import type { ErrorLogRow } from '../error-logs-page/queries';
+import {
+  getErrorRowId,
+  renderEnvironment,
+  renderMessage,
+  renderUser,
+  renderWhen,
+  type ErrorLogTableProps,
+} from '../error-logs-page/errorLogCells';
 import { BOUNDARY_FILTER, parseBoundaryData, surfaceOf } from './boundary-data';
-
-const getRowId = (row: ErrorLogRow) => row.id;
-
-const renderEnvironment = (row: ErrorLogRow) => (
-  <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
-);
-
-const renderMessage = (row: ErrorLogRow) => (
-  <Typography variant="body2" noWrap title={row.error?.message ?? ''}>
-    {row.error?.message ?? '—'}
-  </Typography>
-);
-
-const renderUser = (row: ErrorLogRow) => <UserCell user={row.user} />;
-
-const renderWhen = (row: ErrorLogRow) => (
-  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-    {formatDateTime(row.created_at)}
-  </Typography>
-);
-
-interface Props {
-  fetchRows: TableFetch<ErrorLogRow>;
-  refetchRef: MutableRefObject<(() => void) | null>;
-  onOpen: (row: ErrorLogRow) => void;
-  /** DuncitTable's checkbox column, for the bulk delete above the table. */
-  selection: {
-    onChange: (rows: ErrorLogRow[]) => void;
-    clearRef: MutableRefObject<(() => void) | null>;
-  };
-  /** Reports the query WITH the pinned boundary marker, so a delete here stays inside these rows. */
-  onQueryChange: (snapshot: TableQuerySnapshot) => void;
-  toolbarActions?: ReactNode;
-}
 
 /** One row per crash a boundary caught, and one per Report an Issue pressed on it. */
 export default function ErrorBoundariesTable({
@@ -48,7 +22,7 @@ export default function ErrorBoundariesTable({
   selection,
   onQueryChange,
   toolbarActions,
-}: Readonly<Props>) {
+}: Readonly<ErrorLogTableProps>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorLogRow>[]>(() => {
     const eventLabel = (event?: string) =>
@@ -113,7 +87,7 @@ export default function ErrorBoundariesTable({
       tableId="tech-error-boundaries"
       columns={columns}
       fetchRows={fetchRows}
-      getRowId={getRowId}
+      getRowId={getErrorRowId}
       emptyText={t('tech.errorBoundaries.noCrashesYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('tech.errorBoundaries.search')}

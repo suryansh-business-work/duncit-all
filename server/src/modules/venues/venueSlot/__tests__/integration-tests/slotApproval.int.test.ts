@@ -7,7 +7,20 @@ import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 
 const ownerId = new Types.ObjectId().toString();
 const hostId = new Types.ObjectId().toString();
-const inDays = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
+const DAY_MS = 86_400_000;
+/**
+ * `d` whole days ahead at NOON venue time, plus any fraction of a day after it.
+ * Anchored at noon so a short slot never crosses midnight: computed from "now",
+ * a run late in the venue's evening pushed `inDays(4)`..`inDays(4.05)` over into
+ * the next day — the very leave day a test had just marked — and the slot under
+ * set-up was itself refused.
+ */
+const inDays = (d: number) => {
+  const whole = Math.floor(d);
+  const ymd = venueLocalYmd(new Date(Date.now() + whole * DAY_MS));
+  const noon = new Date(`${ymd}T12:00:00+05:30`).getTime();
+  return new Date(noon + (d - whole) * DAY_MS).toISOString();
+};
 
 async function seedVenue(over: Record<string, unknown> = {}) {
   const v = await VenueModel.create({

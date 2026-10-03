@@ -105,6 +105,9 @@ export const appConfig = {
         { label: 'Staging Sync', labelKey: 'shell.nav.dnsStagingSync', to: '/domain/staging', icon: 'compare' },
       ],
     },
+    // Beside Domain: the zone sends every host to this VPS, and the certificates
+    // here are what each of those hosts answers HTTPS with.
+    { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/ssl', icon: 'lock' },
     // Beside DNS Config: both decide something about every public website —
     // one where its name points, the other where its traffic is reported.
     { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },

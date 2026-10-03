@@ -49,6 +49,7 @@ import TableApiSettingsPage from './pages/table-api-settings';
 import DomainOverviewPage from './pages/domain/overview';
 import DnsRecordsPage from './pages/domain/dns-records';
 import DnsStagingPage from './pages/domain/staging';
+import SslPage from './pages/ssl';
 import GoogleAnalyticsPage from './pages/google-analytics';
 import Msg91SettingsPage from './pages/msg91-settings';
 // The Communications console's own pages, mounted here as they are — one
@@ -127,6 +128,8 @@ export default function App() {
         <Route path="/domain/staging" element={authed(<DnsStagingPage />)} />
         <Route path="/dns" element={<Navigate to="/domain/overview" replace />} />
         <Route path="/dns/records" element={<Navigate to="/domain/dns-records" replace />} />
+        {/* Every TLS certificate certbot holds on the VPS, beside the zone that points at it. */}
+        <Route path="/ssl" element={authed(<SslPage />)} />
         {/* The GA4 tag each Duncit website loads, one per website. */}
         <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
         {/* MSG91 OTP Logs: the widget's records, read live from MSG91, beside

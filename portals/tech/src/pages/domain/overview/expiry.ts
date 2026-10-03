@@ -13,11 +13,20 @@ export type ExpiryLevel = 'EXPIRED' | 'CRITICAL' | 'SOON' | 'HEALTHY' | 'UNKNOWN
 const CRITICAL_DAYS = 30;
 const SOON_DAYS = 90;
 
-export function expiryLevel(days: number | null | undefined): ExpiryLevel {
+/** Days-left boundaries for a level; a 90-day TLS certificate needs tighter ones than a domain. */
+export interface ExpiryThresholds {
+  critical: number;
+  soon: number;
+}
+
+export function expiryLevel(
+  days: number | null | undefined,
+  thresholds: ExpiryThresholds = { critical: CRITICAL_DAYS, soon: SOON_DAYS },
+): ExpiryLevel {
   if (days === null || days === undefined) return 'UNKNOWN';
   if (days < 0) return 'EXPIRED';
-  if (days <= CRITICAL_DAYS) return 'CRITICAL';
-  if (days <= SOON_DAYS) return 'SOON';
+  if (days <= thresholds.critical) return 'CRITICAL';
+  if (days <= thresholds.soon) return 'SOON';
   return 'HEALTHY';
 }
 

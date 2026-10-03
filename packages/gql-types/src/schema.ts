@@ -23012,6 +23012,10 @@ export type Query = {
   socialScheduledPosts: Array<SocialScheduledPost>;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
+  /** Tech > SSL: every certificate certbot holds on this VPS (SUPER_ADMIN / TECH_MANAGER). */
+  sslCertificates: SslOverview;
+  /** Dial each host on one certificate and report the certificate it serves. */
+  sslLiveCheck: Array<SslLiveCheck>;
   /**
    * Where a call should look for a path to the other browser.
    *
@@ -25719,6 +25723,11 @@ export type QuerySocialScheduledPostArgs = {
 
 export type QuerySocialScheduledPostsArgs = {
   view: SocialQueueView;
+};
+
+
+export type QuerySslLiveCheckArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -28837,6 +28846,59 @@ export type SomethingForYouItem = {
   /** At most 30 characters — the card is a fixed size on both surfaces. */
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
+};
+
+/** One certbot lineage on the VPS, read from its public cert.pem and renewal conf. */
+export type SslCertificate = {
+  __typename?: 'SslCertificate';
+  authenticator?: Maybe<Scalars['String']['output']>;
+  common_name?: Maybe<Scalars['String']['output']>;
+  coverage: SslCoverage;
+  days_remaining: Scalars['Int']['output'];
+  domains: Array<Scalars['String']['output']>;
+  fingerprint_sha256: Scalars['String']['output'];
+  installer?: Maybe<Scalars['String']['output']>;
+  issuer?: Maybe<Scalars['String']['output']>;
+  /** RSA 2048, ECDSA prime256v1, ... */
+  key_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** False for a Let's Encrypt staging certificate, which browsers do not trust. */
+  production_ca: Scalars['Boolean']['output'];
+  /** From this moment certbot's renewal timer will renew it. */
+  renewal_due_at: Scalars['String']['output'];
+  serial_number: Scalars['String']['output'];
+  valid_from: Scalars['String']['output'];
+  valid_to: Scalars['String']['output'];
+};
+
+/** How many hosts one certificate covers. */
+export type SslCoverage =
+  | 'MULTI'
+  | 'SINGLE'
+  | 'WILDCARD';
+
+/** What one hostname on a certificate actually serves right now. */
+export type SslLiveCheck = {
+  __typename?: 'SslLiveCheck';
+  /** False for a wildcard or a host outside duncit.com, which are not dialled. */
+  checked: Scalars['Boolean']['output'];
+  days_remaining?: Maybe<Scalars['Int']['output']>;
+  domain: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  protocol?: Maybe<Scalars['String']['output']>;
+  reachable: Scalars['Boolean']['output'];
+  serving_this: Scalars['Boolean']['output'];
+  trusted: Scalars['Boolean']['output'];
+  valid_to?: Maybe<Scalars['String']['output']>;
+};
+
+export type SslOverview = {
+  __typename?: 'SslOverview';
+  /** False when the host's certbot directory could not be read; error says why. */
+  available: Scalars['Boolean']['output'];
+  certificates: Array<SslCertificate>;
+  checked_at: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
 };
 
 /**

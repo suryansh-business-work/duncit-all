@@ -2076,6 +2076,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       localityHeading: 'Locality',
       localityCityHint: 'Localities in {city}, your selected city',
       localityPlaceholder: 'Search your locality',
+      editLocation: 'Edit location',
       localitiesEmpty: 'No matching localities',
       noOptions: 'No options available.',
       podTitleLabel: 'Pod title',
@@ -3379,6 +3380,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // rejected. mWeb and native render these identically (rule 27).
       validation: {
         bioTooLong: 'Bio must be {max} characters or fewer',
+        firstNameRequired: 'First name is required',
+        nameTooLong: 'Names must be {max} characters or fewer',
+        linkLabelRequired: 'Label is required',
+        linkLabelTooLong: 'Label must be {max} characters or fewer',
+        linkUrlRequired: 'URL is required',
+        linkUrlInvalid: 'Enter a valid URL',
+        linksMax: 'Add up to {max} links',
         firstNamePattern: 'First name can use letters, spaces, apostrophes and periods only',
         lastNamePattern: 'Last name can use letters, spaces, apostrophes and periods only',
       },
@@ -4100,6 +4108,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pickerUnavailable:
         'This browser cannot read contacts. Open the Duncit app to sync them — matches synced from the app show here too.',
       permissionDenied: 'Contact access was not allowed. You can enable it from your phone settings.',
+      permissionBlocked:
+        'Contact access is turned off for Duncit. Open Settings, allow Contacts, then come back and tap Allow contacts.',
+      openSettings: 'Open Settings',
       syncFailed: 'Your contacts could not be synced. Please try again.',
       filterAll: 'All',
       filterNearby: 'Nearby',

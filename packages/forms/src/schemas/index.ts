@@ -59,7 +59,16 @@ export {
   type DeleteAccountValues,
 } from './delete-account';
 
-export { makeProfileBioSchema, PROFILE_BIO_MAX_LENGTH } from './profile';
+export {
+  cleanProfileLinks,
+  makeProfileBioSchema,
+  makeProfileLinksSchema,
+  makeProfileNameSchemas,
+  PROFILE_BIO_MAX_LENGTH,
+  PROFILE_LINK_LABEL_MAX_LENGTH,
+  PROFILE_LINKS_MAX,
+  PROFILE_NAME_MAX_LENGTH,
+} from './profile';
 
 export {
   blankWithdrawValues,

@@ -54,7 +54,7 @@ export const msg91TypeDefs = /* GraphQL */ `
     most 3 days in one window and no end date in the future.
     """
     msg91WidgetLogs(start_date: String!, end_date: String!): Msg91WidgetLogPage!
-    "Per-day OTP widget traffic between two dates (yyyy-MM-dd, at most 31 days)."
+    "Per-day OTP widget traffic between two dates (yyyy-MM-dd, at most 5 days)."
     msg91WidgetAnalytics(start_date: String!, end_date: String!): Msg91WidgetAnalytics!
   }
 `;

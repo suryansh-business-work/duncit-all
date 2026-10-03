@@ -1119,7 +1119,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       logsSubtitle:
         'Every OTP widget request MSG91 recorded, read straight from MSG91 — up to 3 days at a time.',
       analyticsTitle: 'MSG91 OTP Analytics',
-      analyticsSubtitle: 'Daily OTP widget traffic from MSG91 — up to 31 days at a time.',
+      analyticsSubtitle: 'Daily OTP widget traffic from MSG91 — up to 5 days at a time.',
       from: 'From',
       to: 'To',
       load: 'Load',

@@ -10,7 +10,7 @@ import DaysTable from './DaysTable';
 /**
  * Tech → MSG91 OTP Logs → Analytics: the widget's daily traffic from MSG91 —
  * how many codes were asked for, how many were verified, and on which channel
- * — for a window of up to 31 days.
+ * — for a window of up to 5 days.
  */
 export default function Msg91AnalyticsPage() {
   const { t } = useTranslation();

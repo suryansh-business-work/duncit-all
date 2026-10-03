@@ -13,7 +13,7 @@ export type { Msg91WidgetDay, Msg91WidgetLog } from '@duncit/gql-types';
  * server's msg91.gateway (the server imports no @duncit/* package, rule 40).
  */
 export const LOGS_MAX_DAYS = 3;
-export const ANALYTICS_MAX_DAYS = 31;
+export const ANALYTICS_MAX_DAYS = 5;
 
 export const MSG91_CONFIGURED: TypedDocumentNode<{ msg91Configured: boolean }> = gql`
   query Msg91Configured {

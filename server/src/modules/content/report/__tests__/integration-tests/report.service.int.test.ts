@@ -110,7 +110,7 @@ describe('submit', () => {
     });
   });
 
-  it('treats a repeat report as an edit of the same row, keeping its handle and sending no mail', async () => {
+  it('treats a repeat report as an edit of the same row, keeping its handle and acknowledging it again', async () => {
     const reporter = oid();
     const snap = snapshot();
     const first = await reportService.submit(reporter, snap, { reason: 'SPAM' });
@@ -123,7 +123,13 @@ describe('submit', () => {
     const stored = await ContentReportModel.findById(first.id).lean<any>();
     expect(stored.reason).toBe('OTHER');
     expect(stored.details).toBe('actually worse');
-    expect(notice).not.toHaveBeenCalled();
+    expect(notice).toHaveBeenCalledTimes(1);
+    expect(notice).toHaveBeenCalledWith({
+      template: 'content-report-received',
+      userId: stored.reporter_id,
+      report_no: first.report_no,
+      reason: 'Something else',
+    });
   });
 
   it('logs a failed acknowledgement mail without failing the report', async () => {

@@ -54,11 +54,13 @@ export function useReportCategories(enabled: boolean) {
  * Report a post or a story to the Legal team.
  *
  * `reason` is a report category key. A repeat report from the same person
- * edits their existing one, so this is safe to call twice.
+ * edits their existing one, so this is safe to call twice. Answers with the
+ * report's reference — the one its acknowledgement email carries.
  */
-export async function reportPost(id: string, reason: string, details: string): Promise<void> {
-  await graphqlRequest<
+export async function reportPost(id: string, reason: string, details: string): Promise<string> {
+  const data = await graphqlRequest<
     { reportPost: { id: string; report_no: string } },
     { id: string; reason: string; details: string }
   >(ReportPostDocument, { id, reason, details }, { auth: true });
+  return data.reportPost.report_no;
 }

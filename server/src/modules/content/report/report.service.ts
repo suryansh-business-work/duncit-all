@@ -276,46 +276,49 @@ export const reportService = {
       fail('BAD_USER_INPUT', 'Tell us what is wrong with this content');
     }
 
-    const doc = await ContentReportModel.findOne({
+    const existing = await ContentReportModel.findOne({
       reporter_id: new Types.ObjectId(reporterId),
       target_type: snapshot.target_type,
       target_id: targetId,
     });
 
-    if (doc) {
-      doc.reason = category.key;
-      doc.details = details;
-      await doc.save();
-      return { id: String(doc.id), report_no: doc.report_no ?? '' };
+    let report: IContentReport;
+    if (existing) {
+      existing.reason = category.key;
+      existing.details = details;
+      report = await existing.save();
+    } else {
+      report = await ContentReportModel.create({
+        target_type: snapshot.target_type,
+        target_id: targetId,
+        target_owner_id: toOid(snapshot.target_owner_id),
+        club_id: toOid(snapshot.club_id),
+        target_preview_url: snapshot.target_preview_url ?? '',
+        target_caption: snapshot.target_caption ?? '',
+        reason: category.key,
+        details,
+        reporter_id: new Types.ObjectId(reporterId),
+      });
     }
-
-    const created = await ContentReportModel.create({
-      target_type: snapshot.target_type,
-      target_id: targetId,
-      target_owner_id: toOid(snapshot.target_owner_id),
-      club_id: toOid(snapshot.club_id),
-      target_preview_url: snapshot.target_preview_url ?? '',
-      target_caption: snapshot.target_caption ?? '',
-      reason: category.key,
-      details,
-      reporter_id: new Types.ObjectId(reporterId),
-    });
     logs.server.info('report.service', 'submit', {
-      report_no: created.report_no,
-      target_type: created.target_type,
-      reason: created.reason,
+      report_no: report.report_no,
+      target_type: report.target_type,
+      reason: report.reason,
+      repeat: !!existing,
     });
-    // A first report only: a repeat is an edit, and mailing again would read
-    // as a second report.
+    // Every filing is acknowledged, a repeat included: it carries the same
+    // reference, so it confirms the latest version rather than reading as a
+    // second report — and a person who reported again and heard nothing back
+    // could not tell whether it went through. Only the reporter is written to.
     sendNotices([
       {
         template: 'content-report-received',
-        userId: created.reporter_id,
-        report_no: created.report_no ?? '',
+        userId: report.reporter_id,
+        report_no: report.report_no ?? '',
         reason: category.label,
       },
     ]);
-    return { id: String(created.id), report_no: created.report_no ?? '' };
+    return { id: String(report.id), report_no: report.report_no ?? '' };
   },
 
   async table(input?: TableQueryInput) {

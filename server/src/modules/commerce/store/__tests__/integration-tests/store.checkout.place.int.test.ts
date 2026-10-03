@@ -27,6 +27,7 @@ import { createRazorpayOrder, getRazorpayKeys, isRazorpayConfigured } from '@mod
 import { otpService } from '@modules/platform/otp/otp.service';
 import { StoreProductModel } from '../../storeProduct.model';
 import { StoreSettingsModel } from '../../storeSettings.model';
+import { StoreServiceablePincodeModel } from '../../storeServiceablePincode.model';
 import { StoreCartModel } from '../../storeCart.model';
 import { StoreSubscriptionModel } from '../../storeSubscription.model';
 import { storeCheckoutService } from '../../store.checkout.service';
@@ -116,14 +117,15 @@ describe('storeCheckoutService.place — refusals', () => {
   });
 
   it.each([
-    ['The minimum order value is 5000', { min_order_value: 5000 }, {}, {}],
-    ['We cannot deliver to this pincode yet', { serviceable_pincodes_enabled: true, serviceable_pincodes: ['110001'] }, {}, {}],
-    ['Invalid or inactive coupon code', {}, { coupon_code: 'NOPE10' }, {}],
-    ['Cash on Delivery is not available for this order', {}, { payment_method: 'COD' }, {}],
-    ['Verify your phone number to place a Cash on Delivery order', { cod_enabled: true }, { payment_method: 'COD' }, {}],
-    ['Drools Adult Chicken 3 kg is out of stock', {}, {}, { inventory_count: 0 }],
-  ])('refuses "%s" and writes no payment', async (message, settings, args, productOver) => {
+    ['The minimum order value is 5000', { min_order_value: 5000 }, {}, {}, []],
+    ['We cannot deliver to this pincode yet', {}, {}, {}, ['110001']],
+    ['Invalid or inactive coupon code', {}, { coupon_code: 'NOPE10' }, {}, []],
+    ['Cash on Delivery is not available for this order', {}, { payment_method: 'COD' }, {}, []],
+    ['Verify your phone number to place a Cash on Delivery order', { cod_enabled: true }, { payment_method: 'COD' }, {}, []],
+    ['Drools Adult Chicken 3 kg is out of stock', {}, {}, { inventory_count: 0 }, []],
+  ])('refuses "%s" and writes no payment', async (message, settings, args, productOver, servedPincodes) => {
     await openStore(settings);
+    await StoreServiceablePincodeModel.create(servedPincodes.map((pincode) => ({ pincode })));
     await seedBasket(`g:${TOKEN}`, 2, productOver);
 
     await expect(storeCheckoutService.place(guest, order(args))).rejects.toMatchObject({

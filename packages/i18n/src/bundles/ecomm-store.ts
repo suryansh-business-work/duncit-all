@@ -113,7 +113,6 @@ export const ECOMM_STORE_BUNDLE: NestedCatalogue = {
     },
     card: {
       addNamed: 'Add {name} to cart',
-      chooseOptionsNamed: 'Choose options for {name}',
       outOfStock: 'Out of stock',
       lowStock: 'Few left',
     },

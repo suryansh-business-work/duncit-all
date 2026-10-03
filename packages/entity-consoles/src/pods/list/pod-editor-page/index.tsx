@@ -116,6 +116,7 @@ export default function AdminPodEditorPage({
             busy={editor.busy}
             error={editor.opError}
             clubs={lookups.clubs}
+            locations={lookups.locations}
             venues={lookups.approvedVenues}
             users={lookups.approvedHosts}
             products={lookups.inventoryProducts}

@@ -20,6 +20,7 @@ import {
   passwordResetService,
   type PasswordResetLookup,
 } from './password-reset.service';
+import { signOutEverywhere } from './sign-out-everywhere';
 import { validate } from '@utils/validate';
 import { assertEligibleDob } from '@utils/age';
 import { referralService } from '@modules/engagement/referral/referral.service';
@@ -242,6 +243,9 @@ export const authResolvers = {
     },
     disconnectGoogleAccount: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       return userService.disconnectGoogleAccount(await requireUserId(ctx));
+    },
+    signOutEverywhere: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      return signOutEverywhere(await requireUserId(ctx));
     },
     seedSuperAdmin: async () => {
       return userService.seedSuperAdmin();

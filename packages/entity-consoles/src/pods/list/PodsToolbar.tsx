@@ -1,8 +1,8 @@
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import PlaceIcon from '@mui/icons-material/Place';
 import { useTranslation } from '@duncit/app-settings';
 import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
+import ClubLocationLabel from './ClubLocationLabel';
 import { POD_LIFECYCLE_OPTIONS, type PodLifecycleFilter } from './podLifecycle';
 import { clubLocationLabel, type PodFilterClub, type PodFilterLocation } from './podListFilters';
 
@@ -15,20 +15,6 @@ interface Props {
   setLifecycle: (lifecycle: PodLifecycleFilter) => void;
   category: AdminCategoryValue;
   setCategory: (value: AdminCategoryValue) => void;
-}
-
-/** "Who Even Are We? | (pin) Gomti Nagar, Lucknow" — the club and where it
- * runs. The pin is an icon, not a glyph (rule 31); hoisted to module scope. */
-function ClubOptionLabel({ name, location }: Readonly<{ name: string; location: string }>) {
-  if (!location) return <>{name}</>;
-  return (
-    <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-      {name}
-      {' | '}
-      <PlaceIcon fontSize="inherit" aria-hidden />
-      {location}
-    </Box>
-  );
 }
 
 export default function PodsToolbar({
@@ -110,7 +96,7 @@ export default function PodsToolbar({
           <MenuItem value="">{t('admin.pods.allClubs')}</MenuItem>
           {clubs.map((c) => (
             <MenuItem key={c.id} value={c.id}>
-              <ClubOptionLabel name={c.club_name} location={clubLocationLabel(c, locations)} />
+              <ClubLocationLabel name={c.club_name} location={clubLocationLabel(c, locations)} />
             </MenuItem>
           ))}
         </TextField>

@@ -1,5 +1,6 @@
-import { Alert, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from '../../i18n/useTranslation';
+import { ProfileSection } from './ProfileSection';
 
 function humaniseRole(role: string): string {
   return role
@@ -9,49 +10,20 @@ function humaniseRole(role: string): string {
     .join(' ');
 }
 
-interface Props {
-  /** A save just landed — say so above the roles. */
-  saved: boolean;
-  roles: readonly string[];
-}
-
-/** The access roles the account holds, under the "saved" confirmation. */
-export function ProfileRoles({ saved, roles }: Readonly<Props>) {
+/** The access roles the account holds. Read-only: roles are granted by an admin. */
+export function ProfileRoles({ roles }: Readonly<{ roles: readonly string[] }>) {
   const { t } = useTranslation();
   return (
-    <>
-      {saved && (
-        <Alert data-testid="profile-saved" severity="success" sx={{ mb: 2 }}>
-          {t('shell.profile.updated')}
-        </Alert>
-      )}
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 800,
-          letterSpacing: 0.4
-        }}>
-        {t('shell.profile.accessRoles')}
-      </Typography>
-      <Stack
-        direction="row"
-        spacing={1}
-        useFlexGap
-        sx={{
-          flexWrap: "wrap",
-          mt: 1
-        }}>
+    <ProfileSection testId="profile-roles" title={t('shell.profile.accessRolesTitle')}>
+      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
         {roles.length > 0 ? (
           roles.map((role) => <Chip key={role} data-testid={`profile-role-${role}`} label={humaniseRole(role)} size="small" />)
         ) : (
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('shell.profile.noRoles')}
           </Typography>
         )}
       </Stack>
-    </>
+    </ProfileSection>
   );
 }

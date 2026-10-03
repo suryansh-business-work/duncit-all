@@ -7,6 +7,8 @@ export interface PodsColumnDeps {
   t: Translate;
   showProducts: boolean;
   clubName: (id: string) => string;
+  /** Where the club runs ("Gomti Nagar, Lucknow"); '' when unknown. */
+  clubLocation: (id: string) => string;
   venueName: (id: string) => string;
   locName: (id: string) => string;
   /** The club's sub-category minimum people (0 = none). */

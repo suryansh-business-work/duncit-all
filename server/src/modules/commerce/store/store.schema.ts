@@ -178,6 +178,8 @@ export const storeTypeDefs = /* GraphQL */ `
     mrp: Float!
     discount_pct: Int!
     has_variants: Boolean!
+    "The variant the card's price and photo are for — what its add-to-cart button adds. Blank for a product with no variants."
+    lead_variant_id: String!
     in_stock: Boolean!
     low_stock: Boolean!
     badge: String!

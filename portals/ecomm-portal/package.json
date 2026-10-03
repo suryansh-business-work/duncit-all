@@ -25,6 +25,7 @@
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/regex": "workspace:*",
     "@duncit/rich-text": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",

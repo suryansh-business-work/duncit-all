@@ -75,7 +75,10 @@ export interface IStoreSettings extends Document {
   terms_html: string;
   about_html: string;
   social_links: IStoreSocialLink[];
-  /** On: only `serviceable_pincodes` are delivered to; off: wherever the courier reaches. */
+  /**
+   * Legacy: the pincode list once kept here. `migrateServiceablePincodes` moves
+   * it into StoreServiceablePincode and empties it; nothing else reads it.
+   */
   serviceable_pincodes_enabled: boolean;
   serviceable_pincodes: string[];
   occasions: IStoreOccasion[];
@@ -161,12 +164,6 @@ const storeSettingsSchema = new Schema<IStoreSettings>(
 );
 
 export const StoreSettingsModel = model<IStoreSettings>('StoreSettings', storeSettingsSchema);
-
-/** Whether the store's own pincode list (when it is switched on) allows delivery to `pincode`. */
-export function isPincodeServed(settings: Pick<IStoreSettings, 'serviceable_pincodes_enabled' | 'serviceable_pincodes'>, pincode: string): boolean {
-  if (!settings.serviceable_pincodes_enabled || settings.serviceable_pincodes.length === 0) return true;
-  return settings.serviceable_pincodes.includes(String(pincode ?? '').trim());
-}
 
 /**
  * The festive window open at `nowMs`, if any — inactive windows and unusable

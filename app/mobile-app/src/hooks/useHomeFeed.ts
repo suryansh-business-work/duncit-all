@@ -59,6 +59,11 @@ export interface VibeCategory {
  * only survived if it had pods and the pod set was already super-scoped. Turn
  * the admin toggle ON and `isVisible` was always true, so every category from
  * EVERY super category appeared under whichever super the user had picked. */
+/** An admin-deactivated category/sub never becomes a Home chip — not even with
+ *  the "show all categories" toggle on (mWeb twin: useHomeData). The catalogue
+ *  keeps it so pod-card labels still resolve. */
+const isActiveCategory = (c: HomeCategory) => c.is_active !== false;
+
 function deriveVibeCategories(
   allChips: HomeCategory[],
   podCategoryIds: Set<string | null | undefined>,
@@ -81,14 +86,14 @@ function deriveVibeCategories(
     }
     return false;
   };
-  const isVisible = (chipId: string) => showAllVibes || chipHasPods(chipId);
+  const isVisible = (c: HomeCategory) => isActiveCategory(c) && (showAllVibes || chipHasPods(c.id));
   const inSuper = (chipId: string) => !selectedSuperId || isDescendant(chipId, selectedSuperId);
   const categories = allChips
-    .filter((c) => c.level === 'CATEGORY' && inSuper(c.id) && isVisible(c.id))
+    .filter((c) => c.level === 'CATEGORY' && inSuper(c.id) && isVisible(c))
     .sort((a, b) => a.name.localeCompare(b.name));
   const subsByParent = new Map<string, HomeCategory[]>();
   allChips
-    .filter((c) => c.level === 'SUB' && inSuper(c.id) && isVisible(c.id))
+    .filter((c) => c.level === 'SUB' && inSuper(c.id) && isVisible(c))
     .forEach((s) => {
       const key = s.parent_id ?? '';
       const arr = subsByParent.get(key) ?? [];
@@ -155,7 +160,7 @@ function deriveHome(
   const podCategoryIds = new Set(
     allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
   );
-  const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
+  const categoryChips = allChips.filter((c) => isActiveCategory(c) && podCategoryIds.has(c.id));
   const vibeCategories = deriveVibeCategories(
     allChips,
     podCategoryIds,

@@ -297,6 +297,12 @@ export const authTypeDefs = gql`
     email: String
     has_password: Boolean!
     google: ConnectedGoogleAccount
+    "ISO timestamp of the last password change or reset. Null when it was never changed."
+    password_changed_at: String
+    "ISO timestamp of the last successful sign-in."
+    last_login_at: String
+    "How that sign-in was made (EMAIL, OTP, GOOGLE or APPLE)."
+    last_login_provider: String
   }
 
   type SeedAdminResult {
@@ -451,6 +457,14 @@ export const authTypeDefs = gql`
     module. Nothing in this module deletes an account any more.
     """
     requestAccountDeletionOtp: OtpRequestResult!
+    """
+    Auth-required: end every session this account has open, this one included.
+
+    Seals the account the same way a password reset does — every token issued
+    before now stops being accepted on any device — so the caller signs in
+    again afterwards.
+    """
+    signOutEverywhere: Boolean!
     seedSuperAdmin: SeedAdminResult!
   }
 `;

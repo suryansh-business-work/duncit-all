@@ -4463,6 +4463,12 @@ export type ConnectedAccounts = {
   email?: Maybe<Scalars['String']['output']>;
   google?: Maybe<ConnectedGoogleAccount>;
   has_password: Scalars['Boolean']['output'];
+  /** ISO timestamp of the last successful sign-in. */
+  last_login_at?: Maybe<Scalars['String']['output']>;
+  /** How that sign-in was made (EMAIL, OTP, GOOGLE or APPLE). */
+  last_login_provider?: Maybe<Scalars['String']['output']>;
+  /** ISO timestamp of the last password change or reset. Null when it was never changed. */
+  password_changed_at?: Maybe<Scalars['String']['output']>;
 };
 
 /** The Google account currently linked to a Duncit account. */
@@ -12463,6 +12469,14 @@ export type Mutation = {
   signContract: Contract;
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
+  /**
+   * Auth-required: end every session this account has open, this one included.
+   *
+   * Seals the account the same way a password reset does — every token issued
+   * before now stops being accepted on any device — so the caller signs in
+   * again afterwards.
+   */
+  signOutEverywhere: Scalars['Boolean']['output'];
   signupWithApple: AuthPayload;
   signupWithGoogle: AuthPayload;
   /** The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback, which sends it on to the return_to page. */
@@ -12554,6 +12568,7 @@ export type Mutation = {
   storeDeletePetType: Scalars['Boolean']['output'];
   storeDeleteReview: Scalars['Boolean']['output'];
   storeDeleteSection: Scalars['Boolean']['output'];
+  storeDeleteServiceablePincode: Scalars['Boolean']['output'];
   /** Delete a warehouse ShipRocket does not hold and no product ships from. */
   storeDeleteWarehouse: Scalars['Boolean']['output'];
   /** Apply a packaging CSV, matched by product or variant SKU. */
@@ -12592,6 +12607,8 @@ export type Mutation = {
   /** Create (no id) or update an ecomm product. DRAFT saves what is filled in; PUBLISHED first checks it can be sold, then puts it on the store. */
   storeSaveProduct: StoreAdminProduct;
   storeSaveSection: StoreAdminSection;
+  /** Create (no id) or update one serviceable pincode. */
+  storeSaveServiceablePincode: StoreServiceablePincode;
   storeSaveSettings: StoreSettings;
   /** Add the pickup address to the ShipRocket account, then keep the account's copy of it here. Nothing is saved if ShipRocket refuses it. */
   storeSaveWarehouse: BrandPickupLocation;
@@ -16417,6 +16434,11 @@ export type MutationStoreDeleteSectionArgs = {
 };
 
 
+export type MutationStoreDeleteServiceablePincodeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationStoreDeleteWarehouseArgs = {
   id: Scalars['ID']['input'];
 };
@@ -16578,6 +16600,12 @@ export type MutationStoreSaveProductArgs = {
 export type MutationStoreSaveSectionArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: StoreSectionInput;
+};
+
+
+export type MutationStoreSaveServiceablePincodeArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: StoreServiceablePincodeInput;
 };
 
 
@@ -23012,6 +23040,10 @@ export type Query = {
   socialScheduledPosts: Array<SocialScheduledPost>;
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
+  /** Tech > SSL: every certificate certbot holds on this VPS (SUPER_ADMIN / TECH_MANAGER). */
+  sslCertificates: SslOverview;
+  /** Dial each host on one certificate and report the certificate it serves. */
+  sslLiveCheck: Array<SslLiveCheck>;
   /**
    * Where a call should look for a path to the other browser.
    *
@@ -23113,6 +23145,7 @@ export type Query = {
   storeReturnsTable: StoreReturnTablePage;
   storeReviewsTable: StoreReviewTablePage;
   storeSearch: StoreSearchPage;
+  storeServiceablePincodesTable: StoreServiceablePincodeTablePage;
   storeSettings: StorePublicSettings;
   /** Orders waiting on an operator: failed bookings, a low wallet, failed deliveries. */
   storeShipmentAlerts: Array<ProductOrder>;
@@ -25722,6 +25755,11 @@ export type QuerySocialScheduledPostsArgs = {
 };
 
 
+export type QuerySslLiveCheckArgs = {
+  name: Scalars['String']['input'];
+};
+
+
 export type QueryStaffCallsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   peer_id: Scalars['ID']['input'];
@@ -25941,6 +25979,11 @@ export type QueryStoreReviewsTableArgs = {
 
 export type QueryStoreSearchArgs = {
   input: StoreSearchInput;
+};
+
+
+export type QueryStoreServiceablePincodesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -28839,6 +28882,59 @@ export type SomethingForYouItem = {
   updated_at: Scalars['String']['output'];
 };
 
+/** One certbot lineage on the VPS, read from its public cert.pem and renewal conf. */
+export type SslCertificate = {
+  __typename?: 'SslCertificate';
+  authenticator?: Maybe<Scalars['String']['output']>;
+  common_name?: Maybe<Scalars['String']['output']>;
+  coverage: SslCoverage;
+  days_remaining: Scalars['Int']['output'];
+  domains: Array<Scalars['String']['output']>;
+  fingerprint_sha256: Scalars['String']['output'];
+  installer?: Maybe<Scalars['String']['output']>;
+  issuer?: Maybe<Scalars['String']['output']>;
+  /** RSA 2048, ECDSA prime256v1, ... */
+  key_type: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** False for a Let's Encrypt staging certificate, which browsers do not trust. */
+  production_ca: Scalars['Boolean']['output'];
+  /** From this moment certbot's renewal timer will renew it. */
+  renewal_due_at: Scalars['String']['output'];
+  serial_number: Scalars['String']['output'];
+  valid_from: Scalars['String']['output'];
+  valid_to: Scalars['String']['output'];
+};
+
+/** How many hosts one certificate covers. */
+export type SslCoverage =
+  | 'MULTI'
+  | 'SINGLE'
+  | 'WILDCARD';
+
+/** What one hostname on a certificate actually serves right now. */
+export type SslLiveCheck = {
+  __typename?: 'SslLiveCheck';
+  /** False for a wildcard or a host outside duncit.com, which are not dialled. */
+  checked: Scalars['Boolean']['output'];
+  days_remaining?: Maybe<Scalars['Int']['output']>;
+  domain: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  protocol?: Maybe<Scalars['String']['output']>;
+  reachable: Scalars['Boolean']['output'];
+  serving_this: Scalars['Boolean']['output'];
+  trusted: Scalars['Boolean']['output'];
+  valid_to?: Maybe<Scalars['String']['output']>;
+};
+
+export type SslOverview = {
+  __typename?: 'SslOverview';
+  /** False when the host's certbot directory could not be read; error says why. */
+  available: Scalars['Boolean']['output'];
+  certificates: Array<SslCertificate>;
+  checked_at: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+};
+
 /**
  * A call that happened between two coworkers.
  *
@@ -30520,6 +30616,8 @@ export type StoreProductCard = {
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
   in_stock: Scalars['Boolean']['output'];
+  /** The variant the card's price and photo are for — what its add-to-cart button adds. Blank for a product with no variants. */
+  lead_variant_id: Scalars['String']['output'];
   low_stock: Scalars['Boolean']['output'];
   /** Compare-at price; 0 when there is none. */
   mrp: Scalars['Float']['output'];
@@ -30988,6 +31086,35 @@ export type StoreSectionProductSource =
   | 'MANUAL'
   | 'NEWEST';
 
+/** A pincode the store delivers to; once any exist, only the active ones are served. */
+export type StoreServiceablePincode = {
+  __typename?: 'StoreServiceablePincode';
+  area: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type StoreServiceablePincodeInput = {
+  area?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Six digits. */
+  pincode: Scalars['String']['input'];
+  state?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type StoreServiceablePincodeTablePage = {
+  __typename?: 'StoreServiceablePincodeTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<StoreServiceablePincode>;
+  total: Scalars['Int']['output'];
+};
+
 export type StoreSettings = {
   __typename?: 'StoreSettings';
   about_html: Scalars['String']['output'];
@@ -31023,8 +31150,9 @@ export type StoreSettings = {
   returns_policy_html: Scalars['String']['output'];
   seo_description: Scalars['String']['output'];
   seo_title: Scalars['String']['output'];
+  /** @deprecated Read storeServiceablePincodesTable. */
   serviceable_pincodes: Array<Scalars['String']['output']>;
-  /** On: only the pincodes in serviceable_pincodes are delivered to. */
+  /** @deprecated Read storeServiceablePincodesTable. */
   serviceable_pincodes_enabled: Scalars['Boolean']['output'];
   shipping_policy_html: Scalars['String']['output'];
   social_links: Array<StoreSocialLink>;
@@ -31074,8 +31202,9 @@ export type StoreSettingsInput = {
   returns_policy_html?: InputMaybe<Scalars['String']['input']>;
   seo_description?: InputMaybe<Scalars['String']['input']>;
   seo_title?: InputMaybe<Scalars['String']['input']>;
-  /** 6-digit pincodes; anything else is dropped. */
+  /** Ignored: serviceable pincodes are saved with storeSaveServiceablePincode. */
   serviceable_pincodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Ignored: serviceable pincodes are saved with storeSaveServiceablePincode. */
   serviceable_pincodes_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   shipping_policy_html?: InputMaybe<Scalars['String']['input']>;
   social_links?: InputMaybe<Array<StoreSocialLinkInput>>;

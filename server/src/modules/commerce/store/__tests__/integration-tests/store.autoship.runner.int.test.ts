@@ -23,6 +23,7 @@ import { settle } from '@modules/finance/payment/payment.service';
 import { sendEmail } from '@services/email/email.service';
 import { StoreProductModel } from '../../storeProduct.model';
 import { StoreSettingsModel } from '../../storeSettings.model';
+import { StoreServiceablePincodeModel } from '../../storeServiceablePincode.model';
 import { StoreSubscriptionModel } from '../../storeSubscription.model';
 import { storeAutoshipService } from '../../store.autoship.service';
 
@@ -227,12 +228,13 @@ describe('storeAutoshipService.runDue — a cycle that cannot be booked', () => 
   });
 
   it.each([
-    ['Cash on Delivery is switched off', { cod_enabled: false }, {}],
-    ['We cannot deliver to this address', { serviceable_pincodes_enabled: true, serviceable_pincodes: ['110001'] }, {}],
-    ['Cash on Delivery is not available for this order', { cod_max_order: 500 }, {}],
-    ['An item in your cart is no longer available', {}, { status: 'DRAFT' }],
-  ])('records "%s" and books nothing', async (reason, settings, productOver) => {
+    ['Cash on Delivery is switched off', { cod_enabled: false }, {}, []],
+    ['We cannot deliver to this address', {}, {}, ['110001']],
+    ['Cash on Delivery is not available for this order', { cod_max_order: 500 }, {}, []],
+    ['An item in your cart is no longer available', {}, { status: 'DRAFT' }, []],
+  ])('records "%s" and books nothing', async (reason, settings, productOver, servedPincodes) => {
     await openStore(settings);
+    await StoreServiceablePincodeModel.create(servedPincodes.map((pincode) => ({ pincode })));
     const buyer = await seedBuyer();
     const product = await seedProduct(productOver);
     const sub = await seedSub(buyer._id, product._id);

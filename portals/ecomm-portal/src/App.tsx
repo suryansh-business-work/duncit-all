@@ -23,6 +23,7 @@ import CollectionEditorPage from './pages/collections/collection-editor';
 import HomePageBuilder from './pages/home-page/HomePageBuilder';
 import ReviewsPage from './pages/reviews/ReviewsPage';
 import CouponsPage from './pages/coupons/CouponsPage';
+import ServiceablePincodesPage from './pages/serviceable-pincodes/ServiceablePincodesPage';
 import CartsPage from './pages/carts/CartsPage';
 import StockAlertsPage from './pages/stock-alerts/StockAlertsPage';
 import AutoshipPage from './pages/autoship/AutoshipPage';
@@ -44,6 +45,7 @@ const SIGNED_IN: ReadonlyArray<{ path: string; element: ReactElement }> = [
   { path: '/shipping', element: <ShiprocketPage /> },
   { path: '/shipping/needs-action', element: <NeedsActionPage /> },
   { path: '/shipping/cod', element: <CodLedgerPage /> },
+  { path: '/shipping/pincodes', element: <ServiceablePincodesPage /> },
   { path: '/returns', element: <ReturnsPage /> },
   { path: '/returns/:id', element: <ReturnDetailPage /> },
   { path: '/customers', element: <CustomersPage /> },

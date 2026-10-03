@@ -243,7 +243,34 @@ describe('Connected Accounts', () => {
 
   it('myConnectedAccounts reports the password and no Google link', async () => {
     const { id, email } = await makeUser();
-    expect(await userService.myConnectedAccounts(id)).toEqual({ email, has_password: true, google: null });
+    expect(await userService.myConnectedAccounts(id)).toEqual({
+      email,
+      has_password: true,
+      google: null,
+      password_changed_at: null,
+      last_login_at: null,
+      last_login_provider: null,
+    });
+  });
+
+  it('myConnectedAccounts reports when the password changed and the last sign-in', async () => {
+    const { id } = await makeUser();
+    const changedAt = new Date('2026-09-01T10:00:00.000Z');
+    const loginAt = new Date('2026-10-02T08:30:00.000Z');
+    await UserModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          'security.password_changed_at': changedAt,
+          'auth.last_login_at': loginAt,
+          'auth.last_login_provider': 'GOOGLE',
+        },
+      }
+    );
+    const res = await userService.myConnectedAccounts(id);
+    expect(res.password_changed_at).toBe(changedAt.toISOString());
+    expect(res.last_login_at).toBe(loginAt.toISOString());
+    expect(res.last_login_provider).toBe('GOOGLE');
   });
 
   it('myConnectedAccounts falls back to the account email for a legacy Google signup', async () => {

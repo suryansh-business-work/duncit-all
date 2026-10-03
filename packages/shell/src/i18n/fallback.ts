@@ -11,9 +11,41 @@ import {
   FULFILMENT_BUNDLE,
   type FlatCatalogue,
   CHANGE_REQUEST_BUNDLE,
+  MAIL_PREFERENCE_BUNDLE,
+  MWEB_BUNDLE,
+  WHATSAPP_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
+
+/** One branch of a nested bundle, or nothing when it is a leaf or missing. */
+function branch(catalogue: NestedCatalogue | string | undefined, key: string): NestedCatalogue {
+  if (!catalogue || typeof catalogue === 'string') return {};
+  const value = catalogue[key];
+  return value && typeof value !== 'string' ? value : {};
+}
+
+const MWEB = branch(MWEB_BUNDLE, 'mweb');
+
+/**
+ * The `mweb.*` copy the profile page renders through shared rules — the
+ * password and profile schemas in @duncit/forms and the channel labels in
+ * @duncit/utils were written for mWeb first and keep their keys, so the page
+ * ships only those branches rather than the whole mWeb bundle.
+ */
+const PROFILE_MWEB_SLICE: NestedCatalogue = {
+  mweb: {
+    common: {
+      language: branch(MWEB, 'common').language ?? '',
+      languageSaved: branch(MWEB, 'common').languageSaved ?? '',
+    },
+    accountEdit: branch(MWEB, 'accountEdit'),
+    changePassword: branch(MWEB, 'changePassword'),
+    commPreference: branch(MWEB, 'commPreference'),
+    auth: { validation: branch(branch(MWEB, 'auth'), 'validation') },
+    resetPassword: { validation: branch(branch(MWEB, 'resetPassword'), 'validation') },
+  },
+};
 
 /**
  * The portal shell's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -48,6 +80,12 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   // changeRequest.* is the Request Change flow, rendered by the Partners and
   // Admin consoles AND by mWeb and native off the same pod row (rule 27).
   ...CHANGE_REQUEST_BUNDLE,
+  // The profile page's Notifications tab — the person's own email and WhatsApp
+  // preferences, the same categories mWeb shows. Only the person's own WhatsApp
+  // branch: the admin and marketing consoles' copy stays theirs.
+  ...MAIL_PREFERENCE_BUNDLE,
+  whatsappPreference: branch(WHATSAPP_BUNDLE, 'whatsappPreference'),
+  ...PROFILE_MWEB_SLICE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

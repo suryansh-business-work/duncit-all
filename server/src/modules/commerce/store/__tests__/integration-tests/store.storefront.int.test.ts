@@ -16,6 +16,7 @@ import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from '../../st
 import { StoreCollectionModel, StoreHomeSectionModel } from '../../storeMerch.model';
 import { StorePageModel } from '../../storePage.model';
 import { StoreSettingsModel } from '../../storeSettings.model';
+import { StoreServiceablePincodeModel } from '../../storeServiceablePincode.model';
 import { storeStorefrontService } from '../../store.storefront.service';
 
 /**
@@ -78,11 +79,9 @@ describe('storeStorefrontService.settings', () => {
     expect(mockRazorpay).toHaveBeenCalledWith('petstore');
   });
 
-  it('reports a pincode list only when it is switched on AND has entries, and paints the open occasion', async () => {
+  it('reports a pincode list once the store keeps any pincode, and paints the open occasion', async () => {
     const now = Date.now();
     await setSettings({
-      serviceable_pincodes_enabled: true,
-      serviceable_pincodes: [],
       social_links: [{ label: 'Instagram', url: 'https://instagram.com/duncitpets' }],
       occasions: [
         {
@@ -111,7 +110,8 @@ describe('storeStorefrontService.settings', () => {
       ends_at: new Date(now + DAY).toISOString(),
     });
 
-    await setSettings({ serviceable_pincodes: [GURUGRAM] });
+    // Even a list of only switched-off pincodes limits delivery — to nowhere.
+    await StoreServiceablePincodeModel.create({ pincode: GURUGRAM, is_active: false });
     expect((await storeStorefrontService.settings()).serviceable_pincodes_enabled).toBe(true);
   });
 });
@@ -206,13 +206,14 @@ describe('storeStorefrontService.navigation, page and landing pages', () => {
 });
 
 describe('storeStorefrontService.pincodeServiceable', () => {
-  it('answers from the operator’s list when one is on, and allows any valid pincode when it is off', async () => {
+  it('serves only the active pincodes once the store keeps a list, and any valid pincode while it keeps none', async () => {
     expect(await storeStorefrontService.pincodeServiceable('122 002')).toEqual({ pincode: GURUGRAM, restricted: false, serviceable: true });
     expect(await storeStorefrontService.pincodeServiceable('1220')).toEqual({ pincode: '1220', restricted: false, serviceable: false });
 
-    await setSettings({ serviceable_pincodes_enabled: true, serviceable_pincodes: [GURUGRAM] });
+    await StoreServiceablePincodeModel.create([{ pincode: GURUGRAM }, { pincode: '560001', is_active: false }]);
     expect(await storeStorefrontService.pincodeServiceable(GURUGRAM)).toEqual({ pincode: GURUGRAM, restricted: true, serviceable: true });
     expect(await storeStorefrontService.pincodeServiceable('560001')).toEqual({ pincode: '560001', restricted: true, serviceable: false });
+    expect(await storeStorefrontService.pincodeServiceable('110001')).toEqual({ pincode: '110001', restricted: true, serviceable: false });
     expect((await storeStorefrontService.pincodeServiceable(null as never)).pincode).toBe('');
   });
 });
@@ -363,7 +364,7 @@ describe('storeStorefrontService.deliveryCheck', () => {
   });
 
   it('answers "not served" from the operator’s own list without asking the courier', async () => {
-    await setSettings({ serviceable_pincodes_enabled: true, serviceable_pincodes: ['110001'] });
+    await StoreServiceablePincodeModel.create({ pincode: '110001' });
     const product = await seedShippable();
     expect(await storeStorefrontService.deliveryCheck(String(product._id), null, GURUGRAM)).toEqual({ ...unchecked(GURUGRAM), checked: true });
     expect(mockRate).not.toHaveBeenCalled();

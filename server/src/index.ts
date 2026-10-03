@@ -206,6 +206,13 @@ async function bootstrap() {
     const result = await migrateStoreCatalogue();
     if (result.brands_named > 0) logs.server.info('bootstrap', 'storeCatalogue', result);
   });
+  // The Settings › Shipping pincode list moves to its own collection once,
+  // then the old field is emptied — a no-op on every later boot.
+  await safeSeed('storeServiceablePincodes', async () => {
+    const { migrateServiceablePincodes } = await import('@modules/commerce/store/store.migration');
+    const result = await migrateServiceablePincodes();
+    if (result.pincodes_moved > 0) logs.server.info('bootstrap', 'storeServiceablePincodes', result);
+  });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

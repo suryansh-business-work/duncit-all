@@ -28,7 +28,10 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
   const { t } = useTranslation();
   let failureText = '';
   if (failure === 'DENIED') failureText = t('mweb.contacts.permissionDenied');
+  else if (failure === 'BLOCKED') failureText = t('mweb.contacts.permissionBlocked');
   else if (failure === 'FAILED') failureText = t('mweb.contacts.syncFailed');
+  let buttonLabel = status ? t('mweb.contacts.resync') : t('mweb.contacts.allowButton');
+  if (failure === 'BLOCKED') buttonLabel = t('mweb.contacts.openSettings');
   let summary = t('mweb.contacts.notSyncedYet');
   if (status) {
     summary = `${t('mweb.contacts.matched', { count: status.matched })} · ${t(
@@ -81,7 +84,7 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
       ) : null}
       <DuncitButton
         testID="contacts-allow-button"
-        label={status ? t('mweb.contacts.resync') : t('mweb.contacts.allowButton')}
+        label={buttonLabel}
         size="lg"
         fullWidth
         onPress={onAllow}

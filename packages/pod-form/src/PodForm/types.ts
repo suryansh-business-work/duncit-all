@@ -14,6 +14,8 @@ export interface PodFormProps {
   initialValues: PodFormValues;
   config: PodFormConfig;
   clubs: any[];
+  /** Cities for the club options' place tags (see PodFormData.locations). */
+  locations?: PodFormData['locations'];
   venues: any[];
   users?: any[];
   products?: any[];

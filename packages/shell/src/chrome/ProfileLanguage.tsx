@@ -1,8 +1,9 @@
-import { Alert, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
 import { LANGUAGE_PREFERENCE_FLAG, useFeatureFlag } from '@duncit/app-settings';
 import { useTranslation } from '../i18n/useTranslation';
 import { useLocalePreference } from '../i18n/useLocalePreference';
+import { ProfileSection } from './ProfilePage/ProfileSection';
 
 /**
  * Language preference on the shared portal profile page — every MUI portal gets
@@ -23,18 +24,8 @@ export function ProfileLanguage() {
   if (!enabled || locales.length < 2) return null;
 
   return (
-    <>
-      <Divider sx={{ my: 2.5 }} />
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 800,
-          letterSpacing: 0.4
-        }}>
-        LANGUAGE
-      </Typography>
-      <Stack spacing={1.5} sx={{ mt: 1, maxWidth: 360 }}>
+    <ProfileSection testId="profile-language" title={t('mweb.common.language')}>
+      <Stack spacing={1.5} sx={{ maxWidth: 360 }}>
         <LanguageSelect
           value={locale}
           options={locales}
@@ -45,6 +36,6 @@ export function ProfileLanguage() {
         {saved && <Alert data-testid="language-saved" severity="success">{t('mweb.common.languageSaved')}</Alert>}
         {error && <Alert data-testid="language-error" severity="error">{error}</Alert>}
       </Stack>
-    </>
+    </ProfileSection>
   );
 }

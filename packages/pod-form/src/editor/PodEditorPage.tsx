@@ -28,6 +28,7 @@ export interface PodEditorPageProps {
   busy: boolean;
   error: string | null;
   clubs: any[];
+  locations?: PodFormData['locations'];
   venues: any[];
   users?: any[];
   products?: any[];
@@ -74,6 +75,7 @@ export default function PodEditorPage({
   busy,
   error,
   clubs,
+  locations,
   venues,
   users,
   products,
@@ -137,6 +139,7 @@ export default function PodEditorPage({
             initialValues={initialValues}
             config={config}
             clubs={clubs}
+            locations={locations}
             venues={venues}
             users={users}
             products={products}

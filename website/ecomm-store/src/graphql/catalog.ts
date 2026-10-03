@@ -16,6 +16,8 @@ export interface StoreProductCard {
   mrp: number;
   discount_pct: number;
   has_variants: boolean;
+  /** The variant the card prices — what its cart button adds; '' when none. */
+  lead_variant_id: string;
   in_stock: boolean;
   low_stock: boolean;
   badge: string;
@@ -36,6 +38,7 @@ const CARD_FIELDS = `
   mrp
   discount_pct
   has_variants
+  lead_variant_id
   in_stock
   low_stock
   badge

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PERSON_NAME, PINCODE } from '@duncit/regex';
+import { PINCODE } from '@duncit/regex';
 import {
   GENDERS,
   PET_OWNER_CHOICES,
@@ -7,7 +7,7 @@ import {
   fromPetOwnerValue,
   normalizeUsername,
 } from '@duncit/utils';
-import { makeProfileBioSchema } from '@duncit/forms/schemas';
+import { makeProfileBioSchema, makeProfileNameSchemas } from '@duncit/forms/schemas';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   FALLBACK_DATE_FORMAT,
@@ -28,16 +28,6 @@ const addressPincode = z
   .string()
   .trim()
   .refine((v) => v === '' || PINCODE.test(v), 'Enter a valid 6-digit pincode');
-
-/** An optional name box — empty, or the shared PERSON_NAME shape: letters,
- * spaces, apostrophes and periods. Digits, underscores, emoji and any other
- * punctuation are rejected, exactly as they are at signup. */
-const optionalPersonName = (label: string, patternMessage: string) =>
-  z
-    .string()
-    .trim()
-    .max(60, `${label} must be 60 characters or fewer`)
-    .refine((v) => v === '' || PERSON_NAME.test(v), { message: patternMessage });
 
 const optionalLocation = (label: string) =>
   z.string().trim().max(80, `${label} must be 80 characters or fewer`);
@@ -82,15 +72,7 @@ export const makeAccountEditSchema = (
    * Empty is allowed for an account minted before handles existed.
    */
   username: z.string().refine((v) => v === '' || USERNAME_PATTERN.test(normalizeUsername(v))),
-  first_name: z
-    .string()
-    .trim()
-    .min(1, 'First name is required')
-    .max(60, 'First name must be 60 characters or fewer')
-    .refine((v) => PERSON_NAME.test(v), {
-      message: t('mweb.accountEdit.validation.firstNamePattern'),
-    }),
-  last_name: optionalPersonName('Last name', t('mweb.accountEdit.validation.lastNamePattern')),
+  ...makeProfileNameSchemas(t),
   bio: makeProfileBioSchema(t),
   // Single-selects: '' until the member picks one of the shared options.
   gender: z.enum(['', ...GENDERS]),

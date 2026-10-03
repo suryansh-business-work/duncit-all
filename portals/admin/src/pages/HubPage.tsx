@@ -44,14 +44,6 @@ const hubCards = (t: Translate): HubCard[] => [
     accent: '#15803d',
   },
   {
-    key: 'community',
-    title: t('admin.hub.community'),
-    description: t('admin.hub.communityHint'),
-    to: '/clubs',
-    icon: 'community',
-    accent: '#b45309',
-  },
-  {
     key: 'engagement',
     title: t('admin.hub.engagement'),
     description: t('admin.hub.engagementHint'),
@@ -134,7 +126,7 @@ function HubTile({ card }: Readonly<{ card: HubCard }>) {
  * The Admin console's landing board.
  *
  * Every tile is its own widget: which module somebody opens first is entirely a
- * matter of what their job is, and the six-card order here is just the order
+ * matter of what their job is, and the card order here is just the order
  * they happened to be written in.
  */
 export default function HubPage() {

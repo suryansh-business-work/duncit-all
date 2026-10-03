@@ -1,5 +1,5 @@
 import type { SlotFormatter, SlotLabels } from '@duncit/slots';
-import type { TicketDiscountTier } from '@duncit/utils';
+import type { ClubCityLocation, TicketDiscountTier } from '@duncit/utils';
 
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 
@@ -184,6 +184,8 @@ export interface PodMediaPickOptions {
 export interface PodFormData {
   config: PodFormConfig;
   clubs: any[];
+  /** The cities clubs run in — when given, each club option carries its place tag. */
+  locations?: ClubCityLocation[];
   venues: any[];
   users: any[];
   products: any[];

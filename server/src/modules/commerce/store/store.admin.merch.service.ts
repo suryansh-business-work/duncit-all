@@ -238,17 +238,10 @@ const SETTINGS_FLAGS = [
   'returns_enabled',
   'restock_on_cancel',
   'autoship_enabled',
-  'serviceable_pincodes_enabled',
 ] as const;
 
 /** A CSS hex colour, the one form the storefront paints without parsing. */
 const HEX_COLOUR = /^#(?:[\da-f]{3}|[\da-f]{6})$/i;
-
-/** Six digits, whatever was pasted around them. */
-const pincodesOf = (values: unknown) =>
-  cleanList(Array.isArray(values) ? values : [], 20000)
-    .map((p) => p.replaceAll(/\D/g, ''))
-    .filter((p) => p.length === 6);
 
 /** The festive windows as saved: named, dated in order, slugged uniquely, colours well-formed. */
 function occasionsOf(input: Doc[]): IStoreOccasion[] {
@@ -353,7 +346,6 @@ function settingsPatch(input: Doc) {
   }
   if (input.return_reasons) patch.return_reasons = cleanList(input.return_reasons, 30);
   if (input.cancel_reasons) patch.cancel_reasons = cleanList(input.cancel_reasons, 30);
-  if (input.serviceable_pincodes) patch.serviceable_pincodes = pincodesOf(input.serviceable_pincodes);
   if (input.occasions) patch.occasions = occasionsOf(input.occasions as Doc[]);
   if (input.social_links) {
     patch.social_links = (input.social_links as Doc[])

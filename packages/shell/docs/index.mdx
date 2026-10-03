@@ -126,6 +126,23 @@ const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> 
 <Route path="/profile" element={authed(<ProfilePage />)} />
 ```
 
+### The profile page
+
+`ProfilePage` takes no props — every portal mounts the same one. It has three tabs, selected by
+`?selectedtab=` so a link can open one directly:
+
+| Tab | What it holds | Server operations |
+|---|---|---|
+| `profile` | Photo upload, first/last name, bio, up to 5 links (website / social accounts), private-profile switch, language, access roles | `me`, `updateMyProfile`, `updateMyProfileVisibility`, `setMyLocale` |
+| `security` | Change or create the password (current password → emailed 6-digit code → new password), when it last changed, last sign-in and method, linked Google account (read-only), **Sign out of all devices** | `myConnectedAccounts`, `requestPasswordChangeOtp`, `changePasswordWithOtp`, `signOutEverywhere` |
+| `notifications` | Email categories, WhatsApp categories (locked rows shown, never hidden), which channels may carry sign-in codes | `myMailPreferences`, `myWhatsappPreference`, `myCommunicationPreference` and their setters |
+
+The rules are mWeb's, not a portal copy: names, bio and links validate through
+`@duncit/forms/schemas` (`makeProfileNameSchemas`, `makeProfileBioSchema`, `makeProfileLinksSchema`),
+the password steps through `makeCurrentPasswordSchema` / `makeNewPasswordSchema`, and the code-channel
+locks through `authMessageCardState` in `@duncit/utils`. **Sign out of all devices** writes the same
+session seal a password reset does, so the current session ends too and the page signs out.
+
 ## Sample data
 
 A portal's `appConfig` is the main input, and a nav tree is the piece every other feature derives

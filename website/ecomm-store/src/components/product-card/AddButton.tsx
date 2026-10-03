@@ -1,10 +1,9 @@
-import { Link as RouterLink } from 'react-router';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { useState } from 'react';
+import AddShoppingCartRoundedIcon from '@mui/icons-material/AddShoppingCartRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 
 import type { StoreProductCard } from '../../graphql/catalog';
 import { useCart } from '../../app/providers/CartProvider';
-import { paths } from '../../lib/paths';
 import { useStoreT } from '../../i18n';
 import { STORE_TOKENS as T } from '../../theme/tokens';
 
@@ -18,32 +17,36 @@ const ROUND_ADD = {
 } as const;
 
 /**
- * The card's round "+": adds one straight to the cart, or — for a product
- * with options to choose — opens its page. Absent when it is out of stock.
+ * The card's round cart button: adds one of exactly what the card shows to the
+ * cart — for a product with options, the variant the card prices
+ * (`lead_variant_id`). Disabled while the add is in flight so a double click
+ * cannot add two. Absent when it is out of stock.
  */
 export function AddButton({ product }: Readonly<{ product: StoreProductCard }>) {
   const { t } = useStoreT();
   const { addToCart } = useCart();
+  const [adding, setAdding] = useState(false);
   if (!product.in_stock) return null;
-  if (product.has_variants) {
-    return (
-      <DuncitIconButton
-        component={RouterLink}
-        to={paths.product(product.slug)}
-        aria-label={t('ecommStore.card.chooseOptionsNamed', { vars: { name: product.title } })}
-        sx={ROUND_ADD}
-      >
-        <AddRoundedIcon />
-      </DuncitIconButton>
-    );
-  }
+
+  const add = async () => {
+    setAdding(true);
+    try {
+      // addToCart reports its own failure (toast) and resolves false.
+      await addToCart(product.id, product.lead_variant_id, 1);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <DuncitIconButton
       aria-label={t('ecommStore.card.addNamed', { vars: { name: product.title } })}
-      onClick={() => addToCart(product.id, '', 1)}
+      data-testid="product-card-add-to-cart"
+      disabled={adding}
+      onClick={add}
       sx={ROUND_ADD}
     >
-      <AddRoundedIcon />
+      <AddShoppingCartRoundedIcon />
     </DuncitIconButton>
   );
 }

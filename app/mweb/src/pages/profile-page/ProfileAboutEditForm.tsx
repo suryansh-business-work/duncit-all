@@ -5,6 +5,7 @@ import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { cleanProfileLinks } from '@duncit/forms/schemas';
 import { UPDATE_MY_PROFILE } from './queries';
 import { ProfileAboutValues, profileSchema } from './profileAbout.schema';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -30,7 +31,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
   const linkCount = watch('profile_links').length;
 
   const submit = handleSubmit(async (values) => {
-    const profile_links = values.profile_links.filter((link) => link.label || link.url);
+    const profile_links = cleanProfileLinks(values.profile_links);
     await updateProfile({ variables: { input: { bio: values.bio || '', profile_links } } });
     onSaved();
   });

@@ -83,6 +83,7 @@ const makeProps = (rows: PodRow[]) => ({
   fetchRows: vi.fn(async () => ({ rows, total: rows.length })),
   refetchRef: { current: null as (() => void) | null },
   clubName: (id: string) => `Club<${id}>`,
+  clubLocation: () => '',
   venueName: (id: string) => `Venue<${id}>`,
   locName: (id: string) => `Loc<${id}>`,
   minPax: () => 0,

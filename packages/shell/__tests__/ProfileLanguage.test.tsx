@@ -80,7 +80,9 @@ describe('ProfileLanguage', () => {
     mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
 
     render(<ProfileLanguage />);
-    expect(screen.getByText('LANGUAGE')).toBeInTheDocument();
+    // Its own titled card on the profile page, like every other section.
+    expect(screen.getByRole('region', { name: 'Language' })).toHaveAttribute('data-testid', 'profile-language');
+    expect(screen.getByRole('heading', { level: 2, name: 'Language' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Language' })).toHaveTextContent('English');
     expect(screen.getByText('Choose the language for this portal.')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

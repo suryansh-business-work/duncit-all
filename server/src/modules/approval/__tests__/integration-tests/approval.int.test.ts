@@ -50,7 +50,14 @@ describe('approval — ecomm change requests', () => {
 
   it('applies a brand change on approval and tolerates a malformed payload (Task B item 2)', async () => {
     const brandId = new Types.ObjectId();
-    await EcommBrandModel.collection.insertOne({ _id: brandId, brand_name: 'B', tagline: 'old' } as never);
+    // The change is applied through a validated save, so the brand carries the
+    // owner every real brand has.
+    await EcommBrandModel.collection.insertOne({
+      _id: brandId,
+      owner_user_id: new Types.ObjectId(),
+      brand_name: 'B',
+      tagline: 'old',
+    } as never);
     const brandReq = await approvalService.submitEcommChange(
       {
         kind: 'BRAND',
@@ -123,11 +130,44 @@ describe('approval — ecomm change requests', () => {
     expect(brand.status).toBe('APPROVED');
     expect(brand.approved_at).toBeTruthy();
     expect(brand.tagline).toBe('now live');
+    // Both vendors are connected, so the real approve path also puts it live.
+    expect(brand.live).toBe(true);
+    expect(brand.live_since).toBeInstanceOf(Date);
     expect(assignSpy).toHaveBeenCalledWith(
       ownerId.toString(),
       expect.arrayContaining(['USER', 'ECOMM_MANAGER']),
     );
     assignSpy.mockRestore();
+  });
+
+  it('takes a live brand off the pod shop when an approved change pauses it', async () => {
+    const live = await EcommBrandModel.create({
+      owner_user_id: new Types.ObjectId(),
+      brand_name: 'Selling Co',
+      status: 'APPROVED',
+      is_active: true,
+      integrations: { shiprocket: { connected: true }, razorpay: { connected: true } },
+    });
+    expect(live.live).toBe(true);
+
+    const req = await approvalService.submitEcommChange(
+      {
+        kind: 'BRAND',
+        target_id: String(live._id),
+        target_name: 'Selling Co',
+        details: [{ label: 'Active', value: 'No' }],
+        payload: JSON.stringify({ is_active: false }),
+      },
+      ADMIN,
+    );
+    await approvalService.approve(req!.id, ADMIN);
+
+    // Saved through the model, so `live` is re-derived — a $set would have
+    // left the paused brand selling.
+    const after: any = await EcommBrandModel.findById(live._id).lean();
+    expect(after.is_active).toBe(false);
+    expect(after.live).toBe(false);
+    expect(after.live_since).toBeNull();
   });
 
   it('denies a request and blocks a second decision', async () => {

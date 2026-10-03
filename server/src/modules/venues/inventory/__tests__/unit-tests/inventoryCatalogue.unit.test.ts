@@ -316,13 +316,15 @@ describe('inventoryService.listAvailablePodProducts', () => {
     expect(filter.brand_id).toBeUndefined();
   });
 
-  it('excludes the products of every deactivated brand', async () => {
+  it('excludes the products of every brand that is not live (paused, un-approved or integrations pending)', async () => {
     const deadBrand = new Types.ObjectId(BRAND_ID);
     brandModel.find.mockReturnValue(query([{ _id: deadBrand }]));
     productModel.find.mockReturnValue(query([]));
 
     await inventoryService.listAvailablePodProducts();
 
+    // One derived flag decides it — not is_active/status read separately.
+    expect(brandModel.find).toHaveBeenCalledWith({ live: { $ne: true } });
     expect(productModel.find.mock.calls[0][0].brand_id).toEqual({ $nin: [deadBrand] });
   });
 
@@ -976,12 +978,24 @@ describe('inventoryService pod reads', () => {
     expect(podModel.find).not.toHaveBeenCalled();
   });
 
-  it('offers nothing when the product belongs to a deactivated brand', async () => {
+  it('offers nothing when the product belongs to a brand that is not live', async () => {
     productModel.findById.mockReturnValue(query({ is_active: true, brand_id: BRAND_ID }));
-    brandModel.findById.mockReturnValue(query({ is_active: false }));
+    const brandQuery = query({ _id: BRAND_ID, live: false });
+    brandModel.findById.mockReturnValue(brandQuery);
 
     await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
+    expect(brandModel.findById).toHaveBeenCalledWith(BRAND_ID);
+    expect(brandQuery.select).toHaveBeenCalledWith('live');
     expect(podModel.find).not.toHaveBeenCalled();
+  });
+
+  it('goes looking for pods when the product’s brand is live', async () => {
+    productModel.findById.mockReturnValue(query({ is_active: true, brand_id: BRAND_ID }));
+    brandModel.findById.mockReturnValue(query({ _id: BRAND_ID, live: true }));
+    podModel.find.mockReturnValue(query([]));
+
+    await expect(inventoryService.podsForProduct(PRODUCT_ID)).resolves.toEqual([]);
+    expect(podModel.find).toHaveBeenCalledTimes(1);
   });
 
   it('offers nothing for a product that no longer exists', async () => {

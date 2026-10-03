@@ -3,7 +3,8 @@ import { ecommBrandService } from './ecommBrand.service';
 import type { BrandShippingMode } from './ecommBrand.model';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { hasRole, requireRole } from '@middleware/rbac';
+import { brandAnalytics } from './ecommBrand.analytics';
 import { ADMIN_RW } from '@modules/venues/inventory/inventory.resolver';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
@@ -72,13 +73,20 @@ export const ecommBrandResolvers = {
       return ecommBrandService.getById(args.brand_doc_id);
     },
     // Public brand card for the pod product-detail dialog — any signed-in user.
-    // Clients select only non-sensitive fields (no GST/PAN/payout/commission).
+    // The server blanks GST/PAN/payout/contact/commission (publicCard).
     publicEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       uid(ctx);
-      return ecommBrandService.getById(args.brand_doc_id);
+      return ecommBrandService.publicCard(args.brand_doc_id);
     },
     myEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>
       ecommBrandService.myBrand(uid(ctx), args.brand_doc_id),
+    // Brand-review staff read any brand; a partner only their own (myBrand
+    // throws NOT_FOUND for a brand they do not own).
+    brandAnalytics: async (_p: unknown, args: { brand_doc_id: string; days?: number | null }, ctx: GraphQLContext) => {
+      const userId = uid(ctx);
+      if (!ctx.user || !hasRole(ctx.user, BRAND_REVIEW)) await ecommBrandService.myBrand(userId, args.brand_doc_id);
+      return brandAnalytics(args.brand_doc_id, args.days);
+    },
     // Signed-in only: the wizard's last step and the review page both read it.
     brandConsentPolicy: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       uid(ctx);

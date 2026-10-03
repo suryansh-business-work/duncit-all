@@ -6,6 +6,7 @@ export const entityAuditTypeDefs = /* GraphQL */ `
     CLUB
     CLUB_ADMIN
     REGION
+    BRAND
   }
 
   "What happened to the record (not to the individual field)."

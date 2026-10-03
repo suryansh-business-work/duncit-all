@@ -45,19 +45,40 @@ describe('ecommBrandService integration', () => {
     expect(draft.brand_name).toBe('Acme Co');
     expect(draft.integrations.shiprocket.connected).toBe(false);
 
-    // Both vendor connections are the last required step before submitting.
-    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/Integration \(Razorpay connected/);
-    await connectBoth(draft.id);
+    // Integration is the wizard's LAST step and does not gate review: a brand
+    // with no vendor connected is still submitted — it just is not live.
     const submitted = await ecommBrandService.submit(owner, draft.id);
     expect(submitted.status).toBe('SUBMITTED');
     expect(submitted.submitted_at).toBeTruthy();
+    expect(submitted.live).toBe(false);
+    expect(submitted.live_since).toBeNull();
 
     const mine = await ecommBrandService.listMine(owner);
     expect(mine).toHaveLength(1);
     expect(mine[0].status).toBe('SUBMITTED');
   });
 
-  it('submits a brand that ships with the Duncit courier — no ShipRocket account of its own', async () => {
+  it('refuses a submit naming only the review steps still owed — never integration', async () => {
+    const owner = newOwner();
+    const draft = await ecommBrandService.save(owner, null, {
+      ...READY,
+      documents: [],
+      brand_name: 'Half Done',
+      contact_email: 'half@done.in',
+    });
+
+    // No vendor is connected either, yet only the missing documents are named.
+    const refusal = await ecommBrandService.submit(owner, draft.id).catch((err: unknown) => err);
+    expect(refusal).toMatchObject({
+      message: expect.stringMatching(/cannot be submitted yet — finish: Documents/),
+      extensions: { code: 'BAD_REQUEST', missing_steps: ['documents'] },
+    });
+    expect((refusal as Error).message).not.toMatch(/Integration/);
+  });
+
+  it('lets a brand in review settle its shipping, and goes live on approval once integrations are ready', async () => {
+    const { userService } = await import('@modules/access/user/user.service');
+    const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
     const owner = newOwner();
     const draft = await ecommBrandService.save(owner, null, {
       ...READY,
@@ -65,17 +86,22 @@ describe('ecommBrandService integration', () => {
       contact_email: 'ops@yonex.in',
     });
     await EcommBrandModel.updateOne({ _id: draft.id }, { $set: { 'integrations.razorpay.connected': true } });
-    await expect(ecommBrandService.submit(owner, draft.id)).rejects.toThrow(/Integration/);
 
-    const chosen = await ecommBrandService.setShippingMode(owner, draft.id, 'DUNCIT_COURIER');
-    expect(chosen.shipping_mode).toBe('DUNCIT_COURIER');
+    // Shipping is not chosen yet — integration is not owed for review.
     const submitted = await ecommBrandService.submit(owner, draft.id);
     expect(submitted.status).toBe('SUBMITTED');
 
-    // In review, what was submitted stays what the reviewer sees.
-    await expect(ecommBrandService.setShippingMode(owner, draft.id, 'OWN_SHIPROCKET')).rejects.toThrow(
-      /Withdraw the brand from review/
-    );
+    // Integration changes are no longer frozen while the brand is in review.
+    const chosen = await ecommBrandService.setShippingMode(owner, draft.id, 'DUNCIT_COURIER');
+    expect(chosen.shipping_mode).toBe('DUNCIT_COURIER');
+    expect(chosen.status).toBe('SUBMITTED');
+    expect(chosen.live).toBe(false);
+
+    // Razorpay connected + the Duncit courier = ready, so approval puts it live.
+    const approved = await ecommBrandService.approve(draft.id);
+    expect(approved).toMatchObject({ status: 'APPROVED', live: true, integration_waived: false });
+    expect(approved.live_since).not.toBeNull();
+    assignSpy.mockRestore();
   });
 
   it('refuses a shipping mode it does not know', async () => {

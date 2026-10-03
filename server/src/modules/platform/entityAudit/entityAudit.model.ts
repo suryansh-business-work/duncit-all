@@ -16,7 +16,7 @@ import { Schema, model, Types, type Document } from 'mongoose';
  */
 
 /** The directory entities that carry a change log. */
-export const ENTITY_AUDIT_TYPES = ['VENUE', 'HOST', 'CLUB', 'CLUB_ADMIN', 'REGION'] as const;
+export const ENTITY_AUDIT_TYPES = ['VENUE', 'HOST', 'CLUB', 'CLUB_ADMIN', 'REGION', 'BRAND'] as const;
 export type EntityAuditType = (typeof ENTITY_AUDIT_TYPES)[number];
 
 /** What happened to the record, not to the field. */

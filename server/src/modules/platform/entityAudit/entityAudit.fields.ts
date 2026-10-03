@@ -197,6 +197,52 @@ const REGION_FIELDS: readonly DiffField[] = [
   { path: 'is_active', label: 'Active' },
 ];
 
+/**
+ * A partner brand. Credentials (ShipRocket password, Razorpay key secret,
+ * webhook secrets) are deliberately absent — the trail records that an
+ * integration connected or dropped, never the secret that did it.
+ */
+const BRAND_FIELDS: readonly DiffField[] = [
+  { path: 'brand_no', label: 'Brand ID' },
+  { path: 'brand_name', label: 'Brand Name' },
+  { path: 'status', label: 'Status' },
+  { path: 'is_active', label: 'Active' },
+  { path: 'live', label: 'Live In Pod Shop' },
+  { path: 'integration_waived', label: 'Integration Waived' },
+  { path: 'logo_url', label: 'Logo' },
+  { path: 'cover_image_url', label: 'Cover Image' },
+  { path: 'tagline', label: 'Tagline' },
+  { path: 'description', label: 'Description' },
+  { path: 'product_categories', label: 'Product Categories' },
+  { path: 'website_url', label: 'Website' },
+  { path: 'instagram_url', label: 'Instagram' },
+  { path: 'contact_person', label: 'Contact Person' },
+  { path: 'contact_email', label: 'Contact Email' },
+  { path: 'contact_phone', label: 'Contact Phone' },
+  { path: 'registered_business_name', label: 'Registered Business Name' },
+  { path: 'gstin', label: 'GSTIN' },
+  { path: 'pan', label: 'PAN' },
+  { path: 'address_line1', label: 'Address Line 1' },
+  { path: 'city', label: 'City' },
+  { path: 'state', label: 'State' },
+  { path: 'postal_code', label: 'Postal Code' },
+  { path: 'account_holder_name', label: 'Account Holder Name' },
+  { path: 'account_number', label: 'Account Number' },
+  { path: 'ifsc_code', label: 'IFSC Code' },
+  { path: 'upi_id', label: 'UPI ID' },
+  { path: 'documents', label: 'Documents', ordered: true },
+  { path: 'product_commission_pct', label: 'Commission %' },
+  { path: 'shipping_mode', label: 'Shipping Mode' },
+  { path: 'integrations.shiprocket.connected', label: 'ShipRocket Connected' },
+  { path: 'integrations.shiprocket.message', label: 'ShipRocket Check Result' },
+  { path: 'integrations.razorpay.connected', label: 'Razorpay Connected' },
+  { path: 'integrations.razorpay.message', label: 'Razorpay Check Result' },
+  { path: 'consent.accepted', label: 'Consent Signed' },
+  { path: 'consent.signed_name', label: 'Consent Signed By' },
+  { path: 'default_pickup_location_id', label: 'Default Warehouse' },
+  ...reviewFields,
+];
+
 /** Every entity's config, keyed by the type stored on the log row. */
 export const ENTITY_AUDIT_CONFIG: Record<EntityAuditType, EntityAuditConfig> = {
   VENUE: { labelPath: 'venue_name', ownerPath: 'owner_user_id', fields: VENUE_FIELDS },
@@ -204,4 +250,5 @@ export const ENTITY_AUDIT_CONFIG: Record<EntityAuditType, EntityAuditConfig> = {
   CLUB: { labelPath: 'club_name', fields: CLUB_FIELDS },
   CLUB_ADMIN: { labelPath: 'full_name', ownerPath: 'user_id', fields: CLUB_ADMIN_FIELDS },
   REGION: { labelPath: 'region_name', ownerPath: 'manager_user_id', fields: REGION_FIELDS },
+  BRAND: { labelPath: 'brand_name', ownerPath: 'owner_user_id', fields: BRAND_FIELDS },
 };

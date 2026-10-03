@@ -147,6 +147,12 @@ export const ecommBrandTypeDefs = gql`
     brand_no: String
     status: EcommBrandStatus!
     is_active: Boolean!
+    "Live in the pod shop: approved, active and integrations ready (derived on every save)."
+    live: Boolean!
+    "When the brand last went live; null while it is not."
+    live_since: String
+    "A brand already selling before integrations were required — it stays live without them."
+    integration_waived: Boolean!
     reviewer_notes: String!
     # E-commerce: the brand's default ShipRocket pickup/warehouse location.
     default_pickup_location_id: ID
@@ -203,6 +209,35 @@ export const ecommBrandTypeDefs = gql`
     page_size: Int!
   }
 
+  "One day of a brand's sales (UTC date)."
+  type BrandAnalyticsPoint {
+    date: String!
+    orders: Int!
+    gross_revenue: Float!
+  }
+
+  "A brand's sales over a window. Cancelled, failed and RTO orders are excluded."
+  type BrandAnalytics {
+    days: Int!
+    since: String!
+    orders: Int!
+    units_sold: Int!
+    gross_revenue: Float!
+    "Gross minus the Duncit commission — the partner dashboard's own rule."
+    net_earnings: Float!
+    average_order_value: Float!
+    "Lifetime product-page views and clicks across the brand's products."
+    product_views: Int!
+    product_clicks: Int!
+    total_products: Int!
+    "Products approved, active and listed."
+    live_products: Int!
+    "Every day of the window, oldest first, zero-filled."
+    trend: [BrandAnalyticsPoint!]!
+    "Best-selling products in the window."
+    top_products: [PartnerProductPerformance!]!
+  }
+
   extend type Query {
     "The signed-in partner's e-commerce brands (a partner may run several)."
     myEcommBrands: [EcommBrand!]!
@@ -218,8 +253,10 @@ export const ecommBrandTypeDefs = gql`
     marketplaceBrandsTable(query: TableQueryInput): EcommBrandTablePage!
     "Onboarding/admin: a single brand by id."
     ecommBrand(brand_doc_id: ID!): EcommBrand
-    "Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side)."
+    "Public brand card for the pod product-detail brand dialog (any signed-in user). Payout, tax, contact, commission and integration details come back blank."
     publicEcommBrand(brand_doc_id: ID!): EcommBrand
+    "One brand's sales over the last days (1-365, default 30) — the brand owner or brand-review staff."
+    brandAnalytics(brand_doc_id: ID!, days: Int): BrandAnalytics!
     "Partner: one of the caller's own brands, at any status — what the brand wizard opens."
     myEcommBrand(brand_doc_id: ID!): EcommBrand
     "The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one."

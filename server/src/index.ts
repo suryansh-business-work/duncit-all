@@ -255,6 +255,15 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'locationLaunched', { repaired });
     }
   });
+  // Stamp the derived `live` flag on partner brands saved before it existed.
+  // Brands already selling stay on the pod shop (integration_waived).
+  await safeSeed('ecommBrandLive', async () => {
+    const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
+    const result = await ecommBrandService.backfillLive();
+    if (result.repaired > 0) {
+      logs.server.info('bootstrap', 'ecommBrandLive', result);
+    }
+  });
   // What every existing translation was written against, recorded once so it
   // can be seen to fall out of date with English. Must run BEFORE the shipped
   // English below is revised, or a reword in this boot would read as in sync.

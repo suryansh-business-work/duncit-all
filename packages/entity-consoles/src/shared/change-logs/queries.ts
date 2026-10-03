@@ -65,7 +65,7 @@ export const ENTITY_CHANGE_FEED_TABLE = gql`
 `;
 
 /** The entities that carry a change log — the server's `EntityAuditType`. */
-export type EntityAuditType = 'VENUE' | 'HOST' | 'CLUB' | 'CLUB_ADMIN' | 'REGION';
+export type EntityAuditType = 'VENUE' | 'HOST' | 'CLUB' | 'CLUB_ADMIN' | 'REGION' | 'BRAND';
 
 export type EntityChangeAction = 'CREATE' | 'UPDATE' | 'DELETE';
 export type EntityChangeActorType = 'OWNER' | 'ADMIN' | 'SYSTEM';

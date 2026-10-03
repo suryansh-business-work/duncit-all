@@ -2,9 +2,12 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.81.91",
+    "version": "1.81.92",
     "orientation": "default",
-    "scheme": "duncit",
+    "scheme": [
+      "duncit",
+      "com.duncit.mobile"
+    ],
     "userInterfaceStyle": "automatic",
     "icon": "./assets/duncit-logo.png",
     "assetBundlePatterns": [

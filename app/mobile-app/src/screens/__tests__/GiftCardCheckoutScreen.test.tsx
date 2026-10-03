@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { GiftCardScopeType } from '@/generated/graphql/graphql';
 import { GiftCardCheckoutScreen } from '@/screens/GiftCardCheckoutScreen';
 import { useGiftCardCheckout } from '@/hooks/useGiftCardCheckout';
 import { fallbackT } from '@/i18n/fallback';
@@ -64,7 +65,7 @@ const success = {
 };
 
 const selection = (over: Partial<GiftCardSelection> = {}): GiftCardSelection => ({
-  scope_type: 'SHOP',
+  scope_type: GiftCardScopeType.Shop,
   scope_category_id: null,
   scope_name: 'Pet Lovers',
   scope_image_url: '',

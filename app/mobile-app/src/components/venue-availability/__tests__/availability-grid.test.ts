@@ -88,8 +88,8 @@ describe('viewCells', () => {
   it('lays out the month in Monday-first rows padded with nulls', () => {
     const rows = viewCells('month', anchor);
     expect(rows.every((row) => row.length === 7)).toBe(true);
-    expect(rows[0][0]).toBeNull();
-    expect(rows[0][1]).toBe('2030-01-01');
+    expect(rows[0]?.[0]).toBeNull();
+    expect(rows[0]?.[1]).toBe('2030-01-01');
     expect(rows.flat().filter(Boolean)).toHaveLength(31);
   });
 

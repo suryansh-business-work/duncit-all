@@ -125,14 +125,14 @@ describe('ClubClaimSheet — club list', () => {
   });
 
   it('preselects the only eligible club', async () => {
-    serveClubs([clubs[0], clubs[1]]);
+    serveClubs(clubs.slice(0, 2));
     mount({ row: makeRow({ location }) });
     await waitFor(() => expect(selected('auto-pod-club-c1')).toBe(true));
     expect(disabled('auto-pod-claim-confirm')).toBe(false);
   });
 
   it('says so when the admin has no club in the pinned city', async () => {
-    serveClubs([clubs[1]]);
+    serveClubs(clubs.slice(1, 2));
     mount({ row: makeRow({ location }) });
     await waitFor(() =>
       expect(screen.getByTestId('auto-pod-no-club-in-city')).toHaveTextContent(

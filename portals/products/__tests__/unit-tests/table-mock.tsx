@@ -116,3 +116,69 @@ export type DuncitColumn<T> = {
   [key: string]: unknown;
 };
 export type TableFetch<T> = (q: unknown) => Promise<{ rows: T[]; total: number }>;
+
+interface MockRowMenuItem {
+  key: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+interface MockRowMenuOptions<T> {
+  field?: string;
+  headerName?: string;
+  ariaLabel?: string | ((row: T) => string);
+  items: (row: T) => MockRowMenuItem[];
+}
+
+/**
+ * The ⋮ row menu, as a button that reveals its items. The real menu renders
+ * in a portal outside the grid, so choosing an item never opens the row —
+ * here every click stops at the menu to keep that contract.
+ */
+function MockRowMenu({ label, items }: Readonly<{ label: string; items: MockRowMenuItem[] }>) {
+  const [open, setOpen] = useState(false);
+  if (items.length === 0) return null;
+  return (
+    <span>
+      <button
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((value) => !value);
+        }}
+      />
+      {open && (
+        <span role="menu">
+          {items.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              role="menuitem"
+              disabled={item.disabled}
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpen(false);
+                item.onClick();
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function rowMenuColumn<T>(options: MockRowMenuOptions<T>): DuncitColumn<T> {
+  const labelOf = (row: T) =>
+    typeof options.ariaLabel === 'function' ? options.ariaLabel(row) : (options.ariaLabel ?? 'Actions');
+  return {
+    field: options.field ?? 'menu',
+    headerName: options.headerName ?? '',
+    cellRenderer: (row: T) => <MockRowMenu label={labelOf(row)} items={options.items(row)} />,
+  };
+}

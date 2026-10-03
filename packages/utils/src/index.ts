@@ -290,10 +290,12 @@ export {
   MIN_GATEWAY_CHARGE,
   applyBillDiscounts,
   clampPayable,
+  exclusiveOfGstBill,
   maxRedeemableCoins,
   round2,
   type BillDiscount,
   type DiscountedBill,
+  type ExclusiveOfGstBill,
 } from './checkout-bill';
 export {
   DEFAULT_TICKET_DISCOUNT_MAX_PCT,

@@ -848,6 +848,7 @@ four literals that drift apart.
 | `clampPayable` | `(amount: number) => number` | What is left to charge: rounded, never below zero. |
 | `applyBillDiscounts` | `(gross: number, discounts: BillDiscount[]) => DiscountedBill` | Takes the deductions off in order, stopping at zero. |
 | `maxRedeemableCoins` | `(balance: number, payableAfterCoupon: number) => number` | Whole coins the bill can absorb — balance, bill and gateway minimum. |
+| `exclusiveOfGstBill` | `(gross, discounts, taxable, gstPct) => { subtotal, discounts }` | The bill restated GST-compliantly: subtotal and each deduction net of GST, so subtotal − discounts = taxable value. |
 | `MIN_GATEWAY_CHARGE` | `1` | Smallest amount Razorpay accepts; server twin of the same constant. |
 
 A coupon and Duncit Coins cut the same gross and neither may cut past zero. `applyBillDiscounts`
@@ -860,6 +861,17 @@ applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
 
 maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
 clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
+```
+
+A discount shown on the invoice comes off the value BEFORE GST (CGST Act s.15(3)(a)), so every
+breakdown — mWeb, native and the Finance payment card — reads ticket → subtotal (excl. GST) →
+discounts (excl. GST) → taxable value → GST → total. `exclusiveOfGstBill` takes the taxable value
+from the charged quote, so the GST row is always the tax actually charged:
+
+```ts
+exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
+// { subtotal: 635.59, discounts: [{ key: 'ticketDiscount', amount: 31.78 }] }
+// 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
 ```
 
 ### Multi-ticket discount — `pod-ticket-discount` + `pod-ticket-discount-copy`

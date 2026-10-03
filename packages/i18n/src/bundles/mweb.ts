@@ -1755,8 +1755,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // subtotal, so each labels the number it actually shows.
       ticketPrice: 'Ticket price',
       subtotal: 'Subtotal',
-      // mWeb only — it lists the tax as a component of the price above it.
+      // Product checkout only — it lists the tax as a component of the price above it.
       inclusiveOf: 'Inclusive of:',
+      // The pod bill reads like a GST invoice: discounts come off the value
+      // BEFORE tax, so subtotal and discounts are excl. GST and the GST row is
+      // charged on the taxable value left after them.
+      subtotalExclGst: 'Subtotal (excl. GST)',
+      taxableValue: 'Taxable value',
       gst: 'GST ({pct}%)',
       // Money taken OFF the bill, listed in the breakdown itself rather than
       // only under the pay button — a total that ignores a discount the buyer

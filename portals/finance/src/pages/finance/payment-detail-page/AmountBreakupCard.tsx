@@ -1,5 +1,6 @@
 import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
+import { exclusiveOfGstBill } from '@duncit/utils';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import { money, type PaymentDetail } from './queries';
 
@@ -17,54 +18,59 @@ interface BreakupLine {
  * `original_total` is the cart before EVERY discount (ticket gross + products).
  * The multi-ticket tier comes off the tickets first; the coupon is then
  * evaluated on that discounted payable and coins re-quote what the coupon left
- * (payment.service `applyCoupon`/`applyCoins`). So
- * original − ticket discount − coupon − coins is the gross that was priced;
- * `computeQuote` then extracts GST inclusive from that gross
- * (gst = value × g/(100+g), subtotal = value − gst, total = value), which makes
- * subtotal + gst = total exactly. The platform fee is NOT in this list: it is
- * carved out of the subtotal, not added on top — see the memo block below.
+ * (payment.service `applyCoupon`/`applyCoins`), and `computeQuote` extracts GST
+ * inclusive from what is left. So every deduction cuts the value BEFORE tax —
+ * the way GST law reads an invoice discount (CGST Act s.15(3)(a)) — and the
+ * card prints it in that order: original → subtotal (excl. GST) → each
+ * deduction (excl. GST) → taxable value → GST. The shared `exclusiveOfGstBill`
+ * reconciles it to the paisa, and the mWeb and native checkout read the same
+ * way. The GST row is the tax actually charged. The platform fee is NOT in this
+ * list: it is carved out of the subtotal, not added on top — see the memo block below.
  *
- * The ticket discount, coupon and coins render as negatives so the arithmetic
- * reads top to bottom; each is skipped when zero rather than shown as a
- * "− ₹0.00" no-op. The ticket discount reads the payment's frozen snapshot,
- * never the pod's current tiers.
+ * Each deduction is skipped when zero rather than shown as a "− ₹0.00" no-op.
+ * The ticket discount reads the payment's frozen snapshot, never the pod's
+ * current tiers.
  */
 function buildLines(detail: PaymentDetail, t: Translator['t']): BreakupLine[] {
   const p = detail.payment;
   const sym = p.currency_symbol;
+  // Named when the code survived on the payment, bare when it did not — the
+  // two are separate keys so a translator is never handed a dangling "()".
+  const couponLabel = p.coupon_code
+    ? t('finance.payment.couponDiscountWith', { vars: { code: p.coupon_code } })
+    : t('finance.payment.couponDiscount');
+  const bill = exclusiveOfGstBill(
+    detail.original_total,
+    [
+      {
+        key: 'ticket-discount',
+        label: t('finance.payment.ticketDiscountLine', { vars: { pct: p.ticket_discount_pct } }),
+        amount: p.ticket_discount_amount,
+      },
+      { key: 'coupon', label: couponLabel, amount: p.coupon_discount },
+      {
+        key: 'coins',
+        label: t('finance.payment.coinsRedeemedLine', { vars: { n: detail.coins_redeemed } }),
+        amount: detail.coins_redeemed,
+      },
+    ],
+    p.subtotal,
+    p.gst_pct,
+  );
   const lines: BreakupLine[] = [
     { key: 'original', label: t('finance.payment.originalTotal'), value: money(sym, detail.original_total) },
+    { key: 'subtotal', label: t('finance.payment.subtotalExclGst'), value: money(sym, bill.subtotal) },
+    ...bill.discounts.map((line) => ({ key: line.key, label: line.label, value: `− ${money(sym, line.amount)}` })),
   ];
-  if (p.ticket_discount_amount > 0) {
-    lines.push({
-      key: 'ticket-discount',
-      label: t('finance.payment.ticketDiscountLine', { vars: { pct: p.ticket_discount_pct } }),
-      value: `− ${money(sym, p.ticket_discount_amount)}`,
-    });
+  // With nothing deducted the subtotal IS the taxable value — printing it twice says nothing.
+  if (bill.discounts.length > 0) {
+    lines.push({ key: 'taxable', label: t('finance.payment.taxableValue'), value: money(sym, p.subtotal) });
   }
-  if (p.coupon_discount > 0) {
-    // Named when the code survived on the payment, bare when it did not — the
-    // two are separate keys so a translator is never handed a dangling "()".
-    const label = p.coupon_code
-      ? t('finance.payment.couponDiscountWith', { vars: { code: p.coupon_code } })
-      : t('finance.payment.couponDiscount');
-    lines.push({ key: 'coupon', label, value: `− ${money(sym, p.coupon_discount)}` });
-  }
-  if (detail.coins_redeemed > 0) {
-    lines.push({
-      key: 'coins',
-      label: t('finance.payment.coinsRedeemedLine', { vars: { n: detail.coins_redeemed } }),
-      value: `− ${money(sym, detail.coins_redeemed)}`,
-    });
-  }
-  lines.push(
-    { key: 'subtotal', label: t('finance.payment.subtotalNetGst'), value: money(sym, p.subtotal) },
-    {
-      key: 'gst',
-      label: t('finance.payment.gstPct', { vars: { pct: p.gst_pct.toFixed(2) } }),
-      value: money(sym, p.gst_amount),
-    },
-  );
+  lines.push({
+    key: 'gst',
+    label: t('finance.payment.gstPct', { vars: { pct: p.gst_pct.toFixed(2) } }),
+    value: money(sym, p.gst_amount),
+  });
   return lines;
 }
 

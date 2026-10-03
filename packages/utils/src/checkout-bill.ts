@@ -67,6 +67,52 @@ export function applyBillDiscounts(
   return { discounts: taken, discountTotal: round2(grossTotal - remaining), payable: remaining };
 }
 
+/** A GST-inclusive bill restated the way GST law prints it: the price net of
+ * tax, each deduction net of tax, then the taxable value the GST is charged on. */
+export interface ExclusiveOfGstBill<T extends { amount: number }> {
+  /** The gross before any deduction, with its GST taken out. */
+  subtotal: number;
+  /** The same deductions, each with its GST share taken out. */
+  discounts: T[];
+}
+
+/**
+ * Restate an inclusive bill's deductions exclusive of GST.
+ *
+ * A discount shown on the invoice comes off the value of supply BEFORE tax
+ * (CGST Act s.15(3)(a)), and every Duncit deduction cuts the gross with the tax
+ * re-extracted from what is left. So the compliant reading is
+ * subtotal − discounts = taxable value, + GST = total — with the discounts
+ * stated net of tax, or the GST row would describe money nobody pays.
+ *
+ * `taxable` is the charged bill's own net (the server's quote), never re-derived
+ * here, so the GST row stays the tax actually charged. Each deduction is
+ * extracted on its own and the LAST one absorbs the rounding, so the rows
+ * reconcile to the paisa. With nothing deducted the subtotal IS the taxable value.
+ */
+export function exclusiveOfGstBill<T extends { amount: number }>(
+  gross: number,
+  discounts: readonly T[],
+  taxable: number,
+  gstPct: number,
+): ExclusiveOfGstBill<T> {
+  const g = Number(gstPct) || 0;
+  const taken = discounts.filter((discount) => clampPayable(discount.amount) > 0);
+  if (taken.length === 0) return { subtotal: round2(taxable), discounts: [] };
+  const grossTotal = clampPayable(gross);
+  const subtotal = round2(grossTotal - round2((grossTotal * g) / (100 + g)));
+  let remaining = round2(subtotal - round2(taxable));
+  const net = taken.map((discount, index) => {
+    const amount =
+      index === taken.length - 1
+        ? remaining
+        : round2((clampPayable(discount.amount) * 100) / (100 + g));
+    remaining = round2(remaining - amount);
+    return { ...discount, amount };
+  });
+  return { subtotal, discounts: net };
+}
+
 /**
  * The most whole coins a bill can absorb — capped by the balance and by what is
  * owed after the coupon, floored because `redeem_coins` is an Int. Never

@@ -40,7 +40,11 @@ describe('shop-page queries module', () => {
       'PRICE_ASC',
       'PRICE_DESC',
     ]);
-    SHOP_SORT_OPTIONS.forEach((o) => expect(typeof o.label).toBe('string'));
+    expect(SHOP_SORT_OPTIONS.map((o) => o.labelKey)).toEqual([
+      'mweb.shop.sortName',
+      'mweb.shop.sortPriceAsc',
+      'mweb.shop.sortPriceDesc',
+    ]);
   });
 
   it('sorts by name A-Z by default (NAME)', () => {

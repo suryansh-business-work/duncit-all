@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SectionHeader } from '@/components/SectionHeader';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
+import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
@@ -16,21 +19,14 @@ import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
 import { useShopFilters } from '@/hooks/useShopFilters';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
-import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { RefreshScrollView } from '@/components/PullToRefresh';
+import { RefreshScrollView, useRefreshRegistration } from '@/components/PullToRefresh';
 import { useLoadingRegion } from '@/components/Skeleton';
 
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
 export type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';
-
-const SORT_OPTIONS = [
-  ['NAME', 'Name'],
-  ['PRICE_ASC', 'Price ↑'],
-  ['PRICE_DESC', 'Price ↓'],
-] as const;
 
 /** Pure sort helper shared with tests (twin of mWeb's sortShopProducts). */
 export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopProduct[] {
@@ -50,23 +46,43 @@ export function ShopScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { categories } = useHomeData();
-  const { addingId, add } = useQuickAddToCart();
+  const { addingId, add, notice } = useQuickAddToCart();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const reload = useCallback(() => setAttempt((value) => value + 1), []);
   const filters = useShopFilters(categories, products);
   const visible = filters.visible;
+  // The same three sort choices (and copy) as mWeb's SHOP_SORT_OPTIONS.
+  const sortOptions = useMemo(
+    () =>
+      [
+        ['NAME', t('mweb.shop.sortName')],
+        ['PRICE_ASC', t('mweb.shop.sortPriceAsc')],
+        ['PRICE_DESC', t('mweb.shop.sortPriceDesc')],
+      ] as const,
+    [t],
+  );
 
   useEffect(() => {
     let active = true;
+    setIsLoading(true);
+    setFailed(false);
     graphqlRequest(ShopProductsDocument, undefined, { auth: true })
       .then((data) => active && setProducts(data.availablePodProducts))
-      .catch((e) => active && setError(toErrorMessage(e, 'Could not load the shop.')))
+      .catch((error: unknown) => {
+        logs.mobileApp.error('ShopScreen', 'loadProducts', { error });
+        if (active) setFailed(true);
+      })
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  // Pull-to-refresh reloads the catalogue.
+  useRefreshRegistration(reload);
 
   let body;
   if (isLoading) {
@@ -75,11 +91,16 @@ export function ShopScreen() {
         <Spinner {...loadingRegion} size="large" />
       </YStack>
     );
-  } else if (error) {
+  } else if (failed) {
     body = (
-      <Text role="alert" testID="shop-error" padding={24} color="$danger">
-        {error}
-      </Text>
+      <YStack padding={24}>
+        <LoadErrorNotice
+          testID="shop-error"
+          message={t('mweb.shop.loadError')}
+          retryLabel={t('mweb.shop.retry')}
+          onRetry={reload}
+        />
+      </YStack>
     );
   } else if (visible.length === 0) {
     body = <EmptyState testID="shop-empty" icon="search-off" title={t('mweb.shop.emptyState')} />;
@@ -87,6 +108,9 @@ export function ShopScreen() {
     body = (
       <YStack gap={12} paddingHorizontal={16} paddingTop={4}>
         <SectionHeader testID="shop-featured-heading" title={t('mweb.shop.featured')} />
+        {notice ? (
+          <NoticeCard testID="shop-quick-add-notice" tone={notice.tone} title={notice.message} />
+        ) : null}
         <XStack flexWrap="wrap" gap={12} justifyContent="space-between">
           {visible.map((product) => (
             <ShopProductCard
@@ -111,7 +135,7 @@ export function ShopScreen() {
         contentContainerStyle={{ gap: 20, paddingTop: 4, paddingBottom: 32 }}
       >
         <PodShopSlider />
-        <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted={muted} />
+        <ShopFilterBar filters={filters} sortOptions={sortOptions} muted={muted} />
         {body}
       </RefreshScrollView>
     </StackScreen>

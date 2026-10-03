@@ -1058,6 +1058,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       safeDelivery: 'Safe Delivery',
       searchProducts: 'Search products',
       trustedPods: 'Trusted Pods',
+      subCategory: 'Sub-category',
+      // The sort choices in the filter panel — the same three on mWeb and native.
+      sortName: 'Name (A–Z)',
+      sortPriceAsc: 'Price: low to high',
+      sortPriceDesc: 'Price: high to low',
+      loadError: 'Could not load the shop. Please try again.',
+      retry: 'Try again',
+      // Quick-add from the browse grid (the + on a product card).
+      quickAddFailed: 'Could not add this to your cart. Please try again.',
+      quickAddUnavailable: 'No pod stocks this product right now.',
+      quickAddMaxReached: 'You already have all the available stock of this product in your cart.',
     },
     // The pod-type words, shared wherever a pod is labelled or filtered by
     // whether it charges: the Home and Explore price chips, the Create Pod
@@ -3901,6 +3912,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     productDetailPage: {
       productNotFound: 'Product not found.',
+      loadError: 'Could not load this product. Please try again.',
+      noDescription: 'No description provided.',
+      noPod:
+        "Products are purchased from a pod's shop while booking — find this product in a pod near you.",
+      podsError: 'Could not check which pods stock this product.',
+      retry: 'Try again',
     },
     productsManage: {
       avgPrice: 'Avg price',

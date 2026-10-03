@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, useWindowDimensions } from 'react-native';
 import { XStack, YStack } from 'tamagui';
+import { logs } from '@duncit/logs';
 
 import { AppImage } from '@/components/AppImage';
 import { ReelVideo } from '@/components/explore/ReelVideo';
@@ -52,7 +53,8 @@ export function PodShopSlider() {
         }));
         setMedia(items.sort((a, b) => a.order - b.order));
       })
-      .catch(() => undefined);
+      // A failed slider stays hidden (it is decoration) but is never swallowed.
+      .catch((error: unknown) => logs.mobileApp.error('PodShopSlider', 'load', { error }));
     return () => {
       active = false;
     };

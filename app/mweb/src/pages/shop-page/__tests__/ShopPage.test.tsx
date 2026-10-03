@@ -160,6 +160,19 @@ describe('ShopPage', () => {
       { request: { query: SHOP_PRODUCTS }, error: new Error('boom') },
       categoriesMock,
     ]);
-    expect(await screen.findByText('boom')).toBeInTheDocument();
+    // A friendly message, never the raw error text.
+    expect(await screen.findByText('Could not load the shop. Please try again.')).toBeInTheDocument();
+    expect(screen.queryByText('boom')).toBeNull();
+  });
+
+  it('retries a failed load and shows the catalogue once it succeeds', async () => {
+    renderPage([
+      { request: { query: SHOP_PRODUCTS }, error: new Error('boom') },
+      categoriesMock,
+      productsMock,
+    ]);
+    fireEvent.click(await screen.findByTestId('shop-error-retry'));
+    expect(await screen.findByText('Banana')).toBeInTheDocument();
+    expect(screen.queryByTestId('shop-error')).toBeNull();
   });
 });

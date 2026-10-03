@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { logs } from '@duncit/logs';
 
 import { AppBackground } from '@/components/AppBackground';
 import { ProductDetailSheet, type VariantPick } from '@/components/details/ProductDetailSheet';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { ProductPodNotice } from '@/components/shop/ProductPodNotice';
 import { PodsForProductDocument } from '@/graphql/details';
 import { useGoBack } from '@/hooks/useGoBack';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -13,11 +16,15 @@ import type { RootStackParamList } from '@/navigation/types';
 
 type PodOption = ResultOf<typeof PodsForProductDocument>['podsForProduct'][number];
 
+/** Where the pod lookup stands: still loading, failed, or done. */
+type PodLookup = 'loading' | 'failed' | 'done';
+
 /** Standalone product detail (Pod Shop browse → tap a product). Products and
  * pods are separate entities, so the catalogue product carries no pod — we
  * resolve the cheapest live pod that stocks it (podsForProduct) and wire the
  * detail sheet's add/remove to the shared cart, keeping counts synced app-wide.
- * Stays browse-only when no live pod stocks the product. RN twin of mWeb's
+ * Stays browse-only (with a notice saying why, and a Retry when the lookup
+ * failed) when no live pod stocks the product. RN twin of mWeb's
  * ProductDetailPage. */
 export function ProductDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'ProductDetail'>>();
@@ -26,9 +33,13 @@ export function ProductDetailScreen() {
   const lines = useCartStore((s) => s.lines);
   const setLine = useCartStore((s) => s.setLine);
   const [pod, setPod] = useState<PodOption | null>(null);
+  const [lookup, setLookup] = useState<PodLookup>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const reloadPods = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
+    setLookup('loading');
     graphqlRequest(PodsForProductDocument, { productDocId: productId }, { auth: true })
       .then((data) => {
         if (!active) return;
@@ -37,12 +48,19 @@ export function ProductDetailScreen() {
         const options = [...data.podsForProduct];
         options.sort((a, b) => a.unit_cost - b.unit_cost);
         setPod(options[0] ?? null);
+        setLookup('done');
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        logs.mobileApp.error('ProductDetailScreen', 'loadPods', { error, productId });
+        if (active) setLookup('failed');
+      });
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, attempt]);
+
+  // Pull-to-refresh re-resolves the pod too (the sheet reloads the product).
+  useRefreshRegistration(reloadPods);
 
   const selection = useMemo(() => {
     if (!pod) return undefined;
@@ -76,6 +94,12 @@ export function ProductDetailScreen() {
             quantity,
           );
 
+  // No notice while the lookup runs or once a pod is found (mWeb shows none then).
+  const notice =
+    pod == null && lookup !== 'loading' ? (
+      <ProductPodNotice failed={lookup === 'failed'} onRetry={reloadPods} />
+    ) : null;
+
   return (
     <YStack flex={1} testID="product-detail-screen">
       <AppBackground />
@@ -86,6 +110,7 @@ export function ProductDetailScreen() {
         maxQuantity={pod?.available_count ?? 0}
         onUpdateLine={onUpdateLine}
         readOnly={pod == null}
+        notice={notice}
       />
     </YStack>
   );

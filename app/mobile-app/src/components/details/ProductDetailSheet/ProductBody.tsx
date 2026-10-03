@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ProductQuantityBar } from '@/components/details/ProductQuantityBar';
 import { ProductReviews } from '@/components/details/ProductReviews';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useTranslation } from '@/hooks/useTranslation';
 import { formatRupees, productSpecs } from '@/utils/product-specs';
 import { BrandPill, ProductGallery, ProductInfoCard, VariantChips } from './parts';
 import type { Product, Variant } from './types';
@@ -27,6 +29,8 @@ export interface BodyProps {
   onUpdateQuantity?: (quantity: number) => void;
   onZoom: (index: number) => void;
   onOpenBrand: (brandId: string) => void;
+  /** Rendered under the description card (where mWeb shows its pod notice). */
+  notice?: ReactNode;
 }
 
 /**
@@ -53,7 +57,9 @@ export function ProductBody({
   onUpdateQuantity,
   onZoom,
   onOpenBrand,
+  notice,
 }: Readonly<BodyProps>) {
+  const { t } = useTranslation();
   if (!product) return null;
   const description = product.description || product.short_description;
   // Specs reflect the selected variant's colour/size when one is chosen.
@@ -95,7 +101,11 @@ export function ProductBody({
           {product.brand_name ? (
             <BrandPill brandId={brandId} brandName={product.brand_name} onOpenBrand={onOpenBrand} />
           ) : null}
-          <ProductInfoCard description={description || 'No description provided.'} specs={specs} />
+          <ProductInfoCard
+            description={description || t('mweb.productDetailPage.noDescription')}
+            specs={specs}
+          />
+          {notice}
           <ProductReviews productId={product.id} />
         </YStack>
       </RefreshScrollView>

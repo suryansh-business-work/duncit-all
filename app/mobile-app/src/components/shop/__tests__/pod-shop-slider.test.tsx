@@ -1,5 +1,6 @@
 import { Linking } from 'react-native';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { logs } from '@duncit/logs';
 
 import { PodShopSlider, openSliderCta } from '@/components/shop/PodShopSlider';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -64,11 +65,16 @@ describe('PodShopSlider', () => {
     expect(screen.getByTestId('pod-shop-slide-0')).toBeOnTheScreen();
   });
 
-  it('stays hidden when the slider query fails', async () => {
-    mockRequest.mockRejectedValue(new Error('offline'));
+  it('stays hidden when the slider query fails, and logs the failure', async () => {
+    const logError = jest.spyOn(logs.mobileApp, 'error').mockImplementation(() => undefined);
+    const failure = new Error('offline');
+    mockRequest.mockRejectedValue(failure);
     renderWithProviders(<PodShopSlider />);
-    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(logError).toHaveBeenCalledWith('PodShopSlider', 'load', { error: failure }),
+    );
     expect(screen.queryByTestId('pod-shop-slider')).toBeNull();
+    logError.mockRestore();
   });
 
   it('ignores a late slider response after unmount', async () => {

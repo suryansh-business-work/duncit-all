@@ -6,6 +6,7 @@ import {
   ProductOrderModel,
   type FulfilmentMethod,
   type FulfilmentStatus,
+  type IOrderLineItem,
   type IProductOrder,
   type OrderChannel,
   type OrderPaymentMethod,
@@ -189,6 +190,25 @@ async function buildLineItem(line: any, petStore: boolean, session?: ClientSessi
   };
 }
 
+/** The `$inc` (and variant array filter) one sold line applies to its catalogue row. */
+function stockDecrement(order: IProductOrder, item: IOrderLineItem, qty: number, session?: ClientSession) {
+  const inc: Record<string, number> = { inventory_count: -qty };
+  const options: Record<string, unknown> = { session };
+  if (item.variant_id && Types.ObjectId.isValid(item.variant_id)) {
+    inc['variants.$[v].inventory_count'] = -qty;
+    options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
+  }
+  // Pod-channel sales consume units the pod had reserved — release that
+  // share of the reservation so available stock stays truthful.
+  const reservationReleased = order.pod_id ? qty : 0;
+  if (reservationReleased) {
+    inc.requested_count = -reservationReleased;
+  }
+  // The pet store sorts its "bestsellers" by what it actually sold.
+  if (order.channel === 'PET_STORE') inc['store.sold_count'] = qty;
+  return { inc, options, reservationReleased };
+}
+
 /**
  * Point-of-sale stock movement for a freshly created order: decrement the
  * product's inventory (and the bought variant's own count), and step the pod
@@ -205,20 +225,7 @@ async function recordStockForOrder(order: IProductOrder, session?: ClientSession
   for (const item of order.line_items) {
     const qty = Number(item.qty) || 0;
     if (qty <= 0) continue;
-    const inc: Record<string, number> = { inventory_count: -qty };
-    const options: Record<string, unknown> = { session };
-    if (item.variant_id && Types.ObjectId.isValid(item.variant_id)) {
-      inc['variants.$[v].inventory_count'] = -qty;
-      options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
-    }
-    // Pod-channel sales consume units the pod had reserved — release that
-    // share of the reservation so available stock stays truthful.
-    const reservationReleased = order.pod_id ? qty : 0;
-    if (reservationReleased) {
-      inc.requested_count = -reservationReleased;
-    }
-    // The pet store sorts its "bestsellers" by what it actually sold.
-    if (order.channel === 'PET_STORE') inc['store.sold_count'] = qty;
+    const { inc, options, reservationReleased } = stockDecrement(order, item, qty, session);
     // findOneAndUpdate rather than updateOne so the post-decrement counts come
     // back with the write that caused them — a crossing needs both sides.
     const petStore = order.channel === 'PET_STORE';
@@ -450,7 +457,7 @@ interface StoreOrderFacts {
 }
 
 function storeFactsOf(payment: IPayment): StoreOrderFacts | null {
-  const facts = (payment.metadata ?? {}).store;
+  const facts = payment.metadata?.store;
   if (!facts || typeof facts !== 'object') return null;
   return {
     payment_method: facts.payment_method === 'COD' ? 'COD' : 'PREPAID',

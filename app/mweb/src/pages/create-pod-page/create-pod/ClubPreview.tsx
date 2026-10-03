@@ -1,21 +1,12 @@
 import { useState } from 'react';
-import {
-  Avatar,
-  Box,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
-import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
+import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 import ClubSlotsChip from './steps/ClubSlotsChip';
+import ClubDetailsDialog from './ClubDetailsDialog';
 
 interface Props {
   club: CreatePodClub | null;
@@ -23,16 +14,15 @@ interface Props {
   showSlots?: boolean;
 }
 
-/** Selected-club preview — photo + name with a "View club details" dialog
- * showing the club's gallery and description (create-pod step 2). */
+/** Selected-club preview — photo + name with a brief "View club details" dialog
+ * (gallery, description, rating, WhatsApp chats and admin contacts). */
 export default function ClubPreview({ club, showSlots = false }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   if (!club) return null;
-  const images = (club.club_feature_images_and_videos ?? []).filter(
+  const cover = (club.club_feature_images_and_videos ?? []).find(
     (item) => (item.type ?? 'IMAGE') === 'IMAGE'
-  );
-  const cover = images[0]?.url;
+  )?.url;
   const venueCount = club.matched_venues_count ?? 0;
   const venueLabel =
     venueCount === 1
@@ -83,41 +73,7 @@ export default function ClubPreview({ club, showSlots = false }: Readonly<Props>
         </Stack>
       </Box>
 
-      <Dialog data-testid="club-preview-dialog" open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography component="span" sx={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }} noWrap>
-            {club.club_name}
-          </Typography>
-          <DuncitRoundButton data-testid="club-preview-close" tone="surface" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
-            <CloseIcon />
-          </DuncitRoundButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={1.5}>
-            {images.length > 0 && (
-              <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
-                {images.map((item) => (
-                  <Box
-                    key={item.url}
-                    component="img"
-                    src={item.url}
-                    alt={club.club_name}
-                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '18px', flexShrink: 0 }}
-                  />
-                ))}
-              </Stack>
-            )}
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                whiteSpace: 'pre-wrap'
-              }}>
-              {club.club_description?.trim() || t('mweb.createPod.noDescription')}
-            </Typography>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+      <ClubDetailsDialog club={club} open={open} onClose={() => setOpen(false)} />
     </Stack>
   );
 }

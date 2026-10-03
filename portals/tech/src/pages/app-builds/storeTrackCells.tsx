@@ -23,7 +23,7 @@ export interface TrackRelease {
 }
 
 export interface StoreTrackConfig<T extends string, R extends TrackRelease> {
-  field: keyof AppBuildRow & string;
+  field: Extract<keyof AppBuildRow, string>;
   header: string;
   tracks: readonly T[];
   /** The word on the button and the chip. */

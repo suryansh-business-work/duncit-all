@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { trimTrailingSlash } from '@utils/url';
 import type { ClientSession } from 'mongoose';
 import {
   PaymentModel,
@@ -685,7 +686,7 @@ async function codOrderMail(p: IPayment, appUrl: string): Promise<ReceiptMail> {
 /** Where a pet-store receipt sends its reader. */
 async function storeOrdersUrl(p: IPayment, orderNo: string): Promise<string> {
   const { ecommUrl } = await getUrlConfigs();
-  const base = ecommUrl.replace(/\/+$/, '');
+  const base = trimTrailingSlash(ecommUrl);
   if (p.user_id) return `${base}/account/orders`;
   const key = String(p.metadata?.store?.access_key ?? '');
   return `${base}/track?order=${encodeURIComponent(orderNo)}&key=${encodeURIComponent(key)}`;
@@ -871,7 +872,7 @@ async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
       pod.pod_title,
       appDate(pod.pod_date_time),
       appTime(pod.pod_date_time),
-      `${mwebUrl.replace(/\/+$/, '')}/club/${(club as any)?.club_id ?? ''}/pod/${pod.pod_id}`,
+      `${trimTrailingSlash(mwebUrl)}/club/${(club as any)?.club_id ?? ''}/pod/${pod.pod_id}`,
       fullName(host) || 'A host',
       payment.payment_id,
     ],

@@ -24,7 +24,11 @@ async function isBootstrapAdmin(email: string): Promise<boolean> {
 /** Find the account for a proven email, or create a minimal one. */
 async function upsertUser(email: string, extra: { name?: string; duncitUserId?: string; googleSub?: string; handleSeed?: string }): Promise<LiteUserDoc> {
   let user = await userService.byEmail(email);
-  if (!user) {
+  if (user) {
+    if (extra.duncitUserId && !user.duncit_user_id) user.duncit_user_id = extra.duncitUserId;
+    if (extra.googleSub && !user.google_sub) user.google_sub = extra.googleSub;
+    if (!user.is_admin && (await isBootstrapAdmin(email))) user.is_admin = true;
+  } else {
     const name = cleanText(extra.name, 80, 'Name') || email.split('@')[0];
     user = await LiteUserModel.create({
       email,
@@ -34,10 +38,6 @@ async function upsertUser(email: string, extra: { name?: string; duncitUserId?: 
       google_sub: extra.googleSub ?? '',
       is_admin: await isBootstrapAdmin(email),
     });
-  } else {
-    if (extra.duncitUserId && !user.duncit_user_id) user.duncit_user_id = extra.duncitUserId;
-    if (extra.googleSub && !user.google_sub) user.google_sub = extra.googleSub;
-    if (!user.is_admin && (await isBootstrapAdmin(email))) user.is_admin = true;
   }
   if (user.is_blocked) throw forbidden('This account has been blocked');
   user.last_sign_in_at = new Date();

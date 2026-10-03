@@ -24,7 +24,7 @@ export default function SearchPage() {
   const [sort, setSort] = useState<SearchSort>('RELEVANCE');
 
   const debounced = useDebouncedValue(text.trim());
-  const { buttons, nameOf } = useSearchCategories();
+  const { buttons, groups, nameOf } = useSearchCategories();
   const { happening, moreClubs, loading, active, refetch } = useSearchDiscovery(debounced, categoryId);
   const follow = useFollowedClubs();
 
@@ -76,7 +76,7 @@ export default function SearchPage() {
           onEarn={() => navigate('/earn')}
         />
       ) : (
-        <CategoryActions categories={buttons} onSelect={pickCategory} />
+        <CategoryActions groups={groups} onSelect={pickCategory} />
       )}
     </Container>
   );

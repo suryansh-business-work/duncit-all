@@ -240,13 +240,13 @@ function hostMeetingFields(doc: IAutoPod, meeting?: HostMeetingInput | null) {
     autoPodFail('BAD_USER_INPUT', 'Set the meeting link and when the pod happens to host this virtual pod');
   }
   validateMeetingDetails('VIRTUAL', meeting);
-  validateFutureDates(meeting!.pod_date_time, meeting!.pod_end_date_time, true);
+  validateFutureDates(meeting.pod_date_time, meeting.pod_end_date_time, true);
   return {
-    meeting_platform: meeting!.meeting_platform?.trim() || null,
-    meeting_url: meeting!.meeting_url.trim(),
-    meeting_notes: meeting!.meeting_notes?.trim() || null,
-    pod_date_time: new Date(meeting!.pod_date_time),
-    pod_end_date_time: new Date(meeting!.pod_end_date_time),
+    meeting_platform: meeting.meeting_platform?.trim() || null,
+    meeting_url: meeting.meeting_url.trim(),
+    meeting_notes: meeting.meeting_notes?.trim() || null,
+    pod_date_time: new Date(meeting.pod_date_time),
+    pod_end_date_time: new Date(meeting.pod_end_date_time),
   };
 }
 
@@ -534,12 +534,12 @@ export async function clubWithdrawAutoPod(actor: any, autoPodId: string) {
   if (!claim) autoPodFail('FORBIDDEN', 'No club has claimed this Auto Pod.');
   // Any admin of the claiming club may take it back, not only whoever claimed
   // it — the claim belongs to the club, and its admins share it.
-  await clubAdminService.assertClubAdmin(actor, String(claim!.club_id));
+  await clubAdminService.assertClubAdmin(actor, String(claim.club_id));
 
   const others = !!doc.venue_claim || !!doc.host_claim;
   const unpin = doc.location?.bound_by === 'CLUB' && !others;
   const updated = await AutoPodModel.findOneAndUpdate(
-    { _id: doc._id, ...PRE_LIVE_FILTER, 'club_claim.club_id': claim!.club_id },
+    { _id: doc._id, ...PRE_LIVE_FILTER, 'club_claim.club_id': claim.club_id },
     {
       $set: {
         club_claim: null,
@@ -547,7 +547,7 @@ export async function clubWithdrawAutoPod(actor: any, autoPodId: string) {
         ...(unpin ? { location: null } : {}),
       },
       $push: {
-        events: autoPodEvent('CLUB_WITHDRAW', userId, claim!.club_name, 'Club admin withdrew the claim'),
+        events: autoPodEvent('CLUB_WITHDRAW', userId, claim.club_name, 'Club admin withdrew the claim'),
       },
     },
     { new: true }
@@ -560,7 +560,7 @@ export async function clubWithdrawAutoPod(actor: any, autoPodId: string) {
     `Withdrew the club claim on Auto Pod "${doc.pod_title}"`
   );
   await autoPodService.setViewerClock(autoPodId, userId, true);
-  autoPodNotify.withdrawn(updated, 'club', claim!.club_name).catch((error) =>
+  autoPodNotify.withdrawn(updated, 'club', claim.club_name).catch((error) =>
     logs.server.error('autoPod', 'notifyClubWithdrawn', { error, auto_pod_id: autoPodId })
   );
   return autoPodToPub(updated);

@@ -76,6 +76,28 @@ export const HOST_SURVEY_CATEGORY = gql`
   }
 `;
 
+/** Phone, DOB and address off the host's user account. The Edit dialog fills
+ * the host fields still blank from it — hosts drafted from a meeting approval
+ * carry only a name, email and phone. */
+export const HOST_ACCOUNT_PROFILE = gql`
+  query HostAccountProfile($host_doc_id: ID!) {
+    host(host_doc_id: $host_doc_id) {
+      id
+      account_profile {
+        phone
+        dob
+        full_address
+      }
+    }
+  }
+`;
+
+export interface HostAccountProfile {
+  phone: string;
+  dob?: string | null;
+  full_address: string;
+}
+
 /** Row shape used by the hosts table columns; rows also carry the full
  * HostRowFields selection so the Edit/Review dialogs can reuse the row object. */
 export interface HostRow {

@@ -120,6 +120,19 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     really goes.
     """
     is_external: Boolean!
+    "Set when a member's share minted the link. Its destination follows the thing shared."
+    share_target: ShareLinkTarget
+    """
+    True when the marketer forced the link-preview card. Off, the card is read
+    live from the destination on every unfurl, so it follows the destination.
+    """
+    meta_override_enabled: Boolean!
+    "The forced card title. Always set while the override is on."
+    meta_title: String
+    "The forced description; null keeps the destination's own."
+    meta_description: String
+    "The forced image; null keeps the destination's own."
+    meta_image_url: String
     "Where the code actually lands, with the utm tags and dl marker applied."
     tagged_url: String!
     source: ShortLinkSource!
@@ -275,6 +288,38 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     "Required when medium is OTHER."
     medium_other: String
     campaign_id: ID
+    "Force the link-preview card. Off or omitted, it is read from the destination."
+    meta_override_enabled: Boolean
+    "Required while the override is on."
+    meta_title: String
+    meta_description: String
+    meta_image_url: String
+  }
+
+  """
+  An edit to an existing link. The utm tags are not here on purpose: a link
+  already printed keeps the attribution it went out with.
+  """
+  input ShortLinkUpdateInput {
+    label: String!
+    """
+    Refused for a share link, and for a move between a Duncit and an external
+    destination. Moving without sending the override clears the old one.
+    """
+    destination_url: String!
+    "Omit to leave the stored override as it is."
+    meta_override_enabled: Boolean
+    meta_title: String
+    meta_description: String
+    meta_image_url: String
+  }
+
+  "What a destination says about itself — the card an unfurler would show."
+  type ShortLinkDestinationMeta {
+    title: String
+    description: String
+    image_url: String
+    site_name: String
   }
 
   extend type Query {
@@ -284,6 +329,11 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     shortLinkOptions: ShortLinkOptions!
     shortLinksTable(query: TableQueryInput): ShortLinkTablePage!
     shortLink(id: ID!): ShortLink!
+    """
+    The link-preview card a destination publishes right now, read the same way
+    an unfurler reads it. What the console shows before anything is forced.
+    """
+    shortLinkDestinationMeta(destination_url: String!): ShortLinkDestinationMeta!
     "A PNG data URL of the short link, rendered server-side."
     shortLinkQr(id: ID!): String!
     """
@@ -352,6 +402,8 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     """
     shareLink(target: ShareLinkTarget!, ref: ID!): ShareLink!
     createShortLink(input: ShortLinkInput!): ShortLink!
+    "Rename a link, re-point it, or change its link-preview card."
+    updateShortLink(id: ID!, input: ShortLinkUpdateInput!): ShortLink!
     "Retire or revive a link without deleting its click history."
     setShortLinkActive(id: ID!, is_active: Boolean!): ShortLink!
     deleteShortLink(id: ID!): Boolean!

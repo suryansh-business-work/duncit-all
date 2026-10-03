@@ -56,9 +56,9 @@ export function usePagedRows<Row>({ document, field, variables }: Options) {
         setRows((previous) => (next === 1 ? fresh : [...previous, ...fresh]));
         setTotal(answer?.total ?? 0);
         setPage(next);
-      } catch (caught) {
+      } catch (error_) {
         if (ticket !== request.current) return;
-        setError(parseApiError(caught));
+        setError(parseApiError(error_));
       } finally {
         if (ticket === request.current) setLoading(false);
       }

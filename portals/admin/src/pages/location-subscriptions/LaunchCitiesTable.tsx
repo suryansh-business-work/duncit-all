@@ -68,6 +68,13 @@ function SendLaunchCell({ row, onSend }: Readonly<SendCellProps>) {
   );
 }
 
+/** The actions column's renderer, bound to the page's send. */
+function sendCellRenderer(onSend: SendCellProps['onSend']) {
+  return function renderSendCell(row: LaunchCityRow) {
+    return <SendLaunchCell row={row} onSend={onSend} />;
+  };
+}
+
 /** One row per city with subscribers: the totals, and Send for its launch message. */
 export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -155,7 +162,7 @@ export default function LaunchCitiesTable({ rows, onSent, selectedId, onSelect }
         headerName: t('shell.common.actions'),
         type: 'actions',
         minWidth: 220,
-        cellRenderer: (row) => <SendLaunchCell row={row} onSend={send} />,
+        cellRenderer: sendCellRenderer(send),
       },
     ],
     [send, t]

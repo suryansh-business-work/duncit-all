@@ -68,7 +68,7 @@ export function packagingMissing(p: Packable): string[] {
   const variants = p.variants ?? [];
   if (variants.length === 0) return [...missing, ...dimGaps(effectiveDims(p))];
   for (const variant of variants) {
-    const gaps = dimGaps(effectiveDims(p, variant as Partial<Dims>));
+    const gaps = dimGaps(effectiveDims(p, variant));
     if (gaps.length > 0) missing.push(`${variant.option_label || variant.sku || 'variant'}: ${gaps.join(', ')}`);
   }
   return missing;

@@ -1,6 +1,6 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
-import { shortLinkService } from './shortLink.service';
+import { shortLinkService, type ShortLinkUpdateInput } from './shortLink.service';
 import { shortLinkPolicyService } from './shortLinkPolicy.service';
 import { shortLinkJourneyService } from './shortLinkJourney.service';
 import type { JourneyStep } from './shortLinkClick.model';
@@ -26,6 +26,14 @@ export const shortLinkResolvers = {
     shortLink: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.byId(args.id);
+    },
+    shortLinkDestinationMeta: (
+      _p: unknown,
+      args: { destination_url: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.previewDestination(args.destination_url);
     },
     shortLinkQr: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -90,6 +98,14 @@ export const shortLinkResolvers = {
       // no need to re-guard ctx.user for the author id.
       const user = requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.create(args.input, user.id);
+    },
+    updateShortLink: (
+      _p: unknown,
+      args: { id: string; input: ShortLinkUpdateInput },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.update(args.id, args.input);
     },
     setShortLinkActive: (
       _p: unknown,

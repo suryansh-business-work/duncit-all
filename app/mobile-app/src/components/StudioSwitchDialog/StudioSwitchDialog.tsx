@@ -107,7 +107,7 @@ export function StudioSwitchDialog({
               </Text>
               <XStack
                 justifyContent="center"
-                gap={16}
+                gap={10}
                 paddingBottom={16}
                 role="radiogroup"
                 aria-label={t('mweb.common.switchRole')}
@@ -123,8 +123,9 @@ export function StudioSwitchDialog({
                       aria-label={STUDIO_LABEL[option.mode]}
                       aria-checked={selected}
                       onPress={() => setPending(option.mode)}
-                      width={52}
-                      height={52}
+                      flex={1}
+                      maxWidth={52}
+                      aspectRatio={1}
                       alignItems="center"
                       justifyContent="center"
                       borderRadius={26}

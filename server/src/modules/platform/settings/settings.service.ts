@@ -8,6 +8,7 @@ import {
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
 import { getUrlConfigs } from "@config/url-configs";
+import { trimTrailingSlash } from "@utils/url";
 import {
   runTableQuery,
   type TableEntityConfig,
@@ -75,6 +76,9 @@ const DEFAULT_POD_FEEDBACK_DELAY_HOURS = 1;
 /** Days of free slots a venue is offered when accepting an Auto Pod — short,
  * because the host and the club admin still need time to enrol before the date. */
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
+/** Days ahead Home's "Happening nearby" looks — a week, so it reads as what is
+ * on soon rather than everything ever scheduled. */
+const DEFAULT_HAPPENING_NEARBY_DAYS = 7;
 /** Hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
 const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
 /** Hours an Auto Pod's venue, host and club admin have to all enrol before it is released. */
@@ -144,6 +148,10 @@ const cleanPodFeedbackDelayHours = (value: unknown) => {
 const cleanAutoPodSlotWindowDays = (value: unknown) =>
   Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS));
 
+/** Happening nearby window, clamped to 1 – 60 days. */
+const cleanHappeningNearbyDays = (value: unknown) =>
+  Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_HAPPENING_NEARBY_DAYS));
+
 /** Auto Pod venue window, clamped to 1 hour – 30 days. */
 const cleanAutoPodVenueExpiryHours = (value: unknown) =>
   Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS));
@@ -210,6 +218,7 @@ const toAppPub = (d: any) => ({
   pod_cancel_risk_window_hours: cleanPodCancelRiskWindowHours(d?.pod_cancel_risk_window_hours),
   pod_cancel_risk_alert_hours: cleanPodCancelRiskAlertHours(d?.pod_cancel_risk_alert_hours),
   auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
+  happening_nearby_days: cleanHappeningNearbyDays(d?.happening_nearby_days),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
     d?.auto_pod_assignment_expiry_hours,
@@ -597,6 +606,7 @@ type AppSettingsUpdateInput = {
   pod_cancel_risk_window_hours?: number;
   pod_cancel_risk_alert_hours?: number;
   auto_pod_slot_window_days?: number;
+  happening_nearby_days?: number;
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
@@ -626,6 +636,33 @@ const customTimeUpdate = (raw: string | null) => {
   return { custom_time: valid, custom_time_set_at: valid ? new Date() : null };
 };
 
+/** Fields run through their own clamp when the caller supplied them, in update order. */
+const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
+  readonly [keyof AppSettingsUpdateInput, (value: unknown) => unknown]
+> = [
+  ["min_signup_age", cleanMinSignupAge],
+  ["draft_retention_days", cleanRetentionDays],
+  ["max_backout_attempts", cleanMaxBackoutAttempts],
+  ["venue_cancel_health_penalty", cleanVenueCancelHealthPenalty],
+  ["pod_complete_timeout_hours", cleanPodCompleteTimeoutHours],
+  ["ticket_discount_max_pct", cleanTicketDiscountMaxPct],
+  ["pod_complete_reminder_hours", cleanPodCompleteReminderHours],
+  ["pod_reminder_lead_hours", cleanPodReminderLeadHours],
+  ["venue_slot_reminder_lead_hours", cleanVenueSlotReminderLeadHours],
+  ["pod_feedback_delay_hours", cleanPodFeedbackDelayHours],
+  ["pod_auto_cancel_lead_hours", cleanPodAutoCancelLeadHours],
+  ["pod_cancel_risk_window_hours", cleanPodCancelRiskWindowHours],
+  ["pod_cancel_risk_alert_hours", cleanPodCancelRiskAlertHours],
+  ["auto_pod_slot_window_days", cleanAutoPodSlotWindowDays],
+  ["happening_nearby_days", cleanHappeningNearbyDays],
+  ["auto_pod_venue_expiry_hours", cleanAutoPodVenueExpiryHours],
+  ["auto_pod_assignment_expiry_hours", cleanAutoPodAssignmentExpiryHours],
+  ["auto_pod_cancel_health_penalty", cleanAutoPodCancelHealthPenalty],
+  ["venue_change_request_health_penalty", cleanChangeRequestHealthPenalty],
+  ["host_change_request_health_penalty", cleanChangeRequestHealthPenalty],
+  ["club_admin_change_request_health_penalty", cleanChangeRequestHealthPenalty],
+];
+
 const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   const update: any = {};
   for (const field of APP_SETTING_PASSTHROUGH_FIELDS) {
@@ -633,72 +670,9 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   }
   if (input.custom_time !== undefined)
     Object.assign(update, customTimeUpdate(input.custom_time));
-  if (input.min_signup_age !== undefined)
-    update.min_signup_age = cleanMinSignupAge(input.min_signup_age);
-  if (input.draft_retention_days !== undefined)
-    update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
-  if (input.max_backout_attempts !== undefined)
-    update.max_backout_attempts = cleanMaxBackoutAttempts(input.max_backout_attempts);
-  if (input.venue_cancel_health_penalty !== undefined)
-    update.venue_cancel_health_penalty = cleanVenueCancelHealthPenalty(
-      input.venue_cancel_health_penalty,
-    );
-  if (input.pod_complete_timeout_hours !== undefined)
-    update.pod_complete_timeout_hours = cleanPodCompleteTimeoutHours(
-      input.pod_complete_timeout_hours,
-    );
-  if (input.ticket_discount_max_pct !== undefined)
-    update.ticket_discount_max_pct = cleanTicketDiscountMaxPct(input.ticket_discount_max_pct);
-  if (input.pod_complete_reminder_hours !== undefined)
-    update.pod_complete_reminder_hours = cleanPodCompleteReminderHours(
-      input.pod_complete_reminder_hours,
-    );
-  if (input.pod_reminder_lead_hours !== undefined)
-    update.pod_reminder_lead_hours = cleanPodReminderLeadHours(input.pod_reminder_lead_hours);
-  if (input.venue_slot_reminder_lead_hours !== undefined)
-    update.venue_slot_reminder_lead_hours = cleanVenueSlotReminderLeadHours(
-      input.venue_slot_reminder_lead_hours,
-    );
-  if (input.pod_feedback_delay_hours !== undefined)
-    update.pod_feedback_delay_hours = cleanPodFeedbackDelayHours(input.pod_feedback_delay_hours);
-  if (input.pod_auto_cancel_lead_hours !== undefined)
-    update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
-      input.pod_auto_cancel_lead_hours,
-    );
-  if (input.pod_cancel_risk_window_hours !== undefined)
-    update.pod_cancel_risk_window_hours = cleanPodCancelRiskWindowHours(
-      input.pod_cancel_risk_window_hours,
-    );
-  if (input.pod_cancel_risk_alert_hours !== undefined)
-    update.pod_cancel_risk_alert_hours = cleanPodCancelRiskAlertHours(
-      input.pod_cancel_risk_alert_hours,
-    );
-  if (input.auto_pod_slot_window_days !== undefined)
-    update.auto_pod_slot_window_days = cleanAutoPodSlotWindowDays(input.auto_pod_slot_window_days);
-  if (input.auto_pod_venue_expiry_hours !== undefined)
-    update.auto_pod_venue_expiry_hours = cleanAutoPodVenueExpiryHours(
-      input.auto_pod_venue_expiry_hours,
-    );
-  if (input.auto_pod_assignment_expiry_hours !== undefined)
-    update.auto_pod_assignment_expiry_hours = cleanAutoPodAssignmentExpiryHours(
-      input.auto_pod_assignment_expiry_hours,
-    );
-  if (input.auto_pod_cancel_health_penalty !== undefined)
-    update.auto_pod_cancel_health_penalty = cleanAutoPodCancelHealthPenalty(
-      input.auto_pod_cancel_health_penalty,
-    );
-  if (input.venue_change_request_health_penalty !== undefined)
-    update.venue_change_request_health_penalty = cleanChangeRequestHealthPenalty(
-      input.venue_change_request_health_penalty,
-    );
-  if (input.host_change_request_health_penalty !== undefined)
-    update.host_change_request_health_penalty = cleanChangeRequestHealthPenalty(
-      input.host_change_request_health_penalty,
-    );
-  if (input.club_admin_change_request_health_penalty !== undefined)
-    update.club_admin_change_request_health_penalty = cleanChangeRequestHealthPenalty(
-      input.club_admin_change_request_health_penalty,
-    );
+  for (const [field, clean] of APP_SETTING_CLEANED_FIELDS) {
+    if (input[field] !== undefined) update[field] = clean(input[field]);
+  }
   return update;
 };
 
@@ -730,6 +704,7 @@ export const settingsService = {
         doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
       pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(doc.pod_complete_timeout_hours),
       ticket_discount_max_pct: cleanTicketDiscountMaxPct(doc.ticket_discount_max_pct),
+      happening_nearby_days: cleanHappeningNearbyDays(doc.happening_nearby_days),
     };
   },
 
@@ -891,7 +866,7 @@ export const settingsService = {
       apple_bundle_id: appleBundleId.trim(),
       apple_services_id: appleServicesId.trim(),
       apple_web_redirect_uri: appleWebRedirectUri.trim(),
-      apple_relay_url: `${serverUrl.replace(/\/+$/, "")}/apple/callback`,
+      apple_relay_url: `${trimTrailingSlash(serverUrl)}/apple/callback`,
     };
   },
 

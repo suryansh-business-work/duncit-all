@@ -1,89 +1,68 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
-import { DuncitButton } from '@duncit/buttons';
+import type { ReactNode } from 'react';
+import { gql } from '@apollo/client';
 import { logs } from '@duncit/logs';
-import { useTranslation } from '../i18n/useTranslation';
+import { DuncitErrorBoundary } from '@duncit/ui';
+import { ISSUE_REPORT_CATEGORY } from '@duncit/errors';
+import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
+import { buildCrashReportMessage, type BoundaryScope, type CrashReport } from '@duncit/utils';
+import { apolloClient } from '../apollo';
 import { isStaleChunkError, reloadForStaleChunk } from './staleChunkReload';
 
-interface Props {
-  children: ReactNode;
-}
+const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
 
-interface State {
-  error: Error | null;
+/**
+ * A route chunk this document can no longer load means a deploy landed under
+ * an open tab. Reload once to pick up the new index.html instead of showing a
+ * crash screen for a site that is fine — and log it as a warn, because nothing
+ * is broken. A second one falls through to the fallback.
+ */
+function onCaught(error: unknown): 'warn' | 'error' {
+  reloadForStaleChunk(error);
+  return isStaleChunkError(error) ? 'warn' : 'error';
 }
 
 /**
- * The fallback itself, as a function component — a boundary has to be a class,
- * and a class cannot call `useTranslation`. One icon, one line, one way back.
- * Native twin: components/ErrorBoundary (ErrorPanel).
+ * Report an Issue also files a support feedback row (Slack + the support
+ * table) for a signed-in member. That mutation needs a session, so a
+ * signed-out crash is reported through its log row alone.
  */
-function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
-  const { t } = useTranslation();
+async function fileFeedback(report: CrashReport): Promise<void> {
+  if (!localStorage.getItem('token')) return;
+  await apolloClient.mutate({
+    mutation: SUBMIT_APP_FEEDBACK,
+    variables: {
+      input: buildAppFeedbackInput({
+        category: ISSUE_REPORT_CATEGORY,
+        message: buildCrashReportMessage(report),
+        platform: 'web',
+        app_version: report.app_version,
+        source_screen: report.route,
+      }),
+    },
+  });
+}
+
+/**
+ * mWeb's error boundary — the shared DuncitErrorBoundary with mWeb's logger,
+ * stale-chunk recovery and feedback pipeline. `root` wraps the whole provider
+ * tree (main.tsx); the default `page` wraps the routed page (App.tsx), which is
+ * remounted per path, so navigating away clears a crash.
+ * Native twin: components/ErrorBoundary.
+ */
+export default function ErrorBoundary({
+  children,
+  scope = 'page',
+}: Readonly<{ children: ReactNode; scope?: BoundaryScope }>) {
   return (
-    <Box
-      data-testid="error-boundary-fallback"
-      // The page it replaced vanished without a sound; this says why (WCAG 4.1.3).
-      role="alert"
-      sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
+    <DuncitErrorBoundary
+      logger={logs.mWeb}
+      surface="mWeb"
+      scope={scope}
+      appVersion={__APP_VERSION__}
+      onCaught={onCaught}
+      onReport={fileFeedback}
     >
-      <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
-        <Box
-          sx={{
-            width: 96,
-            height: 96,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <ErrorOutlineIcon sx={{ fontSize: 44, color: 'error.main' }} />
-        </Box>
-        <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
-          {t('mweb.errorBoundary.somethingWentWrong')}
-        </Typography>
-        <DuncitButton data-testid="error-boundary-retry" variant="contained" size="large" onClick={onRetry}>
-          {t('mweb.errorBoundary.tryAgain')}
-        </DuncitButton>
-      </Stack>
-    </Box>
+      {children}
+    </DuncitErrorBoundary>
   );
-}
-
-/**
- * App-wide error boundary — catches render/runtime errors anywhere in the tree
- * and shows a recoverable fallback instead of a blank screen. mWeb twin of the
- * mobile ErrorBoundary.
- */
-export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
-
-  static getDerivedStateFromError(error: Error): State {
-    return { error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    // A route chunk this document can no longer load means a deploy landed
-    // under an open tab. Reload once to pick up the new index.html instead of
-    // showing a crash screen for a site that is fine — and log it as a warn,
-    // because nothing is broken. A second one falls through to the error below.
-    const recovering = reloadForStaleChunk(error);
-    const level = isStaleChunkError(error) ? 'warn' : 'error';
-    logs.mWeb[level]('ErrorBoundary', 'componentDidCatch', {
-      error,
-      msg: 'ErrorBoundary caught an error',
-      componentStack: info.componentStack,
-      recovering,
-    });
-  }
-
-  private readonly reset = () => this.setState({ error: null });
-
-  render() {
-    if (!this.state.error) return this.props.children;
-
-    return <ErrorPanel onRetry={this.reset} />;
-  }
 }

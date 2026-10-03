@@ -65,3 +65,5 @@ export { SidebarList, countBadge } from './sidebar-list';
 export type { SidebarFilter, SidebarItem, SidebarListProps, SidebarOption } from './sidebar-list';
 export { ScrollRail } from './ScrollRail';
 export type { ScrollRailProps } from './ScrollRail';
+export { DuncitErrorBoundary, ErrorFallback } from './error-boundary';
+export type { BoundaryLogger, DuncitErrorBoundaryProps, ErrorFallbackProps } from './error-boundary';

@@ -1702,6 +1702,26 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       decrease: 'Decrease {name}',
       increase: 'Increase {name}',
       removeItem: 'Remove {name}',
+      // The Cart | Wishlist tabs on the cart screen (mWeb + native).
+      tabsLabel: 'Cart and wishlist',
+      tabCart: 'Cart',
+      tabWishlist: 'Wishlist',
+      moveToWishlist: 'Move to wishlist',
+      // Each row's accessible name starts with the visible label (WCAG 2.5.3).
+      moveToWishlistItem: 'Move to wishlist: {name}',
+      moveToCart: 'Move to cart',
+      moveToCartItem: 'Move to cart: {name}',
+      removeFromWishlist: 'Remove {name} from wishlist',
+      wishlistEmpty: 'Your wishlist is empty',
+      // The "your cart is calling" nudge above the bottom bar. Explicit
+      // One/Many pairs, like checkout's seats, for the key gate.
+      nudgeTitle: 'Your cart is calling',
+      nudgeBodyOne: '1 item is waiting for you. Check out before it sells out.',
+      nudgeBodyMany: '{count} items are waiting for you. Check out before they sell out.',
+      nudgeCheckout: 'Checkout now',
+      nudgeLater: 'Remind me next time',
+      nudgeMute: "Don't remind me again",
+      nudgeDismiss: 'Dismiss cart reminder',
     },
     // The money path: the pod-membership checkout, the standalone product
     // checkout, and the confirmation both of them end on. mWeb and the native
@@ -2162,6 +2182,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewClubDetails: 'View club details',
       closeClubDetails: 'Close club details',
       noDescription: 'No description yet.',
+      // View club details: rating, WhatsApp chats and the admins' contacts.
+      clubRatingsCount: {
+        one: '{count} rating',
+        other: '{count} ratings',
+      },
+      clubNoRatings: 'No ratings yet',
+      clubAdmins: 'Club admins',
+      clubDetailsLoadFailed: 'Could not load the club details. Please try again.',
       // Open venue slots per club — a physical pod cannot be planned without one.
       clubSlots: {
         one: '{count} open slot',
@@ -3614,11 +3642,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       whyAreYouCancelling: 'Why are you cancelling?',
       whyAreYouRescheduling: 'Why are you rescheduling?',
       subtitle: 'Pick a way to start earning on Duncit.',
-    },
-    errorBoundary: {
-      anUnexpectedError: 'An unexpected error occurred. Please try again.',
-      somethingWentWrong: 'Something went wrong',
-      tryAgain: 'Try again',
     },
     faqs: {
       searchFaqs: 'Search FAQs',

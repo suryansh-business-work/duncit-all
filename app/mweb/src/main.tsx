@@ -162,7 +162,7 @@ function mount() {
   // recoverable fallback instead of unmounting React to a blank white screen.
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <ErrorBoundary>
+      <ErrorBoundary scope="root">
         <ApolloProvider client={apolloClient}>
           <UserProvider isAuthed={isAuthed} loadUser={loadUserInfo} storageKey="mweb_user">
             <AppLocaleProvider fallback={MWEB_FALLBACK_FLAT}>

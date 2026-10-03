@@ -107,8 +107,8 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
 
 interface PodPlaceRow {
   pod_mode?: string | null;
-  venue_id?: unknown;
-  location_id?: unknown;
+  venue_id?: Types.ObjectId | string | null;
+  location_id?: Types.ObjectId | string | null;
 }
 
 /** The ids in `ids` this memo has not seen yet, valid ones only — a malformed

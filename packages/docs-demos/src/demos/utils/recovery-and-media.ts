@@ -12,6 +12,9 @@ import {
   isVideoMedia,
   videoSourceUrl,
   imageSourceUrl,
+  isReelPreloaded,
+  reelFeed,
+  shouldExtendReelFeed,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 import type { PasswordRecoveryMock, HandleMock } from './mocks';
@@ -134,5 +137,32 @@ export const recoveryAndMediaDemos: PackageDemo[] = [
     },
     compute: (mock) =>
       Object.fromEntries(mock.urls.map((url) => [url, imageSourceUrl(url, mock.width)])),
+  }),
+  defineDemo<{ seed: number; activeIndex: number; cycles: number; pods: string[] }>({
+    id: 'reel-feed',
+    title: 'The Explore reel order, and when the next pass is dealt',
+    note:
+      'Change `seed` and the order reshuffles — that is a new visit. Keep it and reorder ' +
+      '`pods`: nothing moves, which is why a refetch after a like or a save never jumps the feed. ' +
+      'Push `activeIndex` to within two of the end and `Deal next pass` turns true; raise ' +
+      '`cycles` and the feed carries on into a fresh shuffle, never opening on the reel the ' +
+      'last pass closed on.',
+    mock: {
+      seed: 1727950000000,
+      activeIndex: 1,
+      cycles: 2,
+      pods: ['DUN-POD-4821', 'DUN-POD-4822', 'DUN-POD-4823', 'DUN-POD-4824'],
+    },
+    compute: (mock) => {
+      const feed = reelFeed(mock.pods, (pod) => pod, mock.seed, mock.cycles);
+      return {
+        Order: feed.map((entry) => entry.key).join(' → '),
+        'Deal next pass': String(shouldExtendReelFeed(mock.activeIndex, feed.length)),
+        'Loading now': feed
+          .filter((_, index) => isReelPreloaded(index, mock.activeIndex))
+          .map((entry) => entry.key)
+          .join(', '),
+      };
+    },
   }),
 ];

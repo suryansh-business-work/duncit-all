@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeData, useHomeFeed } from '@/hooks/useHomeFeed';
+import { useAppSettingsStore } from '@/stores/app-settings.store';
 
 const mockHomeState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
   data: undefined,
@@ -260,6 +261,36 @@ describe('useHomeFeed', () => {
   });
 });
 
+it('keeps Happening nearby to the admin window, a week until the setting loads', () => {
+  mockHomeState.data = {
+    clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+    pods: [pod('soon', 'c1', future(2)), pod('later', 'c1', future(10))],
+    categories: [],
+  } as never;
+  const weekHook = renderHook(() => useHomeFeed(''));
+  const week = weekHook.result.current;
+  expect(week.nearbyPods.map((p) => p.id)).toEqual(['soon']);
+  expect(week.featuredPods.map((p) => p.id)).toEqual(['soon']);
+  expect(week.totalPods).toBe(1);
+  // The club section still lists the pod beyond the window.
+  expect(week.activePods.map((p) => p.id)).toEqual(['soon', 'later']);
+  // Unmounted first, so the settings update below reaches no mounted hook.
+  weekHook.unmount();
+
+  useAppSettingsStore.setState({
+    data: { publicAppSettings: { happening_nearby_days: 14 } } as never,
+  });
+  try {
+    const fortnightHook = renderHook(() => useHomeFeed(''));
+    const fortnight = fortnightHook.result.current;
+    expect(fortnight.nearbyPods.map((p) => p.id)).toEqual(['soon', 'later']);
+    expect(fortnight.totalPods).toBe(2);
+    fortnightHook.unmount();
+  } finally {
+    useAppSettingsStore.setState({ data: undefined });
+  }
+});
+
 describe('useHomeFeed filters (bug 6)', () => {
   beforeEach(() => {
     mockHomeState.data = {
@@ -378,6 +409,9 @@ describe('deriveHome edge cases', () => {
     } as never;
     const { result } = renderHook(() => useHomeFeed(''));
     expect(result.current.clubsWithPods).toHaveLength(1); // c2 has no pods → dropped
-    expect(result.current.featuredPods).toHaveLength(2); // both dateless → epoch 0
+    // Dateless pods cannot be placed in the Happening nearby window…
+    expect(result.current.featuredPods).toHaveLength(0);
+    // …but the club feed still sorts them, as epoch 0.
+    expect(result.current.activePods).toHaveLength(2);
   });
 });

@@ -51,8 +51,8 @@ const blankLiterals = {
   IntValue: (node: { value: string }) => ({ ...node, value: '0' }),
   FloatValue: (node: { value: string }) => ({ ...node, value: '0' }),
   StringValue: (node: { value: string }) => ({ ...node, value: '', block: false }),
-  ListValue: (node: { values: unknown[] }) => ({ ...node, values: [] }),
-  ObjectValue: (node: { fields: unknown[] }) => ({ ...node, fields: [] }),
+  ListValue: (node: { values: readonly unknown[] }) => ({ ...node, values: [] }),
+  ObjectValue: (node: { fields: readonly unknown[] }) => ({ ...node, fields: [] }),
 };
 
 const definitionName = (definition: DefinitionNode): string =>
@@ -62,7 +62,7 @@ function signatureOf(document: DocumentNode, operation: OperationDefinitionNode)
   const fragments = document.definitions.filter((d) => d.kind === Kind.FRAGMENT_DEFINITION);
   fragments.sort((a, b) => definitionName(a).localeCompare(definitionName(b)));
   const reduced: DocumentNode = { ...document, definitions: [operation, ...fragments] };
-  const blanked = visit(reduced, blankLiterals as never) as DocumentNode;
+  const blanked = visit(reduced, blankLiterals) as DocumentNode;
   return stripIgnoredCharacters(print(blanked)).slice(0, MAX_SIGNATURE_CHARS);
 }
 

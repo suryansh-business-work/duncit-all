@@ -20,6 +20,15 @@ function preview(template: AisensyTemplateOption, params: readonly string[]): st
   return [template.header, body, template.footer].filter(Boolean).join('\n\n');
 }
 
+type ButtonValue = WhatsappValues['buttons'][number];
+
+/** The button values with `index` set to `value` — or dropped when the value is cleared. */
+function withButtonValue(rows: readonly ButtonValue[], index: number, value: string): ButtonValue[] {
+  const next = rows.filter((row) => row.index !== index);
+  if (value) next.push({ index, value });
+  return next;
+}
+
 /**
  * One field per template variable, one per dynamic button link, and the message
  * as it will read. Text may carry {{variables}}; the run fills them per contact.
@@ -66,11 +75,7 @@ export default function TemplateParamFields({ control, watch, template, paramCou
                 label={t('ai.automation.inspector.whatsapp.button', { vars: { n: position + 1 } })}
                 helperText={`${button.text} — ${t('ai.automation.inspector.whatsapp.buttonHint')}`}
                 value={current}
-                onChange={(event) => {
-                  const next = rows.filter((row) => row.index !== button.index);
-                  if (event.target.value) next.push({ index: button.index, value: event.target.value });
-                  field.onChange(next);
-                }}
+                onChange={(event) => field.onChange(withButtonValue(rows, button.index, event.target.value))}
               />
             );
           }}

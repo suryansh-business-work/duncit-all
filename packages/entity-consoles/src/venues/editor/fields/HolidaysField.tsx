@@ -19,6 +19,10 @@ import type { VenueFormValues } from '../types';
  */
 const DAY = 'yyyy-MM-dd';
 
+/** The holidays without `day`. */
+const withoutDay = (days: readonly string[], day: string): string[] =>
+  days.filter((d) => d !== day);
+
 export default function HolidaysField({
   control,
 }: Readonly<{ control: Control<VenueFormValues> }>) {
@@ -61,7 +65,7 @@ export default function HolidaysField({
                     key={day}
                     size="small"
                     label={day}
-                    onDelete={() => field.onChange(days.filter((d) => d !== day))}
+                    onDelete={() => field.onChange(withoutDay(days, day))}
                   />
                 ))}
               </Stack>

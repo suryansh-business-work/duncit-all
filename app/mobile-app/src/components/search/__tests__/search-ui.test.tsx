@@ -5,6 +5,7 @@ import { SearchResultsSection } from '@/components/search/SearchResultsSection';
 import { CategoryActions } from '@/components/search/CategoryActions';
 import { SearchEmptyState } from '@/components/search/SearchEmptyState';
 import { SearchSuggestions } from '@/components/search/SearchSuggestions';
+import { CategoryLevel } from '@/generated/graphql/graphql';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { SearchCategory, SearchClubResult, SearchSuggestion } from '@/hooks/useSearch';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -174,25 +175,78 @@ const category = (over: Partial<SearchCategory>) =>
 
 describe('CategoryActions', () => {
   it('shows a placeholder when there are no categories', () => {
-    renderWithProviders(<CategoryActions categories={[]} onSelect={jest.fn()} />);
+    renderWithProviders(<CategoryActions groups={[]} onSelect={jest.fn()} />);
     expect(screen.getByTestId('search-category-empty')).toBeOnTheScreen();
   });
 
-  it('renders emoji and fallback-glyph buttons and selects one', () => {
+  it('groups tiles under their super category with each icon kind, and selects one', () => {
     const onSelect = jest.fn();
     renderWithProviders(
       <CategoryActions
-        categories={[
-          category({ id: 'c1', name: 'Sports', icon: '🏸' }),
-          category({ id: 'c2', name: 'Creative', icon: 'PaletteIconName' }),
-          category({ id: 'c3', name: 'Music', icon: null }),
+        groups={[
+          {
+            superCategory: category({
+              id: 's1',
+              name: 'Active',
+              level: CategoryLevel.Super,
+              icon: '⚡',
+            }),
+            categories: [
+              category({ id: 'c1', name: 'Sports', icon: '🏸', parent_id: 's1' }),
+              category({ id: 'c2', name: 'Creative', icon: 'PaletteIconName', parent_id: 's1' }),
+            ],
+          },
+          {
+            superCategory: category({
+              id: 's2',
+              name: 'Calm',
+              level: CategoryLevel.Super,
+              icon: null,
+            }),
+            categories: [
+              category({ id: 'c3', name: 'Music', icon: null, parent_id: 's2' }),
+              category({
+                id: 'c4',
+                name: 'Art',
+                icon: 'https://ik.imagekit.io/duncit/art.png',
+                parent_id: 's2',
+              }),
+            ],
+          },
         ]}
         onSelect={onSelect}
       />,
     );
+    expect(screen.getByText('Active')).toBeOnTheScreen();
+    expect(screen.getByText('Calm')).toBeOnTheScreen();
+    expect(screen.getByText('⚡')).toBeOnTheScreen();
     expect(screen.getByText('🏸')).toBeOnTheScreen();
+    expect(screen.getByTestId('search-cat-group-s2')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('search-cat-c2'));
     expect(onSelect).toHaveBeenCalledWith('c2');
+  });
+
+  it('shows the admin image icon, and the glyph once that image fails', () => {
+    renderWithProviders(
+      <CategoryActions
+        groups={[
+          {
+            superCategory: category({
+              id: 's1',
+              name: 'Calm',
+              level: CategoryLevel.Super,
+              icon: null,
+            }),
+            categories: [
+              category({ id: 'c4', name: 'Art', icon: 'https://ik.imagekit.io/duncit/art.png' }),
+            ],
+          },
+        ]}
+        onSelect={jest.fn()}
+      />,
+    );
+    fireEvent(screen.getByTestId('search-cat-c4-image'), 'error');
+    expect(screen.queryByTestId('search-cat-c4-image')).toBeNull();
   });
 });
 

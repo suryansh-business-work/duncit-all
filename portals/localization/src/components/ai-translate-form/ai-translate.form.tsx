@@ -93,7 +93,7 @@ export function AiTranslateDialog({
     setOpError(null);
     try {
       const res = await start({
-        variables: { input: { ...values, ...where }, url: window.location.href },
+        variables: { input: { ...values, ...where }, url: globalThis.location.href },
       });
       // Languages with nothing to send get no job, so count what actually started.
       notifySuccess(t('localization.ai.started', { count: res.data?.startAiTranslation.length ?? 0 }));

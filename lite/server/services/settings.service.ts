@@ -24,6 +24,14 @@ export interface AdminSettingsInput {
   max_ticket_price?: number | null;
 }
 
+/** Whole, distinct reminder hours in 1–720, latest first; at least one is required. */
+function reminderHours(requested: number[]): number[] {
+  const hours = [...new Set(requested.map((h) => Math.trunc(h)).filter((h) => h > 0 && h <= 720))];
+  if (hours.length === 0) throw badInput('Give at least one reminder hour between 1 and 720');
+  hours.sort((a, b) => b - a);
+  return hours;
+}
+
 export const settingsService = {
   async seed(): Promise<void> {
     await LiteSettingsModel.updateOne({ key: 'global' }, { $setOnInsert: { key: 'global' } }, { upsert: true });
@@ -85,11 +93,7 @@ export const settingsService = {
     if (input.duncit_graphql_url != null) $set.duncit_graphql_url = cleanText(input.duncit_graphql_url, 300, 'Duncit GraphQL URL');
     if (input.duncit_app_url != null) $set.duncit_app_url = cleanText(input.duncit_app_url, 300, 'Duncit app URL');
     if (input.reminders_enabled != null) $set.reminders_enabled = input.reminders_enabled;
-    if (input.reminder_hours_before != null) {
-      const hours = [...new Set(input.reminder_hours_before.map((h) => Math.trunc(h)).filter((h) => h > 0 && h <= 720))];
-      if (hours.length === 0) throw badInput('Give at least one reminder hour between 1 and 720');
-      $set.reminder_hours_before = hours.sort((a, b) => b - a);
-    }
+    if (input.reminder_hours_before != null) $set.reminder_hours_before = reminderHours(input.reminder_hours_before);
     if (input.upi_help_text != null) $set.upi_help_text = cleanText(input.upi_help_text, 500, 'UPI help text');
     if (input.admin_emails != null) $set.admin_emails = [...new Set(input.admin_emails.map(normalizeEmail))];
     if (input.max_ticket_price != null) $set.max_ticket_price = Math.max(0, Math.trunc(input.max_ticket_price));

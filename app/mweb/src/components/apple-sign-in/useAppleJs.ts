@@ -87,8 +87,10 @@ export function useAppleJs(servicesId: string, redirectUri: string): AppleIdAuth
 /** What Apple's popup answers when the person closed it — a cancel, not a failure. */
 const CANCELLED = new Set(['popup_closed_by_user', 'user_cancelled_authorize']);
 
-export const isAppleCancel = (error: unknown): boolean =>
-  CANCELLED.has(String((error as { error?: unknown } | null)?.error ?? ''));
+export const isAppleCancel = (error: unknown): boolean => {
+  const code = (error as { error?: unknown } | null)?.error;
+  return typeof code === 'string' && CANCELLED.has(code);
+};
 
 /** Apple's answer as the credential the page spends. */
 export function appleCredentialOf(response: AppleSignInResponse): SocialCredential {

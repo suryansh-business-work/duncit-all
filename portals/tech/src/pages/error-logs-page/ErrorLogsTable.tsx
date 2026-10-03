@@ -1,16 +1,17 @@
-import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, Typography } from '@mui/material';
-import {
-  DuncitTable,
-  type DuncitColumn,
-  type TableFetch,
-  type TableQuerySnapshot,
-} from '@duncit/table';
-import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
+import { useMemo } from 'react';
+import { Chip } from '@mui/material';
+import { DuncitTable, type DuncitColumn } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
+import { envOptions } from '../../components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
-import { formatDateTime, useTranslation } from '@duncit/app-settings';
-
-const getRowId = (row: ErrorLogRow) => row.id;
+import {
+  getErrorRowId,
+  renderEnvironment,
+  renderMessage,
+  renderUser,
+  renderWhen,
+  type ErrorLogTableProps,
+} from './errorLogCells';
 
 const KIND_COLOR: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
   SERVER: 'error',
@@ -26,47 +27,10 @@ const KIND_COLOR: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
 /** The chip shows the kind itself, so the filter lists the same raw values. */
 const KIND_OPTIONS = Object.keys(KIND_COLOR).map((kind) => ({ value: kind, label: kind }));
 
-const renderEnvironment = (row: ErrorLogRow) => (
-  <Chip size="small" label={row.environment} color={ENV_COLOR[row.environment] ?? 'default'} />
-);
-
 const renderKind = (row: ErrorLogRow) => {
   const kind = parseIssueData(row).kind ?? '—';
   return <Chip size="small" variant="outlined" label={kind} color={KIND_COLOR[kind] ?? 'default'} />;
 };
-
-const renderMessage = (row: ErrorLogRow) => (
-  <Typography variant="body2" noWrap title={row.error?.message ?? ''}>
-    {row.error?.message ?? '—'}
-  </Typography>
-);
-
-const renderUser = (row: ErrorLogRow) => <UserCell user={row.user} />;
-
-const renderWhen = (row: ErrorLogRow) => (
-  <Typography variant="body2" sx={{
-    color: "text.secondary"
-  }}>
-    {formatDateTime(row.created_at)}
-  </Typography>
-);
-
-interface Props {
-  fetchRows: TableFetch<ErrorLogRow>;
-  refetchRef: MutableRefObject<(() => void) | null>;
-  onOpen: (row: ErrorLogRow) => void;
-  /** DuncitTable's checkbox column, for the bulk delete above the table. */
-  selection: {
-    onChange: (rows: ErrorLogRow[]) => void;
-    clearRef: MutableRefObject<(() => void) | null>;
-  };
-  /**
-   * Reports the query behind the rows — WITH the pinned error-module marker, so
-   * a delete from this page can never reach a log the module never wrote.
-   */
-  onQueryChange: (snapshot: TableQuerySnapshot) => void;
-  toolbarActions?: ReactNode;
-}
 
 export default function ErrorLogsTable({
   fetchRows,
@@ -75,7 +39,7 @@ export default function ErrorLogsTable({
   selection,
   onQueryChange,
   toolbarActions,
-}: Readonly<Props>) {
+}: Readonly<ErrorLogTableProps>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorLogRow>[]>(
     () => [
@@ -140,7 +104,7 @@ export default function ErrorLogsTable({
       tableId="tech-error-logs"
       columns={columns}
       fetchRows={fetchRows}
-      getRowId={getRowId}
+      getRowId={getErrorRowId}
       emptyText={t('tech.errorLogs.noServerOperationErrorsLoggedYet')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search page, source or message"

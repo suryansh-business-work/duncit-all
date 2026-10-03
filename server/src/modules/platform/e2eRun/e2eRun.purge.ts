@@ -48,7 +48,7 @@ interface PurgedCollection {
   deleted: number;
 }
 
-const clean = (value: unknown): string => String(value ?? '').trim();
+const clean = (value: unknown): string => (typeof value === 'string' ? value : '').trim();
 
 /**
  * The run account and any address a scenario derived from it by suffixing the

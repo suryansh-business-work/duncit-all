@@ -363,7 +363,7 @@ export function publishGaps(
   if (!p.brand_id) gaps.push('a brand');
   // ShipRocket bills the packed parcel: every variant's (falling back to the
   // product's) weight and L × B × H, and the HSN code for the GST invoice.
-  const packaging = packagingMissing(p as never);
+  const packaging = packagingMissing(p);
   if (packaging.length > 0) gaps.push(`the packaging (${packaging.join('; ')})`);
   return gaps;
 }

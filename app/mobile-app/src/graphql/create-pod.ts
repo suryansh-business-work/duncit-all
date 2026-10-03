@@ -252,3 +252,26 @@ export const ModeratePodContentDocument = gql(`
     }
   }
 `);
+
+/** The selected club's "View club details" sheet — rating, WhatsApp chats and
+ * the admins' contact details, read on demand for one club. mWeb twin:
+ * CREATE_POD_CLUB_DETAILS (rule 27). */
+export const CreatePodClubDetailsDocument = gql(`
+  query MobileCreatePodClubDetails($club_doc_id: ID!) {
+    club(club_doc_id: $club_doc_id) {
+      id
+      rating
+      ratings_count
+      club_whats_app_community_link
+      club_whats_app_group_link
+      club_admins {
+        id
+        name
+        avatar_url
+        email
+        phone
+        whatsapp
+      }
+    }
+  }
+`);

@@ -72,8 +72,8 @@ export default function CreateShortLinkDialog({
       </DialogTitle>
       <DialogContent dividers>
         <ShortLinkForm
-          options={options}
-          campaigns={campaignsData?.shortLinkCampaigns ?? []}
+          utm={{ options, campaigns: campaignsData?.shortLinkCampaigns ?? [] }}
+          submitLabel={t('marketing.shortLinks.createLink')}
           external={external}
           busy={loading}
           errorMessage={error}

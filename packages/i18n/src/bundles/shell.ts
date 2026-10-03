@@ -45,6 +45,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       view: 'View',
       edit: 'Edit',
       copy: 'Copy',
+      retry: 'Try again',
       yes: 'Yes',
       no: 'No',
 
@@ -429,14 +430,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       accountMenu: 'account menu',
     },
 
-    /** The panel a crashed page shows instead of a white screen (PageErrorBoundary). */
-    pageError: {
-      title: 'Something went wrong',
-      unexpected: 'An unexpected error occurred. Try again or reload the page.',
-      tryAgain: 'Try again',
-      reload: 'Reload',
-    },
-
     /** The signed-in account card on every portal welcome dashboard. */
     /** The e-mail sign-in panel on the portal login screen. */
     login: {
@@ -585,6 +578,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       cancelAndRefunds: 'Cancel & Refunds',
       cards: 'Cards',
       career: 'Career',
+      cart: 'Cart',
+      cartSettings: 'Cart Settings',
       catalog: 'Catalog',
       categories: 'Categories',
       challenges: 'Challenges',
@@ -637,6 +632,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       externalLinks: 'External Links',
       engagement: 'Engagement',
       environmentVariables: 'Environment Variables',
+      errorBoundaries: 'Error Boundaries',
       errorLogs: 'Error Logs',
       errors: 'Errors',
       eventSuitabilityManagement: 'Event Suitability management',

@@ -69,6 +69,14 @@ function RowSurface({ onOpen, children }: Readonly<{ onOpen?: () => void; childr
   );
 }
 
+/** `<row id>-<part>` for a row's inner test ids; none when the row has none. */
+const partTestId = (testId: string | undefined, part: string) =>
+  testId ? `${testId}-${part}` : undefined;
+
+/** A row action bound to its pod; no handler stays no handler. */
+const bindPod = (pod: StudioPod, action?: (pod: StudioPod) => void) =>
+  action ? () => action(pod) : undefined;
+
 interface Props {
   pod: StudioPod;
   /** Symbol the surface's own money figures use, so a row never guesses. */
@@ -103,28 +111,23 @@ export default function StudioPodRow({
   const hosts = pod.host_names.filter(Boolean).join(', ');
   const hostValue = hosts || t('mweb.studioPods.hostsNone');
   const priceLabel = podPriceLabel(pod, currencySymbol, t('mweb.podDetails.free'));
-  const open = onOpen ? () => onOpen(pod) : undefined;
+  const open = bindPod(pod, onOpen);
 
   return (
     <Stack
       data-testid={testId}
       direction="row"
       spacing={0.5}
-      sx={{
-        alignItems: 'flex-start',
-        py: 1.75,
-      }}
+      sx={{ alignItems: 'flex-start', py: 1.75 }}
     >
       <RowSurface onOpen={open}>
         <Stack spacing={0.75}>
-          <Stack direction="row" spacing={0.75} sx={{
-            alignItems: "center"
-          }}>
+          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             <Typography sx={{ flex: 1, fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
               {pod.pod_title}
             </Typography>
             <Chip
-              data-testid={testId ? `${testId}-state` : undefined}
+              data-testid={partTestId(testId, 'state')}
               size="small"
               label={t(BUCKET_LABEL_KEY[pod.bucket])}
               sx={stateChipSx(BUCKET_TONE[pod.bucket])}
@@ -147,7 +150,7 @@ export default function StudioPodRow({
           <PodFact
             label={t('mweb.studioPods.hosts')}
             value={hostValue}
-            testId={testId ? `${testId}-hosts` : undefined}
+            testId={partTestId(testId, 'hosts')}
           />
 
           <Box>
@@ -163,17 +166,17 @@ export default function StudioPodRow({
             <PodFact
               label={t('mweb.studioPods.spots')}
               value={`${pod.attendee_count}/${pod.no_of_spots}`}
-              testId={testId ? `${testId}-spots` : undefined}
+              testId={partTestId(testId, 'spots')}
             />
             <PodFact
               label={t('mweb.studioPods.people')}
               value={String(pod.pod_attendees.length)}
-              testId={testId ? `${testId}-people` : undefined}
+              testId={partTestId(testId, 'people')}
             />
             <PodFact
               label={t('mweb.studioPods.ticket')}
               value={priceLabel}
-              testId={testId ? `${testId}-price` : undefined}
+              testId={partTestId(testId, 'price')}
             />
           </Stack>
         </Stack>
@@ -182,10 +185,10 @@ export default function StudioPodRow({
       {(onCancel ?? onRequestChange) && (
         <StudioPodRowMenu
           pod={pod}
-          onCancel={onCancel ? () => onCancel(pod) : undefined}
-          onRequestChange={onRequestChange ? () => onRequestChange(pod) : undefined}
+          onCancel={bindPod(pod, onCancel)}
+          onRequestChange={bindPod(pod, onRequestChange)}
           requestChangeLabel={requestChangeLabel}
-          testId={testId ? `${testId}-actions` : undefined}
+          testId={partTestId(testId, 'actions')}
         />
       )}
     </Stack>

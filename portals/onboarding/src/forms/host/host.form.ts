@@ -111,13 +111,21 @@ export type HostCreateValues = z.input<typeof hostCreateSchema>;
 const dateOnly = (value?: string | null) =>
   value ? new Date(value).toISOString().slice(0, 10) : '';
 
-export function hostEditInitialValues(host: any): HostEditValues {
+/** Personal details from the host's user account, used where the host's own
+ * field is still blank. */
+interface HostAccountFallback {
+  phone?: string | null;
+  dob?: string | null;
+  full_address?: string | null;
+}
+
+export function hostEditInitialValues(host: any, account?: HostAccountFallback | null): HostEditValues {
   return {
     step1: {
       full_name: host?.full_name ?? '',
       email: host?.email ?? '',
-      phone: nationalPhoneDigits(host?.phone ?? ''),
-      dob: dateOnly(host?.dob),
+      phone: nationalPhoneDigits(host?.phone || account?.phone || ''),
+      dob: dateOnly(host?.dob || account?.dob),
     },
     step2: {
       aadhar_number: host?.aadhar_number ?? '',
@@ -126,7 +134,7 @@ export function hostEditInitialValues(host: any): HostEditValues {
     },
     step3: {
       police_verification_url: host?.police_verification_url ?? '',
-      full_address: host?.full_address ?? '',
+      full_address: host?.full_address || account?.full_address || '',
       bank_account: normalizeBankAccountValues(host?.bank_account),
       tags: host?.tags ?? [],
     },

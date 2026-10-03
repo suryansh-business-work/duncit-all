@@ -1,7 +1,5 @@
-import { useMemo, type ReactNode } from 'react';
-import { Linking } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { useMemo } from 'react';
+import { Text, YStack } from 'tamagui';
 
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
@@ -9,6 +7,7 @@ import { ClubSegments } from '@/components/details/club/ClubSegments';
 import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection';
 import { ClubMeetupVenuesSection } from '@/components/details/club/ClubMeetupVenuesSection';
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
+import { ClubSocialLinks } from '@/components/details/club/ClubSocialLinks';
 import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { FollowPillButton } from '@/components/FollowPillButton';
@@ -16,74 +15,10 @@ import { LocalityChip } from '@/components/LocalityChip';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { pickPodMoments } from '@/utils/club-detail';
 import { isClubAdminOf } from '@duncit/utils';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { useMeStore } from '@/stores/me.store';
-
-interface ChatLinkCandidate {
-  key: string;
-  label: string;
-  href?: string | null;
-  icon: ReactNode;
-}
-
-type ChatLink = ChatLinkCandidate & { href: string };
-
-/** The club's WhatsApp community and group chat as surface pills. mWeb twin:
- * club-details-page/ClubSocialLinks. */
-function ClubSocialLinks({ club }: Readonly<{ club: ClubDetail }>) {
-  const { t } = useTranslation();
-  const { color } = useThemeColors();
-  const candidates: ChatLinkCandidate[] = [
-    {
-      key: 'community',
-      label: t('mweb.common.community'),
-      href: club.club_whats_app_community_link,
-      icon: <Ionicons name="logo-whatsapp" size={18} color={color} />,
-    },
-    {
-      key: 'group',
-      label: t('mweb.common.groupChat'),
-      href: club.club_whats_app_group_link,
-      icon: <MaterialIcons name="chat" size={18} color={color} />,
-    },
-  ];
-  const links = candidates.filter((link): link is ChatLink => !!link.href);
-  if (links.length === 0) return null;
-
-  return (
-    <XStack gap={8} flexWrap="wrap">
-      {links.map((link) => (
-        <XStack
-          key={link.key}
-          testID={`club-chat-${link.key}`}
-          role="button"
-          tabIndex={0}
-          aria-label={`Open ${link.label} on WhatsApp`}
-          onPress={() => Linking.openURL(link.href)}
-          alignItems="center"
-          gap={8}
-          height={44}
-          paddingHorizontal={18}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$cardBorder"
-          backgroundColor="$surface"
-          pressStyle={PRESS_STYLE.control}
-        >
-          {link.icon}
-          <Text fontSize={14} fontWeight="600" color="$color">
-            {link.label}
-          </Text>
-        </XStack>
-      ))}
-    </XStack>
-  );
-}
 
 /** The club-details body — the summary card, stories, WhatsApp chats, members
  * and the tabbed segments (pods schedule, moments, content sections, hosts).

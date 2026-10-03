@@ -101,7 +101,7 @@ async function replaceVenue(
     action: 'UPDATE',
     source: 'ADMIN',
     actorUserId: String(offer.user_id),
-    before: before as any,
+    before,
     note: `Change request ${request.change_request_no}: venue moved to ${venue!.venue_name} (${when})`,
   });
   await notifyAttendeesOfVenueChange(pod, venue!.venue_name ?? '', when);
@@ -144,7 +144,7 @@ async function replaceHost(
     action: 'UPDATE',
     source: 'ADMIN',
     actorUserId: newHostId,
-    before: before as any,
+    before,
     note: `Change request ${request.change_request_no}: host handed over to ${offer.display_name || newHostId}`,
   });
 

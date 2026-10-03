@@ -42,6 +42,43 @@ export function failingFiles(log) {
   return [...files].sort((a, b) => a.localeCompare(b));
 }
 
+/** The first lines a runner printed under `FAIL <file>` — enough to say why it failed. */
+export function failureExcerpt(log, file, maxLines = 25) {
+  const lines = log.replaceAll(/\u001b\[[0-9;]*m/g, '').split(/\r?\n/);
+  const start = lines.findIndex((line) => FAIL_LINE.exec(line)?.[1] === file);
+  if (start < 0) return '';
+  const excerpt = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^\s*(?:PASS|FAIL)\s/.test(line) || excerpt.length >= maxLines) break;
+    if (line.trim()) excerpt.push(line.trimEnd());
+  }
+  return excerpt.join('\n');
+}
+
+/**
+ * A GitHub Actions error annotation per newly failing file. The job log needs an
+ * authenticated client to read; annotations are on the public check-run, so the
+ * reason a push went red can be read from anywhere.
+ */
+function workflowCommand(level, title, message) {
+  if (!process.env.GITHUB_ACTIONS) return;
+  const escape = (s) => s.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+  console.log(`::${level} title=${escape(title)}::${escape(message)}`);
+}
+
+function annotate(label, file, log) {
+  const excerpt = failureExcerpt(log, file);
+  workflowCommand('error', `New test failure: ${label}`, `${label}: ${file}\n${excerpt}`);
+}
+
+/** ONE warning per log for the files still failing inside the baseline — GitHub
+ * caps annotations per step, and these are the debt the baseline exists to shrink. */
+function annotateBaselined(label, files, log) {
+  if (files.length === 0) return;
+  const body = files.map((f) => `${f}\n${failureExcerpt(log, f, 8)}`).join('\n\n');
+  workflowCommand('warning', `Baselined failures: ${label}`, body);
+}
+
 /** `[label, file]` for every log the arguments name. */
 function logInputs(args) {
   return args.flatMap((arg) => {
@@ -57,10 +94,14 @@ function logInputs(args) {
 
 /** One log against its baseline entry: what newly fails, and what passes again. */
 function compareLog(label, file, known) {
-  const failing = failingFiles(readFileSync(file, 'utf8'));
+  const log = readFileSync(file, 'utf8');
+  const failing = failingFiles(log);
+  const newlyFailing = failing.filter((f) => !known.has(f));
+  for (const f of newlyFailing) annotate(label, f, log);
+  annotateBaselined(label, failing.filter((f) => known.has(f)), log);
   return {
     failing,
-    added: failing.filter((f) => !known.has(f)).map((f) => `${label}: ${f}`),
+    added: newlyFailing.map((f) => `${label}: ${f}`),
     fixed: [...known].filter((f) => !failing.includes(f)).map((f) => `${label}: ${f}`),
   };
 }

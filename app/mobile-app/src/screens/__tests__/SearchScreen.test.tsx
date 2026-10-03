@@ -79,7 +79,29 @@ beforeEach(() => {
   mockSuggestions.mockReturnValue([]);
   mockCategories.mockReturnValue({
     categories: [
-      { id: 'c1', name: 'Sports', slug: 'sports', icon: null, level: 'CATEGORY', parent_id: null },
+      { id: 'c1', name: 'Sports', slug: 'sports', icon: null, level: 'CATEGORY', parent_id: 's1' },
+    ],
+    groups: [
+      {
+        superCategory: {
+          id: 's1',
+          name: 'Active',
+          slug: 'active',
+          icon: null,
+          level: 'SUPER',
+          parent_id: null,
+        },
+        categories: [
+          {
+            id: 'c1',
+            name: 'Sports',
+            slug: 'sports',
+            icon: null,
+            level: 'CATEGORY',
+            parent_id: 's1',
+          },
+        ],
+      },
     ],
     nameOf: () => null,
   });

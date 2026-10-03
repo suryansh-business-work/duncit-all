@@ -67,7 +67,7 @@ export default function AutoPodSummary({ row, t, labels, formatDateTime }: Reado
       label: t('admin.autoPods.summaryMedia'),
       value: t('admin.autoPods.summaryMediaCount', {
         vars: { n: row.pod_images_and_videos.length },
-      } as never),
+      }),
     },
     ...(row.cancel_reason
       ? [{ label: t('admin.autoPods.summaryCancelReason'), value: row.cancel_reason }]

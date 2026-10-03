@@ -578,8 +578,10 @@ export const clubAdminProfileService = {
     const existing = await ClubAdminProfileModel.exists({ user_id: new Types.ObjectId(userId) });
     if (existing) return false;
 
+    // The account's creation date is stored at `metadata.created_at`; the root
+    // `created_at` is only a virtual, which a lean read never carries.
     const user = await UserModel.findById(userId)
-      .select('profile.first_name profile.last_name auth.email auth.phone created_at')
+      .select('profile.first_name profile.last_name auth.email auth.phone metadata.created_at')
       .lean<any>();
     if (!user) return false;
 
@@ -602,7 +604,7 @@ export const clubAdminProfileService = {
     const phone = user.auth?.phone
       ? `${user.auth.phone.extension ?? ''}${user.auth.phone.number ?? ''}`
       : '';
-    const when = meeting?.feedback_sent_at ?? user.created_at ?? new Date();
+    const when = meeting?.feedback_sent_at ?? user.metadata?.created_at ?? new Date();
 
     try {
       await ClubAdminProfileModel.create({

@@ -31,7 +31,7 @@ export function SearchScreen() {
 
   const { happening, moreClubs, loading, active } = useSearchDiscovery(query, categoryId);
   const suggestions = useSearchSuggestions(query);
-  const { categories, nameOf } = useSearchCategories();
+  const { categories, groups, nameOf } = useSearchCategories();
 
   useEffect(() => {
     const timer = setTimeout(
@@ -95,7 +95,7 @@ export function SearchScreen() {
               onEarn={() => navigation.navigate('Earn')}
             />
           ) : (
-            <CategoryActions categories={categories} onSelect={pickCategory} />
+            <CategoryActions groups={groups} onSelect={pickCategory} />
           )}
         </YStack>
       </RefreshScrollView>

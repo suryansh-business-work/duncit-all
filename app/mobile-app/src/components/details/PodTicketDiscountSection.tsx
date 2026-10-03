@@ -15,7 +15,7 @@ type TicketDiscountPod = TicketDiscountSource & { pod_amount: number };
  * host switched the discount on with at least one tier.
  */
 export function showsTicketDiscount(pod: TicketDiscountPod, isFree: boolean): boolean {
-  if (isFree || !(pod.pod_amount > 0)) return false;
+  if (isFree || pod.pod_amount <= 0) return false;
   return !!pod.ticket_discount_enabled && (pod.ticket_discount_tiers ?? []).length > 0;
 }
 

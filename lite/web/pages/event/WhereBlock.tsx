@@ -4,6 +4,17 @@ import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import type { LiteEvent } from '../../../shared/graphql/documents';
 import { useWebT } from '../../../shared/i18n';
 
+/** Online: the join link once the reader may see it, a note until then. */
+function OnlineJoin({ link }: Readonly<{ link: LiteEvent['virtual_link'] }>) {
+  const { t } = useWebT();
+  if (!link) return <Typography color="text.secondary">{t('liteWeb.event.onlineNote')}</Typography>;
+  return (
+    <Link href={link} target="_blank" rel="noopener noreferrer" sx={{ fontWeight: 700, wordBreak: 'break-all' }} data-testid="event-join-link">
+      {t('liteWeb.event.joinLink')}
+    </Link>
+  );
+}
+
 /** In person: the venue, the address and a map link. Online: the join link once the reader may see it. */
 export function WhereBlock({ event }: Readonly<{ event: LiteEvent }>) {
   const { t } = useWebT();
@@ -16,13 +27,7 @@ export function WhereBlock({ event }: Readonly<{ event: LiteEvent }>) {
           {online ? t('lite.common.online') : (event.venue_name ?? event.address ?? '')}
         </Typography>
         {online ? (
-          event.virtual_link ? (
-            <Link href={event.virtual_link} target="_blank" rel="noopener noreferrer" sx={{ fontWeight: 700, wordBreak: 'break-all' }} data-testid="event-join-link">
-              {t('liteWeb.event.joinLink')}
-            </Link>
-          ) : (
-            <Typography color="text.secondary">{t('liteWeb.event.onlineNote')}</Typography>
-          )
+          <OnlineJoin link={event.virtual_link} />
         ) : (
           <>
             {event.venue_name && event.address ? <Typography color="text.secondary">{event.address}</Typography> : null}

@@ -10,6 +10,9 @@ import type { StoreTopProduct } from './queries';
 
 const productName = (row: StoreTopProduct) => row.name;
 const productId = (row: StoreTopProduct) => row.product_id;
+const renderProduct = (row: StoreTopProduct) => (
+  <ProductCardRow title={row.name} imageUrl={row.image_url} price={row.revenue} />
+);
 
 /** The period's best sellers by revenue — each row opening its listing. */
 export default function TopProducts({ products }: Readonly<{ products: readonly StoreTopProduct[] }>) {
@@ -24,7 +27,7 @@ export default function TopProducts({ products }: Readonly<{ products: readonly 
         type: 'text',
         flex: 1,
         minWidth: 220,
-        cellRenderer: (row) => <ProductCardRow title={row.name} imageUrl={row.image_url} price={row.revenue} />,
+        cellRenderer: renderProduct,
       },
       { field: 'units', headerName: t('ecommPortal.dashboard.units'), type: 'number', width: 100 },
       { field: 'revenue', headerName: t('ecommPortal.dashboard.revenue'), type: 'number', width: 140, valueGetter: (row) => money(row.revenue) },

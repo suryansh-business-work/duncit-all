@@ -40,6 +40,10 @@ export function isWhatsappDestination(destination: string): boolean {
  * `OTP_PHONE_MIN_DIGITS` in `@duncit/utils`, which the clients read. */
 const KEY_DIGITS = 10;
 
+/** A phone part as text: a string or number as written; anything else holds no digits. */
+const partText = (part: unknown): string =>
+  typeof part === 'string' || typeof part === 'number' || typeof part === 'bigint' ? String(part) : '';
+
 /**
  * The comparable form of a phone number.
  *
@@ -53,6 +57,6 @@ const KEY_DIGITS = 10;
  * two only have to agree on what counts as the same number.
  */
 export const phoneKey = (...parts: unknown[]): string => {
-  const digits = (parts.map((part) => String(part ?? '')).join('').match(/\d+/g) ?? []).join('');
+  const digits = (parts.map(partText).join('').match(/\d+/g) ?? []).join('');
   return digits.length > KEY_DIGITS ? digits.slice(-KEY_DIGITS) : digits;
 };

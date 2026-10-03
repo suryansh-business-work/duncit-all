@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ResultOf } from '@graphql-typed-document-node/core';
-import type { VariablesOf } from '@graphql-typed-document-node/core';
+import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
 
 import {
   CreateSlotTemplateDocument,

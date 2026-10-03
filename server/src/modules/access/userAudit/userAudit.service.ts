@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { requestIdentity } from '@observability/requestIdentity';
-import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   diffSnapshots,

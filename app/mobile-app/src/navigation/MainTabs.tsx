@@ -1,9 +1,8 @@
-import type { ReactNode } from 'react';
 import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { BottomNav } from '@/components/BottomNav';
-import { ScreenRefreshProvider } from '@/components/PullToRefresh';
 import { DeletionNoticeDialog } from '@/components/account/DeletionNoticeDialog';
+import { CartReminder } from '@/components/cart/CartReminder';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
 import { usePushNotificationDeepLink } from '@/hooks/usePushNotificationDeepLink';
 import { useProductVisibility } from '@/hooks/useProductVisibility';
@@ -13,17 +12,11 @@ import { ExploreScreen } from '@/screens/ExploreScreen';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { VenuesScreen } from '@/screens/VenuesScreen';
 import type { TabParamList } from '@/navigation/tabs';
+import { screenLayout } from '@/navigation/screenLayout';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
-
-/** Each tab is its own pull-to-refresh scope, exactly like a pushed screen —
- * the tabs stay mounted behind one another, so a shared scope would refetch
- * four tabs on every pull. */
-const screenLayout = ({ children }: Readonly<{ children: ReactNode }>) => (
-  <ScreenRefreshProvider>{children}</ScreenRefreshProvider>
-);
 
 export function MainTabs() {
   usePushNotificationDeepLink();
@@ -44,6 +37,7 @@ export function MainTabs() {
         <Tab.Screen name="Venues" component={VenuesScreen} />
         {productsVisible ? <Tab.Screen name="Cart" component={CartScreen} /> : null}
       </Tab.Navigator>
+      <CartReminder />
       <PodFeedbackPrompt />
       <DeletionNoticeDialog />
     </>

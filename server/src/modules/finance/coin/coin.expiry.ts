@@ -44,7 +44,7 @@ export function coinExpiryAt(
   days: number,
   tz: string = getAppTimeZone()
 ): Date | null {
-  if (!(days > 0)) return null;
+  if (Number.isNaN(days) || days <= 0) return null;
   // The wall-clock day of the grant in the configured zone, moved on by whole
   // days and closed at its last millisecond, then turned back into a real
   // instant — calendar days, not 24-hour blocks, so a DST shift cannot move it.

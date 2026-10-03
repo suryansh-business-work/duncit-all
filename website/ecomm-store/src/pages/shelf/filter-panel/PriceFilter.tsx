@@ -8,20 +8,19 @@ interface PriceFilterProps {
   /** The range the current results span, from the search. */
   floor: number;
   ceiling: number;
-  min: number | null;
   max: number | null;
   onCommit: (min: number | null, max: number | null) => void;
 }
 
-/** A two-thumb price slider that applies when a thumb is released. */
-export function PriceFilter({ floor, ceiling, min, max, onCommit }: Readonly<PriceFilterProps>) {
+/** A max-price slider: it starts at the highest price and is dragged down; applies when released. */
+export function PriceFilter({ floor, ceiling, max, onCommit }: Readonly<PriceFilterProps>) {
   const { t } = useStoreT();
   const money = useMoney();
   const headingId = useId();
   const low = Math.floor(floor);
   const high = Math.max(Math.ceil(ceiling), low + 1);
-  const [value, setValue] = useState<number[]>([min ?? low, max ?? high]);
-  useEffect(() => setValue([min ?? low, max ?? high]), [min, max, low, high]);
+  const [value, setValue] = useState<number>(max ?? high);
+  useEffect(() => setValue(max ?? high), [max, high]);
   if (ceiling <= 0) return null;
   return (
     <Stack spacing={1}>
@@ -32,19 +31,18 @@ export function PriceFilter({ floor, ceiling, min, max, onCommit }: Readonly<Pri
         value={value}
         min={low}
         max={high}
-        onChange={(_event, next) => setValue(next as number[])}
+        onChange={(_event, next) => setValue(next as number)}
         onChangeCommitted={(_event, next) => {
-          const [from, to] = next as number[];
-          onCommit(from > low ? from : null, to < high ? to : null);
+          const to = next as number;
+          onCommit(null, to < high ? to : null);
         }}
-        getAriaLabel={(index) => (index === 0 ? t('ecommStore.filters.minPrice') : t('ecommStore.filters.maxPrice'))}
+        aria-label={t('ecommStore.filters.maxPrice')}
         getAriaValueText={(amount) => money(amount)}
-        aria-labelledby={headingId}
         sx={{ mx: 1, width: 'auto' }}
       />
       <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-        <Typography variant="body2">{money(value[0] ?? low)}</Typography>
-        <Typography variant="body2">{money(value[1] ?? high)}</Typography>
+        <Typography variant="body2">{money(low)}</Typography>
+        <Typography variant="body2">{money(value)}</Typography>
       </Stack>
     </Stack>
   );

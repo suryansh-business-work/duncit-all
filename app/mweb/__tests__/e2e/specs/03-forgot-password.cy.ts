@@ -109,7 +109,7 @@ describe('03 Forgot password', { testIsolation: false }, () => {
     sendCode('CompletePasswordReset', () => {
       savePassword().should('be.enabled').click();
     });
-    recoveryError().should('contain.text', 'Choose a password you have not used on this account before');
+    cy.byTestId('recovery-error').should('contain.text', 'Choose a password you have not used on this account before');
   });
 
   it('FP-08 the RECOVERED password is saved', () => {
@@ -131,7 +131,8 @@ describe('03 Forgot password', { testIsolation: false }, () => {
   });
 
   it('FP-10 a session opened before the reset is signed out', () => {
-    expect(sessionBeforeReset, 'the session FP-01 opened').to.not.be.empty;
+    // The session FP-01 opened.
+    cy.wrap(sessionBeforeReset).should('not.be.empty');
     // The server no longer knows who the old token belongs to.
     sessionUser(sessionBeforeReset).then((data) => {
       expect(data.me, 'me for the pre-reset token').to.be.null;

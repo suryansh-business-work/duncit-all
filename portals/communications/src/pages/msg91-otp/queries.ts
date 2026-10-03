@@ -1,14 +1,12 @@
 import { gql, type TypedDocumentNode } from '@apollo/client';
 import type {
   Msg91WidgetAnalytics,
-  Msg91WidgetDay,
-  Msg91WidgetLog,
   Msg91WidgetLogPage,
   QueryMsg91WidgetAnalyticsArgs,
   QueryMsg91WidgetLogsArgs,
 } from '@duncit/gql-types';
 
-export type { Msg91WidgetDay, Msg91WidgetLog };
+export type { Msg91WidgetDay, Msg91WidgetLog } from '@duncit/gql-types';
 
 /**
  * How wide one window may be, in days — MSG91's own limits, mirrored from the

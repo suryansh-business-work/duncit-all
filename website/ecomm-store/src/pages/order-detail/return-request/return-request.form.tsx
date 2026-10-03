@@ -18,12 +18,12 @@ import { makeReturnRequestSchema, type ReturnRequestValues } from './return-requ
 
 interface ReturnRequestDialogProps {
   order: StoreOrder;
-  accessKey?: string;
+  orderKey?: string;
   onClose: () => void;
 }
 
 /** Pick what goes back (never more than is still returnable), why, and any note. */
-export function ReturnRequestDialog({ order, accessKey, onClose }: Readonly<ReturnRequestDialogProps>) {
+export function ReturnRequestDialog({ order, orderKey, onClose }: Readonly<ReturnRequestDialogProps>) {
   const { t } = useStoreT();
   const titleId = useId();
   const { return_reasons: reasons } = useStoreSettings();
@@ -44,7 +44,7 @@ export function ReturnRequestDialog({ order, accessKey, onClose }: Readonly<Retu
     setError('');
     try {
       const picked = items.filter((i) => i.qty > 0).map((i) => ({ product_id: i.product_id, variant_id: i.variant_id || undefined, qty: i.qty }));
-      await requestReturn({ variables: { input: { order_no: order.order_no, access_key: accessKey, items: picked, reason, comments: comments || undefined } } });
+      await requestReturn({ variables: { input: { order_no: order.order_no, access_key: orderKey, items: picked, reason, comments: comments || undefined } } });
       notifySuccess(t('ecommStore.returns.requested'));
       onClose();
     } catch (err) {

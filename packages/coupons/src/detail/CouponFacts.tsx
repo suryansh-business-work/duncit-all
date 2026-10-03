@@ -3,7 +3,7 @@ import { EM_DASH } from '@duncit/table';
 import { InfoRow, StatCard } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../i18n';
-import type { CouponRedemptionRow, CouponRow, CouponStats } from '../queries';
+import type { CouponRow, CouponStats } from '../queries';
 
 interface Props {
   coupon: CouponRow;

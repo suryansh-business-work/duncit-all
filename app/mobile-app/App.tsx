@@ -157,7 +157,7 @@ export default function App() {
       <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme}>
         <Theme name={scheme}>
           <SafeAreaProvider>
-            <ErrorBoundary>
+            <ErrorBoundary scope="root">
               <OfflineBanner />
               <YStack flex={1}>
                 <NavigationContainer

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
+import { groupCategoriesBySuper } from '@duncit/utils';
 import { makeCategoryMatcher } from '../../utils/category-match';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from './queries';
 
@@ -41,6 +42,8 @@ export function useSearchCategories() {
     return categoryLevel.length > 0 ? categoryLevel : all.filter((c) => c.level === 'SUPER');
   }, [all]);
 
+  const groups = useMemo(() => groupCategoriesBySuper(all), [all]);
+
   const nameById = useMemo(() => new Map(all.map((c) => [c.id, c.name])), [all]);
   const nameOf = (club: { category_id?: string | null; super_category_id?: string | null }) => {
     if (club.category_id && nameById.has(club.category_id)) return nameById.get(club.category_id) ?? null;
@@ -52,7 +55,7 @@ export function useSearchCategories() {
 
   const matchesCategory = useMemo(() => makeCategoryMatcher(all), [all]);
 
-  return { all, buttons, nameOf, matchesCategory };
+  return { all, buttons, groups, nameOf, matchesCategory };
 }
 
 /** The CATEGORY-level chips that descend from `superId` (all of them when no

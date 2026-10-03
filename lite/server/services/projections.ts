@@ -19,7 +19,7 @@ export interface Viewer {
   is_admin: boolean;
 }
 
-const idOf = (value: unknown): string => String(value);
+const idOf: (value: unknown) => string = String;
 
 export function isHostOf(event: { hosts: { user_id: unknown }[] }, viewer: Viewer | null): boolean {
   if (!viewer) return false;

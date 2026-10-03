@@ -32,6 +32,7 @@ function locationOf(event: IcsEvent): string {
 
 export function eventLines(event: IcsEvent): string[] {
   const url = `${env.siteUrl}/e/${event.slug}`;
+  const description = `${event.description}\n\n${url}`;
   return [
     'BEGIN:VEVENT',
     `UID:lite-${String(event._id)}@duncit.com`,
@@ -39,7 +40,7 @@ export function eventLines(event: IcsEvent): string[] {
     `DTSTART:${stamp(event.start_at)}`,
     `DTEND:${stamp(event.end_at)}`,
     `SUMMARY:${escapeText(event.title)}`,
-    `DESCRIPTION:${escapeText(`${event.description}\n\n${url}`)}`,
+    `DESCRIPTION:${escapeText(description)}`,
     `LOCATION:${escapeText(locationOf(event))}`,
     `URL:${url}`,
     `STATUS:${event.status === 'CANCELLED' ? 'CANCELLED' : 'CONFIRMED'}`,

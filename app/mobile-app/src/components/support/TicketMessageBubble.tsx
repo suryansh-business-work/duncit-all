@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { AttachmentView } from '@/components/AttachmentView';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { formatTime, tickState } from '@/utils/support-chat';
+import { MINE_BUBBLE_SIDE, THEIRS_BUBBLE_SIDE, formatTime, tickState } from '@/utils/support-chat';
 
 export interface TicketThreadMessage {
   id: string;
@@ -57,23 +57,20 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
   const mine = message.author_role === 'USER';
   const seen = mine && tickState(message, agentLastReadAt) === 'seen';
   // Every `mine`-derived value is resolved once here, so the JSX below stays flat.
-  const ink = mine ? '$onPrimary' : '$color';
-  const subtleInk = mine ? '$onPrimary' : '$muted';
+  const side = mine ? MINE_BUBBLE_SIDE : THEIRS_BUBBLE_SIDE;
+  const { ink, subtleInk } = side;
   // The tick sits on the red bubble, so it keeps the bubble's full ink (3:1)
   // and the shape (✓ / ✓✓) plus its spoken name carry Sent vs Seen.
   const tickLabel = seen ? t('mweb.a11y.messageSeen') : t('mweb.a11y.messageSent');
 
   return (
-    <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`ticket-msg-${message.id}`}>
+    <XStack justifyContent={side.justify} testID={`ticket-msg-${message.id}`}>
       <YStack
         maxWidth="80%"
         paddingHorizontal={12}
         paddingVertical={8}
         borderRadius={18}
-        borderBottomRightRadius={mine ? 6 : 18}
-        borderBottomLeftRadius={mine ? 18 : 6}
-        backgroundColor={mine ? '$primary' : '$surface'}
-        borderWidth={mine ? 0 : 1}
+        {...side.frame}
         borderColor="$cardBorder"
         gap={3}
       >

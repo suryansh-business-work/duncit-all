@@ -22,7 +22,7 @@ export default function HappeningNearbyPage({
   const f = usePodListFilters();
   // useHomeData already applies category/price/date/sort, so this page narrows
   // through the same rules Home uses — no second implementation.
-  const { activePods, loading, error, hostNameOf, categoryChips } = useHomeData({
+  const { nearbyPods, loading, error, hostNameOf, categoryChips } = useHomeData({
     superCategorySlug,
     locationId,
     zoneName,
@@ -36,7 +36,7 @@ export default function HappeningNearbyPage({
   return (
     <PodListPage
       title={t('mweb.home.happeningNearbyTitle')}
-      pods={activePods}
+      pods={nearbyPods}
       ads={ads}
       loading={loading}
       error={error}

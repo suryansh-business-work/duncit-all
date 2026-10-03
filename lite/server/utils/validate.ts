@@ -1,7 +1,11 @@
+import { EMAIL } from '@duncit/regex';
 import { badInput } from './errors';
 
-/** The same shapes `@duncit/regex` ships to the clients, kept here because the server bundle owns its own copy. */
-export const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/**
+ * Email is `@duncit/regex`'s own pattern — the copy that lived here let two
+ * quantifiers claim the same dots and backtracked quadratically (Sonar S5852).
+ * The rest are the same shapes that package ships to the clients.
+ */
 export const UPI_ID = /^[\w.-]{2,256}@[a-z][a-z0-9]{1,63}$/i;
 export const HANDLE = /^[a-z0-9](?:[a-z0-9_]{1,28}[a-z0-9])?$/;
 export const OTP_6 = /^\d{6}$/;

@@ -6,6 +6,8 @@ import {
   type ViewToken,
 } from 'react-native';
 import { YStack } from 'tamagui';
+import { useIsFocused } from '@react-navigation/native';
+import { REEL_PRELOAD_DISTANCE, reelFeed } from '@duncit/utils';
 
 import { EmptyState } from '@/components/EmptyState';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -27,8 +29,11 @@ import { PodCommentsSheet } from '@/components/details/pod-comments';
 export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
-  // Only the visible reel plays its video — the others stay paused.
+  // Only the visible reel plays its video — the others stay paused. Explore is
+  // a tab, so it stays mounted under every other screen: without focus nothing
+  // plays, or a reel's sound would carry on behind them.
   const [activeIndex, setActiveIndex] = useState(0);
+  const focused = useIsFocused();
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   // Reels start muted; once unmuted the choice carries across swipes.
@@ -54,7 +59,12 @@ export function ExploreReels() {
   } = useExplore();
   // Sponsored reels woven into the feed — one full-screen ad every 5 pods.
   const { ads } = useActiveAds('EXPLORE_SCROLL');
-  const feed = useMemo(() => interleaveAds(pods, ads, 5), [pods, ads]);
+  // A random order that never ends: one more shuffled pass of the pods is dealt
+  // as the viewer nears the end (shared with mWeb through @duncit/utils).
+  const [seed] = useState(() => Date.now());
+  const [cycles, setCycles] = useState(1);
+  const reels = useMemo(() => reelFeed(pods, (pod) => pod.id, seed, cycles), [pods, seed, cycles]);
+  const feed = useMemo(() => interleaveAds(reels, ads, 5), [reels, ads]);
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
   // FlatList requires a stable identity for the viewability pair across renders.
@@ -95,7 +105,7 @@ export function ExploreReels() {
       reelsBody = (
         <FlatList
           data={feed}
-          keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.id)}
+          keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.key)}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           snapToInterval={height}
@@ -104,11 +114,15 @@ export function ExploreReels() {
           getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
           // Full-screen items: keep only the current reel ±2 mounted (default
           // windowSize 21 = ~21 full-screen image cards alive → heavy memory/GC).
-          windowSize={5}
-          initialNumToRender={2}
+          // A mounted card's player buffers, so the next reels are loaded
+          // before the viewer swipes to them.
+          windowSize={REEL_PRELOAD_DISTANCE * 2 + 1}
+          initialNumToRender={REEL_PRELOAD_DISTANCE + 1}
           maxToRenderPerBatch={2}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
+          onEndReached={() => setCycles((count) => count + 1)}
+          onEndReachedThreshold={REEL_PRELOAD_DISTANCE}
           refreshControl={refreshControl}
           renderItem={({ item: entry, index }) => {
             if (isAdEntry(entry)) {
@@ -117,11 +131,11 @@ export function ExploreReels() {
                   ad={entry.ad}
                   width={width}
                   height={height}
-                  isActive={index === activeIndex}
+                  isActive={focused && index === activeIndex}
                 />
               );
             }
-            const item = entry.item;
+            const { item } = entry.item;
             const like = likeStateFor(item);
             const saved = isSaved(item.id);
             return (
@@ -130,7 +144,7 @@ export function ExploreReels() {
                 club={clubsById.get(item.club_id)}
                 width={width}
                 height={height}
-                isActive={index === activeIndex}
+                isActive={focused && index === activeIndex}
                 saved={saved}
                 savePending={isSavePending(item.id)}
                 like={like}

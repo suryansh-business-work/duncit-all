@@ -46,10 +46,15 @@ module.exports = {
     'src/modules/**/*.ts',
     'src/services/**/*.ts',
     'src/utils/**/*.ts',
+    // Status page / health probes — six unit suites cover these, but nothing
+    // collected them, so SonarQube read the whole directory as 0%.
+    'src/observability/**/*.ts',
     // The one config file with logic of its own (Tech > Database > Info's log).
     'src/config/dbConnectionLog.ts',
-    '!src/**/*.schema.ts',
-    '!src/**/*.model.ts',
+    // Models and GraphQL schemas are collected too: every suite that touches the
+    // database or the API executes them, and SonarQube counts their lines as code
+    // to cover whether jest reports them or not — excluding them only hid real
+    // execution (and their hooks/methods that no suite reaches).
     '!src/**/index.ts',
     '!src/**/__tests__/**',
     '!src/**/*.socket.ts',

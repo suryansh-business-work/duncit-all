@@ -13,6 +13,8 @@ import {
   splitDraftsByExpiry,
   splitHostPods,
   splitPodsByPhase,
+  withinHappeningNearbyWindow,
+  DEFAULT_HAPPENING_NEARBY_DAYS,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 import type { BadgeMock, PhaseMock, HostSectionsMock, DraftsMock } from './mocks';
@@ -27,7 +29,7 @@ export const hostPodsDemos: PackageDemo[] = [
       "what puts Host Studio's Complete Pod action on a pod: it is offered on a PREVIOUS " +
       'pod only, never while the door is still open. Scanning tickets is the exact mirror — ' +
       'the same crossing greys that row out, because a scanner belongs at a door that is ' +
-      'still open.',
+      'still open. Happening nearby lists only the upcoming pods starting within the admin window (a week by default).',
     mock: {
       now: '2026-08-25T19:30:00.000Z',
       pods: [
@@ -71,6 +73,11 @@ export const hostPodsDemos: PackageDemo[] = [
           ])
         ),
         'Home rails': counts,
+        // The Home "Happening nearby" rail: upcoming pods starting within the admin's window.
+        [`Happening nearby (next ${DEFAULT_HAPPENING_NEARBY_DAYS} days)`]:
+          withinHappeningNearbyWindow(rails.upcoming, DEFAULT_HAPPENING_NEARBY_DAYS, now)
+            .map((pod) => pod.pod_id)
+            .join(', ') || 'none',
       };
     },
   }),

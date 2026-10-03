@@ -7,6 +7,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { AppHeader } from '@/components/AppHeader';
 import { SuperCategoryTabs } from '@/components/SuperCategoryTabs';
+import { useComingSoonCity } from '@/hooks/useComingSoonCity';
 import type { TabParamList } from '@/navigation/tabs';
 
 const HOME_TAB: keyof TabParamList = 'HomeTab';
@@ -18,12 +19,15 @@ const HOME_TAB: keyof TabParamList = 'HomeTab';
  * inactive tabs stay mounted). */
 export function TabScreen({ testID, children }: Readonly<{ testID: string; children: ReactNode }>) {
   const route = useRoute();
+  const home = route.name === HOME_TAB;
+  // A "Coming soon" city has nothing for the switch to narrow until it launches.
+  const comingSoon = useComingSoonCity();
   return (
     <YStack flex={1} testID={testID}>
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <AppHeader home={route.name === HOME_TAB} />
-        <SuperCategoryTabs />
+        <AppHeader home={home} />
+        {home && comingSoon ? null : <SuperCategoryTabs />}
         <KeyboardScreen flush>{children}</KeyboardScreen>
       </SafeAreaView>
     </YStack>

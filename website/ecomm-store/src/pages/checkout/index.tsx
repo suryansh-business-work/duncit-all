@@ -62,7 +62,7 @@ export function CheckoutPage() {
               <StepButton onClick={() => controls.goTo(index)} disabled={index >= step}>
                 <Typography sx={{ fontWeight: 800 }}>{t(STEP_KEYS[name])}</Typography>
               </StepButton>
-              <StepContent>{bodies[index]}</StepContent>
+              <StepContent sx={{ pl: { xs: 1.5, sm: 2.5 }, pr: { xs: 0, sm: 1 } }}>{bodies[index]}</StepContent>
             </Step>
           ))}
         </Stepper>

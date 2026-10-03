@@ -153,6 +153,18 @@ export default function PodLifecycleSettings({
         value={settings?.ticket_discount_max_pct ?? null}
         onSave={(next) => onSave({ ticket_discount_max_pct: next })}
       />
+      <NumberSettingCard
+        title={t('admin.podSettings.happeningNearbyTitle')}
+        description={t('admin.podSettings.happeningNearbyDesc')}
+        label={t('admin.podSettings.happeningNearbyLabel')}
+        helperText={t('admin.podSettings.happeningNearbyMin')}
+        invalidText={t('admin.podSettings.happeningNearbyInvalid')}
+        min={1}
+        max={60}
+        loading={loading}
+        value={settings?.happening_nearby_days ?? null}
+        onSave={(next) => onSave({ happening_nearby_days: next })}
+      />
     </Stack>
   );
 }

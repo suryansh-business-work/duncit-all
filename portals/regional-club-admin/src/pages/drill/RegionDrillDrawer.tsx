@@ -41,7 +41,7 @@ export default function RegionDrillDrawer({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const level = stack.at(-1) ?? null;
-  const parent = stack.length > 1 ? stack[stack.length - 2] : null;
+  const parent = stack.at(-2) ?? null;
   const openPod = (podDocId: string) => navigate(`/pods/${podDocId}`);
 
   return (

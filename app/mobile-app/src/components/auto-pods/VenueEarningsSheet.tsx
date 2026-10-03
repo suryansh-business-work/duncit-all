@@ -68,7 +68,7 @@ function VenueSpaceRow({
         keyboardType="numeric"
         value={price}
         // Digits only — a ticket price is whole rupees.
-        onChangeText={(text) => onPrice(text.replace(/[^0-9]/g, ''))}
+        onChangeText={(text) => onPrice(text.replace(/\D/g, ''))}
         placeholder={labels.ticketPrice}
         aria-label={labels.ticketPrice}
       />

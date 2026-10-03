@@ -1,4 +1,5 @@
 import { getUrlConfigs } from '@config/url-configs';
+import { trimTrailingSlash } from '@utils/url';
 import { sendEmail } from '@services/email/email.service';
 import { logs } from '@observability/log';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
@@ -52,7 +53,7 @@ const firstName = (name: string) => String(name ?? '').trim().split(/\s+/)[0] ||
 
 async function storeBase() {
   const { ecommUrl } = await getUrlConfigs();
-  return ecommUrl.replace(/\/+$/, '');
+  return trimTrailingSlash(ecommUrl);
 }
 
 /** The buyer's way back to an order: their account page, or a guest's keyed link. */

@@ -35,6 +35,9 @@ interface EntitySource {
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const rx = (term: string) => new RegExp(escape(term.trim()), 'i');
+/** A stored name or reference as text; anything that is not a scalar reads as blank. */
+const fieldText = (value: unknown) =>
+  typeof value === 'string' || typeof value === 'number' ? String(value) : '';
 
 /**
  * Builds a source from a mongoose model plus the two fields that name a row.
@@ -55,8 +58,8 @@ function fieldSource(
     if (!doc) return null;
     return {
       id: String(doc._id),
-      name: String(doc[nameField] ?? ''),
-      reference: String(doc[refField] ?? ''),
+      name: fieldText(doc[nameField]),
+      reference: fieldText(doc[refField]),
     };
   };
   return {

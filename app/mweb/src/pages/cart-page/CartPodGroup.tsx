@@ -2,7 +2,8 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import { DuncitRoundButton } from '@duncit/buttons';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import {
   cartLineKey,
   lineQualifiesFreeDelivery,
@@ -18,14 +19,10 @@ interface Props {
   priceFormat: (amount: number) => string;
   onSetQuantity: (line: CartLine, quantity: number) => void;
   onRemove: (line: CartLine) => void;
+  onMoveToWishlist: (line: CartLine) => void;
 }
 
-interface LineProps {
-  line: CartLine;
-  priceFormat: (amount: number) => string;
-  onSetQuantity: (line: CartLine, quantity: number) => void;
-  onRemove: (line: CartLine) => void;
-}
+type LineProps = Omit<Props, 'podId' | 'podTitle' | 'lines'> & { line: CartLine };
 
 const NAME_SX = {
   fontSize: '0.875rem',
@@ -69,8 +66,14 @@ function QtyStepper({ line, onSetQuantity }: Readonly<Pick<LineProps, 'line' | '
 }
 
 /** One cart line: 64px thumb, name, unit price (+ free-delivery pill), the
- * stepper, and a round remove button. */
-function CartLineRow({ line, priceFormat, onSetQuantity, onRemove }: Readonly<LineProps>) {
+ * stepper with "Move to wishlist" beside it, and a round remove button. */
+function CartLineRow({
+  line,
+  priceFormat,
+  onSetQuantity,
+  onRemove,
+  onMoveToWishlist,
+}: Readonly<LineProps>) {
   const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1.5} sx={{ py: 1.5, alignItems: 'flex-start', '& + &': { borderTop: 1, borderColor: 'divider' } }}>
@@ -95,7 +98,19 @@ function CartLineRow({ line, priceFormat, onSetQuantity, onRemove }: Readonly<Li
           </Typography>
           {lineQualifiesFreeDelivery(line) && <FreeDeliveryChip />}
         </Stack>
-        <QtyStepper line={line} onSetQuantity={onSetQuantity} />
+        <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+          <QtyStepper line={line} onSetQuantity={onSetQuantity} />
+          <DuncitButton
+            variant="text"
+            size="small"
+            startIcon={<FavoriteBorderIcon />}
+            aria-label={t('mweb.cart.moveToWishlistItem', { vars: { name: line.product_name } })}
+            onClick={() => onMoveToWishlist(line)}
+            data-testid={`cart-move-wishlist-${cartLineKey(line)}`}
+          >
+            {t('mweb.cart.moveToWishlist')}
+          </DuncitButton>
+        </Stack>
       </Stack>
       <DuncitRoundButton
         tone="surface"
@@ -118,6 +133,7 @@ export default function CartPodGroup({
   priceFormat,
   onSetQuantity,
   onRemove,
+  onMoveToWishlist,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
@@ -134,6 +150,7 @@ export default function CartPodGroup({
             priceFormat={priceFormat}
             onSetQuantity={onSetQuantity}
             onRemove={onRemove}
+            onMoveToWishlist={onMoveToWishlist}
           />
         ))}
       </Box>

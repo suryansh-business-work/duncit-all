@@ -24,7 +24,7 @@ export function useSocialAccountActions(onChanged: () => void, returnTo: SocialC
     async (provider: SocialProvider) => {
       try {
         const { data } = await connectMut({ variables: { provider, return_to: returnTo } });
-        if (data?.socialConnectUrl) window.location.assign(data.socialConnectUrl);
+        if (data?.socialConnectUrl) globalThis.location.assign(data.socialConnectUrl);
       } catch (error) {
         notify(parseApiError(error), 'error');
       }

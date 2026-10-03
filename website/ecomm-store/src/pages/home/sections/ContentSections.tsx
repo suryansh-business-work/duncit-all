@@ -15,6 +15,12 @@ import { useStoreT } from '../../../i18n';
 import { STORE_TOKENS as T, tintAt } from '../../../theme/tokens';
 import type { SectionProps } from './types';
 
+/** Up to `max` equal columns that may shrink below their content's width. */
+function columns(count: number, max: number): string {
+  const n = Math.min(count, max);
+  return `repeat(${n},minmax(0,1fr))`;
+}
+
 /** A collection's products — the mock's "Best Selling Items" grid. */
 export function CollectionSection({ section }: Readonly<SectionProps>) {
   const { t } = useStoreT();
@@ -36,7 +42,7 @@ export function PromoBannersSection({ section }: Readonly<SectionProps>) {
     <Box
       component="section"
       aria-label={section.title || undefined}
-      sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: `repeat(${Math.min(section.items.length, 3)},1fr)` } }}
+      sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'minmax(0,1fr)', md: columns(section.items.length, 3) } }}
     >
       {section.items.map((item) => (
         <SmartLink key={item.id} to={item.link || paths.shop} underline="none" aria-label={item.title || item.cta_label}>
@@ -56,7 +62,7 @@ export function UspStripSection({ section }: Readonly<SectionProps>) {
     <Box
       component="section"
       aria-label={section.title || undefined}
-      sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr 1fr', md: `repeat(${Math.min(section.items.length, 4)},1fr)` } }}
+      sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: columns(section.items.length, 2), md: columns(section.items.length, 4) } }}
     >
       {section.items.map((item, position) => (
         <Stack key={item.id} direction="row" spacing={1.5} sx={{ alignItems: 'center', bgcolor: tintAt(position), borderRadius: `${T.radius.card}px`, p: 1.5 }}>
@@ -109,7 +115,7 @@ export function FreeDeliveryBanner() {
       <Typography sx={{ flexGrow: 1, fontWeight: 700 }} variant="body2">
         {t('ecommStore.home.freeDelivery', { vars: { amount: money(above) } })}
       </Typography>
-      <DuncitButton component={RouterLink} to={paths.shop} variant="contained" size="small">
+      <DuncitButton component={RouterLink} to={paths.shop} variant="contained" size="small" sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
         {t('ecommStore.home.shopNow')}
       </DuncitButton>
     </Stack>

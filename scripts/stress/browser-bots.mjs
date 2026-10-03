@@ -46,7 +46,6 @@ async function devToolsPort(profileDir) {
 function connect(url) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
-    let nextId = 0;
     const pending = new Map();
     const listeners = new Map();
     ws.addEventListener('message', (event) => {
@@ -61,29 +60,33 @@ function connect(url) {
       for (const fn of listeners.get(msg.method) ?? []) fn(msg.params);
     });
     ws.addEventListener('error', () => reject(new Error('Could not connect to the Chrome tab.')));
-    ws.addEventListener('open', () =>
-      resolve({
-        send(method, params = {}) {
-          nextId += 1;
-          const id = nextId;
-          ws.send(JSON.stringify({ id, method, params }));
-          return new Promise((ok, fail) => pending.set(id, { ok, fail }));
-        },
-        on(method, fn) {
-          listeners.set(method, [...(listeners.get(method) ?? []), fn]);
-        },
-        /** Listen for the next event only — a navigation waits once per page. */
-        once(method, fn) {
-          const wrapper = (params) => {
-            listeners.set(method, (listeners.get(method) ?? []).filter((l) => l !== wrapper));
-            fn(params);
-          };
-          listeners.set(method, [...(listeners.get(method) ?? []), wrapper]);
-        },
-        close: () => ws.close(),
-      })
-    );
+    ws.addEventListener('open', () => resolve(cdpSession(ws, pending, listeners)));
   });
+}
+
+/** The session's commands and event hooks over an open socket; `connect` routes the replies. */
+function cdpSession(ws, pending, listeners) {
+  let nextId = 0;
+  return {
+    send(method, params = {}) {
+      nextId += 1;
+      const id = nextId;
+      ws.send(JSON.stringify({ id, method, params }));
+      return new Promise((ok, fail) => pending.set(id, { ok, fail }));
+    },
+    on(method, fn) {
+      listeners.set(method, [...(listeners.get(method) ?? []), fn]);
+    },
+    /** Listen for the next event only — a navigation waits once per page. */
+    once(method, fn) {
+      const wrapper = (params) => {
+        listeners.set(method, (listeners.get(method) ?? []).filter((l) => l !== wrapper));
+        fn(params);
+      };
+      listeners.set(method, [...(listeners.get(method) ?? []), wrapper]);
+    },
+    close: () => ws.close(),
+  };
 }
 
 /** Resolves on the event; rejects on the timeout, or at once when the run is stopped. */

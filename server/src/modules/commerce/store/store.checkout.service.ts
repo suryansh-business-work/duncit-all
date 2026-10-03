@@ -24,7 +24,7 @@ import { assertBuyable, lineOut, priceStoreCart, resolveStoreLines, type StoreQu
 import { addressProblems } from '@modules/commerce/shiprocket/shiprocket.address';
 import { toStoreOrder } from './store.order.mapper';
 import { autoshipDiscountFor } from './store.autoship.discount';
-import { badInput, forbidden, notFound, resolveOwner, sameSecret, secretKey, type StoreOwner } from './store.shared';
+import { badInput, forbidden, idText, notFound, resolveOwner, sameSecret, secretKey, type StoreOwner } from './store.shared';
 
 /**
  * Turning a cart into orders. One path for every way of paying:
@@ -388,7 +388,7 @@ async function openRazorpay(
     amountPaise,
     currency: 'INR',
     receipt: String(draft.base.payment_id),
-    notes: { kind: 'pet_store', user_id: draft.base.user_id ? String(draft.base.user_id) : 'guest' },
+    notes: { kind: 'pet_store', user_id: idText(draft.base.user_id) || 'guest' },
     account,
   });
   const doc = await PaymentModel.create({
@@ -570,7 +570,8 @@ export const storeCheckoutService = {
     const store = doc.metadata?.store ?? {};
     await markConverted(String(store.cart_owner_key ?? ''), doc._id);
     const fresh = await PaymentModel.findById(doc._id);
-    return resultFor(fresh!, pub.status === 'SUCCESS' ? 'PAID' : 'FAILED', String(store.access_key ?? ''));
+    if (!fresh) notFound('Payment not found');
+    return resultFor(fresh, pub.status === 'SUCCESS' ? 'PAID' : 'FAILED', String(store.access_key ?? ''));
   },
 
   /** The confirmation page's read: the payment and the orders it became. */

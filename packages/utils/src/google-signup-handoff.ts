@@ -69,7 +69,7 @@ export function openGoogleSignup(
   email: string,
   extras: Readonly<SocialHandoffExtras> = {},
 ): GoogleSignupHandoff {
-  if (current && current.idToken === idToken) return current;
+  if (current?.idToken === idToken) return current;
   return { idToken, email, ...extras };
 }
 

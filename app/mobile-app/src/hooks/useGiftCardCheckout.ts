@@ -49,11 +49,8 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      graphqlRequest(MobilePublicFinanceDocument, undefined, { auth: true }).then(
-        (d) => active && setFinance(d.publicFinanceSettings),
-      ),
-    ])
+    graphqlRequest(MobilePublicFinanceDocument, undefined, { auth: true })
+      .then((d) => active && setFinance(d.publicFinanceSettings))
       .catch(() => undefined)
       .finally(() => active && setIsLoading(false));
     return () => {

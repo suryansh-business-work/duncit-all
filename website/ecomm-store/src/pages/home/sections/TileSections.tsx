@@ -32,7 +32,7 @@ export function CategoryGridSection({ section }: Readonly<SectionProps>) {
       <SectionHeading title={title} subtitle={section.subtitle} />
       <Box
         component="ul"
-        sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' } }}
+        sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(3, minmax(0, 1fr))', md: 'repeat(6, minmax(0, 1fr))' } }}
       >
         {section.categories.map((category, position) => (
           <Box component="li" key={category.id}>

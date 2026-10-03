@@ -20,7 +20,7 @@ export function BrandsPage() {
     <Stack spacing={2}>
       <Typography variant="h1">{t('ecommStore.menu.brands')}</Typography>
       {loading && brands.length === 0 ? <Loader label={t('ecommStore.common.loading')} /> : null}
-      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' } }}>
+      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5, gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))', md: 'repeat(5, minmax(0, 1fr))' } }}>
         {brands.map((brand, position) => (
           <Box component="li" key={brand.id}>
             <ButtonBase

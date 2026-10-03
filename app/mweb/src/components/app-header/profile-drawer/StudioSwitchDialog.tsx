@@ -60,7 +60,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
         </Typography>
         <Stack
           direction="row"
-          spacing={2}
+          spacing={1.25}
           sx={{
             justifyContent: "center",
             mb: 2
@@ -74,9 +74,17 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
                 aria-label={STUDIO_LABEL[option.mode]}
                 aria-pressed={selected}
                 onClick={() => setPending(option.mode)}
+                // Bubbles share the row and shrink together on a narrow phone,
+                // staying round — like native's flex/maxWidth/aspectRatio. The
+                // explicit minHeight beats the global coarse-pointer 44px floor,
+                // which otherwise kept the height while the width shrank (ovals
+                // spilling out of the dialog).
                 sx={{
-                  width: 52,
-                  height: 52,
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  maxWidth: 52,
+                  aspectRatio: '1 / 1',
+                  minHeight: 'auto',
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',

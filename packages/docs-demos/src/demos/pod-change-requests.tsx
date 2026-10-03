@@ -98,15 +98,14 @@ export default defineDemos('pod-change-requests', [
     compute: (mock) => {
       const current = row({ status: mock.status, resolution: mock.resolution });
       const pod = { completed_at: mock.completed ? '2026-09-14T04:00:00.000Z' : null };
+      const blockedKey = changeRequestBlockedKey(pod, current);
       return {
         'Status label': fallbackT(changeRequestStatusKey(current)),
         'Chip tone': changeRequestTone(current),
         'Still live': isChangeRequestLive(current),
         'Requester may withdraw': canWithdrawChangeRequest(current),
         'Pod may be asked about': canRequestPodChange(pod),
-        'Why not': changeRequestBlockedKey(pod, current)
-          ? fallbackT(changeRequestBlockedKey(pod, current)!)
-          : '(the action is open)',
+        'Why not': blockedKey ? fallbackT(blockedKey) : '(the action is open)',
         'Pod link': changeRequestPodLink(current),
       };
     },

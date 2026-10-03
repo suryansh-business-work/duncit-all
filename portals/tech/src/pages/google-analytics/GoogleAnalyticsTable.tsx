@@ -24,6 +24,13 @@ const renderUpdated = (row: TagRow) =>
     </Typography>
   );
 
+/** The status column's renderer, bound to the page's translator. */
+function statusRenderer(t: ReturnType<typeof useTranslation>['t']) {
+  return function renderStatus(row: TagRow) {
+    return <StatusChip status={row.status} colorMap={TAG_STATUS_COLORS} label={t(TAG_STATUS_KEYS[row.status])} />;
+  };
+}
+
 interface Props {
   sites: readonly GoogleAnalyticsSite[];
   toolbarActions: ReactNode;
@@ -62,9 +69,7 @@ export default function GoogleAnalyticsTable({ sites, toolbarActions, onEdit, on
         width: 130,
         type: 'enum',
         options: (['LIVE', 'OFF', 'NOT_SET'] as const).map((status) => ({ value: status, label: t(TAG_STATUS_KEYS[status]) })),
-        cellRenderer: (row) => (
-          <StatusChip status={row.status} colorMap={TAG_STATUS_COLORS} label={t(TAG_STATUS_KEYS[row.status])} />
-        ),
+        cellRenderer: statusRenderer(t),
       },
       {
         field: 'updated_at',

@@ -37,15 +37,17 @@ function buildSections(showAdmins: boolean, t: Translate): SectionDef[] {
     { id: 'content', label: t('clubForm.clubSections.pageContentWhoWeArePerks'), render: () => <ContentSection /> },
   ];
   if (showAdmins) {
-    list.push({ id: 'admins', label: t('clubForm.common.clubAdmin'), render: () => <AdminsSection /> });
-    // Its own section rather than a second field inside the admins one: it asks a
-    // different question ("which hosts belong to this club"), and folding it in
-    // gave that section a second Apollo query.
-    list.push({
-      id: 'hosts',
-      label: t('clubForm.linkedHosts.title'),
-      render: () => <LinkedHostsField />,
-    });
+    list.push(
+      { id: 'admins', label: t('clubForm.common.clubAdmin'), render: () => <AdminsSection /> },
+      // Its own section rather than a second field inside the admins one: it asks a
+      // different question ("which hosts belong to this club"), and folding it in
+      // gave that section a second Apollo query.
+      {
+        id: 'hosts',
+        label: t('clubForm.linkedHosts.title'),
+        render: () => <LinkedHostsField />,
+      },
+    );
   }
   return list;
 }

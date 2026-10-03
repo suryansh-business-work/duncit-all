@@ -207,7 +207,7 @@ describe('useSearchCategories', () => {
   });
 
   const cats = [
-    { id: 'c1', name: 'Sports', slug: 'sports', icon: '🏸', level: 'CATEGORY', parent_id: null },
+    { id: 'c1', name: 'Sports', slug: 'sports', icon: '🏸', level: 'CATEGORY', parent_id: 's1' },
     { id: 's1', name: 'Top', slug: 'top', icon: null, level: 'SUPER', parent_id: null },
   ];
 
@@ -216,6 +216,8 @@ describe('useSearchCategories', () => {
     const { result } = renderHook(() => useSearchCategories());
     await waitFor(() => expect(result.current.categories).toHaveLength(1));
     expect(result.current.categories[0]?.id).toBe('c1');
+    expect(result.current.groups.map((group) => group.superCategory.id)).toEqual(['s1']);
+    expect(result.current.groups[0]?.categories.map((item) => item.id)).toEqual(['c1']);
   });
 
   it('falls back to SUPER-level buttons when no CATEGORY exists', async () => {

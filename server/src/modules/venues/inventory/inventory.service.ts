@@ -658,7 +658,9 @@ function applyPackagingFields(doc: IInventoryProduct, input: any) {
 
 /** The brand's display name, copied onto the product so tables and the store's Brand facet can read it. */
 async function brandNameOf(brandId: unknown): Promise<string> {
-  const id = String(brandId ?? '');
+  let id = '';
+  if (brandId instanceof Types.ObjectId) id = brandId.toHexString();
+  else if (typeof brandId === 'string') id = brandId;
   if (!Types.ObjectId.isValid(id)) return '';
   const brand = await EcommBrandModel.findById(id).select('brand_name').lean();
   return brand?.brand_name ?? '';

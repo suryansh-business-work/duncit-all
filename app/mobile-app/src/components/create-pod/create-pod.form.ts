@@ -188,7 +188,7 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
 /** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount. mWeb twin. */
 export const isFreeTicket = (
   values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
-): boolean => values.pod_type === 'FREE' || !(Number(values.pod_amount_text) > 0);
+): boolean => values.pod_type === 'FREE' || (Number(values.pod_amount_text) || 0) <= 0;
 
 /** Products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {

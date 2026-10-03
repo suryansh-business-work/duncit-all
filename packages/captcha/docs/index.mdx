@@ -105,6 +105,9 @@ await submit({ ...values, captcha_token: captcha.token });
 captcha.reload();
 ```
 
+The picture, reload and answer box sit on one row; in a column too narrow for
+all three (a phone footer) the answer box wraps to its own full-width line.
+
 The token is deliberately **not** form state: nobody types it, a form reset must
 not clear it, and it changes on its own every time a code is spent.
 

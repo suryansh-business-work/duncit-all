@@ -850,3 +850,46 @@ come from a Localization key with a fallback bundle entry first (rule 38); the d
 `vitest.config.ts` gates at 100/100/100/100 with the barrels excluded, and every layout /
 variant branch has to be exercised — a new `StatCardLayout` value ships with the test that
 renders it.
+
+## `DuncitErrorBoundary` — no page or screen ends on a blank screen
+
+Every web surface protects itself with this one boundary, at two levels. The **root** boundary
+wraps the whole provider tree: `mountPortal` mounts it for every portal, and mWeb's `main.tsx`
+mounts it for mWeb. The **page** boundary wraps each routed page: `createAuthed`/`PageErrorBoundary`
+does this in the portals, and mWeb's `App.tsx` does it around the routes. A crash in one page
+leaves the chrome working, and navigating away clears it (`resetKey`).
+
+```tsx
+import { DuncitErrorBoundary } from '@duncit/ui';
+import { logs } from '@duncit/logs';
+
+<DuncitErrorBoundary logger={logs.mWeb} surface="mWeb" scope="page" resetKey={pathname} onReport={fileFeedback}>
+  <Page />
+</DuncitErrorBoundary>
+```
+
+When something it wraps throws, it shows `ErrorFallback`: a title, one line, **Retry** and
+**Report an Issue**, and the crash reference. It never shows the error itself.
+
+- **Retry** re-renders the page. With `scope="root"` it reloads the app instead.
+- **Report an Issue** logs a `REPORTED` row and then calls `onReport`. mWeb uses `onReport` to file
+  a support feedback ticket for a signed-in member.
+
+Every crash is logged with `logger.error(route, 'errorBoundary', …)`. Before logging, the report is
+built and scrubbed by `buildCrashReport` from `@duncit/utils`. The rows appear in **Tech → Error
+Boundaries**, and also roll up into Telemetry → Bugs. `onCaught` lets a surface run its own
+recovery first and pick the log level; mWeb uses it to reload once for a stale chunk.
+
+| Prop | Type | Meaning |
+| --- | --- | --- |
+| `logger` | `{ error, warn }` | `logs.mWeb`, or a `createLogger(...)` result. |
+| `surface` | `string` | `mWeb`, or the portal key. |
+| `scope` | `'root' \| 'page'` | Default `page`. |
+| `resetKey` | `string?` | A new value clears a caught crash. |
+| `appVersion` | `string?` | Stamped on the report. |
+| `onReport` | `(report) => Promise<unknown>` | Where Report an Issue also files the report. |
+| `onCaught` | `(error) => 'warn' \| 'error'` | Runs once per crash, before it is logged. |
+
+The native app cannot import React from a package, so its Tamagui twin
+(`app/mobile-app/src/components/ErrorBoundary`) builds the same report from `@duncit/utils`. It
+wraps the app root and every screen through the navigators' `screenLayout`.

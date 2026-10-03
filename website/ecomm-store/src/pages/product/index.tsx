@@ -45,7 +45,8 @@ function ProductView({ product }: Readonly<{ product: StoreProduct }>) {
           display: 'grid',
           gap: { xs: 2, md: 5 },
           alignItems: 'start',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          // minmax(0, …): the gallery's off-screen slides must not widen the column past the phone.
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
           gridTemplateAreas: { xs: '"title" "gallery" "buy"', md: '"gallery title" "gallery buy"' },
         }}
       >

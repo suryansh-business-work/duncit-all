@@ -56,6 +56,8 @@ export default function ReorderList<T>({
         {items.map((item) => {
           const id = getId(item);
           const group = siblingsOf ? siblingsOf(item) : allIds;
+          // The first row has nowhere above it to go.
+          const position = group.indexOf(id);
           const move = (direction: MoveDirection) => {
             const next = moveId(group, id, direction);
             if (next) onReorder(next);
@@ -67,8 +69,8 @@ export default function ReorderList<T>({
               secondary={renderSecondary?.(item)}
               leading={renderLeading?.(item)}
               depth={getDepth?.(item) ?? 0}
-              canMoveUp={group.indexOf(id) > 0}
-              canMoveDown={group.indexOf(id) < group.length - 1}
+              canMoveUp={position > 0}
+              canMoveDown={position < group.length - 1}
               busy={busy}
               onMove={move}
               onEdit={() => onEdit(item)}

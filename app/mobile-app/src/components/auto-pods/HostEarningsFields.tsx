@@ -100,7 +100,7 @@ export function HostEarningsFields({
         value={price}
         // Digits only — a ticket price is whole rupees, and anything else
         // would feed a bogus collection into the projection.
-        onChangeText={(text) => onPrice(text.replace(/[^0-9]/g, ''))}
+        onChangeText={(text) => onPrice(text.replace(/\D/g, ''))}
         placeholder={labels.earningsAddPrice}
         aria-label={labels.earningsAddPrice}
       />
@@ -137,7 +137,7 @@ export function HostEarningsFields({
           {...inputStyle}
           keyboardType="numeric"
           value={spots > 0 ? String(spots) : ''}
-          onChangeText={(text) => onSpots(Number(text.replace(/[^0-9]/g, '')) || 0)}
+          onChangeText={(text) => onSpots(Number(text.replace(/\D/g, '')) || 0)}
           placeholder={labels.spotsField}
           aria-label={labels.spotsField}
         />

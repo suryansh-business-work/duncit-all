@@ -107,21 +107,31 @@ const renderName = (entry: LiteEnvEntry) => (
   </Box>
 );
 
+const renderStatus = (entry: LiteEnvEntry) => <StatusCell entry={entry} />;
+const renderLastTested = (entry: LiteEnvEntry) => <LastTested entry={entry} />;
+
+/** The actions column's renderer, bound to the page's row handlers. */
+function actionsRenderer(handlers: Handlers) {
+  return function renderActions(entry: LiteEnvEntry) {
+    return <RowActions entry={entry} {...handlers} />;
+  };
+}
+
 export function EnvEntriesTable({ rows, categoryLabel, toolbarActions, onEdit, onDelete, onSetDefault, onTest }: Readonly<Props>) {
   const { t } = usePortalT();
   const columns = useMemo<DuncitColumn<LiteEnvEntry>[]>(
     () => [
       { field: 'name', headerName: t('litePortal.environment.colName'), type: 'text', flex: 1, minWidth: 220, cellRenderer: renderName, valueGetter: (entry) => entry.name },
-      { field: 'is_active', headerName: t('litePortal.environment.colStatus'), type: 'boolean', width: 160, cellRenderer: (entry) => <StatusCell entry={entry} /> },
+      { field: 'is_active', headerName: t('litePortal.environment.colStatus'), type: 'boolean', width: 160, cellRenderer: renderStatus },
       { field: 'is_default', headerName: t('litePortal.environment.default'), type: 'boolean', width: 100, hide: true },
-      { field: 'last_tested_at', headerName: t('litePortal.environment.colLastTest'), type: 'date', width: 120, cellRenderer: (entry) => <LastTested entry={entry} />, valueGetter: (entry) => lastTestText(entry, t) },
+      { field: 'last_tested_at', headerName: t('litePortal.environment.colLastTest'), type: 'date', width: 120, cellRenderer: renderLastTested, valueGetter: (entry) => lastTestText(entry, t) },
       dateColumn({ headerName: t('litePortal.common.created') }),
       {
         field: 'actions',
         headerName: t('litePortal.common.actions'),
         type: 'actions',
         width: 180,
-        cellRenderer: (entry) => <RowActions entry={entry} onEdit={onEdit} onDelete={onDelete} onSetDefault={onSetDefault} onTest={onTest} />,
+        cellRenderer: actionsRenderer({ onEdit, onDelete, onSetDefault, onTest }),
       },
     ],
     [t, onEdit, onDelete, onSetDefault, onTest],

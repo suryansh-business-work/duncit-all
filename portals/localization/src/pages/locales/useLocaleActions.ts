@@ -41,7 +41,7 @@ export function useLocaleActions({ editing, onSaved, onRemoved }: Readonly<Optio
   const translateNew = async (saved: LocaleRow) => {
     try {
       await startAi({
-        variables: { input: { locales: [saved.code], scope: 'MISSING' }, url: window.location.href },
+        variables: { input: { locales: [saved.code], scope: 'MISSING' }, url: globalThis.location.href },
       });
       notifySuccess(t('localization.locales.aiStarted', { vars: { language: localeName(saved) } }));
     } catch (e) {

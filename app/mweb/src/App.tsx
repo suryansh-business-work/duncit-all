@@ -8,6 +8,7 @@ import RouteMeta from './app/RouteMeta';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 import BrandFontLoader from './components/BrandFontLoader';
+import { useComingSoonPage } from './components/city-launch/useComingSoonPage';
 import OpenInAppBanner from './components/OpenInAppBanner';
 import { ConsentHost } from './components/consent';
 import SplashScreen from './components/SplashScreen';
@@ -30,7 +31,7 @@ import { useShortLinkJourney } from './app/useShortLinkJourney';
 import { useBrandingAssets } from './hooks/useBrandingAssets';
 import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
-import { CartProvider } from './components/cart/CartContext';
+import CartProviders from './components/cart/CartProviders';
 import { TourProvider } from './tours/TourContext';
 import { TourRunner } from './tours/TourRunner';
 
@@ -51,7 +52,8 @@ export default function App() {
   // resolves to the same route, so normalise before comparing.
   const isMenu = location.pathname === '/menu' || location.pathname === '/menu/';
   const showAppHeader = isAuthed && !isMenu;
-  const showBottomNav = isAuthed && !isSignupSurvey && !isMenu;
+  const comingSoon = useComingSoonPage(locationId);
+  const showBottomNav = isAuthed && !isSignupSurvey && !isMenu && !comingSoon;
   const navPadBottom = showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : '0px';
   const contentPadBottom = fullBleed ? 0 : `calc(${navPadBottom} + ${APP_BANNER_CONTENT_OFFSET})`;
 
@@ -88,7 +90,7 @@ export default function App() {
     <TabSearchDefaultProvider searchable={false}>
     <ConfirmProvider>
     <StatusUploadProvider>
-    <CartProvider>
+    <CartProviders signedIn={isAuthed}>
     <TourProvider>
     <Box
       data-testid="app-shell"
@@ -189,7 +191,7 @@ export default function App() {
     </Box>
     <TourRunner />
     </TourProvider>
-    </CartProvider>
+    </CartProviders>
     </StatusUploadProvider>
     </ConfirmProvider>
     </TabSearchDefaultProvider>

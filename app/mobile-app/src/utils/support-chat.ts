@@ -92,3 +92,29 @@ export function canReopen(reopenDeadline?: string | null, now: Date = new Date()
   if (Number.isNaN(ms)) return false;
   return now.getTime() < ms;
 }
+
+/** Alignment, tail, fill and inks of the user's own support bubble (ticket and live chat). */
+export const MINE_BUBBLE_SIDE = {
+  justify: 'flex-end',
+  ink: '$onPrimary',
+  subtleInk: '$onPrimary',
+  frame: {
+    borderBottomRightRadius: 6,
+    borderBottomLeftRadius: 18,
+    backgroundColor: '$primary',
+    borderWidth: 0,
+  },
+} as const;
+
+/** The support side's bubble: left-aligned, outlined, on the surface fill. */
+export const THEIRS_BUBBLE_SIDE = {
+  justify: 'flex-start',
+  ink: '$color',
+  subtleInk: '$muted',
+  frame: {
+    borderBottomRightRadius: 18,
+    borderBottomLeftRadius: 6,
+    backgroundColor: '$surface',
+    borderWidth: 1,
+  },
+} as const;

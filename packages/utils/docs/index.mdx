@@ -98,6 +98,11 @@ exports:
   - 'isVideoUrl'
   - 'mediaTypeForUrl'
   - 'isVideoMedia'
+  - 'reelFeed'
+  - 'ReelFeedEntry'
+  - 'shouldExtendReelFeed'
+  - 'isReelPreloaded'
+  - 'REEL_PRELOAD_DISTANCE'
   - 'coverImageUrl'
   - 'podPhase'
   - 'canCompletePod'
@@ -105,6 +110,8 @@ exports:
   - 'podScanWindow'
   - 'POD_SCAN_LEAD_MINUTES'
   - 'splitPodsByPhase'
+  - 'withinHappeningNearbyWindow'
+  - 'DEFAULT_HAPPENING_NEARBY_DAYS'
   - 'hostPodSection'
   - 'splitHostPods'
   - 'POD_LIVE_TAIL_MS'
@@ -386,6 +393,9 @@ exports:
   - 'clubCityName'
   - 'clubOptionLabel'
   - 'clubPlaceLabel'
+  - 'groupCategoriesBySuper'
+  - 'GroupableCategory'
+  - 'SuperCategoryGroup'
   - 'groupClubsByCity'
   - 'groupClubsByLocality'
   - 'localitiesByClubCount'
@@ -650,6 +660,34 @@ isCartFlowRoute('/pod/DUN-POD-8842')      // false
 
 The web path and the native screen name reduce to the same key, which is what keeps the
 header identical on both surfaces (rule 27).
+
+### Cart reminder and wishlist
+
+The "your cart is calling" nudge and the Cart / Wishlist tabs follow the same rules on mWeb and
+native. Timing comes from Products portal > Cart > Cart Settings (`productCartSettings`).
+
+```ts
+const settings = DEFAULT_CART_NUDGE_SETTINGS
+// { nudge_enabled: true, nudge_delay_minutes: 10, nudge_auto_hide_seconds: 8 }
+
+cartNudgeDelayMs(settings)  // 600000 — wait after launch, and after each nudge
+cartNudgeHideMs(settings)   // 8000   — the nudge hides itself after this
+
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: false, route: '/home' }) // true
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: false, route: '/cart' }) // false — already there
+canShowCartNudge({ settings, itemCount: 2, muted: true,  snoozed: false, route: '/home' }) // false — "Don't remind me again"
+canShowCartNudge({ settings, itemCount: 2, muted: false, snoozed: true,  route: '/home' }) // false — "Remind me next time"
+
+const tee = { pod_id: 'pod-1', product_id: 'p-7', variant_id: 'xl' }
+addToWishlist([], tee)                  // [tee]
+addToWishlist([tee], tee)               // [tee] — never twice
+removeFromWishlist([tee], wishlistKey(tee)) // []
+
+toCartSyncLines(cartLines) // ids + quantity only — all a cart sync sends to the server
+```
+
+`CART_SETTINGS_BOUNDS` is the range each Cart Setting accepts; the portal form validates against
+it and the server clamps to the same numbers.
 
 ### Club ↔ product matching
 
@@ -950,6 +988,32 @@ because native's codegen refuses an interpolated one.
 | `isVideoMedia` | `(media) => boolean` | — | Whether a stored row plays. The recorded `type` wins; the URL answers for rows written before it was recorded correctly. |
 | `coverImageUrl` | `(media) => string \| undefined` | — | The first still in a cover list — what a card or avatar shows. `undefined` when the cover is video only, so the caller draws its placeholder. |
 
+### The Explore reel feed — `reel-feed`
+
+The Explore reels play in a random order that never runs out. Each pass over
+the pods is a *cycle*, shuffled on its own; when the viewer gets within
+`REEL_PRELOAD_DISTANCE` of the end, the surface deals one more. mWeb and the
+native app share this and nothing else — the players stay separate.
+
+The order is a hash of `seed` + cycle + pod key, so a refetch (a like, a save)
+moves nothing; a new `seed` (a new visit) deals a new order. Where a cycle
+would open on the reel the last one closed on, it is rotated by one.
+
+```ts
+const [seed] = useState(() => Date.now());
+const [cycles, setCycles] = useState(1);
+const reels = useMemo(() => reelFeed(pods, (pod) => pod.id, seed, cycles), [pods, seed, cycles]);
+// Swiped near the end → deal the next shuffled pass.
+if (shouldExtendReelFeed(activeIndex, reels.length)) setCycles((count) => count + 1);
+```
+
+| Export | Signature | Returns | Notes |
+| --- | --- | --- | --- |
+| `reelFeed` | `(items, keyOf, seed, cycles) => ReelFeedEntry[]` | — | `cycles` shuffled passes; each entry's `key` is `<pod key>~<cycle>`, unique across passes. |
+| `shouldExtendReelFeed` | `(activeIndex, length) => boolean` | — | True once the reel on screen is within the preload distance of the end. |
+| `isReelPreloaded` | `(index, activeIndex) => boolean` | — | Whether a reel should be buffering — the ones within `REEL_PRELOAD_DISTANCE` either side. |
+| `REEL_PRELOAD_DISTANCE` | `2` | — | Reels kept loading ahead of and behind the one on screen. |
+
 ### Pod phase — the Home rails
 
 A pod is not simply "upcoming or past". It leaves the upcoming feed the moment
@@ -971,6 +1035,7 @@ rails can never place the same pod differently.
 | `POD_LIVE_TAIL_MS` | `number` | 4h — how long a pod with no set end stays live. |
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
+| `withinHappeningNearbyWindow` | `(pods, days, now = Date.now()) => pods` | The Home "Happening nearby" rail and page: upcoming pods starting within the next `days` days (admin-set in Pods > Pod Settings, `DEFAULT_HAPPENING_NEARBY_DAYS` = 7 until it loads). A pod with no usable start is left out. |
 | `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
 | `POD_SCAN_LEAD_MINUTES` | `number` | 15 — how long before the start a pod's door opens to the host's scanner. |
 | `podScanWindow` | `(pod, now = Date.now()) => 'NOT_OPEN' \| 'OPEN' \| 'CLOSED'` | `NOT_OPEN` until `POD_SCAN_LEAD_MINUTES` before the start, `OPEN` through the end instant, `CLOSED` after. Host Studio keeps the scan row greyed either side of `OPEN`, saying "not yet" or "too late". No usable start ⇒ never opens. |
@@ -2713,6 +2778,27 @@ list that was already searched and sorted stays that way. A city with no clubs g
 and a club whose `location_id` is not among the locations is left out of the city cards. The
 no-area group (`locality: ''`) always comes last — each app labels it "Other areas".
 
+## Categories grouped by super category
+
+`category-grouping.ts` decides how Search's landing grid groups the interests: one section per
+SUPER category, its CATEGORY tiles beneath. mWeb's and the native app's `CategoryActions`
+render it; which category lands under which super is decided here.
+
+```ts
+const categories = [
+  { id: 'sup-sports', name: 'Sports', level: 'SUPER', parent_id: null },
+  { id: 'cat-badminton', name: 'Badminton', level: 'CATEGORY', parent_id: 'sup-sports' },
+  { id: 'sup-wellness', name: 'Wellness', level: 'SUPER', parent_id: null },
+  { id: 'cat-running', name: 'Running', level: 'CATEGORY', parent_id: 'sup-sports' },
+];
+
+groupCategoriesBySuper(categories);
+// [{ superCategory: Sports, categories: [Badminton, Running] }]
+```
+
+Supers and categories keep the order they arrive in. A super with no categories gets no
+section, and SUB rows or a category whose parent is not a known super are left out.
+
 ## Theme tokens — bundled, or the admin's
 
 `theme-tokens.ts` decides which light and dark palettes mWeb and the native app theme with.
@@ -2804,3 +2890,28 @@ page loaded, `rememberShortLinkAttribution` fills it in then, without reporting 
 | `onWebConsentChange` / `whenWebConsentAllows` | listener / `(category, start, doc?) => () => void` | React to an answer given later on the page. |
 | `clearWithdrawnStorage` | `(choice, storage?) => void` | Deletes what a withdrawn category kept (`OPTIONAL_STORAGE_KEYS`). |
 | `startWebShortLinkAttribution` | `(serverUrl, search?, doc?) => Promise<string \| null>` | Consent-aware landing capture + link decorator. |
+
+## Crash reports — `crash-report`
+
+This is the framework-free half of every error boundary. The web `DuncitErrorBoundary` (`@duncit/ui`)
+and the native Tamagui twin both build their report here, so a crash reaches the Tech portal in the
+same shape from any surface.
+
+```ts
+import { BOUNDARY_LOG_COMPONENT, buildCrashReport, crashLogData, crashLogError } from '@duncit/utils';
+
+const report = buildCrashReport({ error, componentStack, scope: 'page', route: location.pathname, surface: 'mWeb', platform: 'web' });
+logs.mWeb.error(report.route, BOUNDARY_LOG_COMPONENT, { error: crashLogError(report), ...crashLogData(report, 'CAUGHT') });
+```
+
+`redactSensitive` runs over the message, both stacks and the route before anything leaves the
+device. It replaces JWTs, bearer tokens, `token=`/`password=`/`otp=`-style values, email addresses
+and phone-length digit runs. The route keeps only its path. Stacks are cut to their first 12 lines.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `BOUNDARY_LOG_COMPONENT` | `'errorBoundary'` | The log marker the Tech portal's Error Boundaries page filters on. |
+| `buildCrashReport` | `(input) => CrashReport` | Scrubbed report with a `crash_id` that pairs CAUGHT and REPORTED rows. |
+| `crashLogError` / `crashLogData` | `(report) => Error` / `(report, event) => Record<string, string>` | The log's `error` and `data`. |
+| `buildCrashReportMessage` | `(report) => string` | Body for `submitAppFeedback` when a member reports it. |
+| `redactSensitive` | `(text) => string` | The scrubber on its own. |

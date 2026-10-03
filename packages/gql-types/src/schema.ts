@@ -1664,6 +1664,8 @@ export type AppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there. */
+  happening_nearby_days: Scalars['Int']['output'];
   /** Account Health points a HOST loses for filing a Request Change on a pod they host (0-10, 0 disables it). */
   host_change_request_health_penalty: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
@@ -8861,6 +8863,13 @@ export type HolidayType =
 export type Host = {
   __typename?: 'Host';
   aadhar_number: Scalars['String']['output'];
+  /**
+   * Phone, DOB and address from the host's own user account. Resolved on demand
+   * for the Edit Host dialog, which fills the host fields still blank from it:
+   * hosts drafted from an approved meeting carry only a name, email and phone.
+   * Null for anyone without hosts-console read access (it is personal data).
+   */
+  account_profile?: Maybe<HostAccountProfile>;
   approved_at?: Maybe<Scalars['String']['output']>;
   bank_account: BankAccountVerification;
   created_at: Scalars['String']['output'];
@@ -8896,6 +8905,14 @@ export type Host = {
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/** The account-side copy of a host's personal details (see Host.account_profile). */
+export type HostAccountProfile = {
+  __typename?: 'HostAccountProfile';
+  dob?: Maybe<Scalars['String']['output']>;
+  full_address: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
 };
 
 export type HostCategory = {
@@ -12700,6 +12717,8 @@ export type Mutation = {
    * slice, and the replacing happens when the slice marked `last` arrives.
    */
   syncContacts: ContactsSyncResult;
+  /** Mirror the signed-in member's device cart so the reminder email knows what is waiting. An empty list clears it. */
+  syncMyProductCart: Scalars['Boolean']['output'];
   /** Read the account now instead of waiting for the scheduler. */
   syncSocialAccount: SocialAccount;
   /** Points the named staging hosts at whatever production holds. Never writes production. */
@@ -12891,6 +12910,7 @@ export type Mutation = {
   /** Replace the global Pod Shop slider media (managed from the products portal). */
   updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
+  updateProductCartSettings: ProductCartSettings;
   updateRateLimitRule: RateLimitRule;
   updateRateLimitSettings: RateLimitSettings;
   updateReelProject: ReelProject;
@@ -12903,6 +12923,8 @@ export type Mutation = {
   updateReportProblemSlack: ReportProblemSlackSettings;
   updateRole: Role;
   updateScheduledSocialPost: SocialScheduledPost;
+  /** Rename a link, re-point it, or change its link-preview card. */
+  updateShortLink: ShortLink;
   updateShortLinkPolicy: ShortLinkPolicy;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
@@ -16833,6 +16855,11 @@ export type MutationSyncContactsArgs = {
 };
 
 
+export type MutationSyncMyProductCartArgs = {
+  lines: Array<ProductCartLineInput>;
+};
+
+
 export type MutationSyncSocialAccountArgs = {
   id: Scalars['ID']['input'];
 };
@@ -17468,6 +17495,11 @@ export type MutationUpdatePolicyArgs = {
 };
 
 
+export type MutationUpdateProductCartSettingsArgs = {
+  input: UpdateProductCartSettingsInput;
+};
+
+
 export type MutationUpdateRateLimitRuleArgs = {
   input: RateLimitRuleInput;
   rule_id: Scalars['ID']['input'];
@@ -17515,6 +17547,12 @@ export type MutationUpdateRoleArgs = {
 export type MutationUpdateScheduledSocialPostArgs = {
   id: Scalars['ID']['input'];
   input: SocialScheduledPostInput;
+};
+
+
+export type MutationUpdateShortLinkArgs = {
+  id: Scalars['ID']['input'];
+  input: ShortLinkUpdateInput;
 };
 
 
@@ -21117,6 +21155,34 @@ export type ProductCartItemInput = {
   variant_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** One Pod Shop cart line as the device holds it — ids and quantity only. */
+export type ProductCartLineInput = {
+  pod_id: Scalars['ID']['input'];
+  product_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Products portal > Cart > Cart Settings: the in-app cart nudge and the cart reminder email. */
+export type ProductCartSettings = {
+  __typename?: 'ProductCartSettings';
+  /** Send the cart reminder email. */
+  email_enabled: Scalars['Boolean']['output'];
+  /** Hours after the cart last changed before the first reminder email (1-720). */
+  email_first_delay_hours: Scalars['Int']['output'];
+  /** Most reminder emails one unchanged cart gets (1-20). */
+  email_max_count: Scalars['Int']['output'];
+  /** Hours between reminder emails for the same unchanged cart (1-720). */
+  email_repeat_hours: Scalars['Int']['output'];
+  /** Seconds a nudge stays on screen before hiding itself (3-60). */
+  nudge_auto_hide_seconds: Scalars['Int']['output'];
+  /** Minutes after the app opens (and after each nudge hides) before the next nudge (1-1440). */
+  nudge_delay_minutes: Scalars['Int']['output'];
+  /** Show the bottom 'your cart is calling' nudge on mWeb and the app. */
+  nudge_enabled: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 /** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
 export type ProductCategory = {
   __typename?: 'ProductCategory';
@@ -21455,6 +21521,8 @@ export type PublicAppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there. */
+  happening_nearby_days: Scalars['Int']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
   max_backout_attempts: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
@@ -22701,6 +22769,8 @@ export type Query = {
   posts: Array<Post>;
   potentialPodEarnings: PodEarningsProjection;
   previewCoupon: CouponPreview;
+  /** Public: the apps read it to time the cart nudge. */
+  productCartSettings: ProductCartSettings;
   productListingRequests: Array<InventoryProduct>;
   /** Server-side table sibling of productListingRequests (shared table engine). */
   productListingRequestsTable: InventoryProductTablePage;
@@ -22877,6 +22947,11 @@ export type Query = {
   shortLinkCampaigns: Array<ShortLinkCampaign>;
   /** Individual clicks on one link. */
   shortLinkClicks: ShortLinkClickTablePage;
+  /**
+   * The link-preview card a destination publishes right now, read the same way
+   * an unfurler reads it. What the console shows before anything is forced.
+   */
+  shortLinkDestinationMeta: ShortLinkDestinationMeta;
   /** Click -> signup -> checkout -> paid, for one link. */
   shortLinkFunnel: ShortLinkFunnel;
   /** One row per click, with the person it became and how far they got. */
@@ -25561,6 +25636,11 @@ export type QueryShortLinkClicksArgs = {
 };
 
 
+export type QueryShortLinkDestinationMetaArgs = {
+  destination_url: Scalars['String']['input'];
+};
+
+
 export type QueryShortLinkFunnelArgs = {
   id: Scalars['ID']['input'];
 };
@@ -27837,6 +27917,19 @@ export type ShortLink = {
   last_clicked_at?: Maybe<Scalars['String']['output']>;
   medium: ShortLinkMedium;
   medium_other?: Maybe<Scalars['String']['output']>;
+  /** The forced description; null keeps the destination's own. */
+  meta_description?: Maybe<Scalars['String']['output']>;
+  /** The forced image; null keeps the destination's own. */
+  meta_image_url?: Maybe<Scalars['String']['output']>;
+  /**
+   * True when the marketer forced the link-preview card. Off, the card is read
+   * live from the destination on every unfurl, so it follows the destination.
+   */
+  meta_override_enabled: Scalars['Boolean']['output'];
+  /** The forced card title. Always set while the override is on. */
+  meta_title?: Maybe<Scalars['String']['output']>;
+  /** Set when a member's share minted the link. Its destination follows the thing shared. */
+  share_target?: Maybe<ShareLinkTarget>;
   /** The link you hand out, e.g. https://duncit.com/aB3xY9Zq */
   short_url: Scalars['String']['output'];
   source: ShortLinkSource;
@@ -27911,6 +28004,15 @@ export type ShortLinkDailyPoint = {
   date: Scalars['String']['output'];
 };
 
+/** What a destination says about itself — the card an unfurler would show. */
+export type ShortLinkDestinationMeta = {
+  __typename?: 'ShortLinkDestinationMeta';
+  description?: Maybe<Scalars['String']['output']>;
+  image_url?: Maybe<Scalars['String']['output']>;
+  site_name?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
 export type ShortLinkFunnel = {
   __typename?: 'ShortLinkFunnel';
   /** Percentage of clicks that ended in a payment. */
@@ -27933,6 +28035,12 @@ export type ShortLinkInput = {
   medium: ShortLinkMedium;
   /** Required when medium is OTHER. */
   medium_other?: InputMaybe<Scalars['String']['input']>;
+  meta_description?: InputMaybe<Scalars['String']['input']>;
+  meta_image_url?: InputMaybe<Scalars['String']['input']>;
+  /** Force the link-preview card. Off or omitted, it is read from the destination. */
+  meta_override_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Required while the override is on. */
+  meta_title?: InputMaybe<Scalars['String']['input']>;
   source: ShortLinkSource;
   /** Required when source is OTHER. */
   source_other?: InputMaybe<Scalars['String']['input']>;
@@ -28112,6 +28220,24 @@ export type ShortLinkTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<ShortLink>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * An edit to an existing link. The utm tags are not here on purpose: a link
+ * already printed keeps the attribution it went out with.
+ */
+export type ShortLinkUpdateInput = {
+  /**
+   * Refused for a share link, and for a move between a Duncit and an external
+   * destination. Moving without sending the override clears the old one.
+   */
+  destination_url: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+  meta_description?: InputMaybe<Scalars['String']['input']>;
+  meta_image_url?: InputMaybe<Scalars['String']['input']>;
+  /** Omit to leave the stored override as it is. */
+  meta_override_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  meta_title?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SignContractInput = {
@@ -33116,6 +33242,8 @@ export type UpdateAppSettingsInput = {
   date_format?: InputMaybe<Scalars['String']['input']>;
   /** Days a Create-Pod draft is kept before auto-deletion (min 1). */
   draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
+  /** How many days ahead Home's Happening nearby looks (1-60). */
+  happening_nearby_days?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a host loses for filing a Request Change (0-10, 0 disables it). */
   host_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;
@@ -33700,6 +33828,16 @@ export type UpdatePolicyInput = {
   slug?: InputMaybe<Scalars['String']['input']>;
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateProductCartSettingsInput = {
+  email_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  email_first_delay_hours?: InputMaybe<Scalars['Int']['input']>;
+  email_max_count?: InputMaybe<Scalars['Int']['input']>;
+  email_repeat_hours?: InputMaybe<Scalars['Int']['input']>;
+  nudge_auto_hide_seconds?: InputMaybe<Scalars['Int']['input']>;
+  nudge_delay_minutes?: InputMaybe<Scalars['Int']['input']>;
+  nudge_enabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateReportProblemConfigInput = {

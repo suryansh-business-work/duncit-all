@@ -65,6 +65,7 @@ export {
 } from './pickers';
 export { resolveActiveOccasion, type OccasionWindow } from './occasion';
 export { dateToTimeOfDay, timeOfDayToDate } from './time-of-day';
+export { formatDurationBetween } from './duration';
 export {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   ageInYears,

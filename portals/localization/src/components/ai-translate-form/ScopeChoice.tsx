@@ -16,7 +16,7 @@ interface Props {
 }
 
 const isScope = (value: string): value is AiTranslateScope =>
-  AI_TRANSLATE_SCOPES.some((scope) => scope === value);
+  (AI_TRANSLATE_SCOPES as readonly string[]).includes(value);
 
 /**
  * What a run sends. The counts beside each language follow this choice, because

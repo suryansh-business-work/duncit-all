@@ -45,8 +45,8 @@ export function FlashSale({ section }: Readonly<SectionProps>) {
   return (
     <Stack component="section" aria-label={section.title || t('ecommStore.flash.title')} spacing={2}>
       <Stack spacing={2} sx={{ bgcolor: T.brandTint, borderRadius: `${T.radius.card}px`, p: 2 }}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <Stack>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <Stack sx={{ minWidth: 0 }}>
             <Typography variant="h2" component="h2">
               {section.title || t('ecommStore.flash.title')}
             </Typography>

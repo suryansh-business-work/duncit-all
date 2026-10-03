@@ -41,6 +41,21 @@ const renderName = (row: AutomationFlow) => (
   </div>
 );
 
+/** The status column's renderer, bound to the page's translator. */
+function statusRenderer(t: Translate) {
+  return function renderStatus(row: AutomationFlow) {
+    return <StatusChip size="small" status={row.status} colorMap={STATUS_COLORS} label={t(FLOW_STATUS_KEYS[row.status])} />;
+  };
+}
+
+/** The trigger column's renderer, bound to the page's translator. */
+function triggerRenderer(t: Translate) {
+  return function renderTrigger(row: AutomationFlow) {
+    const key = TRIGGER_LABEL_KEYS[row.trigger];
+    return <span>{key ? t(key) : t('ai.automation.trigger.none')}</span>;
+  };
+}
+
 export default function FlowsTable({ channel, rows, onOpen, onDuplicate, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -54,9 +69,7 @@ export default function FlowsTable({ channel, rows, onOpen, onDuplicate, onDelet
         type: 'enum',
         options: statusOptions(t),
         valueGetter: (row) => row.status,
-        cellRenderer: (row) => (
-          <StatusChip size="small" status={row.status} colorMap={STATUS_COLORS} label={t(FLOW_STATUS_KEYS[row.status])} />
-        ),
+        cellRenderer: statusRenderer(t),
       },
       {
         field: 'trigger',
@@ -65,10 +78,7 @@ export default function FlowsTable({ channel, rows, onOpen, onDuplicate, onDelet
         type: 'enum',
         options: triggerOptions(t, channel),
         valueGetter: (row) => row.trigger,
-        cellRenderer: (row) => {
-          const key = TRIGGER_LABEL_KEYS[row.trigger];
-          return <span>{key ? t(key) : t('ai.automation.trigger.none')}</span>;
-        },
+        cellRenderer: triggerRenderer(t),
       },
       { field: 'run_count', headerName: t('ai.automation.list.colRuns'), width: 90, type: 'number', valueGetter: (row) => row.run_count },
       dateColumn<AutomationFlow>({ field: 'last_run_at', headerName: t('ai.automation.list.colLastRun'), width: 165, hide: false }),

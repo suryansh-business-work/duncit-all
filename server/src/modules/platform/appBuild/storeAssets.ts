@@ -26,7 +26,8 @@ const EXTENSION_BY_TYPE: Record<string, string> = {
 function assetFileName(url: string, contentType: string, index: number): string {
   const base = path.posix.basename(new URL(url).pathname).replaceAll(/[^\w.-]/g, '_');
   if (path.extname(base)) return base;
-  return `${base || `image-${index + 1}`}${EXTENSION_BY_TYPE[contentType] ?? '.png'}`;
+  const stem = base || `image-${index + 1}`;
+  return `${stem}${EXTENSION_BY_TYPE[contentType] ?? '.png'}`;
 }
 
 /** Fetch one image. Refuses anything but PNG or JPEG — the stores would too, later and less clearly. */

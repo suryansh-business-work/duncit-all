@@ -357,6 +357,8 @@ export {
   podPhase,
   podScanWindow,
   splitPodsByPhase,
+  withinHappeningNearbyWindow,
+  DEFAULT_HAPPENING_NEARBY_DAYS,
   type PodPhase,
   type PodPhaseFields,
   type PodScanWindow,
@@ -376,6 +378,22 @@ export {
   isCartFlowRoute,
   type CartEntry,
 } from './cart-entry';
+export {
+  CART_NUDGE_MUTED_KEY,
+  CART_SETTINGS_BOUNDS,
+  DEFAULT_CART_NUDGE_SETTINGS,
+  addToWishlist,
+  canShowCartNudge,
+  cartNudgeDelayMs,
+  cartNudgeHideMs,
+  removeFromWishlist,
+  toCartSyncLines,
+  wishlistKey,
+  type CartNudgeSettings,
+  type CartNudgeState,
+  type CartSyncLine,
+  type WishlistKeyed,
+} from './cart-reminder';
 export {
   MEETING_PLATFORM_VALUES,
   isMeetingPlatform,
@@ -747,6 +765,13 @@ export {
   type StoredMedia,
 } from './media-url';
 export {
+  isReelPreloaded,
+  REEL_PRELOAD_DISTANCE,
+  reelFeed,
+  shouldExtendReelFeed,
+  type ReelFeedEntry,
+} from './reel-feed';
+export {
   allZero,
   buildEarningsBars,
   buildParticipantTrend,
@@ -1052,6 +1077,11 @@ export {
   type LocalityClubCount,
 } from './club-grouping';
 export {
+  groupCategoriesBySuper,
+  type GroupableCategory,
+  type SuperCategoryGroup,
+} from './category-grouping';
+export {
   E2E_GOOGLE_CREDENTIAL_QUERY,
   E2E_GRANT_ROLES_MUTATION,
   E2E_ONE_TIME_CODE_QUERY,
@@ -1086,3 +1116,14 @@ export {
   type BrandWizardStep,
   type BrandWizardStepKey,
 } from './brand-wizard';
+export {
+  BOUNDARY_LOG_COMPONENT,
+  buildCrashReport,
+  buildCrashReportMessage,
+  crashLogData,
+  crashLogError,
+  redactSensitive,
+  type BoundaryEvent,
+  type BoundaryScope,
+  type CrashReport,
+} from './crash-report';

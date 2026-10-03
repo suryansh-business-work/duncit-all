@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 import { cartBadgeLabel } from '@duncit/utils';
 
+import { useComingSoonCity } from '@/hooks/useComingSoonCity';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TAB_CONFIG } from '@/navigation/tabs';
@@ -54,6 +55,10 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const { muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const cartCount = useCartStore(selectCartCount);
+  const comingSoon = useComingSoonCity();
+
+  // A "Coming soon" city's Home has nowhere to send the bar until it launches.
+  if (comingSoon && state.routes[state.index]?.name === 'HomeTab') return null;
 
   return (
     <XStack

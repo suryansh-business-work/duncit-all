@@ -59,7 +59,7 @@ export default function LocalePicker({ value, error, onPick }: Readonly<Props>) 
         });
       }}
       renderOption={(props, code) => {
-        const { key, ...rest } = props as typeof props & { key: string };
+        const { key, ...rest } = props;
         // Every option is a code taken from `options`, so its row is always in the map.
         const option = byCode.get(code) as LocaleOption;
         return (

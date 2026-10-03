@@ -43,8 +43,10 @@ export default function CaptchaField<T extends FieldValues>({
       <Stack
         direction="row"
         spacing={1.5}
+        useFlexGap
         sx={{
           alignItems: "flex-start",
+          flexWrap: "wrap",
           mt: 0.5
         }}>
         {captcha.image ? (
@@ -82,6 +84,8 @@ export default function CaptchaField<T extends FieldValues>({
           hint={hint}
           autoComplete="off"
           spellCheck={false}
+          // Takes the rest of the row; on a narrow column it drops to its own full-width line.
+          sx={{ flex: '1 1 160px' }}
           slotProps={{ htmlInput: { maxLength: 8, style: { textTransform: 'uppercase', letterSpacing: 4 } } }}
         />
       </Stack>

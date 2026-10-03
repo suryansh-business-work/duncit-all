@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
+  Box,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -16,8 +17,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { Controller, FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
-import HostCategoriesSection from '../../components/host-form/HostCategoriesSection';
-import { STATUSES, UPDATE_HOST } from './queries';
+import { HOST_ACCOUNT_PROFILE, STATUSES, UPDATE_HOST, type HostAccountProfile } from './queries';
 import {
   hostEditInitialValues,
   hostEditSchema,
@@ -44,11 +44,26 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
   });
   const { control, formState } = methods;
 
+  const { data: accountData } = useQuery<{ host: { id: string; account_profile: HostAccountProfile | null } | null }>(
+    HOST_ACCOUNT_PROFILE,
+    { variables: { host_doc_id: host?.id }, skip: !host?.id, fetchPolicy: 'network-only' },
+  );
+  const account = accountData?.host?.id === host?.id ? accountData?.host?.account_profile : null;
+  // Nothing submitted beyond what a meeting approval copies over.
+  const detailsMissing = !!host && !host.aadhar_number && !host.pan_number && !host.bank_account?.payout_method;
+
   useEffect(() => {
     if (!host) return;
     setError('');
     methods.reset(hostEditInitialValues(host));
   }, [host, methods]);
+
+  // The account answers after the dialog opens: fill the blanks it covers
+  // without overwriting anything the admin has already typed.
+  useEffect(() => {
+    if (!host || !account) return;
+    methods.reset(hostEditInitialValues(host, account), { keepDirtyValues: true });
+  }, [host, account, methods]);
 
   const onSubmit = methods.handleSubmit(async (values) => {
     if (!host) return;
@@ -65,14 +80,21 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
   return (
     <Dialog open={!!host} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
       <FormProvider {...methods}>
-        <form onSubmit={onSubmit} noValidate>
+        {/* A flex column, so DialogContent is what scrolls and the actions stay
+            pinned in view — a plain <form> let the whole Paper scroll and pushed
+            Save below the fold. */}
+        <Box
+          component="form"
+          onSubmit={onSubmit}
+          noValidate
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
+        >
           <DialogTitle>{t('onboarding.hosts.editHost')}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2} sx={{ mt: 1 }}>
               {error && <Alert severity="error">{error}</Alert>}
+              {detailsMissing && <Alert severity="info">{t('onboarding.hostForm.detailsNotSubmitted')}</Alert>}
               <HostAccordionForm mode="edit" />
-              <Divider />
-              <HostCategoriesSection />
               <Divider />
               <Controller
                 control={control}
@@ -113,7 +135,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
               Save
             </DuncitButton>
           </DialogActions>
-        </form>
+        </Box>
       </FormProvider>
     </Dialog>
   );

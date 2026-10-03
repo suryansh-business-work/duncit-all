@@ -902,6 +902,23 @@ export const TECH_BUNDLE: NestedCatalogue = {
       operation: 'Operation',
       noServerOperationErrorsLoggedYet: 'No server-operation errors logged yet.',
     },
+    /** Crashes the error boundaries caught on mWeb, the app and every portal, and the ones people reported. */
+    errorBoundaries: {
+      description:
+        'Every page or screen that crashed into an error boundary on mWeb, the native app or a portal, and every Report an Issue pressed on one — scrubbed of tokens and personal data. Rows follow the telemetry retention window.',
+      event: 'Event',
+      caught: 'Crash',
+      reported: 'Reported',
+      scope: 'Boundary',
+      scopeRoot: 'Whole app',
+      scopePage: 'Page / screen',
+      surface: 'Surface',
+      route: 'Route',
+      reference: 'Reference',
+      componentStack: 'Component stack',
+      search: 'Search route, source or message',
+      noCrashesYet: 'No crashes caught yet.',
+    },
     featureFlags: {
       custom: 'Custom',
       deleteFlag: 'Delete flag',

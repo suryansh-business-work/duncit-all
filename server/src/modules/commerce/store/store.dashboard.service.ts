@@ -69,6 +69,18 @@ async function topProducts(from: Date) {
         revenue: { $sum: '$line_items.gross' },
       },
     },
+    // Orders placed before the store had its own catalogue carry Products-portal
+    // ids; only the store's own products belong on its best-seller list.
+    {
+      $lookup: {
+        from: StoreProductModel.collection.collectionName,
+        localField: '_id',
+        foreignField: '_id',
+        as: 'store_product',
+      },
+    },
+    { $match: { 'store_product.0': { $exists: true } } },
+    { $project: { store_product: 0 } },
     { $sort: { units: -1, revenue: -1 } },
     { $limit: 10 },
   ]);

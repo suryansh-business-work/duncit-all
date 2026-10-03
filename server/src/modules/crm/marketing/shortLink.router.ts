@@ -4,12 +4,13 @@ import { shortLinkService } from './shortLink.service';
 import { shortLinkClickService } from './shortLinkClick.service';
 import { shortLinkJourneyService } from './shortLinkJourney.service';
 import { SHORT_CODE_PATTERN } from './shortLink.codes';
-import { cardForDestination } from './shortLink.preview';
+import { cardForLink } from './shortLink.preview';
 import { isLinkPreviewCrawler, renderCardHtml } from './shortLink.crawler';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import type { ConsentSignal } from './shortLinkClick.model';
 import { consentFromCookie } from '@utils/consent';
+import { UNFURL_HEADER } from '@utils/open-graph';
 
 /**
  * The privacy signal this visitor's browser sent, if any.
@@ -39,9 +40,24 @@ function consentSignalFrom(req: Request, consented: boolean): ConsentSignal | nu
 const redirectConsented = (req: Request) => consentFromCookie(req.get('cookie')).marketing;
 const landingConsented = (req: Request) => req.query.c === '1';
 
-/** The card document, or null when this destination has nothing to describe. */
-async function crawlerCardHtml(code: string, destination: string): Promise<string | null> {
-  const card = await cardForDestination(destination);
+type PeekedLink = NonNullable<Awaited<ReturnType<typeof shortLinkService.peek>>>;
+
+/**
+ * The card document, or null when this destination has nothing to describe.
+ *
+ * Built fresh on every unfurl from the link as it is NOW — its current
+ * destination and its current override — so re-pointing a link or editing its
+ * card is what the very next crawler sees. `readPage` is false when the
+ * request is itself one of our own card fetches (a link whose destination is
+ * another short link): reading the page again would fetch this card forever.
+ */
+async function crawlerCardHtml(
+  code: string,
+  peeked: PeekedLink,
+  readPage: boolean,
+): Promise<string | null> {
+  const { destination, link } = peeked;
+  const card = await cardForLink(link, { readPage });
   if (!card) return null;
   const websiteUrl = (await getUrlConfigs()).websiteUrl.replace(/\/+$/, '');
   // The card names the SHORT link as its own address, not this hop: that is
@@ -52,29 +68,32 @@ async function crawlerCardHtml(code: string, destination: string): Promise<strin
 /**
  * Answer an unfurler with the card for whatever the link points at.
  *
- * Anything that cannot be described — a campaign landing page, a store
- * listing, a pod that has since been deleted — redirects after all, so the
- * destination gets to describe itself with its own meta tags instead of being
- * described badly here. Every failure lands in that same branch.
+ * Our entity pages are described from the database; every other destination —
+ * internal or external — by its own tags, read live. Only a destination with
+ * nothing readable and no override redirects after all, so it still gets to
+ * describe itself. Every failure lands in that same branch.
  */
-async function serveCrawlerCard(res: Response, code: string): Promise<void> {
-  const destination = await shortLinkService.peek(code).catch((error) => {
+async function serveCrawlerCard(req: Request, res: Response, code: string): Promise<void> {
+  const peeked = await shortLinkService.peek(code).catch((error) => {
     logs.server.error('shortLink', 'crawlerPeek', { error });
     return null;
   });
-  if (!destination) {
+  if (!peeked) {
     res.status(404).type('text/plain').send('This link is no longer active.');
     return;
   }
-  const html = await crawlerCardHtml(code, destination).catch((error) => {
+  const readPage = !req.get(UNFURL_HEADER);
+  const html = await crawlerCardHtml(code, peeked, readPage).catch((error) => {
     logs.server.error('shortLink', 'crawlerCard', { error });
     return null;
   });
   if (!html) {
-    res.redirect(302, destination);
+    res.redirect(302, peeked.destination);
     return;
   }
-  res.type('html').set('Cache-Control', 'public, max-age=300').send(html);
+  // Not cached by anything in between: an edited card or a re-pointed link
+  // has to reach the next unfurl, not the one after a proxy's TTL runs out.
+  res.type('html').set('Cache-Control', 'no-cache').send(html);
 }
 
 /**
@@ -143,7 +162,7 @@ export function buildShortLinkRouter() {
     // stops there — see shortLink.crawler.ts. Handled before anything is
     // counted, because an unfurl is not a visit.
     if (isLinkPreviewCrawler(req.get('user-agent'))) {
-      await serveCrawlerCard(res, code);
+      await serveCrawlerCard(req, res, code);
       return;
     }
 

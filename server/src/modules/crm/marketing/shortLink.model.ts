@@ -95,6 +95,16 @@ export interface IShortLink extends Document {
    * and no link would carry a meaningful click count.
    */
   share_key?: string | null;
+  /**
+   * The link-preview card a marketer chose to force. Off by default: the card
+   * is then read LIVE from the destination on every unfurl, so it follows the
+   * destination wherever it is changed to. When on, each filled field replaces
+   * the destination's own value and a blank one keeps it.
+   */
+  meta_override_enabled: boolean;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  meta_image_url?: string | null;
   is_active: boolean;
   click_count: number;
   first_clicked_at?: Date | null;
@@ -122,6 +132,10 @@ const shortLinkSchema = new Schema<IShortLink>(
     // No default: an absent path is what keeps every hand-made link out of
     // the unique index below, which a stored null would not.
     share_key: { type: String },
+    meta_override_enabled: { type: Boolean, default: false },
+    meta_title: { type: String, default: null, trim: true, maxlength: 120 },
+    meta_description: { type: String, default: null, trim: true, maxlength: 300 },
+    meta_image_url: { type: String, default: null, trim: true, maxlength: 2048 },
     is_active: { type: Boolean, default: true, index: true },
     click_count: { type: Number, default: 0, min: 0 },
     first_clicked_at: { type: Date, default: null },

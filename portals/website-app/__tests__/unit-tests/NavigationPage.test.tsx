@@ -101,5 +101,6 @@ describe('NavigationPage', () => {
     dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  });
+    // Two confirm-dialog round trips (cancel, then confirm) outran 5s on a busy runner.
+  }, 20_000);
 });

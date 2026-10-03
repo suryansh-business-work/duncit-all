@@ -72,20 +72,51 @@ function BubbleReactions({
   );
 }
 
+/** The bubble's alignment, tail and colours for each side of the conversation. */
+interface BubbleTone {
+  justify: 'flex-end' | 'flex-start';
+  ink: Ink;
+  /** Faded white on the red fill fails 4.5:1, so the time is solid there. */
+  metaInk: Ink;
+  bottomRight: number;
+  bottomLeft: number;
+  fill: '$primary' | '$surface';
+  border: '$primary' | '$cardBorder';
+}
+
+const MINE_TONE: BubbleTone = {
+  justify: 'flex-end',
+  ink: '$onPrimary',
+  metaInk: '$onPrimary',
+  bottomRight: 6,
+  bottomLeft: 18,
+  fill: '$primary',
+  border: '$primary',
+};
+
+const THEIRS_TONE: BubbleTone = {
+  justify: 'flex-start',
+  ink: '$color',
+  metaInk: '$muted',
+  bottomRight: 18,
+  bottomLeft: 6,
+  fill: '$surface',
+  border: '$cardBorder',
+};
+
 /** A single chat bubble: author, text/image, reactions and time. Right-aligned
  * and tinted for my own messages. Long-press opens the reaction picker. */
 export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessageBubbleProps>) {
   const { t } = useTranslation();
   const time = formatMessageTime(message.createdAt);
   const reactions = groupReactions(message.reactions);
-  const ink: Ink = mine ? '$onPrimary' : '$color';
-  // Faded white on the red fill fails 4.5:1, so the time is solid there.
-  const metaInk: Ink = mine ? '$onPrimary' : '$muted';
+  const tone = mine ? MINE_TONE : THEIRS_TONE;
+  const { ink, metaInk } = tone;
   // One spoken line per message: who, what and when — never a bare "Chat message".
   const spoken = [message.user_name, message.text, time].filter(Boolean).join(', ');
 
   return (
-    <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} paddingHorizontal={12}>
+    <XStack justifyContent={tone.justify} paddingHorizontal={12}>
       <YStack
         testID={`chat-message-${message.id}`}
         role="button"
@@ -98,11 +129,11 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
         paddingHorizontal={12}
         paddingVertical={8}
         borderRadius={18}
-        borderBottomRightRadius={mine ? 6 : 18}
-        borderBottomLeftRadius={mine ? 18 : 6}
+        borderBottomRightRadius={tone.bottomRight}
+        borderBottomLeftRadius={tone.bottomLeft}
         borderWidth={1}
-        backgroundColor={mine ? '$primary' : '$surface'}
-        borderColor={mine ? '$primary' : '$cardBorder'}
+        backgroundColor={tone.fill}
+        borderColor={tone.border}
       >
         {!mine && message.user_name ? (
           <Text fontSize={12} fontWeight="600" color="$muted">

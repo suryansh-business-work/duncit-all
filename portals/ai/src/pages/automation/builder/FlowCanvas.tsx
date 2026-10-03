@@ -12,7 +12,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Box, useTheme } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import { isNodeKind, type NodeKind } from '../node-kinds';
+import { isNodeKind } from '../node-kinds';
 import { exitsOf, type CanvasNode } from '../graph-io';
 import type { FlowGraph } from './useFlowGraph';
 import StepNode from './nodes/StepNode';
@@ -67,7 +67,7 @@ function CanvasInner({ graph, fullScreen, onToggleFullScreen }: Readonly<Props>)
       event.preventDefault();
       const kind = event.dataTransfer.getData(DRAG_KIND);
       if (!isNodeKind(kind)) return;
-      addNode(kind as NodeKind, screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+      addNode(kind, screenToFlowPosition({ x: event.clientX, y: event.clientY }));
     },
     [addNode, screenToFlowPosition]
   );

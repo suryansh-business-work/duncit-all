@@ -8,6 +8,7 @@ import { emailTemplateService } from '@modules/content/emailTemplate/emailTempla
 import { sendHtmlEmail } from '@services/email/email.service';
 import { EMAIL_CATEGORIES, type EmailCategory } from '@services/email/email.provider';
 import { renderVars } from './automation.vars';
+import { list, str } from './automation.graph';
 import type { StepContext, StepResult } from './automation.types';
 
 /**
@@ -22,9 +23,6 @@ import type { StepContext, StepResult } from './automation.types';
 /** The message log's event key for a flow send — one key, so the WhatsApp Logs
  * console can filter every automation message in one click. */
 export const WA_AUTOMATION_EVENT = 'AUTOMATION';
-
-const str = (v: unknown): string => String(v ?? '').trim();
-const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(str) : []);
 
 /** The template body as WhatsApp would draw it, with the values in place. */
 export function previewTemplate(template: AisensyTemplate | null, params: string[]): string {

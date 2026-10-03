@@ -20,21 +20,23 @@ export function DeliverToPill() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={t('ecommStore.deliverTo.label', { vars: { place } })}
-        sx={{ borderRadius: T.radius.pill, px: 1, py: 0.5, minHeight: 44, textAlign: 'left' }}
+        sx={{ borderRadius: T.radius.pill, px: 1, py: 0.5, minHeight: 44, textAlign: 'left', minWidth: 0, maxWidth: '100%' }}
       >
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
           <Box
-            sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: T.surface, border: 1, borderColor: T.border, display: 'grid', placeItems: 'center' }}
+            sx={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', bgcolor: T.surface, border: 1, borderColor: T.border, display: 'grid', placeItems: 'center' }}
             aria-hidden
           >
             <FmdGoodOutlinedIcon fontSize="small" />
           </Box>
-          <Stack aria-hidden>
-            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+          <Stack aria-hidden sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ lineHeight: 1.1 }}>
               {t('ecommStore.deliverTo.caption')}
             </Typography>
-            <Stack direction="row" sx={{ alignItems: 'center' }}>
-              <Typography sx={{ fontWeight: 800 }}>{place}</Typography>
+            <Stack direction="row" sx={{ alignItems: 'center', minWidth: 0 }}>
+              <Typography noWrap sx={{ fontWeight: 800 }}>
+                {place}
+              </Typography>
               <KeyboardArrowDownIcon fontSize="small" />
             </Stack>
           </Stack>

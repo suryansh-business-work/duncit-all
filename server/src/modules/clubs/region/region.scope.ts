@@ -147,5 +147,5 @@ export async function assertRegionPod(userId: string, podDocId: string) {
     .select('club_id')
     .lean();
   if (!pod) notFound('Pod');
-  await assertRegionClub(userId, String((pod as { club_id?: unknown }).club_id ?? ''));
+  await assertRegionClub(userId, pod?.club_id?.toString() ?? '');
 }

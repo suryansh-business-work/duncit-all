@@ -32,11 +32,14 @@ const FIRST_SWEEP_DELAY_MS = 60_000;
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
+/** A pod's stored start, as a document or a serialised row carries it. */
+type PodStartValue = Date | string | null;
+
 /** The instant a pod's cancellation stops being reversible: its own start.
  * Null when the pod carries no usable start, which every caller must read as
  * "no window at all" rather than "an open one". */
 export function podRevokeDeadline(pod: {
-  pod_date_time?: Date | string | null;
+  pod_date_time?: PodStartValue;
 }): Date | null {
   const start = pod?.pod_date_time ? new Date(pod.pod_date_time).getTime() : Number.NaN;
   return Number.isNaN(start) ? null : new Date(start);
@@ -45,7 +48,7 @@ export function podRevokeDeadline(pod: {
 /** Whether a cancelled pod may still be put back — the same test the revoke
  * mutation enforces and the console greys its button on. */
 export function isRevokeWindowOpen(
-  pod: { pod_date_time?: Date | string | null },
+  pod: { pod_date_time?: PodStartValue },
   now: Date = new Date()
 ): boolean {
   const deadline = podRevokeDeadline(pod);
@@ -60,7 +63,7 @@ export function isRevokeWindowOpen(
  * and a cancellation that can never be revoked has nothing to wait for.
  */
 export async function refundHoldReleaseAt(pod: {
-  pod_date_time?: Date | string | null;
+  pod_date_time?: PodStartValue;
 }): Promise<Date | null> {
   if (!(await settingsService.getPodCancelRefundHold())) return null;
   return isRevokeWindowOpen(pod) ? podRevokeDeadline(pod) : null;

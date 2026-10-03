@@ -13,12 +13,12 @@ import { OrderDetail } from '../order-detail';
 import { TrackOrderForm } from './track-order-form';
 
 /** A guest's order opened with the key their checkout handed back. */
-function KeyedOrder({ orderNo, accessKey }: Readonly<{ orderNo: string; accessKey: string }>) {
+function KeyedOrder({ orderNo, orderKey }: Readonly<{ orderNo: string; orderKey: string }>) {
   const { t } = useStoreT();
-  const { data, loading, error } = useQuery(STORE_ORDER, { variables: { order_no: orderNo, access_key: accessKey } });
+  const { data, loading, error } = useQuery(STORE_ORDER, { variables: { order_no: orderNo, access_key: orderKey } });
   if (loading && !data) return <Loader label={t('ecommStore.common.loading')} />;
   if (error || !data) return <Alert severity="error">{parseApiError(error, t('ecommStore.track.notFound'))}</Alert>;
-  return <OrderDetail order={data.storeOrder} accessKey={accessKey} canAct />;
+  return <OrderDetail order={data.storeOrder} orderKey={orderKey} canAct />;
 }
 
 /** /track — the guest's link (order + key), or a lookup by order number and contact. */
@@ -29,12 +29,12 @@ export function TrackPage() {
   const [found, setFound] = useState<StoreOrder | null>(null);
   usePageSeo(t('ecommStore.track.title'));
   const orderNo = params.get('order') ?? '';
-  const accessKey = params.get('key') ?? '';
+  const orderKey = params.get('key') ?? '';
   return (
     <Stack spacing={2} sx={{ maxWidth: 1000, mx: 'auto' }}>
       <Typography variant="h1">{t('ecommStore.track.title')}</Typography>
-      {orderNo && accessKey ? <KeyedOrder orderNo={orderNo} accessKey={accessKey} /> : null}
-      {orderNo && accessKey ? null : (
+      {orderNo && orderKey ? <KeyedOrder orderNo={orderNo} orderKey={orderKey} /> : null}
+      {orderNo && orderKey ? null : (
         <Paper sx={{ p: { xs: 2, md: 3 } }}>
           <Stack spacing={1.5}>
             <Typography color="text.secondary">{t('ecommStore.track.intro')}</Typography>

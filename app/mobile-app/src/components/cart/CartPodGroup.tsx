@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { CartLineStepper } from '@/components/cart/CartLineStepper';
 import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { lineQualifiesFreeDelivery } from '@/services/cart';
@@ -16,82 +17,53 @@ interface Props {
   lines: CartLine[];
   onSetQuantity: (line: CartLine, quantity: number) => void;
   onRemove: (line: CartLine) => void;
+  onMoveToWishlist: (line: CartLine) => void;
 }
 
-interface StepperProps {
+interface LineProps extends Omit<Props, 'podId' | 'podTitle' | 'lines'> {
   line: CartLine;
-  onSetQuantity: (line: CartLine, quantity: number) => void;
-}
-
-interface LineProps extends StepperProps {
   /** Rows after the first carry the hairline divider above them. */
   divided: boolean;
-  onRemove: (line: CartLine) => void;
 }
 
 const THUMB_STYLE = { width: '100%', height: '100%' } as const;
 
-/** The per-line − qty + stepper: a soft pill holding two round buttons. */
-function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
-  const { color: ink } = useThemeColors();
+/** "Move to wishlist" beside the stepper — the line leaves the cart for the
+ * Wishlist tab. */
+function MoveToWishlist({ line, onPress }: Readonly<{ line: CartLine; onPress: () => void }>) {
+  const { primary } = useThemeColors();
   const { t } = useTranslation();
-  const atMax = line.quantity >= line.max_quantity;
   return (
     <XStack
-      gap={8}
+      testID={`cart-move-wishlist-${cartLineKey(line)}`}
+      role="button"
+      tabIndex={0}
+      aria-label={t('mweb.cart.moveToWishlistItem', { vars: { name: line.product_name } })}
+      onPress={onPress}
+      gap={4}
       alignItems="center"
-      alignSelf="flex-start"
-      padding={4}
+      paddingVertical={8}
+      paddingHorizontal={4}
       marginTop={4}
-      borderRadius={999}
-      backgroundColor="$soft"
+      pressStyle={PRESS_STYLE.row}
     >
-      <XStack
-        testID={`cart-minus-${cartLineKey(line)}`}
-        role="button"
-        tabIndex={0}
-        aria-label={t('mweb.cart.decrease', { vars: { name: line.product_name } })}
-        hitSlop={6}
-        onPress={() => onSetQuantity(line, line.quantity - 1)}
-        width={32}
-        height={32}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={999}
-        backgroundColor="$surface"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <MaterialIcons name="remove" size={18} color={ink} />
-      </XStack>
-      <Text minWidth={20} textAlign="center" fontSize={14} fontWeight="600" color="$color">
-        {line.quantity}
+      <MaterialIcons name="favorite-border" size={16} color={primary} />
+      <Text fontSize={13} fontWeight="600" color="$primary">
+        {t('mweb.cart.moveToWishlist')}
       </Text>
-      <XStack
-        testID={`cart-plus-${cartLineKey(line)}`}
-        role="button"
-        tabIndex={0}
-        aria-label={t('mweb.cart.increase', { vars: { name: line.product_name } })}
-        aria-disabled={atMax}
-        hitSlop={6}
-        onPress={atMax ? undefined : () => onSetQuantity(line, line.quantity + 1)}
-        width={32}
-        height={32}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={999}
-        backgroundColor="$surface"
-        opacity={atMax ? 0.4 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <MaterialIcons name="add" size={18} color={ink} />
-      </XStack>
     </XStack>
   );
 }
 
 /** One cart line: 64px thumb, name, unit price (+ free-delivery pill), the
- * stepper, and a round remove button. */
-function CartLineRow({ line, divided, onSetQuantity, onRemove }: Readonly<LineProps>) {
+ * stepper with "Move to wishlist" beside it, and a round remove button. */
+function CartLineRow({
+  line,
+  divided,
+  onSetQuantity,
+  onRemove,
+  onMoveToWishlist,
+}: Readonly<LineProps>) {
   const { muted } = useThemeColors();
   const { t } = useTranslation();
   return (
@@ -120,7 +92,10 @@ function CartLineRow({ line, divided, onSetQuantity, onRemove }: Readonly<LinePr
             <FreeDeliveryBadge testID={`cart-free-delivery-${cartLineKey(line)}`} />
           ) : null}
         </XStack>
-        <LineStepper line={line} onSetQuantity={onSetQuantity} />
+        <XStack gap={8} alignItems="center" flexWrap="wrap">
+          <CartLineStepper line={line} onSetQuantity={onSetQuantity} />
+          <MoveToWishlist line={line} onPress={() => onMoveToWishlist(line)} />
+        </XStack>
       </YStack>
       <XStack
         testID={`cart-remove-${cartLineKey(line)}`}
@@ -146,7 +121,14 @@ function CartLineRow({ line, divided, onSetQuantity, onRemove }: Readonly<LinePr
 /** One pod's cart lines as rows inside one card, plus the group's products
  * total. Checkout is cart-wide (one payment) from the cart screen's single CTA.
  * RN twin of mWeb's CartPodGroup. */
-export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }: Readonly<Props>) {
+export function CartPodGroup({
+  podId,
+  podTitle,
+  lines,
+  onSetQuantity,
+  onRemove,
+  onMoveToWishlist,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
   return (
@@ -161,6 +143,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
           divided={lineIndex > 0}
           onSetQuantity={onSetQuantity}
           onRemove={onRemove}
+          onMoveToWishlist={onMoveToWishlist}
         />
       ))}
       <XStack

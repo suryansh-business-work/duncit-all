@@ -22,19 +22,12 @@ export default function HostCategoriesSection() {
 
   return (
     <Stack spacing={1.5}>
-      <Box>
-        <Typography variant="subtitle2" sx={{
-          fontWeight: 800
-        }}>
-          Host categories
-        </Typography>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          Categories this host operates in. A host can work across multiple super-categories —
-          requested categories are marked, and you can add or remove more here.
-        </Typography>
-      </Box>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>
+        Categories this host operates in. A host can work across multiple super-categories —
+        requested categories are marked, and you can add or remove more here.
+      </Typography>
 
       {fields.length === 0 ? (
         <Typography variant="body2" sx={{
@@ -71,7 +64,7 @@ export default function HostCategoriesSection() {
                       color="info"
                       variant="outlined"
                       icon={<VerifiedIcon />}
-                      label={`Requested · ${category.request_no}`}
+                      label={t('onboarding.hostForm.fromHostRequest', { vars: { requestNo: category.request_no ?? '' } })}
                       sx={{ mt: 0.5 }}
                     />
                   ) : (

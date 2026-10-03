@@ -352,6 +352,36 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       whichMedium: 'Which medium?',
       who: 'Who',
       noShortLinksYetCreateOne: 'No short links yet. Create one to start tracking a channel.',
+      editLink: 'Edit link',
+      editLinkBlurb:
+        'Rename it, point it somewhere else or change its link preview. The channel and campaign stay as the link went out with.',
+      saveChanges: 'Save changes',
+      linkUpdated: '“{label}” updated',
+      couldNotUpdate: 'Could not update the link',
+      shareDestinationLocked:
+        'A shared link always opens the thing it was made for, so its destination cannot be changed.',
+      linkPreview: 'Link preview',
+      linkPreviewHint:
+        'What WhatsApp, Slack and other apps show when this link is shared. It is read live from the destination, so it changes whenever the destination does.',
+      couldNotReadDestination: 'Could not read the destination’s preview',
+      previewNeedsDestination: 'Enter a destination to see its preview.',
+      previewNothingPublished:
+        'This destination publishes no preview, so apps will show a plain link. Override the preview to give it one.',
+      overridePreview: 'Override the link preview',
+      overridePreviewHint:
+        'Set your own title, description or image. A description or image left blank keeps the destination’s own.',
+      previewOverrideCleared:
+        'The destination changed, so the old preview override was switched off. Turn it back on to set one for the new destination.',
+      previewTitle: 'Preview title',
+      previewTitleHint: 'Up to {max} characters',
+      previewDescription: 'Preview description',
+      previewDescriptionHint: 'Optional, up to {max} characters',
+      previewImage: 'Preview image',
+      previewImageHint: 'Optional — upload one or paste an https:// link',
+      previewTitleRequired: 'Give the preview a title, or switch the override off',
+      previewTitleTooLong: 'Keep the preview title to 120 characters or fewer',
+      previewDescriptionTooLong: 'Keep the preview description to 300 characters or fewer',
+      previewImageInvalid: 'Use a full https:// image link',
     },
     /**
      * Marketing > Status — the statuses Duncit itself publishes into the apps'

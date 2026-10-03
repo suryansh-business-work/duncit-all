@@ -59,6 +59,15 @@ const fire = (promise: Promise<unknown>, what: string) => {
   promise.catch((error) => log.error('notifications', what, { error }));
 };
 
+/** "in 2 days" / "in 1 hour" — how far off the event is, for a reminder's copy. */
+function reminderLeadInWords(hoursBefore: number): string {
+  if (hoursBefore >= 24) {
+    const days = Math.round(hoursBefore / 24);
+    return `in ${days} day${hoursBefore >= 48 ? 's' : ''}`;
+  }
+  return `in ${hoursBefore} hour${hoursBefore === 1 ? '' : 's'}`;
+}
+
 export const notifications = {
   guestStatus(event: EventLike, registration: RegistrationLike, templateKey: string, extra: TemplateVars = {}): void {
     fire(
@@ -164,7 +173,7 @@ export const notifications = {
     const vars = await baseVars(event);
     const rows = await LiteRegistrationModel.find({ event_id: event._id, status: 'CONFIRMED' }).lean();
     const users = new Map((await LiteUserModel.find({ _id: { $in: rows.map((r) => r.user_id) } }).lean()).map((u) => [String(u._id), u]));
-    const inWords = hoursBefore >= 24 ? `in ${Math.round(hoursBefore / 24)} day${hoursBefore >= 48 ? 's' : ''}` : `in ${hoursBefore} hour${hoursBefore === 1 ? '' : 's'}`;
+    const inWords = reminderLeadInWords(hoursBefore);
     let sent = 0;
     for (const row of rows) {
       const guest = users.get(String(row.user_id));

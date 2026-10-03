@@ -33,22 +33,50 @@ interface HomeVibeChipsProps {
 
 /** The glyph size inside a chip's 24px icon circle. */
 const MARK_SIZE = 16;
+/** A sub-category pill's icon circle — smaller, to sit inside the 32px pill. */
+const SUB_CIRCLE = 20;
+const SUB_MARK_SIZE = 14;
 
 interface VibeChipProps {
   testId: string;
   label: string;
+  /** Admin-set sub-category icon; the pill stays label-only without one. */
+  icon?: string | null;
   selected: boolean;
   onClick: () => void;
 }
 
 /** A pill for a sub-category in the second row. */
-function VibeChip({ testId, label, selected, onClick }: Readonly<VibeChipProps>) {
+function VibeChip({ testId, label, icon, selected, onClick }: Readonly<VibeChipProps>) {
   const restSx = selected
     ? null
     : { bgcolor: 'background.paper', border: '1px solid var(--duncit-card-border)', '&:hover': { bgcolor: 'action.hover' } };
+  const mark = renderSuperCategoryMark(icon, SUB_MARK_SIZE);
   return (
     <Chip
       data-testid={testId}
+      icon={
+        mark ? (
+          <Box
+            component="span"
+            data-testid={`${testId}-icon`}
+            sx={{
+              width: SUB_CIRCLE,
+              height: SUB_CIRCLE,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: selected ? 'background.paper' : 'action.hover',
+              color: 'text.primary',
+              // An admin image fills the circle, as on the category chips (VibeTab).
+              '& img': { width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0 },
+            }}
+          >
+            {mark}
+          </Box>
+        ) : undefined
+      }
       label={label}
       clickable
       color={selected ? 'primary' : 'default'}
@@ -118,6 +146,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
               key={sub.id}
               testId={`vibe-sub-${sub.id}`}
               label={sub.name}
+              icon={sub.icon}
               selected={selectedId === sub.id}
               onClick={() => onSelect(selectedId === sub.id ? activeCategory.id : sub.id)}
             />

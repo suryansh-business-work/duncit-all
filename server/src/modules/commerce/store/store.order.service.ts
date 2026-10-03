@@ -91,7 +91,7 @@ export async function recordPaymentRefund(
   initiatedBy: string
 ) {
   if (amount <= 0) return;
-  const meta = (payment.metadata ?? {}) as Record<string, any>;
+  const meta = payment.metadata ?? {};
   const refunded = round2((Number(meta.refunded_amount) || 0) + amount);
   const update: Record<string, unknown> = {
     'metadata.refunded_at': new Date().toISOString(),

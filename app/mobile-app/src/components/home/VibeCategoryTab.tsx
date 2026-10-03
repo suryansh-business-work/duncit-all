@@ -17,28 +17,64 @@ interface ChipIconProps {
   icon?: string;
   fallback: IconName;
   tint: string;
+  circle: number;
 }
 
 /** The chip's icon: an image filling the circle for a URL, an emoji/text for a
  * short string, or a MaterialIcons fallback when the category has no icon. */
-function ChipIcon({ testID, icon, fallback, tint }: Readonly<ChipIconProps>) {
+function ChipIcon({ testID, icon, fallback, tint, circle }: Readonly<ChipIconProps>) {
+  const glyph = Math.round((circle * GLYPH) / CIRCLE);
   if (icon?.startsWith('http')) {
     return (
       <AppImage
         testID={`${testID}-image`}
         source={{ uri: icon }}
-        style={{ width: CIRCLE, height: CIRCLE }}
+        style={{ width: circle, height: circle }}
       />
     );
   }
   if (icon) {
     return (
-      <Text testID={`${testID}-emoji`} fontSize={GLYPH} lineHeight={CIRCLE}>
+      <Text testID={`${testID}-emoji`} fontSize={glyph} lineHeight={circle}>
         {icon}
       </Text>
     );
   }
-  return <MaterialIcons name={fallback} size={GLYPH} color={tint} />;
+  return <MaterialIcons name={fallback} size={glyph} color={tint} />;
+}
+
+interface VibeChipMarkProps {
+  testID: string;
+  icon?: string;
+  fallback?: IconName;
+  selected: boolean;
+  /** Circle diameter; the sub-category pill passes a smaller one. */
+  size?: number;
+}
+
+/** The icon circle at the left of a vibe chip — shared by the category chip and
+ * the sub-category pill (HomeVibeChips). */
+export function VibeChipMark({
+  testID,
+  icon,
+  fallback = 'category',
+  selected,
+  size = CIRCLE,
+}: Readonly<VibeChipMarkProps>) {
+  const { color } = useThemeColors();
+  return (
+    <YStack
+      width={size}
+      height={size}
+      borderRadius={size / 2}
+      overflow="hidden"
+      alignItems="center"
+      justifyContent="center"
+      backgroundColor={selected ? '$surface' : '$soft'}
+    >
+      <ChipIcon testID={testID} icon={icon} fallback={fallback} tint={color} circle={size} />
+    </YStack>
+  );
 }
 
 interface VibeCategoryTabProps {
@@ -61,8 +97,6 @@ export function VibeCategoryTab({
   selected,
   onPress,
 }: Readonly<VibeCategoryTabProps>) {
-  const { color } = useThemeColors();
-
   return (
     <XStack
       testID={testID}
@@ -83,17 +117,7 @@ export function VibeCategoryTab({
       backgroundColor={selected ? '$primary' : '$surface'}
       pressStyle={PRESS_STYLE.control}
     >
-      <YStack
-        width={CIRCLE}
-        height={CIRCLE}
-        borderRadius={CIRCLE / 2}
-        overflow="hidden"
-        alignItems="center"
-        justifyContent="center"
-        backgroundColor={selected ? '$surface' : '$soft'}
-      >
-        <ChipIcon testID={testID} icon={icon} fallback={fallback} tint={color} />
-      </YStack>
+      <VibeChipMark testID={testID} icon={icon} fallback={fallback} selected={selected} />
       <Text
         fontSize={13}
         fontWeight="600"

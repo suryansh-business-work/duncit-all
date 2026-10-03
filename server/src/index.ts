@@ -30,6 +30,7 @@ import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/an
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
+import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
@@ -552,6 +553,8 @@ async function bootstrap() {
   // Pet store: email everyone waiting on a product that is back in stock.
   startStoreScheduler();
   startShiprocketScheduler();
+  // Pod Shop: the "your cart is calling" reminder email (Products > Cart Settings).
+  startProductCartReminderScheduler();
 
   // Database backups: a one-minute tick that takes the archive when the
   // admin-configured window has passed (Tech > Database > Backups; off until

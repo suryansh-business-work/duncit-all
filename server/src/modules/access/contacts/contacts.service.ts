@@ -146,7 +146,8 @@ async function finishSync(owner: Types.ObjectId, syncId: Types.ObjectId, syncedA
   );
 }
 
-const lower = (value: unknown) => String(value ?? '').trim().toLowerCase();
+const lower = (value: unknown) =>
+  (typeof value === 'string' || typeof value === 'number' ? String(value) : '').trim().toLowerCase();
 
 /**
  * Same city as the viewer. The selected location wins when both sides have

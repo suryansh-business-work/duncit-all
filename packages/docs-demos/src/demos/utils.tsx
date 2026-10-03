@@ -17,6 +17,8 @@ import { venuesDemos } from './utils/venues';
 import { clubAdminDemos } from './utils/club-admin';
 import { invitesAndClaimsDemos } from './utils/invites-and-claims';
 import { privacyDemos } from './utils/privacy';
+import { crashReportDemos } from './utils/crash-report';
+import { cartReminderDemos } from './utils/cart-reminder';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -34,4 +36,6 @@ export default defineDemos('utils', [
   ...clubAdminDemos,
   ...invitesAndClaimsDemos,
   ...privacyDemos,
+  ...crashReportDemos,
+  ...cartReminderDemos,
 ]);

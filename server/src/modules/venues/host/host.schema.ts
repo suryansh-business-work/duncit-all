@@ -41,6 +41,13 @@ export const hostTypeDefs = /* GraphQL */ `
     Null when they never booked a meeting or the taxonomy has since changed.
     """
     survey_category: HostCategory
+    """
+    Phone, DOB and address from the host's own user account. Resolved on demand
+    for the Edit Host dialog, which fills the host fields still blank from it:
+    hosts drafted from an approved meeting carry only a name, email and phone.
+    Null for anyone without hosts-console read access (it is personal data).
+    """
+    account_profile: HostAccountProfile
     step_completed: Int!
     "Permanent human id (HOST-000001) — Onboarded Hosts table."
     host_no: String
@@ -56,6 +63,13 @@ export const hostTypeDefs = /* GraphQL */ `
     rejected_at: String
     created_at: String!
     updated_at: String!
+  }
+
+  "The account-side copy of a host's personal details (see Host.account_profile)."
+  type HostAccountProfile {
+    phone: String!
+    dob: String
+    full_address: String!
   }
 
   "Server-side table page for the shared table engine (hostsTable)."

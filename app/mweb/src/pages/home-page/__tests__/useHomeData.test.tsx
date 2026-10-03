@@ -259,8 +259,17 @@ describe('useHomeData', () => {
     // active pods exclude the past one and the orphan (no club); previous holds the past pod
     expect(result.current.previousPods.map((p: any) => p.id)).toEqual(['p_past']);
     expect(result.current.activePods.some((p: any) => p.id === 'p_orphan')).toBe(false);
-    expect(result.current.totalPods).toBe(result.current.activePods.length);
+    // Happening nearby (rail + count) reaches a week ahead by default: the 10-
+    // and 40-day pods and the undated one stay in their club sections only.
+    const nearbyIds = result.current.nearbyPods.map((p: any) => p.id);
+    expect(nearbyIds).toContain('p_future3');
+    expect(nearbyIds).not.toContain('p_future10');
+    expect(nearbyIds).not.toContain('p_future40');
+    expect(nearbyIds).not.toContain('p_nodate');
+    expect(result.current.activePods.map((p: any) => p.id)).toEqual(expect.arrayContaining(['p_future10']));
+    expect(result.current.totalPods).toBe(result.current.nearbyPods.length);
     expect(result.current.totalPods).toBeGreaterThan(0);
+    expect(result.current.featuredPods.every((p: any) => nearbyIds.includes(p.id))).toBe(true);
 
     // featured pods sorted ascending by date, capped at 6
     expect(result.current.featuredPods.length).toBeLessThanOrEqual(6);

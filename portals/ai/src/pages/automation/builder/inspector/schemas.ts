@@ -105,5 +105,7 @@ export const httpSchema = (t: Translate) =>
   });
 export type HttpValues = z.infer<ReturnType<typeof httpSchema>>;
 
-export const str = (value: unknown): string => String(value ?? '');
+/** A step setting as text: settings are scalars, so anything else (unset included) reads as ''. */
+export const str = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : '';
 export const strList = (value: unknown): string[] => (Array.isArray(value) ? value.map(str) : []);

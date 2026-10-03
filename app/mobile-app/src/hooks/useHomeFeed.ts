@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { splitPodsByPhase } from '@duncit/utils';
+import {
+  DEFAULT_HAPPENING_NEARBY_DAYS,
+  splitPodsByPhase,
+  withinHappeningNearbyWindow,
+} from '@duncit/utils';
 
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
+import { useAppSettingsStore } from '@/stores/app-settings.store';
 import { useHomeStore, type HomeFeed } from '@/stores/home.store';
 import { makeCategoryMatcher } from '@/utils/category-match';
 import {
@@ -119,6 +124,7 @@ function deriveHome(
   selectedLocationId: string,
   filters: HomeFilters,
   showAllVibes: boolean,
+  nearbyDays: number,
 ) {
   const clubs = data?.clubs ?? [];
   const allPods = data?.pods ?? [];
@@ -183,7 +189,12 @@ function deriveHome(
     .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }))
     .filter((entry) => entry.pods.length > 0);
 
-  const featuredPods = activePods.slice().sort(byDateAsc).slice(0, 10);
+  // "Happening nearby" (the rail, its count and its See all screen) reaches only
+  // as far ahead as the admin's window (Pods > Pod Settings, a week by
+  // default); the club sections keep every upcoming pod. mWeb twin: useHomeData.
+  const nearbyPods = withinHappeningNearbyWindow(activePods, nearbyDays);
+  nearbyPods.sort(byDateAsc);
+  const featuredPods = nearbyPods.slice(0, 10);
 
   // The pod card's category chip (mock: "Sports") — the pod's club's CATEGORY
   // name, resolved through the same catalogue the vibe chips use. mWeb twin:
@@ -207,7 +218,8 @@ function deriveHome(
     activePods: activePods.slice().sort(byDateAsc),
     ongoingPods,
     previousPods,
-    totalPods: activePods.length,
+    nearbyPods,
+    totalPods: nearbyPods.length,
     categoryLabelOf,
   };
 }
@@ -270,6 +282,11 @@ export function useHomeFeed(
   const fetch = useHomeStore((s) => s.fetch);
   const { selectedSuperId } = useSuperCategories();
   const { selectedId: selectedLocationId } = useLocations();
+  // Read from the app-wide settings cache (useDateFormat loads it on launch);
+  // the shared default stands in until it has.
+  const nearbyDays =
+    useAppSettingsStore((s) => s.data?.publicAppSettings?.happening_nearby_days) ??
+    DEFAULT_HAPPENING_NEARBY_DAYS;
 
   useEffect(() => {
     fetch();
@@ -284,8 +301,17 @@ export function useHomeFeed(
         selectedLocationId,
         filters,
         showAllVibes,
+        nearbyDays,
       ),
-    [data, selectedCategoryId, selectedSuperId, selectedLocationId, filters, showAllVibes],
+    [
+      data,
+      selectedCategoryId,
+      selectedSuperId,
+      selectedLocationId,
+      filters,
+      showAllVibes,
+      nearbyDays,
+    ],
   );
 
   // Stable, for the same reason `useSupport.reload` is — see the note above.

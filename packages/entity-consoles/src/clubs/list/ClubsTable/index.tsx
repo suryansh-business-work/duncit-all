@@ -15,7 +15,7 @@ import {
 import type { ClubRow } from '../queries';
 import { clubTabPath } from '../../records/clubTabPath';
 import { useTranslation } from '@duncit/shell';
-import { ClubNameCell, hasNoClubAdmin, renderCover, renderWhatsApp, whatsAppValue } from './cells';
+import { clubNameRenderer, hasNoClubAdmin, renderCover, renderWhatsApp, whatsAppValue } from './cells';
 
 export { hasNoClubAdmin } from './cells';
 
@@ -62,7 +62,7 @@ export default function ClubsTable({
         type: 'text',
         flex: 1,
         minWidth: 200,
-        cellRenderer: (c) => <ClubNameCell club={c} t={t} />,
+        cellRenderer: clubNameRenderer(t),
         // Keyed on the flag too, so the cell repaints the moment an admin is
         // assigned — a renderer whose value never changes freezes (S…/AG Grid).
         valueGetter: (c) => `${c.club_name}${hasNoClubAdmin(c) ? ' · no club admin' : ''}`,

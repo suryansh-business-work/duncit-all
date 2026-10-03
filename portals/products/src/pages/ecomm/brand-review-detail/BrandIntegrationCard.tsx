@@ -4,7 +4,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { InfoRow } from '@duncit/ui';
+import { InfoRow, IntegrationLogo } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import type { BrandIntegrationStatus } from '../queries';
@@ -47,6 +47,7 @@ export default function BrandIntegrationCard({ title, status, checking, onCheck 
     <Card variant="outlined" sx={{ flex: 1 }} data-testid={`brand-integration-${provider}`}>
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}>
+          <IntegrationLogo vendor={status.provider} label={title} size={28} />
           <Typography component="h3" variant="subtitle2" sx={{ flex: 1, fontWeight: 700 }}>
             {title}
           </Typography>

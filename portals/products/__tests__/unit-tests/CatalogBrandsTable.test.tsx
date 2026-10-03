@@ -35,10 +35,11 @@ const fetchOf = (rows: CatalogBrandRow[]) => async () => ({ rows, total: rows.le
 const renderTable = (rows: CatalogBrandRow[]) => {
   const onProducts = vi.fn();
   const onManage = vi.fn();
+  const onDetails = vi.fn();
   render(
-    <CatalogBrandsTable fetchRows={fetchOf(rows)} onProducts={onProducts} onManage={onManage} />,
+    <CatalogBrandsTable fetchRows={fetchOf(rows)} onProducts={onProducts} onManage={onManage} onDetails={onDetails} />,
   );
-  return { onProducts, onManage };
+  return { onProducts, onManage, onDetails };
 };
 
 describe('CatalogBrandsTable', () => {
@@ -80,21 +81,34 @@ describe('CatalogBrandsTable', () => {
     const { onProducts, onManage } = renderTable([makeRow()]);
     await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Products' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Products' }));
 
     expect(onProducts).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1' }));
     expect(onManage).not.toHaveBeenCalled();
   });
 
-  it('opens Manage exactly once from the action button (click does not bubble)', async () => {
+  it('opens Manage exactly once from the row menu (the row click does not also fire)', async () => {
     const { onProducts, onManage } = renderTable([makeRow()]);
     await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Manage' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Manage commission & status' }));
 
     expect(onManage).toHaveBeenCalledTimes(1);
     expect(onManage).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1' }));
     expect(onProducts).not.toHaveBeenCalled();
+  });
+
+  it('opens the brand analytics & logs page from the row menu', async () => {
+    const { onDetails, onManage } = renderTable([makeRow()]);
+    await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Brand details, analytics & logs' }));
+
+    expect(onDetails).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1' }));
+    expect(onManage).not.toHaveBeenCalled();
   });
 
   it('opens Manage when the row itself is clicked', async () => {

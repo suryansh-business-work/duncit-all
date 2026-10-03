@@ -5,7 +5,7 @@ import { Alert, Card, CardContent, CircularProgress, Divider, Stack, Typography 
 import { notifyError } from '@duncit/dialogs';
 import { BackButton, SectionCard } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
-import { useTranslation } from '@duncit/shell';
+import { BrandAnalyticsPanel, BrandLogsPanel, useTranslation } from '@duncit/shell';
 import BrandPickupPanel from '../BrandPickupPanel';
 import BrandProductsTable from '../BrandProductsTable';
 import ReviewBrandDialog from '../ReviewBrandDialog';
@@ -102,6 +102,19 @@ export default function BrandReviewDetailPage() {
           <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1, display: 'block' }}>
             {t('products.brandReview.pickupHint')}
           </Typography>
+        </CardContent>
+      </Card>
+
+      {/* Both panels carry their own heading, so they keep plain cards. */}
+      <Card variant="outlined">
+        <CardContent>
+          <BrandAnalyticsPanel brandId={brand.id} />
+        </CardContent>
+      </Card>
+
+      <Card variant="outlined">
+        <CardContent>
+          <BrandLogsPanel brandId={brand.id} tableId="products-brand-logs" />
         </CardContent>
       </Card>
 

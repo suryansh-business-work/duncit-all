@@ -40,6 +40,7 @@ export default function CatalogBrandsPage() {
         fetchRows={fetchRows}
         onProducts={(b) => navigate(`/catalog/brands/${b.id}/products`)}
         onManage={(b) => navigate(`/catalog/brands/${b.id}`)}
+        onDetails={(b) => navigate(`/ecomm/brands/${b.id}`)}
       />
     </Stack>
   );

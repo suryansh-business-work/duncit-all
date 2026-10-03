@@ -7,6 +7,7 @@ import {
   appleSignInConnection,
   appStoreConnectConnection,
   githubConnection,
+  cloudflareConnection,
   godaddyConnection,
   googleDriveConnection,
   googlePlayConnection,
@@ -211,6 +212,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   APPLE_SIGNIN: appleSignInConnection,
   APP_STORE_CONNECT: appStoreConnectConnection,
   GODADDY: godaddyConnection,
+  CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
 };
 

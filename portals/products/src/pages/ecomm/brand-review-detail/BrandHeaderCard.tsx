@@ -34,6 +34,15 @@ export default function BrandHeaderCard({ brand, onReview }: Readonly<Props>) {
               {paused && (
                 <Chip size="small" color="warning" variant="outlined" label={t('products.brandReview.paused')} />
               )}
+              {brand.status === 'APPROVED' && !paused && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color={brand.live ? 'success' : 'warning'}
+                  label={brand.live ? t('products.brandReview.live') : t('products.brandReview.integrationPending')}
+                  data-testid="brand-live-chip"
+                />
+              )}
             </Stack>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {location} · {contact}

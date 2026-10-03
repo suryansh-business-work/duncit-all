@@ -6,6 +6,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
 jest.mock('expo-auth-session/providers/google', () => ({ useIdTokenAuthRequest: jest.fn() }));
+jest.mock('expo-auth-session', () => ({ exchangeCodeAsync: jest.fn() }));
 
 let mockScheme: 'light' | 'dark' = 'light';
 jest.mock('@/stores/theme.store', () => ({

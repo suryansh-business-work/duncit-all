@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { logs } from '@duncit/logs';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
@@ -17,6 +18,7 @@ import { cartLineKey, useCart } from '../../components/cart/CartContext';
 import { useTranslation } from '../../i18n/useTranslation';
 import { PODS_FOR_PRODUCT } from './queries';
 import { BACK_SX, IDLE_PILL_SX, PILL_SX } from './productDetailStyles';
+import PodAvailabilityNotice from './PodAvailabilityNotice';
 
 const variantName = (v: any): string => v.option_label || v.color || v.size_label || 'Variant';
 
@@ -37,11 +39,17 @@ export default function ProductDetailPage() {
     skip: !productId,
     fetchPolicy: 'cache-first',
   });
-  const { data: podData } = useQuery<any>(PODS_FOR_PRODUCT, {
+  const { data: podData, loading: podsLoading, error: podError, refetch: refetchPods } = useQuery<any>(PODS_FOR_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-and-network',
   });
+  useEffect(() => {
+    if (error) logs.mWeb.error('ProductDetailPage', 'loadProduct', { error, productId });
+  }, [error, productId]);
+  useEffect(() => {
+    if (podError) logs.mWeb.error('ProductDetailPage', 'loadPods', { error: podError, productId });
+  }, [podError, productId]);
 
   const product = data?.publicInventoryProduct;
   useEntityPageMeta(product?.name);
@@ -94,7 +102,7 @@ export default function ProductDetailPage() {
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
-  if (error) return <Alert severity="error" data-testid="product-detail-error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="product-detail-error">{t('mweb.productDetailPage.loadError')}</Alert>;
   if (!product) return <Alert severity="info" data-testid="product-detail-not-found">{t('mweb.productDetailPage.productNotFound')}</Alert>;
 
   return (
@@ -147,14 +155,11 @@ export default function ProductDetailPage() {
         />
       )}
       <ProductInfoCard
-        description={product.description || product.short_description || 'No description provided.'}
+        description={product.description || product.short_description || t('mweb.productDetailPage.noDescription')}
         specs={specs}
       />
-      {pod ? null : (
-        <Alert severity="info" data-testid="product-detail-no-pod">
-          Products are purchased from a pod&apos;s shop while booking — find this product in a pod
-          near you.
-        </Alert>
+      {pod || (podsLoading && !podError) ? null : (
+        <PodAvailabilityNotice failed={!!podError} onRetry={() => refetchPods()} />
       )}
       <ProductReviews productId={product.id} />
       {pod ? (

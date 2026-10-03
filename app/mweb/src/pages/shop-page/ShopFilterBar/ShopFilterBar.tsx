@@ -106,7 +106,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
             </FilterSection>
           )}
           {filters.subOptions.length > 0 && (
-            <FilterSection title="Sub-category">
+            <FilterSection title={t('mweb.shop.subCategory')}>
               <FilterChipRow
                 options={withAll(filters.subOptions)}
                 value={filters.subId}
@@ -144,7 +144,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           >
             {SHOP_SORT_OPTIONS.map((option) => (
               <MenuItem key={option.value} data-testid={`shop-sort-${option.value}`} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </MenuItem>
             ))}
           </TextField>

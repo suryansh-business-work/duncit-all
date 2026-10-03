@@ -12,7 +12,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 
 /** Order states that never count toward a partner's e-commerce sales. */
-const EXCLUDED_ORDER_STATUSES = ['CANCELLED', 'FAILED', 'RTO'];
+export const EXCLUDED_ORDER_STATUSES = ['CANCELLED', 'FAILED', 'RTO'];
 
 /** How many products the E-Commerce Brand Dashboard's performance chart plots.
  * Earnings are summed over EVERY sold product — only the chart is topped. */
@@ -138,7 +138,7 @@ async function ecommSales(brandIds: any[]) {
 }
 
 /** Duncit's cut per sold product, keyed by product id. */
-async function soldCommissionPcts(soldProductIds: any[]) {
+export async function soldCommissionPcts(soldProductIds: any[]) {
   const byProduct = new Map<string, number>();
   if (soldProductIds.length === 0) return byProduct;
   const [products, fs] = await Promise.all([
@@ -162,7 +162,7 @@ async function soldCommissionPcts(soldProductIds: any[]) {
 }
 
 /** Sold products with the Duncit commission taken off, best-selling first. */
-function performanceRows(byProduct: any[], pctById: Map<string, number>) {
+export function performanceRows(byProduct: any[], pctById: Map<string, number>) {
   return byProduct.map((row: any) => {
     const gross = money(row.gross);
     const pct = pctById.get(String(row._id)) ?? 0;

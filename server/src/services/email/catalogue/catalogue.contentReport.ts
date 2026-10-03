@@ -57,7 +57,7 @@ const REPORT_STEPS: readonly ReportStep[] = [
     slug: 'content-report-received',
     name: 'Content Report Received',
     description: 'Tells a member their report of a post or story reached the Legal team.',
-    fires: 'A member reports a post or story for the first time',
+    fires: 'A member reports a post or story, or updates a report they already filed',
     copyKey: 'email.contentReportReceived',
     subject: 'We have your report — {{report_no}}',
     tone: CALM,

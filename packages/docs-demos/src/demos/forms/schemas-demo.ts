@@ -13,6 +13,7 @@ import {
   makeResetPasswordSchema,
   makeForceMarkSchema,
   makeVenueCancelPodSchema,
+  makeTwoFactorCodeSchema,
 } from '@duncit/forms/schemas';
 import { defineDemo } from '../../types';
 
@@ -43,6 +44,8 @@ interface SchemaMock {
   /** One name a Club Admin was read for a multi-seat booking. Blank it: the
    * mark still goes through, because "I was not told" is a real answer. */
   companion_name: string;
+  /** What is typed into the authenticator step — 6 digits, or a recovery code. */
+  two_factor_code: string;
 }
 
 /** The `schemas` demo: every mWeb/native form contract, parsed side by side. */
@@ -69,6 +72,7 @@ export const schemasDemo = defineDemo<SchemaMock>({
     recipient_phone: '+91 98450 12345',
     bio: 'Weekend trail runner in Bengaluru — hosting DUN-POD-4821 on Saturdays.',
     companion_name: 'Rohan Mehta',
+    two_factor_code: 'K7QD-M2XA',
   },
   compute: (mock) => {
     // Messages are keys here so the demo shows WHICH sentence fires without
@@ -138,6 +142,15 @@ export const schemasDemo = defineDemo<SchemaMock>({
       ),
       'Delete account': say(
         makeDeleteAccountSchema(t).safeParse({ otp: mock.otp, reason: mock.reason }),
+      ),
+      // The console's authenticator step. A recovery code passes where a lost
+      // phone must not lock anyone out (signing in, turning it off) and is
+      // refused while setting up — only the app can prove the scan.
+      'Authenticator code (sign-in)': say(
+        makeTwoFactorCodeSchema(t, { allowRecovery: true }).safeParse({ code: mock.two_factor_code }),
+      ),
+      'Authenticator code (setup)': say(
+        makeTwoFactorCodeSchema(t, { allowRecovery: false }).safeParse({ code: mock.two_factor_code }),
       ),
       // One bio ceiling for every editor — the server's.
       [`Profile bio (max ${PROFILE_BIO_MAX_LENGTH})`]: say(

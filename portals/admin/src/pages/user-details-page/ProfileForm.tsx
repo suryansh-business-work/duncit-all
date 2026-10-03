@@ -8,18 +8,21 @@ import { RhfTextField } from '@duncit/forms';
 import MediaPickerField from '../../components/MediaPickerField';
 import AddressFields from './AddressFields';
 import ContactFields from './ContactFields';
+import ProfileDemographicsReadout from './ProfileDemographicsReadout';
 import type { EditForm } from './queries';
 import { userProfileSchema } from './user-profile.form';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
   form: EditForm;
+  gender: string | null | undefined;
+  isPetOwner: boolean | null | undefined;
   busy: boolean;
   opError: string | null;
   onSave: (values: EditForm) => void;
 }
 
-export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Props>) {
+export default function ProfileForm({ form, gender, isPetOwner, busy, opError, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, handleSubmit, reset, setValue, watch, formState } = useForm<EditForm, any, EditForm>({
     defaultValues: form,
@@ -125,6 +128,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
           <Grid size={12}>
             <RhfTextField control={control} name="bio" label={t('admin.profile.bio')} multiline minRows={3} />
           </Grid>
+          <ProfileDemographicsReadout gender={gender} isPetOwner={isPetOwner} />
           <Grid
             size={{
               xs: 12,

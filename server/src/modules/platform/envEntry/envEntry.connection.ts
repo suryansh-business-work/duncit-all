@@ -19,6 +19,12 @@ import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
 import { sonarGet } from '@utils/sonarqube';
 import { godaddyConfigOf, godaddyDomain, godaddyRecords } from '@modules/platform/dns/godaddy.gateway';
+import {
+  cloudflareConfigOf,
+  cloudflareRecords,
+  cloudflareVerifyToken,
+  cloudflareZone,
+} from '@modules/platform/cloudflare/cloudflare.gateway';
 import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
 
 /**
@@ -690,6 +696,35 @@ export async function godaddyConnection(str: EnvConfigReader): Promise<EnvConnec
   }
 }
 
+// --- Cloudflare ---------------------------------------------------------------
+
+/**
+ * Verifies the token, then looks the domain up in the account — the calls the
+ * Security → Cloudflare page starts with. A zone not added yet is still a
+ * working connection: adding it is that page's first button. Nothing is written.
+ */
+export async function cloudflareConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const cfg = cloudflareConfigOf(str('api_token'), str('account_id'), str('domain'));
+  if (!cfg) return { ok: false, message: 'API token, account ID and domain are all required', details: [] };
+  try {
+    const status = await cloudflareVerifyToken(cfg);
+    const zone = await cloudflareZone(cfg);
+    if (!zone) {
+      return {
+        ok: true,
+        message: `Token ${status}; ${cfg.domain} is not on Cloudflare yet`,
+        details: ['Add the zone from Tech → Security → Cloudflare.'],
+      };
+    }
+    const records = await cloudflareRecords(cfg, zone.id);
+    const details = [`${records.length} DNS records in the zone.`];
+    if (zone.name_servers?.length) details.push(`Assigned nameservers: ${zone.name_servers.join(', ')}.`);
+    return { ok: true, message: `Connected to ${cfg.domain} (${zone.status})`, details };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+  }
+}
+
 /**
  * Social apps: every provider app with both keys is put in front of its
  * provider. It lives with the social module, which owns the four providers;
@@ -717,6 +752,7 @@ const CONNECTION_CHECKS = {
   APP_STORE_CONNECT: appStoreConnectConnection,
   SONARQUBE: sonarqubeConnection,
   GODADDY: godaddyConnection,
+  CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
 } as const;
 

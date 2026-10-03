@@ -24,6 +24,8 @@ export const USER = gql`
       assigned_zones
       profile_photo
       bio
+      gender
+      is_pet_owner
       profile_links {
         label
         url

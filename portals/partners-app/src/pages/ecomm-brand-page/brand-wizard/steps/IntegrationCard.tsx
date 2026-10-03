@@ -6,7 +6,7 @@ import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
 import { RhfTextField } from '@duncit/forms';
-import { SectionCard } from '@duncit/ui';
+import { IntegrationLogo, SectionCard } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import {
@@ -16,6 +16,7 @@ import {
   type BrandIntegrationStatus,
 } from '../../queries';
 import { IntegrationChips, IntegrationResult } from './IntegrationStatus';
+import IntegrationGuide from './IntegrationGuide';
 import {
   CONNECT_DOCUMENT,
   CONNECT_RESULT_KEY,
@@ -101,8 +102,14 @@ export default function IntegrationCard({ provider, status, brandId, locked, ens
 
   const title = integrationTitle(t, provider);
   return (
-    <SectionCard title={title} subtitle={integrationIntro(t, provider)} action={<IntegrationChips status={shown} />}>
+    <SectionCard
+      title={title}
+      subtitle={integrationIntro(t, provider)}
+      icon={<IntegrationLogo vendor={provider} label={title} />}
+      action={<IntegrationChips status={shown} />}
+    >
       <Stack spacing={2} component="form" onSubmit={runConnect} noValidate data-testid={`integration-card-${provider.toLowerCase()}`}>
+        {!locked && <IntegrationGuide provider={provider} defaultExpanded={shown?.connected !== true} />}
         {result && <IntegrationResult result={result} />}
         {fields.map((field) => (
           <RhfTextField

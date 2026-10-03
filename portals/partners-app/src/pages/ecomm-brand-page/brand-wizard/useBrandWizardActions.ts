@@ -62,15 +62,18 @@ export function useBrandWizardActions({ brandId, form, onChanged }: Readonly<Opt
     return Boolean(id);
   };
 
-  const submit = async () => {
+  /** True once the brand is in review — the wizard then moves on to Integration. */
+  const submit = async (): Promise<boolean> => {
     const id = await persist();
-    if (!id) return;
+    if (!id) return false;
     try {
       await submitBrand({ variables: { brand_doc_id: id } });
       notifySuccess(t('partners.brandWizard.submitted'));
       onChanged();
+      return true;
     } catch (error) {
       notifyError(parseApiError(error));
+      return false;
     }
   };
 

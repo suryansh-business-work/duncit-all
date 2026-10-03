@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
+  activeCategories,
   DEFAULT_HAPPENING_NEARBY_DAYS,
   splitPodsByPhase,
   withinHappeningNearbyWindow,
@@ -59,17 +60,14 @@ export interface VibeCategory {
  * only survived if it had pods and the pod set was already super-scoped. Turn
  * the admin toggle ON and `isVisible` was always true, so every category from
  * EVERY super category appeared under whichever super the user had picked. */
-/** An admin-deactivated category/sub never becomes a Home chip — not even with
- *  the "show all categories" toggle on (mWeb twin: useHomeData). The catalogue
- *  keeps it so pod-card labels still resolve. */
-const isActiveCategory = (c: HomeCategory) => c.is_active !== false;
-
 function deriveVibeCategories(
   allChips: HomeCategory[],
+  activeIds: Set<string>,
   podCategoryIds: Set<string | null | undefined>,
   showAllVibes: boolean,
   selectedSuperId: string | null,
 ): VibeCategory[] {
+  const isActiveCategory = (c: HomeCategory) => activeIds.has(c.id);
   const parentById = new Map(allChips.map((c) => [c.id, c.parent_id ?? null]));
   const isDescendant = (childId: string, ancestorId: string) => {
     let cur: string | null | undefined = childId;
@@ -160,9 +158,15 @@ function deriveHome(
   const podCategoryIds = new Set(
     allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
   );
-  const categoryChips = allChips.filter((c) => isActiveCategory(c) && podCategoryIds.has(c.id));
+  // An admin-deactivated category/sub — or one under a deactivated parent —
+  // never becomes a Home chip, not even with the "show all categories" toggle
+  // on (mWeb twin: useHomeData). The catalogue keeps it so pod-card labels
+  // still resolve.
+  const activeIds = new Set(activeCategories(allChips).map((c) => c.id));
+  const categoryChips = allChips.filter((c) => activeIds.has(c.id) && podCategoryIds.has(c.id));
   const vibeCategories = deriveVibeCategories(
     allChips,
+    activeIds,
     podCategoryIds,
     showAllVibes,
     selectedSuperId,

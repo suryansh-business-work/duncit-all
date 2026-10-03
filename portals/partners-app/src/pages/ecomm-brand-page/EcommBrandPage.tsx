@@ -13,6 +13,7 @@ import PartnerBrandsTable from './PartnerBrandsTable';
 import { DELETE_MY_BRAND, MY_BRANDS_TABLE, type EcommBrandRow } from './queries';
 import { primaryHeroBackground } from '../../components/primaryHero';
 
+const detailsPath = (brand: EcommBrandRow) => `/ecomm-brand/${brand.id}`;
 const editPath = (brand: EcommBrandRow) => `/ecomm-brand/${brand.id}/edit`;
 
 /** "Your brands": the table, and the doors into the wizard, products and settings. */
@@ -73,7 +74,9 @@ export default function EcommBrandPage() {
                 {t('partners.ecommBrandPage.newBrand')}
               </DuncitButton>
             }
+            onView={(brand) => navigate(detailsPath(brand))}
             onOpen={(brand) => navigate(editPath(brand))}
+            onIntegrations={(brand) => navigate(`${editPath(brand)}?step=integration`)}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
             onSettings={(brand) => navigate(`/ecomm-brand/${brand.id}/settings`)}
             onToggleActive={setPauseTarget}

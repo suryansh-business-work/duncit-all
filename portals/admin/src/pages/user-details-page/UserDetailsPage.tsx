@@ -78,6 +78,8 @@ export default function UserDetailsPage() {
             <Card sx={{ height: '100%' }}>
               <ProfileForm
                 form={s.form}
+                gender={s.user.gender}
+                isPetOwner={s.user.is_pet_owner}
                 busy={s.busy}
                 opError={s.opError}
                 onSave={s.save}

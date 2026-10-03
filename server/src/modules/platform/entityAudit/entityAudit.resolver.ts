@@ -21,7 +21,28 @@ const AUDIT_ROLES: Record<EntityAuditType, string[]> = {
   CLUB: [...PLATFORM_ADMINS, 'ALL_CLUBS_ACCESS'],
   CLUB_ADMIN: [...PLATFORM_ADMINS, 'ONBOARDING_MANAGER', 'ALL_CLUB_ADMINS_ACCESS'],
   REGION: [...PLATFORM_ADMINS, 'ALL_CLUB_ADMINS_ACCESS', 'REGIONAL_CLUB_ADMIN'],
+  // Staff here; the brand's own partner is let in by `assertBrandScope`.
+  BRAND: [...PLATFORM_ADMINS, 'ONBOARDING_MANAGER', 'PRODUCTS_MANAGER'],
 };
+
+/**
+ * A brand's history is read by the staff who review brands, and by the partner
+ * who OWNS that brand (Partners → Your brands → Logs) — only their own: the
+ * owner check is on the record, so changing the id in the URL reads nothing.
+ */
+async function assertBrandScope(entityId: string, ctx: GraphQLContext): Promise<void> {
+  if (ctx.user && hasRole(ctx.user, AUDIT_ROLES.BRAND)) return;
+  if (!ctx.user) {
+    throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+  }
+  const { EcommBrandModel } = await import('@modules/venues/ecommBrand/ecommBrand.model');
+  const brand = Types.ObjectId.isValid(entityId)
+    ? await EcommBrandModel.findById(entityId).select('owner_user_id').lean()
+    : null;
+  if (!brand || String(brand.owner_user_id) !== ctx.user.id) {
+    throw new GraphQLError('That is not your brand', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
 
 /**
  * A REGIONAL_CLUB_ADMIN may read their OWN region's history and no other.
@@ -51,6 +72,10 @@ export const entityAuditResolvers = {
       args: { entity_type: EntityAuditType; entity_id: string; query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
+      if (args.entity_type === 'BRAND') {
+        await assertBrandScope(args.entity_id, ctx);
+        return entityAuditService.table(args.entity_type, args.entity_id, args.query);
+      }
       requireRole(ctx, AUDIT_ROLES[args.entity_type]);
       if (args.entity_type === 'REGION') await assertRegionScope(args.entity_id, ctx);
       return entityAuditService.table(args.entity_type, args.entity_id, args.query);

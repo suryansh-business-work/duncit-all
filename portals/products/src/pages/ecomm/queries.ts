@@ -110,6 +110,10 @@ export interface EcommBrandRow {
   product_categories?: string[] | null;
   status: string;
   is_active?: boolean | null;
+  /** Live in the pod shop: approved, active and integrations ready (server-derived). */
+  live?: boolean | null;
+  /** Selling before integrations were required — stays live without them. */
+  integration_waived?: boolean | null;
   reviewer_notes?: string | null;
   tags?: string[] | null;
   approved_product_count: number;
@@ -172,6 +176,8 @@ const ECOMM_BRAND_ROW_FIELDS = gql`
     product_categories
     status
     is_active
+    live
+    integration_waived
     reviewer_notes
     tags
     approved_product_count

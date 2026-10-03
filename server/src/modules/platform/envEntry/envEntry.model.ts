@@ -31,6 +31,7 @@ export const ENV_CATEGORIES = [
   'APP_STORE_CONNECT',
   'SONARQUBE',
   'GODADDY',
+  'CLOUDFLARE',
   'SOCIAL_APPS',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];

@@ -31,7 +31,7 @@ interface Props {
   onChanged: () => void;
 }
 
-/** Step 10 — read the Brand Consent and sign it by name; recorded with the wording signed. */
+/** Step 9 — read the Brand Consent and sign it by name; recorded with the wording signed. */
 export default function ConsentStep({ brandId, consent, locked, ensureBrandId, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDate } = useDateFormat();

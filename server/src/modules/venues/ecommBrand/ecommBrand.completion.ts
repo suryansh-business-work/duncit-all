@@ -6,6 +6,10 @@
  * (rule 40), so the two are kept in step by hand — same ten steps, same rule
  * per step. THIS copy is authoritative: it is what the Your brands table shows,
  * and what `submit` and `approve` refuse on.
+ *
+ * Integration (Razorpay + shipping) is the LAST step and does not gate review:
+ * a brand is submitted and approved on its business facts and consent, then
+ * goes LIVE in the pod shop only once its integrations are ready (`isBrandLive`).
  */
 export type BrandStepKey =
   | 'details'
@@ -15,27 +19,30 @@ export type BrandStepKey =
   | 'categories'
   | 'media'
   | 'documents'
-  | 'integration'
   | 'review'
-  | 'consent';
+  | 'consent'
+  | 'integration';
 
 interface BrandStep {
   key: BrandStepKey;
   /** Counted in the percentage. Payout is optional; Review is derived. */
   required: boolean;
+  /** Must be done before the brand can be submitted or approved. Integration
+   * is owed for the brand to go live, not for it to be reviewed. */
+  gatesReview: boolean;
 }
 
 export const BRAND_STEPS: readonly BrandStep[] = [
-  { key: 'details', required: true },
-  { key: 'business', required: true },
-  { key: 'address', required: true },
-  { key: 'payout', required: false },
-  { key: 'categories', required: true },
-  { key: 'media', required: true },
-  { key: 'documents', required: true },
-  { key: 'integration', required: true },
-  { key: 'review', required: false },
-  { key: 'consent', required: true },
+  { key: 'details', required: true, gatesReview: true },
+  { key: 'business', required: true, gatesReview: true },
+  { key: 'address', required: true, gatesReview: true },
+  { key: 'payout', required: false, gatesReview: false },
+  { key: 'categories', required: true, gatesReview: true },
+  { key: 'media', required: true, gatesReview: true },
+  { key: 'documents', required: true, gatesReview: true },
+  { key: 'review', required: false, gatesReview: false },
+  { key: 'consent', required: true, gatesReview: true },
+  { key: 'integration', required: true, gatesReview: false },
 ];
 
 export interface BrandStepState {
@@ -85,9 +92,7 @@ const CHECK: Record<Exclude<BrandStepKey, 'review'>, Check> = {
   categories: (b) => some(b.product_categories),
   media: (b) => filled(b.logo_url),
   documents: (b) => some(b.documents),
-  integration: (b) =>
-    b.integrations?.razorpay?.connected === true &&
-    shippingReady(b.shipping_mode, b.integrations?.shiprocket?.connected === true),
+  integration: (b) => brandIntegrationReady(b),
   // No published consent = nothing to sign; the step is satisfied so a brand
   // is never blocked on a page Legal has not written yet.
   consent: (b, c) => !c.available || (b.consent?.accepted === true && c.current),
@@ -95,7 +100,7 @@ const CHECK: Record<Exclude<BrandStepKey, 'review'>, Check> = {
 
 export function brandStepComplete(brand: BrandFacts, key: BrandStepKey, consent: ConsentContext): boolean {
   if (key === 'review') {
-    return BRAND_STEPS.filter((s) => s.required && s.key !== 'consent').every((s) =>
+    return BRAND_STEPS.filter((s) => s.gatesReview && s.key !== 'consent').every((s) =>
       CHECK[s.key as Exclude<BrandStepKey, 'review'>](brand, consent)
     );
   }
@@ -118,11 +123,35 @@ export function brandCompletion(brand: BrandFacts, consent: ConsentContext): Bra
   };
 }
 
-/** The required steps still missing, by key — what a refusal names. */
+/** The steps still owed before review, by key — what a submit/approve refusal names. */
 export const missingBrandSteps = (brand: BrandFacts, consent: ConsentContext): BrandStepKey[] =>
-  brandCompletion(brand, consent)
-    .steps.filter((s) => s.required && !s.complete)
-    .map((s) => s.key);
+  BRAND_STEPS.filter((s) => s.gatesReview && !brandStepComplete(brand, s.key, consent)).map((s) => s.key);
+
+/** Razorpay connected, and shipping settled (own ShipRocket connected or the Duncit courier). */
+export function brandIntegrationReady(b: BrandFacts): boolean {
+  return (
+    b.integrations?.razorpay?.connected === true &&
+    shippingReady(b.shipping_mode, b.integrations?.shiprocket?.connected === true)
+  );
+}
+
+/** The facts `isBrandLive` reads on top of the wizard's. */
+export type BrandLiveFacts = BrandFacts & {
+  status?: string | null;
+  is_active?: boolean | null;
+  integration_waived?: boolean | null;
+};
+
+/**
+ * A brand is LIVE — its products show in the pod shop and can be bought — when
+ * it is approved, not paused, and its integrations are ready. `integration_waived`
+ * keeps a brand that was already selling before this rule existed live (stamped
+ * once by the startup backfill), so the rule never pulls a selling brand off the shop.
+ */
+export function isBrandLive(b: BrandLiveFacts): boolean {
+  if (b.status !== 'APPROVED' || b.is_active === false) return false;
+  return b.integration_waived === true || brandIntegrationReady(b);
+}
 
 /**
  * Whether a brand's shipping is settled. Duncit's courier needs nothing from

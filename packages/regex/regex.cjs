@@ -110,6 +110,12 @@ const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
  */
 const GA_MEASUREMENT_ID = /^G-[A-Z\d]{6,16}$/;
 
+/** One DNS label: letters, digits and inner hyphens, 1–63 characters. See regex.mjs for the full note. */
+const HOSTNAME_LABEL = /^(?!-)[a-z\d-]{1,63}(?<!-)$/i;
+
+/** The longest name DNS can carry, in characters. */
+const MAX_HOSTNAME = 253;
+
 /**
  * A Duncit @handle — the thing that stands in for a Mongo id in a profile URL.
  * Lowercase letters, digits and single hyphens, 3–30 characters, starting and
@@ -135,6 +141,7 @@ module.exports = {
   PERSON_NAME,
   REFERRAL_CODE,
   GA_MEASUREMENT_ID,
+  HOSTNAME_LABEL,
   USERNAME,
   toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
@@ -150,4 +157,9 @@ module.exports = {
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
   isUsername: (v) => USERNAME.test(v),
+  isHostname: (v) => {
+    const name = String(v ?? '').replace(/\.$/, '');
+    const labels = name.split('.');
+    return name.length <= MAX_HOSTNAME && labels.length >= 2 && labels.every((label) => HOSTNAME_LABEL.test(label));
+  },
 };

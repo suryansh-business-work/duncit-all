@@ -346,5 +346,8 @@ productOrderSchema.index({ buyer_email: 1, channel: 1, created_at: -1 });
 // The tracking fallback sweep: shipments with an AWB that tracking has not touched lately.
 productOrderSchema.index({ fulfilment_status: 1, 'shiprocket.last_synced_at': 1 });
 productOrderSchema.index({ 'shiprocket.awb': 1 });
+// A partner brand's sales: brand analytics and the partner dashboard match on
+// the line item's brand, windowed by date (multikey; additive, built by autoIndex).
+productOrderSchema.index({ 'line_items.brand_id': 1, created_at: -1 });
 
 export const ProductOrderModel = model<IProductOrder>('ProductOrder', productOrderSchema);

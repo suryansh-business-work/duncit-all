@@ -33,8 +33,9 @@ const submittedRow = () =>
   });
 
 const openReviewDialog = async () => {
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Review' })).toBeInTheDocument());
-  fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Options for Zeta' })).toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'Options for Zeta' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Review' }));
   await screen.findByLabelText('Reviewer notes');
 };
 
@@ -55,9 +56,10 @@ describe('BrandsReviewPage', () => {
     expect(nav.fn).toHaveBeenCalledWith('/ecomm/brands/b9');
 
     nav.fn.mockClear();
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Zeta' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Review' }));
     await screen.findByLabelText('Reviewer notes');
-    // The action button stops the row click from also opening the brand.
+    // The row menu stops the row click from also opening the brand.
     expect(nav.fn).not.toHaveBeenCalled();
   });
 

@@ -39,6 +39,7 @@ const SDL_CATEGORIES = [
   'APP_STORE_CONNECT',
   'SONARQUBE',
   'GODADDY',
+  'CLOUDFLARE',
   'SOCIAL_APPS',
 ];
 
@@ -73,6 +74,7 @@ export const envEntryTypeDefs = gql`
     APP_STORE_CONNECT
     SONARQUBE
     GODADDY
+    CLOUDFLARE
     SOCIAL_APPS
   }
 

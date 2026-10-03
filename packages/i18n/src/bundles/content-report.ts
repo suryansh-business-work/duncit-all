@@ -50,6 +50,12 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     submit: 'Submit report',
     cancel: 'Cancel',
     submitted: 'Thanks — our Legal team will review this',
+    // The confirmation after a report lands. The reference is the one the
+    // acknowledgement email carries, so the two can be matched up.
+    submittedTitle: 'Report received',
+    submittedRef: 'Thanks — our Legal team will review this. Your reference is {ref}.',
+    sending: 'Sending your report',
+    done: 'Done',
     submitFailed: 'Could not send your report',
     // The reasons themselves come from the server; these cover the moments
     // before they arrive and the case where they do not.

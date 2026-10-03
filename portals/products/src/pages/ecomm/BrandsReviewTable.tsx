@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import GavelIcon from '@mui/icons-material/Gavel';
+import { DuncitTable, rowMenuColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import { BRAND_STATUS_OPTIONS } from './brandStatus';
@@ -36,19 +37,6 @@ export default function BrandsReviewTable({
   const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
-    // Rows open the brand, so the action must not also trigger the row click.
-    const renderReview = (b: EcommBrandRow) => (
-      <DuncitButton
-        size="small"
-        variant="outlined"
-        onClick={(event) => {
-          event.stopPropagation();
-          onReview(b);
-        }}
-      >
-        {t('products.review.action')}
-      </DuncitButton>
-    );
     return [
       // A decorative thumbnail — no value to order or match.
       { field: 'logo', headerName: '', type: 'actions', width: 64, cellRenderer: renderLogo },
@@ -137,9 +125,22 @@ export default function BrandsReviewTable({
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
       },
-      { field: 'review', headerName: t('products.review.action'), type: 'actions', width: 110, cellRenderer: renderReview },
+      rowMenuColumn<EcommBrandRow>({
+        headerName: t('products.review.action'),
+        width: 90,
+        ariaLabel: (b) => t('products.brands.rowMenu', { vars: { brand: b.brand_name } }),
+        items: (b) => [
+          {
+            key: 'view',
+            label: t('products.brands.menuDetails'),
+            icon: <VisibilityIcon fontSize="small" />,
+            onClick: () => onView(b),
+          },
+          { key: 'review', label: t('products.review.action'), icon: <GavelIcon fontSize="small" />, onClick: () => onReview(b) },
+        ],
+      }),
     ];
-  }, [onReview, formatDate, t]);
+  }, [onView, onReview, formatDate, t]);
 
   return (
     <DuncitTable<EcommBrandRow>

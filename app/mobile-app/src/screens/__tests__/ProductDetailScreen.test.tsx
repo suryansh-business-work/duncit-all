@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { logs } from '@duncit/logs';
 
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -15,8 +16,9 @@ jest.mock('@/components/details/ProductDetailSheet', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Pressable, Text } = require('react-native');
   return {
-    ProductDetailSheet: ({ onUpdateLine, maxQuantity, selection, readOnly }: any) => (
+    ProductDetailSheet: ({ onUpdateLine, maxQuantity, selection, readOnly, notice }: any) => (
       <>
+        {notice}
         <Text testID="pds-max">{String(maxQuantity)}</Text>
         <Text testID="pds-selected">{String(selection?.p1 ?? 0)}</Text>
         {readOnly || !onUpdateLine ? (
@@ -116,12 +118,25 @@ describe('ProductDetailScreen', () => {
     renderWithProviders(<ProductDetailScreen />);
     await waitFor(() => expect(screen.getByTestId('pds-readonly')).toBeOnTheScreen());
     expect(screen.getByTestId('pds-max')).toHaveTextContent('0');
+    await waitFor(() => expect(screen.getByTestId('product-detail-no-pod')).toBeOnTheScreen());
+    expect(screen.queryByTestId('product-detail-pods-error')).toBeNull();
   });
 
-  it('stays browse-only when the pod lookup fails', async () => {
-    mockRequest.mockRejectedValue(new Error('offline'));
+  it('says the pod lookup failed (not "no pod") and Retry makes it buyable', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('offline'));
     renderWithProviders(<ProductDetailScreen />);
-    await waitFor(() => expect(screen.getByTestId('pds-readonly')).toBeOnTheScreen());
+    await waitFor(() =>
+      expect(screen.getByTestId('product-detail-pods-error')).toHaveTextContent(
+        'Could not check which pods stock this product.',
+      ),
+    );
+    expect(screen.getByTestId('pds-readonly')).toBeOnTheScreen();
+    expect(screen.queryByTestId('product-detail-no-pod')).toBeNull();
+
+    mockRequest.mockResolvedValue({ podsForProduct: [pod()] });
+    fireEvent.press(screen.getByTestId('product-detail-pods-error-retry'));
+    await waitFor(() => expect(screen.getByTestId('pds-add')).toBeOnTheScreen());
+    expect(screen.queryByTestId('product-detail-pods-error')).toBeNull();
   });
 
   it('adds a specific variant line with its own price/stock/image', async () => {
@@ -139,6 +154,27 @@ describe('ProductDetailScreen', () => {
       max_quantity: 4,
       quantity: 1,
     });
+  });
+
+  it('still logs a pod lookup that fails after the screen unmounts', async () => {
+    const logError = jest.spyOn(logs.mobileApp, 'error').mockImplementation(() => undefined);
+    let reject: (reason: unknown) => void = () => {};
+    mockRequest.mockReturnValue(
+      new Promise((_, r) => {
+        reject = r;
+      }),
+    );
+    const { unmount } = renderWithProviders(<ProductDetailScreen />);
+    unmount();
+    const failure = new Error('offline');
+    await act(async () => {
+      reject(failure);
+    });
+    expect(logError).toHaveBeenCalledWith('ProductDetailScreen', 'loadPods', {
+      error: failure,
+      productId: 'p1',
+    });
+    logError.mockRestore();
   });
 
   it('ignores a late pods response after the screen unmounts', async () => {

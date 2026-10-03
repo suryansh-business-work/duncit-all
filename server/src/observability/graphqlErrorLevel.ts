@@ -37,6 +37,10 @@ const CALLER_FIXABLE_CODES = new Set([
   // consent step that links Google to an existing email/password account.
   'GOOGLE_ACCOUNT_NOT_FOUND',
   'EMAIL_LOGIN_REQUIRED',
+  // A console sign-in asking for the authenticator code (the client opens that
+  // step), and that step left too long (the client sends them back to sign in).
+  'TWO_FACTOR_REQUIRED',
+  'TWO_FACTOR_CHALLENGE_EXPIRED',
   // A rule of the product telling the caller no, not a fault: the Pod's
   // backout allowance is spent.
   'BACKOUT_LIMIT_REACHED',

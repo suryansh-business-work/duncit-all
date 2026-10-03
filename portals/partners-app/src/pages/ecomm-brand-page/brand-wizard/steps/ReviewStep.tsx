@@ -45,12 +45,13 @@ interface Props {
   onJump: (key: BrandWizardStepKey) => void;
 }
 
-/** Step 9 — everything at a glance, an Edit link per section, and what still blocks submission. */
+/** Step 8 — everything at a glance, an Edit link per section, and what still blocks submission. */
 export default function ReviewStep({ values, states, shippingMode, integrations, locked, onJump }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = stepLabels(t);
   const ready = integrationReady(shippingMode, integrations);
-  const blocking = states.filter((state) => state.required && !state.complete);
+  // Integration is owed for going live, not for submission — never listed as blocking.
+  const blocking = states.filter((state) => state.key !== 'integration' && state.required && !state.complete);
   const notProvided = t('partners.brandWizard.review.notProvided');
   const editLabel = t('partners.brandWizard.review.edit');
 
@@ -59,7 +60,7 @@ export default function ReviewStep({ values, states, shippingMode, integrations,
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {t('partners.brandWizard.review.intro')}
       </Typography>
-      <Alert severity={ready ? 'success' : 'warning'} data-testid="brand-review-integrations">
+      <Alert severity={ready ? 'success' : 'info'} data-testid="brand-review-integrations">
         {ready ? t('partners.brandWizard.review.integrationsOk') : t('partners.brandWizard.review.integrationsMissing')}
       </Alert>
       {blocking.length > 0 && (

@@ -90,7 +90,10 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       couponDiscount: 'Coupon discount',
       couponDiscountWith: 'Coupon discount ({code})',
       coinsRedeemedLine: 'Coins redeemed ({n})',
-      subtotalNetGst: 'Subtotal (net of GST)',
+      // Deductions come off the value before tax, so the card reads
+      // subtotal → deductions → taxable value → GST, every figure excl. GST.
+      subtotalExclGst: 'Subtotal (excl. GST)',
+      taxableValue: 'Taxable value',
       gstPct: 'GST ({pct}%)',
       totalCharged: 'Total charged',
       duncitShare: "Of which Duncit's share",

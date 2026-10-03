@@ -29,6 +29,18 @@ export const LOGS_PAGE: AnalyticsPageSpec = {
   dashboardId: 'analytics.logs',
 };
 
+/**
+ * What SonarQube says about the code. Also Tech → Security → SonarQube, which
+ * mounts this same spec — so a layout saved in one console is the layout in the other.
+ */
+export const SONARQUBE_PAGE: AnalyticsPageSpec = {
+  path: '/security/sonarqube',
+  entity: 'SONARQUBE',
+  title: 'analytics.page.sonarqube.title',
+  subtitle: 'analytics.page.sonarqube.subtitle',
+  dashboardId: 'analytics.sonarqube',
+};
+
 /** The console's dashboards, in sidebar order. The first is where `/` lands. */
 export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
   {
@@ -196,13 +208,7 @@ export const ANALYTICS_PAGES: readonly AnalyticsPageSpec[] = [
     subtitle: 'analytics.page.openaiCosts.subtitle',
     dashboardId: 'analytics.openaiCosts',
   },
-  {
-    path: '/security/sonarqube',
-    entity: 'SONARQUBE',
-    title: 'analytics.page.sonarqube.title',
-    subtitle: 'analytics.page.sonarqube.subtitle',
-    dashboardId: 'analytics.sonarqube',
-  },
+  SONARQUBE_PAGE,
   {
     path: '/testing/unit-coverage',
     entity: 'TEST_COVERAGE',

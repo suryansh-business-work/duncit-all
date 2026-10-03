@@ -1,4 +1,4 @@
-import { Navigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import BrandWizardPage from './BrandWizardPage';
 
 export { default as BrandWizardPage } from './BrandWizardPage';
@@ -14,8 +14,3 @@ export function BrandWizardRoute() {
   return <BrandWizardPage key={brandId ?? 'new'} brandId={brandId ?? null} />;
 }
 
-/** `/ecomm-brand/:brandId` — the bare id opens the wizard. */
-export function BrandEditRedirect() {
-  const { brandId = '' } = useParams<{ brandId: string }>();
-  return <Navigate to={`/ecomm-brand/${brandId}/edit`} replace />;
-}

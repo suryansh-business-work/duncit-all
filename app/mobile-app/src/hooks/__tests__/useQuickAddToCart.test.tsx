@@ -52,7 +52,7 @@ describe('useQuickAddToCart', () => {
     expect(useCartStore.getState().lines[0]?.quantity).toBe(2);
   });
 
-  it('no-ops when no live pod stocks the product', async () => {
+  it('adds nothing and tells the buyer when no live pod stocks the product', async () => {
     mockRequest.mockResolvedValue({ podsForProduct: [] });
     const { result } = renderHook(() => useQuickAddToCart());
 
@@ -61,5 +61,54 @@ describe('useQuickAddToCart', () => {
     });
     expect(useCartStore.getState().lines).toHaveLength(0);
     expect(result.current.addingId).toBeNull();
+    expect(result.current.notice).toEqual({
+      tone: 'info',
+      message: 'No pod stocks this product right now.',
+    });
+  });
+
+  it('stops at the pod stock instead of over-filling the line', async () => {
+    mockRequest.mockResolvedValue({ podsForProduct: [pod({ available_count: 1 })] });
+    const { result } = renderHook(() => useQuickAddToCart());
+
+    await act(async () => {
+      await result.current.add(product);
+    });
+    expect(useCartStore.getState().lines[0]?.quantity).toBe(1);
+    expect(result.current.notice).toBeNull();
+
+    await act(async () => {
+      await result.current.add(product);
+    });
+    expect(useCartStore.getState().lines[0]?.quantity).toBe(1);
+    expect(result.current.notice).toEqual({
+      tone: 'info',
+      message: 'You already have all the available stock of this product in your cart.',
+    });
+  });
+
+  it('surfaces a failed lookup as a danger notice that clears itself', async () => {
+    jest.useFakeTimers();
+    try {
+      mockRequest.mockRejectedValue(new Error('offline'));
+      const { result } = renderHook(() => useQuickAddToCart());
+
+      await act(async () => {
+        await result.current.add(product);
+      });
+      expect(useCartStore.getState().lines).toHaveLength(0);
+      expect(result.current.addingId).toBeNull();
+      expect(result.current.notice).toEqual({
+        tone: 'danger',
+        message: 'Could not add this to your cart. Please try again.',
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(4000);
+      });
+      expect(result.current.notice).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

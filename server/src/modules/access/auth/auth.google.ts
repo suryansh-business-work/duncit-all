@@ -47,7 +47,15 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenI
   }
   const info = (await res.json()) as GoogleTokenInfo;
 
-  if (info.aud !== expectedClientId) {
+  // The native apps sign in with their own Android / iOS clients (Google
+  // refuses an app redirect on a Web client), so their tokens carry that
+  // client as the audience. Blank fields are left out, never matched.
+  const nativeClientIds = await Promise.all([
+    getRuntimeEnvValue('GOOGLE_ANDROID_CLIENT_ID'),
+    getRuntimeEnvValue('GOOGLE_IOS_CLIENT_ID'),
+  ]);
+  const accepted = [expectedClientId, ...nativeClientIds].map((id) => id.trim()).filter(Boolean);
+  if (!accepted.includes(info.aud)) {
     throw new GraphQLError('Google credential audience mismatch', {
       extensions: { code: 'UNAUTHENTICATED' },
     });

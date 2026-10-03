@@ -112,6 +112,17 @@ export const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
 export const GA_MEASUREMENT_ID = /^G-[A-Z\d]{6,16}$/;
 
 /**
+ * One DNS label — letters, digits and inner hyphens, 1–63 characters, never
+ * starting or ending on a hyphen. The hyphen rules sit in a lookahead and a
+ * lookbehind so the body is one character class and the pattern can never
+ * backtrack.
+ */
+export const HOSTNAME_LABEL = /^(?!-)[a-z\d-]{1,63}(?<!-)$/i;
+
+/** The longest name DNS can carry, in characters. */
+const MAX_HOSTNAME = 253;
+
+/**
  * Keep only the digits in a string.
  *
  * The rule behind every number-only box: a phone field is typed into, pasted
@@ -155,3 +166,14 @@ export const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** Handle shape check. Lower-case before calling it — the pattern is strict. */
 export const isUsername = (v) => USERNAME.test(v);
+
+/**
+ * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
+ * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
+ * root) is accepted. Case-insensitive, as DNS is.
+ */
+export const isHostname = (v) => {
+  const name = String(v ?? '').replace(/\.$/, '');
+  const labels = name.split('.');
+  return name.length <= MAX_HOSTNAME && labels.length >= 2 && labels.every((label) => HOSTNAME_LABEL.test(label));
+};

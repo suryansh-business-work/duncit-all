@@ -1,8 +1,9 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Slider from 'react-slick';
+import { logs } from '@duncit/logs';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { alpha, Box, Stack, Typography, useMediaQuery, type Theme } from '@mui/material';
@@ -132,7 +133,9 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
  * until media is configured. mWeb twin of the mobile PodShopSlider. */
 export default function PodShopSlider() {
   const navigate = useNavigate();
-  const { data } = useQuery<any>(POD_SHOP_SLIDER, { fetchPolicy: 'cache-and-network' });
+  const { data, error } = useQuery<any>(POD_SHOP_SLIDER, { fetchPolicy: 'cache-and-network' });
+  // A failed slider stays hidden (it is decoration) but is never swallowed.
+  useEffect(() => { if (error) logs.mWeb.error('PodShopSlider', 'load', { error }); }, [error]);
   const media = [...(data?.branding?.pod_shop_slider ?? [])] as SliderMedia[];
   media.sort((a, b) => a.order - b.order);
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');

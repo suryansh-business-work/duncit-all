@@ -13,7 +13,13 @@ import { notifyEach, notifyEvent } from '@services/notify/notify.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { policyAcceptanceService } from '@modules/content/policyAcceptance/policyAcceptance.service';
 import { toPub as policyToPub } from '@modules/content/policy/policy.service';
-import { brandCompletion, missingBrandSteps, type BrandStepKey } from './ecommBrand.completion';
+import {
+  brandCompletion,
+  brandIntegrationReady,
+  isBrandLive,
+  missingBrandSteps,
+  type BrandStepKey,
+} from './ecommBrand.completion';
 import {
   applyConsentSignature,
   applyRazorpayInput,
@@ -66,6 +72,9 @@ const toPub = (b: IEcommBrand) => ({
   tags: b.tags ?? [],
   status: b.status,
   is_active: b.is_active ?? true,
+  live: b.live === true,
+  live_since: b.live_since ? b.live_since.toISOString() : null,
+  integration_waived: b.integration_waived === true,
   reviewer_notes: b.reviewer_notes ?? '',
   default_pickup_location_id: b.default_pickup_location_id ? String(b.default_pickup_location_id) : null,
   // Secrets stay behind: only whether each half is on file and what the vendor said.
@@ -86,6 +95,13 @@ const TEXT_FIELDS = [
   'instagram_url', 'contact_person', 'contact_email', 'contact_phone',
   'registered_business_name', 'gstin', 'pan', 'address_line1', 'city', 'state',
   'postal_code', 'country', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id',
+] as const;
+
+/** Text fields a buyer must never read off the public brand card. */
+const PRIVATE_TEXT_FIELDS = [
+  'contact_person', 'contact_email', 'contact_phone', 'registered_business_name', 'gstin', 'pan',
+  'address_line1', 'postal_code', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id',
+  'reviewer_notes',
 ] as const;
 
 function applyInput(brand: IEcommBrand, input: any) {
@@ -370,6 +386,34 @@ export const ecommBrandService = {
     return brand ? toPub(brand) : null;
   },
 
+  /**
+   * The brand card any signed-in buyer may read (product detail → brand sheet).
+   * Built from an allowlist: payout, tax ids, contact details, documents,
+   * reviewer notes, commission and integration identifiers are blanked on the
+   * SERVER, so a client selecting them gets nothing — "select only safe fields"
+   * was never a control.
+   */
+  async publicCard(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const brand = await EcommBrandModel.findById(id);
+    if (!brand) return null;
+    const pub = toPub(brand);
+    const blank = Object.fromEntries(PRIVATE_TEXT_FIELDS.map((field) => [field, '']));
+    return {
+      ...pub,
+      ...blank,
+      owner_user_id: '',
+      product_commission_pct: 0,
+      documents: [],
+      tags: [],
+      default_pickup_location_id: null,
+      shipping_mode: null,
+      integrations: integrationsOf(new EcommBrandModel()),
+      consent: consentPub(new EcommBrandModel(), { available: false, current: false }),
+      integration_waived: false,
+    };
+  },
+
   // Create a new brand (no id) or update an owned, still-editable one.
   async save(userId: string, brandId: string | null | undefined, input: any) {
     let brand: IEcommBrand;
@@ -403,8 +447,9 @@ export const ecommBrandService = {
     if (!str(brand.contact_email)) {
       throw new GraphQLError('Add a contact email before submitting', { extensions: { code: 'BAD_REQUEST' } });
     }
-    // Every required wizard step, both integrations connected, the consent
-    // signed against its current wording — the same bar approval applies.
+    // Every review step done and the consent signed against its current
+    // wording — the same bar approval applies. Integrations are NOT owed here:
+    // they decide when the approved brand goes live, not whether it is reviewed.
     await assertReadyForReview(brand, 'submitted');
     brand.status = 'SUBMITTED';
     brand.submitted_at = new Date();
@@ -438,8 +483,9 @@ export const ecommBrandService = {
     // tags. Both stay allowed; the message only goes out on the transition,
     // because it carries no entity for the duplicate index to key on.
     const wasApproved = brand.status === 'APPROVED';
-    // A brand goes live only once the reviewer can see every section is done:
-    // required steps, both vendor connections and the signed consent. A brand
+    // A brand is approved only once the reviewer can see every review section
+    // is done and the consent signed; it then goes LIVE by itself when its
+    // integrations are ready (model hook → `live`). A brand
     // approved before the wizard existed is re-approved without the bar, so a
     // change request on it still lands.
     if (!wasApproved) await assertReadyForReview(brand, 'approved');
@@ -650,19 +696,14 @@ export const ecommBrandService = {
   },
 
   /**
-   * Save a brand's own vendor credential and check it right away. Allowed on a
-   * draft, a rejected brand and a LIVE brand (credentials get rotated) — but
-   * not while the brand sits in the review queue, where the reviewer must see
-   * what was submitted.
+   * Save a brand's own vendor credential and check it right away. Allowed at
+   * every status: integration is the wizard's LAST step and is not part of the
+   * review, so a brand connects while it waits for approval, and a live brand
+   * rotates credentials. The save re-derives `live` (model hook).
    */
   async connectIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider, input: any) {
     assertProvider(provider);
     const brand = await loadOwned(userId, brandId);
-    if (brand.status === 'SUBMITTED') {
-      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
     if (provider === 'SHIPROCKET') applyShiprocketInput(brand, input);
     else applyRazorpayInput(brand, input);
     const status = await probeBrandIntegration(brand, provider);
@@ -682,11 +723,6 @@ export const ecommBrandService = {
       throw new GraphQLError('Unknown shipping mode', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const brand = await loadOwned(userId, brandId);
-    if (brand.status === 'SUBMITTED') {
-      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
     const { brandShippingMode } = await import('@modules/commerce/shiprocket/shiprocket.account');
     const before = brandShippingMode(brand);
     brand.shipping_mode = mode;
@@ -715,15 +751,11 @@ export const ecommBrandService = {
     return status;
   },
 
-  /** Forget the credential. The brand is no longer connected, so it cannot be submitted until it is again. */
+  /** Forget the credential. The brand is no longer connected, so a live brand
+   * leaves the pod shop until it connects again (the save re-derives `live`). */
   async disconnectIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider) {
     assertProvider(provider);
     const brand = await loadOwned(userId, brandId);
-    if (brand.status === 'SUBMITTED') {
-      throw new GraphQLError('Withdraw the brand from review before changing its integrations', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
     clearIntegration(brand, provider);
     await brand.save();
     return integrationStatus(brand, provider);
@@ -789,6 +821,36 @@ export const ecommBrandService = {
       );
     }
     return removeBrand(brand, str(notes));
+  },
+
+  /**
+   * Stamp `live` on brands saved before it existed, once (a brand that already
+   * has the field is never touched again). A brand that was selling — approved
+   * and active — keeps selling: if its integrations are not ready it is marked
+   * `integration_waived` instead of being pulled off the pod shop on deploy.
+   */
+  async backfillLive() {
+    const docs = await EcommBrandModel.find({ live: { $exists: false } })
+      .select('status is_active shipping_mode integrations.razorpay.connected integrations.shiprocket.connected approved_at')
+      .lean();
+    if (docs.length === 0) return { repaired: 0, waived: 0 };
+    let waived = 0;
+    const ops = docs.map((doc) => {
+      const selling = doc.status === 'APPROVED' && doc.is_active !== false;
+      const waive = selling && !brandIntegrationReady(doc);
+      if (waive) waived += 1;
+      const live = isBrandLive({ ...doc, integration_waived: waive });
+      return {
+        updateOne: {
+          filter: { _id: doc._id, live: { $exists: false } },
+          update: {
+            $set: { live, integration_waived: waive, live_since: live ? (doc.approved_at ?? new Date()) : null },
+          },
+        },
+      };
+    });
+    await EcommBrandModel.bulkWrite(ops);
+    return { repaired: docs.length, waived };
   },
 
   /* ---- Field resolvers' helpers: the consent-aware halves of a public brand ---- */

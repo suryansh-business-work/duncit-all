@@ -32,8 +32,10 @@ describe('AmountBreakupCard', () => {
     renderWithProviders(<AmountBreakupCard detail={detail} />);
 
     expect(valueOf('Original total')).toBe('₹1000.00');
-    expect(valueOf('Subtotal (net of GST)')).toBe('₹847.46');
+    expect(valueOf('Subtotal (excl. GST)')).toBe('₹847.46');
     expect(valueOf('Total charged')).toBe('₹1000.00');
+    // Nothing deducted, so the subtotal already is the taxable value.
+    expect(screen.queryByText('Taxable value')).not.toBeInTheDocument();
     expect(screen.queryByText(/Multi-ticket discount/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Coupon discount/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Coins redeemed/)).not.toBeInTheDocument();
@@ -46,7 +48,37 @@ describe('AmountBreakupCard', () => {
       payment: makeDetailPayment({ coupon_code: null, coupon_discount: 100 }),
     });
     renderWithProviders(<AmountBreakupCard detail={detail} />);
-    expect(valueOf('Coupon discount')).toBe('− ₹100.00');
+    // ₹100 off a GST-inclusive bill is ₹84.75 off the value before tax.
+    expect(valueOf('Coupon discount')).toBe('− ₹84.75');
+  });
+
+  it('takes every deduction off the value before GST, in the order the bill was priced', () => {
+    // ₹1200 cart − ₹50 tier − ₹100 coupon − 50 coins = ₹1000 charged (₹847.46 + ₹152.54 GST).
+    const detail = makePaymentDetail({ payment: makeDetailPayment({ coupon_code: 'YOGA10' }) });
+    renderWithProviders(<AmountBreakupCard detail={detail} />);
+
+    const labels = [
+      'Original total',
+      'Subtotal (excl. GST)',
+      'Multi-ticket discount (5%)',
+      'Coupon discount (YOGA10)',
+      'Coins redeemed (50)',
+      'Taxable value',
+      'GST (18.00%)',
+    ];
+    expect(labels.map(valueOf)).toEqual([
+      '₹1200.00',
+      '₹1016.95',
+      '− ₹42.37',
+      '− ₹84.75',
+      '− ₹42.37',
+      '₹847.46',
+      '₹152.54',
+    ]);
+    const rows = labels.map((label) => screen.getByText(label));
+    rows.slice(1).forEach((row, i) => {
+      expect(rows[i].compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
   });
 });
 

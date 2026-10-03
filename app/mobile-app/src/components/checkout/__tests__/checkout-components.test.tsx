@@ -53,8 +53,10 @@ describe('OrderSummary', () => {
       />,
     );
     // Membership only — a single "Subtotal" row, never a product breakdown.
-    expect(screen.getByText('Subtotal')).toBeOnTheScreen();
+    expect(screen.getByText('Subtotal (excl. GST)')).toBeOnTheScreen();
     expect(screen.queryByText('Ticket price')).toBeNull();
+    // Nothing deducted, so there is no separate taxable-value line.
+    expect(screen.queryByText('Taxable value')).toBeNull();
   });
 
   it('tolerates a pod with no image/date', () => {

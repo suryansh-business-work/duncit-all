@@ -1,5 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
+import { isBrandLive } from './ecommBrand.completion';
 
 export type EcommBrandStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -13,7 +15,7 @@ export interface IEcommBrandDocument {
  * One vendor account the brand holds. The credential is the brand's own —
  * never the Tech portal's — and is checked against the vendor with the same
  * probe the Tech portal runs on its entries. `connected` is what the last
- * check said; a brand cannot be submitted or approved until both are true.
+ * check said; an approved brand goes live in the pod shop only once both are.
  */
 export interface IBrandShiprocketIntegration {
   email: string;
@@ -100,16 +102,24 @@ export interface IEcommBrand extends Document {
   default_pickup_location_id: Types.ObjectId | null;
   // Who ships this brand's parcels; null on a brand that has not chosen yet.
   shipping_mode: BrandShippingMode | null;
-  // The brand's own ShipRocket + Razorpay accounts (wizard step 8).
+  // The brand's own ShipRocket + Razorpay accounts (the wizard's last step).
   integrations: {
     shiprocket: IBrandShiprocketIntegration;
     razorpay: IBrandRazorpayIntegration;
   };
-  // The Brand Consent signature (wizard step 10).
+  // The Brand Consent signature.
   consent: IBrandConsent;
   // Workflow
   status: EcommBrandStatus;
   is_active: boolean;
+  /** Derived on every save (`isBrandLive`): approved, active and integrations
+   * ready. The pod shop, checkout and storefront list only live brands. */
+  live: boolean;
+  /** When the brand last went live; null while it is not. */
+  live_since: Date | null;
+  /** Stamped once by the startup backfill on a brand that was already selling
+   * before integrations were required to go live — it stays live without them. */
+  integration_waived: boolean;
   reviewer_notes: string;
   submitted_at: Date | null;
   approved_at: Date | null;
@@ -208,6 +218,9 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     consent: { type: brandConsentSchema, default: () => ({}) },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },
+    live: { type: Boolean, default: false, index: true },
+    live_since: { type: Date, default: null },
+    integration_waived: { type: Boolean, default: false },
     reviewer_notes: { type: String, default: '' },
     submitted_at: { type: Date, default: null },
     approved_at: { type: Date, default: null },
@@ -221,5 +234,19 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
 ecommBrandSchema.pre('save', async function assignBrandNo(this: IEcommBrand) {
   if (this.isNew && !this.brand_no) this.brand_no = await nextEntityNo('BRD', 'brand');
 });
+
+// `live` is never written by hand: every save re-derives it, so approving,
+// pausing, rejecting, connecting or disconnecting an integration all move the
+// brand on or off the pod shop through this one rule.
+ecommBrandSchema.pre('save', function deriveLive(this: IEcommBrand) {
+  const live = isBrandLive(this);
+  if (live && !this.live) this.live_since = new Date();
+  if (!live) this.live_since = null;
+  this.live = live;
+});
+
+// Every write through mongoose is diffed into the entity change log — the
+// brand's Logs tab in Partners and the Products portal (no secrets tracked).
+attachEntityAudit(ecommBrandSchema, 'BRAND');
 
 export const EcommBrandModel = model<IEcommBrand>('EcommBrand', ecommBrandSchema);

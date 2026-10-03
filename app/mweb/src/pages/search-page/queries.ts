@@ -73,6 +73,7 @@ export const SEARCH_CATEGORIES = gql`
       icon
       level
       parent_id
+      is_active
     }
   }
 `;

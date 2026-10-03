@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
+import { activeCategories } from '@duncit/utils';
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
 import EmptyState from '../../components/EmptyState';
 import ExploreReels from './ExploreReels';
@@ -72,7 +73,8 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
     return m;
   }, [data]);
   const categoryChips = useMemo(() => {
-    const categories = data?.categories ?? [];
+    // Only categories the admin left active (with active parents) become chips.
+    const categories = activeCategories(data?.categories ?? []);
     const supers = data?.superCategories ?? [];
     const selectedSuperId = superCategorySlug
       ? supers.find((category: any) => category.slug === superCategorySlug)?.id

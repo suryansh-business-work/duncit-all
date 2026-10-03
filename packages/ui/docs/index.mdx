@@ -825,7 +825,7 @@ const base = lineTrendOptions(theme, single);
 
 | Export | What it does |
 | --- | --- |
-| `SectionCard` | An outlined card with a bold title, optional caption subtitle and an `action` slot at the right of the title row. |
+| `SectionCard` | An outlined card with a bold title, optional caption subtitle, an optional `icon` before the title (e.g. an `IntegrationLogo`) and an `action` slot at the right of the title row. |
 | `DistributionCard` | Horizontal bars for a set of `{ key, count }`, scaled to the largest; `emptyText` overrides `ui.distributionCard.empty`. |
 | `FillViewport` | A flex column that ends where the viewport ends (measured from its own top, floor 360px), so the panes inside scroll instead of the window. |
 | `chartSeriesColor(theme, index)` | The validated three-slot categorical palette for console charts, stepped per light/dark mode; index wraps after 3. |
@@ -838,6 +838,19 @@ const base = lineTrendOptions(theme, single);
 | `countBadge(count, title)` | A row badge that stays visible — and muted — at zero. |
 
 The list's words are `ui.sidebarList.*` in `UI_BUNDLE`.
+
+## `IntegrationLogo` — the vendor tile on an integration card
+
+A square tile naming a third-party service a partner brand connects. `RAZORPAY` draws Razorpay's mark
+(Simple Icons, CC0); `SHIPROCKET` draws the shipping glyph, because no openly licensed ShipRocket mark
+is available. Both use `currentColor` on `text.primary`, so no vendor colour enters the design system.
+The tile is `role="img"` with the `label` you pass as its accessible name.
+
+```tsx
+<IntegrationLogo vendor="RAZORPAY" label={t('partners.brandWizard.integration.razorpayTitle')} />
+```
+
+Used by the Partners brand wizard (Integration step) and the Products portal brand review page.
 
 ## Localization and coverage
 

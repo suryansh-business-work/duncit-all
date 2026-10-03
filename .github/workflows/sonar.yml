@@ -52,12 +52,12 @@ jobs:
   # Is the server even up? It is a manually-managed VPS container. Checking
   # first spares the coverage matrix (thirteen runners) when it is not.
   #
-  # An unreachable server FAILS the run. It used to skip every job and stay
-  # green — but this workflow is the quality gate on PRs now, and a skipped
-  # check cannot be told apart from a passed one (GitHub even counts a skipped
-  # job as satisfying a required check). On 2026-09-02 three people read that
-  # green as a quality signal while nothing had been analysed. No analysis
-  # means the gate was not passed.
+  # ADVISORY since 2026-10-04 (owner's decision): the SonarQube quality gate
+  # no longer blocks a merge. An unreachable server is a loud WARNING, not a
+  # red check, and a failed gate is reported (job summary + annotation) while
+  # the job stays green — so read the warnings: a green run carrying one means
+  # nothing was analysed, or the gate failed. The test-failure ratchet at the
+  # end of `analyze` is about tests, not Sonar, and still fails the job.
   # ---------------------------------------------------------------------------
   probe:
     name: Probe SonarQube
@@ -75,8 +75,7 @@ jobs:
             # 000 is a connection that never completed — when the server answers
             # from a developer machine but not from here, that is egress from
             # GitHub's runner ranges to the VPS (firewall / fail2ban).
-            echo "::error::SonarQube server unreachable (curl status $code) — the quality gate cannot be evaluated."
-            exit 1
+            echo "::warning::SonarQube server unreachable (curl status $code) — no analysis this run; the advisory quality gate was not evaluated."
           fi
 
   # ---------------------------------------------------------------------------
@@ -279,8 +278,8 @@ jobs:
         run: |
           code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$SONAR_HOST_URL/api/server/version" || true)
           if [ "$code" != "200" ]; then
-            echo "::error::SonarQube server unreachable (curl status $code) — no analysis, so the quality gate was not passed."
-            exit 1
+            echo "::warning::SonarQube server unreachable (curl status $code) — no analysis this run; the advisory quality gate was not evaluated."
+            echo "SONAR_DOWN=1" >> "$GITHUB_ENV"
           fi
 
       - uses: actions/checkout@v5
@@ -406,11 +405,10 @@ jobs:
         run: |
           count=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | wc -l)
           echo "lcov reports available to the scanner: $count"
+          # Advisory like the gate it feeds: a short delivery is a warning, and
+          # the Sonar coverage figure for this run should not be trusted.
           if [ "$count" -lt 20 ]; then
-            echo "::error::Only $count lcov report(s) reached the scanner (expected 20+)."
-            echo "::error::The coverage jobs did not deliver their artifacts, so this"
-            echo "::error::scan would report a coverage figure for the pipeline, not the code."
-            exit 1
+            echo "::warning::Only $count lcov report(s) reached the scanner (expected 20+) — the coverage jobs did not deliver their artifacts, so this scan's coverage figure describes the pipeline, not the code."
           fi
 
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
@@ -426,6 +424,10 @@ jobs:
 
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         id: scan
+        if: env.SONAR_DOWN != '1'
+        # Advisory gate: a failed quality gate is explained and annotated below,
+        # but does not fail this merge-required job.
+        continue-on-error: true
         with:
           # The set actually present on disk (see "Normalize lcov paths" above).
           # Left empty on a skip_coverage run so the scan still publishes rather
@@ -460,11 +462,14 @@ jobs:
       # This writes the failed conditions, the new-code issues and hotspots, and
       # the files behind a coverage/duplication miss into the job summary.
       - name: Explain the quality gate failure
-        if: failure() && steps.scan.outcome == 'failure'
+        if: ${{ !cancelled() && steps.scan.outcome == 'failure' }}
+        continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: node scripts/sonar-gate-report.mjs
+        run: |
+          echo "::warning::SonarQube quality gate failed (advisory, does not block the merge). This job's summary lists the failed conditions and new issues."
+          node scripts/sonar-gate-report.mjs
 
       # This job is the required check, so a coverage job that went red — today
       # that means its test-failure ratchet caught a NEW failing test file —

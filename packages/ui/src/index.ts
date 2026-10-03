@@ -12,6 +12,8 @@ export type { StatusChipColor, StatusChipProps, StatusColorMap } from './StatusC
 export { ChipList } from './ChipList';
 export type { ChipListProps } from './ChipList';
 export { InfoRow } from './InfoRow';
+export { IntegrationLogo } from './IntegrationLogo';
+export type { IntegrationLogoProps, IntegrationVendor } from './IntegrationLogo';
 export type { InfoRowProps, InfoRowVariant } from './InfoRow';
 export { ImagePreview } from './ImagePreview';
 export type { ImagePreviewProps } from './ImagePreview';

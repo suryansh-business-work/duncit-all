@@ -9,7 +9,7 @@ import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
-import { coverImageUrl, type CoinCheckoutSummary } from '@duncit/utils';
+import { coverImageUrl, exclusiveOfGstBill, type CoinCheckoutSummary } from '@duncit/utils';
 import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 import { SummaryRow as Row } from '@/components/checkout/SummaryRow';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
@@ -47,7 +47,7 @@ export function OrderSummary({
   breakup: CheckoutBreakup;
   /** The bill before any discount, for the line above the deductions. */
   grossTotal?: number;
-  /** Deductions to list between the subtotal and the tax. */
+  /** Deductions (GST-inclusive) to list, net of GST, between the subtotal and the tax. */
   discounts?: CheckoutDiscount[];
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
@@ -68,6 +68,9 @@ export function OrderSummary({
   // card renders exactly as it always did.
   const gross = Number(grossTotal ?? breakup.total);
   const showsGross = seats > 1 && unitAmount > 0;
+  // Read like a GST invoice: the discounts come off the value BEFORE tax, so
+  // subtotal and discounts are excl. GST and the GST row is the tax charged.
+  const bill = exclusiveOfGstBill(gross, discounts, breakup.subtotal, breakup.gstPct);
   // Venue charges are paid at the venue — shown for transparency, never added to
   // the online "Total payable".
   const venueCharges = pod?.place_charges ?? [];
@@ -124,7 +127,8 @@ export function OrderSummary({
         {discounts.length > 0 && !showsGross ? (
           <Row label={t('mweb.checkout.ticketPrice')} value={fmt(gross)} />
         ) : null}
-        {discounts.map((discount) => (
+        <Row label={t('mweb.checkout.subtotalExclGst')} value={fmt(bill.subtotal)} />
+        {bill.discounts.map((discount) => (
           <Row
             key={discount.key}
             testID={discount.testID}
@@ -133,7 +137,9 @@ export function OrderSummary({
             tone="$success"
           />
         ))}
-        <Row label={t('mweb.checkout.subtotal')} value={fmt(breakup.subtotal)} />
+        {bill.discounts.length > 0 ? (
+          <Row label={t('mweb.checkout.taxableValue')} value={fmt(breakup.subtotal)} />
+        ) : null}
         <Row
           label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
           value={fmt(breakup.gst)}

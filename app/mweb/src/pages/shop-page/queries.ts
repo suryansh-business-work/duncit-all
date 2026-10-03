@@ -46,10 +46,11 @@ export interface ShopProduct {
 
 export type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';
 
-export const SHOP_SORT_OPTIONS: ReadonlyArray<{ value: ShopSort; label: string }> = [
-  { value: 'NAME', label: 'Name (A–Z)' },
-  { value: 'PRICE_ASC', label: 'Price: low to high' },
-  { value: 'PRICE_DESC', label: 'Price: high to low' },
+/** Sort choices; `labelKey` is a literal i18n key the filter bar translates. */
+export const SHOP_SORT_OPTIONS: ReadonlyArray<{ value: ShopSort; labelKey: string }> = [
+  { value: 'NAME', labelKey: 'mweb.shop.sortName' },
+  { value: 'PRICE_ASC', labelKey: 'mweb.shop.sortPriceAsc' },
+  { value: 'PRICE_DESC', labelKey: 'mweb.shop.sortPriceDesc' },
 ];
 
 /** Pure sort helper shared by the page + tests. */

@@ -847,6 +847,8 @@ export const settingsService = {
   async getPublicClientConfig() {
     const [
       googleClientId,
+      googleAndroidClientId,
+      googleIosClientId,
       googleMapsApiKey,
       appleBundleId,
       appleServicesId,
@@ -854,6 +856,8 @@ export const settingsService = {
       { serverUrl },
     ] = await Promise.all([
       getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
+      getRuntimeEnvValue("GOOGLE_ANDROID_CLIENT_ID"),
+      getRuntimeEnvValue("GOOGLE_IOS_CLIENT_ID"),
       getRuntimeEnvValue("GOOGLE_MAP_API"),
       getRuntimeEnvValue("APPLE_BUNDLE_ID"),
       getRuntimeEnvValue("APPLE_SERVICES_ID"),
@@ -862,6 +866,8 @@ export const settingsService = {
     ]);
     return {
       google_client_id: googleClientId ?? "",
+      google_android_client_id: googleAndroidClientId.trim(),
+      google_ios_client_id: googleIosClientId.trim(),
       google_maps_api_key: googleMapsApiKey ?? "",
       apple_bundle_id: appleBundleId.trim(),
       apple_services_id: appleServicesId.trim(),

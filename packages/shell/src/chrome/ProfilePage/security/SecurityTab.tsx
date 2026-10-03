@@ -6,6 +6,7 @@ import { MY_CONNECTED_ACCOUNTS, type ConnectedAccounts } from '../queries';
 import { PasswordSection } from './PasswordSection';
 import { SignInActivitySection } from './SignInActivitySection';
 import { SignOutEverywhereSection } from './SignOutEverywhereSection';
+import { TwoFactorSection } from './two-factor/TwoFactorSection';
 
 const logger = createLogger('portal');
 
@@ -27,16 +28,19 @@ export function SecurityTab({ onSignedOut }: Readonly<{ onSignedOut: () => void 
     );
   }
 
+  // The change already succeeded; a failed reload only leaves the old facts on screen.
+  const reload = () => {
+    refetch().catch((error) => logger.warn('profile', 'securityRefetch', { error }));
+  };
+
   return (
     <Stack spacing={2}>
       <PasswordSection
         hasPassword={accounts.has_password}
         changedAt={accounts.password_changed_at}
-        onChanged={() => {
-          // The change already succeeded; a failed reload only leaves the old date.
-          refetch().catch((error) => logger.warn('profile', 'securityRefetch', { error }));
-        }}
+        onChanged={reload}
       />
+      <TwoFactorSection accounts={accounts} onChanged={reload} />
       <SignInActivitySection accounts={accounts} />
       <SignOutEverywhereSection onSignedOut={onSignedOut} />
     </Stack>

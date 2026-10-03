@@ -32,7 +32,7 @@ export const MSG91_RETRY_CHANNELS = { SMS: 11, VOICE: 4, EMAIL: 3, WHATSAPP: 12 
 
 /** The widget reports' own ceilings on how wide a window may be, in days. */
 export const MSG91_LOGS_MAX_DAYS = 3;
-export const MSG91_ANALYTICS_MAX_DAYS = 31;
+export const MSG91_ANALYTICS_MAX_DAYS = 5;
 
 export interface Msg91Credentials {
   widget_id: string;
@@ -179,7 +179,7 @@ export async function msg91WidgetLogs(
   return { rows, total: Number(body.metadata?.total ?? rows.length) };
 }
 
-/** Per-day widget traffic between two dates (`yyyy-MM-dd`, at most 31 days apart). */
+/** Per-day widget traffic between two dates (`yyyy-MM-dd`, at most 5 days apart). */
 export async function msg91WidgetAnalytics(
   creds: Readonly<Msg91Credentials>,
   range: Readonly<{ startDate: string; endDate: string }>

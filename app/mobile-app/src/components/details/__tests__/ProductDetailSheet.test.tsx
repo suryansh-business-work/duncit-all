@@ -282,12 +282,15 @@ describe('ProductDetailSheet', () => {
     await waitFor(() => expect(screen.getByText('Out of stock')).toBeOnTheScreen());
   });
 
-  it('surfaces a load error', async () => {
+  it('surfaces a load error in plain words, never the raw error', async () => {
     mockRequest.mockRejectedValue(new Error('offline'));
     renderWithProviders(<ProductDetailSheet productId="pr1" onClose={jest.fn()} />);
     await waitFor(() =>
-      expect(screen.getByTestId('product-detail-error')).toHaveTextContent('offline'),
+      expect(screen.getByTestId('product-detail-error')).toHaveTextContent(
+        'Could not load this product. Please try again.',
+      ),
     );
+    expect(screen.queryByText('offline')).toBeNull();
   });
 
   it('closes via the close button and the backdrop', async () => {

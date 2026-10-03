@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { splitPodsByPhase, withinHappeningNearbyWindow } from '@duncit/utils';
+import { activeCategories, splitPodsByPhase, withinHappeningNearbyWindow } from '@duncit/utils';
 import { useHappeningNearbyDays } from '../../utils/dateFormat';
 import { HEADER_STATIC, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useUserInfo } from '../../user-info/useUserInfo';
@@ -86,11 +86,6 @@ function makeChipHasPods(podCategoryIds: Set<string>, isDescendantOf: IsDescenda
     return false;
   };
 }
-
-/** An admin-deactivated category/sub never becomes a Home chip — not even with
- *  the "show all categories" toggle on. The catalogue keeps it so pod-card
- *  labels still resolve. */
-const isActiveCategory = (c: { is_active?: boolean | null }) => c.is_active !== false;
 
 export function useHomeData({
   superCategorySlug,
@@ -405,6 +400,18 @@ export function useHomeData({
     return ids;
   }, [data, selectedSuperId, catSuperMap, superCategorySlug]);
 
+  // An admin-deactivated category/sub — or one under a deactivated parent —
+  // never becomes a Home chip, not even with the "show all categories" toggle
+  // on. The catalogue keeps it so pod-card labels still resolve.
+  const activeCategoryIds = useMemo(
+    () => new Set(activeCategories(data?.categories ?? []).map((c) => c.id)),
+    [data]
+  );
+  const isActiveCategory = useCallback(
+    (c: { id: string }) => activeCategoryIds.has(c.id),
+    [activeCategoryIds]
+  );
+
   const categoryChips = useMemo(() => {
     const cats = data?.categories ?? [];
     const chipHasPods = makeChipHasPods(podCategoryIds, isDescendantOf);
@@ -444,7 +451,7 @@ export function useHomeData({
     });
     subsByParent.forEach((arr) => arr.forEach((s) => ordered.push(s)));
     return ordered.filter((c: any) => chipHasPods(c.id));
-  }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
+  }, [data, selectedSuperId, isDescendantOf, podCategoryIds, isActiveCategory]);
 
   // Structured two-row "What's your vibe": CATEGORY-level chips (row 1), each
   // carrying its SUB-category chips (row 2, shown when the category is picked).
@@ -482,7 +489,7 @@ export function useHomeData({
       iconLayout: c.icon_layout_mweb ?? null,
       subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon ?? null })),
     }));
-  }, [data, selectedSuperId, isDescendantOf, podCategoryIds, showAllVibes]);
+  }, [data, selectedSuperId, isDescendantOf, podCategoryIds, showAllVibes, isActiveCategory]);
 
   const clubs = useMemo(() => {
     const all = data?.clubs ?? [];

@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ShopScreen, sortShopProducts, type ShopProduct } from '@/screens/ShopScreen';
+import { ShopProductsDocument } from '@/graphql/shop';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
 import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
@@ -151,10 +152,46 @@ describe('ShopScreen', () => {
     expect(screen.getByTestId('shop-empty')).toBeOnTheScreen();
   });
 
-  it('surfaces a load error', async () => {
-    mockRequest.mockRejectedValue(new Error('offline'));
+  it('surfaces a load error in plain words, and Retry reloads the catalogue', async () => {
+    // Only the catalogue request fails (the slider shares the mocked client).
+    mockRequest.mockImplementation((doc: unknown) =>
+      doc === ShopProductsDocument
+        ? Promise.reject(new Error('offline'))
+        : Promise.resolve({ branding: { pod_shop_slider: [] } }),
+    );
     renderWithProviders(<ShopScreen />);
-    await waitFor(() => expect(screen.getByTestId('shop-error')).toHaveTextContent('offline'));
+    await waitFor(() =>
+      expect(screen.getByTestId('shop-error')).toHaveTextContent(
+        'Could not load the shop. Please try again.',
+      ),
+    );
+    expect(screen.queryByText('offline')).toBeNull();
+
+    mockRequest.mockImplementation(() => Promise.resolve({ availablePodProducts: [product()] }));
+    fireEvent.press(screen.getByTestId('shop-error-retry'));
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    expect(screen.queryByTestId('shop-error')).toBeNull();
+  });
+
+  it('shows the quick-add notice when no pod stocks the product', async () => {
+    mockRequest.mockImplementation((doc: unknown) =>
+      Promise.resolve(
+        doc === ShopProductsDocument
+          ? { availablePodProducts: [product()] }
+          : { podsForProduct: [] },
+      ),
+    );
+    renderWithProviders(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('shop-product-add-p1'));
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('shop-quick-add-notice')).toHaveTextContent(
+        'No pod stocks this product right now.',
+      ),
+    );
+    expect(useCartStore.getState().lines).toHaveLength(0);
   });
 
   it('hides the super-category rail when no categories exist and covers image fallbacks', async () => {

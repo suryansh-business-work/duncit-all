@@ -94,7 +94,12 @@ const brandMock = {
  * browse list). We reproduce that here by pre-seeding the Apollo cache, which
  * makes useQuery return the product synchronously with loading=false.
  */
-function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[] = []) {
+function renderPage(
+  product: unknown,
+  mocks: readonly unknown[],
+  pods: unknown[] = [],
+  podsMocks?: readonly unknown[],
+) {
   // Apollo 4 dropped the addTypename option; the cache normalises the same way
   // the mocks are written.
   const cache = new InMemoryCache();
@@ -109,7 +114,7 @@ function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[]
   };
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
-      mocks={[...mocks, podsMock, podsMock] as never}
+      mocks={[...mocks, ...(podsMocks ?? [podsMock, podsMock])] as never}
       cache={cache}
     >
       <CartProvider>
@@ -142,8 +147,8 @@ describe('ProductDetailPage', () => {
     expect(screen.getByText('Size')).toBeInTheDocument();
     expect(screen.getByText('Dimensions')).toBeInTheDocument();
     expect(screen.getByText('180 × 60 × 2 cm')).toBeInTheDocument();
-    // Browse-only notice
-    expect(screen.getByText(/purchased from a pod's shop/i)).toBeInTheDocument();
+    // Browse-only notice — once the pod lookup has come back empty.
+    expect(await screen.findByText(/purchased from a pod's shop/i)).toBeInTheDocument();
   });
 
   it('swaps price when another variant chip is clicked', async () => {
@@ -251,5 +256,31 @@ describe('ProductDetailPage', () => {
     });
     // The stepper replaces the add button once the product is in the cart.
     expect(await screen.findByLabelText('Increase quantity')).toBeInTheDocument();
+  });
+
+  it('says the pod lookup failed (not "no pod") and retries it into a buyable product', async () => {
+    const podsRequest = { query: PODS_FOR_PRODUCT, variables: { id: PRODUCT_ID } };
+    const stocking = {
+      pod_id: 'podB',
+      pod_title: 'B',
+      club_slug: 'cb',
+      product_name: 'Yoga Mat',
+      unit_cost: 1499,
+      available_count: 8,
+      free_delivery_above: null,
+      image_url: 'https://img/b.jpg',
+    };
+    renderPage({ ...fullProduct, variants: [] }, [reviewsMock], [], [
+      { request: podsRequest, error: new Error('offline') },
+      { request: podsRequest, result: { data: { podsForProduct: [stocking] } } },
+    ]);
+    expect(
+      await screen.findByText('Could not check which pods stock this product.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('product-detail-no-pod')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('product-detail-pods-error-retry'));
+    expect(await screen.findByRole('button', { name: /add to selection/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('product-detail-pods-error')).toBeNull();
   });
 });

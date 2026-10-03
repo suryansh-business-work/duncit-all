@@ -20,6 +20,9 @@ vi.mock('../../../components/media/VideoMedia', () => ({
   default: ({ src }: { src: string }) => <div data-testid="slider-video">{src}</div>,
 }));
 
+const mockLogError = vi.fn();
+vi.mock('@duncit/logs', () => ({ logs: { mWeb: { error: (...args: unknown[]) => mockLogError(...args) } } }));
+
 const slide = (over: Record<string, unknown>) => ({
   heading: '',
   subheading: '',
@@ -48,6 +51,23 @@ describe('PodShopSlider', () => {
     await waitFor(() =>
       expect(container.querySelector('[data-testid="pod-shop-slider"]')).not.toBeInTheDocument(),
     );
+  });
+
+  it('stays hidden when the slider query fails, and logs the failure', async () => {
+    const { container } = render(
+      <MockedProvider
+        mockLinkDefaultOptions={{ delay: 0 }}
+        mocks={[{ request: { query: POD_SHOP_SLIDER }, error: new Error('offline') }]}
+      >
+        <MemoryRouter>
+          <PodShopSlider />
+        </MemoryRouter>
+      </MockedProvider>,
+    );
+    await waitFor(() =>
+      expect(mockLogError).toHaveBeenCalledWith('PodShopSlider', 'load', expect.objectContaining({ error: expect.anything() })),
+    );
+    expect(container.querySelector('[data-testid="pod-shop-slider"]')).not.toBeInTheDocument();
   });
 
   it('renders ordered image + video slides', async () => {

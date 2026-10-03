@@ -21,6 +21,7 @@ export {
   dateColumn,
   entityIdColumn,
   formatDateCell,
+  rowMenuColumn,
   EM_DASH,
 } from './cells';
 export type {
@@ -29,6 +30,8 @@ export type {
   DateColumnOptions,
   EntityIdColumnOptions,
   RowActionOptions,
+  RowMenuColumnOptions,
+  RowMenuItem,
 } from './cells';
 export { isColumnFilterable, isColumnSortable } from './columnTypes';
 export type {

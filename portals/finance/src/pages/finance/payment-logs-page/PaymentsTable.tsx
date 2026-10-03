@@ -102,17 +102,19 @@ export default function PaymentsTable({
         valueGetter: (p) => p.user_name,
       },
       { field: 'description', headerName: t('finance.payment.colDescription'), minWidth: 160, type: 'text' },
-      { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
-      { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
-      { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
+      // Ahead of the subtotal: the tier came off the price before GST was
+      // worked out, so the row reads discount → taxable subtotal → GST → total,
+      // the same order as the payment's Amount Breakup and the checkout.
       {
         field: 'ticket_discount_amount',
         headerName: t('finance.payment.colTicketDiscount'),
         width: 150,
-        hide: true,
         type: 'number',
         valueGetter: (p) => fmt(p.ticket_discount_amount, p.currency_symbol),
       },
+      { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
+      { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
+      { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
       {
         field: 'coins_redeemed',
         headerName: t('finance.payment.colCoinsUsed'),

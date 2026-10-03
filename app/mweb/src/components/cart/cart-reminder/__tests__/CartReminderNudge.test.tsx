@@ -93,7 +93,11 @@ describe('CartReminderNudge', () => {
     const bar = screen.getByTestId('cart-nudge').querySelector('.cart-nudge-timer');
     if (!bar) throw new Error('the countdown bar did not render');
     expect(onHide).not.toHaveBeenCalled();
+    // React picks its animation-end event name when it loads: jsdom has no
+    // AnimationEvent, so depending on the jsdom build it listens for the
+    // prefixed `webkitAnimationEnd` instead. Fire both; exactly one is heard.
     fireEvent.animationEnd(bar);
+    fireEvent(bar, new Event('webkitAnimationEnd', { bubbles: true }));
     expect(onHide).toHaveBeenCalledTimes(1);
   });
 });

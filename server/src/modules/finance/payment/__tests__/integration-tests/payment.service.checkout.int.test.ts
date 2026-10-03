@@ -294,12 +294,12 @@ describe('createRazorpayGiftCardCheckout', () => {
   it('a card with no scope name is a Pod Shop card; purchase switched off opens no order', async () => {
     const user = await seedUser();
     jest.mocked(giftcardService.purchaseFacts).mockResolvedValue({ ...facts, scope_name: '' } as never);
-    const sheet = await paymentService.createRazorpayGiftCardCheckout({}, String(user._id));
+    const sheet = await paymentService.createRazorpayGiftCardCheckout({ contact_email: 'asha@x.com' }, String(user._id));
     expect(sheet.description).toBe('Gift card · Pod Shop');
 
     mockOrder.mockClear();
     jest.mocked(giftcardService.assertPurchaseEnabled).mockRejectedValueOnce(new Error('Gift cards are switched off'));
-    await expect(paymentService.createRazorpayGiftCardCheckout({}, String(user._id))).rejects.toThrow('Gift cards are switched off');
+    await expect(paymentService.createRazorpayGiftCardCheckout({ contact_email: 'asha@x.com' }, String(user._id))).rejects.toThrow('Gift cards are switched off');
     expect(mockOrder).not.toHaveBeenCalled();
   });
 });

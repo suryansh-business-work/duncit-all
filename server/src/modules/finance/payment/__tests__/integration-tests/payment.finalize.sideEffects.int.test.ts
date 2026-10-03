@@ -317,12 +317,15 @@ describe('runSideEffects — shop orders', () => {
   it('a shipment that never reached ShipRocket fails the step with the order error', async () => {
     const p = await seedCoreDone({ target_type: 'PRODUCT' });
     await seedOrder(p._id);
-    mockShip.mockImplementation(async (order: { _id: unknown }) => {
-      await ProductOrderModel.updateOne(
-        { _id: order._id },
-        { $set: { fulfilment_status: 'FAILED', last_error: 'Pincode not serviceable' } }
-      );
-    });
+    // Like the real createShipment: the failure is written onto the very order
+    // document it was handed (then saved), which is what the step reads back.
+    mockShip.mockImplementation(
+      async (order: { fulfilment_status: string; last_error: string; save: () => Promise<unknown> }) => {
+        order.fulfilment_status = 'FAILED';
+        order.last_error = 'Pincode not serviceable';
+        await order.save();
+      }
+    );
 
     await paymentFinalizer.runSideEffects(String(p._id));
 

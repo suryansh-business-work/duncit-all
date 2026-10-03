@@ -99,9 +99,10 @@ describe('review round-trips', () => {
       profile: { first_name: 'Priya' },
       metadata: { status: 'ACTIVE', role_keys: ['PRODUCTS_MANAGER'] },
     });
-    await UserModel.create({ profile: { first_name: 'NoMail' }, metadata: { status: 'ACTIVE', role_keys: ['PRODUCTS_MANAGER'] } });
+    await UserModel.create({ auth: {}, profile: { first_name: 'NoMail' }, metadata: { status: 'ACTIVE', role_keys: ['PRODUCTS_MANAGER'] } });
     await UserModel.create({
       auth: { email: 'gone-pm@duncit.com' },
+      profile: { first_name: 'Gone' },
       metadata: { status: 'SUSPENDED', role_keys: ['PRODUCTS_MANAGER'] },
     });
     const brand = await readyBrand(uid);
@@ -135,7 +136,7 @@ describe('review round-trips', () => {
 
   it('a failing owner notice or reviewer email never fails the submission', async () => {
     const uid = owner();
-    await UserModel.create({ auth: { email: 'pm2@duncit.com' }, metadata: { status: 'ACTIVE', role_keys: ['PRODUCTS_MANAGER'] } });
+    await UserModel.create({ auth: { email: 'pm2@duncit.com' }, profile: { first_name: 'Pm' }, metadata: { status: 'ACTIVE', role_keys: ['PRODUCTS_MANAGER'] } });
     mockNotify.mockRejectedValueOnce(new Error('AiSensy down'));
     mockMail.mockRejectedValueOnce(new Error('SMTP down'));
     const brand = await readyBrand(uid);

@@ -49,7 +49,7 @@ let seq = 0;
 const seedUser = (email: string | undefined, status = 'ACTIVE') => {
   seq += 1;
   return UserModel.create({
-    ...(email === undefined ? {} : { auth: { email } }),
+    auth: email === undefined ? {} : { email },
     profile: { first_name: `U${seq}` },
     metadata: { status },
   });

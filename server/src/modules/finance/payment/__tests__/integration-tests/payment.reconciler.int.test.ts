@@ -126,7 +126,8 @@ describe('capture stage', () => {
 
     const row = await reload(p._id);
     expect(row?.gateway_ref).toBe('order_B1');
-    expect(row?.metadata.razorpay_payment_id).toBeUndefined();
+    // An untouched payment carries no metadata at all, so nothing was recorded.
+    expect(row?.metadata?.razorpay_payment_id).toBeUndefined();
     expect(row?.reconcile_checked_at).toBeInstanceOf(Date);
     expect(finalizePayment).not.toHaveBeenCalled();
   });

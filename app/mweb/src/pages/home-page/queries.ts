@@ -47,6 +47,7 @@ export const HOME_STATIC = gql`
       icon
       level
       parent_id
+      is_active
       icon_layout_mweb {
         position
         width

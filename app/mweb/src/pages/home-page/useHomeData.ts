@@ -87,6 +87,11 @@ function makeChipHasPods(podCategoryIds: Set<string>, isDescendantOf: IsDescenda
   };
 }
 
+/** An admin-deactivated category/sub never becomes a Home chip — not even with
+ *  the "show all categories" toggle on. The catalogue keeps it so pod-card
+ *  labels still resolve. */
+const isActiveCategory = (c: { is_active?: boolean | null }) => c.is_active !== false;
+
 export function useHomeData({
   superCategorySlug,
   locationId,
@@ -405,12 +410,16 @@ export function useHomeData({
     const chipHasPods = makeChipHasPods(podCategoryIds, isDescendantOf);
     if (!selectedSuperId) {
       return cats
-        .filter((c: any) => (c.level === 'CATEGORY' || c.level === 'SUB') && chipHasPods(c.id))
+        .filter(
+          (c: any) =>
+            (c.level === 'CATEGORY' || c.level === 'SUB') && isActiveCategory(c) && chipHasPods(c.id)
+        )
         .sort((a: any, b: any) => a.name.localeCompare(b.name));
     }
     const descendants = cats.filter(
       (c: any) =>
         (c.level === 'CATEGORY' || c.level === 'SUB') &&
+        isActiveCategory(c) &&
         isDescendantOf(c.id, selectedSuperId)
     );
     const categories = descendants
@@ -448,7 +457,7 @@ export function useHomeData({
     const inScope = (c: any) => !selectedSuperId || isDescendantOf(c.id, selectedSuperId);
     // When the admin toggle is on, show every category/sub (with its icon) even
     // ones with no pods yet; otherwise only those that currently have pods.
-    const isVisible = (c: any) => showAllVibes || chipHasPods(c.id);
+    const isVisible = (c: any) => isActiveCategory(c) && (showAllVibes || chipHasPods(c.id));
     const categories = cats
       .filter((c: any) => c.level === 'CATEGORY' && inScope(c) && isVisible(c))
       .sort((a: any, b: any) => a.name.localeCompare(b.name));

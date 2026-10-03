@@ -23,6 +23,7 @@ export const HomeStaticDocument = gql(`
       icon
       level
       parent_id
+      is_active
       icon_layout_native {
         position
         width

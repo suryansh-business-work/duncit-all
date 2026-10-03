@@ -118,9 +118,7 @@ describe('ProductDetailScreen', () => {
     renderWithProviders(<ProductDetailScreen />);
     await waitFor(() => expect(screen.getByTestId('pds-readonly')).toBeOnTheScreen());
     expect(screen.getByTestId('pds-max')).toHaveTextContent('0');
-    await waitFor(() =>
-      expect(screen.getByTestId('product-detail-no-pod')).toBeOnTheScreen(),
-    );
+    await waitFor(() => expect(screen.getByTestId('product-detail-no-pod')).toBeOnTheScreen());
     expect(screen.queryByTestId('product-detail-pods-error')).toBeNull();
   });
 

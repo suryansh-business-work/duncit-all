@@ -176,7 +176,9 @@ describe('ShopScreen', () => {
   it('shows the quick-add notice when no pod stocks the product', async () => {
     mockRequest.mockImplementation((doc: unknown) =>
       Promise.resolve(
-        doc === ShopProductsDocument ? { availablePodProducts: [product()] } : { podsForProduct: [] },
+        doc === ShopProductsDocument
+          ? { availablePodProducts: [product()] }
+          : { podsForProduct: [] },
       ),
     );
     renderWithProviders(<ShopScreen />);

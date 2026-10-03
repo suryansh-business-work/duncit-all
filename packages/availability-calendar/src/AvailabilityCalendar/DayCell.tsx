@@ -30,8 +30,10 @@ export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoli
   const isSelected = !!selectedDate && isSameDay(date, selectedDate);
   const isToday = isSameDay(date, today);
   const isDayView = view === 'day';
+  // Selection and leave already paint the whole tile, so gold only marks a plain today.
+  const isTodayAccent = isToday && !isSelected && !isHoliday;
   const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isDisabled, isHoliday);
-  const shape = cellShape(isDayView, isSelected, isDisabled);
+  const shape = cellShape(isDayView, isSelected, isDisabled, isTodayAccent);
 
   return (
     <Box
@@ -40,6 +42,7 @@ export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoli
       tabIndex={isDisabled ? -1 : 0}
       aria-disabled={isDisabled}
       aria-pressed={isSelected}
+      aria-current={isToday ? 'date' : undefined}
       onClick={isDisabled ? undefined : () => onSelect(date)}
       onKeyDown={
         isDisabled
@@ -53,7 +56,7 @@ export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoli
         minHeight: shape.minHeight,
         p: { xs: 0.5, sm: 0.75 },
         borderRadius: 1.5,
-        border: 1.5,
+        border: shape.borderWidth,
         borderColor: shape.borderColor,
         bgcolor,
         color,
@@ -67,7 +70,7 @@ export function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoli
         '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
       }}
     >
-      <DayHeader date={date} isDayView={isDayView} isToday={isToday} isHoliday={isHoliday} />
+      <DayHeader date={date} isDayView={isDayView} isToday={isToday} isTodayAccent={isTodayAccent} isHoliday={isHoliday} />
       {isHoliday && isDayView && (
         <Typography variant="caption" sx={{ fontWeight: 800 }}>
           {t('availability.onLeaveNotBookable')}

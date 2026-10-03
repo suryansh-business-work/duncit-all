@@ -3,7 +3,7 @@ import { alpha } from '@mui/material/styles';
 import { format } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
 import { formatDate } from '@duncit/datetime';
-import type { Bucket } from './helpers';
+import { TODAY_TONE, type Bucket } from './helpers';
 
 interface BadgeProps {
   count: number;
@@ -37,11 +37,13 @@ interface DayHeaderProps {
   date: Date;
   isDayView: boolean;
   isToday: boolean;
+  /** Paint the number in the gold today tone (false when selection or leave colours the tile). */
+  isTodayAccent?: boolean;
   isHoliday: boolean;
 }
 
 /** The day number (or full date in day view) plus the venue-leave tag. */
-export function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderProps>) {
+export function DayHeader({ date, isDayView, isToday, isTodayAccent = false, isHoliday }: Readonly<DayHeaderProps>) {
   const { t } = useTranslation();
   return (
     <Stack
@@ -52,7 +54,11 @@ export function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayH
       }}>
       <Typography
         variant="body2"
-        sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
+        sx={{
+          fontWeight: isToday ? 900 : 600,
+          textDecoration: isToday ? 'underline' : 'none',
+          color: isTodayAccent ? TODAY_TONE : 'inherit',
+        }}
       >
         {isDayView ? formatDate(date) : format(date, 'd')}
       </Typography>

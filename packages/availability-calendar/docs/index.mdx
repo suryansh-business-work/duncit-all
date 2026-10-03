@@ -292,6 +292,10 @@ So the badges are counts, not flags: a day with three slots in three states rend
 badges at all. Past days — and days after `maxDate` — carry `aria-disabled="true"` and
 `tabIndex={-1}`, so they are skipped by keyboard navigation, not merely greyed.
 
+Today's cell carries `aria-current="date"` and is drawn in gold — a 2px `warning.main` border
+and a `warning.main` date number (`TODAY_TONE`, the leaderboard's gold medal token). When
+today is selected or on leave, the primary or error fill wins and the gold steps aside.
+
 `DayDrawer` for 30 Jul, given those first three slots:
 
 ```tsx

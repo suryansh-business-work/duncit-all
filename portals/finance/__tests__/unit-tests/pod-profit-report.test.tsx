@@ -75,7 +75,9 @@ describe('EmailReportDialog', () => {
   };
 
   it('only sends to a valid address, then confirms and closes', async () => {
-    renderActions({ mocks: [emailPodCalculatorMock({ delay: 20 })] });
+    // Long enough that the in-flight state is still on screen under a loaded
+    // coverage runner; 20ms finished between two polls and re-enabled Cancel.
+    renderActions({ mocks: [emailPodCalculatorMock({ delay: 300 })] });
     openDialog();
     expect(screen.getByText('Diwali weekend: Pods #1')).toBeInTheDocument();
 
@@ -91,8 +93,11 @@ describe('EmailReportDialog', () => {
     fireEvent.change(to, { target: { value: ' finance-team@duncit.com ' } });
     expect(to).toHaveAttribute('aria-invalid', 'false');
     fireEvent.click(send);
-    expect(await screen.findByRole('button', { name: 'Sending…' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    // Both read in the same tick: while the send is in flight, neither button works.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Sending…' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    });
 
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Report sent'));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());

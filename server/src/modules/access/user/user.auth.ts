@@ -74,6 +74,9 @@ function connectedAccountsOf(u: any) {
           linked_at: auth.google_linked_at?.toISOString?.() ?? null,
         }
       : null,
+    password_changed_at: u?.security?.password_changed_at?.toISOString?.() ?? null,
+    last_login_at: auth.last_login_at?.toISOString?.() ?? null,
+    last_login_provider: auth.last_login_provider ?? null,
   };
 }
 

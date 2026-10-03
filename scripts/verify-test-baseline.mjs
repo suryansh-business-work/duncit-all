@@ -42,15 +42,24 @@ export function failingFiles(log) {
   return [...files].sort((a, b) => a.localeCompare(b));
 }
 
-/** The first lines a runner printed under `FAIL <file>` — enough to say why it failed. */
+/**
+ * The first lines a runner printed under `FAIL <file>` — enough to say why it failed.
+ *
+ * jest prints a file's captured console output (`● Console`) BEFORE its failing
+ * tests, and one noisy import (expo-notifications' warning, say) used to fill
+ * the whole excerpt with log lines, so the annotation never reached the
+ * assertion. Console blocks are skipped up to the next `● <suite> › <test>`.
+ */
 export function failureExcerpt(log, file, maxLines = 25) {
   const lines = log.replaceAll(/\u001b\[[0-9;]*m/g, '').split(/\r?\n/);
   const start = lines.findIndex((line) => FAIL_LINE.exec(line)?.[1] === file);
   if (start < 0) return '';
   const excerpt = [];
+  let inConsole = false;
   for (const line of lines.slice(start + 1)) {
     if (/^\s*(?:PASS|FAIL)\s/.test(line) || excerpt.length >= maxLines) break;
-    if (line.trim()) excerpt.push(line.trimEnd());
+    if (/^\s*● /.test(line)) inConsole = /^\s*● Console\s*$/.test(line);
+    if (!inConsole && line.trim()) excerpt.push(line.trimEnd());
   }
   return excerpt.join('\n');
 }

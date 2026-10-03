@@ -125,6 +125,10 @@ export { usePageMeta, type PageMetaInput } from '@duncit/app-settings';
 // Partners portal (brand owner) and the Products portal (staff) show.
 export {
   BrandLogsPanel,
+  renderChangeLogField,
+  renderChangeLogNew,
+  renderChangeLogOld,
+  type ChangeLogValueRow,
   BrandAnalyticsPanel,
   BrandAnalyticsReport,
   BRAND_ANALYTICS,

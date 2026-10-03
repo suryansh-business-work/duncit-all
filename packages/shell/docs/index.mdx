@@ -68,6 +68,10 @@ exports:
   - 'BackgroundJobsIndicator'
   - 'useBackgroundJobs'
   - 'BrandLogsPanel'
+  - 'renderChangeLogField'
+  - 'renderChangeLogOld'
+  - 'renderChangeLogNew'
+  - 'ChangeLogValueRow'
   - 'BrandAnalyticsPanel'
   - 'BrandAnalyticsReport'
   - 'BRAND_ANALYTICS'
@@ -194,6 +198,10 @@ The bar strip has no chart dependency. It is a row of `Box` bars, each scaled to
 the order total and `trendPeak(trend)`. Money goes through `formatINR` and counts through
 `formatCount` (both `@duncit/utils`). The window start uses the admin-configured `formatDate`. All
 copy lives under `shell.brandConsole.*`.
+
+The Field and Old / New value cells are exported as `renderChangeLogField`, `renderChangeLogOld` and
+`renderChangeLogNew` (typed on `ChangeLogValueRow`), and `@duncit/entity-consoles` draws its directory
+change logs with them — one copy, so a brand trail and a venue trail read the same.
 
 ## Sample data
 

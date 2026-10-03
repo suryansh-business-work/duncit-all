@@ -11,8 +11,11 @@ import { ACTION_COLORS, ACTOR_COLORS, actionOptions, actorOptions, labelOf, sour
 
 const EMPTY = '—';
 
+/** The fields every entity change log row shares — what the field/value cells read. */
+export type ChangeLogValueRow = Pick<BrandChangeLogRow, 'field' | 'field_label' | 'old_value' | 'new_value'>;
+
 /** The field's readable label, with the document path it maps to underneath. */
-export const renderField = (row: BrandChangeLogRow) => (
+export const renderField = (row: ChangeLogValueRow) => (
   <Stack spacing={0.25} component="span">
     <Typography variant="caption" component="span" sx={{ fontWeight: 'fontWeightBold' }}>
       {row.field_label || row.field}
@@ -41,8 +44,8 @@ function renderValue(value: string) {
   );
 }
 
-export const renderOld = (row: BrandChangeLogRow) => renderValue(row.old_value);
-export const renderNew = (row: BrandChangeLogRow) => renderValue(row.new_value);
+export const renderOld = (row: ChangeLogValueRow) => renderValue(row.old_value);
+export const renderNew = (row: ChangeLogValueRow) => renderValue(row.new_value);
 
 export const renderAction = (t: Translate) => (row: BrandChangeLogRow) => (
   <Chip size="small" color={ACTION_COLORS[row.action]} label={labelOf(actionOptions(t), row.action)} />

@@ -328,7 +328,8 @@ describe('postsTable / postDetail', () => {
       shares: 0,
       views: null,
       engagement: 0,
-      ai_score: null,
+      // An (empty) analysis exists, so its defaulted score is reported — null is only for no analysis at all.
+      ai_score: 0,
       ai_analysis: { score: 0, summary: '', strengths: [], improvements: [], next_idea: '', analyzed_at: null },
     });
   });

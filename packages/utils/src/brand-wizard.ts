@@ -9,6 +9,10 @@
  * Twin of `ecommBrand.completion.ts` on the server (rule 40: the server imports
  * no `@duncit/*` package). The server's number is what the table shows; this
  * copy is what the wizard shows live while the partner is still typing.
+ *
+ * Integration (Razorpay + shipping) is the LAST step and does not gate review:
+ * the brand is submitted and approved on its business facts and consent, and
+ * goes live in the pod shop once its integrations are ready.
  */
 export type BrandWizardStepKey =
   | 'details'
@@ -18,9 +22,9 @@ export type BrandWizardStepKey =
   | 'categories'
   | 'media'
   | 'documents'
-  | 'integration'
   | 'review'
-  | 'consent';
+  | 'consent'
+  | 'integration';
 
 export interface BrandWizardStep {
   key: BrandWizardStepKey;
@@ -28,19 +32,21 @@ export interface BrandWizardStep {
   labelKey: string;
   /** Counted in the completion percentage. Payout is optional; Review is derived. */
   required: boolean;
+  /** Must be done before the brand can be submitted. Integration is owed for going live, not for review. */
+  gatesReview: boolean;
 }
 
 export const BRAND_WIZARD_STEPS: readonly BrandWizardStep[] = [
-  { key: 'details', labelKey: 'partners.brandWizard.step.details', required: true },
-  { key: 'business', labelKey: 'partners.brandWizard.step.business', required: true },
-  { key: 'address', labelKey: 'partners.brandWizard.step.address', required: true },
-  { key: 'payout', labelKey: 'partners.brandWizard.step.payout', required: false },
-  { key: 'categories', labelKey: 'partners.brandWizard.step.categories', required: true },
-  { key: 'media', labelKey: 'partners.brandWizard.step.media', required: true },
-  { key: 'documents', labelKey: 'partners.brandWizard.step.documents', required: true },
-  { key: 'integration', labelKey: 'partners.brandWizard.step.integration', required: true },
-  { key: 'review', labelKey: 'partners.brandWizard.step.review', required: false },
-  { key: 'consent', labelKey: 'partners.brandWizard.step.consent', required: true },
+  { key: 'details', labelKey: 'partners.brandWizard.step.details', required: true, gatesReview: true },
+  { key: 'business', labelKey: 'partners.brandWizard.step.business', required: true, gatesReview: true },
+  { key: 'address', labelKey: 'partners.brandWizard.step.address', required: true, gatesReview: true },
+  { key: 'payout', labelKey: 'partners.brandWizard.step.payout', required: false, gatesReview: false },
+  { key: 'categories', labelKey: 'partners.brandWizard.step.categories', required: true, gatesReview: true },
+  { key: 'media', labelKey: 'partners.brandWizard.step.media', required: true, gatesReview: true },
+  { key: 'documents', labelKey: 'partners.brandWizard.step.documents', required: true, gatesReview: true },
+  { key: 'review', labelKey: 'partners.brandWizard.step.review', required: false, gatesReview: false },
+  { key: 'consent', labelKey: 'partners.brandWizard.step.consent', required: true, gatesReview: true },
+  { key: 'integration', labelKey: 'partners.brandWizard.step.integration', required: true, gatesReview: false },
 ];
 
 /** The facts a step is judged on — a subset of the brand, whatever holds it. */
@@ -88,14 +94,14 @@ const STEP_CHECK: Record<Exclude<BrandWizardStepKey, 'review'>, (f: BrandWizardF
   categories: (f) => some(f.product_categories),
   media: (f) => filled(f.logo_url),
   documents: (f) => some(f.documents),
-  integration: (f) => f.razorpay_connected === true && brandShippingReady(f.shipping_mode, f.shiprocket_connected === true),
+  integration: (f) => brandIntegrationReady(f),
   consent: (f) => f.consent_signed === true,
 };
 
-/** Whether one step is done. Review is done once every REQUIRED step before it is. */
+/** Whether one step is done. Review is done once every review step before it is. */
 export function brandStepComplete(facts: BrandWizardFacts, key: BrandWizardStepKey): boolean {
   if (key === 'review') {
-    return BRAND_WIZARD_STEPS.filter((step) => step.required && step.key !== 'consent').every((step) =>
+    return BRAND_WIZARD_STEPS.filter((step) => step.gatesReview && step.key !== 'consent').every((step) =>
       STEP_CHECK[step.key as Exclude<BrandWizardStepKey, 'review'>](facts),
     );
   }
@@ -110,7 +116,7 @@ export function brandStepStates(facts: BrandWizardFacts): BrandStepState[] {
   }));
 }
 
-/** Required steps done, as a whole percentage. 100 means the brand can be submitted. */
+/** Required steps done, as a whole percentage. 100 means the brand is ready to go live. */
 export function brandCompletionPercent(facts: BrandWizardFacts): number {
   const required = BRAND_WIZARD_STEPS.filter((step) => step.required);
   const done = required.filter((step) => brandStepComplete(facts, step.key)).length;
@@ -123,7 +129,17 @@ export function brandNextStepIndex(facts: BrandWizardFacts): number {
   return index === -1 ? BRAND_WIZARD_STEPS.length - 1 : index;
 }
 
-/** The slug of the Legal-portal policy a brand partner signs at the last step. */
+/** Every step the review needs is done — the brand can be submitted (integration may still be pending). */
+export function brandReviewReady(facts: BrandWizardFacts): boolean {
+  return BRAND_WIZARD_STEPS.filter((step) => step.gatesReview).every((step) => brandStepComplete(facts, step.key));
+}
+
+/** Razorpay connected and shipping settled — what an approved brand needs to go live. Server twin: `brandIntegrationReady`. */
+export function brandIntegrationReady(facts: BrandWizardFacts): boolean {
+  return facts.razorpay_connected === true && brandShippingReady(facts.shipping_mode, facts.shiprocket_connected === true);
+}
+
+/** The slug of the Legal-portal policy a brand partner signs before submitting. */
 export const BRAND_CONSENT_POLICY_SLUG = 'brand-partner-consent';
 
 /**

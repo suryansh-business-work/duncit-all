@@ -11,3 +11,5 @@ export { activeChipColumn } from './activeChipColumn';
 export type { ActiveChipColumnOptions } from './activeChipColumn';
 export { actionsColumn } from './actionsColumn';
 export type { ActionsColumnOptions, RowActionOptions } from './actionsColumn';
+export { rowMenuColumn } from './rowMenuColumn';
+export type { RowMenuColumnOptions, RowMenuItem } from './rowMenuColumn';

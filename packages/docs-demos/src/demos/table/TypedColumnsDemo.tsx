@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DuncitTable, clientTableFetch, formatDateCell, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, clientTableFetch, formatDateCell, rowMenuColumn, type DuncitColumn } from '@duncit/table';
 
 export interface PayoutRowMock {
   id: string;
@@ -42,6 +42,14 @@ const PAYOUT_COLUMNS: DuncitColumn<PayoutRowMock>[] = [
     width: 150,
     valueGetter: (row) => formatDateCell(row.requested_at),
   },
+  // The row's extra actions behind a kebab (⋮) — a paid payout has nothing left to hold.
+  rowMenuColumn<PayoutRowMock>({
+    ariaLabel: (row) => `Options for ${row.payout_no}`,
+    items: (row) => [
+      { key: 'view', label: 'View payout', onClick: () => undefined },
+      { key: 'hold', label: 'Put on hold', onClick: () => undefined, disabled: row.payout_status === 'PAID', destructive: true },
+    ],
+  }),
 ];
 
 /**

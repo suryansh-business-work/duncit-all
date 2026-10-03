@@ -34,6 +34,9 @@ exports:
   - 'fallbackT'
   - 'useTranslation'
   - 'actionsColumn'
+  - 'rowMenuColumn'
+  - 'RowMenuColumnOptions'
+  - 'RowMenuItem'
   - 'activeChipColumn'
   - 'dateColumn'
   - 'entityIdColumn'
@@ -400,6 +403,7 @@ set when AG Grid creates the row. A spec that filed a ticket finds it as
 | `dateColumn` | `<T>(options?: DateColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'created_at'`, header `shell.common.created`, `hide true`, `width 130`, `filterable true`, `format` from `ambientDateFormat()`. `formatDate` wins over `format`. |
 | `activeChipColumn` | `<T>(options?: ActiveChipColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'is_active'`, header `shell.common.status`, `width 110`, labels `shell.common.active` / `shell.common.inactive`, `filterable true`. |
 | `actionsColumn` | `<T>(options: ActionsColumnOptions<T>) => DuncitColumn<T>` | Edit/Delete icon buttons; each side takes `RowActionOptions` (`title`, `ariaLabel`, `color`, `icon`, `disabled`, `disabledTitle`), all accepting a `(row) => string`. |
+| `rowMenuColumn` | `<T>(options: RowMenuColumnOptions<T>) => DuncitColumn<T>` | A kebab (⋮) button opening a menu of row actions — `items(row)` returns `RowMenuItem[]` (`key`, `label`, `icon`, `onClick`, `disabled`, `destructive`); an empty list renders no button. Use it when a row has more actions than fit as icons, alongside `onRowClick` (choosing an item never opens the row). `ariaLabel` names the button per row. |
 | `entityIdColumn` | `<T>(options: EntityIdColumnOptions<T>) => DuncitColumn<T>` | Requires `field` + `headerName`. Defaults: `width 150`, `filterable true`. Monospace, non-wrapping, `EM_DASH` when the record predates its id. |
 | `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty **or unreadable** — it never throws out of a value getter. |
 | `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |

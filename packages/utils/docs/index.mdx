@@ -58,6 +58,8 @@ exports:
   - 'brandShippingReady'
   - 'brandCompletionPercent'
   - 'brandNextStepIndex'
+  - 'brandReviewReady'
+  - 'brandIntegrationReady'
   - 'BrandWizardFacts'
   - 'BrandWizardStep'
   - 'BrandWizardStepKey'
@@ -2539,15 +2541,19 @@ readout while the partner is still typing.
 
 | Export | What it answers |
 | --- | --- |
-| `BRAND_WIZARD_STEPS` | The ten steps in order, each with its `labelKey` and whether it is `required` |
-| `brandStepComplete(facts, key)` | Is this step done? `review` is done once every required step before it is |
+| `BRAND_WIZARD_STEPS` | The ten steps in order — Integration LAST — each with its `labelKey`, whether it is `required` and whether it `gatesReview` |
+| `brandStepComplete(facts, key)` | Is this step done? `review` is done once every review step before it is (integrations are not owed) |
 | `brandStepStates(facts)` | Every step with its `complete` flag — what the vertical stepper draws |
-| `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to submit |
+| `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to go live |
+| `brandReviewReady(facts)` | Can the brand be submitted? Every `gatesReview` step done and the consent signed — integrations may still be pending |
+| `brandIntegrationReady(facts)` | Can an approved brand go live? Razorpay connected and shipping settled |
 | `brandNextStepIndex(facts)` | Where a saved draft opens — the first required step still to do |
-| `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy the last step signs |
+| `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy signed before submitting |
 | `brandShippingReady(mode, ownConnected)` | Is shipping settled? `DUNCIT_COURIER` needs nothing from the brand; its own ShipRocket must be connected |
 
-Payout is optional (it never lowers the percentage) and Review is derived. Integration needs
+Payout is optional (it never lowers the percentage) and Review is derived. Integration is the last
+step and does not gate review: a brand is submitted and approved on its business facts and consent,
+and goes **live** in the pod shop (server `EcommBrand.live`) once it is connected. Integration needs
 Razorpay connected plus the brand's shipping settled: `shipping_mode` is `DUNCIT_COURIER` (Duncit's
 courier carries the parcels) or the brand's own ShipRocket is connected. Connection is something
 only the server can say — pass the brand's `shipping_mode`, `integrations.*.connected` and
@@ -2564,8 +2570,9 @@ const facts = {
   documents: [{ type: 'GST certificate', url: '…' }],
   shiprocket_connected: true, razorpay_connected: false, consent_signed: false,
 };
-brandCompletionPercent(facts); // 75 — integration and consent still to do
-brandStepStates(facts).filter((s) => s.required && !s.complete).map((s) => s.key); // ['integration', 'consent']
+brandCompletionPercent(facts); // 75 — consent and integration still to do
+brandStepStates(facts).filter((s) => s.required && !s.complete).map((s) => s.key); // ['consent', 'integration']
+brandReviewReady({ ...facts, consent_signed: true }); // true — submit now; connect Razorpay to go live
 ```
 
 ## Product-order fulfilment

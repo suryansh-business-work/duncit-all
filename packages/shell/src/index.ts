@@ -120,3 +120,27 @@ export { useTranslation } from './i18n/useTranslation';
 // ticket's subject, a user's name) without reaching past the shell. The shell
 // already titles every routed page from the breadcrumb; this is the override.
 export { usePageMeta, type PageMetaInput } from '@duncit/app-settings';
+
+// A brand's details page — the activity log and sales analytics both the
+// Partners portal (brand owner) and the Products portal (staff) show.
+export {
+  BrandLogsPanel,
+  BrandAnalyticsPanel,
+  BrandAnalyticsReport,
+  BRAND_ANALYTICS,
+  BRAND_ANALYTICS_WINDOWS,
+  BRAND_CHANGE_LOGS_TABLE,
+  DEFAULT_BRAND_ANALYTICS_WINDOW,
+  trendBarPercents,
+  trendPeak,
+  type BrandLogsPanelProps,
+  type BrandAnalyticsPanelProps,
+  type BrandAnalyticsReportProps,
+  type BrandAnalytics,
+  type BrandAnalyticsData,
+  type BrandAnalyticsPoint,
+  type BrandAnalyticsVars,
+  type BrandAnalyticsWindow,
+  type BrandChangeLogRow,
+  type BrandTopProduct,
+} from './brand';

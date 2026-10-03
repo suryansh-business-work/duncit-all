@@ -3,6 +3,7 @@ import { createTheme } from '@mui/material/styles';
 import {
   ErrorFallback,
   InfoRow,
+  IntegrationLogo,
   PodSeatsCell,
   ScrollRail,
   categoryAxis,
@@ -37,6 +38,10 @@ interface SeatsMock {
   seats_taken: number;
   bookings: number;
   no_of_spots: number;
+}
+
+interface IntegrationLogoMock {
+  size: number;
 }
 
 interface RailMock {
@@ -104,6 +109,20 @@ export default defineDemos('ui', [
     mock: { seats_taken: 10, bookings: 3, no_of_spots: 10 },
     render: (mock) => (
       <PodSeatsCell seats={mock.seats_taken} bookings={mock.bookings} total={mock.no_of_spots} />
+    ),
+  }),
+
+  defineDemo<IntegrationLogoMock>({
+    id: 'integration-logo',
+    title: 'IntegrationLogo — the Razorpay and ShipRocket tiles on a brand Integration step',
+    note:
+      'Both tiles are monochrome and take the theme text colour, so they sit right in light and dark. Change size to see the glyph scale with the tile.',
+    mock: { size: 40 },
+    render: (mock) => (
+      <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
+        <IntegrationLogo vendor="RAZORPAY" label="Razorpay" size={mock.size} />
+        <IntegrationLogo vendor="SHIPROCKET" label="ShipRocket" size={mock.size} />
+      </Paper>
     ),
   }),
 

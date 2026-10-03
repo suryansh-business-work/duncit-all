@@ -1,4 +1,13 @@
-import { deriveSearchItems, formatGmtOffset, withSeconds, zoneChoices } from '@duncit/shell';
+import {
+  BrandAnalyticsReport,
+  deriveSearchItems,
+  formatGmtOffset,
+  trendBarPercents,
+  trendPeak,
+  withSeconds,
+  zoneChoices,
+  type BrandAnalytics,
+} from '@duncit/shell';
 import { defineDemo, defineDemos } from '../types';
 
 interface NavMock {
@@ -90,5 +99,61 @@ export default defineDemos('shell', [
           'the Agent tab stores how far DOWN its edge it sits (0 to 1), so a tab placed on a 4K monitor is still reachable on a laptop.',
       };
     },
+  }),
+  defineDemo<BrandAnalytics>({
+    id: 'brand-analytics',
+    title: "A brand's sales, exactly as brandAnalytics answers",
+    note:
+      'The body BrandAnalyticsPanel shows under its 7 / 30 / 90-day selector. Set orders to 0 for the empty-window line, or empty top_products to see the table give way. BrandLogsPanel reads a live table query, so it has no sandbox here.',
+    mock: {
+      days: 7,
+      since: '2026-09-28T00:00:00.000Z',
+      orders: 46,
+      units_sold: 71,
+      gross_revenue: 58450,
+      net_earnings: 49682,
+      average_order_value: 1271,
+      product_views: 3120,
+      product_clicks: 488,
+      total_products: 12,
+      live_products: 9,
+      trend: [
+        { date: '2026-09-28', orders: 4, gross_revenue: 5100 },
+        { date: '2026-09-29', orders: 7, gross_revenue: 8800 },
+        { date: '2026-09-30', orders: 5, gross_revenue: 6350 },
+        { date: '2026-10-01', orders: 9, gross_revenue: 11400 },
+        { date: '2026-10-02', orders: 6, gross_revenue: 7600 },
+        { date: '2026-10-03', orders: 11, gross_revenue: 13900 },
+        { date: '2026-10-04', orders: 4, gross_revenue: 5300 },
+      ],
+      top_products: [
+        {
+          product_id: '66f1a0c2e4b0a1d2c3e4f501',
+          name: 'Chicken Jerky Treats',
+          units_sold: 24,
+          gross_revenue: 21600,
+          net_earnings: 18360,
+        },
+        {
+          product_id: '66f1a0c2e4b0a1d2c3e4f502',
+          name: 'Rope Tug Toy',
+          units_sold: 18,
+          gross_revenue: 8100,
+          net_earnings: 6885,
+        },
+        {
+          product_id: '66f1a0c2e4b0a1d2c3e4f503',
+          name: 'Orthopedic Pet Bed',
+          units_sold: 6,
+          gross_revenue: 17400,
+          net_earnings: 14790,
+        },
+      ],
+    },
+    render: (mock) => <BrandAnalyticsReport analytics={mock} />,
+    compute: (mock) => ({
+      'Busiest day (orders)': trendPeak(mock.trend),
+      'Bar heights (% of the busiest day)': trendBarPercents(mock.trend),
+    }),
   }),
 ]);

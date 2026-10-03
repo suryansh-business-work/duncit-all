@@ -76,7 +76,7 @@ export const brandAndLaunchDemos: PackageDemo[] = [
     id: 'brand-wizard',
     title: 'How far a brand is through onboarding',
     note:
-      'Yonex has filled six of the eight required steps. Flip razorpay_connected to true and the percentage moves to 88 with only the consent left; sign it (consent_signed: true) and it reads 100 — the point at which the server lets the brand be submitted. Payout is optional, so leaving it blank never lowers the number. Set shipping_mode to DUNCIT_COURIER and shipping is settled even with shiprocket_connected false — the Duncit courier carries the parcels.',
+      'Yonex has filled six of the eight required steps. Sign the consent (consent_signed: true) and the percentage moves to 88 with only Integration left — the brand can now be submitted and approved. Flip razorpay_connected to true and it reads 100: the approved brand goes live in the pod shop. Payout is optional, so leaving it blank never lowers the number. Set shipping_mode to DUNCIT_COURIER and shipping is settled even with shiprocket_connected false — the Duncit courier carries the parcels.',
     mock: {
       brand_name: 'Yonex',
       description: 'Badminton racquets, shuttles and grips for club players.',
@@ -106,7 +106,7 @@ export const brandAndLaunchDemos: PackageDemo[] = [
       'Still to do': brandStepStates(mock)
         .filter((step) => step.required && !step.complete)
         .map((step) => step.key)
-        .join(', ') || 'nothing — ready to submit',
+        .join(', ') || 'nothing — ready to go live',
     }),
   }),
 

@@ -105,28 +105,28 @@ describe('IntegrationStep — going live', () => {
 
   it('tells a live brand it is live', () => {
     mount('DUNCIT_COURIER', integrations(true), [], approved({ live: true }));
-    expect().not.toBeNull();
+    expect(screen.getByText('Your brand is live in the Pod Shop.')).not.toBeNull();
   });
 
   it('warns an approved brand that it is not live until the integrations connect', () => {
     mount('OWN_SHIPROCKET', integrations(false), [], approved());
-    expect().not.toBeNull();
+    expect(screen.getByText(/Not live yet. Connect the integrations below/)).not.toBeNull();
   });
 
   it('tells a brand in review with integrations ready that approval takes it live', () => {
     mount('DUNCIT_COURIER', integrations(true), [], { status: 'SUBMITTED', live: false, integration_waived: false });
-    expect().not.toBeNull();
+    expect(screen.getByText(/Integrations are ready. Your brand goes live as soon as it is approved/)).not.toBeNull();
   });
 
   it('keeps a grandfathered brand live and still asks it to connect', () => {
     mount('OWN_SHIPROCKET', integrations(false), [], approved({ live: true, integration_waived: true }));
-    expect().not.toBeNull();
+    expect(screen.getByText(/was selling before integrations were required/)).not.toBeNull();
   });
 
   it('shows each provider with its logo and a how-to-connect guide linking to the vendor', () => {
     mount('OWN_SHIPROCKET', integrations(false));
-    expect().not.toBeNull();
-    expect().not.toBeNull();
+    expect(screen.getByRole('img', { name: 'ShipRocket' })).not.toBeNull();
+    expect(screen.getByRole('img', { name: 'Razorpay' })).not.toBeNull();
     const open = screen.getByTestId('integration-guide-razorpay-openApi');
     expect(open.getAttribute('href')).toBe('https://dashboard.razorpay.com/app/website-app-settings/api-keys');
     expect(open.getAttribute('target')).toBe('_blank');

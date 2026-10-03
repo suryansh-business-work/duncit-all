@@ -99,6 +99,7 @@ export function toStoreCard(p: any, rating?: RatingSummary) {
     mrp,
     discount_pct: discountPct(price, mrp),
     has_variants: (p.variants ?? []).length > 0,
+    lead_variant_id: lead ? String(lead._id) : '',
     in_stock: available > 0,
     low_stock: available > 0 && available <= Number(p.low_stock_alert || 0),
     badge: listing.badge,

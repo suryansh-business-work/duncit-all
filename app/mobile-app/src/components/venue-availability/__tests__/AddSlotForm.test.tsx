@@ -19,8 +19,9 @@ jest.mock('@/utils/app-formatter', () => ({
 // down and applies whatever patch the spec queues.
 let mockPatch: Partial<SlotDraft> = {};
 jest.mock('../AddSlotFields', () => {
-  const React = require('react');
-  const { Pressable, Text, View } = require('react-native');
+  const React = jest.requireActual<typeof import('react')>('react');
+  const { Pressable, Text, View } =
+    jest.requireActual<typeof import('react-native')>('react-native');
   return {
     AddSlotFields: ({
       draft,
@@ -175,9 +176,7 @@ describe('AddSlotForm — creating', () => {
     const onCreate = mount(jest.fn().mockRejectedValue('nope'));
     applyPatch({ startTime: at(10), endTime: at(11) });
     fireEvent.press(screen.getByTestId('add-slot-submit'));
-    await waitFor(() =>
-      expect(issue()).toHaveTextContent(fallbackT('availability.createFailed')),
-    );
+    await waitFor(() => expect(issue()).toHaveTextContent(fallbackT('availability.createFailed')));
     expect(onCreate).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('add-slot-overwrite')).toBeNull();
     expect(isDisabled(screen.getByTestId('add-slot-submit'))).toBe(false);

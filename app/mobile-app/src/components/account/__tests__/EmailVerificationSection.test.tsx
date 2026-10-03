@@ -116,9 +116,7 @@ describe('EmailVerificationSection — sending', () => {
     mount();
     fireEvent.press(sendButton());
     await waitFor(() =>
-      expect(screen.getByTestId('email-verification-error')).toHaveTextContent(
-        'Too many requests',
-      ),
+      expect(screen.getByTestId('email-verification-error')).toHaveTextContent('Too many requests'),
     );
     expect(sendButton()).toHaveTextContent('Send OTP');
   });

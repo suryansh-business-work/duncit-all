@@ -138,6 +138,7 @@ export const SearchCategoriesDocument = gql(`
       icon
       level
       parent_id
+      is_active
     }
   }
 `);

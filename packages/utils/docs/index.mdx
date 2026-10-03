@@ -393,6 +393,8 @@ exports:
   - 'clubCityName'
   - 'clubOptionLabel'
   - 'clubPlaceLabel'
+  - 'activeCategories'
+  - 'ActivatableCategory'
   - 'groupCategoriesBySuper'
   - 'GroupableCategory'
   - 'SuperCategoryGroup'
@@ -2798,6 +2800,20 @@ groupCategoriesBySuper(categories);
 
 Supers and categories keep the order they arrive in. A super with no categories gets no
 section, and SUB rows or a category whose parent is not a known super are left out.
+
+`activeCategories` is the member-facing visibility rule. Every list a member sees in mWeb or the native
+app (Home vibe and filter chips, Explore chips, Search tiles) runs through it. A category is kept
+only when it and every ancestor above it are active, so switching a CATEGORY to Inactive in Admin
+also hides its SUB rows. A missing `is_active` counts as active.
+
+```ts
+activeCategories([
+  { id: 'cat-badminton', parent_id: 'sup-sports', is_active: false },
+  { id: 'sub-doubles', parent_id: 'cat-badminton', is_active: true },
+  { id: 'cat-running', parent_id: 'sup-sports' },
+]);
+// [{ id: 'cat-running', ... }]
+```
 
 ## Theme tokens — bundled, or the admin's
 

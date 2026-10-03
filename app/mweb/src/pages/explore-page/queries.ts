@@ -50,6 +50,7 @@ export const EXPLORE_PODS = gql`
       slug
       level
       parent_id
+      is_active
     }
     locations {
       id

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { groupCategoriesBySuper } from '@duncit/utils';
+import { activeCategories, groupCategoriesBySuper } from '@duncit/utils';
 
 import {
   SearchCategoriesDocument,
@@ -135,14 +135,18 @@ export function useSearchCategories() {
 
   useRefreshRegistration(refetch);
 
+  // Tiles and buttons show only what the admin left active (and under an active
+  // parent); `all` stays whole so a club card's label still resolves.
+  const active = useMemo(() => activeCategories(all), [all]);
+
   const categories = useMemo(() => {
-    const categoryLevel = all.filter((category) => category.level === 'CATEGORY');
+    const categoryLevel = active.filter((category) => category.level === 'CATEGORY');
     return categoryLevel.length > 0
       ? categoryLevel
-      : all.filter((category) => category.level === 'SUPER');
-  }, [all]);
+      : active.filter((category) => category.level === 'SUPER');
+  }, [active]);
 
-  const groups = useMemo(() => groupCategoriesBySuper(all), [all]);
+  const groups = useMemo(() => groupCategoriesBySuper(active), [active]);
 
   const nameById = useMemo(
     () => new Map(all.map((category) => [category.id, category.name])),

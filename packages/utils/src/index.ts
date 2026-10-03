@@ -1077,7 +1077,9 @@ export {
   type LocalityClubCount,
 } from './club-grouping';
 export {
+  activeCategories,
   groupCategoriesBySuper,
+  type ActivatableCategory,
   type GroupableCategory,
   type SuperCategoryGroup,
 } from './category-grouping';

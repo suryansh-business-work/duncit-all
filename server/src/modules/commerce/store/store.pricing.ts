@@ -7,7 +7,8 @@ import { couponService } from '@modules/finance/coupon/coupon.service';
 import { CouponModel } from '@modules/finance/coupon/coupon.model';
 import { applyCoins, computeQuote, type QuoteBreakup } from '@modules/finance/payment/payment.service';
 import { logs } from '@observability/log';
-import { isPincodeServed, type IStoreSettings } from './storeSettings.model';
+import type { IStoreSettings } from './storeSettings.model';
+import { isPincodeServed } from './storeServiceablePincode.model';
 import { StoreProductModel } from './storeProduct.model';
 import { listedFilter } from './store.catalog.service';
 import {
@@ -272,7 +273,7 @@ export async function quoteStoreShipping(
   }
   // The operator's own pincode list is the first gate: a pincode it excludes
   // is not served, whatever the courier would say — so the courier is not asked.
-  if (/^\d{6}$/.test(String(pincode ?? '')) && !isPincodeServed(settings, String(pincode))) {
+  if (/^\d{6}$/.test(String(pincode ?? '')) && !(await isPincodeServed(String(pincode)))) {
     return { total: 0, breakup: [], all_quoted: false, serviceable: false, cod_serviceable: false, etd: '' };
   }
   const ids = [...groups.keys()].filter((id) => Types.ObjectId.isValid(id));

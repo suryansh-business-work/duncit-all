@@ -45,9 +45,8 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String!
     about_html: String!
     social_links: [StoreSocialLink!]!
-    "On: only the pincodes in serviceable_pincodes are delivered to."
-    serviceable_pincodes_enabled: Boolean!
-    serviceable_pincodes: [String!]!
+    serviceable_pincodes_enabled: Boolean! @deprecated(reason: "Read storeServiceablePincodesTable.")
+    serviceable_pincodes: [String!]! @deprecated(reason: "Read storeServiceablePincodesTable.")
     occasions: [StoreOccasion!]!
     updated_at: String!
   }
@@ -163,8 +162,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     terms_html: String
     about_html: String
     social_links: [StoreSocialLinkInput!]
+    "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
     serviceable_pincodes_enabled: Boolean
-    "6-digit pincodes; anything else is dropped."
+    "Ignored: serviceable pincodes are saved with storeSaveServiceablePincode."
     serviceable_pincodes: [String!]
     occasions: [StoreOccasionInput!]
   }
@@ -733,6 +733,33 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  "A pincode the store delivers to; once any exist, only the active ones are served."
+  type StoreServiceablePincode {
+    id: ID!
+    pincode: String!
+    area: String!
+    city: String!
+    state: String!
+    is_active: Boolean!
+    created_at: String!
+  }
+
+  type StoreServiceablePincodeTablePage {
+    rows: [StoreServiceablePincode!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  input StoreServiceablePincodeInput {
+    "Six digits."
+    pincode: String!
+    area: String
+    city: String
+    state: String
+    is_active: Boolean
+  }
+
   type StoreReviewRow {
     id: ID!
     product_id: ID!
@@ -853,6 +880,7 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     storeStockAlertsTable(query: TableQueryInput): StoreStockAlertTablePage!
     storeReviewsTable(query: TableQueryInput): StoreReviewTablePage!
     storeCouponsTable(query: TableQueryInput): CouponTablePage!
+    storeServiceablePincodesTable(query: TableQueryInput): StoreServiceablePincodeTablePage!
     storeDashboard(days: Int): StoreDashboard!
     storeSubscriptionsTable(query: TableQueryInput): StoreSubscriptionTablePage!
     "Packaging of every approved product and variant (or just product_ids), for the CSV export."
@@ -968,6 +996,9 @@ export const storeAdminTypeDefs = /* GraphQL */ `
     "Create (no id) or update a STORE-scoped coupon."
     storeSaveCoupon(id: ID, input: CreateCouponInput!): Coupon!
     storeDeleteCoupon(id: ID!): Boolean!
+    "Create (no id) or update one serviceable pincode."
+    storeSaveServiceablePincode(id: ID, input: StoreServiceablePincodeInput!): StoreServiceablePincode!
+    storeDeleteServiceablePincode(id: ID!): Boolean!
     storeAdminSetSubscriptionStatus(id: ID!, status: StoreSubscriptionStatus!): StoreAdminSubscriptionRow!
   }
 `;

@@ -5,7 +5,8 @@ import { getServiceability } from '@modules/commerce/shiprocket/shiprocket.gatew
 import { logs } from '@observability/log';
 import { StoreBrandModel, StoreCategoryModel, StorePetTypeModel } from './storeTaxonomy.model';
 import { StoreCollectionModel, StoreHomeSectionModel } from './storeMerch.model';
-import { activeOccasionAt, getStoreSettings, isPincodeServed, type IStoreSettings } from './storeSettings.model';
+import { activeOccasionAt, getStoreSettings, type IStoreSettings } from './storeSettings.model';
+import { isPincodeServed, restrictsPincodes } from './storeServiceablePincode.model';
 import { StorePageModel } from './storePage.model';
 import { StoreProductModel } from './storeProduct.model';
 import { cardsFor, listedFilter, storeCatalogService, type StoreSort } from './store.catalog.service';
@@ -66,7 +67,7 @@ const pageLinkOut = (p: Doc) => ({ id: String(p._id), title: p.title, slug: p.sl
 export async function publicSettingsOut(s: IStoreSettings) {
   const fs = await getFinanceSettings();
   return {
-    serviceable_pincodes_enabled: s.serviceable_pincodes_enabled && (s.serviceable_pincodes ?? []).length > 0,
+    serviceable_pincodes_enabled: await restrictsPincodes(),
     active_occasion: activeOccasionOut(s),
     store_enabled: s.store_enabled,
     store_name: s.store_name,
@@ -301,9 +302,8 @@ export const storeStorefrontService = {
   /** The operator's pincode list alone — instant, no courier call. */
   async pincodeServiceable(pincode: string) {
     const clean = String(pincode ?? '').replaceAll(/\D/g, '');
-    const settings = await getStoreSettings();
-    const restricted = settings.serviceable_pincodes_enabled && settings.serviceable_pincodes.length > 0;
-    return { pincode: clean, restricted, serviceable: /^\d{6}$/.test(clean) && isPincodeServed(settings, clean) };
+    const [restricted, served] = await Promise.all([restrictsPincodes(), isPincodeServed(clean)]);
+    return { pincode: clean, restricted, serviceable: /^\d{6}$/.test(clean) && served };
   },
 
   async home() {
@@ -367,7 +367,7 @@ export const storeStorefrontService = {
     };
     if (!/^\d{6}$/.test(clean)) return empty;
     // The operator's own list answers before the courier is asked.
-    if (!isPincodeServed(settings, clean)) return { ...empty, checked: true };
+    if (!(await isPincodeServed(clean))) return { ...empty, checked: true };
     const id = toObjectId(productId);
     const product = id ? await StoreProductModel.findById(id).lean() : null;
     if (!product) return empty;

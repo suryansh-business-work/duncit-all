@@ -5,6 +5,7 @@ import { paymentService } from '@modules/finance/payment/payment.service';
 import { storeAdminCatalogService } from './store.admin.catalog.service';
 import { storeAdminProductsService } from './store.admin.products.service';
 import { storeAdminPackagingService } from './store.admin.packaging.service';
+import { storeAdminPincodeService } from './store.admin.pincode.service';
 import { storeOrderService } from './store.order.service';
 import { storeReturnService } from './store.return.service';
 import { storeDashboardService } from './store.dashboard.service';
@@ -69,6 +70,7 @@ export const storeAdminResolvers = {
     storeStockAlertsTable: admin((a) => storeAdminCatalogService.alertsTable(a.query)),
     storeReviewsTable: admin((a) => storeAdminCatalogService.reviewsTable(a.query)),
     storeCouponsTable: admin((a) => storeAdminCatalogService.couponsTable(a.query)),
+    storeServiceablePincodesTable: admin((a) => storeAdminPincodeService.table(a.query)),
     storeDashboard: admin((a) => storeDashboardService.overview(Number(a.days) || 30)),
     storeSubscriptionsTable: admin((a) => storeAutoshipService.table(a.query)),
   },
@@ -115,6 +117,8 @@ export const storeAdminResolvers = {
     storeReplyReview: admin((a) => storeAdminCatalogService.replyReview(a.id, a.reply)),
     storeSaveCoupon: admin((a) => storeAdminCatalogService.saveCoupon(a.id, a.input)),
     storeDeleteCoupon: admin((a) => storeAdminCatalogService.deleteCoupon(a.id)),
+    storeSaveServiceablePincode: admin((a) => storeAdminPincodeService.save(a.id, a.input)),
+    storeDeleteServiceablePincode: admin((a) => storeAdminPincodeService.remove(a.id)),
     storeAdminSetSubscriptionStatus: admin((a) => storeAutoshipService.adminSetStatus(a.id, a.status)),
   },
 };

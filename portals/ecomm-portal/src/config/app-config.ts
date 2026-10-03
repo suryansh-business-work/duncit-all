@@ -35,6 +35,7 @@ export const appConfig = {
         { label: 'Needs action', labelKey: 'ecommPortal.nav.needsAction', to: '/shipping/needs-action', icon: 'sos' },
         { label: 'ShipRocket', labelKey: 'ecommPortal.nav.shiprocket', to: '/shipping', icon: 'warehouse' },
         { label: 'COD remittance', labelKey: 'ecommPortal.nav.codLedger', to: '/shipping/cod', icon: 'wallet' },
+        { label: 'Serviceable pincodes', labelKey: 'ecommPortal.nav.serviceablePincodes', to: '/shipping/pincodes', icon: 'location' },
       ],
     },
     { label: 'Customers', labelKey: 'ecommPortal.nav.customers', to: '/customers', icon: 'customers' },

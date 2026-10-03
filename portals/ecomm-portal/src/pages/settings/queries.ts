@@ -30,8 +30,7 @@ type FlagSetting =
   | 'cod_requires_otp'
   | 'returns_enabled'
   | 'restock_on_cancel'
-  | 'autoship_enabled'
-  | 'serviceable_pincodes_enabled';
+  | 'autoship_enabled';
 
 /** The settings that are amounts, percentages or counts. */
 type NumberSetting =
@@ -70,7 +69,6 @@ export type StoreSettings = Record<TextSetting, string> &
     cancel_reasons: string[];
     autoship_frequencies: number[];
     social_links: { label: string; url: string }[];
-    serviceable_pincodes: string[];
     occasions: StoreOccasion[];
   };
 
@@ -118,8 +116,6 @@ const SETTINGS_FIELDS = `
     label
     url
   }
-  serviceable_pincodes_enabled
-  serviceable_pincodes
   occasions {
     slug
     label

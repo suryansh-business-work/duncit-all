@@ -15,6 +15,7 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       needsAction: 'Needs action',
       shiprocket: 'ShipRocket',
       codLedger: 'COD remittance',
+      serviceablePincodes: 'Serviceable pincodes',
       customers: 'Customers',
       catalogue: 'Catalogue',
       products: 'Products',
@@ -716,6 +717,23 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       reviewBy: 'the review by {name}',
     },
 
+    serviceablePincodes: {
+      subtitle:
+        'The pincodes the store delivers to. Once this list holds any pincode, only the active ones pass the delivery check and checkout; while it is empty, every pincode the courier reaches is served.',
+      add: 'Add pincode',
+      newTitle: 'New serviceable pincode',
+      editTitle: 'Edit serviceable pincode',
+      empty: 'No pincodes yet — every pincode the courier reaches is served. Add one to limit delivery to this list.',
+      search: 'Search pincode, area, city or state',
+      pincode: 'Pincode',
+      pincodeHint: 'Six digits, as the post office writes it',
+      pincodeRule: 'Enter a valid 6-digit pincode',
+      area: 'Area',
+      city: 'City',
+      state: 'State',
+      activeHint: 'Switched off, the store stops delivering to this pincode but keeps it on the list.',
+    },
+
     coupons: {
       subtitle: 'The pet store’s own coupons — codes only its checkout accepts.',
       search: 'Search code or description',
@@ -996,14 +1014,6 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
       tabAutoship: 'Autoship',
       tabPages: 'Pages',
       tabOccasions: 'Occasions',
-      serviceablePincodes: 'Serviceable pincodes',
-      serviceableEnabled: 'Deliver only to the pincodes below',
-      serviceableHint: 'Switched off, every pincode the courier can reach is served. Switched on, the delivery check and checkout refuse any pincode not in this list.',
-      serviceableList: 'Pincodes served',
-      serviceableCount: {
-        one: '1 pincode',
-        other: '{count} pincodes',
-      },
       occasionsHint: 'A festive look for a date window: the store swaps its logo, favicon and background while the window is open. When windows overlap, the higher sort order wins.',
       addOccasion: 'Add occasion',
       occasionN: 'Occasion {n}',

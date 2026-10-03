@@ -98,10 +98,16 @@ describe('PodFeedbackScreen — loading', () => {
         resolve = r;
       }),
     );
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = renderWithProviders(<PodFeedbackScreen />);
+    expect(getPodFeedbackForm).toHaveBeenCalledTimes(1);
     unmount();
+    // The screen is gone, so there is nothing left to query (the renderer refuses
+    // after unmount): the proof is that the late answer lands without React
+    // reporting anything, i.e. the screen did not try to set state on itself.
     await act(async () => resolve(form()));
-    expect(screen.queryByTestId('pod-feedback-submit')).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });
 

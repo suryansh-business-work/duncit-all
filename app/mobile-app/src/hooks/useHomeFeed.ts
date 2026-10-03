@@ -86,8 +86,7 @@ function deriveVibeCategories(
     }
     return false;
   };
-  const isVisible = (c: HomeCategory) =>
-    isActiveCategory(c) && (showAllVibes || chipHasPods(c.id));
+  const isVisible = (c: HomeCategory) => isActiveCategory(c) && (showAllVibes || chipHasPods(c.id));
   const inSuper = (chipId: string) => !selectedSuperId || isDescendant(chipId, selectedSuperId);
   const categories = allChips
     .filter((c) => c.level === 'CATEGORY' && inSuper(c.id) && isVisible(c))

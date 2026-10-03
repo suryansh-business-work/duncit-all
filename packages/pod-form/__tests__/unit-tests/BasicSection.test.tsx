@@ -55,6 +55,29 @@ describe('BasicSection', () => {
     expect(ref.current?.getValues('venue_slot_id')).toBe('');
   });
 
+  it('tags each club option with where it runs, and shows the pick with its place', async () => {
+    const user = userEvent.setup();
+    const clubs = [
+      { id: 'c1', club_name: 'Readers', location_id: 'lko', locality: 'Gomti Nagar' },
+      { id: 'c2', club_name: 'Readers', location_id: 'gone' },
+    ];
+    const locations = [{ id: 'lko', location_name: 'Lucknow HQ', city: 'Lucknow' }];
+    renderBasic(makeData({ clubs, locations }), { club_id: 'c1' });
+
+    // Two clubs share a name; the picked one reads with its place.
+    expect(screen.getByRole('combobox', { name: /Club/ })).toHaveTextContent('Readers | Gomti Nagar, Lucknow');
+    await user.click(screen.getByRole('combobox', { name: /Club/ }));
+    expect(await screen.findByTestId('pod-form-club-c1-place')).toHaveTextContent('Gomti Nagar, Lucknow');
+    // A club whose city is unknown gets no tag rather than an empty one.
+    expect(screen.getByTestId('pod-form-club-c2')).toHaveTextContent('Readers');
+    expect(screen.queryByTestId('pod-form-club-c2-place')).not.toBeInTheDocument();
+  });
+
+  it('renders a blank pick for a club that is no longer among the options', () => {
+    renderBasic(makeData({ clubs: CLUBS }), { club_id: 'archived-club' });
+    expect(screen.getByRole('combobox', { name: /Club/ })).not.toHaveTextContent(/Club (One|Two)/);
+  });
+
   it('renders the server-search host picker when searchHosts is injected', () => {
     const searchHosts = vi.fn().mockResolvedValue([]);
     renderBasic(makeData({ clubs: CLUBS, config: makeConfig({ showHosts: true }), searchHosts }));

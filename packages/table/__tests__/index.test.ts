@@ -14,6 +14,7 @@ describe('package entry point', () => {
     expect(typeof api.makeApolloTableFetch).toBe('function');
     expect(typeof api.useApolloTableFetch).toBe('function');
     expect(typeof api.actionsColumn).toBe('function');
+    expect(typeof api.rowMenuColumn).toBe('function');
     expect(typeof api.activeChipColumn).toBe('function');
     expect(typeof api.dateColumn).toBe('function');
     expect(typeof api.formatDateCell).toBe('function');

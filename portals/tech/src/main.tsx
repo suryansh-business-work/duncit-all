@@ -1,5 +1,5 @@
 import { mountPortal } from '@duncit/shell';
-import { flattenCatalogue, STATUS_BUNDLE, TECH_BUNDLE } from '@duncit/app-settings';
+import { ANALYTICS_BUNDLE, flattenCatalogue, STATUS_BUNDLE, TECH_BUNDLE } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -18,7 +18,12 @@ mountPortal({
   // STATUS_BUNDLE too: the Status Reports table reads the same impact and
   // triage words the public status page writes them in, and one namespace for
   // both is what keeps the dropdown and the chip from drifting apart.
-  i18nFallback: { ...flattenCatalogue(TECH_BUNDLE), ...flattenCatalogue(STATUS_BUNDLE) },
+  // ANALYTICS_BUNDLE for Security → SonarQube, the Analytics console's own page.
+  i18nFallback: {
+    ...flattenCatalogue(TECH_BUNDLE),
+    ...flattenCatalogue(STATUS_BUNDLE),
+    ...flattenCatalogue(ANALYTICS_BUNDLE),
+  },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,
 });

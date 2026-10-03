@@ -253,7 +253,26 @@ const knownDeviceSchema = new Schema(
 
 const securitySchema = new Schema(
   {
+    /*
+      Authenticator-app (TOTP) sign-in for the consoles — see auth/two-factor.
+
+      The secrets and recovery-code hashes are select:false: they are
+      credentials, read only by the code that checks them. Their names carry
+      "secret"/"hash" on purpose — the table change log masks any field so
+      named, which keeps them out of the audit rows too.
+    */
     two_factor_enabled: { type: Boolean, default: false },
+    two_factor_enabled_at: { type: Date, default: null },
+    two_factor_secret: { type: String, default: '', select: false },
+    // Written by "Set up", promoted to two_factor_secret only once a code from
+    // the app proves it was scanned — a half-finished setup never locks anyone out.
+    two_factor_pending_secret: { type: String, default: '', select: false },
+    // sha256 of each unused recovery code; one is pulled as it is spent.
+    two_factor_recovery_code_hashes: { type: [String], default: [], select: false },
+    // The newest TOTP step accepted, so the same code cannot be used twice.
+    two_factor_last_step: { type: Number, default: null },
+    // Wrong authenticator codes in a row, and the lock they earn (the
+    // two_factor service is the only writer of both).
     failed_login_attempts: { type: Number, default: 0, min: 0 },
     locked_until: { type: Date, default: null },
     password_changed_at: { type: Date, default: null },

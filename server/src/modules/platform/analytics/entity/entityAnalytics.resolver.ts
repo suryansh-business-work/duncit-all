@@ -9,9 +9,15 @@ import type { PeriodRequest } from './window';
 /** The Analytics console's staff, plus the admins who can open every console. */
 const ANALYTICS_ROLES = ['SUPER_ADMIN', 'ANALYTICS_MANAGER'];
 
-/** Who may read one page: the Logs dashboard is also the Logs console's home, so its staff read that page too. */
-export const entityReaders = (entity: AnalyticsEntity) =>
-  entity === 'LOGS' ? [...ANALYTICS_ROLES, LOGS_READER] : ANALYTICS_ROLES;
+/** The Tech console's staff: SonarQube is also Tech → Security → SonarQube. */
+const TECH_READER = 'TECH_MANAGER';
+
+/** Who may read one page: a dashboard another console mounts too is read by that console's staff as well. */
+export const entityReaders = (entity: AnalyticsEntity) => {
+  if (entity === 'LOGS') return [...ANALYTICS_ROLES, LOGS_READER];
+  if (entity === 'SONARQUBE') return [...ANALYTICS_ROLES, TECH_READER];
+  return ANALYTICS_ROLES;
+};
 
 export const entityAnalyticsResolvers = {
   Query: {

@@ -41,6 +41,7 @@ import {
 import { assertPortalLogin } from '@modules/portals';
 import { noteSignIn, type SignInContext } from './user.signin';
 import { authPayload } from './user.public';
+import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
 import { applySignupMarketingChoice } from '@modules/access/privacy/privacy.service';
 import type { IdLike } from '@utils/request-cache';
 import {
@@ -55,7 +56,7 @@ import {
 /**
  * Map a user document to what Profile > Connected Accounts renders.
  *
- * The document MUST have been loaded with `+auth.password` — the hash is
+ * The document MUST have been loaded with CONNECTED_FIELDS — the hash is
  * `select: false`, and `has_password` silently reads false without it, which
  * would tell a password-holder that Google is their only way in and hide the
  * Disconnect action from them.
@@ -77,8 +78,14 @@ function connectedAccountsOf(u: any) {
     password_changed_at: u?.security?.password_changed_at?.toISOString?.() ?? null,
     last_login_at: auth.last_login_at?.toISOString?.() ?? null,
     last_login_provider: auth.last_login_provider ?? null,
+    two_factor_enabled: !!u?.security?.two_factor_enabled,
+    two_factor_enabled_at: u?.security?.two_factor_enabled_at?.toISOString?.() ?? null,
+    two_factor_recovery_codes_left: u?.security?.two_factor_recovery_code_hashes?.length ?? 0,
   };
 }
+
+/** What `connectedAccountsOf` reads that is select:false. */
+const CONNECTED_FIELDS = '+auth.password +security.two_factor_recovery_code_hashes';
 
 /**
  * The name a provider signup is created under.
@@ -273,6 +280,9 @@ export const userAuthMethods = {
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
+    // A console sign-in with an authenticator app on stops here and asks for
+    // the code; nothing below — the last-login stamp, the token — happens yet.
+    await twoFactorService.requireForPortal(user, { provider: 'EMAIL', portalKey: input.portal_key });
     await UserModel.updateOne(
       { _id: user._id },
       {
@@ -427,6 +437,7 @@ export const userAuthMethods = {
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
+    await twoFactorService.requireForPortal(user, { provider, portalKey });
     const set: Record<string, any> = {
       'auth.last_login_provider': provider,
       'auth.last_login_at': new Date(),
@@ -507,6 +518,9 @@ export const userAuthMethods = {
       }
     );
     const fresh = await UserModel.findById(user._id).select('+auth.password');
+    // After the link is written: linking grants no session by itself, and every
+    // later provider sign-in meets this same gate.
+    await twoFactorService.requireForPortal(fresh, { provider, portalKey });
     const payload = await authPayload(fresh);
     assertPortalLogin(portalKey, payload.user.roles);
     return payload;
@@ -514,7 +528,7 @@ export const userAuthMethods = {
 
   /** Auth-required: what the signed-in account can sign in with. */
   async myConnectedAccounts(userId: string) {
-    const user = await UserModel.findById(userId).select('+auth.password');
+    const user = await UserModel.findById(userId).select(CONNECTED_FIELDS);
     if (!user) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }
@@ -531,7 +545,7 @@ export const userAuthMethods = {
   async connectGoogleAccount(userId: string, idToken: string) {
     const info = await verifyGoogleIdToken(idToken);
     const email = info.email.toLowerCase();
-    const user = await UserModel.findById(userId).select('+auth.password');
+    const user = await UserModel.findById(userId).select(CONNECTED_FIELDS);
     if (!user) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }
@@ -562,7 +576,7 @@ export const userAuthMethods = {
         },
       }
     );
-    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    const fresh = await UserModel.findById(user._id).select(CONNECTED_FIELDS);
     return connectedAccountsOf(fresh);
   },
 
@@ -600,7 +614,7 @@ export const userAuthMethods = {
         $set: { 'auth.last_login_provider': 'EMAIL' },
       }
     );
-    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    const fresh = await UserModel.findById(user._id).select(CONNECTED_FIELDS);
     return connectedAccountsOf(fresh);
   },
 

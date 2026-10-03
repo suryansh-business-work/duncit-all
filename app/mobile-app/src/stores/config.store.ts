@@ -6,6 +6,13 @@ import { graphqlRequest } from '@/services/graphql.client';
 
 interface ConfigState {
   googleClientId: string;
+  /**
+   * Google sign-in on Android / iOS — that platform's own OAuth client. Google
+   * refuses the app's redirect on a Web client, so blank means the button falls
+   * back to googleClientId only until the Tech portal holds these.
+   */
+  googleAndroidClientId: string;
+  googleIosClientId: string;
   googleMapApiKey: string;
   /** Sign in with Apple on iOS — the App ID. Blank: no Apple button there. */
   appleBundleId: string;
@@ -26,6 +33,8 @@ interface ConfigState {
  */
 export const useConfigStore = create<ConfigState>((set) => ({
   googleClientId: config.googleClientId,
+  googleAndroidClientId: '',
+  googleIosClientId: '',
   googleMapApiKey: config.googleMapApiKey,
   appleBundleId: '',
   appleServicesId: '',
@@ -36,6 +45,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
       const c = data.publicClientConfig;
       set((prev) => ({
         googleClientId: c.google_client_id?.trim() || prev.googleClientId,
+        googleAndroidClientId: c.google_android_client_id?.trim() || prev.googleAndroidClientId,
+        googleIosClientId: c.google_ios_client_id?.trim() || prev.googleIosClientId,
         googleMapApiKey: c.google_maps_api_key?.trim() || prev.googleMapApiKey,
         appleBundleId: c.apple_bundle_id?.trim() || prev.appleBundleId,
         appleServicesId: c.apple_services_id?.trim() || prev.appleServicesId,

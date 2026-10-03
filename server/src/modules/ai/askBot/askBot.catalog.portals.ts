@@ -493,7 +493,7 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'communications', path: '/msg91-otp/logs', label: 'Logs', group: 'MSG91 OTP Logs',
     description: 'Read MSG91\'s own record of every phone code the OTP widget sent over a window of up to three days — the number, when it was asked for, whether it was verified, retries and which channel carried it.' },
   { surface: 'communications', path: '/msg91-otp/analytics', label: 'Analytics', group: 'MSG91 OTP Logs',
-    description: 'See MSG91 OTP widget totals over a window of up to 31 days — requests, verifications and retries per day as a chart and a table, split by SMS, WhatsApp, email and voice.' },
+    description: 'See MSG91 OTP widget totals over a window of up to 5 days — requests, verifications and retries per day as a chart and a table, split by SMS, WhatsApp, email and voice.' },
   { surface: 'communications', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Communications console.' },
 

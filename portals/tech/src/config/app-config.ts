@@ -105,9 +105,21 @@ export const appConfig = {
         { label: 'Staging Sync', labelKey: 'shell.nav.dnsStagingSync', to: '/domain/staging', icon: 'compare' },
       ],
     },
-    // Beside Domain: the zone sends every host to this VPS, and the certificates
-    // here are what each of those hosts answers HTTPS with.
-    { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/ssl', icon: 'lock' },
+    {
+      // Beside Domain. SSL: the certificates every host the zone points here
+      // answers HTTPS with. Cloudflare: where the zone moves when DNS leaves
+      // GoDaddy, and the nameserver switch that decides which of the two
+      // answers. SonarQube: what the scanner says about the code itself, read
+      // live with the keys kept in SonarQube Settings.
+      label: 'Security', labelKey: 'shell.nav.security',
+      icon: 'shield',
+      children: [
+        { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/security/ssl', icon: 'lock' },
+        { label: 'Cloudflare', labelKey: 'shell.nav.cloudflare', to: '/security/cloudflare', icon: 'dns' },
+        { label: 'SonarQube', labelKey: 'shell.nav.sonarqube', to: '/security/sonarqube', icon: 'policy' },
+        { label: 'SonarQube Settings', labelKey: 'shell.nav.sonarqubeSettings', to: '/security/sonarqube-settings', icon: 'tune' },
+      ],
+    },
     // Beside DNS Config: both decide something about every public website —
     // one where its name points, the other where its traffic is reported.
     { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },

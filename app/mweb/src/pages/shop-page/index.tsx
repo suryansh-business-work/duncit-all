@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import SearchOffRoundedIcon from '@mui/icons-material/SearchOffRounded';
+import { DuncitButton } from '@duncit/buttons';
+import { logs } from '@duncit/logs';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { usePricing } from '../../hooks/usePricing';
@@ -24,11 +26,17 @@ export default function ShopPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery<any>(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery<{ availablePodProducts: ShopProduct[] }>(
+    SHOP_PRODUCTS,
+    { fetchPolicy: 'cache-and-network' },
+  );
   const { all, matchesCategory } = useSearchCategories();
   const { addingId, add } = useQuickAddToCart();
   const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);
   const filters = useShopFilters(all, products, matchesCategory);
+  useEffect(() => {
+    if (error) logs.mWeb.error('ShopPage', 'loadProducts', { error });
+  }, [error]);
 
   if (loading && !data)
     return (
@@ -41,7 +49,20 @@ export default function ShopPage() {
         <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
-  if (error) return <Alert data-testid="shop-error" severity="error">{error.message}</Alert>;
+  if (error)
+    return (
+      <Alert
+        data-testid="shop-error"
+        severity="error"
+        action={
+          <DuncitButton data-testid="shop-error-retry" color="inherit" size="small" onClick={() => refetch()}>
+            {t('mweb.shop.retry')}
+          </DuncitButton>
+        }
+      >
+        {t('mweb.shop.loadError')}
+      </Alert>
+    );
 
   return (
     <Stack data-testid="shop-page" spacing={2.5} sx={{ py: 0.5 }}>

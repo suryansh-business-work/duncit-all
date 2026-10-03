@@ -42,6 +42,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "tech.msg91.notConfigured": [
     "MSG91 is not configured yet. Add the widget ID and auth key in Environment Variables → MSG91 (SMS OTP).",
   ],
+  // MSG91 refused 31-day analytics windows, so the page now asks for at most 5.
+  "tech.msg91.analyticsSubtitle": ["Daily OTP widget traffic from MSG91 — up to 31 days at a time."],
   // App Store Connect refuses a copyright line holding a URL; the hint now says so.
   "tech.storeListing.copyrightHint": ["e.g. 2026 Duncit. Apple requires it to submit."],
   // The finance-negative auto-cancel sweep sends this email too, and its refund
@@ -76,12 +78,28 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "marketing.social.connectFirst": ["Connect an account on the Accounts tab first."],
   // A brand may now ship with the Duncit courier instead of its own ShipRocket
   // account, so "both must connect" stopped being true.
+  // Integration moved to the LAST step and stopped gating review: a brand is
+  // submitted and approved first, and goes live once it is connected.
   "partners.brandWizard.integration.intro": [
     "Connect the ShipRocket and Razorpay accounts this brand ships and gets paid through. Both must connect before the brand can be submitted.",
+    "Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and connect the Razorpay account it gets paid through.",
   ],
   "partners.brandWizard.integration.bothRequired": [
     "Both connections must succeed before the brand can be submitted for review.",
+    "Razorpay must connect, and shipping must be settled — the Duncit courier chosen or your ShipRocket connected — before the brand can be submitted for review.",
   ],
   "partners.brandWizard.review.integrationsOk": ["ShipRocket and Razorpay are connected."],
-  "partners.brandWizard.review.integrationsMissing": ["Connect both ShipRocket and Razorpay in the Integration step."],
+  "partners.brandWizard.review.integrationsMissing": [
+    "Connect both ShipRocket and Razorpay in the Integration step.",
+    "Settle shipping and connect Razorpay in the Integration step.",
+  ],
+  "partners.brandWizard.intro": ["Ten short steps. Save a draft at any point and come back — your progress is kept."],
+  "partners.brandWizard.payout.razorpayPending": ["Connect Razorpay in the Integration step to confirm payouts."],
+  "partners.brandWizard.integration.disconnectBody": [
+    "The saved credential is forgotten and the brand cannot be submitted until it is connected again.",
+  ],
+  "partners.brandWizard.integration.disconnected": ["Credential forgotten. Connect again before submitting."],
+  "products.brandReview.integrationsIntro": [
+    "The brand ships and gets paid through its own accounts. Both must connect before approval.",
+  ],
 };

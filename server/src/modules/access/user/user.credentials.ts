@@ -17,6 +17,7 @@ import type {
   ChangePasswordDTO,
 } from '@modules/access/auth/auth.validator';
 import { assertPortalLogin } from '@modules/portals';
+import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
 import { noteSignIn, type SignInContext } from './user.signin';
 import {
   sendEmailVerificationOtpEmail,
@@ -230,6 +231,9 @@ export const userCredentialMethods = {
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
+    // An emailed code is the FIRST factor here, not a second one: an account
+    // with an authenticator app on is asked for that code as well.
+    await twoFactorService.requireForPortal(user, { provider: 'EMAIL', portalKey });
     await UserModel.updateOne(
       { _id: user._id },
       { $set: { 'auth.last_login_provider': 'EMAIL', 'auth.last_login_at': new Date() } }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Text, TextArea, YStack } from 'tamagui';
+import { Button, Spinner, Text, TextArea, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { ReportCategoryList } from '@/components/content-report/ReportCategoryList';
+import { ReportReceivedNotice } from '@/components/content-report/ReportReceivedNotice';
 import { reportPost, useReportCategories } from '@/hooks/useReportContent';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -33,6 +34,8 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
   const [details, setDetails] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // The landed report's reference; set, the sheet turns into its confirmation.
+  const [receipt, setReceipt] = useState<string | null>(null);
   const { categories, isLoading, failed, retry } = useReportCategories(!!postId);
 
   // Re-seed on every open: one sheet instance serves every post and story.
@@ -41,6 +44,7 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
     setReason('');
     setDetails('');
     setError('');
+    setReceipt(null);
   }, [postId]);
 
   const picked = categories.find((option) => option.key === reason) ?? null;
@@ -54,9 +58,8 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
     }
     setBusy(true);
     try {
-      await reportPost(postId, reason, details.trim());
+      setReceipt(await reportPost(postId, reason, details.trim()));
       onReported?.();
-      onClose();
     } catch (e) {
       setError(parseApiError(e) || t('contentReport.submitFailed'));
     } finally {
@@ -70,46 +73,60 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
       onClose={onClose}
       testID="report-content-sheet"
       title={t(REPORT_COPY[kind].title)}
-      subtitle={t('contentReport.subtitle')}
+      subtitle={receipt === null ? t('contentReport.subtitle') : undefined}
       closeLabel={t('contentReport.cancel')}
+      dismissOnBackdrop={!busy}
       footer={
-        <Button
-          testID="report-content-submit"
-          theme="red"
-          disabled={busy}
-          onPress={() => fireAndForget(submit())}
-        >
-          {t('contentReport.submit')}
-        </Button>
+        receipt !== null ? (
+          <Button testID="report-content-done" theme="red" onPress={onClose}>
+            {t('contentReport.done')}
+          </Button>
+        ) : (
+          <Button
+            testID="report-content-submit"
+            theme="red"
+            disabled={busy}
+            aria-busy={busy}
+            aria-label={busy ? t('contentReport.sending') : undefined}
+            icon={busy ? <Spinner testID="report-content-spinner" color="$color" /> : undefined}
+            onPress={() => fireAndForget(submit())}
+          >
+            {t('contentReport.submit')}
+          </Button>
+        )
       }
     >
-      <YStack gap={10}>
-        <ReportCategoryList
-          options={categories}
-          loading={isLoading && categories.length === 0}
-          failed={failed && categories.length === 0}
-          value={reason}
-          onChange={setReason}
-          onRetry={retry}
-        />
-        <Text fontSize={12} fontWeight="600" color="$muted">
-          {t('contentReport.detailsLabel')}
-        </Text>
-        <TextArea
-          testID="report-content-details"
-          aria-label={t('contentReport.detailsLabel')}
-          value={details}
-          onChangeText={setDetails}
-          placeholder={t('contentReport.detailsPlaceholder')}
-          placeholderTextColor="$muted"
-          minHeight={80}
-        />
-        {error ? (
-          <Text testID="report-content-error" role="alert" fontSize={12} color="$danger">
-            {error}
+      {receipt !== null ? (
+        <ReportReceivedNotice reportNo={receipt} />
+      ) : (
+        <YStack gap={10}>
+          <ReportCategoryList
+            options={categories}
+            loading={isLoading && categories.length === 0}
+            failed={failed && categories.length === 0}
+            value={reason}
+            onChange={setReason}
+            onRetry={retry}
+          />
+          <Text fontSize={12} fontWeight="600" color="$muted">
+            {t('contentReport.detailsLabel')}
           </Text>
-        ) : null}
-      </YStack>
+          <TextArea
+            testID="report-content-details"
+            aria-label={t('contentReport.detailsLabel')}
+            value={details}
+            onChangeText={setDetails}
+            placeholder={t('contentReport.detailsPlaceholder')}
+            placeholderTextColor="$muted"
+            minHeight={80}
+          />
+          {error ? (
+            <Text testID="report-content-error" role="alert" fontSize={12} color="$danger">
+              {error}
+            </Text>
+          ) : null}
+        </YStack>
+      )}
     </DuncitDialog>
   );
 }

@@ -5,10 +5,12 @@ import {
   DIGITS,
   EMAIL,
   GSTIN,
+  HOSTNAME_LABEL,
   IFSC,
   isBankAccountNumber,
   isEmail,
   isGstin,
+  isHostname,
   isIfsc,
   isPersonName,
   isOtp,
@@ -355,5 +357,40 @@ describe('validators', () => {
   it('isGstin uses the STRICT pattern, not the loose one', () => {
     expect(isGstin('29ABCDE1234F1Z5')).toBe(true);
     expect(isGstin('29ABCDE1234F1A5')).toBe(false);
+  });
+});
+
+describe('HOSTNAME_LABEL', () => {
+  it('accepts letters, digits and inner hyphens in any case', () => {
+    for (const label of ['ns1', 'a', 'NS-Cloud', 'x'.repeat(63)]) expect(HOSTNAME_LABEL.test(label)).toBe(true);
+  });
+
+  it('rejects edge hyphens, other characters and labels over 63 characters', () => {
+    for (const label of ['-ns', 'ns-', 'ns_1', 'n s', '', 'x'.repeat(64)]) expect(HOSTNAME_LABEL.test(label)).toBe(false);
+  });
+});
+
+describe('isHostname', () => {
+  it('accepts a fully-qualified name, with or without the root dot', () => {
+    expect(isHostname('ns1.example.com')).toBe(true);
+    expect(isHostname('Kate.NS.Cloudflare.com.')).toBe(true);
+  });
+
+  it('rejects a single label, an empty label or a bad label', () => {
+    for (const name of ['localhost', 'a..com', '.example.com', '-a.example.com', 'ns_1.example.com']) {
+      expect(isHostname(name)).toBe(false);
+    }
+  });
+
+  it('rejects a name over 253 characters even when every label is valid', () => {
+    const long = `${Array.from({ length: 4 }, () => 'a'.repeat(63)).join('.')}.com`;
+    expect(long.length).toBeGreaterThan(253);
+    expect(isHostname(long)).toBe(false);
+  });
+
+  it('treats null, undefined and empty input as not a hostname', () => {
+    expect(isHostname(null)).toBe(false);
+    expect(isHostname(undefined)).toBe(false);
+    expect(isHostname('')).toBe(false);
   });
 });

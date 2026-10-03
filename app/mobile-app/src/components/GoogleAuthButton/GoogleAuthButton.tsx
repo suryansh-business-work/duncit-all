@@ -9,6 +9,8 @@ import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { readGoogleIdToken } from './googleIdToken';
+
 // Official Google "G" marks (from the Google sign-in branding kit). The light
 // mark sits on a white tile, the dark mark on a dark tile, so each blends into
 // our themed button surface — keeping the logo on-brand without altering it.
@@ -47,8 +49,19 @@ export function GoogleAuthButton({
   const { t } = useTranslation();
   const scheme = useThemeStore((s) => s.scheme);
   const googleClientId = useConfigStore((s) => s.googleClientId);
+  const googleAndroidClientId = useConfigStore((s) => s.googleAndroidClientId);
+  const googleIosClientId = useConfigStore((s) => s.googleIosClientId);
+  // Each platform signs in as its own client: Google refuses the app's
+  // `com.duncit.mobile:/oauthredirect` on the Web client. A blank native id
+  // (undefined, not '') lets the library fall back to `clientId`.
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: googleClientId,
+    webClientId: googleClientId,
+    androidClientId: googleAndroidClientId || undefined,
+    iosClientId: googleIosClientId || undefined,
+    // readGoogleIdToken exchanges the native code, with an error path the
+    // library's own exchange lacks. Both at once would spend the code twice.
+    shouldAutoExchangeCode: false,
   });
   /*
     True from the tap until Google settles. `promptAsync` hands the person to a
@@ -59,18 +72,35 @@ export function GoogleAuthButton({
   const [prompting, setPrompting] = useState(false);
 
   useEffect(() => {
-    if (!response) return;
+    if (!response) return undefined;
     // Settled, whichever way it went: dismissed and cancelled end the wait just
     // as a success does, and leaving the spinner up after one would strand the
     // screen on a button that can no longer be pressed.
-    setPrompting(false);
-    if (response.type === 'success') {
-      const idToken = response.params?.id_token;
-      if (idToken) onIdToken(idToken);
-      else onError?.(t('mweb.auth.googleNoIdToken'));
-    } else if (response.type === 'error') {
-      onError?.(response.error?.message ?? t('mweb.auth.googleFailed'));
+    if (response.type !== 'success') {
+      setPrompting(false);
+      if (response.type === 'error') {
+        onError?.(response.error?.message ?? t('mweb.auth.googleFailed'));
+      }
+      return undefined;
     }
+    // A native success still has a code to exchange, so the spinner stays up
+    // until the token is in hand (or the exchange has failed).
+    let live = true;
+    readGoogleIdToken(response, request)
+      .then((idToken) => {
+        if (!live) return;
+        if (idToken) onIdToken(idToken);
+        else onError?.(t('mweb.auth.googleNoIdToken'));
+      })
+      .catch(() => {
+        if (live) onError?.(t('mweb.auth.googleFailed'));
+      })
+      .finally(() => {
+        if (live) setPrompting(false);
+      });
+    return () => {
+      live = false;
+    };
     // Only react to a settled auth response; callbacks are stable enough here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);

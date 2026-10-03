@@ -290,10 +290,12 @@ export {
   MIN_GATEWAY_CHARGE,
   applyBillDiscounts,
   clampPayable,
+  exclusiveOfGstBill,
   maxRedeemableCoins,
   round2,
   type BillDiscount,
   type DiscountedBill,
+  type ExclusiveOfGstBill,
 } from './checkout-bill';
 export {
   DEFAULT_TICKET_DISCOUNT_MAX_PCT,
@@ -1077,7 +1079,9 @@ export {
   type LocalityClubCount,
 } from './club-grouping';
 export {
+  activeCategories,
   groupCategoriesBySuper,
+  type ActivatableCategory,
   type GroupableCategory,
   type SuperCategoryGroup,
 } from './category-grouping';
@@ -1107,7 +1111,9 @@ export {
   BRAND_CONSENT_POLICY_SLUG,
   BRAND_WIZARD_STEPS,
   brandCompletionPercent,
+  brandIntegrationReady,
   brandNextStepIndex,
+  brandReviewReady,
   brandStepComplete,
   brandShippingReady,
   brandStepStates,

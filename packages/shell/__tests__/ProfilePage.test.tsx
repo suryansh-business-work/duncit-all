@@ -131,6 +131,9 @@ describe('ProfilePage', () => {
         last_login_at: null,
         last_login_provider: null,
         google: null,
+        two_factor_enabled: false,
+        two_factor_enabled_at: null,
+        two_factor_recovery_codes_left: 0,
       },
     });
     renderPage('/profile?selectedtab=security');

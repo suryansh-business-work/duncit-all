@@ -303,6 +303,41 @@ export const authTypeDefs = gql`
     last_login_at: String
     "How that sign-in was made (EMAIL, OTP, GOOGLE or APPLE)."
     last_login_provider: String
+    "Whether console sign-ins also ask for a code from an authenticator app."
+    two_factor_enabled: Boolean!
+    "ISO timestamp the authenticator app was turned on. Null while it is off."
+    two_factor_enabled_at: String
+    "Recovery codes not yet used. 0 while the authenticator app is off."
+    two_factor_recovery_codes_left: Int!
+  }
+
+  """
+  Setting up an authenticator app: the shared secret, as a QR code to scan and
+  as text to type in. Nothing changes about how the account signs in until
+  enableTwoFactor proves the app holds it.
+  """
+  type TwoFactorSetup {
+    "Base32 — what an app asks for when the QR code cannot be scanned."
+    secret: String!
+    otpauth_url: String!
+    "A PNG data URL of otpauth_url, ready for an <img>."
+    qr_code_data_url: String!
+  }
+
+  type TwoFactorEnableResult {
+    """
+    One-time codes that stand in for the app if the phone is lost. Shown THIS
+    ONCE — only their hashes are kept.
+    """
+    recovery_codes: [String!]!
+    accounts: ConnectedAccounts!
+  }
+
+  input TwoFactorLoginInput {
+    "The challenge_token a console sign-in's TWO_FACTOR_REQUIRED error carried."
+    challenge_token: String!
+    "Six digits from the authenticator app, or one recovery code."
+    code: String!
   }
 
   type SeedAdminResult {
@@ -465,6 +500,29 @@ export const authTypeDefs = gql`
     again afterwards.
     """
     signOutEverywhere: Boolean!
+    """
+    Auth-required: start setting up an authenticator app. Refused (CONFLICT)
+    while one is already on; asking again replaces an unfinished setup.
+    """
+    startTwoFactorSetup: TwoFactorSetup!
+    "Auth-required: prove the scan with a code from the app, and turn it on."
+    enableTwoFactor(code: String!): TwoFactorEnableResult!
+    """
+    Auth-required: turn the authenticator app off. Needs a current code (or a
+    recovery code), so a session left open somewhere cannot remove it.
+    """
+    disableTwoFactor(code: String!): ConnectedAccounts!
+    """
+    The second step of a console sign-in.
+
+    A console sign-in (one that names a portal_key) on an account with an
+    authenticator app on answers with a TWO_FACTOR_REQUIRED error instead of a
+    session; its extensions carry challenge_token and expires_in_seconds. Trade
+    them back here with the code for the session the first step held back.
+    Five wrong codes lock this step for fifteen minutes (TOO_MANY_REQUESTS); an
+    expired challenge is TWO_FACTOR_CHALLENGE_EXPIRED — sign in again.
+    """
+    completeTwoFactorLogin(input: TwoFactorLoginInput!): AuthPayload!
     seedSuperAdmin: SeedAdminResult!
   }
 `;

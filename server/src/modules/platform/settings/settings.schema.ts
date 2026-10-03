@@ -108,6 +108,10 @@ export const settingsTypeDefs = gql`
 
   type PublicClientConfig {
     google_client_id: String!
+    "Google sign-in on the Android app — its Android OAuth client. Blank: the app falls back to google_client_id."
+    google_android_client_id: String!
+    "Google sign-in on the iOS app — its iOS OAuth client. Blank: the app falls back to google_client_id."
+    google_ios_client_id: String!
     google_maps_api_key: String!
     "Sign in with Apple on the iOS app — its App ID. Blank: the iOS app offers no Apple button."
     apple_bundle_id: String!

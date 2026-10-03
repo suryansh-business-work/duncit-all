@@ -31,6 +31,17 @@ describe('SectionCard', () => {
     expect(screen.getByText('Phases')).toBeInTheDocument();
     expect(screen.queryByText('DUN-POD-4821 window')).not.toBeInTheDocument();
   });
+
+  it('draws the icon before the title', () => {
+    render(
+      <SectionCard title="Razorpay" icon={<span role="img" aria-label="Razorpay logo" />}>
+        <p>body</p>
+      </SectionCard>,
+    );
+    const logo = screen.getByRole('img', { name: 'Razorpay logo' });
+    const title = screen.getByText('Razorpay');
+    expect(logo.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
 
 describe('FillViewport', () => {

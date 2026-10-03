@@ -292,7 +292,7 @@ describe('vendor integrations', () => {
     expect(mockRazorpay.mock.calls[1][0]('key_secret')).toBe('sec');
   });
 
-  it('refuses an unknown provider, missing credentials, and changes while in review', async () => {
+  it('refuses an unknown provider and missing credentials', async () => {
     const uid = owner();
     const brand = await readyBrand(uid);
     await expect(svc.connectIntegration(uid, brand.id, 'PAYPAL' as never, {})).rejects.toThrow('Unknown integration provider');
@@ -302,11 +302,26 @@ describe('vendor integrations', () => {
     await expect(svc.connectIntegration(uid, brand.id, 'RAZORPAY', { key_id: 'rzp_test_1' })).rejects.toThrow(
       'Enter the Razorpay key secret'
     );
+  });
+
+  it('connects and disconnects while the brand waits in review — integration is not part of the review', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
     await svc.submit(uid, brand.id);
-    await expect(svc.connectIntegration(uid, brand.id, 'RAZORPAY', { key_id: 'k', key_secret: 's' })).rejects.toThrow(
-      'Withdraw the brand from review before changing its integrations'
-    );
-    await expect(svc.disconnectIntegration(uid, brand.id, 'RAZORPAY')).rejects.toThrow('Withdraw the brand from review');
+    mockRazorpay.mockResolvedValue({ ok: true, message: 'ok', details: [] });
+
+    await expect(
+      svc.connectIntegration(uid, brand.id, 'RAZORPAY', { key_id: 'rzp_test_k', key_secret: 's' })
+    ).resolves.toMatchObject({ provider: 'RAZORPAY', connected: true, identifier: 'rzp_test_k' });
+    await expect(svc.disconnectIntegration(uid, brand.id, 'RAZORPAY')).resolves.toMatchObject({
+      configured: false,
+      connected: false,
+    });
+
+    // Neither change pulled the brand out of the review queue.
+    const after = await EcommBrandModel.findById(brand.id).lean();
+    expect(after?.status).toBe('SUBMITTED');
+    expect(after?.integrations.razorpay.connected).toBe(false);
   });
 
   it('an unreachable vendor is recorded as not connected with a retry message', async () => {
@@ -376,6 +391,27 @@ describe('pausing', () => {
 
     await svc.setActiveOwned(uid, brand.id, false);
     expect(mockMail).toHaveBeenCalledTimes(1);
+  });
+
+  it('approval puts a ready brand live; pausing and disconnecting each take it off the pod shop', async () => {
+    const uid = owner();
+    const brand = await readyBrand(uid);
+    expect((await svc.getById(brand.id))?.live).toBe(false);
+
+    const approved = await svc.approve(brand.id);
+    expect(approved).toMatchObject({ status: 'APPROVED', live: true });
+    expect(approved.live_since).not.toBeNull();
+
+    const paused = await svc.setActiveOwned(uid, brand.id, false);
+    expect(paused).toMatchObject({ is_active: false, live: false, live_since: null });
+
+    const resumed = await svc.setActive(brand.id, true);
+    expect(resumed.live).toBe(true);
+    expect(resumed.live_since).not.toBeNull();
+
+    // Losing Razorpay leaves the brand approved but no longer sellable.
+    await svc.disconnectIntegration(uid, brand.id, 'RAZORPAY');
+    expect(await svc.getById(brand.id)).toMatchObject({ status: 'APPROVED', is_active: true, live: false, live_since: null });
   });
 
   it('a reactivation email failure is logged and the WhatsApp still goes', async () => {

@@ -36,6 +36,10 @@ interface CategoriesData {
   reportCategories: ReportCategoryOption[];
 }
 
+interface ReportPostData {
+  reportPost: { id: string; report_no: string };
+}
+
 /**
  * Report a post or a story to the Legal team. Native twin (rule 27).
  *
@@ -57,7 +61,7 @@ export default function ReportContentDialog({ postId, kind, onClose }: Readonly<
     // category that has since been switched off.
     fetchPolicy: 'cache-and-network',
   });
-  const [report, { loading }] = useMutation(REPORT_POST);
+  const [report, { loading }] = useMutation<ReportPostData>(REPORT_POST);
 
   // Re-seed on every open: one dialog instance serves every post and story.
   useEffect(() => {
@@ -78,8 +82,13 @@ export default function ReportContentDialog({ postId, kind, onClose }: Readonly<
       return;
     }
     try {
-      await report({ variables: { id: postId, reason, details: details.trim() } });
-      notify(t('contentReport.submitted'), 'success');
+      const { data } = await report({ variables: { id: postId, reason, details: details.trim() } });
+      // The reference is the one the acknowledgement email carries.
+      const ref = data?.reportPost.report_no;
+      notify(
+        ref ? t('contentReport.submittedRef', { vars: { ref } }) : t('contentReport.submitted'),
+        'success'
+      );
       onClose();
     } catch (e) {
       setError(parseApiError(e) || t('contentReport.submitFailed'));

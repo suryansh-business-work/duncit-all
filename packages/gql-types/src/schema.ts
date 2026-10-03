@@ -2999,6 +2999,37 @@ export type BouncerSupportTarget = {
   phone: Scalars['String']['output'];
 };
 
+/** A brand's sales over a window. Cancelled, failed and RTO orders are excluded. */
+export type BrandAnalytics = {
+  __typename?: 'BrandAnalytics';
+  average_order_value: Scalars['Float']['output'];
+  days: Scalars['Int']['output'];
+  gross_revenue: Scalars['Float']['output'];
+  /** Products approved, active and listed. */
+  live_products: Scalars['Int']['output'];
+  /** Gross minus the Duncit commission — the partner dashboard's own rule. */
+  net_earnings: Scalars['Float']['output'];
+  orders: Scalars['Int']['output'];
+  product_clicks: Scalars['Int']['output'];
+  /** Lifetime product-page views and clicks across the brand's products. */
+  product_views: Scalars['Int']['output'];
+  since: Scalars['String']['output'];
+  /** Best-selling products in the window. */
+  top_products: Array<PartnerProductPerformance>;
+  total_products: Scalars['Int']['output'];
+  /** Every day of the window, oldest first, zero-filled. */
+  trend: Array<BrandAnalyticsPoint>;
+  units_sold: Scalars['Int']['output'];
+};
+
+/** One day of a brand's sales (UTC date). */
+export type BrandAnalyticsPoint = {
+  __typename?: 'BrandAnalyticsPoint';
+  date: Scalars['String']['output'];
+  gross_revenue: Scalars['Float']['output'];
+  orders: Scalars['Int']['output'];
+};
+
 /** How far the brand is through the onboarding wizard — the % in the Your brands table. */
 export type BrandCompletion = {
   __typename?: 'BrandCompletion';
@@ -3607,6 +3638,72 @@ export type ClaimStressRunInput = {
   shard: Scalars['Int']['input'];
   workflow_run_id?: InputMaybe<Scalars['String']['input']>;
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One record, as GoDaddy and Cloudflare each hold it. */
+export type CloudflareCompareRow = {
+  __typename?: 'CloudflareCompareRow';
+  cloudflare_value?: Maybe<Scalars['String']['output']>;
+  /** Whether copying it to Cloudflare can fix it. */
+  copyable: Scalars['Boolean']['output'];
+  godaddy_value?: Maybe<Scalars['String']['output']>;
+  host: Scalars['String']['output'];
+  /** type|name|value|priority. */
+  id: Scalars['String']['output'];
+  /** Relative to the domain: @ for the domain itself. */
+  name: Scalars['String']['output'];
+  /** MX and SRV only. */
+  priority?: Maybe<Scalars['Int']['output']>;
+  /** Whether Cloudflare proxies it. Null when Cloudflare has no record here. */
+  proxied?: Maybe<Scalars['Boolean']['output']>;
+  state: CloudflareRowState;
+  type: Scalars['String']['output'];
+};
+
+/** The move from GoDaddy DNS to Cloudflare: both zones side by side and where the domain points now. */
+export type CloudflareMigration = {
+  __typename?: 'CloudflareMigration';
+  cloudflare_configured: Scalars['Boolean']['output'];
+  /** The domain the Cloudflare entry names — shown when it differs from GoDaddy's. */
+  cloudflare_domain: Scalars['String']['output'];
+  cloudflare_only: Scalars['Int']['output'];
+  /** Both configured, for the same domain. */
+  connected: Scalars['Boolean']['output'];
+  /** What the registrar points at today. */
+  current_name_servers: Array<Scalars['String']['output']>;
+  domain: Scalars['String']['output'];
+  godaddy_configured: Scalars['Boolean']['output'];
+  /** GoDaddy's own nameservers for this domain — what switching back restores. */
+  godaddy_name_servers: Array<Scalars['String']['output']>;
+  godaddy_only: Scalars['Int']['output'];
+  live_provider: DnsLiveProvider;
+  matched: Scalars['Int']['output'];
+  /** The zone exists and every GoDaddy record is already on Cloudflare. */
+  ready_to_switch: Scalars['Boolean']['output'];
+  rows: Array<CloudflareCompareRow>;
+  /** Null until the domain has been added to Cloudflare. */
+  zone?: Maybe<CloudflareZoneInfo>;
+};
+
+/** Where one record lives across the two providers. */
+export type CloudflareRowState =
+  /** On GoDaddy and Cloudflare, with the same value. */
+  | 'BOTH'
+  /** On Cloudflare only — it starts resolving when the nameservers move. */
+  | 'CLOUDFLARE_ONLY'
+  /** On GoDaddy only — it stops resolving if the nameservers move now. */
+  | 'GODADDY_ONLY';
+
+/** The domain's zone on Cloudflare. */
+export type CloudflareZoneInfo = {
+  __typename?: 'CloudflareZoneInfo';
+  activated_on?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** The pair Cloudflare assigned — what the registrar must point at. */
+  name_servers: Array<Scalars['String']['output']>;
+  paused: Scalars['Boolean']['output'];
+  /** pending until Cloudflare sees its nameservers at the registrar, then active. */
+  status: Scalars['String']['output'];
 };
 
 export type Club = {
@@ -4469,6 +4566,12 @@ export type ConnectedAccounts = {
   last_login_provider?: Maybe<Scalars['String']['output']>;
   /** ISO timestamp of the last password change or reset. Null when it was never changed. */
   password_changed_at?: Maybe<Scalars['String']['output']>;
+  /** Whether console sign-ins also ask for a code from an authenticator app. */
+  two_factor_enabled: Scalars['Boolean']['output'];
+  /** ISO timestamp the authenticator app was turned on. Null while it is off. */
+  two_factor_enabled_at?: Maybe<Scalars['String']['output']>;
+  /** Recovery codes not yet used. 0 while the authenticator app is off. */
+  two_factor_recovery_codes_left: Scalars['Int']['output'];
 };
 
 /** The Google account currently linked to a Duncit account. */
@@ -6237,6 +6340,15 @@ export type DnsHostPair = {
   type: Scalars['String']['output'];
 };
 
+/** Which provider the registrar sends resolvers to today. */
+export type DnsLiveProvider =
+  | 'CLOUDFLARE'
+  | 'GODADDY'
+  /** Nameservers that are neither GoDaddy's nor this Cloudflare zone's. */
+  | 'OTHER'
+  /** GoDaddy reported no nameservers. */
+  | 'UNKNOWN';
+
 /** What the two stacks hold for one host. */
 export type DnsPairState =
   /** Both stacks answer, with the same values. */
@@ -6939,9 +7051,15 @@ export type EcommBrand = {
   id: Scalars['ID']['output'];
   ifsc_code: Scalars['String']['output'];
   instagram_url: Scalars['String']['output'];
+  /** A brand already selling before integrations were required — it stays live without them. */
+  integration_waived: Scalars['Boolean']['output'];
   /** The brand's own ShipRocket and Razorpay accounts, and whether each connects. */
   integrations: BrandIntegrations;
   is_active: Scalars['Boolean']['output'];
+  /** Live in the pod shop: approved, active and integrations ready (derived on every save). */
+  live: Scalars['Boolean']['output'];
+  /** When the brand last went live; null while it is not. */
+  live_since?: Maybe<Scalars['String']['output']>;
   logo_url: Scalars['String']['output'];
   owner_user_id: Scalars['ID']['output'];
   pan: Scalars['String']['output'];
@@ -7453,6 +7571,7 @@ export type EntityAnalytics = {
 
 /** A directory record that carries a change log. */
 export type EntityAuditType =
+  | 'BRAND'
   | 'CLUB'
   | 'CLUB_ADMIN'
   | 'HOST'
@@ -7534,6 +7653,7 @@ export type EnvCategory =
   | 'AISENSY'
   | 'APPLE_SIGNIN'
   | 'APP_STORE_CONNECT'
+  | 'CLOUDFLARE'
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
@@ -11202,6 +11322,8 @@ export type Mutation = {
   changePasswordWithOtp: Scalars['Boolean']['output'];
   /** Check one alert now; a tripped one tells its people straight away. */
   checkAnalyticsAlertNow: AnalyticsAlertCheckResult;
+  /** Asks Cloudflare to re-check the domain's nameservers now. */
+  checkCloudflareActivation: Scalars['Boolean']['output'];
   checkInEventTicket: EventTicket;
   /** CI: a runner claims its shard of a dispatched run. */
   claimStressRun: StressClaimResult;
@@ -11273,6 +11395,17 @@ export type Mutation = {
    */
   completePasswordReset: Scalars['Boolean']['output'];
   completePodSettlement: PodSettlementResult;
+  /**
+   * The second step of a console sign-in.
+   *
+   * A console sign-in (one that names a portal_key) on an account with an
+   * authenticator app on answers with a TWO_FACTOR_REQUIRED error instead of a
+   * session; its extensions carry challenge_token and expires_in_seconds. Trade
+   * them back here with the code for the session the first step held back.
+   * Five wrong codes lock this step for fifteen minutes (TOO_MANY_REQUESTS); an
+   * expired challenge is TWO_FACTOR_CHALLENGE_EXPIRED — sign in again.
+   */
+  completeTwoFactorLogin: AuthPayload;
   /** Spend the code from requestContactPhoneChangeOtp and store the number. */
   confirmContactPhoneChange: User;
   /**
@@ -11288,6 +11421,8 @@ export type Mutation = {
   connectBrandShiprocket: BrandIntegrationStatus;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
+  /** Copies the named GoDaddy-only records onto Cloudflare, DNS-only. Never writes GoDaddy. */
+  copyDnsToCloudflare: DnsSyncResult;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
   createAiPrompt: AiPrompt;
   /** Bind an approved template to a campaign name, which is what a send addresses. */
@@ -11310,6 +11445,8 @@ export type Mutation = {
   createBadge: Badge;
   createCategory: Category;
   createChallenge: Challenge;
+  /** Adds the domain to Cloudflare as a full-setup zone. Does nothing when it is already there. */
+  createCloudflareZone: Scalars['Boolean']['output'];
   createClub: Club;
   createCommsProvider: CommsProvider;
   createContract: Contract;
@@ -11439,6 +11576,8 @@ export type Mutation = {
   deleteBugs: Scalars['Int']['output'];
   deleteCategory: Scalars['Boolean']['output'];
   deleteChallenge: Scalars['Boolean']['output'];
+  /** Removes one record from Cloudflare. GoDaddy is untouched. */
+  deleteCloudflareDnsRecord: Scalars['Boolean']['output'];
   deleteClub: Scalars['Boolean']['output'];
   /**
    * Delete the onboarding record and unassign every club. The user account and
@@ -11572,6 +11711,11 @@ export type Mutation = {
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
   denyWarehouseRequest: ApprovalRequest;
+  /**
+   * Auth-required: turn the authenticator app off. Needs a current code (or a
+   * recovery code), so a session left open somewhere cannot remove it.
+   */
+  disableTwoFactor: ConnectedAccounts;
   /** Partner: forget the saved credential. The brand drops out of review until it is reconnected. */
   disconnectBrandIntegration: BrandIntegrationStatus;
   /**
@@ -11625,6 +11769,8 @@ export type Mutation = {
   /** Email the ticket transcript to an address (defaults to a .docx attachment). */
   emailTicketTranscript: Scalars['Boolean']['output'];
   emailVenueLeadContact: LeadContactActionResult;
+  /** Auth-required: prove the scan with a code from the app, and turn it on. */
+  enableTwoFactor: TwoFactorEnableResult;
   /** Erase every recorded click for one link. The link and its lifetime count stay. */
   eraseShortLinkClicks: Scalars['Int']['output'];
   /** CI: a runner's final report. */
@@ -12378,6 +12524,8 @@ export type Mutation = {
   setDefaultMyAddress: UserAddress;
   setDefaultMyBrandPickupLocation: BrandPickupLocation;
   setDefaultSlotTemplate: SlotTemplate;
+  /** Points the domain at new nameservers at GoDaddy. name_servers is read only for CUSTOM. */
+  setDomainNameServers: Scalars['Boolean']['output'];
   /** Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible). */
   setEcommBrandActive: EcommBrand;
   setFeatureFlag: FeatureFlag;
@@ -12523,6 +12671,11 @@ export type Mutation = {
   startE2eRun: E2eRunStart;
   startRecordedUserCall: UserContactAction;
   startSupportChat: SupportChatSession;
+  /**
+   * Auth-required: start setting up an authenticator app. Refused (CONFLICT)
+   * while one is already on; asking again replaces an unfinished setup.
+   */
+  startTwoFactorSetup: TwoFactorSetup;
   /**
    * Compress an already direct-uploaded ImageKit video with FFmpeg and re-upload
    * the result. Poll videoCompressionJob(job_id) for the real percentage.
@@ -13600,6 +13753,11 @@ export type MutationCompletePodSettlementArgs = {
 };
 
 
+export type MutationCompleteTwoFactorLoginArgs = {
+  input: TwoFactorLoginInput;
+};
+
+
 export type MutationConfirmContactPhoneChangeArgs = {
   field: ContactPhoneField;
   otp: Scalars['String']['input'];
@@ -13628,6 +13786,11 @@ export type MutationConnectBrandShiprocketArgs = {
 
 export type MutationConnectGoogleAccountArgs = {
   input: GoogleAuthInput;
+};
+
+
+export type MutationCopyDnsToCloudflareArgs = {
+  ids: Array<Scalars['String']['input']>;
 };
 
 
@@ -14135,6 +14298,11 @@ export type MutationDeleteChallengeArgs = {
 };
 
 
+export type MutationDeleteCloudflareDnsRecordArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteClubArgs = {
   club_doc_id: Scalars['ID']['input'];
 };
@@ -14608,6 +14776,11 @@ export type MutationDenyWarehouseRequestArgs = {
 };
 
 
+export type MutationDisableTwoFactorArgs = {
+  code: Scalars['String']['input'];
+};
+
+
 export type MutationDisconnectBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
@@ -14733,6 +14906,11 @@ export type MutationEmailVenueLeadContactArgs = {
   id: Scalars['ID']['input'];
   provider_id?: InputMaybe<Scalars['ID']['input']>;
   subject: Scalars['String']['input'];
+};
+
+
+export type MutationEnableTwoFactorArgs = {
+  code: Scalars['String']['input'];
 };
 
 
@@ -15948,6 +16126,12 @@ export type MutationSetDefaultMyBrandPickupLocationArgs = {
 
 export type MutationSetDefaultSlotTemplateArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDomainNameServersArgs = {
+  name_servers?: InputMaybe<Array<Scalars['String']['input']>>;
+  target: NameServerTarget;
 };
 
 
@@ -17873,6 +18057,15 @@ export type MyReferral = {
    */
   share_message: Scalars['String']['output'];
 };
+
+/** Where a nameserver switch points the domain. */
+export type NameServerTarget =
+  /** The two nameservers Cloudflare assigned this zone. */
+  | 'CLOUDFLARE'
+  /** Nameservers typed by hand. */
+  | 'CUSTOM'
+  /** GoDaddy's own nameservers, read from the NS records its zone still holds. */
+  | 'GODADDY';
 
 export type NewsletterSource =
   | 'ADMIN'
@@ -21580,7 +21773,11 @@ export type PublicClientConfig = {
   apple_services_id: Scalars['String']['output'];
   /** The Return URL mWeb hands Apple's web SDK, as registered under the Services ID. */
   apple_web_redirect_uri: Scalars['String']['output'];
+  /** Google sign-in on the Android app — its Android OAuth client. Blank: the app falls back to google_client_id. */
+  google_android_client_id: Scalars['String']['output'];
   google_client_id: Scalars['String']['output'];
+  /** Google sign-in on the iOS app — its iOS OAuth client. Blank: the app falls back to google_client_id. */
+  google_ios_client_id: Scalars['String']['output'];
   google_maps_api_key: Scalars['String']['output'];
 };
 
@@ -21868,6 +22065,8 @@ export type Query = {
   bouncerSosAlert?: Maybe<BouncerSosAlert>;
   bouncerSosAlerts: BouncerSosAlertPage;
   bouncerSupportTarget: BouncerSupportTarget;
+  /** One brand's sales over the last days (1-365, default 30) — the brand owner or brand-review staff. */
+  brandAnalytics: BrandAnalytics;
   /** The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one. */
   brandConsentPolicy?: Maybe<Policy>;
   /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
@@ -21899,6 +22098,8 @@ export type Query = {
   /** Host(s) and participants of a pod's chat (members only). */
   chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
+  /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
+  cloudflareMigration: CloudflareMigration;
   club?: Maybe<Club>;
   /** Offers one of the caller's clubs may still claim, plus their claims. */
   clubAdminAutoPods: Array<AutoPod>;
@@ -22449,7 +22650,7 @@ export type Query = {
   membershipPricing: MembershipPricing;
   /** Whether the default MSG91 entry holds both a widget ID and an auth key. */
   msg91Configured: Scalars['Boolean']['output'];
-  /** Per-day OTP widget traffic between two dates (yyyy-MM-dd, at most 31 days). */
+  /** Per-day OTP widget traffic between two dates (yyyy-MM-dd, at most 5 days). */
   msg91WidgetAnalytics: Msg91WidgetAnalytics;
   /**
    * Every OTP widget request between two dates (yyyy-MM-dd). MSG91 allows at
@@ -22815,7 +23016,7 @@ export type Query = {
   publicAdRateCard: AdRateCard;
   publicAppSettings: PublicAppSettings;
   publicClientConfig: PublicClientConfig;
-  /** Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side). */
+  /** Public brand card for the pod product-detail brand dialog (any signed-in user). Payout, tax, contact, commission and integration details come back blank. */
   publicEcommBrand?: Maybe<EcommBrand>;
   publicFaqGroups: Array<FaqGroup>;
   publicFeatureFlags: Array<PublicFeatureFlag>;
@@ -23651,6 +23852,12 @@ export type QueryBouncerSosAlertsArgs = {
   sort_by?: InputMaybe<Scalars['String']['input']>;
   sort_dir?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<BouncerSosStatus>;
+};
+
+
+export type QueryBrandAnalyticsArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -33271,6 +33478,37 @@ export type TriggerStressRunInput = {
   runners: Scalars['Int']['input'];
   think_time_ms: Scalars['Int']['input'];
   virtual_users: Scalars['Int']['input'];
+};
+
+export type TwoFactorEnableResult = {
+  __typename?: 'TwoFactorEnableResult';
+  accounts: ConnectedAccounts;
+  /**
+   * One-time codes that stand in for the app if the phone is lost. Shown THIS
+   * ONCE — only their hashes are kept.
+   */
+  recovery_codes: Array<Scalars['String']['output']>;
+};
+
+export type TwoFactorLoginInput = {
+  /** The challenge_token a console sign-in's TWO_FACTOR_REQUIRED error carried. */
+  challenge_token: Scalars['String']['input'];
+  /** Six digits from the authenticator app, or one recovery code. */
+  code: Scalars['String']['input'];
+};
+
+/**
+ * Setting up an authenticator app: the shared secret, as a QR code to scan and
+ * as text to type in. Nothing changes about how the account signs in until
+ * enableTwoFactor proves the app holds it.
+ */
+export type TwoFactorSetup = {
+  __typename?: 'TwoFactorSetup';
+  otpauth_url: Scalars['String']['output'];
+  /** A PNG data URL of otpauth_url, ready for an <img>. */
+  qr_code_data_url: Scalars['String']['output'];
+  /** Base32 — what an app asks for when the QR code cannot be scanned. */
+  secret: Scalars['String']['output'];
 };
 
 /** One row of the user's unified support history (every category in one list). */

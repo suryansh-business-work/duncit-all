@@ -15,7 +15,10 @@ import {
   googleSignupSchema,
   appleSignupSchema,
   verifyPasswordResetCodeSchema,
+  twoFactorCodeSchema,
+  twoFactorLoginSchema,
 } from './auth.validator';
+import { twoFactorService } from './two-factor/two-factor.service';
 import {
   passwordResetService,
   type PasswordResetLookup,
@@ -246,6 +249,25 @@ export const authResolvers = {
     },
     signOutEverywhere: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       return signOutEverywhere(await requireUserId(ctx));
+    },
+    startTwoFactorSetup: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      return twoFactorService.startSetup(await requireUserId(ctx));
+    },
+    enableTwoFactor: async (_p: unknown, args: { code: string }, ctx: GraphQLContext) => {
+      const userId = await requireUserId(ctx);
+      const { code } = await validate(twoFactorCodeSchema, args);
+      const recovery_codes = await twoFactorService.enable(userId, code);
+      return { recovery_codes, accounts: await userService.myConnectedAccounts(userId) };
+    },
+    disableTwoFactor: async (_p: unknown, args: { code: string }, ctx: GraphQLContext) => {
+      const userId = await requireUserId(ctx);
+      const { code } = await validate(twoFactorCodeSchema, args);
+      await twoFactorService.disable(userId, code);
+      return userService.myConnectedAccounts(userId);
+    },
+    completeTwoFactorLogin: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      const data = await validate(twoFactorLoginSchema, args.input);
+      return twoFactorService.completeLogin(data, signInContext(ctx));
     },
     seedSuperAdmin: async () => {
       return userService.seedSuperAdmin();

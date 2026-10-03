@@ -1164,10 +1164,11 @@ export const inventoryService = {
       if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
     }
     // The pod shop follows the brand: a product shows only while its brand is
-    // APPROVED and active. A deactivated, withdrawn, rejected or deleted-and-
-    // recreated brand takes its products out of the picker with it.
+    // LIVE — approved, active and integrations ready (`live`, derived on every
+    // brand save). A paused, withdrawn, rejected or integration-pending brand
+    // takes its products out of the picker with it.
     // Duncit-owned products (no brand_id) are unaffected by the $nin.
-    const hiddenBrands = await EcommBrandModel.find({ $or: [{ is_active: false }, { status: { $ne: 'APPROVED' } }] })
+    const hiddenBrands = await EcommBrandModel.find({ live: { $ne: true } })
       .select('_id')
       .lean();
     if (hiddenBrands.length > 0) {
@@ -1645,18 +1646,19 @@ export const inventoryService = {
    */
   async podsForProduct(productId: string) {
     if (!Types.ObjectId.isValid(productId)) return [];
-    // A paused product — or one whose brand is deactivated — is hidden from the
-    // shop, so it must not stay purchasable through a stale product-detail
-    // screen either: no pod options means no add-to-cart.
+    // A paused product — or one whose brand is not live (paused, un-approved
+    // or integrations pending) — is hidden from the shop, so it must not stay
+    // purchasable through a stale product-detail screen either: no pod options
+    // means no add-to-cart.
     const product = await InventoryProductModel.findById(productId)
       .select('free_delivery_above is_active brand_id')
       .lean();
     if (!product || (product as any).is_active === false) return [];
     if ((product as any).brand_id) {
       const brand = await EcommBrandModel.findById((product as any).brand_id)
-        .select('is_active')
+        .select('live')
         .lean();
-      if (brand?.is_active === false) return [];
+      if (brand && brand.live !== true) return [];
     }
     const freeDeliveryAbove = (product as any)?.free_delivery_above ?? null;
 

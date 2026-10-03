@@ -11,7 +11,11 @@ vi.mock('@apollo/client/react', () => ({
   useMutation: vi.fn(),
   useQuery: vi.fn(),
 }));
-vi.mock('@duncit/utils', () => ({ parseApiError: (e: { message?: string }) => `DEF:${e?.message ?? ''}` }));
+vi.mock('@duncit/utils', async (orig) => ({
+  // The real reader: the page asks it whether a failed sign-in wants the authenticator step.
+  firstGraphQLError: (await orig<typeof import('@duncit/utils')>()).firstGraphQLError,
+  parseApiError: (e: { message?: string }) => `DEF:${e?.message ?? ''}`,
+}));
 
 const navSpy = vi.hoisted(() => vi.fn());
 vi.mock('react-router', async (orig) => {

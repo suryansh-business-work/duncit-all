@@ -296,7 +296,8 @@ async function assertProductsActive(products: any[]) {
   }
   const brandIds = [...new Set(products.map((p: any) => (p.brand_id ? String(p.brand_id) : '')).filter(Boolean))];
   if (brandIds.length === 0) return;
-  const pausedBrands = await EcommBrandModel.find({ _id: { $in: brandIds }, is_active: false })
+  // Not live = paused, un-approved or integrations pending: none of them sells.
+  const pausedBrands = await EcommBrandModel.find({ _id: { $in: brandIds }, live: { $ne: true } })
     .select('_id')
     .lean();
   if (pausedBrands.length === 0) return;

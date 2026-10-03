@@ -6,6 +6,8 @@ export const PublicClientConfigDocument = gql(`
   query MobilePublicClientConfig {
     publicClientConfig {
       google_client_id
+      google_android_client_id
+      google_ios_client_id
       google_maps_api_key
       apple_bundle_id
       apple_services_id

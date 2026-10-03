@@ -201,6 +201,21 @@ export const googleSignupSchema = obj(shape(googleSignupFields));
  */
 export const appleSignupSchema = obj(shape({ ...registerNames, ...googleSignupFields }));
 
+/**
+ * An authenticator code (six digits) or a recovery code (`ABCD-EFGH`). Only the
+ * length is checked here — which of the two it is, the service decides.
+ */
+const twoFactorCode = () => str(z.string().check(minLen(6), maxLen(20), filled()), { required: true });
+
+export const twoFactorCodeSchema = obj(shape({ code: twoFactorCode() }));
+
+export const twoFactorLoginSchema = obj(
+  shape({
+    challenge_token: str(z.string().check(minLen(10), maxLen(2000), filled()), { required: true }),
+    code: twoFactorCode(),
+  })
+);
+
 export type RegisterDTO = z.infer<typeof registerSchema>;
 export type LoginDTO = z.infer<typeof loginSchema>;
 export type RequestPasswordResetDTO = z.infer<typeof requestPasswordResetSchema>;

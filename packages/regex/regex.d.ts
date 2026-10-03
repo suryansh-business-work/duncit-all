@@ -52,6 +52,8 @@ export const PERSON_NAME: RegExp;
 export const REFERRAL_CODE: RegExp;
 /** A GA4 measurement id — `G-` and the stream's alphanumeric suffix (G-XXXXXXXXXX). */
 export const GA_MEASUREMENT_ID: RegExp;
+/** One DNS label: letters, digits and inner hyphens, 1–63 characters, no leading or trailing hyphen. */
+export const HOSTNAME_LABEL: RegExp;
 
 export function isPhoneNumber(value: string): boolean;
 export function isPincode(value: string): boolean;
@@ -76,3 +78,9 @@ export function isReferralCode(value: string): boolean;
 export const USERNAME: RegExp;
 /** Handle shape check. Lower-case before calling it — the pattern is strict. */
 export function isUsername(value: string): boolean;
+/**
+ * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
+ * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
+ * root) is accepted. Case-insensitive, as DNS is.
+ */
+export function isHostname(value: string): boolean;

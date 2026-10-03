@@ -58,6 +58,8 @@ exports:
   - 'brandShippingReady'
   - 'brandCompletionPercent'
   - 'brandNextStepIndex'
+  - 'brandReviewReady'
+  - 'brandIntegrationReady'
   - 'BrandWizardFacts'
   - 'BrandWizardStep'
   - 'BrandWizardStepKey'
@@ -393,6 +395,8 @@ exports:
   - 'clubCityName'
   - 'clubOptionLabel'
   - 'clubPlaceLabel'
+  - 'activeCategories'
+  - 'ActivatableCategory'
   - 'groupCategoriesBySuper'
   - 'GroupableCategory'
   - 'SuperCategoryGroup'
@@ -846,6 +850,7 @@ four literals that drift apart.
 | `clampPayable` | `(amount: number) => number` | What is left to charge: rounded, never below zero. |
 | `applyBillDiscounts` | `(gross: number, discounts: BillDiscount[]) => DiscountedBill` | Takes the deductions off in order, stopping at zero. |
 | `maxRedeemableCoins` | `(balance: number, payableAfterCoupon: number) => number` | Whole coins the bill can absorb — balance, bill and gateway minimum. |
+| `exclusiveOfGstBill` | `(gross, discounts, taxable, gstPct) => { subtotal, discounts }` | The bill restated GST-compliantly: subtotal and each deduction net of GST, so subtotal − discounts = taxable value. |
 | `MIN_GATEWAY_CHARGE` | `1` | Smallest amount Razorpay accepts; server twin of the same constant. |
 
 A coupon and Duncit Coins cut the same gross and neither may cut past zero. `applyBillDiscounts`
@@ -858,6 +863,17 @@ applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
 
 maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
 clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
+```
+
+A discount shown on the invoice comes off the value BEFORE GST (CGST Act s.15(3)(a)), so every
+breakdown — mWeb, native and the Finance payment card — reads ticket → subtotal (excl. GST) →
+discounts (excl. GST) → taxable value → GST → total. `exclusiveOfGstBill` takes the taxable value
+from the charged quote, so the GST row is always the tax actually charged:
+
+```ts
+exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
+// { subtotal: 635.59, discounts: [{ key: 'ticketDiscount', amount: 31.78 }] }
+// 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
 ```
 
 ### Multi-ticket discount — `pod-ticket-discount` + `pod-ticket-discount-copy`
@@ -2525,15 +2541,19 @@ readout while the partner is still typing.
 
 | Export | What it answers |
 | --- | --- |
-| `BRAND_WIZARD_STEPS` | The ten steps in order, each with its `labelKey` and whether it is `required` |
-| `brandStepComplete(facts, key)` | Is this step done? `review` is done once every required step before it is |
+| `BRAND_WIZARD_STEPS` | The ten steps in order — Integration LAST — each with its `labelKey`, whether it is `required` and whether it `gatesReview` |
+| `brandStepComplete(facts, key)` | Is this step done? `review` is done once every review step before it is (integrations are not owed) |
 | `brandStepStates(facts)` | Every step with its `complete` flag — what the vertical stepper draws |
-| `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to submit |
+| `brandCompletionPercent(facts)` | Required steps done, as a whole number; 100 = ready to go live |
+| `brandReviewReady(facts)` | Can the brand be submitted? Every `gatesReview` step done and the consent signed — integrations may still be pending |
+| `brandIntegrationReady(facts)` | Can an approved brand go live? Razorpay connected and shipping settled |
 | `brandNextStepIndex(facts)` | Where a saved draft opens — the first required step still to do |
-| `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy the last step signs |
+| `BRAND_CONSENT_POLICY_SLUG` | The Legal-portal policy signed before submitting |
 | `brandShippingReady(mode, ownConnected)` | Is shipping settled? `DUNCIT_COURIER` needs nothing from the brand; its own ShipRocket must be connected |
 
-Payout is optional (it never lowers the percentage) and Review is derived. Integration needs
+Payout is optional (it never lowers the percentage) and Review is derived. Integration is the last
+step and does not gate review: a brand is submitted and approved on its business facts and consent,
+and goes **live** in the pod shop (server `EcommBrand.live`) once it is connected. Integration needs
 Razorpay connected plus the brand's shipping settled: `shipping_mode` is `DUNCIT_COURIER` (Duncit's
 courier carries the parcels) or the brand's own ShipRocket is connected. Connection is something
 only the server can say — pass the brand's `shipping_mode`, `integrations.*.connected` and
@@ -2550,8 +2570,9 @@ const facts = {
   documents: [{ type: 'GST certificate', url: '…' }],
   shiprocket_connected: true, razorpay_connected: false, consent_signed: false,
 };
-brandCompletionPercent(facts); // 75 — integration and consent still to do
-brandStepStates(facts).filter((s) => s.required && !s.complete).map((s) => s.key); // ['integration', 'consent']
+brandCompletionPercent(facts); // 75 — consent and integration still to do
+brandStepStates(facts).filter((s) => s.required && !s.complete).map((s) => s.key); // ['consent', 'integration']
+brandReviewReady({ ...facts, consent_signed: true }); // true — submit now; connect Razorpay to go live
 ```
 
 ## Product-order fulfilment
@@ -2798,6 +2819,20 @@ groupCategoriesBySuper(categories);
 
 Supers and categories keep the order they arrive in. A super with no categories gets no
 section, and SUB rows or a category whose parent is not a known super are left out.
+
+`activeCategories` is the member-facing visibility rule. Every list a member sees in mWeb or the native
+app (Home vibe and filter chips, Explore chips, Search tiles) runs through it. A category is kept
+only when it and every ancestor above it are active, so switching a CATEGORY to Inactive in Admin
+also hides its SUB rows. A missing `is_active` counts as active.
+
+```ts
+activeCategories([
+  { id: 'cat-badminton', parent_id: 'sup-sports', is_active: false },
+  { id: 'sub-doubles', parent_id: 'cat-badminton', is_active: true },
+  { id: 'cat-running', parent_id: 'sup-sports' },
+]);
+// [{ id: 'cat-running', ... }]
+```
 
 ## Theme tokens — bundled, or the admin's
 

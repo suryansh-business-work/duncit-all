@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { groupCategoriesBySuper } from '@duncit/utils';
+import { activeCategories, groupCategoriesBySuper } from '@duncit/utils';
 import { makeCategoryMatcher } from '../../utils/category-match';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from './queries';
 
@@ -11,6 +11,7 @@ export interface SearchCategory {
   icon?: string | null;
   level: string;
   parent_id?: string | null;
+  is_active?: boolean | null;
 }
 
 /** Discovery results for the active query/category. Skipped (and `active=false`)
@@ -37,12 +38,16 @@ export function useSearchCategories() {
   const { data } = useQuery<any>(SEARCH_CATEGORIES, { fetchPolicy: 'cache-first' });
   const all: SearchCategory[] = useMemo(() => data?.categories ?? [], [data]);
 
-  const buttons = useMemo(() => {
-    const categoryLevel = all.filter((c) => c.level === 'CATEGORY');
-    return categoryLevel.length > 0 ? categoryLevel : all.filter((c) => c.level === 'SUPER');
-  }, [all]);
+  // Tiles and buttons show only what the admin left active (and under an active
+  // parent); `all` stays whole so a club card's label still resolves.
+  const active = useMemo(() => activeCategories(all), [all]);
 
-  const groups = useMemo(() => groupCategoriesBySuper(all), [all]);
+  const buttons = useMemo(() => {
+    const categoryLevel = active.filter((c) => c.level === 'CATEGORY');
+    return categoryLevel.length > 0 ? categoryLevel : active.filter((c) => c.level === 'SUPER');
+  }, [active]);
+
+  const groups = useMemo(() => groupCategoriesBySuper(active), [active]);
 
   const nameById = useMemo(() => new Map(all.map((c) => [c.id, c.name])), [all]);
   const nameOf = (club: { category_id?: string | null; super_category_id?: string | null }) => {

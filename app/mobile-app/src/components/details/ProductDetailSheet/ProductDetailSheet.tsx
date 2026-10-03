@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Modal } from 'react-native';
 import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -16,7 +16,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { toErrorMessage } from '@/utils/errors';
+import { logs } from '@duncit/logs';
 import { selectionKey } from '@/utils/product-selection';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
@@ -35,6 +35,8 @@ interface Props {
   onUpdateLine?: (quantity: number, variant: VariantPick | null) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   readOnly?: boolean;
+  /** Shown under the description — e.g. why the product cannot be bought here. */
+  notice?: ReactNode;
 }
 
 /** Product-detail sheet opened from the Pod Shop info icon — laid out like
@@ -48,13 +50,14 @@ export function ProductDetailSheet({
   maxQuantity = 0,
   onUpdateLine,
   readOnly,
+  notice,
 }: Readonly<Props>) {
   const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const { primary } = useThemeColors();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
@@ -65,12 +68,15 @@ export function ProductDetailSheet({
     if (!productId) return;
     let active = true;
     setIsLoading(true);
-    setError('');
+    setError(false);
     setProduct(null);
     setVariantId(null);
     graphqlRequest(PublicInventoryProductDocument, { productDocId: productId }, { auth: true })
       .then((data) => active && setProduct(data.publicInventoryProduct ?? null))
-      .catch((e) => active && setError(toErrorMessage(e, 'Could not load product.')))
+      .catch((e: unknown) => {
+        logs.mobileApp.error('ProductDetailSheet', 'loadProduct', { error: e, productId });
+        if (active) setError(true);
+      })
       .finally(() => active && setIsLoading(false));
     // Forward-only engagement tracking: a view + product click each time the
     // detail opens (mirrors the mWeb pod-shop product dialog, rule 27).
@@ -132,7 +138,7 @@ export function ProductDetailSheet({
   // ternaries — identical branches, same scope.
   const loadedBody = error ? (
     <Text role="alert" testID="product-detail-error" padding={24} color="$danger">
-      {error}
+      {t('mweb.productDetailPage.loadError')}
     </Text>
   ) : (
     <ProductBody
@@ -150,6 +156,7 @@ export function ProductDetailSheet({
       maxQuantity={stock}
       primary={primary}
       readOnly={readOnly}
+      notice={notice}
       onUpdateQuantity={onUpdateLine ? (next) => onUpdateLine(next, activePick) : undefined}
       onZoom={setZoomIndex}
       onOpenBrand={setBrandOpen}

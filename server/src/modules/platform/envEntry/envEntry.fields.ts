@@ -33,9 +33,23 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'url_endpoint', label: 'URL Endpoint', hint: 'https://ik.imagekit.io/your_id' },
   ],
   PEXELS: [{ name: 'api_key', label: 'API Key', secret: true, hint: '56-char alphanumeric key' }],
+  // Google refuses an app's custom-scheme redirect on a Web client ("Custom
+  // scheme URIs are not allowed for 'WEB' client type"), so the native apps
+  // sign in with their own Android / iOS clients. Blank: that app falls back to
+  // the web client. The server accepts a token minted for any of the three.
   GOOGLE_OAUTH: [
-    { name: 'client_id', label: 'OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com' },
+    { name: 'client_id', label: 'Web OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com — mWeb, portals and the server' },
     { name: 'client_secret', label: 'OAuth Client Secret', secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' },
+    {
+      name: 'android_client_id',
+      label: 'Android OAuth Client ID',
+      hint: 'xxxxxx.apps.googleusercontent.com — Android client for com.duncit.mobile, with "Enable custom URI scheme" on under Advanced settings',
+    },
+    {
+      name: 'ios_client_id',
+      label: 'iOS OAuth Client ID',
+      hint: 'xxxxxx.apps.googleusercontent.com — iOS client for bundle ID com.duncit.mobile',
+    },
   ],
   GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true, hint: 'AIzaSy... (39 chars)' }],
   TWILIO: [
@@ -283,6 +297,19 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'api_secret', label: 'API Secret', secret: true, hint: 'Shown once, beside the key, when it is created' },
     { name: 'domain', label: 'Domain', hint: 'The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key' },
   ],
+  // Where the zone moves when DNS leaves GoDaddy. Tech → Security → Cloudflare
+  // compares the two zones, copies records across and switches the
+  // nameservers at GoDaddy — so the domain here must be GoDaddy's domain.
+  CLOUDFLARE: [
+    {
+      name: 'api_token',
+      label: 'API Token',
+      secret: true,
+      hint: 'dash.cloudflare.com → My Profile → API Tokens → Create Token with Zone:Read, Zone:Edit and DNS:Edit on this account (not the Global API key)',
+    },
+    { name: 'account_id', label: 'Account ID', hint: 'dash.cloudflare.com → Account Home → Account ID, in the right-hand column' },
+    { name: 'domain', label: 'Domain', hint: 'The zone to move, e.g. duncit.com — the same domain as the GoDaddy entry' },
+  ],
   // The apps Marketing → Social Accounts connects through. One entry holds all
   // four, so the Marketing page can say exactly which network is missing. Every
   // app registers the SAME redirect URL: <server URL>/social/callback.
@@ -344,6 +371,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
   SONARQUBE: 'SonarQube (code analysis)',
   GODADDY: 'GoDaddy (DNS)',
+  CLOUDFLARE: 'Cloudflare (DNS)',
   SOCIAL_APPS: 'Social apps',
 };
 
@@ -371,6 +399,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
   SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
   GODADDY: 'https://developer.godaddy.com/keys',
+  CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
   SOCIAL_APPS: 'https://developers.facebook.com/apps/',
 };
 
@@ -384,6 +413,7 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
   APP_STORE_CONNECT:
     'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
   GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
+  CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
 };
 
 const secretSet = new Set<string>();
@@ -410,6 +440,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SMTP_FROM: { category: 'EMAIL', field: 'from_address' },
   GOOGLE_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'client_id' },
   GOOGLE_CLIENT_SECRET: { category: 'GOOGLE_OAUTH', field: 'client_secret' },
+  GOOGLE_ANDROID_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'android_client_id' },
+  GOOGLE_IOS_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'ios_client_id' },
   GOOGLE_MAP_API: { category: 'GOOGLE_MAPS', field: 'maps_api_key' },
   TWILIO_ACCOUNT_SID: { category: 'TWILIO', field: 'account_sid' },
   TWILIO_AUTH_TOKEN: { category: 'TWILIO', field: 'auth_token' },
@@ -473,6 +505,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GODADDY_API_KEY: { category: 'GODADDY', field: 'api_key' },
   GODADDY_API_SECRET: { category: 'GODADDY', field: 'api_secret' },
   GODADDY_DOMAIN: { category: 'GODADDY', field: 'domain' },
+  CLOUDFLARE_API_TOKEN: { category: 'CLOUDFLARE', field: 'api_token' },
+  CLOUDFLARE_ACCOUNT_ID: { category: 'CLOUDFLARE', field: 'account_id' },
+  CLOUDFLARE_DOMAIN: { category: 'CLOUDFLARE', field: 'domain' },
   SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'linkedin_client_id' },
   SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'linkedin_client_secret' },
   SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_APPS', field: 'linkedin_api_version' },

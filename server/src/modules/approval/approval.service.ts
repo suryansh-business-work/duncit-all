@@ -96,7 +96,13 @@ async function applyEcommChange(doc: any) {
       // run the real approve path so the owner also gets the e-commerce role.
       const { status, ...rest } = changes as Record<string, unknown>;
       if (Object.keys(rest).length > 0) {
-        await EcommBrandModel.findByIdAndUpdate(doc.target_id, { $set: rest });
+        // Loaded and saved (not findByIdAndUpdate) so the model re-derives
+        // `live` — a change that pauses the brand must take it off the shop.
+        const brand = await EcommBrandModel.findById(doc.target_id);
+        if (brand) {
+          brand.set(rest);
+          await brand.save();
+        }
       }
       if (status === 'APPROVED') {
         const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');

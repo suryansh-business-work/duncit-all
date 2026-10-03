@@ -87,9 +87,27 @@ describe('BrandsReviewTable', () => {
         onReview={onReview}
       />,
     );
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Review' })).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Options for Acme' })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Review' }));
     expect(onReview).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1' }));
     expect(onView).not.toHaveBeenCalled();
+  });
+
+  it('opens the brand details from the row menu', async () => {
+    const onView = vi.fn();
+    render(
+      <BrandsReviewTable
+        fetchRows={async () => ({ rows: [makeEcommBrandRow()], total: 1 })}
+        refetchRef={{ current: null }}
+        onView={onView}
+        onReview={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Options for Acme' })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Brand details, analytics & logs' }));
+    expect(onView).toHaveBeenCalledTimes(1);
+    expect(onView).toHaveBeenCalledWith(expect.objectContaining({ id: 'b1' }));
   });
 });

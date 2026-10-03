@@ -7,3 +7,6 @@
  */
 export const escapeRegExp = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+
+/** Exactly six digits — a one-time code as an authenticator app shows it. */
+export const SIX_DIGIT_CODE = /^\d{6}$/;

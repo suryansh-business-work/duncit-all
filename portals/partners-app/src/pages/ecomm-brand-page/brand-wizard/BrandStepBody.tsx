@@ -61,7 +61,10 @@ export default function BrandStepBody({
           brandId={brandId}
           shippingMode={brand?.shipping_mode}
           integrations={brand?.integrations}
-          locked={locked}
+          brand={brand}
+          // Not part of the review: connected while the brand is in review or
+          // live, so the review lock never applies here.
+          locked={false}
           ensureBrandId={ensureBrandId}
           onChanged={onChanged}
         />

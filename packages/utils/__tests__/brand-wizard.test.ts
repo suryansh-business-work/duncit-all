@@ -3,7 +3,9 @@ import {
   BRAND_CONSENT_POLICY_SLUG,
   BRAND_WIZARD_STEPS,
   brandCompletionPercent,
+  brandIntegrationReady,
   brandNextStepIndex,
+  brandReviewReady,
   brandShippingReady,
   brandStepComplete,
   brandStepStates,
@@ -34,7 +36,7 @@ const complete: BrandWizardFacts = {
 };
 
 describe('BRAND_WIZARD_STEPS', () => {
-  it('is the ten steps in wizard order, with payout and review optional', () => {
+  it('is the ten steps in wizard order, integration last, with payout and review optional', () => {
     expect(BRAND_WIZARD_STEPS.map((step) => step.key)).toEqual([
       'details',
       'business',
@@ -43,11 +45,15 @@ describe('BRAND_WIZARD_STEPS', () => {
       'categories',
       'media',
       'documents',
-      'integration',
       'review',
       'consent',
+      'integration',
     ]);
     expect(BRAND_WIZARD_STEPS.filter((step) => !step.required).map((step) => step.key)).toEqual(['payout', 'review']);
+    // Integration is owed for going live, never for the review.
+    expect(BRAND_WIZARD_STEPS.filter((step) => step.required && !step.gatesReview).map((step) => step.key)).toEqual([
+      'integration',
+    ]);
     expect(BRAND_WIZARD_STEPS.every((step) => step.labelKey === `partners.brandWizard.step.${step.key}`)).toBe(true);
     expect(BRAND_CONSENT_POLICY_SLUG).toBe('brand-partner-consent');
   });
@@ -110,9 +116,10 @@ describe('brandStepComplete', () => {
     expect(brandShippingReady(null, false)).toBe(false);
   });
 
-  it('counts review as done once every required step before the consent is', () => {
+  it('counts review as done once every review step before the consent is — integrations not owed', () => {
     expect(brandStepComplete({ ...complete, consent_signed: false }, 'review')).toBe(true);
-    expect(brandStepComplete({ ...complete, razorpay_connected: false }, 'review')).toBe(false);
+    expect(brandStepComplete({ ...complete, razorpay_connected: false, shiprocket_connected: false }, 'review')).toBe(true);
+    expect(brandStepComplete({ ...complete, logo_url: '' }, 'review')).toBe(false);
     expect(brandStepComplete({ ...complete, consent_signed: false }, 'consent')).toBe(false);
   });
 });
@@ -138,11 +145,33 @@ describe('brandStepStates / brandCompletionPercent / brandNextStepIndex', () => 
 
     const unsigned: BrandWizardFacts = { ...noPayout, razorpay_connected: false, consent_signed: false };
     expect(brandCompletionPercent(unsigned)).toBe(75);
-    expect(brandNextStepIndex(unsigned)).toBe(BRAND_WIZARD_STEPS.findIndex((step) => step.key === 'integration'));
+    expect(brandNextStepIndex(unsigned)).toBe(BRAND_WIZARD_STEPS.findIndex((step) => step.key === 'consent'));
     expect(
       brandStepStates(unsigned)
         .filter((state) => state.required && !state.complete)
         .map((state) => state.key),
-    ).toEqual(['integration', 'consent']);
+    ).toEqual(['consent', 'integration']);
+  });
+});
+
+describe('brandReviewReady / brandIntegrationReady', () => {
+  it('lets a brand submit for review with its integrations still pending', () => {
+    const pending: BrandWizardFacts = { ...complete, razorpay_connected: false, shiprocket_connected: false };
+    expect(brandReviewReady(pending)).toBe(true);
+    expect(brandIntegrationReady(pending)).toBe(false);
+    expect(brandCompletionPercent(pending)).toBe(88);
+  });
+
+  it('refuses review until the consent is signed and every business step is done', () => {
+    expect(brandReviewReady({ ...complete, consent_signed: false })).toBe(false);
+    expect(brandReviewReady({ ...complete, documents: [] })).toBe(false);
+    expect(brandReviewReady({ ...complete, account_number: '', ifsc_code: '', upi_id: '' })).toBe(true);
+  });
+
+  it('is ready to go live with Razorpay plus own ShipRocket or the Duncit courier', () => {
+    expect(brandIntegrationReady(complete)).toBe(true);
+    expect(brandIntegrationReady({ razorpay_connected: true, shipping_mode: 'DUNCIT_COURIER' })).toBe(true);
+    expect(brandIntegrationReady({ razorpay_connected: true, shipping_mode: 'OWN_SHIPROCKET' })).toBe(false);
+    expect(brandIntegrationReady({ shiprocket_connected: true })).toBe(false);
   });
 });

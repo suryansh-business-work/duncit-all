@@ -35,3 +35,30 @@ export function groupCategoriesBySuper<T extends GroupableCategory>(
     .forEach((category) => bySuper.get(category.parent_id ?? '')?.categories.push(category));
   return [...bySuper.values()].filter((group) => group.categories.length > 0);
 }
+
+/** The category fields `activeCategories` reads. A missing `is_active` counts as
+ * active, so an older payload that never selected it still shows everything. */
+export interface ActivatableCategory {
+  id: string;
+  parent_id?: string | null;
+  is_active?: boolean | null;
+}
+
+/**
+ * The categories a member may see: each one must be active AND every ancestor
+ * above it must be too, so switching a CATEGORY off in Admin also hides its
+ * SUB rows. Order is kept. A parent missing from `all` does not hide its child —
+ * only an explicit `is_active: false` hides anything.
+ */
+export function activeCategories<T extends ActivatableCategory>(all: readonly T[]): T[] {
+  const byId = new Map(all.map((item) => [item.id, item]));
+  const isVisible = (item: T): boolean => {
+    let current: T | undefined = item;
+    for (let depth = 0; current && depth < 16; depth++) {
+      if (current.is_active === false) return false;
+      current = current.parent_id ? byId.get(current.parent_id) : undefined;
+    }
+    return true;
+  };
+  return all.filter(isVisible);
+}

@@ -1,9 +1,9 @@
-import { useMemo, type MouseEvent } from 'react';
+import { useMemo } from 'react';
 import { Avatar, Chip, Stack, Typography } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import TuneIcon from '@mui/icons-material/Tune';
-import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import InsightsIcon from '@mui/icons-material/Insights';
+import { DuncitTable, rowMenuColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from '../ecomm/brandStatus';
@@ -14,6 +14,8 @@ interface Props {
   fetchRows: TableFetch<CatalogBrandRow>;
   onProducts: (b: CatalogBrandRow) => void;
   onManage: (b: CatalogBrandRow) => void;
+  /** The brand page with analytics and the activity log. */
+  onDetails: (b: CatalogBrandRow) => void;
 }
 
 const getRowId = (b: CatalogBrandRow) => b.id;
@@ -63,36 +65,10 @@ const renderActive = (b: CatalogBrandRow) => (
   />
 );
 
-export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: Readonly<Props>) {
+export default function CatalogBrandsTable({ fetchRows, onProducts, onManage, onDetails }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   const columns = useMemo<DuncitColumn<CatalogBrandRow>[]>(() => {
-    // Row click opens Manage, so both actions must stop the click bubbling.
-    const openProducts = (event: MouseEvent, b: CatalogBrandRow) => {
-      event.stopPropagation();
-      onProducts(b);
-    };
-    const openManage = (event: MouseEvent, b: CatalogBrandRow) => {
-      event.stopPropagation();
-      onManage(b);
-    };
-    const renderActions = (b: CatalogBrandRow) => (
-      <Stack direction="row" spacing={1} component="span" sx={{
-        justifyContent: "flex-end"
-      }}>
-        <DuncitButton
-          size="small"
-          variant="outlined"
-          startIcon={<Inventory2Icon />}
-          onClick={(event) => openProducts(event, b)}
-        >
-          Products
-        </DuncitButton>
-        <DuncitButton size="small" startIcon={<TuneIcon />} onClick={(event) => openManage(event, b)}>
-          Manage
-        </DuncitButton>
-      </Stack>
-    );
     return [
       // A decorative thumbnail — no value to order or match.
       { field: 'logo', headerName: '', type: 'actions', width: 64, cellRenderer: renderLogo },
@@ -153,15 +129,27 @@ export default function CatalogBrandsTable({ fetchRows, onProducts, onManage }: 
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
       },
-      {
-        field: 'actions',
-        headerName: t('shell.common.actions'),
-        type: 'actions',
-        width: 220,
-        cellRenderer: renderActions,
-      },
+      rowMenuColumn<CatalogBrandRow>({
+        width: 90,
+        ariaLabel: (b) => t('products.brands.rowMenu', { vars: { brand: b.brand_name } }),
+        items: (b) => [
+          { key: 'manage', label: t('products.brands.menuManage'), icon: <TuneIcon fontSize="small" />, onClick: () => onManage(b) },
+          {
+            key: 'details',
+            label: t('products.brands.menuDetails'),
+            icon: <InsightsIcon fontSize="small" />,
+            onClick: () => onDetails(b),
+          },
+          {
+            key: 'products',
+            label: t('products.brands.menuProducts'),
+            icon: <Inventory2Icon fontSize="small" />,
+            onClick: () => onProducts(b),
+          },
+        ],
+      }),
     ];
-  }, [onProducts, onManage, formatDate]);
+  }, [onProducts, onManage, onDetails, formatDate, t]);
 
   return (
     <DuncitTable<CatalogBrandRow>

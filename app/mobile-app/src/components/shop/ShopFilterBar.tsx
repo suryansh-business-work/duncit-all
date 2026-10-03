@@ -116,7 +116,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             </Section>
           ) : null}
           {filters.subOptions.length > 0 ? (
-            <Section title="Sub-category">
+            <Section title={t('mweb.shop.subCategory')}>
               <OptionChipRow
                 testIDPrefix="shop-sub"
                 options={[['', 'All'], ...filters.subOptions]}

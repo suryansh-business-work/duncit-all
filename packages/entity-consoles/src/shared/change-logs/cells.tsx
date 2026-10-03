@@ -1,4 +1,4 @@
-import { Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
 import type { EntityChangeLogRow } from './queries';
 import {
@@ -20,38 +20,13 @@ type Translate = (key: string) => string;
 
 const EMPTY = '—';
 
-/** The field, with the document path it maps to underneath. */
-export const renderField = (row: EntityChangeLogRow) => (
-  <Stack spacing={0.25} component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="caption" component="span" sx={{ fontWeight: 700 }}>
-      {row.field_label || row.field}
-    </Typography>
-    <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
-      {row.field}
-    </Typography>
-  </Stack>
-);
-
-/** A stored value, or an em-dash when the field was empty on that side. */
-function renderValue(value: string) {
-  if (!value) {
-    return (
-      <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
-        {EMPTY}
-      </Typography>
-    );
-  }
-  return (
-    <Tooltip title={value}>
-      <Typography variant="caption" component="span" sx={{ wordBreak: 'break-word' }}>
-        {value}
-      </Typography>
-    </Tooltip>
-  );
-}
-
-export const renderOld = (row: EntityChangeLogRow) => renderValue(row.old_value);
-export const renderNew = (row: EntityChangeLogRow) => renderValue(row.new_value);
+// The field and old/new value cells are the shell's (the brand log draws the
+// same columns) — one copy, so the two trails can never look different.
+export {
+  renderChangeLogField as renderField,
+  renderChangeLogNew as renderNew,
+  renderChangeLogOld as renderOld,
+} from '@duncit/shell';
 
 export const renderAction = (t: Translate) => (row: EntityChangeLogRow) => (
   <Chip

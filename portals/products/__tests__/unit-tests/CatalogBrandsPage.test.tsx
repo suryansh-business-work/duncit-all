@@ -45,24 +45,37 @@ describe('CatalogBrandsPage', () => {
     expect(screen.getAllByText('SUBMITTED').length).toBeGreaterThan(0);
   });
 
-  it('navigates to the brand products list from the Products action', async () => {
+  it('navigates to the brand products list from the row menu', async () => {
     __setTableRows([row]);
     renderWithProviders(<CatalogBrandsPage />);
     await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Products' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Products' }));
 
     expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
   });
 
-  it('navigates to the brand manage screen from the Manage action', async () => {
+  it('navigates to the brand manage screen from the row menu', async () => {
     __setTableRows([row]);
     renderWithProviders(<CatalogBrandsPage />);
     await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Manage' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Manage commission & status' }));
 
     expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1');
+  });
+
+  it('navigates to the brand analytics & logs page from the row menu', async () => {
+    __setTableRows([row]);
+    renderWithProviders(<CatalogBrandsPage />);
+    await waitFor(() => expect(screen.getAllByText('Acme').length).toBeGreaterThan(0));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Options for Acme' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Brand details, analytics & logs' }));
+
+    expect(nav.fn).toHaveBeenCalledWith('/ecomm/brands/b1');
   });
 
   it('offers no approve or reject action — reviews live in Brands Review', async () => {

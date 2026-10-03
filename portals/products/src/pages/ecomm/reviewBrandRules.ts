@@ -30,18 +30,17 @@ export const confirmCopy = (t: Translate): Record<Decision, ConfirmCopy> => ({
 });
 
 /**
- * Why Approve is disabled — the same three conditions `approveEcommBrand`
- * refuses on, read from the row so the reviewer sees them BEFORE the server
- * says no. An empty list means the brand can be approved.
+ * Why Approve is disabled — the same conditions `approveEcommBrand` refuses on,
+ * read from the row so the reviewer sees them BEFORE the server says no. An
+ * empty list means the brand can be approved. Integrations are NOT among them:
+ * they decide when an approved brand goes live, not whether it is approved.
  */
 export function approveBlockedReasons(brand: EcommBrandRow, t: Translate): string[] {
   const reasons: string[] = [];
-  const stepsIncomplete = brand.completion.steps.some((step) => step.required && !step.complete);
+  const stepsIncomplete = brand.completion.steps.some(
+    (step) => step.key !== 'integration' && step.key !== 'consent' && step.required && !step.complete
+  );
   if (stepsIncomplete) reasons.push(t('products.brandReview.reasonSteps'));
-  const { shiprocket, razorpay } = brand.integrations;
-  if (!shiprocket.connected || !razorpay.connected) {
-    reasons.push(t('products.brandReview.reasonIntegration'));
-  }
   const { consent } = brand;
   if (consent.available && !(consent.accepted && consent.current)) {
     reasons.push(t('products.brandReview.reasonConsent'));

@@ -50,6 +50,9 @@ const ACCOUNTS: ConnectedAccounts = {
   last_login_at: '2026-10-02T08:30:00Z',
   last_login_provider: 'EMAIL',
   google: { google_email: 'ada@gmail.test', linked_at: '2026-01-01T00:00:00Z' },
+  two_factor_enabled: false,
+  two_factor_enabled_at: null,
+  two_factor_recovery_codes_left: 0,
 };
 
 beforeEach(() => {

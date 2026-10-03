@@ -3,6 +3,7 @@ import {
   MIN_GATEWAY_CHARGE,
   applyBillDiscounts,
   clampPayable,
+  exclusiveOfGstBill,
   maxRedeemableCoins,
   round2,
   type BillDiscount,
@@ -238,5 +239,37 @@ describe('maxRedeemableCoins', () => {
     expect(maxRedeemableCoins(500, -10)).toBe(0);
     expect(maxRedeemableCoins(Number.NaN, 399)).toBe(0);
     expect(maxRedeemableCoins(500, Number.NaN)).toBe(0);
+  });
+});
+
+describe('exclusiveOfGstBill', () => {
+  it('restates the multi-ticket discount net of GST so subtotal − discount is the taxable value', () => {
+    // ₹250 × 3 at 5% off: ₹712.50 charged, GST extracted from it is ₹108.69.
+    const bill = exclusiveOfGstBill(750, [line({ key: 'ticketDiscount', amount: 37.5 })], 603.81, 18);
+    expect(bill.subtotal).toBe(635.59);
+    expect(bill.discounts).toEqual([{ key: 'ticketDiscount', label: 'Coupon WELCOME', amount: 31.78 }]);
+    expect(round2(bill.subtotal - bill.discounts[0].amount)).toBe(603.81);
+  });
+
+  it('extracts each deduction on its own and lets the last absorb the rounding', () => {
+    // ₹750 − ₹37.50 tier − 50 coins = ₹662.50 charged; its taxable value is ₹561.44.
+    const bill = exclusiveOfGstBill(750, [line({ key: 'ticketDiscount', amount: 37.5 }), coins(50)], 561.44, 18);
+    expect(bill.discounts.map((d) => d.amount)).toEqual([31.78, 42.37]);
+    const taxable = bill.discounts.reduce((left, d) => round2(left - d.amount), bill.subtotal);
+    expect(taxable).toBe(561.44);
+  });
+
+  it('prints the taxable value as the subtotal when nothing was deducted', () => {
+    expect(exclusiveOfGstBill(750, [], 635.59, 18)).toEqual({ subtotal: 635.59, discounts: [] });
+  });
+
+  it('drops a deduction that came to nothing instead of printing a zero row', () => {
+    const bill = exclusiveOfGstBill(750, [line({ amount: 0 }), coins(37.5)], 603.81, 18);
+    expect(bill.discounts).toEqual([{ key: 'coins', label: 'Duncit Coins', amount: 31.78 }]);
+  });
+
+  it('keeps the deductions whole when no GST is charged', () => {
+    const bill = exclusiveOfGstBill(500, [coins(100)], 400, 0);
+    expect(bill).toEqual({ subtotal: 500, discounts: [{ key: 'coins', label: 'Duncit Coins', amount: 100 }] });
   });
 });

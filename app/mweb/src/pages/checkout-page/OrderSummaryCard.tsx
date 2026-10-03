@@ -8,7 +8,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 import CoinSummaryRows from './CoinSummaryRows';
-import { isVideoMedia, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
+import { exclusiveOfGstBill, isVideoMedia, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
 /** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
@@ -31,7 +31,7 @@ interface Props {
   breakup: any;
   /** The bill before any discount, for the ticket line above the deductions. */
   grossTotal?: number;
-  /** Deductions to list between the ticket line and the tax. */
+  /** Deductions (GST-inclusive) to list, net of GST, between the subtotal and the tax. */
   discounts?: CheckoutDiscount[];
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
@@ -67,6 +67,9 @@ export default function OrderSummaryCard({
   // the price BEFORE deductions, so the rows below have something to subtract
   // from; with no discount it is the payable, exactly as it always was.
   const ticketTotal = Number(grossTotal ?? breakup.total);
+  // Read like a GST invoice: the discounts come off the value BEFORE tax, so
+  // subtotal and discounts are excl. GST and the GST row is the tax charged.
+  const bill = exclusiveOfGstBill(ticketTotal, discounts, breakup.subtotal, breakup.gstPct);
   // Venue charges are paid directly at the venue — shown for transparency but
   // NOT added to the online "Total payable".
   const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
@@ -96,14 +99,16 @@ export default function OrderSummaryCard({
         />
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
-          {seats > 1 && unitAmount > 0 && (
+          {seats > 1 && unitAmount > 0 ? (
             <Row
               label={t('mweb.checkout.ticketMultiplier', { vars: { price: fmt(unitAmount), seats } })}
               value={fmt(unitAmount * seats)}
             />
+          ) : (
+            <Row label={t('mweb.checkout.ticketPrice')} value={fmt(ticketTotal)} />
           )}
-          <Row label={t('mweb.checkout.ticketPrice')} value={fmt(ticketTotal)} />
-          {discounts.map((discount) => (
+          <Row label={t('mweb.checkout.subtotalExclGst')} value={fmt(bill.subtotal)} />
+          {bill.discounts.map((discount) => (
             <Row
               key={discount.key}
               testId={discount.testId}
@@ -112,10 +117,9 @@ export default function OrderSummaryCard({
               tone="success.main"
             />
           ))}
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>{t('mweb.checkout.inclusiveOf')}</Typography>
+          {bill.discounts.length > 0 && (
+            <Row label={t('mweb.checkout.taxableValue')} value={fmt(breakup.subtotal)} />
+          )}
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />

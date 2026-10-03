@@ -16,6 +16,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { receiptForPayment } from '@test/deferred-payment';
 
 let seq = 0;
@@ -472,5 +473,55 @@ describe('payment-receipt-product', () => {
     // The pod's snapshot name, which is what the order line was written with.
     expect(receipt.vars.items).toBe('Shipped Item × 2');
     expect(receipt.vars.orders_url.endsWith('/orders')).toBe(true);
+  });
+});
+
+describe('product checkout — only live brands sell', () => {
+  beforeEach(enableProducts);
+
+  const seedBrand = (over: Record<string, unknown>) =>
+    EcommBrandModel.create({
+      owner_user_id: new Types.ObjectId(),
+      brand_name: `Checkout Brand ${++seq}`,
+      status: 'APPROVED',
+      is_active: true,
+      ...over,
+    });
+
+  it('refuses a stale cart line from an approved brand whose integrations are still pending', async () => {
+    const user = await seedUser();
+    const wh = await seedWarehouse('WH-PENDING', '110010');
+    // Approved, but Razorpay is not connected: not live, so it must not sell.
+    const brand = await seedBrand({ integrations: { shiprocket: { connected: true } } });
+    expect(brand.live).toBe(false);
+    const product = await seedShipProduct(wh._id, { ownership: 'BRAND', brand_id: brand._id });
+    const pod = await seedPodFor(product._id);
+
+    await expect(
+      paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 1 }]),
+        String(user._id),
+      ),
+    ).rejects.toThrow('Shipped Item is currently unavailable');
+    expect(await ProductOrderModel.countDocuments()).toBe(0);
+  });
+
+  it('sells the same line once the brand is live', async () => {
+    const user = await seedUser();
+    const wh = await seedWarehouse('WH-LIVE', '110011');
+    const brand = await seedBrand({
+      integrations: { shiprocket: { connected: true }, razorpay: { connected: true } },
+    });
+    expect(brand.live).toBe(true);
+    const product = await seedShipProduct(wh._id, { ownership: 'BRAND', brand_id: brand._id });
+    const pod = await seedPodFor(product._id);
+
+    const res = await paymentService.dummyProductCheckout(
+      cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 1 }]),
+      String(user._id),
+    );
+
+    expect(res.target_type).toBe('PRODUCT');
+    expect(await ordersFor(res.id)).toHaveLength(1);
   });
 });

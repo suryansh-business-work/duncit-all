@@ -40,12 +40,22 @@ export function cellColors(isSelected: boolean, isOtherMonth: boolean, isDisable
   return { bgcolor: 'background.paper', color: 'text.primary' };
 }
 
+// The theme's gold (the leaderboard's gold medal tone) marks the present date.
+export const TODAY_TONE = 'warning.main';
+
+function cellBorderColor(isSelected: boolean, isTodayAccent: boolean) {
+  if (isSelected) return 'primary.main';
+  return isTodayAccent ? TODAY_TONE : 'divider';
+}
+
 // Flat geometry/interaction resolution keeps the day-cell `sx` free of ternaries.
-export function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean) {
+// `isTodayAccent` is the present date when nothing stronger (selection, leave) colours it.
+export function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean, isTodayAccent = false) {
   return {
     aspectRatio: isDayView ? undefined : '1 / 1',
     minHeight: isDayView ? 120 : undefined,
-    borderColor: isSelected ? 'primary.main' : 'divider',
+    borderWidth: isTodayAccent ? 2 : 1.5,
+    borderColor: cellBorderColor(isSelected, isTodayAccent),
     // Past and beyond-window days are read-only — dimmed and non-interactive.
     cursor: isDisabled ? 'default' : 'pointer',
     hoverBorderColor: isDisabled ? 'divider' : 'primary.main',

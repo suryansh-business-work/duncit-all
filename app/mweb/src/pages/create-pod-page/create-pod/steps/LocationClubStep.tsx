@@ -77,7 +77,13 @@ export default function LocationClubStep({ form, hostCategories, clubs, cityClub
 
       <Card sx={{ p: 2, display: 'grid', gap: 2 }}>
         {pickLocality && location && (
-          <LocalityField form={form} zones={zones} cityClubs={cityClubs} cityName={clubCityName(location)} />
+          <LocalityField
+            form={form}
+            zones={zones}
+            cityClubs={cityClubs}
+            cityName={clubCityName(location)}
+            locations={locations}
+          />
         )}
         <ClubField
           form={form}

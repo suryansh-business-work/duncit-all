@@ -9,6 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { applyPodLocation } from '../create-pod.location';
 import type { CreatePodClub, CreatePodForm, CreatePodLocationZone } from '../create-pod.types';
+import { EditPodLocation } from './EditPodLocation';
 
 interface Props {
   form: CreatePodForm;
@@ -71,7 +72,8 @@ function LocalityRow({ name, countLabel, selected, disabled, onPick }: Readonly<
  * Step 1 — a searchable dropdown of the city's localities, each with the number
  * of this host's clubs in it. Localities with clubs come first; the empty ones
  * sit at the bottom, disabled. Picking one is what opens the club picker below,
- * and a new pick clears the club chosen for the old area. mWeb twin (rule 27).
+ * and a new pick clears the club chosen for the old area. "Edit location"
+ * beside the label moves the pod to another city. mWeb twin (rule 27).
  */
 export function LocalityField({
   form,
@@ -100,7 +102,10 @@ export function LocalityField({
 
   return (
     <YStack gap={6} testID="create-pod-locality">
-      <FieldLabel label={label} required testID="create-pod-locality-label" />
+      <XStack alignItems="center" justifyContent="space-between" gap={8}>
+        <FieldLabel label={label} required testID="create-pod-locality-label" />
+        <EditPodLocation form={form} />
+      </XStack>
       <Text fontSize={12} color="$muted">
         {t('mweb.createPod.localityCityHint', { vars: { city: cityName } })}
       </Text>

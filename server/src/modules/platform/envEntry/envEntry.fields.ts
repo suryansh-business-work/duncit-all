@@ -33,9 +33,23 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'url_endpoint', label: 'URL Endpoint', hint: 'https://ik.imagekit.io/your_id' },
   ],
   PEXELS: [{ name: 'api_key', label: 'API Key', secret: true, hint: '56-char alphanumeric key' }],
+  // Google refuses an app's custom-scheme redirect on a Web client ("Custom
+  // scheme URIs are not allowed for 'WEB' client type"), so the native apps
+  // sign in with their own Android / iOS clients. Blank: that app falls back to
+  // the web client. The server accepts a token minted for any of the three.
   GOOGLE_OAUTH: [
-    { name: 'client_id', label: 'OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com' },
+    { name: 'client_id', label: 'Web OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com — mWeb, portals and the server' },
     { name: 'client_secret', label: 'OAuth Client Secret', secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' },
+    {
+      name: 'android_client_id',
+      label: 'Android OAuth Client ID',
+      hint: 'xxxxxx.apps.googleusercontent.com — Android client for com.duncit.mobile, with "Enable custom URI scheme" on under Advanced settings',
+    },
+    {
+      name: 'ios_client_id',
+      label: 'iOS OAuth Client ID',
+      hint: 'xxxxxx.apps.googleusercontent.com — iOS client for bundle ID com.duncit.mobile',
+    },
   ],
   GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true, hint: 'AIzaSy... (39 chars)' }],
   TWILIO: [
@@ -426,6 +440,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SMTP_FROM: { category: 'EMAIL', field: 'from_address' },
   GOOGLE_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'client_id' },
   GOOGLE_CLIENT_SECRET: { category: 'GOOGLE_OAUTH', field: 'client_secret' },
+  GOOGLE_ANDROID_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'android_client_id' },
+  GOOGLE_IOS_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'ios_client_id' },
   GOOGLE_MAP_API: { category: 'GOOGLE_MAPS', field: 'maps_api_key' },
   TWILIO_ACCOUNT_SID: { category: 'TWILIO', field: 'account_sid' },
   TWILIO_AUTH_TOKEN: { category: 'TWILIO', field: 'auth_token' },

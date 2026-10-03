@@ -10,6 +10,7 @@ import {
   LOCATIONS,
   USERS,
 } from './queries';
+import { clubLocationLabel, type PodFilterClub, type PodFilterLocation } from './podListFilters';
 
 /** Lookup datasets shared by the pods table (name columns) and the pod dialogs. */
 export default function usePodPageData() {
@@ -31,6 +32,16 @@ export default function usePodPageData() {
   const clubName = useCallback(
     (id: string) => (clubsData?.clubs ?? []).find((c: any) => c.id === id)?.club_name ?? '—',
     [clubsData],
+  );
+  /** "Gomti Nagar, Lucknow" — where the club runs; '' when unknown. */
+  const clubLocation = useCallback(
+    (id: string) => {
+      const clubList: PodFilterClub[] = clubsData?.clubs ?? [];
+      const club = clubList.find((c) => c.id === id);
+      const locationList: PodFilterLocation[] = locsData?.locations ?? [];
+      return club ? clubLocationLabel(club, locationList) : '';
+    },
+    [clubsData, locsData],
   );
   const locName = useCallback(
     (id: string) => (locsData?.locations ?? []).find((l: any) => l.id === id)?.location_name ?? '—',
@@ -62,6 +73,7 @@ export default function usePodPageData() {
     approvedHosts: approvedHostsData?.hosts ?? [],
     finance: financeData?.publicFinanceSettings,
     clubName,
+    clubLocation,
     locName,
     venueName,
     minPax,

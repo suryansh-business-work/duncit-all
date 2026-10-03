@@ -31,6 +31,7 @@ const makePod = (over: Partial<PodRow> = {}): PodRow => ({
 const makeDeps = (over: Partial<PodsColumnDeps> = {}): PodsColumnDeps => ({
   showProducts: false,
   clubName: (id) => `Club<${id}>`,
+  clubLocation: () => '',
   venueName: (id) => `Venue<${id}>`,
   locName: (id) => `Loc<${id}>`,
   minPax: () => 0,

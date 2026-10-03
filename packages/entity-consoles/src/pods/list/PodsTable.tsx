@@ -23,6 +23,7 @@ export default function PodsTable({
   refetchRef,
   toolbarActions,
   clubName,
+  clubLocation,
   venueName,
   locName,
   minPax,
@@ -51,6 +52,7 @@ export default function PodsTable({
       buildPodsColumns({
         showProducts,
         clubName,
+        clubLocation,
         venueName,
         locName,
         minPax,
@@ -61,7 +63,20 @@ export default function PodsTable({
         onMonitor,
         t,
       }),
-    [showProducts, clubName, venueName, locName, minPax, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t],
+    [
+      showProducts,
+      clubName,
+      clubLocation,
+      venueName,
+      locName,
+      minPax,
+      onEdit,
+      onQuickEdit,
+      onDelete,
+      onComplete,
+      onMonitor,
+      t,
+    ],
   );
 
   return (

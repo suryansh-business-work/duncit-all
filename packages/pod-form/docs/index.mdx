@@ -373,6 +373,7 @@ Every key absent from the server pod comes back as its `blankPodFormValues` defa
 | `initialValues` | `PodFormValues` | yes | — | Seed values; the form `reset()`s whenever this identity changes. |
 | `config` | `PodFormConfig` | yes | — | Feature flags gating both sections and schema branches. |
 | `clubs` | `any[]` | yes | — | Club options for the club select. |
+| `locations` | `ClubCityLocation[]` | no | — | Cities clubs run in; when given, each club option shows its place tag ("Gomti Nagar, Lucknow") beside the name. |
 | `venues` | `any[]` | yes | — | Venue options, narrowed by the selected club. |
 | `users` | `any[]` | no | `[]` | Local host options when `searchHosts` is not supplied. Admin passes its approved hosts here (`hosts(status: APPROVED)`), not the user directory. |
 | `products` | `any[]` | no | `[]` | Approved product catalogue for the products section. |

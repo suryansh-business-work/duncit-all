@@ -19,6 +19,7 @@ export default function PodForm({
   initialValues,
   config,
   clubs,
+  locations,
   venues,
   users = [],
   products = [],
@@ -71,6 +72,7 @@ export default function PodForm({
     () => ({
       config,
       clubs: clubsInCategory,
+      locations,
       venues,
       users,
       products,
@@ -85,7 +87,7 @@ export default function PodForm({
       slotLabels,
       editingPodDocId,
     }),
-    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId],
+    [config, clubsInCategory, locations, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateFormatter, slotLabels, editingPodDocId],
   );
 
   const submit = methods.handleSubmit(async (values) => {

@@ -137,6 +137,7 @@ export default function PodsPage() {
           </>
         }
         clubName={lookups.clubName}
+        clubLocation={lookups.clubLocation}
         venueName={lookups.venueName}
         locName={lookups.locName}
         minPax={lookups.minPax}

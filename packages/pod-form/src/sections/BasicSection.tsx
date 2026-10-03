@@ -1,4 +1,6 @@
-import { MenuItem, Stack, TextField } from '@mui/material';
+import { Chip, MenuItem, Stack, TextField } from '@mui/material';
+import PlaceIcon from '@mui/icons-material/PlaceOutlined';
+import { clubOptionLabel, clubPlaceLabel } from '@duncit/utils';
 import { useFormContext, useWatch } from 'react-hook-form';
 import HostSelectField from '../components/HostSelectField';
 import HostsField from '../components/HostsField';
@@ -39,7 +41,7 @@ function HashtagsField() {
 
 export default function BasicSection() {
   const { t } = useTranslation();
-  const { config, clubs, searchHosts } = usePodFormData();
+  const { config, clubs, locations = [], searchHosts } = usePodFormData();
   const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
 
@@ -55,6 +57,13 @@ export default function BasicSection() {
       </Stack>
     );
   }
+
+  // Two clubs can share a name; the place tag is what tells them apart.
+  const placeOf = (club: { location_id?: string | null; locality?: string | null }) => clubPlaceLabel(club, locations);
+  const selectedLabel = (id: unknown) => {
+    const club = clubs.find((item) => item.id === id);
+    return club ? clubOptionLabel(club.club_name, placeOf(club)) : '';
+  };
 
   const handleClubChange = (value: string) => {
     setValue('club_id', value, { shouldValidate: true });
@@ -77,12 +86,25 @@ export default function BasicSection() {
         required
         error={!!errors.club_id}
         helperText={errors.club_id?.message}
+        slotProps={{ select: { renderValue: selectedLabel } }}
       >
-        {clubs.map((club) => (
-          <MenuItem key={club.id} value={club.id}>
-            {club.club_name}
-          </MenuItem>
-        ))}
+        {clubs.map((club) => {
+          const place = placeOf(club);
+          return (
+            <MenuItem key={club.id} value={club.id} sx={{ gap: 1 }} data-testid={`pod-form-club-${club.id}`}>
+              {club.club_name}
+              {place && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  icon={<PlaceIcon />}
+                  label={place}
+                  data-testid={`pod-form-club-${club.id}-place`}
+                />
+              )}
+            </MenuItem>
+          );
+        })}
       </TextField>
       {config.showHosts && searchHosts && <HostsField />}
       {config.showHosts && !searchHosts && <HostSelectField />}

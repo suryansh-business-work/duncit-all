@@ -1,5 +1,6 @@
 import { AttendanceChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
+import ClubLocationLabel from '../ClubLocationLabel';
 import PodActionButtons from '../PodActionButtons';
 import PodSpotsCell from '../PodSpotsCell';
 import AiMonitorPill from '../../monitoring/AiMonitorPill';
@@ -26,8 +27,12 @@ import type { PodsColumnDeps } from './types';
 export type { PodsColumnDeps } from './types';
 
 export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<PodRow>[] {
-  const { showProducts, clubName, venueName, locName, minPax, onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } =
-    deps;
+  const { showProducts, clubName, clubLocation, venueName, locName, minPax } = deps;
+  const { onEdit, onQuickEdit, onDelete, onComplete, onMonitor, t } = deps;
+  const clubValue = (p: PodRow) => {
+    const location = clubLocation(p.club_id);
+    return location ? `${clubName(p.club_id)} | ${location}` : clubName(p.club_id);
+  };
   const placeValue = (p: PodRow) => {
     if (p.pod_mode === 'VIRTUAL') return p.meeting_platform ?? 'Virtual';
     if (p.venue_id) return venueName(p.venue_id);
@@ -53,8 +58,10 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       type: 'text',
       // The stored value is an ObjectId: a text match cannot be cast to one. The club select above filters it.
       filterable: false,
-      minWidth: 140,
-      valueGetter: (p) => clubName(p.club_id),
+      minWidth: 220,
+      // The export and quick search read the joined text; the cell shows the pin icon.
+      valueGetter: clubValue,
+      cellRenderer: (p: PodRow) => <ClubLocationLabel name={clubName(p.club_id)} location={clubLocation(p.club_id)} />,
     },
     {
       field: 'place',

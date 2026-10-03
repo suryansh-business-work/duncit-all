@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { notifyError } from '@duncit/dialogs';
 import { BackHeader } from '@duncit/ui';
@@ -19,15 +20,19 @@ import BrandDangerZone from './BrandDangerZone';
 const BRANDS_PATH = '/ecomm-brand';
 const LAST_STEP = BRAND_WIZARD_STEPS.length - 1;
 const stepIndex = (key: BrandWizardStepKey) => BRAND_WIZARD_STEPS.findIndex((step) => step.key === key);
+/** The steps a submission needs — Integration is owed for going live, not for review. */
+const REVIEW_STEPS = new Set(BRAND_WIZARD_STEPS.filter((step) => step.gatesReview).map((step) => step.key));
 
 interface Props {
   /** null for `/ecomm-brand/new` — the first save mints the id and moves to the edit route. */
   brandId: string | null;
 }
 
-/** The brand onboarding wizard: ten steps on one page, a draft saved at any of them. */
+/** The brand onboarding wizard: ten steps on one page, a draft saved at any of them, Integration last. */
 export default function BrandWizardPage({ brandId }: Readonly<Props>) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const account = useQuery<any>(MY_ACCOUNT, { fetchPolicy: 'cache-first' });
   const { data, loading, refetch } = useQuery<any>(MY_BRAND, {
     variables: { brand_doc_id: brandId },
@@ -45,13 +50,15 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);
 
-  // A saved draft opens on its first unfinished step, once, when it arrives.
+  // or on the step a link asked for (?step=integration from the brands table).
+  // or on the step a link asked for ( from the brands table).
   useEffect(() => {
     if (brand && !openedRef.current) {
       openedRef.current = true;
-      setActiveStep(brand.completion?.next_step ?? 0);
+      const requested = stepIndex(searchParams.get('step') as BrandWizardStepKey);
+      setActiveStep(requested >= 0 ? requested : (brand.completion?.next_step ?? 0));
     }
-  }, [brand]);
+  }, [brand, searchParams]);
 
   const pickImage = () =>
     new Promise<string | null>((resolve) => {
@@ -65,7 +72,10 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
   };
 
   const locked = brand?.status === 'SUBMITTED' || brand?.status === 'APPROVED';
-  const canSubmit = wizard.states.every((state) => !state.required || state.complete);
+  const canSubmit = wizard.states.every((state) => !REVIEW_STEPS.has(state.key) || state.complete);
+  const submit = async () => {
+    if (await actions.submit()) setActiveStep(LAST_STEP);
+  };
   const goNext = async (key: BrandWizardStepKey) => {
     const ok = locked || (await actions.next(STEP_FIELDS[key]));
     if (ok) setActiveStep((step) => Math.min(step + 1, LAST_STEP));
@@ -129,7 +139,8 @@ export default function BrandWizardPage({ brandId }: Readonly<Props>) {
                   onBack={() => setActiveStep((step) => Math.max(step - 1, 0))}
                   onSaveDraft={actions.saveDraft}
                   onNext={() => goNext(key)}
-                  onSubmit={actions.submit}
+                  onSubmit={submit}
+                  onFinish={() => navigate(brandId ? `${BRANDS_PATH}/${brandId}` : BRANDS_PATH)}
                 />
               </Stack>
             )}

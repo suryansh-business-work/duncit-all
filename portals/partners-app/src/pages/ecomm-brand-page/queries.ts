@@ -3,6 +3,7 @@ import type { BrandShippingMode } from '@duncit/gql-types';
 
 const BRAND_FIELDS = `
   id
+  brand_no
   brand_name
   logo_url
   cover_image_url
@@ -31,6 +32,9 @@ const BRAND_FIELDS = `
   tags
   status
   is_active
+  live
+  live_since
+  integration_waived
   reviewer_notes
   submitted_at
   approved_at
@@ -98,6 +102,7 @@ export const MY_BRANDS_TABLE = gql`
         ${BRAND_FIELDS}
         created_at
         updated_at
+        shipping_mode
         completion { percent }
         integrations { shiprocket { connected } razorpay { connected } }
       }
@@ -233,6 +238,8 @@ export interface BrandCompletion {
 
 export interface EcommBrand {
   id: string;
+  /** Permanent human id, e.g. BRD-000014. */
+  brand_no?: string | null;
   brand_name: string;
   logo_url: string;
   cover_image_url: string;
@@ -261,6 +268,11 @@ export interface EcommBrand {
   tags: string[];
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
   is_active: boolean;
+  /** Live in the pod shop: approved, active and integrations ready (server-derived). */
+  live: boolean;
+  live_since: string | null;
+  /** Already selling before integrations were required — stays live without them. */
+  integration_waived: boolean;
   reviewer_notes: string;
   submitted_at: string | null;
   approved_at: string | null;

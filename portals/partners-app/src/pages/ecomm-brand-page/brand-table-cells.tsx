@@ -1,6 +1,6 @@
 import { Avatar, Box, Chip, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import type { EcommBrandRow } from './queries';
+import type { EcommBrand, EcommBrandRow } from './queries';
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
   DRAFT: 'warning',
@@ -11,8 +11,13 @@ const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 
 
 export const percentOf = (brand: EcommBrandRow) => brand.completion?.percent ?? 0;
 
+/** A brand on the Duncit courier needs no ShipRocket account — its shipping is settled. */
+const shippingSettled = (brand: EcommBrandRow) =>
+  brand.shipping_mode === 'DUNCIT_COURIER' || brand.integrations?.shiprocket?.connected === true;
+
+/** How many of the two go-live integrations are settled (shipping, Razorpay). */
 export const connectedCount = (brand: EcommBrandRow) =>
-  [brand.integrations?.shiprocket?.connected, brand.integrations?.razorpay?.connected].filter(Boolean).length;
+  [shippingSettled(brand), brand.integrations?.razorpay?.connected === true].filter(Boolean).length;
 
 /** Logo + name + tagline. */
 export function BrandCell({ brand }: Readonly<{ brand: EcommBrandRow }>) {
@@ -57,14 +62,16 @@ export function IntegrationsCell({ brand }: Readonly<{ brand: EcommBrandRow }>) 
   );
   return (
     <Stack direction="row" spacing={0.5} component="span">
-      {chip(t('partners.ecommBrandPage.shiprocketShort'), brand.integrations?.shiprocket?.connected)}
+      {brand.shipping_mode === 'DUNCIT_COURIER'
+        ? chip(t('partners.ecommBrandPage.duncitCourierShort'), true)
+        : chip(t('partners.ecommBrandPage.shiprocketShort'), brand.integrations?.shiprocket?.connected)}
       {chip(t('partners.ecommBrandPage.razorpayShort'), brand.integrations?.razorpay?.connected)}
     </Stack>
   );
 }
 
-/** Status chip, plus a Paused marker on an approved brand the partner has hidden. */
-export function StatusCell({ brand }: Readonly<{ brand: EcommBrandRow }>) {
+/** Status chip, plus Live / Integration pending on an approved brand, or Paused when the partner hid it. */
+export function StatusCell({ brand }: Readonly<{ brand: Pick<EcommBrand, 'status' | 'is_active' | 'live'> }>) {
   const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={0.5} component="span">
@@ -72,6 +79,23 @@ export function StatusCell({ brand }: Readonly<{ brand: EcommBrandRow }>) {
       {brand.status === 'APPROVED' && brand.is_active === false && (
         <Chip size="small" color="warning" variant="outlined" label={t('partners.ecommBrandPage.paused')} />
       )}
+      {brand.status === 'APPROVED' && brand.is_active !== false && <LiveChip live={brand.live} />}
     </Stack>
+  );
+}
+
+/** Whether an approved, active brand is actually selling — the go-live gate made visible. */
+export function LiveChip({ live }: Readonly<{ live: boolean }>) {
+  const { t } = useTranslation();
+  return (
+    <Tooltip title={live ? t('partners.ecommBrandPage.liveHint') : t('partners.ecommBrandPage.integrationPendingHint')}>
+      <Chip
+        size="small"
+        variant="outlined"
+        color={live ? 'success' : 'warning'}
+        label={live ? t('partners.ecommBrandPage.live') : t('partners.ecommBrandPage.integrationPendingChip')}
+        data-testid="brand-live-chip"
+      />
+    </Tooltip>
   );
 }

@@ -10,18 +10,22 @@ interface Props {
   stepKey: BrandWizardStepKey;
   locked: boolean;
   busy: boolean;
-  /** Every required step is done, so the server would accept a submission. */
+  /** Every review step is done (consent signed), so the server would accept a submission. */
   canSubmit: boolean;
   onBack: () => void;
   onSaveDraft: () => void;
   onNext: () => void;
   onSubmit: () => void;
+  /** Open the brand's details page — offered on the last step (Integration). */
+  onFinish: () => void;
 }
 
 /**
- * Back / Save draft / Next under every step. Review and the last step (Consent)
- * carry Submit for review instead, disabled until the consent is signed and
- * every required step is complete. A locked brand only navigates.
+ * Back / Save draft / Next under every step. Review and Consent carry Submit
+ * for review, disabled until the consent is signed and every review step is
+ * complete. Integration is the last step and saves itself (each card tests its
+ * own connection), so it offers "Go to brand" instead. A locked brand only
+ * navigates — and still reaches Integration, which stays editable.
  */
 export default function BrandStepActions({
   index,
@@ -34,11 +38,12 @@ export default function BrandStepActions({
   onSaveDraft,
   onNext,
   onSubmit,
+  onFinish,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const isFirst = index === 0;
   const isLast = index === total - 1;
-  const submitStep = stepKey === 'review' || isLast;
+  const submitStep = stepKey === 'review' || stepKey === 'consent';
 
   const backButton = (
     <DuncitButton disabled={isFirst || busy} onClick={onBack} data-testid="brand-wizard-back">
@@ -50,12 +55,17 @@ export default function BrandStepActions({
       {t('partners.brandWizard.next')}
     </DuncitButton>
   );
+  const finishButton = (
+    <DuncitButton variant="contained" disabled={busy} onClick={onFinish} data-testid="brand-wizard-finish">
+      {t('partners.brandWizard.integration.goToBrand')}
+    </DuncitButton>
+  );
 
-  if (locked) {
+  if (locked || isLast) {
     return (
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
         {backButton}
-        {!isLast && nextButton}
+        {isLast ? finishButton : nextButton}
       </Stack>
     );
   }
@@ -66,7 +76,7 @@ export default function BrandStepActions({
       <DuncitButton variant="outlined" loading={busy} onClick={onSaveDraft} data-testid="brand-wizard-save-draft">
         {t('partners.brandWizard.saveDraft')}
       </DuncitButton>
-      {!isLast && nextButton}
+      {nextButton}
       {submitStep && (
         <DuncitButton
           variant="contained"

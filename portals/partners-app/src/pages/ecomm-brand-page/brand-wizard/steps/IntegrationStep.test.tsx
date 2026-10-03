@@ -7,6 +7,7 @@ import {
   type BrandIntegrationStatus,
   type BrandIntegrations,
   type BrandShippingMode,
+  type EcommBrand,
 } from '../../queries';
 import { renderWithProviders } from '../../../../__tests__/render';
 
@@ -32,13 +33,21 @@ const integrations = (razorpayConnected = true, shiprocket: Partial<BrandIntegra
   razorpay: status('RAZORPAY', { configured: razorpayConnected, connected: razorpayConnected }),
 });
 
-const mount = (shippingMode: BrandShippingMode | null, value: BrandIntegrations, mocks: MockedResponse[] = []) => {
+type LiveFacts = Pick<EcommBrand, 'status' | 'live' | 'integration_waived'>;
+
+const mount = (
+  shippingMode: BrandShippingMode | null,
+  value: BrandIntegrations,
+  mocks: MockedResponse[] = [],
+  brand: LiveFacts | null = null,
+) => {
   const onChanged = vi.fn();
   renderWithProviders(
     <IntegrationStep
       brandId="b1"
       shippingMode={shippingMode}
       integrations={value}
+      brand={brand}
       locked={false}
       ensureBrandId={async () => 'b1'}
       onChanged={onChanged}
@@ -50,7 +59,7 @@ const mount = (shippingMode: BrandShippingMode | null, value: BrandIntegrations,
 
 const shiprocketCard = () => screen.queryByText('ShipRocket');
 const checked = (label: RegExp) => (screen.getByLabelText(label) as HTMLInputElement).checked;
-const notReady = () => screen.queryByText(/Razorpay must connect, and shipping must be settled/);
+const notReady = () => screen.queryByText(/goes live in the Pod Shop only once Razorpay is connected/);
 
 describe('IntegrationStep — who ships the parcels', () => {
   it('asks a new brand to choose, and hides the ShipRocket form until it picks its own account', () => {
@@ -88,5 +97,40 @@ describe('IntegrationStep — who ships the parcels', () => {
     ]);
     fireEvent.click(screen.getByTestId('brand-shipping-mode-duncit').querySelector('input') as HTMLInputElement);
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('IntegrationStep — going live', () => {
+  const approved = (over: Partial<LiveFacts> = {}): LiveFacts => ({ status: 'APPROVED', live: false, integration_waived: false, ...over });
+
+  it('tells a live brand it is live', () => {
+    mount('DUNCIT_COURIER', integrations(true), [], approved({ live: true }));
+    expect(screen.getByText('Your brand is live in the Pod Shop.')).toBeInTheDocument();
+  });
+
+  it('warns an approved brand that it is not live until the integrations connect', () => {
+    mount('OWN_SHIPROCKET', integrations(false), [], approved());
+    expect(screen.getByText(/Not live yet. Connect the integrations below/)).toBeInTheDocument();
+  });
+
+  it('tells a brand in review with integrations ready that approval takes it live', () => {
+    mount('DUNCIT_COURIER', integrations(true), [], { status: 'SUBMITTED', live: false, integration_waived: false });
+    expect(screen.getByText(/Integrations are ready. Your brand goes live as soon as it is approved/)).toBeInTheDocument();
+  });
+
+  it('keeps a grandfathered brand live and still asks it to connect', () => {
+    mount('OWN_SHIPROCKET', integrations(false), [], approved({ live: true, integration_waived: true }));
+    expect(screen.getByText(/was selling before integrations were required/)).toBeInTheDocument();
+  });
+
+  it('shows each provider with its logo and a how-to-connect guide linking to the vendor', () => {
+    mount('OWN_SHIPROCKET', integrations(false));
+    expect(screen.getByRole('img', { name: 'ShipRocket' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Razorpay' })).toBeInTheDocument();
+    const open = screen.getByTestId('integration-guide-razorpay-openApi');
+    expect(open).toHaveAttribute('href', 'https://dashboard.razorpay.com/app/website-app-settings/api-keys');
+    expect(open).toHaveAttribute('target', '_blank');
+    expect(open).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.getByTestId('integration-guide-shiprocket-webhook').textContent).toMatch(/\/webhooks\/courier-updates$/);
   });
 });

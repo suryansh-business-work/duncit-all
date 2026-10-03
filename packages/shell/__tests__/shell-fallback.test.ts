@@ -27,8 +27,8 @@ describe('SHELL_FALLBACK — the profile page slices', () => {
       'accountEdit',
       'auth',
       'changePassword',
-      'commPreference',
       'common',
+      'commPreference',
       'resetPassword',
     ]);
     expect(asNested(SHELL_FALLBACK.mweb).changePassword).toEqual(mweb.changePassword);

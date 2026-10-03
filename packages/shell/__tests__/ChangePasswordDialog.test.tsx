@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const apollo = vi.hoisted(() => ({ useQuery: vi.fn(), useMutation: vi.fn() }));
@@ -185,7 +185,8 @@ describe('ChangePasswordDialog — with a password', () => {
     const { onClose, onChanged, rerender } = renderDialog(true);
     await proveCurrentPassword(u);
 
-    await u.keyboard('{Escape}');
+    // MUI's Modal listens on its root; focus moved off the dialog with the step change.
+    fireEvent.keyDown(screen.getByTestId('change-password-dialog'), { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
 
     rerender(<ChangePasswordDialog open hasPassword onClose={onClose} onChanged={onChanged} />);

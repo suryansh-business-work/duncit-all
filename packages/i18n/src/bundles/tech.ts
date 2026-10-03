@@ -438,6 +438,12 @@ export const TECH_BUNDLE: NestedCatalogue = {
       liveNotChecked: 'Not checked',
       liveServedExpiry: 'Served certificate expires {date}',
     },
+    /** Security → SonarQube Settings — the SonarQube category of Environment Variables. */
+    sonarqube: {
+      settingsTitle: 'SonarQube Settings',
+      settingsSubtitle:
+        'The server URL, user token and project key Security → SonarQube reads with — the SonarQube category of Environment Variables, on a page of its own.',
+    },
     /** Security → Cloudflare — moving the zone from GoDaddy's nameservers to Cloudflare's. */
     cloudflare: {
       subtitle:

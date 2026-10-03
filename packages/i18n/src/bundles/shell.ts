@@ -781,6 +781,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       testing: 'Testing',
       security: 'Security',
       sonarqube: 'SonarQube',
+      sonarqubeSettings: 'SonarQube Settings',
       unitTestCoverage: 'Unit Test Coverage',
       tickets: 'Tickets',
       tools: 'Tools',

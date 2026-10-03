@@ -111,6 +111,8 @@ COPY portals/tech ./portals/tech
 # mounts them from their source), so its src folder is part of this build. Its
 # package.json is copied above, so its dependencies are installed.
 COPY portals/communications/src ./portals/communications/src
+# Security → SonarQube is the Analytics console's own dashboard, mounted the same way.
+COPY portals/analytics/src ./portals/analytics/src
 RUN pnpm --filter tech build
 
 # --- runner ---

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Linking } from 'react-native';
 import { Contact, ContactField, requestPermissionsAsync } from 'expo-contacts';
 import {
   contactEntriesFromPhoneBook,
@@ -11,8 +12,10 @@ import { logs } from '@duncit/logs';
 import { SyncContactsDocument } from '@/graphql/contacts';
 import { graphqlRequest } from '@/services/graphql.client';
 
-/** Why a sync did not happen — mapped to copy by the screen, never shown raw. */
-export type ContactsSyncFailure = 'DENIED' | 'FAILED';
+/** Why a sync did not happen — mapped to copy by the screen, never shown raw.
+ * BLOCKED is a refusal the OS will not ask about again (iOS after the first
+ * "Don't Allow"): only the Settings app can turn access back on. */
+export type ContactsSyncFailure = 'DENIED' | 'BLOCKED' | 'FAILED';
 
 /** The two fields a sync reads. Everything else in a phone book — addresses,
  * birthdays, notes — is none of Duncit's business and is never asked for. */
@@ -70,7 +73,7 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
     try {
       const permission = await requestPermissionsAsync();
       if (!permission.granted) {
-        setFailure('DENIED');
+        setFailure(permission.canAskAgain ? 'DENIED' : 'BLOCKED');
         return;
       }
       const entries = contactEntriesFromPhoneBook(await readPhoneBook(setStage));
@@ -104,7 +107,19 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
   // told exactly what is read and kept before anything is (GDPR). `request`
   // only asks; nothing is read until they agree, and "Not now" does nothing.
   const [asking, setAsking] = useState(false);
-  const request = useCallback(() => setAsking(true), []);
+  const request = useCallback(() => {
+    if (failure !== 'BLOCKED') {
+      setAsking(true);
+      return;
+    }
+    // The OS would answer "denied" without showing a prompt, so the button
+    // sends the person to Settings instead. The failure is cleared so the
+    // next tap, once they are back, asks the OS afresh.
+    setFailure(null);
+    Linking.openSettings().catch((error) =>
+      logs.mobileApp.error('useContactsSync', 'openSettings', { error }),
+    );
+  }, [failure]);
   const decline = useCallback(() => setAsking(false), []);
   const agree = useCallback(() => {
     setAsking(false);

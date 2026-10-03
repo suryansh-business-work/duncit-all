@@ -84,7 +84,7 @@ describe('useContactsSync', () => {
   });
 
   it('reports a refused permission', async () => {
-    mockPermission.mockResolvedValue({ granted: false });
+    mockPermission.mockResolvedValue({ granted: false, canAskAgain: true });
     const { result } = setup();
     await act(async () => {
       await result.current.agree();

@@ -99,8 +99,6 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
     "The saved credential is forgotten and the brand cannot be submitted until it is connected again.",
   ],
   "partners.brandWizard.integration.disconnected": ["Credential forgotten. Connect again before submitting."],
-  // MSG91's widget analytics API answers at most 5 days per request.
-  "tech.msg91.analyticsSubtitle": ["Daily OTP widget traffic from MSG91 — up to 31 days at a time."],
   "products.brandReview.integrationsIntro": [
     "The brand ships and gets paid through its own accounts. Both must connect before approval.",
   ],

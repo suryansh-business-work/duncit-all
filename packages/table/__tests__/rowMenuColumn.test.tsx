@@ -27,7 +27,7 @@ describe('rowMenuColumn', () => {
     const col = rowMenuColumn<Row>({
       ariaLabel: (row) => `Options for ${row.name}`,
       items: (row) => [
-        { key: 'view', label: 'View details', onClick: () => view(row.id) },
+        { key: 'view', label: 'View details', onClick: () => view(row.id), icon: <span data-testid="view-icon" /> },
         { key: 'pause', label: 'Pause', onClick: pause, destructive: true, icon: <span data-testid="pause-icon" /> },
       ],
     });
@@ -37,6 +37,8 @@ describe('rowMenuColumn', () => {
     await userEvent.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('pause-icon')).toBeInTheDocument();
+    // A non-destructive entry draws its icon too (uncoloured).
+    expect(screen.getByTestId('view-icon')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('menuitem', { name: 'View details' }));
     expect(view).toHaveBeenCalledWith('BRD-000014');
     expect(pause).not.toHaveBeenCalled();

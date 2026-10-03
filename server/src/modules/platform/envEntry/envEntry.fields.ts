@@ -283,6 +283,19 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'api_secret', label: 'API Secret', secret: true, hint: 'Shown once, beside the key, when it is created' },
     { name: 'domain', label: 'Domain', hint: 'The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key' },
   ],
+  // Where the zone moves when DNS leaves GoDaddy. Tech → Security → Cloudflare
+  // compares the two zones, copies records across and switches the
+  // nameservers at GoDaddy — so the domain here must be GoDaddy's domain.
+  CLOUDFLARE: [
+    {
+      name: 'api_token',
+      label: 'API Token',
+      secret: true,
+      hint: 'dash.cloudflare.com → My Profile → API Tokens → Create Token with Zone:Read, Zone:Edit and DNS:Edit on this account (not the Global API key)',
+    },
+    { name: 'account_id', label: 'Account ID', hint: 'dash.cloudflare.com → Account Home → Account ID, in the right-hand column' },
+    { name: 'domain', label: 'Domain', hint: 'The zone to move, e.g. duncit.com — the same domain as the GoDaddy entry' },
+  ],
   // The apps Marketing → Social Accounts connects through. One entry holds all
   // four, so the Marketing page can say exactly which network is missing. Every
   // app registers the SAME redirect URL: <server URL>/social/callback.
@@ -344,6 +357,7 @@ export const CATEGORY_LABELS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
   SONARQUBE: 'SonarQube (code analysis)',
   GODADDY: 'GoDaddy (DNS)',
+  CLOUDFLARE: 'Cloudflare (DNS)',
   SOCIAL_APPS: 'Social apps',
 };
 
@@ -371,6 +385,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
   SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
   GODADDY: 'https://developer.godaddy.com/keys',
+  CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
   SOCIAL_APPS: 'https://developers.facebook.com/apps/',
 };
 
@@ -384,6 +399,7 @@ export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
   APP_STORE_CONNECT:
     'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
   GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
+  CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
 };
 
 const secretSet = new Set<string>();
@@ -473,6 +489,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GODADDY_API_KEY: { category: 'GODADDY', field: 'api_key' },
   GODADDY_API_SECRET: { category: 'GODADDY', field: 'api_secret' },
   GODADDY_DOMAIN: { category: 'GODADDY', field: 'domain' },
+  CLOUDFLARE_API_TOKEN: { category: 'CLOUDFLARE', field: 'api_token' },
+  CLOUDFLARE_ACCOUNT_ID: { category: 'CLOUDFLARE', field: 'account_id' },
+  CLOUDFLARE_DOMAIN: { category: 'CLOUDFLARE', field: 'domain' },
   SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_APPS', field: 'linkedin_client_id' },
   SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_APPS', field: 'linkedin_client_secret' },
   SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_APPS', field: 'linkedin_api_version' },

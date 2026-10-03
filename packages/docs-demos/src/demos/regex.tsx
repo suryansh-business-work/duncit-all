@@ -2,6 +2,7 @@ import {
   isBankAccountNumber,
   isEmail,
   isGstin,
+  isHostname,
   isIfsc,
   isPhoneNumber,
   isPincode,
@@ -22,6 +23,11 @@ interface CandidateMock {
 
 interface TypedPhoneMock {
   typed: string;
+}
+
+interface NameServerMock {
+  first: string;
+  second: string;
 }
 
 interface BankMock {
@@ -83,6 +89,21 @@ export default defineDemos('regex', [
       'isBankAccountNumber(account_number)': isBankAccountNumber(mock.account_number),
       'isUpiId(upi_id)': isUpiId(mock.upi_id),
       'isGstin(gstin)': isGstin(mock.gstin),
+    }),
+  }),
+
+  defineDemo<NameServerMock>({
+    id: 'name-servers',
+    title: 'What Tech → Security → Cloudflare accepts as a nameserver',
+    note:
+      'Custom nameservers are checked label by label before GoDaddy is asked to point the domain at them. Drop a dot, add an underscore or start a label with "-" and the row turns false.',
+    mock: {
+      first: 'kate.ns.cloudflare.com',
+      second: 'rob.ns.cloudflare.com',
+    },
+    compute: (mock) => ({
+      'isHostname(first)': isHostname(mock.first),
+      'isHostname(second)': isHostname(mock.second),
     }),
   }),
 ]);

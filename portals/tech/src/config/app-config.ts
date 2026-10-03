@@ -108,6 +108,16 @@ export const appConfig = {
     // Beside Domain: the zone sends every host to this VPS, and the certificates
     // here are what each of those hosts answers HTTPS with.
     { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/ssl', icon: 'lock' },
+    {
+      // Beside Domain and SSL: Cloudflare is where the zone moves when DNS
+      // leaves GoDaddy, and the nameserver switch here decides which of the
+      // two answers for every *.duncit.com host.
+      label: 'Security', labelKey: 'shell.nav.security',
+      icon: 'shield',
+      children: [
+        { label: 'Cloudflare', labelKey: 'shell.nav.cloudflare', to: '/security/cloudflare', icon: 'dns' },
+      ],
+    },
     // Beside DNS Config: both decide something about every public website —
     // one where its name points, the other where its traffic is reported.
     { label: 'Google Analytics', labelKey: 'shell.nav.googleAnalytics', to: '/google-analytics', icon: 'analytics' },

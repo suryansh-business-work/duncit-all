@@ -170,6 +170,14 @@ export async function godaddyDomain(cfg: Readonly<GodaddyConfig>): Promise<Godad
   return (await zoneCall(cfg, 'GET', '')) as GodaddyDomain;
 }
 
+/**
+ * Point the domain at other nameservers. Every record in whichever zone those
+ * servers hold becomes the live DNS once resolvers' cached delegation expires.
+ */
+export async function godaddySetNameServers(cfg: Readonly<GodaddyConfig>, nameServers: readonly string[]): Promise<void> {
+  await zoneCall(cfg, 'PATCH', '', { nameServers });
+}
+
 /** Every record in the zone. */
 export async function godaddyRecords(cfg: Readonly<GodaddyConfig>): Promise<GodaddyRecord[]> {
   return ((await zoneCall(cfg, 'GET', '/records')) as GodaddyRecord[] | null) ?? [];

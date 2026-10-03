@@ -3609,6 +3609,72 @@ export type ClaimStressRunInput = {
   workflow_run_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** One record, as GoDaddy and Cloudflare each hold it. */
+export type CloudflareCompareRow = {
+  __typename?: 'CloudflareCompareRow';
+  cloudflare_value?: Maybe<Scalars['String']['output']>;
+  /** Whether copying it to Cloudflare can fix it. */
+  copyable: Scalars['Boolean']['output'];
+  godaddy_value?: Maybe<Scalars['String']['output']>;
+  host: Scalars['String']['output'];
+  /** type|name|value|priority. */
+  id: Scalars['String']['output'];
+  /** Relative to the domain: @ for the domain itself. */
+  name: Scalars['String']['output'];
+  /** MX and SRV only. */
+  priority?: Maybe<Scalars['Int']['output']>;
+  /** Whether Cloudflare proxies it. Null when Cloudflare has no record here. */
+  proxied?: Maybe<Scalars['Boolean']['output']>;
+  state: CloudflareRowState;
+  type: Scalars['String']['output'];
+};
+
+/** The move from GoDaddy DNS to Cloudflare: both zones side by side and where the domain points now. */
+export type CloudflareMigration = {
+  __typename?: 'CloudflareMigration';
+  cloudflare_configured: Scalars['Boolean']['output'];
+  /** The domain the Cloudflare entry names — shown when it differs from GoDaddy's. */
+  cloudflare_domain: Scalars['String']['output'];
+  cloudflare_only: Scalars['Int']['output'];
+  /** Both configured, for the same domain. */
+  connected: Scalars['Boolean']['output'];
+  /** What the registrar points at today. */
+  current_name_servers: Array<Scalars['String']['output']>;
+  domain: Scalars['String']['output'];
+  godaddy_configured: Scalars['Boolean']['output'];
+  /** GoDaddy's own nameservers for this domain — what switching back restores. */
+  godaddy_name_servers: Array<Scalars['String']['output']>;
+  godaddy_only: Scalars['Int']['output'];
+  live_provider: DnsLiveProvider;
+  matched: Scalars['Int']['output'];
+  /** The zone exists and every GoDaddy record is already on Cloudflare. */
+  ready_to_switch: Scalars['Boolean']['output'];
+  rows: Array<CloudflareCompareRow>;
+  /** Null until the domain has been added to Cloudflare. */
+  zone?: Maybe<CloudflareZoneInfo>;
+};
+
+/** Where one record lives across the two providers. */
+export type CloudflareRowState =
+  /** On GoDaddy and Cloudflare, with the same value. */
+  | 'BOTH'
+  /** On Cloudflare only — it starts resolving when the nameservers move. */
+  | 'CLOUDFLARE_ONLY'
+  /** On GoDaddy only — it stops resolving if the nameservers move now. */
+  | 'GODADDY_ONLY';
+
+/** The domain's zone on Cloudflare. */
+export type CloudflareZoneInfo = {
+  __typename?: 'CloudflareZoneInfo';
+  activated_on?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  /** The pair Cloudflare assigned — what the registrar must point at. */
+  name_servers: Array<Scalars['String']['output']>;
+  paused: Scalars['Boolean']['output'];
+  /** pending until Cloudflare sees its nameservers at the registrar, then active. */
+  status: Scalars['String']['output'];
+};
+
 export type Club = {
   __typename?: 'Club';
   /** Users who administer this club (assigned by an admin) — the CLUB_ADMIN scope. */
@@ -6237,6 +6303,15 @@ export type DnsHostPair = {
   type: Scalars['String']['output'];
 };
 
+/** Which provider the registrar sends resolvers to today. */
+export type DnsLiveProvider =
+  | 'CLOUDFLARE'
+  | 'GODADDY'
+  /** Nameservers that are neither GoDaddy's nor this Cloudflare zone's. */
+  | 'OTHER'
+  /** GoDaddy reported no nameservers. */
+  | 'UNKNOWN';
+
 /** What the two stacks hold for one host. */
 export type DnsPairState =
   /** Both stacks answer, with the same values. */
@@ -7534,6 +7609,7 @@ export type EnvCategory =
   | 'AISENSY'
   | 'APPLE_SIGNIN'
   | 'APP_STORE_CONNECT'
+  | 'CLOUDFLARE'
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
@@ -11202,6 +11278,8 @@ export type Mutation = {
   changePasswordWithOtp: Scalars['Boolean']['output'];
   /** Check one alert now; a tripped one tells its people straight away. */
   checkAnalyticsAlertNow: AnalyticsAlertCheckResult;
+  /** Asks Cloudflare to re-check the domain's nameservers now. */
+  checkCloudflareActivation: Scalars['Boolean']['output'];
   checkInEventTicket: EventTicket;
   /** CI: a runner claims its shard of a dispatched run. */
   claimStressRun: StressClaimResult;
@@ -11288,6 +11366,8 @@ export type Mutation = {
   connectBrandShiprocket: BrandIntegrationStatus;
   /** Auth-required: link a Google account from Profile > Connected Accounts. */
   connectGoogleAccount: ConnectedAccounts;
+  /** Copies the named GoDaddy-only records onto Cloudflare, DNS-only. Never writes GoDaddy. */
+  copyDnsToCloudflare: DnsSyncResult;
   /** Creates an AI prompt. Code prompts come from the catalogue and cannot be created here. */
   createAiPrompt: AiPrompt;
   /** Bind an approved template to a campaign name, which is what a send addresses. */
@@ -11310,6 +11390,8 @@ export type Mutation = {
   createBadge: Badge;
   createCategory: Category;
   createChallenge: Challenge;
+  /** Adds the domain to Cloudflare as a full-setup zone. Does nothing when it is already there. */
+  createCloudflareZone: Scalars['Boolean']['output'];
   createClub: Club;
   createCommsProvider: CommsProvider;
   createContract: Contract;
@@ -11439,6 +11521,8 @@ export type Mutation = {
   deleteBugs: Scalars['Int']['output'];
   deleteCategory: Scalars['Boolean']['output'];
   deleteChallenge: Scalars['Boolean']['output'];
+  /** Removes one record from Cloudflare. GoDaddy is untouched. */
+  deleteCloudflareDnsRecord: Scalars['Boolean']['output'];
   deleteClub: Scalars['Boolean']['output'];
   /**
    * Delete the onboarding record and unassign every club. The user account and
@@ -12378,6 +12462,8 @@ export type Mutation = {
   setDefaultMyAddress: UserAddress;
   setDefaultMyBrandPickupLocation: BrandPickupLocation;
   setDefaultSlotTemplate: SlotTemplate;
+  /** Points the domain at new nameservers at GoDaddy. name_servers is read only for CUSTOM. */
+  setDomainNameServers: Scalars['Boolean']['output'];
   /** Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible). */
   setEcommBrandActive: EcommBrand;
   setFeatureFlag: FeatureFlag;
@@ -13631,6 +13717,11 @@ export type MutationConnectGoogleAccountArgs = {
 };
 
 
+export type MutationCopyDnsToCloudflareArgs = {
+  ids: Array<Scalars['String']['input']>;
+};
+
+
 export type MutationCreateAiPromptArgs = {
   input: CreateAiPromptInput;
 };
@@ -14132,6 +14223,11 @@ export type MutationDeleteCategoryArgs = {
 
 export type MutationDeleteChallengeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCloudflareDnsRecordArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -15948,6 +16044,12 @@ export type MutationSetDefaultMyBrandPickupLocationArgs = {
 
 export type MutationSetDefaultSlotTemplateArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDomainNameServersArgs = {
+  name_servers?: InputMaybe<Array<Scalars['String']['input']>>;
+  target: NameServerTarget;
 };
 
 
@@ -17873,6 +17975,15 @@ export type MyReferral = {
    */
   share_message: Scalars['String']['output'];
 };
+
+/** Where a nameserver switch points the domain. */
+export type NameServerTarget =
+  /** The two nameservers Cloudflare assigned this zone. */
+  | 'CLOUDFLARE'
+  /** Nameservers typed by hand. */
+  | 'CUSTOM'
+  /** GoDaddy's own nameservers, read from the NS records its zone still holds. */
+  | 'GODADDY';
 
 export type NewsletterSource =
   | 'ADMIN'
@@ -21899,6 +22010,8 @@ export type Query = {
   /** Host(s) and participants of a pod's chat (members only). */
   chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
+  /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
+  cloudflareMigration: CloudflareMigration;
   club?: Maybe<Club>;
   /** Offers one of the caller's clubs may still claim, plus their claims. */
   clubAdminAutoPods: Array<AutoPod>;

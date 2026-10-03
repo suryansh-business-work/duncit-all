@@ -201,8 +201,8 @@ describe('waCampaignService reach and people search', () => {
       })
     ).toBe(1);
 
-    await UserModel.create({ auth: { email: 'r1@example.com', phone: { extension: '+91', number: '9811100001' } }, profile: { first_name: 'Asha' } });
-    await UserModel.create({ auth: { email: 'r2@example.com' }, profile: { first_name: 'No Phone' } });
+    await UserModel.create({ auth: { email: 'r1@example.com', phone: { extension: '+91', number: '9811100001' } }, profile: { first_name: 'Asha' }, metadata: { status: 'ACTIVE' } });
+    await UserModel.create({ auth: { email: 'r2@example.com' }, profile: { first_name: 'No Phone' }, metadata: { status: 'ACTIVE' } });
     expect(await waCampaignService.reach('ALL_USERS', {})).toBe(1);
   });
 
@@ -210,6 +210,7 @@ describe('waCampaignService reach and people search', () => {
     const asha = await UserModel.create({
       auth: { email: 'asha.s@example.com', phone: { extension: '+91', number: '9811100002' } },
       profile: { first_name: 'Asha', last_name: 'Singh' },
+      metadata: { status: 'ACTIVE' },
     });
     expect(await waCampaignService.userSearch('  a ')).toEqual([]);
     expect(await waCampaignService.userSearch('asha')).toEqual([

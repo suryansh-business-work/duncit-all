@@ -5,6 +5,7 @@
  */
 import bcrypt from 'bcryptjs';
 import { GraphQLError } from 'graphql';
+import { isValidObjectId } from 'mongoose';
 import { UserModel } from './user.model';
 import { UserRoleModel } from './relations';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
@@ -341,7 +342,8 @@ export const userAuthMethods = {
   ): Promise<{ token: string; user: any }> {
     const challenge = await otpService.verifyLatest('LOGIN', targetOf(input), input.otp);
     const userId = String((challenge.context as { user_id?: string })?.user_id ?? '');
-    const user = await UserModel.findById(userId);
+    // A challenge naming no account is refused like any unknown one — findById('') would throw a CastError.
+    const user = isValidObjectId(userId) ? await UserModel.findById(userId) : null;
     if (!user) throw invalidCredentials();
     // The same order the password door uses: proof first, then whether this
     // account may still hold a session at all.

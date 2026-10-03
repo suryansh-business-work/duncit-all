@@ -376,6 +376,8 @@ describe('paymentDetailService.detail — product orders', () => {
       order_no: `DUN-ORD-${++seq}`,
       payment_id: paymentId,
       fulfilment_method: 'SHIP',
+      // One SHIP order per pickup origin — the unique (payment, pod, method, origin) key.
+      pickup_location_id: new Types.ObjectId(),
       fulfilment_status: 'PENDING',
       total: 698,
       line_items: [{ qty: 2 }],

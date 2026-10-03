@@ -4,7 +4,9 @@
  * Rows go in through `Model.collection.insertOne` so a test controls every
  * field — `created_at` / `updated_at` included, which the sweep and the
  * clocks read — without the save hooks or the timestamps plugin rewriting
- * them. Every value is obviously fake.
+ * them. Every value is obviously fake. Raw inserts skip the hooks that fill a
+ * row's unique keys (club_id, location_id, slug), so each builder derives them
+ * from the row's own `_id` — a null there collides with the next row.
  */
 import { Types } from 'mongoose';
 import { AutoPodModel } from '../../autoPod.model';
@@ -26,9 +28,9 @@ export async function seedCategoryTree(minPax = 0) {
   const midId = oid();
   const subId = oid();
   await CategoryModel.collection.insertMany([
-    { _id: superId, name: 'Sports', level: 'SUPER', parent_id: null },
-    { _id: midId, name: 'Racket', level: 'CATEGORY', parent_id: superId },
-    { _id: subId, name: 'Badminton', level: 'SUB', parent_id: midId, min_pax: minPax },
+    { _id: superId, name: 'Sports', slug: `sports-${String(superId)}`, level: 'SUPER', parent_id: null },
+    { _id: midId, name: 'Racket', slug: 'racket', level: 'CATEGORY', parent_id: superId },
+    { _id: subId, name: 'Badminton', slug: 'badminton', level: 'SUB', parent_id: midId, min_pax: minPax },
   ]);
   return { superId, midId, subId };
 }
@@ -37,6 +39,7 @@ export async function seedLocation(over: Record<string, unknown> = {}) {
   const _id = oid();
   await LocationModel.collection.insertOne({
     _id,
+    location_id: `bengaluru-${String(_id)}`,
     location_name: 'Bengaluru',
     country: 'India',
     state: 'Karnataka',
@@ -62,6 +65,7 @@ export async function seedClub(over: Record<string, unknown> = {}) {
   const _id = oid();
   await ClubModel.collection.insertOne({
     _id,
+    club_id: `smash-club-${String(_id)}`,
     club_name: 'Smash Club',
     category_id: null,
     location_id: null,

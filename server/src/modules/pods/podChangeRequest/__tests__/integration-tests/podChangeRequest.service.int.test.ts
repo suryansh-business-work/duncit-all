@@ -98,9 +98,10 @@ beforeEach(() => {
 
 /* --------------------------------------------------------------- fixtures */
 
-async function seedUser(first: string, last: string, email = '') {
+async function seedUser(first: string, last: string, email?: string) {
   const _id = oid();
-  await UserModel.collection.insertOne({ _id, profile: { first_name: first, last_name: last }, auth: { email } });
+  // auth.email is unique for any string (even ''), so a user without one leaves it unset.
+  await UserModel.collection.insertOne({ _id, profile: { first_name: first, last_name: last }, auth: email ? { email } : {} });
   return _id;
 }
 

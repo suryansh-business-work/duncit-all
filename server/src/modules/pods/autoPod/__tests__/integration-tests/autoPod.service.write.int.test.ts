@@ -117,7 +117,7 @@ describe('resolveCategoryPair', () => {
   it('refuses an invalid id, a non-SUB node and a SUB with no super above it', async () => {
     const { midId } = await seedCategoryTree();
     const orphanSub = oid();
-    await CategoryModel.collection.insertOne({ _id: orphanSub, name: 'Loose', level: 'SUB', parent_id: null });
+    await CategoryModel.collection.insertOne({ _id: orphanSub, name: 'Loose', slug: 'loose', level: 'SUB', parent_id: null });
 
     await expect(resolveCategoryPair('nope')).rejects.toEqual(fails('BAD_USER_INPUT', 'Select a category'));
     await expect(resolveCategoryPair(String(midId))).rejects.toEqual(

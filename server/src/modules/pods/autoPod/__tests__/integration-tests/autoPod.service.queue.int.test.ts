@@ -379,15 +379,17 @@ describe('who the caller is, per role', () => {
   });
 
   it('hostSubCategoryIds: each approved sub-category once', async () => {
+    // One host row per user (user_id is unique), so the repeat is within it.
     const user = oid();
+    const pending = oid();
     const a = oid();
     const b = oid();
-    await seedHost(user, [a, b]);
-    await seedHost(user, [a]);
-    await seedHost(user, [oid()], { status: 'SUBMITTED' });
+    await seedHost(user, [a, b, a]);
+    await seedHost(pending, [oid()], { status: 'SUBMITTED' });
 
     const subs = await autoPodService.hostSubCategoryIds(String(user));
     expect(subs.map(String).sort()).toEqual(asIds(a, b));
+    await expect(autoPodService.hostSubCategoryIds(String(pending))).resolves.toEqual([]);
     await expect(autoPodService.hostSubCategoryIds('nope')).resolves.toEqual([]);
   });
 

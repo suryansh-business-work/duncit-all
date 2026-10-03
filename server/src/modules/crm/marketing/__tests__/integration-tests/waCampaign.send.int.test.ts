@@ -57,8 +57,15 @@ const TEMPLATE = {
 
 let seq = 0;
 const phone = (number: string) => ({ extension: '+91', number });
+// metadata is passed explicitly: the schema's `metadata` default does not fire on create.
+const ACTIVE = { status: 'ACTIVE' };
 const seedUser = (profile: Record<string, unknown>, over: Record<string, unknown> = {}) =>
-  UserModel.create({ auth: { email: `wa-${++seq}@example.com`, phone: phone(`98765000${String(seq).padStart(2, '0')}`) }, profile, ...over });
+  UserModel.create({
+    auth: { email: `wa-${++seq}@example.com`, phone: phone(`98765000${String(seq).padStart(2, '0')}`) },
+    profile,
+    metadata: ACTIVE,
+    ...over,
+  });
 
 /** The send walks in the background — wait for it to land. */
 async function finished(campaignId: string) {
@@ -159,6 +166,7 @@ describe('waCampaignService.send — the walk', () => {
     await UserModel.create({
       auth: { email: 'short@example.com' },
       profile: { first_name: 'Short', city: 'Agra' },
+      metadata: ACTIVE,
       communication: { whatsapp: { number: '98765' } },
     });
 

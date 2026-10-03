@@ -67,6 +67,14 @@ exports:
   - 'BackgroundJobsProvider'
   - 'BackgroundJobsIndicator'
   - 'useBackgroundJobs'
+  - 'BrandLogsPanel'
+  - 'BrandAnalyticsPanel'
+  - 'BrandAnalyticsReport'
+  - 'BRAND_ANALYTICS'
+  - 'BRAND_ANALYTICS_WINDOWS'
+  - 'BRAND_CHANGE_LOGS_TABLE'
+  - 'trendBarPercents'
+  - 'trendPeak'
 ---
 
 ## Why this exists
@@ -134,7 +142,7 @@ const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> 
 | Tab | What it holds | Server operations |
 |---|---|---|
 | `profile` | Photo upload, first/last name, bio, up to 5 links (website / social accounts), private-profile switch, language, access roles | `me`, `updateMyProfile`, `updateMyProfileVisibility`, `setMyLocale` |
-| `security` | Change or create the password (current password → emailed 6-digit code → new password), when it last changed, last sign-in and method, linked Google account (read-only), **Sign out of all devices** | `myConnectedAccounts`, `requestPasswordChangeOtp`, `changePasswordWithOtp`, `signOutEverywhere` |
+| `security` | Change or create the password (current password → emailed 6-digit code → new password), when it last changed, **Authenticator app** (set up / turn off), last sign-in and method, linked Google account (read-only), **Sign out of all devices** | `myConnectedAccounts`, `requestPasswordChangeOtp`, `changePasswordWithOtp`, `startTwoFactorSetup`, `enableTwoFactor`, `disableTwoFactor`, `signOutEverywhere` |
 | `notifications` | Email categories, WhatsApp categories (locked rows shown, never hidden), which channels may carry sign-in codes | `myMailPreferences`, `myWhatsappPreference`, `myCommunicationPreference` and their setters |
 
 The rules are mWeb's, not a portal copy: names, bio and links validate through
@@ -142,6 +150,50 @@ The rules are mWeb's, not a portal copy: names, bio and links validate through
 the password steps through `makeCurrentPasswordSchema` / `makeNewPasswordSchema`, and the code-channel
 locks through `authMessageCardState` in `@duncit/utils`. **Sign out of all devices** writes the same
 session seal a password reset does, so the current session ends too and the page signs out.
+
+### Authenticator app (two-step sign-in for the consoles)
+
+Profile → Security → **Set up authenticator app** asks the server for a fresh secret
+(`startTwoFactorSetup` — a QR code plus the key as text), and turns it on only once a code from the
+app proves the scan (`enableTwoFactor`). Ten recovery codes are shown **once**, then only their
+hashes are kept. **Turn off** (`disableTwoFactor`) needs a current code or a recovery code, so a
+session left open on someone else's screen cannot remove it.
+
+Once on, every console sign-in — password or emailed code, through `PortalLoginPage` — is answered
+with a `TWO_FACTOR_REQUIRED` error carrying a 5-minute `challenge_token` instead of a session. The
+page opens `TwoFactorLoginDialog`, and `completeTwoFactorLogin` trades the token plus the 6-digit
+code (or a recovery code) for the session, which goes through the same `acceptSession` role gate.
+Five wrong codes lock the step for 15 minutes; an expired challenge drops back to the form.
+
+It applies to **console sign-ins only**: the server asks only when a sign-in carries `portal_key`,
+so mWeb and the app sign in exactly as before. The code box is `TwoFactorCodeForm`
+(`src/two-factor/two-factor-code/`), validated by `makeTwoFactorCodeSchema` from
+`@duncit/forms/schemas`.
+
+### Brand details: activity log and sales analytics
+
+A brand's details page shows the same two panels whether the brand owner opens it in the Partners
+portal or staff open it in the Products portal. The server decides which brands each caller may
+read, so both portals mount the panels unchanged:
+
+```tsx
+import { BrandAnalyticsPanel, BrandLogsPanel } from '@duncit/shell';
+
+<BrandAnalyticsPanel brandId={brand.id} />
+<BrandLogsPanel brandId={brand.id} tableId="partners-brand-logs" />
+```
+
+| Export | Props | What it renders | Server operation |
+|---|---|---|---|
+| `BrandLogsPanel` | `{ brandId: string; tableId: string }` | The brand's append-only change log in a `DuncitTable`, newest first. Columns: When (admin date format), Field, Old value, New value, Action, Changed by (Owner / Admin / System), Changed by name / ID, Source. Action, actor and source filter as enums. `tableId` keys column and filter persistence, so give each portal its own. | `entityChangeLogsTable(entity_type: BRAND, entity_id, query)` (`BRAND_CHANGE_LOGS_TABLE`) |
+| `BrandAnalyticsPanel` | `{ brandId: string }` | A 7 / 30 / 90-day window selector (default 30, from `BRAND_ANALYTICS_WINDOWS`), then `BrandAnalyticsReport`. Loading is a `role="status"` skeleton. An error shows its reason (`parseApiError`) with **Retry**, which refetches. | `brandAnalytics(brand_doc_id, days)` (`BRAND_ANALYTICS`) |
+| `BrandAnalyticsReport` | `{ analytics: BrandAnalytics }` | The body for a `brandAnalytics` answer you already have: KPI tiles (orders, units sold, gross sales, net earnings, avg order value, product views, product clicks, live products "X of Y"), a daily-orders bar strip, and a captioned top-products table. A window with no orders keeps the tiles at zero and adds an info line. | none |
+
+The bar strip has no chart dependency. It is a row of `Box` bars, each scaled to the busiest day by
+`trendBarPercents(trend)`. Screen readers get it as one `role="img"` whose label states the window,
+the order total and `trendPeak(trend)`. Money goes through `formatINR` and counts through
+`formatCount` (both `@duncit/utils`). The window start uses the admin-configured `formatDate`. All
+copy lives under `shell.brandConsole.*`.
 
 ## Sample data
 

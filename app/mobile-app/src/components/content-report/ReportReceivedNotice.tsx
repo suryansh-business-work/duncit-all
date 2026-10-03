@@ -21,7 +21,13 @@ export function ReportReceivedNotice({ reportNo }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
   return (
-    <YStack testID="report-content-received" role="alert" alignItems="center" gap={10} paddingVertical={12}>
+    <YStack
+      testID="report-content-received"
+      role="alert"
+      alignItems="center"
+      gap={10}
+      paddingVertical={12}
+    >
       <MaterialIcons name="check-circle-outline" size={40} color={primary} />
       <Text fontSize={16} fontWeight="700" color="$color" textAlign="center">
         {t('contentReport.submittedTitle')}

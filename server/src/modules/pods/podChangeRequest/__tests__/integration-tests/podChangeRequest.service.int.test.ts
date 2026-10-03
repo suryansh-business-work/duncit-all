@@ -112,7 +112,8 @@ async function seedWorld(podOver: Record<string, unknown> = {}) {
   const venue = oid();
   await VenueModel.collection.insertOne({ _id: venue, venue_name: 'Play Arena', owner_user_id: owner });
   const club = oid();
-  await ClubModel.collection.insertOne({ _id: club, club_name: 'Smash Club', admin_user_ids: [admin] });
+  // A raw insert skips the hook that fills the unique club_id, so derive one.
+  await ClubModel.collection.insertOne({ _id: club, club_id: `smash-club-${String(club)}`, club_name: 'Smash Club', admin_user_ids: [admin] });
   const slot = oid();
   const pod = oid();
   await PodModel.collection.insertOne({

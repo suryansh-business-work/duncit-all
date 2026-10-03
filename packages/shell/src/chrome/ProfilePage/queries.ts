@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql, type TypedDocumentNode } from '@apollo/client';
 
 /** One link on the profile — a website or social account. */
 export interface ProfileLink {
@@ -21,6 +21,15 @@ export interface ConnectedAccounts {
   password_changed_at: string | null;
   last_login_at: string | null;
   last_login_provider: string | null;
+  two_factor_enabled: boolean;
+  two_factor_enabled_at: string | null;
+  two_factor_recovery_codes_left: number;
+}
+
+/** The secret to put into an authenticator app, as a QR code and as text. */
+export interface TwoFactorSetup {
+  secret: string;
+  qr_code_data_url: string;
 }
 
 export const MY_PROFILE_DETAILS = gql`
@@ -75,10 +84,53 @@ export const MY_CONNECTED_ACCOUNTS = gql`
       password_changed_at
       last_login_at
       last_login_provider
+      two_factor_enabled
+      two_factor_enabled_at
+      two_factor_recovery_codes_left
       google {
         google_email
         linked_at
       }
+    }
+  }
+`;
+
+/*
+  The two-factor mutations select only what the screen reads off them.
+  ConnectedAccounts has no id, so Apollo cannot merge an answer into the query
+  above — the Security tab refetches it after a change instead, as it does
+  after a password change.
+*/
+export const START_TWO_FACTOR_SETUP: TypedDocumentNode<
+  { startTwoFactorSetup: TwoFactorSetup },
+  Record<string, never>
+> = gql`
+  mutation ShellStartTwoFactorSetup {
+    startTwoFactorSetup {
+      secret
+      qr_code_data_url
+    }
+  }
+`;
+
+export const ENABLE_TWO_FACTOR: TypedDocumentNode<
+  { enableTwoFactor: { recovery_codes: string[] } },
+  { code: string }
+> = gql`
+  mutation ShellEnableTwoFactor($code: String!) {
+    enableTwoFactor(code: $code) {
+      recovery_codes
+    }
+  }
+`;
+
+export const DISABLE_TWO_FACTOR: TypedDocumentNode<
+  { disableTwoFactor: { two_factor_enabled: boolean } },
+  { code: string }
+> = gql`
+  mutation ShellDisableTwoFactor($code: String!) {
+    disableTwoFactor(code: $code) {
+      two_factor_enabled
     }
   }
 `;

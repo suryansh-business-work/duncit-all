@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
 import { useColorMode } from '@duncit/theme';
@@ -9,44 +8,13 @@ import { useTranslation } from '../i18n/useTranslation';
 import { useBranding } from '../hooks/useBranding';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../lib/redirect';
 import OtpLoginPanel from './OtpLoginPanel';
+import TwoFactorLoginDialog from './TwoFactorLoginDialog';
+import { useTwoFactorLogin } from './useTwoFactorLogin';
+import { REQUEST_OTP, buildLoginMutation, buildOtpLoginMutation, type SessionPayload } from './login-documents';
 import type { PortalLoginPageProps, RedirectLocation } from './portal-login.types';
 
 const LOGIN_FAILED_MESSAGE = 'Login failed. Please try again.';
-const BASE_USER_FIELDS = 'user_id first_name last_name email roles';
 const NO_EXTRA_FIELDS: readonly string[] = [];
-
-function buildLoginMutation(mutationName: string, extraUserFields: readonly string[]) {
-  const extra = extraUserFields.length ? ` ${extraUserFields.join(' ')}` : '';
-  return gql(`
-    mutation ${mutationName}($input: LoginInput!) {
-      login(input: $input) {
-        token
-        user { ${BASE_USER_FIELDS}${extra} }
-      }
-    }
-  `);
-}
-
-/** The same session a password produces, from a code instead. */
-function buildOtpLoginMutation(extraUserFields: readonly string[]) {
-  const extra = extraUserFields.length ? ` ${extraUserFields.join(' ')}` : '';
-  return gql(`
-    mutation ConsoleOtpLogin($input: PortalLoginOtpInput!) {
-      loginWithPortalOtp(input: $input) {
-        token
-        user { ${BASE_USER_FIELDS}${extra} }
-      }
-    }
-  `);
-}
-
-const REQUEST_OTP = gql(`
-  mutation ConsoleRequestLoginOtp($input: PortalLoginOtpRequestInput!) {
-    requestPortalLoginOtp(input: $input) {
-      ok
-    }
-  }
-`);
 
 /**
  * The login page every Duncit console previously hand-rolled: ConsoleLogin
@@ -104,7 +72,7 @@ export default function PortalLoginPage({
     same role gate and write the same token to the same place. Two copies of
     this is how one of them ends up skipping the gate.
   */
-  const acceptSession = (data?: { token?: string; user?: { roles?: string[] } } | null) => {
+  const acceptSession = (data?: SessionPayload | null) => {
     if (!data?.token) throw new Error(LOGIN_FAILED_MESSAGE);
     if (!skipAccessGate && !session.hasAppAccess(data.user?.roles)) {
       throw new Error(session.accessDeniedMessage(t));
@@ -112,6 +80,14 @@ export default function PortalLoginPage({
     session.setToken(data.token);
     navigate(redirectAfterLogin(), { replace: true });
   };
+
+  // Either door may answer "now the authenticator code" instead of a session.
+  const twoFactor = useTwoFactorLogin({
+    extraUserFields,
+    onSession: acceptSession,
+    onExpired: setError,
+    resolveError: resolveErrorMessage,
+  });
 
   const handleLogin = async (values: LoginFormValues) => {
     setError(null);
@@ -121,7 +97,7 @@ export default function PortalLoginPage({
       });
       acceptSession(res.data?.login);
     } catch (err) {
-      setError(resolveErrorMessage(err));
+      if (!twoFactor.intercept(err)) setError(resolveErrorMessage(err));
     }
   };
 
@@ -143,7 +119,7 @@ export default function PortalLoginPage({
       });
       acceptSession(res.data?.loginWithPortalOtp);
     } catch (err) {
-      setOtpError(resolveErrorMessage(err));
+      if (!twoFactor.intercept(err)) setOtpError(resolveErrorMessage(err));
     }
   };
 
@@ -172,23 +148,31 @@ export default function PortalLoginPage({
   }
 
   return (
-    <LoginScreen
-      config={config}
-      t={t}
-      mode={mode}
-      onToggleMode={toggle}
-      loading={loading}
-      errorMessage={error ?? deniedMessage}
-      onSubmit={handleLogin}
-      altSlot={
-        <OtpLoginPanel
-          onRequestCode={handleRequestCode}
-          onSubmitCode={handleSubmitCode}
-          busy={sendingOtp || verifyingOtp}
-          errorMessage={otpError}
-        />
-      }
-      footerSlot={footerSlot}
-    />
+    <>
+      <LoginScreen
+        config={config}
+        t={t}
+        mode={mode}
+        onToggleMode={toggle}
+        loading={loading}
+        errorMessage={error ?? deniedMessage}
+        onSubmit={handleLogin}
+        altSlot={
+          <OtpLoginPanel
+            onRequestCode={handleRequestCode}
+            onSubmitCode={handleSubmitCode}
+            busy={sendingOtp || verifyingOtp}
+            errorMessage={otpError}
+          />
+        }
+        footerSlot={footerSlot}
+      />
+      <TwoFactorLoginDialog
+        open={twoFactor.open}
+        busy={twoFactor.busy}
+        onSubmit={twoFactor.submit}
+        onCancel={twoFactor.cancel}
+      />
+    </>
   );
 }

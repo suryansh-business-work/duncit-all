@@ -250,6 +250,10 @@ describe('Connected Accounts', () => {
       password_changed_at: null,
       last_login_at: null,
       last_login_provider: null,
+      // A new account has no authenticator app, and so no recovery codes.
+      two_factor_enabled: false,
+      two_factor_enabled_at: null,
+      two_factor_recovery_codes_left: 0,
     });
   });
 

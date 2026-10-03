@@ -60,6 +60,12 @@ export {
 } from './delete-account';
 
 export {
+  makeTwoFactorCodeSchema,
+  twoFactorCodeDefaults,
+  type TwoFactorCodeValues,
+} from './two-factor';
+
+export {
   cleanProfileLinks,
   makeProfileBioSchema,
   makeProfileLinksSchema,

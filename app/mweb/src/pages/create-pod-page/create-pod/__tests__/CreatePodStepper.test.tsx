@@ -90,10 +90,13 @@ const validVirtual = (over: Partial<CreatePodFormValues> = {}): CreatePodFormVal
   pod_title: 'A Valid Pod Title',
   club_id: 'club1',
   pod_mode: 'VIRTUAL',
-  meeting_platform: 'Zoom',
+  // Picked from the shared platform list, not typed.
+  meeting_platform: 'ZOOM',
   meeting_url: 'https://zoom.us/j/123',
   pod_description: 'A sufficiently long description of the pod.',
   pod_date_time: future,
+  // A virtual pod needs an end — its window is what marks a member present.
+  pod_end_date_time: new Date(future.getTime() + 2 * 3600 * 1000),
   pod_type: 'FREE',
   pod_amount: 0,
   media_text: 'https://cdn.example.com/cover.jpg',
@@ -146,39 +149,50 @@ beforeEach(() => {
 describe('CreatePodStepper', () => {
   it('renders the first step with its title', () => {
     setup();
+    // The category, locality and club come first; basics follow.
     expect(screen.getByText(STEP_TITLES[0])).toBeInTheDocument();
-    expect(screen.getByText('BasicsStep')).toBeInTheDocument();
+    expect(screen.getByText('LocationClubStep')).toBeInTheDocument();
+    expect(screen.queryByText('BasicsStep')).not.toBeInTheDocument();
   });
 
   it('advances to the next step and persists a draft when values are valid', async () => {
     const { onSaveDraft } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(await screen.findByText(STEP_TITLES[1])).toBeInTheDocument();
-    expect(screen.getByText('LocationClubStep')).toBeInTheDocument();
-    await waitFor(() => expect(onSaveDraft).toHaveBeenCalled());
+    expect(screen.getByText('BasicsStep')).toBeInTheDocument();
+    // The draft is saved against the step the host moved to.
+    await waitFor(() => expect(onSaveDraft).toHaveBeenCalledWith(null, expect.objectContaining({ step: 1 })));
   });
 
-  it('blocks Next on step 2 when a multi-category host has not picked a category', async () => {
-    setup({
-      initialStep: 1,
+  it('blocks Next on step 1 when a multi-category host has not picked a category', async () => {
+    const { onSaveDraft } = setup({
       hostCategories: [hostCat, { ...hostCat, sub_category_id: 'sub2' }],
       initialValues: validVirtual({ host_category_key: '' }),
     });
-    expect(screen.getByText(STEP_TITLES[1])).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    // Category gate keeps us on step 2.
-    expect(screen.getByText(STEP_TITLES[1])).toBeInTheDocument();
-    expect(screen.queryByText(STEP_TITLES[2])).not.toBeInTheDocument();
+    expect(screen.getByText(STEP_TITLES[0])).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    });
+    // Category gate keeps us on step 1 and nothing is persisted.
+    expect(screen.getByText(STEP_TITLES[0])).toBeInTheDocument();
+    expect(screen.queryByText(STEP_TITLES[1])).not.toBeInTheDocument();
+    expect(onSaveDraft).not.toHaveBeenCalled();
   });
 
-  it('auto-selects the sole host category so it advances past step 2', async () => {
-    setup({
-      initialStep: 1,
+  it('auto-selects the sole host category so it advances past step 1', async () => {
+    const { onSaveDraft } = setup({
       hostCategories: [hostCat],
       initialValues: validVirtual({ host_category_key: '' }),
     });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    expect(await screen.findByText(STEP_TITLES[2])).toBeInTheDocument();
+    expect(await screen.findByText(STEP_TITLES[1])).toBeInTheDocument();
+    // The sole category key (Super|Sub) is what got saved.
+    await waitFor(() =>
+      expect(onSaveDraft).toHaveBeenCalledWith(
+        null,
+        expect.objectContaining({ step: 1, payload: expect.stringContaining('"host_category_key":"sup|sub"') }),
+      ),
+    );
   });
 
   it('goes back to the previous step', async () => {
@@ -203,10 +217,11 @@ describe('CreatePodStepper', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     expect(await screen.findByTestId('blocked-dialog')).toBeInTheDocument();
     expect(onPublish).not.toHaveBeenCalled();
-    // Jump moves to the field's step (pod_description -> step 0) and closes dialog.
+    // Jump moves to the field's step (pod_description -> Basics, step 1) and closes dialog.
     fireEvent.click(screen.getByRole('button', { name: 'No contact info allowed' }));
     await waitFor(() => expect(screen.queryByTestId('blocked-dialog')).not.toBeInTheDocument());
-    expect(screen.getByText(STEP_TITLES[0])).toBeInTheDocument();
+    expect(screen.getByText(STEP_TITLES[1])).toBeInTheDocument();
+    expect(screen.getByText('BasicsStep')).toBeInTheDocument();
   });
 
   it('closes the moderation dialog via its close action', async () => {
@@ -232,14 +247,15 @@ describe('CreatePodStepper', () => {
     setup({
       initialValues: validVirtual({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
     });
-    // Effect ran without throwing; the pricing step still renders.
-    expect(screen.getByText('BasicsStep')).toBeInTheDocument();
+    // Effect ran without throwing; the first step still renders.
+    expect(screen.getByText('LocationClubStep')).toBeInTheDocument();
   });
 
   it('autosaves the draft after the debounce once the form is dirty', async () => {
     vi.useFakeTimers();
     try {
-      const { onSaveDraft } = setup();
+      // The title is edited on the Basics step (step 2).
+      const { onSaveDraft } = setup({ initialStep: 1 });
       await act(async () => {
         screen.getByRole('button', { name: 'edit-title' }).click();
       });

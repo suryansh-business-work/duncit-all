@@ -16,6 +16,11 @@ interface Props<T> {
   rootField: string;
   columns: DuncitColumn<T>[];
   defaultSortField: string;
+  /**
+   * The query takes the account as its own argument (e.g. `user_id` on
+   * userProductOrdersTable) instead of a `user_id` filter.
+   */
+  userVariable?: string;
 }
 
 const getRowId = (row: { id: string }) => row.id;
@@ -34,14 +39,17 @@ export default function UserLog<T extends { id: string }>({
   rootField,
   columns,
   defaultSortField,
+  userVariable,
 }: Readonly<Props<T>>) {
   const client = useApolloClient();
   const fetchTable = useApolloTableFetch<T>(
     client,
     document,
     rootField,
-    { extraFilters: [{ field: 'user_id', op: 'eq', value: userId }] },
-    [userId],
+    userVariable
+      ? { extraVariables: { [userVariable]: userId } }
+      : { extraFilters: [{ field: 'user_id', op: 'eq', value: userId }] },
+    [userId, userVariable],
   );
   const fetchRows = useCallback(
     async (q: TableQueryState) => (userId ? fetchTable(q) : { rows: [], total: 0 }),

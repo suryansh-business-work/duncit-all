@@ -12,6 +12,8 @@ export type CoinTxnType = 'CREDIT' | 'DEBIT';
  * which is why they are the only ones that record who did it.
  * COIN_EXPIRY takes back the unspent part of a grant once its expiry date has
  * passed. Only the expiry sweep writes it (coin.expiry.ts).
+ * EARN_REVOKE takes back the PAYMENT_EARN coins of a booking whose money was
+ * refunded on a backout — the refunded share only, never below a zero balance.
  */
 export type CoinTxnSource =
   | 'PAYMENT_EARN'
@@ -23,7 +25,8 @@ export type CoinTxnSource =
   | 'POD_FEEDBACK'
   | 'ADMIN_GRANT'
   | 'ADMIN_DEDUCT'
-  | 'COIN_EXPIRY';
+  | 'COIN_EXPIRY'
+  | 'EARN_REVOKE';
 
 /**
  * Duncit Coins are a loyalty balance, NOT withdrawable money — which is exactly
@@ -115,6 +118,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
         'ADMIN_GRANT',
         'ADMIN_DEDUCT',
         'COIN_EXPIRY',
+        'EARN_REVOKE',
       ],
       required: true,
     },

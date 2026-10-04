@@ -7,13 +7,14 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 export interface ProductRowAction {
   key: string;
   label: string;
-  icon: 'edit' | 'settings' | 'ad' | 'delete' | 'pause' | 'resume';
+  icon: 'edit' | 'settings' | 'ad' | 'delete' | 'pause' | 'resume' | 'restore';
   onClick: () => void;
   danger?: boolean;
   disabled?: boolean;
@@ -26,6 +27,7 @@ const ICONS = {
   delete: <DeleteOutlineIcon fontSize="small" color="error" />,
   pause: <PauseCircleOutlineIcon fontSize="small" color="warning" />,
   resume: <PlayCircleOutlineIcon fontSize="small" color="success" />,
+  restore: <RestoreIcon fontSize="small" />,
 };
 
 /** Per-row 3-dots menu. Lives in a MUI Menu portal, so item clicks never bubble

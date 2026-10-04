@@ -197,7 +197,8 @@ describe('PodHistoryDetails', () => {
 
   it('shows the backing-out label and disables the button while backing out', () => {
     renderIt(baseItem(), [], { backingOut: true });
-    expect(screen.getByText('Backing out...')).toBeInTheDocument();
+    expect(screen.getByText('Backing out…')).toBeInTheDocument();
+    expect(screen.getByTestId('ph-backout')).toBeDisabled();
   });
 
   it('offers Rejoin + replacement notice for a backed-out active pod and fires onRejoin', () => {
@@ -213,7 +214,7 @@ describe('PodHistoryDetails', () => {
 
   it('shows the rejoining label while rejoining', () => {
     renderIt(baseItem({ status: 'BACKED_OUT' }), [], { rejoining: true });
-    expect(screen.getByText('Rejoining...')).toBeInTheDocument();
+    expect(screen.getByText('Rejoining…')).toBeInTheDocument();
   });
 
   it('shows the replacement notice for BACKOUT_IN_PROCESS', () => {
@@ -241,12 +242,28 @@ describe('PodHistoryDetails', () => {
           pod_date_time: '2000-01-01T10:00:00.000Z',
           pod_end_date_time: '2000-01-01T11:00:00.000Z',
         }),
+        // "Visited" needs a check-in at a pod that has happened — never the clock alone.
+        participation: { ...participationWith({}), attended: true, attendance_recorded: true, backouts: [] },
       })
     );
     expect(screen.getByText('Visited')).toBeInTheDocument();
     expect(screen.queryByText('Rejoin Pod')).not.toBeInTheDocument();
     expect(screen.queryByText('Backout Pod')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Refund Status/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ph-refund')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ph-refund-chip')).not.toBeInTheDocument();
+  });
+
+  it('keeps the Joined label for a past pod nobody checked in at', () => {
+    renderIt(
+      baseItem({
+        pod: basePod({
+          pod_date_time: '2000-01-01T10:00:00.000Z',
+          pod_end_date_time: '2000-01-01T11:00:00.000Z',
+        }),
+      })
+    );
+    expect(screen.getByText('Joined')).toBeInTheDocument();
+    expect(screen.queryByText('Visited')).not.toBeInTheDocument();
   });
 
   it('notifies the refund status when the Refund Status button is clicked', () => {
@@ -255,7 +272,9 @@ describe('PodHistoryDetails', () => {
         participation: participationWith({ status: 'SPOT_FILLED', refund_status: 'PROCESSED' }),
       })
     );
-    fireEvent.click(screen.getByText(/Refund Status: Refund initiated/));
+    const refundButton = screen.getByTestId('ph-refund');
+    expect(refundButton).toHaveTextContent('Refund: Refund initiated');
+    fireEvent.click(refundButton);
     expect(notifyMock).toHaveBeenCalledWith('Refund status: Refund initiated', 'info');
   });
 

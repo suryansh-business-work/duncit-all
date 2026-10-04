@@ -48,11 +48,11 @@ beforeEach(() => {
 });
 
 describe('HostApplyScreen', () => {
-  it('renders the category step with the brand logo and a back button', () => {
+  it('renders the category step titled "Host a new category", with a back button', () => {
     mockedFlow.mockReturnValue(flow());
     renderWithProviders(<HostApplyScreen />);
     expect(screen.getByTestId('category-phase')).toBeOnTheScreen();
-    expect(screen.getByText('Apply Now')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-apply-title')).toHaveTextContent('Host a new category');
     fireEvent.press(screen.getByTestId('host-apply-back'));
     expect(mockGoBack).toHaveBeenCalled();
   });
@@ -72,7 +72,7 @@ describe('HostApplyScreen', () => {
       flow({ phase: 'survey', survey: { id: 'sv1', title: '', questions: [] } }),
     );
     renderWithProviders(<HostApplyScreen />);
-    expect(screen.getByText('Apply Now')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-apply-title')).toHaveTextContent('Host a new category');
   });
 
   it('renders the success screen', () => {

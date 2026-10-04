@@ -28,6 +28,15 @@ const BACKOUT_REFUND_ROW_FIELDS = gql`
     refund_amount
     coins_paid
     coins_refunded
+    payment_gateway
+    coins_earned_share
+    coins_to_revoke
+    coins_revoked
+    cash_refund_processed_at
+    coins_refund_processed_at
+    earn_revoke_processed_at
+    refund_parts
+    pending_refund_parts
     refund_processed_at
     created_at
     pod {
@@ -107,6 +116,15 @@ export const BACKOUT_REFUND_DETAIL = gql`
       refund_amount
       coins_paid
       coins_refunded
+      payment_gateway
+      coins_earned_share
+      coins_to_revoke
+      coins_revoked
+      cash_refund_processed_at
+      coins_refund_processed_at
+      earn_revoke_processed_at
+      refund_parts
+      pending_refund_parts
       refund_processed_at
       events {
         status
@@ -173,10 +191,11 @@ export const BACKOUT_REFUND_DETAIL = gql`
   }
 `;
 
-/** Finance processes the refund for a Spot Filled request (one per request). */
+/** Finance processes ONE part of a Spot Filled request's refund — the gateway
+ * money, the coins, or the earned-coin revocation. */
 export const PROCESS_BACKOUT_REFUND = gql`
-  mutation ProcessBackoutRefund($id: ID!) {
-    processBackoutRefund(id: $id) {
+  mutation ProcessBackoutRefund($id: ID!, $part: BackoutRefundPart) {
+    processBackoutRefund(id: $id, part: $part) {
       ...BackoutRefundRowFields
     }
   }
@@ -185,6 +204,8 @@ export const PROCESS_BACKOUT_REFUND = gql`
 
 export type RefundStatus = 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
 export type BackoutStatus = 'IN_PROCESS' | 'CANCELLED' | 'SPOT_FILLED';
+/** One separately-actioned part of a refund (server enum BackoutRefundPart). */
+export type RefundPart = 'CASH' | 'COINS' | 'EARN_REVOKE';
 
 export type ChipColor = 'default' | 'warning' | 'success' | 'error';
 
@@ -255,6 +276,16 @@ export interface BackoutRefundRequest {
   payment_amount: number | null;
   coins_paid: number;
   coins_refunded: number;
+  /** RAZORPAY / DUMMY, or COINS / COUPON when nothing went through a gateway. */
+  payment_gateway: string | null;
+  coins_earned_share: number;
+  coins_to_revoke: number;
+  coins_revoked: number;
+  cash_refund_processed_at: string | null;
+  coins_refund_processed_at: string | null;
+  earn_revoke_processed_at: string | null;
+  refund_parts: RefundPart[];
+  pending_refund_parts: RefundPart[];
   payment_currency: string | null;
   payment_status: string | null;
   deduction_pct: number;
@@ -318,51 +349,3 @@ export interface BackoutRefundDetail extends Omit<BackoutRefundRequest, 'pod'> {
 export const canProcessRefund = (row: BackoutRefundRequest): boolean =>
   row.backout_status === 'SPOT_FILLED' && !!row.payment_id && !row.refund_processed_at;
 
-export interface BreakupLine {
-  key: string;
-  label: string;
-  value: string;
-  bold?: boolean;
-}
-
-/**
- * Builds the read-only refund "breakup" lines for a Backout request. The
- * request carries a snapshot (deduction_pct / refund_amount) taken when the
- * user confirmed the backout; the global Default Deductions Backouts % is only
- * a fallback for legacy rows without one.
- */
-export function buildRefundBreakup(
-  row: BackoutRefundRequest,
-  symbol: string,
-  fallbackDeductionPct: number
-): BreakupLine[] {
-  const amount = Number(row.payment_amount ?? 0);
-  const pct = Math.max(0, Math.min(100, Number(row.deduction_pct ?? fallbackDeductionPct) || 0));
-  const deduction = Math.round(amount * pct) / 100; // amount × pct%, 2dp
-  const net = row.refund_amount ?? Math.max(0, amount - deduction);
-  const lines: BreakupLine[] = [
-    { key: 'paid', label: 'Amount paid', value: money(symbol, amount) },
-    { key: 'backout-status', label: 'Backout status', value: BACKOUT_STATUS_LABELS[row.backout_status] },
-    { key: 'deduction', label: `Backout deduction (${pct}%)`, value: `- ${money(symbol, deduction)}` },
-    { key: 'refund', label: 'Refund payable', value: money(symbol, net), bold: true },
-  ];
-  // The coin half of the same refund. Only shown when the booking actually
-  // spent coins — every other backout would carry two zero rows that say
-  // nothing. Same percentage as the cash above it, floored to a whole coin,
-  // which is why the deducted figure is derived from the two stored numbers
-  // rather than recomputed from the rate.
-  const coinsPaid = Math.max(0, Math.floor(Number(row.coins_paid) || 0));
-  if (coinsPaid > 0) {
-    const coinsBack = Math.max(0, Math.floor(Number(row.coins_refunded) || 0));
-    lines.push(
-      { key: 'coins-paid', label: 'Duncit Coins used', value: String(coinsPaid) },
-      {
-        key: 'coins-deduction',
-        label: `Coin deduction (${pct}%)`,
-        value: `- ${coinsPaid - coinsBack}`,
-      },
-      { key: 'coins-refund', label: 'Coins refundable', value: String(coinsBack), bold: true },
-    );
-  }
-  return lines;
-}

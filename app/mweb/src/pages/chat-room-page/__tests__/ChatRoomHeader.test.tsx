@@ -8,8 +8,11 @@ describe('ChatRoomHeader', () => {
     render(<ChatRoomHeader title="Weekend Ride" messageCount={5} onBack={vi.fn()} onOpenPod={vi.fn()} />);
     expect(screen.getByText('Weekend Ride')).toBeInTheDocument();
     expect(screen.getByText('5 messages')).toBeInTheDocument();
-    // Avatar initial from first char of the title.
-    expect(screen.getByText('W')).toBeInTheDocument();
+    // The page's h1 wraps the tappable group name (a heading inside a button
+    // would be flattened away by assistive tech).
+    expect(screen.getByRole('heading', { level: 1 })).toContainElement(
+      screen.getByRole('button', { name: 'Open pod details for Weekend Ride' }),
+    );
   });
 
   it('uses the singular "message" for a count of 1', () => {
@@ -21,8 +24,6 @@ describe('ChatRoomHeader', () => {
     render(<ChatRoomHeader messageCount={0} onBack={vi.fn()} onOpenPod={vi.fn()} />);
     expect(screen.getByText('Chat')).toBeInTheDocument();
     expect(screen.getByText('0 messages')).toBeInTheDocument();
-    // Avatar initial from the fallback label.
-    expect(screen.getByText('C')).toBeInTheDocument();
     expect(screen.getByLabelText('Open pod details for Chat')).toBeInTheDocument();
   });
 

@@ -187,7 +187,7 @@ export const inventoryResolvers = {
     },
     updateMyProductSettings: async (
       _p: unknown,
-      args: { product_doc_id: string; low_stock_alert: number; notify_low_stock: boolean },
+      args: { product_doc_id: string; low_stock_alert: number; notify_low_stock: boolean; return_window_days?: number | null },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
@@ -195,7 +195,8 @@ export const inventoryResolvers = {
         args.product_doc_id,
         args.low_stock_alert,
         args.notify_low_stock,
-        ctx.user
+        ctx.user,
+        args.return_window_days
       );
     },
     deleteMyProductListing: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {

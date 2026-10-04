@@ -15,6 +15,11 @@ function makeOrder(overrides: Partial<ProductOrder> = {}): ProductOrder {
     pickup_ref: '',
     pickup_location_id: '',
     created_at: '2026-01-01T00:00:00.000Z',
+    delivered_at: null,
+    cancelled_at: null,
+    cancel_reason: '',
+    refund: { status: 'NONE', amount: 0, coins: 0, refunded_at: null },
+    returnable: [],
     line_items: [
       {
         product_id: 'p1',

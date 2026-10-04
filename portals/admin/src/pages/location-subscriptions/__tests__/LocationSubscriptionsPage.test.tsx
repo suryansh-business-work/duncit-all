@@ -17,10 +17,34 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
 }));
 
 vi.mock('@duncit/table', async (importOriginal) => {
+  const { useState } = await import('react');
   const stub = await import('./table-mock');
+  type StubProps = Parameters<typeof stub.DuncitTable>[0];
+  type Fetched = Awaited<ReturnType<StubProps['fetchRows']>>;
+  /** The grid stub has no row clicks; this adds a "pick" button per fetched row that calls `onRowClick`. */
+  function ClickableTable(props: Readonly<StubProps & { onRowClick?: (row: never) => void }>) {
+    const { onRowClick, ...rest } = props;
+    const [fetched, setFetched] = useState<unknown[]>([]);
+    const fetchRows: StubProps['fetchRows'] = async (query) => {
+      const res: Fetched = await props.fetchRows(query);
+      setFetched(res.rows);
+      return res;
+    };
+    return (
+      <>
+        <stub.DuncitTable {...rest} fetchRows={fetchRows} />
+        {onRowClick &&
+          fetched.map((row) => (
+            <button key={props.getRowId(row as never)} type="button" onClick={() => onRowClick(row as never)}>
+              {`pick ${props.getRowId(row as never)}`}
+            </button>
+          ))}
+      </>
+    );
+  }
   return {
     ...(await importOriginal<typeof import('@duncit/table')>()),
-    DuncitTable: stub.DuncitTable,
+    DuncitTable: ClickableTable,
     useApolloTableFetch: stub.useApolloTableFetch,
   };
 });
@@ -89,6 +113,12 @@ describe('LocationSubscriptionsPage', () => {
     });
 
     await waitFor(() => expect(screen.getAllByTestId('value-city')[0]).toHaveTextContent('Pune'));
+    // Nobody is listed until a city is picked.
+    expect(screen.getByTestId('location-subscriptions-pick-city')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('value-notified_at')).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'pick loc-pune' }));
+    expect(screen.getByTestId('location-subscriptions-selected-city')).toHaveTextContent('Pune');
     // Subscribers come back in server order: Asha (still waiting), then Kabir (messaged).
     await waitFor(() => expect(screen.getAllByTestId('value-notified_at')).toHaveLength(2));
     const [waiting, messaged] = screen.getAllByTestId('value-notified_at');

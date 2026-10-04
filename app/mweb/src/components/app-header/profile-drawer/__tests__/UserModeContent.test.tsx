@@ -65,12 +65,16 @@ describe('UserModeContent', () => {
     mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
   });
 
-  it('renders identity, quick actions, venues, referral and manage list', async () => {
+  it('renders identity, quick actions, referral and manage list', async () => {
     renderContent({ me: FULL_ME, showPodPlans: false, onNavigate: vi.fn() });
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('jane@example.com')).toBeInTheDocument();
     expect(screen.getByText('Pod History')).toBeInTheDocument();
-    expect(screen.getByText('Venues')).toBeInTheDocument();
+    // Chats and Following came down from the bottom bar into the grid; Venues
+    // went the other way, so the menu no longer carries a venues card.
+    expect(screen.getByTestId('sidebar-grid-chats')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-grid-following')).toBeInTheDocument();
+    expect(screen.queryByText('Venues')).not.toBeInTheDocument();
     expect(screen.getByText('Refer & Earn')).toBeInTheDocument();
     expect(screen.getByText('FAQs')).toBeInTheDocument();
     // Shop section — the e-commerce group parallel to Manage Account. It waits
@@ -154,7 +158,7 @@ describe('UserModeContent', () => {
     expect(onNavigate).toHaveBeenCalledWith('/account');
   });
 
-  it('navigates from quick action, venues, referral and manage rows', async () => {
+  it('navigates from quick action, referral and manage rows', async () => {
     const onNavigate = vi.fn();
     renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
     await screen.findByText('Pod Shop');
@@ -162,8 +166,11 @@ describe('UserModeContent', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pod History' }));
     expect(onNavigate).toHaveBeenCalledWith('/pod-history');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Explore venues' }));
-    expect(onNavigate).toHaveBeenCalledWith('/venues');
+    fireEvent.click(screen.getByTestId('sidebar-grid-chats'));
+    expect(onNavigate).toHaveBeenCalledWith('/chats');
+
+    fireEvent.click(screen.getByTestId('sidebar-grid-following'));
+    expect(onNavigate).toHaveBeenCalledWith('/follow');
 
     fireEvent.click(screen.getByRole('button', { name: 'Refer & Earn' }));
     expect(onNavigate).toHaveBeenCalledWith('/referral');

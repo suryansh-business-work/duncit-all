@@ -15,16 +15,17 @@ const baseProps = {
 };
 
 describe('ClubSummaryHeader', () => {
-  it('renders name, description, crumbs and all stats', () => {
+  it('renders name, description and crumbs, with no follower/pod/moment/venue counts', () => {
     render(<ClubSummaryHeader {...baseProps} />);
     expect(screen.getByText('Badminton Buddies')).toBeInTheDocument();
     expect(screen.getByText('We smash shuttles')).toBeInTheDocument();
     expect(screen.getByText('Badminton')).toBeInTheDocument();
-    // stats
-    expect(screen.getByText('42')).toBeInTheDocument(); // followers
-    expect(screen.getByText('5')).toBeInTheDocument(); // pods
-    expect(screen.getByText('2')).toBeInTheDocument(); // moments length
-    expect(screen.getByText('3')).toBeInTheDocument(); // venues
+    // The count stats were removed on purpose (a new club read "0 total
+    // members" as its loudest line) — none render even when counts are passed.
+    expect(screen.queryByText('42')).not.toBeInTheDocument(); // followers
+    expect(screen.queryByText('5')).not.toBeInTheDocument(); // pods
+    expect(screen.queryByText('2')).not.toBeInTheDocument(); // moments length
+    expect(screen.queryByText('3')).not.toBeInTheDocument(); // venues
   });
 
   it('shows Follow Club and fires onToggleFollow when not following', () => {
@@ -56,7 +57,7 @@ describe('ClubSummaryHeader', () => {
     expect(chat).not.toHaveAttribute('href');
   });
 
-  it('omits crumbs and description when absent, and defaults moments to 0', () => {
+  it('omits crumbs and description when absent', () => {
     render(
       <ClubSummaryHeader
         {...baseProps}
@@ -67,7 +68,7 @@ describe('ClubSummaryHeader', () => {
     expect(screen.getByText('Bare Club')).toBeInTheDocument();
     expect(screen.queryByText('We smash shuttles')).not.toBeInTheDocument();
     expect(screen.queryByText('Badminton')).not.toBeInTheDocument();
-    // moments stat falls back to 0
-    expect(screen.getByText('0')).toBeInTheDocument();
+    // A bare club shows no zero-count stat line.
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 });

@@ -73,11 +73,22 @@ beforeEach(() => {
   jest.mocked(githubRepoConfig).mockResolvedValue(null);
   admin.ping.mockResolvedValue({ ok: 1 });
   admin.buildInfo.mockResolvedValue({ version: '8.0.12' });
-  admin.command.mockResolvedValue({ setName: 'rs0', isWritablePrimary: true, hosts: ['duncit-mongo:27017'] });
+  admin.command.mockResolvedValue({
+    setName: 'rs0',
+    isWritablePrimary: true,
+    hosts: ['duncit-mongo:27017'],
+    primary: 'duncit-mongo:27017',
+    me: 'duncit-mongo:27017',
+    lastWrite: { lastWriteDate: new Date('2026-10-04T08:30:00.000Z') },
+  });
   admin.serverStatus.mockResolvedValue({
     uptime: 3600,
     connections: { current: 42, available: 838_818, totalCreated: 120 },
     storageEngine: { name: 'wiredTiger' },
+    opcounters: { insert: 11, query: 22, update: 33, delete: 4, command: 55 },
+    mem: { resident: 256 },
+    network: { bytesIn: 1000, bytesOut: 2000, numRequests: 30 },
+    wiredTiger: { cache: { 'bytes currently in the cache': 5000, 'maximum bytes configured': 9000 } },
   });
   db.stats.mockResolvedValue({
     collections: 3,
@@ -128,11 +139,26 @@ describe('databaseInfo', () => {
       setName: 'rs0',
       isWritablePrimary: true,
       members: ['duncit-mongo:27017'],
+      primary: 'duncit-mongo:27017',
+      me: 'duncit-mongo:27017',
+      lastWriteAt: '2026-10-04T08:30:00.000Z',
       uptimeSeconds: 3600,
       connectionsCurrent: 42,
       connectionsAvailable: 838_818,
       connectionsTotalCreated: 120,
       storageEngine: 'wiredTiger',
+      opInsert: 11,
+      opQuery: 22,
+      opUpdate: 33,
+      opDelete: 4,
+      opCommand: 55,
+      // serverStatus reports resident memory in MiB; the page shows bytes.
+      memResidentBytes: 256 * 1024 * 1024,
+      networkBytesIn: 1000,
+      networkBytesOut: 2000,
+      networkRequests: 30,
+      cacheBytes: 5000,
+      cacheMaxBytes: 9000,
       statusError: null,
     });
     expect(info.storage).toEqual({
@@ -198,10 +224,17 @@ describe('databaseInfo', () => {
       setName: null,
       isWritablePrimary: null,
       members: [],
+      primary: null,
+      me: null,
+      lastWriteAt: null,
       connectionsCurrent: null,
       connectionsAvailable: null,
       connectionsTotalCreated: null,
       storageEngine: null,
+      opInsert: null,
+      memResidentBytes: null,
+      networkBytesIn: null,
+      cacheBytes: null,
     });
     expect(info.storage).toMatchObject({ views: 0, avgDocumentBytes: 0, totalBytes: 150, fsUsedBytes: null, fsTotalBytes: null });
   });

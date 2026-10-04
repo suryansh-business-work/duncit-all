@@ -55,8 +55,13 @@ describe('ExplorePodCard share', () => {
         onOpen={jest.fn()}
       />,
     );
-    fireEvent.press(screen.getByText('Share'));
-    await waitFor(() => expect(spy).toHaveBeenCalled());
+    // Share is an icon-only disc on the reel rail; its name is the aria-label.
+    fireEvent.press(screen.getByLabelText('Share'));
+    await waitFor(() =>
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Pod', message: expect.stringContaining('Pod') }),
+      ),
+    );
     spy.mockRestore();
   });
 });

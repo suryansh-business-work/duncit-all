@@ -37,9 +37,12 @@ describe('PortalMappingTable', () => {
     const infoButtons = screen.getAllByTestId('InfoOutlinedIcon').map((i) => i.closest('button')!);
     expect(infoButtons[1]).toBeDisabled(); // 'web' row has no entries
     fireEvent.click(infoButtons[0]); // 'crm' enabled
-    expect(onInfo).toHaveBeenCalled();
+    expect(onInfo).toHaveBeenCalledWith(rows[0]);
 
-    fireEvent.click(screen.getAllByRole('button', { name: /Assign/i })[0]);
-    expect(onAssign).toHaveBeenCalled();
+    // Exact name: the "Assigned configs" column header carries its own buttons.
+    const assignButtons = screen.getAllByRole('button', { name: 'Assign' });
+    expect(assignButtons).toHaveLength(3);
+    fireEvent.click(assignButtons[0]);
+    expect(onAssign).toHaveBeenCalledWith(rows[0].portal);
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,16 +28,28 @@ import {
 } from './productAccess';
 import { useTranslation } from '@duncit/shell';
 import { primaryHeroBackground } from '../../components/primaryHero';
+import type { Translate } from '../ecomm-brand-page/brand-wizard/wizard-steps';
 
-const settingsSchema = z.object({
-  low_stock_alert: z.coerce
-    .number({ error: 'Enter a whole number' })
-    .int('Enter a whole number')
-    .min(0, 'Cannot be negative')
-    .max(1000000),
-  notify_low_stock: z.boolean(),
-});
-type SettingsValues = z.infer<typeof settingsSchema>;
+/** Mirrors the server's bound (inventory RETURN_WINDOW_MAX_DAYS); the server re-checks it. */
+const RETURN_WINDOW_MAX_DAYS = 30;
+
+const makeSettingsSchema = (t: Translate) => {
+  const returnWindowInvalid = t('partners.productSettings.returnWindowInvalid', { vars: { max: RETURN_WINDOW_MAX_DAYS } });
+  return z.object({
+    low_stock_alert: z.coerce
+      .number({ error: 'Enter a whole number' })
+      .int('Enter a whole number')
+      .min(0, 'Cannot be negative')
+      .max(1000000),
+    notify_low_stock: z.boolean(),
+    return_window_days: z.coerce
+      .number({ error: returnWindowInvalid })
+      .int(returnWindowInvalid)
+      .min(0, returnWindowInvalid)
+      .max(RETURN_WINDOW_MAX_DAYS, returnWindowInvalid),
+  });
+};
+type SettingsValues = z.infer<ReturnType<typeof makeSettingsSchema>>;
 
 export default function ProductSettingsPage() {
   const { t } = useTranslation();
@@ -59,14 +71,19 @@ export default function ProductSettingsPage() {
   const product = stateProduct || data?.myProductListings?.find((item: any) => item.id === productId) || null;
 
   const [updateSettings, { loading: saving }] = useMutation<any>(UPDATE_PRODUCT_SETTINGS);
+  const settingsSchema = useMemo(() => makeSettingsSchema(t), [t]);
   const { control, handleSubmit, reset } = useForm<SettingsValues, any, SettingsValues>({
     resolver: zodResolver(settingsSchema) as unknown as Resolver<SettingsValues, any, SettingsValues>,
-    defaultValues: { low_stock_alert: 5, notify_low_stock: false },
+    defaultValues: { low_stock_alert: 5, notify_low_stock: false, return_window_days: 0 },
   });
 
   useEffect(() => {
     if (product) {
-      reset({ low_stock_alert: Number(product.low_stock_alert ?? 5), notify_low_stock: Boolean(product.notify_low_stock) });
+      reset({
+        low_stock_alert: Number(product.low_stock_alert ?? 5),
+        notify_low_stock: Boolean(product.notify_low_stock),
+        return_window_days: Number(product.return_window_days ?? 0),
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
@@ -150,6 +167,16 @@ export default function ProductSettingsPage() {
                     label={t('partners.listProductsPage.notifyMeWhenThisProductHits')}
                   />
                 )}
+              />
+              <RhfTextField
+                control={control}
+                name="return_window_days"
+                label={t('partners.productSettings.returnWindowLabel')}
+                type="number"
+                slotProps={{ htmlInput: { min: 0, max: RETURN_WINDOW_MAX_DAYS, step: 1, inputMode: 'numeric' } }}
+                hint={t('partners.productSettings.returnWindowHint')}
+                sx={{ maxWidth: 420 }}
+                data-testid="product-settings-return-window"
               />
               <DuncitButton type="submit" variant="contained" loading={saving} sx={{ alignSelf: 'flex-start' }}>
                 {saving ? 'Saving...' : 'Save settings'}

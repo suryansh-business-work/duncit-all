@@ -66,9 +66,13 @@ describe('SurveyStepper', () => {
         onSubmit={onSubmit}
       />,
     );
-    // multi-section => stepper visible (label appears in stepper + active title)
-    expect(screen.getAllByText('Section One').length).toBeGreaterThan(0);
-    expect(screen.getByText('Section Two')).toBeInTheDocument();
+    // multi-section => progress bar visible: one segment per section, on step 1
+    // of 2, labelled with the active section; only the active title is shown
+    const bar = screen.getByRole('progressbar', { name: 'Section One' });
+    expect(bar).toHaveAttribute('aria-valuenow', '1');
+    expect(bar).toHaveAttribute('aria-valuemax', '2');
+    expect(screen.getByText('Section One')).toBeInTheDocument();
+    expect(screen.queryByText('Section Two')).not.toBeInTheDocument();
 
     // Back disabled on first step
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();

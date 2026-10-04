@@ -15,6 +15,21 @@ export const MY_PRODUCT_ORDERS_FOR_POD = gql`
       pickup_ref
       pickup_location_id
       created_at
+      delivered_at
+      cancelled_at
+      cancel_reason
+      refund {
+        status
+        amount
+        coins
+        refunded_at
+      }
+      returnable {
+        product_id
+        variant_id
+        returnable_qty
+        returnable_until
+      }
       line_items {
         product_id
         variant_id
@@ -63,6 +78,21 @@ export const MY_PRODUCT_ORDERS = gql`
       pickup_ref
       pickup_location_id
       created_at
+      delivered_at
+      cancelled_at
+      cancel_reason
+      refund {
+        status
+        amount
+        coins
+        refunded_at
+      }
+      returnable {
+        product_id
+        variant_id
+        returnable_qty
+        returnable_until
+      }
       pod {
         id
         pod_title
@@ -123,6 +153,23 @@ export interface ProductOrderLine {
   gross: number;
 }
 
+export type OrderRefundStatus = 'NONE' | 'PENDING' | 'PROCESSED' | 'RECORDED' | 'FAILED';
+
+export interface OrderRefund {
+  status: OrderRefundStatus;
+  amount: number;
+  coins: number;
+  refunded_at: string | null;
+}
+
+export interface ReturnableLine {
+  product_id: string;
+  variant_id: string;
+  returnable_qty: number;
+  /** Null when the product was not returnable when bought. */
+  returnable_until: string | null;
+}
+
 export interface ProductOrder {
   id: string;
   order_no: string;
@@ -134,6 +181,13 @@ export interface ProductOrder {
   pickup_ref: string;
   pickup_location_id: string;
   created_at: string;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string;
+  /** Money going back after a cancellation. */
+  refund: OrderRefund;
+  /** Pod shop only: what the buyer may still return, line by line. */
+  returnable: ReturnableLine[];
   /** Present on the all-orders history query only. */
   pod?: { id: string; pod_title: string } | null;
   line_items: ProductOrderLine[];

@@ -150,7 +150,8 @@ describe('ProductCheckoutScreen', () => {
     renderWithProviders(<ProductCheckoutScreen />);
     expect(screen.getByTestId('product-checkout-empty')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('product-checkout-back-to-cart'));
-    expect(mockNavigate).toHaveBeenCalledWith('Cart');
+    // The cart is a Home tab, reached through its navigator.
+    expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'Cart' });
   });
 
   it("checks out EVERY pod's cart lines together as one flat product list", () => {
@@ -335,7 +336,7 @@ describe('ProductCheckoutScreen', () => {
     );
   });
 
-  it('shows a cancellation message when the Razorpay sheet is dismissed', async () => {
+  it('shows the cancelled payment dialog when the Razorpay sheet is dismissed', async () => {
     createRazorpayProductOrder.mockResolvedValue(order);
     mockedCheckout.mockReturnValue(liveHook());
     renderWithProviders(<ProductCheckoutScreen />);
@@ -343,9 +344,13 @@ describe('ProductCheckoutScreen', () => {
     fireEvent.press(screen.getByTestId('checkout-submit'));
     const frame = await screen.findByTestId('razorpay-webview-frame');
     fireEvent(frame, 'message', { nativeEvent: { data: JSON.stringify({ type: 'dismiss' }) } });
-    await waitFor(() =>
-      expect(screen.getByTestId('checkout-error')).toHaveTextContent(/cancelled/i),
-    );
+    const dialog = await screen.findByTestId('payment-failure-dialog');
+    expect(dialog).toHaveTextContent(/cancelled/i);
+    // A hand-closed sheet risks no money, so no support ticket is promised.
+    expect(screen.queryByTestId('payment-ticket-no')).toBeNull();
+    expect(verifyRazorpay).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('payment-failure-retry'));
+    await waitFor(() => expect(screen.queryByTestId('payment-failure-dialog')).toBeNull());
   });
 
   it('completes a 100%-off coupon for free without the gateway sheet', async () => {
@@ -407,7 +412,7 @@ describe('ProductCheckoutScreen', () => {
     // Preview base = product subtotal (200), never subtotal + shipping (260).
     await waitFor(() => expect(previewCoupon).toHaveBeenCalledWith('TEN', 200));
     // You pay = discounted subtotal (180) + delivery (60), struck from 260.
-    expect(screen.getByTestId('coupon-total')).toHaveTextContent('You pay ₹240 ₹260');
+    expect(screen.getByTestId('coupon-total')).toHaveTextContent('You pay ₹240.00 ₹260.00');
     // Pay carries the applied code through to the product engine.
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));

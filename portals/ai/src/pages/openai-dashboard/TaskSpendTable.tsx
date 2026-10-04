@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { useTranslation } from '@duncit/shell';
@@ -107,6 +107,18 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
     []
   );
   const fetchRows = useMemo(() => clientTableFetch<TaskSpend>(rows, searchOf, columns), [rows, columns]);
+  // DuncitTable reloads on its own query state, not on a new fetchRows — so when
+  // the dashboard refetches (a rate saved, the background refresh) the new rows
+  // would never be shown. Ask it to reload whenever the rows really change.
+  const refetchRef = useRef<(() => void) | null>(null);
+  const firstRows = useRef(true);
+  useEffect(() => {
+    if (firstRows.current) {
+      firstRows.current = false;
+      return;
+    }
+    refetchRef.current?.();
+  }, [fetchRows]);
 
   if (rows.length === 0) {
     return (
@@ -129,6 +141,7 @@ export default function TaskSpendTable({ rows }: Readonly<{ rows: readonly TaskS
       emptyText={t('ai.taskSpend.empty')}
       defaultSort={{ field: 'cost_usd', dir: 'desc' }}
       searchPlaceholder={t('ai.taskSpend.search')}
+      refetchRef={refetchRef}
     />
   );
 }

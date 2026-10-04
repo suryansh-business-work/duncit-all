@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import ReviewBrandDialog from '../../src/pages/ecomm/ReviewBrandDialog';
+import type { EcommBrandRow } from '../../src/pages/ecomm/queries';
 import { renderWithProviders } from '../testkit';
 import {
   approveEcommBrandMock,
@@ -8,8 +9,35 @@ import {
   rejectEcommBrandMock,
 } from '../mocks/ecommBrand.mock';
 
-const submitted = (over = {}) =>
-  makeEcommBrandRow({ status: 'SUBMITTED', reviewer_notes: '', tags: [], ...over });
+// The dialog reads the wizard progress and the signed consent to decide whether
+// Approve is allowed, so by default every row is a completed, signed submission.
+const ready = (over: Partial<EcommBrandRow> = {}): EcommBrandRow =>
+  makeEcommBrandRow({
+    completion: {
+      percent: 100,
+      next_step: 10,
+      steps: [
+        { key: 'details', required: true, complete: true },
+        { key: 'documents', required: true, complete: true },
+        // Integrations gate going live, not approval.
+        { key: 'integration', required: true, complete: false },
+      ],
+    },
+    consent: {
+      accepted: true,
+      signed_name: 'Asha',
+      signed_at: '2026-10-01T10:00:00.000Z',
+      policy_slug: 'brand-partner-consent',
+      policy_title: 'Brand Consent',
+      content_hash: 'a1b2',
+      current: true,
+      available: true,
+    },
+    ...over,
+  });
+
+const submitted = (over: Partial<EcommBrandRow> = {}) =>
+  ready({ status: 'SUBMITTED', reviewer_notes: '', tags: [], ...over });
 
 describe('ReviewBrandDialog', () => {
   it('is closed when there is no brand', () => {
@@ -20,7 +48,7 @@ describe('ReviewBrandDialog', () => {
   it('seeds notes and tags from the brand and shows what was submitted', () => {
     renderWithProviders(
       <ReviewBrandDialog
-        brand={makeEcommBrandRow({
+        brand={ready({
           status: 'SUBMITTED',
           reviewer_notes: 'needs a call',
           tags: ['premium', 'apparel'],
@@ -40,7 +68,7 @@ describe('ReviewBrandDialog', () => {
   it('warns when the brand is not awaiting review', () => {
     renderWithProviders(
       <ReviewBrandDialog
-        brand={makeEcommBrandRow({ status: 'APPROVED' })}
+        brand={ready({ status: 'APPROVED' })}
         onClose={vi.fn()}
         onDone={vi.fn()}
       />,
@@ -51,7 +79,7 @@ describe('ReviewBrandDialog', () => {
   it('falls back to a generic title and empty notes when the brand carries neither', () => {
     renderWithProviders(
       <ReviewBrandDialog
-        brand={makeEcommBrandRow({
+        brand={ready({
           brand_name: '',
           status: 'SUBMITTED',
           reviewer_notes: null,
@@ -61,7 +89,8 @@ describe('ReviewBrandDialog', () => {
         onDone={vi.fn()}
       />,
     );
-    expect(screen.getByText('Brand')).toBeInTheDocument();
+    // A brand saved without a name still gives the dialog a title (and so an accessible name).
+    expect(screen.getByRole('dialog', { name: /Untitled brand/ })).toBeInTheDocument();
     expect(screen.getByLabelText('Reviewer notes')).toHaveValue('');
   });
 
@@ -128,6 +157,27 @@ describe('ReviewBrandDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Yes, approve' }));
     expect(await screen.findByText('cannot approve')).toBeInTheDocument();
+  });
+
+  it('disables Approve and lists why while a required step is unfinished', () => {
+    renderWithProviders(
+      <ReviewBrandDialog
+        brand={submitted({
+          completion: {
+            percent: 50,
+            next_step: 2,
+            steps: [{ key: 'documents', required: true, complete: false }],
+          },
+        })}
+        onClose={vi.fn()}
+        onDone={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('review-brand-blocked')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
+    // Reject stays available once notes are written.
+    fireEvent.change(screen.getByLabelText('Reviewer notes'), { target: { value: 'incomplete' } });
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeEnabled();
   });
 
   it('closes on cancel', () => {

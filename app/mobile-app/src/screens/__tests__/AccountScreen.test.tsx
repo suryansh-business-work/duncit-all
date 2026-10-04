@@ -20,6 +20,13 @@ jest.mock('@/components/profile/ProfileAvatar', () => {
     ),
   };
 });
+// Connected accounts (Google connect/disconnect) loads its own data and drives
+// the native Google sign-in; the screen only has to place it.
+jest.mock('@/components/account/ConnectedAccountsSection', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return { ConnectedAccountsSection: () => <View testID="connected-accounts" /> };
+});
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
@@ -90,6 +97,7 @@ describe('AccountScreen', () => {
     expect(screen.getByText('riya@duncit.com')).toBeOnTheScreen();
     expect(screen.getByText('Pune · Maharashtra · India')).toBeOnTheScreen();
     expect(screen.getByTestId('account-health')).toBeOnTheScreen();
+    expect(screen.getByTestId('connected-accounts')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('account-health'));
     expect(mockNavigate).toHaveBeenCalledWith('AccountHealth');
 

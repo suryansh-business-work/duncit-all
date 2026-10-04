@@ -50,7 +50,9 @@ describe('HostDashboardScreen', () => {
   it('renders earnings, stats, quick actions and opens health + a quick action', () => {
     renderWithProviders(<HostDashboardScreen />);
     expect(screen.getByTestId('host-earnings')).toBeOnTheScreen();
-    expect(screen.getByText('Welcome back, Riya')).toBeOnTheScreen();
+    // The balance card shows the wallet balance (the greeting went with the redesign).
+    expect(screen.getByText('AVAILABLE BALANCE')).toBeOnTheScreen();
+    expect(screen.getByText('₹1200.00')).toBeOnTheScreen();
     // Earnings summary tiles from myHostEarningsSummary.
     expect(screen.getByTestId('earnings-summary-tiles')).toBeOnTheScreen();
     expect(screen.getByText('Lifetime earnings')).toBeOnTheScreen();
@@ -77,7 +79,7 @@ describe('HostDashboardScreen', () => {
     });
     renderWithProviders(<HostDashboardScreen />);
     expect(screen.getByText('₹0.00')).toBeOnTheScreen();
-    expect(screen.getByText('Earnings from your hosted pods')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-earnings')).toBeOnTheScreen();
     expect(screen.queryByTestId('earnings-summary-tiles')).toBeNull();
     expect(screen.queryByTestId('host-health')).toBeNull();
   });

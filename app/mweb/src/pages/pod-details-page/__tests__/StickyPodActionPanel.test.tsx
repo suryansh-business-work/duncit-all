@@ -32,8 +32,8 @@ describe('StickyPodActionPanel', () => {
   it('renders the inner PodActionPanel booking CTA and forwards props', () => {
     const onPaidCheckout = vi.fn();
     renderPanel({ onPaidCheckout });
-    const cta = screen.getByRole('button', { name: /book & pay ₹100/i });
-    expect(cta).toBeInTheDocument();
+    expect(screen.getByTestId('pod-price')).toHaveTextContent('₹100');
+    const cta = screen.getByRole('button', { name: /^book now$/i });
     fireEvent.click(cta);
     expect(onPaidCheckout).toHaveBeenCalledTimes(1);
   });
@@ -48,7 +48,8 @@ describe('StickyPodActionPanel', () => {
   it('forwards the free-join branch to the inner panel', () => {
     const onJoinFree = vi.fn();
     renderPanel({ isFree: true, onJoinFree });
-    fireEvent.click(screen.getByRole('button', { name: /join free pod/i }));
+    expect(screen.getByTestId('pod-price')).toHaveTextContent(/^free$/i);
+    fireEvent.click(screen.getByRole('button', { name: /^join$/i }));
     expect(onJoinFree).toHaveBeenCalledTimes(1);
   });
 });

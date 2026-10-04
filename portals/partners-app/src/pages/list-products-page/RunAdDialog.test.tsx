@@ -146,7 +146,7 @@ describe('RunAdDialog', () => {
     expect((within(dialog).getByLabelText(/Ad Title/) as HTMLInputElement).value).toBe('Discover Beta Cap');
   });
 
-  it('asks for media when the listing has no image at all', async () => {
+  it('holds the request back until media is uploaded when the listing has no image at all', async () => {
     let sent = false;
     const { onSubmitted } = renderDialog(
       [
@@ -160,9 +160,15 @@ describe('RunAdDialog', () => {
 
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).queryByAltText('Ad media preview')).toBeNull();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Run a Product Ad' }));
+    expect(within(dialog).getByText('Upload the ad image')).toBeTruthy();
+    // Every other field is prefilled and valid, so the missing media alone keeps
+    // the form invalid — the submit stays disabled and a click sends nothing.
+    const submit = within(dialog).getByRole('button', { name: 'Run a Product Ad' });
+    await waitFor(() => expect(within(dialog).getByText('₹3,500')).toBeTruthy());
+    expect((submit as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(submit);
 
-    expect(await within(dialog).findByText('Upload the ad media')).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(sent).toBe(false);
     expect(onSubmitted).not.toHaveBeenCalled();
   });

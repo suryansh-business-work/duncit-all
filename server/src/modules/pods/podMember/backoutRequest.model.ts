@@ -59,7 +59,26 @@ export interface IBackoutRequest extends Document {
    * refund takes. Stored rather than derived so the number the member was shown
    * is the number the ledger later credits, even if the rate changes meanwhile. */
   coins_refunded: number;
-  /** Set once Finance processes the refund — one refund per request. */
+  /** Duncit Coins the booking EARNED on this release's share of the ticket
+   * money, before the deduction — what the purchase reward paid for these seats. */
+  coins_earned_share: number;
+  /** Coins to take back on refund: the earned share less the same Backouts
+   * deduction, because the deducted part of the payment is kept and the coins
+   * earned on it stay earned. Frozen with the rest of the snapshot. */
+  coins_to_revoke: number;
+  /** Coins actually taken back — less than `coins_to_revoke` only when the
+   * member had already spent them and the balance could not cover it. */
+  coins_revoked: number;
+  /**
+   * Each way the booking was paid is refunded on its own: Finance actions the
+   * gateway money, the coins and the earned-coin revocation separately, so each
+   * part carries its own stamp. Null on requests refunded before the split —
+   * `refund_processed_at` alone settled every part of those.
+   */
+  cash_refund_processed_at: Date | null;
+  coins_refund_processed_at: Date | null;
+  earn_revoke_processed_at: Date | null;
+  /** Set once EVERY part of the refund is processed — one refund per request. */
   refund_processed_at: Date | null;
   events: IBackoutEvent[];
   created_at: Date;
@@ -94,6 +113,12 @@ const backoutRequestSchema = new Schema<IBackoutRequest>(
     refund_amount: { type: Number, default: null },
     coins_paid: { type: Number, default: 0, min: 0 },
     coins_refunded: { type: Number, default: 0, min: 0 },
+    coins_earned_share: { type: Number, default: 0, min: 0 },
+    coins_to_revoke: { type: Number, default: 0, min: 0 },
+    coins_revoked: { type: Number, default: 0, min: 0 },
+    cash_refund_processed_at: { type: Date, default: null },
+    coins_refund_processed_at: { type: Date, default: null },
+    earn_revoke_processed_at: { type: Date, default: null },
     refund_processed_at: { type: Date, default: null },
     events: { type: [backoutEventSchema], default: [] },
   },

@@ -4,6 +4,7 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
+import { WishlistProvider } from '../../../components/cart/WishlistContext';
 import CartPage from '../../CartPage';
 
 const meta = (over: Partial<CartLineMeta> = {}): CartLineMeta => ({
@@ -34,14 +35,16 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <CartProvider>
-        <MemoryRouter initialEntries={['/cart']}>
-          <Seed lines={lines} />
-          <Routes>
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/shop" element={<div>SHOP</div>} />
-            <Route path="/product-checkout" element={<div data-testid="checkout-probe">CHECKOUT</div>} />
-          </Routes>
-        </MemoryRouter>
+        <WishlistProvider>
+          <MemoryRouter initialEntries={['/cart']}>
+            <Seed lines={lines} />
+            <Routes>
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/shop" element={<div>SHOP</div>} />
+              <Route path="/product-checkout" element={<div data-testid="checkout-probe">CHECKOUT</div>} />
+            </Routes>
+          </MemoryRouter>
+        </WishlistProvider>
       </CartProvider>
     </MockedProvider>,
   );
@@ -52,7 +55,7 @@ describe('CartPage + CartContext', () => {
   it('shows the empty state with a Pod Shop CTA', () => {
     renderCart();
     expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /browse the pod shop/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Explore Pod Shop' }));
     expect(screen.getByText('SHOP')).toBeInTheDocument();
   });
 

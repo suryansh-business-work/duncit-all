@@ -154,7 +154,10 @@ describe('GiftCardRedeemView', () => {
     await redeemNow(container);
 
     // A raw server message is not copy anyone wrote for a recipient (rule 38).
-    expect(container.querySelector('.MuiAlert-standardError')).not.toBeNull();
+    const alert = container.querySelector('[data-testid="gift-card-redeem-error"]');
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent).toContain('could not be redeemed');
+    expect(alert?.textContent).not.toContain('already been redeemed');
   });
 
   it('says so when the server answered nothing at all', async () => {
@@ -169,7 +172,9 @@ describe('GiftCardRedeemView', () => {
 
     await redeemNow(container);
 
-    expect(container.querySelector('.MuiAlert-standardError')).not.toBeNull();
+    const alert = container.querySelector('[data-testid="gift-card-redeem-error"]');
+    expect(alert?.textContent).toContain('could not be redeemed');
+    expect(container.querySelector('[data-testid="gift-card-redeem-success"]')).toBeNull();
   });
 
   it('reads a repeat redemption by the same holder as a no-op, not a second credit', async () => {

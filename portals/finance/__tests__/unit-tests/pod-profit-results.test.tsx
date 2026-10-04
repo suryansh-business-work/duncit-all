@@ -53,7 +53,7 @@ describe('ResultsCard', () => {
     expect(screen.getByText(formatRupees(260))).toBeInTheDocument(); // venue 360 − 100
     expect(screen.getByText(formatRupees(19022.34))).toBeInTheDocument(); // host − 1,000
     expect(screen.getByText(formatRupees(3593.93))).toBeInTheDocument(); // Duncit − 600
-    expect(screen.getByText('Venue expenses: ₹100')).toBeInTheDocument();
+    expect(screen.getByText(`Venue expenses: ${formatRupees(100)}`)).toBeInTheDocument();
   });
 
   it('names a venue shortfall on the host and hides costs when there are none', () => {

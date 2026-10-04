@@ -1,3 +1,4 @@
+import { config } from '@/constants/config';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import {
   formatMeetingPlatform,
@@ -151,7 +152,8 @@ describe('podShareMessage', () => {
 
   it('includes the title, schedule, venue and a deep link', () => {
     const { message, url } = podShareMessage(sharable);
-    expect(url).toBe('https://mweb.duncit.com/club/jazz-club/pod/p1');
+    // The link points at THIS build's mWeb origin (local, staging or prod).
+    expect(url).toBe(`${config.webUrl}/club/jazz-club/pod/p1`);
     expect(message).toContain('Sunset Jam');
     expect(message).toContain('When:');
     expect(message).toContain('Where: Indiranagar · Bengaluru');
@@ -160,7 +162,7 @@ describe('podShareMessage', () => {
 
   it('falls back to a club-less url and omits absent date/venue', () => {
     const { message, url } = podShareMessage({ pod_id: 'p2', pod_title: 'Open Mic' });
-    expect(url).toBe('https://mweb.duncit.com/pod/p2');
+    expect(url).toBe(`${config.webUrl}/pod/p2`);
     expect(message).not.toContain('When:');
     expect(message).not.toContain('Where:');
     expect(message).toContain('Open Mic');

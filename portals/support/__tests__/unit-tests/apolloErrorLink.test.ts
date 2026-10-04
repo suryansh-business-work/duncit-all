@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApolloLink, execute, gql } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache, execute, gql } from '@apollo/client';
 import { Observable } from '@apollo/client/utilities';
 import { apolloErrorLink } from '@duncit/shell';
 
@@ -9,9 +9,12 @@ const QUERY = gql`
   }
 `;
 
+// Apollo v4's `execute` needs the client the operation runs under.
+const client = new ApolloClient({ link: ApolloLink.empty(), cache: new InMemoryCache() });
+
 function runWith(downstream: ApolloLink) {
   return new Promise<{ error?: Error; data?: unknown }>((resolve) => {
-    execute(apolloErrorLink.concat(downstream), { query: QUERY }).subscribe({
+    execute(apolloErrorLink.concat(downstream), { query: QUERY }, { client }).subscribe({
       next: (data) => resolve({ data }),
       error: (error) => resolve({ error }),
       complete: () => resolve({}),

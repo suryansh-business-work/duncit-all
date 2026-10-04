@@ -22,6 +22,7 @@ const sourceOptions = (t: Translate) => [
   { value: 'ADMIN_GRANT', label: t('admin.userFinance.sourceAdminGrant') },
   { value: 'ADMIN_DEDUCT', label: t('admin.userFinance.sourceAdminDeduct') },
   { value: 'COIN_EXPIRY', label: t('admin.userFinance.sourceExpired') },
+  { value: 'EARN_REVOKE', label: t('admin.userFinance.sourceEarnRevoke') },
 ];
 
 /** The ledger as one running story: signed amounts, the balance after each move, and why it moved. */

@@ -102,8 +102,10 @@ describe('ImageLibraryDialog', () => {
     pick(fileInput(), [file('new.png', 'image/png')]);
 
     expect(await screen.findByText('ImageKit rejected the file')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    // The alert's own Close dismisses the failure; the dialog's Close button is a different one.
+    fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByText('ImageKit rejected the file')).toBeNull());
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('removes an image from the library, and reports a failed removal', async () => {

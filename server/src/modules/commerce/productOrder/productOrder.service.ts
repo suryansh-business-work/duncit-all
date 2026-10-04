@@ -62,6 +62,7 @@ const toPub = (d: IProductOrder) => ({
     length_cm: l.length_cm,
     breadth_cm: l.breadth_cm,
     height_cm: l.height_cm,
+    return_window_days: l.return_window_days ?? 0,
   })),
   currency_symbol: d.currency_symbol,
   items_total: d.items_total,
@@ -116,6 +117,16 @@ const toPub = (d: IProductOrder) => ({
   cancelled_at: d.cancelled_at?.toISOString?.() ?? null,
   cancel_reason: d.cancel_reason ?? '',
   cancelled_by: d.cancelled_by ?? '',
+  delivered_at: d.delivered_at?.toISOString?.() ?? null,
+  refund: {
+    status: d.refund?.status || 'NONE',
+    amount: d.refund?.amount ?? 0,
+    coins: d.refund?.coins ?? 0,
+    razorpay_refund_id: d.refund?.razorpay_refund_id ?? '',
+    refunded_at: d.refund?.refunded_at?.toISOString?.() ?? null,
+    error: d.refund?.error ?? '',
+    initiated_by: d.refund?.initiated_by ?? '',
+  },
   notes: (d.notes ?? []).map((n) => ({
     id: String(n._id),
     text: n.text,
@@ -149,6 +160,9 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
     order_no: { type: 'string' },
     total: { type: 'number' },
     created_at: { type: 'date' },
+    // Admin › User › Shop Orders scopes the table to one buyer and one shop.
+    buyer_id: { type: 'string' },
+    channel: { type: 'enum' },
   },
   defaultSort: { created_at: -1 },
 };
@@ -187,6 +201,8 @@ async function buildLineItem(line: any, petStore: boolean, session?: ClientSessi
     length_cm: Number(variant?.length_cm || (product as any)?.length_cm || 0),
     breadth_cm: Number(variant?.breadth_cm || (product as any)?.breadth_cm || 0),
     height_cm: Number(variant?.height_cm || (product as any)?.height_cm || 0),
+    // The return policy the buyer bought under; the pet store runs its own returns.
+    return_window_days: petStore ? 0 : Math.max(0, Math.floor(Number(product?.get?.('return_window_days')) || 0)),
   };
 }
 
@@ -696,6 +712,18 @@ export const productOrderService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
+  /** One member's pod-shop orders — the scope is fixed here, so a client filter cannot widen it. */
+  async tableForUser(userId: string, input?: TableQueryInput | null) {
+    if (!Types.ObjectId.isValid(userId)) return { rows: [], total: 0, page: 1, page_size: 25 };
+    const { docs, total, page, page_size } = await runTableQuery<IProductOrder>(
+      ProductOrderModel,
+      { buyer_id: new Types.ObjectId(userId), channel: 'POD_SHOP' },
+      input,
+      PRODUCT_ORDER_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
   async getById(id: string) {
     const d = await ProductOrderModel.findById(id);
     return d ? toPub(d) : null;
@@ -711,6 +739,13 @@ export const productOrderService = {
   async advanceStatus(id: string, status: FulfilmentStatus, note = '') {
     const doc = await ProductOrderModel.findById(id);
     if (!doc) throw new GraphQLError('Order not found', { extensions: { code: 'NOT_FOUND' } });
+    // A pod-shop cancellation owes the buyer a courier stop, the stock and a
+    // refund — a bare status write would do none of it.
+    if (status === 'CANCELLED' && doc.channel === 'POD_SHOP' && !doc.cancelled_at) {
+      throw new GraphQLError('Use Cancel order — it also stops the courier, restocks and refunds the buyer', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     const previous = doc.fulfilment_status;
     doc.fulfilment_status = status;
     doc.tracking_events.push({ status, code: 0, location: '', note, at: new Date() } as any);

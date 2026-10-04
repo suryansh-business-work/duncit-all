@@ -93,7 +93,10 @@ describe('PodAccordions', () => {
     expect(screen.getByText('Payment terms')).toBeOnTheScreen();
     // Paid pod → customer sees GST + total only (no fee/host/venue internals).
     expect(screen.getByText('GST (18%)')).toBeOnTheScreen();
-    expect(screen.getByText('Total payable')).toBeOnTheScreen();
+    // One ticket's price, labelled per seat so it never reads as the bar's total.
+    expect(screen.getByText('Price per seat')).toBeOnTheScreen();
+    expect(screen.getByText('₹200.00')).toBeOnTheScreen();
+    expect(screen.queryByText('Total payable')).toBeNull();
     // The pod's club category renders as a breadcrumb in the Club details card.
     expect(screen.getByText('Runners')).toBeOnTheScreen();
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(

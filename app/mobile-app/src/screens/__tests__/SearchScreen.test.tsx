@@ -132,7 +132,7 @@ describe('SearchScreen', () => {
     fireEvent.press(screen.getByLabelText('Club 1'));
     expect(mockOpenClub).toHaveBeenCalledWith('club-1');
     fireEvent.press(screen.getByTestId('pod-card-pod-p1'));
-    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-p1');
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-p1', 'p1');
   });
 
   it('routes the empty-state CTAs to Pod Ideas and Earn', () => {

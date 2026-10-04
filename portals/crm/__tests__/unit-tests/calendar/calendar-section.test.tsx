@@ -78,7 +78,11 @@ const leadMocks: MockedResponse[] = [
 const renderSection = (extra: MockedResponse[] = []) =>
   renderWithApollo(<CalendarSection />, [remindersMock({}, ALL), ...leadMocks, ...extra], { route: '/reminders' });
 
-const title = () => screen.getByRole('status');
+// The router's location probe is an <output> (also a status); the period title is the other one.
+const title = () => {
+  const [heading] = screen.getAllByRole('status').filter((el) => el !== screen.getByTestId('location'));
+  return heading;
+};
 const pills = () => screen.getAllByTestId('crm-calendar-event-pill').map((p) => p.textContent ?? '');
 
 const pickOption = async (field: RegExp, option: string) => {

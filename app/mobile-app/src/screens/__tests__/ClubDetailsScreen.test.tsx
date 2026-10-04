@@ -3,14 +3,19 @@ import { Share } from 'react-native';
 
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { useClubDetails } from '@/hooks/useDetails';
+import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
+jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+
+const mockRememberPodId = jest.fn();
 jest.mock('@/hooks/useDetails', () => ({
   useClubDetails: jest.fn(),
+  rememberPodId: (...args: unknown[]) => mockRememberPodId(...args),
   useResolvedClubId: (p: { clubId?: string }) => p?.clubId ?? '',
 }));
 
-const mockClubToggle = jest.fn();
+const mockClubToggle = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/useFollow', () => ({
   useClubFollow: () => ({ following: false, busy: false, toggle: mockClubToggle }),
 }));
@@ -57,6 +62,7 @@ const club = {
   values: [],
   faqs: [],
   hosts: [],
+  club_admins: [],
 };
 
 const pod = {
@@ -76,9 +82,18 @@ const pod = {
   place_detail: null,
 };
 
+const SHARE_URL = 'https://duncit.com/s/club1';
+
 beforeEach(() => {
   mockGoBack.mockClear();
   mockNavigate.mockClear();
+  // The body's own fetches: the club's stories and ratings (both keyed by
+  // clubId), and the tracked share link.
+  (graphqlRequest as jest.Mock).mockImplementation((_doc: unknown, vars: object) =>
+    Promise.resolve(
+      'target' in vars ? { shareLink: { url: SHARE_URL } } : { clubStories: [], clubRatings: [] },
+    ),
+  );
 });
 
 describe('ClubDetailsScreen', () => {
@@ -105,14 +120,12 @@ describe('ClubDetailsScreen', () => {
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
       'Sports › Racquet › Badminton',
     );
-    // Followers count is the single "total members" truth — the dedicated card
-    // and the stats row both show it, so the number appears twice.
-    expect(screen.getAllByText('42')).toHaveLength(2);
-    expect(screen.getByTestId('club-total-members')).toBeOnTheScreen();
-    expect(screen.getByText('Total Members')).toBeOnTheScreen();
-    expect(screen.getByText('total members')).toBeOnTheScreen();
-    // The attendee rail keeps its own, distinct heading.
-    expect(screen.getByText('Pod Members')).toBeOnTheScreen();
+    // The follower-count "Total Members" card and stat row were removed on
+    // purpose — who is in the club is answered by Club Members instead.
+    expect(screen.queryByTestId('club-total-members')).toBeNull();
+    expect(screen.queryByText('42')).toBeNull();
+    expect(screen.getByTestId('club-members')).toBeOnTheScreen();
+    expect(screen.getByText('Club Members')).toBeOnTheScreen();
     // The club's linked venues render, and open the venue screen.
     expect(screen.getByTestId('club-venues')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-venue-open-v1'));
@@ -121,6 +134,8 @@ describe('ClubDetailsScreen', () => {
     expect(mockClubToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
+    // The card's doc id is remembered so the pod screen skips the slug lookup.
+    expect(mockRememberPodId).toHaveBeenCalledWith('s', 'pod-1', 'p1');
     // Members rail → full profile (B4-12).
     fireEvent.press(screen.getByTestId('attendees-avatar-group'));
     fireEvent.press(screen.getByTestId('attendee-row-m1'));
@@ -129,7 +144,7 @@ describe('ClubDetailsScreen', () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it('share button triggers Share.share', async () => {
+  it('share button shares the tracked club link', async () => {
     const shareSpy = jest
       .spyOn(Share, 'share')
       .mockResolvedValue({ action: 'sharedAction' } as never);
@@ -145,7 +160,11 @@ describe('ClubDetailsScreen', () => {
     renderWithProviders(<ClubDetailsScreen />);
     fireEvent.press(screen.getByTestId('hb-share'));
     await act(async () => {});
-    expect(shareSpy).toHaveBeenCalled();
+    expect(shareSpy).toHaveBeenCalledWith({
+      title: 'Runners',
+      message: `Runners — ${SHARE_URL}`,
+      url: SHARE_URL,
+    });
     shareSpy.mockRestore();
   });
 

@@ -38,7 +38,7 @@ jest.mock('@/components/AccountButton', () => {
   return { AccountButton: () => <V testID="account-button" /> };
 });
 
-/** The header now carries the cart entry point (it used to float over content). */
+/** The cart moved to the bottom bar; seeded to prove the header stays clear of it. */
 const seedCart = (quantity: number) => {
   const line: CartLine = {
     pod_id: 'p1',
@@ -72,13 +72,19 @@ beforeEach(() => {
 });
 
 describe('AppHeader', () => {
-  it('renders the greeting tagline + account avatar and no studio badge in User mode', () => {
+  it('renders the account avatar and no studio badge or greeting in User mode off Home', () => {
     renderWithProviders(<AppHeader />);
     expect(screen.getByTestId('app-header')).toBeOnTheScreen();
     expect(screen.getByTestId('account-button')).toBeOnTheScreen();
-    expect(screen.getByTestId('header-greeting-title')).toHaveTextContent('It All Starts Here!');
+    expect(screen.queryByTestId('header-greeting-title')).toBeNull();
     expect(screen.queryByTestId('logout-button')).toBeNull();
     expect(screen.queryByTestId('header-studio-badge')).toBeNull();
+  });
+
+  it('greets with the branding tagline on Home, where its own search bar replaces the icon', () => {
+    renderWithProviders(<AppHeader home />);
+    expect(screen.getByTestId('header-greeting-title')).toHaveTextContent('It All Starts Here!');
+    expect(screen.queryByTestId('header-search')).toBeNull();
   });
 
   it('shows the tappable location in User mode and opens the picker on press', () => {
@@ -135,11 +141,11 @@ describe('AppHeader', () => {
     expect(screen.getByTestId('location-dialog')).toBeOnTheScreen();
   });
 
-  it('carries the cart entry point once the cart has items', () => {
+  it('no longer carries the cart even with items — it is a bottom-bar destination now', () => {
     seedCart(3);
     renderWithProviders(<AppHeader />);
-    expect(screen.getByTestId('header-cart-count')).toHaveTextContent('3');
-    expect(screen.getByLabelText('Open cart (3 items)')).toBeOnTheScreen();
+    expect(screen.queryByTestId('header-cart')).toBeNull();
+    expect(screen.queryByTestId('header-cart-count')).toBeNull();
   });
 
   it('shows no cart entry point while the cart is empty', () => {
@@ -147,11 +153,13 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('header-cart')).toBeNull();
   });
 
-  it('keeps the cart entry point in a studio mode, where the fab used to float', () => {
+  it('carries no cart in a studio mode either, nor a greeting even on Home', () => {
     seedCart(2);
     useStudioModeStore.setState({ mode: 'HOST' });
-    renderWithProviders(<AppHeader />);
-    expect(screen.getByTestId('header-cart')).toBeOnTheScreen();
+    renderWithProviders(<AppHeader home />);
+    expect(screen.getByTestId('header-studio-badge')).toBeOnTheScreen();
+    expect(screen.queryByTestId('header-cart')).toBeNull();
+    expect(screen.queryByTestId('header-greeting-title')).toBeNull();
   });
 
   it('hides the cart entry point in minimal (survey) mode', () => {

@@ -7,8 +7,10 @@ import ChatRoomNotice from '../ChatRoomNotice';
 describe('ChatRoomNotice', () => {
   it('shows the live state by default', () => {
     render(<ChatRoomNotice />);
-    expect(screen.getByText('Live')).toBeInTheDocument();
-    expect(screen.getByText('Keep the plan in one place')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-room-notice-live')).toHaveTextContent('Live');
+    // A live pod shows only the chip — no ended line beside it.
+    expect(screen.queryByTestId('chat-room-notice-ended')).not.toBeInTheDocument();
+    expect(screen.queryByText('This pod has ended')).not.toBeInTheDocument();
   });
 
   it('shows the ended state when the pod has ended', () => {

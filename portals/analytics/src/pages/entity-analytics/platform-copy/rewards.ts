@@ -57,6 +57,7 @@ export const REWARDS_COPY: PageCopy = {
       PAYMENT_REDEEM: 'analytics.slice.rewPaymentRedeem',
       COIN_EXPIRY: 'analytics.slice.rewCoinExpiry',
       ADMIN_DEDUCT: 'analytics.slice.rewAdminDeduct',
+      EARN_REVOKE: 'analytics.slice.rewEarnRevoke',
     },
     rew_balance_bands: {
       balance_under_50: 'analytics.slice.rewBalanceUnder50',

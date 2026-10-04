@@ -133,14 +133,14 @@ describe('DocumentsSection — document rows', () => {
     expect(screen.getByRole('combobox', { name: 'Document type' }).textContent).toBe('PAN Card');
   });
 
-  it('appends an untyped row when the config carries no document types', async () => {
+  it('offers no untyped row when the config carries no document types', () => {
     const formRef = mount({ mode: 'register', docTypes: [] });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add document' }));
-
-    await waitFor(() => expect(formRef.current?.getValues('documents')).toEqual([{ type: '', url: '' }]));
-    expect(screen.queryByText('PAN Card')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Upload file' })).toBeTruthy();
+    // A row needs a type to pass validation, so with no types there is nothing to add.
+    expect(screen.queryByRole('button', { name: 'Add document' })).toBeNull();
+    expect(screen.getByTestId('register-venue-all-document-types-added')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Upload file' })).toBeNull();
+    expect(formRef.current?.getValues('documents')).toEqual([]);
   });
 
   it('stores the picked file URL on the row that opened the picker', async () => {

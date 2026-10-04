@@ -104,10 +104,10 @@ describe('profileSections', () => {
       '/products/manage',
       '/host/wallet',
     ]);
-    // Club administration has no in-app studio — Withdrawal alone.
-    expect(buildPartnerMenus(['CLUB_ADMIN'], 'CLUB')[0]?.items.map((i) => i.label)).toEqual([
-      'Withdrawal',
-    ]);
+    // Club administration's in-app home is Club Studio, then Withdrawal.
+    const [clubMenu] = buildPartnerMenus(['CLUB_ADMIN'], 'CLUB');
+    expect(clubMenu?.items.map((i) => i.label)).toEqual(['Club Studio', 'Withdrawal']);
+    expect(clubMenu?.items.map((i) => i.to)).toEqual(['/clubs/manage', '/host/wallet']);
 
     // A dual-role user sees one menu at a time — whichever they switched to.
     expect(buildPartnerMenus(['HOST', 'VENUE_OWNER'], 'VENUE').map((m) => m.title)).toEqual([

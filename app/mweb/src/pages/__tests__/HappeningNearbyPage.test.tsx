@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
 
 const navigate = vi.fn();
 vi.mock('react-router', async (importOriginal) => ({
@@ -50,7 +51,13 @@ const setAds = (ads: any[]) => useActiveAds.mockReturnValue({ ads });
 
 const props = { superCategorySlug: 'sports', locationId: 'loc-1', zoneName: 'Baner' };
 
-const renderPage = () => render(<HappeningNearbyPage {...props} />);
+// The shared pod list reads `?from=` from the URL, so it needs a router.
+const renderPage = () =>
+  render(
+    <MemoryRouter>
+      <HappeningNearbyPage {...props} />
+    </MemoryRouter>,
+  );
 
 beforeEach(() => {
   setHome({});
@@ -62,10 +69,10 @@ afterEach(() => {
 });
 
 describe('HappeningNearbyPage', () => {
-  it('always renders the header title and subtitle', () => {
+  it('always renders the header title and the pod search field', () => {
     renderPage();
     expect(screen.getByText('Happening nearby')).toBeInTheDocument();
-    expect(screen.getByText('Live pods around your selected city')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search pods…')).toBeInTheDocument();
   });
 
   it('forwards the props to useHomeData and asks for POD_LIST ads', () => {

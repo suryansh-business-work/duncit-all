@@ -41,11 +41,19 @@ describe('FeedPostCard', () => {
     expect(h.onOpenAuthor).toHaveBeenCalled();
   });
 
-  it('shows the STORY chip for stories and a liked heart', () => {
-    renderWithProviders(
+  it('carries no STORY chip (the feed is posts only) and flips the like control when liked', () => {
+    const view = renderWithProviders(
       <FeedPostCard post={post({ kind: 'STORY', liked_by_me: true })} {...handlers()} />,
     );
-    expect(screen.getByText('STORY')).toBeOnTheScreen();
+    // Stories left the Following feed, so the card no longer labels one.
+    expect(screen.queryByText('STORY')).toBeNull();
+    const likedLabel = screen.getByTestId('feed-like-p1').props['aria-label'];
+    view.rerender(<FeedPostCard post={post({ liked_by_me: false })} {...handlers()} />);
+    const unlikedLabel = screen.getByTestId('feed-like-p1').props['aria-label'];
+    // A liked heart announces the opposite action to an unliked one.
+    expect(likedLabel).toEqual(expect.any(String));
+    expect(unlikedLabel).toEqual(expect.any(String));
+    expect(likedLabel).not.toBe(unlikedLabel);
   });
 
   it('falls back to an initial avatar, full_name, and hides missing media/caption', () => {

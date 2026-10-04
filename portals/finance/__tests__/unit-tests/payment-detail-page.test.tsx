@@ -120,13 +120,16 @@ describe('PaymentDetailPage — the audit', () => {
     expect(screen.getByText('Receipt e-mail: SMTP timeout after 30s')).toBeInTheDocument();
     expect(screen.queryByText('Refund required')).not.toBeInTheDocument();
 
-    // Original − tier − coupon − coins = the gross that was priced.
+    // Original ₹1200 incl. 18% GST → ₹1016.95 excl. GST; each deduction is shown
+    // excl. GST too (₹50 → ₹42.37, ₹100 → ₹84.75, coins take the remainder
+    // ₹42.37) so they land exactly on the ₹847.46 taxable value.
     expect(screen.getByText('₹1200.00')).toBeInTheDocument();
+    expect(screen.getByText('₹1016.95')).toBeInTheDocument();
     expect(screen.getByText('Multi-ticket discount (5%)')).toBeInTheDocument();
     expect(screen.getByText('Coupon discount (YOGA10)')).toBeInTheDocument();
-    expect(screen.getByText('− ₹100.00')).toBeInTheDocument();
+    expect(screen.getByText('− ₹84.75')).toBeInTheDocument();
     expect(screen.getByText('Coins redeemed (50)')).toBeInTheDocument();
-    expect(screen.getAllByText('− ₹50.00')).toHaveLength(2);
+    expect(screen.getAllByText('− ₹42.37')).toHaveLength(2);
     expect(screen.getByText('GST (18.00%)')).toBeInTheDocument();
     expect(screen.getByText('Platform fee (10.00% of subtotal)')).toBeInTheDocument();
 

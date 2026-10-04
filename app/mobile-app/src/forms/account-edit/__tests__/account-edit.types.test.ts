@@ -1,4 +1,5 @@
 import {
+  accountEditContacts,
   accountEditDefaults,
   accountEditSchema,
   toDobInput,
@@ -22,19 +23,20 @@ const fullMe = {
 } as unknown as AccountMe;
 
 describe('accountEditDefaults', () => {
-  it('falls back to empty/+91 defaults when there is no user', () => {
+  it('falls back to empty defaults when there is no user', () => {
+    // Email, phone and WhatsApp are not form values: each changes behind its
+    // own one-time code, so the edit form never holds them.
     expect(accountEditDefaults(null)).toEqual({
+      username: '',
       first_name: '',
       last_name: '',
       bio: '',
+      gender: '',
+      pet_owner: '',
       dob: '',
       country: '',
       state: '',
       city: '',
-      phone_extension: '+91',
-      phone_number: '',
-      whatsapp_extension: '+91',
-      whatsapp_number: '',
       address_line1: '',
       address_line2: '',
       address_landmark: '',
@@ -67,11 +69,28 @@ describe('accountEditDefaults', () => {
   });
 
   it('reflects the loaded user values including state (bug 14)', () => {
-    expect(accountEditDefaults(fullMe)).toMatchObject({
-      first_name: 'Riya',
-      state: 'Maharashtra',
+    const values = accountEditDefaults(fullMe);
+    expect(values).toMatchObject({ first_name: 'Riya', state: 'Maharashtra' });
+    expect('whatsapp_number' in values).toBe(false);
+    expect('phone_number' in values).toBe(false);
+  });
+});
+
+describe('accountEditContacts', () => {
+  it('reads the three contact details the account holds for the read-only rows', () => {
+    expect(accountEditContacts(fullMe)).toMatchObject({
+      phone_extension: '+91',
+      phone_number: '9876543210',
       whatsapp_extension: '+44',
       whatsapp_number: '5551234567',
+    });
+  });
+
+  it('is empty when there is no user yet', () => {
+    expect(accountEditContacts(null)).toMatchObject({
+      email: undefined,
+      phone_number: undefined,
+      whatsapp_number: undefined,
     });
   });
 
@@ -94,17 +113,18 @@ describe('toUpdateProfileInput', () => {
   it('maps values to the mutation input (state, not zone) and omits an empty dob', () => {
     const values: AccountEditValues = accountEditDefaults(fullMe);
     const input = toUpdateProfileInput(values);
+    // Unanswered selects and an empty dob are omitted (undefined), so a save
+    // never clears a stored answer; contacts never ride this mutation.
     expect(input).toEqual({
       first_name: 'Riya',
       last_name: 'Sharma',
       bio: 'Hi',
+      gender: undefined,
+      is_pet_owner: undefined,
+      dob: undefined,
       country: 'India',
       state: 'Maharashtra',
       city: 'Pune',
-      phone_extension: '+91',
-      phone_number: '9876543210',
-      whatsapp_extension: '+44',
-      whatsapp_number: '5551234567',
       address: {
         line1: '',
         line2: '',
@@ -116,6 +136,8 @@ describe('toUpdateProfileInput', () => {
       },
     });
     expect('zone' in input).toBe(false);
+    expect('phone_number' in input).toBe(false);
+    expect('whatsapp_number' in input).toBe(false);
     expect(input.dob).toBeUndefined();
   });
 
@@ -149,27 +171,24 @@ describe('accountEditSchema field validation', () => {
   it('requires a first name', () => {
     expect(accountEditSchema.safeParse({ ...base, first_name: '' }).success).toBe(false);
   });
-  it('rejects non-digit phone numbers', () => {
-    expect(accountEditSchema.safeParse({ ...base, phone_number: 'abc' }).success).toBe(false);
+  it('rejects digits in a name (shared PERSON_NAME shape)', () => {
+    expect(accountEditSchema.safeParse({ ...base, first_name: 'Riya2' }).success).toBe(false);
+    expect(accountEditSchema.safeParse({ ...base, last_name: 'Sh4rma' }).success).toBe(false);
   });
-  it('rejects a phone number with more than 10 digits', () => {
-    expect(accountEditSchema.safeParse({ ...base, phone_number: '123456789012' }).success).toBe(
-      false,
-    );
+  it('accepts an empty (optional) last name', () => {
+    expect(accountEditSchema.safeParse({ ...base, last_name: '' }).success).toBe(true);
   });
-  it('accepts an empty (optional) phone number', () => {
-    expect(
-      accountEditSchema.safeParse({ ...base, phone_number: '', whatsapp_number: '' }).success,
-    ).toBe(true);
+  it('drops contact details instead of carrying them through Save', () => {
+    const parsed = accountEditSchema.safeParse({ ...base, phone_number: 'abc' });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && 'phone_number' in parsed.data).toBe(false);
   });
   it('accepts a valid 6-digit pincode and rejects a malformed one', () => {
     expect(accountEditSchema.safeParse({ ...base, address_pincode: '110001' }).success).toBe(true);
     expect(accountEditSchema.safeParse({ ...base, address_pincode: '12' }).success).toBe(false);
   });
-  it('rejects an over-long extension', () => {
-    expect(accountEditSchema.safeParse({ ...base, phone_extension: '+123456' }).success).toBe(
-      false,
-    );
+  it('rejects an over-long location', () => {
+    expect(accountEditSchema.safeParse({ ...base, city: 'x'.repeat(81) }).success).toBe(false);
   });
   it('accepts a blank optional location', () => {
     expect(accountEditSchema.safeParse({ ...base, country: '', state: '', city: '' }).success).toBe(

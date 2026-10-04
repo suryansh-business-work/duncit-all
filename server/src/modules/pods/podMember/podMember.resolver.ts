@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { participationForMembership } from './membershipTimeline.service';
-import { podMemberService } from './podMember.service';
+import { podMemberService, type BackoutRefundPart } from './podMember.service';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
@@ -177,9 +177,13 @@ export const podMemberResolvers = {
       const uid = requireUser(ctx);
       return podMemberService.rejoin(args.pod_doc_id, uid);
     },
-    processBackoutRefund: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    processBackoutRefund: async (
+      _p: unknown,
+      args: { id: string; part?: BackoutRefundPart | null },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, ADMIN_RW);
-      return podMemberService.processBackoutRefund(args.id);
+      return podMemberService.processBackoutRefund(args.id, args.part);
     },
   },
 };

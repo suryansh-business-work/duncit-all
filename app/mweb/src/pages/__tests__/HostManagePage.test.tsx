@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -38,6 +38,17 @@ vi.mock('../host-manage-page/HostPodSections', () => ({
   ),
 }));
 
+// The shared pod-action dialogs' provider: a pass-through here, so the page's
+// own wiring is what is under test.
+vi.mock('../host-manage-page/HostPodActionsBridge', () => ({
+  default: ({ children }: { children: ReactNode }) => (
+    <div data-testid="pod-actions-bridge">{children}</div>
+  ),
+}));
+vi.mock('../../components/studio-pods/StudioChangeRequests', () => ({
+  default: ({ role }: { role: string }) => <div data-testid="change-requests">{role}</div>,
+}));
+
 import HostManagePage from '../HostManagePage';
 
 const ME_QUERY = gql`
@@ -69,6 +80,12 @@ const HOST_PODS = gql`
       pod_type
       pod_mode
       no_of_spots
+      ticket_discount_enabled
+      ticket_discount_tiers {
+        min_tickets
+        discount_pct
+      }
+      seats_taken
       location_id
       venue_id
       zone_name
@@ -107,7 +124,6 @@ describe('HostManagePage', () => {
   it('renders the header and static action links', () => {
     setup([meMock()], <HostManagePage />);
     expect(screen.getByText('Your Pods')).toBeInTheDocument();
-    expect(screen.getByText('Manage the pods you host')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Insights/i })).toHaveAttribute(
       'href',
       '/host/dashboard',
@@ -116,9 +132,14 @@ describe('HostManagePage', () => {
       'href',
       '/create-pod',
     );
-    // Drafts + share cards always render.
+    // Drafts, share and the host's change requests always render.
     expect(screen.getByTestId('drafts-card')).toBeInTheDocument();
     expect(screen.getByTestId('share-card')).toBeInTheDocument();
+    expect(screen.getByTestId('change-requests')).toHaveTextContent('HOST');
+    // The pod sections sit inside the pod-actions provider.
+    expect(screen.getByTestId('pod-actions-bridge')).toContainElement(
+      screen.getByTestId('pods-card'),
+    );
   });
 
   it('shows boot loading while the me query is in flight', () => {

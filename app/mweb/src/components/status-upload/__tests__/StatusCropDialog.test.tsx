@@ -46,6 +46,12 @@ vi.mock('@duncit/media-picker', () => ({
   ),
 }));
 
+// The AI Monitoring notice is its own package (it queries its config over
+// Apollo); the dialog only has to place it in the title.
+vi.mock('@duncit/ai-monitoring/mui', () => ({
+  AiMonitoringChip: () => <span data-testid="ai-monitoring-chip" />,
+}));
+
 beforeAll(() => {
   globalThis.URL.createObjectURL = vi.fn(() => 'blob:status-image');
   globalThis.URL.revokeObjectURL = vi.fn();

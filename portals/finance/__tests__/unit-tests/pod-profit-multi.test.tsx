@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import MultiPodCalculator from '../../src/pages/calculators/pod-profit/multi';
+import { formatRupees } from '../../src/pages/calculators/pod-profit/types';
 import { ConfirmProvider } from '../../../../packages/dialogs/src/useConfirm';
 import { renderWithProviders } from '../testkit';
 import { notifyError, notifySuccess } from './mocks/dialogs';
@@ -16,6 +17,14 @@ import {
   podCalculatorsMock,
   updatePodCalculatorMock,
 } from '../mocks/pod-calculator.mock';
+
+// jsdom has no canvas, so chart.js throws as soon as an input re-renders a
+// chart. The charts' own data and callbacks are covered in
+// pod-profit-charts.test; here they only need to stand in as labelled images.
+vi.mock('react-chartjs-2', () => {
+  const Chart = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />;
+  return { Bar: Chart, Doughnut: Chart };
+});
 
 // The stub's useConfirm always says yes; leaving and deleting are both tested
 // on the Cancel side too, so the real confirm and its provider are swapped in.
@@ -95,8 +104,8 @@ describe('Multiple pods tab — the list', () => {
 
     expect((await nameField()).value).toBe('Weekend comparison');
     // Each header answers the question collapsed: a count above one is shown.
-    expect(screen.getByText('Total collection ₹29,000')).toBeInTheDocument();
-    expect(screen.getByText('Total collection ₹43,500 · x3')).toBeInTheDocument();
+    expect(screen.getByText(`Total collection ${formatRupees(29000)}`)).toBeInTheDocument();
+    expect(screen.getByText(`Total collection ${formatRupees(43500)} · x3`)).toBeInTheDocument();
     expect(screen.getByText('Pods in this comparison: 4')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to saved comparisons' }));
@@ -122,8 +131,8 @@ describe('Multiple pods tab — the editor', () => {
     fireEvent.change(footballPanel.getByLabelText('Pod name'), { target: { value: 'Sunday Turf Football (5-a-side)' } });
     fireEvent.change(footballPanel.getByLabelText('Ticket price per spot (GST-inclusive)'), { target: { value: '1200' } });
     expect(screen.getByText('Sunday Turf Football (5-a-side)')).toBeInTheDocument();
-    expect(screen.getByText('Total collection ₹34,800')).toBeInTheDocument();
-    expect(screen.getByText('Total collection ₹43,500 · x3')).toBeInTheDocument();
+    expect(screen.getByText(`Total collection ${formatRupees(34800)}`)).toBeInTheDocument();
+    expect(screen.getByText(`Total collection ${formatRupees(43500)} · x3`)).toBeInTheDocument();
 
     // Unsaved edits: savable, not yet exportable.
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();

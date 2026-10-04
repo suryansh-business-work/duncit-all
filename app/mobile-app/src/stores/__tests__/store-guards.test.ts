@@ -36,9 +36,11 @@ describe('fetch guards skip while a request is already in flight', () => {
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('explore: skips when data is already cached and not forced', async () => {
+  it('explore: skips when data is already cached for the same city and not forced', async () => {
+    // The cache is per city: '' (every city) is what the data was loaded for.
     useExploreStore.setState({
       data: { me: null, clubs: [], pods: [] } as never,
+      locationId: '',
       isLoading: false,
       savedOverride: {},
       savePending: {},

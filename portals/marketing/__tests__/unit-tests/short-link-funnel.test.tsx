@@ -37,9 +37,13 @@ import { getJourneyColumns } from '../../src/pages/short-links-page/detail/journ
 import { stepLabel, toFunnelRows } from '../../src/pages/short-links-page/detail/funnel-steps';
 import type { ShortLinkJourneyRow } from '../../src/pages/short-links-page/queries';
 
+// The shared stats fixture predates consent_minimised, which the summary now
+// always renders; every stats response here carries it, as the server's does.
+const statsMock = () => shortLinkStatsMock({ consent_minimised: 0 });
+
 const detailMocks = () => [
   shortLinkMock(),
-  shortLinkStatsMock(),
+  statsMock(),
   shortLinkQrMock(),
   shortLinkFunnelMock(),
 ];
@@ -279,7 +283,7 @@ describe('the funnel on the detail page', () => {
   });
 
   it('waits on the funnel rather than drawing an empty one', () => {
-    renderDetail([shortLinkMock(), shortLinkStatsMock(), shortLinkQrMock()]);
+    renderDetail([shortLinkMock(), statsMock(), shortLinkQrMock()]);
     expect(screen.queryByText('Click to checkout')).not.toBeInTheDocument();
   });
 });

@@ -91,8 +91,12 @@ export function buildExpenseColumns({
     </Stack>
   );
 
-  const statusLabel = (row: ExpenseRecord) =>
-    t(COMPENSATION_STATUS_KEYS[row.compensation_status as CompensationStatus]);
+  // The server types the status as a plain string: one this console does not
+  // know yet shows as written rather than crashing the whole table.
+  const statusLabel = (row: ExpenseRecord) => {
+    const key = COMPENSATION_STATUS_KEYS[row.compensation_status as CompensationStatus];
+    return key ? t(key) : row.compensation_status;
+  };
   const renderStatus = (row: ExpenseRecord) => (
     <StatusChip
       status={row.compensation_status}

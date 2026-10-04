@@ -13,6 +13,7 @@ jest.mock('@/hooks/useActiveAds', () => ({
 }));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn(), goBack: jest.fn() }),
+  useRoute: () => ({ params: undefined }),
 }));
 
 const mockedFeed = useHomeFeed as jest.Mock;
@@ -33,6 +34,14 @@ const pod = {
   place_detail: null,
 };
 
+// The filter sheet reads the feed's category chips; the filter button is
+// enabled only when the feed has content.
+const feed = (nearbyPods: unknown[]) => ({
+  nearbyPods,
+  categoryChips: [],
+  hasContent: nearbyPods.length > 0,
+});
+
 describe('HappeningNearbyScreen', () => {
   beforeEach(() => {
     mockOpenPod.mockClear();
@@ -40,17 +49,18 @@ describe('HappeningNearbyScreen', () => {
   });
 
   it('shows the empty state when there are no live pods', () => {
-    mockedFeed.mockReturnValue({ nearbyPods: [] });
+    mockedFeed.mockReturnValue(feed([]));
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('happening-nearby-empty')).toBeOnTheScreen();
   });
 
   it('lists live pods and opens one', () => {
-    mockedFeed.mockReturnValue({ nearbyPods: [pod] });
+    mockedFeed.mockReturnValue(feed([pod]));
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('happening-nearby-screen')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-live'));
-    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-live');
+    // Slugs address the screen; the doc id lets it skip the slug lookup.
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-live', 'live');
   });
 
   it('interleaves a full-width sponsored banner after every 4 pods', () => {
@@ -69,7 +79,7 @@ describe('HappeningNearbyScreen', () => {
       id,
       pod_id: `pod-${id}`,
     }));
-    mockedFeed.mockReturnValue({ nearbyPods: pods });
+    mockedFeed.mockReturnValue(feed(pods));
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('ad-card-ad1')).toBeOnTheScreen();
     expect(screen.getByText('Sponsored Pod')).toBeOnTheScreen();

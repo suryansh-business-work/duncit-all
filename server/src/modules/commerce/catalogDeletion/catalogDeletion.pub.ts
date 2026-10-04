@@ -1,0 +1,30 @@
+import type { ICatalogDeletionRequest } from './catalogDeletion.model';
+
+/** The public shape of a deletion request (Partners + Products portals). */
+export const toDeletionPub = (r: ICatalogDeletionRequest) => ({
+  id: String(r._id),
+  request_no: r.request_no,
+  kind: r.kind,
+  brand_id: String(r.brand_id),
+  product_id: r.product_id ? String(r.product_id) : null,
+  parent_id: r.parent_id ? String(r.parent_id) : null,
+  brand_name: r.brand_name,
+  product_name: r.product_name,
+  mode: r.mode,
+  reason: r.reason,
+  scheduled_for: r.scheduled_for?.toISOString?.() ?? '',
+  status: r.status,
+  open_orders_at_request: r.open_orders_at_request,
+  requested_by_name: r.requested_by_name,
+  reviewed_by: r.reviewed_by,
+  reviewed_at: r.reviewed_at?.toISOString?.() ?? null,
+  review_note: r.review_note,
+  cancelled_orders: r.cancelled_orders,
+  failed_refunds: r.failed_refunds,
+  blocked_reason: r.blocked_reason,
+  last_checked_at: r.last_checked_at?.toISOString?.() ?? null,
+  completed_at: r.completed_at?.toISOString?.() ?? null,
+  events: (r.events ?? []).map((e) => ({ action: e.action, note: e.note, by: e.by, at: e.at?.toISOString?.() ?? '' })),
+  created_at: r.created_at?.toISOString?.() ?? '',
+  updated_at: r.updated_at?.toISOString?.() ?? '',
+});

@@ -92,28 +92,31 @@ describe('ChatsPage', () => {
     expect(await screen.findByText('boom')).toBeInTheDocument();
   });
 
-  it('renders the header count and pod chat cards', async () => {
+  it('renders one pod chat card per room', async () => {
     setup([chatMock([room('1'), room('2')])], <ChatsPage />);
     expect(await screen.findByText('Pod 1')).toBeInTheDocument();
     expect(screen.getByText('Pod 2')).toBeInTheDocument();
-    expect(screen.getByText('2 pod chats connected right now')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-room-1')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-room-2')).toBeInTheDocument();
     // live chip + members count
     expect(screen.getAllByText('Live').length).toBeGreaterThan(0);
     expect(screen.getAllByText('2/5 members').length).toBe(2);
   });
 
-  it('uses singular "chat" wording for a single room', async () => {
+  it('opens the chat room when its card is pressed', async () => {
     setup([chatMock([room('1')])], <ChatsPage />);
-    expect(await screen.findByText('1 pod chat connected right now')).toBeInTheDocument();
+    fireEvent.click(await screen.findByTestId('chat-room-1'));
+    expect(navigate).toHaveBeenCalledWith('/chats/1');
   });
 
   it('renders the ACTIVE PODS strip on the ALL filter and navigates from an avatar', async () => {
     setup([chatMock([room('1')])], <ChatsPage />);
     await screen.findByText('Pod 1');
     expect(screen.getByText('ACTIVE PODS · 1')).toBeInTheDocument();
-    // The strip avatar is the first GroupsIcon-bearing clickable box.
-    const openLink = screen.getByText('Open');
-    fireEvent.click(openLink);
+    // Each strip avatar is a button labelled with its pod's title.
+    const avatar = screen.getByTestId('active-pods-strip-1');
+    expect(avatar).toHaveAccessibleName('Pod 1');
+    fireEvent.click(avatar);
     expect(navigate).toHaveBeenCalledWith('/chats/1');
   });
 
@@ -159,7 +162,9 @@ describe('ChatsPage', () => {
         "You haven't joined any pods yet. Join or host a pod to start chatting with attendees.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText('0 pod chats connected right now')).toBeInTheDocument();
+    // Nothing to list: no active strip and no room cards.
+    expect(screen.queryByTestId('active-pods-strip')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('chats-list')).not.toBeInTheDocument();
   });
 
   it('scopes rooms to the header super category slug', async () => {

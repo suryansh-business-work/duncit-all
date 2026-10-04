@@ -49,8 +49,9 @@ describe('PhoneExtensionField', () => {
   it('writes an empty dial code when the field is cleared', () => {
     const onChange = vi.fn();
     render(<Harness initial="+91" onChange={onChange} />);
-    // The clear indicator is CSS-hidden until the field is hovered or focused.
-    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
+    // The clear indicator is CSS-hidden until hover/focus, so it has no computed
+    // accessible name in jsdom; its `title` still identifies it.
+    fireEvent.click(screen.getByTitle('Clear'));
     expect(onChange).toHaveBeenLastCalledWith('');
   });
 

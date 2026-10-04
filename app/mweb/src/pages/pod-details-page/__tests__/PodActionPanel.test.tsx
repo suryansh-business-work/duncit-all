@@ -38,11 +38,13 @@ afterEach(() => {
 });
 
 describe('PodActionPanel', () => {
-  it('offers Book & Pay for the membership amount only (products are separate)', () => {
+  it('offers Book now priced at the membership amount only (products are separate)', () => {
     const onPaidCheckout = vi.fn();
     renderPanel({ onPaidCheckout });
-    const cta = screen.getByRole('button', { name: /book & pay ₹100/i });
-    expect(cta).toBeInTheDocument();
+    expect(screen.getByText('Price')).toBeInTheDocument();
+    expect(screen.getByTestId('pod-price')).toHaveTextContent('₹100');
+    const cta = screen.getByRole('button', { name: 'Book now' });
+    expect(cta).toBeEnabled();
     fireEvent.click(cta);
     expect(onPaidCheckout).toHaveBeenCalledTimes(1);
   });
@@ -102,26 +104,36 @@ describe('PodActionPanel', () => {
     expect(screen.getByText(/can no longer be cancelled/i)).toBeInTheDocument();
   });
 
-  it('shows Joined + Backout for a member who can back out', () => {
+  it('shows the booked state + Backout for a member who can back out', () => {
     const onBackout = vi.fn();
     renderPanel({
       membershipState: { is_member: true, can_backout: true, backout_deduction_pct: 15 },
       onBackout,
     });
-    expect(screen.getByRole('button', { name: /joined/i })).toBeDisabled();
+    expect(screen.getByText("You're going")).toBeInTheDocument();
+    expect(screen.getByTestId('pod-booked-label')).toHaveTextContent('Pod Booked');
+    expect(screen.queryByRole('button', { name: 'Book now' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^backout$/i }));
     expect(onBackout).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/15% deduction/i)).toBeInTheDocument();
+    // The deduction is stated by the Backout dialog, not the bar.
+    expect(screen.queryByText(/15% deduction/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-backout-maxed')).not.toBeInTheDocument();
   });
 
-  it('defaults the deduction to 0% when backout_deduction_pct is missing', () => {
-    renderPanel({ membershipState: { is_member: true, can_backout: true } });
-    expect(screen.getByText(/0% deduction/i)).toBeInTheDocument();
+  it('tells a member of a past pod it has already taken place, not that attempts ran out', () => {
+    renderPanel({
+      pod: { ...baseProps.pod, pod_date_time: '2020-01-01T10:00:00Z' },
+      membershipState: { is_member: true, can_backout: false },
+    });
+    expect(screen.getByTestId('pod-booked-label')).toHaveTextContent('Pod Visited');
+    expect(screen.getByTestId('pod-backout-maxed')).toHaveTextContent('This pod has already taken place.');
+    expect(screen.queryByText(/maximum number of Backout attempts/i)).not.toBeInTheDocument();
   });
 
   it('defaults the amount to 0 when pod_amount is missing', () => {
     renderPanel({ pod: { ...baseProps.pod, pod_amount: undefined } });
-    expect(screen.getByRole('button', { name: /book & pay ₹0/i })).toBeInTheDocument();
+    expect(screen.getByTestId('pod-price')).toHaveTextContent('₹0');
+    expect(screen.getByRole('button', { name: 'Book now' })).toBeEnabled();
   });
 
   it('shows the max-attempts alert for a member who can no longer back out', () => {
@@ -158,19 +170,22 @@ describe('PodActionPanel', () => {
     expect(share).toHaveBeenCalledTimes(1);
     const arg = share.mock.calls[0][0];
     expect(arg.title).toBe('Sunset Jam');
-    expect(arg.url).toContain('ref=tok-1');
+    // The link rides inside `text` (targets that take `url` drop `text`).
+    expect(arg.url).toBeUndefined();
+    expect(arg.text).toContain('ref=tok-1');
   });
 
   it('offers a free-join CTA when the pod is free', () => {
     const onJoinFree = vi.fn();
     renderPanel({ isFree: true, onJoinFree });
-    fireEvent.click(screen.getByRole('button', { name: /join free pod/i }));
+    expect(screen.getByTestId('pod-price')).toHaveTextContent('Free');
+    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
     expect(onJoinFree).toHaveBeenCalledTimes(1);
   });
 
   it('disables the free-join CTA while joining', () => {
     renderPanel({ isFree: true, joining: true });
-    expect(screen.getByRole('button', { name: /join free pod/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Join' })).toBeDisabled();
   });
 
   it('shows "Pod is full" for a free pod that cannot be joined', () => {

@@ -20,8 +20,8 @@ describe('navigation + web-fonts config', () => {
       'HomeTab',
       'Explore',
       'Clubs',
-      'Chats',
-      'Following',
+      'Venues',
+      'Cart',
     ]);
     expect(linking.config?.screens).toHaveProperty('Home');
     // The account drawer is a routable overlay at /menu.

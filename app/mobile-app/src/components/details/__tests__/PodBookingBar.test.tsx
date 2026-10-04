@@ -37,6 +37,8 @@ describe('PodBookingBar', () => {
     const onCheckout = jest.fn();
     renderBar({ onCheckout });
     expect(screen.getByText('Book now')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-book')).not.toBeDisabled();
+    expect(screen.getByTestId('pod-book').props.onResponderRelease).toEqual(expect.any(Function));
     fireEvent.press(screen.getByTestId('pod-book'));
     expect(onCheckout).toHaveBeenCalledTimes(1);
   });
@@ -51,7 +53,14 @@ describe('PodBookingBar', () => {
     const onCheckout = jest.fn();
     renderBar({ onCheckout, membershipState: ms({ can_join: false }) });
     expect(screen.getByText('Pod is full')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('pod-book'));
+    // The CTA is announced as disabled and its native view no longer becomes a
+    // touch responder, so no real tap reaches checkout. (fireEvent.press would
+    // bubble up to BarCta's own composite `onPress` prop, which no real touch
+    // ever reaches, so it cannot prove this.)
+    const cta = screen.getByTestId('pod-book');
+    expect(cta).toBeDisabled();
+    expect(cta.props.onStartShouldSetResponder).toBeUndefined();
+    expect(cta.props.onResponderRelease).toBeUndefined();
     expect(onCheckout).not.toHaveBeenCalled();
   });
 

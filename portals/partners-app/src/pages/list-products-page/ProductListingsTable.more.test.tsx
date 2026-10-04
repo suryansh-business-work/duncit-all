@@ -4,6 +4,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/re
 import type { MockedResponse } from '@apollo/client/testing';
 import ProductListingsTable from './ProductListingsTable';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, SET_LISTING_ACTIVE } from './queries';
+import { MY_CATALOG_DELETION_REQUESTS } from '../ecomm-brand-page/deletion-request/deletion.queries';
 import { renderWithProviders } from '../../__tests__/render';
 
 afterEach(cleanup);
@@ -63,8 +64,18 @@ const tableMock = (rows: unknown[]): MockedResponse => ({
   },
 });
 
+
+/** No deletion request is open for this brand's products. */
+const noDeletionRequests: MockedResponse = {
+  request: { query: MY_CATALOG_DELETION_REQUESTS, variables: { brand_id: 'b1' } },
+  result: { data: { myCatalogDeletionRequests: [] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+};
+
 const renderTable = (mocks: MockedResponse[]) =>
-  renderWithProviders(<ProductListingsTable brandId="b1" canManageProducts onEdit={vi.fn()} />, { mocks });
+  renderWithProviders(<ProductListingsTable brandId="b1" canManageProducts onEdit={vi.fn()} />, {
+    mocks: [...mocks, noDeletionRequests],
+  });
 
 const openRowMenu = async (productName: string) => {
   const row = (await screen.findByText(productName)).closest('[role="row"]') as HTMLElement;
@@ -117,10 +128,12 @@ describe('ProductListingsTable pause, reactivate and delete guards', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
+  // A listing that never went on sale is deleted directly; a live one goes
+  // through a deletion request (see DeletionRequestDialog).
   it('ignores a Delete click that lands while the cancelled delete dialog is closing', async () => {
     let deleted = false;
     renderTable([
-      tableMock([listing()]),
+      tableMock([listing({ listing_review_status: 'PENDING' })]),
       {
         request: { query: DELETE_LISTING, variables: { product_doc_id: 'p1' } },
         result: () => {

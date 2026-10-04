@@ -6,11 +6,7 @@ import {
   sendCampaign,
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { recordManualSend } from '@modules/platform/whatsapp/whatsapp.manualLog';
-import {
-  e2eOverrides,
-  MUTED_REASON,
-  OTP_BYPASS_REASON,
-} from '@modules/platform/e2eRun/e2eRun.mute';
+import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 
 jest.mock('@services/email/email.service', () => ({
   sendLoginOtpEmail: jest.fn(),
@@ -18,15 +14,17 @@ jest.mock('@services/email/email.service', () => ({
 }));
 
 /*
-  The two E2E switches are asked for BEFORE any medium is chosen, and they are
-  read from the database. This is a unit suite with no connection, so the read
-  buffers until mongoose gives up — every case here timed out at the first line
-  of the function under test rather than at anything it was written to check.
-  Neither switch is on in a normal run, which is the state being unit-tested.
+  The mute switch is asked for BEFORE any medium is chosen, and it is read from
+  the database. This is a unit suite with no connection, so the read buffers
+  until mongoose gives up — every case here timed out at the first line of the
+  function under test rather than at anything it was written to check. It is
+  mocked at `communicationsMuted`, the export `deliverOtp` actually calls: that
+  helper reaches `e2eOverrides` inside its own module, so mocking the latter
+  never intercepts the read. Off is the normal state being unit-tested.
 */
 jest.mock('@modules/platform/e2eRun/e2eRun.mute', () => ({
   ...jest.requireActual('@modules/platform/e2eRun/e2eRun.mute'),
-  e2eOverrides: jest.fn().mockResolvedValue({ muted: false, otpBypass: false }),
+  communicationsMuted: jest.fn().mockResolvedValue(false),
 }));
 
 // The WhatsApp provider and the log every WhatsApp message is filed in — both
@@ -245,28 +243,32 @@ describe('deliverOtp — WHATSAPP', () => {
 });
 
 /*
-  The two E2E switches, asked before any medium is chosen. They are kept apart
-  on purpose: holding traffic is not a decision to reveal a secret, so muting
-  alone must never hand the code back.
+  The mute switch, asked before any medium is chosen. A held code is FAILED,
+  never STUBBED: holding traffic is not a decision to reveal a secret, so
+  muting must never hand the code back. (Codes for the e2e run account are held
+  upstream in otpService and never reach deliverOtp.)
 */
-describe('deliverOtp — the E2E switches', () => {
-  it('hands the code back for every medium while the OTP bypass is on', async () => {
-    (e2eOverrides as jest.Mock).mockResolvedValueOnce({ muted: false, otpBypass: true });
+describe('deliverOtp — while communications are muted', () => {
+  it('holds a WhatsApp code without revealing it', async () => {
+    (communicationsMuted as jest.Mock).mockResolvedValueOnce(true);
 
-    await expect(deliverOtp(wa)).resolves.toMatchObject({
-      status: 'STUBBED',
-      reason: OTP_BYPASS_REASON,
-    });
-    expect(sendCampaign).not.toHaveBeenCalled();
-  });
-
-  it('holds a code without revealing it while communications are muted', async () => {
-    (e2eOverrides as jest.Mock).mockResolvedValueOnce({ muted: true, otpBypass: false });
-
-    await expect(deliverOtp(wa)).resolves.toMatchObject({
+    await expect(deliverOtp(wa)).resolves.toEqual({
+      medium: 'WHATSAPP',
       status: 'FAILED',
       reason: MUTED_REASON,
     });
     expect(sendCampaign).not.toHaveBeenCalled();
+    expect(recordManualSend).not.toHaveBeenCalled();
+  });
+
+  it('holds an email code before the mailer is reached', async () => {
+    (communicationsMuted as jest.Mock).mockResolvedValueOnce(true);
+
+    await expect(deliverOtp(input)).resolves.toEqual({
+      medium: 'EMAIL',
+      status: 'FAILED',
+      reason: MUTED_REASON,
+    });
+    expect(mockedSend).not.toHaveBeenCalled();
   });
 });

@@ -496,6 +496,17 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.storeCartReminder.title': 'You left something in your cart',
   'email.storeCartReminder.body':
     'Your pet store cart is saved and waiting. Pick up where you left off whenever you are ready.',
+  // --- Pod Shop orders after checkout (catalogue.podShopOrders) ---------------
+  'email.podShopOrderCancelled.title': 'We are sorry — your order was cancelled',
+  'email.podShopOrderCancelled.body':
+    'We had to cancel your Pod Shop order, and we are really sorry for the trouble. Your money is on its way back in full: to the payment you used (banks usually take 5–7 working days), and any Duncit Coins you spent are already back in your balance.',
+  'email.podShopOrderCancelled.footer':
+    'Questions about this refund? Reply to this email or reach us from Help in the app — quote your order number.',
+  'email.podShopReturnUpdate.title': 'An update on your return',
+  'email.podShopReturnUpdate.body': 'Here is where your return stands. We will write again at the next step.',
+  'email.catalogDeletionUpdate.title': 'An update on your deletion request',
+  'email.catalogDeletionUpdate.body':
+    'The Duncit Products team has updated the deletion request you raised. You can follow it, or withdraw it while it is still open, from the partner portal.',
   'email.productCartReminder.title': 'Your cart is calling',
   'email.productCartReminder.body':
     'You left a few things in your Pod Shop cart. They are saved and waiting — check out before they sell out.',

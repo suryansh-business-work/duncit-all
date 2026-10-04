@@ -19,6 +19,16 @@ export const podMemberTypeDefs = /* GraphQL */ `
     NOT_ELIGIBLE
   }
 
+  "One separately-actioned part of a Backout refund."
+  enum BackoutRefundPart {
+    "Money paid through the gateway (Razorpay / test gateway)."
+    CASH
+    "Duncit Coins the booking was paid with."
+    COINS
+    "Purchase-reward coins the refund takes back."
+    EARN_REVOKE
+  }
+
   enum JoinSource {
     DIRECT
     REFERRAL
@@ -257,7 +267,28 @@ export const podMemberTypeDefs = /* GraphQL */ `
     cash refund is processed, never before.
     """
     coins_refunded: Float!
-    "Set once Finance processed the refund (one refund per request)."
+    """
+    Gateway of the join payment — RAZORPAY / DUMMY for money, COINS or COUPON
+    when nothing went through a gateway. Null when there is no payment.
+    """
+    payment_gateway: String
+    "Purchase-reward coins earned on this release's seats, before the deduction."
+    coins_earned_share: Float!
+    "Earned coins the refund takes back — the refunded share of coins_earned_share."
+    coins_to_revoke: Float!
+    "Earned coins actually taken back; less than coins_to_revoke when the balance was short."
+    coins_revoked: Float!
+    "When Finance processed the gateway-money part of the refund."
+    cash_refund_processed_at: String
+    "When Finance processed the Duncit Coin part of the refund."
+    coins_refund_processed_at: String
+    "When Finance revoked the earned coins."
+    earn_revoke_processed_at: String
+    "Every part this refund is actioned in, one per way the booking was paid."
+    refund_parts: [BackoutRefundPart!]!
+    "Parts still to action — empty once the request is refunded."
+    pending_refund_parts: [BackoutRefundPart!]!
+    "Set once Finance processed EVERY part of the refund (one refund per request)."
     refund_processed_at: String
     "Immutable, chronological Backout lifecycle timeline."
     events: [BackoutEvent!]!
@@ -385,7 +416,10 @@ export const podMemberTypeDefs = /* GraphQL */ `
     redeemPodReferral(token: String!): PodMember!
     "Rejoin a pod the caller previously backed out of — no payment, until the pod completes."
     rejoinPod(pod_doc_id: ID!): PodMember!
-    "Finance-only: process the refund for a Spot Filled Backout request (one refund per request)."
-    processBackoutRefund(id: ID!): BackoutRefundRequest!
+    """
+    Finance-only: process one part of the refund for a Spot Filled Backout
+    request. Without a part, every outstanding part is processed in order.
+    """
+    processBackoutRefund(id: ID!, part: BackoutRefundPart): BackoutRefundRequest!
   }
 `;

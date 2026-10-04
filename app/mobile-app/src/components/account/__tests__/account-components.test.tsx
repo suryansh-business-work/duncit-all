@@ -92,13 +92,20 @@ describe('AccountProfileHeader', () => {
     );
     expect(screen.getByText('Riya Sharma')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('account-share'));
-    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Profile');
+    // No handle on file, so the share link falls back to the user id.
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Profile', undefined);
   });
 
-  it('shares the profile with the full name', () => {
-    renderWithProviders(<AccountProfileHeader me={me} onEdit={jest.fn()} onLogout={jest.fn()} />);
+  it('shares the profile with the full name and the public handle', () => {
+    renderWithProviders(
+      <AccountProfileHeader
+        me={{ ...me, username: 'riya' } as AccountMe}
+        onEdit={jest.fn()}
+        onLogout={jest.fn()}
+      />,
+    );
     fireEvent.press(screen.getByTestId('account-share'));
-    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Riya Sharma');
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Riya Sharma', 'riya');
   });
 });
 
@@ -116,6 +123,8 @@ describe('AccountHealthCard', () => {
   it('renders the green band message', () => {
     renderWithProviders(<AccountHealthCard health={health()} />);
     expect(screen.getByText('You’re in great shape.')).toBeOnTheScreen();
+    // Without onPress the card is a plain summary, not a button.
+    expect(screen.queryByRole('button', { name: 'Open account health' })).toBeNull();
   });
 
   it('renders yellow band, admin adjustment and remark count', () => {
@@ -142,11 +151,10 @@ describe('AccountHealthCard', () => {
     expect(screen.getByText(/\+5/)).toBeOnTheScreen();
   });
 
-  it('is tappable when onPress is provided', () => {
+  it('is a button that opens the detail when onPress is provided', () => {
     const onPress = jest.fn();
     renderWithProviders(<AccountHealthCard health={health()} onPress={onPress} />);
-    expect(screen.getByText('Tap for details')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('account-health'));
+    fireEvent.press(screen.getByRole('button', { name: 'Open account health' }));
     expect(onPress).toHaveBeenCalled();
   });
 

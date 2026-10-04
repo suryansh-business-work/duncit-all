@@ -87,7 +87,8 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Typography component="span" variant="h6" noWrap sx={{ fontWeight: 900, flex: 1, minWidth: 0 }}>
-              {brand?.brand_name ?? ''}
+              {/* The dialog's accessible name: never blank, even for a brand saved without one. */}
+              {brand?.brand_name || t('products.brandReview.untitledBrand')}
             </Typography>
             {brand && <StatusChip status={brand.status} colorMap={BRAND_STATUS_COLOR} />}
           </Stack>

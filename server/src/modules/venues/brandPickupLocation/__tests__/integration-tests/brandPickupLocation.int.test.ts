@@ -8,14 +8,29 @@ beforeEach(async () => {
   await BrandPickupLocationModel.deleteMany({});
 });
 
+/*
+  A DUNCIT warehouse IS a ShipRocket pickup address now: save() hands it to
+  saveDuncitPickup, which validates the address and puts it on the account
+  before anything is written (covered by the shiprocket suites). The service's
+  own write path — defaults, updates, deletes — is the BRAND one, exercised here.
+*/
 describe('brandPickupLocationService', () => {
   it('enforces a single default per owner', async () => {
-    await brandPickupLocationService.save(null, { owner_kind: 'DUNCIT', nickname: 'WH-A', is_default: true });
-    await brandPickupLocationService.save(null, { owner_kind: 'DUNCIT', nickname: 'WH-B', is_default: true });
-    const list = await brandPickupLocationService.list({ owner_kind: 'DUNCIT' });
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Two WH Co' });
+    const brand_id = String(brand._id);
+    await brandPickupLocationService.save(null, { owner_kind: 'BRAND', brand_id, nickname: 'WH-A', is_default: true });
+    await brandPickupLocationService.save(null, { owner_kind: 'BRAND', brand_id, nickname: 'WH-B', is_default: true });
+    const list = await brandPickupLocationService.list({ owner_kind: 'BRAND', brand_id });
     const defaults = list.filter((l) => l.is_default);
     expect(defaults).toHaveLength(1);
     expect(defaults[0].nickname).toBe('WH-B');
+  });
+
+  it('refuses a Duncit warehouse whose address ShipRocket would reject, writing nothing', async () => {
+    await expect(
+      brandPickupLocationService.save(null, { owner_kind: 'DUNCIT', nickname: 'WH-A' })
+    ).rejects.toThrow(/^Enter the house number and street .*a contact email$/);
+    expect(await BrandPickupLocationModel.countDocuments()).toBe(0);
   });
 
   it('syncs the owning brand default_pickup_location_id for BRAND locations', async () => {
@@ -31,8 +46,9 @@ describe('brandPickupLocationService', () => {
   });
 
   it('updates and deletes a location', async () => {
-    const loc = await brandPickupLocationService.save(null, { owner_kind: 'DUNCIT', nickname: 'WH-X' });
-    const updated = await brandPickupLocationService.save(loc.id, { owner_kind: 'DUNCIT', nickname: 'WH-X2' });
+    const brand_id = String(new Types.ObjectId());
+    const loc = await brandPickupLocationService.save(null, { owner_kind: 'BRAND', brand_id, nickname: 'WH-X' });
+    const updated = await brandPickupLocationService.save(loc.id, { owner_kind: 'BRAND', brand_id, nickname: 'WH-X2' });
     expect(updated.nickname).toBe('WH-X2');
     expect(await brandPickupLocationService.remove(loc.id)).toBe(true);
     expect(await BrandPickupLocationModel.countDocuments()).toBe(0);
@@ -163,7 +179,9 @@ describe('brandPickupLocationService partner-scoped ops', () => {
   it('surfaces a CONFLICT for a duplicate nickname and rethrows other save errors', async () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Dup Co');
-    await brandPickupLocationService.save(null, { owner_kind: 'DUNCIT', nickname: 'DUP-WH' });
+    // Nicknames are unique across every owner (one ShipRocket account), so a
+    // Duncit warehouse already holding the name blocks the partner's.
+    await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUP-WH' });
     await expect(
       brandPickupLocationService.saveMine(userId, String(brand._id), null, { owner_kind: 'BRAND', nickname: 'DUP-WH' })
     ).rejects.toThrow(/already exists/i);

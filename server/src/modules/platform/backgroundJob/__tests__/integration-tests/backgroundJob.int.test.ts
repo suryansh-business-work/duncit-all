@@ -223,7 +223,11 @@ describe('backgroundJobService.startBulkDelete — ALL', () => {
       variables: vars({}),
     });
     expect(await settled(started.id)).toMatchObject({ status: 'FAILED', error_message: 'Lead store is offline' });
-    expect(error).toHaveBeenCalledWith('backgroundJob', 'step', expect.objectContaining({ table: 'flakyLeadsTable' }));
+    expect(error).toHaveBeenCalledWith(
+      'backgroundJob',
+      'step',
+      expect.objectContaining({ job_id: started.id, kind: 'BULK_DELETE' })
+    );
     expect(await LeadModel.countDocuments()).toBe(1);
   });
 });

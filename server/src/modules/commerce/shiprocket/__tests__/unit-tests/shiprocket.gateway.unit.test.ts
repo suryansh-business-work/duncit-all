@@ -14,7 +14,7 @@ jest.mock('../../shiprocket.client', () => ({
 }));
 
 import { cacheGet, cacheSet } from '@config/redis';
-import { isShiprocketConfigured } from '../../shiprocket.account';
+import { getShiprocketAccount } from '../../shiprocket.account';
 import { shiprocketError, srRequest, withShiprocketAccount } from '../../shiprocket.client';
 import { getServiceability, weightSlab, type ServiceabilityArgs } from '../../shiprocket.gateway';
 
@@ -24,7 +24,7 @@ import { getServiceability, weightSlab, type ServiceabilityArgs } from '../../sh
  * in a big box is rated as the box), and caches the answer per lane so a busy
  * product page does not call ShipRocket on every view.
  */
-const mockConfigured = jest.mocked(isShiprocketConfigured);
+const mockAccount = jest.mocked(getShiprocketAccount);
 const mockGet = jest.mocked(cacheGet);
 const mockSet = jest.mocked(cacheSet);
 const mockRequest = jest.mocked(srRequest);
@@ -35,8 +35,10 @@ const couriers = (list: Record<string, unknown>[], recommended?: number) => ({
   data: { recommended_courier_company_id: recommended, available_courier_companies: list },
 });
 
+const techAccount = { email: 'ops@duncit.com', password: '', pickupLocation: '', webhookSecret: '', tokenTtlHours: 240, hash: 'h', sessionKey: 'default' };
+
 beforeEach(() => {
-  mockConfigured.mockResolvedValue(true);
+  mockAccount.mockResolvedValue(techAccount);
   mockGet.mockResolvedValue(null);
   mockSet.mockResolvedValue(undefined);
 });
@@ -60,7 +62,7 @@ describe('weightSlab', () => {
 
 describe('getServiceability', () => {
   it('answers null without a lookup when ShipRocket is not configured', async () => {
-    mockConfigured.mockResolvedValue(false);
+    mockAccount.mockResolvedValue(null);
     await expect(getServiceability(lane)).resolves.toBeNull();
     expect(mockGet).not.toHaveBeenCalled();
     expect(mockRequest).not.toHaveBeenCalled();

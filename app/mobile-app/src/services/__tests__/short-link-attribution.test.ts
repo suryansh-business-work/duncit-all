@@ -61,6 +61,21 @@ const okFetch = (clickId: string | null) =>
 /** Let the fire-and-forget promise chains inside the module settle. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/**
+ * Settle the landing capture that steps wait on: the app opened with no URL
+ * and the device holds `clickId` from an earlier landing. Any step the capture
+ * itself reported is cleared so a case sees only its own.
+ */
+const primeCapture = async (clickId: string | null) => {
+  getItemMock.mockResolvedValue(clickId);
+  getInitialURLMock.mockResolvedValue(null);
+  addEventListenerMock.mockReturnValue({ remove: jest.fn() } as never);
+  const stop = initShortLinkAttribution();
+  await settle();
+  stop();
+  graphqlRequestMock.mockClear();
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   // Every pre-consent case below ran with attribution allowed.
@@ -184,7 +199,7 @@ describe('stepForRouteName', () => {
 
 describe('reportJourneyStep', () => {
   it('reports the step against the stored click, authenticated', async () => {
-    getItemMock.mockResolvedValue('c-1');
+    await primeCapture('c-1');
     reportJourneyStep('VIEWED_POD');
     await settle();
     expect(graphqlRequestMock).toHaveBeenCalledWith(
@@ -195,22 +210,25 @@ describe('reportJourneyStep', () => {
   });
 
   it('says nothing for a device with no attribution', async () => {
+    await primeCapture(null);
     reportJourneyStep('SIGNED_UP');
     await settle();
     expect(graphqlRequestMock).not.toHaveBeenCalled();
   });
 
   it('never lets a failed report crash anything', async () => {
-    getItemMock.mockResolvedValue('c-1');
+    await primeCapture('c-1');
     graphqlRequestMock.mockRejectedValue(new Error('offline'));
     expect(() => reportJourneyStep('SURVEY_DONE')).not.toThrow();
     await settle();
+    // The report was attempted; its rejection was swallowed, not thrown.
+    expect(graphqlRequestMock).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('reportJourneyForCurrentRoute', () => {
   it('reports the step of the screen just reached', async () => {
-    getItemMock.mockResolvedValue('c-1');
+    await primeCapture('c-1');
     getCurrentRouteMock.mockReturnValue({ name: 'Checkout' });
     reportJourneyForCurrentRoute();
     await settle();
@@ -311,7 +329,10 @@ describe('without marketing consent', () => {
   });
 
   it('never reports a journey step', async () => {
-    getItemMock.mockResolvedValue('c-1');
+    // The device holds a click from when consent was given; it is now refused.
+    useConsentStore.setState({ choice: GRANTED });
+    await primeCapture('c-1');
+    useConsentStore.setState({ choice: REFUSED });
     reportJourneyStep('VIEWED_POD');
     await settle();
     expect(graphqlRequestMock).not.toHaveBeenCalled();

@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { formatDate } from '../../../utils/dateFormat';
 import {
   POD_IDEAS,
   POD_IDEA_DETAILS,
@@ -53,8 +54,16 @@ describe('formatRelative', () => {
     expect(formatRelative(iso(2 * 86400000))).toBe('2d ago');
   });
 
-  it('returns a locale date string for >= 7 days', () => {
-    const old = iso(10 * 86400000);
-    expect(formatRelative(old)).toBe(new Date(old).toLocaleDateString());
+  it('returns the admin-formatted date (not the device locale) for >= 7 days', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-04T12:00:00.000Z'));
+    try {
+      const old = '2026-09-24T12:00:00.000Z';
+      // Same formatter every other date in mWeb goes through (default dd MMM yyyy).
+      expect(formatRelative(old)).toBe(formatDate(old));
+      expect(formatRelative(old)).toBe('24 Sep 2026');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

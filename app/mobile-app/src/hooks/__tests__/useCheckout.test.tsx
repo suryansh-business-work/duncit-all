@@ -15,6 +15,7 @@ import {
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useMeStore, type MeData } from '@/stores/me.store';
 import {
   buildCheckoutBilling,
   buildCheckoutContact,
@@ -33,6 +34,12 @@ jest.mock('expo-file-system/legacy', () => ({
 jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
 
 const mockRequest = graphqlRequest as jest.Mock;
+
+/** The buyer is the user info already held in the `me` store — a checkout visit
+ * does not ask for the account again, so tests seed the store instead. */
+const seedMe = (me: Record<string, unknown> | null) =>
+  useMeStore.setState({ data: { me: me as unknown as MeData['me'] } });
+const checkoutMe = { user_id: 'u1', email: 'r@d.com', phone_number: '9', phone_extension: '+91' };
 const writeFile = FileSystem.writeAsStringAsync as jest.Mock;
 const isAvailable = Sharing.isAvailableAsync as jest.Mock;
 const share = Sharing.shareAsync as jest.Mock;
@@ -66,10 +73,6 @@ function route(doc: unknown) {
         currency_symbol: '₹',
         dummy_mode: true,
       },
-    });
-  if (doc === MobileCheckoutMeDocument)
-    return Promise.resolve({
-      me: { user_id: 'u1', email: 'r@d.com', phone_number: '9', phone_extension: '+91' },
     });
   if (doc === MobileCheckoutPodDocument)
     return Promise.resolve({
@@ -147,6 +150,11 @@ beforeEach(() => {
   writeFile.mockReset().mockResolvedValue(undefined);
   isAvailable.mockReset().mockResolvedValue(true);
   share.mockReset().mockResolvedValue(undefined);
+  seedMe(checkoutMe);
+});
+
+afterEach(() => {
+  useMeStore.setState({ data: undefined });
 });
 
 describe('useCheckout', () => {
@@ -157,6 +165,12 @@ describe('useCheckout', () => {
     expect(result.current.me?.email).toBe('r@d.com');
     expect(result.current.pod?.pod_title).toBe('Pod');
     expect(result.current.availableCoupons).toHaveLength(1);
+    // The account comes from the store, never a second user request.
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      MobileCheckoutMeDocument,
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
   it('tolerates an available-coupons fetch failure', async () => {
@@ -305,13 +319,15 @@ describe('useCheckout', () => {
   });
 
   it('tolerates a load failure and still settles', async () => {
+    useMeStore.setState({ data: undefined });
     mockRequest
       .mockReset()
       .mockImplementation((doc) =>
-        doc === MobileCheckoutMeDocument ? Promise.reject(new Error('down')) : route(doc),
+        doc === MobilePublicFinanceDocument ? Promise.reject(new Error('down')) : route(doc),
       );
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.finance).toBeNull();
     expect(result.current.me).toBeNull();
   });
 
@@ -365,28 +381,22 @@ describe('useCheckout', () => {
   });
 
   it('prefills initial values from the saved main address', async () => {
-    mockRequest.mockReset().mockImplementation((doc: unknown) => {
-      if (doc === MobileCheckoutMeDocument)
-        return Promise.resolve({
-          me: {
-            user_id: 'u1',
-            first_name: 'Riya',
-            last_name: 'Sharma',
-            email: 'r@d.com',
-            phone_number: '9876543210',
-            phone_extension: '+91',
-            address: {
-              line1: '9 Palm Road',
-              line2: 'Flat 2',
-              landmark: 'Near Lake',
-              city: 'Delhi',
-              state: 'Delhi',
-              pincode: '110001',
-              country: 'India',
-            },
-          },
-        });
-      return route(doc);
+    seedMe({
+      user_id: 'u1',
+      first_name: 'Riya',
+      last_name: 'Sharma',
+      email: 'r@d.com',
+      phone_number: '9876543210',
+      phone_extension: '+91',
+      address: {
+        line1: '9 Palm Road',
+        line2: 'Flat 2',
+        landmark: 'Near Lake',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110001',
+        country: 'India',
+      },
     });
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -464,13 +474,7 @@ describe('useCheckout', () => {
   });
 
   it('skips saving when opted in but a main address already exists', async () => {
-    mockRequest.mockReset().mockImplementation((doc: unknown) => {
-      if (doc === MobileCheckoutMeDocument)
-        return Promise.resolve({
-          me: { user_id: 'u1', email: 'r@d.com', address: { line1: '9 Palm Road', city: 'Delhi' } },
-        });
-      return route(doc);
-    });
+    seedMe({ user_id: 'u1', email: 'r@d.com', address: { line1: '9 Palm Road', city: 'Delhi' } });
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {

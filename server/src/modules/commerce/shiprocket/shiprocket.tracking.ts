@@ -10,7 +10,7 @@ import { hasShiprocketAccount, withShiprocketAccount } from './shiprocket.client
 import { accountForOrder } from './shiprocket.shipment';
 import { parseShiprocketDate, trackByAwb, trackByShipment, type TrackActivity, type TrackResult } from './shiprocket.gateway';
 import { isFinalStatus, mapShiprocketStatus, nextStatus } from './shiprocket.statusMap';
-import { applyReturnTracking } from './shiprocket.returns';
+import { applyReturnTracking, mailStoreReturnArrived } from './shiprocket.returns';
 
 /**
  * Where a parcel is. Two feeds write here and nothing else:
@@ -125,8 +125,14 @@ export async function applyWebhookEvent(payload: Record<string, any>): Promise<s
   }
   const ret = awb ? await StoreReturnModel.findOne({ 'pickup.awb': awb }) : null;
   if (ret) {
-    await applyReturnTracking(ret, t);
+    await applyReturnTracking(ret, t, mailStoreReturnArrived);
     return `return ${ret.return_no}`;
+  }
+  // A pod-shop return's reverse pickup (the pod shop's own return records).
+  if (awb) {
+    const { podShopReturnTracking } = await import('@modules/commerce/podShopReturn/podShopReturn.tracking');
+    const done = await podShopReturnTracking.webhook(awb, t);
+    if (done) return done;
   }
   return 'nothing';
 }
@@ -170,11 +176,12 @@ export async function sweepStaleTracking(): Promise<number> {
   }).limit(SWEEP_BATCH);
   for (const ret of returns) {
     try {
-      await applyReturnTracking(ret, await trackByAwb(ret.pickup.awb));
+      await applyReturnTracking(ret, await trackByAwb(ret.pickup.awb), mailStoreReturnArrived);
       pulled += 1;
     } catch (error) {
       logs.server.warn('shiprocket', 'sweepStaleTracking', { error, return_no: ret.return_no });
     }
   }
-  return pulled;
+  const { podShopReturnTracking } = await import('@modules/commerce/podShopReturn/podShopReturn.tracking');
+  return pulled + (await podShopReturnTracking.sweep(cutoff, SWEEP_BATCH));
 }

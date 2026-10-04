@@ -11,7 +11,7 @@ import {
 import { CLUB_ADMIN_PODS } from '../queries';
 
 describe('CLUB_ADMIN_POD_LOOKUPS', () => {
-  it('is parameterless and fills all three pickers in one round trip', () => {
+  it('is parameterless and fills every picker, owned and bookable venues alike, in one round trip', () => {
     expect(operationOf(CLUB_ADMIN_POD_LOOKUPS)).toEqual({
       name: 'ClubAdminPodLookups',
       type: 'query',
@@ -20,6 +20,7 @@ describe('CLUB_ADMIN_POD_LOOKUPS', () => {
     expect(fieldsAt(CLUB_ADMIN_POD_LOOKUPS)).toEqual([
       'myAdminClubs',
       'myVenues',
+      'publicVenues',
       'availablePodProducts',
     ]);
   });
@@ -125,6 +126,7 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
       'is_deleted',
       'location_id',
       'place_charges',
+      'place_label',
       'pod_hosts_id',
       'reel_url',
       'ticket_discount_enabled',

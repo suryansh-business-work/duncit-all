@@ -7,11 +7,20 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockOpenPod = jest.fn();
 jest.mock('@/hooks/useDetailNav', () => ({ useDetailNav: () => ({ openPod: mockOpenPod }) }));
 jest.mock('@/hooks/useHomeFeed', () => ({ useHomeFeed: jest.fn() }));
+// Reached from Home's "See all" with no params, or with the row it was tapped from.
+let mockRouteParams: { initialIndex?: number } | undefined;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn(), goBack: jest.fn() }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 
 const mockedFeed = useHomeFeed as jest.Mock;
+/** The feed as the hook returns it: no category chips, content iff any pods. */
+const feed = (previousPods: unknown[]) => ({
+  previousPods,
+  categoryChips: [],
+  hasContent: previousPods.length > 0,
+});
 
 const pod = {
   id: 'old',
@@ -30,19 +39,32 @@ const pod = {
 };
 
 describe('PreviousPodsScreen', () => {
-  beforeEach(() => mockOpenPod.mockClear());
+  beforeEach(() => {
+    mockOpenPod.mockClear();
+    mockRouteParams = undefined;
+  });
 
   it('shows the empty state when there are no previous pods', () => {
-    mockedFeed.mockReturnValue({ previousPods: [] });
+    mockedFeed.mockReturnValue(feed([]));
     renderWithProviders(<PreviousPodsScreen />);
     expect(screen.getByTestId('previous-pods-empty')).toBeOnTheScreen();
   });
 
   it('lists previous pods and opens one', () => {
-    mockedFeed.mockReturnValue({ previousPods: [pod] });
+    mockedFeed.mockReturnValue(feed([pod]));
     renderWithProviders(<PreviousPodsScreen />);
     expect(screen.getByTestId('previous-pods-screen')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-old'));
-    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-old');
+    // The doc id rides along so the details screen need not resolve the slug.
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-old', 'old');
+  });
+
+  it('still lists the pods when opened at a row index past the end of the list', () => {
+    mockRouteParams = { initialIndex: 5 };
+    mockedFeed.mockReturnValue(feed([pod]));
+    renderWithProviders(<PreviousPodsScreen />);
+    fireEvent.press(screen.getByTestId('pod-card-pod-old'));
+    // The doc id rides along so the details screen need not resolve the slug.
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-old', 'old');
   });
 });

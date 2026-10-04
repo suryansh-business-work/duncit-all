@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -49,11 +50,14 @@ export default function MultiPodAccordion({
   onRemove,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // Names the expanded panel after its summary (WCAG 4.1.2) — MUI wires the
+  // region's aria-labelledby to the summary's id, and aria-controls back.
+  const baseId = useId();
   const { scaled } = row.results;
   const countSuffix = scaled.pod_count > 1 ? ` · x${scaled.pod_count}` : '';
   return (
     <Accordion expanded={expanded} onChange={onToggle} disableGutters>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <AccordionSummary id={`${baseId}-header`} aria-controls={`${baseId}-content`} expandIcon={<ExpandMoreIcon />}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={{ xs: 1, md: 3 }}

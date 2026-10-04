@@ -213,7 +213,9 @@ describe('RegisterVenueForm — register mode', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Submit for review' }));
 
     expect(await screen.findByText('Fix the highlighted fields before submitting.')).toBeTruthy();
-    expect(screen.getByLabelText(/Owner phone/)).toBeTruthy();
+    // The section switch is a router navigation (a transition), so it can
+    // commit after the error alert does.
+    expect(await screen.findByLabelText(/Owner phone/)).toBeTruthy();
     expect(onSubmitted).not.toHaveBeenCalled();
     expect(sent.some((call) => call.name === 'VFinal')).toBe(false);
   });

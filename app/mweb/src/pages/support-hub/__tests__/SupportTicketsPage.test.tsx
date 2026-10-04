@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -14,41 +14,66 @@ vi.mock('react-router', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
+// The signed-in account comes from the one USER_INFO read (useUserInfo), which
+// only asks while a session token is present.
 const headerMock = {
   request: { query: USER_INFO },
   result: {
     data: {
-      branding: {
-        app_name: 'Duncit',
-        logo_url: '',
-        mweb_logo_url: '',
-        primary_color: '#ff4f73',
-        home_all_vibe_icon_url: '',
-        home_all_vibe_icon_layout: null,
-        home_header_tagline: '',
-      },
       me: {
         user_id: 'u1',
-        full_name: 'Jane Doe',
+        username: 'jane',
         first_name: 'Jane',
         last_name: 'Doe',
+        full_name: 'Jane Doe',
         email: 'jane@example.com',
-        is_email_verified: true,
+        phone_number: '',
+        phone_extension: '+91',
+        whatsapp_number: null,
+        whatsapp_extension: null,
+        whatsapp_verified_at: null,
         profile_photo: null,
         bio: null,
-        dob: null,
+        gender: null,
+        is_pet_owner: null,
+        dob: '',
+        roles: [],
+        locale: null,
+        timezone: null,
+        country: '',
         city: null,
         state: null,
-        country: null,
-        phone_number: null,
-        whatsapp_number: null,
+        zone: null,
+        assigned_city: null,
+        assigned_zones: [],
         selected_location_id: null,
-        roles: [],
+        is_email_verified: true,
+        is_phone_verified: false,
+        onboarding_survey_completed: true,
+        profile_visibility: null,
+        created_at: null,
+        updated_at: null,
+        address: {
+          line1: null,
+          line2: null,
+          landmark: null,
+          city: null,
+          state: null,
+          pincode: null,
+          country: null,
+        },
+        saved_pod_ids: [],
+        following_club_ids: [],
         following_user_ids: [],
       },
-      superCategories: [],
-      locations: [],
-      activePodLocationIds: [],
+      myCoinBalance: {
+        balance: 0,
+        lifetime_earned: 0,
+        earn_pct: 0,
+        shop_earn_pct: 0,
+        pod_feedback_coins: 0,
+      },
+      publicPolicies: [],
     },
   },
 };
@@ -89,7 +114,11 @@ function renderPage(initialEntries: string[], mocks: any[]) {
 }
 
 describe('SupportTicketsPage', () => {
-  beforeEach(() => mockNavigate.mockReset());
+  beforeEach(() => {
+    mockNavigate.mockReset();
+    localStorage.setItem('token', 'test-session');
+  });
+  afterEach(() => localStorage.removeItem('token'));
 
   it('renders the shell, help cards and prefills name/email from me', async () => {
     renderPage(['/support/tickets'], [headerMock, emptyTicketsMock]);
@@ -134,7 +163,7 @@ describe('SupportTicketsPage', () => {
           },
         },
       },
-      result: { data: { createTicket: { id: 'newid99' } } },
+      result: { data: { createTicket: { id: 'newid99', ticket_no: 'TKT-99' } } },
     };
 
     renderPage(['/support/tickets'], [headerMock, emptyTicketsMock, createMock, emptyTicketsMock]);

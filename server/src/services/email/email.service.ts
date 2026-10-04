@@ -48,7 +48,10 @@ export type { EmailCategory } from './email.provider';
 const LEGACY_LOGO_URL = 'https://duncit.com/duncit-logo.svg';
 /** Short TTL so we don't hit the branding singleton on every send. */
 const BRAND_LOGO_TTL_MS = 60_000;
-let brandCache: { logoUrl: string; appName: string; at: number } | null = null;
+type Brand = { logoUrl: string; appName: string };
+/** The read itself, not its result: concurrent callers inside one send (the
+ * logo and the footer's chrome vars run in one Promise.all) share it. */
+let brandCache: { read: Promise<Brand>; at: number } | null = null;
 
 /**
  * Branding for one email, cached for a short TTL.
@@ -61,21 +64,20 @@ let brandCache: { logoUrl: string; appName: string; at: number } | null = null;
  * Best-effort: any failure (or an empty logo) falls back to the legacy Duncit
  * logo, so an email always renders an image.
  */
-async function getBrand(): Promise<{ logoUrl: string; appName: string }> {
-  const now = Date.now();
-  if (brandCache && now - brandCache.at < BRAND_LOGO_TTL_MS) return brandCache;
-
-  let logoUrl = LEGACY_LOGO_URL;
-  let appName = 'Duncit';
+async function readBrand(): Promise<Brand> {
   try {
     const branding = await settingsService.getBranding();
-    logoUrl = branding.logo_url || LEGACY_LOGO_URL;
-    appName = branding.app_name || appName;
+    return { logoUrl: branding.logo_url || LEGACY_LOGO_URL, appName: branding.app_name || 'Duncit' };
   } catch {
-    logoUrl = LEGACY_LOGO_URL;
+    return { logoUrl: LEGACY_LOGO_URL, appName: 'Duncit' };
   }
-  brandCache = { logoUrl, appName, at: now };
-  return brandCache;
+}
+
+function getBrand(): Promise<Brand> {
+  const now = Date.now();
+  if (brandCache && now - brandCache.at < BRAND_LOGO_TTL_MS) return brandCache.read;
+  brandCache = { read: readBrand(), at: now };
+  return brandCache.read;
 }
 
 const getBrandLogoUrl = async (): Promise<string> => (await getBrand()).logoUrl;

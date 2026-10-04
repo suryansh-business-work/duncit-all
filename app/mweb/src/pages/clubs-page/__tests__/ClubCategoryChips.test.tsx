@@ -23,13 +23,17 @@ describe('ClubCategoryChips', () => {
     expect(screen.getByText('Sports')).toBeInTheDocument();
   });
 
-  it('marks the selected chip as filled primary and others outlined', () => {
+  it('marks the selected chip as primary and pressed, the others default and unpressed', () => {
     render(<ClubCategoryChips categories={categories} selectedId="c1" onSelect={() => {}} />);
-    expect(screen.getByText('Nightlife').closest('.MuiChip-root')).toHaveClass(
-      'MuiChip-colorPrimary',
-    );
-    expect(screen.getByText('Sports').closest('.MuiChip-root')).toHaveClass('MuiChip-outlined');
-    expect(screen.getByText('All').closest('.MuiChip-root')).toHaveClass('MuiChip-outlined');
+    const nightlife = screen.getByText('Nightlife').closest('.MuiChip-root');
+    expect(nightlife).toHaveClass('MuiChip-colorPrimary');
+    expect(nightlife).toHaveAttribute('aria-pressed', 'true');
+    for (const name of ['Sports', 'All']) {
+      const chip = screen.getByText(name).closest('.MuiChip-root');
+      expect(chip).toHaveClass('MuiChip-colorDefault');
+      expect(chip).not.toHaveClass('MuiChip-colorPrimary');
+      expect(chip).toHaveAttribute('aria-pressed', 'false');
+    }
   });
 
   it('selects a category on tap and clears it via the All chip', () => {

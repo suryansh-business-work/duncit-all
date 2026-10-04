@@ -50,6 +50,16 @@ const pick = async (label: RegExp, option: string) => {
 const setField = (role: 'textbox' | 'spinbutton', name: string, value: string) =>
   fireEvent.change(screen.getByRole(role, { name }), { target: { value } });
 
+/** The Product step: a title, plus the packed parcel and HSN code a ShipRocket listing must carry. */
+const fillProductStep = async () => {
+  fireEvent.change(await screen.findByRole('textbox', { name: /Product title/ }), { target: { value: 'Cold brew kit' } });
+  setField('spinbutton', 'Packed weight (kg)', '1.5');
+  setField('spinbutton', 'Length (cm)', '30');
+  setField('spinbutton', 'Breadth (cm)', '20');
+  setField('spinbutton', 'Height (cm)', '25');
+  setField('textbox', 'HSN code', '2101');
+};
+
 describe('ListProductsForm — a new listing', () => {
   it('will not leave the category step until a full category path is picked', async () => {
     renderNewForm();
@@ -65,7 +75,7 @@ describe('ListProductsForm — a new listing', () => {
     await pick(/^Category/, 'Tops');
     await pick(/^Sub Category/, 'T-shirts');
     next();
-    fireEvent.change(await screen.findByRole('textbox', { name: /Product title/ }), { target: { value: 'Cold brew kit' } });
+    await fillProductStep();
     next();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Add variant image' }));
@@ -92,8 +102,8 @@ describe('ListProductsForm — a new listing', () => {
     await pick(/^Sub Category/, 'T-shirts');
     next();
 
-    // Product
-    fireEvent.change(await screen.findByRole('textbox', { name: /Product title/ }), { target: { value: 'Cold brew kit' } });
+    // Product: a ShipRocket listing needs its own packed parcel and HSN code.
+    await fillProductStep();
     next();
 
     // Variants: one image from the picker, then the variant's copy and figures.
@@ -103,7 +113,7 @@ describe('ListProductsForm — a new listing', () => {
     setField('textbox', 'Variant name (e.g. Default)', 'Starter box');
     setField('textbox', 'Description', 'A complete cold brew kit for hosts to add to their pods.');
     setField('spinbutton', 'Height (cm)', '24');
-    setField('spinbutton', 'Weight (kg)', '1.2');
+    setField('spinbutton', 'Packed weight (kg)', '1.2');
     setField('spinbutton', 'Length (cm)', '20');
     setField('spinbutton', 'Breadth (cm)', '15');
     setField('spinbutton', 'Price (₹)', '499');
@@ -139,6 +149,12 @@ describe('ListProductsForm — a new listing', () => {
         delivery_target: 'SHIPROCKET',
         pickup_location_id: 'w1',
         free_delivery_above: null,
+        weight_kg: 1.5,
+        length_cm: 30,
+        breadth_cm: 20,
+        height_cm: 25,
+        hsn_code: '2101',
+        variants: [expect.objectContaining({ weight_kg: 1.2, length_cm: 20, breadth_cm: 15, height_cm: 24 })],
       },
     });
     expect(submitted).not.toHaveProperty('product_doc_id');

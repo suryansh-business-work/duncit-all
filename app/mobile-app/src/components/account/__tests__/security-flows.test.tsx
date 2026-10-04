@@ -20,8 +20,23 @@ const logout = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // useLogout hands back an async sign-out; the panel chains .catch on it.
+  logout.mockResolvedValue(undefined);
   mockedUseLogout.mockReturnValue(logout);
 });
+
+// The deletion panel reads the open request and the retention window on mount,
+// so only the OTP request itself fails — the mount reads stay healthy.
+function failDeletionOtp(reason: unknown) {
+  mockRequest.mockImplementation((doc: unknown) =>
+    doc === MobileRequestAccountDeletionOtpDocument
+      ? Promise.reject(reason)
+      : Promise.resolve({
+          myAccountDeletionRequest: null,
+          accountDeletionSettings: { retention_days: 30 },
+        }),
+  );
+}
 
 function fillNewPassword() {
   fireEvent.changeText(screen.getByTestId('field-otp'), '123456');
@@ -232,7 +247,7 @@ describe('SecuritySection', () => {
   });
 
   it('surfaces a deletion-request error and cancels the confirm', async () => {
-    mockRequest.mockRejectedValueOnce('boom');
+    failDeletionOtp('boom');
     renderWithProviders(<SecuritySection />);
     fireEvent.press(screen.getByTestId('open-delete-account'));
     fireEvent.press(screen.getByTestId('confirm-dialog-confirm'));
@@ -245,7 +260,7 @@ describe('SecuritySection', () => {
   });
 
   it('surfaces an Error message from a failed deletion request', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('Too many requests'));
+    failDeletionOtp(new Error('Too many requests'));
     renderWithProviders(<SecuritySection />);
     fireEvent.press(screen.getByTestId('open-delete-account'));
     fireEvent.press(screen.getByTestId('confirm-dialog-confirm'));

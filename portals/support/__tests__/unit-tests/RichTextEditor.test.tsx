@@ -1,40 +1,18 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { DuncitRichTextInput, htmlToText as packageHtmlToText } from '@duncit/rich-text';
 import RichTextEditor, { htmlToText } from '../../src/components/RichTextEditor';
 
-vi.mock('react-quill', () => ({
-  default: ({
-    value,
-    onChange,
-    placeholder,
-  }: {
-    value: string;
-    onChange: (html: string) => void;
-    placeholder?: string;
-  }) => (
-    <textarea
-      data-testid="quill"
-      aria-label="editor"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  ),
-}));
-
-describe('RichTextEditor', () => {
-  it('renders the editor and forwards changes', () => {
-    const onChange = vi.fn();
-    render(<RichTextEditor value="<p>hi</p>" onChange={onChange} placeholder="Write a reply…" />);
-    const editor = screen.getByTestId('quill');
-    expect(editor).toHaveAttribute('placeholder', 'Write a reply…');
-    fireEvent.change(editor, { target: { value: '<p>updated</p>' } });
-    expect(onChange).toHaveBeenCalledWith('<p>updated</p>');
-  });
-
-  it('accepts a custom minHeight', () => {
-    const { container } = render(<RichTextEditor value="" onChange={vi.fn()} minHeight={240} />);
-    expect(container.firstChild).toBeTruthy();
+/**
+ * This module is a compatibility shim: the editor itself lives in
+ * `@duncit/rich-text`, which owns its own suite (rendering, change forwarding,
+ * minHeight, toolbar). What is worth pinning HERE is that the shim still points
+ * at that one implementation — an older import path quietly resolving to a
+ * second editor is the drift this file exists to catch.
+ */
+describe('RichTextEditor re-export', () => {
+  it('is the shared editor, not a second implementation', () => {
+    expect(RichTextEditor).toBe(DuncitRichTextInput);
+    expect(htmlToText).toBe(packageHtmlToText);
   });
 });
 

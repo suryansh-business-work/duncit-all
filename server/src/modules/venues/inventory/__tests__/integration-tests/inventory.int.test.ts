@@ -629,7 +629,8 @@ describe('partner listing warehouse + free-delivery threshold', () => {
 
   it('omitting the warehouse keeps the listing unassigned and validates the threshold', async () => {
     const user = await seedManager();
-    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 3' });
+    // Only an APPROVED brand may list products, as in the cases above.
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 3', status: 'APPROVED' });
     await expect(
       inventoryService.submitProductListing(listingInput(brand._id, { free_delivery_above: -5 }), user)
     ).rejects.toThrow(/cannot be negative/i);

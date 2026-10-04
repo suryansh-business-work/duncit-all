@@ -117,8 +117,11 @@ describe('RegionDrillDrawer', () => {
     );
 
     const [live, off] = await rows();
-    expect(within(live).getByText('Sunday 10K Social Run')).toBeInTheDocument();
-    expect(within(live).getByText('DUN-POD-4821')).toBeInTheDocument();
+    // The pod cell sorts/exports by title and shows the title over the pod id.
+    const podCell = within(live).getByTestId('cell-pod_title');
+    expect(within(podCell).getByTestId('cell-value')).toHaveTextContent('Sunday 10K Social Run');
+    expect(within(podCell).getAllByText('Sunday 10K Social Run')).toHaveLength(2);
+    expect(within(podCell).getByText('DUN-POD-4821')).toBeInTheDocument();
     expect(within(live).getByTestId('cell-pod_amount')).toHaveTextContent('₹1499.00');
     expect(within(live).getByTestId('cell-no_of_spots')).toHaveTextContent('20');
     expect(within(live).getByTestId('cell-club_name')).toHaveTextContent('Koramangala Runners');

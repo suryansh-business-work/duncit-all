@@ -9,6 +9,7 @@ jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
 jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn() }),
+  useRoute: () => ({ name: 'HomeTab' }),
 }));
 
 // Stub the data hooks so the screen renders deterministically (no network).

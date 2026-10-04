@@ -81,9 +81,13 @@ describe('UploadField (shared AttachmentUploadField, support config)', () => {
   });
 
   it('surfaces an upload failure', async () => {
-    const { input } = setup({}, [uploadErrorMock()]);
+    const onChange = vi.fn();
+    const { input } = setup({ onChange }, [uploadErrorMock('Upload service unavailable')]);
     fireEvent.change(input, { target: { files: [pngFile()] } });
-    await waitFor(() => expect(screen.getByText(/network error/i)).toBeInTheDocument());
+    // Apollo v4 rethrows the link error itself (no `networkError` wrapper), so
+    // parseApiError surfaces its message rather than a generic network line.
+    await waitFor(() => expect(screen.getByText('Upload service unavailable')).toBeInTheDocument());
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('surfaces a file-read failure', async () => {

@@ -91,7 +91,9 @@ describe('VenueLeadForm submit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
 
     expect(await screen.findByText('1 field has validation errors')).toBeInTheDocument();
-    expect(screen.getByText('Enter a valid website')).toBeInTheDocument();
+    // Named both in the summary and beside the field itself.
+    expect(within(screen.getByText('Website:').closest('li') as HTMLElement).getByText('Enter a valid website')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /Website/ })).toHaveAccessibleDescription('Enter a valid website');
   });
 
   it('asks to describe an "Other" venue type', async () => {

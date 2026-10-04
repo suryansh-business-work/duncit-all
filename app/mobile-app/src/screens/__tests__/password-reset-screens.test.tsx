@@ -28,6 +28,8 @@ const mockedComplete = completePasswordReset as jest.Mock;
 
 const SENT = {
   registered: true,
+  // A medium actually carried the code — without it the screen stays on step one.
+  sent: true,
   resendAfterSeconds: 30,
   expiresInMinutes: 10,
   testCode: null,
@@ -87,6 +89,16 @@ describe('ForgotPasswordScreen', () => {
       ),
     );
     expect(screen.getByTestId('recovery-create-account')).toBeTruthy();
+  });
+
+  it('stays on step one and says so when the account exists but no code went out', async () => {
+    mockedRequest.mockResolvedValueOnce({ ...SENT, sent: false });
+    renderWithProviders(<ForgotPasswordScreen />);
+    await sendCodeToEmail();
+
+    await waitFor(() => expect(screen.getByTestId('recovery-not-sent')).toBeOnTheScreen());
+    expect(screen.queryByTestId('recovery-verify-code')).toBeNull();
+    expect(screen.queryByTestId('recovery-create-account')).toBeNull();
   });
 
   it('surfaces an error from the request', async () => {

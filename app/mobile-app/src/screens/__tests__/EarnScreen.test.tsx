@@ -42,7 +42,9 @@ beforeEach(() => {
 describe('EarnScreen', () => {
   it('disables held-role boxes and navigates from an available one', async () => {
     renderWithProviders(<EarnScreen />);
-    expect(screen.getByTestId('earn-box-HOST-enabled')).toBeOnTheScreen();
+    // The boxes wait on the meetings load behind a skeleton, then settle.
+    expect(screen.getByTestId('earn-box-HOST-skeleton')).toBeOnTheScreen();
+    expect(await screen.findByTestId('earn-box-HOST-enabled')).toBeOnTheScreen();
     expect(screen.queryByTestId('earn-box-VENUE_OWNER-enabled')).toBeNull();
     fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
     expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
@@ -51,8 +53,9 @@ describe('EarnScreen', () => {
   it('treats a user with no roles as all-available', async () => {
     mockUseMe.mockReturnValue({ data: {} });
     renderWithProviders(<EarnScreen />);
+    expect(await screen.findByTestId('earn-box-HOST')).toBeOnTheScreen();
     expect(screen.queryByTestId('earn-box-HOST-enabled')).toBeNull();
-    fireEvent.press(screen.getByTestId('earn-box-ECOMM_MANAGER'));
+    fireEvent.press(await screen.findByTestId('earn-box-ECOMM_MANAGER'));
     expect(mockNavigate).toHaveBeenCalledWith('ListProduct');
   });
 
@@ -230,7 +233,7 @@ describe('EarnScreen', () => {
   it('survives a failed meetings load', async () => {
     mockRequest.mockRejectedValue(new Error('down'));
     renderWithProviders(<EarnScreen />);
-    fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
+    fireEvent.press(await screen.findByTestId('earn-box-VENUE_OWNER'));
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue'));
   });
 
@@ -242,25 +245,25 @@ describe('EarnScreen', () => {
     await waitFor(() => expect(mockRequest.mock.calls.length).toBeGreaterThan(before));
   });
 
-  it('hides the product-seller box when products are gated off', () => {
+  it('hides the product-seller box when products are gated off', async () => {
     mockFeatureFlag.mockReturnValue(false);
     mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
     renderWithProviders(<EarnScreen />);
+    expect(await screen.findByTestId('earn-box-HOST')).toBeOnTheScreen();
     expect(screen.queryByTestId('earn-box-ECOMM_MANAGER')).toBeNull();
-    expect(screen.getByTestId('earn-box-HOST')).toBeOnTheScreen();
   });
 
-  it('gives an approved host an in-app CTA into Host Studio, keeping the label visible', () => {
+  it('gives an approved host an in-app CTA into Host Studio, keeping the label visible', async () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
     renderWithProviders(<EarnScreen />);
     // Business rule: the "Already enabled" label stays visible alongside the CTA.
-    expect(screen.getByText('Already enabled')).toBeOnTheScreen();
+    expect(await screen.findByText('Already enabled')).toBeOnTheScreen();
     expect(screen.getByText('Ready to host more experiences?')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('earn-box-HOST-cta'));
     expect(mockNavigate).toHaveBeenCalledWith('HostManage');
   });
 
-  it('sends each approved venue/brand/club CTA to its OWN Partner Portal deep link', () => {
+  it('sends each approved venue/brand/club CTA to its OWN Partner Portal deep link', async () => {
     const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
     mockUseMe.mockReturnValue({
       data: { me: { roles: ['VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'] } },
@@ -268,7 +271,7 @@ describe('EarnScreen', () => {
     renderWithProviders(<EarnScreen />);
     // Assert each button in isolation (toHaveBeenLastCalledWith) so a
     // button->URL cross-wiring would be caught, not just the URL set.
-    fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER-cta'));
+    fireEvent.press(await screen.findByTestId('earn-box-VENUE_OWNER-cta'));
     expect(openSpy).toHaveBeenLastCalledWith('https://partners-app.duncit.com/register-venue/new');
     fireEvent.press(screen.getByTestId('earn-box-ECOMM_MANAGER-cta'));
     expect(openSpy).toHaveBeenLastCalledWith('https://partners-app.duncit.com/ecomm-brand');

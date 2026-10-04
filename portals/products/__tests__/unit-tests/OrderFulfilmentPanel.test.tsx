@@ -4,9 +4,10 @@ import OrderFulfilmentPanel from '../../src/pages/orders/OrderFulfilmentPanel';
 import { renderWithProviders } from '../testkit';
 
 const shipOrder = (over: Record<string, unknown> = {}) => ({
+  id: 'o1',
   fulfilment_method: 'SHIP',
   fulfilment_status: 'PENDING',
-  shiprocket: { awb: 'AWB1', courier_name: 'BlueDart', tracking_status: 'In transit', label_url: 'http://x/label' },
+  shiprocket: { shipment_id: 'S1', awb: 'AWB1', courier_name: 'BlueDart', tracking_status: 'In transit' },
   last_error: null,
   ...over,
 });
@@ -23,34 +24,42 @@ describe('OrderFulfilmentPanel', () => {
     const h = handlers();
     renderWithProviders(<OrderFulfilmentPanel order={shipOrder()} busy={false} {...h} />);
     expect(screen.getByText('Fulfilment')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Recreate shipment/i })).toBeInTheDocument();
+    // A courier is assigned, so there is nothing left to book.
+    expect(screen.queryByRole('button', { name: /Create shipment|Retry booking/i })).not.toBeInTheDocument();
     expect(screen.getByText('AWB AWB1')).toBeInTheDocument();
     expect(screen.getByText('BlueDart')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Download shipping label/i })).toBeInTheDocument();
-    // Sync tracking is enabled because an AWB exists.
+    expect(screen.getByText('In transit')).toBeInTheDocument();
+    // With an AWB the label can be printed.
+    const label = screen.getByRole('group', { name: 'Label' });
+    expect(within(label).getByRole('button', { name: 'Print' })).toBeEnabled();
+    // Sync tracking is enabled because the shipment is booked.
     expect(screen.getByRole('button', { name: /Sync tracking/i })).toBeEnabled();
   });
 
-  it('creates a shipment and refreshes tracking', () => {
+  it('retries a stopped booking and refreshes tracking', () => {
     const h = handlers();
-    renderWithProviders(<OrderFulfilmentPanel order={shipOrder()} busy={false} {...h} />);
-    fireEvent.click(screen.getByRole('button', { name: /Recreate shipment/i }));
+    renderWithProviders(
+      <OrderFulfilmentPanel order={shipOrder({ shiprocket: { shipment_id: 'S1' } })} busy={false} {...h} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Retry booking/i }));
     fireEvent.click(screen.getByRole('button', { name: /Sync tracking/i }));
-    expect(h.onCreateShipment).toHaveBeenCalled();
-    expect(h.onRefreshTracking).toHaveBeenCalled();
+    expect(h.onCreateShipment).toHaveBeenCalledTimes(1);
+    expect(h.onRefreshTracking).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the no-shipment state and disables sync without an AWB', () => {
+  it('shows the no-shipment state and disables sync until booked', () => {
     const h = handlers();
     renderWithProviders(
       <OrderFulfilmentPanel order={shipOrder({ shiprocket: {} })} busy={false} {...h} />,
     );
-    expect(screen.getByRole('button', { name: /Create shipment/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Create shipment/i }));
+    expect(h.onCreateShipment).toHaveBeenCalledTimes(1);
     expect(screen.getByText('No shipment created yet.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sync tracking/i })).toBeDisabled();
+    expect(screen.queryByText('Documents')).not.toBeInTheDocument();
   });
 
-  it('hides the ship section for pickup orders and shows the last error', () => {
+  it('hides the ship section, booking error included, for pickup orders', () => {
     const h = handlers();
     renderWithProviders(
       <OrderFulfilmentPanel
@@ -60,17 +69,45 @@ describe('OrderFulfilmentPanel', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: /Create shipment/i })).not.toBeInTheDocument();
-    expect(screen.getByText('boom')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Sync tracking/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/boom/)).not.toBeInTheDocument();
   });
 
-  it('shows courier/tracking fallbacks when only an AWB is present', () => {
+  it('shows the last booking error on a ship order', () => {
     const h = handlers();
     renderWithProviders(
-      <OrderFulfilmentPanel order={shipOrder({ shiprocket: { awb: 'A2' } })} busy={false} {...h} />,
+      <OrderFulfilmentPanel order={shipOrder({ shiprocket: {}, last_error: 'boom' })} busy={false} {...h} />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('boom');
+  });
+
+  it('dates the booking error once a sync attempt is recorded', () => {
+    const h = handlers();
+    renderWithProviders(
+      <OrderFulfilmentPanel
+        order={shipOrder({
+          shiprocket: { shipment_id: 'S1', last_synced_at: '2026-09-01T10:00:00.000Z' },
+          last_error: 'boom',
+        })}
+        busy={false}
+        {...h}
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(/^Last booking attempt \(.+\): boom$/);
+  });
+
+  it('shows courier/tracking fallbacks when booked without a courier yet', () => {
+    const h = handlers();
+    renderWithProviders(
+      <OrderFulfilmentPanel order={shipOrder({ shiprocket: { shipment_id: 'S2' } })} busy={false} {...h} />,
     );
     expect(screen.getByText('Courier pending')).toBeInTheDocument();
     expect(screen.getByText('Awaiting first scan')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Download shipping label/i })).not.toBeInTheDocument();
+    // Label needs an AWB; the invoice only needs the booking.
+    const label = screen.getByRole('group', { name: 'Label' });
+    expect(within(label).getByRole('button', { name: 'Print' })).toBeDisabled();
+    const invoice = screen.getByRole('group', { name: 'Invoice' });
+    expect(within(invoice).getByRole('button', { name: 'Print' })).toBeEnabled();
   });
 
   it('switches the fulfilment method and ignores re-selecting the current one', () => {

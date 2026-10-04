@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
 
+import { ScreenRefreshProvider, useRefreshRegistration } from '@/components/PullToRefresh';
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { ClubsScreen } from '@/screens/ClubsScreen';
 import { FollowingScreen } from '@/screens/FollowingScreen';
@@ -34,6 +35,8 @@ jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => ({
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
+  // TabScreen reads the route to tell Home from the other tabs.
+  useRoute: () => ({ name: 'ClubsTab' }),
 }));
 
 const mockedHomeData = useHomeData as jest.Mock;
@@ -100,31 +103,58 @@ beforeEach(() => {
     isLoading: false,
     select: jest.fn(),
   });
-  mockedLocations.mockReturnValue({ selectedId: '', cityLabel: '', zoneName: '' });
+  mockedLocations.mockReturnValue(locationsApi());
 });
 
+// The admin's active cities — the Clubs tab groups clubs by these.
+const LOCATIONS = [
+  { id: 'loc1', location_name: 'Delhi NCR', city: 'Delhi', location_image: null },
+  { id: 'loc2', location_name: 'Mumbai', city: null, location_image: null },
+];
+function locationsApi(over: Record<string, unknown> = {}) {
+  return { selectedId: '', cityLabel: '', zoneName: '', locations: LOCATIONS, ...over };
+}
+const inCity = (id: string, locationId = 'loc1', extra: Record<string, unknown> = {}) =>
+  ({ ...(club(id) as Record<string, unknown>), location_id: locationId, ...extra }) as never;
+
 describe('ClubsScreen', () => {
-  it('renders club cards and opens club details', () => {
+  it('lists city cards first, opens a city, then opens club details', () => {
     mockedHomeData.mockReturnValue({
       pods: [],
-      clubs: [club('1')],
+      clubs: [inCity('1'), inCity('2', 'loc2'), inCity('3', 'gone')],
       categories: [{ id: 'cat1', name: 'Music', slug: 'm', level: 'CATEGORY', parent_id: null }],
       isLoading: false,
       refetch: jest.fn(),
     });
     renderWithProviders(<ClubsScreen />);
+    // No header city: one card per city that has clubs; a club in an inactive
+    // city has no card, and no club is listed yet.
+    expect(screen.getByTestId('club-city-card-loc1')).toBeOnTheScreen();
+    expect(screen.getByTestId('club-city-card-loc2')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-city-card-gone')).toBeNull();
+    expect(screen.queryByTestId('club-card-cl-1')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('club-city-card-loc1'));
+    expect(screen.getByTestId('clubs-city-heading-title')).toHaveTextContent('Delhi');
     expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-card-cl-2')).toBeNull();
     fireEvent.press(screen.getByTestId('club-card-cl-1'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
+
+    // "All cities" goes back to the city cards.
+    fireEvent.press(screen.getByTestId('clubs-city-heading-action'));
+    expect(screen.getByTestId('club-city-card-loc2')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-card-cl-1')).toBeNull();
   });
 
   it('filters clubs by search query and category, then shows an empty message', () => {
+    mockedLocations.mockReturnValue(locationsApi({ selectedId: 'loc1', cityLabel: 'Delhi' }));
     mockedHomeData.mockReturnValue({
       pods: [],
       clubs: [
-        { ...(club('1') as Record<string, unknown>), club_name: 'Runners', category_id: 'cat1' },
-        { ...(club('2') as Record<string, unknown>), club_name: 'Painters', category_id: 'cat2' },
-      ] as never,
+        inCity('1', 'loc1', { club_name: 'Runners', category_id: 'cat1' }),
+        inCity('2', 'loc1', { club_name: 'Painters', category_id: 'cat2' }),
+      ],
       categories: [
         { id: 'cat1', name: 'Sports', slug: 's', level: 'CATEGORY', parent_id: null },
         { id: 'cat2', name: 'Arts', slug: 'a', level: 'CATEGORY', parent_id: null },
@@ -153,9 +183,11 @@ describe('ClubsScreen', () => {
         position: 'CLUB_LIST',
       },
     ];
+    // Inside a city, a banner is woven in after every 4 clubs of a locality.
+    mockedLocations.mockReturnValue(locationsApi({ selectedId: 'loc1', cityLabel: 'Delhi' }));
     mockedHomeData.mockReturnValue({
       pods: [],
-      clubs: [club('1'), club('2'), club('3'), club('4'), club('5')],
+      clubs: ['1', '2', '3', '4', '5'].map((id) => inCity(id)),
       categories: [],
       isLoading: false,
       refetch: jest.fn(),
@@ -169,7 +201,7 @@ describe('ClubsScreen', () => {
   });
 
   it('shows only clubs in the selected location', () => {
-    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: '' });
+    mockedLocations.mockReturnValue(locationsApi({ selectedId: 'loc1', cityLabel: 'Delhi' }));
     mockedHomeData.mockReturnValue({
       pods: [],
       clubs: [
@@ -186,7 +218,9 @@ describe('ClubsScreen', () => {
   });
 
   it('narrows to the selected locality/area within the city', () => {
-    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' });
+    mockedLocations.mockReturnValue(
+      locationsApi({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' }),
+    );
     mockedHomeData.mockReturnValue({
       pods: [],
       clubs: [
@@ -203,7 +237,9 @@ describe('ClubsScreen', () => {
   });
 
   it('shows the Reset-Location empty state when no club operates in the locality', () => {
-    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' });
+    mockedLocations.mockReturnValue(
+      locationsApi({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' }),
+    );
     mockedHomeData.mockReturnValue({
       pods: [],
       clubs: [
@@ -267,14 +303,28 @@ describe('FollowingScreen', () => {
     act(() => again.onClose());
   });
 
-  it('pull-to-refresh refetches the active feed', () => {
+  it('pull-to-refresh on the feed reloads what the feed hooks registered', () => {
     const people = { ...emptyFeed(), posts: [feedPost('p1')] };
-    mockedFeed.mockImplementation((source: string) => (source === 'PEOPLE' ? people : emptyFeed()));
-    renderWithProviders(<FollowingScreen />);
+    const clubs = emptyFeed();
+    // The real useFollowingFeed hands its reload to the screen's pull gesture;
+    // the mock keeps that contract so the screen's wiring is what is tested.
+    mockedFeed.mockImplementation((source: string) => {
+      const feed = source === 'PEOPLE' ? people : clubs;
+      useRefreshRegistration(feed.refetch);
+      return feed;
+    });
+    renderWithProviders(
+      <ScreenRefreshProvider>
+        <FollowingScreen />
+      </ScreenRefreshProvider>,
+    );
+    const control = screen.getByTestId('following-feed').props.refreshControl;
+    expect(control.props.testID).toBe('screen-refresh');
     act(() => {
-      screen.getByTestId('following-feed').props.refreshControl.props.onRefresh();
+      control.props.onRefresh();
     });
     expect(people.refetch).toHaveBeenCalled();
+    expect(clubs.refetch).toHaveBeenCalled();
   });
 });
 

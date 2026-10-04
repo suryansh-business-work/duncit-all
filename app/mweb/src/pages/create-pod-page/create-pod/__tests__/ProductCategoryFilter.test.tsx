@@ -66,7 +66,7 @@ const renderFor = (club: unknown) =>
 describe('Step 4 product picker — pod category hierarchy', () => {
   it('offers only the products mapped to the pod category', () => {
     renderFor(BADMINTON_CLUB);
-    expect(screen.getByRole('button', { name: /Add product/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeEnabled();
     expect(screen.queryByText('No products available for this category.')).not.toBeInTheDocument();
     expect(filterProductsForClub(CATALOGUE, BADMINTON_CLUB)).toEqual([shuttles]);
   });
@@ -75,7 +75,7 @@ describe('Step 4 product picker — pod category hierarchy', () => {
   it('offers nothing, and says so, when the pod club carries no category', () => {
     renderFor(LEGACY_CLUB);
     expect(screen.getByText('No products available for this category.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add product/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeDisabled();
   });
 
   it('offers nothing before a club is picked', () => {

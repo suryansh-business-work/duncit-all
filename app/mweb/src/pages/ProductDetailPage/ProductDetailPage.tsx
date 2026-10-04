@@ -61,7 +61,10 @@ export default function ProductDetailPage() {
     : [product?.image_url].filter(Boolean);
   const images: string[] = variantImages.length ? variantImages : baseImages;
   const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
-  const specs = productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product);
+  // `product` is undefined while loading and after a failed read — the loading
+  // and error states render below, so there are no specs to build yet.
+  let specs: ReturnType<typeof productSpecs> = [];
+  if (product) specs = productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product);
 
   // Auto-pick the cheapest live pod that stocks the product so the buyer can add
   // it here (the pod stays invisible — the product is the hero, per req 3).

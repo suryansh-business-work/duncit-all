@@ -52,14 +52,14 @@ describe('OfflineBanner', () => {
 });
 
 describe('NotFoundPage', () => {
-  it('renders the 404 with a home link', () => {
+  it('renders the not-found heading with a home link', () => {
     render(
       <MemoryRouter>
         <NotFoundPage />
       </MemoryRouter>,
     );
-    expect(screen.getByText('404')).toBeInTheDocument();
-    expect(screen.getByText('Page not found')).toBeInTheDocument();
+    // One icon, one line, one way home — the bare "404" numeral was dropped.
+    expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /go to home/i })).toHaveAttribute('href', '/');
   });
 });

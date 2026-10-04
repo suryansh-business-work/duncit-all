@@ -41,7 +41,12 @@ import {
 } from '../../src/pages/short-links-page/detail/daily-series';
 import type { ShortLinkClickRow } from '../../src/pages/short-links-page/queries';
 
-const detailMocks = () => [shortLinkMock(), shortLinkStatsMock(), shortLinkQrMock()];
+// The shared stats fixture predates consent_minimised, which the summary now
+// always renders; every stats response here carries it, as the server's does.
+const statsMock = (...[over, opts]: Parameters<typeof shortLinkStatsMock>) =>
+  shortLinkStatsMock({ consent_minimised: 17, ...over }, opts);
+
+const detailMocks = () => [shortLinkMock(), statsMock(), shortLinkQrMock()];
 
 const renderDetail = (mocks = detailMocks()) =>
   renderWithProviders(<ShortLinkDetailPage />, {
@@ -247,7 +252,7 @@ describe('ShortLinkDetailPage', () => {
   it('says so when nothing has followed the link yet', async () => {
     renderDetail([
       shortLinkMock(),
-      shortLinkStatsMock({
+      statsMock({
         total_clicks: 0,
         unique_visitors: 0,
         countries_reached: 0,
@@ -267,12 +272,12 @@ describe('ShortLinkDetailPage', () => {
   });
 
   it('waits rather than rendering half a page', () => {
-    renderDetail([shortLinkMock(), shortLinkStatsMock({}, { pending: true }), shortLinkQrMock()]);
+    renderDetail([shortLinkMock(), statsMock({}, { pending: true }), shortLinkQrMock()]);
     expect(screen.queryByText('Came from')).not.toBeInTheDocument();
   });
 
   it('surfaces a link that could not be loaded', async () => {
-    renderDetail([shortLinkMock({}, { failWith: 'Short link not found' }), shortLinkStatsMock()]);
+    renderDetail([shortLinkMock({}, { failWith: 'Short link not found' }), statsMock()]);
     expect(await screen.findByText(/Short link not found/)).toBeInTheDocument();
   });
 
@@ -294,7 +299,7 @@ describe('ShortLinkDetailPage', () => {
   it('reactivates a retired link', async () => {
     renderDetail([
       shortLinkMock({ is_active: false }),
-      shortLinkStatsMock(),
+      statsMock(),
       shortLinkQrMock(),
       setShortLinkActiveMock(true),
     ]);
@@ -307,7 +312,7 @@ describe('ShortLinkDetailPage', () => {
   it('em-dashes a link that has never been clicked', async () => {
     renderDetail([
       shortLinkMock({ first_clicked_at: null, last_clicked_at: null, utm_campaign: null }),
-      shortLinkStatsMock(),
+      statsMock(),
       shortLinkQrMock(),
     ]);
     await screen.findByText('Diwali pod push');
@@ -315,7 +320,7 @@ describe('ShortLinkDetailPage', () => {
   });
 
   it('renders without a QR rather than showing a broken image', async () => {
-    renderDetail([shortLinkMock(), shortLinkStatsMock(), shortLinkQrMock({ pending: true })]);
+    renderDetail([shortLinkMock(), statsMock(), shortLinkQrMock({ pending: true })]);
     await screen.findByText('Came from');
     expect(screen.queryByAltText('QR code for Diwali pod push')).not.toBeInTheDocument();
   });

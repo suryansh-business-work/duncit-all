@@ -17,6 +17,7 @@ import {
 } from '@/graphql/productCheckout';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useProductCheckout } from '@/hooks/useProductCheckout';
+import { useMeStore } from '@/stores/me.store';
 import type { CheckoutFormValues } from '@/forms/checkout';
 import type { ProductCartItemInput } from '@/generated/graphql/graphql';
 
@@ -63,10 +64,6 @@ function route(doc: unknown) {
         currency_symbol: '₹',
         dummy_mode: true,
       },
-    });
-  if (doc === MobileCheckoutMeDocument)
-    return Promise.resolve({
-      me: { user_id: 'u1', email: 'r@d.com', phone_number: '9', phone_extension: '+91' },
     });
   if (doc === MobileAvailableCouponsDocument)
     return Promise.resolve({
@@ -135,7 +132,11 @@ function route(doc: unknown) {
   return Promise.resolve({});
 }
 
+// The buyer comes from the shared user-info store, not a checkout-only request.
+const storedMe = { user_id: 'u1', email: 'r@d.com', phone_number: '9', phone_extension: '+91' };
+
 beforeEach(() => {
+  useMeStore.setState({ data: { me: storedMe } } as never);
   mockRequest.mockReset().mockImplementation(route);
   (FileSystem.writeAsStringAsync as jest.Mock).mockReset().mockResolvedValue(undefined);
   isAvailable.mockReset().mockResolvedValue(true);
@@ -143,13 +144,24 @@ beforeEach(() => {
 });
 
 describe('useProductCheckout', () => {
-  it('loads finance, me and the available coupons', async () => {
+  it('loads finance and the available coupons, and reads me from the user store', async () => {
     const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.finance?.gst_pct).toBe(18);
     expect(result.current.me?.email).toBe('r@d.com');
+    expect(result.current.initialValues.email).toBe('r@d.com');
     expect(result.current.availableCoupons).toHaveLength(1);
     expect(result.current.initialValues.country).toBe('India');
+    // A checkout visit never asks for the account again.
+    expect(mockRequest.mock.calls.map((c) => c[0])).not.toContain(MobileCheckoutMeDocument);
+  });
+
+  it('has no buyer until the user store has loaded', async () => {
+    useMeStore.setState({ data: undefined } as never);
+    const { result } = renderHook(() => useProductCheckout());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.me).toBeNull();
+    expect(result.current.initialValues.email).toBe('');
   });
 
   it('never scopes the coupon lookup to a pod (the checkout is cart-wide)', async () => {
@@ -176,11 +188,11 @@ describe('useProductCheckout', () => {
     mockRequest
       .mockReset()
       .mockImplementation((doc) =>
-        doc === MobileCheckoutMeDocument ? Promise.reject(new Error('down')) : route(doc),
+        doc === MobilePublicFinanceDocument ? Promise.reject(new Error('down')) : route(doc),
       );
     const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.me).toBeNull();
+    expect(result.current.finance).toBeNull();
   });
 
   it('pays via the product dummy engine with the mapped input', async () => {

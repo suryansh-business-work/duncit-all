@@ -10,7 +10,11 @@ import {
 } from './backoutRequest.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
-import { coinService, coinsForBackoutRefund } from '@modules/finance/coin/coin.service';
+import {
+  coinService,
+  coinsForBackoutRefund,
+  coinsToRevokeForBackout,
+} from '@modules/finance/coin/coin.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { UserModel } from '@modules/access/user/user.model';
@@ -425,6 +429,154 @@ export async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   }
 }
 
+/**
+ * The separately-actioned parts of a backout refund — one per way the booking
+ * was paid, plus the earned-coin revocation:
+ *  - CASH: the gateway money (Razorpay / test gateway). A request with no
+ *    snapshot (`payment_amount` null, written before snapshots) is cash.
+ *  - COINS: the Duncit Coins the booking was paid with.
+ *  - EARN_REVOKE: the purchase-reward coins the refunded share takes back.
+ * A booking that cost nothing (a 100%-off coupon) still has one part, CASH for
+ * ₹0, so Finance has something to close the request with.
+ */
+export type BackoutRefundPart = 'CASH' | 'COINS' | 'EARN_REVOKE';
+
+const PART_STAMP = {
+  CASH: 'cash_refund_processed_at',
+  COINS: 'coins_refund_processed_at',
+  EARN_REVOKE: 'earn_revoke_processed_at',
+} as const satisfies Record<BackoutRefundPart, keyof IBackoutRequest>;
+
+export function backoutRefundParts(request: IBackoutRequest): BackoutRefundPart[] {
+  const parts: BackoutRefundPart[] = [];
+  if (request.payment_amount == null || request.payment_amount > 0) parts.push('CASH');
+  if ((request.coins_paid ?? 0) > 0) parts.push('COINS');
+  if ((request.coins_to_revoke ?? 0) > 0) parts.push('EARN_REVOKE');
+  return parts.length > 0 ? parts : ['CASH'];
+}
+
+/** Parts still to action. Empty once the request is refunded — including a
+ * request refunded before the split, which has no per-part stamps at all. */
+export function pendingBackoutRefundParts(request: IBackoutRequest): BackoutRefundPart[] {
+  if (request.refund_processed_at) return [];
+  return backoutRefundParts(request).filter((part) => !request[PART_STAMP[part]]);
+}
+
+// Declarations, not arrow consts: only a declared `never` function narrows the
+// caller's types after the guard that calls it.
+function refundConflict(message: string): never {
+  throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
+}
+function refundBadRequest(message: string): never {
+  throw new GraphQLError(message, { extensions: { code: 'BAD_REQUEST' } });
+}
+
+/** Records this request's gateway refund on the payment it reverses, as the
+ * running total across every release on the booking. Status stays SUCCESS
+ * here — only the completed refund of a WHOLE booking flips it. */
+async function stampPaymentRefund(payment: IPayment, request: IBackoutRequest, amount: number) {
+  const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+  (payment.metadata as any) = {
+    ...meta,
+    refund_reason: 'backout_spot_filled',
+    refunded_at: new Date().toISOString(),
+    backout_no: request.backout_no,
+    refunded_amount: round2(Number(meta.refunded_amount ?? 0) + amount),
+  };
+  await payment.save();
+}
+
+/**
+ * Runs ONE part's money movement. The part's stamp is claimed atomically first
+ * (filter on it still being null), so two Finance clicks racing the same part
+ * cannot both pay it; if the movement then fails the claim is released, so the
+ * part is retryable rather than stuck as "processed" with nothing paid.
+ */
+async function runRefundPart(request: IBackoutRequest, payment: IPayment, part: BackoutRefundPart) {
+  const stamp = PART_STAMP[part];
+  const claimed = await BackoutRequestModel.findOneAndUpdate(
+    { _id: request._id, refund_processed_at: null, [stamp]: null },
+    { $set: { [stamp]: new Date() } },
+    { new: true }
+  );
+  if (!claimed) refundConflict('This part of the refund has already been processed');
+  const reason = `Backout ${request.backout_no}`;
+  try {
+    if (part === 'CASH') {
+      await stampPaymentRefund(payment, request, Number(request.refund_amount ?? 0));
+    } else if (part === 'COINS') {
+      // Keyed on the backout, not the payment: a booking released in parts
+      // reaches here once per release. The ledger's unique index is the second
+      // line of defence behind the claim above.
+      await coinService.refundForBackout({
+        userId: String(request.user_id),
+        backoutId: String(request._id),
+        paymentId: payment.payment_id,
+        coins: request.coins_refunded,
+        reason,
+      });
+    } else {
+      const revoked = await coinService.revokeEarnForBackout({
+        userId: String(request.user_id),
+        backoutId: String(request._id),
+        paymentId: payment.payment_id,
+        coins: request.coins_to_revoke,
+        reason,
+      });
+      await BackoutRequestModel.updateOne({ _id: request._id }, { $set: { coins_revoked: revoked } });
+      if (revoked < (request.coins_to_revoke ?? 0)) {
+        logs.server.warn('podMember', 'revokeEarnForBackout', {
+          msg: '[backout] earned coins only partly revoked — balance already spent',
+          backout_no: request.backout_no,
+          to_revoke: request.coins_to_revoke,
+          revoked,
+        });
+      }
+    }
+  } catch (err) {
+    await BackoutRequestModel.updateOne({ _id: request._id }, { $set: { [stamp]: null } });
+    throw err;
+  }
+}
+
+/**
+ * Closes a request once its last part is paid. Claimed atomically on
+ * `refund_processed_at`, so when two parts finish together only one of them
+ * flips the payment and notifies the member.
+ */
+async function completeBackoutRefund(request: IBackoutRequest, payment: IPayment) {
+  const closed = await BackoutRequestModel.findOneAndUpdate(
+    { _id: request._id, refund_processed_at: null },
+    { $set: { refund_processed_at: new Date() } },
+    { new: true }
+  );
+  if (!closed) return request;
+  const partial = normalizeSeats(closed.seats ?? 1) < normalizeSeats(closed.seats_before ?? 1);
+  // A booking with no gateway money (paid in coins, or a free coupon) still
+  // gets the refund stamp, so it lists in User Refund Logs like any other.
+  if (!backoutRefundParts(closed).includes('CASH')) await stampPaymentRefund(payment, closed, 0);
+  // Only a release of the WHOLE booking ends the payment. Marking a payment
+  // REFUNDED for a partial release said the pod collected nothing from a
+  // buyer who is still attending on the seats they kept — `collectedForPod`
+  // counts SUCCESS payments only, so the host and the venue would have
+  // settled on a booking that never left. It also made the payment
+  // un-refundable, so a second released seat could never be paid back.
+  if (!partial) {
+    payment.status = 'REFUNDED';
+    await payment.save();
+  }
+  const member = await PodMemberModel.findById(closed.member_id);
+  // A partially-refunded member is still going, so their membership-level
+  // refund state must not read as settled.
+  if (member && !partial) {
+    member.refund_status = 'PROCESSED';
+    member.refund_payment_id = payment._id;
+    await member.save();
+  }
+  await notifyRefundProcessed(closed, payment);
+  return closed;
+}
+
 /** Per-request refund state — derived so every history row reads correctly. */
 function requestRefundStatus(request: IBackoutRequest): string {
   if (request.refund_processed_at) return 'PROCESSED';
@@ -486,6 +638,19 @@ const toBackoutRefund = (
   refund_amount: request.refund_amount ?? null,
   coins_paid: request.coins_paid ?? 0,
   coins_refunded: request.coins_refunded ?? 0,
+  // How the booking was paid: the gateway for the money half (RAZORPAY, DUMMY,
+  // or COINS / COUPON when nothing went through a gateway).
+  payment_gateway: payment?.gateway ?? null,
+  coins_earned_share: request.coins_earned_share ?? 0,
+  coins_to_revoke: request.coins_to_revoke ?? 0,
+  coins_revoked: request.coins_revoked ?? 0,
+  // A request refunded before the split settled every part at once, so its
+  // single stamp stands in for each part's.
+  cash_refund_processed_at: iso(request.cash_refund_processed_at ?? request.refund_processed_at),
+  coins_refund_processed_at: iso(request.coins_refund_processed_at ?? request.refund_processed_at),
+  earn_revoke_processed_at: iso(request.earn_revoke_processed_at ?? request.refund_processed_at),
+  refund_parts: backoutRefundParts(request),
+  pending_refund_parts: pendingBackoutRefundParts(request),
   refund_processed_at: iso(request.refund_processed_at),
   events: (request.events ?? []).map((e) => ({
     status: e.status,
@@ -551,7 +716,7 @@ async function hydrateBackoutRequests(requests: IBackoutRequest[]) {
     UserModel.find({ _id: { $in: userIds } }).select(
       'profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension',
     ),
-    PaymentModel.find({ _id: { $in: paymentIds } }).select('total currency_symbol status'),
+    PaymentModel.find({ _id: { $in: paymentIds } }).select('total currency_symbol status gateway'),
     attemptsUsedMap(requests),
     settingsService.getMaxBackoutAttempts(),
   ]);
@@ -648,7 +813,17 @@ function backoutRefundShare(payment: IPayment | null, held: number, release: num
     paidSeats,
     deductionPct,
   });
-  return { paymentAmount, refundAmount, coinsPaidShare, coinsRefund };
+  // The purchase reward these seats earned, and the refunded share of it the
+  // refund takes back (Finance actions it as its own part of the refund).
+  const earn = coinsToRevokeForBackout({
+    coinsEarned: payment?.coins_earned ?? 0,
+    ticketPaid,
+    totalPaid: payment?.total ?? 0,
+    releaseSeats: release,
+    paidSeats,
+    deductionPct,
+  });
+  return { paymentAmount, refundAmount, coinsPaidShare, coinsRefund, earn };
 }
 
 export const podMemberService = {
@@ -902,7 +1077,7 @@ export const podMemberService = {
     const wholeBooking = release >= held;
 
     const payment = membership.payment_id ? await PaymentModel.findById(membership.payment_id) : null;
-    const { paymentAmount, refundAmount, coinsPaidShare, coinsRefund } = backoutRefundShare(
+    const { paymentAmount, refundAmount, coinsPaidShare, coinsRefund, earn } = backoutRefundShare(
       payment,
       held,
       release,
@@ -925,6 +1100,8 @@ export const podMemberService = {
       refund_amount: refundAmount,
       coins_paid: coinsPaidShare,
       coins_refunded: coinsRefund,
+      coins_earned_share: earn.earnedShare,
+      coins_to_revoke: earn.toRevoke,
       events: [{ status: 'IN_PROCESS', backout_count: attemptNo, at: now }],
     });
 
@@ -1393,88 +1570,48 @@ export const podMemberService = {
   },
 
   /**
-   * Finance processes the refund for a Spot Filled request — exactly once per
-   * request. Flips the join payment to REFUNDED (deduction already reflected in
-   * refund_amount) and notifies the member on every channel.
+   * Finance processes the refund for a Spot Filled request, one PART at a
+   * time — the gateway money, the coins and the earned-coin revocation are each
+   * actioned on their own (`part`). Without a part, every outstanding part runs
+   * in order, as the single "Refund now" did before the split.
+   *
+   * The request is refunded — `refund_processed_at`, the payment flip, the
+   * member's refund state and the notification — only once its LAST part lands,
+   * so a member never hears "refund processed" for half of one.
    */
-  async processBackoutRefund(id: string) {
+  async processBackoutRefund(id: string, part?: BackoutRefundPart | null) {
     const request = Types.ObjectId.isValid(id) ? await BackoutRequestModel.findById(id) : null;
     if (!request) {
       throw new GraphQLError('Backout request not found', { extensions: { code: 'NOT_FOUND' } });
     }
     if (request.status !== 'SPOT_FILLED') {
-      throw new GraphQLError('Refund can be processed only after the spot is filled', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
+      refundBadRequest('Refund can be processed only after the spot is filled');
     }
-    if (request.refund_processed_at) {
-      throw new GraphQLError('This Backout request has already been refunded', {
-        extensions: { code: 'CONFLICT' },
-      });
-    }
-    if (!request.payment_id) {
-      throw new GraphQLError('This booking has no payment to refund', {
-        extensions: { code: 'BAD_REQUEST' },
-      });
-    }
+    if (request.refund_processed_at) refundConflict('This Backout request has already been refunded');
+    if (!request.payment_id) refundBadRequest('This booking has no payment to refund');
     const payment = await PaymentModel.findById(request.payment_id);
     // A partial release leaves the payment SUCCESS on purpose (below), so a
     // later release on the same booking has to be refundable too.
-    const partial = normalizeSeats(request.seats ?? 1) < normalizeSeats(request.seats_before ?? 1);
-    if (payment?.status !== 'SUCCESS') {
-      throw new GraphQLError('The linked payment cannot be refunded', {
-        extensions: { code: 'CONFLICT' },
-      });
+    if (payment?.status !== 'SUCCESS') refundConflict('The linked payment cannot be refunded');
+
+    const pending = pendingBackoutRefundParts(request);
+    if (part && !backoutRefundParts(request).includes(part)) {
+      refundBadRequest('This booking was not paid that way — there is nothing to refund there');
+    }
+    if (part && !pending.includes(part)) refundConflict('This part of the refund has already been processed');
+    // The revocation is taken from the coin refund first, then the balance — so
+    // the coins have to be back before it runs.
+    if (part === 'EARN_REVOKE' && pending.includes('COINS')) {
+      refundBadRequest('Refund the Duncit Coins first — the revoked coins are taken from them');
+    }
+    for (const next of part ? [part] : pending) {
+      await runRefundPart(request, payment, next);
     }
 
-    // Only a release of the WHOLE booking ends the payment. Marking a payment
-    // REFUNDED for a partial release said the pod collected nothing from a
-    // buyer who is still attending on the seats they kept — `collectedForPod`
-    // counts SUCCESS payments only, so the host and the venue would have
-    // settled on a booking that never left. It also made the payment
-    // un-refundable, so a second released seat could never be paid back.
-    const refundedSoFar = round2(
-      Number((payment.metadata as any)?.refunded_amount ?? 0) + Number(request.refund_amount ?? 0)
-    );
-    (payment.metadata as any) = {
-      ...payment.metadata,
-      refund_reason: 'backout_spot_filled',
-      refunded_at: new Date().toISOString(),
-      backout_no: request.backout_no,
-      // What has gone back across every release on this booking, so Finance can
-      // see a part-refunded payment for what it is.
-      refunded_amount: refundedSoFar,
-    };
-    if (!partial) payment.status = 'REFUNDED';
-    await payment.save();
-    request.refund_processed_at = new Date();
-    await request.save();
-
-    // The coin half of the refund lands at the SAME moment the cash does, so a
-    // member never sees one arrive without the other. Keyed on the backout, not
-    // the payment: a booking released in parts reaches here once per release,
-    // and each one pays back its own seats. The guard above (refund_processed_at)
-    // already makes this run once per request; the ledger's unique index is the
-    // second line of defence if two calls race it.
-    if ((request.coins_refunded ?? 0) > 0) {
-      await coinService.refundForBackout({
-        userId: String(request.user_id),
-        backoutId: String(request._id),
-        paymentId: payment.payment_id,
-        coins: request.coins_refunded,
-        reason: `Backout ${request.backout_no}`,
-      });
-    }
-    const member = await PodMemberModel.findById(request.member_id);
-    // A partially-refunded member is still going, so their membership-level
-    // refund state must not read as settled.
-    if (member && !partial) {
-      member.refund_status = 'PROCESSED';
-      member.refund_payment_id = payment._id;
-      await member.save();
-    }
-    await notifyRefundProcessed(request, payment);
-    const [row] = await hydrateBackoutRequests([request]);
+    const fresh = (await BackoutRequestModel.findById(request._id)) ?? request;
+    const settled =
+      pendingBackoutRefundParts(fresh).length === 0 ? await completeBackoutRefund(fresh, payment) : fresh;
+    const [row] = await hydrateBackoutRequests([settled]);
     return row;
   },
 };

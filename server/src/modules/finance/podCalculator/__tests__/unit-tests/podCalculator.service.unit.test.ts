@@ -247,6 +247,8 @@ describe('reading a document written before today', () => {
       host_commission_percent: 0,
       venue_commission_percent: 0,
       club_admin_percent: 0,
+      // A pod saved before expenses existed reads back an empty list, not null.
+      expenses: [],
     });
   });
 

@@ -63,7 +63,9 @@ describe('NotifyHost', () => {
     fire({ message: 'Saved!', severity: 'success', duration: 4000 });
 
     expect(await screen.findByText('Saved!')).toBeInTheDocument();
-    expect(document.querySelector('.MuiAlert-filledSuccess')).toBeInTheDocument();
+    // MUI 9 composes the filled + colour classes rather than `filledSuccess`.
+    const alert = screen.getByTestId('notify-host-alert');
+    expect(alert).toHaveClass('MuiAlert-filled', 'MuiAlert-colorSuccess');
   });
 
   it('ignores events with no message', () => {

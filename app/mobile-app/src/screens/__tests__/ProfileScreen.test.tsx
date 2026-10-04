@@ -33,6 +33,7 @@ const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: mockGoBack }),
+  useRoute: () => ({ params: undefined }),
 }));
 
 const mockedProfile = useProfile as jest.Mock;

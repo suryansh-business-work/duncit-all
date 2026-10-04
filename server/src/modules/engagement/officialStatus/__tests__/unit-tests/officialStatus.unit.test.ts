@@ -2,17 +2,19 @@ import { officialStatusResolvers } from '../../officialStatus.resolver';
 import { makeContext } from '@test/harness';
 
 describe('officialStatus resolver — access control', () => {
-  it('officialStatusesTable is gated to marketing-write roles', async () => {
-    await expect(
+  // officialStatusesTable, deleteOfficialStatus and recordOfficialStatusView are
+  // not async: their gate throws synchronously, before any service call.
+  it('officialStatusesTable is gated to marketing-write roles', () => {
+    expect(() =>
       (officialStatusResolvers.Query as any).officialStatusesTable(
         {},
         {},
         makeContext({ roles: ['USER'] })
       )
-    ).rejects.toThrow(/access denied/i);
-    await expect(
+    ).toThrow(/access denied/i);
+    expect(() =>
       (officialStatusResolvers.Query as any).officialStatusesTable({}, {}, makeContext(null))
-    ).rejects.toThrow(/authenticat/i);
+    ).toThrow(/authenticat/i);
   });
 
   it('createOfficialStatus is gated to marketing-write roles', async () => {
@@ -35,23 +37,23 @@ describe('officialStatus resolver — access control', () => {
     ).rejects.toThrow(/access denied/i);
   });
 
-  it('deleteOfficialStatus is gated to marketing-write roles', async () => {
-    await expect(
+  it('deleteOfficialStatus is gated to marketing-write roles', () => {
+    expect(() =>
       (officialStatusResolvers.Mutation as any).deleteOfficialStatus(
         {},
         { status_doc_id: 'x' },
         makeContext({ roles: ['USER'] })
       )
-    ).rejects.toThrow(/access denied/i);
+    ).toThrow(/access denied/i);
   });
 
-  it('recordOfficialStatusView requires authentication', async () => {
-    await expect(
+  it('recordOfficialStatusView requires authentication', () => {
+    expect(() =>
       (officialStatusResolvers.Mutation as any).recordOfficialStatusView(
         {},
         { status_doc_id: 'x' },
         makeContext(null)
       )
-    ).rejects.toThrow(/authenticat/i);
+    ).toThrow(/authenticat/i);
   });
 });

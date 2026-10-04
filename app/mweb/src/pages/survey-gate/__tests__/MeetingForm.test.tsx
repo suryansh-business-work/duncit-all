@@ -25,10 +25,10 @@ const MEETING_ME = gql`
   }
 `;
 
-// The component renders slot times via toLocaleTimeString with the same options,
-// so computing it here yields the exact chip label at test runtime.
-const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+// Slots render as tiles in the shared @duncit/slots calendar, labelled in the
+// admin-configured time format; a meeting slot's identity is its start_at, so
+// the tile is found by that rather than by a formatted label.
+const slotTile = (iso: string) => screen.getByTestId(`slot-tile-${iso}`);
 
 const SLOT_A = '2026-08-01T10:00:00.000Z';
 const SLOT_B = '2026-08-01T11:00:00.000Z';
@@ -114,7 +114,7 @@ describe('MeetingForm', () => {
     await screen.findByLabelText('Your name');
 
     // Pick the available slot chip, then add a note.
-    fireEvent.click(screen.getByText(timeLabel(SLOT_A)));
+    fireEvent.click(slotTile(SLOT_A));
     fireEvent.change(screen.getByLabelText(/Anything we should know/), { target: { value: 'call me' } });
     fireEvent.click(screen.getByRole('button', { name: 'Book this slot' }));
 
@@ -134,7 +134,7 @@ describe('MeetingForm', () => {
     );
     await screen.findByText(/Phone number is required/);
 
-    fireEvent.click(screen.getByText(timeLabel(SLOT_A)));
+    fireEvent.click(slotTile(SLOT_A));
     fireEvent.click(screen.getByRole('button', { name: 'Book this slot' }));
     expect(onSubmit).not.toHaveBeenCalled();
 

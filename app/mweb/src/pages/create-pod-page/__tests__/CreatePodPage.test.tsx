@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { gql } from '@apollo/client';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -30,94 +29,12 @@ vi.mock('../create-pod', () => ({
   ),
 }));
 
-// Query documents recreated to match the component's inline gql exactly.
-const CREATE_POD_OPTIONS = gql`
-  query CreatePodOptions {
-    me { user_id roles selected_location_id }
-    clubs(filter: { is_active: true }) {
-      id
-      club_name
-      location_id
-      locality
-      super_category_id
-      category_id
-      matched_venues_count
-      matched_venues { id }
-      club_description
-      club_feature_images_and_videos { url type }
-    }
-    locations(filter: { is_active: true }) {
-      id
-      location_name
-      city
-      state
-      state_code
-      country
-      country_code
-      location_image
-      location_pincode
-      active_club_count
-      location_zones { zone_name pincode active_club_count }
-    }
-    publicVenues {
-      id
-      owner_user_id
-      location_id
-      venue_name
-      venue_type
-      capacity
-      capacity_items { label capacity }
-      cover_image_url
-      city
-      locality
-      address_line1
-      state
-      postal_code
-      country
-      lat
-      lng
-      owner_name
-      owner_phone
-      owner_email
-      is_active
-    }
-    myHost {
-      id
-      status
-      is_active
-      host_categories {
-        super_category_id
-        category_id
-        sub_category_id
-        super_category_name
-        category_name
-        sub_category_name
-      }
-    }
-    subCategories: categories(filter: { level: SUB }) {
-      id
-      min_pax
-    }
-    availablePodProducts {
-      id
-      product_name
-      unit_cost
-      available_count
-      image_url
-      super_category_id
-      sub_category_id
-      categories { super_category_id sub_category_id }
-    }
-  }
-`;
-const MY_POD_DRAFT = gql`
-  query MyPodDraftForEdit($draft_id: ID!) {
-    myPodDraft(draft_id: $draft_id) { id payload step }
-  }
-`;
+// The page reads its documents from ../queries, so the mocks match them exactly.
+import { CREATE_POD_OPTIONS, MY_POD_DRAFT } from '../queries';
+import { AppLocationProvider } from '../../../app/AppLocationContext';
 
 const baseOptions = (overrides: Record<string, any> = {}) => ({
-  me: { user_id: 'u1', roles: ['HOST'], selected_location_id: 'loc-2' },
+  me: { user_id: 'u1', roles: ['HOST'] },
   clubs: [{ id: 'c1' }, { id: 'c2' }],
   locations: [
     { id: 'loc-1' },
@@ -143,15 +60,18 @@ const draftMock = (draftId: string) => ({
   result: { data: { myPodDraft: { id: 'd1', payload: { any: 'thing' }, step: 2 } } },
 });
 
-const renderPage = (mocks: any[], entry = '/create-pod'): ReactElement =>
+// A new pod starts in the city the app header has selected.
+const renderPage = (mocks: any[], entry = '/create-pod', locationId = 'loc-2'): ReactElement =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
-      <MemoryRouter initialEntries={[entry]}>
-        <Routes>
-          <Route path="/create-pod" element={<Page />} />
-          <Route path="/create-pod/:draftId" element={<Page />} />
-        </Routes>
-      </MemoryRouter>
+      <AppLocationProvider locationId={locationId} zoneName="">
+        <MemoryRouter initialEntries={[entry]}>
+          <Routes>
+            <Route path="/create-pod" element={<Page />} />
+            <Route path="/create-pod/:draftId" element={<Page />} />
+          </Routes>
+        </MemoryRouter>
+      </AppLocationProvider>
     </MockedProvider>,
   ) as unknown as ReactElement;
 
@@ -164,17 +84,16 @@ afterEach(() => {
 });
 
 describe('CreatePodPage', () => {
-  it('shows the header title, caption and a loading spinner initially', () => {
+  it('shows the header title and a loading spinner initially', () => {
     renderPage([optionsMock(baseOptions())]);
     expect(screen.getByText('Create a Pod')).toBeInTheDocument();
-    expect(screen.getByText(/Your progress saves automatically/)).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders the stepper for a HOST role and passes filtered/derived props', async () => {
     renderPage([optionsMock(baseOptions())]);
     expect(await screen.findByTestId('stepper')).toBeInTheDocument();
-    // selected_location_id loc-2 exists -> used as default location
+    // a new pod starts in the header's selected city
     expect(screen.getByTestId('location')).toHaveTextContent('loc-2');
     expect(screen.getByTestId('clubs')).toHaveTextContent('2');
     // inactive venue filtered out
@@ -186,20 +105,21 @@ describe('CreatePodPage', () => {
   });
 
   it('grants host access via an approved active host profile without the HOST role', async () => {
-    const data = baseOptions({ me: { user_id: 'u9', roles: [], selected_location_id: 'nope' } });
-    renderPage([optionsMock(data)]);
+    const data = baseOptions({ me: { user_id: 'u9', roles: [] } });
+    renderPage([optionsMock(data)], '/create-pod', 'loc-1');
     expect(await screen.findByTestId('stepper')).toBeInTheDocument();
-    // selected_location_id not found -> falls back to first location id
+    expect(screen.getByTestId('viewer')).toHaveTextContent('u9');
+    // the location follows whichever city the header has selected
     expect(screen.getByTestId('location')).toHaveTextContent('loc-1');
   });
 
   it('shows the become-host info alert when the viewer is not a host', async () => {
     const data = baseOptions({
-      me: { user_id: 'u0', roles: [], selected_location_id: 'loc-1' },
+      me: { user_id: 'u0', roles: [] },
       myHost: null,
     });
     renderPage([optionsMock(data)]);
-    expect(await screen.findByText('Host access is required before creating pods.')).toBeInTheDocument();
+    expect(await screen.findByText('An approved host profile is required before creating pods.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Become a host' }));
     expect(mockNavigate).toHaveBeenCalledWith('/become-host');
   });
@@ -219,16 +139,12 @@ describe('CreatePodPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('from-draft');
   });
 
-  // MUI renders `caption` as a <span>, and noWrap's overflow/text-overflow are
-  // inert on an inline box: only white-space:nowrap took, so on a phone the note
-  // ran out of the header in one unbroken line and under the close button. jsdom
-  // computes no layout, so the guard is the element itself — an inline box
-  // cannot show an ellipsis no matter what the styles say.
-  it('renders the autosave note as a block so it truncates instead of overflowing', () => {
+  // The calm header carries the title alone: the autosave subtitle that used to
+  // overflow under the close button on a phone is gone, not just truncated.
+  it('renders the title alone, with no autosave subtitle in the header', () => {
     renderPage([optionsMock(baseOptions())]);
-    const note = screen.getByText(/Your progress saves automatically/);
-    expect(note.tagName).toBe('DIV');
-    expect(note).toHaveClass('MuiTypography-noWrap');
+    expect(screen.getByRole('heading', { name: 'Create a Pod' })).toBeInTheDocument();
+    expect(screen.queryByText(/Your progress saves automatically/)).not.toBeInTheDocument();
   });
 
   it('navigates to host management from the close button', async () => {

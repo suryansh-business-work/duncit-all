@@ -15,7 +15,7 @@
  * wrong, and it is what a maps app would take.
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -180,21 +180,31 @@ describe('PodMapSection', () => {
     expect(virtual.container.innerHTML).not.toBe(physical.container.innerHTML);
   });
 
-  it('gives a virtual pod its join link, opened away from the app', () => {
-    const { container } = section({
+  it('gives a virtual pod its join link, opened away from the app', async () => {
+    const opened = vi.spyOn(globalThis, 'open').mockReturnValue(null);
+    const onJoinMeeting = vi.fn(() => Promise.resolve('https://meet.google.com/from-server'));
+    const { container, getByTestId } = section({
       pod: pod({
         pod_mode: 'VIRTUAL',
         meeting_platform: 'GOOGLE_MEET',
-        meeting_url: 'https://meet.google.com/abc-defg-hij',
+        meeting_url: JOIN_URL,
         meeting_notes: 'Join five minutes early.',
       }),
       venue: null,
+      onJoinMeeting,
     });
 
-    const join = container.querySelector('a[href*="meet.google.com"]');
-    expect(join).not.toBeNull();
-    expect(join?.getAttribute('target')).toBe('_blank');
+    // The pod's own URL is never linked: asking the server is the attendance mark.
+    expect(container.querySelector('a[href*="meet.google.com"]')).toBeNull();
     expect(container.textContent).toContain('Join five minutes early.');
+
+    fireEvent.click(getByTestId('pod-join-meeting'));
+
+    await waitFor(() =>
+      expect(opened).toHaveBeenCalledWith('https://meet.google.com/from-server', '_blank', 'noopener')
+    );
+    expect(onJoinMeeting).toHaveBeenCalledTimes(1);
+    opened.mockRestore();
   });
 
   it('tells a member the link arrives after they join, rather than showing a dead button', () => {

@@ -158,12 +158,26 @@ describe('ProfileAvatar — crop dialog (item 9)', () => {
 });
 
 describe('ProfileAvatar — story interaction (item 12)', () => {
-  it('tapping the avatar with no story starts adding one', async () => {
+  // Posting a story is Home's job: the avatar only ever shows.
+  it('tapping the avatar with no story opens the photo full-size, never the story picker', async () => {
+    renderWithProviders(
+      <ProfileAvatar photo="http://x/a.jpg" initial="A" size={76} onChanged={refetch} />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('avatar-story-button'));
+    });
+    expect(screen.getByTestId('image-viewer')).toBeOnTheScreen();
+    expect(pickAndUpload).not.toHaveBeenCalled();
+  });
+
+  it('tapping the avatar with no story and no photo opens nothing', async () => {
     renderWithProviders(<ProfileAvatar photo={null} initial="A" size={76} onChanged={refetch} />);
     await act(async () => {
       fireEvent.press(screen.getByTestId('avatar-story-button'));
     });
-    expect(pickAndUpload).toHaveBeenCalled();
+    expect(screen.queryByTestId('image-viewer')).toBeNull();
+    expect(screen.queryByTestId('status-viewer')).toBeNull();
+    expect(pickAndUpload).not.toHaveBeenCalled();
   });
 
   it('does not add a story while an upload is in flight', async () => {
@@ -184,13 +198,11 @@ describe('ProfileAvatar — story interaction (item 12)', () => {
     expect(screen.queryByTestId('status-viewer')).toBeNull();
   });
 
-  it('the + badge always starts a new story', async () => {
+  it('has no + badge to start a new story from the avatar', () => {
     mockedStatus.mockReturnValue({ mine: mineGroup, refetch });
     renderWithProviders(<ProfileAvatar photo="http://x/a.jpg" initial="A" size={76} />);
-    await act(async () => {
-      fireEvent.press(screen.getByTestId('avatar-story-button-add-story'));
-    });
-    expect(pickAndUpload).toHaveBeenCalled();
+    expect(screen.getByTestId('avatar-story-button')).toHaveProp('aria-label', 'View your story');
+    expect(screen.queryByTestId('avatar-story-button-add-story')).toBeNull();
   });
 
   it('deletes the current story from the viewer after confirming', async () => {

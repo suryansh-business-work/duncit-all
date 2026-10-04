@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import type { DatabaseCollection, DatabaseInfo } from '../../src/pages/database/info/queries';
 import {
   makeDatabaseCollection,
@@ -16,10 +17,18 @@ const m = vi.hoisted(() => ({
   query: { data: undefined as unknown, loading: false, error: undefined as Error | undefined, refetch: vi.fn() },
   rows: [] as DatabaseCollection[],
   tableRefetch: vi.fn(),
+  idle: { data: undefined, loading: false, error: undefined, refetch: vi.fn() },
 }));
+// Only the page's own TechDatabaseInfo read is under test; the self-contained
+// cards it mounts (mongod logs, backup store) run their own queries, which stay idle.
 vi.mock('@apollo/client/react', async (io) => {
   const actual = await io<typeof import('@apollo/client/react')>();
-  return { ...actual, useApolloClient: () => ({}), useQuery: () => m.query };
+  return {
+    ...actual,
+    useApolloClient: () => ({}),
+    useQuery: (doc: { definitions: Array<{ name?: { value: string } }> }) =>
+      doc.definitions[0]?.name?.value === 'TechDatabaseInfo' ? m.query : m.idle,
+  };
 });
 // The grid itself belongs to @duncit/table; this stand-in runs every column's
 // renderer on real rows so the page's own column definitions are exercised.
@@ -51,6 +60,16 @@ vi.mock('@duncit/table', () => ({
 
 import DbInfoPage from '../../src/pages/database/info';
 
+const renderPage = () =>
+  render(
+    <MemoryRouter initialEntries={['/database/info']}>
+      <Routes>
+        <Route path="/database/info" element={<DbInfoPage />} />
+        <Route path="/database/backups" element={<p>backups page</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
 const withInfo = (info: DatabaseInfo = makeDatabaseInfo()) => {
   m.query = { data: { techDatabaseInfo: info }, loading: false, error: undefined, refetch: vi.fn() };
 };
@@ -64,20 +83,20 @@ beforeEach(() => {
 describe('DbInfoPage', () => {
   it('shows progress while the first read is on its way', () => {
     m.query = { ...m.query, loading: true };
-    render(<DbInfoPage />);
+    renderPage();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
   });
 
   it('says why the read failed', () => {
     m.query = { ...m.query, error: new Error('down') };
-    render(<DbInfoPage />);
+    renderPage();
     expect(screen.getByText('Could not load database info: down')).toBeInTheDocument();
   });
 
   it('shows the live database read-only, and refreshes the page and the table together', () => {
     withInfo();
-    render(<DbInfoPage />);
+    renderPage();
 
     expect(screen.getByRole('heading', { name: 'Database · Info' })).toBeInTheDocument();
     expect(screen.getByTestId('db-info-provider')).toHaveTextContent('Self-hosted (VPS)');
@@ -103,9 +122,20 @@ describe('DbInfoPage', () => {
     expect(table).toHaveTextContent('On disk=293 KB');
     expect(table).toHaveTextContent('Indexes=5');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    // The mongod logs card carries its own Refresh; the page's is the one in the header.
+    const [pageRefresh, logsRefresh] = screen.getAllByRole('button', { name: 'Refresh' });
+    expect(logsRefresh).toHaveAttribute('data-testid', 'db-info-logs-refresh');
+    fireEvent.click(pageRefresh);
     expect(m.query.refetch).toHaveBeenCalled();
     expect(m.tableRefetch).toHaveBeenCalled();
+    expect(m.idle.refetch).not.toHaveBeenCalled();
+  });
+
+  it('links through to the backups page', () => {
+    withInfo();
+    renderPage();
+    fireEvent.click(screen.getByTestId('db-info-open-backups'));
+    expect(screen.getByText('backups page')).toBeInTheDocument();
   });
 
   it('explains a disconnected local Atlas connection with nothing to measure', () => {
@@ -131,7 +161,7 @@ describe('DbInfoPage', () => {
         events: [],
       }),
     );
-    render(<DbInfoPage />);
+    renderPage();
 
     expect(screen.getByTestId('db-info-provider')).toHaveTextContent('MongoDB Atlas');
     expect(screen.getByText('Local')).toBeInTheDocument();
@@ -147,7 +177,7 @@ describe('DbInfoPage', () => {
 
   it('shows the driver reason when the stats could not be read', () => {
     withInfo(makeDatabaseInfo({ server: null, storage: null, statsError: 'connection timed out' }));
-    render(<DbInfoPage />);
+    renderPage();
     expect(screen.getByText('Could not read the database stats: connection timed out')).toBeInTheDocument();
   });
 
@@ -161,12 +191,18 @@ describe('DbInfoPage', () => {
           members: [],
         }),
         storage: makeDatabaseStorage({ fsUsedBytes: null, fsTotalBytes: null }),
+        // The same missing clusterMonitor role refuses replSetGetStatus and the oplog too.
+        replica: null,
+        replicaError: 'not authorized on admin',
+        oplog: null,
+        oplogError: null,
       }),
     );
-    render(<DbInfoPage />);
+    renderPage();
 
     expect(screen.getByText('Not writable')).toBeInTheDocument();
-    expect(screen.getByText(/clusterMonitor role.*not authorized on admin/)).toBeInTheDocument();
+    expect(screen.getByText(/Uptime, connections and engine need the clusterMonitor role.*not authorized on admin/)).toBeInTheDocument();
+    expect(screen.getByText(/Replica-set status and the oplog need the clusterMonitor role.*not authorized on admin/)).toBeInTheDocument();
     expect(screen.queryByText('Uptime')).toBeNull();
     expect(screen.queryByText('VOLUME')).toBeNull();
   });
@@ -185,7 +221,7 @@ describe('DbInfoPage', () => {
         events: [{ at: '2026-09-18T11:00:00.000Z', kind: 'HEARTBEAT', message: 'topology changed', attempt: null }],
       }),
     );
-    render(<DbInfoPage />);
+    renderPage();
 
     expect(screen.getByText('Not started')).toBeInTheDocument();
     expect(screen.getByText('Error')).toBeInTheDocument();

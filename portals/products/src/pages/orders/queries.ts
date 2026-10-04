@@ -61,6 +61,20 @@ const ORDER_DETAIL_FIELDS = `
     at
   }
   last_error
+  channel
+  cancelled_at
+  cancel_reason
+  cancelled_by
+  delivered_at
+  refund {
+    status
+    amount
+    coins
+    razorpay_refund_id
+    refunded_at
+    error
+    initiated_by
+  }
   created_at
 `;
 
@@ -185,6 +199,22 @@ export const PRODUCT_ORDER_SHIPMENT_FILE = gql`
       filename
       mime
       content_base64
+    }
+  }
+`;
+
+export const FORCE_CANCEL_PRODUCT_ORDER = gql`
+  mutation ForceCancelProductOrder($id: ID!, $reason: String!) {
+    forceCancelProductOrder(id: $id, reason: $reason) {
+      ${ORDER_DETAIL_FIELDS}
+    }
+  }
+`;
+
+export const RETRY_PRODUCT_ORDER_REFUND = gql`
+  mutation RetryProductOrderRefund($id: ID!) {
+    retryProductOrderRefund(id: $id) {
+      ${ORDER_DETAIL_FIELDS}
     }
   }
 `;

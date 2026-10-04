@@ -128,8 +128,9 @@ describe('SurveyGatePage', () => {
 
   it('starts on the category step with the kind heading', async () => {
     renderGate([]);
-    expect(await screen.findByText('Register your venue')).toBeInTheDocument();
-    expect(screen.getByText('Tell us your category so we can ask the right questions.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Register your venue' })).toBeInTheDocument();
+    // The phase names itself — the old subtitle restating it is gone.
+    expect(screen.queryByText('Tell us your category so we can ask the right questions.')).not.toBeInTheDocument();
     expect(screen.getByTestId('category-continue')).toBeInTheDocument();
   });
 
@@ -182,7 +183,7 @@ describe('SurveyGatePage', () => {
     fireEvent.click(await screen.findByTestId('survey-submit'));
     await screen.findByTestId('meeting-submit');
 
-    const back = () => fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    const back = () => fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
     // meeting → survey
     back();
     expect(await screen.findByTestId('survey-submit')).toBeInTheDocument();

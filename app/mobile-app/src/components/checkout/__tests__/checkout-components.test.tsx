@@ -153,7 +153,10 @@ describe('CheckoutSuccess', () => {
         onProfile={onProfile}
       />,
     );
-    expect(screen.getByText('Payment successful')).toBeOnTheScreen();
+    // Two-tone heading: the ink lead with the muted overline stacked under it.
+    expect(screen.getByRole('heading', { name: /Payment successful/ })).toHaveTextContent(
+      'Payment successful\nYou are in',
+    );
     expect(screen.getByText('₹130.00')).toBeOnTheScreen();
     // Defaults to the pod-bookings label when no profileLabel is given.
     expect(screen.getByText('My bookings')).toBeOnTheScreen();

@@ -131,7 +131,7 @@ describe('createShipment — what it will not ship', () => {
     const { order } = await seedPaidOrder({ product: await seedProduct(), over: { pickup_location_id: '' } });
     await createShipment(order);
     expect((await reloadOrder(order._id)).last_error).toBe(
-      'This order has no pickup location — give the product a warehouse, or set a default pickup nickname in the Tech portal'
+      'This order has no pickup location — give the product a warehouse, or set a default pickup nickname on the account'
     );
   });
 });

@@ -1,6 +1,9 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 
 export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
+
+/** The longest return window a brand may offer on a product, in days. */
+export const RETURN_WINDOW_MAX_DAYS = 30;
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
 export type ProductListingReviewStatus = 'PENDING' | 'APPROVED' | 'DENIED';
@@ -96,6 +99,8 @@ export interface IInventoryProduct extends Document {
   low_stock_alert: number;
   /** When true, notify the listing owner once available stock drops to/below low_stock_alert. */
   notify_low_stock: boolean;
+  /** Days after delivery a buyer may return this product (0 = not returnable). Set by the brand. */
+  return_window_days: number;
   inventory_count: number;
   reserved_count: number;
   damaged_count: number;
@@ -254,6 +259,7 @@ const productSchema = new Schema<IInventoryProduct>(
     max_order_qty: { type: Number, default: 100, min: 0 },
     low_stock_alert: { type: Number, default: 5, min: 0 },
     notify_low_stock: { type: Boolean, default: false },
+    return_window_days: { type: Number, default: 0, min: 0, max: RETURN_WINDOW_MAX_DAYS },
     inventory_count: { type: Number, required: true, min: 0, default: 0 },
     reserved_count: { type: Number, default: 0, min: 0 },
     damaged_count: { type: Number, default: 0, min: 0 },

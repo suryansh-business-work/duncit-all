@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import SinglePodTab from '../../src/pages/calculators/pod-profit/single';
+import { formatRupees } from '../../src/pages/calculators/pod-profit/types';
 import { ConfirmProvider } from '../../../../packages/dialogs/src/useConfirm';
 import { renderWithProviders } from '../testkit';
 import { notifyError, notifySuccess } from './mocks/dialogs';
@@ -16,6 +17,14 @@ import {
   podCalculatorsMock,
   updatePodCalculatorMock,
 } from '../mocks/pod-calculator.mock';
+
+// jsdom has no canvas, so chart.js throws as soon as an input re-renders a
+// chart. The charts' own data and callbacks are covered in
+// pod-profit-charts.test; here they only need to stand in as labelled images.
+vi.mock('react-chartjs-2', () => {
+  const Chart = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />;
+  return { Bar: Chart, Doughnut: Chart };
+});
 
 // The stub's useConfirm always says yes. These flows need the real one — a
 // Cancel that resolves false is half of what they do — so swap it in and mount
@@ -55,7 +64,7 @@ describe('Single pod tab — scratch pad', () => {
     const created = single('66f1a2b3c4d5e6f708192a09', 'Navratri garba night');
     renderTab([
       podCalculatorsMock('SINGLE', []),
-      createPodCalculatorMock(created, { delay: 20 }),
+      createPodCalculatorMock(created, { delay: 200 }),
       podCalculatorsMock('SINGLE', [created]),
     ]);
 
@@ -125,8 +134,8 @@ describe('Single pod tab — scratch pad', () => {
     fireEvent.change(amounts[0], { target: { value: '-20' } });
     expect(amounts[0].value).toBe('0');
 
-    expect(screen.getByText('Total expenses: ₹1,500')).toBeInTheDocument();
-    expect(screen.getAllByText('Host expenses: ₹1,500').length).toBeGreaterThan(0);
+    expect(screen.getByText(`Total expenses: ${formatRupees(1500)}`)).toBeInTheDocument();
+    expect(screen.getAllByText(`Host expenses: ${formatRupees(1500)}`).length).toBeGreaterThan(0);
     expect(screen.getByText('Costs & net')).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove expense' })[0]);

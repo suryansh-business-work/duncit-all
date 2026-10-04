@@ -38,7 +38,8 @@ describe('component branch variants', () => {
   it('PodCard with an image and no place / open spots', () => {
     renderWithProviders(<PodCard pod={podWith({})} />);
     expect(screen.getByTestId('pod-card-pod-1')).toBeOnTheScreen();
-    expect(screen.getByText('Open')).toBeOnTheScreen();
+    // No spot limit: the count shows the seats taken alone, as the mWeb twin does.
+    expect(screen.getByText('2 joining now · 2')).toBeOnTheScreen();
   });
 
   it('ClubCard with an image and no description', () => {

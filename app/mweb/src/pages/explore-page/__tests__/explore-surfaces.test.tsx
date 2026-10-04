@@ -124,16 +124,22 @@ describe('ExploreActionRail', () => {
   });
 
   it('lets the label be pressed separately, for a count that opens a list', () => {
+    // The count is drawn from `caption`; the label is the action's name, not
+    // what sits under the disc.
     const onLabelClick = vi.fn();
-    const { container } = wrap(
-      <ExploreActionRail actions={[action('like', { onLabelClick, label: '12' })]} />
+    const onClick = vi.fn();
+    const { getByTestId } = wrap(
+      <ExploreActionRail
+        actions={[action('like', { onClick, onLabelClick, caption: '12', testId: 'reel-like' })]}
+      />
     );
 
-    for (const control of container.querySelectorAll<HTMLElement>('button, [role="button"]')) {
-      fireEvent.click(control);
-    }
+    const count = getByTestId('reel-like-count');
+    expect(count.textContent).toBe('12');
+    fireEvent.click(count);
 
-    expect(container.textContent).toContain('12');
+    expect(onLabelClick).toHaveBeenCalledTimes(1);
+    expect(onClick).not.toHaveBeenCalled();
   });
 
   it('renders a reel with no actions at all', () => {

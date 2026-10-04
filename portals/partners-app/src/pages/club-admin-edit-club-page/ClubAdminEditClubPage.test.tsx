@@ -131,7 +131,7 @@ describe('ClubAdminEditClubPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Save club' }));
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/club-admin/clubs/club-1'));
-    expect(recorder.notices).toEqual([{ message: 'Club details updated.', severity: 'success' }]);
+    expect(recorder.notices).toEqual([{ message: 'Club details updated.', severity: 'success', duration: 4000 }]);
     const save = sent.find((op) => op.name === 'ClubAdminUpdateClub');
     expect(save?.variables.club_doc_id).toBe('club-1');
     const input = save?.variables.input as Record<string, unknown>;

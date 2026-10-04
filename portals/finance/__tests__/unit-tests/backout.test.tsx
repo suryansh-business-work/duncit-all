@@ -46,9 +46,10 @@ describe('BackoutRefundPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /process refund/i }));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Riya')).toBeInTheDocument();
-    expect(within(dialog).getByText('DUN-BKO-000001')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /refund now/i }));
+    expect(within(dialog).getByText(/Riya — Backout DUN-BKO-000001/)).toBeInTheDocument();
+    // A Razorpay-only booking: one payment method, one box, processed on its own.
+    expect(within(dialog).getAllByText('Razorpay').length).toBeGreaterThan(0);
+    fireEvent.click(within(dialog).getByTestId('refund-part-cash-action'));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Refund processed'));
   });
 
@@ -60,7 +61,7 @@ describe('BackoutRefundPage', () => {
     });
 
     fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /refund now/i }));
+    fireEvent.click(await screen.findByTestId('refund-part-cash-action'));
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     expect(notifySuccess).not.toHaveBeenCalled();
   });
@@ -89,13 +90,15 @@ describe('BackoutRefundPage', () => {
     expect(screen.queryByRole('button', { name: /process refund/i })).not.toBeInTheDocument();
   });
 
-  it('shows the "this member" fallback for an anonymous eligible row and cancels', async () => {
+  it('shows the "this member" fallback for an anonymous eligible row and closes', async () => {
     tableControls.rows = [makeBackoutRow({ user_name: null })];
     renderWithProviders(<BackoutRefundPage />, { path: '/', mocks: [backoutFinanceSettingsMock()] });
 
     fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
-    expect(await screen.findByText('this member')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    // The breakup dialog names the member inside its "Refund for …" line.
+    expect(await screen.findByText(/this member/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('disables the dialog actions while the refund is processing', () => {
@@ -110,8 +113,11 @@ describe('BackoutRefundPage', () => {
       />,
       { path: '/', mocks: [] },
     );
-    expect(screen.getByRole('button', { name: /processing…/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
+    // Every part's action reads Processing… and nothing can be pressed, Close included.
+    const processing = screen.getAllByRole('button', { name: /processing…/i });
+    expect(processing.length).toBeGreaterThan(0);
+    for (const button of processing) expect(button).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^close$/i })).toBeDisabled();
   });
 
   it('navigates to a row detail', async () => {

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -42,11 +42,11 @@ const USER_ID = 'user-1';
 
 const pods = [
   // future + paid
-  { id: 'p1', pod_date_time: iso(5), pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a'] },
+  { id: 'p1', pod_date_time: iso(5), pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a'], seats_taken: 1 },
   // past + free
-  { id: 'p2', pod_date_time: iso(-5), pod_type: 'FREE', pod_hosts_id: ['h'], pod_attendees: [] },
+  { id: 'p2', pod_date_time: iso(-5), pod_type: 'FREE', pod_hosts_id: ['h'], pod_attendees: [], seats_taken: 0 },
   // no date
-  { id: 'p3', pod_date_time: null, pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a', 'b'] },
+  { id: 'p3', pod_date_time: null, pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a', 'b'], seats_taken: 2 },
 ];
 
 function meMock(band = 'GREEN', fullName: string | null = 'Alice Host') {
@@ -99,54 +99,64 @@ describe('HostDashboardPage', () => {
     expect(await screen.findByText('me boom')).toBeInTheDocument();
   });
 
-  it('renders the populated dashboard with welcome name, stats and earnings', async () => {
+  it('renders the populated dashboard with header, stats, earnings and quick actions', async () => {
     setup([meMock(), podsMock]);
-    expect(await screen.findByText('Welcome back, Alice Host')).toBeInTheDocument();
+    expect(await screen.findByText('AVAILABLE BALANCE')).toBeInTheDocument();
+    expect(screen.getByTestId('host-dashboard-screen')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     // Stats labels.
     expect(screen.getByText('Pods')).toBeInTheDocument();
     expect(screen.getByText('Upcoming')).toBeInTheDocument();
     expect(screen.getByText('Paid')).toBeInTheDocument();
-    // Earnings card balance.
-    expect(screen.getByText('AVAILABLE BALANCE')).toBeInTheDocument();
+    // Earnings card: wallet balance + settled-earnings summary.
+    expect(screen.getByText('₹1000.00')).toBeInTheDocument();
+    expect(screen.getByTestId('earnings-summary-tiles')).toBeInTheDocument();
     // Quick actions.
     expect(screen.getByText('Create pod')).toBeInTheDocument();
+    // The welcome greeting was dropped in the calm redesign.
+    expect(screen.queryByText(/Welcome back/)).not.toBeInTheDocument();
     await flush();
   });
 
   it('computes upcoming and paid pod counts once pods resolve', async () => {
     setup([meMock(), podsMock]);
-    await screen.findByText('Welcome back, Alice Host');
-    await flush();
+    await screen.findByText('AVAILABLE BALANCE');
     // 3 pods total, 1 upcoming (future), 2 paid (non-FREE).
     expect(await screen.findByText('3')).toBeInTheDocument();
+    const podStats = screen
+      .getAllByTestId('stat-tile')
+      .filter((tile) => ['Pods', 'Upcoming', 'Paid'].includes(tile.firstChild?.textContent ?? ''))
+      .map((tile) => [tile.firstChild?.textContent, tile.lastChild?.textContent]);
+    expect(podStats).toEqual([
+      ['Pods', '3'],
+      ['Upcoming', '1'],
+      ['Paid', '2'],
+    ]);
   });
 
-  it('shows the GREEN health hint and navigates on health meter click', async () => {
+  it('shows the health score and navigates on health row click', async () => {
     setup([meMock('GREEN'), podsMock]);
-    const hint = await screen.findByText('Your host profile is in great shape.');
-    expect(hint).toBeInTheDocument();
-    const meter = screen.getByRole('button', { name: /Profile health/i });
-    meter.click();
+    const row = await screen.findByRole('button', { name: 'View profile health' });
+    expect(row).toHaveTextContent('82');
+    expect(row).toHaveTextContent('Profile health');
+    row.click();
     expect(navigateMock).toHaveBeenCalledWith('/account/health');
   });
 
-  it('shows the RED band hint when health is low', async () => {
-    setup([meMock('RED'), podsMock]);
-    expect(
-      await screen.findByText('Complete your profile and verification to host with trust.'),
-    ).toBeInTheDocument();
+  it.each([
+    ['GREEN', '#2e7d32'],
+    ['YELLOW', '#ed6c02'],
+    ['RED', '#d32f2f'],
+  ])('colours the health score disc by the %s band', async (band, colour) => {
+    setup([meMock(band), podsMock]);
+    const row = await screen.findByRole('button', { name: 'View profile health' });
+    const disc = within(row).getByText('82');
+    expect(disc).toHaveStyle({ backgroundColor: colour });
   });
 
-  it('shows the YELLOW band hint', async () => {
-    setup([meMock('YELLOW'), podsMock]);
-    expect(
-      await screen.findByText('A few profile + verification items to tighten up.'),
-    ).toBeInTheDocument();
-  });
-
-  it('falls back to a generic subtitle when the user has no full name', async () => {
+  it('still renders the dashboard when the user has no full name', async () => {
     setup([meMock('GREEN', null), podsMock]);
-    expect(await screen.findByText('Your host overview')).toBeInTheDocument();
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('AVAILABLE BALANCE')).toBeInTheDocument();
   });
 });

@@ -28,18 +28,19 @@ describe('checkoutSchema — contact + billing', () => {
     expect(parse({}).success).toBe(true);
   });
 
-  it('accepts a missing name, phone and address — only the email is mandatory', () => {
-    expect(
-      parse({
-        full_name: '',
-        phone_extension: '',
-        phone_number: '',
-        line1: '',
-        city: '',
-        state: '',
-        pincode: '',
-      }).success,
-    ).toBe(true);
+  it('accepts a missing name and phone — the contact block is read-only', () => {
+    expect(parse({ full_name: '', phone_extension: '', phone_number: '' }).success).toBe(true);
+  });
+
+  it('requires the billing address on the pod checkout too (its invoice needs one)', () => {
+    const result = parse({ line1: '', city: '', state: '', pincode: '' });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).toEqual(expect.arrayContaining(['line1', 'city', 'state', 'pincode']));
+    // Reusing the saved main address lifts the requirement.
+    expect(parse({ same_as_main: true, line1: '', city: '', state: '', pincode: '' }).success).toBe(
+      true,
+    );
   });
 
   it('requires a valid contact email, and a valid phone only when one is typed', () => {

@@ -33,7 +33,8 @@ const hvBase = {
   hosts: [{ id: 'a', user_id: 'h1', full_name: 'Host One', tags: [] }],
   venues: [{ id: 'v1', venue_name: 'Cafe', venue_type: 'CAFE', capacity: 20 }],
   meId: 'me',
-  followingIds: new Set<string>(),
+  // The hook derives each host's three-state follow status (NONE / REQUESTED / FOLLOWING).
+  statusFor: jest.fn(() => 'NONE'),
   pendingFollow: null,
   isLoading: false,
   error: undefined,
@@ -59,13 +60,18 @@ describe('HostsVenuesScreen', () => {
 
   it('lists hosts, switches to venues, and opens both detail screens', () => {
     renderWithProviders(<HostsVenuesScreen />);
+    expect(hvBase.statusFor).toHaveBeenCalledWith('h1');
+    expect(screen.getByTestId('host-follow-h1')).toHaveProp('aria-label', 'Follow');
     fireEvent.press(screen.getByTestId('host-follow-h1'));
     expect(toggleFollow).toHaveBeenCalledWith('h1');
     fireEvent.press(screen.getByTestId('host-card-h1'));
     expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'h1' });
 
     fireEvent.press(screen.getByTestId('hv-tab-venues'));
-    fireEvent.press(screen.getByTestId('venue-card-v1'));
+    expect(screen.getByTestId('venue-card-v1')).toBeOnTheScreen();
+    // The card is no longer one pressable (its photo slider owns its taps) —
+    // the name block opens the venue.
+    fireEvent.press(screen.getByRole('button', { name: 'Cafe' }));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
   });
 
@@ -113,41 +119,42 @@ describe('PublicProfileScreen', () => {
   });
 
   it('follows/unfollows a non-owner from the profile (B4-12)', () => {
-    const toggle = jest.fn();
-    mockedProfile.mockReturnValue({
+    const toggle = jest.fn().mockResolvedValue(undefined);
+    const followProfile = {
       user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
       isOwner: false,
       badges: [],
       posts: [],
       stories: [],
       canView: true,
-      following: false,
+      followsViewer: false,
+      inboundRequestId: null,
+      answerBusy: false,
+      answerRequest: jest.fn().mockResolvedValue(undefined),
+      isLoading: false,
+    };
+    mockedProfile.mockReturnValue({
+      ...followProfile,
+      followStatus: 'NONE',
       followBusy: false,
       toggleFollow: toggle,
-      isLoading: false,
     });
     const { rerender } = renderWithProviders(<PublicProfileScreen />);
+    expect(screen.getByText('Follow')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('public-profile-follow'));
     expect(toggle).toHaveBeenCalled();
 
-    // Following + busy variant: the button shows "Following" and goes inert.
-    const busyToggle = jest.fn();
+    // Following + busy variant: the button shows "Following" and goes inert
+    // (FollowStatusButton reports it as aria-disabled and drops its handler).
     mockedProfile.mockReturnValue({
-      user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
-      isOwner: false,
-      badges: [],
-      posts: [],
-      stories: [],
-      canView: true,
-      following: true,
+      ...followProfile,
+      followStatus: 'FOLLOWING',
       followBusy: true,
-      toggleFollow: busyToggle,
-      isLoading: false,
+      toggleFollow: jest.fn().mockResolvedValue(undefined),
     });
     rerender(<PublicProfileScreen />);
     expect(screen.getByText('Following')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('public-profile-follow'));
-    expect(busyToggle).not.toHaveBeenCalled();
+    expect(screen.getByTestId('public-profile-follow')).toHaveProp('aria-disabled', true);
   });
 
   it('renders a non-owner profile without the edit action (and no route params)', () => {
@@ -159,6 +166,13 @@ describe('PublicProfileScreen', () => {
       posts: [],
       stories: [],
       canView: false,
+      followStatus: 'NONE',
+      followsViewer: false,
+      followBusy: false,
+      inboundRequestId: null,
+      answerBusy: false,
+      toggleFollow: jest.fn().mockResolvedValue(undefined),
+      answerRequest: jest.fn().mockResolvedValue(undefined),
       isLoading: false,
     });
     renderWithProviders(<PublicProfileScreen />);

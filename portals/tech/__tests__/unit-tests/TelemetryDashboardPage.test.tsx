@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { TelemetryDashboardData } from '../../src/pages/telemetry-dashboard/queries';
@@ -31,6 +32,25 @@ vi.mock('@duncit/ui', async (importOriginal) => ({
     </div>
   ),
 }));
+// The grid (GridStack) is @duncit/dashboard's own subject. What this page owns
+// is the dashboard id, the header above it and the widgets it hands in.
+vi.mock('@duncit/dashboard', () => ({
+  DuncitDashboard: (p: {
+    dashboardId: string;
+    header: ReactNode;
+    widgets: { id: string; title?: string; content: ReactNode }[];
+  }) => (
+    <div data-testid="dashboard" data-dashboard-id={p.dashboardId}>
+      {p.header}
+      {p.widgets.map((w) => (
+        <section key={w.id} data-testid={`widget-${w.id}`}>
+          {w.title}
+          {w.content}
+        </section>
+      ))}
+    </div>
+  ),
+}));
 vi.mock('../../src/pages/telemetry-dashboard/RecentLogsTable', () => ({
   default: () => <div>recent-logs</div>,
 }));
@@ -60,10 +80,11 @@ beforeEach(() => {
 });
 
 describe('TelemetryDashboardPage', () => {
-  it('shows a spinner while loading with no data', () => {
+  it('shows the loader while loading with no data', () => {
     m.result = { loading: true };
     render(<TelemetryDashboardPage />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
+    expect(screen.queryByTestId('dashboard')).not.toBeInTheDocument();
   });
 
   it('shows an error alert', () => {
@@ -82,6 +103,7 @@ describe('TelemetryDashboardPage', () => {
   it('renders stats, distributions and top bugs from a full payload', () => {
     m.result = { loading: false, data: { telemetryDashboard: makeData() } };
     render(<TelemetryDashboardPage />);
+    expect(screen.getByTestId('dashboard')).toHaveAttribute('data-dashboard-id', 'tech.telemetry');
     expect(screen.getByText('TOTAL LOGS')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
     // errorCount taken from the by_level 'error' bucket

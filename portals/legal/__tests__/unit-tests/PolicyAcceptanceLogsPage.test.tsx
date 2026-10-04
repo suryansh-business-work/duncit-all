@@ -49,6 +49,10 @@ describe('PolicyAcceptanceLogsPage', () => {
       expect(screen.queryByText('We collect your city to show pods near you.')).not.toBeInTheDocument(),
     );
 
+    // The words clear the moment the version is dropped, but the wording dialog
+    // keeps the record behind it hidden until its exit transition finishes.
+    await waitFor(() => expect(wordingDialog).not.toBeInTheDocument());
+
     fireEvent.click(within(record).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });

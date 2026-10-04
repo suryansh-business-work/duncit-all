@@ -13,6 +13,7 @@ import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAutoPodCounts } from '@/hooks/useAutoPodCounts';
+import { useComingSoonCity } from '@/hooks/useComingSoonCity';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
@@ -53,7 +54,9 @@ export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
   const [locationOpen, setLocationOpen] = useState(false);
   const isUserStudio = effectiveStudio === 'USER';
   const showSearch = !minimal && isUserStudio && !home;
-  const showGreeting = minimal || (isUserStudio && home);
+  // A "Coming soon" Home leads with its waitlist hero — no greeting.
+  const comingSoon = useComingSoonCity();
+  const showGreeting = minimal || (isUserStudio && home && !comingSoon);
   const openLocation = () => setLocationOpen(true);
   // Read once for a partner and re-read when the dialog opens, so the switch
   // itself never waits on the network to decide where to land.

@@ -37,7 +37,7 @@ describe('VenueCardMedia', () => {
     render(<VenueCardMedia images={[]} venueName="Sunset Hall" onOpen={vi.fn()} />);
 
     expect(screen.queryByAltText('Sunset Hall')).not.toBeInTheDocument();
-    expect(screen.getByTestId('StorefrontIcon')).toBeInTheDocument();
+    expect(screen.getByTestId('StorefrontOutlinedIcon')).toBeInTheDocument();
   });
 
   // One photo is not a carousel: no arrows to press, no dots to count.

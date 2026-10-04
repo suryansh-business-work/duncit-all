@@ -203,9 +203,14 @@ describe('usePodDetailActions', () => {
     await act(async () => {
       await result.current.onShare();
     });
-    expect(share).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Sunset Run', url: expect.stringContaining('pod/DUN-1') }),
-    );
+    // No `url` field: share targets that prefer `url` would drop `text`, so the
+    // pod link travels as the last line of `text` instead.
+    expect(share).toHaveBeenCalledTimes(1);
+    const payload = share.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('url');
+    expect(payload.title).toBe('Sunset Run');
+    expect(payload.text).toMatch(/^Sunset Run\n/);
+    expect(payload.text).toMatch(/pod\/DUN-1$/);
   });
 
   it('onShare falls back to clipboard + snack when no native share', async () => {

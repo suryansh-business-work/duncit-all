@@ -23,6 +23,7 @@ const PRODUCT_FIELDS = `
   available_count
   low_stock_alert
   notify_low_stock
+  return_window_days
   unit_cost
   commission_pct
   delivery_target
@@ -132,8 +133,13 @@ export const MY_PRODUCT_ANALYTICS = gql`
 `;
 
 export const UPDATE_PRODUCT_SETTINGS = gql`
-  mutation UpdateMyProductSettings($product_doc_id: ID!, $low_stock_alert: Int!, $notify_low_stock: Boolean!) {
-    updateMyProductSettings(product_doc_id: $product_doc_id, low_stock_alert: $low_stock_alert, notify_low_stock: $notify_low_stock) {
+  mutation UpdateMyProductSettings($product_doc_id: ID!, $low_stock_alert: Int!, $notify_low_stock: Boolean!, $return_window_days: Int) {
+    updateMyProductSettings(
+      product_doc_id: $product_doc_id
+      low_stock_alert: $low_stock_alert
+      notify_low_stock: $notify_low_stock
+      return_window_days: $return_window_days
+    ) {
       ${PRODUCT_FIELDS}
     }
   }

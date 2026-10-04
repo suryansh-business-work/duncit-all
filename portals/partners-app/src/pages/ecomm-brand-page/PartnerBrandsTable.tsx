@@ -7,10 +7,13 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import LinkIcon from '@mui/icons-material/Link';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
+import RestoreIcon from '@mui/icons-material/Restore';
+import { Stack } from '@mui/material';
 import { DuncitTable, rowMenuColumn, type DuncitColumn, type RowMenuItem, type TableFetch } from '@duncit/table';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import type { EcommBrandRow } from './queries';
+import { DeletionStateChip, type DeletionRequestRow } from './deletion-request';
 import { BrandCell, IntegrationsCell, ProgressCell, StatusCell, connectedCount, percentOf } from './brand-table-cells';
 
 const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({ value, label: value }));
@@ -21,7 +24,6 @@ const updatedValue = (brand: EcommBrandRow) => formatDate(brand.updated_at) || '
 const renderBrand = (brand: EcommBrandRow) => <BrandCell brand={brand} />;
 const renderProgress = (brand: EcommBrandRow) => <ProgressCell brand={brand} />;
 const renderIntegrations = (brand: EcommBrandRow) => <IntegrationsCell brand={brand} />;
-const renderStatus = (brand: EcommBrandRow) => <StatusCell brand={brand} />;
 
 /** What each row offers. */
 export interface BrandRowHandlers {
@@ -35,6 +37,9 @@ export interface BrandRowHandlers {
   onSettings: (brand: EcommBrandRow) => void;
   onToggleActive: (brand: EcommBrandRow) => void;
   onDelete: (brand: EcommBrandRow) => void;
+  /** The brand's open deletion request, if any — it replaces Delete with Withdraw. */
+  deletionFor?: (brand: EcommBrandRow) => DeletionRequestRow | null;
+  onWithdrawDeletion?: (brand: EcommBrandRow, request: DeletionRequestRow) => void;
 }
 
 interface Props extends BrandRowHandlers {
@@ -83,24 +88,42 @@ function brandMenuItems(brand: EcommBrandRow, t: Translate, h: BrandRowHandlers)
       },
     );
   }
-  items.push(
-    { key: 'settings', label: t('partners.ecommBrandPage.brandSettings'), icon: <SettingsIcon fontSize="small" />, onClick: () => h.onSettings(brand) },
-    {
+  items.push({ key: 'settings', label: t('partners.ecommBrandPage.brandSettings'), icon: <SettingsIcon fontSize="small" />, onClick: () => h.onSettings(brand) });
+  const request = h.deletionFor?.(brand) ?? null;
+  if (request) {
+    items.push({
+      key: 'withdraw-deletion',
+      label: t('partners.deletionRequest.withdrawAction'),
+      icon: <RestoreIcon fontSize="small" />,
+      disabled: Boolean(request.parent_id),
+      onClick: () => h.onWithdrawDeletion?.(brand, request),
+    });
+  } else {
+    items.push({
       key: 'delete',
       label: t('partners.ecommBrandPage.deleteBrand'),
       icon: <DeleteOutlineIcon fontSize="small" />,
       onClick: () => h.onDelete(brand),
       destructive: true,
-    },
-  );
+    });
+  }
   return items;
 }
 
 export default function PartnerBrandsTable({ fetchRows, refetchRef, toolbarActions, ...handlers }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete } = handlers;
+  const { onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete, deletionFor, onWithdrawDeletion } = handlers;
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
-    const h = { onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete };
+    const h = { onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete, deletionFor, onWithdrawDeletion };
+    const renderStatusWithDeletion = (brand: EcommBrandRow) => {
+      const request = deletionFor?.(brand) ?? null;
+      return (
+        <Stack direction="row" spacing={0.5} component="span" sx={{ flexWrap: 'wrap' }}>
+          <StatusCell brand={brand} />
+          {request && <DeletionStateChip request={request} />}
+        </Stack>
+      );
+    };
     return [
       {
         field: 'brand_name',
@@ -138,7 +161,7 @@ export default function PartnerBrandsTable({ fetchRows, refetchRef, toolbarActio
         width: 250,
         type: 'enum',
         options: STATUS_OPTIONS,
-        cellRenderer: renderStatus,
+        cellRenderer: renderStatusWithDeletion,
         valueGetter: (brand) => brand.status,
       },
       { field: 'updated_at', headerName: t('shell.common.updated'), hide: true, width: 130, type: 'date', valueGetter: updatedValue },
@@ -150,7 +173,7 @@ export default function PartnerBrandsTable({ fetchRows, refetchRef, toolbarActio
         items: (brand) => brandMenuItems(brand, t, h),
       }),
     ];
-  }, [t, onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete]);
+  }, [t, onView, onOpen, onIntegrations, onManageProducts, onSettings, onToggleActive, onDelete, deletionFor, onWithdrawDeletion]);
 
   return (
     <DuncitTable<EcommBrandRow>

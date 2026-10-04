@@ -22,9 +22,18 @@ const mount = (mocks: MockedResponse[], onApplied = vi.fn()) => {
   return onApplied;
 };
 
+/**
+ * Types into the account search the way a person does — into a focused box. MUI
+ * resets the text of an unfocused Autocomplete, so a bare change never searches.
+ */
+const typeUser = (term: string) => {
+  fireEvent.focus(userBox());
+  fireEvent.change(userBox(), { target: { value: term } });
+};
+
 /** Types into the account search and picks the option once the server answers. */
 const pickUser = async (term: string, optionName: RegExp) => {
-  fireEvent.change(userBox(), { target: { value: term } });
+  typeUser(term);
   fireEvent.click(await screen.findByRole('option', { name: optionName }, { timeout: 2000 }));
 };
 
@@ -61,7 +70,7 @@ describe('CoinGrantCard', () => {
       adjustUserCoinsMock(),
     ]);
 
-    fireEvent.change(userBox(), { target: { value: 'as' } });
+    typeUser('as');
     const listbox = await screen.findByRole('listbox', {}, { timeout: 2000 });
     // Each option carries its balance; a nameless account reads as its email.
     expect(within(listbox).getByText('asha@duncit.com · holds 120 coins')).toBeInTheDocument();

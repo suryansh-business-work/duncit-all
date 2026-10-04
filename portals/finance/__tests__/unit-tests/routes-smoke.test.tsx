@@ -54,6 +54,27 @@ vi.mock('@duncit/user-context', async (importOriginal) => {
   };
 });
 
+/**
+ * @duncit/ui is aliased to a lightweight stub that does not carry `mergeSx`,
+ * yet every page with a DuncitTabs strip calls it on render. The real helper is
+ * handed back unchanged so those routes mount at all.
+ */
+vi.mock('@duncit/ui', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  mergeSx: (await import('../../../../packages/ui/src/mergeSx')).mergeSx,
+}));
+
+/**
+ * jsdom has no canvas: chart.js mounts once, but the first input that updates a
+ * chart makes it re-measure a canvas with no layout and throw. The chart
+ * components themselves still render here; only the canvas drawing is stood in
+ * for, with the same accessible label the real chart carries.
+ */
+vi.mock('react-chartjs-2', () => {
+  const Chart = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />;
+  return { Bar: Chart, Doughnut: Chart };
+});
+
 vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));

@@ -82,6 +82,7 @@ const EMPTY_CONTENT = {
   values: [],
   faqs: [],
   hosts: [],
+  club_admins: [],
   matched_venues: [],
 };
 

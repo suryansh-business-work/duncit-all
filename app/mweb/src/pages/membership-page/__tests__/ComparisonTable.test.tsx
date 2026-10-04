@@ -197,10 +197,17 @@ describe('ComparisonTable', () => {
     expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
   });
 
-  it('says the table scrolls sideways, since it cannot fit a phone', () => {
+  it('scrolls sideways with the benefit column pinned, since it cannot fit a phone', () => {
     const { container } = table();
 
-    expect(container.textContent).toContain('Scroll sideways');
+    // The calm redesign dropped the "Scroll sideways" hint copy; the table
+    // itself still scrolls and keeps each row's label in view.
+    expect(container.textContent).not.toContain('Scroll sideways');
+    const tableEl = container.querySelector('table') as HTMLElement;
+    expect(tableEl.parentElement).toHaveStyle({ overflowX: 'auto' });
+    const label = container.querySelector('[data-testid="membership-benefit-row-b-1"] th') as HTMLElement;
+    expect(label).toHaveTextContent('Join any pod');
+    expect(label).toHaveStyle({ position: 'sticky', left: '0px' });
   });
 
   it('renders a table with no plans yet', () => {

@@ -34,6 +34,7 @@ beforeEach(() => mockRequest.mockReset());
 describe('addressSchema', () => {
   const valid = {
     ...blankAddressValues,
+    label: 'Home',
     line1: '12 MG Road',
     city: 'Pune',
     state: 'Maharashtra',
@@ -63,7 +64,7 @@ describe('AddressBookSection', () => {
     });
     renderWithProviders(<AddressBookSection />);
     await waitFor(() => expect(screen.getByText('Home')).toBeOnTheScreen());
-    expect(screen.getByText('DEFAULT')).toBeOnTheScreen();
+    expect(screen.getByText('Default')).toBeOnTheScreen();
     expect(screen.getByText('Office')).toBeOnTheScreen();
 
     await act(async () => {
@@ -163,6 +164,7 @@ describe('AddressBookSection', () => {
         title="Edit address"
         initial={{
           ...blankAddressValues,
+          label: 'Home',
           line1: '12 MG Road',
           city: 'Pune',
           state: 'MH',
@@ -185,6 +187,7 @@ describe('AddressBookSection', () => {
         title="Edit address"
         initial={{
           ...blankAddressValues,
+          label: 'Home',
           line1: '12 MG Road',
           city: 'Pune',
           state: 'MH',
@@ -198,6 +201,10 @@ describe('AddressBookSection', () => {
       fireEvent.press(screen.getByTestId('address-save'));
     });
     expect(onSubmit).toHaveBeenCalledTimes(1);
-    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ line1: '12 MG Road', city: 'Pune' });
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({
+      label: 'Home',
+      line1: '12 MG Road',
+      city: 'Pune',
+    });
   });
 });

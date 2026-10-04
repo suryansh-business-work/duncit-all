@@ -97,11 +97,12 @@ function setup(podAmount: number, noOfSpots = 0) {
 }
 
 describe('PricePanel (auditable earnings statement)', () => {
-  it('renders the header, subtitle and free-spot message', () => {
+  it('renders the header as a section heading and the free-spot message', () => {
     setup(1000, 30);
     expect(screen.getByTestId('create-pod-price-panel')).toBeInTheDocument();
-    expect(screen.getByText('Potential earnings')).toBeInTheDocument();
-    expect(screen.getByText('Your take-home for the full pod')).toBeInTheDocument();
+    // The calm redesign dropped the subtitle: the header is the title alone.
+    expect(screen.getByRole('heading', { level: 2, name: 'Potential earnings' })).toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-price-panel-header')).toHaveTextContent(/^Potential earnings$/);
     expect(screen.getByTestId('price-panel-host-free-note')).toHaveTextContent(
       'Your spot is free — that is why the total calculation is based on the remaining available slots.',
     );

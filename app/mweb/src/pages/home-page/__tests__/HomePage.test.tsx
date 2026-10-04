@@ -15,7 +15,13 @@ vi.mock('react-router', async () => {
 vi.mock('../HomeSkeleton', () => ({ default: () => <div>skeleton</div> }));
 vi.mock('../HomeStatusRail', () => ({ default: () => <div>status-rail</div> }));
 vi.mock('../HomeFeaturedPods', () => ({
-  default: ({ pods }: any) => <div>featured:{pods.length}</div>,
+  // The nearby total rides into the featured rail (its See-all card owns the
+  // count now), and so does whether a chip/filter has narrowed the rails.
+  default: ({ pods, totalCount, filtered }: any) => (
+    <div>
+      featured:{pods.length}/{totalCount}:{filtered ? 'filtered' : 'all'}
+    </div>
+  ),
 }));
 vi.mock('../HomeSearch', () => ({
   default: ({ disabled }: any) => <div>search:{disabled ? 'off' : 'on'}</div>,
@@ -30,6 +36,11 @@ vi.mock('../PreviousPodsRail', () => ({
   default: ({ pods }: any) => <div>previous:{pods.length}</div>,
 }));
 vi.mock('../../../components/ads/AdSlot', () => ({ default: () => <div>ad-slot</div> }));
+vi.mock('../ClubRecommendationRow', () => ({ default: () => <div>club-recommendation</div> }));
+vi.mock('../SomethingForYouRail', () => ({ default: () => <div>something-for-you</div> }));
+vi.mock('../../../hooks/useSavedPodHearts', () => ({
+  useSavedPodHearts: () => ({ signedIn: false, isSaved: vi.fn(), isSaving: vi.fn(), toggle: vi.fn() }),
+}));
 vi.mock('../FilterMenu', () => ({
   default: ({ disabled }: any) => <div>filter-menu:{disabled ? 'off' : 'on'}</div>,
 }));
@@ -39,6 +50,9 @@ vi.mock('../HomeVibeChips', () => ({
       vibe-chips
       <button type="button" onClick={() => onSelect('missing-cat')}>
         select-missing
+      </button>
+      <button type="button" onClick={() => onSelect('chip-1')}>
+        select-chip
       </button>
       {action}
     </div>
@@ -99,16 +113,18 @@ describe('HomePage', () => {
       error: new Error('boom'),
     });
     renderPage();
-    expect(screen.getByText('boom')).toBeInTheDocument();
+    expect(screen.getByTestId('home-page-error')).toHaveTextContent('boom');
+    expect(screen.queryByTestId('home-screen')).not.toBeInTheDocument();
   });
 
-  it('renders the populated feed with clubs and the pods-nearby label', () => {
+  it('renders the populated feed with clubs and hands the nearby total to the featured rail', () => {
     useHomeDataMock.mockReturnValue(baseReturn());
     renderPage();
     expect(screen.getByText('Happening nearby')).toBeInTheDocument();
-    expect(screen.getByText('3 pods nearby')).toBeInTheDocument();
     expect(screen.getByText('club:c1')).toBeInTheDocument();
-    expect(screen.getByText('featured:2')).toBeInTheDocument();
+    expect(screen.getByText('featured:2/3:all')).toBeInTheDocument();
+    expect(screen.getByText('club-recommendation')).toBeInTheDocument();
+    expect(screen.getByText('something-for-you')).toBeInTheDocument();
     expect(screen.getByText('ongoing:1')).toBeInTheDocument();
     expect(screen.getByText('previous:1')).toBeInTheDocument();
     expect(screen.getByText('ad-slot')).toBeInTheDocument();
@@ -117,10 +133,13 @@ describe('HomePage', () => {
     expect(screen.getByText('filter-menu:on')).toBeInTheDocument();
   });
 
-  it('uses singular "pod" label when exactly one pod nearby', () => {
-    useHomeDataMock.mockReturnValue({ ...baseReturn(), totalPods: 1 });
+  it('tells the rails they are filtered once a vibe is picked', () => {
+    // The full-list pages are unfiltered, so a filtered rail must drop its count.
+    useHomeDataMock.mockReturnValue(baseReturn());
     renderPage();
-    expect(screen.getByText('1 pod nearby')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('select-chip'));
+    expect(screen.getByText('featured:2/3:filtered')).toBeInTheDocument();
+    expect(useHomeDataMock).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: 'chip-1' }));
   });
 
   it('shows the empty-clubs info alert and disables search/filter when no content', () => {
@@ -131,7 +150,8 @@ describe('HomePage', () => {
       totalPods: 0,
     });
     renderPage();
-    expect(screen.getByText(/No clubs in this category/)).toBeInTheDocument();
+    expect(screen.getByTestId('home-empty')).toHaveTextContent(/No pods here yet/);
+    expect(screen.queryByText(/^club:/)).not.toBeInTheDocument();
     expect(screen.getByText('search:off')).toBeInTheDocument();
     expect(screen.getByText('filter-menu:off')).toBeInTheDocument();
   });
@@ -139,19 +159,20 @@ describe('HomePage', () => {
   it('navigates to happening-nearby via the header and See all button', () => {
     useHomeDataMock.mockReturnValue(baseReturn());
     renderPage();
-    fireEvent.click(screen.getByLabelText('Open Happening nearby'));
-    expect(navigateMock).toHaveBeenCalledWith('/happening-nearby');
+    // The title is a plain heading; See all is the one control that opens the list.
+    fireEvent.click(screen.getByText('Happening nearby'));
+    expect(navigateMock).not.toHaveBeenCalled();
 
-    navigateMock.mockClear();
     fireEvent.click(screen.getByRole('button', { name: 'See all' }));
     expect(navigateMock).toHaveBeenCalledWith('/happening-nearby');
   });
 
-  it('navigates to happening-nearby on keyboard Enter on the header', () => {
+  it('invites a non-host into the become-a-host flow, with no Create pod FAB', () => {
     useHomeDataMock.mockReturnValue(baseReturn());
     renderPage();
-    fireEvent.keyDown(screen.getByLabelText('Open Happening nearby'), { key: 'Enter' });
-    expect(navigateMock).toHaveBeenCalledWith('/happening-nearby');
+    expect(screen.queryByTestId('home-create-pod-fab')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Get started' }));
+    expect(navigateMock).toHaveBeenCalledWith('/earn');
   });
 
   it('shows the Create pod FAB for hosts and navigates to create-pod', () => {
@@ -159,6 +180,10 @@ describe('HomePage', () => {
     renderPage();
     const fab = screen.getByRole('button', { name: 'Create pod' });
     fireEvent.click(fab);
+    expect(navigateMock).toHaveBeenCalledWith('/create-pod');
+
+    navigateMock.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
     expect(navigateMock).toHaveBeenCalledWith('/create-pod');
   });
 
@@ -169,5 +194,7 @@ describe('HomePage', () => {
     // guard clears it back to '' on the next render (no crash, still rendered).
     fireEvent.click(screen.getByText('select-missing'));
     expect(screen.getByText('Happening nearby')).toBeInTheDocument();
+    expect(useHomeDataMock).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: '' }));
+    expect(screen.getByText('featured:2/3:all')).toBeInTheDocument();
   });
 });

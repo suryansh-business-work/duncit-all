@@ -6,7 +6,10 @@ import type { PortalModeRow, PortalModeState } from '../../src/pages/portal-mode
 
 const m = vi.hoisted(() => ({ notify: vi.fn(), confirmMock: vi.fn(), refetchSpy: vi.fn() }));
 vi.mock('@duncit/dialogs', () => ({ notify: m.notify, useConfirm: () => m.confirmMock }));
-vi.mock('@duncit/utils', () => ({ parseApiError: (e: unknown) => (e instanceof Error ? e.message : 'err') }));
+vi.mock('@duncit/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/utils')>()),
+  parseApiError: (e: unknown) => (e instanceof Error ? e.message : 'err'),
+}));
 vi.mock('@duncit/table', () => ({ useApolloTableFetch: () => vi.fn() }));
 
 const row = makePortalModeRow({ id: 'p1', key: 'crm', name: 'CRM', mode: 'LIVE' });

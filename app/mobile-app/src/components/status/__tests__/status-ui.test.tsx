@@ -18,13 +18,19 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
+// Duncit's pinned official group has its own suite (useOfficialStatus.test);
+// with none live the rail shows only the followed stories these tests walk.
+jest.mock('@/hooks/useOfficialStatus', () => ({
+  useOfficialStatus: () => ({ statuses: [], seenIds: new Set<string>(), recordView: jest.fn() }),
+}));
 // Controlled status store — an empty, frozen seenIds keeps the rail order driven
 // purely by the (deterministic) shuffle so the navigation walks stay stable.
 const mockSeenIds = new Set<string>();
 jest.mock('@/stores/status.store', () => ({
   useStatusStore: (selector: (s: unknown) => unknown) =>
     selector({
-      recordView: jest.fn(),
+      // The real store action returns a promise the rail hands to fireAndForget.
+      recordView: jest.fn().mockResolvedValue(undefined),
       deleteStory: jest.fn().mockResolvedValue(undefined),
       seenIds: mockSeenIds,
     }),

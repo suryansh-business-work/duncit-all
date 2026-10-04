@@ -18,6 +18,7 @@ import {
   type CreatePodVenue,
 } from '@/components/create-pod/create-pod.types';
 import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
+import { appFormatter } from '@/utils/app-formatter';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockedEarnings = usePotentialEarnings as jest.Mock;
@@ -64,6 +65,7 @@ const slot = {
   space_label: '',
   capacity: 10,
   status: 'AVAILABLE',
+  whole_day: false,
 };
 const freeSlot = {
   id: 's2',
@@ -73,6 +75,7 @@ const freeSlot = {
   space_label: '',
   capacity: 10,
   status: 'AVAILABLE',
+  whole_day: false,
 };
 const finance = { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' };
 
@@ -244,8 +247,8 @@ describe('VenueSlotStep', () => {
       />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Main Hall'));
-    await screen.findByTestId('create-pod-slot-sa');
-    expect(screen.queryByTestId('create-pod-slot-sb')).toBeNull();
+    await screen.findByTestId('slot-tile-sa');
+    expect(screen.queryByTestId('slot-tile-sb')).toBeNull();
   });
 
   it('surfaces the venue space validation error in danger styling', async () => {
@@ -275,14 +278,18 @@ describe('VenueSlotStep', () => {
     );
     // Slots are gated behind the space (capacity) selection now.
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
-    await screen.findByTestId('create-pod-slot-s1');
-    fireEvent.press(screen.getByTestId('create-pod-slot-s1'));
+    await screen.findByTestId('slot-tile-s1');
+    fireEvent.press(screen.getByTestId('slot-tile-s1'));
     expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/your venue/);
-    // Free slots read as "Free" — the grid paginates by day, so switch to the
-    // free slot's day first.
-    const freeDay = format(new Date(freeSlot.start_at), 'yyyy-MM-dd');
-    fireEvent.press(screen.getByTestId(`create-pod-day-${freeDay}`));
-    expect(screen.getByTestId('create-pod-slot-s2')).toHaveTextContent(/Free/);
+    // Free slots read as "Free" — the calendar shows one day's times, so switch
+    // to the free slot's day first (day keys follow the admin time zone, and the
+    // grid pages by month when the two days straddle a month end).
+    const freeDay = appFormatter().dayKey(freeSlot.start_at);
+    if (!screen.queryByTestId(`slot-day-${freeDay}`)) {
+      fireEvent.press(screen.getByTestId('slot-month-next'));
+    }
+    fireEvent.press(screen.getByTestId(`slot-day-${freeDay}`));
+    expect(screen.getByTestId('slot-tile-s2')).toHaveTextContent(/Free/);
   });
 
   it('changing venue clears the previously booked slot', async () => {
@@ -305,7 +312,7 @@ describe('VenueSlotStep', () => {
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
-    expect(await screen.findByTestId('create-pod-no-slots')).toBeOnTheScreen();
+    expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
   it('falls back to an empty slot list when the request fails', async () => {
@@ -314,7 +321,7 @@ describe('VenueSlotStep', () => {
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
-    expect(await screen.findByTestId('create-pod-no-slots')).toBeOnTheScreen();
+    expect(await screen.findByTestId('slot-calendar-empty')).toBeOnTheScreen();
   });
 
   it('renders meeting fields (and no slot picker) for virtual pods', () => {
@@ -329,9 +336,8 @@ describe('VenueSlotStep', () => {
   });
 
   it('shows the live duration line for a scheduled virtual pod', () => {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const toText = (date: Date) =>
-      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    // Typed in the admin's input pattern — the same shape a picked slot writes.
+    const toText = (date: Date) => format(date, appFormatter().dateTimeInputFormat);
     renderWithProviders(
       <VenueSlotHarness
         initial={{
@@ -397,11 +403,22 @@ describe('PricingStep', () => {
 
 describe('SlotPicker', () => {
   it('shows the loading spinner and a validation error', () => {
-    renderWithProviders(
+    const view = renderWithProviders(
       <SlotPicker slots={[]} loading selectedSlotId="" onPick={jest.fn()} error="Pick a slot" />,
     );
-    expect(screen.getByTestId('create-pod-slots-loading')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-slot-error')).toHaveTextContent('Pick a slot');
+    expect(screen.getByTestId('slot-calendar-loading')).toBeOnTheScreen();
+    // Once slots arrive the calendar replaces the spinner and carries the error.
+    view.rerender(
+      <SlotPicker
+        slots={[slot]}
+        loading={false}
+        selectedSlotId=""
+        onPick={jest.fn()}
+        error="Pick a slot"
+      />,
+    );
+    expect(screen.queryByTestId('slot-calendar-loading')).toBeNull();
+    expect(screen.getByTestId('slot-calendar-error')).toHaveTextContent('Pick a slot');
   });
 
   it('groups multiple slots on the same day under one heading', () => {
@@ -430,8 +447,8 @@ describe('SlotPicker', () => {
     renderWithProviders(
       <SlotPicker slots={sameDay} loading={false} selectedSlotId="a1" onPick={jest.fn()} />,
     );
-    expect(screen.getByTestId('create-pod-slot-a1')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-slot-a2')).toHaveTextContent(/Free/);
+    expect(screen.getByTestId('slot-tile-a1')).toBeOnTheScreen();
+    expect(screen.getByTestId('slot-tile-a2')).toHaveTextContent(/Free/);
   });
 });
 

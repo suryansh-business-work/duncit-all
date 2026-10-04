@@ -16,6 +16,7 @@
  * The countdown is shared with the mobile app (rule 27) and compacts to m / h /
  * d, so a story with 45 minutes left never reads as "0h".
  */
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -28,6 +29,12 @@ import HomeStatusViewer, {
 } from '../HomeStatusViewer';
 
 const testTheme = createTheme();
+
+/** The report dialog is always mounted, so every render needs a client; its
+ * categories query is skipped until a story is reported. */
+const WithApollo = ({ children }: { children: React.ReactNode }) => (
+  <MockedProvider mocks={[]}>{children}</MockedProvider>
+);
 
 /** jsdom ships `play`/`pause` as "not implemented" stubs that log and return
  * undefined, so they are replaced outright rather than filled in — the viewer
@@ -82,12 +89,16 @@ const viewer = (over: Partial<Parameters<typeof HomeStatusViewer>[0]> = {}) => {
     onToggleLike: vi.fn(),
     onRecordView: vi.fn(),
   };
+  // The report dialog is always mounted; its categories query is skipped
+  // until a story is reported, so no response has to be mocked.
   const result = render(
-    <ThemeProvider theme={testTheme}>
-      <MemoryRouter>
-        <HomeStatusViewer item={item()} {...spies} {...over} />
-      </MemoryRouter>
-    </ThemeProvider>
+    <MockedProvider mocks={[]}>
+      <ThemeProvider theme={testTheme}>
+        <MemoryRouter>
+          <HomeStatusViewer item={item()} {...spies} {...over} />
+        </MemoryRouter>
+      </ThemeProvider>
+    </MockedProvider>
   );
   return { ...result, spies };
 };
@@ -166,6 +177,7 @@ describe('HomeStatusViewer', () => {
           />
         </MemoryRouter>
       </ThemeProvider>,
+      { wrapper: WithApollo },
     );
     for (const control of document.body.querySelectorAll<HTMLElement>('button')) {
       fireEvent.click(control);
@@ -185,6 +197,7 @@ describe('HomeStatusViewer', () => {
           <HomeStatusViewer item={item({ kind: 'user' })} onClose={vi.fn()} onToggleLike={onToggleLike} />
         </MemoryRouter>
       </ThemeProvider>,
+      { wrapper: WithApollo },
     );
     for (const control of document.body.querySelectorAll<HTMLElement>('button')) {
       fireEvent.click(control);
@@ -203,6 +216,7 @@ describe('HomeStatusViewer', () => {
           <HomeStatusViewer item={item({ kind: 'ad' })} onClose={vi.fn()} />
         </MemoryRouter>
       </ThemeProvider>,
+      { wrapper: WithApollo },
     );
     for (const control of document.body.querySelectorAll<HTMLElement>('button')) {
       fireEvent.click(control);
@@ -357,7 +371,8 @@ describe('HomeStatusViewer', () => {
         <MemoryRouter>
           <HomeStatusViewer item={item()} onClose={vi.fn()} />
         </MemoryRouter>
-      </ThemeProvider>
+      </ThemeProvider>,
+      { wrapper: WithApollo },
     );
 
     expect(document.body.textContent).toContain('Meera N');

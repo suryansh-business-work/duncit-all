@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
 
 const navigate = vi.fn();
 vi.mock('react-router', async (importOriginal) => ({
@@ -27,6 +28,8 @@ const club = (id: string, over: Record<string, unknown> = {}) => ({
   club_description: `Desc ${id}`,
   category_id: 'cat-a',
   super_category_id: 's1',
+  location_id: 'loc-1',
+  locality: 'Kothrud',
   club_feature_images_and_videos: [],
   ...over,
 });
@@ -55,7 +58,7 @@ const allClubsMock = (
   result: {
     data: {
       superCategories: [{ id: 's1', slug: 'sports' }],
-      locations: [{ id: 'loc-1', location_name: 'Pune' }],
+      locations: [{ id: 'loc-1', location_name: 'Pune', city: 'Pune', location_image: null }],
       clubs,
       pods,
     },
@@ -64,12 +67,16 @@ const allClubsMock = (
 
 const noVars = { locationId: undefined, locality: undefined };
 
-const setup = (mocks: unknown[], ui: ReactElement) =>
+// The opened city lives in `?city=`; by default the page opens inside Pune so
+// its clubs are listed. Pass '/clubs' to land on the city cards instead.
+const setup = (mocks: unknown[], ui: ReactElement, entry = '/clubs?city=loc-1') =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
-      <DuncitLocalizationProvider>
-        {ui}
-      </DuncitLocalizationProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <DuncitLocalizationProvider>
+          {ui}
+        </DuncitLocalizationProvider>
+      </MemoryRouter>
     </MockedProvider>,
   );
 
@@ -100,7 +107,27 @@ describe('ClubsPage', () => {
     // sorted + pod count chip: Club 1 has 2 pods, Club 2 has 0
     expect(screen.getByText('2 pods')).toBeInTheDocument();
     expect(screen.getByText('0 pods')).toBeInTheDocument();
-    expect(screen.getByText('Clubs')).toBeInTheDocument();
+    // The page title is visually hidden but still names the page.
+    expect(screen.getByTestId('clubs-page-title')).toHaveTextContent('Clubs');
+    // Inside the opened city, clubs are grouped under their locality.
+    expect(screen.getByTestId('clubs-locality-heading-title')).toHaveTextContent('Kothrud');
+  });
+
+  it('lists the city cards first and opens a city to show its clubs', async () => {
+    setup([allClubsMock(noVars, [club('1'), club('2')]), catMock, adMock()], <ClubsPage />, '/clubs');
+    const cityCard = await screen.findByRole('button', { name: 'Pune' });
+    expect(screen.getByText('2 clubs')).toBeInTheDocument();
+    expect(screen.queryByText('Club 1')).not.toBeInTheDocument();
+
+    fireEvent.click(cityCard);
+    expect(await screen.findByText('Club 1')).toBeInTheDocument();
+    expect(screen.getByText('Club 2')).toBeInTheDocument();
+    expect(screen.getByTestId('clubs-city-heading-title')).toHaveTextContent('Pune');
+
+    // "All cities" returns to the city cards.
+    fireEvent.click(screen.getByRole('button', { name: 'All cities' }));
+    expect(await screen.findByRole('button', { name: 'Pune' })).toBeInTheDocument();
+    expect(screen.queryByText('Club 1')).not.toBeInTheDocument();
   });
 
   it('renders category chips and filters by a selected chip', async () => {

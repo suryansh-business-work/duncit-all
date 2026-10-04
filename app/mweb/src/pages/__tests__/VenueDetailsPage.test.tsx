@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { gql } from '@apollo/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const navigate = vi.fn();
@@ -26,34 +25,9 @@ vi.mock('../venues-page/VenuePodsSection', () => ({
 
 import VenueDetailsPage from '../VenueDetailsPage';
 
-// Re-declared identical to the (unexported) document inside the page; Apollo
-// MockedProvider matches on the printed query AST.
-const PUBLIC_VENUES = gql`
-  query PublicVenueDetails {
-    publicVenues {
-      id
-      venue_name
-      venue_type
-      capacity
-      description
-      amenities
-      facilities
-      security
-      cover_image_url
-      gallery
-      address_line1
-      address_line2
-      city
-      state
-      locality
-      postal_code
-      country
-      lat
-      lng
-      tags
-    }
-  }
-`;
+// The page's own document: MockedProvider matches on the printed query AST, so
+// a copy drifts the day the selection grows (as it did with location_id).
+import { PUBLIC_VENUES } from '../VenueDetailsPage/queries';
 
 const baseVenue = (over: Record<string, unknown> = {}) => ({
   id: 'v1',
@@ -61,6 +35,8 @@ const baseVenue = (over: Record<string, unknown> = {}) => ({
   venue_type: 'Banquet',
   capacity: 300,
   description: 'A lovely spot',
+  // No Location row, so the location-mismatch lookup stays skipped.
+  location_id: null,
   amenities: ['WiFi', 'Parking'],
   facilities: ['Stage'],
   security: ['CCTV'],
@@ -104,8 +80,8 @@ describe('VenueDetailsPage', () => {
 
   it('renders the populated venue detail with images, chips, sections and pods', async () => {
     setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
-    // heading appears twice (cover fallback would differ) -> use role heading query
-    expect(await screen.findByRole('heading', { name: 'Grand Hall', level: 4 })).toBeInTheDocument();
+    // the name is both the page header (h1) and the hero title (h2)
+    expect(await screen.findByRole('heading', { name: 'Grand Hall', level: 2 })).toBeInTheDocument();
     // type + capacity + tag chips
     expect(screen.getByText('Banquet')).toBeInTheDocument();
     expect(screen.getByText('300 capacity')).toBeInTheDocument();
@@ -163,9 +139,10 @@ describe('VenueDetailsPage', () => {
       [venuesMock([baseVenue({ cover_image_url: null, gallery: [] })])],
       <VenueDetailsPage />,
     );
-    // fallback heading (level 4 name shown twice now: fallback + title). Both exist.
-    const headings = await screen.findAllByRole('heading', { name: 'Grand Hall' });
-    expect(headings.length).toBeGreaterThanOrEqual(2);
+    // the hero falls back to the storefront mark instead of a cover image
+    expect(await screen.findByRole('heading', { name: 'Grand Hall', level: 2 })).toBeInTheDocument();
+    expect(screen.queryByTestId('venue-cover-image')).not.toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
     // no Images section with a single/zero image
     expect(screen.queryByText('Images')).not.toBeInTheDocument();
   });
@@ -202,7 +179,7 @@ describe('VenueDetailsPage', () => {
       ],
       <VenueDetailsPage />,
     );
-    await screen.findByRole('heading', { name: 'Grand Hall', level: 4 });
+    await screen.findByRole('heading', { name: 'Grand Hall', level: 2 });
     await waitFor(() => expect(screen.queryByText('Amenities')).not.toBeInTheDocument());
     expect(screen.queryByText('A lovely spot')).not.toBeInTheDocument();
     expect(screen.queryByText('Images')).not.toBeInTheDocument();

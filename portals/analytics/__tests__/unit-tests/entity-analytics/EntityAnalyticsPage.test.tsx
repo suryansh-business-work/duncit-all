@@ -5,7 +5,7 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import EntityAnalyticsPage from '../../../src/pages/entity-analytics/EntityAnalyticsPage';
 import { ANALYTICS_PAGES } from '../../../src/pages/entity-analytics/pages';
-import { ENTITY_ANALYTICS, type EntityAnalytics } from '../../../src/pages/entity-analytics/queries';
+import { ANALYTICS_CITIES, ENTITY_ANALYTICS, type EntityAnalytics } from '../../../src/pages/entity-analytics/queries';
 import { byTestId, click, mount, queryTestId, waitUntil } from '../../dom';
 import { COPY, board, kpi } from '../../mocks/analytics';
 
@@ -31,18 +31,24 @@ vi.mock('@duncit/dashboard', () => ({
 const PODS_PAGE = ANALYTICS_PAGES[1];
 
 const answer = (days: number, value: EntityAnalytics): MockedResponse => ({
-  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', days } },
+  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, days } },
   result: { data: { entityAnalytics: value } },
 });
 
 const failure = (message: string): MockedResponse => ({
-  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', days: 30 } },
+  request: { query: ENTITY_ANALYTICS, variables: { entity: 'PODS', compare: 'PREVIOUS', city: null, days: 30 } },
   result: { errors: [new GraphQLError(message)] },
 });
 
+// The Pods page can be narrowed to one city, so its header asks for the list.
+const cities: MockedResponse = {
+  request: { query: ANALYTICS_CITIES },
+  result: { data: { analyticsCities: [{ __typename: 'AnalyticsCity', id: 'loc-blr', name: 'Bengaluru' }] } },
+};
+
 const renderPage = (mocks: MockedResponse[]) =>
   mount(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[cities, ...mocks]}>
       <EntityAnalyticsPage page={PODS_PAGE} />
     </MockedProvider>,
   );

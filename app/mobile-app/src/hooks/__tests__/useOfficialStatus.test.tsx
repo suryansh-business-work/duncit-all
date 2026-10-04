@@ -23,6 +23,12 @@ jest.mock('@/components/PullToRefresh', () => ({
   useRefreshRegistration: (fn: () => void) => mockUseRefreshRegistration(fn),
 }));
 
+// The statuses are re-read every time Home comes into view, so focus is an input.
+let mockFocused = true;
+jest.mock('@react-navigation/native', () => ({
+  useIsFocused: () => mockFocused,
+}));
+
 const mockRequest = graphqlRequest as jest.Mock;
 
 const status = {
@@ -39,6 +45,7 @@ beforeEach(() => {
   mockRequest.mockReset();
   mockUseRefreshRegistration.mockClear();
   mockLocationState.selectedId = 'loc1';
+  mockFocused = true;
 });
 
 describe('useOfficialStatus', () => {
@@ -106,6 +113,29 @@ describe('useOfficialStatus', () => {
       { locationId: 'loc2' },
       { auth: true },
     );
+  });
+
+  it('does not ask while Home is out of view, and re-reads each time it comes back', async () => {
+    mockFocused = false;
+    mockRequest.mockResolvedValue({ officialStatuses: [status] });
+    const { result, rerender } = renderHook(() => useOfficialStatus());
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(mockRequest).not.toHaveBeenCalled();
+    expect(result.current.statuses).toEqual([]);
+
+    mockFocused = true;
+    rerender({});
+    await waitFor(() => expect(result.current.statuses).toEqual([status]));
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+
+    // Leaving and returning re-reads, so a status published meanwhile shows up.
+    mockFocused = false;
+    rerender({});
+    mockFocused = true;
+    rerender({});
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2));
   });
 
   it('re-fetches when the registered pull-to-refresh handler runs', async () => {

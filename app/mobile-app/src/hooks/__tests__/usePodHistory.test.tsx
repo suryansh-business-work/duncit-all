@@ -70,7 +70,7 @@ describe('usePodHistory', () => {
 });
 
 describe('usePodBackout', () => {
-  it('calls backoutPod with the pod doc id', async () => {
+  it('calls backoutPod with the pod doc id, releasing every seat when none is given', async () => {
     mockRequest.mockResolvedValueOnce({ backoutPod: { id: 'm1' } });
     const { result } = renderHook(() => usePodBackout());
     await act(async () => {
@@ -78,10 +78,23 @@ describe('usePodBackout', () => {
     });
     expect(mockRequest).toHaveBeenCalledWith(
       expect.anything(),
-      { pod_doc_id: 'pod1' },
+      { pod_doc_id: 'pod1', seats: null },
       { auth: true },
     );
     expect(result.current.busy).toBe(false);
+  });
+
+  it('passes the seat count for a partial backout', async () => {
+    mockRequest.mockResolvedValueOnce({ backoutPod: { id: 'm1' } });
+    const { result } = renderHook(() => usePodBackout());
+    await act(async () => {
+      await result.current.backout('pod1', 2);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { pod_doc_id: 'pod1', seats: 2 },
+      { auth: true },
+    );
   });
 
   it('clears busy even when the mutation fails', async () => {
@@ -188,9 +201,13 @@ describe('usePodTicket', () => {
     await act(async () => {
       await result.current.download('pod1');
     });
-    expect(writeFile).toHaveBeenCalledWith('file:///cache/ticket-TKT-9.pdf', 'TBASE64', {
-      encoding: 'base64',
-    });
+    expect(writeFile).toHaveBeenCalledWith(
+      'file:///cache/ticket-and-invoice-TKT-9.pdf',
+      'TBASE64',
+      {
+        encoding: 'base64',
+      },
+    );
     expect(share).toHaveBeenCalled();
   });
 

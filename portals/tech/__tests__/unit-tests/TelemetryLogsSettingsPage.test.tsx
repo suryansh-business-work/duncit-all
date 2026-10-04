@@ -25,7 +25,22 @@ vi.mock('@apollo/client/react', async (importOriginal) => {
   };
 });
 
+// The page also mounts PublicApiKeyCard, which reads the session (for the
+// SUPER_ADMIN-only rotate button). A Tech Manager session keeps that card inert.
+vi.mock('@duncit/user-context', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  useUserData: () => ({ user: { user_id: 'u1', roles: ['TECH_MANAGER'] }, loading: false, error: null }),
+}));
+
+import { ConfirmProvider } from '@duncit/dialogs';
 import TelemetryLogsSettingsPage from '../../src/pages/telemetry-logs-settings/index';
+
+const renderPage = () =>
+  render(
+    <ConfirmProvider>
+      <TelemetryLogsSettingsPage />
+    </ConfirmProvider>,
+  );
 
 const makeSettings = (over: Partial<Settings> = {}): Settings => ({
   signoz_enabled: false,
@@ -48,21 +63,22 @@ beforeEach(() => {
 });
 
 describe('TelemetryLogsSettingsPage', () => {
-  it('shows a spinner while loading with no data', () => {
+  it('shows the loader while loading with no data', () => {
     m.loading = true;
-    render(<TelemetryLogsSettingsPage />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    renderPage();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
   });
 
   it('shows an error alert when the query fails', () => {
     m.error = { message: 'load fail' };
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     expect(screen.getByText('load fail')).toBeInTheDocument();
   });
 
   it('resets the form from data and shows the last-updated line', async () => {
     withData();
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     await waitFor(() =>
       expect((screen.getByLabelText(/^Retention/) as HTMLInputElement).value).toBe('45'),
     );
@@ -73,14 +89,14 @@ describe('TelemetryLogsSettingsPage', () => {
 
   it('hides the last-updated line when updated_at is null', async () => {
     withData({ updated_at: null });
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     await screen.findByRole('checkbox', { name: 'error' });
     expect(screen.queryByText(/Last updated/)).not.toBeInTheDocument();
   });
 
   it('toggles a level checkbox off and on', async () => {
     withData();
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     const warn = await screen.findByRole('checkbox', { name: 'warn' });
     const error = screen.getByRole('checkbox', { name: 'error' });
 
@@ -92,7 +108,7 @@ describe('TelemetryLogsSettingsPage', () => {
 
   it('surfaces the no-level validation error on submit', async () => {
     withData();
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     fireEvent.click(await screen.findByRole('checkbox', { name: 'error' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'info' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -101,7 +117,7 @@ describe('TelemetryLogsSettingsPage', () => {
 
   it('surfaces a retention validation error on submit', async () => {
     withData();
-    render(<TelemetryLogsSettingsPage />);
+    renderPage();
     const retention = await screen.findByLabelText(/^Retention/);
     fireEvent.change(retention, { target: { value: '0' } });
     // The retention input's HTML min constraint makes jsdom block an interactive
@@ -113,8 +129,8 @@ describe('TelemetryLogsSettingsPage', () => {
 
   it('toggles SigNoz, edits retention, saves and closes the toast', async () => {
     withData();
-    render(<TelemetryLogsSettingsPage />);
-    const signoz = await screen.findByRole('checkbox', { name: /Ship logs to SigNoz/i });
+    renderPage();
+    const signoz = await screen.findByRole('switch', { name: /Ship logs to SigNoz/i });
     fireEvent.click(signoz);
     fireEvent.change(screen.getByLabelText(/^Retention/), { target: { value: '60' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -132,8 +148,8 @@ describe('TelemetryLogsSettingsPage', () => {
   it('shows an Error-instance save failure in an alert', async () => {
     withData();
     m.saveMock = vi.fn().mockRejectedValue(new Error('save boom'));
-    render(<TelemetryLogsSettingsPage />);
-    fireEvent.click(await screen.findByRole('checkbox', { name: /Ship logs to SigNoz/i }));
+    renderPage();
+    fireEvent.click(await screen.findByRole('switch', { name: /Ship logs to SigNoz/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('save boom')).toBeInTheDocument();
   });
@@ -141,8 +157,8 @@ describe('TelemetryLogsSettingsPage', () => {
   it('shows a non-Error save failure with the fallback message', async () => {
     withData();
     m.saveMock = vi.fn().mockRejectedValue('weird');
-    render(<TelemetryLogsSettingsPage />);
-    fireEvent.click(await screen.findByRole('checkbox', { name: /Ship logs to SigNoz/i }));
+    renderPage();
+    fireEvent.click(await screen.findByRole('switch', { name: /Ship logs to SigNoz/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Failed to save')).toBeInTheDocument();
   });

@@ -96,6 +96,7 @@ describe('ListProductsPreview', () => {
         variants: [{ ...emptyVariant }],
         free_delivery_above: '',
         pickup_location_id: '',
+        commission_pct: emptyValues.commission_pct,
       }),
       [],
       '',

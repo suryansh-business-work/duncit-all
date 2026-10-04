@@ -46,14 +46,17 @@ describe('FeatureFlagsTable', () => {
 
     fireEvent.click(screen.getAllByRole('switch')[0]); // toggle first row
     fireEvent.click(screen.getAllByTestId('EditIcon')[0].closest('button')!);
-    // Delete is disabled for the system row, enabled for the custom row
-    // (rows are sorted key asc: cust_flag first, sys_flag second).
+    // Delete is disabled for the system row, enabled for the custom row. Sorting
+    // is server-side, so the grid keeps the fetch order: sys_flag, then cust_flag.
     const deleteButtons = screen.getAllByTestId('DeleteIcon').map((i) => i.closest('button')!);
-    expect(deleteButtons[1]).toBeDisabled();
-    fireEvent.click(deleteButtons[0]);
+    expect(deleteButtons).toHaveLength(2);
+    expect(deleteButtons[0]).toBeDisabled();
+    expect(deleteButtons[1]).toBeEnabled();
+    fireEvent.click(deleteButtons[1]);
 
-    expect(onToggle).toHaveBeenCalled();
-    expect(onEdit).toHaveBeenCalled();
-    expect(onRemove).toHaveBeenCalled();
+    expect(onToggle).toHaveBeenCalledWith(flags[0]);
+    expect(onEdit).toHaveBeenCalledWith(flags[0]);
+    expect(onRemove).toHaveBeenCalledTimes(1);
+    expect(onRemove).toHaveBeenCalledWith(flags[1]);
   });
 });

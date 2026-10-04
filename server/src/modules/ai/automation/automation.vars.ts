@@ -1,6 +1,7 @@
 import { UserModel } from '@modules/access/user/user.model';
 import { WA_VARIABLES } from '@modules/crm/marketing/waCampaign.recipients';
 import { appDateTime } from '@utils/app-time';
+import { MAX_VETTED_INPUT, escapeRegexLiteral, vetRegexPattern } from '@utils/vet-regex';
 import type { AutomationContact, IAutomationRun } from './automation.model';
 import { scalarText } from './automation.graph';
 
@@ -87,8 +88,6 @@ export function withReply(run: IAutomationRun, text: string): Record<string, unk
   return { ...vars, message, now: appDateTime(new Date()) };
 }
 
-const escapeRegex = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-
 /** The condition step's test. Text comparisons are case-insensitive. */
 export function evaluateCondition(actual: string, operator: string, expected: string): boolean {
   const left = actual.trim().toLowerCase();
@@ -101,7 +100,9 @@ export function evaluateCondition(actual: string, operator: string, expected: st
     case 'starts_with':
       return right !== '' && left.startsWith(right);
     case 'matches':
-      return safeRegex(expected).test(actual);
+      // A flow author's pattern: vetted against catastrophic backtracking, and
+      // never run over more text than it needs to look at.
+      return safeRegex(expected).test(String(actual).slice(0, MAX_VETTED_INPUT));
     case 'is_empty':
       return left === '';
     case 'not_empty':
@@ -111,13 +112,14 @@ export function evaluateCondition(actual: string, operator: string, expected: st
   }
 }
 
-/** An operator's regex, or a literal match when the pattern does not compile —
- * a broken pattern must not take the whole flow down. */
+/** An operator's regex — matched literally when it does not compile, or when its
+ * shape could backtrack catastrophically (see utils/vet-regex). */
 function safeRegex(pattern: string): RegExp {
   try {
-    return new RegExp(pattern, 'i');
+    return new RegExp(vetRegexPattern(pattern), 'i');
   } catch {
-    return new RegExp(escapeRegex(pattern), 'i');
+    // A pattern that does not compile is matched as the text it is.
+    return new RegExp(escapeRegexLiteral(pattern), 'i');
   }
 }
 

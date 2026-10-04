@@ -30,6 +30,7 @@ const sourceOptions = (t: Translate) => [
   { value: 'ADMIN_GRANT', label: t('finance.duncitCoin.adminGrant') },
   { value: 'ADMIN_DEDUCT', label: t('finance.duncitCoin.adminDeduction') },
   { value: 'COIN_EXPIRY', label: t('finance.duncitCoin.expired') },
+  { value: 'EARN_REVOKE', label: t('finance.duncitCoin.earnRevoked') },
 ];
 
 const sourceLabel = (t: Translate) =>

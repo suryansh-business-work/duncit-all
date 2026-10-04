@@ -4,6 +4,14 @@ import { CheckoutForm } from '@/forms/checkout';
 import type { CheckoutFormValues } from '@/forms/checkout';
 import { renderWithProviders } from '@/utils/test-utils';
 
+// The requirements card under the form links to the profile, so the form needs
+// a navigator in reach.
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+
 // Contact is now read-only — it must be prefilled via initialValues, not typed.
 const contact: Partial<CheckoutFormValues> = {
   full_name: 'Riya Sharma',
@@ -70,11 +78,36 @@ describe('CheckoutForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('pays without an address on the pod checkout (email is enough)', async () => {
+  it('requires the billing address by default', async () => {
     const onSubmit = jest.fn();
     renderWithProviders(<CheckoutForm initialValues={contact} onSubmit={onSubmit} />);
     fireEvent.press(screen.getByTestId('checkout-submit'));
+    await waitFor(() => expect(screen.getByTestId('line1-error')).toBeOnTheScreen());
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('pays with the saved main address instead of a typed one', async () => {
+    const onSubmit = jest.fn();
+    renderWithProviders(
+      <CheckoutForm
+        initialValues={contact}
+        mainAddress={{
+          line1: '9 Palm Road',
+          line2: '',
+          landmark: '',
+          city: 'Pune',
+          state: 'Maharashtra',
+          pincode: '411001',
+          country: 'India',
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('billing-same-as-main'));
+    expect(screen.getByTestId('billing-main-summary')).toHaveTextContent(/9 Palm Road/);
+    fireEvent.press(screen.getByTestId('checkout-submit'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ same_as_main: true, line1: '' });
     expect(screen.queryByTestId('line1-error')).toBeNull();
   });
 

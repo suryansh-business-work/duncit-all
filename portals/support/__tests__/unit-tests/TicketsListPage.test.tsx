@@ -14,11 +14,30 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
   },
 }));
 
-vi.mock('react-quill', () => ({
-  default: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
-    <textarea data-testid="quill" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
+// The shared editor is ProseMirror, which cannot be typed into under jsdom; the
+// dialog's description field is swapped for a textarea speaking the same
+// (html, text) change contract.
+vi.mock('@duncit/rich-text', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@duncit/rich-text')>();
+  return {
+    ...actual,
+    DuncitRichTextInput: ({ value, onChange }: Parameters<typeof actual.DuncitRichTextInput>[0]) => (
+      <textarea
+        data-testid="ticket-body-editor"
+        value={value}
+        onChange={(e) => onChange(e.target.value, actual.htmlToText(e.target.value))}
+      />
+    ),
+  };
+});
+
+// The list selects `source` (its own column, read through a label map), which
+// the shared ticket factory does not set — a list row always carries one.
+const makeListTicket = (over: Parameters<typeof makeTicket>[0]) => ({
+  ...makeTicket(over),
+  source: 'APP' as const,
+  guest_email: null,
+});
 
 describe('TicketsListPage', () => {
   it('shows an empty state', async () => {
@@ -27,7 +46,7 @@ describe('TicketsListPage', () => {
   });
 
   it('lists tickets, refetches on live events and opens a row', async () => {
-    const row = makeTicket({ id: 't1', subject: 'Cannot pay' });
+    const row = makeListTicket({ id: 't1', subject: 'Cannot pay' });
     renderWithProviders(<></>, {
       mocks: [ticketsListMock([row]), ticketsListMock([row]), ticketsListMock([row])],
       initialEntries: ['/tickets'],
@@ -51,8 +70,8 @@ describe('TicketsListPage', () => {
   it('filters by status from the Status column header', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
-        ticketsListMock([makeTicket({ id: 't1', subject: 'Open one' })]),
-        ticketsListMock([makeTicket({ id: 't2', subject: 'Resolved one' })], {
+        ticketsListMock([makeListTicket({ id: 't1', subject: 'Open one' })]),
+        ticketsListMock([makeListTicket({ id: 't2', subject: 'Resolved one' })], {
           filters: [{ field: 'status', op: 'in', values: ['RESOLVED'] }],
         }),
       ],
@@ -69,8 +88,8 @@ describe('TicketsListPage', () => {
   it('searches on the server (a debounced query keyed on the search variable)', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
-        ticketsListMock([makeTicket({ id: 't1', subject: 'Cannot pay' }), makeTicket({ id: 't2', subject: 'Refund please' })]),
-        ticketsListMock([makeTicket({ id: 't2', subject: 'Refund please' })], { search: 'Refund' }),
+        ticketsListMock([makeListTicket({ id: 't1', subject: 'Cannot pay' }), makeListTicket({ id: 't2', subject: 'Refund please' })]),
+        ticketsListMock([makeListTicket({ id: 't2', subject: 'Refund please' })], { search: 'Refund' }),
       ],
     });
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
@@ -86,8 +105,8 @@ describe('TicketsListPage', () => {
   it('reorders by priority via the Sort dropdown (display order only)', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
-        ticketsListMock([makeTicket({ id: 't1', subject: 'High leads' })]),
-        ticketsListMock([makeTicket({ id: 't2', subject: 'Medium leads' })], { priority_first: 'MEDIUM' }),
+        ticketsListMock([makeListTicket({ id: 't1', subject: 'High leads' })]),
+        ticketsListMock([makeListTicket({ id: 't2', subject: 'Medium leads' })], { priority_first: 'MEDIUM' }),
       ],
     });
     await waitFor(() => expect(screen.getByText('High leads')).toBeInTheDocument());
@@ -117,7 +136,7 @@ describe('TicketsListPage', () => {
     // Pick a category from the select (exercises the category onChange handler).
     fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Category' }));
     fireEvent.click(await screen.findByRole('option', { name: 'TECHNICAL' }));
-    fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Steps to reproduce</p>' } });
+    fireEvent.change(within(dialog).getByTestId('ticket-body-editor'), { target: { value: '<p>Steps to reproduce</p>' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('TICKET DETAIL')).toBeInTheDocument());
   });
@@ -136,14 +155,14 @@ describe('TicketsListPage', () => {
       mocks: [
         ticketsListMock([]),
         createTicketMock(null),
-        ticketsListMock([makeTicket({ id: 't9', subject: 'Created elsewhere' })]),
+        ticketsListMock([makeListTicket({ id: 't9', subject: 'Created elsewhere' })]),
       ],
     });
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new ticket/i }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText(/^Subject/), { target: { value: 'Something' } });
-    fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Body</p>' } });
+    fireEvent.change(within(dialog).getByTestId('ticket-body-editor'), { target: { value: '<p>Body</p>' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('Created elsewhere')).toBeInTheDocument());
   });

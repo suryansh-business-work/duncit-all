@@ -40,6 +40,9 @@ const wallet = {
   currency_symbol: '₹',
   payout_mode: 'IMMEDIATE',
   next_payout_at: '2026-06-20T00:00:00Z',
+  // Eligibility is the server's call (role-wise Minimum Withdrawal Amount).
+  can_withdraw: true,
+  min_withdrawal_amount: 0,
 };
 const transactions = [
   {
@@ -116,6 +119,7 @@ describe('WalletScreen', () => {
     expect(screen.getByText('₹1500.00')).toBeOnTheScreen();
     expect(screen.getByText('Bad account', { exact: false })).toBeOnTheScreen();
     expect(screen.getByText('WEIRD')).toBeOnTheScreen();
+    expect(screen.getByTestId('wallet-withdraw').props['aria-disabled']).toBe(false);
     fireEvent.press(screen.getByTestId('wallet-withdraw'));
     expect(screen.getByTestId('mock-withdraw')).toBeOnTheScreen();
     fireEvent(screen.getByTestId('mock-withdraw-close'), 'touchEnd');
@@ -128,7 +132,7 @@ describe('WalletScreen', () => {
   it('disables withdraw and shows empty states with a zero balance', () => {
     mockedUse.mockReturnValue(
       api({
-        wallet: { ...wallet, balance: 0, payout_mode: 'WEEKLY' },
+        wallet: { ...wallet, balance: 0, payout_mode: 'WEEKLY', can_withdraw: false },
         transactions: [],
         withdrawals: [],
       }),
@@ -136,8 +140,20 @@ describe('WalletScreen', () => {
     renderWithProviders(<WalletScreen />);
     expect(screen.getByTestId('wallet-no-withdrawals')).toBeOnTheScreen();
     expect(screen.getByTestId('wallet-no-transactions')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('wallet-withdraw'));
+    // DuncitButton reports its state as `aria-disabled` and drops its press
+    // handler; RNTL's fireEvent.press would still bubble to the composite's
+    // onPress prop, so the disabled state is asserted directly.
+    expect(screen.getByTestId('wallet-withdraw').props['aria-disabled']).toBe(true);
     expect(screen.queryByTestId('mock-withdraw')).toBeNull();
+  });
+
+  it('blocks withdraw when the server says the balance is under the minimum', () => {
+    mockedUse.mockReturnValue(
+      api({ wallet: { ...wallet, can_withdraw: false, min_withdrawal_amount: 2000 } }),
+    );
+    renderWithProviders(<WalletScreen />);
+    expect(screen.getByTestId('wallet-withdraw').props['aria-disabled']).toBe(true);
+    expect(screen.getByTestId('wallet-minimum-notice')).toBeOnTheScreen();
   });
 
   it('keeps the screen up when a refetch fails, and tolerates an unknown payout mode', async () => {

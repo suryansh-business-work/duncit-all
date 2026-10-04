@@ -4,19 +4,19 @@ import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
-import { QuantityCell } from '../ProductListingCells';
-import ProductRowActions from '../ProductRowActions';
+import { QuantityCell, renderListingStatus } from '../ProductListingCells';
+import ProductRowActions, { type ProductRowAction } from '../ProductRowActions';
 import ListingPauseDialog from '../ListingPauseDialog';
 import RunAdDialog, { type AdKind } from '../RunAdDialog';
 import {
-  DELETE_LISTING,
   MY_PRODUCT_LISTINGS_TABLE,
   UPDATE_QUANTITY,
   type ProductListingRow,
 } from '../queries';
 import { useTranslation } from '@duncit/shell';
+import { DeletionStateChip } from '../../ecomm-brand-page/deletion-request';
 import { buildListingColumns, getProductRowId, isLowStock } from './columns';
-import { DeleteListingDialog } from './DeleteListingDialog';
+import { useProductDeletion } from './useProductDeletion';
 
 interface Props {
   brandId: string;
@@ -32,11 +32,12 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateQuantity, quantityState] = useMutation<unknown>(UPDATE_QUANTITY);
-  const [deleteListing, deleteState] = useMutation<unknown>(DELETE_LISTING);
-  const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
   const [pauseTarget, setPauseTarget] = useState<ProductListingRow | null>(null);
   const [adTarget, setAdTarget] = useState<{ product: ProductListingRow; kind: AdKind } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const refetch = useCallback(() => refetchRef.current?.(), []);
+  const deletion = useProductDeletion({ brandId, onMessage: setMessage, refetch });
+  const { openFor, startDelete, startWithdraw } = deletion;
 
   const fetchRows = useApolloTableFetch<ProductListingRow>(
     client,
@@ -60,24 +61,28 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     [updateQuantity],
   );
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    setMessage(null);
-    try {
-      await deleteListing({ variables: { product_doc_id: deleteTarget.id } });
-      setDeleteTarget(null);
-      setMessage(t('partners.listProductsPage.productListingDeleted'));
-      refetchRef.current?.();
-    } catch (deleteError) {
-      setMessage(parseApiError(deleteError));
-    }
-  };
-
   const columns = useMemo<DuncitColumn<ProductListingRow>[]>(() => {
     const quantityDisabled = !canManageProducts || quantityState.loading;
     const renderQuantity = (product: ProductListingRow) => (
       <QuantityCell product={product} disabled={quantityDisabled} onSave={saveQuantity} />
     );
+    const renderStatus = (product: ProductListingRow) => {
+      const request = openFor('PRODUCT', product.id);
+      return (
+        <Stack direction="row" spacing={0.5} component="span" sx={{ flexWrap: 'wrap' }}>
+          {renderListingStatus(product)}
+          {request && <DeletionStateChip request={request} />}
+        </Stack>
+      );
+    };
+    // An open deletion request replaces Delete with Withdraw (a brand request's products are withdrawn with the brand).
+    const removalAction = (product: ProductListingRow): ProductRowAction => {
+      const request = openFor('PRODUCT', product.id);
+      if (!request) {
+        return { key: 'delete', label: t('shell.common.delete'), icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => startDelete(product) };
+      }
+      return { key: 'withdraw-deletion', label: t('partners.deletionRequest.withdrawAction'), icon: 'restore', disabled: !canManageProducts || Boolean(request.parent_id), onClick: () => startWithdraw(product) };
+    };
     const renderActions = (product: ProductListingRow) => {
       const paused = product.is_active === false;
       const canPause = canManageProducts && product.listing_review_status === 'APPROVED' && product.status !== 'ARCHIVED';
@@ -89,13 +94,13 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
             { key: 'toggle-active', label: paused ? 'Reactivate' : 'Temporarily deactivate', icon: paused ? 'resume' : 'pause', disabled: !canPause, onClick: () => setPauseTarget(product) },
             { key: 'product-ad', label: t('partners.listProductsPage.runProductAd'), icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
             { key: 'brand-ad', label: t('partners.listProductsPage.runBrandAd'), icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
-            { key: 'delete', label: t('shell.common.delete'), icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
+            removalAction(product),
           ]}
         />
       );
     };
-    return buildListingColumns(t, renderQuantity, renderActions);
-  }, [canManageProducts, quantityState.loading, saveQuantity, onEdit, onSettings]);
+    return buildListingColumns(t, renderQuantity, renderActions, renderStatus);
+  }, [canManageProducts, quantityState.loading, saveQuantity, onEdit, onSettings, openFor, startDelete, startWithdraw]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -122,12 +127,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
           />
         </Stack>
       </CardContent>
-      <DeleteListingDialog
-        target={deleteTarget}
-        deleting={deleteState.loading}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-      />
+      {deletion.dialogs}
       <ListingPauseDialog target={pauseTarget} onClose={() => setPauseTarget(null)} onDone={(text) => { setMessage(text); refetchRef.current?.(); }} />
       <RunAdDialog
         product={adTarget?.product ?? null}

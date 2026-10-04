@@ -42,14 +42,14 @@ describe('EarnMeetingActions', () => {
     const onChanged = jest.fn();
     renderWithProviders(<EarnMeetingActions kind="VENUE" onChanged={onChanged} />);
     fireEvent.press(screen.getByTestId('reschedule-VENUE'));
-    await screen.findByTestId('slot-2027-01-04T04:30:00.000Z');
+    await screen.findByTestId('slot-tile-2027-01-04T04:30:00.000Z');
 
     // No slot picked yet → inline error.
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
     expect(await screen.findByTestId('reschedule-error')).toHaveTextContent(/available slot/);
 
     // Slot picked but no reason → reason error.
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T04:30:00.000Z'));
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
     expect(await screen.findByTestId('reschedule-error')).toHaveTextContent(/why you are/);
 
@@ -86,7 +86,7 @@ describe('EarnMeetingActions', () => {
     // Reference line names the currently-booked slot.
     expect(await screen.findByTestId('reschedule-current')).toHaveTextContent(/Currently booked/);
     // Tapping the current slot does NOT select it…
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T04:30:00.000Z'));
     fireEvent.changeText(screen.getByTestId('reschedule-reason'), 'Need a later time');
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
     // …so confirming still reports "pick an available slot".
@@ -98,7 +98,7 @@ describe('EarnMeetingActions', () => {
       { auth: true },
     );
     // A different open slot can still be picked and the reschedule goes through.
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T06:00:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T06:00:00.000Z'));
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
     await waitFor(() => expect(onChanged).toHaveBeenCalled(), { timeout: 5000 });
   }, 15000);
@@ -120,7 +120,7 @@ describe('EarnMeetingActions', () => {
     route({ failReschedule: true });
     renderWithProviders(<EarnMeetingActions kind="HOST" onChanged={jest.fn()} />);
     fireEvent.press(screen.getByTestId('reschedule-HOST'));
-    fireEvent.press(await screen.findByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(await screen.findByTestId('slot-tile-2027-01-04T04:30:00.000Z'));
     fireEvent.changeText(screen.getByTestId('reschedule-reason'), 'Need a later time');
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
     expect(await screen.findByTestId('reschedule-error')).toHaveTextContent(/just booked/);

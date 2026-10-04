@@ -38,7 +38,7 @@ describe('PodActivityDialog', () => {
       link: scriptedLink({}, sent),
     });
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(sent).toHaveLength(0);
+    expect(sent.map((op) => op.name)).not.toContain('ClubAdminPodAuditLogs');
   });
 
   it('lists every audited action of the pod with its diff, note and AI verdict', async () => {

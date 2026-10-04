@@ -4,6 +4,8 @@ import * as Sharing from 'expo-sharing';
 import { shareTranscript } from '@/utils/transcript';
 
 jest.mock('expo-file-system/legacy', () => ({
+  // A real ES module, so the namespace the unit reads is the one this suite edits.
+  __esModule: true,
   cacheDirectory: 'file:///cache/',
   writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
   EncodingType: { Base64: 'base64' },
@@ -62,5 +64,6 @@ describe('shareTranscript', () => {
     isAvailable.mockResolvedValue(false);
     await shareTranscript({ filename: 'c.txt', text: 'x' });
     expect(write).toHaveBeenCalledWith('c.txt', 'x');
+    (FileSystem as { cacheDirectory: string | null }).cacheDirectory = 'file:///cache/';
   });
 });

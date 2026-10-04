@@ -461,13 +461,13 @@ describe('removal', () => {
   const seedProduct = (brandId: string) =>
     InventoryProductModel.create({ product_name: 'Vase', sku: `VASE-${++seq}`, unit_cost: 100, brand_id: brandId, ownership: 'BRAND' });
 
-  it('an approved brand that still sells cannot be deleted by its owner', async () => {
+  it('an approved brand cannot be deleted on the spot by its owner — it needs a deletion request', async () => {
     const uid = owner();
     const brand = await readyBrand(uid);
     await setStatus(brand.id, 'APPROVED');
     await seedProduct(brand.id);
     await expect(svc.deleteMine(uid, brand.id)).rejects.toThrow(
-      'This brand still has 1 product(s). Deactivate it instead, or remove the products first.'
+      'This brand is approved — raise a deletion request instead'
     );
     expect(await EcommBrandModel.exists({ _id: brand.id })).not.toBeNull();
   });

@@ -3,12 +3,24 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { VenuesScreen } from '@/screens/VenuesScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useLocationStore } from '@/stores/location.store';
+import { useSuperCategoryStore } from '@/stores/super-category.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
+  // Venues is a bottom tab now, so the tab scaffold reads the active route.
+  useRoute: () => ({ name: 'Venues' }),
 }));
+// The tab scaffold's app header and super-category switch are unit-tested on
+// their own (and fetch their own data); stub them so only this screen's
+// requests reach the mocked client.
+jest.mock('@/components/AppHeader', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { AppHeader: () => <V testID="app-header-stub" /> };
+});
+jest.mock('@/components/SuperCategoryTabs', () => ({ SuperCategoryTabs: () => null }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 let mockAds: unknown[] = [];
@@ -46,32 +58,24 @@ const venue = (id: string, name: string) => ({
 });
 
 const route = (venues = [venue('v1', 'Turf One')]) => {
-  mockRequest.mockImplementation((doc: never) => {
-    if (opName(doc) === 'SurveyOnboardingCategories') {
-      return Promise.resolve({
-        categories: [
-          {
-            id: 'sup1',
-            name: 'Sports',
-            level: 'SUPER',
-            parent_id: null,
-            is_active: true,
-            sort_order: 0,
-          },
-          {
-            id: 'sup0',
-            name: 'Hidden',
-            level: 'SUPER',
-            parent_id: null,
-            is_active: false,
-            sort_order: 0,
-          },
-        ],
-      });
-    }
-    return Promise.resolve({ publicVenues: venues });
-  });
+  mockRequest.mockImplementation(() => Promise.resolve({ publicVenues: venues }));
 };
+
+// The header's Super-category tiles (an app-wide store) are the list's filter.
+// Seeded so the store never fetches; with nothing picked, the first tile is.
+const superCat = (id: string, slug: string) => ({
+  id,
+  name: slug,
+  slug,
+  icon: null,
+  description: null,
+});
+const seedSuperCategories = (categories: ReturnType<typeof superCat>[] | null) =>
+  useSuperCategoryStore.setState({
+    data: { categories } as never,
+    isLoading: false,
+    selectedSlug: '',
+  });
 
 const venuesCalls = () => mockRequest.mock.calls.filter((c) => opName(c[0]) === 'MobileVenues');
 
@@ -79,6 +83,7 @@ beforeEach(() => {
   mockRequest.mockReset();
   mockNavigate.mockReset();
   mockAds = [];
+  seedSuperCategories([superCat('sup1', 'sports'), superCat('sup2', 'food')]);
   useLocationStore.setState({ selectedId: 'loc1', cityLabel: 'Pune' });
 });
 
@@ -91,11 +96,15 @@ describe('VenuesScreen', () => {
     route();
     renderWithProviders(<VenuesScreen />);
     expect(await screen.findByTestId('venue-card-v1')).toBeOnTheScreen();
-    // Inactive categories are filtered from the chip rail.
-    expect(screen.getByTestId('venues-cat-sup1')).toBeOnTheScreen();
-    expect(screen.queryByTestId('venues-cat-sup0')).toBeNull();
-    expect(venuesCalls()[0][1]).toMatchObject({ location_id: 'loc1', search: null });
-    fireEvent.press(screen.getByTestId('venue-card-v1'));
+    // Scoped to the header's city and its first (auto-picked) Super-category tile.
+    expect(venuesCalls().at(-1)?.[1]).toMatchObject({
+      location_id: 'loc1',
+      search: null,
+      super_category_id: 'sup1',
+    });
+    // The card itself is not pressable (its photo slider owns its taps); the
+    // name block opens the venue.
+    fireEvent.press(screen.getByRole('button', { name: 'Turf One' }));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
   });
 
@@ -144,29 +153,27 @@ describe('VenuesScreen', () => {
     }
   });
 
-  it('filters by a Super-category chip and clears via All', async () => {
+  it('refetches when the header Super-category tile changes', async () => {
     route();
     renderWithProviders(<VenuesScreen />);
-    fireEvent.press(await screen.findByTestId('venues-cat-sup1'));
     await waitFor(() =>
       expect(venuesCalls().some((c) => c[1].super_category_id === 'sup1')).toBe(true),
     );
-    fireEvent.press(screen.getByTestId('venues-cat-all'));
-    await waitFor(() => {
-      const last = venuesCalls().at(-1);
-      expect(last?.[1].super_category_id).toBeNull();
+    expect(venuesCalls().some((c) => c[1].super_category_id === 'sup2')).toBe(false);
+    act(() => {
+      useSuperCategoryStore.getState().select('food');
     });
+    await waitFor(() => expect(venuesCalls().at(-1)?.[1].super_category_id).toBe('sup2'));
+    expect(await screen.findByTestId('venue-card-v1')).toBeOnTheScreen();
   });
 
   it('shows the empty state (tolerating a null categories payload), and the error state', async () => {
-    mockRequest.mockImplementation((doc: never) => {
-      if (opName(doc) === 'SurveyOnboardingCategories') {
-        return Promise.resolve({ categories: null });
-      }
-      return Promise.resolve({ publicVenues: [] });
-    });
+    seedSuperCategories(null);
+    mockRequest.mockImplementation(() => Promise.resolve({ publicVenues: [] }));
     const { unmount } = renderWithProviders(<VenuesScreen />);
     expect(await screen.findByTestId('venues-empty')).toBeOnTheScreen();
+    // No tiles to pick from, so the list is not narrowed by one.
+    expect(venuesCalls().at(-1)?.[1]).toMatchObject({ super_category_id: null });
     unmount();
 
     mockRequest.mockRejectedValue(new Error('down'));
@@ -176,26 +183,20 @@ describe('VenuesScreen', () => {
 
   it('ignores late responses after unmount and hides the header without a city', async () => {
     useLocationStore.setState({ selectedId: '', cityLabel: '' });
-    let resolveCats: (v: unknown) => void = () => undefined;
-    let resolveVenues: (v: unknown) => void = () => undefined;
-    mockRequest.mockImplementation((doc: never) => {
-      if (opName(doc) === 'SurveyOnboardingCategories') {
-        return new Promise((r) => {
-          resolveCats = r;
-        });
-      }
-      return new Promise((r) => {
-        resolveVenues = r;
-      });
-    });
+    const resolvers: ((v: unknown) => void)[] = [];
+    mockRequest.mockImplementation(
+      () =>
+        new Promise((r) => {
+          resolvers.push(r);
+        }),
+    );
     const { unmount } = renderWithProviders(<VenuesScreen />);
     // No selected city → no location arg sent.
     expect(venuesCalls()[0][1]).toMatchObject({ location_id: null });
     unmount();
     // Responses landing after unmount must not update state (no act warnings).
     await act(async () => {
-      resolveCats({ categories: [] });
-      resolveVenues({ publicVenues: [] });
+      resolvers.forEach((resolve) => resolve({ publicVenues: [] }));
     });
   });
 });

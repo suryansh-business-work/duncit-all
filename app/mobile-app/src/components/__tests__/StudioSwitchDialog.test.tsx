@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, userEvent } from '@testing-library/react-native';
 
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -28,7 +28,7 @@ describe('StudioSwitchDialog', () => {
     expect(onSelect).toHaveBeenCalledWith('USER');
   });
 
-  it('keeps the Switch button disabled while the current role is still the pick', () => {
+  it('keeps the Switch button disabled while the current role is still the pick', async () => {
     const onSelect = jest.fn();
     renderWithProviders(
       <StudioSwitchDialog
@@ -43,7 +43,10 @@ describe('StudioSwitchDialog', () => {
     const confirm = screen.getByTestId('studio-switch-confirm');
     expect(confirm).toHaveTextContent('Switch');
     expect(confirm).toBeDisabled();
-    fireEvent.press(confirm);
+    // userEvent presses the way a finger does — only through host views — so a
+    // disabled button that drops its handler cannot be reached through the
+    // component's own props, which fireEvent would walk into.
+    await userEvent.setup().press(confirm);
     expect(onSelect).not.toHaveBeenCalled();
   });
 

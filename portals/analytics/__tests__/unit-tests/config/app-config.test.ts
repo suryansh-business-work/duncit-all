@@ -26,9 +26,42 @@ describe('Analytics console app config', () => {
     expect(appConfig.colorModeKey).toBe('analytics_color_mode');
   });
 
-  it('lists one dashboard per subject and nothing else', async () => {
+  it('groups its dashboards into sections, each a label over its own routes', async () => {
     const appConfig = await loadConfig();
-    expect(appConfig.nav.map((item) => item.to)).toEqual(['/users', '/pods', '/clubs', '/club-admins', '/hosts']);
+    expect(appConfig.nav.map((group) => group.label)).toEqual([
+      'Business',
+      'Growth',
+      'Support',
+      'Tech',
+      'Costing',
+      'Security',
+      'Testing',
+      'Settings',
+    ]);
+    // A section is a heading only: it never links anywhere itself.
+    appConfig.nav.forEach((group) => expect(group).not.toHaveProperty('to'));
+    expect(appConfig.nav[0].children.map((item) => item.to)).toEqual([
+      '/users',
+      '/pods',
+      '/clubs',
+      '/club-admins',
+      '/hosts',
+      '/venues',
+      '/revenue',
+      '/rewards',
+      '/shop',
+      '/pet-store',
+    ]);
+  });
+
+  it('lists every dashboard route exactly once', async () => {
+    const appConfig = await loadConfig();
+    const routes = appConfig.nav.flatMap((group) => group.children.map((item) => item.to));
+    expect(routes).toHaveLength(30);
+    expect(new Set(routes).size).toBe(routes.length);
+    expect(routes).toEqual(
+      expect.arrayContaining(['/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
+    );
   });
 
   it('gates on ANALYTICS_MANAGER and ships its own login image by default', async () => {

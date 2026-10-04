@@ -8,6 +8,13 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
+// The section is gated behind the language_preference flag; default it on so
+// the flows below exercise the picker. The off path has its own test.
+const mockFeatureFlag = jest.fn().mockReturnValue(true);
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
+}));
+
 const EN = { code: 'en-IN', label: 'English', english_label: 'English (India)', is_default: true };
 const HI = { code: 'hi-IN', label: 'हिन्दी', english_label: 'Hindi (India)' };
 const LOCALES = [EN, HI];
@@ -24,6 +31,7 @@ const seedStore = (overrides: Partial<ReturnType<typeof useLocaleStore.getState>
 
 beforeEach(() => {
   mockRequest.mockReset().mockResolvedValue({ publicTranslations: [] });
+  mockFeatureFlag.mockReset().mockReturnValue(true);
   seedStore();
 });
 
@@ -39,6 +47,13 @@ describe('LanguageSection', () => {
   it('hides itself when the platform offers fewer than two languages', () => {
     seedStore({ locales: [EN] });
     renderWithProviders(<LanguageSection />);
+    expect(screen.queryByTestId('account-language-section')).toBeNull();
+  });
+
+  it('hides itself while the language_preference flag is off', () => {
+    mockFeatureFlag.mockReturnValue(false);
+    renderWithProviders(<LanguageSection />);
+    expect(mockFeatureFlag).toHaveBeenCalledWith('language_preference', undefined);
     expect(screen.queryByTestId('account-language-section')).toBeNull();
   });
 

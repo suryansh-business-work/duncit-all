@@ -32,7 +32,7 @@ describe('VariantTabs', () => {
     expect(screen.getByRole('tab', { name: 'Variant 1' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('textbox', { name: 'Variant name (e.g. Default)' })).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Remove this variant' }) as HTMLButtonElement).disabled).toBe(true);
-    for (const label of ['Height (cm)', 'Weight (kg)', 'Length (cm)', 'Breadth (cm)', 'Price (₹)', 'Stock']) {
+    for (const label of ['Height (cm)', 'Packed weight (kg)', 'Length (cm)', 'Breadth (cm)', 'Price (₹)', 'Stock']) {
       expect(screen.getByRole('spinbutton', { name: label })).toBeTruthy();
     }
   });

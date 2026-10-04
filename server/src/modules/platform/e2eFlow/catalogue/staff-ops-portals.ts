@@ -2032,8 +2032,11 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Open /backout-refunds', 'Columns Backout ID, Member, Pod, Status, Backed out, Amount, Refund status, Actions'],
           ['Look at a row with status "Backout In Process"', 'No Refund button — Actions shows "—"'],
-          ['Click Refund on a "Spot Filled" row', 'Dialog "Refund breakup" with Amount paid, Backout deduction (x%), Refund payable and coin lines if coins were used'],
-          ['Click "Refund now"', 'Toast "Refund processed"; Refund status reads PROCESSED and the button is gone'],
+          ['Click Refund on a "Spot Filled" row', 'Dialog "Refund breakup" shows "Paid via" (Razorpay, Duncit Coins or both) and one accordion box per way it was paid, each with its paid amount, Backout deduction (x%) and refund'],
+          ['For a booking that earned coins, look for the "Earned coins revoked" box', 'Coins earned on these seats, Kept for the deducted share (x%), Coins to revoke; Revoke coins is disabled until the Duncit Coins box is processed'],
+          ['Click Process refund in one box while another is still pending', 'Toast "Refund part processed"; that box reads Processed, the dialog stays open, and Refund status still reads PENDING'],
+          ['Process the last pending box', 'Toast "Refund processed"; the dialog closes, Refund status reads PROCESSED and the button is gone'],
+          ['Call processBackoutRefund with part EARN_REVOKE while COINS is pending', 'Server refuses "Refund the Duncit Coins first — the revoked coins are taken from them"'],
           ['Call processBackoutRefund again for it', 'Server refuses "This Backout request has already been refunded"'],
           ['Call it for a request still in process', 'Server refuses "Refund can be processed only after the spot is filled"'],
         ],

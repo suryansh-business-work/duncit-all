@@ -86,7 +86,12 @@ describe('Email template editor — variables pane', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sync all' }));
     expect(screen.getByLabelText('city')).toBeInTheDocument();
     expect(screen.getByLabelText('coupon_code')).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Slug')).toHaveLength(3);
+    // The template's own (read-only) slug field is also labelled "Slug"; the editable ones are the variables.
+    const variableSlugs = screen
+      .getAllByLabelText('Slug')
+      .filter((input) => !(input as HTMLInputElement).disabled)
+      .map((input) => (input as HTMLInputElement).value);
+    expect(variableSlugs).toEqual(['venue_name', 'city', 'coupon_code']);
 
     // Deselecting a declared chip removes it; selecting it again adds it back.
     const cityChip = () =>

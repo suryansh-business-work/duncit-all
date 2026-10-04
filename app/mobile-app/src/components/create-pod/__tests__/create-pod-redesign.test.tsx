@@ -17,6 +17,7 @@ import {
   blankCreatePodForm,
   type CreatePodFormValues,
 } from '@/components/create-pod/create-pod.types';
+import { appFormatter } from '@/utils/app-formatter';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -72,7 +73,7 @@ describe('PodTypeCards', () => {
     expect(screen.queryByTestId('pod_type-error')).toBeNull();
     fireEvent.press(screen.getByTestId('pt-validate'));
     expect(await screen.findByTestId('pod_type-error')).toHaveTextContent(
-      'Physical pods must be Paid',
+      'Physical pods must be paid',
     );
   });
 });
@@ -201,8 +202,8 @@ describe('TermsAgreement', () => {
   });
 });
 
-describe('SlotPicker day labels', () => {
-  it('labels a slot dated today as "Today"', () => {
+describe('SlotPicker calendar', () => {
+  it('opens on the day of a slot dated today and picks its time tile', () => {
     const noon = new Date();
     noon.setHours(12, 0, 0, 0);
     const todaySlot = {
@@ -215,10 +216,15 @@ describe('SlotPicker day labels', () => {
       capacity: 20,
       status: 'AVAILABLE',
     };
+    const onPick = jest.fn();
     renderWithProviders(
-      <SlotPicker slots={[todaySlot]} loading={false} selectedSlotId="" onPick={jest.fn()} />,
+      <SlotPicker slots={[todaySlot]} loading={false} selectedSlotId="" onPick={onPick} />,
     );
-    expect(screen.getByTestId('create-pod-slot-today1')).toBeOnTheScreen();
+    // The day is keyed in the admin's zone, the same way the calendar groups it.
+    expect(screen.getByTestId(`slot-day-${appFormatter().dayKey(noon)}`)).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('slot-tile-today1'));
+    // The original create-pod slot (with its space + capacity) is handed back.
+    expect(onPick).toHaveBeenCalledWith(todaySlot);
   });
 });
 

@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { gql } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter } from 'react-router';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
@@ -8,22 +9,72 @@ import type { SignupStep } from '@duncit/utils';
 import { describe, expect, it, vi } from 'vitest';
 import RegisterForm from '../register.form';
 import { PUBLIC_APP_SETTINGS } from '../../../utils/dateFormat';
+import { SIGNUP_CONTACT_AVAILABILITY } from '../useSignupContactCheck';
 
 const settingsMock = {
   request: { query: PUBLIC_APP_SETTINGS },
   result: {
     data: {
       publicAppSettings: {
+        __typename: 'PublicAppSettings',
+        // The picker types what this pattern shows, with the month as digits.
         date_format: 'dd MMM yyyy',
         time_format: 'hh:mm a',
         time_zone: 'Asia/Kolkata',
-        min_birth_year: 1950,
-        max_birth_year: 2010,
+        time_source: null,
+        custom_time: null,
+        custom_time_set_at: null,
+        server_time: null,
+        min_signup_age: 13,
         draft_retention_days: 3,
+        ticket_discount_max_pct: null,
+        happening_nearby_days: null,
       },
     },
   },
+  maxUsageCount: Number.POSITIVE_INFINITY,
 };
+
+/** The register form's policy list (the hook keeps its document private). */
+const SIGNUP_POLICIES = gql`
+  query SignupPolicies {
+    signupPolicies {
+      id
+      slug
+      title
+      content
+    }
+  }
+`;
+
+/** No policies to accept, so step three is the password pair alone. */
+const policiesMock = {
+  request: { query: SIGNUP_POLICIES },
+  result: { data: { signupPolicies: [] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+};
+
+/** The contact step asks the server about each box as it is typed; both are free. */
+const availabilityMock = (variables: Record<string, string>, field: 'email' | 'phone') => ({
+  request: { query: SIGNUP_CONTACT_AVAILABILITY, variables },
+  result: {
+    data: {
+      signupContactAvailability: {
+        __typename: 'SignupContactAvailability',
+        email_available: field === 'email' ? true : null,
+        phone_available: field === 'phone' ? true : null,
+      },
+    },
+  },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+});
+
+const mocks = [
+  settingsMock,
+  policiesMock,
+  availabilityMock({ email: 'riya@gmail.com' }, 'email'),
+  availabilityMock({ ext: '+91', num: '9845012345' }, 'phone'),
+];
 
 /**
  * The form only ever shows one step, and the page owns which — so the harness
@@ -47,7 +98,7 @@ function Harness(props: Partial<React.ComponentProps<typeof RegisterForm>>) {
 function renderForm(props: Partial<React.ComponentProps<typeof RegisterForm>> = {}) {
   const onSubmit = props.onSubmit ?? vi.fn();
   const utils = render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[settingsMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <MemoryRouter initialEntries={['/register']}>
           <Harness {...props} onSubmit={onSubmit} />
@@ -60,17 +111,29 @@ function renderForm(props: Partial<React.ComponentProps<typeof RegisterForm>> = 
 
 const field = (label: string) => screen.getByLabelText(new RegExp(label, 'i')) as HTMLInputElement;
 const next = () => screen.getByTestId('signup-next');
+/**
+ * The date of birth is a sectioned picker field: its label names the group and
+ * each day/month/year spinbutton, so the box that carries the typed value is
+ * the field's own input, reached by its test id. It is typed in the admin
+ * pattern's keyboard form — 'dd MMM yyyy' types as 'dd MM yyyy'.
+ */
+const dobInput = () => screen.getByTestId('field-dob-input') as HTMLInputElement;
 
 /** Step one, answered. */
 function fillWho() {
   fireEvent.change(field('^Name'), { target: { value: 'Riya Sharma' } });
-  fireEvent.change(field('date of birth'), { target: { value: '23/04/1990' } });
+  fireEvent.change(dobInput(), { target: { value: '23 04 1990' } });
 }
 
-/** Step two, answered. */
-function fillContact() {
+/**
+ * Step two, answered. Continue stays shut while the server is still being asked
+ * whether the number and the email are free, and opens once both come back free.
+ */
+async function fillContact() {
   fireEvent.change(field('WhatsApp number'), { target: { value: '9845012345' } });
   fireEvent.change(field('^Email'), { target: { value: 'riya@gmail.com' } });
+  expect(next()).toBeDisabled();
+  await waitFor(() => expect(next()).toBeEnabled());
 }
 
 /** Step three, answered. */
@@ -84,7 +147,7 @@ async function walkToSecurity() {
   fillWho();
   fireEvent.click(next());
   await waitFor(() => expect(screen.getByLabelText(/WhatsApp number/i)).toBeInTheDocument());
-  fillContact();
+  await fillContact();
   fireEvent.click(next());
   await waitFor(() => expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument());
 }
@@ -93,7 +156,8 @@ describe('RegisterForm — one step at a time', () => {
   it('opens on step one, showing only its own boxes', () => {
     renderForm();
     expect(screen.getByLabelText(/^Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /date of birth/i })).toBeInTheDocument();
+    expect(dobInput()).toBeInTheDocument();
     expect(screen.getByLabelText(/referral code/i)).toBeInTheDocument();
     // The later steps' fields are not merely hidden — they are not rendered.
     expect(screen.queryByLabelText(/^Email/i)).not.toBeInTheDocument();
@@ -117,7 +181,7 @@ describe('RegisterForm — one step at a time', () => {
     fireEvent.click(next());
     await waitFor(() => expect(screen.getByLabelText(/WhatsApp number/i)).toBeInTheDocument());
 
-    fillContact();
+    await fillContact();
     fireEvent.click(next());
     await waitFor(() => expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument());
     expect(next()).toHaveTextContent(/create account/i);
@@ -170,7 +234,7 @@ describe('RegisterForm — a step validates its own boxes only', () => {
     fillWho();
     fireEvent.click(next());
     await waitFor(() => expect(screen.getByLabelText(/WhatsApp number/i)).toBeInTheDocument());
-    fillContact();
+    await fillContact();
     fireEvent.click(next());
     await waitFor(() => expect(screen.getByLabelText(/^Password/i)).toBeInTheDocument());
 
@@ -257,7 +321,7 @@ describe('RegisterForm — errors and toggles', () => {
       },
     });
     expect(field('^Name')).toHaveValue('Seed User');
-    expect(field('date of birth')).toHaveValue('23/04/2000');
+    expect(dobInput()).toHaveValue('23 04 2000');
     expect(field('referral code')).toHaveValue('DUN-A1B2C3');
   });
 });

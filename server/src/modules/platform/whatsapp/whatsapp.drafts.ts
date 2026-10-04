@@ -259,6 +259,40 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'The host who asked is Meera Nair, and you can reach them on +91 98765 43210. ' +
       'Open the club: https://partners-app.duncit.com/club-admin/clubs/66f1c2a9e4b0a1d2c3f4e5a6 — Team Duncit',
   },
+  /*
+   * Duncit cancelled a Pod Shop order (an operator, or a brand withdrawing the
+   * product). The buyer is owed an apology and the refund, in one message.
+   */
+  POD_SHOP_ORDER_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, we are sorry — your Duncit order {{2}} had to be cancelled. ' +
+      'A full refund of {{3}} is on its way to your original payment (banks take 5-7 working days). ' +
+      'See your orders: {{4}} — Team Duncit',
+    sample:
+      'Hi Aarav, we are sorry — your Duncit order ord_mu8319d825afec77 had to be cancelled. ' +
+      'A full refund of Rs 1180.00 is on its way to your original payment (banks take 5-7 working days). ' +
+      'See your orders: https://mweb.duncit.com/orders — Team Duncit',
+  },
+  POD_SHOP_RETURN_UPDATE: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, an update on your Duncit return {{2}}: {{3}}. Track it here: {{4}} — Team Duncit',
+    sample:
+      'Hi Aarav, an update on your Duncit return RET-7F3A21: approved, a courier will collect it. ' +
+      'Track it here: https://mweb.duncit.com/orders — Team Duncit',
+  },
+  ECOMM_DELETION_UPDATE: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your request to delete {{2}} on Duncit has been {{3}}. ' +
+      'You can follow it in the partner portal. — Team Duncit',
+    sample:
+      'Hi Ananya, your request to delete Yonex Mavis 350 on Duncit has been approved, it will be deleted on 12 Nov 2026. ' +
+      'You can follow it in the partner portal. — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

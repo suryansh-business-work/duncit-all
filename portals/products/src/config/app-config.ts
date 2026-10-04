@@ -53,7 +53,19 @@ export const appConfig = {
     {
       label: 'Fulfilment', labelKey: 'shell.nav.fulfilment',
       icon: 'local_shipping',
-      children: [{ label: 'Orders', labelKey: 'shell.nav.orders', to: '/orders', icon: 'local_shipping' }],
+      children: [
+        { label: 'Orders', labelKey: 'shell.nav.orders', to: '/orders', icon: 'local_shipping' },
+        { label: 'Product Returns', labelKey: 'shell.nav.productReturns', to: '/returns', icon: 'compare' },
+      ],
+    },
+    {
+      label: 'Delete Requests', labelKey: 'shell.nav.deleteRequests',
+      icon: 'block',
+      children: [
+        { label: 'Product Deletion Requests', labelKey: 'shell.nav.productDeletionRequests', to: '/deletion-requests/products', icon: 'inventory' },
+        { label: 'Brand Deletion Requests', labelKey: 'shell.nav.brandDeletionRequests', to: '/deletion-requests/brands', icon: 'storefront' },
+        { label: 'Deletion Settings', labelKey: 'shell.nav.deletionSettings', to: '/deletion-requests/settings', icon: 'settings' },
+      ],
     },
     {
       label: 'Cart', labelKey: 'shell.nav.cart',

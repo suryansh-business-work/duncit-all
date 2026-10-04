@@ -24,6 +24,7 @@ const venue = (id: string, over: Record<string, unknown> = {}) => ({
   venue_type: 'Cafe',
   capacity: 40,
   cover_image_url: null,
+  gallery: [],
   city: 'Pune',
   locality: 'Baner',
   pod_count: 3,
@@ -37,17 +38,16 @@ const fiveVenues = ['1', '2', '3', '4', '5'].map((i) => venue(i));
 import { gql } from '@apollo/client';
 const SUPER_CATEGORIES = gql`
   query VenuesSuperCategories {
-    categories(filter: { level: SUPER, parent_id: null }) {
+    superCategories: categories(filter: { level: SUPER }) {
       id
-      name
-      is_active
+      slug
     }
   }
 `;
 
 const catMock = (categories: unknown[]) => ({
   request: { query: SUPER_CATEGORIES },
-  result: { data: { categories } },
+  result: { data: { superCategories: categories } },
 });
 
 const adMock = (ads: unknown[]) => ({
@@ -77,14 +77,10 @@ afterEach(() => {
 });
 
 describe('VenuesPage', () => {
-  it('renders categories and venue cards, and interleaves an ad', async () => {
-    const categories = [
-      { id: 'c1', name: 'Food', is_active: true },
-      { id: 'c2', name: 'Hidden', is_active: false },
-    ];
+  it('renders venue cards and interleaves an ad', async () => {
     setup(
       [
-        catMock(categories),
+        catMock([{ id: 'c1', slug: 'food' }]),
         adMock([{ id: 'ad-1', ad_type: 'IMAGE', media_url: 'x', redirect_url: null, ad_title: 'Buy', position: 'VENUE_LIST' }]),
         venuesMock(baseVars, fiveVenues),
       ],
@@ -92,10 +88,7 @@ describe('VenuesPage', () => {
     );
 
     expect(await screen.findByText('Venue 1')).toBeInTheDocument();
-    // active category shown, inactive filtered out
-    expect(await screen.findByText('Food')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
-    expect(screen.queryByText('Hidden')).not.toBeInTheDocument();
+    expect(screen.getByText('Venue 5')).toBeInTheDocument();
     // interleaved ad (5 venues, every 4 => one ad card)
     expect(await screen.findByTestId('ad-card')).toBeInTheDocument();
     // venue meta rendered
@@ -134,19 +127,34 @@ describe('VenuesPage', () => {
     expect(await screen.findByText(/Could not load venues/)).toBeInTheDocument();
   });
 
-  it('refetches with the selected super-category on chip tap', async () => {
-    const categories = [{ id: 'c1', name: 'Food', is_active: true }];
+  it('filters by the super-category whose slug the header selected', async () => {
+    const categories = [
+      { id: 'c1', slug: 'food' },
+      { id: 'c2', slug: 'sports' },
+    ];
     setup(
       [
         catMock(categories),
         adMock([]),
         venuesMock(baseVars, [venue('1')]),
-        venuesMock({ ...baseVars, super_category_id: 'c1' }, [venue('2')]),
+        venuesMock({ ...baseVars, super_category_id: 'c2' }, [venue('2')]),
       ],
-      <VenuesPage locationId="loc-1" />,
+      <VenuesPage locationId="loc-1" superCategorySlug="sports" />,
     );
-    fireEvent.click(await screen.findByText('Food'));
     expect(await screen.findByText('Venue 2')).toBeInTheDocument();
+    expect(screen.queryByText('Venue 1')).not.toBeInTheDocument();
+  });
+
+  it('does not filter when the header slug matches no super-category', async () => {
+    setup(
+      [
+        catMock([{ id: 'c1', slug: 'food' }]),
+        adMock([]),
+        venuesMock(baseVars, [venue('1')]),
+      ],
+      <VenuesPage locationId="loc-1" superCategorySlug="unknown" />,
+    );
+    expect(await screen.findByText('Venue 1')).toBeInTheDocument();
   });
 
   it('debounces the search input and refetches with the term', async () => {

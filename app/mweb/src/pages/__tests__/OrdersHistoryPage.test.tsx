@@ -4,6 +4,7 @@ import { GraphQLError } from 'graphql';
 import { MockedProvider } from '@apollo/client/testing/react';
 import OrdersHistoryPage from '../OrdersHistoryPage';
 import { MY_PRODUCT_ORDERS, type ProductOrder } from '../pod-history-page/productOrders';
+import { MY_POD_SHOP_RETURNS } from '../orders-history-page/podShopReturns.queries';
 
 const baseOrder = (over: Partial<ProductOrder> = {}): ProductOrder => ({
   id: 'ord-1',
@@ -16,6 +17,11 @@ const baseOrder = (over: Partial<ProductOrder> = {}): ProductOrder => ({
   pickup_ref: '',
   pickup_location_id: '',
   created_at: '2026-07-01T00:00:00.000Z',
+  delivered_at: null,
+  cancelled_at: null,
+  cancel_reason: '',
+  refund: { status: 'NONE', amount: 0, coins: 0, refunded_at: null },
+  returnable: [],
   pod: { id: 'pod-1', pod_title: 'Morning Yoga Pod' },
   line_items: [
     {
@@ -40,9 +46,15 @@ const ordersMock = (orders: ProductOrder[]) => ({
   result: { data: { myProductOrders: orders } },
 });
 
+// The page also lists the buyer's returns under each order; none by default.
+const returnsMock = {
+  request: { query: MY_POD_SHOP_RETURNS },
+  result: { data: { myPodShopReturns: [] } },
+};
+
 const renderPage = (mocks: readonly unknown[]) =>
   render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, returnsMock] as never}>
       <OrdersHistoryPage />
     </MockedProvider>,
   );
@@ -56,13 +68,16 @@ describe('OrdersHistoryPage', () => {
   it('renders the empty state when the buyer has no product orders', async () => {
     renderPage([ordersMock([])]);
     expect(await screen.findByText('No product orders yet')).toBeInTheDocument();
-    expect(screen.getByText(/will show up here with tracking/i)).toBeInTheDocument();
+    expect(screen.getByTestId('orders-empty')).toBeInTheDocument();
+    expect(screen.queryByTestId('orders-history-order-ord-1')).not.toBeInTheDocument();
   });
 
   it('renders the populated list with header, pod title and order item', async () => {
     renderPage([ordersMock([baseOrder()])]);
     expect(await screen.findByText('My Product Orders')).toBeInTheDocument();
-    expect(screen.getByText(/live tracking/i)).toBeInTheDocument();
+    expect(screen.getByTestId('orders-history-order-ord-1')).toBeInTheDocument();
+    // the returns list loaded, so no returns warning is shown
+    expect(screen.queryByTestId('orders-returns-error')).not.toBeInTheDocument();
     // pod title caption
     expect(screen.getByText('Morning Yoga Pod')).toBeInTheDocument();
     // order item content (from PodProductOrderItem)

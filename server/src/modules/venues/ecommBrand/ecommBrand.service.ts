@@ -839,17 +839,24 @@ export const ecommBrandService = {
     return consentPub(brand, consentContext(brand, policy));
   },
 
-  /** Partner self-service delete. An approved brand that still sells is deactivated instead, never deleted. */
+  /** Partner self-service delete — only for a brand that never went on sale. An
+   * approved brand may have orders running, so it goes through a deletion
+   * request (warning, notice period, Products review) instead. */
   async deleteMine(userId: string, brandId: string) {
     const brand = await loadOwned(userId, brandId);
-    const productCount = await InventoryProductModel.countDocuments({ brand_id: brand._id, ownership: 'BRAND' });
-    if (brand.status === 'APPROVED' && productCount > 0) {
-      throw new GraphQLError(
-        `This brand still has ${productCount} product(s). Deactivate it instead, or remove the products first.`,
-        { extensions: { code: 'BAD_REQUEST' } }
-      );
+    if (brand.status === 'APPROVED') {
+      throw new GraphQLError('This brand is approved — raise a deletion request instead', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
     }
     return removeBrand(brand, '');
+  },
+
+  /** The deletion request's last step, once every product is gone and every order settled. */
+  async removeForDeletionRequest(brandId: string, note: string) {
+    const brand = await EcommBrandModel.findById(brandId);
+    if (!brand) return false;
+    return removeBrand(brand, note);
   },
 
   /** Products portal delete, with the reason the owner is sent. Same product guard as the partner's. */

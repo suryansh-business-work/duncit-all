@@ -283,10 +283,13 @@ describe('NotificationRow', () => {
   it('drops the chevron on an actionable row, which ends in its own buttons', () => {
     const plain = row();
     const actionable = row({
-      item: item({ notification: { ...item().notification, action_type: 'FOLLOW_REQUEST' } }),
+      item: item({
+        notification: { ...item().notification, action_type: 'FOLLOW_REQUEST', action_ref_id: 'fr-1' },
+      }),
     });
 
-    expect(actionable.container.innerHTML).not.toBe(plain.container.innerHTML);
+    expect(plain.container.querySelector('[data-testid="ChevronRightRoundedIcon"]')).not.toBeNull();
+    expect(actionable.container.querySelector('[data-testid="ChevronRightRoundedIcon"]')).toBeNull();
   });
 
   it('renders a notification with nothing to open', () => {

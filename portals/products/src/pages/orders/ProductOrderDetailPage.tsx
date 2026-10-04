@@ -18,6 +18,7 @@ import OrderSummaryCard from './OrderSummaryCard';
 import OrderFulfilmentPanel from './OrderFulfilmentPanel';
 import OrderTrackingTimeline from './OrderTrackingTimeline';
 import OrderShipmentDialog from './OrderShipmentDialog';
+import OrderCancelRefundCard from './OrderCancelRefundCard';
 import { STATUS_COLOR, humaniseStatus } from './constants';
 import {
   ADVANCE_PRODUCT_ORDER_STATUS,
@@ -153,6 +154,7 @@ export default function ProductOrderDetailPage() {
                 run('Tracking synced', () => refreshTracking({ variables: { id: orderId } }))
               }
             />
+            <OrderCancelRefundCard order={order} />
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>
                 <Typography component="h2"

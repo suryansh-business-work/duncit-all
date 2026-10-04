@@ -201,9 +201,13 @@ describe('usePodTicket', () => {
     await act(async () => {
       await result.current.download('pod1');
     });
-    expect(writeFile).toHaveBeenCalledWith('file:///cache/ticket-and-invoice-TKT-9.pdf', 'TBASE64', {
-      encoding: 'base64',
-    });
+    expect(writeFile).toHaveBeenCalledWith(
+      'file:///cache/ticket-and-invoice-TKT-9.pdf',
+      'TBASE64',
+      {
+        encoding: 'base64',
+      },
+    );
     expect(share).toHaveBeenCalled();
   });
 

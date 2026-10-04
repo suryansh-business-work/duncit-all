@@ -88,9 +88,7 @@ describe('PodResubmitDialog', () => {
     renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={onSaved} />);
     expect(screen.getByTestId('pod-resubmit-dialog')).toBeOnTheScreen();
     // Slot picker asks for a venue first.
-    expect(
-      screen.getByText('Select a venue first to see its available slots.'),
-    ).toBeOnTheScreen();
+    expect(screen.getByText('Select a venue first to see its available slots.')).toBeOnTheScreen();
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
     fireEvent.press(screen.getByTestId('slot-tile-s1'));
@@ -116,9 +114,7 @@ describe('PodResubmitDialog', () => {
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));
     // No venue yet: the venue is what is asked for; the slot picker still waits on it.
     await waitFor(() => expect(screen.getByText('Select a venue')).toBeOnTheScreen());
-    expect(
-      screen.getByText('Select a venue first to see its available slots.'),
-    ).toBeOnTheScreen();
+    expect(screen.getByText('Select a venue first to see its available slots.')).toBeOnTheScreen();
     // A venue but no slot: the calendar now says a slot is missing.
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
     fireEvent.press(screen.getByTestId('pod-resubmit-save'));

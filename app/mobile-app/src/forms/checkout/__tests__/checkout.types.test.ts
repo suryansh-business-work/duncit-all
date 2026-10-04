@@ -38,9 +38,9 @@ describe('checkoutSchema — contact + billing', () => {
     const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
     expect(paths).toEqual(expect.arrayContaining(['line1', 'city', 'state', 'pincode']));
     // Reusing the saved main address lifts the requirement.
-    expect(
-      parse({ same_as_main: true, line1: '', city: '', state: '', pincode: '' }).success,
-    ).toBe(true);
+    expect(parse({ same_as_main: true, line1: '', city: '', state: '', pincode: '' }).success).toBe(
+      true,
+    );
   });
 
   it('requires a valid contact email, and a valid phone only when one is typed', () => {

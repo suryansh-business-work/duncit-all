@@ -82,7 +82,9 @@ describe('HomeFeed', () => {
     expect(screen.getByTestId('home-feed')).toBeOnTheScreen();
     // The club is named twice: on its own rail's header and on the recommendation card.
     expect(screen.getByTestId('club-section-cl-1-header-title')).toHaveTextContent('Runners');
-    expect(within(screen.getByTestId('club-recommendation')).getByText('Runners')).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId('club-recommendation')).getByText('Runners'),
+    ).toBeOnTheScreen();
 
     // See all has its own id (same as the mWeb twin) and opens the club.
     fireEvent.press(screen.getByTestId('club-section-cl-1-see-all'));

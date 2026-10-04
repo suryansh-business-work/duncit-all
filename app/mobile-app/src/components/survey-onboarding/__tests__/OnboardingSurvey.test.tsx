@@ -178,7 +178,7 @@ describe('OnboardingSurvey', () => {
     fireEvent.press(screen.getByTestId('primary-action'));
 
     // Meeting step appears with the slot grid.
-    await screen.findByTestId('slot-2027-01-04T04:30:00.000Z');
+    await screen.findByTestId('slot-tile-2027-01-04T04:30:00.000Z');
 
     // No slot picked -> error.
     fireEvent.press(screen.getByTestId('primary-action'));
@@ -188,7 +188,7 @@ describe('OnboardingSurvey', () => {
     expect(screen.getByTestId('meeting-phone').props.value).toBe('9876543210');
 
     // Slot + notes -> books the slot -> thank-you with the booked time.
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T04:30:00.000Z'));
     fireEvent.changeText(screen.getByTestId('meeting-notes'), 'Afternoon please');
     fireEvent.press(screen.getByTestId('primary-action'));
 

@@ -52,7 +52,10 @@ describe('refundLabel', () => {
   });
 
   it('falls back to the NONE label for an unknown status', () => {
-    expect(refundLabel(rs('WEIRD'))).toBe(REFUND_LABEL.NONE);
+    // REFUND_LABEL holds translation keys; refundLabel resolves them to words.
+    expect(REFUND_LABEL.NONE).toBe('mweb.podHistory.refundNotStarted');
+    expect(refundLabel(rs('WEIRD'))).toBe(refundLabel(rs('NONE')));
+    expect(refundLabel(rs('WEIRD'))).toBe('Not started');
   });
 });
 
@@ -111,19 +114,26 @@ describe('podHistoryGate', () => {
   it('offers a backout and calls it Joined while the pod is still ahead', () => {
     expect(podHistoryGate(onPod(future))).toEqual({
       canBackout: true,
+      coinsRefunded: 0,
       showRefundState: false,
       refundStatus: 'NONE',
       joinedLabelKind: 'JOINED',
     });
   });
 
-  it('offers nothing and calls it Visited once the pod has happened', () => {
+  it('offers nothing once the pod has happened, and still says Joined when never checked in', () => {
     expect(podHistoryGate(onPod(past))).toEqual({
       canBackout: false,
+      coinsRefunded: 0,
       showRefundState: false,
       refundStatus: 'NONE',
-      joinedLabelKind: 'VISITED',
+      joinedLabelKind: 'JOINED',
     });
+  });
+
+  it('calls it Visited only once the member was checked in at a pod that happened', () => {
+    expect(podHistoryGate(onPod(past, { attended: true })).joinedLabelKind).toBe('VISITED');
+    expect(podHistoryGate(onPod(future, { attended: true })).joinedLabelKind).toBe('JOINED');
   });
 
   it('reports the refund state of the request that earned it', () => {

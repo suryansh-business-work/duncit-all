@@ -225,7 +225,10 @@ describe('useOnboardingFlow', () => {
   it('walks the gate even when a meeting was already requested (request upserts)', async () => {
     route({ meeting: { id: 'm1' }, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
-    expect(result.current.phase).toBe('category');
+    // Opens on the intro; with no intro copy authored it moves on to category —
+    // an existing meeting request does not skip the gate.
+    expect(result.current.phase).toBe('intro');
+    await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
       await result.current.chooseCategory(SCOPE, LABELS);
     });

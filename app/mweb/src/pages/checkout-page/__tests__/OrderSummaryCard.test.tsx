@@ -15,7 +15,8 @@ describe('OrderSummaryCard', () => {
     };
     render(<OrderSummaryCard pod={pod} breakup={breakup} />);
     expect(screen.getByText('Sunset Yoga')).toBeInTheDocument();
-    expect(screen.getByText('North Zone')).toBeInTheDocument();
+    // Date/time and zone share one line, joined by a middle dot.
+    expect(screen.getByText(/^\S.* · North Zone$/)).toBeInTheDocument();
     expect(screen.getByText('GST (18%)')).toBeInTheDocument();
     expect(screen.getByText('₹180.00')).toBeInTheDocument();
     expect(screen.getByText('Total payable')).toBeInTheDocument();

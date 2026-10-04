@@ -11,9 +11,11 @@ jest.mock('@/services/cart', () => ({
 }));
 
 const mockNavigate = jest.fn();
-// CartScreen navigates via the useNavigation hook.
+// CartScreen navigates via the useNavigation hook; it is the Cart bottom tab,
+// so the tab scaffold reads the active route as Cart.
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
+  useRoute: () => ({ name: 'Cart' }),
 }));
 // The StackScreen back-bar carries the header cart, which reads the active
 // route (and navigates) through the container ref — parked on Cart here, which

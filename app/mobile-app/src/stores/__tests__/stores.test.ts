@@ -1,3 +1,4 @@
+import { HomePodsDocument, HomeStaticDocument } from '@/graphql/home';
 import { graphqlRequest } from '@/services/graphql.client';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { compressUploadedVideo } from '@/services/video-compression';
@@ -23,12 +24,23 @@ beforeEach(() => {
 describe('home / following / chat stores', () => {
   it('home: fetches, skips when cached, captures errors', async () => {
     useHomeStore.setState({ data: undefined, isLoading: false, error: undefined });
-    mockRequest.mockResolvedValueOnce({ clubs: [], pods: [], categories: [] });
+    // The feed is two requests in parallel — the catalogue half and the pods
+    // half — merged into one object.
+    mockRequest
+      .mockResolvedValueOnce({ clubs: [], categories: [] })
+      .mockResolvedValueOnce({ pods: [] });
     await useHomeStore.getState().fetch();
+    expect(mockRequest).toHaveBeenNthCalledWith(1, HomeStaticDocument, undefined, { auth: true });
+    expect(mockRequest).toHaveBeenNthCalledWith(
+      2,
+      HomePodsDocument,
+      { podFilter: { is_active: true } },
+      { auth: true },
+    );
     expect(useHomeStore.getState().data).toEqual({ clubs: [], pods: [], categories: [] });
 
-    await useHomeStore.getState().fetch(); // cached → no second call
-    expect(mockRequest).toHaveBeenCalledTimes(1);
+    await useHomeStore.getState().fetch(); // cached → no further calls
+    expect(mockRequest).toHaveBeenCalledTimes(2);
 
     useHomeStore.setState({ data: undefined });
     mockRequest.mockRejectedValueOnce(new Error('boom'));
@@ -62,6 +74,8 @@ describe('store fetch guards', () => {
   it('skips while already loading and refetches with force', async () => {
     useExploreStore.setState({
       data: { me: null, clubs: [], pods: [] },
+      // The guard is per city: '' (every city) is the one in flight.
+      locationId: '',
       isLoading: true,
       savedOverride: {},
       likeOverride: {},

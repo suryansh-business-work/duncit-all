@@ -108,8 +108,12 @@ export function isIsoDay(value: string): boolean {
 export function parseIsoDay(value: string): Date | null {
   const parts = ISO_DAY.exec(value);
   if (!parts) return null;
-  const date = new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
-  return Number.isNaN(date.getTime()) ? null : date;
+  const [year, month, day] = [Number(parts[1]), Number(parts[2]), Number(parts[3])];
+  const date = new Date(year, month - 1, day);
+  // `new Date` rolls an impossible day forward ('1995-13-40' → 9 Feb 1996);
+  // only a date that reads back as the same day is that day.
+  const same = date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  return same ? date : null;
 }
 
 /** Render a 'yyyy-MM-dd' calendar day in `pattern`, with NO zone conversion. */

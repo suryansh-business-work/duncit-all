@@ -8,10 +8,9 @@ import { EXPLORE_PODS, TOGGLE_SAVED_POD } from '../queries';
 // Stub the heavy child trees so we exercise ExplorePage's own logic (query wiring,
 // filtering, optimistic save, refetch) without react-slick / video / ad machinery.
 vi.mock('../ExploreHeader', () => ({
-  default: ({ activeCount, resultCount, onOpenFilters, onRefresh }: any) => (
+  default: ({ activeCount, onOpenFilters, onRefresh }: any) => (
     <div data-testid="header">
       <span>active:{activeCount}</span>
-      <span>results:{resultCount}</span>
       <button type="button" onClick={onOpenFilters}>
         open-filters
       </button>
@@ -37,9 +36,10 @@ vi.mock('../ExploreReels', () => ({
 }));
 
 vi.mock('../ExploreFilterSheet', () => ({
-  default: ({ open, categories, filters, setFilters, onClose }: any) => (
+  default: ({ open, categories, filters, setFilters, resultCount, onClose }: any) => (
     <div data-testid="filter-sheet">
       <span>sheet-open:{String(open)}</span>
+      <span>results:{resultCount}</span>
       <span>cats:{categories.map((c: any) => c.name).join(',')}</span>
       <button type="button" onClick={() => setFilters({ ...filters, price: 'PAID' })}>
         set-paid
@@ -60,9 +60,11 @@ const pod = (over: Record<string, unknown> = {}) => ({
   pod_type: 'FREE',
   pod_amount: 0,
   pod_attendees: [],
+  seats_taken: 0,
   no_of_spots: 10,
   zone_name: 'Central',
   reel_url: 'https://cdn.example/reel-1.mp4',
+  reel_has_audio: true,
   club_id: 'club-1',
   club_slug: 'club-one',
   location_id: 'loc-1',
@@ -83,16 +85,16 @@ const exploreData = (over: Record<string, unknown> = {}) => ({
   clubs: [{ id: 'club-1', club_id: 'C1', club_name: 'Club One', is_verified: true, super_category_id: 'super-1', category_id: 'cat-child' }],
   superCategories: [{ id: 'super-1', slug: 'nightlife' }],
   categories: [
-    { id: 'cat-child', name: 'Techno', slug: 'techno', level: 'SUB', parent_id: 'super-1' },
-    { id: 'cat-other', name: 'Comedy', slug: 'comedy', level: 'SUB', parent_id: 'other-super' },
-    { id: 'super-1', name: 'Nightlife', slug: 'nightlife', level: 'SUPER', parent_id: null },
+    { id: 'cat-child', name: 'Techno', slug: 'techno', level: 'SUB', parent_id: 'super-1', is_active: true },
+    { id: 'cat-other', name: 'Comedy', slug: 'comedy', level: 'SUB', parent_id: 'other-super', is_active: true },
+    { id: 'super-1', name: 'Nightlife', slug: 'nightlife', level: 'SUPER', parent_id: null, is_active: true },
   ],
   locations: [{ id: 'loc-1', location_name: 'Mumbai' }],
   ...over,
 });
 
 const exploreMock = (data: Record<string, unknown>) => ({
-  request: { query: EXPLORE_PODS },
+  request: { query: EXPLORE_PODS, variables: { locationId: null } },
   result: { data },
 });
 
@@ -127,7 +129,7 @@ describe('ExplorePage', () => {
   });
 
   it('renders an error alert when the query fails', async () => {
-    setup([{ request: { query: EXPLORE_PODS }, error: new Error('boom') }]);
+    setup([{ request: { query: EXPLORE_PODS, variables: { locationId: null } }, error: new Error('boom') }]);
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('boom'));
   });
 

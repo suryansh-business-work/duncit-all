@@ -187,7 +187,9 @@ describe('ProductCheckoutPage', () => {
         { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', unit_cost: 50 }), qty: 1 },
       ],
     );
-    expect(await screen.findByText('Complete your order')).toBeInTheDocument();
+    // The calm redesign dropped the "Complete your order" heading — the page
+    // header now carries the title.
+    expect(await screen.findByText('Product checkout')).toBeInTheDocument();
     expect(screen.getByText('Payment details')).toBeInTheDocument();
     // Lines from BOTH pods, listed flat with NO pod titles (products and pods
     // are separate entities — the checkout never shows a pod title).
@@ -216,7 +218,7 @@ describe('ProductCheckoutPage', () => {
         { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', unit_cost: 50 }), qty: 1 }, // 50
       ],
     );
-    await screen.findByText('Complete your order');
+    await screen.findByText('Product checkout');
     // Wait for the live quote (shipping 80) so the Pay total includes delivery.
     await screen.findByText('BlueDart');
     fireEvent.change(screen.getByLabelText('Coupon code'), { target: { value: 'SAVE10' } });
@@ -235,11 +237,11 @@ describe('ProductCheckoutPage', () => {
         { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug' }), qty: 1 },
       ],
     );
-    await screen.findByText('Complete your order');
+    await screen.findByText('Product checkout');
     const payButton = await screen.findByRole('button', { name: /^pay/i });
     await waitFor(() => expect(payButton).not.toBeDisabled());
     fireEvent.click(payButton);
-    expect(await screen.findByText('Payment Successful')).toBeInTheDocument();
+    expect(await screen.findByText('Payment successful')).toBeInTheDocument();
     // The success screen routes the buyer to their product orders (not pod history).
     fireEvent.click(screen.getByRole('button', { name: /my orders/i }));
     expect(screen.getByText('ORDERS')).toBeInTheDocument();

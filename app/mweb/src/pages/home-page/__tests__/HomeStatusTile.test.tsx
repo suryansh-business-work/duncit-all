@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { createTheme } from '@mui/material/styles';
 import HomeStatusTile, { STORY_RING_GRADIENT } from '../HomeStatusTile';
 
 describe('HomeStatusTile', () => {
-  it('exports a story ring gradient constant', () => {
-    expect(STORY_RING_GRADIENT).toContain('linear-gradient');
+  it('reads the unseen story ring from the theme accent, so it flips with the mode', () => {
+    const light = createTheme({ palette: { mode: 'light' } });
+    const dark = createTheme({ palette: { mode: 'dark', secondary: { main: '#123456' } } });
+    expect(STORY_RING_GRADIENT(light)).toBe(light.palette.secondary.main);
+    expect(STORY_RING_GRADIENT(dark)).toBe('#123456');
   });
 
   it('renders the label and fires onClick', () => {

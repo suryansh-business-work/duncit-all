@@ -32,9 +32,14 @@ const settingsMock = {
         date_format: 'dd MMM yyyy',
         time_format: 'hh:mm a',
         time_zone: 'Asia/Kolkata',
-        min_birth_year: 1940,
-        max_birth_year: 2012,
+        time_source: null,
+        custom_time: null,
+        custom_time_set_at: null,
+        server_time: null,
+        min_signup_age: 13,
         draft_retention_days: 7,
+        ticket_discount_max_pct: null,
+        happening_nearby_days: null,
       },
     },
   },
@@ -86,7 +91,7 @@ describe('HostDraftsCard', () => {
     // retention days come from settings mock
     await waitFor(() =>
       expect(
-        screen.getByText(/automatically deleted after 7 days/i),
+        screen.getByText(/automatically deleted 7 days after/i),
       ).toBeInTheDocument(),
     );
 
@@ -97,10 +102,10 @@ describe('HostDraftsCard', () => {
     expect(screen.getByText('Sunday Football')).toBeInTheDocument();
     expect(screen.getByText('Untitled pod')).toBeInTheDocument();
 
-    // step label for step=1 => 'Location, Category & Club', display Step 2/4
-    expect(screen.getByText(/Step 2\/4 · Location, Category & Club/)).toBeInTheDocument();
-    // step=0 => Step 1/4 · Pod Basics
-    expect(screen.getByText(/Step 1\/4 · Pod Basics/)).toBeInTheDocument();
+    // The club step comes first: step=0 => Step 1/4 · Location, Category & Club,
+    // step=1 => Step 2/4 · Pod Basics
+    expect(screen.getByText(/Step 2\/4 · Pod Basics/)).toBeInTheDocument();
+    expect(screen.getByText(/Step 1\/4 · Location, Category & Club/)).toBeInTheDocument();
 
     // continue links point at the draft route
     const links = screen.getAllByRole('link', { name: 'Continue' });
@@ -159,7 +164,7 @@ describe('HostDraftsCard', () => {
 
     await screen.findByText('Draft pods');
     await waitFor(() =>
-      expect(screen.getByText(/automatically deleted after 3 days/i)).toBeInTheDocument(),
+      expect(screen.getByText(/automatically deleted 3 days after/i)).toBeInTheDocument(),
     );
   });
 });

@@ -160,7 +160,11 @@ describe('HomeFeaturedPods', () => {
     fireEvent.keyDown(card, { key: ' ' });
     fireEvent.keyDown(card, { key: 'Tab' });
 
-    expect(card.getAttribute('aria-label')).toBe('Sunday Badminton');
+    // One spoken name for the whole card, title first, then when, price, spots.
+    const name = card.getAttribute('aria-label') ?? '';
+    expect(name.split(', ')[0]).toBe('Sunday Badminton');
+    expect(name).toContain('₹250');
+    expect(name).toContain('7 spots left');
   });
 
   it('offers a See-all card when the rail is capped below the real count', () => {

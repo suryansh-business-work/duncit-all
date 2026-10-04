@@ -34,8 +34,8 @@ vi.mock('react-router', async () => {
 vi.mock('../HeaderGreeting', () => ({
   default: (props: any) => (
     <div data-testid="greeting">
-      <span data-testid="greeting-loc">{props.selectedLocationName ?? 'no-loc'}</span>
-      <span data-testid="greeting-zone">{props.selectedZoneName ?? 'no-zone'}</span>
+      <span data-testid="greeting-name">{props.firstName ?? 'no-name'}</span>
+      <span data-testid="greeting-tagline">{props.tagline ?? 'no-tagline'}</span>
       <button type="button" onClick={props.onOpenLocation} disabled={!props.onOpenLocation}>
         open-location
       </button>
@@ -169,7 +169,7 @@ const baseProps = {
   onZoneChange: vi.fn(),
 };
 
-/** The header now carries the cart entry point, so it needs the cart provider. */
+/** Seeds a basket, to prove the header shows no cart however full it is. */
 function seedCart(quantity: number) {
   const line: CartLine = {
     pod_id: 'pod-1',
@@ -208,22 +208,28 @@ describe('AppHeader', () => {
     mockNavigate.mockReset();
     studioModeValue = 'USER';
     localStorage.clear();
+    // `me` (USER_INFO) is only asked for with a session token on the device.
+    localStorage.setItem('token', 'header-test-token');
   });
 
-  it('renders greeting, search, tabs and email-verify alert in USER mode', async () => {
+  it('renders greeting, location pill, tabs and email-verify alert in USER mode on Home', async () => {
     renderHeader();
     await screen.findByTestId('greeting');
-    expect(screen.getByTestId('greeting-loc')).toHaveTextContent('Delhi');
-    expect(screen.getByTestId('greeting-zone')).toHaveTextContent('North');
-    expect(screen.getByTestId('search')).toHaveTextContent('loc-1|North');
+    // The greeting names the signed-in user over the admin tagline.
+    expect(await screen.findByTestId('greeting-name')).toHaveTextContent('Ada');
+    expect(screen.getByTestId('greeting-tagline')).toHaveTextContent('Find your people');
+    // The city and zone live in the location pill on row one.
+    expect(await screen.findByTestId('header-location')).toHaveTextContent('Delhi · North');
+    // Home leads with its own search bar, so the header's search button hides.
+    expect(screen.queryByTestId('search')).toBeNull();
     expect(screen.getByTestId('tabs')).toHaveTextContent('tabs:all');
     // is_email_verified === false -> alert shown
-    expect(await screen.findByText('Please verify your email')).toBeInTheDocument();
+    expect(await screen.findByText('Verify your email')).toBeInTheDocument();
   });
 
   it('navigates to profile verify page when the alert is clicked', async () => {
     renderHeader();
-    const alert = await screen.findByText('Please verify your email');
+    const alert = await screen.findByText('Verify your email');
     fireEvent.click(alert);
     expect(mockNavigate).toHaveBeenCalledWith('/profile?verifyEmail=1');
   });
@@ -314,7 +320,7 @@ describe('AppHeader', () => {
     const survey = await screen.findByTestId('survey-actions');
     expect(survey).toBeInTheDocument();
     expect(screen.queryByTestId('tabs')).toBeNull();
-    expect(screen.queryByText('Please verify your email')).toBeNull();
+    expect(screen.queryByText('Verify your email')).toBeNull();
     fireEvent.click(survey);
     expect(mockLogout).toHaveBeenCalled();
   });
@@ -331,12 +337,12 @@ describe('AppHeader', () => {
     await waitFor(() => expect(props.onSuperCategoryChange).toHaveBeenCalledWith('all'));
   });
 
-  it('carries the cart entry point once the cart has items, and opens the cart', async () => {
+  it('no longer carries a cart entry point even with items — the bottom bar owns the cart', async () => {
     seedCart(3);
     renderHeader();
     await screen.findByTestId('greeting');
-    fireEvent.click(screen.getByRole('button', { name: 'Open cart (3 items)' }));
-    expect(mockNavigate).toHaveBeenCalledWith('/cart');
+    expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
+    expect(screen.queryByText('3')).toBeNull();
   });
 
   it('drops the cart entry point entirely once products are switched off', async () => {
@@ -352,12 +358,12 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
   });
 
-  it('keeps the cart entry point in a studio mode, where the fab used to float', async () => {
+  it('shows no cart entry point in a studio mode either', async () => {
     seedCart(2);
     studioModeValue = 'HOST';
     renderHeader();
     await screen.findByText('Host Studio');
-    expect(screen.getByRole('button', { name: 'Open cart (2 items)' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
   });
 
   it('hides the cart entry point in minimal (survey) mode', async () => {
@@ -371,6 +377,6 @@ describe('AppHeader', () => {
     const verified = { ...headerData, me: { ...headerData.me, is_email_verified: true } };
     renderHeader({}, [...headerMocks(verified), policiesMock]);
     await screen.findByTestId('greeting');
-    expect(screen.queryByText('Please verify your email')).toBeNull();
+    expect(screen.queryByText('Verify your email')).toBeNull();
   });
 });

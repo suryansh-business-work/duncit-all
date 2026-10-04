@@ -44,7 +44,7 @@ export function ClubSection({
           title={club.club_name}
           actionLabel={t('mweb.home.seeAll')}
           onAction={() => onOpenClub(club)}
-          actionTestID={sectionTestID}
+          actionTestID={`${sectionTestID}-see-all`}
           actionAriaLabel={club.club_name}
         />
         {/* Two clubs can share a name; the area under it tells their rails apart. */}

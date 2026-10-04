@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { usePodHistory, usePodHistoryCategories } from '@/hooks/usePodHistory';
@@ -9,8 +9,16 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodHistoryCategories: jest.fn(() => []),
 }));
 const mockNavigate = jest.fn();
+// The focus callback runs once on mount (as on a real first focus) and is kept
+// so a test can bring the screen back to the front.
+let mockFocus: (() => void) | null = null;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
+  useFocusEffect: (cb: () => void) => {
+    mockFocus = cb;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('react').useEffect(() => cb(), [cb]);
+  },
 }));
 
 const mockedUsePodHistory = usePodHistory as jest.Mock;
@@ -37,6 +45,7 @@ const categories = [
 ] as never;
 
 beforeEach(() => {
+  mockFocus = null;
   mockNavigate.mockClear();
   mockedUsePodHistory.mockReset();
   mockedCategories.mockReset().mockReturnValue(categories);
@@ -64,6 +73,16 @@ describe('PodHistoryScreen', () => {
     renderWithProviders(<PodHistoryScreen />);
     expect(screen.getByTestId('pod-history-empty')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-history-filter-button')).toBeNull();
+  });
+
+  it('re-reads the history when the screen comes back to the front, not on first focus', () => {
+    const refetch = jest.fn().mockResolvedValue(undefined);
+    mockedUsePodHistory.mockReturnValue({ uniqueItems: [], isLoading: false, refetch });
+    renderWithProviders(<PodHistoryScreen />);
+    // The hook already fetched on mount — the first focus does not fetch again.
+    expect(refetch).not.toHaveBeenCalled();
+    act(() => mockFocus?.());
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
   it('lists pods and navigates to details on tap', () => {

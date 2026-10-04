@@ -7,11 +7,11 @@ jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 const file = { uri: 'file://a.png', name: 'a.png', type: 'image/png' };
 
+// The single-use upload pass: the file goes to OUR server, which holds the
+// private key and forwards it to ImageKit — no client-side signature.
 const AUTH = {
-  token: 'tok',
-  expire: 123,
-  signature: 'sig',
-  publicKey: 'pub',
+  uploadUrl: 'https://api.test/upload/imagekit',
+  ticket: 'tkt/1',
   urlEndpoint: 'https://ik.io/x',
 };
 
@@ -71,11 +71,17 @@ describe('uploadToImagekitDirect', () => {
     const pending = uploadToImagekitDirect(file, '/support', onProgress);
     const xhr = await flushToSend();
 
-    // Auth is fetched via the authenticated GraphQL mutation.
-    expect(mockRequest).toHaveBeenCalledWith(expect.anything(), {}, { auth: true });
-    // The file bytes go straight to ImageKit's multipart upload endpoint.
+    // The pass is fetched via the authenticated GraphQL mutation, scoped to the
+    // folder and attributed to the app surface.
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { folder: '/support', surface: 'MOBILE' },
+      { auth: true },
+    );
+    // The file bytes are POSTed multipart to the pass's upload URL, carrying the
+    // URL-encoded ticket and file name.
     expect(xhr.method).toBe('POST');
-    expect(xhr.url).toContain('upload.imagekit.io');
+    expect(xhr.url).toBe('https://api.test/upload/imagekit?ticket=tkt%2F1&fileName=a.png');
     expect(xhr.sentBody).toBeInstanceOf(FormData);
 
     xhr.upload.onprogress?.({ lengthComputable: true, loaded: 25, total: 100 });

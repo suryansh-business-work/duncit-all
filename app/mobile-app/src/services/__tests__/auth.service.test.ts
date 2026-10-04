@@ -97,11 +97,37 @@ describe('auth.service mutations', () => {
 
     const result = await login({ email: 'Hello@Duncit.com', password: 'StrongPass123' });
 
+    // Only the chosen channel travels — the default is EMAIL.
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
-      input: { email: 'hello@duncit.com', password: 'StrongPass123' },
+      input: { channel: 'EMAIL', email: 'hello@duncit.com', password: 'StrongPass123' },
     });
     expect(mockedSetToken).toHaveBeenCalledWith('tok-2');
     expect(result).toEqual({ token: 'tok-2', surveyCompleted: true });
+  });
+
+  it('login on the phone channel sends the trimmed number and no email', async () => {
+    mockedRequest.mockResolvedValue({
+      login: { token: 'tok-5', user: { onboarding_survey_completed: false } },
+    } as never);
+
+    const result = await login({
+      channel: 'PHONE',
+      email: 'ignored@duncit.com',
+      phoneExtension: ' +91 ',
+      phoneNumber: ' 9876543210 ',
+      password: 'StrongPass123',
+    });
+
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
+      input: {
+        channel: 'PHONE',
+        phone_extension: '+91',
+        phone_number: '9876543210',
+        password: 'StrongPass123',
+      },
+    });
+    expect(mockedSetToken).toHaveBeenCalledWith('tok-5');
+    expect(result).toEqual({ token: 'tok-5', surveyCompleted: false });
   });
 
   it('signupWithGoogle sends the id_token with the accepted policies and the date of birth', async () => {

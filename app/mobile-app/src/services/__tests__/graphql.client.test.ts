@@ -1,13 +1,14 @@
 import { parse } from 'graphql';
 import { ClientError } from 'graphql-request';
 
+import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useConsentStore } from '@/stores/consent.store';
 import { ApiError } from '@/utils/errors';
 
 const mockRequest = jest.fn();
-const ctorCalls: [string, { headers?: Record<string, string> }][] = [];
+const ctorCalls: [string, { headers?: Record<string, string>; signal?: AbortSignal }][] = [];
 
 jest.mock('graphql-request', () => {
   const actual = jest.requireActual('graphql-request');
@@ -176,7 +177,11 @@ describe('graphqlRequest', () => {
     );
 
     const promise = graphqlRequest(DOC);
-    jest.runOnlyPendingTimers(); // fires the timeout → controller.abort()
+    // The request is sent only after the headers resolve (device id is awaited),
+    // so advance asynchronously: microtasks settle, then the timeout fires.
+    await jest.advanceTimersByTimeAsync(config.requestTimeoutMs);
+    const signal = ctorCalls[0]?.[1].signal;
+    expect(signal?.aborted).toBe(true); // the guard called controller.abort()
     rejectRequest(Object.assign(new Error('aborted'), { name: 'AbortError' }));
 
     await expect(promise).rejects.toThrow(/timed out/i);

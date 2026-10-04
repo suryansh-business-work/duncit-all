@@ -14,7 +14,13 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('@/components/pod-ideas', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text, Pressable } = require('react-native');
+  // The status filter is real: its chips and matching rule are what the screen
+  // narrows "Your submissions" by.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const statusFilter = require('@/components/pod-ideas/IdeaStatusFilter');
   return {
+    IdeaStatusFilter: statusFilter.IdeaStatusFilter,
+    ideaMatchesStatus: statusFilter.ideaMatchesStatus,
     EMPTY_CATEGORY_SCOPE: { super_category_id: '', category_id: '', sub_category_id: '' },
     CategoryCascadeField: ({
       onChange,
@@ -50,6 +56,7 @@ jest.mock('@/components/pod-ideas', () => {
     }) => (
       <View>
         <Text testID="list-count">{`${ideas.length}/${myIdeas.length}`}</Text>
+        <Text testID="my-idea-ids">{myIdeas.map((i) => i.id).join(',')}</Text>
         <Pressable testID="mock-open" onPress={() => onOpen('idea-1')}>
           <Text>open</Text>
         </Pressable>
@@ -174,6 +181,29 @@ describe('PodIdeasScreen', () => {
     // Picking a sub category no idea carries hides them all.
     fireEvent.press(screen.getByTestId('mock-filter-nomatch'));
     expect(screen.getByTestId('list-count')).toHaveTextContent('0/0');
+  });
+
+  it('filters only your submissions by moderation status', () => {
+    api.ideas = [{ ...seededIdea('idea-1'), status: 'APPROVED' }] as never;
+    api.myIdeas = [
+      { ...seededIdea('idea-2'), status: 'APPROVED' },
+      { ...seededIdea('idea-3'), status: 'REJECTED' },
+      // No status yet counts as pending.
+      seededIdea('idea-4'),
+    ] as never;
+    renderWithProviders(<PodIdeasScreen />);
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/3');
+    fireEvent.press(screen.getByTestId('idea-status-REJECTED'));
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/1');
+    expect(screen.getByTestId('my-idea-ids')).toHaveTextContent('idea-3');
+    fireEvent.press(screen.getByTestId('idea-status-PENDING'));
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/1');
+    expect(screen.getByTestId('my-idea-ids')).toHaveTextContent('idea-4');
+    fireEvent.press(screen.getByTestId('idea-status-APPROVED'));
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/1');
+    expect(screen.getByTestId('my-idea-ids')).toHaveTextContent('idea-2');
+    fireEvent.press(screen.getByTestId('idea-status-ALL'));
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/3');
   });
 
   it('updates the search field and likes an idea', () => {

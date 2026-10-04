@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
+  MobileCancelFollowRequestDocument,
   MobileFollowUserDocument,
   MobilePublicHostsDocument,
   MobilePublicVenuesDocument,
@@ -29,7 +30,10 @@ const venuesData = {
 function route(doc: unknown) {
   if (doc === MobilePublicHostsDocument) return Promise.resolve(hostsData);
   if (doc === MobilePublicVenuesDocument) return Promise.resolve(venuesData);
-  return Promise.resolve({ followUser: { user_id: 'me', following_user_ids: [] } });
+  // Each follow mutation answers under its own field with the viewer's lists.
+  const lists = { user_id: 'me', following_user_ids: [], requested_user_ids: [] };
+  if (doc === MobileUnfollowUserDocument) return Promise.resolve({ unfollowUser: lists });
+  return Promise.resolve({ followUser: lists });
 }
 
 beforeEach(() => mockRequest.mockReset().mockImplementation(route));
@@ -72,12 +76,41 @@ describe('useHostsVenues', () => {
       { user_id: 'h2' },
       { auth: true },
     );
+    // Every settled toggle reloads the hosts list so the buttons read the server state.
+    const hostReloads = mockRequest.mock.calls.filter(([doc]) => doc === MobilePublicHostsDocument);
+    expect(hostReloads).toHaveLength(3);
+    expect(result.current.pendingFollow).toBeNull();
 
     mockRequest.mockClear();
     await act(async () => {
       await result.current.toggleFollow('me');
     });
     expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('reads a pending request as Requested and withdraws it on tap', async () => {
+    const requested = { ...hostsData, me: { ...hostsData.me, requested_user_ids: ['h1'] } };
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (doc === MobilePublicHostsDocument) return Promise.resolve(requested);
+      if (doc === MobileCancelFollowRequestDocument) {
+        return Promise.resolve({ cancelFollowRequest: { following_user_ids: ['h2'] } });
+      }
+      return route(doc);
+    });
+    const { result } = renderHook(() => useHostsVenues());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.statusFor('h1')).toBe('REQUESTED');
+    expect(result.current.statusFor('h2')).toBe('FOLLOWING');
+    expect(result.current.statusFor('zz')).toBe('NONE');
+
+    await act(async () => {
+      await result.current.toggleFollow('h1');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileCancelFollowRequestDocument,
+      { user_id: 'h1' },
+      { auth: true },
+    );
   });
 });
 

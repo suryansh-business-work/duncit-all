@@ -1,5 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import {
+  PodAttendeeSeatsDocument,
+  PodDetailsDocument,
+  PodPeopleDocument,
+  PodSpotFillsDocument,
+} from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import {
   useClubDetails,
@@ -15,15 +21,41 @@ jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 beforeEach(() => mockRequest.mockReset());
 
+type PodAnswers = {
+  details: unknown;
+  people?: unknown;
+  fills?: unknown;
+  seats?: unknown;
+};
+
+/** The pod screen sends its spot-fill and seat lookups alongside the pod itself
+ * (not queued behind it), so answers are routed by document, not call order.
+ * An `Error` answer rejects that one request. */
+function routePod(answers: PodAnswers) {
+  const answer = (value: unknown) =>
+    value instanceof Error ? Promise.reject(value) : Promise.resolve(value);
+  mockRequest.mockImplementation((doc: unknown) => {
+    if (doc === PodDetailsDocument) return answer(answers.details);
+    if (doc === PodPeopleDocument) return answer(answers.people ?? { publicUsersByIds: [] });
+    if (doc === PodSpotFillsDocument) return answer(answers.fills ?? { podSpotFills: [] });
+    if (doc === PodAttendeeSeatsDocument) return answer(answers.seats ?? { podAttendeeSeats: [] });
+    return Promise.reject(new Error('unexpected request'));
+  });
+}
+
 describe('useResolvedPodId / useResolvedClubId', () => {
   it('returns the doc id from in-app params (or empty) without a request', () => {
     const inApp = renderHook(() => useResolvedPodId({ podId: 'p1' })).result.current;
     expect(inApp.podId).toBe('p1');
     expect(inApp.resolving).toBe(false);
-    expect(renderHook(() => useResolvedClubId({ clubId: 'c1' })).result.current).toBe('c1');
+    const inAppClub = renderHook(() => useResolvedClubId({ clubId: 'c1' })).result.current;
+    expect(inAppClub).toEqual({ clubId: 'c1', resolving: false });
     expect(renderHook(() => useResolvedPodId({})).result.current.podId).toBe('');
     expect(renderHook(() => useResolvedPodId({ clubSlug: 'x' })).result.current.podId).toBe('');
-    expect(renderHook(() => useResolvedClubId({})).result.current).toBe('');
+    expect(renderHook(() => useResolvedClubId({})).result.current).toEqual({
+      clubId: '',
+      resolving: false,
+    });
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
@@ -36,7 +68,20 @@ describe('useResolvedPodId / useResolvedClubId', () => {
     expect(pod.result.current.resolving).toBe(false);
     mockRequest.mockResolvedValueOnce({ clubBySlug: { id: 'c9' } });
     const club = renderHook(() => useResolvedClubId({ clubSlug: 'jazz' }));
-    await waitFor(() => expect(club.result.current).toBe('c9'));
+    expect(club.result.current.resolving).toBe(true);
+    await waitFor(() => expect(club.result.current.clubId).toBe('c9'));
+    expect(club.result.current.resolving).toBe(false);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('remembers a resolved slug, so reopening the link skips the lookup', async () => {
+    mockRequest.mockResolvedValueOnce({ podBySlugs: { id: 'p7' } });
+    const first = renderHook(() => useResolvedPodId({ clubSlug: 'chess', podSlug: 'blitz' }));
+    await waitFor(() => expect(first.result.current.podId).toBe('p7'));
+
+    const again = renderHook(() => useResolvedPodId({ clubSlug: 'chess', podSlug: 'blitz' }));
+    expect(again.result.current).toEqual({ podId: 'p7', resolving: false });
+    expect(mockRequest).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to empty on a missing match or a failed lookup', async () => {
@@ -54,10 +99,12 @@ describe('useResolvedPodId / useResolvedClubId', () => {
     // Club: a resolved-but-missing match, then a rejected lookup.
     mockRequest.mockResolvedValueOnce({ clubBySlug: null });
     const clubMissing = renderHook(() => useResolvedClubId({ clubSlug: 'w' }));
-    await waitFor(() => expect(clubMissing.result.current).toBe(''));
+    await waitFor(() => expect(clubMissing.result.current.resolving).toBe(false));
+    expect(clubMissing.result.current.clubId).toBe('');
     mockRequest.mockRejectedValueOnce(new Error('down'));
     const clubFailed = renderHook(() => useResolvedClubId({ clubSlug: 'z' }));
-    await waitFor(() => expect(clubFailed.result.current).toBe(''));
+    await waitFor(() => expect(clubFailed.result.current.resolving).toBe(false));
+    expect(clubFailed.result.current.clubId).toBe('');
   });
 
   it('ignores a slug resolve or reject that lands after unmount', async () => {
@@ -83,36 +130,46 @@ describe('useResolvedPodId / useResolvedClubId', () => {
       });
     };
 
+    // Each case uses its own slug: a resolved answer is remembered for the
+    // session, so a repeated slug would skip its lookup.
     await settleAfterUnmount(
-      () => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }),
+      () => useResolvedPodId({ clubSlug: 'late-club', podSlug: 'late-pod' }),
       (c) => c.resolve({ podBySlugs: { id: 'late' } }),
     );
     await settleAfterUnmount(
-      () => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }),
+      () => useResolvedPodId({ clubSlug: 'gone-club', podSlug: 'gone-pod' }),
       (c) => c.reject(new Error('late')),
     );
     await settleAfterUnmount(
-      () => useResolvedClubId({ clubSlug: 'x' }),
-      (c) => c.resolve({ clubBySlug: { id: 'late' } }),
+      () => useResolvedClubId({ clubSlug: 'late-club' }),
+      (c) => c.resolve({ clubBySlug: { id: 'late-c' } }),
     );
     await settleAfterUnmount(
-      () => useResolvedClubId({ clubSlug: 'x' }),
+      () => useResolvedClubId({ clubSlug: 'gone-club' }),
       (c) => c.reject(new Error('late')),
     );
+    expect(mockRequest).toHaveBeenCalledTimes(4);
+
+    // The late answer is still remembered for the next visit — no new lookup.
+    const reopened = renderHook(() =>
+      useResolvedPodId({ clubSlug: 'late-club', podSlug: 'late-pod' }),
+    );
+    expect(reopened.result.current).toEqual({ podId: 'late', resolving: false });
     expect(mockRequest).toHaveBeenCalledTimes(4);
   });
 });
 
 describe('usePodDetails / useClubDetails', () => {
   it('loads the pod, the viewer + the resolved venue/location', async () => {
-    mockRequest
-      .mockResolvedValueOnce({
+    routePod({
+      details: {
         me: { user_id: 'me', profile_photo: 'http://img/me.jpg', saved_pod_ids: ['p1'] },
         pod: { id: 'p1', venue_id: 'v1', location_id: 'l1' },
         publicVenues: [{ id: 'v1', venue_name: 'Hall' }],
         locations: [{ id: 'l1', location_name: 'City' }],
-      })
-      .mockResolvedValueOnce({ podSpotFills: [] });
+      },
+      seats: { podAttendeeSeats: [{ user_id: 'u1', seats: 3 }] },
+    });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.pod?.id).toBe('p1');
@@ -121,47 +178,43 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.viewerPhoto).toBe('http://img/me.jpg');
     expect(result.current.venue?.id).toBe('v1');
     expect(result.current.location?.id).toBe('l1');
+    // One face per person; the seats they hold become a label beside the name.
+    expect(result.current.seatsByUser).toEqual({ u1: 3 });
   });
 
   it('loads hosts + attendees public profiles for the avatar group', async () => {
-    mockRequest
-      .mockResolvedValueOnce({
+    routePod({
+      details: {
         me: null,
         pod: { id: 'p1', pod_hosts_id: ['h1'], pod_attendees: ['h1', 'u1'] },
         publicVenues: [],
         locations: [],
-      })
-      .mockResolvedValueOnce({
-        publicUsersByIds: [{ user_id: 'h1', full_name: 'Host', profile_photo: null }],
-      })
-      .mockResolvedValueOnce({ podSpotFills: [] });
+      },
+      people: { publicUsersByIds: [{ user_id: 'h1', full_name: 'Host', profile_photo: null }] },
+    });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.people).toHaveLength(1);
-    expect(mockRequest).toHaveBeenCalledTimes(3);
-    expect(mockRequest).toHaveBeenNthCalledWith(
-      2,
-      expect.anything(),
+    // Pod, spot fills, seats, then the people the pod names (deduped ids).
+    expect(mockRequest).toHaveBeenCalledTimes(4);
+    expect(mockRequest).toHaveBeenCalledWith(
+      PodPeopleDocument,
       { ids: ['h1', 'u1'] },
       { auth: true },
     );
-    expect(mockRequest).toHaveBeenLastCalledWith(
-      expect.anything(),
-      { podId: 'p1' },
-      { auth: true },
-    );
+    expect(mockRequest).toHaveBeenCalledWith(PodSpotFillsDocument, { podId: 'p1' }, { auth: true });
   });
 
   it('keeps an empty people list when the profile lookup fails', async () => {
-    mockRequest
-      .mockResolvedValueOnce({
+    routePod({
+      details: {
         me: null,
         pod: { id: 'p1', pod_hosts_id: [], pod_attendees: ['u1'] },
         publicVenues: [],
         locations: [],
-      })
-      .mockRejectedValueOnce(new Error('down'))
-      .mockResolvedValueOnce({ podSpotFills: [] });
+      },
+      people: new Error('down'),
+    });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.people).toEqual([]);
@@ -178,19 +231,17 @@ describe('usePodDetails / useClubDetails', () => {
       replacement_user_name: 'Bela',
       filled_at: '2026-07-01T00:00:00.000Z',
     };
-    mockRequest
-      .mockResolvedValueOnce({ me: null, pod: { id: 'p1' }, publicVenues: [], locations: [] })
-      .mockResolvedValueOnce({ podSpotFills: [fill] });
+    const details = { me: null, pod: { id: 'p1' }, publicVenues: [], locations: [] };
+    routePod({ details, fills: { podSpotFills: [fill] } });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.spotFills).toEqual([fill]);
 
-    mockRequest
-      .mockResolvedValueOnce({ me: null, pod: { id: 'p1' }, publicVenues: [], locations: [] })
-      .mockRejectedValueOnce(new Error('down'));
+    routePod({ details, fills: new Error('down'), seats: new Error('down') });
     const failed = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(failed.result.current.isLoading).toBe(false));
     expect(failed.result.current.spotFills).toEqual([]);
+    expect(failed.result.current.seatsByUser).toEqual({});
     expect(failed.result.current.error).toBeUndefined();
   });
 

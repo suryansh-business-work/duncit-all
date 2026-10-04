@@ -51,7 +51,7 @@ describe('ClubMembersSection', () => {
 
     renderSection(ids, mocks);
 
-    expect(screen.getByText('Pod Members')).toBeInTheDocument();
+    expect(screen.getByText('Club Members')).toBeInTheDocument();
 
     // Fallback initial for the member with no name/photo.
     await waitFor(() => expect(screen.getByText('?')).toBeInTheDocument());
@@ -59,7 +59,7 @@ describe('ClubMembersSection', () => {
     // Dialog starts closed.
     expect(screen.queryByText(/Attendees/)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'View all pod members' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all club members' }));
 
     await waitFor(() => expect(screen.getByText('Attendees (2)')).toBeInTheDocument());
     expect(screen.getByText('Asha Kumar')).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('ClubMembersSection', () => {
 
     renderSection(ids, mocks);
 
-    fireEvent.click(screen.getByRole('button', { name: 'View all pod members' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all club members' }));
     await waitFor(() => expect(screen.getByText('Attendees (1)')).toBeInTheDocument());
     // No name resolved -> default label.
     expect(screen.getByText('Attendee')).toBeInTheDocument();

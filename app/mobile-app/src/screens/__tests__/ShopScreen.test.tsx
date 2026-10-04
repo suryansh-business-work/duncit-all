@@ -17,17 +17,6 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
 }));
-// The header cart in the StackScreen back-bar routes through the container ref.
-const mockRefNavigate = jest.fn();
-jest.mock('@/navigation/navigationRef', () => ({
-  navigationRef: {
-    isReady: () => true,
-    getCurrentRoute: () => ({ name: 'Shop' }),
-    navigate: (name: string) => mockRefNavigate(name),
-    addListener: () => () => undefined,
-  },
-}));
-
 const mockRequest = graphqlRequest as jest.Mock;
 
 const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
@@ -50,10 +39,10 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
 beforeEach(() => {
   jest.useFakeTimers();
   mockNavigate.mockClear();
-  mockRefNavigate.mockClear();
   mockRequest.mockReset();
   useCartStore.setState({ lines: [], hydrated: true });
-  // The header cart button rides on the product system flag.
+  // The product system flag is on, so the cart is live — yet the shop's
+  // back-bar still carries no cart (it is a bottom-bar tab now).
   useFeatureFlagsStore.setState({
     data: { publicFeatureFlags: [{ key: 'is_product_visible', enabled: true }] },
   });
@@ -189,6 +178,8 @@ describe('ShopScreen', () => {
     await waitFor(() =>
       expect(screen.getByTestId('shop-quick-add-notice')).toHaveTextContent(
         'No pod stocks this product right now.',
+        // The card's leading icon glyph is part of its text content.
+        { exact: false },
       ),
     );
     expect(useCartStore.getState().lines).toHaveLength(0);
@@ -207,7 +198,7 @@ describe('ShopScreen', () => {
     expect(screen.queryByTestId('shop-super-all')).toBeNull();
   });
 
-  it('opens the cart from the header cart button', async () => {
+  it('shows no header cart even with items in the cart — the cart is a bottom-bar tab', async () => {
     useCartStore.setState({
       lines: [
         {
@@ -229,9 +220,9 @@ describe('ShopScreen', () => {
     mockRequest.mockResolvedValue({ availablePodProducts: [product()] });
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
-    expect(screen.getByTestId('header-cart-count')).toHaveTextContent('2');
-    fireEvent.press(screen.getByTestId('header-cart'));
-    expect(mockRefNavigate).toHaveBeenCalledWith('Cart');
+    expect(screen.getByTestId('shop-screen-title')).toBeOnTheScreen();
+    expect(screen.queryByTestId('header-cart')).toBeNull();
+    expect(screen.queryByTestId('header-cart-count')).toBeNull();
   });
 
   it('shows no cart entry point on the shop while the cart is empty', async () => {

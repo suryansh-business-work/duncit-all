@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
 import FeedbackPage from '../FeedbackPage';
 
@@ -14,14 +15,29 @@ vi.mock('react-router', async (io) => {
 
 const SUBMIT = gql(SUBMIT_APP_FEEDBACK_SDL);
 const MESSAGE = 'The app crashes when I open it';
-const input = buildAppFeedbackInput({ category: 'Bug', message: MESSAGE, platform: 'web' });
+// The page also sends what it knows about the browser (user agent, screen size,
+// the screen the report came from) so support can reproduce it — read here from
+// the same jsdom globals so the expectation holds on any machine.
+const input = buildAppFeedbackInput({
+  category: 'Bug',
+  message: MESSAGE,
+  platform: 'web',
+  media_urls: [],
+  device_os: globalThis.navigator.userAgent,
+  device_model: `${globalThis.screen.width}x${globalThis.screen.height}`,
+  source_screen: '/',
+});
+// The attachment picker reads breakpoints off the theme the app root provides.
+const testTheme = createTheme();
 
 const renderPage = (mocks: readonly unknown[]) =>
   render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
-      <MemoryRouter>
-        <FeedbackPage />
-      </MemoryRouter>
+      <ThemeProvider theme={testTheme}>
+        <MemoryRouter>
+          <FeedbackPage />
+        </MemoryRouter>
+      </ThemeProvider>
     </MockedProvider>,
   );
 

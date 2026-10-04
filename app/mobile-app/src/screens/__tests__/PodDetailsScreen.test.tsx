@@ -2,11 +2,21 @@ import { Share } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
+import { JoinFreePodDocument } from '@/graphql/details';
 import { usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
+import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
+
+// The network is offline by default (a share falls back to the plain pod
+// link); a test that needs a mutation to succeed resolves it per document.
+jest.mock('@/services/graphql.client', () => ({
+  ...jest.requireActual('@/services/graphql.client'),
+  graphqlRequest: jest.fn(),
+}));
+const mockGraphql = graphqlRequest as jest.Mock;
 
 jest.mock('@/services/cart', () => ({
   ...jest.requireActual('@/services/cart'),
@@ -122,6 +132,8 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedPod = usePodDetails as jest.Mock;
+const mockedResolvedPodId = useResolvedPodId as jest.Mock;
+const resolvedPodIdImpl = mockedResolvedPodId.getMockImplementation();
 
 const pod = {
   id: 'p1',
@@ -181,6 +193,9 @@ beforeEach(() => {
   mockCancelBackout.mockClear();
   mockCancelBackout.mockResolvedValue(undefined);
   mockAds = [];
+  mockedResolvedPodId.mockImplementation(resolvedPodIdImpl);
+  mockGraphql.mockReset();
+  mockGraphql.mockRejectedValue(new Error('offline'));
   mockFeatureFlag.mockReturnValue(true);
   mockSaved = false;
   mockLiked = false;
@@ -204,7 +219,8 @@ describe('PodDetailsScreen', () => {
   });
 
   it('shows the loader while a shared slug link is still resolving', () => {
-    (useResolvedPodId as jest.Mock).mockReturnValueOnce({ podId: '', resolving: true });
+    // Still resolving on every render, not just the first (the screen re-renders on mount).
+    mockedResolvedPodId.mockReturnValue({ podId: '', resolving: true });
     mockedPod.mockReturnValue({
       pod: null,
       savedInitially: false,
@@ -304,7 +320,9 @@ describe('PodDetailsScreen', () => {
     renderWithProviders(<PodDetailsScreen />);
     fireEvent.press(screen.getByTestId('pod-backout'));
     fireEvent.press(screen.getByTestId('backout-confirm'));
-    await waitFor(() => expect(mockBackout).toHaveBeenCalledWith('p1'));
+    // The dialog releases the member's one seat; a refusal still closes it.
+    await waitFor(() => expect(mockBackout).toHaveBeenCalledWith('p1', 1));
+    await waitFor(() => expect(screen.queryByTestId('backout-confirm')).toBeNull());
   });
 
   it('renders the overview, hides the empty pod shop, social bar and goes back', () => {
@@ -359,6 +377,9 @@ describe('PodDetailsScreen', () => {
       ...podData,
       pod: {
         ...podData.pod,
+        // A paid pod — its membership is bought through Checkout.
+        pod_type: 'PAID',
+        pod_amount: 500,
         products_enabled: true,
         product_requests: [
           {
@@ -380,7 +401,7 @@ describe('PodDetailsScreen', () => {
     // checkout), NOT mixed into the pod-membership payment.
     expect(useCartStore.getState().lines.some((l) => l.product_id === 'pr1')).toBe(true);
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', seats: 1 });
   });
 
   it('adds a picked variant line to the cart from the product detail sheet', () => {
@@ -480,12 +501,24 @@ describe('PodDetailsScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'u1' });
   });
 
-  it('books a (free) pod via the footer CTA', () => {
-    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+  it('joins a free pod outright from the footer CTA, without checkout', async () => {
+    mockGraphql.mockImplementation((doc: unknown) =>
+      doc === JoinFreePodDocument
+        ? Promise.resolve({ joinFreePod: { id: 'p1' } })
+        : Promise.reject(new Error('offline')),
+    );
+    const refetch = jest.fn().mockResolvedValue(undefined);
+    mockedPod.mockReturnValue({ ...podData, refetch, savedInitially: false, isLoading: false });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
+    expect(mockGraphql).toHaveBeenCalledWith(
+      JoinFreePodDocument,
+      { podId: 'p1', referral: null, seats: 1 },
+      { auth: true },
+    );
+    expect(mockNavigate).not.toHaveBeenCalledWith('Checkout', expect.anything());
   });
 
   it('sends the pod host to Host Studio instead of booking their own pod', () => {
@@ -515,7 +548,7 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-backout'));
     fireEvent.press(screen.getByTestId('backout-confirm'));
     await screen.findByTestId('backout-dialog');
-    expect(mockBackout).toHaveBeenCalledWith('p1');
+    expect(mockBackout).toHaveBeenCalledWith('p1', 1);
   });
 
   it('shows the refund estimate inside the backout dialog for a paid member', () => {
@@ -580,12 +613,17 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByTestId('pod-details-screen')).toBeOnTheScreen();
   });
 
-  it('shares the pod', () => {
+  it('shares the pod with the plain pod link when a tracked one cannot be minted', async () => {
     const spy = jest.spyOn(Share, 'share').mockResolvedValue({} as never);
     mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
     renderWithProviders(<PodDetailsScreen />);
     fireEvent.press(screen.getByTestId('pod-share'));
-    expect(spy).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(spy).toHaveBeenCalledWith({
+        message: expect.stringContaining('/club/s/pod/pod-1'),
+        title: 'Sunset Jam',
+      }),
+    );
     spy.mockRestore();
   });
 

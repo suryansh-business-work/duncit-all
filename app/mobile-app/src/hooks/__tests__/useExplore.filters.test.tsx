@@ -96,11 +96,13 @@ describe('useExplore filtering', () => {
     expect(result.current.pods.map((p) => p.id)).toEqual(['p1', 'p3']);
   });
 
-  it('drops located pods outside the selected city but keeps virtual pods', () => {
+  it('asks the server for the selected city and does not re-filter its reels', () => {
     mockedLoc.mockReturnValue({ selectedId: 'l1' });
     const { result } = renderHook(() => useExplore());
-    // p1 matches the city, p2 is a different city (dropped), p3 is virtual (kept).
-    expect(result.current.pods.map((p) => p.id)).toEqual(['p1', 'p3']);
+    // The city is a server filter: the feed is fetched for l1 ...
+    expect(fetch).toHaveBeenCalledWith('l1');
+    // ... and the reels the server returned are kept as-is (only reel-less p4 drops).
+    expect(result.current.pods.map((p) => p.id)).toEqual(['p1', 'p2', 'p3']);
   });
 
   it('exposes the viewer id and a comment count merged with the delta', () => {
@@ -112,9 +114,10 @@ describe('useExplore filtering', () => {
     expect(result.current.commentCountFor(p3)).toBe(0); // no delta
   });
 
-  it('forwards a forced refetch', () => {
+  it('forwards a forced refetch for the selected city', () => {
+    mockedLoc.mockReturnValue({ selectedId: 'l1' });
     const { result } = renderHook(() => useExplore());
     result.current.refetch();
-    expect(fetch).toHaveBeenCalledWith(true);
+    expect(fetch).toHaveBeenLastCalledWith('l1', true);
   });
 });

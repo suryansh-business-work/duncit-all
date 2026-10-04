@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PodIdeasPage from '../PodIdeasPage';
 import {
@@ -90,7 +91,9 @@ function baseMocks({
 function renderPage(mocks: MockedResponse[]) {
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
-      <PodIdeasPage />
+      <MemoryRouter>
+        <PodIdeasPage />
+      </MemoryRouter>
     </MockedProvider>,
   );
 }

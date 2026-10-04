@@ -7,7 +7,7 @@ vi.mock('lottie-react', () => ({ default: () => null }));
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import CheckoutPage from '../CheckoutPage';
 import { CartProvider } from '../../../components/cart/CartContext';
 import {
@@ -120,7 +120,7 @@ function renderCheckout(mocks: MockedResponse[], path = `/checkout/${POD_ID}`) {
 describe('CheckoutPage', () => {
   it('renders the empty state when there is no pod and no amount', async () => {
     renderCheckout([financeMock(), meMock(), couponsMock(null)], '/checkout');
-    expect(await screen.findByText('Nothing to checkout.')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing to checkout')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back to home/i }));
     expect(screen.getByText('HOME')).toBeInTheDocument();
   });
@@ -135,7 +135,7 @@ describe('CheckoutPage', () => {
     // Before the queries resolve the skeleton is shown.
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
 
-    expect(await screen.findByText('Confirm your spot')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Checkout' })).toBeInTheDocument();
     expect(screen.getByText('Payment details')).toBeInTheDocument();
     expect(screen.getByText('Sunset Jam')).toBeInTheDocument();
     // Gateway badge (dummy_mode on, razorpay off).
@@ -165,10 +165,10 @@ describe('CheckoutPage', () => {
 
   it('runs the back button without crashing', async () => {
     renderCheckout([financeMock(), meMock(), podMock(), couponsMock(POD_ID)]);
-    await screen.findByText('Confirm your spot');
+    await screen.findByRole('heading', { level: 1, name: 'Checkout' });
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
     // Single history entry: still on the checkout screen.
-    expect(screen.getByText('Confirm your spot')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Checkout' })).toBeInTheDocument();
   });
 
   it('applies a valid coupon and shows the applied state', async () => {
@@ -196,7 +196,7 @@ describe('CheckoutPage', () => {
       couponsMock(POD_ID),
       previewMock,
     ]);
-    await screen.findByText('Confirm your spot');
+    await screen.findByRole('heading', { level: 1, name: 'Checkout' });
     const input = screen.getByLabelText('Coupon code');
     fireEvent.change(input, { target: { value: 'save10' } });
     fireEvent.click(screen.getByRole('button', { name: /^apply$/i }));
@@ -213,6 +213,8 @@ describe('CheckoutPage', () => {
             payment_id: 'PAY-123',
             invoice_no: 'INV-1',
             total: 1000,
+            ticket_discount_amount: 0,
+            ticket_discount_pct: 0,
             currency_symbol: '₹',
             status: 'SUCCESS',
             paid_at: '2026-08-01T10:05:00.000Z',
@@ -228,11 +230,16 @@ describe('CheckoutPage', () => {
       couponsMock(POD_ID),
       checkoutMock,
     ]);
-    await screen.findByText('Confirm your spot');
+    await screen.findByRole('heading', { level: 1, name: 'Checkout' });
     // Prefill from `me` makes the form valid; wait for the Pay button to be enabled.
     const payButton = await screen.findByRole('button', { name: /^pay/i });
     await waitFor(() => expect(payButton).not.toBeDisabled());
     fireEvent.click(payButton);
-    expect(await screen.findByText('Payment Successful')).toBeInTheDocument();
+    // The confirmation's two-tone heading: the ink lead, then the muted beat.
+    const success = await screen.findByTestId('checkout-success');
+    expect(within(success).getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Payment successfulYou are in',
+    );
+    expect(screen.queryByTestId('checkout-screen')).not.toBeInTheDocument();
   });
 });

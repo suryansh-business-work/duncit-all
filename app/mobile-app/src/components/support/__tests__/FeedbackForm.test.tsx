@@ -9,7 +9,12 @@ describe('FeedbackForm', () => {
     renderWithProviders(<FeedbackForm onSubmit={onSubmit} />);
     fireEvent.changeText(screen.getByTestId('feedback-message'), '  the app keeps crashing  ');
     fireEvent.press(screen.getByTestId('feedback-submit'));
-    expect(onSubmit).toHaveBeenCalledWith({ category: 'Bug', message: 'the app keeps crashing' });
+    // No attachments picked, so the media list goes up empty.
+    expect(onSubmit).toHaveBeenCalledWith({
+      category: 'Bug',
+      message: 'the app keeps crashing',
+      media_urls: [],
+    });
   });
 
   it('blocks a too-short message and shows the hint error', () => {
@@ -30,6 +35,7 @@ describe('FeedbackForm', () => {
     expect(onSubmit).toHaveBeenCalledWith({
       category: 'Idea',
       message: 'please add dark mode support',
+      media_urls: [],
     });
   });
 

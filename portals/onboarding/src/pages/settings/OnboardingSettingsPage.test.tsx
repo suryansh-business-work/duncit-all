@@ -38,21 +38,36 @@ const saved: OnboardingIntroSettingsValues = {
   venue_intro_html: '',
   ecomm_intro_html: '',
   club_admin_intro_html: '<p>Run a club</p>',
+  social_handles: {
+    x_url: 'https://x.com/duncit',
+    instagram_url: 'https://instagram.com/duncit',
+    youtube_url: '',
+    facebook_url: '',
+    website_url: 'https://duncit.com',
+  },
 };
 const edited: OnboardingIntroSettingsValues = { ...saved, venue_intro_html: '<p>List your venue</p>' };
+
+// Server shape: the nested handles object carries its own typename, which the
+// form must not send back in the mutation input.
+const asIntro = (values: OnboardingIntroSettingsValues) => ({
+  __typename: 'OnboardingIntro',
+  ...values,
+  social_handles: { __typename: 'OnboardingSocialHandles', ...values.social_handles },
+});
 
 const introMock = (opts: { failWith?: string } = {}): MockedResponse => ({
   request: { query: ONBOARDING_INTRO_SETTINGS },
   ...(opts.failWith
     ? { result: { errors: [new GraphQLError(opts.failWith)] } }
-    : { result: { data: { onboardingIntro: { __typename: 'OnboardingIntro', ...saved } } } }),
+    : { result: { data: { onboardingIntro: asIntro(saved) } } }),
 });
 
 const updateMock = (opts: { failWith?: string; delay?: number } = {}): MockedResponse => ({
   request: { query: UPDATE_ONBOARDING_INTRO_SETTINGS, variables: { input: edited } },
   ...(opts.failWith
     ? { result: { errors: [new GraphQLError(opts.failWith)] } }
-    : { result: { data: { updateOnboardingIntro: { __typename: 'OnboardingIntro', ...edited } } } }),
+    : { result: { data: { updateOnboardingIntro: asIntro(edited) } } }),
   ...(opts.delay ? { delay: opts.delay } : {}),
 });
 
@@ -78,6 +93,7 @@ describe('OnboardingSettingsPage', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(await screen.findByLabelText('Host intro')).toHaveValue('<p>Host with Duncit</p>');
     expect(screen.getByLabelText('Club Admin intro')).toHaveValue('<p>Run a club</p>');
+    expect(screen.getByRole('textbox', { name: 'X' })).toHaveValue('https://x.com/duncit');
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
 
     await editVenueIntro();

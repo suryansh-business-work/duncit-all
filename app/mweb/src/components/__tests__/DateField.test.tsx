@@ -39,20 +39,26 @@ function Harness({
   );
 }
 
+/** MUI X v8 renders an accessible sectioned field: a labelled `group` of
+ * spinbuttons the person edits, plus a hidden input that carries the value. */
+const field = () => screen.getByRole('group', { name: /event date/i });
+const valueInput = () => screen.getByTestId('date-field-input');
+
 describe('DateField', () => {
   it('renders the labelled picker with an empty value', () => {
     render(<Harness />);
-    expect(screen.getByLabelText(/event date/i)).toHaveValue('');
+    expect(field()).toBeInTheDocument();
+    expect(valueInput()).toHaveValue('');
   });
 
   it('seeds the input from an existing ISO value', () => {
     render(<Harness initialValue="2024-03-15" />);
-    expect(screen.getByLabelText(/event date/i)).toHaveValue('03/15/2024');
+    expect(valueInput()).toHaveValue('03/15/2024');
   });
 
   it('ignores an invalid ISO value (treats it as empty)', () => {
     render(<Harness initialValue="not-a-date" />);
-    expect(screen.getByLabelText(/event date/i)).toHaveValue('');
+    expect(valueInput()).toHaveValue('');
   });
 
   it('emits a YYYY-MM-DD string when a day is picked from the calendar', () => {
@@ -75,12 +81,14 @@ describe('DateField', () => {
       />,
     );
     expect(screen.getByText('Date is required')).toBeInTheDocument();
-    expect(screen.getByLabelText(/event date/i)).toBeInvalid();
+    expect(field()).toHaveAttribute('aria-invalid', 'true');
+    expect(valueInput()).toBeRequired();
   });
 
   it('respects the disabled prop', () => {
     render(<Harness disabled />);
-    expect(screen.getByLabelText(/event date/i)).toBeDisabled();
+    expect(valueInput()).toBeDisabled();
+    expect(screen.getByRole('button', { name: /choose date/i })).toBeDisabled();
   });
 
   it('honours minDate / maxDate bounds when picking', () => {
@@ -102,8 +110,10 @@ describe('DateField', () => {
   it('fires onBlur when the input loses focus', () => {
     const onBlur = vi.fn();
     render(<Harness onBlur={onBlur} />);
-    const input = screen.getByLabelText(/event date/i);
-    fireEvent.blur(input);
+    // The editable surface is the sections container inside the group.
+    const sections = field().querySelector<HTMLElement>('[tabindex="0"]');
+    expect(sections).not.toBeNull();
+    fireEvent.blur(sections as HTMLElement);
     expect(onBlur).toHaveBeenCalled();
   });
 });

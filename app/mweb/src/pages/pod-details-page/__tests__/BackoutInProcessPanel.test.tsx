@@ -4,17 +4,19 @@ import { describe, expect, it, vi } from 'vitest';
 import BackoutInProcessPanel from '../BackoutInProcessPanel';
 
 describe('BackoutInProcessPanel', () => {
-  it('renders the confirmed-replacement info alert when canCancel is false', () => {
+  it('renders the locked notice and no Keep My Spot button when canCancel is false', () => {
     render(<BackoutInProcessPanel canCancel={false} busy={false} onKeepSpot={vi.fn()} />);
-    expect(screen.getByRole('alert')).toHaveTextContent(/replacement has been confirmed/i);
+    expect(screen.getByTestId('pod-backout-locked')).toHaveTextContent(/replacement has been confirmed/i);
+    expect(screen.queryByTestId('pod-backout-in-process-panel')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Keep My Spot' })).not.toBeInTheDocument();
   });
 
-  it('renders the warning alert, button and caption when canCancel is true', () => {
+  it('renders the in-process state, searching caption and button when canCancel is true', () => {
     render(<BackoutInProcessPanel canCancel busy={false} onKeepSpot={vi.fn()} />);
-    expect(screen.getByRole('alert')).toHaveTextContent(/Backout in process/i);
+    expect(screen.getByTestId('pod-backout-in-process')).toHaveTextContent('Backout in process');
+    expect(screen.getByText('Searching for a replacement')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Keep My Spot' })).toBeEnabled();
-    expect(screen.getByText(/Changed your mind\?/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('pod-backout-locked')).not.toBeInTheDocument();
   });
 
   it('fires onKeepSpot when the button is clicked', () => {

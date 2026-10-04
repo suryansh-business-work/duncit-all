@@ -183,14 +183,17 @@ describe('CheckoutScreen', () => {
     );
   });
 
-  it('surfaces a thrown payment error', async () => {
+  it('surfaces a thrown payment error as a reportable server issue above the form', async () => {
     pay.mockRejectedValueOnce(new Error('gateway down'));
     renderWithProviders(<CheckoutScreen />);
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));
     await waitFor(() =>
-      expect(screen.getByTestId('checkout-error')).toHaveTextContent('gateway down'),
+      expect(screen.getByTestId('issue-notice')).toHaveTextContent(/gateway down/),
     );
+    // The issue is said once, by the notice — not repeated as a form error.
+    expect(screen.queryByTestId('checkout-error')).toBeNull();
+    expect(screen.queryByTestId('checkout-success')).toBeNull();
   });
 
   it('errors when live mode is on but Razorpay is not configured', async () => {
@@ -237,7 +240,7 @@ describe('CheckoutScreen', () => {
     await waitFor(() => expect(screen.getByTestId('checkout-success')).toBeOnTheScreen());
   });
 
-  it('shows a cancellation message when the Razorpay sheet is dismissed', async () => {
+  it('shows the cancelled payment dialog when the Razorpay sheet is dismissed', async () => {
     createRazorpayOrder.mockResolvedValue(order);
     mockedCheckout.mockReturnValue(
       baseHook({ finance: { ...finance, dummy_mode: false, razorpay_enabled: true } }),
@@ -247,9 +250,13 @@ describe('CheckoutScreen', () => {
     fireEvent.press(screen.getByTestId('checkout-submit'));
     const frame = await screen.findByTestId('razorpay-webview-frame');
     fireEvent(frame, 'message', { nativeEvent: { data: JSON.stringify({ type: 'dismiss' }) } });
-    await waitFor(() =>
-      expect(screen.getByTestId('checkout-error')).toHaveTextContent(/cancelled/i),
-    );
+    const dialog = await screen.findByTestId('payment-failure-dialog');
+    expect(dialog).toHaveTextContent(/cancelled/i);
+    // A hand-closed sheet risks no money, so no support ticket is promised.
+    expect(screen.queryByTestId('payment-ticket-no')).toBeNull();
+    expect(verifyRazorpay).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('payment-failure-retry'));
+    await waitFor(() => expect(screen.queryByTestId('payment-failure-dialog')).toBeNull());
   });
 
   it('applies a coupon and pays the discounted total via the dummy gateway', async () => {

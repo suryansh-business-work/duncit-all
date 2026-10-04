@@ -85,7 +85,10 @@ describe('LoginForm', () => {
     return { onSubmit, ...wrap(<LoginForm onSubmit={onSubmit} {...over} />) };
   };
 
-  const fields = (container: HTMLElement) => [...container.querySelectorAll<HTMLInputElement>('input')];
+  // Scoped to the form: the channel tabs above it carry their own search box.
+  const fields = (container: HTMLElement) => [
+    ...(container.querySelector('form')?.querySelectorAll<HTMLInputElement>('input') ?? []),
+  ];
 
   it('asks for an email and a password', () => {
     expect(fields(form().container)).toHaveLength(2);

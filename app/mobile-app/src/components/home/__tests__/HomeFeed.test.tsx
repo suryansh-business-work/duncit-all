@@ -84,10 +84,8 @@ describe('HomeFeed', () => {
     expect(screen.getByTestId('club-section-cl-1-header-title')).toHaveTextContent('Runners');
     expect(within(screen.getByTestId('club-recommendation')).getByText('Runners')).toBeOnTheScreen();
 
-    // The rail and its header's See all share this test id; press the See all.
-    fireEvent.press(
-      within(screen.getByTestId('club-section-cl-1-header')).getByTestId('club-section-cl-1'),
-    );
+    // See all has its own id (same as the mWeb twin) and opens the club.
+    fireEvent.press(screen.getByTestId('club-section-cl-1-see-all'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
 
     fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]!);

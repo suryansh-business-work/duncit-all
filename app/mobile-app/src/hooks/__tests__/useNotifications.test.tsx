@@ -9,6 +9,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { displayLocalNotification } from '@/services/local-notifications';
 import { useNotifications } from '@/hooks/useNotifications';
+import { resetNotifications } from '@/stores/notifications.store';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 jest.mock('@/services/local-notifications', () => ({ displayLocalNotification: jest.fn() }));
@@ -35,6 +36,8 @@ function routeRequest(doc: unknown) {
 beforeEach(() => {
   mockRequest.mockReset().mockImplementation(routeRequest);
   mockDisplay.mockReset().mockResolvedValue(true);
+  // The feed is one app-wide store; start every test from a fresh session.
+  resetNotifications();
 });
 
 describe('useNotifications', () => {
@@ -222,9 +225,14 @@ describe('useNotifications → device notifications (Notifee)', () => {
 describe('useNotifications → real-time refresh (BUG-A)', () => {
   let appStateCb: (state: AppStateStatus) => void;
   let removeListener: jest.Mock;
+  let originalState: PropertyDescriptor | undefined;
 
   beforeEach(() => {
     jest.useFakeTimers();
+    // The poll only refreshes a foregrounded app. RN's jest preset stubs
+    // `currentState` as a function, so pin it to the real string value here.
+    originalState = Object.getOwnPropertyDescriptor(AppState, 'currentState');
+    Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
     removeListener = jest.fn();
     jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, handler) => {
       appStateCb = handler as (state: AppStateStatus) => void;
@@ -236,6 +244,7 @@ describe('useNotifications → real-time refresh (BUG-A)', () => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
     (AppState.addEventListener as jest.Mock).mockRestore();
+    if (originalState) Object.defineProperty(AppState, 'currentState', originalState);
   });
 
   it('polls the feed on an interval and refetches when the app foregrounds', async () => {

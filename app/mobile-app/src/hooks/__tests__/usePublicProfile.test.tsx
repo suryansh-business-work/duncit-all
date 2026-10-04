@@ -65,7 +65,7 @@ describe('usePublicProfile', () => {
     expect(result.current.isOwner).toBe(false);
     expect(result.current.canView).toBe(true);
     expect(result.current.posts).toHaveLength(1);
-    expect(result.current.stories).toEqual(['s.jpg']);
+    expect(result.current.stories).toEqual([{ id: 'st1', image_url: 's.jpg' }]);
   });
 
   it('reveals a private account once followed and tolerates a posts failure', async () => {

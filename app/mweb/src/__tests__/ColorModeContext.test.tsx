@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ColorModeProvider, useColorMode } from '../ColorModeContext';
@@ -24,10 +25,14 @@ function Consumer() {
 }
 
 const renderProvider = () =>
+  // The provider reads the branding theme tokens over Apollo; with no mock it
+  // keeps the bundled palette, which is all these mode tests need.
   render(
-    <ColorModeProvider>
-      <Consumer />
-    </ColorModeProvider>
+    <MockedProvider mocks={[]}>
+      <ColorModeProvider>
+        <Consumer />
+      </ColorModeProvider>
+    </MockedProvider>
   );
 
 beforeEach(() => {

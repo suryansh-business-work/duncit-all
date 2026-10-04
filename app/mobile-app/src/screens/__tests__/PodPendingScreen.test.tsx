@@ -68,7 +68,10 @@ describe('PodPendingScreen', () => {
   it('falls back to the error state when the view is missing without an error', () => {
     mockedUse.mockReturnValue({ view: null, isLoading: false, error: undefined });
     renderWithProviders(<PodPendingScreen />);
-    expect(screen.getByTestId('pod-pending-error')).toHaveTextContent('Something went wrong.');
+    // The pod-specific load-failed copy, not the generic one.
+    expect(screen.getByTestId('pod-pending-error')).toHaveTextContent(
+      'This pod could not be loaded.',
+    );
   });
 
   it('renders the banner and all three cards', () => {

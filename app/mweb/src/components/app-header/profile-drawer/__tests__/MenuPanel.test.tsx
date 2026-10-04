@@ -29,8 +29,10 @@ vi.mock('../../../../hooks/useAutoPodCounts', () => ({
 // Stub the heavy consumer layout (fires ads/branding queries) — it is covered
 // by its own tests; here we only need a marker to assert it mounts.
 vi.mock('../UserModeContent', () => ({
-  default: ({ showPodPlans }: { showPodPlans: boolean }) => (
-    <div data-testid="user-mode-content">pod-plans:{String(showPodPlans)}</div>
+  default: ({ showPodPlans, mode }: { showPodPlans: boolean; mode: string }) => (
+    <div data-testid="user-mode-content">
+      pod-plans:{String(showPodPlans)} mode:{mode}
+    </div>
   ),
 }));
 
@@ -67,10 +69,10 @@ describe('MenuPanel', () => {
     flagValue = false;
   });
 
-  it('renders the Profile title in USER mode and mounts the user content', () => {
+  it('mounts the user content in USER mode', () => {
     renderPanel();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByTestId('user-mode-content')).toHaveTextContent('pod-plans:false');
+    expect(screen.getByTestId('user-mode-content')).toHaveTextContent('mode:USER');
     // No switch-role affordance for a role-less user.
     expect(screen.queryByText('Switch role')).not.toBeInTheDocument();
   });
@@ -115,20 +117,21 @@ describe('MenuPanel', () => {
     // Confirming is what actually switches.
     fireEvent.click(screen.getByRole('button', { name: 'Switch to Venue Studio' }));
     expect(studioState.setMode).toHaveBeenCalledWith('VENUE');
-    expect(mockNavigate).toHaveBeenCalledWith('/venues/manage');
+    // Leaving the menu replaces its history entry, so Back skips the menu.
+    expect(mockNavigate).toHaveBeenCalledWith('/venues/manage', { replace: true });
   });
 
   it('falls a persisted mode the user no longer qualifies for back to USER', () => {
     studioState.mode = 'VENUE';
     renderPanel({ me: { roles: [] } });
-    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByTestId('user-mode-content')).toHaveTextContent('mode:USER');
     expect(screen.queryByText('Switch role')).not.toBeInTheDocument();
   });
 
   it('reflects light mode and toggles color mode from the switch', () => {
     renderPanel();
     expect(screen.getByTestId('LightModeIcon')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Toggle dark mode' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Toggle dark mode' }));
     expect(colorState.toggle).toHaveBeenCalledTimes(1);
   });
 
@@ -136,7 +139,7 @@ describe('MenuPanel', () => {
     colorState.mode = 'dark';
     renderPanel();
     expect(screen.getByTestId('DarkModeIcon')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'Toggle dark mode' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Toggle dark mode' })).toBeChecked();
   });
 
   it('renders the policies section only when policies exist', () => {

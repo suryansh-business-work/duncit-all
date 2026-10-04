@@ -24,7 +24,9 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
-import { CartProvider } from '../components/cart/CartContext';
+import { ConfirmProvider } from '@duncit/dialogs';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import CartProviders from '../components/cart/CartProviders';
 import { TourProvider } from '../tours/TourContext';
 import { StatusUploadProvider } from '../components/status-upload/StatusUploadProvider';
 
@@ -46,7 +48,11 @@ export function SmokeProviders({ children, link }: Readonly<SmokeProvidersProps>
   // admin-configured date format through a `publicAppSettings` query.
   const inner = (
     <ThemeProvider theme={smokeTheme}>
-      <DuncitLocalizationProvider timeZoneAware>{children}</DuncitLocalizationProvider>
+      {/* main.tsx's RuntimeGoogleOAuthProvider: the sign-in buttons on /login,
+          /register and /account throw outside it. No real client is reached. */}
+      <GoogleOAuthProvider clientId="smoke-test-client-id">
+        <DuncitLocalizationProvider timeZoneAware>{children}</DuncitLocalizationProvider>
+      </GoogleOAuthProvider>
     </ThemeProvider>
   );
 
@@ -81,16 +87,19 @@ export function SmokeRoute({ pattern, concrete, children, link }: Readonly<Smoke
   return (
     <SmokeProviders link={link}>
       <MemoryRouter initialEntries={[concrete]}>
-        <StatusUploadProvider>
-          <CartProvider>
-            <TourProvider>
-              <Routes>
-                <Route path={pattern} element={children} />
-                {catchAll}
-              </Routes>
-            </TourProvider>
-          </CartProvider>
-        </StatusUploadProvider>
+        {/* Same order as App.tsx: confirm → status upload → cart + wishlist → tours. */}
+        <ConfirmProvider>
+          <StatusUploadProvider>
+            <CartProviders signedIn={false}>
+              <TourProvider>
+                <Routes>
+                  <Route path={pattern} element={children} />
+                  {catchAll}
+                </Routes>
+              </TourProvider>
+            </CartProviders>
+          </StatusUploadProvider>
+        </ConfirmProvider>
       </MemoryRouter>
     </SmokeProviders>
   );

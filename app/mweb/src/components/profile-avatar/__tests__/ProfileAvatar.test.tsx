@@ -107,12 +107,26 @@ describe('ProfileAvatar — photo menu (item 9)', () => {
 });
 
 describe('ProfileAvatar — story interaction (item 12)', () => {
-  it('clicking the avatar with no story opens the add-story file picker', async () => {
-    setup(null, noStories);
-    const storyInput = screen.getByTestId('avatar-story-input') as HTMLInputElement;
-    const clickSpy = vi.spyOn(storyInput, 'click');
+  // Posting a story moved to Home: the avatar only ever SHOWS, so a tap with no
+  // live story opens the photo itself and never a file picker.
+  it('clicking the avatar with no story shows the photo rather than posting one', async () => {
+    setup('http://x/a.jpg', noStories);
+    const fileInput = screen.getByTestId('avatar-file-input') as HTMLInputElement;
+    const clickSpy = vi.spyOn(fileInput, 'click');
     fireEvent.click(screen.getByTestId('avatar-button'));
-    await waitFor(() => expect(clickSpy).toHaveBeenCalled());
+    expect(await screen.findByAltText('Profile photo')).toBeInTheDocument();
+    expect(screen.queryByTestId('story-viewer')).not.toBeInTheDocument();
+    expect(clickSpy).not.toHaveBeenCalled();
+  });
+
+  it('clicking the avatar with neither story nor photo opens nothing', () => {
+    setup(null, noStories);
+    const fileInput = screen.getByTestId('avatar-file-input') as HTMLInputElement;
+    const clickSpy = vi.spyOn(fileInput, 'click');
+    fireEvent.click(screen.getByTestId('avatar-button'));
+    expect(screen.queryByAltText('Profile photo')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('story-viewer')).not.toBeInTheDocument();
+    expect(clickSpy).not.toHaveBeenCalled();
   });
 
   it('clicking the avatar with an active story opens the viewer, then deletes', async () => {
@@ -128,11 +142,12 @@ describe('ProfileAvatar — story interaction (item 12)', () => {
     expect(await screen.findByText('Delete story?')).toBeInTheDocument();
   });
 
-  it('the + add badge opens the story file picker', () => {
+  it('carries no add-story badge or story picker on the photo', async () => {
     setup('http://x/a.jpg', oneStory);
-    const storyInput = screen.getByTestId('avatar-story-input') as HTMLInputElement;
-    const clickSpy = vi.spyOn(storyInput, 'click');
-    fireEvent.click(screen.getByTestId('avatar-add-story'));
-    expect(clickSpy).toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByLabelText('View your story')).toBeInTheDocument());
+    expect(screen.queryByTestId('avatar-add-story')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('avatar-story-input')).not.toBeInTheDocument();
+    // The edit pencil is the photo's only other control.
+    expect(screen.getByTestId('avatar-edit')).toBeInTheDocument();
   });
 });

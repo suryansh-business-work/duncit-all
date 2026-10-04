@@ -82,10 +82,11 @@ describe('BackoutConfirmDialog', () => {
 
   it('renders the refund estimate with currency and deduction percent', () => {
     renderDialog({ refundAmount: 450, currency: '$', deductionPct: 10 });
-    expect(screen.getByText('$450')).toBeInTheDocument();
-    expect(
-      screen.getByText(/after the 10% backout deduction/i),
-    ).toBeInTheDocument();
+    // The amount is interpolated into one estimate sentence, priced for the
+    // single held seat.
+    expect(screen.getByTestId('backout-refund-amount')).toHaveTextContent(
+      'If the refund is done, you will get $450 for 1 seat (after the 10% backout deduction).',
+    );
   });
 
   it('renders the embedded policy content once the query resolves', async () => {

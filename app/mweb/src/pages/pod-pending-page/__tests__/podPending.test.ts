@@ -21,11 +21,15 @@ const venue = {
 };
 
 describe('pod-pending helpers (native twin, rule 27)', () => {
-  it('prefers the first IMAGE, else the first media item', () => {
+  it('picks the first still, and null when the cover has no image to show', () => {
     expect(pendingPodImage([{ url: 'a.mp4', type: 'VIDEO' }, { url: 'b.jpg', type: 'IMAGE' }])).toBe(
       'b.jpg',
     );
-    expect(pendingPodImage([{ url: 'a.mp4', type: 'VIDEO' }])).toBe('a.mp4');
+    expect(pendingPodImage([{ url: 'c.jpg', type: 'IMAGE' }, { url: 'd.jpg', type: 'IMAGE' }])).toBe(
+      'c.jpg',
+    );
+    // A video cannot be painted into an <img>, so a video-only cover has no still.
+    expect(pendingPodImage([{ url: 'a.mp4', type: 'VIDEO' }])).toBeNull();
     expect(pendingPodImage([])).toBeNull();
   });
 

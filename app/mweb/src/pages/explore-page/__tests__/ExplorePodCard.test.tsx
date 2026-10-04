@@ -141,7 +141,9 @@ describe('ExplorePodCard', () => {
     expect(screen.getByLabelText('btn-join')).toHaveTextContent('join:2/10');
     expect(screen.getByLabelText('btn-like')).toHaveTextContent('like:3');
     expect(screen.getByLabelText('btn-comment')).toHaveTextContent('comment:2');
-    expect(screen.getByText('Join in 2 taps')).toBeInTheDocument();
+    // The calm redesign: the join bar carries ONE line — the price — and Go.
+    expect(screen.getByTestId('explore-join-bar')).toHaveTextContent(/^₹200 · Confirm with UPIGo$/);
+    expect(screen.getByTestId('reel-go-POD-1')).toBeInTheDocument();
     // Paid CTA subtitle uses the priced amount.
     expect(screen.getByText('₹200 · Confirm with UPI')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open pod details' })).toBeInTheDocument();

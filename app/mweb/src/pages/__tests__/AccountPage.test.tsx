@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { gql } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -9,6 +8,13 @@ import { MY_ACCOUNT_HEALTH, type HealthScore } from '../../components/health/que
 // ---- hoisted spies ------------------------------------------------------
 const navigateSpy = vi.fn();
 const logoutSpy = vi.fn();
+const refetchSpy = vi.fn();
+// The profile is read from the USER_INFO cache through useUserInfo; a failed
+// load surfaces through the user context's `error`.
+const userInfo = vi.hoisted(() => ({
+  state: { me: undefined as unknown, loading: false },
+  error: undefined as Error | undefined,
+}));
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
@@ -16,7 +22,11 @@ vi.mock('react-router', async () => {
 });
 
 vi.mock('@duncit/user-context', () => ({
-  useUserData: () => ({ logout: logoutSpy }),
+  useUserData: () => ({ logout: logoutSpy, refetch: refetchSpy, error: userInfo.error }),
+}));
+
+vi.mock('../../user-info/useUserInfo', () => ({
+  useUserInfo: () => userInfo.state,
 }));
 
 vi.mock('../../utils/dateFormat', () => ({
@@ -55,6 +65,15 @@ vi.mock('../account-page/SecuritySection', () => ({
   default: () => <div>stub-security</div>,
 }));
 
+vi.mock('../account-page/LanguageSection', () => ({ default: () => <div>stub-language</div> }));
+vi.mock('../account-page/comm-preference', () => ({ default: () => <div>stub-comm-pref</div> }));
+vi.mock('../account-page/PrivacyDataEntryCard', () => ({
+  default: () => <div>stub-privacy-data</div>,
+}));
+vi.mock('../account-page/ConnectedAccountsSection', () => ({
+  default: () => <div>stub-connected</div>,
+}));
+
 vi.mock('../account-page/EditAccountDialog', () => ({
   default: ({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) =>
     open ? (
@@ -71,46 +90,8 @@ vi.mock('../account-page/account-edit', () => ({
 }));
 
 vi.mock('../../components/health/HealthMeter', () => ({
-  default: ({ onClick, label }: { onClick: () => void; label: string }) => (
-    <button onClick={onClick}>meter-{label}</button>
-  ),
+  default: ({ label }: { label: string }) => <span>meter-{label}</span>,
 }));
-
-// ---- ME query (redefined verbatim to match the inline document) ---------
-const ME = gql`
-  query MeProfile {
-    me {
-      user_id
-      username
-      first_name
-      last_name
-      full_name
-      email
-      phone_number
-      phone_extension
-      whatsapp_number
-      whatsapp_extension
-      profile_photo
-      bio
-      city
-      state
-      country
-      address {
-        line1
-        line2
-        landmark
-        city
-        state
-        pincode
-        country
-      }
-      dob
-      roles
-      profile_visibility
-      created_at
-    }
-  }
-`;
 
 const meData = {
   __typename: 'User',
@@ -166,7 +147,9 @@ const health = {
   adjustments: [adjustment],
 } as unknown as HealthScore;
 
-const meMock = (data: unknown) => ({ request: { query: ME }, result: { data: { me: data } } });
+const withProfile = (me: unknown, loading = false) => {
+  userInfo.state = { me, loading };
+};
 const healthMock = (h: HealthScore | null) => ({
   request: { query: MY_ACCOUNT_HEALTH },
   result: { data: { myAccountHealth: h } },
@@ -185,15 +168,21 @@ describe('AccountPage', () => {
   beforeEach(() => {
     navigateSpy.mockClear();
     logoutSpy.mockClear();
+    refetchSpy.mockClear();
+    userInfo.error = undefined;
+    withProfile(meData);
   });
 
-  it('shows a spinner while the profile query is loading', () => {
-    renderPage([meMock(meData), healthMock(health)]);
+  it('shows a spinner while the profile is loading for the first time', () => {
+    withProfile(undefined, true);
+    renderPage([healthMock(health)]);
+    expect(screen.getByTestId('account-loading')).toBeInTheDocument();
     expect(document.querySelector('.MuiCircularProgress-root')).toBeTruthy();
+    expect(screen.queryByTestId('account-screen')).not.toBeInTheDocument();
   });
 
   it('renders the profile once loaded, with formatted DOB and info rows', async () => {
-    renderPage([meMock(meData), healthMock(health)]);
+    renderPage([healthMock(health)]);
     expect(await screen.findByText('Email: alice@example.com')).toBeInTheDocument();
     expect(screen.getByText('Phone: +91 9999999999')).toBeInTheDocument();
     expect(screen.getByText('Location: London · LDN · UK')).toBeInTheDocument();
@@ -203,15 +192,15 @@ describe('AccountPage', () => {
   });
 
   it('renders em-dashes for missing phone/location/dob', async () => {
-    const sparse = {
+    withProfile({
       ...meData,
       phone_number: '',
       city: '',
       state: '',
       country: '',
       dob: null,
-    };
-    renderPage([meMock(sparse), healthMock(null)]);
+    });
+    renderPage([healthMock(null)]);
     expect(await screen.findByText('Phone: —')).toBeInTheDocument();
     expect(screen.getByText('Location: —')).toBeInTheDocument();
     expect(screen.getByText('Date of birth: —')).toBeInTheDocument();
@@ -219,18 +208,19 @@ describe('AccountPage', () => {
     expect(screen.queryByText(/Account Health/)).not.toBeInTheDocument();
   });
 
-  it('shows the GREEN health card and navigates to details on meter click', async () => {
-    renderPage([meMock(meData), healthMock(health)]);
+  it('shows the GREEN health card and opens the details when the card is pressed', async () => {
+    renderPage([healthMock(health)]);
     expect(await screen.findByText('You’re in great shape.')).toBeInTheDocument();
     expect(screen.getByText(/Base score: 80/)).toBeInTheDocument();
     expect(screen.getByText(/Admin adjustment: \+5/)).toBeInTheDocument();
-    expect(screen.getByText(/1 admin remark/)).toBeInTheDocument();
+    expect(screen.getByText(/1 admin remark\./)).toBeInTheDocument();
+    expect(screen.getByText('meter-Account Health')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('meter-Account Health'));
+    fireEvent.click(screen.getByText('You’re in great shape.'));
     expect(navigateSpy).toHaveBeenCalledWith('/account/health');
   });
 
-  it('renders the YELLOW headline with pluralised remarks and no admin adjustment', async () => {
+  it('renders the YELLOW headline with no admin adjustment or remarks', async () => {
     const yellow: HealthScore = {
       ...health,
       band: 'YELLOW',
@@ -239,7 +229,7 @@ describe('AccountPage', () => {
       total_score: 60,
       adjustments: [],
     };
-    renderPage([meMock(meData), healthMock(yellow)]);
+    renderPage([healthMock(yellow)]);
     expect(await screen.findByText('A few things to tighten up.')).toBeInTheDocument();
     expect(screen.queryByText(/Admin adjustment/)).not.toBeInTheDocument();
     expect(screen.queryByText(/admin remark/)).not.toBeInTheDocument();
@@ -253,38 +243,51 @@ describe('AccountPage', () => {
       total_score: 70,
       adjustments: [adjustment, adjustment],
     };
-    renderPage([meMock(meData), healthMock(red)]);
+    renderPage([healthMock(red)]);
     expect(await screen.findByText('Needs attention.')).toBeInTheDocument();
     expect(screen.getByText(/Admin adjustment: -10/)).toBeInTheDocument();
     expect(screen.getByText(/2 admin remarks/)).toBeInTheDocument();
   });
 
   it('opens and closes the edit dialog', async () => {
-    renderPage([meMock(meData), healthMock(health)]);
+    renderPage([healthMock(health)]);
     fireEvent.click(await screen.findByText('stub-edit'));
     expect(await screen.findByText('edit-dialog-open')).toBeInTheDocument();
     fireEvent.click(screen.getByText('stub-dialog-close'));
     await waitFor(() => expect(screen.queryByText('edit-dialog-open')).not.toBeInTheDocument());
   });
 
-  it('shows the "Profile updated" snackbar after a save', async () => {
-    renderPage([meMock(meData), healthMock(health), meMock(meData)]);
+  it('re-reads the profile and shows the "Profile updated" snackbar after a save', async () => {
+    renderPage([healthMock(health)]);
     fireEvent.click(await screen.findByText('stub-edit'));
     fireEvent.click(await screen.findByText('stub-saved'));
     expect(await screen.findByText('Profile updated')).toBeInTheDocument();
+    expect(refetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-reads the profile when the privacy setting changes', async () => {
+    renderPage([healthMock(health)]);
+    fireEvent.click(await screen.findByText('stub-privacy'));
+    expect(refetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('logs out via the profile header', async () => {
-    renderPage([meMock(meData), healthMock(health)]);
+    renderPage([healthMock(health)]);
     fireEvent.click(await screen.findByText('stub-logout'));
     expect(logoutSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('renders an error alert when the profile query fails', async () => {
-    renderPage([
-      { request: { query: ME }, error: new Error('boom') },
-      healthMock(health),
-    ]);
+  it('renders the context error when the profile could not be loaded', async () => {
+    withProfile(undefined);
+    userInfo.error = new Error('boom');
+    renderPage([healthMock(health)]);
     expect(await screen.findByText('boom')).toBeInTheDocument();
+    expect(screen.getByTestId('account-error')).toBeInTheDocument();
+  });
+
+  it('falls back to a generic message when there is no profile and no error', () => {
+    withProfile(undefined);
+    renderPage([healthMock(health)]);
+    expect(screen.getByTestId('account-error')).toHaveTextContent('Unable to load profile');
   });
 });

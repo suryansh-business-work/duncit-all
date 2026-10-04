@@ -111,8 +111,13 @@ beforeEach(() => {
 describe('ChatWithUsScreen', () => {
   it('shows only the live-chat shortcut (no New button, no ticket list) and routes to LiveChat', () => {
     renderWithProviders(<ChatWithUsScreen />);
-    expect(screen.getByTestId('chat-inbox-subtitle')).toBeOnTheScreen();
-    expect(screen.getByTestId('chat-live-card')).toBeOnTheScreen();
+    expect(screen.getByTestId('chat-with-us-screen-title')).toHaveTextContent('Chat with Us');
+    // The card is the screen's only content; its own label says what it does.
+    expect(screen.getByTestId('chat-live-card')).toHaveProp(
+      'aria-label',
+      'Chat live with an agent',
+    );
+    expect(screen.queryByTestId('chat-inbox-subtitle')).toBeNull();
     // The "+ New" button and the ticket inbox list were removed.
     expect(screen.queryByTestId('chat-inbox-new')).toBeNull();
     expect(screen.queryByTestId('chat-inbox-empty')).toBeNull();

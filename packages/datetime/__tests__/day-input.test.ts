@@ -118,6 +118,18 @@ describe('parseIsoDay', () => {
     expect(parseIsoDay('2000-01-05T10:00:00Z')).toBeNull();
     expect(parseIsoDay('')).toBeNull();
   });
+
+  it('returns null for a well-shaped day the calendar does not have, instead of rolling it over', () => {
+    // `new Date(1995, 12, 40)` would be 9 Feb 1996 — a date of birth nobody typed.
+    expect(parseIsoDay('1995-13-40')).toBeNull();
+    expect(parseIsoDay('2026-02-30')).toBeNull();
+    expect(parseIsoDay('2023-02-29')).toBeNull();
+    expect(parseIsoDay('2026-01-00')).toBeNull();
+  });
+
+  it('accepts a leap day in a leap year', () => {
+    expect(toIsoDay(parseIsoDay('2024-02-29') as Date)).toBe('2024-02-29');
+  });
 });
 
 describe('formatIsoDay', () => {

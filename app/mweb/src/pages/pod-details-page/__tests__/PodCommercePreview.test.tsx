@@ -80,8 +80,9 @@ function renderPreview(props: Partial<React.ComponentProps<typeof PodCommercePre
 describe('PodCommercePreview', () => {
   it('renders the header, Available chip and filters out nameless requests', () => {
     renderPreview();
-    expect(screen.getByText('Pod Shop')).toBeInTheDocument();
-    expect(screen.getByText('Products')).toBeInTheDocument();
+    // The header is the section title alone — the "Products" eyebrow was dropped.
+    expect(screen.getByTestId('pod-shop-header')).toHaveTextContent('Pod Shop');
+    expect(screen.queryByText('Products')).not.toBeInTheDocument();
     expect(screen.getByText('Available')).toBeInTheDocument();
     // Two named products render; the nameless p3 is filtered out.
     expect(screen.getByText('Mug')).toBeInTheDocument();

@@ -17,8 +17,8 @@ describe('pendingPodImage', () => {
     expect(pendingPodImage(media)).toBe('a.jpg');
   });
 
-  it('falls back to the first media item when no image exists', () => {
-    expect(pendingPodImage([{ url: 'v.mp4', type: 'VIDEO' }])).toBe('v.mp4');
+  it('returns null for a video-only cover, which has no still to paint', () => {
+    expect(pendingPodImage([{ url: 'v.mp4', type: 'VIDEO' }])).toBeNull();
   });
 
   it('returns null for an empty gallery', () => {

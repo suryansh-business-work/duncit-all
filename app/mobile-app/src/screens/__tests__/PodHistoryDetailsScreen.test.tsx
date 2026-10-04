@@ -1,9 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
+import { auth } from '@duncit/auth-tokens';
 
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
 import {
   usePodBackout,
+  usePodBackoutAttempts,
   usePodBackoutDeduction,
   usePodHistory,
   usePodInvoice,
@@ -17,6 +19,7 @@ import type { PodMembership } from '@/utils/pod-history';
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodHistory: jest.fn(),
   usePodBackout: jest.fn(),
+  usePodBackoutAttempts: jest.fn(),
   usePodRejoin: jest.fn(),
   usePodBackoutDeduction: jest.fn(),
   usePodInvoice: jest.fn(),
@@ -35,6 +38,7 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockedHistory = usePodHistory as jest.Mock;
 const mockedBackout = usePodBackout as jest.Mock;
+const mockedAttempts = usePodBackoutAttempts as jest.Mock;
 const mockedRejoin = usePodRejoin as jest.Mock;
 const mockedDeduction = usePodBackoutDeduction as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
@@ -91,6 +95,7 @@ const backout = jest.fn();
 const rejoin = jest.fn();
 const download = jest.fn();
 const refetch = jest.fn();
+const refetchAttempts = jest.fn();
 
 // A backed-out membership on a future pod → the Rejoin action is visible.
 const rejoinable = () =>
@@ -113,6 +118,9 @@ beforeEach(() => {
   rejoin.mockResolvedValue(undefined);
   download.mockResolvedValue(undefined);
   refetch.mockResolvedValue(undefined);
+  refetchAttempts.mockResolvedValue(undefined);
+  // Attempts not answered yet — the backout control stays offered.
+  mockedAttempts.mockReturnValue({ state: undefined, refetch: refetchAttempts });
   mockedDeduction.mockReturnValue(0);
   mockedBackout.mockReturnValue({ backout, busy: false });
   mockedRejoin.mockReturnValue({ rejoin, busy: false });
@@ -159,7 +167,8 @@ describe('PodHistoryDetailsScreen actions', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Policy', { slug: 'backout-terms' });
 
     fireEvent.press(screen.getByTestId('ph-general-terms'));
-    expect(openURL).toHaveBeenCalledWith('https://duncit.com/terms');
+    // No Branding terms page set → the shared default terms link.
+    expect(openURL).toHaveBeenCalledWith(auth.legal.termsUrl);
   });
 
   it('shows the refund status as a notice', () => {
@@ -185,6 +194,8 @@ describe('PodHistoryDetailsScreen actions', () => {
     fireEvent.press(screen.getByTestId('backout-confirm'));
     // The seat count rides along: a backout releases the seats it names.
     await waitFor(() => expect(backout).toHaveBeenCalledWith('pod1', 1));
+    // A backout changes the booking AND the attempts — both are re-read.
+    await waitFor(() => expect(refetchAttempts).toHaveBeenCalled());
     expect(refetch).toHaveBeenCalled();
     await waitFor(() =>
       expect(screen.getByTestId('ph-notice')).toHaveTextContent('Backout request recorded'),
@@ -199,6 +210,25 @@ describe('PodHistoryDetailsScreen actions', () => {
     await waitFor(() =>
       expect(screen.getByTestId('ph-notice')).toHaveTextContent('cannot backout'),
     );
+    // A refusal is decided on server state, so the screen still re-reads it.
+    await waitFor(() => expect(refetchAttempts).toHaveBeenCalled());
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('reads the attempts for the selected pod and blocks the backout once they are used up', () => {
+    mockedAttempts.mockReturnValue({
+      state: { backout_attempts_used: 3, backout_attempts_max: 3 },
+      refetch: refetchAttempts,
+    });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    expect(mockedAttempts).toHaveBeenCalledWith('pod1');
+    fireEvent.press(screen.getByTestId('ph-backout'));
+    // The dead control says why instead of opening the dialog.
+    expect(screen.getByTestId('ph-notice')).toHaveTextContent(
+      'You have reached the maximum number of Backout attempts allowed for this Pod.',
+    );
+    expect(screen.queryByTestId('backout-confirm')).toBeNull();
+    expect(backout).not.toHaveBeenCalled();
   });
 
   it('confirms a free rejoin and records the notice', async () => {

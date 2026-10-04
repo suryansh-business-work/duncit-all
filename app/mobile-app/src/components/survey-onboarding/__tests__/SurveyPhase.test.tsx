@@ -3,6 +3,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { MeetingPhase } from '@/components/survey-onboarding/MeetingPhase';
 import { SlotPicker } from '@/components/survey-onboarding/SlotPicker';
 import { SurveyPhase } from '@/components/survey-onboarding/SurveyPhase';
+import { appFormatter } from '@/utils/app-formatter';
 import { renderWithProviders } from '@/utils/test-utils';
 
 function makeAnswer(initial: Record<string, { value: string; values: string[] }> = {}) {
@@ -27,6 +28,12 @@ const sec = (qid: string, label: string, help: string | null = null) =>
   ({ qid, type: 'SECTION', label, help, required: false, multi: false, options: [] }) as never;
 const text = (qid: string, label: string, required = false, help: string | null = null) =>
   ({ qid, type: 'TEXT', label, help, required, multi: false, options: [] }) as never;
+/** The section stepper is a progress bar now — read which step it reports. */
+const expectStep = (now: number, max: number) => {
+  const bar = screen.getByTestId('step-progress-bar');
+  expect(bar).toHaveProp('aria-valuenow', now);
+  expect(bar).toHaveProp('aria-valuemax', max);
+};
 const mcqMulti = (qid: string, label: string, required = true) =>
   ({ qid, type: 'MCQ', label, help: null, required, multi: true, options: ['A', 'B'] }) as never;
 
@@ -66,16 +73,18 @@ describe('SurveyPhase', () => {
         onSubmit={onSubmit}
       />,
     );
-    expect(screen.getByText('Step 1 of 2')).toBeOnTheScreen();
+    expectStep(1, 2);
+    expect(screen.getByText('Section 1')).toBeOnTheScreen();
     expect(screen.getByText('Help 1')).toBeOnTheScreen();
     expect(screen.getByText('your name')).toBeOnTheScreen();
 
     fireEvent.changeText(screen.getByTestId('q-q1'), 'Asha');
     fireEvent.press(screen.getByTestId('primary-action')); // Next
-    expect(screen.getByText('Step 2 of 2')).toBeOnTheScreen();
+    expectStep(2, 2);
+    expect(screen.getByText('Section 2')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByTestId('survey-back')); // Back
-    expect(screen.getByText('Step 1 of 2')).toBeOnTheScreen();
+    expectStep(1, 2);
 
     fireEvent.press(screen.getByTestId('primary-action')); // Next
     fireEvent.press(screen.getByTestId('primary-action')); // Continue (last)
@@ -151,9 +160,10 @@ const meetingProps = {
 };
 
 describe('SlotPicker empty fallback', () => {
-  it('renders without days when no slots exist', () => {
+  it('renders the empty message and no calendar when no slots exist', () => {
     renderWithProviders(<SlotPicker slots={[]} value="" onChange={jest.fn()} />);
-    expect(screen.queryByText('Day')).toBeOnTheScreen();
+    expect(screen.getByTestId('slot-calendar-empty')).toBeOnTheScreen();
+    expect(screen.queryByTestId('slot-month-grid')).toBeNull();
   });
 });
 
@@ -164,16 +174,19 @@ describe('MeetingPhase slot picker', () => {
     expect(screen.queryByText('YOUR SURVEY ANSWERS')).toBeNull();
     expect(screen.getByTestId('meeting-phone')).toBeOnTheScreen();
     // Open slot selects; booked slot is inert.
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T04:30:00.000Z'));
     expect(setSelectedSlot).toHaveBeenCalledWith('2027-01-04T04:30:00.000Z');
     setSelectedSlot.mockClear();
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T05:00:00.000Z'));
+    fireEvent.press(screen.getByTestId('slot-tile-2027-01-04T05:00:00.000Z'));
     expect(setSelectedSlot).not.toHaveBeenCalled();
-    // Switching day clears the selected slot.
+    // Switching day shows that day's times only; it never picks a slot by
+    // itself (day keys follow the admin time zone).
     fireEvent.press(
-      screen.getByTestId(`slot-day-${new Date('2027-01-05T04:30:00.000Z').toDateString()}`),
+      screen.getByTestId(`slot-day-${appFormatter().dayKey('2027-01-05T04:30:00.000Z')}`),
     );
-    expect(setSelectedSlot).toHaveBeenCalledWith('');
+    expect(screen.getByTestId('slot-tile-2027-01-05T04:30:00.000Z')).toBeOnTheScreen();
+    expect(screen.queryByTestId('slot-tile-2027-01-04T04:30:00.000Z')).toBeNull();
+    expect(setSelectedSlot).not.toHaveBeenCalled();
   });
 
   it('locks name and always shows the profile phone read-only', () => {

@@ -23,7 +23,8 @@ describe('FeedbackScreen', () => {
     renderWithProviders(<FeedbackScreen />);
     fillAndSend();
     await waitFor(() => expect(screen.getByTestId('feedback-sent')).toBeOnTheScreen());
-    expect(mockSubmit).toHaveBeenCalledWith('Bug', 'the checkout button does nothing');
+    // No screenshots attached → an empty media list travels with the message.
+    expect(mockSubmit).toHaveBeenCalledWith('Bug', 'the checkout button does nothing', []);
   });
 
   it('surfaces a thrown Error without confirming success', async () => {

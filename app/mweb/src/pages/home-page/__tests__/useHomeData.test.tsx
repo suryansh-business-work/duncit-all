@@ -1,23 +1,11 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { gql } from '@apollo/client';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
 import { HEADER_STATIC, HOME_REFRESH_EVENT } from '../../../components/app-header/queries';
 import { USER_INFO } from '../../../user-info/queries';
 import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS } from '../queries';
 import { useHomeData } from '../useHomeData';
-
-// Re-declared identically to the (unexported) query inside useFollowedClubs so
-// MockedProvider matches it by document equivalence.
-const FOLLOWED_CLUBS = gql`
-  query FollowedClubIds {
-    me {
-      user_id
-      following_club_ids
-    }
-  }
-`;
 
 const isoDaysFromNow = (n: number) => {
   const d = new Date();
@@ -166,7 +154,8 @@ const homeDataMock = (locationId: string, zoneName: string) => ({
   },
 });
 
-/** The hook reads the header's two queries; each fixture answers both. */
+/** The hook reads the header's two queries; each fixture answers both. The
+ * followed clubs ride in USER_INFO too (useFollowedClubs reads it from there). */
 const headerPair = (showAll: boolean) => [
   {
     request: { query: HEADER_STATIC },
@@ -181,7 +170,11 @@ const headerPair = (showAll: boolean) => [
   },
   {
     request: { query: USER_INFO },
-    result: { data: { me: { user_id: 'me1', roles: ['HOST'], following_user_ids: ['u2'] } } },
+    result: {
+      data: {
+        me: { user_id: 'me1', roles: ['HOST'], following_user_ids: ['u2'], following_club_ids: ['club1'] },
+      },
+    },
   },
 ];
 
@@ -189,11 +182,6 @@ const headerMock = headerPair(false);
 
 // Same as headerMock but with the admin "show all categories on Home" toggle on.
 const headerMockShowAll = headerPair(true);
-
-const followedClubsMock = {
-  request: { query: FOLLOWED_CLUBS },
-  result: { data: { me: { user_id: 'me1', following_club_ids: ['club1'] } } },
-};
 
 const followedUsersMock = {
   request: { query: FOLLOWED_USERS, variables: { userIds: ['u2'] } },
@@ -223,6 +211,16 @@ const baseParams = {
 };
 
 describe('useHomeData', () => {
+  // `me` (USER_INFO) is only asked for with a session token on the device; the
+  // host role, the followed users and "my stories" all come from it.
+  beforeEach(() => {
+    localStorage.setItem('token', 'home-data-test-token');
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('token');
+  });
+
   it('returns empty defaults before data resolves', () => {
     const { result } = renderHook(() => useHomeData(baseParams), {
       wrapper: wrapperWith([]),
@@ -244,7 +242,6 @@ describe('useHomeData', () => {
       wrapper: wrapperWith([
         homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         ...headerMock,
-        followedClubsMock,
         followedUsersMock,
       ]),
     });
@@ -311,7 +308,7 @@ describe('useHomeData', () => {
   it('shows every category (including pod-less ones) when the admin toggle is on', async () => {
     // Default (toggle off): the pod-less "Ball" category (c2) is hidden.
     const { result: off } = renderHook(() => useHomeData(baseParams), {
-      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedClubsMock, followedUsersMock]),
+      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedUsersMock]),
     });
     await waitFor(() => expect(off.current.loading).toBe(false));
     expect(off.current.vibeCategories.map((c: any) => c.id)).not.toContain('c2');
@@ -321,7 +318,6 @@ describe('useHomeData', () => {
       wrapper: wrapperWith([
         homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         ...headerMockShowAll,
-        followedClubsMock,
         followedUsersMock,
       ]),
     });
@@ -331,7 +327,7 @@ describe('useHomeData', () => {
 
   it('resolves host names via host_names, publicHosts, and no-match', async () => {
     const { result } = renderHook(() => useHomeData(baseParams), {
-      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedClubsMock, followedUsersMock]),
+      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedUsersMock]),
     });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -360,7 +356,6 @@ describe('useHomeData', () => {
         wrapper: wrapperWith([
           homeDataMock('loc1', 'zoneA'), homeStaticMock(),
           ...headerMock,
-          followedClubsMock,
           followedUsersMock,
         ]),
       }
@@ -383,7 +378,7 @@ describe('useHomeData', () => {
     const { result: freeRes } = renderHook(
       () => useHomeData({ ...baseParams, priceFilter: 'FREE', dateFilter: 'WEEK', sortBy: 'DATE_DESC' }),
       {
-        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedClubsMock, followedUsersMock]),
+        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedUsersMock]),
       }
     );
     await waitFor(() => expect(freeRes.current.loading).toBe(false));
@@ -392,7 +387,7 @@ describe('useHomeData', () => {
     const { result: paidRes } = renderHook(
       () => useHomeData({ ...baseParams, priceFilter: 'PAID', dateFilter: 'TOMORROW', sortBy: 'PRICE_ASC' }),
       {
-        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedClubsMock, followedUsersMock]),
+        wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), homeStaticMock(), ...headerMock, followedUsersMock]),
       }
     );
     await waitFor(() => expect(paidRes.current.loading).toBe(false));
@@ -405,7 +400,6 @@ describe('useHomeData', () => {
       wrapper: wrapperWith([
         homeDataMock('loc1', 'zoneA'), homeStaticMock(),
         ...headerMock,
-        followedClubsMock,
         followedUsersMock,
         // second copy consumed by refetch
         homeDataMock('loc1', 'zoneA'), homeStaticMock(),
@@ -443,7 +437,6 @@ describe('useHomeData', () => {
         livePodsMock([running, finished, later]),
         homeStaticMock(),
         ...headerMock,
-        followedClubsMock,
         followedUsersMock,
       ]),
     });
@@ -475,7 +468,6 @@ describe('useHomeData', () => {
         livePodsMock([noEnd, stale]),
         homeStaticMock(),
         ...headerMock,
-        followedClubsMock,
         followedUsersMock,
       ]),
     });

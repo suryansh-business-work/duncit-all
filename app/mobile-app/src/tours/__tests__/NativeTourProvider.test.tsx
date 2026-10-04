@@ -13,6 +13,11 @@ import { useToursStore } from '@/stores/tours.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useMe', () => ({ useMe: jest.fn() }));
+// The `tour_guide` kill switch; on unless a case turns it off.
+let mockTourGuideEnabled = true;
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string) => key === 'tour_guide' && mockTourGuideEnabled,
+}));
 jest.mock('@/services/secure-storage', () => ({
   getItem: jest.fn().mockResolvedValue(null),
   setItem: jest.fn().mockResolvedValue(undefined),
@@ -51,6 +56,7 @@ const settle = () =>
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers();
+  mockTourGuideEnabled = true;
   mockUseMe.mockReturnValue({ data: { me: { user_id: 'u1' } } });
   useThemeStore.setState({ scheme: 'light' });
   useToursStore.setState({
@@ -89,6 +95,17 @@ describe('NativeTourProvider', () => {
     expect(screen.getByTestId('tour-overlay')).toBeOnTheScreen();
     expect(screen.getByText('What are Pods?')).toBeOnTheScreen();
     expect(screen.getByTestId('tour-progress')).toHaveTextContent('1 / 2');
+  });
+
+  it('never opens a tour while the tour_guide flag is off', () => {
+    mockTourGuideEnabled = false;
+    useToursStore.setState({ activeTourId: 'home' });
+    mount(<Screen anchors={['home-pods', 'home-clubs']} />);
+    settle();
+
+    expect(screen.getByTestId('home-pods')).toBeOnTheScreen();
+    expect(screen.queryByTestId('tour-overlay')).toBeNull();
+    expect(useToursStore.getState().activeSteps).toEqual([]);
   });
 
   it('numbers zones by registry order, not by the order anchors mounted', () => {

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import InsightChartCard from '../InsightChartCard';
 
 describe('InsightChartCard', () => {
-  it('renders title, subtitle, action and children when not empty', () => {
+  it('renders title, action and children when not empty, without drawing the subtitle', () => {
     render(
       <InsightChartCard
         title="Earnings over time"
@@ -16,7 +16,8 @@ describe('InsightChartCard', () => {
       </InsightChartCard>,
     );
     expect(screen.getByText('Earnings over time')).toBeInTheDocument();
-    expect(screen.getByText('Last 30 days')).toBeInTheDocument();
+    // The subtitle prop is still accepted but intentionally not rendered.
+    expect(screen.queryByText('Last 30 days')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument();
     expect(screen.getByText('chart body')).toBeInTheDocument();
     expect(screen.queryByText('No data available')).not.toBeInTheDocument();
@@ -29,6 +30,7 @@ describe('InsightChartCard', () => {
       </InsightChartCard>,
     );
     expect(screen.getByText('Pods')).toBeInTheDocument();
+    expect(screen.getByTestId('insight-card-empty')).toBeInTheDocument();
     expect(screen.getByText('No data available')).toBeInTheDocument();
     expect(screen.queryByText('hidden chart')).not.toBeInTheDocument();
   });

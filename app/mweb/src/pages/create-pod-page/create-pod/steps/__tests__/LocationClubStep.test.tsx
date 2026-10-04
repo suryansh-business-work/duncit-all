@@ -46,14 +46,16 @@ const CLUBS: CreatePodClub[] = [
     locality: 'Indiranagar',
     matched_venues_count: 2,
     matched_venues: [{ id: 'venue-1' }, { id: 'venue-2' }],
+    available_slots_count: 2,
   },
   {
     id: 'club-2',
     club_name: 'Whitefield Club',
     location_id: 'loc-1',
     locality: 'Whitefield',
-    matched_venues_count: 0,
-    matched_venues: [],
+    matched_venues_count: 1,
+    matched_venues: [{ id: 'venue-3' }],
+    available_slots_count: 1,
   },
   {
     id: 'club-3',
@@ -61,6 +63,8 @@ const CLUBS: CreatePodClub[] = [
     location_id: 'loc-2',
     locality: '',
     matched_venues_count: 1,
+    // Its venues have no open slot, so a physical pod cannot be planned here.
+    available_slots_count: 0,
   },
 ];
 
@@ -120,10 +124,10 @@ describe('LocationClubStep', () => {
   });
 
   it('offers the clubs it was handed, which arrive already scoped to the category', () => {
-    const { container } = step({ values: { location_id: 'loc-1', locality: 'Indiranagar' } });
+    step({ values: { location_id: 'loc-1', locality: 'Indiranagar' } });
 
-    const picker = container.querySelector('[role="combobox"]');
-    if (picker) fireEvent.mouseDown(picker as HTMLElement);
+    // The category picker now sits first on the step, so open the club one by name.
+    fireEvent.mouseDown(clubInput());
 
     // Scoping is the page's job — the category is chosen above the title, and
     // the list arrives narrowed. This step renders what it is given.
@@ -139,8 +143,9 @@ describe('LocationClubStep', () => {
     expect(screen.getByTestId('create-pod-club-option-club-1-place')).toHaveTextContent(
       'Indiranagar, Bengaluru',
     );
+    // A physical pod also hears how many open slots the club's venues have.
     expect(screen.getByTestId('create-pod-club-option-club-1')).toHaveAccessibleName(
-      'Sunset Club, Indiranagar, Bengaluru',
+      'Sunset Club, Indiranagar, Bengaluru, 2 open slots',
     );
     // A club with no area still says which city it is in.
     expect(screen.getByTestId('create-pod-club-option-club-3-place')).toHaveTextContent('Pune');
@@ -173,6 +178,16 @@ describe('LocationClubStep', () => {
 
     expect(formRef?.getValues('club_id')).toBe('club-2');
     expect(clubInput()).toHaveValue('Whitefield Club | Whitefield, Bengaluru');
+  });
+
+  it('refuses a club with no open slot for a physical pod and explains why', () => {
+    step({ values: { location_id: 'loc-2' } });
+
+    fireEvent.mouseDown(clubInput());
+    fireEvent.click(screen.getByTestId('create-pod-club-option-club-3'));
+
+    expect(formRef?.getValues('club_id')).toBe('');
+    expect(screen.getByTestId('create-pod-no-slots-dialog')).toHaveTextContent('No slots available in this club');
   });
 
   it('renders a locality that has no clubs in it', () => {

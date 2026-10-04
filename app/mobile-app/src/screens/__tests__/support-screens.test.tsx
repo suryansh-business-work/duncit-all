@@ -147,10 +147,14 @@ describe('SupportScreen help center', () => {
 });
 
 describe('SupportTicketsScreen', () => {
-  it('opens straight onto the form with the subtitle and banners (BUG-05/09)', () => {
+  it('opens straight onto the form with the banners (BUG-05/09)', () => {
     renderWithProviders(<SupportTicketsScreen />);
     expect(screen.getByTestId('ticket-form')).toBeOnTheScreen();
-    expect(screen.getByTestId('tickets-subtitle')).toBeOnTheScreen();
+    expect(screen.getByTestId('support-tickets-screen-title')).toHaveTextContent(
+      'Create Support Tickets',
+    );
+    // The subtitle that restated the title was dropped from the screen.
+    expect(screen.queryByTestId('tickets-subtitle')).toBeNull();
     expect(screen.getByTestId('tickets-help-banner')).toBeOnTheScreen();
     expect(screen.getByTestId('tickets-faq-banner')).toBeOnTheScreen();
     expect(screen.getByText('Send to support')).toBeOnTheScreen();
@@ -172,7 +176,8 @@ describe('SupportTicketsScreen', () => {
   });
 
   it('navigates to the new ticket details after creating one', async () => {
-    mockedCreate.mockResolvedValue('tk1');
+    // createTicket answers with the id and the human ticket number.
+    mockedCreate.mockResolvedValue({ id: 'tk1', ticketNo: 'TCK-1' });
     renderWithProviders(<SupportTicketsScreen />);
     fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
     fireEvent.changeText(screen.getByTestId('ticket-message'), 'It broke');
@@ -184,7 +189,7 @@ describe('SupportTicketsScreen', () => {
 
   it('attaches the pod from route params: chip shown + pod sent on create', async () => {
     mockRouteParams = { podId: 'p1', podTitle: 'Sunset Jam' };
-    mockedCreate.mockResolvedValue('tk2');
+    mockedCreate.mockResolvedValue({ id: 'tk2', ticketNo: 'TCK-2' });
     renderWithProviders(<SupportTicketsScreen />);
     expect(screen.getByTestId('ticket-attached-pod')).toBeOnTheScreen();
     expect(screen.getByText('About pod: Sunset Jam')).toBeOnTheScreen();

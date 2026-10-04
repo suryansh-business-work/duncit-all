@@ -33,6 +33,19 @@ const setup = (props: Partial<Parameters<typeof AccountEditForm>[0]> = {}) =>
 const saveDisabled = () =>
   screen.getByTestId('account-edit-submit').props['aria-disabled'] === true;
 
+/**
+ * Disabled means no real tap can land: the host view is announced disabled and
+ * never becomes a touch responder. (fireEvent.press would bubble up to
+ * DuncitButton's own composite `onPress` prop, which no real touch reaches, so
+ * it cannot prove this.)
+ */
+const expectSaveInert = () => {
+  const save = screen.getByTestId('account-edit-submit');
+  expect(save.props['aria-disabled']).toBe(true);
+  expect(save.props.onStartShouldSetResponder).toBeUndefined();
+  expect(save.props.onResponderRelease).toBeUndefined();
+};
+
 /** Press Save once it is enabled (RHF validates onChange asynchronously). */
 const pressSaveWhenEnabled = async () => {
   await waitFor(() => expect(saveDisabled()).toBe(false));
@@ -43,22 +56,28 @@ describe('AccountEditForm', () => {
   it('prefills the loaded user values including the date of birth (bug 8)', () => {
     setup();
     expect(screen.getByTestId('field-first_name').props.value).toBe('Riya');
-    expect(screen.getByTestId('field-dob').props.value).toBe('1995-01-01');
+    // Stored as YYYY-MM-DD, shown in the typeable form of the admin's date
+    // pattern (the fallback dd MMM yyyy → DD MM YYYY when no settings load).
+    expect(screen.getByTestId('field-dob').props.value).toBe('01 01 1995');
   });
 
   it('keeps Save disabled until a valid change is made, then submits (bug 4 gating)', async () => {
     const onSubmit = jest.fn();
     setup({ onSubmit });
 
-    // Pristine: the button is disabled and pressing it does nothing.
+    // Pristine: the button is disabled and no tap can reach it.
     expect(saveDisabled()).toBe(true);
-    fireEvent.press(screen.getByTestId('account-edit-submit'));
-    expect(onSubmit).not.toHaveBeenCalled();
+    expectSaveInert();
 
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await pressSaveWhenEnabled();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({ first_name: 'Riya R', state: 'Maharashtra' });
+    // The untouched birthday still submits in the stored YYYY-MM-DD shape.
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      first_name: 'Riya R',
+      state: 'Maharashtra',
+      dob: '1995-01-01',
+    });
   });
 
   it('validates the date of birth and submits an edited dob (bug 8)', async () => {
@@ -67,12 +86,12 @@ describe('AccountEditForm', () => {
 
     fireEvent.changeText(screen.getByTestId('field-dob'), '01/01/1995');
     await waitFor(() =>
-      expect(screen.getByTestId('dob-error')).toHaveTextContent('Use the format YYYY-MM-DD'),
+      expect(screen.getByTestId('dob-error')).toHaveTextContent('Use the format DD MM YYYY'),
     );
-    fireEvent.press(screen.getByTestId('account-edit-submit'));
-    expect(onSubmit).not.toHaveBeenCalled();
+    expectSaveInert();
 
-    fireEvent.changeText(screen.getByTestId('field-dob'), '1990-12-31');
+    // Typed in the box's own pattern, stored as YYYY-MM-DD.
+    fireEvent.changeText(screen.getByTestId('field-dob'), '31 12 1990');
     // A valid dob re-enables Save and submits the new value; assert via the
     // stable enabled-state + submit below rather than the error node, whose exit
     // animation can briefly linger in CI.
@@ -93,14 +112,12 @@ describe('AccountEditForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('rejects an invalid phone number', async () => {
+  it('shows the phone number read-only, changed only through its own verified door', () => {
     setup();
-    fireEvent.changeText(screen.getByTestId('field-phone_number'), 'abc123');
-    await waitFor(() =>
-      expect(screen.getByTestId('phone_number-error')).toHaveTextContent(
-        'Enter a 10-digit phone number',
-      ),
-    );
+    // Contacts are not form boxes any more — each moves behind a one-time code.
+    expect(screen.queryByTestId('field-phone_number')).toBeNull();
+    expect(screen.getByText('+91 9876543210')).toBeOnTheScreen();
+    expect(screen.getByTestId('contact-change-PHONE')).toBeOnTheScreen();
   });
 
   it('marks every contact detail required and blocks Save while one is missing', async () => {
@@ -110,7 +127,7 @@ describe('AccountEditForm', () => {
     expect(screen.getByTestId('contact-required')).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await waitFor(() => expect(saveDisabled()).toBe(true));
-    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    expectSaveInert();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

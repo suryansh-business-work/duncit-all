@@ -11,11 +11,16 @@ import {
 import type { StoryTarget } from '@/hooks/useStoryRail';
 
 // statusRailActions only touches `Linking.openURL` from react-native and
-// `createURL` from expo-linking at runtime — a minimal replacement keeps this
-// spec from depending on the native modules behind either package.
-jest.mock('react-native', () => ({
-  Linking: { openURL: jest.fn().mockResolvedValue(undefined) },
-}));
+// `createURL` from expo-linking at runtime. The rest of react-native stays real:
+// jest-expo's lazy `fetch` global loads expo-modules-core, which reads
+// `Platform.select` — a bare `{ Linking }` replacement crashes the suite.
+jest.mock('react-native', () => {
+  const actual = jest.requireActual('react-native');
+  return Object.setPrototypeOf(
+    { Linking: { ...actual.Linking, openURL: jest.fn().mockResolvedValue(undefined) } },
+    actual,
+  );
+});
 jest.mock('expo-linking', () => ({
   createURL: jest.fn((path: string) => `duncit://app${path}`),
 }));

@@ -1,3 +1,4 @@
+import { gql } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -19,6 +20,21 @@ const HOME_ANCHORS = [
   'home-profile',
 ];
 
+/** The query useFeatureFlag reads; `tour_guide` is the runner's kill switch. */
+const PUBLIC_FLAGS = gql`
+  query PublicFeatureFlags {
+    publicFeatureFlags {
+      key
+      enabled
+    }
+  }
+`;
+
+const flagsMock = (enabled: boolean) => ({
+  request: { query: PUBLIC_FLAGS },
+  result: { data: { publicFeatureFlags: [{ key: 'tour_guide', enabled }] } },
+});
+
 /** Starts a tour from inside the provider, like the Tour Guide centre does. */
 function Starter() {
   const { startTour } = useTours();
@@ -29,9 +45,9 @@ function Starter() {
   );
 }
 
-function mount(anchors: string[]) {
+function mount(anchors: string[], tourGuideEnabled = true) {
   return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[flagsMock(tourGuideEnabled)]}>
       <MemoryRouter>
         <TourProvider userId="u1" storage={store}>
           {anchors.map((a) => (
@@ -94,6 +110,17 @@ describe('TourRunner', () => {
       container.append(late);
     });
     expect(await screen.findByText('What are Pods?', undefined, { timeout: 4000 })).toBeInTheDocument();
+  });
+
+  it('opens nothing when the tour_guide kill switch is off', async () => {
+    mount(HOME_ANCHORS, false);
+    act(() => {
+      screen.getByRole('button', { name: 'start' }).click();
+    });
+    // Every anchor is there, so with the flag on the tour would open at once;
+    // give it longer than the poll needs and it must still be closed.
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 600));
+    expect(screen.queryByText('What are Pods?')).toBeNull();
   });
 
   it('renders nothing while no tour is active', () => {

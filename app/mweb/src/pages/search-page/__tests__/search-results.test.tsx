@@ -12,7 +12,7 @@
  *
  *  - a follow that is in flight cannot be tapped again. Two taps on Follow is
  *    two mutations, and the second lands as an unfollow.
- *  - a club is opened through the CALLER, by id — the page owns navigation, and
+ *  - a club is opened through the CALLER, by slug — the page owns navigation, and
  *    a card that built its own URL would break the moment a route changed.
  *  - an empty search says so rather than rendering an empty page, and says it
  *    differently from a search still running.
@@ -124,14 +124,17 @@ describe('SearchClubCard', () => {
     expect(container.textContent).toContain('Sunset Club');
   });
 
-  it('opens the club through the caller, by id — the page owns navigation', () => {
+  it('opens the club through the caller, by its slug — the page owns navigation', () => {
     const { container, spies } = card();
 
     for (const control of container.querySelectorAll<HTMLElement>('button, [role="button"]')) {
       fireEvent.click(control);
     }
 
-    for (const [id] of spies.onOpenClub.mock.calls) expect(id).toBe('club-1');
+    // The page builds the club URL from the slug (`club.club_id`), never the
+    // database id.
+    expect(spies.onOpenClub).toHaveBeenCalled();
+    for (const [id] of spies.onOpenClub.mock.calls) expect(id).toBe('sunset-club');
   });
 
   it('reports a follow by club id', () => {

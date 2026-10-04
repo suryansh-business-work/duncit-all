@@ -5,10 +5,9 @@
  * a label with no address is a dead row on a stranger's screen, and an address
  * with no label is a bare URL nobody clicks.
  *
- * NOTE, recorded rather than fixed here: the form always renders one blank row
- * to type into, and validation runs BEFORE the submit handler drops empty rows,
- * so a member with no links cannot save their bio until they delete that row.
- * The test below states what the form does today, not what it should do.
+ * The form always renders one blank row to type into. A row left completely
+ * blank is not a link at all, so it must not block Save — the shared
+ * @duncit/forms links schema skips it and the submit handler drops it.
  */
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
@@ -120,20 +119,33 @@ describe('ProfileAboutEditForm', () => {
     expect(container.querySelectorAll('input').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('refuses the blank row it rendered itself, until the member deletes it', async () => {
-    const { container, spies } = form({ links: [] });
+  it('saves past the blank row it rendered itself, sending no links for it', async () => {
+    // Strict variables: the save only matches when the blank row was dropped.
+    const noLinks: MockedResponse = {
+      request: {
+        query: UPDATE_MY_PROFILE,
+        variables: { input: { bio: 'Plays doubles on Sundays.', profile_links: [] } },
+      },
+      result: saved.result,
+    };
+    const onSaved = vi.fn();
+    const { container } = render(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[noLinks]}>
+        <ThemeProvider theme={testTheme}>
+          <ProfileAboutEditForm bio="Plays doubles on Sundays." links={[]} onCancel={vi.fn()} onSaved={onSaved} />
+        </ThemeProvider>
+      </MockedProvider>
+    );
 
+    // The blank row is there to type into…
+    expect(container.querySelector('[aria-label="remove link"]')).not.toBeNull();
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
     await settle();
     await settle();
-    expect(spies.onSaved).not.toHaveBeenCalled();
 
-    fireEvent.click(container.querySelector('[aria-label="remove link"]') as HTMLElement);
-    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
-    await settle();
-    await settle();
-
-    expect(spies.onSaved).toHaveBeenCalled();
+    // …and neither blocks Save nor reaches the server as a link.
+    expect(container.querySelector('[data-testid="profile-about-edit-form-error"]')).toBeNull();
+    expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
   it('refuses a link with a label and no address', async () => {

@@ -2,10 +2,26 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { LocaleProvider, PUBLIC_LOCALES, PUBLIC_TRANSLATIONS } from '@duncit/app-settings';
-import { describe, expect, it } from 'vitest';
+import {
+  LANGUAGE_PREFERENCE_FLAG,
+  LocaleProvider,
+  PUBLIC_LOCALES,
+  PUBLIC_TRANSLATIONS,
+} from '@duncit/app-settings';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import LanguageSection from '../LanguageSection';
 import { MWEB_FALLBACK_FLAT } from '../../../i18n/fallback';
+
+// The section only shows while the language_preference flag is on; the flag
+// set is the server's, so each test decides which flags it sees.
+let enabledFlags = new Set<string>([LANGUAGE_PREFERENCE_FLAG]);
+vi.mock('../../../hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string) => enabledFlags.has(key),
+}));
+
+afterEach(() => {
+  enabledFlags = new Set([LANGUAGE_PREFERENCE_FLAG]);
+});
 
 const localesMock: MockedResponse = {
   request: { query: PUBLIC_LOCALES },
@@ -43,6 +59,15 @@ describe('LanguageSection', () => {
     expect(screen.getByLabelText('Language')).toBeInTheDocument();
   });
 
+  it('stays hidden while the language preference flag is off', async () => {
+    enabledFlags = new Set();
+    renderSection([localesMock, catalogueMock('en-IN', [])]);
+    // Wait for the locale list to land so the hide is down to the flag alone.
+    await waitFor(() => expect(document.documentElement.lang).toBe('en-IN'));
+    expect(screen.queryByTestId('account-language-section')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Language')).not.toBeInTheDocument();
+  });
+
   it('prefers the server translation over the bundled fallback', async () => {
     renderSection([
       localesMock,
@@ -54,7 +79,11 @@ describe('LanguageSection', () => {
   it('lists every active locale with its own script and English name', async () => {
     renderSection([localesMock, catalogueMock('en-IN', [])]);
     fireEvent.mouseDown(await screen.findByLabelText('Language'));
-    expect(await screen.findByText(/हिन्दी · Hindi \(India\)/)).toBeInTheDocument();
+    // The endonym sits in its own lang-tagged span, so match the whole option.
+    const hindi = await screen.findByTestId('locale-option-hi-IN');
+    expect(hindi).toHaveTextContent('हिन्दी · Hindi (India)');
+    expect(screen.getByText('हिन्दी')).toHaveAttribute('lang', 'hi-IN');
+    expect(screen.getByTestId('locale-option-en-IN')).toHaveTextContent('English · English (India)');
   });
 
   it('re-renders in the chosen language straight away', async () => {

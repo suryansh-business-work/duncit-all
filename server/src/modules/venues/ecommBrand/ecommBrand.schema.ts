@@ -48,6 +48,37 @@ export const ecommBrandTypeDefs = gql`
     live_mode: Boolean!
     "A webhook secret is on file for this account."
     has_webhook_secret: Boolean!
+    "The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand."
+    connection_id: ID
+  }
+
+  "A brand that uses a saved Integrations connection."
+  type PartnerIntegrationBrand {
+    id: ID!
+    brand_name: String!
+  }
+
+  """
+  A Razorpay or ShipRocket account a brand partner saved once on the
+  Integrations page and picks for any of their brands. Picking copies it onto
+  the brand; saving or re-checking it refreshes every brand that uses it.
+  """
+  type PartnerIntegration {
+    id: ID!
+    provider: BrandIntegrationProvider!
+    "The partner's own name for the account."
+    label: String!
+    status: BrandIntegrationStatus!
+    brands: [PartnerIntegrationBrand!]!
+    created_at: String
+    updated_at: String
+  }
+
+  "Fill the credential of the connection's provider; the other is ignored."
+  input PartnerIntegrationInput {
+    label: String!
+    shiprocket: BrandShiprocketInput
+    razorpay: BrandRazorpayInput
   }
 
   """
@@ -261,6 +292,8 @@ export const ecommBrandTypeDefs = gql`
     myEcommBrand(brand_doc_id: ID!): EcommBrand
     "The Brand Consent Legal publishes for brand partners to sign (slug brand-partner-consent). Null until Legal writes one."
     brandConsentPolicy: Policy
+    "Partner: the Razorpay / ShipRocket connections they saved on the Integrations page, newest first."
+    myPartnerIntegrations(provider: BrandIntegrationProvider): [PartnerIntegration!]!
   }
 
   extend type Mutation {
@@ -302,5 +335,13 @@ export const ecommBrandTypeDefs = gql`
     reviewBrandIntegration(brand_doc_id: ID!, provider: BrandIntegrationProvider!): BrandIntegrationStatus!
     "Products portal: delete a brand that is not approved (or approved with no products). The owner is told."
     adminDeleteEcommBrand(brand_doc_id: ID!, notes: String): Boolean!
+    "Partner: add (omit id) or update a saved connection and check it against the vendor right away."
+    savePartnerIntegration(id: ID, provider: BrandIntegrationProvider!, input: PartnerIntegrationInput!): PartnerIntegration!
+    "Partner: check a saved connection again; every brand using it takes the new result."
+    recheckPartnerIntegration(id: ID!): PartnerIntegration!
+    "Partner: delete a saved connection. Refused while a brand uses it."
+    deletePartnerIntegration(id: ID!): Boolean!
+    "Partner: pick a saved connection (one that passed its check) for a brand."
+    useBrandIntegration(brand_doc_id: ID!, provider: BrandIntegrationProvider!, integration_id: ID!): BrandIntegrationStatus!
   }
 `;

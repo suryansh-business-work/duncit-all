@@ -38,9 +38,22 @@ export interface BrandIntegrationStatus {
   pickup_location: string;
   live_mode: boolean;
   has_webhook_secret: boolean;
+  /** The partner's Integrations connection this credential was copied from; null when typed in on the brand. */
+  connection_id: string | null;
 }
 
-const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+/**
+ * Anything that holds the two vendor credentials in the brand's shape: a
+ * brand, or a partner's saved Integrations connection (`PartnerIntegration`).
+ * Both are saved, checked and read through the same helpers below.
+ */
+export interface IntegrationHolder {
+  _id: unknown;
+  integrations: { shiprocket: IBrandShiprocketIntegration; razorpay: IBrandRazorpayIntegration };
+  integration_links?: { shiprocket?: Types.ObjectId | null; razorpay?: Types.ObjectId | null } | null;
+}
+
+const str =(v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 const bad = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -50,11 +63,13 @@ export function assertProvider(provider: string): asserts provider is BrandInteg
   if (!BRAND_INTEGRATION_PROVIDERS.has(provider as BrandIntegrationProvider)) bad('Unknown integration provider');
 }
 
-const shiprocketConfigured = (s: IBrandShiprocketIntegration) => !!(str(s?.email) && s?.password);
+type LinkId = Types.ObjectId | null | undefined;
+
+const shiprocketConfigured =(s: IBrandShiprocketIntegration) => !!(str(s?.email) && s?.password);
 const razorpayConfigured = (r: IBrandRazorpayIntegration) => !!(str(r?.key_id) && r?.key_secret);
 
 /** ShipRocket as the console reads it. */
-function shiprocketStatus(s: IBrandShiprocketIntegration | undefined): BrandIntegrationStatus {
+function shiprocketStatus(s: IBrandShiprocketIntegration | undefined, link: LinkId): BrandIntegrationStatus {
   const integration = s ?? ({} as IBrandShiprocketIntegration);
   return {
     provider: 'SHIPROCKET',
@@ -68,11 +83,12 @@ function shiprocketStatus(s: IBrandShiprocketIntegration | undefined): BrandInte
     pickup_location: integration.pickup_location ?? '',
     live_mode: false,
     has_webhook_secret: !!integration.webhook_secret,
+    connection_id: link ? link.toHexString() : null,
   };
 }
 
 /** Razorpay as the console reads it. The key id's prefix says whether real money moves. */
-function razorpayStatus(r: IBrandRazorpayIntegration | undefined): BrandIntegrationStatus {
+function razorpayStatus(r: IBrandRazorpayIntegration | undefined, link: LinkId): BrandIntegrationStatus {
   const integration = r ?? ({} as IBrandRazorpayIntegration);
   return {
     provider: 'RAZORPAY',
@@ -86,19 +102,67 @@ function razorpayStatus(r: IBrandRazorpayIntegration | undefined): BrandIntegrat
     pickup_location: '',
     live_mode: (integration.key_id ?? '').startsWith('rzp_live'),
     has_webhook_secret: !!integration.webhook_secret,
+    connection_id: link ? link.toHexString() : null,
   };
 }
 
-export const integrationStatus = (brand: IEcommBrand, provider: BrandIntegrationProvider): BrandIntegrationStatus =>
-  provider === 'SHIPROCKET' ? shiprocketStatus(brand.integrations?.shiprocket) : razorpayStatus(brand.integrations?.razorpay);
+export const integrationStatus = (holder: IntegrationHolder, provider: BrandIntegrationProvider): BrandIntegrationStatus =>
+  provider === 'SHIPROCKET'
+    ? shiprocketStatus(holder.integrations?.shiprocket, holder.integration_links?.shiprocket)
+    : razorpayStatus(holder.integrations?.razorpay, holder.integration_links?.razorpay);
 
-export const integrationsOf = (brand: IEcommBrand) => ({
-  shiprocket: shiprocketStatus(brand.integrations?.shiprocket),
-  razorpay: razorpayStatus(brand.integrations?.razorpay),
+export const integrationsOf = (holder: IntegrationHolder) => ({
+  shiprocket: integrationStatus(holder, 'SHIPROCKET'),
+  razorpay: integrationStatus(holder, 'RAZORPAY'),
 });
 
+/**
+ * Copy one provider's credential AND its last check from a saved connection
+ * onto a brand. Every vendor call for the brand reads the brand's copy, so the
+ * webhook keys, `live` and the ShipRocket account resolver keep working
+ * unchanged; the caller records the link and saves the brand.
+ */
+export function copyIntegration(from: IntegrationHolder, to: IntegrationHolder, provider: BrandIntegrationProvider) {
+  if (provider === 'SHIPROCKET') {
+    const s = from.integrations.shiprocket;
+    to.integrations.shiprocket = {
+      email: s.email,
+      password: s.password,
+      pickup_location: s.pickup_location,
+      webhook_secret: s.webhook_secret,
+      connected: s.connected,
+      checked_at: s.checked_at,
+      message: s.message,
+      details: [...(s.details ?? [])],
+    };
+    return;
+  }
+  const r = from.integrations.razorpay;
+  to.integrations.razorpay = {
+    key_id: r.key_id,
+    key_secret: r.key_secret,
+    webhook_secret: r.webhook_secret,
+    connected: r.connected,
+    checked_at: r.checked_at,
+    message: r.message,
+    details: [...(r.details ?? [])],
+  };
+}
+
+/** The same account on both sides: same public half AND same secret. */
+export function sameCredential(a: IntegrationHolder, b: IntegrationHolder, provider: BrandIntegrationProvider) {
+  if (provider === 'SHIPROCKET') {
+    const x = a.integrations.shiprocket;
+    const y = b.integrations.shiprocket;
+    return x.email === y.email && x.password === y.password;
+  }
+  const x = a.integrations.razorpay;
+  const y = b.integrations.razorpay;
+  return x.key_id === y.key_id && x.key_secret === y.key_secret;
+}
+
 /** Write the ShipRocket API user onto the brand. A blank password keeps the saved one. */
-export function applyShiprocketInput(brand: IEcommBrand, input: Record<string, unknown>) {
+export function applyShiprocketInput(brand: IntegrationHolder, input: Record<string, unknown>) {
   const current = brand.integrations.shiprocket;
   const email = str(input.email);
   if (!email) bad('Enter the ShipRocket API user email');
@@ -113,7 +177,7 @@ export function applyShiprocketInput(brand: IEcommBrand, input: Record<string, u
 }
 
 /** Write the Razorpay keys onto the brand. A blank secret keeps the saved one. */
-export function applyRazorpayInput(brand: IEcommBrand, input: Record<string, unknown>) {
+export function applyRazorpayInput(brand: IntegrationHolder, input: Record<string, unknown>) {
   const current = brand.integrations.razorpay;
   const keyId = str(input.key_id);
   if (!keyId) bad('Enter the Razorpay key id');
@@ -127,7 +191,7 @@ export function applyRazorpayInput(brand: IEcommBrand, input: Record<string, unk
 }
 
 /** Forget the credential. The brand is no longer connected and cannot be submitted until it is again. */
-export function clearIntegration(brand: IEcommBrand, provider: BrandIntegrationProvider) {
+export function clearIntegration(brand: IntegrationHolder, provider: BrandIntegrationProvider) {
   const cleared = { connected: false, checked_at: null, message: '', details: [] };
   if (provider === 'SHIPROCKET') {
     brand.integrations.shiprocket = { email: '', password: '', pickup_location: '', webhook_secret: '', ...cleared };
@@ -137,7 +201,7 @@ export function clearIntegration(brand: IEcommBrand, provider: BrandIntegrationP
 }
 
 /** A reader over the brand's stored config, in the field names the Tech portal's probes read. */
-function readerFor(brand: IEcommBrand, provider: BrandIntegrationProvider) {
+function readerFor(brand: IntegrationHolder, provider: BrandIntegrationProvider) {
   const config: Record<string, string> =
     provider === 'SHIPROCKET'
       ? {
@@ -154,7 +218,7 @@ function readerFor(brand: IEcommBrand, provider: BrandIntegrationProvider) {
 }
 
 /** The vendor's answer, or the transport failure as one — a probe never throws. */
-async function runProbe(brand: IEcommBrand, provider: BrandIntegrationProvider): Promise<EnvConnectionResult> {
+async function runProbe(brand: IntegrationHolder, provider: BrandIntegrationProvider): Promise<EnvConnectionResult> {
   try {
     const read = readerFor(brand, provider);
     return provider === 'SHIPROCKET' ? await shiprocketConnection(read) : await razorpayConnection(read);
@@ -169,7 +233,7 @@ async function runProbe(brand: IEcommBrand, provider: BrandIntegrationProvider):
  * The caller saves the brand. An unconfigured credential is refused before
  * any call is made, so a probe can never spend a login on a blank password.
  */
-export async function probeBrandIntegration(brand: IEcommBrand, provider: BrandIntegrationProvider): Promise<BrandIntegrationStatus> {
+export async function probeBrandIntegration(brand: IntegrationHolder, provider: BrandIntegrationProvider): Promise<BrandIntegrationStatus> {
   const status = integrationStatus(brand, provider);
   if (!status.configured) {
     bad(provider === 'SHIPROCKET' ? 'Save the ShipRocket API user first' : 'Save the Razorpay keys first');

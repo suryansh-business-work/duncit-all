@@ -3073,6 +3073,8 @@ export type BrandIntegrationStatus = {
   configured: Scalars['Boolean']['output'];
   /** The vendor accepted the credential the last time it was checked. */
   connected: Scalars['Boolean']['output'];
+  /** The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand. */
+  connection_id?: Maybe<Scalars['ID']['output']>;
   details: Array<Scalars['String']['output']>;
   has_secret: Scalars['Boolean']['output'];
   /** A webhook secret is on file for this account. */
@@ -11658,6 +11660,8 @@ export type Mutation = {
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
+  /** Partner: delete a saved connection. Refused while a brand uses it. */
+  deletePartnerIntegration: Scalars['Boolean']['output'];
   deletePod: Scalars['Boolean']['output'];
   deletePodCalculator: Scalars['Boolean']['output'];
   deletePodComment: Scalars['Boolean']['output'];
@@ -12069,6 +12073,8 @@ export type Mutation = {
   reactToStaffMessage: StaffMessage;
   /** Partner: check the saved credential again without changing it. */
   recheckBrandIntegration: BrandIntegrationStatus;
+  /** Partner: check a saved connection again; every brand using it takes the new result. */
+  recheckPartnerIntegration: PartnerIntegration;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
@@ -12442,6 +12448,8 @@ export type Mutation = {
   saveMyAddress: UserAddress;
   /** Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
   saveMyBrandPickupLocation: BrandPickupLocation;
+  /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
+  savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   /**
@@ -13134,6 +13142,8 @@ export type Mutation = {
   /** Create or correct one model's rate. Past rows keep the cost they were written with. */
   upsertOpenAiModelPrice: OpenAiModelPrice;
   upsertTranslation: Translation;
+  /** Partner: pick a saved connection (one that passed its check) for a brand. */
+  useBrandIntegration: BrandIntegrationStatus;
   /** Venue enrols: accepts the offer and commits one of its own slots. */
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
@@ -14561,6 +14571,11 @@ export type MutationDeleteOfficialStatusArgs = {
 };
 
 
+export type MutationDeletePartnerIntegrationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeletePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -15294,6 +15309,11 @@ export type MutationRecheckBrandIntegrationArgs = {
 };
 
 
+export type MutationRecheckPartnerIntegrationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationReconcileCrmCallArgs = {
   log_id: Scalars['ID']['input'];
 };
@@ -15917,6 +15937,13 @@ export type MutationSaveMyBrandPickupLocationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSavePartnerIntegrationArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: PartnerIntegrationInput;
+  provider: BrandIntegrationProvider;
 };
 
 
@@ -17904,6 +17931,13 @@ export type MutationUpsertTranslationArgs = {
 };
 
 
+export type MutationUseBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  integration_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
+};
+
+
 export type MutationVenueAcceptAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   slot_id: Scalars['ID']['input'];
@@ -18668,6 +18702,37 @@ export type PartnerFaqTopic =
   | 'HOST'
   | 'PRODUCTS'
   | 'VENUE';
+
+/**
+ * A Razorpay or ShipRocket account a brand partner saved once on the
+ * Integrations page and picks for any of their brands. Picking copies it onto
+ * the brand; saving or re-checking it refreshes every brand that uses it.
+ */
+export type PartnerIntegration = {
+  __typename?: 'PartnerIntegration';
+  brands: Array<PartnerIntegrationBrand>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The partner's own name for the account. */
+  label: Scalars['String']['output'];
+  provider: BrandIntegrationProvider;
+  status: BrandIntegrationStatus;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A brand that uses a saved Integrations connection. */
+export type PartnerIntegrationBrand = {
+  __typename?: 'PartnerIntegrationBrand';
+  brand_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+};
+
+/** Fill the credential of the connection's provider; the other is ignored. */
+export type PartnerIntegrationInput = {
+  label: Scalars['String']['input'];
+  razorpay?: InputMaybe<BrandRazorpayInput>;
+  shiprocket?: InputMaybe<BrandShiprocketInput>;
+};
 
 /** One of the partner's products, as the E-Commerce Brand Dashboard's performance chart plots it. */
 export type PartnerProductPerformance = {
@@ -22766,6 +22831,8 @@ export type Query = {
   /** All of the current user's onboarding meetings (one per kind). */
   myMeetings: Array<OnboardingMeeting>;
   myNotifications: Array<UserNotification>;
+  /** Partner: the Razorpay / ShipRocket connections they saved on the Integrations page, newest first. */
+  myPartnerIntegrations: Array<PartnerIntegration>;
   /** One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history. */
   myPayment?: Maybe<Payment>;
   myPayments: Array<Payment>;
@@ -25110,6 +25177,11 @@ export type QueryMyMeetingArgs = {
 export type QueryMyNotificationsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   unreadOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryMyPartnerIntegrationsArgs = {
+  provider?: InputMaybe<BrandIntegrationProvider>;
 };
 
 

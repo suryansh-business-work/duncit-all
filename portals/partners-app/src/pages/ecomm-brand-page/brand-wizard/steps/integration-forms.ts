@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { EMAIL } from '@duncit/regex';
-import type { DocumentNode } from '@apollo/client';
-import { CONNECT_BRAND_RAZORPAY, CONNECT_BRAND_SHIPROCKET, type BrandIntegrationProvider, type BrandIntegrationStatus } from '../../queries';
+import type { BrandRazorpayInput, BrandShiprocketInput } from '@duncit/gql-types';
+import type { BrandIntegrationProvider, BrandIntegrationStatus } from '../../queries';
 import type { Translate } from '../wizard-steps';
 
 export interface IntegrationFormValues {
@@ -99,25 +99,17 @@ export const makeIntegrationSchema = (t: Translate, provider: BrandIntegrationPr
 
 const orUndefined = (value: string) => value || undefined;
 
-/** The mutation input — a blank secret is omitted so the server keeps the saved one. */
-export const toIntegrationInput = (provider: BrandIntegrationProvider, values: IntegrationFormValues) => {
-  if (provider === 'SHIPROCKET') {
-    return {
-      email: values.email,
-      password: orUndefined(values.password),
-      pickup_location: values.pickup_location,
-      webhook_secret: orUndefined(values.webhook_secret),
-    };
-  }
-  return { key_id: values.key_id, key_secret: orUndefined(values.key_secret), webhook_secret: orUndefined(values.webhook_secret) };
-};
+/** The ShipRocket input — a blank secret is omitted so the server keeps the saved one. */
+export const toShiprocketInput = (values: IntegrationFormValues): BrandShiprocketInput => ({
+  email: values.email,
+  password: orUndefined(values.password),
+  pickup_location: values.pickup_location,
+  webhook_secret: orUndefined(values.webhook_secret),
+});
 
-export const CONNECT_DOCUMENT: Record<BrandIntegrationProvider, DocumentNode> = {
-  SHIPROCKET: CONNECT_BRAND_SHIPROCKET,
-  RAZORPAY: CONNECT_BRAND_RAZORPAY,
-};
-
-export const CONNECT_RESULT_KEY: Record<BrandIntegrationProvider, string> = {
-  SHIPROCKET: 'connectBrandShiprocket',
-  RAZORPAY: 'connectBrandRazorpay',
-};
+/** The Razorpay input — a blank secret is omitted so the server keeps the saved one. */
+export const toRazorpayInput = (values: IntegrationFormValues): BrandRazorpayInput => ({
+  key_id: values.key_id,
+  key_secret: orUndefined(values.key_secret),
+  webhook_secret: orUndefined(values.webhook_secret),
+});

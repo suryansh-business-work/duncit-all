@@ -58,7 +58,6 @@ export default function BrandStepBody({
     case 'integration':
       return (
         <IntegrationStep
-          brandId={brandId}
           shippingMode={brand?.shipping_mode}
           integrations={brand?.integrations}
           brand={brand}

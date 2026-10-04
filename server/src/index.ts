@@ -264,6 +264,13 @@ async function bootstrap() {
       logs.server.info('bootstrap', 'ecommBrandLive', result);
     }
   });
+  // Credentials brands typed in before the Partners Integrations page existed
+  // become saved connections of their owner, so the page lists them and the
+  // wizard shows them as picked. Idempotent: a linked brand is never re-read.
+  await safeSeed('partnerIntegrations', async () => {
+    const { partnerIntegrationService } = await import('@modules/venues/ecommBrand/partnerIntegration.service');
+    await partnerIntegrationService.backfillFromBrands();
+  });
   // What every existing translation was written against, recorded once so it
   // can be seen to fall out of date with English. Must run BEFORE the shipped
   // English below is revised, or a reword in this boot would read as in sync.

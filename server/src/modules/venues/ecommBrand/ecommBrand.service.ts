@@ -28,14 +28,41 @@ import {
   clearIntegration,
   consentContext,
   consentPub,
+  copyIntegration,
   currentConsentPolicy,
   integrationStatus,
   integrationsOf,
   probeBrandIntegration,
+  sameCredential,
   type BrandIntegrationProvider,
 } from './ecommBrand.integrations';
+import { PartnerIntegrationModel } from './partnerIntegration.model';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+
+/** Where each provider lives under `integrations` / `integration_links`. */
+export const PROVIDER_KEY = { SHIPROCKET: 'shiprocket', RAZORPAY: 'razorpay' } as const;
+
+/**
+ * A pickup address registered on one ShipRocket account does not exist on
+ * another, so when the account a brand ships on changes, its warehouses are
+ * registered again — at once for an approved brand, on approval otherwise.
+ */
+async function resetBrandWarehouses(brand: IEcommBrand) {
+  await BrandPickupLocationModel.updateMany(
+    { owner_kind: 'BRAND', brand_id: brand._id },
+    { $set: { shiprocket_registered: false, shiprocket_error: '' } }
+  );
+  if (brand.status !== 'APPROVED') return;
+  const { brandPickupLocationService } = await import('@modules/venues/brandPickupLocation/brandPickupLocation.service');
+  await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
+}
+
+/** The brand's own ShipRocket account changed: re-register its warehouses if it ships on that account. */
+export async function resetOwnShiprocketWarehouses(brand: IEcommBrand) {
+  const { brandShippingMode } = await import('@modules/commerce/shiprocket/shiprocket.account');
+  if (brandShippingMode(brand) === 'OWN_SHIPROCKET') await resetBrandWarehouses(brand);
+}
 
 const SHIPPING_MODES = new Set<string>(BRAND_SHIPPING_MODES);
 
@@ -706,6 +733,8 @@ export const ecommBrandService = {
     const brand = await loadOwned(userId, brandId);
     if (provider === 'SHIPROCKET') applyShiprocketInput(brand, input);
     else applyRazorpayInput(brand, input);
+    // Typed in on the brand: it no longer follows a saved connection.
+    brand.integration_links[PROVIDER_KEY[provider]] = null;
     const status = await probeBrandIntegration(brand, provider);
     await brand.save();
     return status;
@@ -727,19 +756,35 @@ export const ecommBrandService = {
     const before = brandShippingMode(brand);
     brand.shipping_mode = mode;
     await brand.save();
-    if (before !== mode) {
-      await BrandPickupLocationModel.updateMany(
-        { owner_kind: 'BRAND', brand_id: brand._id },
-        { $set: { shiprocket_registered: false, shiprocket_error: '' } }
-      );
-      if (brand.status === 'APPROVED') {
-        const { brandPickupLocationService } = await import(
-          '@modules/venues/brandPickupLocation/brandPickupLocation.service'
-        );
-        await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
-      }
-    }
+    if (before !== mode) await resetBrandWarehouses(brand);
     return toPub(brand);
+  },
+
+  /**
+   * Pick one of the partner's saved Integrations connections for a brand. The
+   * credential and its last check are copied onto the brand (every vendor call
+   * reads that copy) and the link is kept, so a later save of the connection
+   * refreshes this brand too. Only a connection that passed its check can be
+   * picked — a brand must never go live on a key the vendor refused.
+   */
+  async linkIntegration(userId: string, brandId: string, provider: BrandIntegrationProvider, integrationId: string) {
+    assertProvider(provider);
+    const brand = await loadOwned(userId, brandId);
+    const connection = Types.ObjectId.isValid(integrationId)
+      ? await PartnerIntegrationModel.findOne({ _id: integrationId, owner_user_id: brand.owner_user_id, provider })
+      : null;
+    if (!connection) throw new GraphQLError('Integration not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!connection.integrations[PROVIDER_KEY[provider]].connected) {
+      throw new GraphQLError('This connection did not pass its last check. Test it again on the Integrations page first.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const accountChanged = provider === 'SHIPROCKET' && !sameCredential(connection, brand, provider);
+    copyIntegration(connection, brand, provider);
+    brand.integration_links[PROVIDER_KEY[provider]] = connection._id;
+    await brand.save();
+    if (accountChanged) await resetOwnShiprocketWarehouses(brand);
+    return integrationStatus(brand, provider);
   },
 
   /** Check the saved credential again — the vendor's answer today, not the one on file. */
@@ -757,6 +802,7 @@ export const ecommBrandService = {
     assertProvider(provider);
     const brand = await loadOwned(userId, brandId);
     clearIntegration(brand, provider);
+    brand.integration_links[PROVIDER_KEY[provider]] = null;
     await brand.save();
     return integrationStatus(brand, provider);
   },

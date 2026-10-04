@@ -474,6 +474,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       tags: 'Tags',
       tagsHint: 'Type and press Enter. Tags are searchable in ImageKit.',
       info: 'Info',
+      integrations: 'Integrations',
       edit: 'Edit',
       renameFailed: 'Rename failed',
       tagsFailed: 'Could not save tags',

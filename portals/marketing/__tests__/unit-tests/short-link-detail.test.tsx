@@ -34,6 +34,7 @@ vi.mock('@duncit/utils', async (importOriginal) => ({
 import ShortLinkDetailPage from '../../src/pages/short-links-page/ShortLinkDetailPage';
 import BreakdownCard from '../../src/pages/short-links-page/detail/BreakdownCard';
 import ClicksOverTime from '../../src/pages/short-links-page/detail/ClicksOverTime';
+import StatsRange from '../../src/pages/short-links-page/detail/StatsRange';
 import { getClickColumns, locationOf } from '../../src/pages/short-links-page/detail/clickColumns';
 import {
   fillDailySeries,
@@ -175,6 +176,24 @@ describe('ClicksOverTime', () => {
 });
 
 // ===========================================================================
+describe('StatsRange', () => {
+  it('offers every window, all time first, and reports the picked one in days', async () => {
+    const onChange = vi.fn();
+    renderWithProviders(<StatsRange days={0} onChange={onChange} />);
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Period' }));
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([
+      'All time',
+      'Last 7 days',
+      'Last 30 days',
+      'Last 90 days',
+    ]);
+    fireEvent.click(screen.getByRole('option', { name: 'Last 30 days' }));
+    expect(onChange).toHaveBeenCalledWith(30);
+  });
+});
+
+// ===========================================================================
 describe('click columns', () => {
   const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
   const value = (field: string, row: ShortLinkClickRow) =>
@@ -286,6 +305,24 @@ describe('ShortLinkDetailPage', () => {
     await screen.findByText('Diwali pod push');
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
     expect(await screen.findByText('links-list')).toBeInTheDocument();
+  });
+
+  it('goes back to the external-links list when opened from there', async () => {
+    renderWithProviders(<ShortLinkDetailPage />, {
+      mocks: detailMocks(),
+      initialEntries: ['/external-links/sl1'],
+      routes: (
+        <>
+          <Route path="/external-links/:linkId" element={<ShortLinkDetailPage />} />
+          <Route path="/external-links" element={<div>external-list</div>} />
+          <Route path="/short-links" element={<div>links-list</div>} />
+        </>
+      ),
+    });
+    await screen.findByText('Diwali pod push');
+    fireEvent.click(screen.getByRole('button', { name: /back/i }));
+    expect(await screen.findByText('external-list')).toBeInTheDocument();
+    expect(screen.queryByText('links-list')).not.toBeInTheDocument();
   });
 
   it('retires the link from the header', async () => {

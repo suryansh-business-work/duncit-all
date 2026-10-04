@@ -6,7 +6,10 @@ import {
   SHORT_LINK_STATS,
   CREATE_SHORT_LINK,
   DELETE_SHORT_LINK,
+  ERASE_SHORT_LINK_CLICKS,
   SET_SHORT_LINK_ACTIVE,
+  SHORT_LINK_DESTINATION_META,
+  UPDATE_SHORT_LINK,
   SHORT_LINK_OPTIONS,
   SHORT_LINK_QR,
   type ShortLinkClickRow,
@@ -73,8 +76,10 @@ export const campaignsForShortLinkMock = (
   request: { query: CAMPAIGNS_FOR_SHORT_LINK },
   result: {
     data: {
-      marketingCampaigns: campaigns.map((campaign) => ({
-        __typename: 'MarketingCampaign',
+      shortLinkCampaigns: campaigns.map((campaign) => ({
+        __typename: 'ShortLinkCampaign',
+        utm_campaign: campaign.campaign_id,
+        kind: 'EMAIL',
         ...campaign,
       })),
     },
@@ -105,13 +110,76 @@ export const createShortLinkMock = (
       }),
 });
 
-export const setShortLinkActiveMock = (isActive = false): MockedResponse => ({
+export const setShortLinkActiveMock = (
+  isActive = false,
+  opts: { failWith?: string } = {},
+): MockedResponse => ({
   request: { query: SET_SHORT_LINK_ACTIVE, variables: () => true },
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : {
+        result: {
+          data: {
+            setShortLinkActive: { __typename: 'ShortLink', id: 'sl1', is_active: isActive },
+          },
+        },
+      }),
+});
+
+/** The fields the edit mutation's fragment reads beyond the list row's. */
+const EDITABLE_FIELDS = {
+  is_external: false,
+  share_target: null,
+  meta_override_enabled: false,
+  meta_title: null,
+  meta_description: null,
+  meta_image_url: null,
+};
+
+export const updateShortLinkMock = (
+  over: Partial<ShortLinkRow> = {},
+  opts: { failWith?: string } = {},
+): MockedResponse => ({
+  request: { query: UPDATE_SHORT_LINK, variables: () => true },
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : {
+        result: {
+          data: {
+            updateShortLink: {
+              __typename: 'ShortLink',
+              ...makeShortLinkRow({ ...EDITABLE_FIELDS, ...over }),
+            },
+          },
+        },
+      }),
+});
+
+export const eraseShortLinkClicksMock = (
+  removed: number | null,
+  opts: { failWith?: string } = {},
+): MockedResponse => ({
+  request: { query: ERASE_SHORT_LINK_CLICKS, variables: () => true },
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : { result: { data: { eraseShortLinkClicks: removed } } }),
+});
+
+/** The live card a destination publishes, as the edit form previews it. */
+export const shortLinkDestinationMetaMock = (): MockedResponse => ({
+  request: { query: SHORT_LINK_DESTINATION_META, variables: () => true },
   result: {
     data: {
-      setShortLinkActive: { __typename: 'ShortLink', id: 'sl1', is_active: isActive },
+      shortLinkDestinationMeta: {
+        __typename: 'ShortLinkDestinationMeta',
+        title: 'Badminton at Andheri',
+        description: 'Join the pod',
+        image_url: null,
+        site_name: 'Duncit',
+      },
     },
   },
+  maxUsageCount: 20,
 });
 
 export const deleteShortLinkMock = (opts: { failWith?: string } = {}): MockedResponse => ({

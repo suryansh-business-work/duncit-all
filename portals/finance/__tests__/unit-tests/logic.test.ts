@@ -198,6 +198,7 @@ describe('backout-refund queries logic', () => {
   it('labels each gateway and clamps the deduction pct', () => {
     expect(gatewayLabel('DUMMY', t)).toBe('finance.backoutRefund.methodTestGateway');
     expect(gatewayLabel('COUPON', t)).toBe('finance.backoutRefund.methodCoupon');
+    expect(gatewayLabel('COINS', t)).toBe('finance.backoutRefund.methodCoins');
     expect(gatewayLabel(null, t)).toBe('finance.backoutRefund.methodGateway');
     expect(refundDeductionPct(refundRow({ deduction_pct: 200 }), 0)).toBe(100);
     expect(refundDeductionPct(refundRow({ deduction_pct: -5 }), 0)).toBe(0);

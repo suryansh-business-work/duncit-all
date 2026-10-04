@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
 import {
   CancellationsDashboardPage,
   HostCancelPage,
@@ -19,6 +20,12 @@ import { dashboardLayoutMock } from '../mocks/dashboard-layout.mock';
 
 beforeEach(() => {
   resetTableControls();
+});
+
+/** The server answering a list with no `podCancellations` at all. */
+const noListMock = (kind: string | null): MockedResponse => ({
+  ...podCancellationsMock(kind, []),
+  result: { data: { podCancellations: null } },
 });
 
 const query = (over: Partial<(typeof tableControls.queries)[number]>) => ({
@@ -74,6 +81,15 @@ describe('CancellationsDashboardPage', () => {
     expect(within(dialog).getByText('Cancelled by Host')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('shows the empty list when the server returns no cancellation list', async () => {
+    renderWithProviders(<CancellationsDashboardPage />, {
+      path: '/',
+      mocks: [cancellationStatsMock(), noListMock(null), dashboardLayoutMock('finance.cancellations')],
+    });
+    expect(await screen.findByText('No pods have been cancelled yet.')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('row-open')).toHaveLength(0);
   });
 
   it('shows the stats error and zeroed tiles when the stats query fails', async () => {
@@ -151,6 +167,12 @@ describe('HostCancelPage', () => {
     expect(within(dialog).queryByText(/still unrefunded/)).not.toBeInTheDocument();
   });
 
+  it('shows the empty state when the server returns no host list', async () => {
+    renderWithProviders(<HostCancelPage />, { path: '/', mocks: [noListMock('HOST')] });
+    expect(await screen.findByText('No host-cancelled pods yet.')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('row-open')).toHaveLength(0);
+  });
+
   it('searches the list by venue and sorts it by what was refunded', async () => {
     const rows = [makeCancellationRow(), makeVenueDeclineRow({ kind: 'HOST' })];
     tableControls.queries = [query({ search: 'blue hall' })];
@@ -185,6 +207,12 @@ describe('VenueCancelPage', () => {
     expect(within(dialog).getByText('This pod had no venue booking.')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('shows the empty state when the server returns no venue list', async () => {
+    renderWithProviders(<VenueCancelPage />, { path: '/', mocks: [noListMock('VENUE')] });
+    expect(await screen.findByText('No venue-declined pods yet.')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('row-open')).toHaveLength(0);
   });
 
   it('renders the empty state when nothing was declined', async () => {

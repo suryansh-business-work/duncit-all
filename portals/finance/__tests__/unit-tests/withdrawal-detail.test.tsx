@@ -22,6 +22,7 @@ import {
   podWithdrawalSummaryMock,
   reviewWithdrawalMock,
 } from '../mocks/withdrawals.mock';
+import { REVIEW_WITHDRAWAL } from '../../src/pages/finance/withdrawals-page/queries';
 
 const upi = makeWithdrawalRow();
 const bank = makeBankWithdrawalRow({ status: 'PAID' });
@@ -196,5 +197,71 @@ describe('PodWithdrawalDetailPage — the requests', () => {
     await waitFor(() =>
       expect(within(rowOf('Host A')).getByRole('button', { name: 'Reject', hidden: true })).toBeDisabled(),
     );
+  });
+});
+
+describe('PodWithdrawalDetailPage — a second click while the dialog closes', () => {
+  /** Answers every review and records what was sent, so a duplicate shows up. */
+  const countingReviewMock = (sent: unknown[]): MockedResponse => ({
+    request: { query: REVIEW_WITHDRAWAL, variables: () => true },
+    result: (variables: Record<string, unknown>) => {
+      sent.push(variables);
+      return { data: { reviewWithdrawal: { __typename: 'WalletWithdrawal', id: 'w1', status: 'PAID' } } };
+    },
+    maxUsageCount: 20,
+  });
+
+  it('never marks the same request paid twice', async () => {
+    const sent: unknown[] = [];
+    mount([podWithdrawalSummaryMock(), countingReviewMock(sent)]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark Paid' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Mark withdrawal as paid' });
+    const confirm = within(dialog).getByRole('button', { name: 'Mark Paid' });
+
+    fireEvent.click(confirm);
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Marked as paid'));
+    // The dialog is fading out but its button is still on screen — click it again.
+    expect(confirm).toBeInTheDocument();
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(sent).toEqual([{ id: 'w1', input: { status: 'PAID' } }]);
+    expect(notifySuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('never rejects the same request twice', async () => {
+    const sent: unknown[] = [];
+    mount([podWithdrawalSummaryMock(), countingReviewMock(sent)]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Reject withdrawal' });
+    fireEvent.change(within(dialog).getByLabelText(/^Reason/), { target: { value: 'Account is frozen' } });
+    const confirm = within(dialog).getByRole('button', { name: /reject & refund/i });
+
+    fireEvent.click(confirm);
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Withdrawal rejected'));
+    expect(confirm).toBeInTheDocument();
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(sent).toEqual([{ id: 'w1', input: { status: 'REJECTED', reason: 'Account is frozen' } }]);
+    expect(notifySuccess).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('PodWithdrawalDetailPage — the header re-read after a review', () => {
+  it('does not report a paid request as failed when the header re-read fails', async () => {
+    mount([
+      { ...podWithdrawalSummaryMock(), maxUsageCount: 1 },
+      podWithdrawalSummaryErrorMock(),
+      reviewWithdrawalMock(),
+    ]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark Paid' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Mark withdrawal as paid' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Mark Paid' }));
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Marked as paid'));
+    // The re-read's failure lands on the page guard, never as a review error toast.
+    expect(await screen.findByTestId('qg-error')).toBeInTheDocument();
+    expect(notifyError).not.toHaveBeenCalled();
   });
 });

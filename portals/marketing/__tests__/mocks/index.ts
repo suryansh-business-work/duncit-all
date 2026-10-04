@@ -16,3 +16,4 @@ export * from './mjml.mock';
 export * from './short-links.mock';
 export * from './dashboard.mock';
 export * from './status.mock';
+export * from './external-links.mock';

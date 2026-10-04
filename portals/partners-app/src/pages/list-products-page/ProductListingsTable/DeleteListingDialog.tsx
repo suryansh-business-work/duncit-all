@@ -16,7 +16,9 @@ export function DeleteListingDialog({ target, deleting, onCancel, onConfirm }: R
   return (
     <Dialog open={Boolean(target)} onClose={onCancel} fullWidth maxWidth="xs">
       <DialogTitle>{t('partners.listProductsPage.deleteProductListing')}</DialogTitle>
-      <DialogContent><Typography>{target?.product_name} will be archived and removed from active listing.</Typography></DialogContent>
+      <DialogContent>
+        <Typography>{t('partners.listProductsPage.deleteListingBody', { vars: { name: target?.product_name ?? '' } })}</Typography>
+      </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onCancel}>{t('shell.common.cancel')}</DuncitButton>
         <DuncitButton color="error" variant="contained" disabled={deleting} onClick={onConfirm}>{t('shell.common.delete')}</DuncitButton>

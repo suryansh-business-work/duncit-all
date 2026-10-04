@@ -22,11 +22,12 @@ export const getProductRowId = (product: ProductListingRow) => product.id;
 
 type RowRenderer = (product: ProductListingRow) => ReactNode;
 
-/** The listing columns; the two stateful renderers come from the table. */
+/** The listing columns; the stateful renderers come from the table. */
 export const buildListingColumns = (
   t: Translate,
   renderQuantity: RowRenderer,
   renderActions: RowRenderer,
+  renderStatus: RowRenderer = renderListingStatus,
 ): DuncitColumn<ProductListingRow>[] => [
   {
     field: 'product_name',

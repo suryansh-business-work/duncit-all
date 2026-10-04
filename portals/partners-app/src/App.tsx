@@ -22,6 +22,7 @@ import { BrandWizardRoute } from './pages/ecomm-brand-page/brand-wizard';
 import BrandDetailsRoute from './pages/ecomm-brand-page/brand-details';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
 import IntegrationsPage from './pages/ecomm-brand-page/integrations/IntegrationsPage';
+import ReturnsPage from './pages/ecomm-brand-page/returns';
 import EcommDashboardPage from './pages/ecomm-dashboard-page/EcommDashboardPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
@@ -96,6 +97,8 @@ export default function App() {
       <Route path="/ecomm-brand/new" element={authed(<BrandWizardRoute />)} />
       {/* The Razorpay / ShipRocket accounts a partner saves once and picks per brand. */}
       <Route path="/ecomm-brand/integrations" element={authed(<IntegrationsPage />)} />
+      {/* Buyer returns on the partner's brands — under /ecomm-brand so SectionGate keeps it to ECOMM_MANAGER. */}
+      <Route path="/ecomm-brand/returns" element={authed(<ReturnsPage />)} />
       {/* A brand row opens its details page (overview, logs, analytics). */}
       <Route path="/ecomm-brand/:brandId" element={authed(<BrandDetailsRoute />)} />
       <Route path="/ecomm-brand/:brandId/edit" element={authed(<BrandWizardRoute />)} />

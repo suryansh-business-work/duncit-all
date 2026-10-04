@@ -138,6 +138,8 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
         { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
         // Razorpay / ShipRocket accounts saved once, then picked in each brand's wizard.
         { label: 'Integrations', labelKey: 'shell.nav.integrations', to: '/ecomm-brand/integrations', icon: 'hub' },
+        // Buyer returns on the partner's brands: approve/reject, pickup, refund.
+        { label: 'Product Returns', labelKey: 'shell.nav.productReturns', to: '/ecomm-brand/returns', icon: 'compare' },
       ],
     },
   },

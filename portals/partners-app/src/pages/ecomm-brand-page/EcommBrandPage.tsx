@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
@@ -11,6 +11,14 @@ import { useTranslation } from '@duncit/shell';
 import BrandPauseDialog from './BrandPauseDialog';
 import PartnerBrandsTable from './PartnerBrandsTable';
 import { DELETE_MY_BRAND, MY_BRANDS_TABLE, type EcommBrandRow } from './queries';
+import {
+  DeletionRequestDialog,
+  WithdrawDeletionDialog,
+  useDeletionRequests,
+  type DeletionRequestRow,
+  type DeletionTarget,
+  type WithdrawTarget,
+} from './deletion-request';
 import { primaryHeroBackground } from '../../components/primaryHero';
 
 const detailsPath = (brand: EcommBrandRow) => `/ecomm-brand/${brand.id}`;
@@ -25,8 +33,23 @@ export default function EcommBrandPage() {
   const [deleteBrand, deleteState] = useMutation<any>(DELETE_MY_BRAND);
   const [pauseTarget, setPauseTarget] = useState<EcommBrandRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EcommBrandRow | null>(null);
+  const [requestTarget, setRequestTarget] = useState<DeletionTarget | null>(null);
+  const [withdrawTarget, setWithdrawTarget] = useState<WithdrawTarget | null>(null);
+  const { openFor, reload } = useDeletionRequests();
+  const deletionFor = useCallback((brand: EcommBrandRow) => openFor('BRAND', brand.id), [openFor]);
+  const nameOf = (brand: EcommBrandRow) => brand.brand_name || t('partners.ecommBrandPage.untitledBrand');
 
   const fetchRows = useApolloTableFetch<EcommBrandRow>(client, MY_BRANDS_TABLE, 'myEcommBrandsTable');
+
+  // A LIVE brand is a deletion request the Products team reviews; one still in setup is deleted outright.
+  const startDelete = (brand: EcommBrandRow) => {
+    if (brand.status === 'APPROVED') setRequestTarget({ kind: 'BRAND', id: brand.id, name: nameOf(brand) });
+    else setDeleteTarget(brand);
+  };
+  const deletionChanged = () => {
+    reload();
+    refetchRef.current?.();
+  };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -80,7 +103,9 @@ export default function EcommBrandPage() {
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
             onSettings={(brand) => navigate(`/ecomm-brand/${brand.id}/settings`)}
             onToggleActive={setPauseTarget}
-            onDelete={setDeleteTarget}
+            onDelete={startDelete}
+            deletionFor={deletionFor}
+            onWithdrawDeletion={(brand: EcommBrandRow, request: DeletionRequestRow) => setWithdrawTarget({ request, name: nameOf(brand) })}
           />
         </CardContent>
       </Card>
@@ -106,6 +131,8 @@ export default function EcommBrandPage() {
         onConfirm={confirmDelete}
         onClose={() => setDeleteTarget(null)}
       />
+      <DeletionRequestDialog target={requestTarget} onClose={() => setRequestTarget(null)} onDone={deletionChanged} />
+      <WithdrawDeletionDialog target={withdrawTarget} onClose={() => setWithdrawTarget(null)} onDone={deletionChanged} />
     </Stack>
   );
 }

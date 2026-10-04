@@ -34,3 +34,23 @@ describe('DynamicFieldOptionsEditor', () => {
     expect(onChange).toHaveBeenCalledWith([{ value: 'b', label: 'B' }]);
   });
 });
+
+describe('DynamicFieldOptionsEditor with several options', () => {
+  it('edits only the targeted option and leaves the others untouched', () => {
+    const onChange = vi.fn();
+    render(
+      <DynamicFieldOptionsEditor
+        options={[
+          { value: 'a', label: 'A' },
+          { value: 'b', label: 'B' },
+        ]}
+        onChange={onChange}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText('option-label-1'), { target: { value: 'Bee' } });
+    expect(onChange).toHaveBeenCalledWith([
+      { value: 'a', label: 'A' },
+      { value: 'b', label: 'Bee' },
+    ]);
+  });
+});

@@ -82,6 +82,36 @@ describe('HostLeadForm submit', () => {
 
     expect(await screen.findByText('Duplicate host lead')).toBeInTheDocument();
   });
+
+  it('falls back to a generic message when the save fails without one', async () => {
+    mount(<HostLeadForm config={config} initialValues={validHost} onSubmit={() => Promise.reject(undefined)} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save host lead' }));
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('names the single invalid field', async () => {
+    const onSubmit = vi.fn();
+    mount(<HostLeadForm config={config} initialValues={{ ...validHost, website: 'ravihosts' }} onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save host lead' }));
+
+    expect(await screen.findByText('1 field has validation errors')).toBeInTheDocument();
+    expect(within(screen.getByText('Website:').closest('li') as HTMLElement).getByText('Enter a valid website')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('cancels without submitting', () => {
+    const onSubmit = vi.fn();
+    const onCancel = vi.fn();
+    mount(<HostLeadForm config={config} initialValues={validHost} onSubmit={onSubmit} onCancel={onCancel} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });
 
 describe('VenueLeadForm submit', () => {
@@ -120,6 +150,48 @@ describe('VenueLeadForm submit', () => {
     expect(await screen.findByText('City not serviceable')).toBeInTheDocument();
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ venue_name: 'Sunrise Banquet' }));
   });
+
+  it('falls back to a generic message when the save fails without one', async () => {
+    // First a bare rejection, then an error object with no message.
+    const onSubmit = vi.fn().mockRejectedValueOnce(undefined).mockRejectedValueOnce({});
+    mount(<VenueLeadForm config={config} initialValues={validVenue} onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('lists every invalid field when a blank lead is submitted', async () => {
+    const onSubmit = vi.fn();
+    mount(<VenueLeadForm config={config} onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save venue lead' }));
+
+    expect(await screen.findByText(/fields have validation errors/)).toBeInTheDocument();
+    expect(screen.getByText('Venue name:')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('expands and collapses every section at once', () => {
+    mount(<VenueLeadForm config={config} onSubmit={vi.fn()} />);
+    const details = screen.getByRole('button', { name: /1\. Venue Details/ });
+    const tracking = screen.getByRole('button', { name: /14\. Internal Lead Tracking/ });
+
+    // On first render each section keeps its own default: only Venue Details is open.
+    expect(details).toHaveAttribute('aria-expanded', 'true');
+    expect(tracking).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
+    expect(details).toHaveAttribute('aria-expanded', 'false');
+    expect(tracking).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
+    expect(details).toHaveAttribute('aria-expanded', 'true');
+    expect(tracking).toHaveAttribute('aria-expanded', 'true');
+  });
 });
 
 describe('EcommLeadForm', () => {
@@ -143,6 +215,35 @@ describe('EcommLeadForm', () => {
 
     expect(await screen.findByText('Seller already exists')).toBeInTheDocument();
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ seller_name: 'Kavya Iyer' }));
+  });
+
+  it('saves valid values without showing an error', async () => {
+    const onSubmit = vi.fn(() => Promise.resolve());
+    mount(<EcommLeadForm config={config} initialValues={validEcomm} onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save ecomm lead' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ seller_name: 'Kavya Iyer' })));
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('falls back to a generic message when the save fails without one', async () => {
+    mount(<EcommLeadForm config={config} initialValues={validEcomm} onSubmit={() => Promise.reject({})} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save ecomm lead' }));
+
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('names the single invalid field', async () => {
+    const onSubmit = vi.fn();
+    mount(<EcommLeadForm config={config} initialValues={{ ...validEcomm, website: 'kavyastore' }} onSubmit={onSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save ecomm lead' }));
+
+    expect(await screen.findByText('1 field has validation errors')).toBeInTheDocument();
+    expect(within(screen.getByText('Website:').closest('li') as HTMLElement).getByText('Enter a valid website')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('shows Saving… while submitting', () => {

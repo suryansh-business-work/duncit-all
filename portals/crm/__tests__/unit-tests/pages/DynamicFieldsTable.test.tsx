@@ -77,3 +77,31 @@ describe('DynamicFieldsTable', () => {
     expect(onToggleActive).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }));
   });
 });
+
+describe('DynamicFieldsTable row details', () => {
+  it('flags required fields and shows their hint beneath the label', () => {
+    render(<DynamicFieldsTable {...baseProps} rows={[mk('r', 'Budget', 0, { required: true, hint: 'In lakhs', applies_to_ecomm: true })]} />);
+    const row = within(screen.getByTestId('dynamic-field-row-budget'));
+    expect(row.getByText('Required')).toBeInTheDocument();
+    expect(row.getByText('In lakhs')).toBeInTheDocument();
+    expect(row.getByText('Ecomm')).toBeInTheDocument();
+  });
+});
+
+describe('DynamicFieldsTable drop guards', () => {
+  it('ignores a drop that was not preceded by a drag', () => {
+    const onReorder = vi.fn();
+    render(<DynamicFieldsTable {...baseProps} onReorder={onReorder} />);
+    fireEvent.drop(screen.getByTestId('dynamic-field-row-gamma'));
+    expect(onReorder).not.toHaveBeenCalled();
+  });
+
+  it('ignores a row dropped back onto itself', () => {
+    const onReorder = vi.fn();
+    render(<DynamicFieldsTable {...baseProps} onReorder={onReorder} />);
+    const beta = screen.getByTestId('dynamic-field-row-beta');
+    fireEvent.dragStart(beta);
+    fireEvent.drop(beta);
+    expect(onReorder).not.toHaveBeenCalled();
+  });
+});

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { allFallbackEntries, createTranslator } from '@duncit/app-settings';
 import { renderWithProviders } from '../testkit';
 import {
   createNotificationMock,
@@ -50,6 +51,7 @@ import NotificationsTable from '../../src/pages/notifications-page/Notifications
 import NotificationFormDialog from '../../src/pages/notifications-page/NotificationFormDialog';
 import NotificationsPage from '../../src/pages/notifications-page/NotificationsPage';
 import { blankForm, type NotifForm } from '../../src/pages/notifications-page/helpers';
+import { scopeLabel } from '../../src/pages/notifications-page/NotificationsTable/cells';
 import { toCreateNotificationInput } from '../../src/pages/notifications-page/notification';
 import {
   AUDIENCE_LISTS_FOR_NOTIF,
@@ -96,6 +98,13 @@ describe('NotificationsTable', () => {
     expect(screen.getAllByText(/Users · 0/).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Yes').length).toBeGreaterThan(0);
     expect(screen.getByText(/\/pods\/1/)).toBeInTheDocument();
+  });
+
+  // A zone notification saved without its zone name must not print "null".
+  it('labels a zone notification with no zone name by its location alone', () => {
+    const { t } = createTranslator({ locale: 'en-IN', fallback: allFallbackEntries() });
+    const row = makeNotificationRow({ scope: 'ZONE', location_id: 'l1', zone_name: null });
+    expect(scopeLabel(row, locName, t)).toBe('Zone · Mumbai / ');
   });
 
   it('invokes onDelete from the action button', async () => {

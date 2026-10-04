@@ -190,6 +190,47 @@ describe('journey columns', () => {
     expect(within(rows[1]).getByTestId('cell-user_name')).toHaveTextContent('Unnamed');
     expect(within(rows[2]).getByTestId('cell-user_name')).toHaveTextContent('Not signed in');
   });
+
+  // One person can buy more than once through a link; a bare total reads as one sale.
+  it('says how many payments a repeat buyer’s total is made of', async () => {
+    __setTableRows([
+      makeShortLinkJourneyRow({
+        converted_amount: 3000,
+        conversions: [
+          { payment_id: 'p1', amount: 1500, at: '2026-07-31T09:09:00.000Z' },
+          { payment_id: 'p2', amount: 1500, at: '2026-08-01T10:00:00.000Z' },
+        ],
+      }),
+      makeShortLinkJourneyRow({ id: 'j2' }),
+      // An older row the server sends without its payment list still shows its total.
+      makeShortLinkJourneyRow({
+        id: 'j3',
+        converted_amount: 900,
+        conversions: undefined as unknown as ShortLinkJourneyRow['conversions'],
+      }),
+    ]);
+    renderDetail();
+    const [repeat, single, unlisted] = await screen.findAllByTestId('cell-converted_amount');
+    expect(repeat).toHaveTextContent('3,000');
+    expect(repeat).toHaveTextContent('2 payments');
+    expect(single).toHaveTextContent('1,500');
+    expect(single).not.toHaveTextContent('payments');
+    expect(unlisted).toHaveTextContent('900');
+    expect(unlisted).not.toHaveTextContent('payments');
+  });
+
+  // Only the end of the funnel is a win; an early drop-off is not coloured as one.
+  it('colours a paid visitor as a win and an early drop-off neutrally', async () => {
+    __setTableRows([
+      makeShortLinkJourneyRow(),
+      makeShortLinkJourneyRow({ id: 'j2', furthest_step: 'LANDED', converted_amount: null }),
+    ]);
+    renderDetail();
+    const [paid, landed] = await screen.findAllByTestId('cell-furthest_step');
+    expect(paid.querySelector('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
+    expect(landed.querySelector('.MuiChip-root')).toHaveClass('MuiChip-colorDefault');
+    expect(landed.querySelector('.MuiChip-root')).not.toHaveClass('MuiChip-colorSuccess');
+  });
 });
 
 // ===========================================================================

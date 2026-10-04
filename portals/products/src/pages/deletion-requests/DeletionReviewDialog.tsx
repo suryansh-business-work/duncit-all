@@ -20,6 +20,7 @@ import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import DeletionImpactView from './DeletionImpactView';
 import { DELETION_STATUS_COLORS } from './deletionColumns';
+import { DELETION_MODE_KEY, DELETION_STATUS_KEY } from './labels';
 import { CATALOG_DELETION_DETAIL, REVIEW_CATALOG_DELETION, type DeletionDetail } from './queries';
 
 interface Props {
@@ -81,12 +82,12 @@ export default function DeletionReviewDialog({ requestId, onClose, onReviewed }:
     body = (
       <Stack spacing={2}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <StatusChip status={req.status} label={t(`products.deletionRequests.status.${req.status}`)} colorMap={DELETION_STATUS_COLORS} />
+          <StatusChip status={req.status} label={t(DELETION_STATUS_KEY[req.status])} colorMap={DELETION_STATUS_COLORS} />
           {req.blocked_reason && <Typography variant="body2" sx={{ color: 'warning.main' }}>{req.blocked_reason}</Typography>}
         </Stack>
         {fact(t('products.deletionRequests.colBrand'), req.brand_name)}
         {req.kind === 'PRODUCT' && fact(t('products.deletionRequests.colProduct'), req.product_name)}
-        {fact(t('products.deletionRequests.colMode'), t(`products.deletionRequests.mode.${req.mode}`))}
+        {fact(t('products.deletionRequests.colMode'), t(DELETION_MODE_KEY[req.mode]))}
         {fact(t('products.deletionRequests.colScheduled'), formatDate(req.scheduled_for))}
         {fact(t('products.deletionRequests.reason'), req.reason)}
         {fact(t('products.deletionRequests.colRequestedBy'), req.requested_by_name)}

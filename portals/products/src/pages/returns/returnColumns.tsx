@@ -3,11 +3,11 @@ import { EM_DASH, type DuncitColumn } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import type { DateFormatter, useTranslation } from '@duncit/app-settings';
-import type { PodShopReturnRow } from './queries';
+import type { PodShopReturnRow, ReturnStatus } from './queries';
+import { RETURN_STATUS_KEY } from './labels';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-export const RETURN_STATUSES = ['REQUESTED', 'APPROVED', 'REJECTED', 'PICKUP_SCHEDULED', 'RECEIVED', 'REFUNDED', 'CANCELLED'];
 export const RETURN_STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'warning',
   APPROVED: 'info',
@@ -52,10 +52,10 @@ export const returnColumns = (t: Translate, formatDateTime: DateFormatter['forma
     field: 'status',
     headerName: t('products.returns.colStatus'),
     type: 'enum',
-    options: RETURN_STATUSES.map((s) => ({ value: s, label: t(`products.returns.status.${s}`) })),
+    options: (Object.keys(RETURN_STATUS_KEY) as ReturnStatus[]).map((s) => ({ value: s, label: t(RETURN_STATUS_KEY[s]) })),
     width: 170,
     cellRenderer: (row) => (
-      <StatusChip status={row.status} label={t(`products.returns.status.${row.status}`)} colorMap={RETURN_STATUS_COLORS} />
+      <StatusChip status={row.status} label={t(RETURN_STATUS_KEY[row.status])} colorMap={RETURN_STATUS_COLORS} />
     ),
   },
   { field: 'gross', headerName: t('products.returns.colValue'), type: 'number', width: 120, valueGetter: (row) => formatMoney(row.gross, { decimals: 2 }) },

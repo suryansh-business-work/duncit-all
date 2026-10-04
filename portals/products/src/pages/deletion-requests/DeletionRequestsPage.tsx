@@ -7,6 +7,7 @@ import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import DeletionReviewDialog from './DeletionReviewDialog';
 import { deletionColumns } from './deletionColumns';
+import { DELETION_PAGE_KEYS } from './labels';
 import { CATALOG_DELETION_TABLE, type DeletionKind, type DeletionRequestRow } from './queries';
 
 const getRowId = (row: DeletionRequestRow) => row.id;
@@ -37,7 +38,7 @@ export default function DeletionRequestsPage({ kind }: Readonly<{ kind: Deletion
     [kind, parentId],
   );
   const columns = useMemo(() => deletionColumns(kind, t, formatter), [kind, t, formatter]);
-  const prefix = kind === 'BRAND' ? 'products.deletionRequests.brands' : 'products.deletionRequests.products';
+  const copy = DELETION_PAGE_KEYS[kind];
 
   const onRow = (row: DeletionRequestRow) => {
     if (kind === 'BRAND') {
@@ -54,10 +55,10 @@ export default function DeletionRequestsPage({ kind }: Readonly<{ kind: Deletion
     <Stack spacing={3}>
       <Box>
         <Typography component="h1" variant="h4" sx={{ fontWeight: 700 }}>
-          {t(`${prefix}.title`)}
+          {t(copy.title)}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {t(`${prefix}.description`)}
+          {t(copy.description)}
         </Typography>
       </Box>
       {parentId && (
@@ -81,13 +82,13 @@ export default function DeletionRequestsPage({ kind }: Readonly<{ kind: Deletion
         </Alert>
       )}
       <DuncitTable<DeletionRequestRow>
-        ariaLabel={t(`${prefix}.title`)}
+        ariaLabel={t(copy.title)}
         tableId={`products-deletion-${kind.toLowerCase()}`}
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getRowId}
         onRowClick={onRow}
-        emptyText={t(`${prefix}.empty`)}
+        emptyText={t(copy.empty)}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder={t('products.deletionRequests.search')}
         refetchRef={refetchRef}

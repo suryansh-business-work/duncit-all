@@ -3,6 +3,7 @@ import { EM_DASH, type DuncitColumn } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import type { DateFormatter, useTranslation } from '@duncit/app-settings';
 import type { DeletionKind, DeletionRequestRow } from './queries';
+import { DELETION_MODE_KEY, DELETION_STATUS_KEY } from './labels';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 type Formatter = Pick<DateFormatter, 'formatDate' | 'formatDateTime'>;
@@ -15,13 +16,13 @@ export const DELETION_STATUS_COLORS: StatusColorMap = {
   COMPLETED: 'success',
 };
 
-const STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'WITHDRAWN', 'COMPLETED'];
-const MODES = ['WAIT_FOR_ORDERS', 'CANCEL_AND_REFUND'] as const;
+const STATUSES = Object.keys(DELETION_STATUS_KEY) as DeletionRequestRow['status'][];
+const MODES = Object.keys(DELETION_MODE_KEY) as DeletionRequestRow['mode'][];
 
 /** Where the request is, with why it is waiting when the date has come but orders are still running. */
 const renderStatus = (row: DeletionRequestRow, t: Translate) => (
   <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }}>
-    <StatusChip status={row.status} label={t(`products.deletionRequests.status.${row.status}`)} colorMap={DELETION_STATUS_COLORS} />
+    <StatusChip status={row.status} label={t(DELETION_STATUS_KEY[row.status])} colorMap={DELETION_STATUS_COLORS} />
     {row.blocked_reason && row.status === 'APPROVED' && (
       <Typography variant="caption" component="span" noWrap sx={{ color: 'warning.main' }}>
         {row.blocked_reason}
@@ -58,7 +59,7 @@ export const deletionColumns = (kind: DeletionKind, t: Translate, f: Formatter):
       field: 'status',
       headerName: t('products.deletionRequests.colStatus'),
       type: 'enum',
-      options: STATUSES.map((s) => ({ value: s, label: t(`products.deletionRequests.status.${s}`) })),
+      options: STATUSES.map((s) => ({ value: s, label: t(DELETION_STATUS_KEY[s]) })),
       minWidth: 200,
       cellRenderer: (row) => renderStatus(row, t),
     },
@@ -66,9 +67,9 @@ export const deletionColumns = (kind: DeletionKind, t: Translate, f: Formatter):
       field: 'mode',
       headerName: t('products.deletionRequests.colMode'),
       type: 'enum',
-      options: MODES.map((m) => ({ value: m, label: t(`products.deletionRequests.mode.${m}`) })),
+      options: MODES.map((m) => ({ value: m, label: t(DELETION_MODE_KEY[m]) })),
       minWidth: 200,
-      valueGetter: (row) => t(`products.deletionRequests.mode.${row.mode}`),
+      valueGetter: (row) => t(DELETION_MODE_KEY[row.mode]),
     },
     {
       field: 'scheduled_for',

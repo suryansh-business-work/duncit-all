@@ -9,6 +9,7 @@ import { useTranslation } from '@duncit/shell';
 import type { PodShopReturnRow } from './queries';
 import { RETURN_STATUS_COLORS, returnItemsText } from './returnColumns';
 import { useReturnActions, type ReturnAction } from './useReturnActions';
+import { RETURN_STATUS_KEY, returnStatusKey } from './labels';
 
 interface Props {
   row: PodShopReturnRow | null;
@@ -43,6 +44,10 @@ export default function ReturnDetailDialog({ row, onClose, onChanged }: Readonly
     </Typography>
   );
   const s = row.status;
+  const statusWord = (status: string) => {
+    const key = returnStatusKey(status);
+    return key ? t(key) : status;
+  };
   const coinsBack = row.refund.coins ? ` + ${row.refund.coins}` : '';
   const refundText = `${row.refund.status} · ${formatMoney(row.refund.amount, { decimals: 2 })}${coinsBack}`;
   const waitingForGoods = s === 'APPROVED' || s === 'PICKUP_SCHEDULED';
@@ -52,7 +57,7 @@ export default function ReturnDetailDialog({ row, onClose, onChanged }: Readonly
       <DialogTitle id="return-detail-title">{t('products.returns.detailTitle', { vars: { no: row.return_no } })}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          <StatusChip status={s} label={t(`products.returns.status.${s}`)} colorMap={RETURN_STATUS_COLORS} />
+          <StatusChip status={s} label={t(RETURN_STATUS_KEY[s])} colorMap={RETURN_STATUS_COLORS} />
           {fact(t('products.returns.colOrder'), row.order_no)}
           {fact(t('products.returns.colBuyer'), `${row.buyer_name} · ${row.buyer_email}`)}
           {fact(t('products.returns.colItems'), returnItemsText(row))}
@@ -71,7 +76,7 @@ export default function ReturnDetailDialog({ row, onClose, onChanged }: Readonly
           </Typography>
           {row.events.map((e) => (
             <Typography key={`${e.at}-${e.status}`} variant="body2">
-              {formatDateTime(e.at)} · {t(`products.returns.status.${e.status}`)} · {e.by}
+              {formatDateTime(e.at)} · {statusWord(e.status)} · {e.by}
               {e.note ? ` — ${e.note}` : ''}
             </Typography>
           ))}

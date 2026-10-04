@@ -11,6 +11,7 @@ import {
   RETRY_RETURN_PICKUP,
   RETRY_RETURN_REFUND,
 } from './queries';
+import { RETURN_DONE_KEY } from './labels';
 
 export type ReturnAction = 'approve' | 'reject' | 'retryPickup' | 'received' | 'refund' | 'retryRefund';
 
@@ -39,7 +40,7 @@ export function useReturnActions(onDone: () => void) {
     try {
       const decides = action === 'approve' || action === 'reject';
       await calls[action]({ variables: decides ? { id, note: note || null } : { id } });
-      notifySuccess(t(`products.returns.done.${action}`));
+      notifySuccess(t(RETURN_DONE_KEY[action]));
       onDone();
       return true;
     } catch (error) {

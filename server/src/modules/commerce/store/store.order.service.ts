@@ -9,8 +9,8 @@ import {
 } from '@modules/commerce/productOrder/productOrder.model';
 import { productOrderService } from '@modules/commerce/productOrder/productOrder.service';
 import { cancelOrders } from '@modules/commerce/shiprocket/shiprocket.gateway';
-import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
-import { coinService } from '@modules/finance/coin/coin.service';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { creditCoinsBack, recordPaymentRefund } from '@modules/finance/payment/payment.refundRecord';
 import { StoreProductModel } from './storeProduct.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -80,42 +80,9 @@ async function ownedOrder(ctx: GraphQLContext, orderNo: string, accessKey?: stri
  * Money going back
  * ------------------------------------------------------------------ */
 
-/**
- * Record a refund on the payment it reverses — the same stamps every other
- * refund flow writes, so it lands in Finance › User Refund Logs for payout.
- */
-export async function recordPaymentRefund(
-  payment: IPayment,
-  amount: number,
-  reason: string,
-  initiatedBy: string
-) {
-  if (amount <= 0) return;
-  const meta = payment.metadata ?? {};
-  const refunded = round2((Number(meta.refunded_amount) || 0) + amount);
-  const update: Record<string, unknown> = {
-    'metadata.refunded_at': new Date().toISOString(),
-    'metadata.refunded_amount': refunded,
-    'metadata.refund_reason': reason,
-    'metadata.refund_initiated_by': initiatedBy,
-  };
-  if (refunded >= payment.total - 0.01) update.status = 'REFUNDED';
-  await PaymentModel.updateOne({ _id: payment._id }, { $set: update });
-}
-
-/** Coins back into a buyer's balance, once per key (the ledger dedupes). */
-export async function creditCoinsBack(payment: IPayment, coins: number, key: string, reason: string) {
-  if (!payment.user_id || coins <= 0) return 0;
-  // refundForBackout is the ledger's generic idempotent PAYMENT_REFUND credit;
-  // `backoutId` is only its dedupe key, here the order or return it refunds.
-  return coinService.refundForBackout({
-    userId: String(payment.user_id),
-    backoutId: key,
-    paymentId: payment.payment_id,
-    coins,
-    reason,
-  });
-}
+// The ledger writes are shared with the pod shop and live in finance;
+// re-exported for the store's own modules.
+export { creditCoinsBack, recordPaymentRefund };
 
 /** Put cancelled / returned units back on the shelf and off the sold count. */
 export async function restock(items: { product_id: unknown; variant_id?: string; qty: number }[]) {

@@ -5,7 +5,7 @@ import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { ProductOrder } from '../pod-history-page/productOrders';
 import PodShopReturnCard from './PodShopReturnCard';
-import { openReturnLines, returnDeadline } from './podShopReturns';
+import { openReturnLines, returnDeadline } from '@duncit/utils';
 import type { PodShopReturn } from './podShopReturns.queries';
 
 interface Props {

@@ -36,6 +36,7 @@ const listingRow = (over: Record<string, unknown> = {}) => ({
   available_count: 3,
   low_stock_alert: 4,
   notify_low_stock: true,
+  return_window_days: 3,
   unit_cost: 499,
   commission_pct: 10,
   delivery_target: 'HOST',
@@ -148,7 +149,7 @@ describe('ProductSettingsPage', () => {
         {
           request: {
             query: UPDATE_PRODUCT_SETTINGS,
-            variables: { product_doc_id: 'p1', low_stock_alert: 12, notify_low_stock: false },
+            variables: { product_doc_id: 'p1', low_stock_alert: 12, notify_low_stock: false, return_window_days: 3 },
           },
           result: (variables) => {
             sent = variables as Record<string, unknown>;
@@ -168,7 +169,33 @@ describe('ProductSettingsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
 
     expect(await screen.findByText('Settings saved.')).toBeTruthy();
-    expect(sent).toEqual({ product_doc_id: 'p1', low_stock_alert: 12, notify_low_stock: false });
+    expect(sent).toEqual({ product_doc_id: 'p1', low_stock_alert: 12, notify_low_stock: false, return_window_days: 3 });
+  });
+
+  it('saves the return window the brand sets, in whole days', async () => {
+    let sent: Record<string, unknown> | null = null;
+    renderPage(
+      [
+        accessMock(['ECOMM_MANAGER']),
+        {
+          request: {
+            query: UPDATE_PRODUCT_SETTINGS,
+            variables: { product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true, return_window_days: 10 },
+          },
+          result: (variables) => {
+            sent = variables as Record<string, unknown>;
+            return { data: { updateMyProductSettings: listingRow({ return_window_days: 10 }) } };
+          },
+        },
+      ],
+      listingRow(),
+    );
+
+    fireEvent.change(await screen.findByLabelText('Return window (days)'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+
+    expect(await screen.findByText('Settings saved.')).toBeTruthy();
+    expect(sent).toEqual({ product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true, return_window_days: 10 });
   });
 
   it('refuses an absurd threshold and never reaches the server', async () => {
@@ -179,7 +206,7 @@ describe('ProductSettingsPage', () => {
         {
           request: {
             query: UPDATE_PRODUCT_SETTINGS,
-            variables: { product_doc_id: 'p1', low_stock_alert: 1000001, notify_low_stock: true },
+            variables: { product_doc_id: 'p1', low_stock_alert: 1000001, notify_low_stock: true, return_window_days: 3 },
           },
           result: () => {
             called = true;
@@ -219,7 +246,7 @@ describe('ProductSettingsPage', () => {
         {
           request: {
             query: UPDATE_PRODUCT_SETTINGS,
-            variables: { product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true },
+            variables: { product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true, return_window_days: 3 },
           },
           result: { errors: [new GraphQLError('Threshold above stock cap')] },
         },

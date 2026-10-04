@@ -1,6 +1,6 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 import { orderRefundSchema, type IOrderRefund } from '@modules/commerce/productOrder/productOrder.model';
-import { returnPickupSchema, type IReturnPickup } from './returnPickup.schema';
+import { returnPickupSchema, type IReturnPickup } from '@modules/commerce/shiprocket/returnPickup.schema';
 
 /**
  * A pod-shop buyer sending partner-brand goods back, inside the return window

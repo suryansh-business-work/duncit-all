@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
-import { parseApiError } from '@duncit/utils';
+import {
+  parseApiError,
+  RETURN_COMMENTS_MAX,
+  reasonKey,
+  returnFormDefaults,
+  toReturnInput,
+  type ReturnFormValues,
+} from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { ConfirmFooter } from '@/components/DuncitDialog/ConfirmFooter';
@@ -10,15 +17,8 @@ import { RequestPodShopReturnDocument } from '@/graphql/pod-shop-returns';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { formResolver } from '@/utils/form-resolver';
-import { reasonKey } from '@/utils/pod-shop-returns';
 import type { ProductOrder } from '@/utils/product-orders';
-import {
-  buildReturnSchema,
-  COMMENTS_MAX,
-  returnFormDefaults,
-  toReturnInput,
-  type ReturnFormValues,
-} from './pod-shop-return.form';
+import { makePodShopReturnSchema } from '@duncit/forms/schemas';
 import { ReturnQtyStepper } from './ReturnQtyStepper';
 import { ReturnReasonList } from './ReturnReasonList';
 
@@ -41,16 +41,7 @@ export function PodShopReturnSheet({ order, onClose, onRequested }: Readonly<Pro
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const schema = useMemo(
-    () =>
-      buildReturnSchema({
-        pickItem: t('mweb.podShopReturns.errorPickItem'),
-        qtyTooHigh: t('mweb.podShopReturns.errorQtyTooHigh'),
-        pickReason: t('mweb.podShopReturns.errorPickReason'),
-        commentsTooLong: t('mweb.podShopReturns.errorCommentsTooLong'),
-      }),
-    [t],
-  );
+  const schema = useMemo(() => makePodShopReturnSchema(t), [t]);
   const { control, handleSubmit, reset, formState } = useForm<ReturnFormValues>({
     resolver: formResolver<ReturnFormValues>(schema),
     defaultValues: EMPTY,
@@ -161,7 +152,7 @@ export function PodShopReturnSheet({ order, onClose, onRequested }: Readonly<Pro
           label={t('mweb.podShopReturns.commentsLabel')}
           multiline
           numberOfLines={3}
-          maxLength={COMMENTS_MAX}
+          maxLength={RETURN_COMMENTS_MAX}
         />
         {error ? (
           <Text testID="pod-shop-return-error" role="alert" fontSize={12} color="$danger">

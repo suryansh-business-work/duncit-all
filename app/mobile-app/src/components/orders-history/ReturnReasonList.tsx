@@ -4,7 +4,7 @@ import { PRESS_STYLE, TOUCH_TARGET } from '@duncit/buttons-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { RETURN_REASONS } from '@/utils/pod-shop-returns';
+import { RETURN_REASONS } from '@duncit/utils';
 
 interface Props {
   /** The picked reason's id; blank before a choice. */

@@ -225,6 +225,7 @@ describe('UPDATE_PRODUCT_SETTINGS', () => {
       product_doc_id: 'ID!',
       low_stock_alert: 'Int!',
       notify_low_stock: 'Boolean!',
+      return_window_days: 'Int',
     });
   });
 

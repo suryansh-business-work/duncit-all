@@ -613,6 +613,21 @@ The messages live in the shared `withdraw.*` namespace rather than `mweb.wallet.
 through `SHELL_FALLBACK` and into the apps through their own fallback bundles. The partner
 console's amount rules were plain English literals before this moved.
 
+### A Pod Shop return
+
+`makePodShopReturnSchema(t)` is the "Return items" form in mWeb and the app. Each line carries
+its own `max` — what the server says can still go back — so the quantity rule holds in the
+schema as well as in the stepper that bounds it:
+
+```ts
+makePodShopReturnSchema(t).safeParse({ lines: [{ …, max: 2, qty: 0 }], reason: 'damaged', comments: '' });
+// mweb.podShopReturns.errorPickItem — nothing picked
+```
+
+It also refuses more units than `max`, an empty reason, and comments over `RETURN_COMMENTS_MAX`
+(2000, the server's limit). Defaults and the mutation input come from `returnFormDefaults` /
+`toReturnInput` in `@duncit/utils`.
+
 ### Venue cancellation policy
 
 `makeCancellationPolicySchema(t)` is what a venue owner's cancellation policy is checked

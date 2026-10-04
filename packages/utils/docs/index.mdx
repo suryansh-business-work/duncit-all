@@ -2612,6 +2612,33 @@ knows about it, and a visible `AWAITING_QUANTUM_TUNNEL` beats a blank chip.
 `neutral`) and `TONE_CHIP_COLOR` maps it onto MUI's palette, so no surface picks its own
 colours — the same shape [@duncit/verification](/packages/verification) uses.
 
+## Pod Shop returns and refunds — `pod-shop-returns`
+
+My Product Orders reads the same rules in mWeb and the app (rule 27): which orders can still be
+returned and until when, what a refund line says, and what a return's status is called. They
+were two line-for-line copies; the duplicate-code gate is why they live here.
+
+The server decides what is returnable — each order carries `returnable[]` (units left and the
+deadline, from the return window the brand set on the product when it was bought) and a
+`refund` record. These helpers only read it:
+
+```ts
+openReturnLines(order.returnable); // lines with units left — empty hides "Return items"
+returnDeadline(order.returnable); // the earliest deadline among those lines, or null
+refundCopy(order.refund, money, formatDate); // [{ key: 'mweb.ordersHistory.refundInitiated', vars }, …]
+returnStatusKey('PICKUP_SCHEDULED'); // 'mweb.podShopReturns.statusPickupScheduled'
+canCancelReturn('REQUESTED'); // true — only an undecided return can be withdrawn
+groupReturnsByOrder(myPodShopReturns); // Map<order_id, returns>
+```
+
+Copy comes back as **literal** bundle keys, never composed at the call site — the
+translation-key gate only sees literal keys. A refused Razorpay refund (`FAILED`) is told
+without an amount: the buyer is promised the team will pay it out, not a figure.
+
+The "Return items" form pairs `returnFormDefaults(order)` (one empty row per line that can still
+go back) with `toReturnInput(orderId, values, reasonText)` (only picked lines, trimmed comments)
+and the Zod schema `makePodShopReturnSchema` in [@duncit/forms](/packages/forms).
+
 ## Employee expense claims
 
 `employee-expense.ts` is the shape the two ends of one flow agree on. An employee files a

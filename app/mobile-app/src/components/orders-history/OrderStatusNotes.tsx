@@ -1,9 +1,8 @@
 import { Text, YStack } from 'tamagui';
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, refundCopy } from '@duncit/utils';
 
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
-import { refundCopy } from '@/utils/pod-shop-returns';
 import type { ProductOrder } from '@/utils/product-orders';
 
 type OrderFacts = Pick<

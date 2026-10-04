@@ -1,9 +1,10 @@
 import { Schema } from 'mongoose';
 
 /**
- * The courier leg of a pod-shop return — a ShipRocket reverse pickup from the
- * buyer to the brand's warehouse. The pet store keeps its own (StoreReturn);
- * the two shops share no return code (rule 65).
+ * The courier leg of a return — a ShipRocket reverse pickup from the buyer to
+ * the warehouse — as both shops record it on their own return documents (pet
+ * store `StoreReturn`, pod shop `PodShopReturn`). One shape, so ShipRocket's
+ * booking and tracking serve both; each shop keeps its own return rules.
  */
 
 /** Where the reverse-pickup parcel is. */

@@ -1,9 +1,10 @@
 import { Alert, Stack, Typography } from '@mui/material';
-import { formatMoney } from '@duncit/utils';
-import { useDateFormat } from '../../utils/dateFormat';
+import { formatMoney, refundCopy } from '@duncit/utils';
+// The plain formatter, not the hook: this sits inside the order card, which
+// also renders where no Apollo client is mounted.
+import { formatDate } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { ProductOrder } from '../pod-history-page/productOrders';
-import { refundCopy } from './podShopReturns';
 
 type OrderFacts = Pick<
   ProductOrder,
@@ -15,7 +16,6 @@ type OrderFacts = Pick<
  * Native twin: components/orders-history/OrderStatusNotes (rule 27). */
 export default function OrderStatusNotes({ order }: Readonly<{ order: OrderFacts }>) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormat();
   const cancelled = !!order.cancelled_at || order.fulfilment_status === 'CANCELLED';
 
   if (!cancelled) {

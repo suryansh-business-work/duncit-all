@@ -2,10 +2,9 @@ import { PaymentModel, type IPayment } from './payment.model';
 import { coinService } from '@modules/finance/coin/coin.service';
 
 /**
- * The two ledger writes a pod-shop refund makes (cancelled order or return).
- * The pet store keeps its own copies in store.order.service — the two shops
- * share no refund code (rule 65); the stamps written are the same, so both
- * land in Finance › User Refund Logs alike.
+ * The two ledger writes every order-level refund makes, whichever shop sold
+ * the order (pet store or pod shop). Kept in finance so neither shop imports
+ * the other to give money back; both land in Finance › User Refund Logs alike.
  */
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

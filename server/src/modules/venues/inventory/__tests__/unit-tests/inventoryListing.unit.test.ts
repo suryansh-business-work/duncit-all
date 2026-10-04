@@ -719,6 +719,17 @@ describe('inventoryService.deleteMyProductListing', () => {
       expect.objectContaining({ action: 'DELETE', notes: 'Partner listing deleted' })
     );
   });
+
+  it('refuses a listing that is live on the shop — that goes through a deletion request', async () => {
+    const doc = productDoc({ is_active: true, listing_review_status: 'APPROVED' });
+    productModel.findOne.mockResolvedValue(doc);
+
+    await expect(inventoryService.deleteMyProductListing('p1', PARTNER)).rejects.toThrow(
+      'This product is live on the shop — raise a deletion request instead'
+    );
+    expect(doc.status).not.toBe('ARCHIVED');
+    expect(doc.save).not.toHaveBeenCalled();
+  });
 });
 
 describe('inventoryService.reviewProductListing', () => {

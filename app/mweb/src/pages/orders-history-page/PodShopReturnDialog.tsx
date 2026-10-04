@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogTitle } from '@mui/material';
-import { parseApiError } from '@duncit/utils';
-import PodShopReturnForm, { toReturnInput, type ReturnFormValues } from '../../forms/pod-shop-return';
+import { parseApiError, reasonKey, toReturnInput, type ReturnFormValues } from '@duncit/utils';
+import PodShopReturnForm from '../../forms/pod-shop-return';
 import { DIALOG_TITLE_SX } from '../../components/dialog-styles';
 import { notify } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { ProductOrder } from '../pod-history-page/productOrders';
-import { reasonKey } from './podShopReturns';
 import { REQUEST_POD_SHOP_RETURN, type RequestPodShopReturnInput } from './podShopReturns.queries';
 
 interface Props {

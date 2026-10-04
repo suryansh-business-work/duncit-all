@@ -146,9 +146,9 @@ const authCases: Case[] = (
     [
       m,
       'updateMyProductSettings',
-      { product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true },
+      { product_doc_id: 'p1', low_stock_alert: 4, notify_low_stock: true, return_window_days: 7 },
       'updateMyProductSettings',
-      (u) => ['p1', 4, true, u],
+      (u) => ['p1', 4, true, u, 7],
     ],
     [m, 'deleteMyProductListing', { product_doc_id: 'p1' }, 'deleteMyProductListing', (u) => ['p1', u]],
     [

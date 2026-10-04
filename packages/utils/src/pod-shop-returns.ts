@@ -1,8 +1,9 @@
 /**
- * The pod-shop history rules My Product Orders reads: which orders can still be
- * returned and until when, what a refund line says, and what a return's status
- * is called. Framework-free, and kept line-for-line identical to the native
- * twin `src/utils/pod-shop-returns.ts` (rule 27) so both surfaces decide alike.
+ * Pod Shop order history rules, shared by mWeb and the native app (rule 27):
+ * which orders can still be returned and until when, what a refund line says,
+ * what a return's status is called, and the "Return items" form's defaults
+ * and mutation input. Framework-free — the copy comes back as literal bundle
+ * keys (the translation-key gate only sees literal keys) for each app to render.
  */
 
 export interface OrderRefundView {
@@ -127,4 +128,63 @@ export function groupReturnsByOrder<T extends { order_id: string }>(returns: rea
     byOrder.set(ret.order_id, list);
   }
   return byOrder;
+}
+
+/** Most characters a buyer can write in a return's comments (the server's limit). */
+export const RETURN_COMMENTS_MAX = 2000;
+
+/** One row of the "Return items" form. */
+export interface ReturnFormLine {
+  product_id: string;
+  variant_id: string;
+  name: string;
+  variant_label: string;
+  /** What the server says can still go back. */
+  max: number;
+  qty: number;
+}
+
+export interface ReturnFormValues {
+  lines: ReturnFormLine[];
+  reason: string;
+  comments: string;
+}
+
+/** What the form reads off an order. */
+export interface OrderForReturn {
+  line_items: readonly { product_id: string; variant_id?: string | null; variant_label?: string | null; name: string }[];
+  returnable: readonly { product_id: string; variant_id: string; returnable_qty: number }[];
+}
+
+/** One row per line that can still go back, nothing picked yet. */
+export function returnFormDefaults(order: OrderForReturn): ReturnFormValues {
+  const lines: ReturnFormLine[] = [];
+  for (const open of order.returnable) {
+    if (open.returnable_qty <= 0) continue;
+    const item = order.line_items.find(
+      (li) => li.product_id === open.product_id && (li.variant_id ?? '') === open.variant_id
+    );
+    if (!item) continue;
+    lines.push({
+      product_id: open.product_id,
+      variant_id: open.variant_id,
+      name: item.name,
+      variant_label: item.variant_label ?? '',
+      max: open.returnable_qty,
+      qty: 0,
+    });
+  }
+  return { lines, reason: '', comments: '' };
+}
+
+/** The requestPodShopReturn input: only picked lines, the reason as the buyer read it. */
+export function toReturnInput(orderId: string, values: ReturnFormValues, reasonText: string) {
+  return {
+    order_id: orderId,
+    items: values.lines
+      .filter((line) => line.qty > 0)
+      .map((line) => ({ product_id: line.product_id, variant_id: line.variant_id, qty: line.qty })),
+    reason: reasonText,
+    comments: values.comments.trim(),
+  };
 }

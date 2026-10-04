@@ -1,9 +1,8 @@
 import { Box, Chip, Stack, Typography, type ChipProps } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { formatMoney } from '@duncit/utils';
+import { formatMoney, canCancelReturn, refundCopy, returnStatusKey, returnTone, type ReturnTone } from '@duncit/utils';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
-import { canCancelReturn, refundCopy, returnStatusKey, returnTone, type ReturnTone } from './podShopReturns';
 import type { PodShopReturn } from './podShopReturns.queries';
 
 const TONE_CHIP: Record<ReturnTone, Pick<ChipProps, 'color' | 'variant'>> = {

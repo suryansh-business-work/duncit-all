@@ -13,7 +13,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useCancelPodShopReturn } from '@/hooks/useCancelPodShopReturn';
 import { useOrdersHistory } from '@/hooks/useOrdersHistory';
 import { useTranslation } from '@/hooks/useTranslation';
-import { groupReturnsByOrder } from '@/utils/pod-shop-returns';
+import { groupReturnsByOrder } from '@duncit/utils';
 import type { HistoryOrder, PodShopReturn } from '@/utils/product-orders';
 
 const NO_RETURNS: readonly PodShopReturn[] = [];
@@ -62,7 +62,13 @@ export function OrdersHistoryScreen() {
       </YStack>
     );
   } else if (orders.length === 0) {
-    body = <EmptyState testID="orders-empty" icon="local-shipping" title={t('mweb.ordersHistory.empty')} />;
+    body = (
+      <EmptyState
+        testID="orders-empty"
+        icon="local-shipping"
+        title={t('mweb.ordersHistory.empty')}
+      />
+    );
   } else {
     body = (
       <YStack gap={16} padding={16}>

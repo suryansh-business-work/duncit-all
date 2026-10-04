@@ -15,6 +15,7 @@ import {
   UPDATE_QUANTITY,
   type ProductListingRow,
 } from './queries';
+import { MY_CATALOG_DELETION_REQUESTS } from '../ecomm-brand-page/deletion-request/deletion.queries';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -95,10 +96,18 @@ interface Handlers {
 // useTheme() is null outside a provider — the portal chrome supplies one.
 const theme = createTheme();
 
+
+/** No deletion request is open for this brand's products. */
+const noDeletionRequests: MockedResponse = {
+  request: { query: MY_CATALOG_DELETION_REQUESTS, variables: { brand_id: 'b1' } },
+  result: { data: { myCatalogDeletionRequests: [] } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+};
+
 const renderTable = (mocks: MockedResponse[], handlers: Handlers = {}) => {
   const { onEdit = vi.fn(), canManageProducts = true, ...rest } = handlers;
   return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, noDeletionRequests]}>
       <ThemeProvider theme={theme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <ProductListingsTable
@@ -351,7 +360,7 @@ describe('ProductListingsTable', () => {
   it('deletes a listing after confirmation and reloads the table', async () => {
     let sent: Record<string, unknown> | null = null;
     renderTable([
-      tableMock([listing()]),
+      tableMock([listing({ listing_review_status: 'PENDING' })]),
       {
         request: { query: DELETE_LISTING, variables: { product_doc_id: 'p1' } },
         result: (variables) => {
@@ -375,7 +384,7 @@ describe('ProductListingsTable', () => {
   });
 
   it('leaves the listing alone when the delete dialog is dismissed', async () => {
-    renderTable([tableMock([listing()])]);
+    renderTable([tableMock([listing({ listing_review_status: 'PENDING' })])]);
 
     // Escape dismisses it...
     await openRowMenu();
@@ -456,7 +465,7 @@ describe('ProductListingsTable', () => {
 
   it('reports a rejected delete without closing the row out of the table', async () => {
     renderTable([
-      tableMock([listing()]),
+      tableMock([listing({ listing_review_status: 'PENDING' })]),
       {
         request: { query: DELETE_LISTING, variables: { product_doc_id: 'p1' } },
         result: { errors: [new GraphQLError('Listing has open orders')] },

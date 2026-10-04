@@ -1,16 +1,19 @@
 import { logs } from '@observability/log';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { StoreProductModel } from '@modules/commerce/store/storeProduct.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PACKAGING_LIMITS } from '@modules/venues/inventory/inventory.packaging';
-import type { IStoreReturn, ReturnPickupStatus } from '@modules/commerce/store/storeReturn.model';
+import type { IStoreReturn } from '@modules/commerce/store/storeReturn.model';
+import type { IReturnPickup, ReturnPickupStatus } from './returnPickup.schema';
 import { shiprocketError, type Json } from './shiprocket.client';
 import { assignAwb, createReturnOrder, parseShiprocketDate, type TrackResult } from './shiprocket.gateway';
 import { buildParcel, withWeights, type Parcel } from './shiprocket.parcel';
 
 /**
- * The courier leg of a pet-store return: a reverse pickup from the buyer's
- * address to the warehouse the order shipped from.
+ * The courier leg of a return — pet store or pod shop: a reverse pickup from
+ * the buyer's address to the warehouse the order shipped from. A pod-shop
+ * caller runs these inside `withShiprocketAccount(<the brand's account>)`.
  *
  * Booked when an operator approves the return; tracked by the same webhook
  * and sweep as forward shipments. When the parcel reaches the warehouse the
@@ -19,8 +22,19 @@ import { buildParcel, withWeights, type Parcel } from './shiprocket.parcel';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** What booking and tracking need of a return, whichever shop's record it is. */
+export interface ReturnShipment {
+  return_no: string;
+  order_id: unknown;
+  items: { product_id: unknown; variant_id?: string; name: string; variant_label?: string; qty: number; unit_cost: number }[];
+  status: string;
+  events: { status: string; note: string; by: string; at: Date }[];
+  pickup: IReturnPickup;
+  save(): Promise<unknown>;
+}
+
 /** The returned units as a parcel, from the dimensions the order snapshotted. */
-function returnParcel(ret: IStoreReturn, order: IProductOrder): Parcel {
+function returnParcel(ret: ReturnShipment, order: IProductOrder): Parcel {
   const lines = ret.items.map((item) => {
     const src = order.line_items.find(
       (l) => String(l.product_id) === String(item.product_id) && (l.variant_id || '') === (item.variant_id || '')
@@ -40,16 +54,18 @@ function returnParcel(ret: IStoreReturn, order: IProductOrder): Parcel {
   throw shiprocketError('Packaging is missing for these items — add it on the products, then book the pickup again');
 }
 
-async function returnPayload(ret: IStoreReturn, order: IProductOrder): Promise<Json> {
+async function returnPayload(ret: ReturnShipment, order: IProductOrder): Promise<Json> {
   const warehouse = await BrandPickupLocationModel.findOne({ nickname: order.pickup_location_id }).lean();
   if (!warehouse) throw shiprocketError(`There is no warehouse "${order.pickup_location_id}" to return this to`);
   const addr = (order.shipping_address ?? {}) as unknown as Record<string, string>;
   const [first = 'Customer', ...rest] = String(addr.name || order.buyer_name).trim().split(/\s+/);
   const parcel = returnParcel(ret, order);
-  // Returns exist only for the pet store, which sells from its own catalogue.
-  const products = await StoreProductModel.find({ _id: { $in: ret.items.map((i) => i.product_id) } })
-    .select('hsn_code sku')
-    .lean();
+  // Each shop sells from its own catalogue: the pet store's StoreProduct, the pod shop's InventoryProduct.
+  const ids = ret.items.map((i) => i.product_id);
+  const products: { _id: unknown; hsn_code?: string; sku?: string }[] =
+    order.channel === 'PET_STORE'
+      ? await StoreProductModel.find({ _id: { $in: ids } }).select('hsn_code sku').lean()
+      : await InventoryProductModel.find({ _id: { $in: ids } }).select('hsn_code sku').lean();
   const productById = new Map(products.map((p) => [String(p._id), p]));
   return {
     order_id: ret.return_no,
@@ -90,15 +106,21 @@ async function returnPayload(ret: IStoreReturn, order: IProductOrder): Promise<J
   };
 }
 
-const addPickupEvent = (ret: IStoreReturn, status: string, note: string, at = new Date()) => {
+const addPickupEvent = (ret: ReturnShipment, status: string, note: string, at = new Date()) => {
   ret.pickup.events.push({ status, location: '', note, at });
+};
+
+/** Move the return itself (not its parcel) on, with the step in its history. */
+const moveReturn = (ret: ReturnShipment, status: string, note: string) => {
+  ret.status = status;
+  ret.events.push({ status, note, by: 'ShipRocket', at: new Date() });
 };
 
 /**
  * Book (or resume booking) the reverse pickup for an approved return. Never
  * throws: the reason lands on `pickup.last_error` and the operator retries.
  */
-export async function bookReturnPickup(ret: IStoreReturn): Promise<IStoreReturn> {
+export async function bookReturnPickup<R extends ReturnShipment>(ret: R): Promise<R> {
   try {
     if (!ret.pickup.sr_order_id) {
       const order = await ProductOrderModel.findById(ret.order_id);
@@ -116,10 +138,7 @@ export async function bookReturnPickup(ret: IStoreReturn): Promise<IStoreReturn>
       ret.pickup.courier_name = awb.courier_name;
       ret.pickup.status = 'PICKUP_SCHEDULED';
       addPickupEvent(ret, 'PICKUP_SCHEDULED', `AWB ${awb.awb} with ${awb.courier_name}`);
-      if (ret.status === 'APPROVED') {
-        ret.status = 'PICKUP_SCHEDULED';
-        ret.events.push({ status: 'PICKUP_SCHEDULED', note: `Courier: ${awb.courier_name}, AWB ${awb.awb}`, by: 'ShipRocket', at: new Date() });
-      }
+      if (ret.status === 'APPROVED') moveReturn(ret, 'PICKUP_SCHEDULED', `Courier: ${awb.courier_name}, AWB ${awb.awb}`);
     }
     ret.pickup.last_error = '';
   } catch (error) {
@@ -143,8 +162,15 @@ function returnPickupStatus(raw: string): ReturnPickupStatus | null {
   return null;
 }
 
-/** Fold tracking into a return; its arrival at the warehouse marks the return RECEIVED. */
-export async function applyReturnTracking(ret: IStoreReturn, t: TrackResult) {
+/**
+ * Fold tracking into a return; its arrival at the warehouse marks the return
+ * RECEIVED and calls `onArrived` — each shop tells its buyer in its own words.
+ */
+export async function applyReturnTracking<R extends ReturnShipment>(
+  ret: R,
+  t: TrackResult,
+  onArrived: (ret: R) => Promise<void>
+) {
   const seen = new Set(ret.pickup.events.map((e) => `${new Date(e.at).getTime()}|${e.status}`));
   for (const a of t.activities) {
     const at = parseShiprocketDate(a.date) ?? new Date();
@@ -156,14 +182,14 @@ export async function applyReturnTracking(ret: IStoreReturn, t: TrackResult) {
   const next = returnPickupStatus(t.current_status);
   if (next && ret.pickup.status !== 'DELIVERED') ret.pickup.status = next;
   const arrived = next === 'DELIVERED' && (ret.status === 'APPROVED' || ret.status === 'PICKUP_SCHEDULED');
-  if (arrived) {
-    ret.status = 'RECEIVED';
-    ret.events.push({ status: 'RECEIVED', note: 'Reached the warehouse', by: 'ShipRocket', at: new Date() });
-  }
+  if (arrived) moveReturn(ret, 'RECEIVED', 'Reached the warehouse');
   await ret.save();
-  if (arrived) {
-    const { mailReturnUpdate } = await import('@modules/commerce/store/store.emails');
-    const order = await ProductOrderModel.findById(ret.order_id);
-    await mailReturnUpdate(ret, order, `${order?.currency_symbol ?? '₹'}${ret.refund_amount.toFixed(2)}`);
-  }
+  if (arrived) await onArrived(ret);
+}
+
+/** The pet store's arrival mail — its returns' `onArrived`. */
+export async function mailStoreReturnArrived(ret: IStoreReturn) {
+  const { mailReturnUpdate } = await import('@modules/commerce/store/store.emails');
+  const order = await ProductOrderModel.findById(ret.order_id);
+  await mailReturnUpdate(ret, order, `${order?.currency_symbol ?? '₹'}${ret.refund_amount.toFixed(2)}`);
 }

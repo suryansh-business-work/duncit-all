@@ -17,12 +17,12 @@ import { DuncitButton } from '@duncit/buttons';
 import RhfTextField from '../components/RhfTextField';
 import ReturnQtyStepper from './ReturnQtyStepper';
 import {
-  buildReturnSchema,
-  COMMENTS_MAX,
+  RETURN_COMMENTS_MAX,
+  RETURN_REASONS,
   returnFormDefaults,
   type ReturnFormValues,
-} from './pod-shop-return.types';
-import { RETURN_REASONS } from '../../pages/orders-history-page/podShopReturns';
+} from '@duncit/utils';
+import { makePodShopReturnSchema } from '@duncit/forms/schemas';
 import type { ProductOrder } from '../../pages/pod-history-page/productOrders';
 import { DIALOG_ACTIONS_SX, DIALOG_PILL_SX } from '../../components/dialog-styles';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -44,12 +44,7 @@ export default function PodShopReturnForm({ order, busy, errorMessage, onCancel,
   const { t } = useTranslation();
   const schema = useMemo(
     () =>
-      buildReturnSchema({
-        pickItem: t('mweb.podShopReturns.errorPickItem'),
-        qtyTooHigh: t('mweb.podShopReturns.errorQtyTooHigh'),
-        pickReason: t('mweb.podShopReturns.errorPickReason'),
-        commentsTooLong: t('mweb.podShopReturns.errorCommentsTooLong'),
-      }),
+      makePodShopReturnSchema(t),
     [t]
   );
   const { control, handleSubmit, formState } = useForm({
@@ -136,7 +131,7 @@ export default function PodShopReturnForm({ order, busy, errorMessage, onCancel,
             multiline
             minRows={2}
             size="small"
-            slotProps={{ htmlInput: { maxLength: COMMENTS_MAX } }}
+            slotProps={{ htmlInput: { maxLength: RETURN_COMMENTS_MAX } }}
           />
           {errorMessage && (
             <Alert severity="error" data-testid="pod-shop-return-error">

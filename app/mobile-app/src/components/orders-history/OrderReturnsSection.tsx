@@ -5,7 +5,7 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { openReturnLines, returnDeadline } from '@/utils/pod-shop-returns';
+import { openReturnLines, returnDeadline } from '@duncit/utils';
 import type { HistoryOrder, PodShopReturn } from '@/utils/product-orders';
 import { PodShopReturnCard } from './PodShopReturnCard';
 

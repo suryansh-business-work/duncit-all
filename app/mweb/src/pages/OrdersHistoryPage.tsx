@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { parseApiError } from '@duncit/utils';
+import { parseApiError, groupReturnsByOrder } from '@duncit/utils';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
 import { useTranslation } from '../i18n/useTranslation';
@@ -12,7 +12,6 @@ import { MY_PRODUCT_ORDERS, type ProductOrder } from './pod-history-page/product
 import CancelReturnDialog from './orders-history-page/CancelReturnDialog';
 import OrderReturnsSection from './orders-history-page/OrderReturnsSection';
 import PodShopReturnDialog from './orders-history-page/PodShopReturnDialog';
-import { groupReturnsByOrder } from './orders-history-page/podShopReturns';
 import {
   MY_POD_SHOP_RETURNS,
   type MyPodShopReturnsData,

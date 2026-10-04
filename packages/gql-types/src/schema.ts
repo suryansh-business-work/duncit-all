@@ -21272,6 +21272,41 @@ export type PolicyVersion = {
   version_no: Scalars['Int']['output'];
 };
 
+export type PortMapOverview = {
+  __typename?: 'PortMapOverview';
+  /** False when the host's nginx directory could not be read; error says why. */
+  available: Scalars['Boolean']['output'];
+  checked_at: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  routes: Array<PortMapRoute>;
+  sites: Array<PortMapSite>;
+};
+
+/** One domain + location that nginx proxies to a local address. */
+export type PortMapRoute = {
+  __typename?: 'PortMapRoute';
+  domain: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  host?: Maybe<Scalars['String']['output']>;
+  location: Scalars['String']['output'];
+  /** Null for a unix socket or a target built from variables. */
+  port?: Maybe<Scalars['Int']['output']>;
+  site: Scalars['String']['output'];
+  /** The proxy_pass target exactly as written. */
+  target: Scalars['String']['output'];
+  /** Some server block for this domain listens on 443 / ssl. */
+  tls: Scalars['Boolean']['output'];
+};
+
+/** One file in the host's nginx sites-available. */
+export type PortMapSite = {
+  __typename?: 'PortMapSite';
+  domain_count: Scalars['Int']['output'];
+  /** Linked into sites-enabled, so nginx actually serves it. */
+  enabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
 /** One staff console in the Jump to Portal directory, with the signed-in user's standing. */
 export type PortalAccessEntry = {
   __typename?: 'PortalAccessEntry';
@@ -23058,6 +23093,8 @@ export type Query = {
   policyStatsTable: PolicyTypeCountTablePage;
   /** Legal: every wording this policy has had, oldest first. */
   policyVersions: Array<PolicyVersion>;
+  /** Tech > Domain > Port Mapping: domain to port routes from nginx sites-available (SUPER_ADMIN / TECH_MANAGER). */
+  portMappings: PortMapOverview;
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;

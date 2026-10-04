@@ -49,6 +49,7 @@ import TableApiSettingsPage from './pages/table-api-settings';
 import DomainOverviewPage from './pages/domain/overview';
 import DnsRecordsPage from './pages/domain/dns-records';
 import DnsStagingPage from './pages/domain/staging';
+import PortMappingPage from './pages/domain/port-mapping';
 import SslPage from './pages/ssl';
 import CloudflarePage from './pages/cloudflare';
 import SonarqubePage from './pages/sonarqube';
@@ -129,6 +130,7 @@ export default function App() {
         <Route path="/domain/overview" element={authed(<DomainOverviewPage />)} />
         <Route path="/domain/dns-records" element={authed(<DnsRecordsPage />)} />
         <Route path="/domain/staging" element={authed(<DnsStagingPage />)} />
+        <Route path="/domain/port-mapping" element={authed(<PortMappingPage />)} />
         <Route path="/dns" element={<Navigate to="/domain/overview" replace />} />
         <Route path="/dns/records" element={<Navigate to="/domain/dns-records" replace />} />
         {/* Security: every TLS certificate certbot holds on the VPS (the old

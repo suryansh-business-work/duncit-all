@@ -438,6 +438,25 @@ export const TECH_BUNDLE: NestedCatalogue = {
       liveNotChecked: 'Not checked',
       liveServedExpiry: 'Served certificate expires {date}',
     },
+    portMap: {
+      pageTitle: 'Port Mapping',
+      subtitle:
+        'Which domain nginx hands to which local port, read from the server’s sites-available at {time}. Production and staging share the server, so both sites are listed.',
+      refresh: 'Refresh',
+      unavailable: 'The server’s nginx directory could not be read: {error}',
+      empty: 'No domain is proxied to a port for this selection.',
+      siteFilter: 'Site file',
+      allSites: 'All site files',
+      siteOption: '{name} ({count} domains)',
+      siteOptionDisabled: '{name} ({count} domains, not enabled)',
+      domainFilter: 'Domain',
+      allDomains: 'All domains',
+      canvasLabel: 'Domain to port mapping',
+      https: 'Serves HTTPS',
+      siteDisabled: 'Site not enabled in nginx',
+      portLabel: 'Port {port}',
+      noPort: 'No fixed port',
+    },
     /** Security → SonarQube Settings — the SonarQube category of Environment Variables. */
     sonarqube: {
       settingsTitle: 'SonarQube Settings',

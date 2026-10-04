@@ -607,6 +607,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       domain: 'Domain',
       dnsRecords: 'DNS Records',
       dnsStagingSync: 'Staging Sync',
+      portMapping: 'Port Mapping',
       ssl: 'SSL',
       cloudflare: 'Cloudflare',
       googleAnalytics: 'Google Analytics',

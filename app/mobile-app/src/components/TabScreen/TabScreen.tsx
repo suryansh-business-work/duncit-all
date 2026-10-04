@@ -11,6 +11,8 @@ import { useComingSoonCity } from '@/hooks/useComingSoonCity';
 import type { TabParamList } from '@/navigation/tabs';
 
 const HOME_TAB: keyof TabParamList = 'HomeTab';
+/** The cart holds products from every super category — nothing to narrow. */
+const CART_TAB: keyof TabParamList = 'Cart';
 
 /** Shared scaffold for the bottom-tab screens, in mWeb's order: the page
  * ground, then the app header, the super-category switch and the tab's
@@ -27,7 +29,7 @@ export function TabScreen({ testID, children }: Readonly<{ testID: string; child
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <AppHeader home={home} />
-        {home && comingSoon ? null : <SuperCategoryTabs />}
+        {(home && comingSoon) || route.name === CART_TAB ? null : <SuperCategoryTabs />}
         <KeyboardScreen flush>{children}</KeyboardScreen>
       </SafeAreaView>
     </YStack>

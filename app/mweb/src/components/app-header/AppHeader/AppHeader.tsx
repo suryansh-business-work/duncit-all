@@ -57,6 +57,8 @@ export default function AppHeader({
   // keeps the header's search button and skips the greeting. The survey
   // header (`minimal`) keeps its greeting — it is all that header says.
   const onHome = pathname === '/';
+  // The cart holds products from every super category — nothing to narrow.
+  const onCart = pathname === '/cart';
   const isUserStudio = effectiveStudio === 'USER';
   const showGreeting = minimal || (isUserStudio && onHome);
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
@@ -179,7 +181,7 @@ export default function AppHeader({
         <HeaderVerifyEmail onOpen={() => navigate('/profile?verifyEmail=1')} />
       )}
 
-      {!minimal && !comingSoon && (
+      {!minimal && !comingSoon && !onCart && (
         <SuperCategoryTabs
           loading={staticLoading}
           superCats={superCats}

@@ -64,7 +64,7 @@ describe('AskAiDrawer', () => {
   });
 
   it('asks a starter question, shows it is thinking, then shows the answer', async () => {
-    renderDrawer([chatMock([{ role: 'user', content: 'Summarise this lead' }], { reply: 'Grand Hall is a banquet venue.', delay: 20 })]);
+    renderDrawer([chatMock([{ role: 'user', content: 'Summarise this lead' }], { reply: 'Grand Hall is a banquet venue.', delay: 500 })]);
 
     fireEvent.click(screen.getByRole('button', { name: 'Summarise this lead' }));
 
@@ -72,7 +72,7 @@ describe('AskAiDrawer', () => {
     expect(screen.getByText('Summarise this lead')).toBeInTheDocument();
     expect(screen.queryAllByTestId('crm-ask-ai-suggestion')).toHaveLength(0);
 
-    expect(await screen.findByTestId('ai-reply')).toHaveTextContent('Grand Hall is a banquet venue.');
+    expect(await screen.findByTestId('ai-reply', {}, { timeout: 3000 })).toHaveTextContent('Grand Hall is a banquet venue.');
     expect(screen.queryByText('Thinking…')).toBeNull();
   });
 

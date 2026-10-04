@@ -64,15 +64,16 @@ describe('CreateLeadDialog', () => {
     const created = vi.fn(() => ({
       data: { waCreateUserLead: { __typename: 'WaUserLead', id: 'l1', phone: '919876543210', name: 'Asha' } },
     }));
+    // Held long enough that the in-flight "Saving…" state is observable.
     const { phone, name, create, onCreated, onClose } = renderCreate([
-      createMock({ phone: '919876543210', name: 'Asha' }, created),
+      { ...createMock({ phone: '919876543210', name: 'Asha' }, created), delay: 500 },
     ]);
     fireEvent.change(phone, { target: { value: '919876543210' } });
     fireEvent.change(name, { target: { value: 'Asha' } });
     fireEvent.click(create);
 
     expect(await screen.findByRole('button', { name: 'Saving…' })).toBeDisabled();
-    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1), { timeout: 3000 });
     expect(created).toHaveBeenCalledTimes(1);
     expect(onCreated).toHaveBeenCalledTimes(1);
     expect(phone).toHaveValue('');
@@ -228,9 +229,9 @@ describe('EditLeadDialog', () => {
     const updated = vi.fn(() => ({
       data: { waUpdateUserLead: { __typename: 'WaUserLead', id: 'l1', phone: '919800000000', name: 'Asha R' } },
     }));
-    // A short delay keeps the mutation in flight long enough to see the saving state.
+    // Held long enough that the in-flight "Saving…" state is observable.
     const { onSaved, onClose } = renderEdit(lead, [
-      { ...updateMock({ name: 'Asha R', phone: '919800000000' }, updated), delay: 50 },
+      { ...updateMock({ name: 'Asha R', phone: '919800000000' }, updated), delay: 500 },
     ]);
     const { phone, name, save } = fields();
     fireEvent.change(phone, { target: { value: '919800000000' } });
@@ -239,7 +240,7 @@ describe('EditLeadDialog', () => {
 
     expect(await screen.findByRole('button', { name: 'Saving…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1), { timeout: 3000 });
     expect(updated).toHaveBeenCalledTimes(1);
     expect(onSaved).toHaveBeenCalledTimes(1);
   });

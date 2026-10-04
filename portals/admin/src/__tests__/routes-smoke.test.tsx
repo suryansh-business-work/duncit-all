@@ -333,6 +333,11 @@ describe('every route mounts with no data behind it', () => {
     unmount();
   });
 
+  // /branding alone mounts in ~5.5s on CI, and pressing everything on it with no
+  // data outran the 30s ceiling too. A cut-off test never reaches unmount(), and
+  // the half-finished act() it leaves behind blanks every later render in this
+  // file — one slow page failed all 24 with-data cases after it.
+  const PRESS_TIMEOUT_MS = 90_000;
   it.each(ROUTES)('survives every control on %s being pressed', async (route) => {
     const { unmount } = mountRoute(route);
 
@@ -342,7 +347,7 @@ describe('every route mounts with no data behind it', () => {
 
     expect(document.body.innerHTML).not.toBe('');
     unmount();
-  });
+  }, PRESS_TIMEOUT_MS);
 
   it('reads the server schema the with-data pass depends on', () => {
     // Without it every operation would answer empty and the pass below would
@@ -359,7 +364,6 @@ describe('every route mounts with no data behind it', () => {
    */
   // Every control on a data-filled screen is filled and pressed; the largest
   // (/branding) outruns the global 30s on a busy CI runner.
-  const WITH_DATA_TIMEOUT_MS = 90_000;
   it.each(ROUTES)('renders %s with data behind it', async (route) => {
     const { container, unmount } = mountRoute(route, schemaMockLink());
 
@@ -372,5 +376,5 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     unmount();
-  }, WITH_DATA_TIMEOUT_MS);
+  }, PRESS_TIMEOUT_MS);
 });

@@ -308,7 +308,7 @@ describe('AccountsTab', () => {
     const account = makeSocialAccount();
 
     it('asks first, then disconnects, refreshes and closes the dialog', async () => {
-      const onChanged = renderTab([account], [{ ...disconnectSocialAccountMock('sa1'), delay: 30 }]);
+      const onChanged = renderTab([account], [{ ...disconnectSocialAccountMock('sa1'), delay: 500 }]);
       fireEvent.click(screen.getByTestId('social-disconnect-sa1'));
       const dialog = screen.getByRole('dialog', { name: 'Disconnect this account?' });
       expect(dialog).toHaveTextContent(
@@ -316,7 +316,7 @@ describe('AccountsTab', () => {
       );
       fireEvent.click(within(dialog).getByTestId('confirm-dialog-confirm'));
       expect(await within(dialog).findByText('Disconnecting…')).toBeInTheDocument();
-      await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Duncit Pages disconnected', 'success'));
+      await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Duncit Pages disconnected', 'success'), { timeout: 3000 });
       expect(onChanged).toHaveBeenCalledTimes(1);
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });

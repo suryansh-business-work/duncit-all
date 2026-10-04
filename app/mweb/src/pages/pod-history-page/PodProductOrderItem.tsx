@@ -5,6 +5,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton } from '@duncit/buttons';
 import OrderTrackingTimeline from './OrderTrackingTimeline';
+import OrderStatusNotes from '../orders-history-page/OrderStatusNotes';
 import {
   buildOrderTimeline,
   formatMoney,
@@ -51,6 +52,8 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
           #{order.order_no}
         </Typography>
       </Stack>
+
+      <OrderStatusNotes order={order} />
 
       <Stack spacing={0.75}>
         {order.line_items.map((li) => (

@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { OrderStatusNotes } from '@/components/orders-history/OrderStatusNotes';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { OrderTrackingTimeline } from './OrderTrackingTimeline';
@@ -57,6 +58,8 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
           #{order.order_no}
         </Text>
       </XStack>
+
+      <OrderStatusNotes order={order} />
 
       {order.line_items.map((li) => (
         <XStack key={`${li.product_id}-${li.variant_id || 'base'}`} gap={8} alignItems="center">

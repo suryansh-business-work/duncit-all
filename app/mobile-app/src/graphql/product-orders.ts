@@ -18,6 +18,21 @@ export const MyProductOrdersForPodDocument = gql(`
       pickup_ref
       pickup_location_id
       created_at
+      delivered_at
+      cancelled_at
+      cancel_reason
+      refund {
+        status
+        amount
+        coins
+        refunded_at
+      }
+      returnable {
+        product_id
+        variant_id
+        returnable_qty
+        returnable_until
+      }
       line_items {
         product_id
         variant_id
@@ -66,6 +81,21 @@ export const MyProductOrdersDocument = gql(`
       pickup_ref
       pickup_location_id
       created_at
+      delivered_at
+      cancelled_at
+      cancel_reason
+      refund {
+        status
+        amount
+        coins
+        refunded_at
+      }
+      returnable {
+        product_id
+        variant_id
+        returnable_qty
+        returnable_until
+      }
       pod {
         id
         pod_title

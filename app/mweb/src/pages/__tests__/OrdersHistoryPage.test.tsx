@@ -16,6 +16,11 @@ const baseOrder = (over: Partial<ProductOrder> = {}): ProductOrder => ({
   pickup_ref: '',
   pickup_location_id: '',
   created_at: '2026-07-01T00:00:00.000Z',
+  delivered_at: null,
+  cancelled_at: null,
+  cancel_reason: '',
+  refund: { status: 'NONE', amount: 0, coins: 0, refunded_at: null },
+  returnable: [],
   pod: { id: 'pod-1', pod_title: 'Morning Yoga Pod' },
   line_items: [
     {

@@ -1279,6 +1279,7 @@ export const ANALYTICS_BUNDLE: NestedCatalogue = {
       rewPaymentRedeem: 'Spent at checkout',
       rewCoinExpiry: 'Expired',
       rewAdminDeduct: 'Deducted by Finance',
+      rewEarnRevoke: 'Reward revoked on backout',
       rewBalanceUnder50: 'Under 50',
       rewBalance50To199: '50 to 199',
       rewBalance200To499: '200 to 499',

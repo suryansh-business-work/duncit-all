@@ -158,6 +158,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       sourceAdminGrant: 'Admin grant',
       sourceAdminDeduct: 'Admin deduction',
       sourceExpired: 'Expired',
+      sourceEarnRevoke: 'Reward revoked (backout)',
       yes: 'Yes',
       no: 'No',
     },

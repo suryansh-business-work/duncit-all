@@ -3,13 +3,19 @@ import { fmt, paymentTableFilter, STATUS_COLORS } from '../../src/pages/finance/
 import {
   BACKOUT_STATUS_COLORS,
   BACKOUT_STATUS_LABELS,
-  buildRefundBreakup,
   canProcessRefund,
   fmtDate,
   money as backoutMoney,
   REFUND_STATUS_COLORS,
   type BackoutRefundRequest,
 } from '../../src/pages/finance/backout-refund-page/queries';
+import {
+  buildRefundSections,
+  gatewayLabel,
+  paidVia,
+  processedLabel,
+  refundDeductionPct,
+} from '../../src/pages/finance/backout-refund-page/refundParts';
 import {
   labelize,
   tableStateToExpenseFilter,
@@ -87,77 +93,132 @@ describe('backout-refund queries logic', () => {
     ).toBe(false);
   });
 
-  it('builds a refund breakup preferring the request snapshot', () => {
-    const row = {
+  // Echoes the key with its vars, so a label names the copy it renders.
+  const t = ((key: string, opts?: { vars?: Record<string, unknown> }) =>
+    opts?.vars ? `${key}${JSON.stringify(opts.vars)}` : key) as Parameters<typeof buildRefundSections>[3];
+  const refundRow = (over: Partial<BackoutRefundRequest> = {}) =>
+    ({
       payment_amount: 1000,
       backout_status: 'SPOT_FILLED',
       deduction_pct: 10,
       refund_amount: 900,
-    } as BackoutRefundRequest;
-    const lines = buildRefundBreakup(row, '₹', 25); // snapshot 10% wins over 25%
-    expect(lines.find((l) => l.key === 'deduction')?.value).toBe('- ₹100.00');
-    expect(lines.find((l) => l.key === 'refund')?.value).toBe('₹900.00');
-    expect(lines.find((l) => l.key === 'backout-status')?.value).toBe('Spot Filled');
+      coins_paid: 0,
+      coins_refunded: 0,
+      payment_gateway: 'RAZORPAY',
+      coins_earned_share: 0,
+      coins_to_revoke: 0,
+      coins_revoked: 0,
+      cash_refund_processed_at: null,
+      coins_refund_processed_at: null,
+      earn_revoke_processed_at: null,
+      refund_parts: ['CASH'],
+      pending_refund_parts: ['CASH'],
+      ...over,
+    }) as BackoutRefundRequest;
+  const line = (section: { lines: { key: string; value: string; label: string }[] } | undefined, key: string) =>
+    section?.lines.find((l) => l.key === key);
+
+  it('builds the gateway box from the request snapshot', () => {
+    const [cash] = buildRefundSections(refundRow(), '₹', 25, t); // snapshot 10% wins over 25%
+    expect(cash.part).toBe('CASH');
+    expect(cash.title).toBe('finance.backoutRefund.methodRazorpay');
+    expect(line(cash, 'deduction')).toMatchObject({
+      label: 'finance.backoutRefund.backoutDeduction{"pct":10}',
+      value: '- ₹100.00',
+    });
+    expect(line(cash, 'refund')?.value).toBe('₹900.00');
+    expect(cash.summary).toBe('₹900.00');
+    expect(cash.processedAt).toBeNull();
   });
 
-  it('adds the coin half of the refund only when the booking spent coins', () => {
-    const row = {
-      payment_amount: 1000,
-      backout_status: 'SPOT_FILLED',
-      deduction_pct: 10,
-      refund_amount: 900,
-      coins_paid: 50,
-      coins_refunded: 45,
-    } as BackoutRefundRequest;
-    const lines = buildRefundBreakup(row, '₹', 25);
-    expect(lines.find((l) => l.key === 'coins-paid')?.value).toBe('50');
-    expect(lines.find((l) => l.key === 'coins-deduction')).toMatchObject({
-      label: 'Coin deduction (10%)',
+  it('splits a part-coin booking into a gateway box and a coin box, each with the deduction', () => {
+    const sections = buildRefundSections(
+      refundRow({ coins_paid: 50, coins_refunded: 45, refund_parts: ['CASH', 'COINS'] }),
+      '₹',
+      25,
+      t,
+    );
+    expect(sections.map((s) => s.part)).toEqual(['CASH', 'COINS']);
+    expect(paidVia(sections)).toEqual(['finance.backoutRefund.methodRazorpay', 'finance.backoutRefund.methodCoins']);
+    const coins = sections[1];
+    expect(line(coins, 'coins-paid')?.value).toBe('50');
+    expect(line(coins, 'coins-deduction')).toMatchObject({
+      label: 'finance.backoutRefund.coinDeduction{"pct":10}',
       value: '- 5',
     });
-    expect(lines.find((l) => l.key === 'coins-refund')?.value).toBe('45');
+    expect(line(coins, 'coins-refund')?.value).toBe('45');
 
-    // A full deduction hands no coins back: every coin paid is deducted.
-    const kept = buildRefundBreakup({ ...row, deduction_pct: 100, coins_refunded: 0 }, '₹', 25);
-    expect(kept.find((l) => l.key === 'coins-deduction')?.value).toBe('- 50');
-    expect(kept.find((l) => l.key === 'coins-refund')?.value).toBe('0');
-
-    // No coins spent → no coin rows at all.
-    const cashOnly = buildRefundBreakup({ ...row, coins_paid: 0, coins_refunded: 0 }, '₹', 25);
-    expect(cashOnly.some((l) => l.key.startsWith('coins-'))).toBe(false);
+    // A coin-only booking has no gateway box at all.
+    const coinOnly = buildRefundSections(
+      refundRow({ payment_amount: 0, payment_gateway: 'COINS', coins_paid: 50, refund_parts: ['COINS'] }),
+      '₹',
+      25,
+      t,
+    );
+    expect(paidVia(coinOnly)).toEqual(['finance.backoutRefund.methodCoins']);
   });
 
-  it('clamps deduction pct and defaults a null amount', () => {
-    const row = {
-      payment_amount: null,
-      backout_status: 'IN_PROCESS',
-      deduction_pct: 200, // clamped to 100
-      refund_amount: null,
-    } as unknown as BackoutRefundRequest;
-    const lines = buildRefundBreakup(row, '₹', 0);
-    expect(lines[0].value).toBe('₹0.00');
-    expect(lines.find((l) => l.key === 'deduction')?.label).toContain('100%');
-    // negative pct clamps to 0; refund falls back to amount − deduction
-    const row2 = {
-      payment_amount: 500,
-      backout_status: 'CANCELLED',
-      deduction_pct: -5,
-      refund_amount: null,
-    } as unknown as BackoutRefundRequest;
-    const lines2 = buildRefundBreakup(row2, '₹', 0);
-    expect(lines2.find((l) => l.key === 'deduction')?.label).toContain('0%');
-    expect(lines2.find((l) => l.key === 'refund')?.value).toBe('₹500.00');
-    // no snapshot pct → falls back to the global setting; NaN → 0
-    const row3 = {
-      payment_amount: 500,
-      backout_status: 'CANCELLED',
-      deduction_pct: null,
-      refund_amount: null,
-    } as unknown as BackoutRefundRequest;
-    expect(buildRefundBreakup(row3, '₹', 20).find((l) => l.key === 'deduction')?.label).toContain('20%');
-    expect(buildRefundBreakup(row3, '₹', Number.NaN).find((l) => l.key === 'deduction')?.value).toBe(
-      '- ₹0.00',
+  it('revokes only the refunded share of earned coins, after the coins are back', () => {
+    const row = refundRow({
+      coins_paid: 50,
+      coins_refunded: 45,
+      coins_earned_share: 20,
+      coins_to_revoke: 18,
+      refund_parts: ['CASH', 'COINS', 'EARN_REVOKE'],
+      pending_refund_parts: ['COINS', 'EARN_REVOKE'],
+    });
+    const earn = buildRefundSections(row, '₹', 25, t)[2];
+    expect(line(earn, 'earn-share')?.value).toBe('20');
+    expect(line(earn, 'earn-kept')?.value).toBe('- 2');
+    expect(line(earn, 'earn-revoke')?.value).toBe('18');
+    expect(earn.summary).toBe('- 18');
+    // Blocked until the coin refund lands — the revocation is taken from it.
+    expect(earn.blockedReason).toBe('finance.backoutRefund.coinsFirst');
+    expect(buildRefundSections({ ...row, pending_refund_parts: ['EARN_REVOKE'] }, '₹', 25, t)[2].blockedReason).toBeNull();
+
+    // Processed with a short balance: the shortfall is shown, not hidden.
+    const short = buildRefundSections(
+      { ...row, pending_refund_parts: [], earn_revoke_processed_at: '2024-01-04T10:00:00Z', coins_revoked: 11 },
+      '₹',
+      25,
+      t,
+    )[2];
+    expect(line(short, 'earn-revoked')?.value).toBe('11');
+    expect(line(short, 'earn-shortfall')?.value).toBe('7');
+    // Fully revoked: no shortfall line.
+    const full = buildRefundSections(
+      { ...row, pending_refund_parts: [], earn_revoke_processed_at: '2024-01-04T10:00:00Z', coins_revoked: 18 },
+      '₹',
+      25,
+      t,
+    )[2];
+    expect(line(full, 'earn-shortfall')).toBeUndefined();
+  });
+
+  it('labels each gateway and clamps the deduction pct', () => {
+    expect(gatewayLabel('DUMMY', t)).toBe('finance.backoutRefund.methodTestGateway');
+    expect(gatewayLabel('COUPON', t)).toBe('finance.backoutRefund.methodCoupon');
+    expect(gatewayLabel(null, t)).toBe('finance.backoutRefund.methodGateway');
+    expect(refundDeductionPct(refundRow({ deduction_pct: 200 }), 0)).toBe(100);
+    expect(refundDeductionPct(refundRow({ deduction_pct: -5 }), 0)).toBe(0);
+    // no snapshot pct → the global setting; NaN → 0
+    const noPct = { deduction_pct: null } as unknown as Partial<BackoutRefundRequest>;
+    expect(refundDeductionPct(refundRow(noPct), 20)).toBe(20);
+    expect(refundDeductionPct(refundRow(noPct), Number.NaN)).toBe(0);
+    // No snapshot amount and no refund figure → ₹0, refund falls back to amount − deduction.
+    const [legacy] = buildRefundSections(
+      refundRow({ payment_amount: null, refund_amount: null, refund_parts: [] }),
+      '₹',
+      0,
+      t,
     );
+    expect(line(legacy, 'paid')?.value).toBe('₹0.00');
+    expect(line(legacy, 'refund')?.value).toBe('₹0.00');
+  });
+
+  it('labels a part pending until it has a processed stamp', () => {
+    expect(processedLabel(null, t)).toBe('finance.backoutRefund.partPending');
+    expect(processedLabel('2024-01-04T10:00:00Z', t)).toContain('finance.backoutRefund.partProcessed');
   });
 });
 

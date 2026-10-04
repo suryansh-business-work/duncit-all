@@ -46,9 +46,10 @@ describe('BackoutRefundPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /process refund/i }));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('Riya')).toBeInTheDocument();
-    expect(within(dialog).getByText('DUN-BKO-000001')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /refund now/i }));
+    expect(within(dialog).getByText(/Riya — Backout DUN-BKO-000001/)).toBeInTheDocument();
+    // A Razorpay-only booking: one payment method, one box, processed on its own.
+    expect(within(dialog).getAllByText('Razorpay').length).toBeGreaterThan(0);
+    fireEvent.click(within(dialog).getByTestId('refund-part-cash-action'));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Refund processed'));
   });
 
@@ -60,7 +61,7 @@ describe('BackoutRefundPage', () => {
     });
 
     fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /refund now/i }));
+    fireEvent.click(await screen.findByTestId('refund-part-cash-action'));
     await waitFor(() => expect(notifyError).toHaveBeenCalled());
     expect(notifySuccess).not.toHaveBeenCalled();
   });

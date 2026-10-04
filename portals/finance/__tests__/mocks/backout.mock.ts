@@ -33,6 +33,17 @@ export type BackoutRowMock = { __typename?: 'BackoutRefundRequest' } & Pick<
   | 'refund_amount'
   | 'refund_processed_at'
   | 'refund_status'
+  | 'coins_paid'
+  | 'coins_refunded'
+  | 'payment_gateway'
+  | 'coins_earned_share'
+  | 'coins_to_revoke'
+  | 'coins_revoked'
+  | 'cash_refund_processed_at'
+  | 'coins_refund_processed_at'
+  | 'earn_revoke_processed_at'
+  | 'refund_parts'
+  | 'pending_refund_parts'
 > & { pod: PodRowMock | null };
 
 /** A refund-eligible request: replacement booked the seat (Spot Filled). */
@@ -53,6 +64,17 @@ export const makeBackoutRow = (over: Partial<BackoutRowMock> = {}): BackoutRowMo
   refund_amount: 900,
   refund_processed_at: null,
   refund_status: 'PENDING',
+  coins_paid: 0,
+  coins_refunded: 0,
+  payment_gateway: 'RAZORPAY',
+  coins_earned_share: 0,
+  coins_to_revoke: 0,
+  coins_revoked: 0,
+  cash_refund_processed_at: null,
+  coins_refund_processed_at: null,
+  earn_revoke_processed_at: null,
+  refund_parts: ['CASH'],
+  pending_refund_parts: ['CASH'],
   ...over,
 });
 
@@ -92,13 +114,20 @@ export const backoutFinanceSettingsErrorMock = (): MockedResponse => ({
   error: new Error('load fail'),
 });
 
-/** processBackoutRefund success — echoes the (now processed) row. */
+/** processBackoutRefund success for the CASH part — echoes the (now fully
+ * processed) row, so the dialog closes. */
 export const processBackoutRefundMock = (id = 'b1'): MockedResponse => ({
-  request: { query: PROCESS_BACKOUT_REFUND, variables: { id } },
+  request: { query: PROCESS_BACKOUT_REFUND, variables: { id, part: 'CASH' } },
   result: {
     data: {
       processBackoutRefund: {
-        ...makeBackoutRow({ id, refund_processed_at: '2024-01-03T10:00:00Z', refund_status: 'PROCESSED' }),
+        ...makeBackoutRow({
+          id,
+          refund_processed_at: '2024-01-03T10:00:00Z',
+          cash_refund_processed_at: '2024-01-03T10:00:00Z',
+          pending_refund_parts: [],
+          refund_status: 'PROCESSED',
+        }),
         status: 'BACKED_OUT',
         pod_id: 'POD-1',
         user_id: 'u1',
@@ -122,7 +151,7 @@ export const processBackoutRefundMock = (id = 'b1'): MockedResponse => ({
 });
 
 export const processBackoutRefundErrorMock = (id = 'b1'): MockedResponse => ({
-  request: { query: PROCESS_BACKOUT_REFUND, variables: { id } },
+  request: { query: PROCESS_BACKOUT_REFUND, variables: { id, part: 'CASH' } },
   error: new Error('This Backout request has already been refunded'),
 });
 
@@ -234,6 +263,15 @@ interface DetailRequestMock {
   refund_amount: number | null;
   coins_paid: number | null;
   coins_refunded: number | null;
+  payment_gateway: string | null;
+  coins_earned_share: number;
+  coins_to_revoke: number;
+  coins_revoked: number;
+  cash_refund_processed_at: string | null;
+  coins_refund_processed_at: string | null;
+  earn_revoke_processed_at: string | null;
+  refund_parts: string[];
+  pending_refund_parts: string[];
   refund_processed_at: string | null;
   events: DetailEventMock[];
   participation: DetailParticipationMock | null;
@@ -290,6 +328,15 @@ export const makeBackoutDetail = (over: Partial<DetailRequestMock> = {}): Detail
   refund_amount: 900,
   coins_paid: 0,
   coins_refunded: 0,
+  payment_gateway: 'RAZORPAY',
+  coins_earned_share: 0,
+  coins_to_revoke: 0,
+  coins_revoked: 0,
+  cash_refund_processed_at: null,
+  coins_refund_processed_at: null,
+  earn_revoke_processed_at: null,
+  refund_parts: ['CASH'],
+  pending_refund_parts: ['CASH'],
   refund_processed_at: null,
   events: [
     { __typename: 'BackoutEvent', status: 'IN_PROCESS', backout_count: 1, at: '2024-01-02T09:00:00Z' },

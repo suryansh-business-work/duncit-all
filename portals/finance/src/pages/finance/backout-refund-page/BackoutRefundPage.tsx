@@ -13,6 +13,7 @@ import {
   BACKOUT_REFUNDS_TABLE,
   PROCESS_BACKOUT_REFUND,
   type BackoutRefundRequest,
+  type RefundPart,
 } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -28,7 +29,10 @@ export default function BackoutRefundPage() {
   const { data, error } = useQuery<SettingsData>(BACKOUT_FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [processRefund, { loading: refunding }] = useMutation<any>(PROCESS_BACKOUT_REFUND);
+  const [processRefund, { loading: refunding }] = useMutation<
+    { processBackoutRefund: BackoutRefundRequest },
+    { id: string; part: RefundPart }
+  >(PROCESS_BACKOUT_REFUND);
   const [refundFor, setRefundFor] = useState<BackoutRefundRequest | null>(null);
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
@@ -40,14 +44,21 @@ export default function BackoutRefundPage() {
     'backoutRefundRequestsTable',
   );
 
-  // Processes the refund for the selected Spot Filled request (one per request)
-  // and refreshes the table so its status flips to PROCESSED. The dialog passes
+  // Processes ONE part of the selected Spot Filled request's refund. The dialog
+  // stays open on the updated row while other parts are outstanding, and closes
+  // once the last one lands; the table refreshes either way. The dialog passes
   // its (non-null) row back, so no null guard is needed here.
-  const confirmRefund = async (row: BackoutRefundRequest) => {
+  const confirmRefund = async (row: BackoutRefundRequest, part: RefundPart) => {
     try {
-      await processRefund({ variables: { id: row.id } });
-      setRefundFor(null);
-      notifySuccess('Refund processed');
+      const { data: result } = await processRefund({ variables: { id: row.id, part } });
+      const updated = result?.processBackoutRefund ?? null;
+      const finished = !updated || updated.pending_refund_parts.length === 0;
+      setRefundFor(finished ? null : updated);
+      notifySuccess(
+        finished
+          ? t('finance.backoutRefund.refundCompleted')
+          : t('finance.backoutRefund.refundPartProcessed'),
+      );
       refetchRef.current?.();
     } catch (e) {
       notifyError(parseApiError(e));

@@ -108,6 +108,44 @@ export function coinsForBackoutRefund(opts: {
   return Math.floor(share - (share * pct) / 100);
 }
 
+/**
+ * Purchase-reward coins to take back when a backout refunds the booking.
+ *
+ * The reward was earned on the WHOLE charge, product add-ons included, but a
+ * backout returns ticket money only — so only the ticket part of the reward is
+ * in play. Of that, the released seats' share, less the Backouts deduction: the
+ * deducted part of the payment is kept, and the coins earned on it stay earned.
+ * That is the same shape as the coin refund, so it is the same arithmetic.
+ *
+ * @returns `earnedShare` — the reward on these seats before the deduction — and
+ * `toRevoke`, what the refund takes back.
+ */
+export function coinsToRevokeForBackout(opts: {
+  coinsEarned: number;
+  ticketPaid: number;
+  totalPaid: number;
+  releaseSeats: number;
+  paidSeats: number;
+  deductionPct: number;
+}): { earnedShare: number; toRevoke: number } {
+  const total = Number(opts.totalPaid) || 0;
+  const ticket = Math.max(0, Math.min(total, Number(opts.ticketPaid) || 0));
+  const earned = Math.max(0, Number(opts.coinsEarned) || 0);
+  const covered = Math.max(1, Number(opts.paidSeats) || 1);
+  const release = Math.max(0, Math.min(Number(opts.releaseSeats) || 0, covered));
+  if (total <= 0 || earned <= 0 || release <= 0) return { earnedShare: 0, toRevoke: 0 };
+  const onTickets = Math.floor((earned * ticket) / total);
+  return {
+    earnedShare: Math.floor((onTickets * release) / covered),
+    toRevoke: coinsForBackoutRefund({
+      coinsPaid: onTickets,
+      releaseSeats: release,
+      paidSeats: covered,
+      deductionPct: opts.deductionPct,
+    }),
+  };
+}
+
 /** The soonest batch to lapse, as the balance card states it. Never more than
  * the balance itself: a balance that drifted under its own lots must not
  * promise to lose coins it does not hold. */
@@ -479,6 +517,75 @@ export const coinService = {
       throw e;
     }
     return value;
+  },
+
+  /**
+   * Takes back the purchase-reward coins of a booking whose money a backout
+   * refunded — the caller has already worked out the refunded share
+   * (`coinsToRevokeForBackout`), so this only moves what it is handed.
+   *
+   * Capped at the balance, never below zero: a member who already spent the
+   * reward cannot be put into coin debt. The cap is one pipeline update rather
+   * than read-then-write, so a checkout spending coins at the same moment
+   * cannot drive the balance negative between the two. Whatever the balance
+   * could not cover is the caller's shortfall to record.
+   *
+   * Idempotent on the BACKOUT, exactly like `refundForBackout`: a retry of the
+   * same release collides on the unique index, gives back what it took and
+   * reports what the first attempt revoked.
+   *
+   * @returns the coins actually revoked.
+   */
+  async revokeEarnForBackout(opts: {
+    userId: string;
+    backoutId: string;
+    paymentId: string | null;
+    coins: number;
+    reason: string;
+  }): Promise<number> {
+    const value = Math.floor(Number(opts.coins) || 0);
+    if (!Types.ObjectId.isValid(opts.userId) || !opts.backoutId || value <= 0) return 0;
+
+    const userId = new Types.ObjectId(opts.userId);
+    const before = await CoinBalanceModel.findOneAndUpdate(
+      { user_id: userId },
+      [{ $set: { balance: { $max: [0, { $subtract: ['$balance', value] }] } } }],
+      { new: false, projection: { balance: 1 } }
+    ).lean();
+    const taken = Math.min(Math.floor(before?.balance ?? 0), value);
+    // Nothing held, nothing taken — and no zero-coin row for the ledger to
+    // explain. The request records the whole amount as the shortfall.
+    if (taken <= 0) return 0;
+    try {
+      await CoinTransactionModel.create({
+        user_id: userId,
+        type: 'DEBIT',
+        amount: taken,
+        balance_after: Math.max(0, (before?.balance ?? 0) - taken),
+        source: 'EARN_REVOKE',
+        reason: opts.reason,
+        payment_id: opts.paymentId,
+        backout_id: opts.backoutId,
+        earn_pct: 0,
+        spend_amount: 0,
+      });
+    } catch (e) {
+      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+        // Already revoked for this backout — hand back what the retry took.
+        await CoinBalanceModel.updateOne({ user_id: userId }, { $inc: { balance: taken } });
+        const first = await CoinTransactionModel.findOne({
+          payment_id: opts.paymentId,
+          source: 'EARN_REVOKE',
+          backout_id: opts.backoutId,
+        }).select('amount');
+        return first?.amount ?? 0;
+      }
+      throw e;
+    }
+    // The revoked coins come out of the soonest-expiring lots, the same way a
+    // checkout spends them, so the expiry sweep never lapses coins already gone.
+    await consumeLots(userId, taken);
+    return taken;
   },
 
   /**

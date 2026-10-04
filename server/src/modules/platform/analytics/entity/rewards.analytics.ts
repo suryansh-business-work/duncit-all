@@ -49,7 +49,7 @@ const CREDIT_SOURCES = [
   'PAYMENT_REFUND',
   'ADMIN_GRANT',
 ] as const;
-const DEBIT_SOURCES = ['PAYMENT_REDEEM', 'COIN_EXPIRY', 'ADMIN_DEDUCT'] as const;
+const DEBIT_SOURCES = ['PAYMENT_REDEEM', 'COIN_EXPIRY', 'ADMIN_DEDUCT', 'EARN_REVOKE'] as const;
 const CARD_STATES = ['ACTIVE', 'REDEEMED', 'EXPIRED'] as const;
 
 type Live = Awaited<ReturnType<typeof loadRewardsLive>>;

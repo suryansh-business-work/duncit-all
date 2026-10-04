@@ -2656,6 +2656,15 @@ export type BackoutEvent = {
   status: BackoutStatus;
 };
 
+/** One separately-actioned part of a Backout refund. */
+export type BackoutRefundPart =
+  /** Money paid through the gateway (Razorpay / test gateway). */
+  | 'CASH'
+  /** Duncit Coins the booking was paid with. */
+  | 'COINS'
+  /** Purchase-reward coins the refund takes back. */
+  | 'EARN_REVOKE';
+
 /** A Backout request — powers the Finance 'Backout Refunds' list + detail. */
 export type BackoutRefundRequest = {
   __typename?: 'BackoutRefundRequest';
@@ -2668,20 +2677,32 @@ export type BackoutRefundRequest = {
   backout_no: Scalars['String']['output'];
   /** Lifecycle status of this Backout request. */
   backout_status: BackoutStatus;
+  /** When Finance processed the gateway-money part of the refund. */
+  cash_refund_processed_at?: Maybe<Scalars['String']['output']>;
+  /** Purchase-reward coins earned on this release's seats, before the deduction. */
+  coins_earned_share: Scalars['Float']['output'];
   /**
    * Duncit Coins this release's share of the booking was paid with, before the
    * deduction — the coin twin of payment_amount.
    */
   coins_paid: Scalars['Float']['output'];
+  /** When Finance processed the Duncit Coin part of the refund. */
+  coins_refund_processed_at?: Maybe<Scalars['String']['output']>;
   /**
    * Coins handed back, after the SAME Backouts deduction the cash refund takes
    * (Finance > Default Deductions). Credited to the balance at the moment the
    * cash refund is processed, never before.
    */
   coins_refunded: Scalars['Float']['output'];
+  /** Earned coins actually taken back; less than coins_to_revoke when the balance was short. */
+  coins_revoked: Scalars['Float']['output'];
+  /** Earned coins the refund takes back — the refunded share of coins_earned_share. */
+  coins_to_revoke: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
   /** Backouts deduction % snapshotted when the request was created. */
   deduction_pct: Scalars['Float']['output'];
+  /** When Finance revoked the earned coins. */
+  earn_revoke_processed_at?: Maybe<Scalars['String']['output']>;
   /** Immutable, chronological Backout lifecycle timeline. */
   events: Array<BackoutEvent>;
   id: Scalars['ID']['output'];
@@ -2697,13 +2718,22 @@ export type BackoutRefundRequest = {
   participation?: Maybe<PodParticipation>;
   payment_amount?: Maybe<Scalars['Float']['output']>;
   payment_currency?: Maybe<Scalars['String']['output']>;
+  /**
+   * Gateway of the join payment — RAZORPAY / DUMMY for money, COINS or COUPON
+   * when nothing went through a gateway. Null when there is no payment.
+   */
+  payment_gateway?: Maybe<Scalars['String']['output']>;
   payment_id?: Maybe<Scalars['ID']['output']>;
   payment_status?: Maybe<Scalars['String']['output']>;
+  /** Parts still to action — empty once the request is refunded. */
+  pending_refund_parts: Array<BackoutRefundPart>;
   pod?: Maybe<Pod>;
   pod_id: Scalars['ID']['output'];
   /** Estimated refund after deduction (null for free bookings). */
   refund_amount?: Maybe<Scalars['Float']['output']>;
-  /** Set once Finance processed the refund (one refund per request). */
+  /** Every part this refund is actioned in, one per way the booking was paid. */
+  refund_parts: Array<BackoutRefundPart>;
+  /** Set once Finance processed EVERY part of the refund (one refund per request). */
   refund_processed_at?: Maybe<Scalars['String']['output']>;
   refund_status: RefundStatus;
   refund_threshold_pct: Scalars['Int']['output'];
@@ -12008,7 +12038,10 @@ export type Mutation = {
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
   pinStaffMessage: StaffMessage;
-  /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
+  /**
+   * Finance-only: process one part of the refund for a Spot Filled Backout
+   * request. Without a part, every outstanding part is processed in order.
+   */
   processBackoutRefund: BackoutRefundRequest;
   /** Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save. */
   productOrderShipmentFile: ShipmentFile;
@@ -15234,6 +15267,7 @@ export type MutationPinStaffMessageArgs = {
 
 export type MutationProcessBackoutRefundArgs = {
   id: Scalars['ID']['input'];
+  part?: InputMaybe<BackoutRefundPart>;
 };
 
 

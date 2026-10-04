@@ -68,6 +68,15 @@ describe('serviceLabel', () => {
   it('falls back to "Other" when custom_name is blank', () => {
     expect(serviceLabel({ service: 'Other', custom_name: '', description: '' })).toBe('Other');
   });
+
+  it('falls back to "Other" when custom_name is missing', () => {
+    expect(serviceLabel({ service: 'Other', custom_name: null, description: '' } as any)).toBe('Other');
+  });
+
+  it('trims the catalogue value and treats a missing service as blank', () => {
+    expect(serviceLabel({ service: '  Catering ', custom_name: '', description: '' })).toBe('Catering');
+    expect(serviceLabel({ service: null, custom_name: 'ignored', description: '' } as any)).toBe('');
+  });
 });
 
 describe('aggregateStages', () => {
@@ -166,6 +175,32 @@ describe('aggregateSuperCategories', () => {
     const result = aggregateSuperCategories(cats, venueLeads, hostLeads);
     const uncat = result.find((b) => b.super_category_id === '__none__');
     expect(uncat).toMatchObject({ label: 'Uncategorised', venue: 1, host: 1, total: 2 });
+  });
+
+  it('creates a bucket for an id missing from the catalogue, named from the lead', () => {
+    const venueLeads = [
+      baseVenue({ super_category_id: 'cat-pets', super_category: { id: 'cat-pets', name: 'Pets', slug: 'pets' } }),
+    ];
+    const hostLeads = [
+      baseHost({ super_category_id: 'cat-pets', super_category: { id: 'cat-pets', name: 'Pets', slug: 'pets' } }),
+      baseHost({ super_category_id: 'cat-gone', super_category: null }),
+    ];
+    const result = aggregateSuperCategories(cats, venueLeads, hostLeads);
+    expect(result.find((b) => b.super_category_id === 'cat-pets')).toEqual({
+      super_category_id: 'cat-pets',
+      label: 'Pets',
+      venue: 1,
+      host: 1,
+      total: 2,
+    });
+    // A deleted category with no name on the lead still gets its own bucket, labelled as uncategorised.
+    expect(result.find((b) => b.super_category_id === 'cat-gone')).toEqual({
+      super_category_id: 'cat-gone',
+      label: 'Uncategorised',
+      venue: 0,
+      host: 1,
+      total: 1,
+    });
   });
 
   it('hides zero buckets when the catalogue is large', () => {

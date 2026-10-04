@@ -72,7 +72,12 @@ export default function ManageDynamicFieldsPage() {
 
   const toggleActive = async (row: CrmDynamicField) => {
     const result = buildDynamicFieldInput({ ...draftFromRow(row), is_active: !row.is_active }, row.sort_order);
-    if (!result.ok) return;
+    // A stored row the form rules now refuse (e.g. a select with no options):
+    // say why the switch did not move instead of ignoring the press.
+    if (!result.ok) {
+      setFormError(result.error);
+      return;
+    }
     try {
       await updateMut({ variables: { id: row.id, input: result.input } });
     } catch (e) {

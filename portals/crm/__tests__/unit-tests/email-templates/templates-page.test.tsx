@@ -92,6 +92,20 @@ describe('EmailTemplatesPage', () => {
     await waitFor(() => expect(screen.queryByText('Template deleted')).toBeNull());
   });
 
+  it('ignores a second confirm pressed while the delete dialog is closing', async () => {
+    const remove = vi.fn(() => ({ data: { deleteEmailTemplate: true } }));
+    renderPage([tableMock([row]), listRefetch, { request: { query: DELETE, variables: { id: 't1' } }, result: remove }]);
+
+    fireEvent.click(await screen.findByLabelText('Delete Venue Welcome'));
+    fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
+    expect(await screen.findByText('Template deleted')).toBeInTheDocument();
+
+    // The dialog is still fading out; its confirm no longer has a template to delete.
+    fireEvent.click(screen.getByTestId('confirm-dialog-confirm'));
+    await waitFor(() => expect(screen.queryByTestId('confirm-dialog-confirm')).toBeNull());
+    expect(remove).toHaveBeenCalledTimes(1);
+  });
+
   it('reports a failed delete, and backs out without deleting', async () => {
     renderPage([tableMock([row]), { request: { query: DELETE, variables: { id: 't1' } }, error: new Error('Template is in use') }]);
 

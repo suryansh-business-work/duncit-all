@@ -129,6 +129,16 @@ describe('DynamicFieldsRenderer', () => {
     expect(bag()).toEqual({ has_generator: true });
   });
 
+  it('stores an autofilled multi-select value (a plain string) as a list', async () => {
+    renderFields('{}', [FIELDS[7]]);
+
+    const select = (await screen.findByRole('combobox', { name: /Music/ })).parentElement as HTMLElement;
+    fireEvent.change(select.querySelector('input.MuiSelect-nativeInput') as HTMLInputElement, { target: { value: 'live' } });
+
+    await waitFor(() => expect(bag()).toEqual({ music: ['live'] }));
+    expect(screen.getByText('Live')).toBeInTheDocument();
+  });
+
   it('points to Settings when the lead type has no fields', async () => {
     renderFields('{}', [], 'HOST_LEAD');
     expect(await screen.findByText(/No dynamic fields defined for host leads yet/)).toBeInTheDocument();

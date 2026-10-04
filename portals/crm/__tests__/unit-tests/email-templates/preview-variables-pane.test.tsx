@@ -75,6 +75,16 @@ describe('PreviewVariablesPane — preview', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Variables' }));
     expect(screen.getByText('Detected in template')).toBeInTheDocument();
   });
+
+  it('closes the full-screen preview on Escape', async () => {
+    render(<Harness initial={venueDraft} initialTab="preview" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen preview' }));
+    fireEvent.keyDown(await screen.findByRole('dialog', { name: 'Full screen preview' }), { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByTitle('preview')).toBeInTheDocument();
+  });
 });
 
 describe('PreviewVariablesPane — variables', () => {

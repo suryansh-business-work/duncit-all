@@ -17,8 +17,6 @@ const USER_SURVEYS = gql`
 interface SurveyItem { qid: string; label: string; type: string; answer: string }
 interface UserSurvey { kind: 'VENUE' | 'HOST'; submitted_at?: string | null; items: SurveyItem[] }
 
-const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '');
-
 /** Read-only view of a user's venue/host onboarding survey answers. */
 export default function UserSurveysSection({ userId }: Readonly<{ userId: string }>) {
   const { t } = useTranslation();
@@ -51,7 +49,7 @@ export default function UserSurveysSection({ userId }: Readonly<{ userId: string
               <Chip size="small" color="primary" label={r.kind === 'VENUE' ? 'Venue survey' : 'Host survey'} />
               {r.submitted_at && <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>Submitted {fmt(r.submitted_at)}</Typography>}
+              }}>Submitted {formatDateTime(r.submitted_at)}</Typography>}
             </Stack>
             <Divider sx={{ mb: 1 }} />
             {r.items.length === 0 ? (

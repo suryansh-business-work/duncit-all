@@ -84,21 +84,20 @@ const subscriber = (id: string, name: string, notifiedAt: string | null) => ({
   created_at: '2026-09-01T10:00:00.000Z',
 });
 
+const subscribersResult = {
+  data: {
+    locationSubscriptionsTable: {
+      __typename: 'LocationSubscriptionsPage',
+      total: 2,
+      rows: [subscriber('s1', 'Asha Rao', null), subscriber('s2', 'Kabir Shah', '2026-09-10T08:00:00.000Z')],
+    },
+  },
+};
+
 const subscribersMock: MockedResponse = {
   request: { query: LOCATION_SUBSCRIPTIONS_TABLE, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
-  result: {
-    data: {
-      locationSubscriptionsTable: {
-        __typename: 'LocationSubscriptionsPage',
-        total: 2,
-        rows: [
-          subscriber('s1', 'Asha Rao', null),
-          subscriber('s2', 'Kabir Shah', '2026-09-10T08:00:00.000Z'),
-        ],
-      },
-    },
-  },
+  result: subscribersResult,
 };
 
 const sendMock: MockedResponse = {
@@ -141,5 +140,34 @@ describe('LocationSubscriptionsPage', () => {
 
     expect(await screen.findByText('Launch message queued for 2 people in Pune.')).toBeInTheDocument();
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('Counts are unavailable'));
+  });
+
+  it('re-reads the picked city’s subscribers after a send', async () => {
+    const subscriberReads = vi.fn();
+    const countedSubscribers: MockedResponse = {
+      ...subscribersMock,
+      result: () => {
+        subscriberReads();
+        return subscribersResult;
+      },
+    };
+    renderWithProviders(<LocationSubscriptionsPage />, {
+      mocks: [
+        citiesMock([cityEntry('loc-pune', 'Pune', 'Pune', 2)]),
+        countedSubscribers,
+        sendMock,
+        citiesMock([cityEntry('loc-pune', 'Pune', 'Pune', 0)]),
+      ],
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'pick loc-pune' }));
+    await waitFor(() => expect(screen.getAllByTestId('value-notified_at')).toHaveLength(2));
+    expect(subscriberReads).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByTestId('location-subscriptions-send'));
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Send launch message' }));
+
+    expect(await screen.findByText('Launch message queued for 2 people in Pune.')).toBeInTheDocument();
+    await waitFor(() => expect(subscriberReads).toHaveBeenCalledTimes(2));
   });
 });

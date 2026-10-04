@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
+import { alpha, createTheme } from '@mui/material';
 import { renderWithProviders } from '../../../__tests__/testkit';
 import LaunchCitiesTable from '../LaunchCitiesTable';
 import { SEND_LOCATION_LAUNCH_MESSAGE, type LaunchCityRow } from '../queries';
@@ -80,6 +81,17 @@ describe('LaunchCitiesTable — rows', () => {
     expect(rowOf('Nagpur').querySelector('img')).toHaveAttribute('src', 'https://cdn.duncit.com/cities/nagpur.jpg');
     expect(rowOf('Pune').querySelector('img')).toBeNull();
     expect(within(rowOf('Pune')).getByText('P')).toBeInTheDocument();
+  });
+
+  it('highlights only the picked city’s row in the warning tint', async () => {
+    renderWithProviders(
+      <LaunchCitiesTable rows={[PUNE, GOA]} onSent={vi.fn()} selectedId="loc-goa" onSelect={vi.fn()} />
+    );
+
+    await rowsShown(2);
+    const tint = alpha(createTheme().palette.warning.main, 0.24);
+    expect(rowOf('Goa')).toHaveStyle({ backgroundColor: tint });
+    expect(rowOf('Pune').style.backgroundColor).toBe('');
   });
 
   it('narrows the list to the cities matching the search', async () => {

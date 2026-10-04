@@ -223,6 +223,37 @@ describe('UserActivitySection — calendar', () => {
       expect(screen.getByText(`User Journey · ${YEAR}-03-03`)).toBeInTheDocument(),
     );
   }, 30000);
+
+  it.each(['Enter', ' '])(
+    'opens the journey and arms Delete Day from the keyboard with %j',
+    async (key) => {
+      renderSection([
+        activityYearMock({ totalVisits: 3, days: [day(`${YEAR}-03-03`, 3)] }),
+        clickstreamMock(`${YEAR}-03-03`),
+      ]);
+
+      const block = await screen.findByRole('button', { name: `3 events on ${YEAR}-03-03` });
+      expect(fireEvent.keyDown(block, { key })).toBe(false); // default (page scroll) prevented
+
+      await waitFor(() =>
+        expect(screen.getByText(`User Journey · ${YEAR}-03-03`)).toBeInTheDocument(),
+      );
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+      expect(screen.getByRole('button', { name: 'Delete Day' })).toBeEnabled();
+    },
+    30000,
+  );
+
+  it('ignores any other key on a day', async () => {
+    renderSection([activityYearMock({ totalVisits: 3, days: [day(`${YEAR}-03-03`, 3)] })]);
+
+    const block = await screen.findByRole('button', { name: `3 events on ${YEAR}-03-03` });
+    expect(fireEvent.keyDown(block, { key: 'a' })).toBe(true);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Delete Day' })).toBeDisabled();
+  }, 30000);
 });
 
 describe('UserActivitySection — deletions', () => {

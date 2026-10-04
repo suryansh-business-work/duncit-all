@@ -95,6 +95,21 @@ describe('LeadSurveyTab', () => {
     expect(await screen.findByRole('heading', { name: 'Venue onboarding' })).toBeInTheDocument();
   });
 
+  it('offers only the sub-category picker when the lead has several subs but no categories', async () => {
+    renderTab([surveyMock({ categories: [], sub_categories: [{ id: 'sub-1', name: 'Wedding' }, { id: 'sub-2', name: 'Corporate' }] })]);
+
+    expect(await screen.findByText('Multiple categories — pick which survey to use:')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^Sub-category/ })).toHaveTextContent('Wedding');
+    expect(screen.queryByRole('combobox', { name: /^Category/ })).toBeNull();
+  });
+
+  it('offers only the category picker when the lead has several categories but no subs', async () => {
+    renderTab([surveyMock({ categories: [{ id: 'cat-1', name: 'Banquet' }, { id: 'cat-2', name: 'Rooftop' }], sub_categories: [] })]);
+
+    expect(await screen.findByRole('combobox', { name: /^Category/ })).toHaveTextContent('Banquet');
+    expect(screen.queryByRole('combobox', { name: /^Sub-category/ })).toBeNull();
+  });
+
   it('opens and closes the manual form, and saves a filled survey', async () => {
     const save = vi.fn(() => ({ data: { saveLeadSurveyResponse: { id: 'e-new' } } }));
     renderTab([

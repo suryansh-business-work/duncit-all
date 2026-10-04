@@ -59,4 +59,40 @@ describe('toLocationInput', () => {
       { zone_name: '', zone_code: '', pincode: '560034' },
     ]);
   });
+
+  it('trims every field and fills the schema defaults when active and zones are left out', () => {
+    expect(
+      toLocationInput({
+        country: '  India ',
+        state: ' Karnataka ',
+        location_name: ' Bengaluru  ',
+        location_pincode: ' 560001 ',
+        location_image: ' https://cdn.example.com/blr.png ',
+      })
+    ).toEqual({
+      country: 'India',
+      state: 'Karnataka',
+      location_name: 'Bengaluru',
+      location_pincode: '560001',
+      is_active: true,
+      location_image: 'https://cdn.example.com/blr.png',
+      location_zones: [],
+    });
+  });
+
+  it('keeps an explicit inactive flag', () => {
+    expect(toLocationInput({ ...base, is_active: false }).is_active).toBe(false);
+  });
+
+  it('treats a zone’s missing fields as blank, and drops a zone with nothing in it', () => {
+    const input = toLocationInput({
+      ...base,
+      zones: [{ zone_name: ' Indiranagar ' }, { zone_code: ' IND ' }, { pincode: ' 560038 ' }, {}],
+    });
+    expect(input.location_zones).toEqual([
+      { zone_name: 'Indiranagar', zone_code: '', pincode: '' },
+      { zone_name: '', zone_code: 'IND', pincode: '' },
+      { zone_name: '', zone_code: '', pincode: '560038' },
+    ]);
+  });
 });

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { light } from '@duncit/auth-tokens';
+import { contrastRatio } from '@duncit/theme';
 import FontsSection from '../FontsSection';
 import ThemeTokensSection from '../theme-tokens/ThemeTokensSection';
 import {
@@ -11,6 +12,7 @@ import {
   isTokenValueValid,
   primaryTokens,
   tokenContrast,
+  toThemeTokensInput,
 } from '../theme-tokens/tokenRows';
 import type { BrandingFormState } from '../queries';
 import { FormHarness } from './form-harness';
@@ -142,5 +144,48 @@ describe('tokenRows — colour validation', () => {
 
   it('only moves the primary colour when what was typed is not a hex yet', () => {
     expect(primaryTokens('rgb(217, 45, 45)')).toEqual({ primary: 'rgb(217, 45, 45)' });
+  });
+});
+
+describe('tokenRows — toThemeTokensInput', () => {
+  it('turns a missing stored token object into every key blank', () => {
+    expect(toThemeTokensInput(null)).toEqual(emptyThemeTokens());
+    expect(toThemeTokensInput(undefined)).toEqual(emptyThemeTokens());
+  });
+
+  it('keeps stored values, blanks the missing keys and drops anything that is not a token', () => {
+    const stored = { primary: '#D92D2D', ink: '#111111', __typename: 'ThemeTokens' } as Partial<
+      Record<string, string>
+    >;
+    const input = toThemeTokensInput(stored);
+    expect(input).toEqual({ ...emptyThemeTokens(), primary: '#D92D2D', ink: '#111111' });
+    expect(Object.keys(input)).toEqual(TOKEN_ROWS.map((row) => row.key));
+  });
+});
+
+describe('tokenRows — primaryTokens with a full hex', () => {
+  it('moves hover and pressed to progressively darker fills with a readable label colour', () => {
+    const next = primaryTokens('#D92D2D');
+    expect(Object.keys(next).sort()).toEqual(['onPrimary', 'primary', 'primaryActive', 'primaryHover']);
+    expect(next.primary).toBe('#D92D2D');
+    const { primaryHover = '', primaryActive = '', onPrimary = '' } = next;
+    for (const value of [primaryHover, primaryActive, onPrimary]) expect(isTokenValueValid(value)).toBe(true);
+    // Darker fills stand out more against white: primary < hover < pressed.
+    const vsWhite = (color: string) => contrastRatio(color, '#FFFFFF');
+    expect(vsWhite(primaryHover)).toBeGreaterThan(vsWhite('#D92D2D'));
+    expect(vsWhite(primaryActive)).toBeGreaterThan(vsWhite(primaryHover));
+    expect(contrastRatio(onPrimary, '#D92D2D')).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('tokenRows — tokenContrast against an unmeasurable ground', () => {
+  it('skips a ground typed as rgba() and reports the worst of the measurable ones', () => {
+    const inkRow = TOKEN_ROWS.find((row) => row.key === 'ink');
+    if (!inkRow) throw new Error('ink row missing');
+    const values = { ...emptyThemeTokens(), ink: '#000000', bg: 'rgba(255, 255, 255, 0.5)' };
+    const result = tokenContrast(values, light, inkRow);
+    expect(result).not.toBeNull();
+    expect(result?.pair).not.toBe('bg');
+    expect(inkRow.against).toContain(result?.pair);
   });
 });

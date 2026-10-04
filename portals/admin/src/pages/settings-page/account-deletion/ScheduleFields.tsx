@@ -74,19 +74,30 @@ export default function ScheduleFields({
       {enabled && <Alert severity="warning">{t('admin.accountDeletion.cronOnWarning')}</Alert>}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          disabled={!enabled}
-          label={t('admin.accountDeletion.frequency')}
-          defaultValue="DAILY"
-          slotProps={{ htmlInput: { 'data-testid': 'deletion-cron-frequency' } }}
-          {...register('cron_frequency')}
-        >
-          <MenuItem value="DAILY">{t('admin.accountDeletion.daily')}</MenuItem>
-          <MenuItem value="WEEKLY">{t('admin.accountDeletion.weekly')}</MenuItem>
-        </TextField>
+        {/* Controlled, so the saved frequency SHOWS: a register()-ed MUI select
+            keeps its first defaultValue when the form is seeded later. */}
+        <Controller
+          name="cron_frequency"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              select
+              fullWidth
+              size="small"
+              disabled={!enabled}
+              label={t('admin.accountDeletion.frequency')}
+              value={field.value}
+              onChange={(event) => field.onChange(event.target.value)}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+              slotProps={{ htmlInput: { 'data-testid': 'deletion-cron-frequency' } }}
+            >
+              <MenuItem value="DAILY">{t('admin.accountDeletion.daily')}</MenuItem>
+              <MenuItem value="WEEKLY">{t('admin.accountDeletion.weekly')}</MenuItem>
+            </TextField>
+          )}
+        />
 
         <TextField
           fullWidth
@@ -106,22 +117,31 @@ export default function ScheduleFields({
       </Stack>
 
       {weekly && (
-        <TextField
-          select
-          fullWidth
-          size="small"
-          disabled={!enabled}
-          label={t('admin.accountDeletion.weekday')}
-          sx={{ maxWidth: 260 }}
-          defaultValue={0}
-          {...register('cron_weekday')}
-        >
-          {WEEKDAYS.map((day) => (
-            <MenuItem key={day} value={day}>
-              {weekdayLabel(day)}
-            </MenuItem>
-          ))}
-        </TextField>
+        <Controller
+          name="cron_weekday"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              select
+              fullWidth
+              size="small"
+              disabled={!enabled}
+              label={t('admin.accountDeletion.weekday')}
+              sx={{ maxWidth: 260 }}
+              value={field.value}
+              onChange={(event) => field.onChange(Number(event.target.value))}
+              onBlur={field.onBlur}
+              name={field.name}
+              inputRef={field.ref}
+            >
+              {WEEKDAYS.map((day) => (
+                <MenuItem key={day} value={day}>
+                  {weekdayLabel(day)}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
       )}
 
       <TextField

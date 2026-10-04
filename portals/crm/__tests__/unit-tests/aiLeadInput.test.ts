@@ -218,6 +218,23 @@ describe('rowToInput', () => {
 
     expect('contacts' in rowToInput(row, 'VENUE_LEAD')).toBe(false);
   });
+
+  it('sends no contact block on a host lead with nothing to put in one either', () => {
+    const row = { ...recordToRow({ city: 'Pune' }, 'HOST_LEAD', 0), name: '', mobile: '', email: '' };
+
+    const input = rowToInput(row, 'HOST_LEAD');
+
+    expect('contacts' in input).toBe(false);
+    expect(input.city).toBe('Pune');
+  });
+
+  it('builds the contact from the edited row when the record carried an empty contact list', () => {
+    const row = { ...recordToRow({ venue_name: 'Sunset Courts', contacts: [] }, 'VENUE_LEAD', 0), mobile: '9000000003' };
+
+    const [contact] = rowToInput(row, 'VENUE_LEAD').contacts;
+
+    expect(contact).toEqual({ name: 'Sunset Courts', mobile_number: '9000000003' });
+  });
 });
 
 describe('rowError', () => {

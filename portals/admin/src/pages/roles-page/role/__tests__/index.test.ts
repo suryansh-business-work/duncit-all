@@ -95,6 +95,15 @@ describe('roles-page/role barrel', () => {
       expect(toRoleInput({ ...valid, description: '   ' }).description).toBeNull();
     });
 
+    it('sends a null description and no permissions when the form omits both', () => {
+      expect(toRoleInput({ key: ' viewer ', name: ' Viewer ' })).toEqual({
+        key: 'viewer',
+        name: 'Viewer',
+        description: null,
+        permissions: [],
+      });
+    });
+
     it('trims each permission and drops unknown fields', () => {
       const input = toRoleInput({
         ...valid,

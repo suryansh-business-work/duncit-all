@@ -200,3 +200,144 @@ describe('HealthScoreCard — deleting an adjustment through the real confirm di
     expect(screen.getByText('Hosted a full pod')).toBeInTheDocument();
   });
 });
+
+describe('AdjustHealthDialog — editing an adjustment saved without a remark', () => {
+  it('seeds an empty remark and sends it back as an empty string', async () => {
+    const onEdit = vi.fn();
+    // The server stores no remark as null even though the type says string.
+    const editing = adjustment({ delta: 4, remark: null as unknown as string });
+    const mocks: MockedResponse[] = [
+      {
+        request: { query: EDIT_ADJUSTMENT, variables: (variables) => {
+          onEdit(variables);
+          return true;
+        } },
+        result: { data: { editAdjustment: score() } },
+      },
+    ];
+    renderWithProviders(
+      <AdjustHealthDialog
+        open
+        subjectType="USER"
+        subjectId="u-1"
+        subjectLabel="Meera N"
+        currentScore={62}
+        editing={editing}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+      { mocks },
+    );
+    await settle();
+
+    expect(screen.getByRole('textbox', { name: 'Remark (optional)' })).toHaveValue('');
+    expect(screen.getByText('0/500 · The user sees this when they tap the meter.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save adjustment' }));
+    await settle();
+
+    expect(onEdit).toHaveBeenCalledWith({ input: { id: 'adj-1', delta: 4, remark: '' } });
+  });
+});
+
+describe('HealthScoreCard — the adjust dialog it owns', () => {
+  it('labels a venue score with the Venue chip in its band colour', () => {
+    renderWithProviders(
+      <HealthScoreCard score={score({ subject_type: 'VENUE', subject_label: 'Court 7', band: 'GREEN' })} onUpdated={vi.fn()} />,
+    );
+
+    const chip = screen.getByText('Venue').closest('.MuiChip-root');
+    expect(chip).toHaveClass('MuiChip-colorSuccess');
+    expect(screen.queryByText('User')).toBeNull();
+  });
+
+  it('closes the dialog on cancel without touching the score', async () => {
+    const onUpdated = vi.fn();
+    renderWithProviders(<HealthScoreCard score={score()} onUpdated={onUpdated} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Adjust' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/Adjust user health/)).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(onUpdated).not.toHaveBeenCalled();
+  });
+
+  it('hands the saved score up and closes the dialog after a new adjustment', async () => {
+    const onAdd = vi.fn();
+    const onUpdated = vi.fn();
+    renderWithProviders(<HealthScoreCard score={score()} onUpdated={onUpdated} />, {
+      mocks: [
+        {
+          request: { query: ADJUST_HEALTH, variables: (variables) => {
+            onAdd(variables);
+            return true;
+          } },
+          result: { data: { adjustHealth: score({ delta_sum: -3, total_score: 67 }) } },
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Adjust' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save adjustment' }));
+    await settle();
+
+    expect(onAdd).toHaveBeenCalledWith({
+      input: { subject_type: 'USER', subject_id: 'u-1', delta: 5, remark: '' },
+    });
+    expect(onUpdated).toHaveBeenCalledTimes(1);
+    expect(onUpdated).toHaveBeenCalledWith(expect.objectContaining({ total_score: 67 }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+});
+
+describe('AdjustHealthDialog — direction and remark inputs', () => {
+  it('applies a decrease with the trimmed remark, and re-clicking the selected side keeps it', async () => {
+    const onAdd = vi.fn();
+    renderWithProviders(
+      <AdjustHealthDialog
+        open
+        subjectType="VENUE"
+        subjectId="v-9"
+        subjectLabel="Court 7"
+        currentScore={62}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+      {
+        mocks: [
+          {
+            request: { query: ADJUST_HEALTH, variables: (variables) => {
+              onAdd(variables);
+              return true;
+            } },
+            result: { data: { adjustHealth: score({ subject_type: 'VENUE' }) } },
+          },
+        ],
+      },
+    );
+    await settle();
+
+    expect(screen.getByText('Applied as +5. Projected score: 67/100.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease' }));
+    expect(screen.getByText('Applied as -5. Projected score: 57/100.')).toBeInTheDocument();
+    // An exclusive group reports null when the pressed button is clicked again.
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease' }));
+    expect(screen.getByRole('button', { name: 'Decrease' })).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Remark (optional)' }), {
+      target: { value: '  Late cancellations  ' },
+    });
+    expect(screen.getByText('22/500 · The user sees this when they tap the meter.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save adjustment' }));
+    await settle();
+
+    expect(onAdd).toHaveBeenCalledWith({
+      input: { subject_type: 'VENUE', subject_id: 'v-9', delta: -5, remark: 'Late cancellations' },
+    });
+  });
+});

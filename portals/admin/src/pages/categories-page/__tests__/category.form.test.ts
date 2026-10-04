@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toCategoryInput, type CategoryFormValues } from '../category/category.form';
+import { categoryFormSchema, toCategoryInput, type CategoryFormValues } from '../category/category.form';
 
 // category/category.form.cy.ts already exercises the schema's required/oneOf/
 // min/max rules and toCategoryInput's per-level branch (undefined/SUB/CATEGORY/
@@ -56,5 +56,41 @@ describe('toCategoryInput — truthy/falsy field coercion', () => {
   it('keeps a real co-host limit as-is', () => {
     const input = toCategoryInput({ ...base, allow_co_hosts: true, max_co_hosts: 4 }, 'SUB');
     expect(input).toMatchObject({ max_co_hosts: 4 });
+  });
+});
+
+describe('categoryFormSchema — icon mode errors', () => {
+  const messagesOf = (values: unknown) => {
+    const result = categoryFormSchema.safeParse(values);
+    return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+  };
+
+  it('says the icon mode is required when none is chosen', () => {
+    expect(messagesOf({ ...base, iconMode: undefined })).toContain('Icon mode is required');
+  });
+
+  it('says the icon mode is invalid when an unknown one is sent', () => {
+    expect(messagesOf({ ...base, iconMode: 'EMOJI' })).toContain('Select a valid icon mode');
+  });
+});
+
+describe('toCategoryInput — absent optional fields', () => {
+  it('fills the defaults for a SUB-category when the optional fields are missing', () => {
+    expect(toCategoryInput({ name: ' Cricket ', iconMode: 'ICON' }, 'SUB')).toEqual({
+      name: 'Cricket',
+      icon: null,
+      description: null,
+      media: [],
+      sort_order: 0,
+      is_active: true,
+      allow_co_hosts: false,
+      max_co_hosts: 1,
+    });
+  });
+
+  it('keeps an explicit inactive flag and co-host opt-in', () => {
+    expect(
+      toCategoryInput({ ...base, is_active: false, allow_co_hosts: true, max_co_hosts: 2 }, 'SUB'),
+    ).toMatchObject({ is_active: false, allow_co_hosts: true, max_co_hosts: 2 });
   });
 });

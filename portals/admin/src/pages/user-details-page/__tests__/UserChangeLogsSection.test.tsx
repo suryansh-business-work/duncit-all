@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { formatDateTime } from '@duncit/app-settings';
 import UserChangeLogsSection from '../UserChangeLogsSection';
-import { CHANGE_LOG_COLUMNS } from '../UserChangeLogsSection/columns';
+import { CHANGE_LOG_COLUMNS, changeLogColumns } from '../UserChangeLogsSection/columns';
 import {
   ACTION_COLORS,
   ACTION_OPTIONS,
@@ -223,6 +223,29 @@ describe('cells.tsx — cell renderers', () => {
   });
 });
 
+describe('columns.ts — changeLogColumns per scope', () => {
+  it('USER scope keeps "Updated By", offering only the User and System actors', () => {
+    const columns = changeLogColumns('USER');
+
+    expect(columns.map((c) => c.field)).toEqual(CHANGE_LOG_COLUMNS.map((c) => c.field));
+    expect(columns.find((c) => c.field === 'actor_type')).toMatchObject({
+      type: 'enum',
+      options: [
+        { value: 'USER', label: 'User' },
+        { value: 'SYSTEM', label: 'System' },
+      ],
+    });
+    // The shared list keeps every actor for other consumers.
+    expect(columnBy('actor_type')).toMatchObject({ options: ACTOR_OPTIONS });
+  });
+
+  it('ADMIN scope drops "Updated By", since every row would carry the same Admin chip', () => {
+    const fields = changeLogColumns('ADMIN').map((c) => c.field);
+
+    expect(fields).toEqual(CHANGE_LOG_COLUMNS.map((c) => c.field).filter((f) => f !== 'actor_type'));
+  });
+});
+
 describe('UserChangeLogsSection — table wiring', () => {
   beforeEach(() => {
     __setTableRows([]);
@@ -257,5 +280,18 @@ describe('UserChangeLogsSection — table wiring', () => {
     renderWithProviders(<UserChangeLogsSection userId={USER_ID} scope="USER" />);
 
     await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(2));
+  });
+
+  it('ADMIN scope lists admin changes under its own title, without the Updated By column', async () => {
+    renderWithProviders(<UserChangeLogsSection userId={USER_ID} scope="ADMIN" />);
+
+    const section = screen.getByTestId('admin-change-logs-section');
+    expect(within(section).getByText('Admin Change Logs')).toBeInTheDocument();
+    expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID, scope: 'ADMIN' });
+    expect(within(section).queryByTestId('col-actor_type')).toBeNull();
+    expect(within(section).getByTestId('col-actor_name')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(section).getByTestId('table-empty')).toHaveTextContent('No admin changes recorded yet.'),
+    );
   });
 });

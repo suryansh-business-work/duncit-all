@@ -17,4 +17,36 @@ describe('ExternalLink', () => {
     render(<ExternalLink href="https://server.duncit.com" />);
     expect(screen.getByRole('link', { name: /server\.duncit\.com/i })).toBeInTheDocument();
   });
+
+  it('shows the external-link icon by default and drops it when asked to', () => {
+    const { rerender } = render(<ExternalLink href="https://duncit.com">Site</ExternalLink>);
+    expect(screen.getByTestId('OpenInNewIcon')).toBeInTheDocument();
+
+    rerender(
+      <ExternalLink href="https://duncit.com" withIcon={false}>
+        Site
+      </ExternalLink>,
+    );
+    expect(screen.queryByTestId('OpenInNewIcon')).toBeNull();
+  });
+
+  it('layers a caller sx object over its own styles', () => {
+    render(
+      <ExternalLink href="https://duncit.com" sx={{ textTransform: 'uppercase' }}>
+        Site
+      </ExternalLink>,
+    );
+    const anchor = screen.getByRole('link', { name: 'Site' });
+    expect(anchor).toHaveStyle({ textTransform: 'uppercase', display: 'inline-flex' });
+  });
+
+  it('layers every entry of a caller sx array over its own styles', () => {
+    render(
+      <ExternalLink href="https://duncit.com" sx={[{ textTransform: 'uppercase' }, { display: 'block' }]}>
+        Site
+      </ExternalLink>,
+    );
+    const anchor = screen.getByRole('link', { name: 'Site' });
+    expect(anchor).toHaveStyle({ textTransform: 'uppercase', display: 'block' });
+  });
 });

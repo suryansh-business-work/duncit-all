@@ -59,3 +59,43 @@ describe('toBadgeInput', () => {
     expect(input.threshold).toBe(0);
   });
 });
+
+describe('badgeFormSchema — parsed output and condition errors', () => {
+  it('fills a missing MANUAL threshold with 0 in the parsed values', () => {
+    const result = badgeFormSchema.parse({ ...base, condition_type: 'MANUAL', threshold: undefined });
+    expect(result.threshold).toBe(0);
+    expect(result.condition_type).toBe('MANUAL');
+  });
+
+  it('keeps a counted threshold and trims the title in the parsed values', () => {
+    const result = badgeFormSchema.parse({ ...base, title: '  Top Host  ', threshold: 12 });
+    expect(result).toMatchObject({ title: 'Top Host', threshold: 12 });
+  });
+
+  it('says the condition is required when none is chosen', () => {
+    expect(messagesOf({ ...base, condition_type: undefined })).toContain('Condition is required');
+  });
+
+  it('says the condition is invalid when an unknown one is sent', () => {
+    expect(messagesOf({ ...base, condition_type: 'PODS_CANCELLED' })).toContain('Select a valid condition');
+  });
+});
+
+describe('toBadgeInput — missing optional fields', () => {
+  it('nulls absent description and image, zeroes an absent counted threshold and defaults to active', () => {
+    expect(
+      toBadgeInput({ title: ' Regular ', condition_type: 'PODS_ATTENDED' }),
+    ).toEqual({
+      title: 'Regular',
+      description: null,
+      image_url: null,
+      condition_type: 'PODS_ATTENDED',
+      threshold: 0,
+      is_active: true,
+    });
+  });
+
+  it('keeps an explicit inactive flag', () => {
+    expect(toBadgeInput({ ...base, is_active: false }).is_active).toBe(false);
+  });
+});

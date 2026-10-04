@@ -60,7 +60,10 @@ export default function AppHeader({
   // The cart holds products from every super category — nothing to narrow.
   const onCart = pathname === '/cart';
   const isUserStudio = effectiveStudio === 'USER';
-  const showGreeting = minimal || (isUserStudio && onHome);
+  // A "Coming soon" city has nothing for the switch to narrow until it
+  // launches, and its waitlist hero speaks for Home — no greeting either.
+  const comingSoon = useComingSoonPage(selectedLocationId);
+  const showGreeting = minimal || (isUserStudio && onHome && !comingSoon);
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
   // dialog when the `me` query fails, so we no longer render a local one
   // here. Keeping `me`/`loading` for the rest of the header's logic.
@@ -70,8 +73,6 @@ export default function AppHeader({
   // Mounted with the header — the whole point of the counts is that the role
   // switch never waits on a network round trip to decide where to land.
   const autoPods = useAutoPodCounts(me?.roles ?? []);
-  // A "Coming soon" city has nothing for the switch to narrow until it launches.
-  const comingSoon = useComingSoonPage(selectedLocationId);
 
   // The location default, picker draft and window events. Called before the
   // super-category default below so both defaults land in one commit.

@@ -147,6 +147,83 @@ export async function findCapturedPaymentForOrder(
   return { id: captured.id, amount: captured.amount };
 }
 
+/** One refund as Razorpay reports it. `status` is pending | processed | failed. */
+export interface RazorpayRefund {
+  id: string;
+  status: string;
+  amount: number;
+  receipt: string;
+}
+
+/** Razorpay's refund JSON, as far as we read it. */
+interface RefundJson {
+  id?: string;
+  status?: string;
+  amount?: number;
+  receipt?: string;
+  items?: RefundJson[];
+  error?: { description?: string };
+}
+
+const toRefund = (item: RefundJson): RazorpayRefund => ({
+  id: String(item?.id ?? ''),
+  status: String(item?.status ?? ''),
+  amount: Number(item?.amount ?? 0),
+  receipt: String(item?.receipt ?? ''),
+});
+
+const readRefundJson = async (res: Response): Promise<RefundJson> =>
+  ((await res.json().catch(() => ({}))) ?? {}) as RefundJson;
+
+/**
+ * Send money back on a captured payment — all of it or `amountPaise` of it.
+ *
+ * Razorpay has no idempotency key on this call, so the CALLER must make it
+ * safe: stamp that a refund was attempted before calling, and on a retry look
+ * the refund up by `receipt` ({@link listRazorpayRefunds}) before sending again.
+ */
+export async function createRazorpayRefund(args: {
+  paymentId: string;
+  amountPaise: number;
+  receipt: string;
+  notes?: Record<string, string>;
+  account?: string | null;
+}): Promise<RazorpayRefund> {
+  const { keyId, keySecret } = await getRazorpayKeys(args.account);
+  const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+  const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/payments/${encodeURIComponent(args.paymentId)}/refund`, {
+    method: 'POST',
+    headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      amount: args.amountPaise,
+      speed: 'normal',
+      receipt: args.receipt,
+      notes: args.notes ?? {},
+    }),
+  });
+  const json = await readRefundJson(res);
+  if (!res.ok || !json.id) {
+    const detail = json.error?.description || `HTTP ${res.status}`;
+    throw new GraphQLError(`Razorpay refund failed: ${detail}`, { extensions: { code: 'BAD_GATEWAY' } });
+  }
+  return toRefund(json);
+}
+
+/** Every refund already made on a payment — how a retry finds one it sent but never heard back about. */
+export async function listRazorpayRefunds(paymentId: string, account: string | null = null): Promise<RazorpayRefund[]> {
+  const { keyId, keySecret } = await getRazorpayKeys(account);
+  const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+  const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/payments/${encodeURIComponent(paymentId)}/refunds`, {
+    headers: { Authorization: auth },
+  });
+  const json = await readRefundJson(res);
+  if (!res.ok) {
+    const detail = json.error?.description || `HTTP ${res.status}`;
+    throw new GraphQLError(`Razorpay refund lookup failed: ${detail}`, { extensions: { code: 'BAD_GATEWAY' } });
+  }
+  return (Array.isArray(json.items) ? json.items : []).map(toRefund);
+}
+
 /** Verify a checkout signature: HMAC_SHA256(`order_id|payment_id`, key_secret). */
 export async function verifyRazorpaySignature(args: {
   orderId: string;

@@ -49,6 +49,31 @@ export const productOrderTypeDefs = /* GraphQL */ `
     length_cm: Float!
     breadth_cm: Float!
     height_cm: Float!
+    "Days after delivery this line may be returned (the product's setting when bought). 0 = not returnable."
+    return_window_days: Int!
+  }
+
+  "Where money going back to the buyer stands."
+  enum OrderRefundStatus {
+    NONE
+    "Sent to Razorpay with no answer yet."
+    PENDING
+    "Razorpay accepted the refund."
+    PROCESSED
+    "Nothing to send to a gateway (test-mode or free payment) — recorded in the ledger only."
+    RECORDED
+    "Razorpay refused it — Finance pays it out by hand, or an operator retries."
+    FAILED
+  }
+
+  type OrderRefund {
+    status: OrderRefundStatus!
+    amount: Float!
+    coins: Int!
+    razorpay_refund_id: String!
+    refunded_at: String
+    error: String!
+    initiated_by: String!
   }
 
   type OrderShippingAddress {
@@ -158,6 +183,10 @@ export const productOrderTypeDefs = /* GraphQL */ `
     cancelled_at: String
     cancel_reason: String!
     cancelled_by: String!
+    "When the buyer got the goods — the return window counts from here."
+    delivered_at: String
+    "Money going back after a cancellation."
+    refund: OrderRefund!
     notes: [OrderNote!]!
     created_at: String!
     updated_at: String!
@@ -210,6 +239,8 @@ export const productOrderTypeDefs = /* GraphQL */ `
     productOrdersTable(query: TableQueryInput): ProductOrderTablePage!
     productOrder(id: ID!): ProductOrder
     productOrderTracking(order_no: String!): OrderTracking
+    "Admin › User details › Shop Orders: one member's pod-shop orders."
+    userProductOrdersTable(user_id: ID!, query: TableQueryInput): ProductOrderTablePage!
   }
 
   extend type Mutation {
@@ -223,5 +254,9 @@ export const productOrderTypeDefs = /* GraphQL */ `
     refreshProductOrderTracking(id: ID!): ProductOrder!
     "Ops: one PDF (label, invoice or manifest) for the given orders, as a file to print or save."
     productOrderShipmentFile(ids: [ID!]!, kind: ShipmentDocumentKind!): ShipmentFile!
+    "Products portal: cancel a pod-shop order outright — courier stopped, stock back, full refund, apology sent to the buyer."
+    forceCancelProductOrder(id: ID!, reason: String!): ProductOrder!
+    "Products portal: retry a cancelled order's refund that Razorpay refused."
+    retryProductOrderRefund(id: ID!): ProductOrder!
   }
 `;

@@ -5,8 +5,14 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import type { FulfilmentMethod, FulfilmentStatus } from './productOrder.model';
 import type { ShipmentDocument } from '@modules/commerce/shiprocket/shiprocket.shipment';
+import { cancelPodShopOrder, retryOrderRefund } from './productOrder.cancel';
+import type { TableQueryInput } from '@utils/table-query';
 
 const OPS_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGER'];
+// Cancelling sends money back — the Products team and Finance only.
+const CANCEL_RW = ['SUPER_ADMIN', 'PRODUCTS_MANAGER', 'FINANCE_MANAGER'];
+// Admin › User details reads one member's orders — the same people who read their payments there.
+const USER_ORDERS_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER', 'PRODUCTS_MANAGER'];
 
 export const productOrderResolvers = {
   ProductOrder: {
@@ -32,6 +38,10 @@ export const productOrderResolvers = {
     productOrder: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, OPS_RW);
       return productOrderService.getById(args.id);
+    },
+    userProductOrdersTable: (_p: unknown, args: { user_id: string; query?: TableQueryInput | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, USER_ORDERS_READ);
+      return productOrderService.tableForUser(args.user_id, args.query);
     },
     productOrderTracking: (_p: unknown, args: { order_no: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
@@ -66,6 +76,15 @@ export const productOrderResolvers = {
     refreshProductOrderTracking: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, OPS_RW);
       return productOrderService.refreshTrackingById(args.id);
+    },
+    forceCancelProductOrder: async (_p: unknown, args: { id: string; reason: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, CANCEL_RW);
+      const order = await cancelPodShopOrder(args.id, { source: 'ADMIN', actor: user.email ?? user.id, reason: args.reason });
+      return productOrderService.toPub(order);
+    },
+    retryProductOrderRefund: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, CANCEL_RW);
+      return productOrderService.toPub(await retryOrderRefund(args.id));
     },
     productOrderShipmentFile: (
       _p: unknown,

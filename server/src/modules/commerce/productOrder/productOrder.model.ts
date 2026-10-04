@@ -62,6 +62,8 @@ export interface IOrderLineItem {
   length_cm: number;
   breadth_cm: number;
   height_cm: number;
+  /** Days after delivery the buyer may return this line — the product's setting when it was bought. 0 = not returnable. */
+  return_window_days: number;
 }
 
 export interface IOrderShippingAddress {
@@ -105,6 +107,32 @@ export interface IShipRocketInfo {
 }
 
 export type ShipmentAlert = '' | 'LOW_WALLET' | 'NDR';
+
+/**
+ * Where money going back to the buyer stands. PENDING = sent to Razorpay (or
+ * about to be) with no answer yet; PROCESSED = Razorpay accepted it; RECORDED =
+ * nothing to send to a gateway (a test-mode or free payment), only the ledger;
+ * FAILED = Razorpay refused — Finance pays it out by hand or an operator retries.
+ */
+export type RefundStatus = '' | 'PENDING' | 'PROCESSED' | 'RECORDED' | 'FAILED';
+export const REFUND_STATUSES: RefundStatus[] = ['', 'PENDING', 'PROCESSED', 'RECORDED', 'FAILED'];
+
+export interface IOrderRefund {
+  status: RefundStatus;
+  /** Cash going back, in the order's currency. */
+  amount: number;
+  /** Duncit Coins going back (the coins share of what was paid). */
+  coins: number;
+  razorpay_refund_id: string;
+  /** Stamped BEFORE Razorpay is called, so a retry looks the refund up instead of sending it twice. */
+  attempted_at: Date | null;
+  refunded_at: Date | null;
+  error: string;
+  /** Who started it: POD_SHOP_ADMIN_CANCEL, POD_SHOP_DELETION, POD_SHOP_RETURN … */
+  initiated_by: string;
+  /** Written to Finance › User Refund Logs already — exactly once per refund. */
+  finance_recorded: boolean;
+}
 
 /**
  * The parcel we declared to ShipRocket — kept so a weight dispute can be
@@ -171,6 +199,10 @@ export interface IProductOrder extends Document {
   parcel: IOrderParcel | null;
   tracking_events: Types.DocumentArray<ITrackingEvent & Types.Subdocument>;
   last_error: string;
+  /** When the buyer got the goods (DELIVERED or PICKED_UP) — the return window counts from here. */
+  delivered_at: Date | null;
+  /** Money going back after a cancellation (pod shop). */
+  refund: IOrderRefund;
   channel: OrderChannel;
   payment_method: OrderPaymentMethod;
   /** What the courier collects in cash — this order's share of a COD payment. */
@@ -208,6 +240,23 @@ const lineItemSchema = new Schema<IOrderLineItem>(
     length_cm: { type: Number, default: 0, min: 0 },
     breadth_cm: { type: Number, default: 0, min: 0 },
     height_cm: { type: Number, default: 0, min: 0 },
+    return_window_days: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
+/** Shared with pod-shop returns, which refund through the same steps. */
+export const orderRefundSchema = new Schema<IOrderRefund>(
+  {
+    status: { type: String, enum: REFUND_STATUSES, default: '' },
+    amount: { type: Number, default: 0, min: 0 },
+    coins: { type: Number, default: 0, min: 0 },
+    razorpay_refund_id: { type: String, default: '' },
+    attempted_at: { type: Date, default: null },
+    refunded_at: { type: Date, default: null },
+    error: { type: String, default: '' },
+    initiated_by: { type: String, default: '' },
+    finance_recorded: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -318,6 +367,8 @@ const productOrderSchema = new Schema<IProductOrder>(
     parcel: { type: parcelSchema, default: null },
     tracking_events: { type: [trackingEventSchema], default: [] },
     last_error: { type: String, default: '' },
+    delivered_at: { type: Date, default: null },
+    refund: { type: orderRefundSchema, default: () => ({}) },
     channel: { type: String, enum: ORDER_CHANNELS, default: 'POD_SHOP', index: true },
     payment_method: { type: String, enum: ['PREPAID', 'COD'], default: 'PREPAID', index: true },
     cod_amount: { type: Number, default: 0, min: 0 },
@@ -332,6 +383,13 @@ const productOrderSchema = new Schema<IProductOrder>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// The return window counts from delivery: stamp it the first time an order is
+// saved in a delivered state, whichever path (webhook, tracking pull, operator) moved it.
+productOrderSchema.pre('save', function stampDelivered() {
+  const delivered = this.fulfilment_status === 'DELIVERED' || this.fulfilment_status === 'PICKED_UP';
+  if (delivered && !this.delivered_at && this.isModified('fulfilment_status')) this.delivered_at = new Date();
+});
 
 // One payment can span multiple pods (unified cart) and multiple warehouses
 // (one SHIP order per pickup origin), so the idempotency key is the full tuple.

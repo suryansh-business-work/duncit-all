@@ -31,6 +31,7 @@ import { startContactInviteRetentionScheduler } from '@modules/access/contacts/c
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
 import { startProductCartReminderScheduler } from '@modules/commerce/productCart/productCart.scheduler';
+import { startCatalogDeletionScheduler } from '@modules/commerce/catalogDeletion/catalogDeletion.scheduler';
 import { startShiprocketScheduler } from '@modules/commerce/shiprocket/shiprocket.scheduler';
 import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
@@ -536,6 +537,10 @@ async function bootstrap() {
   // Duncit Coin expiry: take back the unspent part of every grant whose date
   // (Finance > Duncit Coin > Settings, 30 days by default) has passed.
   startCoinExpiryScheduler();
+
+  // Brand/product deletion requests: carry out the approved ones whose date has
+  // come, once every order and return on them is settled (Products portal).
+  startCatalogDeletionScheduler();
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();

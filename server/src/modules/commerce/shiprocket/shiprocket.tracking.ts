@@ -128,6 +128,12 @@ export async function applyWebhookEvent(payload: Record<string, any>): Promise<s
     await applyReturnTracking(ret, t);
     return `return ${ret.return_no}`;
   }
+  // A pod-shop return's reverse pickup (the pod shop's own return records).
+  if (awb) {
+    const { podShopReturnTracking } = await import('@modules/commerce/podShopReturn/podShopReturn.tracking');
+    const done = await podShopReturnTracking.webhook(awb, t);
+    if (done) return done;
+  }
   return 'nothing';
 }
 
@@ -176,5 +182,6 @@ export async function sweepStaleTracking(): Promise<number> {
       logs.server.warn('shiprocket', 'sweepStaleTracking', { error, return_no: ret.return_no });
     }
   }
-  return pulled;
+  const { podShopReturnTracking } = await import('@modules/commerce/podShopReturn/podShopReturn.tracking');
+  return pulled + (await podShopReturnTracking.sweep(cutoff, SWEEP_BATCH));
 }

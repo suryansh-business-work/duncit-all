@@ -3452,6 +3452,131 @@ export type CaptchaChallenge = {
   token: Scalars['String']['output'];
 };
 
+export type CatalogDeletionDetail = {
+  __typename?: 'CatalogDeletionDetail';
+  impact: CatalogDeletionImpact;
+  request: CatalogDeletionRequest;
+};
+
+export type CatalogDeletionEvent = {
+  __typename?: 'CatalogDeletionEvent';
+  action: Scalars['String']['output'];
+  at: Scalars['String']['output'];
+  by: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+};
+
+/** What deleting it would touch, right now. */
+export type CatalogDeletionImpact = {
+  __typename?: 'CatalogDeletionImpact';
+  open_orders: Scalars['Int']['output'];
+  open_returns: Scalars['Int']['output'];
+  /** The oldest 50 running orders; open_orders is the exact count. */
+  orders: Array<CatalogDeletionOrder>;
+  /** For a brand: the products that go with it. */
+  products: Array<CatalogDeletionProduct>;
+};
+
+export type CatalogDeletionKind =
+  | 'BRAND'
+  | 'PRODUCT';
+
+/** What happens to orders still running when a brand/product is deleted. */
+export type CatalogDeletionMode =
+  /** Cancel the running orders now, with a full refund and an apology to each buyer. */
+  | 'CANCEL_AND_REFUND'
+  /** Let every running order be delivered first; the deletion waits for them. */
+  | 'WAIT_FOR_ORDERS';
+
+/** A running order on the item being deleted. */
+export type CatalogDeletionOrder = {
+  __typename?: 'CatalogDeletionOrder';
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  fulfilment_method: FulfilmentMethod;
+  fulfilment_status: FulfilmentStatus;
+  id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+  /** Units of the deleted item on this order. */
+  units: Scalars['Int']['output'];
+};
+
+export type CatalogDeletionPreview = {
+  __typename?: 'CatalogDeletionPreview';
+  brand_name: Scalars['String']['output'];
+  impact: CatalogDeletionImpact;
+  kind: CatalogDeletionKind;
+  product_name: Scalars['String']['output'];
+  window: CatalogDeletionWindow;
+};
+
+export type CatalogDeletionProduct = {
+  __typename?: 'CatalogDeletionProduct';
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  product_name: Scalars['String']['output'];
+};
+
+/** A partner's request to delete a live pod-shop brand or product (Products portal › Delete Requests). */
+export type CatalogDeletionRequest = {
+  __typename?: 'CatalogDeletionRequest';
+  /** Why the due deletion has not run yet, e.g. '2 order(s) still running'. */
+  blocked_reason: Scalars['String']['output'];
+  brand_id: Scalars['ID']['output'];
+  brand_name: Scalars['String']['output'];
+  cancelled_orders: Scalars['Int']['output'];
+  completed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  events: Array<CatalogDeletionEvent>;
+  failed_refunds: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  kind: CatalogDeletionKind;
+  last_checked_at?: Maybe<Scalars['String']['output']>;
+  mode: CatalogDeletionMode;
+  open_orders_at_request: Scalars['Int']['output'];
+  /** The brand request this product request was raised under. */
+  parent_id?: Maybe<Scalars['ID']['output']>;
+  product_id?: Maybe<Scalars['ID']['output']>;
+  product_name: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  request_no: Scalars['String']['output'];
+  requested_by_name: Scalars['String']['output'];
+  review_note: Scalars['String']['output'];
+  reviewed_at?: Maybe<Scalars['String']['output']>;
+  reviewed_by: Scalars['String']['output'];
+  /** When the deletion becomes due (start of the picked day, admin time zone). */
+  scheduled_for: Scalars['String']['output'];
+  status: CatalogDeletionStatus;
+  updated_at: Scalars['String']['output'];
+};
+
+export type CatalogDeletionStatus =
+  | 'APPROVED'
+  | 'COMPLETED'
+  | 'PENDING'
+  | 'REJECTED'
+  | 'WITHDRAWN';
+
+export type CatalogDeletionTablePage = {
+  __typename?: 'CatalogDeletionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CatalogDeletionRequest>;
+  total: Scalars['Int']['output'];
+};
+
+/** The notice window a deletion date must fall in. */
+export type CatalogDeletionWindow = {
+  __typename?: 'CatalogDeletionWindow';
+  /** First and last day that can be picked, yyyy-MM-dd. */
+  earliest: Scalars['String']['output'];
+  latest: Scalars['String']['output'];
+  max_days: Scalars['Int']['output'];
+  min_days: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
 export type Category = {
   __typename?: 'Category';
   /** SUB level only: may a host invite co-hosts to a pod in this sub-category? */
@@ -9641,6 +9766,8 @@ export type InventoryProduct = {
   purchase_price: Scalars['Float']['output'];
   requested_count: Scalars['Int']['output'];
   reserved_count: Scalars['Int']['output'];
+  /** Days after delivery a buyer may return this product (0 = not returnable). */
+  return_window_days: Scalars['Int']['output'];
   /** Aggregate rating for the Pod Shop catalogue card (average + count + star split). */
   review_summary: ProductReviewSummary;
   selling_price: Scalars['Float']['output'];
@@ -11257,6 +11384,8 @@ export type Mutation = {
   approveEcommBrand: EcommBrand;
   approveHost: Host;
   approveHostRequest: HostRequest;
+  /** Brand owner or Products team: accept — a SHIP order gets a ShipRocket reverse pickup on the brand's account. */
+  approvePodShopReturn: PodShopReturn;
   /** Admin approves a request — runs the request type's side effect (e.g. drafts the onboarded host/venue/seller, or applies an ecomm change). */
   approveRequest: ApprovalRequest;
   approveVenue: Venue;
@@ -11342,6 +11471,8 @@ export type Mutation = {
   cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
+  /** Buyer: withdraw a return nobody has decided yet. */
+  cancelMyPodShopReturn: PodShopReturn;
   /**
    * Admin: cancel the pod and refund every attendee instead of replacing anyone.
    * Refunds are recorded against each payment; the money itself is returned by
@@ -11816,6 +11947,8 @@ export type Mutation = {
    * only opens a PENDING follow request and notifies its owner.
    */
   followUser: User;
+  /** Products portal: cancel a pod-shop order outright — courier stopped, stock back, full refund, apology sent to the buyer. */
+  forceCancelProductOrder: ProductOrder;
   /** Send an existing message on to somebody else — a copy, not a pointer. */
   forwardStaffMessage: StaffMessage;
   generateInventorySku: Scalars['String']['output'];
@@ -12015,6 +12148,8 @@ export type Mutation = {
   markAllNotificationsRead: Scalars['Boolean']['output'];
   markBouncerCallbackContacted: BouncerCallbackRequest;
   markNotificationRead: Scalars['Boolean']['output'];
+  /** The goods are back (handed in at the venue, or the courier scan never came). */
+  markPodShopReturnReceived: PodShopReturn;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
   /** Mark what they sent you as read. Returns how many that was. */
@@ -12141,6 +12276,8 @@ export type Mutation = {
   /** Ops: pull the latest tracking from ShipRocket. */
   refreshProductOrderTracking: ProductOrder;
   refundPayment: Payment;
+  /** Goods checked: back in stock, and the buyer refunded through Razorpay. */
+  refundPodShopReturn: PodShopReturn;
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
@@ -12154,6 +12291,7 @@ export type Mutation = {
   rejectFollowRequest: User;
   rejectHost: Host;
   rejectHostRequest: HostRequest;
+  rejectPodShopReturn: PodShopReturn;
   rejectVenue: Venue;
   /** Rejoin a pod the caller previously backed out of — no payment, until the pod completes. */
   rejoinPod: PodMember;
@@ -12231,6 +12369,8 @@ export type Mutation = {
    */
   requestAccountDeletionOtp: OtpRequestResult;
   requestBouncerCallback: BouncerCallbackRequest;
+  /** Partner: ask to delete a live brand or product. It leaves the shop at once. */
+  requestCatalogDeletion: CatalogDeletionRequest;
   /**
    * Tell the club's admins, over email and WhatsApp, that none of its venues has
    * an open slot. ALREADY_REQUESTED when this host asked about this club in the
@@ -12319,6 +12459,8 @@ export type Mutation = {
    * is why the host verifies them one at a time.
    */
   requestPodCompanionOtp: PhoneOtpRequestResult;
+  /** Buyer: ask to return items of a delivered pod-shop order. One return per brand on the order. */
+  requestPodShopReturn: Array<PodShopReturn>;
   /** Ask an admin for console access — lands in Admin > Portal Access; the decision is emailed. */
   requestPortalAccess: PortalAccessEntry;
   /**
@@ -12395,6 +12537,10 @@ export type Mutation = {
    * whole instead — every leg guards its own replay, so nothing is created twice.
    */
   retryPaymentSteps: PaymentDetail;
+  retryPodShopReturnPickup: PodShopReturn;
+  retryPodShopReturnRefund: PodShopReturn;
+  /** Products portal: retry a cancelled order's refund that Razorpay refused. */
+  retryProductOrderRefund: ProductOrder;
   /** Send the networks that refused it again; the ones it reached are left alone. */
   retryScheduledSocialPost: SocialScheduledPost;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
@@ -12403,6 +12549,8 @@ export type Mutation = {
   reviewAdRequest: AdRequest;
   /** Products portal: check a submitted brand's credential against the vendor during review. */
   reviewBrandIntegration: BrandIntegrationStatus;
+  /** Products team: approve (CANCEL_AND_REFUND cancels running orders) or reject (note required). */
+  reviewCatalogDeletion: CatalogDeletionRequest;
   /** Record a manual review of a sub flow. Answers with the whole flow. */
   reviewE2eSubFlow: E2eFlow;
   /** Finance's decision — APPROVED or REJECTED; a rejection owes the employee a note. */
@@ -13046,6 +13194,8 @@ export type Mutation = {
   updateBadge: Badge;
   updateBranding: Branding;
   updateBugStatus: Bug;
+  /** Products team: change the notice window (whole days, 1–365, min ≤ max). */
+  updateCatalogDeletionWindow: CatalogDeletionWindow;
   updateCategory: Category;
   updateChallenge: Challenge;
   updateClub: Club;
@@ -13233,6 +13383,8 @@ export type Mutation = {
   waStartExtraction: WaExtraction;
   /** Edit a single user lead's name and/or phone. */
   waUpdateUserLead?: Maybe<WaUserLead>;
+  /** Partner: withdraw an open request — the item goes back on sale. */
+  withdrawCatalogDeletion: CatalogDeletionRequest;
   /** Partner: pull a submitted brand back to draft for edits. */
   withdrawEcommBrand: EcommBrand;
   withdrawHostApplication: Host;
@@ -13531,6 +13683,12 @@ export type MutationApproveHostRequestArgs = {
 };
 
 
+export type MutationApprovePodShopReturnArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationApproveRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -13679,6 +13837,11 @@ export type MutationCancelMeetingArgs = {
 export type MutationCancelMyMeetingArgs = {
   kind: SurveyKind;
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelMyPodShopReturnArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -14987,6 +15150,12 @@ export type MutationFollowUserArgs = {
 };
 
 
+export type MutationForceCancelProductOrderArgs = {
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationForwardStaffMessageArgs = {
   id: Scalars['ID']['input'];
   to_user_id: Scalars['ID']['input'];
@@ -15213,6 +15382,11 @@ export type MutationMarkNotificationReadArgs = {
 };
 
 
+export type MutationMarkPodShopReturnReceivedArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationMarkReportedContentOkArgs = {
   id: Scalars['ID']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
@@ -15422,6 +15596,11 @@ export type MutationRefundPaymentArgs = {
 };
 
 
+export type MutationRefundPodShopReturnArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -15464,6 +15643,12 @@ export type MutationRejectHostArgs = {
 export type MutationRejectHostRequestArgs = {
   id: Scalars['ID']['input'];
   notes: Scalars['String']['input'];
+};
+
+
+export type MutationRejectPodShopReturnArgs = {
+  id: Scalars['ID']['input'];
+  note: Scalars['String']['input'];
 };
 
 
@@ -15606,6 +15791,11 @@ export type MutationRequestBouncerCallbackArgs = {
 };
 
 
+export type MutationRequestCatalogDeletionArgs = {
+  input: RequestCatalogDeletionInput;
+};
+
+
 export type MutationRequestClubVenueSlotsArgs = {
   club_doc_id: Scalars['ID']['input'];
 };
@@ -15679,6 +15869,11 @@ export type MutationRequestPodClubAdminHelpArgs = {
 
 export type MutationRequestPodCompanionOtpArgs = {
   input: PodAttendanceOtpInput;
+};
+
+
+export type MutationRequestPodShopReturnArgs = {
+  input: RequestPodShopReturnInput;
 };
 
 
@@ -15801,6 +15996,21 @@ export type MutationRetryPaymentStepsArgs = {
 };
 
 
+export type MutationRetryPodShopReturnPickupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryPodShopReturnRefundArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryProductOrderRefundArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryScheduledSocialPostArgs = {
   id: Scalars['ID']['input'];
 };
@@ -15821,6 +16031,13 @@ export type MutationReviewAdRequestArgs = {
 export type MutationReviewBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
+};
+
+
+export type MutationReviewCatalogDeletionArgs = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -17389,6 +17606,11 @@ export type MutationUpdateBugStatusArgs = {
 };
 
 
+export type MutationUpdateCatalogDeletionWindowArgs = {
+  input: UpdateCatalogDeletionWindowInput;
+};
+
+
 export type MutationUpdateCategoryArgs = {
   category_id: Scalars['ID']['input'];
   input: UpdateCategoryInput;
@@ -17698,6 +17920,7 @@ export type MutationUpdateMyProductSettingsArgs = {
   low_stock_alert: Scalars['Int']['input'];
   notify_low_stock: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
+  return_window_days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -18063,6 +18286,11 @@ export type MutationWaSaveConfigArgs = {
 export type MutationWaUpdateUserLeadArgs = {
   id: Scalars['ID']['input'];
   input: WaUpdateUserLeadInput;
+};
+
+
+export type MutationWithdrawCatalogDeletionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -18575,6 +18803,8 @@ export type OrderLineItem = {
   ownership: ProductOwnership;
   product_id: Scalars['ID']['output'];
   qty: Scalars['Int']['output'];
+  /** Days after delivery this line may be returned (the product's setting when bought). 0 = not returnable. */
+  return_window_days: Scalars['Int']['output'];
   sku: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
   /** Which variant of the product was bought — empty for variant-less products. */
@@ -18613,6 +18843,29 @@ export type OrderParcel = {
 export type OrderPaymentMethod =
   | 'COD'
   | 'PREPAID';
+
+export type OrderRefund = {
+  __typename?: 'OrderRefund';
+  amount: Scalars['Float']['output'];
+  coins: Scalars['Int']['output'];
+  error: Scalars['String']['output'];
+  initiated_by: Scalars['String']['output'];
+  razorpay_refund_id: Scalars['String']['output'];
+  refunded_at?: Maybe<Scalars['String']['output']>;
+  status: OrderRefundStatus;
+};
+
+/** Where money going back to the buyer stands. */
+export type OrderRefundStatus =
+  /** Razorpay refused it — Finance pays it out by hand, or an operator retries. */
+  | 'FAILED'
+  | 'NONE'
+  /** Sent to Razorpay with no answer yet. */
+  | 'PENDING'
+  /** Razorpay accepted the refund. */
+  | 'PROCESSED'
+  /** Nothing to send to a gateway (test-mode or free payment) — recorded in the ledger only. */
+  | 'RECORDED';
 
 export type OrderShippingAddress = {
   __typename?: 'OrderShippingAddress';
@@ -20985,6 +21238,83 @@ export type PodSettlementStatus =
   | 'PENDING_APPROVAL'
   | 'SETTLED';
 
+/** A pod-shop buyer sending goods back inside the brand's return window. */
+export type PodShopReturn = {
+  __typename?: 'PodShopReturn';
+  brand_ids: Array<Scalars['ID']['output']>;
+  buyer_email: Scalars['String']['output'];
+  buyer_id?: Maybe<Scalars['ID']['output']>;
+  buyer_name: Scalars['String']['output'];
+  comments: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  decision_note: Scalars['String']['output'];
+  events: Array<PodShopReturnEvent>;
+  /** Goods value being returned, at the order's prices. */
+  gross: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  items: Array<PodShopReturnItem>;
+  order_id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  pickup: PodShopReturnPickup;
+  reason: Scalars['String']['output'];
+  refund: OrderRefund;
+  return_no: Scalars['String']['output'];
+  status: PodShopReturnStatus;
+  updated_at: Scalars['String']['output'];
+};
+
+export type PodShopReturnEvent = {
+  __typename?: 'PodShopReturnEvent';
+  at: Scalars['String']['output'];
+  by: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: PodShopReturnStatus;
+};
+
+export type PodShopReturnItem = {
+  __typename?: 'PodShopReturnItem';
+  image_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  product_id: Scalars['ID']['output'];
+  qty: Scalars['Int']['output'];
+  unit_cost: Scalars['Float']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+};
+
+export type PodShopReturnItemInput = {
+  product_id: Scalars['ID']['input'];
+  qty: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PodShopReturnPickup = {
+  __typename?: 'PodShopReturnPickup';
+  awb: Scalars['String']['output'];
+  courier_name: Scalars['String']['output'];
+  /** ShipRocket's refusal on the last booking attempt — empty when booking went through. */
+  last_error: Scalars['String']['output'];
+  status: ReturnPickupState;
+  tracking_status: Scalars['String']['output'];
+};
+
+export type PodShopReturnStatus =
+  | 'APPROVED'
+  | 'CANCELLED'
+  | 'PICKUP_SCHEDULED'
+  | 'RECEIVED'
+  | 'REFUNDED'
+  | 'REJECTED'
+  | 'REQUESTED';
+
+export type PodShopReturnTablePage = {
+  __typename?: 'PodShopReturnTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodShopReturn>;
+  total: Scalars['Int']['output'];
+};
+
 /** One media item in the global Pod Shop top slider (image or video). */
 export type PodShopSliderMedia = {
   __typename?: 'PodShopSliderMedia';
@@ -21666,6 +21996,8 @@ export type ProductOrder = {
   coins_share: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
+  /** When the buyer got the goods — the return window counts from here. */
+  delivered_at?: Maybe<Scalars['String']['output']>;
   /** This order's share of the coupon, prepaid discount and coins. */
   discount_total: Scalars['Float']['output'];
   fulfilment_method: FulfilmentMethod;
@@ -21684,6 +22016,10 @@ export type ProductOrder = {
   pickup_venue_id?: Maybe<Scalars['ID']['output']>;
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** Money going back after a cancellation. */
+  refund: OrderRefund;
+  /** Pod shop only: what the buyer may still return on this order. */
+  returnable: Array<ReturnableLine>;
   shipping_address?: Maybe<OrderShippingAddress>;
   shipping_charge: Scalars['Float']['output'];
   shiprocket: ShipRocketInfo;
@@ -22219,6 +22555,13 @@ export type Query = {
    * first, so this cannot itself require a session.
    */
   captchaChallenge: CaptchaChallenge;
+  /** Partner: the warning shown before deleting — running orders, open returns, the date window. */
+  catalogDeletionPreview: CatalogDeletionPreview;
+  catalogDeletionRequest: CatalogDeletionDetail;
+  /** Products team: the request queue, one kind at a time; parent_id lists a brand request's products. */
+  catalogDeletionRequestsTable: CatalogDeletionTablePage;
+  /** The window a deletion date must fall in. */
+  catalogDeletionWindow: CatalogDeletionWindow;
   categories: Array<Category>;
   category?: Maybe<Category>;
   categoryTree: Array<Category>;
@@ -22820,6 +23163,8 @@ export type Query = {
   myBrandPickupLocations: Array<BrandPickupLocation>;
   /** The signed-in user's own callback request history, newest first. */
   myCallbackRequests: Array<BouncerCallbackRequest>;
+  /** Partner: their deletion requests (optionally one brand's). */
+  myCatalogDeletionRequests: Array<CatalogDeletionRequest>;
   myChatRooms: Array<ChatRoom>;
   /**
    * Pods across the signed-in Club Admin's clubs for the Club Studio "Your Pods"
@@ -22918,6 +23263,8 @@ export type Query = {
   myPodDrafts: Array<PodDraft>;
   myPodIdeas: Array<PodIdea>;
   myPodMemberships: Array<PodMember>;
+  /** The signed-in buyer's pod-shop returns. */
+  myPodShopReturns: Array<PodShopReturn>;
   /** My own pods that carry at least one co-host. */
   myPodsWithCoHosts: Array<Pod>;
   /** Every staff console with whether the signed-in user can open it (Jump to Portal). */
@@ -23079,6 +23426,8 @@ export type Query = {
   /** What revoking this pod's cancellation would cost, and whether it is allowed. */
   podRevokePreview: PodRevokePreview;
   podSettlementPreview: PodSettlement;
+  /** Products team: every return (optionally one brand's). Partner: their own brands' returns. */
+  podShopReturnsTable: PodShopReturnTablePage;
   /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
   podSpotFills: Array<PodSpotFill>;
   /** The range this pod may be resized within. Host, the pod's club admin, or an admin. */
@@ -23605,6 +23954,8 @@ export type Query = {
    * unless the viewer is the owner or a follower.
    */
   userJoinedPods: Array<Pod>;
+  /** Admin › User details › Shop Orders: one member's pod-shop orders. */
+  userProductOrdersTable: ProductOrderTablePage;
   /** Every refund already paid back to a buyer, from all four refund flows. */
   userRefundsTable: UserRefundTablePage;
   /** All survey responses for a user (admin). */
@@ -24019,6 +24370,24 @@ export type QueryBugOccurrencesArgs = {
 
 
 export type QueryBugsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCatalogDeletionPreviewArgs = {
+  kind: CatalogDeletionKind;
+  target_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCatalogDeletionRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCatalogDeletionRequestsTableArgs = {
+  kind: CatalogDeletionKind;
+  parent_id?: InputMaybe<Scalars['ID']['input']>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -25181,6 +25550,11 @@ export type QueryMyCallbackRequestsArgs = {
 };
 
 
+export type QueryMyCatalogDeletionRequestsArgs = {
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryMyClubPodsArgs = {
   club_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -25627,6 +26001,12 @@ export type QueryPodSettlementPreviewArgs = {
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   pod_id: Scalars['ID']['input'];
   venue_bill_amount: Scalars['Float']['input'];
+};
+
+
+export type QueryPodShopReturnsTableArgs = {
+  brand_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -26610,6 +26990,12 @@ export type QueryUserFinanceSummaryArgs = {
 
 
 export type QueryUserJoinedPodsArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserProductOrdersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
   user_id: Scalars['ID']['input'];
 };
 
@@ -27883,6 +28269,16 @@ export type RequestCallbackInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type RequestCatalogDeletionInput = {
+  kind: CatalogDeletionKind;
+  mode: CatalogDeletionMode;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  /** yyyy-MM-dd inside the window. */
+  scheduled_for: Scalars['String']['input'];
+  /** The product's id for PRODUCT, the brand's for BRAND. */
+  target_id: Scalars['ID']['input'];
+};
+
 /**
  * Continue with OTP — signing in with a one-time code instead of a password.
  *
@@ -27922,6 +28318,13 @@ export type RequestPasswordChangeInput = {
   current_password?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type RequestPodShopReturnInput = {
+  comments?: InputMaybe<Scalars['String']['input']>;
+  items: Array<PodShopReturnItemInput>;
+  order_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
 export type RequestWithdrawalInput = {
   account_holder_name?: InputMaybe<Scalars['String']['input']>;
   account_number?: InputMaybe<Scalars['String']['input']>;
@@ -27935,6 +28338,26 @@ export type ResetPasswordInput = {
   email: Scalars['String']['input'];
   new_password: Scalars['String']['input'];
   otp: Scalars['String']['input'];
+};
+
+/** Where a return's reverse-pickup parcel is. */
+export type ReturnPickupState =
+  | 'BOOKED'
+  | 'CANCELLED'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'IN_TRANSIT'
+  | 'NONE'
+  | 'PICKUP_SCHEDULED';
+
+/** How much of one order line the buyer can still send back, and until when. */
+export type ReturnableLine = {
+  __typename?: 'ReturnableLine';
+  product_id: Scalars['ID']['output'];
+  returnable_qty: Scalars['Int']['output'];
+  /** Null when the product was not returnable when bought. */
+  returnable_until?: Maybe<Scalars['String']['output']>;
+  variant_id: Scalars['String']['output'];
 };
 
 export type ReviewPaymentReleaseInput = {
@@ -33890,6 +34313,11 @@ export type UpdateBrandingInput = {
   website_favicon_url?: InputMaybe<Scalars['String']['input']>;
   website_footer_logo_url?: InputMaybe<Scalars['String']['input']>;
   website_header_logo_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateCatalogDeletionWindowInput = {
+  max_days: Scalars['Int']['input'];
+  min_days: Scalars['Int']['input'];
 };
 
 export type UpdateCategoryInput = {

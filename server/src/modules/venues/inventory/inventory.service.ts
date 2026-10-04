@@ -16,7 +16,12 @@ import { notificationService } from '@modules/engagement/notification/notificati
 import { UserModel } from '@modules/access/user/user.model';
 import { notifyEvent } from '@services/notify/notify.service';
 import { sendEmail } from '@services/email/email.service';
-import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
+import {
+  InventoryProductModel,
+  RETURN_WINDOW_MAX_DAYS,
+  type IInventoryProduct,
+  type IProductVariant,
+} from './inventory.model';
 import {
   assertMrp,
   packagingMissing,
@@ -173,6 +178,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     max_order_qty: product.max_order_qty ?? 100,
     low_stock_alert: product.low_stock_alert ?? 5,
     notify_low_stock: !!product.notify_low_stock,
+    return_window_days: product.return_window_days ?? 0,
     inventory_count: inventory,
     reserved_count: reserved,
     damaged_count: product.damaged_count ?? 0,
@@ -1430,7 +1436,8 @@ export const inventoryService = {
     id: string,
     lowStockAlert: number,
     notifyLowStock: boolean,
-    user: AuthUser | null
+    user: AuthUser | null,
+    returnWindowDays?: number | null
   ) {
     await requireEcommManager(user);
     if (!Number.isInteger(lowStockAlert) || lowStockAlert < 0) {
@@ -1440,15 +1447,33 @@ export const inventoryService = {
     const info = userInfo(user);
     doc.low_stock_alert = lowStockAlert;
     doc.notify_low_stock = !!notifyLowStock;
+    const fields = ['low_stock_alert', 'notify_low_stock'];
+    if (returnWindowDays != null) {
+      if (!Number.isInteger(returnWindowDays) || returnWindowDays < 0 || returnWindowDays > RETURN_WINDOW_MAX_DAYS) {
+        throw new GraphQLError(`Return window must be 0–${RETURN_WINDOW_MAX_DAYS} days`, {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+      // Applies to orders placed from now on — each order keeps the window it was bought under.
+      doc.return_window_days = returnWindowDays;
+      fields.push('return_window_days');
+    }
     doc.last_updated_by_id = info.id;
     await doc.save();
-    await logActivity(doc._id, user, 'UPDATE', ['low_stock_alert', 'notify_low_stock'], 'Product settings updated');
+    await logActivity(doc._id, user, 'UPDATE', fields, 'Product settings updated');
     return inventoryProductToPub(doc);
   },
 
   async deleteMyProductListing(id: string, user: AuthUser | null) {
     await requireEcommManager(user);
     const doc = await ownedListing(id, user);
+    // A listing that has been on the shop may have orders running: it goes
+    // through a deletion request (warning, notice period, Products review).
+    if (doc.listing_review_status === 'APPROVED') {
+      throw new GraphQLError('This product is live on the shop — raise a deletion request instead', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     doc.is_active = false;
     doc.status = 'ARCHIVED';
     doc.pod_available = false;

@@ -166,6 +166,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     max_order_qty: Int!
     low_stock_alert: Int!
     notify_low_stock: Boolean!
+    "Days after delivery a buyer may return this product (0 = not returnable)."
+    return_window_days: Int!
     inventory_count: Int!
     reserved_count: Int!
     damaged_count: Int!
@@ -539,7 +541,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     updateMyProductListing(product_doc_id: ID!, input: ProductListingInput!): InventoryProduct!
     updateMyProductListingQuantity(product_doc_id: ID!, inventory_count: Int!): InventoryProduct!
     "Update a listing's low-stock threshold + notify toggle without re-triggering approval."
-    updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!): InventoryProduct!
+    updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!, return_window_days: Int): InventoryProduct!
     deleteMyProductListing(product_doc_id: ID!): Boolean!
     "Partner: temporarily deactivate/reactivate an OWN approved listing (reversible; hidden from the shop while paused, placed orders unaffected)."
     setMyProductListingActive(product_doc_id: ID!, active: Boolean!): InventoryProduct!

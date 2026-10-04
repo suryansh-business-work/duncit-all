@@ -105,7 +105,9 @@ describe('OrdersHistoryScreen', () => {
   it('surfaces a load error', async () => {
     mockRequest.mockRejectedValue(new Error('offline'));
     renderWithProviders(<OrdersHistoryScreen />);
-    await waitFor(() => expect(screen.getByTestId('orders-error')).toHaveTextContent('offline'));
+    // The message, with a Try again under it.
+    await waitFor(() => expect(screen.getByTestId('orders-error')).toHaveTextContent(/offline/));
+    expect(screen.getByTestId('orders-retry')).toBeOnTheScreen();
   });
 
   it('tells the buyer why a cancelled order was cancelled and where the money is', async () => {

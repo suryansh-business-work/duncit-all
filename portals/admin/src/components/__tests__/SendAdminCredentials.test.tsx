@@ -108,8 +108,9 @@ describe('SendAdminCredentials — sending', () => {
     expect(
       await screen.findByText('Super admin created: root@duncit.com — credentials emailed.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Credentials sent' })).toBeDisabled();
+    // The trigger is aria-hidden behind the modal until the dialog has fully closed.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Credentials sent' })).toBeDisabled();
   });
 
   it('says so when the super admin already existed and the email could not go out', async () => {
@@ -159,6 +160,9 @@ describe('SendAdminCredentials — sending', () => {
 
     expect(await screen.findByText('SMTP is not configured')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send Credentials to Admin' })).toBeEnabled();
+    // The open modal hides the trigger from assistive tech, so include hidden nodes.
+    expect(
+      screen.getByRole('button', { name: 'Send Credentials to Admin', hidden: true }),
+    ).toBeEnabled();
   });
 });

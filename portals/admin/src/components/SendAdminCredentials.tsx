@@ -62,8 +62,11 @@ export default function SendAdminCredentials() {
   // Only reachable from the Send button, which is disabled while a send is in flight.
   const confirm = async () => {
     if (entry.trim().toUpperCase() !== code) {
+      // A fresh code and an empty field — but keep the message, so the person
+      // knows why (refresh() would clear it in the same render).
+      setCode(genCaptcha());
+      setEntry('');
       setCaptchaError('That does not match. Please try again.');
-      refresh();
       return;
     }
     try {

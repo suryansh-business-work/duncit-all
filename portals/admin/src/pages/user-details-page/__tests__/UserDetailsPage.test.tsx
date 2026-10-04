@@ -340,8 +340,9 @@ describe('UserDetailsPage — tab switching', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Call & Email Logs' }));
     await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID }));
 
+    // This tab lists the account's own changes, so its fetch carries the USER scope.
     fireEvent.click(screen.getByRole('tab', { name: 'User Change Logs' }));
-    await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID }));
+    await waitFor(() => expect(tableFetchCalls.extraVariables).toEqual({ user_id: USER_ID, scope: 'USER' }));
   });
 
   it("falls back to the route's user id when the loaded user has none of its own", async () => {

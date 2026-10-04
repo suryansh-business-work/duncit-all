@@ -70,7 +70,9 @@ describe('CategoriesPage — a second press while the dialog closes', () => {
     expect(await screen.findByText('Saved')).toBeInTheDocument();
 
     // The dialog is fading out; its Save button is still on screen but can no longer be pressed.
-    const fadingSave = screen.getByText('Save', { selector: 'button' });
+    // The page's own vibe cards also have Save buttons, so look inside the closing dialog only.
+    const closingDialog = screen.getByRole('dialog', { hidden: true });
+    const fadingSave = within(closingDialog).getByText('Save', { selector: 'button' });
     expect(fadingSave).toBeDisabled();
     fireEvent.click(fadingSave);
 

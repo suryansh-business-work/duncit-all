@@ -56,8 +56,9 @@ describe('FontsSection', () => {
       </FormHarness>,
     );
 
-    // The clear indicator is CSS-hidden until the field is hovered or focused.
-    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
+    // The clear indicator is CSS-hidden until hover/focus, so it has no computed
+    // accessible name in jsdom; its `title` still identifies it.
+    fireEvent.click(screen.getByTitle('Clear'));
 
     expect(lastForm(onForm).mobile_font_family).toBe('');
     expect(fontLinks()).toEqual([]);

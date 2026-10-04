@@ -5,7 +5,8 @@ import { renderWithProviders } from '../testkit';
 import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
 // Component-prop fixtures (not GraphQL responses): the shipment dialog only
-// reads line-item ownership + the order's pickup_location_id.
+// reads line-item ownership + the order's pickup_location_id (a warehouse
+// nickname, which is also what onConfirm hands back for ShipRocket).
 const duncitOrder = { line_items: [{ ownership: 'DUNCIT' }], pickup_location_id: null };
 const brandOrder = { line_items: [{ ownership: 'BRAND', brand_id: 'br1' }], pickup_location_id: null };
 
@@ -40,7 +41,7 @@ describe('OrderShipmentDialog', () => {
     );
     await waitFor(() => expect(screen.getByText(/Main — Pune/)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /Create shipment/i }));
-    expect(onConfirm).toHaveBeenCalledWith('loc1');
+    expect(onConfirm).toHaveBeenCalledWith('Main');
   });
 
   it('warns and blocks confirm when the chosen location is not registered', async () => {
@@ -59,13 +60,14 @@ describe('OrderShipmentDialog', () => {
     renderWithProviders(
       <OrderShipmentDialog
         open
-        order={{ line_items: [{ ownership: 'DUNCIT' }], pickup_location_id: 'loc2' }}
+        order={{ line_items: [{ ownership: 'DUNCIT' }], pickup_location_id: 'Second' }}
         onClose={vi.fn()}
         onConfirm={onConfirm}
       />,
       { mocks: [brandPickupLocationsMock([registered, unregistered])] },
     );
-    // loc2 is preselected (from the order) but unregistered → confirm is blocked.
+    // The order names its warehouse by nickname: Second is preselected over the
+    // registered default, and it is unregistered → confirm is blocked.
     await waitFor(() =>
       expect(screen.getByText(/not registered with ShipRocket yet/i)).toBeInTheDocument(),
     );
@@ -116,7 +118,7 @@ describe('OrderShipmentDialog', () => {
     const listbox = await screen.findByRole('listbox');
     fireEvent.click(within(listbox).getByRole('option', { name: /B — Delhi/ }));
     fireEvent.click(screen.getByRole('button', { name: /Create shipment/i }));
-    expect(onConfirm).toHaveBeenCalledWith('b');
+    expect(onConfirm).toHaveBeenCalledWith('B');
   });
 
   it('closes on cancel', async () => {

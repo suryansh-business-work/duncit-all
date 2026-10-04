@@ -61,6 +61,10 @@ function isSafeLine(text: string): boolean {
   if (/new RegExp\(\s*['"`/]/.test(text)) return true;
   if (text.includes('String.raw')) return true;
   if (text.includes('.replace(')) return true;
+  // A pattern a person authored on purpose (an automation "matches" condition)
+  // goes through vetRegexPattern, which escapes it unless its shape is proven
+  // safe — see utils/vet-regex and its suite.
+  if (text.includes('vetRegexPattern(')) return true;
   return /escape/i.test(text);
 }
 

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({ mutate: vi.fn() }));
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return { ...actual, useMutation: () => [m.mutate, { loading: false }] };
 });
 // react-terminal drives its `defaultHandler`; expose it via buttons so we can
@@ -12,6 +12,11 @@ vi.mock('react-terminal', async () => {
   const React = await import('react');
   return {
     TerminalContextProvider: ({ children }: { children: unknown }) => children,
+    // The suggestion sidebar reads the terminal's buffer setters from context.
+    TerminalContext: React.createContext({
+      setBufferedContent: () => undefined,
+      appendCommandToHistory: () => undefined,
+    }),
     ReactTerminal: ({
       defaultHandler,
     }: {

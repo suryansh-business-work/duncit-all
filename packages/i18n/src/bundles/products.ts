@@ -145,6 +145,7 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
     },
 
     brandReview: {
+      untitledBrand: 'Untitled brand',
       title: 'Brands Review',
       subtitle: 'Approve or reject the e-commerce brands partners submit for onboarding. Verify every section before approving.',
       backToInbox: 'Back to Brands Review',

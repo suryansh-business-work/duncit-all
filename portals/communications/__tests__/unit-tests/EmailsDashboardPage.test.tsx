@@ -67,7 +67,7 @@ const tileText = (label: string) =>
 describe('EmailsDashboardPage', () => {
   it('shows a spinner until the range has loaded', () => {
     renderPage();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(screen.queryByText('RECIPIENTS ADDRESSED')).not.toBeInTheDocument();
   });
 

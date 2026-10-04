@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ServerInfo } from '../../src/pages/server/queries';
@@ -30,6 +31,29 @@ vi.mock('@duncit/ui', () => ({
     </div>
   ),
 }));
+// The grid (GridStack) is @duncit/dashboard's own subject. What ServerInfoPage
+// owns is the dashboard id, the header and the widgets it hands in.
+vi.mock('@duncit/dashboard', () => ({
+  DuncitDashboard: (p: {
+    dashboardId: string;
+    header: ReactNode;
+    widgets: { id: string; content: ReactNode }[];
+  }) => (
+    <div data-testid="dashboard" data-dashboard-id={p.dashboardId}>
+      {p.header}
+      {p.widgets.map((w) => (
+        <section key={w.id} data-testid={`widget-${w.id}`}>
+          {w.content}
+        </section>
+      ))}
+    </div>
+  ),
+}));
+// Self-contained panels with their own queries; each is its own subject.
+vi.mock('../../src/pages/server/history', () => ({ default: () => <div>history-panel</div> }));
+vi.mock('../../src/pages/server/history/ContainerUsage', () => ({ default: () => <div>container-usage</div> }));
+vi.mock('../../src/pages/server/advice', () => ({ default: () => <div>advice-card</div> }));
+vi.mock('../../src/pages/stress-testing/components/LivePulse', () => ({ default: () => <div>live-pulse</div> }));
 vi.mock('../../src/pages/server/ServerInfoDetails', () => ({
   default: (p: { info: ServerInfo }) => <div>details:{p.info.os.hostname}</div>,
 }));
@@ -94,8 +118,13 @@ describe('ServerInfoPage', () => {
       refetch,
     };
     render(<ServerInfoPage />);
+    expect(screen.getByTestId('dashboard')).toHaveAttribute('data-dashboard-id', 'tech.serverInfo');
     expect(screen.getByText('details:srv912221')).toBeInTheDocument();
     expect(screen.getByText(/CPU USAGE:45%/)).toBeInTheDocument();
+    expect(screen.getByTestId('widget-pulse')).toHaveTextContent('live-pulse');
+    expect(screen.getByTestId('widget-history')).toHaveTextContent('history-panel');
+    expect(screen.getByTestId('widget-advice')).toHaveTextContent('advice-card');
+    expect(screen.getByTestId('widget-containers')).toHaveTextContent('container-usage');
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
     expect(refetch).toHaveBeenCalled();
   });

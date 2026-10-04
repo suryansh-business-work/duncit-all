@@ -26,7 +26,7 @@ vi.mock('../../src/pages/inventory-page/inventory-product-page/InventoryProductP
 }));
 vi.mock('../../src/pages/ecomm/ProductsReviewPage', () => ({ default: () => <div>REQUESTS PAGE</div> }));
 vi.mock('../../src/pages/ecomm/BrandsReviewPage', () => ({ default: () => <div>BRANDS PAGE</div> }));
-vi.mock('../../src/pages/ecomm/BrandReviewDetailPage', () => ({ default: () => <div>BRAND DETAIL</div> }));
+vi.mock('../../src/pages/ecomm/brand-review-detail', () => ({ default: () => <div>BRAND DETAIL</div> }));
 vi.mock('../../src/pages/catalog-brands/CatalogBrandsPage', () => ({
   default: () => <div>CATALOG BRANDS</div>,
 }));

@@ -77,18 +77,35 @@ describe('the token', () => {
     expect(sr.last('GET', WALLET)?.auth).not.toBe(`Bearer ${old}`);
   });
 
-  it('logs in again once, and replays the call, when ShipRocket answers 401', async () => {
+  it('logs in again once, and replays the call, when ShipRocket answers 401 to a held token', async () => {
     await seedShiprocketAccount();
+    const old = await holdToken(72);
     sr.failNext('GET', WALLET, 401);
     await expect(walletBalance()).resolves.toBe(1500);
-    expect(sr.count('POST', LOGIN)).toBe(2);
+    expect(sr.count('POST', LOGIN)).toBe(1);
     expect(sr.count('GET', WALLET)).toBe(2);
+    expect(sr.last('GET', WALLET)?.auth).not.toBe(`Bearer ${old}`);
+  });
+
+  // A login is rationed: a token issued moments ago is not swapped for another.
+  it('does not spend a login on a 401 to a token it has only just been issued', async () => {
+    await seedShiprocketAccount();
+    sr.failNext('GET', WALLET, 401);
+    await expect(walletBalance()).rejects.toThrow(
+      'ShipRocket refused walletBalance (/account/details/wallet-balance, HTTP 401): ShipRocket answered 401.'
+    );
+    expect(sr.count('POST', LOGIN)).toBe(1);
+    expect(sr.count('GET', WALLET)).toBe(1);
   });
 
   it('gives up on a second 401 rather than looping', async () => {
     await seedShiprocketAccount();
+    await holdToken(72);
     sr.failNext('GET', WALLET, 401, 2);
-    await expect(walletBalance()).rejects.toThrow('ShipRocket: ShipRocket answered 401');
+    await expect(walletBalance()).rejects.toThrow(
+      'ShipRocket refused walletBalance (/account/details/wallet-balance, HTTP 401): ShipRocket answered 401.'
+    );
+    expect(sr.count('POST', LOGIN)).toBe(1);
     expect(sr.count('GET', WALLET)).toBe(2);
   });
 });
@@ -98,10 +115,11 @@ describe('a refused login', () => {
     const { entry } = await seedShiprocketAccount();
     sr.state.loginStatus = 403;
 
-    await expect(walletBalance()).rejects.toThrow(
-      'ShipRocket login failed: Invalid email and password combination. Fix the API user in the Tech portal or in ShipRocket, then press Retry login on E-commerce → Shipping → ShipRocket.'
-    );
-    await expect(walletBalance()).rejects.toThrow('not retried until they change');
+    const refused =
+      'ShipRocket login failed: Invalid email and password combination. Fix the API user in the Tech portal or in ShipRocket, then press Retry login on E-commerce → Shipping → ShipRocket.';
+    await expect(walletBalance()).rejects.toThrow(refused);
+    // The latched refusal answers again without another login.
+    await expect(walletBalance()).rejects.toThrow(refused);
     await expect(createOrderAdhoc({})).rejects.toThrow('Invalid email and password combination');
     expect(sr.count('POST', LOGIN)).toBe(1);
     expect(sr.calls).toHaveLength(1);
@@ -143,7 +161,9 @@ describe('retries', () => {
   it('never retries a create', async () => {
     await seedShiprocketAccount();
     sr.failNext('POST', '/orders/create/adhoc', 503);
-    await expect(createOrderAdhoc({ order_id: 'DUN-ORD-7F3K2' })).rejects.toThrow('ShipRocket: ShipRocket answered 503');
+    await expect(createOrderAdhoc({ order_id: 'DUN-ORD-7F3K2' })).rejects.toThrow(
+      'ShipRocket refused createOrder (/orders/create/adhoc, HTTP 503): ShipRocket answered 503.'
+    );
     expect(sr.count('POST', '/orders/create/adhoc')).toBe(1);
   });
 });

@@ -123,7 +123,7 @@ beforeEach(() => {
   osMock.totalmem.mockReturnValue(16_000_000_000);
   osMock.freemem.mockReturnValue(4_000_000_000);
   osMock.networkInterfaces.mockReturnValue({});
-  statfsMock.mockResolvedValue({ blocks: 1000, bsize: 4096, bfree: 250 });
+  statfsMock.mockResolvedValue({ blocks: 1000, bsize: 4096, bfree: 250, files: 2000, ffree: 1500 });
   readFileMock.mockResolvedValue('');
   isAllowedHostMock.mockReturnValue(false);
 });
@@ -221,6 +221,7 @@ describe('techService.serverInfo — OS, memory, disk and network', () => {
       freeBytes: 1_024_000,
       usedBytes: 3_072_000,
       usagePercent: 75,
+      inodeUsagePercent: 25,
     });
   });
 
@@ -250,6 +251,7 @@ describe('techService.serverInfo — OS, memory, disk and network', () => {
       freeBytes: 0,
       usedBytes: 0,
       usagePercent: 0,
+      inodeUsagePercent: 0,
     });
   });
 

@@ -116,22 +116,26 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     expect(s.has_venue).toBe(true);
 
     // Waterfall: GST 5000×18/118=762.71; net 4237.29; fee 5%=211.86;
-    // pool 4025.43; venue price 1500 (−20% comm 300 → 1200);
-    // host remainder 2525.43 (−10% comm 252.54 → 2272.89); Duncit 764.40.
+    // pool 4025.43; club admin 3% (shipped default) 120.76 → 3904.67 to split;
+    // venue price 1500 (−20% comm 300 → 1200);
+    // host remainder 2404.67 (−10% comm 240.47 → 2164.20);
+    // Duncit 211.86 + 300 + 240.47 + 120.76 = 873.09.
     const w = s.waterfall;
     expect(w.version).toBe(2);
     expect(w.gst_amount).toBe(762.71);
     expect(w.net_amount).toBe(4237.29);
     expect(w.platform_fee_amount).toBe(211.86);
     expect(w.pool_amount).toBe(4025.43);
+    expect(w.club_admin_pct).toBe(3);
+    expect(w.club_admin_amount).toBe(120.76);
     expect(w.venue_amount).toBe(1500);
     expect(w.venue_commission_amount).toBe(300);
     expect(w.venue_receives).toBe(1200);
-    expect(w.host_amount).toBe(2525.43);
-    expect(w.host_commission_amount).toBe(252.54);
-    expect(w.host_receives).toBe(2272.89);
-    expect(w.duncit_revenue).toBe(764.4);
-    expect(w.host_earn_pct).toBe(45.46);
+    expect(w.host_amount).toBe(2404.67);
+    expect(w.host_commission_amount).toBe(240.47);
+    expect(w.host_receives).toBe(2164.2);
+    expect(w.duncit_revenue).toBe(873.09);
+    expect(w.host_earn_pct).toBe(43.28);
     // Invariant: GST + host + venue + Duncit === customer payments.
     expect(
       Math.round((w.gst_amount + w.host_receives + w.venue_receives + w.duncit_revenue) * 100) / 100
@@ -139,8 +143,8 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
 
     // Legacy party lines derive from the waterfall.
     expect(s.host.gst_amount).toBe(762.71);
-    expect(s.host.payout_amount).toBe(2272.89);
-    expect(s.host.duncit_amount).toBe(252.54);
+    expect(s.host.payout_amount).toBe(2164.2);
+    expect(s.host.duncit_amount).toBe(240.47);
     expect(s.venue?.gst_amount).toBe(0);
     expect(s.venue?.duncit_amount).toBe(300);
     expect(s.venue?.payout_amount).toBe(1200);
@@ -155,14 +159,15 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
 
     expect(await venueAmountForPod(pod, 999)).toBe(300);
 
-    // Canonical ₹1000 + ₹300 slot: pool 805.09 → venue 300 (−10% → 270),
-    // host 505.09 (−10% → 454.58), Duncit 122.88.
+    // Canonical ₹1000 + ₹300 slot: pool 805.09 − 3% club admin 24.15 → venue
+    // 300 (−10% → 270),
+    // host 480.94 (−10% → 432.85), Duncit 144.61.
     const s = await computePodSettlement(String(pod._id), 0);
     expect(s.waterfall.venue_amount).toBe(300);
     expect(s.waterfall.venue_receives).toBe(270);
-    expect(s.waterfall.host_receives).toBe(454.58);
-    expect(s.waterfall.duncit_revenue).toBe(122.88);
-    expect(s.waterfall.host_earn_pct).toBe(45.46);
+    expect(s.waterfall.host_receives).toBe(432.85);
+    expect(s.waterfall.duncit_revenue).toBe(144.61);
+    expect(s.waterfall.host_earn_pct).toBe(43.29);
   });
 
   it('falls back to global default commissions when host/venue have none', async () => {
@@ -226,7 +231,9 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
       expect(s.waterfall.gst_amount).toBe(0);
       expect(s.waterfall.platform_fee_amount).toBe(0);
       expect(s.host_commission_pct).toBe(10); // global default (no host doc)
-      expect(s.waterfall.host_amount).toBe(1000); // whole pool, no venue
+      // The club-admin default (3%) still applies: 1000 − 30 is the host's, no venue.
+      expect(s.waterfall.club_admin_amount).toBe(30);
+      expect(s.waterfall.host_amount).toBe(970);
       expect(s.has_venue).toBe(false);
     } finally {
       await FinanceSettingsModel.updateOne(
@@ -257,16 +264,17 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     expect(result.releases).toHaveLength(2);
     const hostRel = result.releases.find((r) => r.kind === 'HOST_PAYMENT')!;
     const venueRel = result.releases.find((r) => r.kind === 'VENUE_BILLING')!;
-    // v2 waterfall on 5000 with venue bill 1500: host remainder 2525.43 −10%
-    // = 2272.89; venue 1500 −20% = 1200. Snapshots frozen at version 2.
-    expect(hostRel.amount_requested).toBe(2272.89);
+    // v2 waterfall on 5000 with venue bill 1500 and the 3% club-admin cut:
+    // host remainder 2404.67 −10%
+    // = 2164.20; venue 1500 −20% = 1200. Snapshots frozen at version 2.
+    expect(hostRel.amount_requested).toBe(2164.2);
     expect(hostRel.status).toBe('APPROVED');
     expect(hostRel.approval_reason).toBe('Auto-approved on pod completion');
-    expect(hostRel.breakdown?.payout_amount).toBe(2272.89);
+    expect(hostRel.breakdown?.payout_amount).toBe(2164.2);
     expect(hostRel.breakdown?.version).toBe(2);
-    expect(hostRel.breakdown?.share_amount).toBe(2525.43);
-    expect(hostRel.breakdown?.share_pct).toBe(62.74); // of the pool, derived
-    expect(hostRel.breakdown?.duncit_revenue).toBe(764.4);
+    expect(hostRel.breakdown?.share_amount).toBe(2404.67);
+    expect(hostRel.breakdown?.share_pct).toBe(59.74); // of the pool, derived
+    expect(hostRel.breakdown?.duncit_revenue).toBe(873.09);
     expect(venueRel.status).toBe('APPROVED');
     expect(venueRel.amount_requested).toBe(1200);
     expect(venueRel.breakdown?.version).toBe(2);
@@ -282,7 +290,7 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     );
     const hostWallet = await WalletModel.findOne({ user_id: host._id });
     const ownerWallet = await WalletModel.findOne({ user_id: owner._id });
-    expect(hostWallet!.balance).toBe(2272.89);
+    expect(hostWallet!.balance).toBe(2164.2);
     expect(ownerWallet!.balance).toBe(1200);
     const venueTxn = await WalletTransactionModel.findOne({ user_id: owner._id });
     expect(venueTxn!.source).toBe('POD_COMPLETION');
@@ -469,7 +477,7 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     expect(result.settlement.has_venue).toBe(false);
     expect(result.releases).toHaveLength(1);
     expect(result.releases[0].kind).toBe('HOST_PAYMENT');
-    // Whole pool 805.09 to the host, −10% commission → 724.58.
-    expect(result.releases[0].amount_requested).toBe(724.58);
+    // Pool 805.09 − 3% club admin = 780.94 to the host, −10% commission → 702.85.
+    expect(result.releases[0].amount_requested).toBe(702.85);
   });
 });

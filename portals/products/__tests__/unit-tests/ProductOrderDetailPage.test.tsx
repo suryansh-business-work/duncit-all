@@ -3,6 +3,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProductOrderDetailPage from '../../src/pages/orders/ProductOrderDetailPage';
+import { CREATE_PRODUCT_ORDER_SHIPMENT } from '../../src/pages/orders/queries';
 import { renderWithProviders } from '../testkit';
 import {
   advanceStatusMock,
@@ -97,8 +98,26 @@ describe('ProductOrderDetailPage', () => {
     await waitFor(() => expect(screen.getByText('PO-1')).toBeInTheDocument());
     panel.props?.onCreateShipment();
     await waitFor(() => expect(screen.getByTestId('ship-dialog')).toBeInTheDocument());
-    await shipment.props?.onConfirm('loc1');
-    await waitFor(() => expect(screen.getByText('Shipment created')).toBeInTheDocument());
+    await shipment.props?.onConfirm('Main');
+    await waitFor(() =>
+      expect(screen.getByText('Shipment booked with ShipRocket')).toBeInTheDocument(),
+    );
+    await waitFor(() => expect(screen.queryByTestId('ship-dialog')).not.toBeInTheDocument());
+  });
+
+  it('reports a courier refusal instead of a booked shipment', async () => {
+    // Booking resolves even when ShipRocket refuses; the reason comes back on the order.
+    const refused: MockedResponse = {
+      request: { query: CREATE_PRODUCT_ORDER_SHIPMENT, variables: () => true },
+      result: { data: { createProductOrderShipment: makeProductOrder({ last_error: 'Pickup not found' }) } },
+    };
+    renderPage([productOrderMock(order), refused]);
+    await waitFor(() => expect(screen.getByText('PO-1')).toBeInTheDocument());
+    panel.props?.onCreateShipment();
+    await waitFor(() => expect(screen.getByTestId('ship-dialog')).toBeInTheDocument());
+    await shipment.props?.onConfirm('Main');
+    await waitFor(() => expect(screen.getByText('Pickup not found')).toBeInTheDocument());
+    expect(screen.queryByText('Shipment booked with ShipRocket')).not.toBeInTheDocument();
   });
 
   it('opens and closes the shipment dialog', async () => {

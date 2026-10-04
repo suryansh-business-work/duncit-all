@@ -21,11 +21,11 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
 
 const req = makeCallbackRequest({ reason: 'call me', pod: null });
 
-// No phone + a present pod exercises the opposite optional-field branches.
+// No phone + no reason exercises the em-dash fallbacks of the optional cells.
 const bareReq = makeCallbackRequest({
   id: 'cb-2',
   ticket_no: 'CB-BBB222',
-  reason: 'call me',
+  reason: '',
   contact_phone: '',
   user: makeCallbackActor({ id: 'u2', name: 'Dev', phone: null }),
   pod: makeCallbackPod({ id: 'p2', title: 'Sunday Brunch' }),
@@ -50,8 +50,11 @@ describe('CallbacksListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
     expect(screen.getByText('CB-AAA111')).toBeInTheDocument();
-    // Nullable pod cell: title when present, em-dash otherwise.
-    expect(screen.getByText('Sunday Brunch')).toBeInTheDocument();
+    // The reason column shows the request's reason; an empty phone and an
+    // empty reason each fall back to an em-dash.
+    expect(screen.getByText('call me')).toBeInTheDocument();
+    expect(screen.getByText('Dev')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(2);
     act(() => {
       sockMock.events.onCallback();
       sockMock.events.onCallbackUpdate();

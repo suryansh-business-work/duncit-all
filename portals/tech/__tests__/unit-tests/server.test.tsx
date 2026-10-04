@@ -3,8 +3,20 @@ import { render, screen } from '@testing-library/react';
 import { formatBytes, formatDate, formatDateTime, formatUptime } from '../../src/pages/server/format';
 import InfoList from '../../src/pages/server/InfoList';
 import ServerInfoDetails from '../../src/pages/server/ServerInfoDetails';
-import { SERVER_INFO, DOCKER_INFO, apiHost, hostFromUrl } from '../../src/pages/server/queries';
+import { SERVER_INFO, DOCKER_INFO, apiHost, hostFromUrl, type ServerInfo } from '../../src/pages/server/queries';
 import { makeServerInfo } from '../mocks/server.mock';
+
+// The shared factory predates swap and inode reporting; fill those in here so the
+// details panel gets the full ServerInfo it renders.
+const GIB = 1024 ** 3;
+const info = (over: Partial<ServerInfo> = {}): ServerInfo => {
+  const base = makeServerInfo();
+  return makeServerInfo({
+    swap: { totalBytes: 2 * GIB, freeBytes: 1.5 * GIB, usedBytes: 0.5 * GIB, usagePercent: 25 },
+    disk: { ...base.disk, inodeUsagePercent: 12 },
+    ...over,
+  });
+};
 
 describe('server format helpers', () => {
   it('formats bytes across unit ranges and edge values', () => {
@@ -64,19 +76,22 @@ describe('InfoList', () => {
 
 describe('ServerInfoDetails', () => {
   it('renders a valid certificate, CPU clock and external network', () => {
-    render(<ServerInfoDetails info={makeServerInfo()} />);
+    render(<ServerInfoDetails info={info()} />);
     expect(screen.getByText('srv912221')).toBeInTheDocument();
     expect(screen.getByText('Valid & trusted')).toBeInTheDocument();
     expect(screen.getByText("Let's Encrypt")).toBeInTheDocument();
     expect(screen.getByText('148.135.136.107')).toBeInTheDocument();
     expect(screen.getByText('2.40 GHz')).toBeInTheDocument();
+    expect(screen.getByText('512 MB of 2 GB (25%)')).toBeInTheDocument();
+    expect(screen.getByText('12%')).toBeInTheDocument();
   });
 
   it('handles an untrusted cert, missing fields and no external network', () => {
     render(
       <ServerInfoDetails
-        info={makeServerInfo({
+        info={info({
           cpu: { ...makeServerInfo().cpu, speedMhz: 0 },
+          swap: { totalBytes: 0, freeBytes: 0, usedBytes: 0, usagePercent: 0 },
           network: [{ name: 'lo', address: '127.0.0.1', family: 'IPv4', internal: true }],
           ssl: {
             host: 'server.duncit.com',
@@ -94,12 +109,13 @@ describe('ServerInfoDetails', () => {
     );
     expect(screen.getByText('Not trusted')).toBeInTheDocument();
     expect(screen.getByText('No external network interfaces detected.')).toBeInTheDocument();
+    expect(screen.getByText('No swap configured')).toBeInTheDocument();
   });
 
   it('shows the probe error when SSL lookup failed', () => {
     render(
       <ServerInfoDetails
-        info={makeServerInfo({
+        info={info({
           ssl: {
             host: 'server.duncit.com',
             valid: false,
@@ -118,7 +134,7 @@ describe('ServerInfoDetails', () => {
   });
 
   it('falls back when no SSL info is present', () => {
-    render(<ServerInfoDetails info={makeServerInfo({ ssl: null })} />);
+    render(<ServerInfoDetails info={info({ ssl: null })} />);
     expect(screen.getByText('No certificate information available.')).toBeInTheDocument();
   });
 });

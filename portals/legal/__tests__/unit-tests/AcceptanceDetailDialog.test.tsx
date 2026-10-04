@@ -37,7 +37,9 @@ function Harness() {
 const openRecord = async (mocks: MockedResponse[]) => {
   renderWithProviders(<Harness />, { mocks });
   fireEvent.click(screen.getByTestId('open-record'));
-  return screen.findByRole('dialog');
+  // The dialog mounts synchronously on open; reading it at once keeps the
+  // pre-response (spinner) state observable before the mocked query settles.
+  return screen.getByRole('dialog');
 };
 
 describe('AcceptanceDetailDialog — a full record', () => {

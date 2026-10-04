@@ -20,6 +20,15 @@ const validInput = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** A city with every field the Location schema requires. */
+const seedCity = (location_id: string, location_name: string, location_pincode: string) =>
+  LocationModel.create({
+    location_id,
+    location_name,
+    location_pincode,
+    location_image: `https://ik.imagekit.io/duncit/${location_id}.jpg`,
+  });
+
 describe('officialStatusService', () => {
   describe('create — expiry', () => {
     it('NEVER never expires', async () => {
@@ -89,7 +98,7 @@ describe('officialStatusService', () => {
     });
 
     it('dedupes repeated city ids and stores each city once', async () => {
-      const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
+      const pune = await seedCity('pune', 'Pune', '411001');
       const created = await officialStatusService.create(
         validInput({
           scope: 'LOCATION',
@@ -100,8 +109,8 @@ describe('officialStatusService', () => {
     });
 
     it('stores every chosen city for a LOCATION status', async () => {
-      const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
-      const mumbai = await LocationModel.create({ location_id: 'mumbai', location_name: 'Mumbai' });
+      const pune = await seedCity('pune', 'Pune', '411001');
+      const mumbai = await seedCity('mumbai', 'Mumbai', '400001');
       const created = await officialStatusService.create(
         validInput({
           scope: 'LOCATION',
@@ -114,7 +123,7 @@ describe('officialStatusService', () => {
     });
 
     it('drops the location list entirely when the scope is GLOBAL, even if ids were sent', async () => {
-      const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
+      const pune = await seedCity('pune', 'Pune', '411001');
       const created = await officialStatusService.create(
         validInput({ scope: 'GLOBAL', location_ids: [String(pune._id)] }) as any
       );
@@ -186,7 +195,7 @@ describe('officialStatusService', () => {
     });
 
     it('only includes a LOCATION status for a matching city', async () => {
-      const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
+      const pune = await seedCity('pune', 'Pune', '411001');
       await officialStatusService.create(
         validInput({ title: 'Pune only', scope: 'LOCATION', location_ids: [String(pune._id)] }) as any
       );
@@ -265,8 +274,8 @@ describe('officialStatusService', () => {
     });
 
     it('returns the matching names, in input order, dropping a city that no longer exists', async () => {
-      const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
-      const mumbai = await LocationModel.create({ location_id: 'mumbai', location_name: 'Mumbai' });
+      const pune = await seedCity('pune', 'Pune', '411001');
+      const mumbai = await seedCity('mumbai', 'Mumbai', '400001');
       const ghost = new Types.ObjectId().toString();
       const names = await officialStatusService.locationNames([
         String(mumbai._id),
@@ -375,7 +384,7 @@ describe('officialStatus resolver — success paths', () => {
 
 describe('OfficialStatus field resolvers', () => {
   it('location_names resolves the chosen cities', async () => {
-    const pune = await LocationModel.create({ location_id: 'pune', location_name: 'Pune' });
+    const pune = await seedCity('pune', 'Pune', '411001');
     const names = await officialStatusResolvers.OfficialStatus.location_names({
       location_ids: [String(pune._id)],
     });

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 /**
  * A lightweight stand-in for `@duncit/table`.
@@ -31,10 +31,14 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
   const { columns, fetchRows, getRowId, onRowClick, emptyText, defaultSort, refetchRef } = props;
   const [rows, setRows] = useState<unknown[]>([]);
   const [search, setSearch] = useState('');
+  // Read through a ref, as the real DuncitTable does (useTableQuery's fetchRef):
+  // a reload after the page swaps fetchRows must use the new one.
+  const fetchRef = useRef(fetchRows);
+  fetchRef.current = fetchRows;
 
   const load = (term = search) => {
     Promise.resolve(
-      fetchRows({
+      fetchRef.current({
         search: term,
         page: 1,
         pageSize: 50,

@@ -6,6 +6,7 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { MemoryRouter } from 'react-router';
 import { gql } from '@apollo/client';
 import { GraphQLError } from 'graphql';
 import ProductListingsTable from './ProductListingsTable';
@@ -93,7 +94,8 @@ interface Handlers {
 }
 
 // The ad dialog's media picker reads the theme's breakpoints, and MUI's
-// useTheme() is null outside a provider — the portal chrome supplies one.
+// useTheme() is null outside a provider — the portal chrome supplies one. Its
+// tabs keep their selection in the URL, so it needs the router the app mounts.
 const theme = createTheme();
 
 
@@ -107,18 +109,20 @@ const noDeletionRequests: MockedResponse = {
 const renderTable = (mocks: MockedResponse[], handlers: Handlers = {}) => {
   const { onEdit = vi.fn(), canManageProducts = true, ...rest } = handlers;
   return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, noDeletionRequests]}>
-      <ThemeProvider theme={theme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <ProductListingsTable
-            brandId="b1"
-            canManageProducts={canManageProducts}
-            onEdit={onEdit}
-            {...rest}
-          />
-        </LocalizationProvider>
-      </ThemeProvider>
-    </MockedProvider>,
+    <MemoryRouter>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks, noDeletionRequests]}>
+        <ThemeProvider theme={theme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <ProductListingsTable
+              brandId="b1"
+              canManageProducts={canManageProducts}
+              onEdit={onEdit}
+              {...rest}
+            />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </MockedProvider>
+    </MemoryRouter>,
   );
 };
 

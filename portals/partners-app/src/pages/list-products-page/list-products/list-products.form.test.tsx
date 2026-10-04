@@ -30,6 +30,8 @@ const savedProduct = listingRow({
     },
   ],
   free_delivery_above: 999,
+  // A ShipRocket listing must carry its GST HSN code before the Product step passes.
+  hsn_code: '6109',
 });
 
 const baseMocks = [categoriesMock, warehousesMock([warehouseRow()])];
@@ -110,6 +112,7 @@ describe('ListProductsForm — editing a listing', () => {
         free_delivery_above: 999,
         commission_pct: 12,
         inventory_count: 12,
+        hsn_code: '6109',
       },
     });
     // An edit keeps what was saved on screen.

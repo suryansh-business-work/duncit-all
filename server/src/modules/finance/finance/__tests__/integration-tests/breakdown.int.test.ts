@@ -135,14 +135,18 @@ describe('breakdownService.podFinanceBreakdown', () => {
     expect(w.gst_amount).toBe(152.54);
     expect(w.platform_fee_amount).toBe(42.37);
     expect(w.pool_amount).toBe(805.09);
+    // The shipped Default Deductions take a 3% club-admin cut off the pool
+    // (after GST + platform fee) before the venue/host split.
+    expect(w.club_admin_pct).toBe(3);
+    expect(w.club_admin_amount).toBe(24.15); // 805.09 × 3%
     expect(w.venue_amount).toBe(300); // the booked slot price (Partners portal)
     expect(w.venue_commission_amount).toBe(30);
     expect(w.venue_receives).toBe(270);
-    expect(w.host_amount).toBe(505.09); // the remainder is the host's
-    expect(w.host_commission_amount).toBe(50.51);
-    expect(w.host_receives).toBe(454.58);
-    expect(w.duncit_revenue).toBe(122.88);
-    expect(w.host_earn_pct).toBe(45.46);
+    expect(w.host_amount).toBe(480.94); // the remainder (805.09 − 24.15 − 300) is the host's
+    expect(w.host_commission_amount).toBe(48.09);
+    expect(w.host_receives).toBe(432.85);
+    expect(w.duncit_revenue).toBe(144.61); // 42.37 fee + 48.09 + 30 + 24.15 club admin
+    expect(w.host_earn_pct).toBe(43.29);
   });
 
   it('freezes the snapshot at completion and keeps it frozen through rate changes', async () => {
@@ -159,7 +163,7 @@ describe('breakdownService.podFinanceBreakdown', () => {
     expect(view.settlement_status).toBe('SETTLED');
     expect(view.frozen).toBe(true);
     expect(view.completed_at).not.toBeNull();
-    expect(view.waterfall.host_receives).toBe(454.58);
+    expect(view.waterfall.host_receives).toBe(432.85);
     expect(view.waterfall.venue_receives).toBe(270);
 
     // A later rate change must NOT rewrite the frozen numbers.
@@ -168,8 +172,8 @@ describe('breakdownService.podFinanceBreakdown', () => {
       { $set: { platform_fee_pct: 20, default_host_commission_pct: 50 } }
     );
     view = await breakdownService.podFinanceBreakdown(String(pod._id));
-    expect(view.waterfall.host_receives).toBe(454.58);
-    expect(view.waterfall.duncit_revenue).toBe(122.88);
+    expect(view.waterfall.host_receives).toBe(432.85);
+    expect(view.waterfall.duncit_revenue).toBe(144.61);
     await FinanceSettingsModel.updateOne(
       { singleton_key: 'finance' },
       { $set: { platform_fee_pct: 5, default_host_commission_pct: 10 } }
@@ -288,9 +292,9 @@ describe('breakdownService.potentialPodEarnings', () => {
     expect(w.venue_commission_pct).toBe(5);
     expect(w.venue_amount).toBe(300);
     expect(w.venue_receives).toBe(285); // 300 − 5%
-    expect(w.host_amount).toBe(505.09); // pool 805.09 − 300
-    expect(w.host_receives).toBe(404.07); // − 20% commission
-    expect(w.host_earn_pct).toBe(40.41);
+    expect(w.host_amount).toBe(480.94); // pool 805.09 − 3% club admin (24.15) − 300
+    expect(w.host_receives).toBe(384.75); // − 20% commission
+    expect(w.host_earn_pct).toBe(38.48);
   });
 
   it('applies the club-admin cut off the pool after GST + platform fee (into Duncit revenue)', async () => {
@@ -328,8 +332,8 @@ describe('breakdownService.potentialPodEarnings', () => {
       300
     );
     expect(w.venue_amount).toBe(0); // no venue → no venue money
-    expect(w.host_amount).toBe(805.09); // whole pool
-    expect(w.host_receives).toBe(724.58);
+    expect(w.host_amount).toBe(780.94); // whole pool less the 3% club-admin cut
+    expect(w.host_receives).toBe(702.85);
     await expect(breakdownService.potentialPodEarnings(String(host._id), -5, 2)).rejects.toThrow(
       /amount/i
     );
@@ -358,10 +362,10 @@ describe('earnings summaries', () => {
 
     // Completion auto-approves every release: nothing stays pending.
     const hostSummary = await breakdownService.hostEarningsSummary(String(host._id));
-    expect(hostSummary.lifetime_earnings).toBe(454.58);
+    expect(hostSummary.lifetime_earnings).toBe(432.85);
     expect(hostSummary.pending_amount).toBe(0);
     expect(hostSummary.pods_completed).toBe(1);
-    expect(hostSummary.this_month_earnings).toBe(454.58);
+    expect(hostSummary.this_month_earnings).toBe(432.85);
 
     const venueSummary = await breakdownService.venueEarningsSummary(String(host._id));
     expect(venueSummary.lifetime_earnings).toBe(270);
@@ -390,7 +394,7 @@ describe('finance resolvers (new breakdown surface)', () => {
       { pod_id: String(pod._id) },
       makeContext({ id: String(host._id), roles: ['USER'] })
     );
-    expect(asHost.waterfall.host_receives).toBe(454.58);
+    expect(asHost.waterfall.host_receives).toBe(432.85);
 
     const asAdmin = await Q.podFinanceBreakdown(
       {},
@@ -410,7 +414,7 @@ describe('finance resolvers (new breakdown surface)', () => {
     // 2 spots → 1 payable (host's seat is free) → ₹1,000 gross.
     const p = await Q.potentialPodEarnings({}, { pod_amount: 1000, no_of_spots: 2 }, ctx);
     expect(p.payable_spots).toBe(1);
-    expect(p.waterfall.host_receives).toBe(724.58); // no venue → whole pool − 10%
+    expect(p.waterfall.host_receives).toBe(702.85); // no venue → pool − 3% club admin − 10%
 
     expect((await Q.myHostEarningsSummary({}, {}, ctx)).lifetime_earnings).toBe(0);
     expect((await Q.myVenueEarningsSummary({}, {}, ctx)).lifetime_earnings).toBe(0);
@@ -543,9 +547,9 @@ describe('breakdownService.dashboardStats', () => {
     expect(stats.total_revenue.total).toBeGreaterThanOrEqual(1000);
     expect(stats.total_revenue.this_month).toBeGreaterThanOrEqual(1000);
     expect(stats.gst_collected.this_month).toBeGreaterThanOrEqual(152.54);
-    expect(stats.duncit_revenue.this_month).toBeGreaterThanOrEqual(122.88);
-    // Both payouts (host 454.58 + venue 270) complete immediately.
-    expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(724.58);
+    expect(stats.duncit_revenue.this_month).toBeGreaterThanOrEqual(144.61);
+    // Both payouts (host 432.85 + venue 270) complete immediately.
+    expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(702.85);
     // Nothing last month yet → +100% growth branch.
     expect(stats.total_revenue.mom_change_pct).toBe(100);
     expect(stats.pod_expenses.total).toBe(420);
@@ -557,7 +561,7 @@ describe('breakdownService.dashboardStats', () => {
     lastMonth.setMonth(lastMonth.getMonth() - 1, 15);
     await PaymentReleaseModel.updateOne({ _id: hostRel!._id }, { $set: { reviewed_at: lastMonth } });
     stats = await breakdownService.dashboardStats();
-    expect(stats.completed_payouts.last_month).toBeGreaterThanOrEqual(454.58);
-    expect(stats.duncit_revenue.last_month).toBeGreaterThanOrEqual(122.88);
+    expect(stats.completed_payouts.last_month).toBeGreaterThanOrEqual(432.85);
+    expect(stats.duncit_revenue.last_month).toBeGreaterThanOrEqual(144.61);
   });
 });

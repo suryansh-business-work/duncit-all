@@ -4,6 +4,7 @@ import { shortLinkService } from '../../shortLink.service';
 import { shortLinkResolvers } from '../../shortLink.resolver';
 import { buildShortLinkRouter } from '../../shortLink.router';
 import { ShortLinkModel } from '../../shortLink.model';
+import { ShortLinkClickModel } from '../../shortLinkClick.model';
 import { MarketingCampaignModel } from '../../marketing.model';
 import { makeContext } from '@test/harness';
 
@@ -89,11 +90,24 @@ describe('shortLinkService.create', () => {
     expect(link.medium_other).toBeNull();
   });
 
-  // duncit.com/<code> carries our brand — it may not be pointed elsewhere.
-  it('refuses a destination that is not ours', async () => {
+  // duncit.com/<code> carries our brand — it may point at a public https site,
+  // but never somewhere the public internet cannot reach, nor over plain http.
+  it('refuses an external destination that is not public https', async () => {
     await expect(
       shortLinkService.create({ ...base, destination_url: 'https://evil.example/free' }, null),
-    ).rejects.toThrow(/may only point at a Duncit site/i);
+    ).rejects.toThrow(/not reachable on the public internet/i);
+    await expect(
+      shortLinkService.create({ ...base, destination_url: 'http://www.partner-site.com/offer' }, null),
+    ).rejects.toThrow(/has to be https/i);
+  });
+
+  it('marks a public https destination that is not ours as external', async () => {
+    const link = await shortLinkService.create(
+      { ...base, destination_url: 'https://www.partner-site.com/offer' },
+      null,
+    );
+    expect(link.is_external).toBe(true);
+    expect(link.destination_url).toBe('https://www.partner-site.com/offer');
   });
 
   it('allows the app stores, for install campaigns', async () => {
@@ -322,29 +336,50 @@ describe('shortLink resolvers', () => {
 
 describe('recordShortLinkJourney is public', () => {
   const M = shortLinkResolvers.Mutation as any;
+  // A funnel step is marketing attribution: it is written only with consent.
+  const consented = (...args: Parameters<typeof makeContext>) => ({
+    ...makeContext(...args),
+    consent: { analytics: false, marketing: true },
+  });
+
+  const mintClick = async () => {
+    const link = await shortLinkService.create(base, null);
+    const app = express();
+    app.use('/r', buildShortLinkRouter());
+    const minted = await request(app).get('/r/v').query({ dl: link.code });
+    return { link, clickId: minted.body.click_id as string };
+  };
 
   // Most of this funnel happens before anyone signs in, so requiring auth
   // would make the anonymous half unmeasurable. The false answer is "unknown
   // click", not a refusal — the point is that no access check threw.
   it('accepts a step from a signed-out visitor', async () => {
     expect(
-      await M.recordShortLinkJourney({}, { click_id: 'c-x', step: 'LANDED' }, makeContext()),
+      await M.recordShortLinkJourney({}, { click_id: 'c-x', step: 'LANDED' }, consented()),
     ).toBe(false);
   });
 
   it('accepts a step from a signed-in visitor and binds the account', async () => {
-    const link = await shortLinkService.create(base, null);
-    const app = express();
-    app.use('/r', buildShortLinkRouter());
-    const minted = await request(app).get('/r/v').query({ dl: link.code });
-    const clickId = minted.body.click_id as string;
+    const { link, clickId } = await mintClick();
 
-    const ctx = makeContext({ roles: ['USER'] });
+    const ctx = consented({ roles: ['USER'] });
     expect(
       await M.recordShortLinkJourney({}, { click_id: clickId, step: 'SIGNED_UP' }, ctx),
     ).toBe(true);
     const journey = await shortLinkService.clicks(link.id, null);
     expect(journey.total).toBe(1);
+  });
+
+  it('records nothing for a visitor who has not allowed marketing', async () => {
+    const { clickId } = await mintClick();
+    const ctx = { ...makeContext({ roles: ['USER'] }), consent: { analytics: true, marketing: false } };
+    expect(
+      await M.recordShortLinkJourney({}, { click_id: clickId, step: 'SIGNED_UP' }, ctx),
+    ).toBe(false);
+    const click = await ShortLinkClickModel.findOne({ click_id: clickId }).lean();
+    expect(click).not.toBeNull();
+    expect(click?.journey.map((j) => j.step)).not.toContain('SIGNED_UP');
+    expect(click?.user_id ?? null).toBeNull();
   });
 });
 

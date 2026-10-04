@@ -153,22 +153,27 @@ const save = async (apiRef: { current: Api | null }, section: EditableSectionKey
 };
 
 describe('useRegisterVenueForm — section completion', () => {
-  it('marks only the sections with no required fields complete for a blank draft', () => {
+  it('marks every section incomplete for a blank draft, amenities included until one is picked', () => {
     const { apiRef } = mount();
     expect(apiRef.current?.venueId).toBeNull();
     expect(apiRef.current?.active).toBe('details');
     expect(apiRef.current?.sectionState).toEqual({
       details: 'incomplete',
       'type-capacity': 'incomplete',
-      amenities: 'complete',
+      amenities: 'incomplete',
       documents: 'incomplete',
       owner: 'incomplete',
       payout: 'incomplete',
     });
   });
 
-  it('marks every section complete once a stored venue hydrates the form', () => {
+  it('leaves amenities incomplete for a stored venue that picked none — every group is optional', () => {
     const { apiRef } = mount({ venue: savedVenue });
+    expect(apiRef.current?.sectionState).toMatchObject({ details: 'complete', amenities: 'incomplete', payout: 'complete' });
+  });
+
+  it('marks every section complete once a stored venue with a picked amenity hydrates the form', () => {
+    const { apiRef } = mount({ venue: { ...savedVenue, amenities: ['AC'] } });
     expect(apiRef.current?.venueId).toBe('venue-1');
     expect(apiRef.current?.sectionState).toEqual({
       details: 'complete',

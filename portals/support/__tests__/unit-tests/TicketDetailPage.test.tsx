@@ -28,11 +28,22 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
   },
 }));
 
-vi.mock('react-quill', () => ({
-  default: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
-    <textarea data-testid="quill" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
+// The editable composer is swapped for a textarea (ProseMirror cannot be typed
+// into under jsdom); read-only message bubbles keep the real shared editor.
+vi.mock('@duncit/rich-text', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@duncit/rich-text')>();
+  const Editor = (props: Parameters<typeof actual.DuncitRichTextInput>[0]) =>
+    props.readOnly ? (
+      <actual.DuncitRichTextInput {...props} />
+    ) : (
+      <textarea
+        data-testid="reply-editor"
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value, actual.htmlToText(e.target.value))}
+      />
+    );
+  return { ...actual, DuncitRichTextInput: Editor };
+});
 
 const ID = 't1';
 
@@ -109,7 +120,7 @@ describe('TicketDetailPage', () => {
     const withReply = makeTicket({ messages: [...baseTicketMessages(), agentReply()] });
     renderAt([ticketMock(makeTicket()), replyToTicketMock(), ticketMock(withReply), ticketMock(withReply)]);
     await waitFor(() => expect(screen.getByText('My card fails')).toBeInTheDocument());
-    fireEvent.change(screen.getByTestId('quill'), { target: { value: '<p>Try again now</p>' } });
+    fireEvent.change(screen.getByTestId('reply-editor'), { target: { value: '<p>Try again now</p>' } });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
     await waitFor(() => expect(screen.getByText('Try again now')).toBeInTheDocument());
   });
@@ -234,7 +245,7 @@ describe('TicketDetailPage', () => {
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
 
     // No reply composer is shown — the prominent Close button is instead.
-    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('reply-editor')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
     await waitFor(() => expect(screen.getByRole('heading', { name: /close this support ticket\?/i })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /close ticket/i }));
@@ -242,7 +253,7 @@ describe('TicketDetailPage', () => {
     // After closing it is permanently read-only — no composer, no Close button.
     await waitFor(() => expect(screen.getByText(/closed and read-only/i)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('reply-editor')).not.toBeInTheDocument();
   });
 
   it('surfaces a close error in the snackbar (Item 17)', async () => {
@@ -259,7 +270,7 @@ describe('TicketDetailPage', () => {
   it('shows a read-only notice (no composer, no Close button) on a CLOSED ticket', async () => {
     renderAt([ticketMock(makeTicket({ status: 'CLOSED' }))]);
     await waitFor(() => expect(screen.getByText(/closed and read-only/i)).toBeInTheDocument());
-    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('reply-editor')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
   });
 

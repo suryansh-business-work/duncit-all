@@ -106,6 +106,7 @@ describe('potentialPodEarnings — the preview never auto-reduces the venue pric
     const host = await seedHost();
     const venue = await seedVenue(host._id);
     // 2 spots → 1 payable → ₹1,000 gross; pool 805.09 ≪ venue price 5,000.
+    // The shipped 3% club-admin cut (24.15) comes off the pool first.
     const { waterfall: w } = await breakdownService.potentialPodEarnings(
       String(host._id),
       1000,
@@ -116,8 +117,9 @@ describe('potentialPodEarnings — the preview never auto-reduces the venue pric
     expect(w.pool_amount).toBe(805.09);
     expect(w.venue_amount).toBe(5000); // NOT clamped to the pool
     expect(w.venue_receives).toBe(4500); // full price − 10% commission
-    expect(w.host_amount).toBe(-4194.91); // the honest shortfall
-    expect(w.host_receives).toBe(-4194.91); // no commission on a shortfall
+    expect(w.club_admin_amount).toBe(24.15);
+    expect(w.host_amount).toBe(-4219.06); // the honest shortfall: 780.94 − 5,000
+    expect(w.host_receives).toBe(-4219.06); // no commission on a shortfall
     expect(w.host_earn_pct).toBeLessThan(0);
   });
 
@@ -132,18 +134,19 @@ describe('potentialPodEarnings — the preview never auto-reduces the venue pric
       300
     );
     expect(w.venue_amount).toBe(300);
-    expect(w.host_amount).toBe(505.09);
-    expect(w.host_receives).toBe(454.58);
+    expect(w.host_amount).toBe(480.94); // 805.09 − 3% club admin − 300
+    expect(w.host_receives).toBe(432.85);
   });
 });
 
 describe('breakdownService.suggestedTicketPrices', () => {
   it('returns the first five ₹x99 candidates with strictly positive host payout (no venue)', async () => {
     const host = await seedHost();
-    // 2 spots → 1 payable; ₹99 already earns the host ₹71.73.
+    // 2 spots → 1 payable; ₹99 already earns the host ₹69.58 (after the 3%
+    // club-admin cut and the 10% host commission).
     const rows = await breakdownService.suggestedTicketPrices(String(host._id), 2);
     expect(rows.map((r) => r.price)).toEqual([99, 199, 299, 399, 499]);
-    expect(rows[0]!.host_receives).toBe(71.73);
+    expect(rows[0]!.host_receives).toBe(69.58);
     for (const row of rows) expect(row.host_receives).toBeGreaterThan(0);
   });
 
@@ -154,7 +157,7 @@ describe('breakdownService.suggestedTicketPrices', () => {
     // ₹399 is the first strictly positive payout.
     const rows = await breakdownService.suggestedTicketPrices(String(host._id), 2, String(venue._id), 300);
     expect(rows.map((r) => r.price)).toEqual([399, 499, 599, 699, 799]);
-    expect(rows[0]!.host_receives).toBe(19.11);
+    expect(rows[0]!.host_receives).toBe(10.43);
     for (const row of rows) expect(row.host_receives).toBeGreaterThan(0);
   });
 

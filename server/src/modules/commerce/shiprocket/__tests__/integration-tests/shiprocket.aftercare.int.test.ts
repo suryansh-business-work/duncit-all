@@ -144,7 +144,9 @@ describe('a buyer return', () => {
     const failed = await StoreReturnModel.findById(ret._id).orFail();
     expect(failed.status).toBe('APPROVED');
     expect(failed.pickup.status).toBe('FAILED');
-    expect(failed.pickup.last_error).toBe('ShipRocket: ShipRocket answered 422');
+    expect(failed.pickup.last_error).toBe(
+      'ShipRocket refused createReturn (/orders/create/return, HTTP 422): ShipRocket answered 422.'
+    );
     expect(sr.count('POST', '/courier/assign/awb')).toBe(0);
   });
 });

@@ -76,13 +76,22 @@ describe('InventoryManagementSection', () => {
   });
 });
 
+// Only a warehouse on the ShipRocket account can be picked (and preselected).
+const duncitWarehouse = () =>
+  makeBrandPickupLocation({
+    owner_kind: 'DUNCIT',
+    brand_id: null,
+    shiprocket_registered: true,
+    shiprocket_error: '',
+  });
+
 describe('DeliveryAvailabilitySection', () => {
   it('enables the delivery charge only when delivery is available and shows the warehouse picker', async () => {
     renderWithProviders(
       <ProductFormHarness>
         <DeliveryAvailabilitySection />
       </ProductFormHarness>,
-      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+      { mocks: [brandPickupLocationsMock([duncitWarehouse()])] },
     );
     const charge = screen.getByLabelText(/Delivery charge/i);
     expect(charge).toBeDisabled();
@@ -101,7 +110,7 @@ describe('DeliveryAvailabilitySection', () => {
       <ProductFormHarness values={{ delivery_target: 'SHIPROCKET', delivery_available: true }}>
         <DeliveryAvailabilitySection />
       </ProductFormHarness>,
-      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+      { mocks: [brandPickupLocationsMock([duncitWarehouse()])] },
     );
     // ShipRocket prices the parcel live from the warehouse, so the flat number
     // is only what is charged when the lane cannot be rated — the hint must not
@@ -117,10 +126,11 @@ describe('DeliveryAvailabilitySection', () => {
       <ProductFormHarness values={{ ownership: 'BRAND' }}>
         <DeliveryAvailabilitySection />
       </ProductFormHarness>,
-      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+      { mocks: [brandPickupLocationsMock([duncitWarehouse()])] },
     );
-    // Shipping dimensions still render; the Duncit-only warehouse select does not.
-    expect(screen.getByLabelText(/Weight/i)).toBeInTheDocument();
+    // The delivery charge still renders; the Duncit-only warehouse select does not.
+    // (Parcel weight and dimensions live in the Shipping & packaging section now.)
+    expect(screen.getByLabelText(/Delivery charge/i)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Main WH — Pune')).not.toBeInTheDocument());
     expect(screen.queryByLabelText(/Warehouse/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Delivery method/i)).not.toBeInTheDocument();

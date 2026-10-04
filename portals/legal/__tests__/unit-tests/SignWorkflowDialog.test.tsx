@@ -66,12 +66,14 @@ const open = (initial: SignableRecord, mocks: MockedResponse[]) => {
   return { onClose, onSigned };
 };
 
-const fillSignature = () => {
+const fillSignature = async () => {
+  // The signature pad only offers a method once the enabled methods have loaded.
+  const typed = await screen.findByLabelText('Type your signature');
   fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: `  ${SIGNER.full_name} ` } });
   fireEvent.change(screen.getByLabelText(/^Designation/), { target: { value: SIGNER.designation } });
   // Initials are capped at twelve characters as they are typed.
   fireEvent.change(screen.getByLabelText(/^Initials/), { target: { value: 'ABCDEFGHIJKLMNOP' } });
-  fireEvent.change(screen.getByLabelText('Type your signature'), { target: { value: SIGNER.full_name } });
+  fireEvent.change(typed, { target: { value: SIGNER.full_name } });
 };
 
 let anchors: { download: string; href: string }[];
@@ -122,7 +124,7 @@ describe('SignWorkflowDialog — an unsigned record', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Signature' }));
     const sign = within(dialog).getByRole('button', { name: 'Sign it' });
     expect(sign).toBeDisabled();
-    fillSignature();
+    await fillSignature();
     expect(screen.getByLabelText(/^Initials/)).toHaveValue(SIGNER.initials);
     expect(sign).toBeEnabled();
     fireEvent.click(sign);
@@ -167,7 +169,7 @@ describe('SignWorkflowDialog — an unsigned record', () => {
       signDocumentErrorMock('The initials do not match the full name.'),
     ]);
     fireEvent.click(screen.getByRole('button', { name: 'Signature' }));
-    fillSignature();
+    await fillSignature();
     fireEvent.click(screen.getByRole('button', { name: 'Sign it' }));
 
     expect(await screen.findByText('The initials do not match the full name.')).toBeInTheDocument();
@@ -184,7 +186,7 @@ describe('SignWorkflowDialog — an unsigned record', () => {
       signDocumentMock(SIGNER, 'doc-1', onSignCall),
     ]);
     fireEvent.click(screen.getByRole('button', { name: 'Signature' }));
-    fillSignature();
+    await fillSignature();
     const sign = screen.getByRole('button', { name: 'Sign it' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));

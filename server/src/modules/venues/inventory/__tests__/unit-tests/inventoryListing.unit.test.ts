@@ -155,7 +155,8 @@ const withRoles = (roles: string[]) => {
 
 beforeEach(() => {
   withRoles(['ECOMM_MANAGER']);
-  brandModel.findById.mockReturnValue(query({ is_active: true }));
+  // Only an active, APPROVED brand may list products.
+  brandModel.findById.mockReturnValue(query({ is_active: true, status: 'APPROVED' }));
   productModel.exists.mockResolvedValue(null);
   activityModel.create.mockResolvedValue({});
   movementModel.create.mockResolvedValue({});
@@ -284,6 +285,14 @@ describe('listing input rules (server-side mirror of the form)', () => {
     await expect(inventoryService.submitProductListing(listingInput(), PARTNER)).rejects.toThrow(
       'This brand is deactivated and cannot list new products'
     );
+  });
+
+  it('blocks a listing for a brand that is not approved yet', async () => {
+    brandModel.findById.mockReturnValue(query({ is_active: true, status: 'PENDING' }));
+    await expect(inventoryService.submitProductListing(listingInput(), PARTNER)).rejects.toThrow(
+      'This brand is not approved yet — products can be listed once it is'
+    );
+    expect(productModel.create).not.toHaveBeenCalled();
   });
 });
 

@@ -51,7 +51,7 @@ const renderPage = (mocks: MockedResponse[] = []) =>
   renderWithProviders(<ReportedContentTab />, { mocks: [reportCategoriesMock(), ...mocks] });
 
 const openRow = async (index: number) => {
-  await screen.findByText('RPT-000123');
+  await screen.findAllByText('RPT-000123');
   fireEvent.click(screen.getAllByTestId('table-row')[index]);
   return screen.findByRole('dialog');
 };
@@ -64,7 +64,7 @@ beforeEach(() => {
 describe('ReportedContentTab — the queue', () => {
   it('shows each report with its snapshot and status', async () => {
     renderPage();
-    await screen.findByText('RPT-000123');
+    await screen.findAllByText('RPT-000123');
     const [photo, video, noPreview] = screen.getAllByTestId('table-row');
 
     expect(within(photo).getAllByText('Story').length).toBeGreaterThan(0);

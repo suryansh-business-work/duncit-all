@@ -25,7 +25,7 @@ function Harness({ children, value = '' }: Readonly<{ children: ReactNode; value
   );
 }
 
-const wh = (over = {}) => makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null, ...over });
+const wh = (over = {}) => makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null, shiprocket_registered: true, shiprocket_error: '', ...over });
 
 describe('WarehouseSelect', () => {
   it('shows the empty hint and surfaces the required error when no warehouse is chosen', async () => {
@@ -36,7 +36,7 @@ describe('WarehouseSelect', () => {
       { mocks: [brandPickupLocationsMock([])] },
     );
     await waitFor(() =>
-      expect(screen.getByText(/No Duncit warehouses yet/i)).toBeInTheDocument(),
+      expect(screen.getByText(/No warehouse is on the ShipRocket account yet/i)).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByRole('button', { name: 'validate' }));
     await waitFor(() => expect(screen.getByText('Warehouse is required')).toBeInTheDocument());
@@ -57,7 +57,7 @@ describe('WarehouseSelect', () => {
       },
     );
     // The default warehouse becomes the selected value (shown in the closed select).
-    await waitFor(() => expect(screen.getByText('Main WH — Pune (default)')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Main WH — Pune (Default)')).toBeInTheDocument());
   });
 
   it('falls back to the first warehouse when none is marked default', async () => {
@@ -77,6 +77,39 @@ describe('WarehouseSelect', () => {
     await waitFor(() => expect(screen.getByText('North WH — Delhi')).toBeInTheDocument());
   });
 
+  it('skips a warehouse ShipRocket does not hold, even when it is the default, and lists it disabled', async () => {
+    renderWithProviders(
+      <Harness>
+        <WarehouseSelect />
+      </Harness>,
+      {
+        mocks: [
+          brandPickupLocationsMock([
+            wh({ id: 'w1', nickname: 'Main WH', city: 'Pune', is_default: true, shiprocket_registered: false }),
+            wh({ id: 'w2', nickname: 'South WH', city: 'Chennai', is_default: false }),
+          ]),
+        ],
+      },
+    );
+    await waitFor(() => expect(screen.getByText('South WH — Chennai')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    const listbox = within(screen.getByRole('listbox'));
+    const unregistered = listbox.getByText('Main WH — Pune (Default)').closest('li');
+    expect(unregistered).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('shows the empty hint when every warehouse is missing from ShipRocket', async () => {
+    renderWithProviders(
+      <Harness>
+        <WarehouseSelect />
+      </Harness>,
+      { mocks: [brandPickupLocationsMock([wh({ id: 'w1', shiprocket_registered: false })])] },
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/No warehouse is on the ShipRocket account yet/i)).toBeInTheDocument(),
+    );
+  });
+
   it('changes the selection when the user picks a different warehouse', async () => {
     renderWithProviders(
       <Harness>
@@ -91,7 +124,7 @@ describe('WarehouseSelect', () => {
         ],
       },
     );
-    await waitFor(() => expect(screen.getByText('North WH — Delhi (default)')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('North WH — Delhi (Default)')).toBeInTheDocument());
     fireEvent.mouseDown(screen.getByRole('combobox'));
     const listbox = within(screen.getByRole('listbox'));
     fireEvent.click(listbox.getByText('South WH — Chennai'));

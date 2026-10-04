@@ -151,6 +151,11 @@ describe('totalsOf', () => {
       venue_receives: 0,
       host_receives: 0,
       duncit_revenue_total: 0,
+      expense_total: 0,
+      expenses: { DUNCIT: 0, HOST: 0, VENUE: 0 },
+      host_net: 0,
+      venue_net: 0,
+      duncit_net: 0,
     });
   });
 });

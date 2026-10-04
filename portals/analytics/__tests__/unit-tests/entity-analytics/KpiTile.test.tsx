@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import KpiTile from '../../../src/pages/entity-analytics/KpiTile';
-import type { AnalyticsKpi } from '../../../src/pages/entity-analytics/queries';
+import KpiTile, { type TilePeriod } from '../../../src/pages/entity-analytics/KpiTile';
+import type { AnalyticsCompare, AnalyticsKpi } from '../../../src/pages/entity-analytics/queries';
 import { byTestId, mount } from '../../dom';
 import { COPY, kpi } from '../../mocks/analytics';
 
-const tileText = async (value: AnalyticsKpi, days = 30) => {
-  await mount(<KpiTile kpi={value} days={days} />);
+const LAST_30: TilePeriod = { days: 30, compare: 'PREVIOUS' };
+
+const tileText = async (value: AnalyticsKpi, days = 30, compare: AnalyticsCompare = 'PREVIOUS') => {
+  await mount(<KpiTile kpi={value} period={{ days, compare }} entity="PODS" />);
   return byTestId(`analytics-kpi-${value.key}`).textContent ?? '';
 };
 
 describe('KpiTile', () => {
   it('names a known number, formats it, and explains it behind an info button', async () => {
-    await mount(<KpiTile kpi={kpi({ key: 'fill_rate', value: 68.4, previous: 61.2, format: 'PERCENT' })} days={30} />);
+    await mount(
+      <KpiTile kpi={kpi({ key: 'fill_rate', value: 68.4, previous: 61.2, format: 'PERCENT' })} period={LAST_30} entity="PODS" />,
+    );
     const tile = byTestId('analytics-kpi-fill_rate');
     expect(tile.textContent).toContain(COPY['analytics.kpi.fillRate']);
     expect(tile.textContent).toContain('68.4%');
@@ -22,6 +26,13 @@ describe('KpiTile', () => {
     const text = await tileText(kpi({ key: 'fill_rate', value: 68.4, previous: 61.2, format: 'PERCENT' }), 30);
     expect(text).toContain('+7.2 pts');
     expect(text).toContain('vs previous 30 days');
+  });
+
+  it('says the move is against the same dates last year when that is the comparison', async () => {
+    const text = await tileText(kpi({ key: 'fill_rate', value: 68.4, previous: 61.2, format: 'PERCENT' }), 30, 'YEAR');
+    expect(text).toContain('+7.2 pts');
+    expect(text).toContain(COPY['analytics.page.vsLastYear']);
+    expect(text).not.toContain('vs previous');
   });
 
   it('shows anything else as a percentage move', async () => {
@@ -49,7 +60,11 @@ describe('KpiTile', () => {
 
   it('shows a rising number that is bad news as bad news', async () => {
     await mount(
-      <KpiTile kpi={kpi({ key: 'cancellation_rate', value: 6, previous: 4, format: 'PERCENT', higher_is_better: false })} days={30} />,
+      <KpiTile
+        kpi={kpi({ key: 'cancellation_rate', value: 6, previous: 4, format: 'PERCENT', higher_is_better: false })}
+        period={LAST_30}
+        entity="PODS"
+      />,
     );
     const tile = byTestId('analytics-kpi-cancellation_rate');
     expect(tile.textContent).toContain('+2 pts');
@@ -58,10 +73,13 @@ describe('KpiTile', () => {
   });
 
   it('uses the raw key, with no info button, for a number the console has no words for', async () => {
-    await mount(<KpiTile kpi={kpi({ key: 'brand_new_metric', value: 3, previous: 5 })} days={30} />);
+    await mount(<KpiTile kpi={kpi({ key: 'brand_new_metric', value: 3, previous: 5 })} period={LAST_30} entity="PODS" />);
     const tile = byTestId('analytics-kpi-brand_new_metric');
     expect(tile.textContent).toContain('brand_new_metric');
-    expect(tile.querySelector('button')).toBeNull();
+    expect(tile.querySelector('[data-testid="InfoOutlinedIcon"]')).toBeNull();
+    // The only button left is the tile's goal flag, which every tile carries.
+    const buttons = [...tile.querySelectorAll('button')];
+    expect(buttons.map((button) => button.dataset.testid)).toEqual(['analytics-kpi-target-button-brand-new-metric']);
     expect(tile.querySelector('[data-testid="TrendingDownIcon"]')).not.toBeNull();
   });
 });

@@ -90,7 +90,7 @@ describe('create → AWB → pickup → delivered', () => {
       height: 10,
     });
     expect(sent?.order_items).toEqual([
-      { name: 'Drools Chicken Jerky 200g', sku: product.sku, units: 2, selling_price: 349, hsn: '2309' },
+      { name: 'Drools Chicken Jerky 200g', sku: product.sku, units: 2, selling_price: 349, hsn: '2309', tax: 0 },
     ]);
     expect(sr.last('POST', '/courier/assign/awb')?.body).toEqual({ shipment_id: '6300001', courier_id: '12' });
     expect(sr.last('POST', '/courier/generate/pickup')?.body).toEqual({ shipment_id: [6300001] });
@@ -188,7 +188,7 @@ describe('idempotent booking', () => {
     await createShipment(order._id);
     const failed = await reloadOrder(order._id);
     expect(failed.fulfilment_status).toBe('FAILED');
-    expect(failed.last_error).toBe('ShipRocket: ShipRocket answered 500');
+    expect(failed.last_error).toBe('ShipRocket refused assignAwb (/courier/assign/awb, HTTP 500): ShipRocket answered 500.');
     expect(failed.shiprocket.order_id).toBe('7300001');
 
     await createShipment(order._id);

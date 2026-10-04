@@ -13956,6 +13956,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "products.brandReview.subtitle": "Approve or reject the e-commerce brands partners submit for onboarding. Verify every section before approving.",
   "products.brandReview.testMode": "Test mode",
   "products.brandReview.title": "Brands Review",
+  "products.brandReview.untitledBrand": "Untitled brand",
   "products.brandReview.working": "Working…",
   "products.brands.colActive": "Active",
   "products.brands.colApprovedProducts": "Approved products",

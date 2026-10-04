@@ -59,9 +59,18 @@ const renderDialog = (mocks: MockedResponse[]) => {
 const searchBox = () => screen.getByRole('combobox', { name: 'Search Club Admins' });
 const addButton = () => screen.getByRole('button', { name: 'Add' });
 
+/**
+ * Type into the search box the way a person does: focus it first. MUI resets an
+ * unfocused Autocomplete's text back to its selection, so a bare change is lost.
+ */
+const typeInSearch = (value: string) => {
+  fireEvent.focus(searchBox());
+  fireEvent.change(searchBox(), { target: { value } });
+};
+
 /** Narrow the list to Neha and pick her, as a manager would. */
 const pickNeha = async () => {
-  fireEvent.change(searchBox(), { target: { value: 'neha' } });
+  typeInSearch('neha');
   fireEvent.click(await screen.findByRole('option', { name: /Neha Kapoor/ }, DEBOUNCED));
 };
 
@@ -90,7 +99,7 @@ describe('AddClubAdminDialog', () => {
 
   it('searches the server with what was typed, not the list it already has', async () => {
     renderDialog([candidatesMock(null, [NEHA, KIRAN]), candidatesMock('kiran', [KIRAN])]);
-    fireEvent.change(searchBox(), { target: { value: '  kiran ' } });
+    typeInSearch('  kiran ');
 
     // Only the server's answer for "kiran" drops Neha while keeping Kiran listed.
     await waitFor(() => {
@@ -101,7 +110,7 @@ describe('AddClubAdminDialog', () => {
 
   it('says so when nobody matches', async () => {
     renderDialog([candidatesMock(null, [NEHA]), candidatesMock('zoya', [])]);
-    fireEvent.change(searchBox(), { target: { value: 'zoya' } });
+    typeInSearch('zoya');
     expect(await screen.findByText('No Club Admin matches that search.', {}, DEBOUNCED)).toBeInTheDocument();
   });
 

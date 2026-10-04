@@ -18,7 +18,22 @@ vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/app-settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/app-settings')>()), useDateFormat: () => ({ formatDate: () => 'D' }) }));
 
-/** A brand a partner just submitted — the row that never used to reach this page. */
+const integration = (provider: 'SHIPROCKET' | 'RAZORPAY') => ({
+  provider,
+  configured: false,
+  connected: false,
+  checked_at: null,
+  message: '',
+  details: [],
+  identifier: '',
+  has_secret: false,
+  pickup_location: '',
+  live_mode: false,
+  has_webhook_secret: false,
+});
+
+/** A brand a partner just submitted — the row that never used to reach this page.
+ * The wizard is complete and the consent signed, so Approve is allowed. */
 const submittedRow = () =>
   makeEcommBrandRow({
     id: 'b9',
@@ -30,6 +45,22 @@ const submittedRow = () =>
     default_pickup_location_id: null,
     created_at: null,
     submitted_at: null,
+    completion: {
+      percent: 100,
+      next_step: 10,
+      steps: [{ key: 'details', required: true, complete: true }],
+    },
+    integrations: { shiprocket: integration('SHIPROCKET'), razorpay: integration('RAZORPAY') },
+    consent: {
+      accepted: true,
+      signed_name: 'Asha',
+      signed_at: '2026-10-01T10:00:00.000Z',
+      policy_slug: 'brand-partner-consent',
+      policy_title: 'Brand Consent',
+      content_hash: 'a1b2',
+      current: true,
+      available: true,
+    },
   });
 
 const openReviewDialog = async () => {

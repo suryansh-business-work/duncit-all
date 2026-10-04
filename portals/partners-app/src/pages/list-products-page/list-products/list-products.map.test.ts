@@ -330,13 +330,19 @@ describe('toSubmitInput', () => {
 
   it('sends every measurement as a number, blanks becoming zero', () => {
     const input = toSubmitInput(
-      values({ variants: [variant({ height_cm: '', weight_kg: 1.5, unit_cost: 'abc' })] }),
+      values({
+        height_cm: '',
+        weight_kg: 1.5,
+        variants: [variant({ height_cm: '', weight_kg: 0.75, unit_cost: 'abc' })],
+      }),
       'brand-1'
     );
 
+    // The flat parcel is the product's own, not the first variant's.
     expect(input.height_cm).toBe(0);
     expect(input.weight_kg).toBe(1.5);
     expect(input.unit_cost).toBe(0);
+    expect(input.variants[0]).toMatchObject({ height_cm: 0, weight_kg: 0.75, unit_cost: 0 });
   });
 
   it('drops half-filled options rather than sending a dimension with no values', () => {

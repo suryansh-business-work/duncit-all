@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { fetchIdentityUpstream } from './auth.upstream';
+import { cleanGoogleClientId } from './google-client-id';
 import {
   isE2eGoogleCredential,
   verifyE2eGoogleCredential,
@@ -54,7 +55,7 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenI
     getRuntimeEnvValue('GOOGLE_ANDROID_CLIENT_ID'),
     getRuntimeEnvValue('GOOGLE_IOS_CLIENT_ID'),
   ]);
-  const accepted = [expectedClientId, ...nativeClientIds].map((id) => id.trim()).filter(Boolean);
+  const accepted = [expectedClientId, ...nativeClientIds].map((id) => cleanGoogleClientId(id)).filter(Boolean);
   if (!accepted.includes(info.aud)) {
     throw new GraphQLError('Google credential audience mismatch', {
       extensions: { code: 'UNAUTHENTICATED' },

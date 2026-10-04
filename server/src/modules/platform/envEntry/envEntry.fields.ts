@@ -50,6 +50,18 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       label: 'iOS OAuth Client ID',
       hint: 'xxxxxx.apps.googleusercontent.com — iOS client for bundle ID com.duncit.mobile',
     },
+    // Read only by Test connection: the apps sign in with `<app id>:/oauthredirect`,
+    // and only with these can the test send Google that exact redirect.
+    {
+      name: 'android_package',
+      label: 'Android Package Name (for Test connection)',
+      hint: 'e.g. com.duncit.mobile — the package the Android client was created for',
+    },
+    {
+      name: 'ios_bundle_id',
+      label: 'iOS Bundle ID (for Test connection)',
+      hint: 'e.g. com.duncit.mobile — the Bundle ID the iOS client was created for',
+    },
   ],
   GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true, hint: 'AIzaSy... (39 chars)' }],
   TWILIO: [

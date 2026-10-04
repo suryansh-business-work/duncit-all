@@ -103,6 +103,7 @@ export const appConfig = {
         { label: 'Overview', labelKey: 'shell.nav.overview', to: '/domain/overview', icon: 'info' },
         { label: 'DNS Records', labelKey: 'shell.nav.dnsRecords', to: '/domain/dns-records', icon: 'dns' },
         { label: 'Staging Sync', labelKey: 'shell.nav.dnsStagingSync', to: '/domain/staging', icon: 'compare' },
+        { label: 'Port Mapping', labelKey: 'shell.nav.portMapping', to: '/domain/port-mapping', icon: 'hub' },
       ],
     },
     {

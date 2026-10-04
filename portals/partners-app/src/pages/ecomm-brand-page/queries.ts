@@ -53,6 +53,7 @@ export const BRAND_INTEGRATION_FIELDS = `
   pickup_location
   live_mode
   has_webhook_secret
+  connection_id
 `;
 
 const BRAND_CONSENT_FIELDS = `
@@ -155,24 +156,6 @@ export const DELETE_MY_BRAND = gql`
   }
 `;
 
-export const CONNECT_BRAND_SHIPROCKET = gql`
-  mutation ConnectBrandShiprocket($brand_doc_id: ID!, $input: BrandShiprocketInput!) {
-    connectBrandShiprocket(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_INTEGRATION_FIELDS} }
-  }
-`;
-
-export const CONNECT_BRAND_RAZORPAY = gql`
-  mutation ConnectBrandRazorpay($brand_doc_id: ID!, $input: BrandRazorpayInput!) {
-    connectBrandRazorpay(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_INTEGRATION_FIELDS} }
-  }
-`;
-
-export const RECHECK_BRAND_INTEGRATION = gql`
-  mutation RecheckBrandIntegration($brand_doc_id: ID!, $provider: BrandIntegrationProvider!) {
-    recheckBrandIntegration(brand_doc_id: $brand_doc_id, provider: $provider) { ${BRAND_INTEGRATION_FIELDS} }
-  }
-`;
-
 export const DISCONNECT_BRAND_INTEGRATION = gql`
   mutation DisconnectBrandIntegration($brand_doc_id: ID!, $provider: BrandIntegrationProvider!) {
     disconnectBrandIntegration(brand_doc_id: $brand_doc_id, provider: $provider) { ${BRAND_INTEGRATION_FIELDS} }
@@ -210,6 +193,8 @@ export interface BrandIntegrationStatus {
   pickup_location: string;
   live_mode: boolean;
   has_webhook_secret: boolean;
+  /** The saved Integrations connection the brand's credential was copied from (brand reads only). */
+  connection_id?: string | null;
 }
 
 export type { BrandShippingMode };

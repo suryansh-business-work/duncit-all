@@ -23,6 +23,7 @@ import UserHealthSection from './UserHealthSection';
 import UserVerificationsSection from './UserVerificationsSection';
 import UserSurveysSection from './UserSurveysSection';
 import UserChangeLogsSection from './UserChangeLogsSection';
+import UserFinanceSection from './UserFinanceSection';
 import { useUserDetailsState } from './useUserDetailsState';
 import { useTranslation } from '@duncit/shell';
 
@@ -106,6 +107,11 @@ export default function UserDetailsPage() {
             value: 'contact-logs',
             label: t('admin.tabs.callEmailLogs'),
             content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,
+          },
+          {
+            value: 'payment-refund-logs',
+            label: t('admin.tabs.paymentRefundLogs'),
+            content: <UserFinanceSection userId={userId} />,
           },
           {
             value: 'change-logs',

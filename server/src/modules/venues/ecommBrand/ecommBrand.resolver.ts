@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { ecommBrandService } from './ecommBrand.service';
+import { partnerIntegrationService, type PartnerIntegrationInput } from './partnerIntegration.service';
 import type { BrandShippingMode } from './ecommBrand.model';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
@@ -92,6 +93,8 @@ export const ecommBrandResolvers = {
       uid(ctx);
       return ecommBrandService.consentPolicy();
     },
+    myPartnerIntegrations: (_p: unknown, args: { provider?: Provider | null }, ctx: GraphQLContext) =>
+      partnerIntegrationService.listMine(uid(ctx), args.provider),
   },
   Mutation: {
     saveEcommBrand: (_p: unknown, args: { brand_doc_id?: string | null; input: any }, ctx: GraphQLContext) =>
@@ -179,5 +182,19 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.adminDelete(args.brand_doc_id, args.notes ?? '');
     },
+    savePartnerIntegration: (
+      _p: unknown,
+      args: { id?: string | null; provider: Provider; input: PartnerIntegrationInput },
+      ctx: GraphQLContext
+    ) => partnerIntegrationService.save(uid(ctx), args.id ?? null, args.provider, args.input),
+    recheckPartnerIntegration: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      partnerIntegrationService.recheck(uid(ctx), args.id),
+    deletePartnerIntegration: (_p: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      partnerIntegrationService.remove(uid(ctx), args.id),
+    useBrandIntegration: (
+      _p: unknown,
+      args: { brand_doc_id: string; provider: Provider; integration_id: string },
+      ctx: GraphQLContext
+    ) => ecommBrandService.linkIntegration(uid(ctx), args.brand_doc_id, args.provider, args.integration_id),
   },
 };

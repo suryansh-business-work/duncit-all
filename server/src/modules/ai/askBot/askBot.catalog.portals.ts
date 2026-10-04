@@ -626,6 +626,8 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Read owner-scoped KPI cards for how your brands, products, warehouses and orders are performing on Duncit.' },
   { surface: 'partners', path: '/ecomm-brand', label: 'Your Brands', group: 'E-Commerce Brand',
     description: 'Register a new product brand or open an existing one to edit, submit for review, withdraw from review, pause/reactivate it, or jump to its products and warehouse settings.' },
+  { surface: 'partners', path: '/ecomm-brand/integrations', label: 'Integrations', group: 'E-Commerce Brand',
+    description: 'Save your Razorpay and ShipRocket accounts once, test them, and see which brands use each; the brand wizard then picks one of them per brand.' },
   { surface: 'partners', path: '/earn', label: 'Earn with Duncit',
     description: 'Browse the earn-journey cards (host, list your venue, sell products, club) and start the matching survey on mWeb or jump into the partner area you are already approved for.' },
   { surface: 'partners', path: '/verification', label: 'Verification',

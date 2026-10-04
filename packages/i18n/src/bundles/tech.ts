@@ -438,6 +438,25 @@ export const TECH_BUNDLE: NestedCatalogue = {
       liveNotChecked: 'Not checked',
       liveServedExpiry: 'Served certificate expires {date}',
     },
+    portMap: {
+      pageTitle: 'Port Mapping',
+      subtitle:
+        'Which domain nginx hands to which local port, read from the server’s sites-available at {time}. Production and staging share the server, so both sites are listed.',
+      refresh: 'Refresh',
+      unavailable: 'The server’s nginx directory could not be read: {error}',
+      empty: 'No domain is proxied to a port for this selection.',
+      siteFilter: 'Site file',
+      allSites: 'All site files',
+      siteOption: '{name} ({count} domains)',
+      siteOptionDisabled: '{name} ({count} domains, not enabled)',
+      domainFilter: 'Domain',
+      allDomains: 'All domains',
+      canvasLabel: 'Domain to port mapping',
+      https: 'Serves HTTPS',
+      siteDisabled: 'Site not enabled in nginx',
+      portLabel: 'Port {port}',
+      noPort: 'No fixed port',
+    },
     /** Security → SonarQube Settings — the SonarQube category of Environment Variables. */
     sonarqube: {
       settingsTitle: 'SonarQube Settings',
@@ -996,6 +1015,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
         'Signs a client secret with this key and asks Apple to redeem a code it never issued. Apple checks the key before the code, so this proves the Team ID, Key ID, private key and Services ID belong together. Nobody is signed in.',
       appStoreConnectHint:
         'Signs in to the App Store Connect API with this key, looks the app up by its bundle ID and lists one certificate. Nothing is created — it proves the Issuer ID, Key ID and .p8 belong together, and that the key has the Admin access Generate signing files needs.',
+      googleOAuthConnectionHint:
+        'Opens Google’s sign-in step for each saved client exactly as the apps do — the Android and iOS clients with their app’s com.duncit.mobile:/oauthredirect when the package name / bundle ID is filled — and reports whether Google accepts it. It catches a client that does not exist, an ID saved with https://, and an Android client whose “Enable custom URI scheme” is off. Nobody is signed in.',
       googleDriveConnectionHint:
         'Signs in to Google Drive as this service account and asks who it is. Nothing in anyone’s Drive is read or changed — it proves the key works and that the Drive API is enabled. Folders are shared with the account one by one, from Reel Studio.',
       godaddyConnectionHint:

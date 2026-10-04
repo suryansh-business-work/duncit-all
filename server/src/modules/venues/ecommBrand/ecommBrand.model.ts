@@ -103,9 +103,17 @@ export interface IEcommBrand extends Document {
   // Who ships this brand's parcels; null on a brand that has not chosen yet.
   shipping_mode: BrandShippingMode | null;
   // The brand's own ShipRocket + Razorpay accounts (the wizard's last step).
+  // Every vendor call reads this copy; a saved Integrations connection is
+  // copied in here when the partner picks it.
   integrations: {
     shiprocket: IBrandShiprocketIntegration;
     razorpay: IBrandRazorpayIntegration;
+  };
+  // The partner's Integrations connection each credential above was copied
+  // from (`PartnerIntegration`); null for a credential typed in on the brand.
+  integration_links: {
+    shiprocket: Types.ObjectId | null;
+    razorpay: Types.ObjectId | null;
   };
   // The Brand Consent signature.
   consent: IBrandConsent;
@@ -144,7 +152,7 @@ const probeFields = {
   details: { type: [String], default: [] },
 };
 
-const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegration>(
+export const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegration>(
   {
     email: { type: String, default: '', trim: true },
     password: { type: String, default: '' },
@@ -155,7 +163,7 @@ const shiprocketIntegrationSchema = new Schema<IBrandShiprocketIntegration>(
   { _id: false }
 );
 
-const razorpayIntegrationSchema = new Schema<IBrandRazorpayIntegration>(
+export const razorpayIntegrationSchema = new Schema<IBrandRazorpayIntegration>(
   {
     key_id: { type: String, default: '', trim: true },
     key_secret: { type: String, default: '' },
@@ -214,6 +222,10 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     integrations: {
       shiprocket: { type: shiprocketIntegrationSchema, default: () => ({}) },
       razorpay: { type: razorpayIntegrationSchema, default: () => ({}) },
+    },
+    integration_links: {
+      shiprocket: { type: Schema.Types.ObjectId, ref: 'PartnerIntegration', default: null, index: true },
+      razorpay: { type: Schema.Types.ObjectId, ref: 'PartnerIntegration', default: null, index: true },
     },
     consent: { type: brandConsentSchema, default: () => ({}) },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },

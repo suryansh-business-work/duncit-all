@@ -83,6 +83,7 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "partners.brandWizard.integration.intro": [
     "Connect the ShipRocket and Razorpay accounts this brand ships and gets paid through. Both must connect before the brand can be submitted.",
     "Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and connect the Razorpay account it gets paid through.",
+    "The last step. Choose who ships this brand’s parcels — your own ShipRocket account or the Duncit courier — and connect the Razorpay account it gets paid through. You can do this while your brand is in review.",
   ],
   "partners.brandWizard.integration.bothRequired": [
     "Both connections must succeed before the brand can be submitted for review.",
@@ -97,8 +98,25 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "partners.brandWizard.payout.razorpayPending": ["Connect Razorpay in the Integration step to confirm payouts."],
   "partners.brandWizard.integration.disconnectBody": [
     "The saved credential is forgotten and the brand cannot be submitted until it is connected again.",
+    "The saved credential is forgotten. A live brand leaves the Pod Shop until it is connected again.",
   ],
-  "partners.brandWizard.integration.disconnected": ["Credential forgotten. Connect again before submitting."],
+  "partners.brandWizard.integration.disconnected": [
+    "Credential forgotten. Connect again before submitting.",
+    "Credential forgotten. Connect again to keep your brand live.",
+  ],
+  // Credentials moved to the Partners Integrations page: the wizard now PICKS a
+  // saved account for the brand instead of taking keys typed in on it.
+  "partners.brandWizard.integration.shippingModeOwnHint": [
+    "Parcels are booked and billed on your ShipRocket account. Connect it below.",
+  ],
+  "partners.brandWizard.integration.disconnect": ["Disconnect"],
+  "partners.brandWizard.integration.disconnectTitle": ["Disconnect {provider}?"],
+  "partners.brandWizard.integration.statusPending": [
+    "Not live yet. Connect the integrations below and your approved brand goes live automatically.",
+  ],
+  "partners.brandWizard.integration.statusWaived": [
+    "Your brand was selling before integrations were required, so it stays live. Connect them below anyway.",
+  ],
   "products.brandReview.integrationsIntro": [
     "The brand ships and gets paid through its own accounts. Both must connect before approval.",
   ],

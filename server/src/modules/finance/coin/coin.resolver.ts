@@ -19,7 +19,7 @@ const COIN_ADMIN_WRITE = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
 
 // The transaction ledger is mounted in the Logs console too; the stats,
 // settings and manual adjustments are not.
-const COIN_LOG_READ = [...COIN_ADMIN_READ, LOGS_READER];
+export const COIN_LOG_READ = [...COIN_ADMIN_READ, LOGS_READER];
 
 // No role gate on the `my*` queries: every signed-in account earns coins on what
 // it spends. Showing the section only in User studio mode is a presentation

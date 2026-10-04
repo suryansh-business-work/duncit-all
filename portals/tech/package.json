@@ -47,6 +47,7 @@
     "@mui/system": "^9.4.0",
     "@mui/x-date-pickers": "^9.14.0",
     "@react-oauth/google": "^0.13.5",
+    "@xyflow/react": "^12.12.0",
     "ag-grid-community": "^36.2.0",
     "ag-grid-react": "^36.2.0",
     "chart.js": "^4.5.1",

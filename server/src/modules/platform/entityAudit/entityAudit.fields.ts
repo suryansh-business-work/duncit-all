@@ -237,6 +237,8 @@ const BRAND_FIELDS: readonly DiffField[] = [
   { path: 'integrations.shiprocket.message', label: 'ShipRocket Check Result' },
   { path: 'integrations.razorpay.connected', label: 'Razorpay Connected' },
   { path: 'integrations.razorpay.message', label: 'Razorpay Check Result' },
+  { path: 'integration_links.shiprocket', label: 'ShipRocket Connection' },
+  { path: 'integration_links.razorpay', label: 'Razorpay Connection' },
   { path: 'consent.accepted', label: 'Consent Signed' },
   { path: 'consent.signed_name', label: 'Consent Signed By' },
   { path: 'default_pickup_location_id', label: 'Default Warehouse' },

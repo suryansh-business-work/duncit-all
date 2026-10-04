@@ -1,15 +1,17 @@
+import { useQuery } from '@apollo/client/react';
 import { Alert, Stack, Typography } from '@mui/material';
+import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { BrandIntegrations, BrandShippingMode, EcommBrand } from '../../queries';
+import { MY_PARTNER_INTEGRATIONS } from '../../integrations/integrations.queries';
 import { integrationReady } from '../wizard-steps';
-import IntegrationCard from './IntegrationCard';
+import IntegrationPicker from './IntegrationPicker';
 import ShippingModeChooser from './ShippingModeChooser';
 
 /** The brand facts the live banner reads. */
 type LiveFacts = Pick<EcommBrand, 'status' | 'live' | 'integration_waived'>;
 
 interface Props {
-  brandId: string | null;
   shippingMode: BrandShippingMode | null | undefined;
   integrations: BrandIntegrations | undefined;
   /** Null for a brand not saved yet. */
@@ -44,30 +46,43 @@ function LiveBanner({ brand, ready }: Readonly<{ brand: LiveFacts | null; ready:
 
 /**
  * The LAST step — who ships the brand's parcels, and the Razorpay account it
- * gets paid through. Not needed to submit; the approved brand goes live once
- * both are settled, so it stays editable while the brand is in review or live.
+ * gets paid through, each PICKED from the partner's saved Integrations. Not
+ * needed to submit; the approved brand goes live once both are settled, so it
+ * stays editable while the brand is in review or live.
  */
-export default function IntegrationStep({
-  brandId,
-  shippingMode,
-  integrations,
-  brand,
-  locked,
-  ensureBrandId,
-  onChanged,
-}: Readonly<Props>) {
+export default function IntegrationStep({ shippingMode, integrations, brand, locked, ensureBrandId, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const mode = shownMode(shippingMode, integrations);
-  const shared = { brandId, locked, ensureBrandId, onChanged };
+  const { data, error } = useQuery(MY_PARTNER_INTEGRATIONS, { fetchPolicy: 'cache-and-network' });
+  // Undefined until the first answer, so a picker never reads "none saved" while loading.
+  const saved = data?.myPartnerIntegrations;
+  const shared = { locked, ensureBrandId, onChanged };
   return (
     <Stack spacing={2}>
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {t('partners.brandWizard.integration.intro')}
       </Typography>
       <LiveBanner brand={brand} ready={integrationReady(shippingMode, integrations)} />
+      {error && !data && (
+        <Alert severity="error">
+          {t('partners.integrations.loadFailed')} {parseApiError(error)}
+        </Alert>
+      )}
       <ShippingModeChooser mode={mode} locked={locked} ensureBrandId={ensureBrandId} onChanged={onChanged} />
-      {mode === 'OWN_SHIPROCKET' && <IntegrationCard provider="SHIPROCKET" status={integrations?.shiprocket} {...shared} />}
-      <IntegrationCard provider="RAZORPAY" status={integrations?.razorpay} {...shared} />
+      {mode === 'OWN_SHIPROCKET' && (
+        <IntegrationPicker
+          provider="SHIPROCKET"
+          status={integrations?.shiprocket}
+          connections={saved?.filter((c) => c.provider === 'SHIPROCKET')}
+          {...shared}
+        />
+      )}
+      <IntegrationPicker
+        provider="RAZORPAY"
+        status={integrations?.razorpay}
+        connections={saved?.filter((c) => c.provider === 'RAZORPAY')}
+        {...shared}
+      />
     </Stack>
   );
 }

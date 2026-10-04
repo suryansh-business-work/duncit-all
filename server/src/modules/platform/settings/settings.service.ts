@@ -28,6 +28,7 @@ import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDis
 import { launchMediaOf } from "@modules/platform/location/location.model";
 import { launchMediaSchema, type LaunchMediaInput } from "@modules/platform/location/location.validator";
 import { validate } from "@utils/validate";
+import { cleanGoogleClientId } from "@modules/access/auth/google-client-id";
 
 /** Minimum joining age when the admin hasn't set an explicit value. */
 const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
@@ -865,9 +866,10 @@ export const settingsService = {
       getUrlConfigs(),
     ]);
     return {
-      google_client_id: googleClientId ?? "",
-      google_android_client_id: googleAndroidClientId.trim(),
-      google_ios_client_id: googleIosClientId.trim(),
+      // A pasted `https://…` is not an id — Google answers it with invalid_client.
+      google_client_id: cleanGoogleClientId(googleClientId),
+      google_android_client_id: cleanGoogleClientId(googleAndroidClientId),
+      google_ios_client_id: cleanGoogleClientId(googleIosClientId),
       google_maps_api_key: googleMapsApiKey ?? "",
       apple_bundle_id: appleBundleId.trim(),
       apple_services_id: appleServicesId.trim(),

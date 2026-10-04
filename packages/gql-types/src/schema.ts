@@ -3073,6 +3073,8 @@ export type BrandIntegrationStatus = {
   configured: Scalars['Boolean']['output'];
   /** The vendor accepted the credential the last time it was checked. */
   connected: Scalars['Boolean']['output'];
+  /** The partner's saved Integrations connection this credential was copied from. Null when typed in on the brand. */
+  connection_id?: Maybe<Scalars['ID']['output']>;
   details: Array<Scalars['String']['output']>;
   has_secret: Scalars['Boolean']['output'];
   /** A webhook secret is on file for this account. */
@@ -11658,6 +11660,8 @@ export type Mutation = {
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deleteOfficialStatus: Scalars['Boolean']['output'];
+  /** Partner: delete a saved connection. Refused while a brand uses it. */
+  deletePartnerIntegration: Scalars['Boolean']['output'];
   deletePod: Scalars['Boolean']['output'];
   deletePodCalculator: Scalars['Boolean']['output'];
   deletePodComment: Scalars['Boolean']['output'];
@@ -12069,6 +12073,8 @@ export type Mutation = {
   reactToStaffMessage: StaffMessage;
   /** Partner: check the saved credential again without changing it. */
   recheckBrandIntegration: BrandIntegrationStatus;
+  /** Partner: check a saved connection again; every brand using it takes the new result. */
+  recheckPartnerIntegration: PartnerIntegration;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
@@ -12442,6 +12448,8 @@ export type Mutation = {
   saveMyAddress: UserAddress;
   /** Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
   saveMyBrandPickupLocation: BrandPickupLocation;
+  /** Partner: add (omit id) or update a saved connection and check it against the vendor right away. */
+  savePartnerIntegration: PartnerIntegration;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   /**
@@ -13134,6 +13142,8 @@ export type Mutation = {
   /** Create or correct one model's rate. Past rows keep the cost they were written with. */
   upsertOpenAiModelPrice: OpenAiModelPrice;
   upsertTranslation: Translation;
+  /** Partner: pick a saved connection (one that passed its check) for a brand. */
+  useBrandIntegration: BrandIntegrationStatus;
   /** Venue enrols: accepts the offer and commits one of its own slots. */
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
@@ -14561,6 +14571,11 @@ export type MutationDeleteOfficialStatusArgs = {
 };
 
 
+export type MutationDeletePartnerIntegrationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeletePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -15294,6 +15309,11 @@ export type MutationRecheckBrandIntegrationArgs = {
 };
 
 
+export type MutationRecheckPartnerIntegrationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationReconcileCrmCallArgs = {
   log_id: Scalars['ID']['input'];
 };
@@ -15917,6 +15937,13 @@ export type MutationSaveMyBrandPickupLocationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   input: BrandPickupLocationInput;
+};
+
+
+export type MutationSavePartnerIntegrationArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: PartnerIntegrationInput;
+  provider: BrandIntegrationProvider;
 };
 
 
@@ -17904,6 +17931,13 @@ export type MutationUpsertTranslationArgs = {
 };
 
 
+export type MutationUseBrandIntegrationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  integration_id: Scalars['ID']['input'];
+  provider: BrandIntegrationProvider;
+};
+
+
 export type MutationVenueAcceptAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   slot_id: Scalars['ID']['input'];
@@ -18668,6 +18702,37 @@ export type PartnerFaqTopic =
   | 'HOST'
   | 'PRODUCTS'
   | 'VENUE';
+
+/**
+ * A Razorpay or ShipRocket account a brand partner saved once on the
+ * Integrations page and picks for any of their brands. Picking copies it onto
+ * the brand; saving or re-checking it refreshes every brand that uses it.
+ */
+export type PartnerIntegration = {
+  __typename?: 'PartnerIntegration';
+  brands: Array<PartnerIntegrationBrand>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The partner's own name for the account. */
+  label: Scalars['String']['output'];
+  provider: BrandIntegrationProvider;
+  status: BrandIntegrationStatus;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** A brand that uses a saved Integrations connection. */
+export type PartnerIntegrationBrand = {
+  __typename?: 'PartnerIntegrationBrand';
+  brand_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+};
+
+/** Fill the credential of the connection's provider; the other is ignored. */
+export type PartnerIntegrationInput = {
+  label: Scalars['String']['input'];
+  razorpay?: InputMaybe<BrandRazorpayInput>;
+  shiprocket?: InputMaybe<BrandShiprocketInput>;
+};
 
 /** One of the partner's products, as the E-Commerce Brand Dashboard's performance chart plots it. */
 export type PartnerProductPerformance = {
@@ -21207,6 +21272,41 @@ export type PolicyVersion = {
   version_no: Scalars['Int']['output'];
 };
 
+export type PortMapOverview = {
+  __typename?: 'PortMapOverview';
+  /** False when the host's nginx directory could not be read; error says why. */
+  available: Scalars['Boolean']['output'];
+  checked_at: Scalars['String']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  routes: Array<PortMapRoute>;
+  sites: Array<PortMapSite>;
+};
+
+/** One domain + location that nginx proxies to a local address. */
+export type PortMapRoute = {
+  __typename?: 'PortMapRoute';
+  domain: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  host?: Maybe<Scalars['String']['output']>;
+  location: Scalars['String']['output'];
+  /** Null for a unix socket or a target built from variables. */
+  port?: Maybe<Scalars['Int']['output']>;
+  site: Scalars['String']['output'];
+  /** The proxy_pass target exactly as written. */
+  target: Scalars['String']['output'];
+  /** Some server block for this domain listens on 443 / ssl. */
+  tls: Scalars['Boolean']['output'];
+};
+
+/** One file in the host's nginx sites-available. */
+export type PortMapSite = {
+  __typename?: 'PortMapSite';
+  domain_count: Scalars['Int']['output'];
+  /** Linked into sites-enabled, so nginx actually serves it. */
+  enabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
 /** One staff console in the Jump to Portal directory, with the signed-in user's standing. */
 export type PortalAccessEntry = {
   __typename?: 'PortalAccessEntry';
@@ -22766,6 +22866,8 @@ export type Query = {
   /** All of the current user's onboarding meetings (one per kind). */
   myMeetings: Array<OnboardingMeeting>;
   myNotifications: Array<UserNotification>;
+  /** Partner: the Razorpay / ShipRocket connections they saved on the Integrations page, newest first. */
+  myPartnerIntegrations: Array<PartnerIntegration>;
   /** One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history. */
   myPayment?: Maybe<Payment>;
   myPayments: Array<Payment>;
@@ -22991,6 +23093,8 @@ export type Query = {
   policyStatsTable: PolicyTypeCountTablePage;
   /** Legal: every wording this policy has had, oldest first. */
   policyVersions: Array<PolicyVersion>;
+  /** Tech > Domain > Port Mapping: domain to port routes from nginx sites-available (SUPER_ADMIN / TECH_MANAGER). */
+  portMappings: PortMapOverview;
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;
@@ -23459,6 +23563,8 @@ export type Query = {
   userClickstream: Array<AppAnalyticsEvent>;
   userContactActions: Array<UserContactAction>;
   userContactActionsTable: UserContactActionTablePage;
+  /** Admin user page: what one account has paid, got refunded and holds in coins. */
+  userFinanceSummary: UserFinanceSummary;
   /**
    * The live pods a user has JOINED, newest first — what a profile's Joined
    * Pods tab lists. Follows the posts/stories rule for a PRIVATE account: empty
@@ -25113,6 +25219,11 @@ export type QueryMyNotificationsArgs = {
 };
 
 
+export type QueryMyPartnerIntegrationsArgs = {
+  provider?: InputMaybe<BrandIntegrationProvider>;
+};
+
+
 export type QueryMyPaymentArgs = {
   payment_doc_id: Scalars['ID']['input'];
 };
@@ -26455,6 +26566,11 @@ export type QueryUserContactActionsArgs = {
 
 export type QueryUserContactActionsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserFinanceSummaryArgs = {
   user_id: Scalars['ID']['input'];
 };
 
@@ -34636,6 +34752,41 @@ export type UserContactActionTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<UserContactAction>;
   total: Scalars['Int']['output'];
+};
+
+/** One account's Duncit Coin wallet, for the Admin user page. */
+export type UserFinanceCoins = {
+  __typename?: 'UserFinanceCoins';
+  balance: Scalars['Float']['output'];
+  /** Every coin the ledger has credited the account. */
+  credited: Scalars['Float']['output'];
+  /** Every coin the ledger has debited: redeemed, expired or taken back. */
+  debited: Scalars['Float']['output'];
+  lifetime_earned: Scalars['Float']['output'];
+};
+
+/**
+ * What one account has paid Duncit and got back (Admin › User › Payment &
+ * Refund Logs). Paid counts every captured payment, refunded ones included;
+ * net_business = paid_total - refunded_total.
+ */
+export type UserFinanceSummary = {
+  __typename?: 'UserFinanceSummary';
+  /** Null when the caller cannot read Duncit Coin. */
+  coins?: Maybe<UserFinanceCoins>;
+  /** Coins spent at checkout on captured payments. */
+  coins_redeemed: Scalars['Float']['output'];
+  /** Symbol of the account's latest payment; null when it has none. */
+  currency_symbol?: Maybe<Scalars['String']['output']>;
+  failed_count: Scalars['Int']['output'];
+  last_paid_at?: Maybe<Scalars['String']['output']>;
+  net_business: Scalars['Float']['output'];
+  paid_total: Scalars['Float']['output'];
+  /** Captured payments (SUCCESS or later REFUNDED). */
+  payment_count: Scalars['Int']['output'];
+  /** Payments with money paid back, part refunds included. */
+  refund_count: Scalars['Int']['output'];
+  refunded_total: Scalars['Float']['output'];
 };
 
 export type UserNotification = {

@@ -26,6 +26,7 @@ import {
   cloudflareZone,
 } from '@modules/platform/cloudflare/cloudflare.gateway';
 import { probeSocialApps } from '@modules/crm/marketing/social/social.probe';
+import { googleOAuthConnection } from './googleOAuth.probe';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -754,6 +755,7 @@ const CONNECTION_CHECKS = {
   GODADDY: godaddyConnection,
   CLOUDFLARE: cloudflareConnection,
   SOCIAL_APPS: socialAppsConnection,
+  GOOGLE_OAUTH: googleOAuthConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

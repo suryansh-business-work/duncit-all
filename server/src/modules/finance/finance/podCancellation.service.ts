@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodAuditLogModel, type IPodAuditLog } from '@modules/pods/podAudit/podAudit.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { REFUNDED_MONEY_EXPR } from '@modules/finance/payment/payment.refund.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -78,11 +79,6 @@ const EMPTY_TALLY: PaymentTally = {
   unrefunded_count: 0,
   unrefunded_total: 0,
 };
-
-/** What a REFUNDED payment actually returned: the stamped figure when a policy
- * refund (the auto-cancel sweep) kept part of `total`, the whole payment for
- * rows flipped before the stamp existed. */
-const REFUNDED_MONEY_EXPR = { $ifNull: ['$metadata.refunded_amount', '$total'] };
 
 /** REFUNDED + still-SUCCESS payment money per pod, in one aggregation. */
 async function paymentTallies(podIds: string[]): Promise<Map<string, PaymentTally>> {

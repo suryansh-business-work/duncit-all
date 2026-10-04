@@ -59,6 +59,8 @@ const COIN_TXN_TABLE_CONFIG: TableEntityConfig = {
     payment_id: { type: 'string' },
     reason: { type: 'string' },
     created_at: { type: 'date' },
+    // Admin › User › Payment & Refund Logs scopes the ledger to one account.
+    user_id: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };

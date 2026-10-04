@@ -2,6 +2,8 @@ import { GraphQLError } from 'graphql';
 import { paymentService } from './payment.service';
 import { paymentDetailService } from './payment.detail.service';
 import { paymentRefundService } from './payment.refund.service';
+import { paymentUserSummaryService } from './payment.userSummary.service';
+import { COIN_LOG_READ } from '../coin/coin.resolver';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';
 import type { IdLike } from '@utils/request-cache';
@@ -48,6 +50,12 @@ export const paymentResolvers = {
     userRefundsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, LOG_READ);
       return paymentRefundService.table(args.query);
+    },
+    // Same read as the payment and refund logs; the coin half follows the
+    // Duncit Coin ledger's own read, so a role without it gets coins: null.
+    userFinanceSummary: (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, LOG_READ);
+      return paymentUserSummaryService.summary(args.user_id, !!ctx.user && hasRole(ctx.user, COIN_LOG_READ));
     },
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);

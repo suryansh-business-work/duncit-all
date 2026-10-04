@@ -525,7 +525,42 @@ export const paymentTypeDefs = /* GraphQL */ `
     lines: [ProductShippingQuoteLine!]!
   }
 
+  "One account's Duncit Coin wallet, for the Admin user page."
+  type UserFinanceCoins {
+    balance: Float!
+    lifetime_earned: Float!
+    "Every coin the ledger has credited the account."
+    credited: Float!
+    "Every coin the ledger has debited: redeemed, expired or taken back."
+    debited: Float!
+  }
+
+  """
+  What one account has paid Duncit and got back (Admin › User › Payment &
+  Refund Logs). Paid counts every captured payment, refunded ones included;
+  net_business = paid_total - refunded_total.
+  """
+  type UserFinanceSummary {
+    "Symbol of the account's latest payment; null when it has none."
+    currency_symbol: String
+    "Captured payments (SUCCESS or later REFUNDED)."
+    payment_count: Int!
+    failed_count: Int!
+    paid_total: Float!
+    "Payments with money paid back, part refunds included."
+    refund_count: Int!
+    refunded_total: Float!
+    net_business: Float!
+    "Coins spent at checkout on captured payments."
+    coins_redeemed: Float!
+    last_paid_at: String
+    "Null when the caller cannot read Duncit Coin."
+    coins: UserFinanceCoins
+  }
+
   extend type Query {
+    "Admin user page: what one account has paid, got refunded and holds in coins."
+    userFinanceSummary(user_id: ID!): UserFinanceSummary!
     payments(filter: PaymentFilterInput, limit: Int): [Payment!]!
     "Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only."
     paymentTotals(filter: PaymentFilterInput): PaymentTotals!

@@ -23,6 +23,12 @@
 import { PaymentModel, type IPayment } from './payment.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
+/** What a refunded payment actually returned, as an aggregation expression: the
+ * stamped figure when a policy refund (the auto-cancel sweep) kept part of
+ * `total`, the whole payment for rows flipped before the stamp existed. The
+ * cancellation console and the Admin user summary both sum by it. */
+export const REFUNDED_MONEY_EXPR = { $ifNull: ['$metadata.refunded_amount', '$total'] };
+
 /** A refund is a payment carrying the stamp one of the four flows left on it. */
 const REFUNDED_ONLY = { 'metadata.refunded_at': { $exists: true, $ne: null } };
 
@@ -66,6 +72,8 @@ const USER_REFUND_TABLE_CONFIG: TableEntityConfig = {
     refund_initiated_by: { path: 'metadata.refund_initiated_by', type: 'string' },
     refund_reason: { path: 'metadata.refund_reason', type: 'string' },
     payment_id: { type: 'string' },
+    // Admin › User › Payment & Refund Logs scopes the table to one account.
+    user_id: { type: 'string' },
     user_name: { type: 'string' },
     description: { type: 'string' },
     subtotal: { type: 'number' },

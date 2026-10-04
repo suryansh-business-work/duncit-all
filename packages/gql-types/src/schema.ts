@@ -23563,6 +23563,8 @@ export type Query = {
   userClickstream: Array<AppAnalyticsEvent>;
   userContactActions: Array<UserContactAction>;
   userContactActionsTable: UserContactActionTablePage;
+  /** Admin user page: what one account has paid, got refunded and holds in coins. */
+  userFinanceSummary: UserFinanceSummary;
   /**
    * The live pods a user has JOINED, newest first — what a profile's Joined
    * Pods tab lists. Follows the posts/stories rule for a PRIVATE account: empty
@@ -26564,6 +26566,11 @@ export type QueryUserContactActionsArgs = {
 
 export type QueryUserContactActionsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserFinanceSummaryArgs = {
   user_id: Scalars['ID']['input'];
 };
 
@@ -34745,6 +34752,41 @@ export type UserContactActionTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<UserContactAction>;
   total: Scalars['Int']['output'];
+};
+
+/** One account's Duncit Coin wallet, for the Admin user page. */
+export type UserFinanceCoins = {
+  __typename?: 'UserFinanceCoins';
+  balance: Scalars['Float']['output'];
+  /** Every coin the ledger has credited the account. */
+  credited: Scalars['Float']['output'];
+  /** Every coin the ledger has debited: redeemed, expired or taken back. */
+  debited: Scalars['Float']['output'];
+  lifetime_earned: Scalars['Float']['output'];
+};
+
+/**
+ * What one account has paid Duncit and got back (Admin › User › Payment &
+ * Refund Logs). Paid counts every captured payment, refunded ones included;
+ * net_business = paid_total - refunded_total.
+ */
+export type UserFinanceSummary = {
+  __typename?: 'UserFinanceSummary';
+  /** Null when the caller cannot read Duncit Coin. */
+  coins?: Maybe<UserFinanceCoins>;
+  /** Coins spent at checkout on captured payments. */
+  coins_redeemed: Scalars['Float']['output'];
+  /** Symbol of the account's latest payment; null when it has none. */
+  currency_symbol?: Maybe<Scalars['String']['output']>;
+  failed_count: Scalars['Int']['output'];
+  last_paid_at?: Maybe<Scalars['String']['output']>;
+  net_business: Scalars['Float']['output'];
+  paid_total: Scalars['Float']['output'];
+  /** Captured payments (SUCCESS or later REFUNDED). */
+  payment_count: Scalars['Int']['output'];
+  /** Payments with money paid back, part refunds included. */
+  refund_count: Scalars['Int']['output'];
+  refunded_total: Scalars['Float']['output'];
 };
 
 export type UserNotification = {

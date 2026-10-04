@@ -17418,6 +17418,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "tech.environment.extensionOptional": "Extension (optional)",
   "tech.environment.godaddyConnectionHint": "Reads the domain and its records with this key. Nothing is written — it proves the key and secret, that this account owns the domain, and that GoDaddy lets the account use its DNS API.",
   "tech.environment.googleDriveConnectionHint": "Signs in to Google Drive as this service account and asks who it is. Nothing in anyone’s Drive is read or changed — it proves the key works and that the Drive API is enabled. Folders are shared with the account one by one, from Reel Studio.",
+  "tech.environment.googleOAuthConnectionHint": "Opens Google’s sign-in step for each saved client exactly as the apps do — the Android and iOS clients with their app’s com.duncit.mobile:/oauthredirect when the package name / bundle ID is filled — and reports whether Google accepts it. It catches a client that does not exist, an ID saved with https://, and an Android client whose “Enable custom URI scheme” is off. Nobody is signed in.",
   "tech.environment.lastTested": "Last tested",
   "tech.environment.leaveBlankToUseThePhone": "Leave blank to use the phone number on your own profile.",
   "tech.environment.noEntriesYetAddOneYou": "No entries yet. Add one — you can add multiple and pick a default.",

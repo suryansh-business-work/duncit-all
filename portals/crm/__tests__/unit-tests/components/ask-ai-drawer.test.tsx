@@ -125,7 +125,7 @@ describe('AskAiDrawer', () => {
   });
 
   it('holds a new question back while the assistant is still answering', async () => {
-    renderDrawer([chatMock([{ role: 'user', content: 'Summarise this lead' }], { reply: 'A banquet venue.', delay: 30 })]);
+    renderDrawer([chatMock([{ role: 'user', content: 'Summarise this lead' }], { reply: 'A banquet venue.', delay: 500 })]);
     fireEvent.click(screen.getByRole('button', { name: 'Summarise this lead' }));
     await screen.findByText('Thinking…');
 
@@ -134,7 +134,7 @@ describe('AskAiDrawer', () => {
     fireEvent.keyDown(input(), { key: 'Enter' });
 
     expect(input()).toHaveValue('Who owns it?');
-    expect(await screen.findByText('A banquet venue.')).toBeInTheDocument();
+    expect(await screen.findByText('A banquet venue.', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByText('Who owns it?', { selector: 'p' })).toBeNull();
   });
 

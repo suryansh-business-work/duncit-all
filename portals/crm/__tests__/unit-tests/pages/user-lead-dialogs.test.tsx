@@ -113,9 +113,10 @@ describe('CreateLeadDialog', () => {
 });
 
 describe('DeleteLeadsDialog', () => {
-  const deleteMock = (ids: string[], result: MockedResponse['result']): MockedResponse => ({
+  const deleteMock = (ids: string[], result: MockedResponse['result'], delay?: number): MockedResponse => ({
     request: { query: WA_DELETE_USER_LEADS, variables: { ids } },
     result,
+    delay,
   });
 
   it('stays closed when there is nothing to delete', () => {
@@ -127,14 +128,15 @@ describe('DeleteLeadsDialog', () => {
     const onClose = vi.fn();
     const onDeleted = vi.fn();
     withApollo(<DeleteLeadsDialog ids={['l1']} onClose={onClose} onDeleted={onDeleted} />, [
-      deleteMock(['l1'], { data: { waDeleteUserLeads: 1 } }),
+      // Held long enough that the in-flight "Deleting…" state is observable.
+      deleteMock(['l1'], { data: { waDeleteUserLeads: 1 } }, 500),
     ]);
     const dialog = within(screen.getByRole('dialog', { name: 'Delete lead?' }));
     expect(dialog.getByText(/Permanently delete this lead from the database/)).toBeInTheDocument();
 
     fireEvent.click(dialog.getByRole('button', { name: 'Delete' }));
     expect(await dialog.findByRole('button', { name: 'Deleting…' })).toBeDisabled();
-    await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(1));
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(1), { timeout: 3000 });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

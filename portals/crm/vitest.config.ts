@@ -20,6 +20,11 @@ export default defineConfig({
     // discovered by Cypress separately (see __tests__/e2e/cypress.config.ts).
     include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
+    // The lead-form and editor-page suites fill a full React Hook Form through
+    // MockedProvider; under v8 instrumentation on a two-core CI runner that
+    // passes 5s ("Test timed out in 5000ms" in Coverage — crm, green in
+    // crm-tests). Same setting and reason as packages/shell and pod-form.
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       // Vitest writes NO coverage report when a test fails (reportOnFailure defaults

@@ -24,6 +24,7 @@ import UserVerificationsSection from './UserVerificationsSection';
 import UserSurveysSection from './UserSurveysSection';
 import UserChangeLogsSection from './UserChangeLogsSection';
 import UserFinanceSection from './UserFinanceSection';
+import UserShopOrders from './UserShopOrders';
 import { useUserDetailsState } from './useUserDetailsState';
 import { useTranslation } from '@duncit/shell';
 
@@ -112,6 +113,11 @@ export default function UserDetailsPage() {
             value: 'payment-refund-logs',
             label: t('admin.tabs.paymentRefundLogs'),
             content: <UserFinanceSection userId={userId} />,
+          },
+          {
+            value: 'shop-orders',
+            label: t('admin.tabs.shopOrders'),
+            content: <UserShopOrders userId={userId} />,
           },
           {
             value: 'change-logs',

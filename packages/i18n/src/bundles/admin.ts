@@ -98,6 +98,22 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       verification: 'Verification',
       callEmailLogs: 'Call & Email Logs',
       paymentRefundLogs: 'Payment & Refund Logs',
+      shopOrders: 'Shop Orders',
+    },
+
+    // User details → Shop Orders: the member's Pod Shop orders.
+    userShopOrders: {
+      title: 'Pod Shop orders',
+      empty: 'This user has not ordered anything from the Pod Shop.',
+      search: 'Search by order number',
+      colPlaced: 'Placed',
+      colOrder: 'Order',
+      colItems: 'Items',
+      colTotal: 'Total',
+      colStatus: 'Status',
+      colDelivered: 'Delivered',
+      colRefund: 'Refund',
+      colCancelReason: 'Cancel reason',
     },
 
     // User details → Payment & Refund Logs: what the account paid, got back and holds in coins.

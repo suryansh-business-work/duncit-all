@@ -20,6 +20,9 @@ import WarehouseApprovalPage from './pages/warehouse-approval';
 import DuncitWarehousesPage from './pages/settings/DuncitWarehousesPage';
 import PodShopSliderPage from './pages/settings/PodShopSliderPage';
 import CartSettingsPage from './pages/cart-settings/CartSettingsPage';
+import DeletionRequestsPage from './pages/deletion-requests/DeletionRequestsPage';
+import DeletionSettingsPage from './pages/deletion-requests/DeletionSettingsPage';
+import ReturnsPage from './pages/returns/ReturnsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -71,6 +74,10 @@ export default function App() {
       <Route path="/settings/warehouses" element={products(<DuncitWarehousesPage />)} />
       <Route path="/settings/pod-shop-slider" element={products(<PodShopSliderPage />)} />
       <Route path="/cart/settings" element={products(<CartSettingsPage />)} />
+      <Route path="/returns" element={products(<ReturnsPage />)} />
+      <Route path="/deletion-requests/products" element={products(<DeletionRequestsPage key="PRODUCT" kind="PRODUCT" />)} />
+      <Route path="/deletion-requests/brands" element={products(<DeletionRequestsPage key="BRAND" kind="BRAND" />)} />
+      <Route path="/deletion-requests/settings" element={products(<DeletionSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

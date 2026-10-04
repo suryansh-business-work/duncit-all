@@ -95,7 +95,8 @@ describe('BackoutRefundPage', () => {
     renderWithProviders(<BackoutRefundPage />, { path: '/', mocks: [backoutFinanceSettingsMock()] });
 
     fireEvent.click(await screen.findByRole('button', { name: /process refund/i }));
-    expect(await screen.findByText('this member')).toBeInTheDocument();
+    // The breakup dialog names the member inside its "Refund for …" line.
+    expect(await screen.findByText(/this member/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
   });
 

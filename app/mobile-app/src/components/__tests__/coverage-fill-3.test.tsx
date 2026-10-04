@@ -77,7 +77,7 @@ describe('PodShop null product list', () => {
 describe('PodSections', () => {
   it('AboutSection falls back when there is no description', () => {
     renderWithProviders(<AboutSection pod={{ pod_description: '', pod_info: '' } as never} />);
-    expect(screen.getByText('Details coming soon.')).toBeOnTheScreen();
+    expect(screen.getByText('No description provided.')).toBeOnTheScreen();
   });
 
   it('ChargesSection renders charges with and without a note', () => {

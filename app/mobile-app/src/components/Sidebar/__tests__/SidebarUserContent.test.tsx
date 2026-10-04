@@ -59,11 +59,11 @@ describe('SidebarUserContent', () => {
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
     expect(onNavigate).toHaveBeenCalledWith('Account');
 
-    // Quick grid (Pod History / Earn) + venues card + referral card.
+    // Quick grid (Pod History / Earn) + referral card. Venues moved down to
+    // the bottom bar, so the sidebar no longer carries a venues card.
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
     expect(onNavigate).toHaveBeenCalledWith('PodHistory');
-    fireEvent.press(screen.getByTestId('sidebar-venues'));
-    expect(onNavigate).toHaveBeenCalledWith('Venues');
+    expect(screen.queryByTestId('sidebar-venues')).toBeNull();
     fireEvent.press(screen.getByTestId('sidebar-grid-earn'));
     expect(onNavigate).toHaveBeenCalledWith('Earn');
     fireEvent.press(screen.getByTestId('sidebar-referral'));

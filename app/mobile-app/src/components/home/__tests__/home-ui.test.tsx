@@ -142,19 +142,19 @@ describe('HomeVibeChips', () => {
     expect(screen.getByTestId('vibe-chip-all-image')).toBeOnTheScreen();
   });
 
-  it('applies the per-category icon layout size, and the default when absent', () => {
+  it('fills the 24px icon circle with the image, whatever icon layout the category carries', () => {
     renderWithProviders(
       <HomeVibeChips categories={categories} selectedId="" onSelect={jest.fn()} />,
     );
-    // c3 has a LEFT layout with a custom 60x30 icon → applied to the image.
+    // c3's custom 60x30 layout no longer stretches the chip: the image fills the circle.
     expect(screen.getByTestId('vibe-chip-c3-image').props.style).toMatchObject({
-      width: 60,
-      height: 30,
+      width: 24,
+      height: 24,
     });
-    // c2 has no layout → the image falls back to the default 40x40 size.
+    // c2 has no layout → the same circle size.
     expect(screen.getByTestId('vibe-chip-c2-image').props.style).toMatchObject({
-      width: 40,
-      height: 40,
+      width: 24,
+      height: 24,
     });
   });
 });
@@ -165,20 +165,27 @@ describe('PodCard', () => {
     expect(screen.getByTestId('pod-card-p1')).toBeOnTheScreen();
     expect(screen.getByText('Sunset Jam')).toBeOnTheScreen();
     expect(screen.getByText('Cafe · MG Road')).toBeOnTheScreen();
-    expect(screen.getByText('· Free')).toBeOnTheScreen();
+    expect(screen.getByText('Free')).toBeOnTheScreen();
   });
 });
 
 describe('HappeningNearbyHeader', () => {
-  it('shows the live pod count below the title', () => {
+  // The live count moved onto the rail and its See-all card; the header is
+  // just the title, and See all only appears when it has somewhere to go.
+  it('shows the title without the pod count, and no See all without a handler', () => {
     renderWithProviders(<HappeningNearbyHeader totalPods={7} />);
-    expect(screen.getByText('7 pods nearby')).toBeOnTheScreen();
-    expect(screen.getByText('See all')).toBeOnTheScreen();
+    expect(screen.getByTestId('happening-nearby-header-title')).toHaveTextContent(
+      'Happening nearby',
+    );
+    expect(screen.queryByText('7 pods nearby')).toBeNull();
+    expect(screen.queryByTestId('happening-nearby-see-all')).toBeNull();
   });
 
-  it('uses the singular label for a single pod', () => {
-    renderWithProviders(<HappeningNearbyHeader totalPods={1} />);
-    expect(screen.getByText('1 pod nearby')).toBeOnTheScreen();
+  it('gives the See all chip a spoken name that says what it opens', () => {
+    renderWithProviders(<HappeningNearbyHeader totalPods={1} onPress={jest.fn()} />);
+    expect(screen.getByText('See all')).toBeOnTheScreen();
+    expect(screen.getByLabelText('See all live pods')).toBeOnTheScreen();
+    expect(screen.queryByText('1 pod nearby')).toBeNull();
   });
 
   it('opens the nearby page from the title row and the See all chip', () => {

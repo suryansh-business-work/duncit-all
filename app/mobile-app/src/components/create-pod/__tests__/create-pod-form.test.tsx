@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 import {
   STEP_FIELDS,
   STEP_TITLES,
@@ -12,11 +14,25 @@ import {
   type CreatePodFormValues,
 } from '@/components/create-pod/create-pod.types';
 
-const futureText = (() => {
-  const date = new Date(Date.now() + 24 * 3_600_000);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-})();
+// With no admin settings loaded the schedule is typed in the fallback pattern:
+// the keyboard form of 'dd MMM yyyy' plus 'hh:mm a'.
+const TYPED_PATTERN = 'dd MM yyyy hh:mm a';
+const futureStart = new Date(Date.now() + 24 * 3_600_000);
+const futureText = format(futureStart, TYPED_PATTERN);
+const futureEndText = format(new Date(futureStart.getTime() + 2 * 3_600_000), TYPED_PATTERN);
+const pastText = '01 01 2020 10:00 AM';
+
+// A virtual pod has no venue slot to close it, so it carries its own end, and
+// its platform is picked from the shared list.
+const virtualPod: Partial<CreatePodFormValues> = {
+  pod_mode: 'VIRTUAL',
+  venue_id: '',
+  venue_slot_id: '',
+  venue_space_label: '',
+  meeting_platform: 'GOOGLE_MEET',
+  meeting_url: 'https://meet.duncit.com/x',
+  pod_end_date_time_text: futureEndText,
+};
 
 const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => ({
   ...blankCreatePodForm,
@@ -47,7 +63,11 @@ const issuesOf = (values: CreatePodFormValues) => {
 describe('parseDateTimeText', () => {
   it('parses valid text and rejects bad formats/impossible dates', () => {
     expect(parseDateTimeText(futureText)).toBeInstanceOf(Date);
+    expect(parseDateTimeText('15 07 2026 06:30 pm')).toEqual(new Date(2026, 6, 15, 18, 30));
     expect(parseDateTimeText('')).toBeNull();
+    // The old ISO-ish shape is no longer the admin's pattern.
+    expect(parseDateTimeText('2026-07-15 18:30')).toBeNull();
+    expect(parseDateTimeText('31 02 2026 06:30 PM')).toBeNull();
     expect(parseDateTimeText('01-07-2026 18:00')).toBeNull();
     expect(parseDateTimeText('2026-13-45 99:99')).toBeNull();
   });
@@ -94,37 +114,31 @@ describe('createPodSchema', () => {
   });
 
   it('requires a venue space/capacity for physical pods (skipped for virtual)', () => {
-    // Physical pod with a venue but no space → the space error fires.
-    expect(issuesOf(valid({ venue_space_label: '' }))).toContain('venue_space_label');
+    // Physical pod with a venue but neither a space nor a slot → the space error fires.
+    expect(issuesOf(valid({ venue_space_label: '', venue_slot_id: '' }))).toContain(
+      'venue_space_label',
+    );
+    // A pod already holding a slot (the club-admin edit) has its space booked.
+    expect(issuesOf(valid({ venue_space_label: '' }))).not.toContain('venue_space_label');
     // Virtual pods never need a space.
-    expect(
-      createPodSchema.safeParse(
-        valid({
-          pod_mode: 'VIRTUAL',
-          venue_id: '',
-          venue_slot_id: '',
-          venue_space_label: '',
-          meeting_url: 'https://meet.duncit.com/x',
-        }),
-      ).success,
-    ).toBe(true);
+    expect(createPodSchema.safeParse(valid(virtualPod)).success).toBe(true);
   });
 
-  it('requires a valid meeting link for virtual pods', () => {
-    const virtual = { pod_mode: 'VIRTUAL' as const, venue_id: '', venue_slot_id: '' };
-    expect(issuesOf(valid({ ...virtual, meeting_url: '' }))).toContain('meeting_url');
-    expect(issuesOf(valid({ ...virtual, meeting_url: 'nope' }))).toContain('meeting_url');
-    expect(
-      createPodSchema.safeParse(valid({ ...virtual, meeting_url: 'https://meet.duncit.com/x' }))
-        .success,
-    ).toBe(true);
+  it('requires a valid meeting link, a listed platform and an end for virtual pods', () => {
+    expect(issuesOf(valid({ ...virtualPod, meeting_url: '' }))).toContain('meeting_url');
+    expect(issuesOf(valid({ ...virtualPod, meeting_url: 'nope' }))).toContain('meeting_url');
+    expect(issuesOf(valid({ ...virtualPod, meeting_platform: 'Google meet' }))).toContain(
+      'meeting_platform',
+    );
+    expect(issuesOf(valid({ ...virtualPod, pod_end_date_time_text: '' }))).toContain(
+      'pod_end_date_time_text',
+    );
+    expect(createPodSchema.safeParse(valid(virtualPod)).success).toBe(true);
   });
 
   it('rejects past starts, ends before start, and bad numbers', () => {
-    expect(issuesOf(valid({ pod_date_time_text: '2020-01-01 10:00' }))).toContain(
-      'pod_date_time_text',
-    );
-    expect(issuesOf(valid({ pod_end_date_time_text: '2020-01-01 10:00' }))).toContain(
+    expect(issuesOf(valid({ pod_date_time_text: pastText }))).toContain('pod_date_time_text');
+    expect(issuesOf(valid({ pod_end_date_time_text: pastText }))).toContain(
       'pod_end_date_time_text',
     );
     expect(issuesOf(valid({ pod_amount_text: 'abc' }))).toContain('pod_amount_text');
@@ -139,12 +153,12 @@ describe('createPodSchema', () => {
         : result.error.issues.filter((i) => i.path[0] === 'pod_type').map((i) => i.message);
     };
     // Retired types (and anything else) are no longer a valid choice.
-    expect(messagesFor({ pod_type: 'NATIVE_FREE' })).toEqual(['Choose Free or Paid']);
+    expect(messagesFor({ pod_type: 'NATIVE_FREE' })).toEqual(['Select Free or Paid']);
     // An unset type also trips the base `min(1)` rule, so assert on the family choice.
-    expect(messagesFor({ pod_type: '' })).toContain('Choose Free or Paid');
+    expect(messagesFor({ pod_type: '' })).toContain('Select Free or Paid');
     // FREE is virtual-only, so a physical pod may not be free.
     expect(messagesFor({ pod_type: 'FREE', pod_amount_text: '0' })).toEqual([
-      'Physical pods must be Paid',
+      'Physical pods must be paid',
     ]);
     // The two legal combinations raise nothing.
     expect(messagesFor({ pod_type: 'PAID' })).toEqual([]);
@@ -152,10 +166,7 @@ describe('createPodSchema', () => {
       messagesFor({
         pod_type: 'FREE',
         pod_amount_text: '0',
-        pod_mode: 'VIRTUAL',
-        venue_id: '',
-        venue_slot_id: '',
-        meeting_url: 'https://meet.duncit.com/x',
+        ...virtualPod,
       }),
     ).toEqual([]);
   });
@@ -176,21 +187,21 @@ describe('createPodSchema', () => {
         valid({
           pod_type: 'FREE',
           pod_amount_text: '0',
-          pod_mode: 'VIRTUAL',
-          venue_id: '',
-          venue_slot_id: '',
-          meeting_url: 'https://meet.duncit.com/x',
+          ...virtualPod,
         }),
       ).success,
     ).toBe(true);
   });
 
-  it('forces free pods to amount 0 and gates enabled products', () => {
+  it('forces free pods to amount 0 and rejects an incomplete product row', () => {
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '100' }))).toContain(
       'pod_amount_text',
     );
-    expect(issuesOf(valid({ products_enabled: true, product_requests: [] }))).toContain(
-      'product_requests',
+    // Products are optional (the shop flag is derived from the rows), but a row
+    // without a chosen product is an incomplete association.
+    expect(issuesOf(valid({ products_enabled: true, product_requests: [] }))).toEqual([]);
+    expect(issuesOf(valid({ product_requests: [{ product_id: '', quantity: 2 }] }))).toContain(
+      'product_requests.0.product_id',
     );
     expect(
       createPodSchema.safeParse(
@@ -242,7 +253,7 @@ describe('buildCreatePodInput', () => {
     expect(input.is_active).toBe(true);
   });
 
-  it('drops product requests when products are disabled and nulls virtual extras', () => {
+  it('derives the shop flag from the product rows and nulls virtual extras', () => {
     const input = buildCreatePodInput(
       valid({
         pod_mode: 'VIRTUAL',
@@ -253,7 +264,13 @@ describe('buildCreatePodInput', () => {
         product_requests: [{ product_id: 'p1', quantity: 3 }],
       }),
     );
-    expect(input.product_requests).toEqual([]);
+    // The "Attach products" switch is gone: rows present means the shop is open.
+    expect(input.products_enabled).toBe(true);
+    expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
+    // A stale draft that still says "enabled" with nothing attached publishes closed.
+    expect(
+      buildCreatePodInput(valid({ products_enabled: true, product_requests: [] })).products_enabled,
+    ).toBe(false);
     expect(input.venue_id).toBeNull();
     expect(input.venue_slot_id).toBeNull();
     expect(input.meeting_platform).toBeNull();

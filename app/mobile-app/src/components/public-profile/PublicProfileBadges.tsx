@@ -77,10 +77,10 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
         onClose={() => setActive(null)}
         testID="badge-sheet"
         title={active?.badge?.title ?? ''}
-        closeLabel="Close"
+        closeLabel={t('mweb.common.close')}
         footer={
           <XStack
-            testID="badge-sheet-close"
+            testID="badge-sheet-done"
             role="button"
             tabIndex={0}
             aria-label={t('mweb.common.close')}
@@ -93,7 +93,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="600" color={color}>
-              Close
+              {t('mweb.common.close')}
             </Text>
           </XStack>
         }

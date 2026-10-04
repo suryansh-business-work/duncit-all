@@ -1,4 +1,5 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import { format } from 'date-fns';
 
 import { CreatePodStepper } from '@/components/create-pod/CreatePodStepper';
 import { blankCreatePodForm } from '@/components/create-pod/create-pod.types';
@@ -23,8 +24,9 @@ jest.mock('@/hooks/usePotentialEarnings', () => ({
   usePotentialEarnings: () => ({ waterfall: null, isLoading: false }),
 }));
 
-// Cover media is upload-only now — stub the picker so pressing "add" delivers a
-// hosted URL via onUploaded, satisfying the "at least one image" rule.
+// Cover media is upload-only now — stub the device pick so it delivers a hosted
+// URL via onUploaded (into the picker's tray), satisfying the "at least one
+// image" rule once the tray is committed.
 jest.mock('@/hooks/useMediaUpload', () => ({
   useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => ({
     uploading: false,
@@ -32,7 +34,7 @@ jest.mock('@/hooks/useMediaUpload', () => ({
     pending: null,
     stage: 'processing' as const,
     progress: null,
-    pick: jest.fn(() => onUploaded('https://cdn/img.jpg')),
+    pick: jest.fn(async () => onUploaded('https://cdn/img.jpg')),
     confirm: jest.fn(),
     cancel: jest.fn(),
   }),
@@ -95,6 +97,8 @@ const clubs = [
     category_id: 'sub-trail',
     matched_venues: [{ id: 'v1' }, { id: 'v9' }],
     matched_venues_count: 1,
+    // A physical pod can only pick a club with an open slot.
+    available_slots_count: 3,
   },
   { id: 'c2', club_name: 'Writers', location_id: 'l1', super_category_id: 'sc-sports' },
   // Right category, different city → dropped for an l1 physical pod.
@@ -167,7 +171,21 @@ const setup = (over: Record<string, unknown> = {}) => {
 
 const press = (testID: string) => fireEvent.press(screen.getByTestId(testID));
 
-// Fills step 1 (Basics) with valid values.
+// The schedule boxes speak the admin's typed pattern; with no settings loaded
+// that is the keyboard form of 'dd MMM yyyy' plus 'hh:mm a'.
+const typedAt = (hours: number) =>
+  format(new Date(Date.now() + hours * 3_600_000), 'dd MM yyyy hh:mm a');
+
+// Step 1 (Location, Category & Club): the sole host category is auto-selected,
+// so picking the mode and a club is all that is left.
+async function pickClub(mode: 'PHYSICAL' | 'VIRTUAL' = 'PHYSICAL') {
+  await screen.findByTestId('create-pod-club-c1');
+  if (mode === 'VIRTUAL') press('create-pod-mode-VIRTUAL');
+  press('create-pod-club-c1');
+  press('create-pod-submit');
+}
+
+// Fills step 2 (Basics) with valid values.
 async function fillBasics() {
   await screen.findByTestId('field-pod_title');
   fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
@@ -175,39 +193,44 @@ async function fillBasics() {
     screen.getByTestId('field-pod_description'),
     'A relaxed group hike around the lake.',
   );
-  // Cover media is upload-only — the stubbed picker appends a hosted URL.
-  fireEvent.press(screen.getByTestId('media-upload-add'));
+  // Cover media is upload-only: the picker's phone tab hands off to the stubbed
+  // device pick, which lands in the tray until "Use this image" commits it.
+  press('media-upload-add');
+  press('cover-device-add');
+  await screen.findByTestId('cover-tray-remove-0');
+  press('cover-picker-done');
   await screen.findByTestId('media-thumb-https://cdn/img.jpg');
-  // "What this pod offers" is now required.
+  // "What this pod offers" is required.
   fireEvent.changeText(screen.getByTestId('create-pod-offers-input'), 'Guided trail');
   fireEvent(screen.getByTestId('create-pod-offers-input'), 'submitEditing');
   await screen.findByTestId('create-pod-offers-chip-Guided trail');
 }
 
+// Step 3 for a physical pod: venue → space (capacity) → a slot on the calendar.
+async function bookSlot() {
+  await screen.findByTestId('create-pod-venue-v1');
+  press('create-pod-venue-v1');
+  // The space (capacity) selector gates the slot calendar — pick the whole venue.
+  press('create-pod-space-Whole venue');
+  await screen.findByTestId('slot-tile-s1');
+  press('slot-tile-s1');
+}
+
 // Drives the flow up to the Pricing step for either mode.
 async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
+  await pickClub(mode);
   await fillBasics();
   press('create-pod-submit');
-  await screen.findByTestId('create-pod-location-label');
-  if (mode === 'VIRTUAL') press('create-pod-mode-VIRTUAL');
-  press('create-pod-club-c1');
-  press('create-pod-submit');
   if (mode === 'PHYSICAL') {
-    await screen.findByTestId('create-pod-venue-v1');
-    press('create-pod-venue-v1');
-    // The space (capacity) selector gates the slot list — pick the whole venue.
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId('create-pod-slot-s1');
-    press('create-pod-slot-s1');
+    await bookSlot();
   } else {
     await screen.findByTestId('field-meeting_url');
+    // The platform is picked from the shared list, and a virtual pod has no
+    // slot to close it, so it carries its own end.
+    press('meeting_platform-GOOGLE_MEET');
     fireEvent.changeText(screen.getByTestId('field-meeting_url'), 'https://meet.duncit.com/x');
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const start = new Date(Date.now() + 24 * 3_600_000);
-    fireEvent.changeText(
-      screen.getByTestId('field-pod_date_time_text'),
-      `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())} ${pad(start.getHours())}:${pad(start.getMinutes())}`,
-    );
+    fireEvent.changeText(screen.getByTestId('field-pod_date_time_text'), typedAt(24));
+    fireEvent.changeText(screen.getByTestId('field-pod_end_date_time_text'), typedAt(26));
   }
   press('create-pod-submit');
   // The Paid card is the one constant on the pricing step — FREE is virtual-only,
@@ -220,57 +243,63 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   press('create-pod-terms');
 }
 
+const expectStep = (step: number) =>
+  expect(screen.getByTestId('create-pod-progress')).toHaveProp('aria-label', `Step ${step} of 4`);
+
 describe('CreatePodStepper', () => {
   it('walks a physical pod end to end: slot booking sets the window, then publishes', async () => {
     const { onPublish } = setup();
-    expect(screen.getByTestId('create-pod-progress')).toBeOnTheScreen();
-    expect(screen.getByText('Step 1 of 4')).toBeOnTheScreen();
+    expectStep(1);
+    expect(screen.getByTestId('create-pod-step-title')).toHaveTextContent(
+      'Location, Category & Club',
+    );
 
-    await fillBasics();
-    press('create-pod-submit');
-
-    // Step 2: default location card + auto category + club filter.
-    await screen.findByTestId('create-pod-location-label');
-    expect(screen.getByTestId('create-pod-location-label')).toHaveTextContent(/Pune/);
-    // The picker is a step-1 field now, so it is off screen here — but the sole
-    // host category was auto-selected and still scopes this step's club list.
-    expect(screen.queryByTestId('create-pod-category')).toBeNull();
-    // Category + location filter: c1 & c2 (l1 + Sports) stay; c3 (other city),
+    // Step 1: the sole host category is auto-selected and scopes the club list
+    // together with the pod city: c1 & c2 (l1 + Sports) stay; c3 (other city),
     // c4 (other category) and c5 (no category) all drop out.
+    expect(screen.getByTestId('create-pod-category-sc-sports|')).toHaveProp('aria-checked', true);
+    expect(screen.getByTestId('create-pod-club-c1-place')).toHaveTextContent(/Pune/);
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
     expect(screen.queryByTestId('create-pod-club-c4')).toBeNull();
     expect(screen.queryByTestId('create-pod-club-c5')).toBeNull();
     press('create-pod-club-c1');
+    expect(screen.getByTestId('club-preview')).toBeOnTheScreen();
+    press('create-pod-submit');
+
+    // Step 2: basics.
+    await fillBasics();
+    expectStep(2);
     press('create-pod-submit');
 
     // Step 3: only the club's matched venues in the pod city are offered; the
     // space (capacity) selector gates the slots, and picking a slot books it.
     await screen.findByTestId('create-pod-venue-v1');
     expect(screen.queryByTestId('create-pod-venue-v9')).toBeNull();
-    press('create-pod-venue-v1');
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId('create-pod-slot-s1');
-    press('create-pod-slot-s1');
+    await bookSlot();
     // Partner venue → approval note + contact card + window from slot.
     expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/venue approves/);
     expect(screen.getByTestId('create-pod-venue-contact')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-duration')).toBeOnTheScreen();
-    // Back returns to the club step, then forward again keeps the slot.
+    // Back returns to the basics step, then forward again keeps the slot.
     press('create-pod-back');
-    await screen.findByTestId('create-pod-location-label');
+    await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
+    expect(screen.getByTestId('create-pod-approval-note')).toBeOnTheScreen();
     press('create-pod-submit');
 
     // Step 4: pricing + products + price panel. This pod is PHYSICAL, so it is
     // always PAID — the Free card is not offered and Paid is preselected.
     await screen.findByTestId('create-pod-paid');
+    expectStep(4);
     expect(screen.queryByTestId('create-pod-free')).toBeNull();
     expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
-    press('products-enabled-toggle');
-    press('products-enabled-toggle');
+    // The catalogue's product carries no category, so the club's category has
+    // nothing to attach and the add button stays shut.
+    expect(screen.getByTestId('products-empty-category')).toBeOnTheScreen();
+    expect(screen.getByTestId('product-add')).toHaveProp('aria-disabled', true);
     // Pressing the already-selected Paid card is a no-op — it stays PAID.
     press('create-pod-paid');
     // The price ships blank and gates publishing, so the host must type one.
@@ -288,6 +317,10 @@ describe('CreatePodStepper', () => {
     expect(input.venue_slot_id).toBe('s1');
     expect(input.location_id).toBe('l1');
     expect(input.pod_type).toBe('PAID');
+    // The booked slot's window is the pod's window.
+    expect(new Date(input.pod_date_time).getTime()).toBe(
+      Math.floor(new Date(slot.start_at).getTime() / 60_000) * 60_000,
+    );
   });
 
   it('publishes a virtual pod (no venue, no slot, no place charges)', async () => {
@@ -296,8 +329,26 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('charge-add')).toBeNull();
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
-    expect(onPublish.mock.calls[0]?.[1].venue_id).toBeNull();
-    expect(onPublish.mock.calls[0]?.[1].venue_slot_id).toBeNull();
+    const input = onPublish.mock.calls[0]?.[1];
+    expect(input.venue_id).toBeNull();
+    expect(input.venue_slot_id).toBeNull();
+    expect(input.meeting_platform).toBe('GOOGLE_MEET');
+    expect(input.meeting_url).toBe('https://meet.duncit.com/x');
+    expect(input.pod_end_date_time).not.toBeNull();
+  });
+
+  it('holds a virtual pod on step 3 until it has a platform and an end', async () => {
+    setup();
+    await pickClub('VIRTUAL');
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('field-meeting_url');
+    fireEvent.changeText(screen.getByTestId('field-meeting_url'), 'https://meet.duncit.com/x');
+    fireEvent.changeText(screen.getByTestId('field-pod_date_time_text'), typedAt(24));
+    press('create-pod-submit');
+    await waitFor(() => expect(screen.getByTestId('meeting_platform-error')).toBeOnTheScreen());
+    expect(screen.getByTestId('pod_end_date_time_text-error')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
   });
 
   it('publishes a free virtual pod and drops FREE when the mode flips back to physical', async () => {
@@ -309,20 +360,22 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('editable', false);
     expect(screen.getByTestId('pod_amount_text-hint')).toHaveTextContent('Free pods are ₹0.');
 
-    // Back to the location step and flip to Physical — FREE is virtual-only, so
-    // the pick must not survive the switch.
+    // Back to step 1 and flip to Physical — FREE is virtual-only, so the pick
+    // must not survive the switch (and the club pick is cleared with the mode).
     press('create-pod-back');
     await screen.findByTestId('field-meeting_url');
     press('create-pod-back');
+    await screen.findByTestId('field-pod_title');
+    press('create-pod-back');
     await screen.findByTestId('create-pod-mode-PHYSICAL');
     press('create-pod-mode-PHYSICAL');
+    expect(screen.getByTestId('create-pod-club-c1')).toHaveProp('aria-checked', false);
+    press('create-pod-club-c1');
+    press('create-pod-submit');
+    await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
     // Finish the physical path and confirm the pod is back on Paid.
-    await screen.findByTestId('create-pod-venue-v1');
-    press('create-pod-venue-v1');
-    press('create-pod-space-Whole venue');
-    await screen.findByTestId('create-pod-slot-s1');
-    press('create-pod-slot-s1');
+    await bookSlot();
     press('create-pod-submit');
     await screen.findByTestId('create-pod-paid');
     expect(screen.queryByTestId('create-pod-free')).toBeNull();
@@ -350,7 +403,7 @@ describe('CreatePodStepper', () => {
       },
     });
     await screen.findByTestId('create-pod-paid');
-    expect(screen.queryByTestId('product-0')).toBeNull();
+    expect(screen.queryByTestId('attached-product-p1')).toBeNull();
     expect(screen.getByTestId('products-empty')).toBeOnTheScreen();
   });
 
@@ -360,14 +413,14 @@ describe('CreatePodStepper', () => {
   // not pick one was the host allowed to skip it.
   it('holds a host with no approved categories on step 1', async () => {
     setup({ hostCategories: [] });
-    await fillBasics();
     // Nothing to choose from — the field says why instead of showing chips.
     expect(screen.getByTestId('create-pod-category-empty')).toHaveTextContent(
       'Assigned after host onboarding',
     );
+    press('create-pod-club-c1');
     press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
-    expect(screen.queryByTestId('create-pod-location-label')).toBeNull();
+    expect(screen.queryByTestId('field-pod_title')).toBeNull();
   });
 
   it('makes multi-category hosts pick a category before leaving step 1', async () => {
@@ -392,35 +445,32 @@ describe('CreatePodStepper', () => {
         location_id: 'l1',
         super_category_id: 'sc-sports',
         matched_venues: [{ id: 'v1' }],
+        available_slots_count: 2,
       },
       { id: 'mc2', club_name: 'Chess', location_id: 'l1', super_category_id: 'sc-games' },
     ];
     setup({ hostCategories: multi, clubs: multiClubs });
-    // The picker sits above the title, so it is on screen from step 1 and the
-    // gate fires there — a host no longer fills a whole step before being told.
-    await fillBasics();
     // The hint says what the pick means, before anything has gone wrong.
     expect(screen.getByTestId('create-pod-category-hint')).toHaveTextContent(
       'In which you want to host your session',
     );
     press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
-    expect(screen.queryByTestId('create-pod-location-label')).toBeNull();
+    expect(screen.queryByTestId('field-pod_title')).toBeNull();
 
-    // Picking the Sports category releases step 1 and scopes the club list, so
-    // the Games club never appears at all.
+    // Picking the Sports category scopes the club list, so the Games club
+    // never appears at all, and releases step 1 once a club is picked.
     press('create-pod-category-sc-sports|');
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
     expect(screen.getByTestId('create-pod-club-mc1')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-mc2')).toBeNull();
-
     press('create-pod-club-mc1');
+    press('create-pod-submit');
+    await fillBasics();
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
   });
 
-  it('filters clubs by the locality picked in the header location picker', async () => {
+  it('opens the club picker per locality and lets Edit location move the pod', async () => {
     const localityClubs = [
       {
         id: 'lc1',
@@ -437,20 +487,34 @@ describe('CreatePodStepper', () => {
         locality: 'Baner',
       },
     ];
-    mockLocationApply = [{ id: 'l1' }, 'Camp'];
-    setup({ clubs: localityClubs });
-    await fillBasics();
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
-    // Both localities' clubs show before a locality is picked.
-    expect(screen.getByTestId('create-pod-club-lc1')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-club-lc2')).toBeOnTheScreen();
-    // Pick Camp in the header picker → only Camp clubs remain.
-    press('create-pod-change-location');
-    press('mock-location-apply');
+    const zonedLocations = [
+      { ...locations[0], location_zones: [{ zone_name: 'Camp' }, { zone_name: 'Baner' }] },
+      locations[1],
+    ];
+    setup({ clubs: localityClubs, locations: zonedLocations });
+    // Until a locality is picked there is no club to choose from.
+    expect(screen.getByTestId('create-pod-club-hint')).toHaveTextContent(
+      'Pick a locality to see its clubs',
+    );
+    expect(screen.queryByTestId('create-pod-club-lc1')).toBeNull();
+    // Pick Camp from the dropdown → only Camp's club is offered.
+    press('create-pod-locality-trigger');
+    press('create-pod-locality-option-Camp');
+    expect(
+      within(screen.getByTestId('create-pod-locality-trigger')).getByText('Camp'),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-hint')).toHaveTextContent('1 club in Camp');
     expect(screen.getByTestId('create-pod-club-lc1')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-lc2')).toBeNull();
-    expect(screen.getByTestId('create-pod-locality-label')).toHaveTextContent('Locality: Camp');
+    // "Edit location" applies the common picker's pick to THIS pod.
+    mockLocationApply = [{ id: 'l1' }, 'Baner'];
+    press('create-pod-edit-location');
+    press('mock-location-apply');
+    expect(
+      within(screen.getByTestId('create-pod-locality-trigger')).getByText('Baner'),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-lc2')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-club-lc1')).toBeNull();
   });
 
   it('opens the AI-monitoring guidelines dialog from the header chip', async () => {
@@ -484,6 +548,7 @@ describe('CreatePodStepper', () => {
     // The "Fix in …" link jumps back to the Basics step and sets an inline error.
     press('moderation-fix-pod_description-EMAIL-0');
     await screen.findByTestId('field-pod_description');
+    expectStep(2);
     expect(screen.getByTestId('pod_description-error')).toHaveTextContent(
       'Remove the email address',
     );
@@ -507,13 +572,12 @@ describe('CreatePodStepper', () => {
     press('create-pod-submit');
     await screen.findByTestId('moderation-blocked-dialog');
     press('moderation-blocked-close');
+    expect(screen.queryByTestId('moderation-blocked-dialog')).toBeNull();
     expect(onPublish).not.toHaveBeenCalled();
   });
 
   it('lists category clubs from any city until a location is picked', async () => {
     setup({ initialValues: { ...initialValues, location_id: '' } });
-    await fillBasics();
-    press('create-pod-submit');
     await screen.findByTestId('create-pod-club-c1');
     // No location yet → category match alone, so the other-city club c3 shows too.
     expect(screen.getByTestId('create-pod-club-c3')).toBeOnTheScreen();
@@ -548,11 +612,8 @@ describe('CreatePodStepper', () => {
       },
     ];
     setup({ clubs: subClubs, hostCategories: subHost });
-    await fillBasics();
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
     // Only the same sub-category (Trail) club matches.
-    expect(screen.getByTestId('create-pod-club-sc1')).toBeOnTheScreen();
+    expect(await screen.findByTestId('create-pod-club-sc1')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-sc2')).toBeNull();
   });
 
@@ -575,43 +636,48 @@ describe('CreatePodStepper', () => {
     ];
     // Default hostCategories carries a super but no sub → any sub matches.
     setup({ clubs: mixClubs });
-    await fillBasics();
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
-    expect(screen.getByTestId('create-pod-club-mx1')).toBeOnTheScreen();
+    expect(await screen.findByTestId('create-pod-club-mx1')).toBeOnTheScreen();
     expect(screen.getByTestId('create-pod-club-mx2')).toBeOnTheScreen();
+  });
+
+  it('refuses a physical club with no open slots and keeps step 1 unpicked', async () => {
+    setup();
+    // c2 has no open slots: the press opens the no-slots sheet instead of picking it.
+    press('create-pod-club-c2');
+    expect(screen.getByTestId('create-pod-club-c2')).toHaveProp('aria-checked', false);
+    press('create-pod-submit');
+    await waitFor(() => expect(screen.getByTestId('create-pod-club-error')).toBeOnTheScreen());
   });
 
   it('blocks Next while the current step is invalid', async () => {
     setup();
-    // Step 1: basics missing.
-    press('create-pod-submit');
-    await waitFor(() => expect(screen.getByTestId('pod_title-error')).toBeOnTheScreen());
-    await fillBasics();
-    press('create-pod-submit');
-    // Step 2: club missing.
-    await screen.findByTestId('create-pod-location-label');
+    // Step 1: club missing.
     press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('create-pod-club-error')).toBeOnTheScreen());
+    expect(screen.queryByTestId('field-pod_title')).toBeNull();
+    press('create-pod-club-c1');
+    press('create-pod-submit');
+    // Step 2: basics missing.
+    await screen.findByTestId('field-pod_title');
+    press('create-pod-submit');
+    await waitFor(() => expect(screen.getByTestId('pod_title-error')).toBeOnTheScreen());
     // Step 3 never rendered.
     expect(screen.queryByTestId('create-pod-venue-v1')).toBeNull();
   });
 
   it('requires a booked slot before leaving the venue step', async () => {
     setup();
+    await pickClub();
     await fillBasics();
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
-    press('create-pod-club-c1');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-venue-v1');
-    // Pick a space so the slot picker (and its error) render, but leave the slot unbooked.
+    // Pick a space so the slot calendar (and its error) render, but leave the slot unbooked.
     press('create-pod-space-Whole venue');
-    await screen.findByTestId('create-pod-slot-s1');
+    await screen.findByTestId('slot-tile-s1');
     press('create-pod-submit');
     await waitFor(() =>
-      expect(screen.getByTestId('create-pod-slot-error')).toHaveTextContent(/available slot/i),
+      expect(screen.getByTestId('slot-calendar-error')).toHaveTextContent(/available slot/i),
     );
   });
 
@@ -635,20 +701,25 @@ describe('CreatePodStepper', () => {
 
   it('keeps navigating even when a draft autosave fails', async () => {
     setup({ onSaveDraft: jest.fn().mockRejectedValue(new Error('save failed')) });
-    await fillBasics();
-    press('create-pod-submit');
-    expect(await screen.findByTestId('create-pod-location-label')).toBeOnTheScreen();
+    await pickClub();
+    expect(await screen.findByTestId('field-pod_title')).toBeOnTheScreen();
   });
 
   it('autosaves the draft after the debounce window', () => {
     jest.useFakeTimers();
     try {
       const { onSaveDraft } = setup();
-      fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Draft title');
+      press('create-pod-club-c1');
       act(() => {
-        jest.advanceTimersByTime(4000);
+        jest.advanceTimersByTime(3999);
+      });
+      expect(onSaveDraft).not.toHaveBeenCalled();
+      act(() => {
+        jest.advanceTimersByTime(1);
       });
       expect(onSaveDraft).toHaveBeenCalled();
+      // The draft is saved against the step the host is on.
+      expect(onSaveDraft.mock.calls[0]?.[1].step).toBe(0);
     } finally {
       jest.useRealTimers();
     }
@@ -666,7 +737,7 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
   });
 
-  it('hides the products section and clears stale product values when gated off', () => {
+  it('hides the products section when gated off', () => {
     mockFeatureFlag.mockReturnValue(false);
     // A stale draft saved on the old 8-step flow lands past the new range.
     setup({
@@ -677,15 +748,17 @@ describe('CreatePodStepper', () => {
         product_requests: [{ product_id: 'p1', quantity: 2 }],
       },
     });
-    expect(screen.getByText('Step 4 of 4')).toBeOnTheScreen();
+    expectStep(4);
     expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
-    expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
+    expect(screen.queryByTestId('pricing-step-products-card')).toBeNull();
+    expect(screen.queryByTestId('product-add')).toBeNull();
   });
 
-  it('leaves a clean draft untouched when products are gated off', () => {
+  it('starts a clean draft on step 1 when products are gated off', () => {
     mockFeatureFlag.mockReturnValue(false);
     setup();
-    expect(screen.getByTestId('field-pod_title')).toBeOnTheScreen();
+    expectStep(1);
+    expect(screen.getByTestId('create-pod-club-c1')).toBeOnTheScreen();
   });
 
   it('clears orphaned product requests even when the toggle was off', () => {

@@ -14,11 +14,20 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 // Canned taxonomy so the real CategoryCascadeField renders selectable chips.
 jest.mock('@/hooks/useCategoryLevel', () => ({
+  // Same `{ options, loading }` shape the real hook returns.
   useCategoryLevel: (level: string, parentId: string, enabled: boolean) => {
-    if (!enabled) return [];
-    if (level === 'SUPER') return [{ id: 's1', name: 'For You', level, parent_id: null }];
-    if (level === 'CATEGORY') return [{ id: 'c1', name: 'Sports', level, parent_id: parentId }];
-    return [{ id: 'b1', name: 'Badminton', level, parent_id: parentId }];
+    if (!enabled) return { options: [], loading: false };
+    if (level === 'SUPER')
+      return { options: [{ id: 's1', name: 'For You', level, parent_id: null }], loading: false };
+    if (level === 'CATEGORY')
+      return {
+        options: [{ id: 'c1', name: 'Sports', level, parent_id: parentId }],
+        loading: false,
+      };
+    return {
+      options: [{ id: 'b1', name: 'Badminton', level, parent_id: parentId }],
+      loading: false,
+    };
   },
 }));
 

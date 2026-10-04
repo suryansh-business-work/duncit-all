@@ -27,6 +27,8 @@ export function StatCard({ label, value, hint, hintColor, icon, loading }: any) 
  * whole screen down at the first line of its render.
  */
 export { PageHeader } from '../../../../../packages/ui/src/PageHeader';
+// DuncitTabs (and other shared chrome) composes sx through it.
+export { mergeSx } from '../../../../../packages/ui/src/mergeSx';
 
 export function StatusChip({ status, label }: any) {
   return <span data-testid="status-chip">{label ?? status}</span>;

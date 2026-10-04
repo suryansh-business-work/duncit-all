@@ -46,13 +46,15 @@ describe('PodInfo', () => {
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
       'Sports › Racquet › Badminton',
     );
-    expect(screen.getByText('₹199')).toBeOnTheScreen();
-    expect(screen.getByText('Physical')).toBeOnTheScreen();
-    expect(screen.getByText('One time')).toBeOnTheScreen();
-    expect(screen.getByText('Pod expired')).toBeOnTheScreen();
-    expect(screen.getByText('People in')).toBeOnTheScreen();
-    expect(screen.getByText('2 spots left')).toBeOnTheScreen();
-    expect(screen.getByText('8 views')).toBeOnTheScreen();
+    // The chip row carries price · mode · when (the occurrence and view-count
+    // chips were retired from the title block).
+    expect(screen.getByTestId('pod-info-price-chip')).toHaveTextContent('₹199');
+    expect(screen.getByTestId('pod-info-mode-chip')).toHaveTextContent('Physical');
+    expect(screen.getByTestId('pod-info-time-chip')).toHaveTextContent('Pod expired');
+    expect(screen.queryByText('8 views')).toBeNull();
+    // 2 of 4 spots taken → 2 people in, 2 spots left.
+    expect(screen.getByTestId('pod-info-attendees-stat')).toHaveTextContent('People in2');
+    expect(screen.getByTestId('pod-info-spots-left-stat')).toHaveTextContent(/2$/);
   });
 
   it('handles free + host-less + spots-less pods with a future date', () => {
@@ -94,7 +96,9 @@ describe('PodSchedule', () => {
         onJoinMeeting={() => Promise.resolve('https://meet.example')}
       />,
     );
-    expect(screen.getByText('Meeting')).toBeOnTheScreen();
+    // A virtual pod shows how to join instead of a place + map.
+    expect(screen.queryByTestId('pod-map')).toBeNull();
+    expect(screen.queryByTestId('pod-venue-details')).toBeNull();
     expect(screen.getByText('Google Meet')).toBeOnTheScreen();
     expect(screen.getByText('Bring a mic')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-join-meeting'));
@@ -151,8 +155,8 @@ describe('PodSchedule', () => {
         onJoinMeeting={neverJoined}
       />,
     );
-    expect(screen.getByText('Where')).toBeOnTheScreen();
-    expect(screen.getByText(/Hall/)).toBeOnTheScreen();
+    // The place row reads the venue's full address, empty parts skipped.
+    expect(screen.getByText('Hall, A1, Loc, City, ST, 12345, IN')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-map')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-venue-details'));
     expect(onOpenVenue).toHaveBeenCalledWith('v1');

@@ -113,8 +113,10 @@ describe('VenueCard', () => {
     renderWithProviders(<VenueCard venue={venue()} onOpen={onOpen} />);
     expect(screen.getByText('Sunset Cafe')).toBeOnTheScreen();
     expect(screen.getByText('CAFE · 40 capacity')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('venue-card-v1'));
-    expect(onOpen).toHaveBeenCalled();
+    // The card itself is no longer one pressable (the photo slider owns its own
+    // taps); the name block opens the venue.
+    fireEvent.press(screen.getByRole('button', { name: 'Sunset Cafe' }));
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
   it('renders a cover image and tolerates missing location', () => {

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 
 import { HomeFeed } from '@/components/home/HomeFeed';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
@@ -80,9 +80,14 @@ describe('HomeFeed', () => {
   it('renders the sections and opens a club + pod', () => {
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('home-feed')).toBeOnTheScreen();
-    expect(screen.getByText('Runners')).toBeOnTheScreen();
+    // The club is named twice: on its own rail's header and on the recommendation card.
+    expect(screen.getByTestId('club-section-cl-1-header-title')).toHaveTextContent('Runners');
+    expect(within(screen.getByTestId('club-recommendation')).getByText('Runners')).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByTestId('club-section-cl-1'));
+    // The rail and its header's See all share this test id; press the See all.
+    fireEvent.press(
+      within(screen.getByTestId('club-section-cl-1-header')).getByTestId('club-section-cl-1'),
+    );
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
 
     fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]!);
@@ -96,9 +101,11 @@ describe('HomeFeed', () => {
   it('opens the Happening Nearby page from the header title and the See all chip', () => {
     renderWithProviders(<HomeFeed />);
     fireEvent.press(screen.getByTestId('happening-nearby-header'));
-    expect(mockNavigate).toHaveBeenCalledWith('HappeningNearby');
+    // A press event is not a start index, so the page opens at its top.
+    expect(mockNavigate).toHaveBeenCalledWith('HappeningNearby', undefined);
     fireEvent.press(screen.getByTestId('happening-nearby-see-all'));
     expect(mockNavigate).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).toHaveBeenLastCalledWith('HappeningNearby', undefined);
   });
 
   it('shows the Previous Pods rail and opens the page or a past pod', () => {
@@ -108,7 +115,7 @@ describe('HomeFeed', () => {
     });
     renderWithProviders(<HomeFeed />);
     fireEvent.press(screen.getByTestId('previous-pods-see-all'));
-    expect(mockNavigate).toHaveBeenCalledWith('PreviousPods');
+    expect(mockNavigate).toHaveBeenCalledWith('PreviousPods', undefined);
     fireEvent.press(screen.getByTestId('pod-card-pod-old'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-old' });
   });

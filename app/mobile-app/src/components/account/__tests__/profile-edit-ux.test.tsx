@@ -49,8 +49,14 @@ const isDisabled = (testID: string) => {
 
 describe('CompletionMeter', () => {
   it('shows the computed completion percentage (8/10 filled → 80%)', () => {
-    renderWithProviders(<CompletionMeter profile={me} />);
+    // `me` fills 9 of the 10 counted fields (no photo); dropping the bio leaves 8.
+    renderWithProviders(<CompletionMeter profile={{ ...me, bio: null }} />);
     expect(screen.getByTestId('profile-completion-value')).toHaveTextContent('80% complete');
+  });
+
+  it('shows 90% when only the profile photo is missing (9/10 filled)', () => {
+    renderWithProviders(<CompletionMeter profile={me} />);
+    expect(screen.getByTestId('profile-completion-value')).toHaveTextContent('90% complete');
   });
 
   it('shows 0% for an empty profile', () => {

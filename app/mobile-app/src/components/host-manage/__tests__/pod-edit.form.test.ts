@@ -67,11 +67,21 @@ describe('podEditInitialValues', () => {
         { url: 'https://cdn/b.mp4', type: 'VIDEO' },
       ],
     });
+    // No capacity on the row and no discount set: blank spots, discount off.
     expect(values).toEqual({
       pod_title: 'Hike',
       pod_description: 'desc',
+      no_of_spots_text: '',
       media_text: 'https://cdn/a.jpg\nhttps://cdn/b.mp4',
+      ticket_discount_enabled: false,
+      ticket_discount_tiers: [],
     });
+  });
+
+  it('prefills the capacity as text', () => {
+    expect(
+      podEditInitialValues({ id: 'p1', pod_title: 'Hike', no_of_spots: 12 }).no_of_spots_text,
+    ).toBe('12');
   });
 
   it('tolerates missing fields and a missing pod', () => {

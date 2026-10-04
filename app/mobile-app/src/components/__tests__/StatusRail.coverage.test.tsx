@@ -10,8 +10,13 @@ jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: () => mockUseStat
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
+// Duncit's pinned official group has its own suite; with none live the rail
+// shows only the followed stories these tests walk through.
+jest.mock('@/hooks/useOfficialStatus', () => ({
+  useOfficialStatus: () => ({ statuses: [], seenIds: new Set<string>(), recordView: jest.fn() }),
+}));
 
-const mockRecordView = jest.fn();
+const mockRecordView = jest.fn().mockResolvedValue(undefined);
 const mockDeleteStory = jest.fn().mockResolvedValue(undefined);
 // A reassignable Set so a test can flip a story's seen state (a new reference)
 // and re-render to exercise the "freeze while open" behaviour.
@@ -56,6 +61,7 @@ beforeEach(() => {
   // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
   jest.spyOn(Math, 'random').mockReturnValue(0);
   mockDeleteStory.mockResolvedValue(undefined);
+  mockRecordView.mockResolvedValue(undefined);
   mockGraphql.mockResolvedValue({ storyViewers: [] });
   mockUseStoryRail.mockReturnValue({
     mine: null,

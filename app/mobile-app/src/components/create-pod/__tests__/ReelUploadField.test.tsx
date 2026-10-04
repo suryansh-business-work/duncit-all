@@ -54,7 +54,10 @@ describe('ReelUploadField', () => {
     expect(screen.queryByTestId('reel-upload-add')).toBeNull();
     openPanel();
     expect(screen.getByTestId('reel-upload-add')).toBeOnTheScreen();
-    expect(screen.getByText(/plays in the Explore feed/)).toBeOnTheScreen();
+    // The cap comes from Upload Settings, falling back to 100 MB before they load.
+    expect(
+      screen.getByText(/shows in Explore while this pod is live.*up to 100 MB/),
+    ).toBeOnTheScreen();
     openPanel();
     expect(screen.queryByTestId('reel-upload-add')).toBeNull();
   });

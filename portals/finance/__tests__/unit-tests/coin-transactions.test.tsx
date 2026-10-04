@@ -125,8 +125,10 @@ describe('CoinTransactionsPage — the pod filter', () => {
     await waitFor(() => expect(screen.getByTestId('search-probe')).toHaveTextContent('?pod_id=pod-doc-1'));
     expect(podBox()).toHaveValue('Sunday Badminton');
 
-    // MUI keeps the clear button visibility-hidden until the field is hovered.
-    fireEvent.click(screen.getByRole('button', { name: 'Clear', hidden: true }));
+    // MUI keeps the clear button visibility-hidden (and so nameless) until the
+    // field is focused or hovered.
+    fireEvent.focus(podBox());
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear' }));
     await waitFor(() => expect(screen.getByTestId('search-probe')).toHaveTextContent(/^$/));
     expect(podBox()).toHaveValue('');
   });
@@ -156,6 +158,8 @@ describe('CoinTransactionsPage — the pod filter', () => {
     };
     mount([coinCurrencyMock(), searched, coinPodPickerMock()]);
 
+    // Typed into a focused box: MUI resets the text of an unfocused Autocomplete.
+    fireEvent.focus(podBox());
     fireEvent.change(podBox(), { target: { value: 'morn' } });
     expect(await screen.findByRole('option', { name: /Morning Run/ }, { timeout: 2000 })).toBeInTheDocument();
     expect(screen.getByText('run-club / DUN-POD-9001')).toBeInTheDocument();

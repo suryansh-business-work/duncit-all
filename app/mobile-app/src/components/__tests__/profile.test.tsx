@@ -107,14 +107,16 @@ describe('ProfileHeader', () => {
   it('shares the profile with the full name', () => {
     renderWithProviders(<ProfileHeader me={me as never} />);
     fireEvent.press(screen.getByTestId('profile-share'));
-    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Sam Lee');
+    // No handle yet → the share link falls back to the user id.
+    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Sam Lee', undefined);
   });
 
   it('shares the profile, falling back to a default name', () => {
-    const m2 = { ...me, full_name: null } as never;
+    const m2 = { ...me, full_name: null, username: 'sam.lee' } as never;
     renderWithProviders(<ProfileHeader me={m2} />);
     fireEvent.press(screen.getByTestId('profile-share'));
-    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Profile');
+    // The handle rides along so the link is /u/<handle>.
+    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Profile', 'sam.lee');
   });
 });
 

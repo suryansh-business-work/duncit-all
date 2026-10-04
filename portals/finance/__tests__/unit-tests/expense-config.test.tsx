@@ -142,6 +142,8 @@ describe('RelatedEntityPicker', () => {
       relatedEntitiesMock('VENUE', [], 'zzz'),
       relatedEntitiesMock('VENUE', VENUE_ENTITIES, null),
     ]);
+    // Typed into a focused box: MUI resets the text of an unfocused Autocomplete.
+    fireEvent.focus(entityBox());
     fireEvent.change(entityBox(), { target: { value: 'zzz' } });
     expect(await screen.findByText('Nothing matches that search.', {}, { timeout: 2000 })).toBeInTheDocument();
   });

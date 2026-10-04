@@ -161,6 +161,8 @@ describe('HostCancelPage', () => {
     await waitFor(() => expect(podTitles()).toEqual(['Sunset YogaHema Kaur']));
     unmount();
 
+    // `query` spreads the current first query, so drop the search above first.
+    resetTableControls();
     tableControls.queries = [query({ sortBy: 'refunded_total', sortDir: 'asc' })];
     renderWithProviders(<HostCancelPage />, { path: '/', mocks: [podCancellationsMock('HOST', rows)] });
     await waitFor(() => expect(podTitles()).toEqual(['Book ClubHema Kaur', 'Sunset YogaHema Kaur']));

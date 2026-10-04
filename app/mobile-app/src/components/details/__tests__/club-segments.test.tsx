@@ -49,6 +49,16 @@ const fullClub = {
     { id: 'h1', name: 'Asha', avatar_url: null },
     { id: 'h2', name: 'Ben', avatar_url: 'https://img/b.jpg' },
   ],
+  club_admins: [
+    {
+      id: 'a1',
+      name: 'Chitra Admin',
+      avatar_url: null,
+      email: 'chitra@club.test',
+      phone: null,
+      whatsapp: null,
+    },
+  ],
 } as never;
 const moments = [{ url: 'https://img/m.jpg', type: 'IMAGE' }] as never;
 
@@ -99,6 +109,10 @@ describe('ClubSegments', () => {
     fireEvent.press(screen.getByTestId('club-host-h1'));
     expect(onOpenHost).toHaveBeenCalledWith('h1');
 
+    fireEvent.press(screen.getByTestId('club-tab-ADMINS'));
+    expect(screen.getByTestId('club-admins')).toBeOnTheScreen();
+    expect(screen.getByText('Chitra Admin')).toBeOnTheScreen();
+
     fireEvent.press(screen.getByTestId('club-tab-PODS'));
     expect(screen.getByTestId('club-pods-schedule')).toBeOnTheScreen();
   });
@@ -112,6 +126,7 @@ describe('ClubSegments', () => {
       values: [],
       faqs: [],
       hosts: [],
+      club_admins: [],
     } as never;
     renderWithProviders(
       <ClubSegments
@@ -125,6 +140,7 @@ describe('ClubSegments', () => {
     expect(screen.getByTestId('club-tab-PODS')).toBeOnTheScreen();
     expect(screen.queryByTestId('club-tab-MOMENTS')).toBeNull();
     expect(screen.queryByTestId('club-tab-HOSTS')).toBeNull();
+    expect(screen.queryByTestId('club-tab-ADMINS')).toBeNull();
     expect(screen.getByTestId('club-no-pods')).toBeOnTheScreen();
   });
 });

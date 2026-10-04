@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { Text } from 'tamagui';
+import { PRESS } from '@duncit/buttons-native';
 
 import { PressScale, pressedOpacityStyle } from '@/animations/PressScale';
 import { Reveal } from '@/animations/Reveal';
@@ -28,7 +29,7 @@ describe('Reveal', () => {
 });
 
 describe('PressScale', () => {
-  it('fires onPress and dims to 0.85 only while pressed', () => {
+  it('fires onPress', () => {
     const onPress = jest.fn();
     renderWithProviders(
       <PressScale testID="press-scale" accessibilityLabel="Do it" onPress={onPress}>
@@ -39,9 +40,15 @@ describe('PressScale', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('dims to 0.85 only while pressed', () => {
-    expect(pressedOpacityStyle(undefined, true)).toEqual([undefined, { opacity: 0.85 }]);
-    expect(pressedOpacityStyle(undefined, false)).toEqual([undefined, { opacity: 1 }]);
+  it('dims and compresses with the shared PRESS.control treatment only while pressed', () => {
+    expect(PRESS.control.opacity).toBeLessThan(1);
+    expect(PRESS.control.scale).toBeLessThan(1);
+    const base = { padding: 4 };
+    expect(pressedOpacityStyle(base, true)).toEqual([
+      base,
+      { opacity: PRESS.control.opacity, transform: [{ scale: PRESS.control.scale }] },
+    ]);
+    expect(pressedOpacityStyle(base, false)).toEqual([base, { opacity: 1 }]);
   });
 
   it('ignores presses when disabled', () => {

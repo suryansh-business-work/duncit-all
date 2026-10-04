@@ -157,11 +157,14 @@ describe('useCallReconcile', () => {
     const answer = vi.fn(() => (answers.shift() ?? statusAnswer('COMPLETED'))());
     const { onStatus } = mount('log-1', [reconcileMock(answer)]);
 
-    await advance(4_000);
+    // Each poll fires at +4 s; the mocked link answers one fake-timer hop later.
+    const poll = () => advance(4_001);
+    await poll();
     expect(onStatus).toHaveBeenLastCalledWith('RINGING');
-    await advance(4_000);
+    await poll();
+    expect(answer).toHaveBeenCalledTimes(2);
     expect(onStatus).toHaveBeenCalledTimes(1);
-    await advance(4_000);
+    await poll();
     expect(onStatus).toHaveBeenLastCalledWith('COMPLETED');
 
     await advance(20_000);

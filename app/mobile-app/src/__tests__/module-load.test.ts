@@ -24,7 +24,7 @@ import path from 'node:path';
  * `navigation/linking.ts` reads the app's URI scheme at IMPORT time, and
  * expo-linking gets that from the expo-constants manifest — which does not
  * exist in a jest environment, only in a built app. Everything else here loads
- * for real; this is the one module that needs the platform stood in for.
+ * for real; platform modules like this one are the only things stood in for.
  */
 jest.mock('expo-linking', () => ({
   createURL: (path_: string) => `duncit://${path_}`,
@@ -32,6 +32,18 @@ jest.mock('expo-linking', () => ({
   useURL: () => null,
   addEventListener: () => ({ remove: () => undefined }),
   getInitialURL: async () => null,
+}));
+
+/**
+ * expo-contacts declares `class Contact extends expoContactsModule.Contact` at
+ * IMPORT time, and that base class comes from the native module — which jest
+ * has no binary for, so the `extends` target is undefined. Like expo-linking,
+ * the platform is stood in for; the modules that import it still load for real.
+ */
+jest.mock('expo-contacts', () => ({
+  ContactField: { FULL_NAME: 'fullName', PHONES: 'phones' },
+  requestPermissionsAsync: async () => ({ status: 'denied' }),
+  Contact: { getCount: async () => 0, getAllDetails: async () => [] },
 }));
 
 const SRC = path.join(__dirname, '..');

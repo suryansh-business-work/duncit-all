@@ -11,6 +11,12 @@ const mockSharePost = jest.fn();
 jest.mock('@/utils/share', () => ({ sharePost: (...a: unknown[]) => mockSharePost(...a) }));
 beforeEach(() => mockSharePost.mockClear());
 
+/** Delete lives in the header's 3-dot menu, which closes once an item is chosen. */
+const pressDelete = () => {
+  fireEvent.press(screen.getByTestId('post-actions-menu-trigger'));
+  fireEvent.press(screen.getByTestId('post-actions-menu-delete'));
+};
+
 const post: PostDetail = {
   id: 'p1',
   author_id: 'me',
@@ -112,7 +118,7 @@ describe('PostViewerSheet', () => {
     renderWithProviders(
       <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={onDeleted} />,
     );
-    fireEvent.press(screen.getByTestId('post-viewer-delete'));
+    pressDelete();
     await waitFor(() => expect(onDeleted).toHaveBeenCalled());
     expect(api.deletePost).toHaveBeenCalled();
   });
@@ -123,7 +129,7 @@ describe('PostViewerSheet', () => {
     renderWithProviders(
       <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={onDeleted} />,
     );
-    fireEvent.press(screen.getByTestId('post-viewer-delete'));
+    pressDelete();
     await waitFor(() => expect(api.deletePost).toHaveBeenCalled());
     expect(onDeleted).not.toHaveBeenCalled();
   });
@@ -134,7 +140,10 @@ describe('PostViewerSheet', () => {
     renderWithProviders(
       <PostViewerSheet postId="p1" meId="me" onClose={onClose} onDeleted={jest.fn()} />,
     );
-    expect(screen.queryByTestId('post-viewer-delete')).toBeNull();
+    // A non-owner's menu offers Report, never Delete.
+    fireEvent.press(screen.getByTestId('post-actions-menu-trigger'));
+    expect(screen.getByTestId('post-actions-menu-report')).toBeOnTheScreen();
+    expect(screen.queryByTestId('post-actions-menu-delete')).toBeNull();
     fireEvent.press(screen.getByTestId('post-viewer-close'));
     expect(onClose).toHaveBeenCalled();
   });
@@ -155,8 +164,8 @@ describe('PostViewerSheet', () => {
     renderWithProviders(
       <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={onDeleted} />,
     );
-    fireEvent.press(screen.getByTestId('post-viewer-delete'));
-    fireEvent.press(screen.getByTestId('post-viewer-delete'));
+    pressDelete();
+    pressDelete();
     expect(api.deletePost).toHaveBeenCalledTimes(1);
     resolveDelete();
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));

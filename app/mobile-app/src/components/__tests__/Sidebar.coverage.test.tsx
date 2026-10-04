@@ -7,7 +7,6 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 const mockMe = jest.fn();
-const mockAccount = jest.fn();
 const mockPolicies = jest.fn();
 const mockFlags: Record<string, boolean> = {};
 
@@ -35,7 +34,6 @@ jest.mock('@/hooks/useMe', () => ({
   useMe: () => mockMe(),
   useRoleLabels: () => ({ labelFor: (k: string) => k }),
 }));
-jest.mock('@/hooks/useAccount', () => ({ useAccount: () => mockAccount() }));
 jest.mock('@/hooks/useFeatureFlag', () => ({
   useFeatureFlag: (key: string) => mockFlags[key] ?? false,
 }));
@@ -48,7 +46,6 @@ beforeEach(() => {
   mockMe.mockReturnValue({
     data: { me: { full_name: 'Asha', email: 'a@d.com', roles: ['HOST', 'VENUE_OWNER'] } },
   });
-  mockAccount.mockReturnValue({ me: { first_name: 'Asha' } });
   mockPolicies.mockReturnValue({
     data: { publicPolicies: [{ id: '1', slug: 'terms', title: 'Terms' }] },
   });
@@ -63,7 +60,10 @@ describe('Sidebar branch coverage', () => {
   });
 
   it('hides the incomplete banner once the profile is 100% complete', () => {
-    mockAccount.mockReturnValue({ me: FULL_ACCOUNT });
+    // Completion is read off the same user info record as the identity.
+    mockMe.mockReturnValue({
+      data: { me: { ...FULL_ACCOUNT, full_name: 'Asha Roy', email: 'a@d.com', roles: ['HOST'] } },
+    });
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.queryByTestId('profile-completion')).toBeNull();
   });
@@ -80,7 +80,6 @@ describe('Sidebar branch coverage', () => {
 
   it('copes with no signed-in user and no policies (no switch button)', () => {
     mockMe.mockReturnValue({ data: {} });
-    mockAccount.mockReturnValue({ me: null });
     mockPolicies.mockReturnValue({ data: {} });
     renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();

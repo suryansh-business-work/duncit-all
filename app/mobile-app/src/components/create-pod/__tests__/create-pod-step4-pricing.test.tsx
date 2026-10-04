@@ -405,15 +405,20 @@ describe('Step 4 products — category empty state', () => {
   it('tells the host when the pod category has no attachable products', () => {
     mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
     renderProducts([]);
-    expect(screen.getByTestId('products-empty')).toHaveTextContent(
+    expect(screen.getByTestId('products-empty-category')).toHaveTextContent(
       'No products available for this category.',
     );
+    // With nothing to pick, the add button stays shut.
+    expect(screen.getByTestId('product-add')).toHaveProp('aria-disabled', true);
   });
 
-  it('shows no empty state once the category has products', () => {
+  it('shows no category empty state once the category has products', () => {
     mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
     renderProducts([{ id: 'p1', product_name: 'Shuttle', unit_cost: 100, available_count: 5 }]);
-    expect(screen.queryByTestId('products-empty')).toBeNull();
+    expect(screen.queryByTestId('products-empty-category')).toBeNull();
+    expect(screen.getByTestId('product-add')).toHaveProp('aria-disabled', false);
+    // Nothing is attached yet, which is its own (separate) hint.
+    expect(screen.getByTestId('products-empty')).toHaveTextContent('No products attached yet.');
   });
 });
 

@@ -24,6 +24,13 @@ import {
   reviewClaimMock,
 } from '../mocks/employee-expense.mock';
 
+// @duncit/ui is aliased to a lightweight stub; the page's DuncitTabs merges its
+// strip styles with the real `mergeSx`, so hand that one helper back unchanged.
+vi.mock('@duncit/ui', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  mergeSx: (await import('../../../../packages/ui/src/mergeSx')).mergeSx,
+}));
+
 const renderPage = (mocks: MockedResponse[] = [employeeSummaryMock()]) =>
   renderWithProviders(<EmployeeExpensePage />, { mocks });
 

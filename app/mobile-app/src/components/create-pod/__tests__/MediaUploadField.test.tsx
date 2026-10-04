@@ -10,7 +10,7 @@ let mockError: string | undefined;
 let mockUploadUrl: string | null = 'https://cdn/new.jpg';
 jest.mock('@/hooks/useMediaUpload', () => ({
   useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => {
-    mockPick.mockImplementation(() => {
+    mockPick.mockImplementation(async () => {
       if (mockUploadUrl) onUploaded(mockUploadUrl);
     });
     return {
@@ -45,15 +45,25 @@ describe('MediaUploadField', () => {
   it('picks from the library and appends the uploaded URL as a thumbnail', async () => {
     renderWithProviders(<Harness />);
     fireEvent.press(screen.getByTestId('media-upload-add'));
-    await waitFor(() =>
-      expect(screen.getByTestId('media-thumb-https://cdn/new.jpg')).toBeOnTheScreen(),
-    );
+    expect(screen.getByTestId('cover-picker')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('cover-device-add'));
+    // The upload lands in the picker's tray first; "Use this image" commits it.
+    await waitFor(() => expect(screen.getByTestId('cover-tray-remove-0')).toBeOnTheScreen());
+    expect(screen.queryByTestId('media-thumb-https://cdn/new.jpg')).toBeNull();
+    fireEvent.press(screen.getByTestId('cover-picker-done'));
+    expect(screen.getByTestId('media-thumb-https://cdn/new.jpg')).toBeOnTheScreen();
+    expect(screen.queryByTestId('cover-picker')).toBeNull();
   });
 
   it('ignores a cancelled pick', () => {
     mockUploadUrl = null;
     renderWithProviders(<Harness />);
     fireEvent.press(screen.getByTestId('media-upload-add'));
+    fireEvent.press(screen.getByTestId('cover-device-add'));
+    expect(mockPick).toHaveBeenCalledTimes(1);
+    // Nothing reached the tray, so "Use this image" stays inert.
+    fireEvent.press(screen.getByTestId('cover-picker-done'));
+    expect(screen.getByTestId('cover-picker')).toBeOnTheScreen();
     expect(screen.queryByTestId(/media-thumb-/)).toBeNull();
   });
 
@@ -73,6 +83,7 @@ describe('MediaUploadField', () => {
     expect(screen.getByTestId('media-upload-error')).toBeOnTheScreen();
     expect(screen.getByTestId('media_text-error')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('media-upload-add'));
+    expect(screen.queryByTestId('cover-picker')).toBeNull();
     expect(mockPick).not.toHaveBeenCalled();
   });
 

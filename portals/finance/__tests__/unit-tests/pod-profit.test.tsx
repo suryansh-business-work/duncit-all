@@ -1,5 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderHook, screen, fireEvent, within } from '@testing-library/react';
+
+// @duncit/ui is aliased to a lightweight stub; the page's DuncitTabs merges its
+// strip styles with the real `mergeSx`, so hand that one helper back unchanged.
+vi.mock('@duncit/ui', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  mergeSx: (await import('../../../../packages/ui/src/mergeSx')).mergeSx,
+}));
+
+// jsdom has no canvas, so chart.js throws as soon as an input re-renders a
+// chart. The charts' own data and callbacks are covered in
+// pod-profit-charts.test; here they only need to stand in as labelled images.
+vi.mock('react-chartjs-2', () => {
+  const Chart = (props: { 'aria-label'?: string }) => <div role="img" aria-label={props['aria-label']} />;
+  return { Bar: Chart, Doughnut: Chart };
+});
 import { DEFAULT_INPUTS, formatRupees, type PodProfitInputs } from '../../src/pages/calculators/pod-profit/types';
 import { useCalculator } from '../../src/pages/calculators/pod-profit/useCalculator';
 import PodProfitCalculatorPage from '../../src/pages/calculators/pod-profit';

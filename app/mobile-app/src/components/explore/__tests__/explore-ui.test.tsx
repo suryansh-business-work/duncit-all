@@ -4,6 +4,7 @@ import { useVideoPlayer } from 'expo-video';
 
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { ExploreReels } from '@/components/explore/ExploreReels';
+import { ScreenRefreshProvider, useRefreshRegistration } from '@/components/PullToRefresh';
 import { useExplore } from '@/hooks/useExplore';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -113,7 +114,10 @@ describe('ExplorePodCard', () => {
     expect(screen.getByText('Free spot')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('reel-like-p-1'));
     expect(onToggleLike).toHaveBeenCalled();
-    fireEvent.press(screen.getByTestId('reel-save-p-1'));
+    // At 700pt the rail (now led by the sound toggle) overflows, so Save sits
+    // behind "More".
+    fireEvent.press(screen.getByTestId('reel-more'));
+    fireEvent.press(screen.getByTestId('reel-more-save'));
     expect(onToggleSave).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-comment-p-1'));
     expect(onComment).toHaveBeenCalled();
@@ -197,7 +201,7 @@ describe('ExplorePodCard', () => {
     expect(onOpen).toHaveBeenCalled();
   });
 
-  it('shows every action inline when the screen is tall enough', () => {
+  it('shows every action inline when the screen is tall enough', async () => {
     renderWithProviders(
       <ExplorePodCard
         soundOn={false}
@@ -219,7 +223,15 @@ describe('ExplorePodCard', () => {
     expect(screen.queryByTestId('reel-more')).toBeNull();
     const shareSpy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
     fireEvent.press(screen.getByTestId('reel-share-p-tall'));
-    expect(shareSpy).toHaveBeenCalled();
+    // The tracked link is minted first, so the share sheet opens a tick later.
+    await waitFor(() =>
+      expect(shareSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Pod tall',
+          message: expect.stringContaining('Pod tall — join on Duncit'),
+        }),
+      ),
+    );
     shareSpy.mockRestore();
   });
 
@@ -519,7 +531,9 @@ describe('ExploreReels', () => {
   it('wires the per-reel save/like handlers and item layout', () => {
     renderWithProviders(<ExploreReels />);
     layout();
-    fireEvent.press(screen.getByTestId('reel-save-p-1'));
+    // A 700pt reel collapses Save into the "More" menu.
+    fireEvent.press(screen.getByTestId('reel-more'));
+    fireEvent.press(screen.getByTestId('reel-more-save'));
     expect(base.toggleSave).toHaveBeenCalledWith('1', false);
     fireEvent.press(screen.getByTestId('reel-like-p-1'));
     expect(base.toggleLike).toHaveBeenCalledWith('1', { liked_by_me: false, like_count: 3 });
@@ -579,8 +593,18 @@ describe('ExploreReels', () => {
 
   it('pull-to-refresh reloads the feed (item 12)', async () => {
     const refetch = jest.fn().mockResolvedValue(undefined);
-    mockedExplore.mockReturnValue({ ...base, refetch });
-    renderWithProviders(<ExploreReels />);
+    // The pull is the screen's: useExplore registers its reload with the
+    // screen's refresh provider (as the real hook does), and the reels' control
+    // runs whatever that screen has registered.
+    mockedExplore.mockImplementation(() => {
+      useRefreshRegistration(refetch);
+      return { ...base, refetch };
+    });
+    renderWithProviders(
+      <ScreenRefreshProvider>
+        <ExploreReels />
+      </ScreenRefreshProvider>,
+    );
     layout();
     const list = screen.UNSAFE_getByType(FlatList);
     await act(async () => {

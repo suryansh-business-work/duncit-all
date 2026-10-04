@@ -2,6 +2,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PodEditDialog } from '@/components/host-manage/PodEditDialog';
+import { ModeratePodContentDocument } from '@/graphql/create-pod';
+import { HostUpdatePodDocument, PodSpotLimitsDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -28,9 +30,25 @@ const pod = {
   pod_images_and_videos: [{ url: 'https://cdn/img.jpg', type: 'IMAGE' }],
 };
 
+// The sheet talks to the server four ways: the AI-monitoring copy, the spot
+// range, the content check and the write. Route each to its own mock so a test
+// steers the one it is about and the others behave like a healthy server.
+const mockSave = jest.fn();
+const mockModerate = jest.fn();
+const saveCalls = () => mockRequest.mock.calls.filter(([doc]) => doc === HostUpdatePodDocument);
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockRequest.mockResolvedValue({ hostUpdatePod: { id: 'p1' } });
+  mockSave.mockReset().mockResolvedValue({ hostUpdatePod: { id: 'p1' } });
+  mockModerate
+    .mockReset()
+    .mockResolvedValue({ moderatePodContent: { allowed: true, violations: [] } });
+  mockRequest.mockImplementation((doc: unknown, vars: unknown) => {
+    if (doc === HostUpdatePodDocument) return mockSave(vars);
+    if (doc === ModeratePodContentDocument) return mockModerate(vars);
+    if (doc === PodSpotLimitsDocument) return Promise.resolve({ podSpotLimits: null });
+    return Promise.resolve({ aiMonitoringConfig: null });
+  });
 });
 
 describe('PodEditDialog', () => {
@@ -46,8 +64,12 @@ describe('PodEditDialog', () => {
     fireEvent.changeText(screen.getByTestId('field-pod_title'), 'New title');
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    // The content check runs on the edited copy before the write.
+    expect(mockModerate).toHaveBeenCalledWith({
+      input: expect.objectContaining({ pod_title: 'New title' }),
+    });
     expect(mockRequest).toHaveBeenCalledWith(
-      expect.anything(),
+      HostUpdatePodDocument,
       {
         pod_doc_id: 'p1',
         input: expect.objectContaining({ pod_title: 'New title' }),
@@ -64,17 +86,24 @@ describe('PodEditDialog', () => {
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     await waitFor(() => expect(screen.getByTestId('pod_title-error')).toBeOnTheScreen());
     expect(screen.getByTestId('media_text-error')).toBeOnTheScreen();
-    expect(mockRequest).not.toHaveBeenCalled();
+    expect(mockModerate).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
   });
 
   it('surfaces a server failure and a non-Error rejection', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('FORBIDDEN'));
+    mockSave.mockRejectedValueOnce(new Error('FORBIDDEN'));
     renderWithProviders(<PodEditDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     await waitFor(() => expect(screen.getByTestId('pod-edit-error')).toBeOnTheScreen());
     expect(screen.getByText('FORBIDDEN')).toBeOnTheScreen();
 
-    mockRequest.mockRejectedValueOnce('nope');
+    // A bare string rejection is still a message worth showing as-is…
+    mockSave.mockRejectedValueOnce('nope');
+    fireEvent.press(screen.getByTestId('pod-edit-save'));
+    await waitFor(() => expect(screen.getByText('nope')).toBeOnTheScreen());
+
+    // …while a rejection with nothing readable falls back to the generic line.
+    mockSave.mockRejectedValueOnce({ code: 500 });
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     await waitFor(() => expect(screen.getByText('Could not save the pod')).toBeOnTheScreen());
   });
@@ -83,7 +112,7 @@ describe('PodEditDialog', () => {
     const onClose = jest.fn();
     const onSaved = jest.fn();
     let resolve!: (value: unknown) => void;
-    mockRequest.mockReturnValue(
+    mockSave.mockReturnValue(
       new Promise((r) => {
         resolve = r;
       }),
@@ -95,7 +124,7 @@ describe('PodEditDialog', () => {
     fireEvent.press(screen.getByTestId('pod-edit-cancel'));
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     expect(onClose).not.toHaveBeenCalled();
-    expect(mockRequest).toHaveBeenCalledTimes(1);
+    expect(saveCalls()).toHaveLength(1);
     await waitFor(async () => {
       resolve({ hostUpdatePod: { id: 'p1' } });
       await Promise.resolve();

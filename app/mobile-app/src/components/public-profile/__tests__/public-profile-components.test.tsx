@@ -80,7 +80,13 @@ describe('PublicProfileBadges', () => {
     fireEvent.press(screen.getByTestId('badge-ub1'));
     expect(screen.getByTestId('badge-sheet')).toBeOnTheScreen();
     expect(screen.getByText('Five pods')).toBeOnTheScreen();
+    // The header X closes it...
     fireEvent.press(screen.getByTestId('badge-sheet-close'));
+    expect(screen.queryByTestId('badge-sheet')).toBeNull();
+    // ...and so does the footer's own Close.
+    fireEvent.press(screen.getByTestId('badge-ub1'));
+    fireEvent.press(screen.getByTestId('badge-sheet-done'));
+    expect(screen.queryByTestId('badge-sheet')).toBeNull();
   });
 
   it('renders a badge image, no-description/no-date badge, and closes via backdrop', () => {

@@ -36,7 +36,9 @@ describe('ConfirmDialog', () => {
       />,
     );
     expect(screen.getByText('Delete')).toBeOnTheScreen();
-    fireEvent.press(screen.getByLabelText('Close'));
+    // The scrim is a touch target hidden from screen readers, so it is found by id.
+    fireEvent.press(screen.getByTestId('confirm-dialog-backdrop'));
+    expect(onCancel).toHaveBeenCalledTimes(1);
     fireEvent.press(screen.getByTestId('confirm-dialog-cancel'));
     expect(onCancel).toHaveBeenCalledTimes(2);
   });

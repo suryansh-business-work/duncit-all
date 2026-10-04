@@ -40,13 +40,13 @@ describe('PodDeleteDialog', () => {
     expect(screen.queryByTestId('pod-delete-dialog')).toBeNull();
   });
 
-  it('shows the direct-delete impact when no one else joined', async () => {
+  it('shows the direct-cancel impact when no one else joined', async () => {
     mockRequest.mockResolvedValue(impact());
     renderDialog();
     await waitFor(() => expect(screen.getByTestId('pod-delete-impact')).toBeOnTheScreen());
-    expect(screen.getByText(/deleted immediately/i)).toBeOnTheScreen();
+    expect(screen.getByText(/cancelled immediately/i)).toBeOnTheScreen();
     expect(
-      within(screen.getByTestId('pod-delete-confirm')).getByText('Delete pod'),
+      within(screen.getByTestId('pod-delete-confirm')).getByText('Cancel pod'),
     ).toBeOnTheScreen();
   });
 
@@ -56,7 +56,9 @@ describe('PodDeleteDialog', () => {
     );
     renderDialog();
     await waitFor(() => expect(screen.getByText(/refund of ₹500/i)).toBeOnTheScreen());
-    expect(screen.getByText('Initiate refunds & delete')).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId('pod-delete-confirm')).getByText('Initiate refunds & cancel'),
+    ).toBeOnTheScreen();
   });
 
   it('shows the no-refund audience impact for free pods', async () => {
@@ -108,7 +110,7 @@ describe('PodDeleteDialog', () => {
     fireEvent.press(screen.getByTestId('pod-delete-confirm'));
     await waitFor(() => expect(screen.getByText('FORBIDDEN')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('pod-delete-confirm'));
-    await waitFor(() => expect(screen.getByText('Could not delete the pod')).toBeOnTheScreen());
+    await waitFor(() => expect(screen.getByText('Could not cancel the pod')).toBeOnTheScreen());
   });
 
   it('keeps the spinner when the impact fetch fails, and cancels', async () => {

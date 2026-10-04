@@ -122,8 +122,11 @@ describe('PublicProfilePosts', () => {
         isOwner={false}
       />,
     );
+    // A post opens the full like/comment post viewer, and its close dismisses it.
     fireEvent.press(screen.getByTestId('public-profile-post-0'));
-    fireEvent.press(screen.getByTestId('image-viewer-close'));
+    expect(screen.getByTestId('post-viewer')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('post-viewer-close'));
+    expect(screen.queryByTestId('post-viewer')).toBeNull();
     // A story opens the timed story viewer, not the plain image viewer.
     fireEvent.press(screen.getByTestId('public-profile-story-0'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();

@@ -347,12 +347,15 @@ describe('PodHistoryDetails', () => {
     expect(screen.queryByText('Refund: Not started')).toBeNull();
   });
 
-  it('says Visited once the pod has happened, and reports a refund that was asked for', () => {
+  it('says Visited once the pod has happened and they checked in, and reports a refund that was asked for', () => {
     renderWithProviders(
       <PodHistoryDetails
         item={membership({
           pod: endedPod,
           participation: baseParticipation({
+            // "Visited" is earned by the check-in, never by the clock alone.
+            attended: true,
+            attendance_recorded: true,
             backouts: [{ refund_status: 'PROCESSED', seats: 1, seats_before: 1 }],
           }),
         })}
@@ -553,7 +556,7 @@ describe('KeepSpotDialog', () => {
     renderWithProviders(<KeepSpotDialog open busy={false} attemptsLeft={2} {...h} />);
     expect(screen.getByText(/up to 2 more times/)).toBeOnTheScreen();
     expect(screen.queryByTestId('keep-spot-error')).toBeNull();
-    fireEvent.press(screen.getByTestId('keep-spot-close'));
+    fireEvent.press(screen.getByTestId('keep-spot-dialog-close'));
     fireEvent.press(screen.getByTestId('keep-spot-cancel'));
     fireEvent.press(screen.getByTestId('keep-spot-confirm'));
     expect(h.onClose).toHaveBeenCalledTimes(2);
@@ -581,7 +584,10 @@ describe('KeepSpotDialog', () => {
     expect(screen.getByText('Restoring…')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('keep-spot-confirm'));
     fireEvent.press(screen.getByTestId('keep-spot-cancel'));
-    fireEvent.press(screen.getByTestId('keep-spot-close'));
+    // The close button is hidden and the backdrop stops dismissing while the
+    // restore is in flight.
+    expect(screen.queryByTestId('keep-spot-dialog-close')).toBeNull();
+    fireEvent.press(screen.getByTestId('keep-spot-dialog-backdrop'));
     expect(h.onConfirm).not.toHaveBeenCalled();
     expect(h.onClose).not.toHaveBeenCalled();
   });

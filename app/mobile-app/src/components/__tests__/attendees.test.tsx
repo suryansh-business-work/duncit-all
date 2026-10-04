@@ -46,7 +46,7 @@ const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars?.name === undefined ? key : `${key}:${options.vars.name}`;
 
 describe('buildAttendeePeople', () => {
-  it('orders hosts first and fills missing profiles with nulls', () => {
+  it('orders hosts first, fills missing profiles with nulls and carries seat counts', () => {
     const people = buildAttendeePeople(
       [
         { user_id: 'u1', full_name: 'Asha', profile_photo: 'https://x/p.jpg' },
@@ -54,14 +54,18 @@ describe('buildAttendeePeople', () => {
       ],
       ['u1', 'unknown', 'h1'],
       ['h1'],
+      { u1: 3 },
     );
     expect(people.map((p) => p.user_id)).toEqual(['h1', 'u1', 'unknown']);
     expect(people[0]?.is_host).toBe(true);
+    // A party booking holds several seats; everyone else holds the default one.
+    expect(people.map((p) => p.seats)).toEqual([1, 3, 1]);
     expect(people[2]).toEqual({
       user_id: 'unknown',
       full_name: null,
       profile_photo: null,
       is_host: false,
+      seats: 1,
     });
     expect(buildAttendeePeople([], undefined as never, [])).toEqual([]);
   });

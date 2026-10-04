@@ -121,9 +121,12 @@ describe('RemindersTab', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Delete reminder' }));
     expect(await screen.findByText('Delete "Call back about the rooftop"?')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('confirm-dialog-cancel'));
-    await waitFor(() => expect(screen.queryByText('Delete "Call back about the rooftop"?')).toBeNull());
+    // The dialog lingers while it fades out, hiding the list from assistive tech until it is gone.
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(remove).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete reminder' }));
+    expect(await screen.findByText('Delete "Call back about the rooftop"?')).toBeInTheDocument();
     fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
     await waitFor(() => expect(remove).toHaveBeenCalled());
   });

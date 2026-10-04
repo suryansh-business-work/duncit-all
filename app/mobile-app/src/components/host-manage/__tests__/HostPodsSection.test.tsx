@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { useHostPods } from '@/hooks/useHostPods';
@@ -155,6 +155,26 @@ const api = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+// A pod that has already run — the only kind the sheet offers Complete for.
+const pastPod = {
+  id: 'p6',
+  pod_id: 'pod-6',
+  club_slug: 'hikers',
+  pod_title: 'Old Hike',
+  pod_date_time: '2020-01-01T10:00:00Z',
+  pod_end_date_time: null,
+  pod_mode: 'PHYSICAL',
+  zone_name: null,
+  pod_type: 'PAID',
+};
+
+// Every per-pod action lives behind the row's overflow button: open the sheet,
+// then pick the action from it.
+const pickAction = (rowActionsTestId: string, actionTestId: string) => {
+  fireEvent.press(screen.getByTestId(rowActionsTestId));
+  fireEvent.press(screen.getByTestId(actionTestId));
+};
+
 beforeEach(() => jest.clearAllMocks());
 
 describe('HostPodsSection', () => {
@@ -177,76 +197,101 @@ describe('HostPodsSection', () => {
     });
   });
 
-  it('edits a pod, then closes or refetches on save', () => {
+  it('edits a pod from its actions sheet, then closes or refetches on save', () => {
     const hookApi = api();
     mockedUse.mockReturnValue(hookApi);
     renderWithProviders(<HostPodsSection />);
-    fireEvent.press(screen.getByTestId('host-pod-edit-p1'));
+    pickAction('host-pod-actions-p1', 'pod-action-edit');
     expect(screen.getByTestId('mock-edit-dialog')).toBeOnTheScreen();
+    expect(screen.queryByTestId('mock-resubmit-dialog')).toBeNull();
     fireEvent(screen.getByTestId('mock-edit-saved'), 'touchEnd');
-    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('mock-edit-dialog')).toBeNull();
-    // Reopen and dismiss without saving.
-    fireEvent.press(screen.getByTestId('host-pod-edit-p2'));
+    // Reopen and dismiss without saving — nothing is re-read.
+    pickAction('host-pod-actions-p2', 'pod-action-edit');
     fireEvent(screen.getByTestId('mock-edit-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-edit-dialog')).toBeNull();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the Venue Rejected status + note and edits it via the resubmission flow', () => {
+  it('lists requested and rejected pods in their own sections and resubmits a rejected one', () => {
     const hookApi = api();
     mockedUse.mockReturnValue(hookApi);
     renderWithProviders(<HostPodsSection />);
-    expect(screen.getByTestId('host-pod-approval-p4')).toHaveTextContent('Venue Rejected');
-    expect(screen.getByTestId('host-pod-rejected-note-p4')).toBeOnTheScreen();
-    // A pending pod shows the warning chip but no note; edit stays limited.
-    expect(screen.getByTestId('host-pod-approval-p5')).toHaveTextContent('Venue Approval Pending');
-    expect(screen.queryByTestId('host-pod-rejected-note-p5')).toBeNull();
-    // A normal pod carries neither the chip nor the note.
-    expect(screen.queryByTestId('host-pod-approval-p1')).toBeNull();
-    expect(screen.queryByTestId('host-pod-rejected-note-p1')).toBeNull();
+    // The venue's refusal moves the pod into Rejected Pods, with its chip + note.
+    const rejected = within(screen.getByTestId('rejected-pods-section'));
+    expect(rejected.getByText('Rejected Pods')).toBeOnTheScreen();
+    expect(rejected.getByTestId('venue-request-approval-p4')).toHaveTextContent('Venue Rejected');
+    expect(rejected.getByTestId('venue-request-note-p4')).toBeOnTheScreen();
+    // A pending pod waits in Requested Pods: the warning chip, but no note.
+    const requested = within(screen.getByTestId('requested-pods-section'));
+    expect(requested.getByTestId('venue-request-approval-p5')).toHaveTextContent(
+      'Venue Approval Pending',
+    );
+    expect(requested.queryByTestId('venue-request-note-p5')).toBeNull();
+    // Neither leaks into Your pods, and a normal pod carries no chip or note.
+    const yours = within(screen.getByTestId('host-pods-section'));
+    expect(yours.queryByTestId('host-pod-open-p4')).toBeNull();
+    expect(yours.queryByTestId('host-pod-open-p5')).toBeNull();
+    expect(yours.queryByTestId('host-pod-approval-p1')).toBeNull();
+    expect(yours.queryByTestId('host-pod-rejected-note-p1')).toBeNull();
 
-    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    // A rejected pod never runs, so its sheet drops the attendee actions and its
+    // Edit opens the full resubmission flow, not the limited edit.
+    fireEvent.press(screen.getByTestId('venue-request-actions-p4'));
+    expect(screen.queryByTestId('pod-action-scan')).toBeNull();
+    expect(screen.queryByTestId('pod-action-attendance')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-action-edit'));
     expect(screen.getByTestId('mock-resubmit-dialog')).toBeOnTheScreen();
     expect(screen.queryByTestId('mock-edit-dialog')).toBeNull();
     fireEvent(screen.getByTestId('mock-resubmit-saved'), 'touchEnd');
-    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('mock-resubmit-dialog')).toBeNull();
     // Reopen and dismiss without resubmitting.
-    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    pickAction('venue-request-actions-p4', 'pod-action-edit');
     fireEvent(screen.getByTestId('mock-resubmit-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-resubmit-dialog')).toBeNull();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('deletes a pod, then closes or refetches on delete', () => {
+  it('cancels a pod from its actions sheet, then closes or refetches on delete', () => {
     const hookApi = api();
     mockedUse.mockReturnValue(hookApi);
     renderWithProviders(<HostPodsSection />);
-    fireEvent.press(screen.getByTestId('host-pod-delete-p1'));
+    pickAction('host-pod-actions-p1', 'pod-action-cancel');
     expect(screen.getByTestId('mock-delete-dialog')).toBeOnTheScreen();
     fireEvent(screen.getByTestId('mock-delete-deleted'), 'touchEnd');
-    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('mock-delete-dialog')).toBeNull();
-    fireEvent.press(screen.getByTestId('host-pod-delete-p3'));
+    pickAction('host-pod-actions-p3', 'pod-action-cancel');
     fireEvent(screen.getByTestId('mock-delete-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-delete-dialog')).toBeNull();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('completes a pod, then closes or refetches on submit', () => {
-    const hookApi = api();
+  it('offers Complete only for a pod that has run, then closes or refetches on submit', () => {
+    const hookApi = api({ pods: [...pods, pastPod] });
     mockedUse.mockReturnValue(hookApi);
     // Completion also notifies the screen, which refetches the Host Share list
     // the completion just added a payout to.
     const onPodCompleted = jest.fn();
     renderWithProviders(<HostPodsSection onPodCompleted={onPodCompleted} />);
-    fireEvent.press(screen.getByTestId('host-pod-complete-p1'));
+    // An upcoming pod cannot be completed yet.
+    fireEvent.press(screen.getByTestId('host-pod-actions-p1'));
+    expect(screen.queryByTestId('pod-action-complete')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-action-slot-request'));
+    expect(mockNavigate).toHaveBeenCalledWith('PodPending', { podId: 'p1' });
+
+    pickAction('host-pod-actions-p6', 'pod-action-complete');
     expect(screen.getByTestId('mock-complete-dialog')).toBeOnTheScreen();
     fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
-    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(hookApi.refetch).toHaveBeenCalledTimes(1);
     expect(onPodCompleted).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
-    fireEvent.press(screen.getByTestId('host-pod-complete-p2'));
+    pickAction('host-pod-actions-p6', 'pod-action-complete');
     fireEvent(screen.getByTestId('mock-complete-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
+    expect(onPodCompleted).toHaveBeenCalledTimes(1);
   });
 
   it('stages type/time/price choices and resets them before applying the default', () => {
@@ -285,17 +330,22 @@ describe('HostPodsSection', () => {
   });
 
   it('keeps the section visible when a refetch fails', () => {
-    const hookApi = api({ refetch: jest.fn().mockRejectedValue(new Error('down')) });
+    const hookApi = api({
+      pods: [...pods, pastPod],
+      refetch: jest.fn().mockRejectedValue(new Error('down')),
+    });
     mockedUse.mockReturnValue(hookApi);
     renderWithProviders(<HostPodsSection />);
-    fireEvent.press(screen.getByTestId('host-pod-edit-p1'));
+    pickAction('host-pod-actions-p1', 'pod-action-edit');
     fireEvent(screen.getByTestId('mock-edit-saved'), 'touchEnd');
-    fireEvent.press(screen.getByTestId('host-pod-delete-p2'));
+    pickAction('host-pod-actions-p2', 'pod-action-cancel');
     fireEvent(screen.getByTestId('mock-delete-deleted'), 'touchEnd');
-    fireEvent.press(screen.getByTestId('host-pod-complete-p3'));
+    pickAction('host-pod-actions-p6', 'pod-action-complete');
     fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
-    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    pickAction('venue-request-actions-p4', 'pod-action-edit');
     fireEvent(screen.getByTestId('mock-resubmit-saved'), 'touchEnd');
+    expect(hookApi.refetch).toHaveBeenCalledTimes(4);
     expect(screen.getByTestId('host-pods-section')).toBeOnTheScreen();
+    expect(screen.getByTestId('host-pod-open-p1')).toBeOnTheScreen();
   });
 });

@@ -31,10 +31,11 @@ describe('OfflineBanner', () => {
 });
 
 describe('NotFoundScreen', () => {
-  it('renders 404 and navigates home', () => {
+  it('renders the not-found heading and navigates home', () => {
     renderWithProviders(<NotFoundScreen />);
-    expect(screen.getByText('404')).toBeOnTheScreen();
-    expect(screen.getByText('Page not found')).toBeOnTheScreen();
+    // One icon, one line: the heading carries the message (no "404" numeral).
+    expect(screen.getByTestId('not-found-title')).toHaveTextContent('Page not found');
+    expect(screen.queryByText('404')).toBeNull();
     fireEvent.press(screen.getByTestId('not-found-home'));
     expect(mockNavigate).toHaveBeenCalledWith('Home');
   });

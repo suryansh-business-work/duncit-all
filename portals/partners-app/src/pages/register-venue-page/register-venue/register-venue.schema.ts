@@ -2,7 +2,9 @@ import { z } from 'zod';
 import { BANK_PAYOUT_METHODS, POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
 import { BANK_ACCOUNT_NUMBER, IFSC, UPI_ID } from '@duncit/regex';
 import { fallbackT, type Translate } from '@duncit/shell';
-import type { RegisterVenueValues, VenueSectionKey } from './register-venue.types';
+import type { RegisterVenueValues, TaxDocTypes, VenueSectionKey } from './register-venue.types';
+
+const NO_TAX_DOCS: TaxDocTypes = { has_gstin: '', has_pan: '' };
 
 const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
 const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
@@ -61,10 +63,21 @@ const taxIdIssue = (
   return pattern.test(value.toUpperCase()) ? null : messages.format;
 };
 
-/** Payout Method's messages depend on the reader's language (`t` from the form
- * that renders it); every other field here is pre-existing, unlocalized debt
- * this change does not touch. */
-export const registerVenueSchema = (t: Translate = fallbackT) => z.object({
+/** The switched-on tax ids whose proof document is not uploaded yet. */
+const missingTaxDocuments = (
+  values: Pick<RegisterVenueValues, 'has_gstin' | 'has_pan' | 'documents'>,
+  taxDocTypes: TaxDocTypes,
+) =>
+  (['has_gstin', 'has_pan'] as const).filter((toggle) => {
+    const type = taxDocTypes[toggle];
+    return values[toggle] && type && !values.documents.some((doc) => doc.type === type && doc.url);
+  });
+
+/** Payout Method's and the tax documents' messages depend on the reader's
+ * language (`t` from the form that renders it); every other field here is
+ * pre-existing, unlocalized debt this change does not touch. `taxDocTypes`
+ * names the document each GSTIN / PAN switch requires while it is on. */
+export const registerVenueSchema = (t: Translate = fallbackT, taxDocTypes: TaxDocTypes = NO_TAX_DOCS) => z.object({
   venue_name: zodRules.requiredText('Venue name', 2, 120),
   description: z
     .string()
@@ -152,6 +165,13 @@ export const registerVenueSchema = (t: Translate = fallbackT) => z.object({
       format: 'PAN must follow format ABCDE1234F',
     });
     if (panIssue) ctx.addIssue({ code: 'custom', path: ['pan'], message: panIssue });
+    for (const toggle of missingTaxDocuments(values, taxDocTypes)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [toggle],
+        message: t('partners.registerVenuePage.taxDocumentRequired', { vars: { type: taxDocTypes[toggle] } }),
+      });
+    }
     if (values.payout_method === 'UPI') {
       if (!values.upi_id) {
         ctx.addIssue({ code: 'custom', path: ['upi_id'], message: t('partners.registerVenuePage.upiIdRequired') });

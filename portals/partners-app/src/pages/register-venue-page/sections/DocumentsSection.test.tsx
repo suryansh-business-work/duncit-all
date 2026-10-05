@@ -30,6 +30,8 @@ afterEach(cleanup);
 const config: VenueRegistrationConfig = {
   venue_types: ['Cafe'],
   doc_types: ['PAN Card', 'Trade License', 'Fire NOC'],
+  gstin_doc_type: '',
+  pan_doc_type: '',
   capacity_item_limit: 5,
   amenities: [],
   facilities: [],

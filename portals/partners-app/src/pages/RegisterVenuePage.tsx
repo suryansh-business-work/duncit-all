@@ -52,6 +52,8 @@ export default function RegisterVenuePage() {
   const config: VenueRegistrationConfig = configQuery.data?.venueRegistrationConfig ?? {
     venue_types: [],
     doc_types: [],
+    gstin_doc_type: '',
+    pan_doc_type: '',
     capacity_item_limit: 50,
     amenities: [],
     facilities: [],

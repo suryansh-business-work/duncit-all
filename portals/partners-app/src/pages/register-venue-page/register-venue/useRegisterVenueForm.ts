@@ -18,6 +18,7 @@ import {
   blankRegisterVenueValues,
   type RegisterVenueMode,
   type RegisterVenueValues,
+  type TaxDocTypes,
   type VenueSectionKey,
 } from './register-venue.types';
 
@@ -47,14 +48,21 @@ interface Options {
   locations: any[];
   account: { name: string; email: string };
   mode: RegisterVenueMode;
+  /** From the registration config — the document each tax-id switch requires. */
+  taxDocTypes?: TaxDocTypes;
   onPersisted: () => Promise<unknown>;
 }
 
-export function useRegisterVenueForm({ venue, locations, account, mode, onPersisted }: Readonly<Options>) {
+export function useRegisterVenueForm({ venue, locations, account, mode, taxDocTypes, onPersisted }: Readonly<Options>) {
   const { t } = useTranslation();
-  // Rebuilt only when the reader's language changes, not on every render —
-  // registerVenueSchema() constructs a fresh Zod object each call.
-  const schema = useMemo(() => registerVenueSchema(t), [t]);
+  // Rebuilt only when the reader's language or the config changes, not on every
+  // render — registerVenueSchema() constructs a fresh Zod object each call.
+  const gstinDocType = taxDocTypes?.has_gstin ?? '';
+  const panDocType = taxDocTypes?.has_pan ?? '';
+  const schema = useMemo(
+    () => registerVenueSchema(t, { has_gstin: gstinDocType, has_pan: panDocType }),
+    [t, gstinDocType, panDocType]
+  );
   // Scoped to the MODE's sections, so an approved venue cannot be deep-linked
   // to ?selectedtab=review — a section its rail does not offer and its form
   // would render as nothing.

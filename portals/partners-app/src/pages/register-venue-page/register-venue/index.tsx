@@ -9,12 +9,14 @@ export {
 } from './register-venue.mappers';
 export { useRegisterVenueForm } from './useRegisterVenueForm';
 export type { EditableSectionKey, SectionState } from './useRegisterVenueForm';
-export { blankRegisterVenueValues } from './register-venue.types';
+export { blankRegisterVenueValues, taxDocTypesOf } from './register-venue.types';
 export type {
   CapacityRow,
   DocRow,
   RegisterVenueMode,
   RegisterVenueValues,
+  TaxDocTypes,
+  TaxToggle,
   VenueLocationValues,
   VenueRegistrationConfig,
   VenueSectionKey,

@@ -25,6 +25,8 @@ import {
   VENUE_CAPACITY_ITEM_LIMIT,
   VENUE_DOC_TYPES,
   VENUE_FACILITIES,
+  VENUE_GSTIN_DOC_TYPE,
+  VENUE_PAN_DOC_TYPE,
   VENUE_SECURITY,
   VENUE_TYPES,
 } from './venue.constants';
@@ -679,6 +681,8 @@ export const venueService = {
     return {
       venue_types: VENUE_TYPES,
       doc_types: VENUE_DOC_TYPES,
+      gstin_doc_type: VENUE_GSTIN_DOC_TYPE,
+      pan_doc_type: VENUE_PAN_DOC_TYPE,
       capacity_item_limit: VENUE_CAPACITY_ITEM_LIMIT,
       amenities: VENUE_AMENITIES,
       facilities: VENUE_FACILITIES,

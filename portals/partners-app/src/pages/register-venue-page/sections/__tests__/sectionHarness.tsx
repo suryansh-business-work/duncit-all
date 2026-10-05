@@ -20,6 +20,8 @@ export type FormRef = { current: SectionForm | null };
 export const sectionConfig: VenueRegistrationConfig = {
   venue_types: ['Cafe', 'Banquet hall'],
   doc_types: ['PAN Card', 'Trade License'],
+  gstin_doc_type: '',
+  pan_doc_type: '',
   capacity_item_limit: 2,
   amenities: ['AC', 'Wi-Fi'],
   facilities: ['Parking'],

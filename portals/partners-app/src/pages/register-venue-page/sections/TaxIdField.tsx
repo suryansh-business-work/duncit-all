@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { FormControlLabel, FormHelperText, Stack, Switch, TextField } from '@mui/material';
 import type { RegisterVenueValues } from '../register-venue';
@@ -14,10 +15,15 @@ interface Props {
   hint: string;
   locked: boolean;
   lockedHint: string;
+  /** Shown under the number while the switch is on — the proof document upload. */
+  children?: ReactNode;
+  /** Called when the reader turns the switch off, so its document is dropped too. */
+  onToggleOff?: () => void;
 }
 
 /**
- * An optional tax id: a switch, and the number only while the switch is on.
+ * An optional tax id: a switch, and the number (plus its proof document) only
+ * while the switch is on.
  * Turning it off clears nothing in the form, but the mappers send a blank, so
  * a venue without the number is saved as having none.
  */
@@ -31,6 +37,8 @@ export default function TaxIdField({
   hint,
   locked,
   lockedHint,
+  children,
+  onToggleOff,
 }: Readonly<Props>) {
   const { control, watch } = form;
   const has = watch(toggleName);
@@ -46,7 +54,10 @@ export default function TaxIdField({
             control={
               <Switch
                 checked={field.value}
-                onChange={(_, checked) => field.onChange(checked)}
+                onChange={(_, checked) => {
+                  field.onChange(checked);
+                  if (!checked) onToggleOff?.();
+                }}
                 onBlur={field.onBlur}
                 disabled={locked}
                 slotProps={{ input: { 'aria-describedby': hintId } }}
@@ -76,6 +87,7 @@ export default function TaxIdField({
           )}
         />
       )}
+      {has && children}
     </Stack>
   );
 }

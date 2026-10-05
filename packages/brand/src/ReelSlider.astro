@@ -1,0 +1,357 @@
+---
+/**
+ * The home-page Reel Slider — a 3D coverflow of up to ten reels the Website
+ * portal manages (Website portal > Reel Slider). See reel-slider.ts.
+ *
+ * The section ships HIDDEN and stays hidden until its reels arrive: a site with
+ * none (or an API that does not answer) shows nothing rather than an empty stage.
+ *
+ * Plain CSS, not Tailwind: this package is outside every site's Tailwind scan.
+ * The stage is a LITERAL dark in both themes — the words and controls on it are
+ * always white, so what sits under them must never invert with the palette.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+import { reelSliderCopy, type ReelSite } from './reel-slider';
+
+interface Props {
+  /** Where to read the reels from. The site already has this per environment. */
+  graphqlUrl: string;
+  /** Which website's reels to show. */
+  site: ReelSite;
+  /** The site's build-time translator. Omit it and the shipped copy renders. */
+  t?: SiteTranslate;
+  class?: string;
+}
+
+const { graphqlUrl, site, t = siteT, class: className = '' } = Astro.props;
+const copy = JSON.stringify(reelSliderCopy((key) => t(key)));
+---
+
+<section
+  class:list={['reel-slider', className]}
+  data-reel-slider
+  data-graphql={graphqlUrl}
+  data-site={site}
+  data-copy={copy}
+  aria-roledescription="carousel"
+  aria-label={t('website.brand.reels.label')}
+  hidden
+>
+  <div class="reel-glow" aria-hidden="true"></div>
+  <header class="reel-header">
+    <span class="reel-eyebrow">{t('website.brand.reels.eyebrow')}</span>
+    <h2 class="reel-heading">{t('website.brand.reels.heading')}</h2>
+  </header>
+  <div class="reel-stage" data-reel-stage></div>
+  <div class="reel-nav">
+    <button type="button" class="reel-icon-button reel-arrow" data-reel-prev><i aria-hidden="true"></i></button>
+    <div class="reel-dots" data-reel-dots></div>
+    <button type="button" class="reel-icon-button reel-arrow" data-reel-next><i aria-hidden="true"></i></button>
+  </div>
+  <p class="reel-sr" aria-live="polite" data-reel-live></p>
+</section>
+
+<script>
+  import { fetchSiteReels, type ReelSite, type ReelSliderCopy } from './reel-slider';
+  import { mountReelSlider } from './reel-slider-dom';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-reel-slider]')) {
+    const { graphql = '', site = 'MAIN', copy = '{}' } = root.dataset;
+    fetchSiteReels(graphql, site as ReelSite)
+      .then((reels) => {
+        if (!reels.length) return;
+        root.hidden = false;
+        mountReelSlider(root, reels, JSON.parse(copy) as ReelSliderCopy);
+      })
+      .catch((error) => {
+        root.hidden = true;
+        console.warn('[reel-slider] could not start', error);
+      });
+  }
+</script>
+
+<style is:global>
+  .reel-slider {
+    --reel-ink: #fff;
+    --reel-w: clamp(220px, 22vw, 330px);
+    --reel-h: calc(var(--reel-w) * 16 / 9);
+    --reel-gap: calc(var(--reel-w) * 0.74);
+    --reel-depth: -170px;
+    --reel-tilt: -22deg;
+    --reel-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin-top: 0.75rem;
+    border-radius: 1.5rem;
+    padding: 4rem 1rem 3rem;
+    background: var(--color-frame, #100e14);
+    color: var(--reel-ink);
+  }
+  .reel-slider[hidden] {
+    display: none;
+  }
+  .reel-glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 50% at 50% 100%, color-mix(in srgb, var(--color-secondary, #5865f2) 45%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 15% 10%, color-mix(in srgb, var(--color-primary, #ff5757) 22%, transparent), transparent 70%);
+  }
+  .reel-header {
+    text-align: center;
+    margin: 0 auto 2.5rem;
+    max-width: 40rem;
+  }
+  .reel-eyebrow {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid rgb(255 255 255 / 0.22);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.08);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+  }
+  .reel-heading {
+    margin: 1rem 0 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: clamp(1.9rem, 4.5vw, 3.1rem);
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--reel-ink);
+  }
+
+  /* ---- the 3D stage ---- */
+  .reel-stage {
+    position: relative;
+    height: var(--reel-h);
+    perspective: 1600px;
+    transform-style: preserve-3d;
+    touch-action: pan-y;
+  }
+  .reel-card {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--reel-w);
+    height: var(--reel-h);
+    margin-left: calc(var(--reel-w) / -2);
+    z-index: calc(10 - var(--distance, 0));
+    opacity: calc(1 - var(--distance, 0) * 0.22);
+    transform: translateX(calc(var(--offset, 0) * var(--reel-gap)))
+      translateZ(calc(var(--distance, 0) * var(--reel-depth)))
+      rotateY(calc(var(--offset, 0) * var(--reel-tilt)))
+      scale(calc(1 - var(--distance, 0) * 0.08));
+    transition:
+      transform 0.7s var(--reel-ease),
+      opacity 0.5s ease,
+      filter 0.5s ease;
+  }
+  .reel-card[data-state='side'] {
+    cursor: pointer;
+    filter: saturate(0.85) brightness(0.72);
+  }
+  .reel-card[data-state='away'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .reel-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.22);
+    border-radius: 1.75rem;
+    background: rgb(255 255 255 / 0.06);
+    box-shadow:
+      0 40px 80px -24px rgb(0 0 0 / 0.65),
+      inset 0 1px 0 rgb(255 255 255 / 0.25);
+  }
+  /* The glass sheen across the top-left, like light on a pane. */
+  .reel-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.2), transparent 38%);
+  }
+  .reel-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #000;
+  }
+  .reel-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgb(0 0 0 / 0.78) 100%);
+    transition: backdrop-filter 0.5s ease, background-color 0.5s ease;
+  }
+  .reel-card[data-state='side'] .reel-shade {
+    background-color: color-mix(in srgb, var(--color-secondary, #5865f2) 18%, transparent);
+    backdrop-filter: blur(3px);
+  }
+  .reel-caption {
+    position: absolute;
+    inset: auto 1.1rem 1.4rem;
+    text-align: left;
+  }
+  .reel-title {
+    margin: 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--reel-ink);
+  }
+  .reel-description {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: rgb(255 255 255 / 0.85);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ---- controls ---- */
+  .reel-controls {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .reel-card:not([data-state='active']) .reel-controls,
+  .reel-card:not([data-state='active']) .reel-progress,
+  .reel-card:not([data-state='active']) .reel-description {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .reel-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgb(255 255 255 / 0.3);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    color: var(--reel-ink);
+    font-size: 0.95rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .reel-icon-button:hover {
+    background: rgb(255 255 255 / 0.26);
+    transform: scale(1.06);
+  }
+  .reel-icon-button:focus-visible,
+  .reel-dot:focus-visible {
+    outline: 3px solid var(--reel-ink);
+    outline-offset: 3px;
+  }
+  .reel-sound[aria-pressed='true'] {
+    background: var(--color-primary, #ff5757);
+    border-color: transparent;
+  }
+  .reel-progress {
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: rgb(255 255 255 / 0.2);
+  }
+  .reel-progress-bar {
+    display: block;
+    height: 100%;
+    background: var(--color-primary, #ff5757);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s linear;
+  }
+
+  /* ---- arrows + dots ---- */
+  .reel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .reel-arrow {
+    width: 3rem;
+    height: 3rem;
+  }
+  .reel-dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+  /* 24px hit area (WCAG 2.2 target size), small pill drawn inside it. */
+  .reel-dot {
+    position: relative;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .reel-dot::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s var(--reel-ease), background-color 0.3s ease;
+  }
+  .reel-dot[aria-current]::before {
+    width: 1.25rem;
+    background: var(--color-primary, #ff5757);
+  }
+
+  .reel-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 640px) {
+    .reel-slider {
+      --reel-w: 62vw;
+      --reel-gap: calc(var(--reel-w) * 0.58);
+      --reel-depth: -260px;
+      --reel-tilt: -8deg;
+      padding: 3rem 1rem 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reel-card,
+    .reel-shade,
+    .reel-dot::before,
+    .reel-progress-bar,
+    .reel-icon-button {
+      transition: none;
+    }
+  }
+</style>

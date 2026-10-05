@@ -6,3 +6,5 @@ export { NewsletterPage } from './newsletter';
 export { ContactSubmissionsPage } from './contact-submissions';
 export { default as JobApplicationsPage } from './job-applications';
 export { default as NavigationPage } from './navigation';
+export { default as ReelsPage } from './reels';
+export { default as ReelSettingsPage } from './reel-settings';

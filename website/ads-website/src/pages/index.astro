@@ -11,9 +11,13 @@ import WhyChoose from '../components/WhyChoose.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import { siteContent } from '../config/site-config';
+import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import EarnShowcase from '@duncit/brand/EarnShowcase.astro';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
+import { siteContent, siteUrls } from '../config/site-config';
 
 const siteConfig = await siteContent();
+const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
 ---
 
 <Layout title={siteConfig.brand.title}>
@@ -30,8 +34,10 @@ const siteConfig = await siteContent();
     <Features />
     <Steps />
     <WhyChoose />
+    <EarnShowcase href={siteUrls.earnwithUrl} t={t} />
     <DownloadApps />
     <CtaBand />
   </main>
   <SiteFooter />
+  <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="ADS" t={t} />
 </Layout>

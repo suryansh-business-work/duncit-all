@@ -68,6 +68,9 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   'aiMonitoringConfig',
   'publicWebsiteContent',
   'publicWebsiteNav',
+  // Every website's home-page Reel Slider. Argument-keyed (site), no auth, no
+  // ctx; a Website portal edit reaches the sliders within the TTL.
+  'publicWebsiteReels',
   'publicPodPlans',
   'publicFaqGroups',
   'publicPartnerFaqs',

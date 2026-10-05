@@ -582,18 +582,6 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
         // Rides the border of the hero banner on a loop.
         marquee:
           'Real people. Real energy.  Sports, live music, nightlife, the outdoors — see what happens when the right people match your energy.',
-        earnEyebrow: 'Earn with Duncit',
-        earnHeading: 'Turn gatherings into income',
-        earnText:
-          'Hosts, venues and sellers all earn from real local demand. Every path lives on Earn with Duncit — pick yours and start.',
-        earnCta: 'Explore Earn with Duncit',
-        earnStart: 'Start now',
-        hostTitle: 'Host pods',
-        hostText: 'Create pods, bring the right people together and earn from every gathering you run.',
-        venueTitle: 'List your venue',
-        venueText: 'Publish your space’s slots and get verified bookings from hosts near you.',
-        sellTitle: 'Sell at gatherings',
-        sellText: 'Bring your products to real meetups and reach buyers face to face.',
         vibesEyebrow: 'Real Energy',
         vibesNoBots: 'No bots.',
         vibesNoFakes: 'No fakes.',
@@ -1037,6 +1025,30 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
       },
       policyStrip: {
         heading: 'Policies',
+      },
+      /** The "Earn with Duncit" photo wall on every home page but earnwith's own
+       * (EarnShowcase.astro). The CTA goes to earnwith.duncit.com. */
+      earnShowcase: {
+        eyebrow: 'Earn with Duncit',
+        heading: 'Turn what you love',
+        headingMuted: 'into what you earn',
+        text: 'Hosts, venues, clubs and sellers earn from real gatherings in their own city. Pick your path and start today.',
+        cta: 'Start earning',
+      },
+      /** The home-page Reel Slider (ReelSlider.astro). Reel titles and
+       * descriptions are content from the Website portal, not keys. */
+      reels: {
+        label: 'Duncit reels',
+        eyebrow: 'Duncit in motion',
+        heading: 'Moments from the community',
+        slide: 'Reel {current} of {total}',
+        previous: 'Previous reel',
+        next: 'Next reel',
+        play: 'Play reel',
+        pause: 'Pause reel',
+        mute: 'Mute reel',
+        unmute: 'Turn sound on',
+        goTo: 'Go to reel {index}',
       },
     },
   },

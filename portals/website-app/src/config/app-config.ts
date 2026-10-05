@@ -32,6 +32,15 @@ export const appConfig = {
     { label: 'Contact Submission', labelKey: 'shell.nav.contactSubmission', to: '/contact-submissions', icon: 'contactMail' },
     { label: 'Job Applications', labelKey: 'shell.nav.jobApplications', to: '/job-applications', icon: 'personSearch' },
     { label: 'Navigation', labelKey: 'shell.nav.navigation', to: '/navigation', icon: 'accountTree' },
+    {
+      label: 'Reel Slider',
+      labelKey: 'shell.nav.reelSlider',
+      icon: 'movie',
+      children: [
+        { label: 'Reels', labelKey: 'shell.nav.reelSliderReels', to: '/reels', icon: 'movie' },
+        { label: 'Reel Slider Settings', labelKey: 'shell.nav.reelSliderSettings', to: '/reels/settings', icon: 'tune' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

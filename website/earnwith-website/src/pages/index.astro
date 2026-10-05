@@ -10,9 +10,12 @@ import EarningsShots from '../components/EarningsShots.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import ReelSlider from '@duncit/brand/ReelSlider.astro';
+import { getSiteTranslator } from '@duncit/brand/site-i18n';
 import { siteContent } from '../config/site-config';
 
 const siteConfig = await siteContent();
+const { t } = await getSiteTranslator(siteConfig.graphqlUrl);
 ---
 
 <Layout title={siteConfig.brand.title}>
@@ -28,4 +31,5 @@ const siteConfig = await siteContent();
     <CtaBand />
   </main>
   <SiteFooter />
+  <ReelSlider graphqlUrl={siteConfig.graphqlUrl} site="EARNWITH" t={t} />
 </Layout>

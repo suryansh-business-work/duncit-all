@@ -7,7 +7,8 @@ name: Shared Gates
 # only. So both gates were passing by never running.
 #
 # This job runs them directly, on every push and PR, with no path filter: the
-# bundles are shared, so a change anywhere can violate them.
+# bundles are shared, so a change anywhere can violate them. (The package
+# SUITES are the exception — see `plan` below.)
 on:
   push:
     branches: [main, master, develop, staging]
@@ -106,11 +107,43 @@ jobs:
   # broken on staging (pod-form x2, user-context x7) with every check green.
   #
   # These thresholds are the packages' own — this job only makes them count.
+  #
+  # Only the packages a change can reach are run: the ones whose files changed
+  # since this workflow last passed on the branch, plus everything that depends
+  # on them (scripts/ci-affected.mjs). Running all fifty serially took 23 minutes
+  # on every push, two thirds of which touched no package at all. Root config
+  # (lockfile, tsconfig.base.json, …) still selects every package.
   # ---------------------------------------------------------------------------
-  packages:
-    name: Shared packages (tests + coverage thresholds + docs)
+  plan:
+    name: Plan package suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Affected packages
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-affected.mjs plan --under packages/ --shards 4 --global .github/workflows/shared-gates.yml
+
+  package-tests:
+    name: Package suites ${{ matrix.shard.name }} (tests + coverage thresholds)
+    needs: plan
+    if: needs.plan.outputs.any == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -133,11 +166,32 @@ jobs:
       # each with its own worker pool, intermittently killed the runner with
       # "FATAL ERROR: v8::ToLocalChecked Empty MaybeLocal" — a V8 OOM, not a test
       # failure. It was reproducible only by luck: the same commit passed on the
-      # push event and failed on the pull_request event. Serialising costs a
-      # little wall-clock on a gate that is nowhere near the critical path, and
-      # buys a signal that means what it says.
+      # push event and failed on the pull_request event. The parallelism comes
+      # from the shards instead — one vitest at a time on each runner.
       - name: Package suites + coverage thresholds
-        run: pnpm --workspace-concurrency=1 --filter "./packages/**" --if-present test:coverage
+        run: |
+          filters=()
+          for dir in ${{ matrix.shard.dirs }}; do filters+=(--filter "./$dir"); done
+          pnpm --workspace-concurrency=1 "${filters[@]}" --if-present test:coverage
+
+  packages:
+    name: Shared contracts (docs + GraphQL + WhatsApp + Ask Bot + prompts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
 
       # The docs site reads packages/*/docs/index.mdx through a strict content
       # collection, so this is also what validates that frontmatter. Without it

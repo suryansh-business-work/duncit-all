@@ -5,6 +5,8 @@ import RhfSwitch from '../../../components/form/RhfSwitch';
 import { useSchemaForm } from '../../../components/form/useSchemaForm';
 import { TWO_COLUMNS } from '../../../lib/layout';
 import type { StoreServiceablePincode } from '../queries';
+import PincodeAiFill from './PincodeAiFill';
+import PincodePlaceFields from './PincodePlaceFields';
 import {
   makeServiceablePincodeSchema,
   toServiceablePincodeValues,
@@ -18,7 +20,11 @@ interface ServiceablePincodeFormProps {
   onSubmit: (values: ServiceablePincodeValues) => Promise<void>;
 }
 
-/** Create or edit one serviceable pincode: the PIN, where it is, and whether the store delivers there now. */
+/**
+ * Create or edit one serviceable pincode: where it is (Country → State → City),
+ * the PIN and its area — typed, or filled with AI for that city — and whether
+ * the store delivers there now.
+ */
 export default function ServiceablePincodeForm({ initial, busy, onClose, onSubmit }: Readonly<ServiceablePincodeFormProps>) {
   const { t, form } = useSchemaForm<ServiceablePincodeValues>(makeServiceablePincodeSchema, toServiceablePincodeValues(initial));
   const { control, handleSubmit } = form;
@@ -30,21 +36,21 @@ export default function ServiceablePincodeForm({ initial, busy, onClose, onSubmi
       onClose={onClose}
       onSubmit={handleSubmit(onSubmit)}
     >
-      <Stack spacing={1} data-testid="serviceable-pincode-form">
-        <RhfTextField
-          control={control}
-          name="pincode"
-          label={t('ecommPortal.serviceablePincodes.pincode')}
-          hint={t('ecommPortal.serviceablePincodes.pincodeHint')}
-          required
-          autoComplete="off"
-          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
-          data-testid="serviceable-pincode-input"
-        />
-        <RhfTextField control={control} name="area" label={t('ecommPortal.serviceablePincodes.area')} data-testid="serviceable-pincode-area" />
+      <Stack spacing={2} data-testid="serviceable-pincode-form">
+        <PincodePlaceFields form={form} />
+        <PincodeAiFill form={form} disabled={busy} />
         <Box sx={TWO_COLUMNS}>
-          <RhfTextField control={control} name="city" label={t('ecommPortal.serviceablePincodes.city')} data-testid="serviceable-pincode-city" />
-          <RhfTextField control={control} name="state" label={t('ecommPortal.serviceablePincodes.state')} data-testid="serviceable-pincode-state" />
+          <RhfTextField
+            control={control}
+            name="pincode"
+            label={t('ecommPortal.serviceablePincodes.pincode')}
+            hint={t('ecommPortal.serviceablePincodes.pincodeHint')}
+            required
+            autoComplete="off"
+            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+            data-testid="serviceable-pincode-input"
+          />
+          <RhfTextField control={control} name="area" label={t('ecommPortal.serviceablePincodes.area')} data-testid="serviceable-pincode-area" />
         </Box>
         <RhfSwitch
           control={control}

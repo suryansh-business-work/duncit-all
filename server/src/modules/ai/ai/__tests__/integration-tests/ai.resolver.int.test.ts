@@ -223,12 +223,25 @@ describe('aiDescribeInventoryProduct', () => {
 describe('aiFillLocationAreas', () => {
   const input = { country: ' India ', state: ' Karnataka ', city: ' Bengaluru ' };
 
+  it('rejects anonymous and plain-user callers, and lets an ecomm manager through', async () => {
+    await expect(M.aiFillLocationAreas({}, { input }, makeContext(null))).rejects.toMatchObject({
+      extensions: { code: 'UNAUTHENTICATED' },
+    });
+    await expect(M.aiFillLocationAreas({}, { input }, plainUser())).rejects.toMatchObject({
+      extensions: { code: 'FORBIDDEN' },
+    });
+    expect(mockChat).not.toHaveBeenCalled();
+    ok(JSON.stringify({ zones: [{ zone_name: 'Indiranagar', pincode: '560038' }] }));
+    const out = await M.aiFillLocationAreas({}, { input }, makeContext({ roles: ['ECOMM_MANAGER'] }));
+    expect(JSON.parse(out)).toEqual({ zones: [{ zone_name: 'Indiranagar', pincode: '560038' }] });
+  });
+
   it.each([
     { country: '', state: 'Karnataka', city: 'Bengaluru' },
     { country: 'India', state: '  ', city: 'Bengaluru' },
     { country: 'India', state: 'Karnataka', city: '' },
   ])('requires country, state and city (%o)', async (bad) => {
-    await expect(M.aiFillLocationAreas({}, { input: bad })).rejects.toMatchObject({
+    await expect(M.aiFillLocationAreas({}, { input: bad }, admin())).rejects.toMatchObject({
       message: 'Country, state and city are required',
       extensions: { code: 'BAD_USER_INPUT' },
     });
@@ -248,7 +261,7 @@ describe('aiFillLocationAreas', () => {
         ],
       })
     );
-    const out = await M.aiFillLocationAreas({}, { input });
+    const out = await M.aiFillLocationAreas({}, { input }, admin());
     expect(JSON.parse(out)).toEqual({
       zones: [
         { zone_name: 'Indiranagar', pincode: '560038' },
@@ -262,23 +275,23 @@ describe('aiFillLocationAreas', () => {
   it('reads an "areas" list when there is no "zones" list, capped at 80', async () => {
     const areas = Array.from({ length: 90 }, (_, i) => ({ zone_name: `Area ${i}`, pincode: `5600${i}` }));
     ok(JSON.stringify({ areas }));
-    const out = JSON.parse(await M.aiFillLocationAreas({}, { input }));
+    const out = JSON.parse(await M.aiFillLocationAreas({}, { input }, admin()));
     expect(out.zones).toHaveLength(80);
     expect(out.zones[0]).toEqual({ zone_name: 'Area 0', pincode: '56000' });
   });
 
   it('rejects an answer with no usable localities, a non-JSON answer and a model failure', async () => {
     ok(JSON.stringify({ zones: 'none' }));
-    await expect(M.aiFillLocationAreas({}, { input })).rejects.toMatchObject({
+    await expect(M.aiFillLocationAreas({}, { input }, admin())).rejects.toMatchObject({
       message: 'OpenAI did not return any localities with PIN codes',
     });
     ok('<html>');
-    await expect(M.aiFillLocationAreas({}, { input })).rejects.toMatchObject({
+    await expect(M.aiFillLocationAreas({}, { input }, admin())).rejects.toMatchObject({
       message: 'OpenAI did not return valid JSON',
       extensions: { code: 'AI_INVALID_JSON' },
     });
     fail('UPSTREAM', 'rate limited', 429);
-    await expect(M.aiFillLocationAreas({}, { input })).rejects.toMatchObject({
+    await expect(M.aiFillLocationAreas({}, { input }, admin())).rejects.toMatchObject({
       message: 'OpenAI error (429): rate limited',
       extensions: { code: 'AI_UPSTREAM_ERROR' },
     });

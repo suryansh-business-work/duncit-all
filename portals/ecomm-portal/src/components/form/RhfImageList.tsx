@@ -23,7 +23,10 @@ const fromLines = (text: string): string[] =>
     .map((line) => line.trim())
     .filter(Boolean);
 
-/** An ordered list of pictures: add (upload or pick), replace, move and remove, bound to the form. */
+/**
+ * An ordered list of pictures: add (upload), replace, move and remove, bound to the form.
+ * Device-only — a store photo is the seller's own product, never a stock picture.
+ */
 export default function RhfImageList<T extends FieldValues>({
   control,
   name,
@@ -45,6 +48,7 @@ export default function RhfImageList<T extends FieldValues>({
             folder={STORE_MEDIA_FOLDER}
             helperText={hint}
             buttonLabel={addLabel}
+            deviceOnly
           />
           {fieldState.error && <FormHelperText error>{fieldState.error.message}</FormHelperText>}
         </Stack>

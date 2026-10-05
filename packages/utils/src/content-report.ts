@@ -33,8 +33,15 @@ export type ReportActionType =
 /** Who a reviewer is writing to. Mirrors `ReportMailRecipient`. */
 export type ReportMailRecipient = 'REPORTER' | 'OWNER';
 
-/** The user-generated content a person can report from the apps today. */
+/** The user-generated content a 3-dot content menu is drawn on. */
 export type ReportableKind = 'STORY' | 'POST';
+
+/**
+ * Everything the report dialog can be opened on. A profile is reportable but
+ * is not a content-menu kind: it has no Delete, and its menu is the profile's
+ * own (Block / Report).
+ */
+export type ReportDialogKind = ReportableKind | 'PROFILE';
 
 /** One reason the report dialog offers, as `reportCategories` returns it. */
 export interface ReportCategoryOption {
@@ -74,6 +81,33 @@ export const REPORT_POST_SDL = `
   }
 `;
 
+/**
+ * Report a member's profile. Same receipt as a post: the reference the
+ * acknowledgement email and WhatsApp carry.
+ */
+export const REPORT_PROFILE_SDL = `
+  mutation ReportProfile($id: ID!, $reason: String!, $details: String) {
+    reportProfile(user_id: $id, reason: $reason, details: $details) {
+      id
+      report_no
+    }
+  }
+`;
+
+/** Block a member from their profile. Idempotent on the server. */
+export const BLOCK_USER_SDL = `
+  mutation BlockUser($user_id: ID!) {
+    blockUser(user_id: $user_id)
+  }
+`;
+
+/** Lift a block made earlier. */
+export const UNBLOCK_USER_SDL = `
+  mutation UnblockUser($user_id: ID!) {
+    unblockUser(user_id: $user_id)
+  }
+`;
+
 /** The lines of copy that differ between reporting a post and reporting a story. */
 export interface ReportKindCopy {
   /** The 3-dot button's accessible name. */
@@ -82,9 +116,50 @@ export interface ReportKindCopy {
   delete: string;
   /** The menu's Report entry. */
   report: string;
-  /** The report dialog's heading. */
-  title: string;
 }
+
+/** What the profile menu's block entry does next: block, or lift a block. */
+export type BlockAction = 'BLOCK' | 'UNBLOCK';
+
+/** The keys one block action reads, from the menu entry to the toast after it. */
+export interface BlockActionCopy {
+  menu: string;
+  confirmTitle: string;
+  confirmBody: string;
+  busy: string;
+  done: string;
+  failed: string;
+}
+
+/**
+ * Block and Unblock, as both apps word them. Looked up rather than branched on
+ * so mWeb and native cannot drift apart on which line goes where.
+ */
+export const BLOCK_ACTION_COPY: Record<BlockAction, BlockActionCopy> = {
+  BLOCK: {
+    menu: 'contentReport.block',
+    confirmTitle: 'contentReport.blockConfirmTitle',
+    confirmBody: 'contentReport.blockConfirmBody',
+    busy: 'contentReport.blocking',
+    done: 'contentReport.blockedToast',
+    failed: 'contentReport.blockFailed',
+  },
+  UNBLOCK: {
+    menu: 'contentReport.unblock',
+    confirmTitle: 'contentReport.unblockConfirmTitle',
+    confirmBody: 'contentReport.unblockConfirmBody',
+    busy: 'contentReport.unblocking',
+    done: 'contentReport.unblockedToast',
+    failed: 'contentReport.unblockFailed',
+  },
+};
+
+/** The report dialog's heading, per thing it can be opened on. */
+export const REPORT_DIALOG_TITLE: Record<ReportDialogKind, string> = {
+  STORY: 'contentReport.title',
+  POST: 'contentReport.titlePost',
+  PROFILE: 'contentReport.titleProfile',
+};
 
 /**
  * The menu and dialog wording per kind of content.
@@ -97,13 +172,11 @@ export const REPORT_COPY: Record<ReportableKind, ReportKindCopy> = {
     menuLabel: 'contentReport.menuLabel',
     delete: 'contentReport.delete',
     report: 'contentReport.report',
-    title: 'contentReport.title',
   },
   POST: {
     menuLabel: 'contentReport.menuLabelPost',
     delete: 'mweb.profile.deletePost',
     report: 'contentReport.reportPost',
-    title: 'contentReport.titlePost',
   },
 };
 

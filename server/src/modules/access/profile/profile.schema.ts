@@ -100,6 +100,11 @@ export const profileTypeDefs = gql`
     can_view_content: Boolean!
     "True when this account holds the HOST role, so a profile can offer a tab of the pods they host."
     is_host: Boolean!
+    """
+    True when the signed-in viewer has blocked this user. A user who blocked
+    the viewer is never returned at all, so there is no field for that side.
+    """
+    blocked_by_viewer: Boolean!
   }
 
   """

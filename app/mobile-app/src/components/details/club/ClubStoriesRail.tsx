@@ -157,7 +157,7 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
         onDelete={setPendingDelete}
         onReport={setReporting}
       />
-      <ReportContentSheet kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentSheet kind="STORY" targetId={reporting} onClose={() => setReporting(null)} />
       <ConfirmSheet
         open={!!pendingDelete}
         busy={deleting}

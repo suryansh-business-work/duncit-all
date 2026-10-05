@@ -1,14 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Box, Stack } from '@mui/material';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import TuneIcon from '@mui/icons-material/Tune';
+import BlockIcon from '@mui/icons-material/Block';
 import { useTranslation } from '@duncit/app-settings';
 import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { PageHeader } from '@duncit/ui';
 import ReportedContentTab from './reported/ReportedContentTab';
 import ReportSettingsTab from './settings/ReportSettingsTab';
+import BlockedAccountsTab from './blocked/BlockedAccountsTab';
 
-type UgcTab = 'reported' | 'settings';
+type UgcTab = 'reported' | 'blocked' | 'settings';
+
+const TAB_PANELS: Record<UgcTab, ReactNode> = {
+  reported: <ReportedContentTab />,
+  blocked: <BlockedAccountsTab />,
+  settings: <ReportSettingsTab />,
+};
 
 const TAB_PREFIX = 'ugc-monitoring';
 
@@ -33,6 +41,13 @@ export default function UgcMonitoringPage() {
         testId: 'ugc-tab-reported',
       },
       {
+        value: 'blocked',
+        label: t('reportLogs.tabBlocked'),
+        icon: <BlockIcon />,
+        iconPosition: 'start',
+        testId: 'ugc-tab-blocked',
+      },
+      {
         value: 'settings',
         label: t('reportLogs.tabSettings'),
         icon: <TuneIcon />,
@@ -49,7 +64,7 @@ export default function UgcMonitoringPage() {
       <PageHeader title={t('reportLogs.pageTitle')} subtitle={t('reportLogs.pageSubtitle')} />
       <DuncitTabs {...tabs} idPrefix={TAB_PREFIX} aria-label={t('reportLogs.tabsLabel')} />
       <Box {...tabPanelProps(TAB_PREFIX, tabs.value)}>
-        {tabs.value === 'reported' ? <ReportedContentTab /> : <ReportSettingsTab />}
+        {TAB_PANELS[tabs.value]}
       </Box>
     </Stack>
   );

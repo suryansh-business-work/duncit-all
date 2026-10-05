@@ -185,7 +185,7 @@ export default function HomeStatusViewer({
           </DuncitButton>
         )}
       </Box>
-      <ReportContentDialog kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentDialog kind="STORY" targetId={reporting} onClose={() => setReporting(null)} />
     </Dialog>
   );
 }

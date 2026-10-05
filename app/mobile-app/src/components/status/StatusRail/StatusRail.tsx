@@ -115,7 +115,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onConfirm={(trim) => fireAndForget(upload.confirmVideo(trim))}
       />
       <StoryViewersSheet storyId={r.viewersStoryId} onClose={() => r.setViewersStoryId(null)} />
-      <ReportContentSheet kind="STORY" postId={r.reporting} onClose={() => r.setReporting(null)} />
+      <ReportContentSheet kind="STORY" targetId={r.reporting} onClose={() => r.setReporting(null)} />
       <ConfirmDialog
         testID="status-delete-confirm"
         open={r.pendingDelete !== null}

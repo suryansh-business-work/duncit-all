@@ -6,6 +6,7 @@ import { userDisplayOf } from '@modules/access/user/user.display';
 import { postService } from '@modules/engagement/post/post.service';
 import type { TableQueryInput } from '@utils/table-query';
 import { reportService, type ReportMailRecipient } from './report.service';
+import { profileReportSnapshot } from './report.profile';
 import { reportCategoryService, type ReportCategoryInput } from './reportCategory.service';
 
 const LEGAL_ROLES = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
@@ -79,6 +80,18 @@ export const contentReportResolvers = {
       // The snapshot comes from the post, never from the caller: a reporter
       // must not be able to file a row describing media that was never there.
       const snapshot = await postService.reportSnapshot(args.post_doc_id);
+      return reportService.submit(user.id, snapshot, {
+        reason: args.reason,
+        details: args.details,
+      });
+    },
+    reportProfile: async (
+      _p: unknown,
+      args: { user_id: string; reason: string; details?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const snapshot = await profileReportSnapshot(args.user_id);
       return reportService.submit(user.id, snapshot, {
         reason: args.reason,
         details: args.details,

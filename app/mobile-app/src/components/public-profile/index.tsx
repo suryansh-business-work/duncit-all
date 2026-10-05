@@ -3,3 +3,4 @@ export { PublicProfileBadges } from './PublicProfileBadges';
 export { PublicProfilePosts } from './PublicProfilePosts';
 export { PublicProfileStories } from './PublicProfileStories';
 export { ProfileFollowActions } from './ProfileFollowActions';
+export { ProfileActionsMenu, ProfileActionsTrigger, ProfileBlockNotices } from './ProfileActionsMenu';

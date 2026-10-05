@@ -11444,6 +11444,12 @@ export type Mutation = {
    * released ones are refunded, at the same deduction.
    */
   backoutPod: PodMember;
+  /**
+   * Block a member: cuts every follow tie between the two, both ways, and
+   * hides each from the other. Idempotent. The blocker is sent a confirmation;
+   * the blocked member is never told.
+   */
+  blockUser: Scalars['Boolean']['output'];
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
   bulkDeleteVenueSlots: BulkSlotResult;
   bulkUpdateVenueSlots: BulkSlotResult;
@@ -11679,6 +11685,7 @@ export type Mutation = {
   createWaCampaignName: WaCampaignNameOption;
   createWebsiteContent: WebsiteContentItem;
   createWebsiteNavItem: WebsiteNavItem;
+  createWebsiteReel: WebsiteReel;
   crmDeleteWebsitePage: Scalars['Boolean']['output'];
   crmExcelImport: CrmExcelImportResult;
   /** Fetch + extract readable content for a single discovered page. */
@@ -11872,6 +11879,7 @@ export type Mutation = {
   deleteWaCampaignName: Scalars['Boolean']['output'];
   deleteWebsiteContent: Scalars['Boolean']['output'];
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
+  deleteWebsiteReel: Scalars['Boolean']['output'];
   /** Admin denies a request. */
   denyRequest: ApprovalRequest;
   /** Products portal: deny a partner warehouse (stays blocked). */
@@ -12358,6 +12366,11 @@ export type Mutation = {
    * row describing something it never showed.
    */
   reportPost: ContentReportReceipt;
+  /**
+   * Report a member's profile. Files into the same Legal queue as posts, with
+   * the avatar, name, @handle and bio snapshotted server-side.
+   */
+  reportProfile: ContentReportReceipt;
   /** CI: a runner's periodic report. The answer says whether to stop. */
   reportStressRun: StressReportResult;
   /**
@@ -13156,6 +13169,8 @@ export type Mutation = {
   triggerE2eRun: TriggerE2eRunResult;
   /** Start a stress run against this server's own environment. Production needs SUPER_ADMIN and confirm_text. */
   triggerStressRun: StressRun;
+  /** Lift a block made earlier. Follows cut by it are not restored. */
+  unblockUser: Scalars['Boolean']['output'];
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
@@ -13315,6 +13330,8 @@ export type Mutation = {
   updateWaPricing: WaPricing;
   updateWebsiteContent: WebsiteContentItem;
   updateWebsiteNavItem: WebsiteNavItem;
+  updateWebsiteReel: WebsiteReel;
+  updateWebsiteReelSettings: WebsiteReelSettings;
   updateWithdrawalMinimums: WithdrawalMinimums;
   /**
    * Server-side ImageKit upload for admin/device files. This avoids browser
@@ -13767,6 +13784,11 @@ export type MutationAwardBadgeManuallyArgs = {
 export type MutationBackoutPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type MutationBlockUserArgs = {
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -14375,6 +14397,11 @@ export type MutationCreateWebsiteNavItemArgs = {
 };
 
 
+export type MutationCreateWebsiteReelArgs = {
+  input: WebsiteReelInput;
+};
+
+
 export type MutationCrmDeleteWebsitePageArgs = {
   id: Scalars['ID']['input'];
 };
@@ -14972,6 +14999,11 @@ export type MutationDeleteWebsiteContentArgs = {
 
 export type MutationDeleteWebsiteNavItemArgs = {
   item_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteWebsiteReelArgs = {
+  reel_id: Scalars['ID']['input'];
 };
 
 
@@ -15778,6 +15810,13 @@ export type MutationReportPostArgs = {
   details?: InputMaybe<Scalars['String']['input']>;
   post_doc_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationReportProfileArgs = {
+  details?: InputMaybe<Scalars['String']['input']>;
+  reason: Scalars['String']['input'];
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -17492,6 +17531,11 @@ export type MutationTriggerStressRunArgs = {
 };
 
 
+export type MutationUnblockUserArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUnfollowClubArgs = {
   club_id: Scalars['ID']['input'];
 };
@@ -18153,6 +18197,17 @@ export type MutationUpdateWebsiteContentArgs = {
 export type MutationUpdateWebsiteNavItemArgs = {
   input: WebsiteNavItemInput;
   item_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateWebsiteReelArgs = {
+  input: WebsiteReelInput;
+  reel_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateWebsiteReelSettingsArgs = {
+  input: WebsiteReelSettingsInput;
 };
 
 
@@ -22279,6 +22334,11 @@ export type PublicLeadSurvey = {
 export type PublicProfile = {
   __typename?: 'PublicProfile';
   bio?: Maybe<Scalars['String']['output']>;
+  /**
+   * True when the signed-in viewer has blocked this user. A user who blocked
+   * the viewer is never returned at all, so there is no field for that side.
+   */
+  blocked_by_viewer: Scalars['Boolean']['output'];
   /** True when the viewer may see this user's posts/stories (owner, public, or follower). */
   can_view_content: Scalars['Boolean']['output'];
   city?: Maybe<Scalars['String']['output']>;
@@ -23549,6 +23609,8 @@ export type Query = {
   publicWebsiteContent: Array<WebsiteContentItem>;
   /** Public: a site's active navigation, ordered by group + sort order. */
   publicWebsiteNav: Array<WebsiteNavItem>;
+  /** Public: a site's active reels in slider order, capped at the max reels setting. */
+  publicWebsiteReels: Array<WebsiteReel>;
   pushConfig: PushConfig;
   /** Server-side table page for the blocked-traffic table. */
   rateLimitEventsTable: RateLimitEventPage;
@@ -23941,6 +24003,8 @@ export type Query = {
   userActivityYear: UserActivityYear;
   userBadgeProgress: Array<BadgeProgress>;
   userBadges: Array<UserBadge>;
+  /** Legal-only: every block members have made, newest first. */
+  userBlocksTable: UserBlockTablePage;
   /** Admin: one half of a user's profile change history, newest first. */
   userChangeLogsTable: UserChangeLogTablePage;
   userClickstream: Array<AppAnalyticsEvent>;
@@ -24059,6 +24123,8 @@ export type Query = {
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
   websiteNavTable: WebsiteNavItemTablePage;
+  websiteReelSettings: WebsiteReelSettings;
+  websiteReelsTable: WebsiteReelTablePage;
   /** The default header assets every media-header scenario falls back to. Cheap: no AiSensy read. */
   whatsappDefaultMedia: WaDefaultMedia;
   /** One send attempt in full — the detail behind a row of the merged WhatsApp log. */
@@ -26242,6 +26308,11 @@ export type QueryPublicWebsiteNavArgs = {
 };
 
 
+export type QueryPublicWebsiteReelsArgs = {
+  site: WebsiteNavSite;
+};
+
+
 export type QueryRateLimitEventsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -26959,6 +27030,11 @@ export type QueryUserBadgesArgs = {
 };
 
 
+export type QueryUserBlocksTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryUserChangeLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
   scope: UserChangeLogScope;
@@ -27221,6 +27297,11 @@ export type QueryWebsiteNavArgs = {
 
 
 export type QueryWebsiteNavTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWebsiteReelsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -35125,6 +35206,28 @@ export type UserBadge = {
   user_id: Scalars['ID']['output'];
 };
 
+/** One member blocking another, as Legal's Blocked accounts table shows it. */
+export type UserBlockRow = {
+  __typename?: 'UserBlockRow';
+  /** False once the blocker lifted it. The row stays as the record. */
+  active: Scalars['Boolean']['output'];
+  blocked_at: Scalars['String']['output'];
+  blocked_id: Scalars['ID']['output'];
+  blocked_name: Scalars['String']['output'];
+  blocker_id: Scalars['ID']['output'];
+  blocker_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  unblocked_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type UserBlockTablePage = {
+  __typename?: 'UserBlockTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<UserBlockRow>;
+  total: Scalars['Int']['output'];
+};
+
 /** What happened to the account (not to the individual field). */
 export type UserChangeAction =
   | 'CREATE'
@@ -35738,6 +35841,10 @@ export type VenueRegistrationConfig = {
   capacity_item_limit: Scalars['Int']['output'];
   doc_types: Array<Scalars['String']['output']>;
   facilities: Array<Scalars['String']['output']>;
+  /** The doc_types entry uploaded beside a GSTIN, not from the general list. */
+  gstin_doc_type: Scalars['String']['output'];
+  /** The doc_types entry uploaded beside a PAN, not from the general list. */
+  pan_doc_type: Scalars['String']['output'];
   security: Array<Scalars['String']['output']>;
   venue_types: Array<Scalars['String']['output']>;
 };
@@ -36735,6 +36842,53 @@ export type WebsitePageType =
   | 'BLOG'
   | 'CAREERS'
   | 'NEWSROOM';
+
+/** A reel in a marketing website's home-page Reel Slider, managed from the Website portal. */
+export type WebsiteReel = {
+  __typename?: 'WebsiteReel';
+  created_at: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  file_size_bytes: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  site: WebsiteNavSite;
+  sort_order: Scalars['Int']['output'];
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  video_url: Scalars['String']['output'];
+};
+
+export type WebsiteReelInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  file_size_bytes?: InputMaybe<Scalars['Float']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  site: WebsiteNavSite;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  video_url: Scalars['String']['input'];
+};
+
+/** Reel Slider limits shared by every website. */
+export type WebsiteReelSettings = {
+  __typename?: 'WebsiteReelSettings';
+  max_reel_mb: Scalars['Int']['output'];
+  max_reels: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type WebsiteReelSettingsInput = {
+  max_reel_mb?: InputMaybe<Scalars['Int']['input']>;
+  max_reels?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Server-side table page for the shared table engine (websiteReelsTable). */
+export type WebsiteReelTablePage = {
+  __typename?: 'WebsiteReelTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<WebsiteReel>;
+  total: Scalars['Int']['output'];
+};
 
 export type WhatsAppOtpRequestResult = {
   __typename?: 'WhatsAppOtpRequestResult';

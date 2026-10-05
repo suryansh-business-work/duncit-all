@@ -582,6 +582,22 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Brand or product', 'Status'],
   },
   {
+    key: 'USER_REPORT_RECEIVED',
+    campaign: 'user_report_received',
+    audience: 'USER',
+    category: 'account',
+    fires: 'A member reports a post, story or profile — the reporter is told Legal has it',
+    params: ['Recipient name', 'Report reference'],
+  },
+  {
+    key: 'USER_PROFILE_BLOCKED',
+    campaign: 'user_profile_blocked',
+    audience: 'USER',
+    category: 'account',
+    fires: 'A member blocks another account — only the blocker is told, never the blocked member',
+    params: ['Recipient name', 'Blocked account'],
+  },
+  {
     key: 'STORE_ORDER_SHIPPED',
     campaign: 'store_order_shipped',
     audience: 'USER',

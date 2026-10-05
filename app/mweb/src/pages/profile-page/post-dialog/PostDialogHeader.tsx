@@ -79,7 +79,7 @@ export default function PostDialogHeader({
           <CloseIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>
-      <ReportContentDialog kind="POST" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentDialog kind="POST" targetId={reporting} onClose={() => setReporting(null)} />
     </>
   );
 }

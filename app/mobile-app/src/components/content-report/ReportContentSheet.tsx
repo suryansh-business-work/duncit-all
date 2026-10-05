@@ -4,22 +4,27 @@ import { Button, Spinner, Text, TextArea, YStack } from 'tamagui';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { ReportCategoryList } from '@/components/content-report/ReportCategoryList';
 import { ReportReceivedNotice } from '@/components/content-report/ReportReceivedNotice';
-import { reportPost, useReportCategories } from '@/hooks/useReportContent';
+import { reportPost, reportProfile, useReportCategories } from '@/hooks/useReportContent';
 import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { parseApiError, reportSubmitError, REPORT_COPY, type ReportableKind } from '@duncit/utils';
+import {
+  parseApiError,
+  reportSubmitError,
+  REPORT_DIALOG_TITLE,
+  type ReportDialogKind,
+} from '@duncit/utils';
 
 interface Props {
-  /** The post or story being reported; null keeps the sheet closed. */
-  postId: string | null;
-  /** Which of the two it is — only the wording differs. */
-  kind: ReportableKind;
+  /** The post, story or member being reported; null keeps the sheet closed. */
+  targetId: string | null;
+  /** What it is — picks the heading, and for a profile the mutation. */
+  kind: ReportDialogKind;
   onClose: () => void;
   onReported?: () => void;
 }
 
 /**
- * Report a post or a story to the Legal team. mWeb twin: ReportContentDialog
+ * Report a post, a story or a profile to the Legal team. mWeb twin: ReportContentDialog
  * (rule 27).
  *
  * Open to ANY signed-in viewer — that is the whole point of it. The reasons
@@ -28,7 +33,7 @@ interface Props {
  * report from the same person edits their existing one rather than filing a
  * second, so tapping it twice cannot be used to manufacture a pile-on.
  */
-export function ReportContentSheet({ postId, kind, onClose, onReported }: Readonly<Props>) {
+export function ReportContentSheet({ targetId, kind, onClose, onReported }: Readonly<Props>) {
   const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
@@ -36,21 +41,21 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
   const [busy, setBusy] = useState(false);
   // The landed report's reference; set, the sheet turns into its confirmation.
   const [receipt, setReceipt] = useState<string | null>(null);
-  const { categories, isLoading, failed, retry } = useReportCategories(!!postId);
+  const { categories, isLoading, failed, retry } = useReportCategories(!!targetId);
 
   // Re-seed on every open: one sheet instance serves every post and story.
   useEffect(() => {
-    if (!postId) return;
+    if (!targetId) return;
     setReason('');
     setDetails('');
     setError('');
     setReceipt(null);
-  }, [postId]);
+  }, [targetId]);
 
   const picked = categories.find((option) => option.key === reason) ?? null;
 
   const submit = async () => {
-    if (!postId) return;
+    if (!targetId) return;
     const problem = reportSubmitError(picked, details);
     if (problem) {
       setError(t(problem));
@@ -58,7 +63,8 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
     }
     setBusy(true);
     try {
-      setReceipt(await reportPost(postId, reason, details.trim()));
+      const send = kind === 'PROFILE' ? reportProfile : reportPost;
+      setReceipt(await send(targetId, reason, details.trim()));
       onReported?.();
     } catch (e) {
       setError(parseApiError(e) || t('contentReport.submitFailed'));
@@ -69,10 +75,10 @@ export function ReportContentSheet({ postId, kind, onClose, onReported }: Readon
 
   return (
     <DuncitDialog
-      open={!!postId}
+      open={!!targetId}
       onClose={onClose}
       testID="report-content-sheet"
-      title={t(REPORT_COPY[kind].title)}
+      title={t(REPORT_DIALOG_TITLE[kind])}
       subtitle={receipt === null ? t('contentReport.subtitle') : undefined}
       closeLabel={t('contentReport.cancel')}
       dismissOnBackdrop={!busy}

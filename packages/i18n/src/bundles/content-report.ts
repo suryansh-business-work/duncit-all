@@ -62,6 +62,26 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     categoriesLoading: 'Loading the report options',
     categoriesFailed: 'Could not load the report options',
     categoriesRetry: 'Try again',
+    // A member's profile: its 3-dot menu offers Block and Report. A block is
+    // never announced to the blocked member, and the copy says so.
+    titleProfile: 'Report this profile',
+    profileMenuLabel: 'Profile options',
+    reportProfile: 'Report profile',
+    block: 'Block',
+    unblock: 'Unblock',
+    blockConfirmTitle: 'Block {name}?',
+    blockConfirmBody:
+      'They will not be able to follow you or see your posts and stories, and you will not see theirs. Any follow between you is removed. They will not be told.',
+    unblockConfirmTitle: 'Unblock {name}?',
+    unblockConfirmBody:
+      'They will be able to see your public posts and follow you again. Follows removed by the block do not come back.',
+    blocking: 'Blocking…',
+    unblocking: 'Unblocking…',
+    blockedToast: '{name} is blocked',
+    unblockedToast: '{name} is unblocked',
+    blockFailed: 'Could not block this account',
+    unblockFailed: 'Could not unblock this account',
+    blockedNotice: 'You blocked this account. Their posts and stories are hidden from you, and they cannot see yours.',
   },
   // Legal > UGC Monitoring: the reported-content queue and its settings.
   reportLogs: {
@@ -203,6 +223,17 @@ export const CONTENT_REPORT_BUNDLE: NestedCatalogue = {
     categoryDeleted: 'Category deleted',
     categorySaveFailed: 'Could not save this category',
     categoryDeleteFailed: 'Could not delete this category',
+    // Blocked accounts: every block members have made, kept after an unblock.
+    tabBlocked: 'Blocked accounts',
+    blockColBlocker: 'Blocked by',
+    blockColBlocked: 'Blocked account',
+    blockColStatus: 'Status',
+    blockColBlockedAt: 'Blocked on',
+    blockColUnblockedAt: 'Unblocked on',
+    blockActive: 'Blocked',
+    blockLifted: 'Unblocked',
+    blocksEmpty: 'Nobody has blocked anyone yet.',
+    blocksSearch: 'Search by name or @handle',
     categoryDeleteTitle: 'Delete this category?',
     categoryDeleteBody:
       '“{name}” leaves the report dialog for good. A category that reports were filed under cannot be deleted. Switch it off instead.',

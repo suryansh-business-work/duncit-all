@@ -2977,3 +2977,27 @@ and phone-length digit runs. The route keeps only its path. Stacks are cut to th
 | `crashLogError` / `crashLogData` | `(report) => Error` / `(report, event) => Record<string, string>` | The log's `error` and `data`. |
 | `buildCrashReportMessage` | `(report) => string` | Body for `submitAppFeedback` when a member reports it. |
 | `redactSensitive` | `(text) => string` | The scrubber on its own. |
+
+## Reporting and blocking — `content-report`
+
+The documents and copy tables behind the 3-dot menus on stories, posts and profiles. mWeb wraps
+the SDL strings with Apollo's `gql`, the native app with `graphql-tag`, so both send the same
+operations. Reports from every surface land in Legal > UGC Monitoring; blocks are listed on its
+Blocked accounts tab.
+
+```ts
+import { BLOCK_USER_SDL, REPORT_DIALOG_TITLE, REPORT_PROFILE_SDL, reportSubmitError } from '@duncit/utils';
+
+const title = t(REPORT_DIALOG_TITLE.PROFILE); // 'Report this profile'
+const problem = reportSubmitError(pickedCategory, details); // a translation key, or null
+```
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `REPORT_CATEGORIES_SDL` | query | The active report reasons, in Legal's order. |
+| `REPORT_POST_SDL` / `REPORT_PROFILE_SDL` | mutation `($id, $reason, $details)` | File a report on a post/story or a profile; answers `{ id, report_no }`. |
+| `BLOCK_USER_SDL` / `UNBLOCK_USER_SDL` | mutation `($user_id)` | Block or unblock a member. Both are idempotent. |
+| `BLOCK_ACTION_COPY` | `Record<BlockAction, BlockActionCopy>` | Menu, confirm, busy, toast and failure keys for Block and Unblock. |
+| `REPORT_DIALOG_TITLE` | `Record<ReportDialogKind, string>` | The report dialog's heading key for a story, post or profile. |
+| `REPORT_COPY` | `Record<ReportableKind, ReportKindCopy>` | The content menu's label, Delete and Report keys for a story or post. |
+| `reportSubmitError` | `(category, details) => string \| null` | The first thing wrong with a report about to be sent, as a key. |

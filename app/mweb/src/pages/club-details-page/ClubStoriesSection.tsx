@@ -105,7 +105,7 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
         onIndexChange={showStory}
         actions={actions}
       />
-      <ReportContentDialog kind="STORY" postId={reporting} onClose={() => setReporting(null)} />
+      <ReportContentDialog kind="STORY" targetId={reporting} onClose={() => setReporting(null)} />
       <ConfirmDialog
         testId="club-story-delete"
         open={confirmDelete}

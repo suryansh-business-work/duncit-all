@@ -180,6 +180,11 @@ export const reportTypeDefs = /* GraphQL */ `
     row describing something it never showed.
     """
     reportPost(post_doc_id: ID!, reason: String!, details: String): ContentReportReceipt!
+    """
+    Report a member's profile. Files into the same Legal queue as posts, with
+    the avatar, name, @handle and bio snapshotted server-side.
+    """
+    reportProfile(user_id: ID!, reason: String!, details: String): ContentReportReceipt!
     updateContentReportStatus(id: ID!, input: UpdateContentReportStatusInput!): ContentReport!
     """
     Remove the reported content for everyone and close every open report on it

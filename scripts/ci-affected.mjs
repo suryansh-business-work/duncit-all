@@ -45,8 +45,45 @@ const TEST_FILE = /\.(?:test|spec|cy)\.[cm]?[jt]sx?$/;
 // (package.json, the lockfile, tsconfig.base.json, the eslint configs, …) can
 // change any workspace's result, so touching one selects everything.
 const INERT_ROOT = /^(?:[^/]+\.md|\.gitignore|\.mcp\.json|\.env\.example|\.easignore|\.dockerignore|codecov\.yml|sonar-project\.properties|\.jscpd\.json)$/;
+// The pre-commit hook (scripts/bump-version.mjs) restamps the app version in
+// these on EVERY commit. Counted as a change, mWeb and the native app would be
+// "affected" by every push and their coverage could never be reused, so a diff
+// or a hash ignores their `"version"` lines.
+const VERSION_STAMPED = new Set([
+  'app/mobile-app/app.json',
+  'app/mobile-app/package.json',
+  'app/mobile-app/package-lock.json',
+  'app/mweb/package.json',
+]);
+const VERSION_LINE = /^[ \t]*"version": "[^"\n]*",?$/;
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+
+/** True when the only lines `file` changed since `base` are version stamps. */
+function onlyVersionStamped(base, file) {
+  if (!VERSION_STAMPED.has(file)) return false;
+  const edits = git('diff', '-U0', base, 'HEAD', '--', file)
+    .split('\n')
+    .filter((l) => /^[+-]/.test(l) && !/^(?:\+\+\+|---) /.test(l));
+  return edits.every((l) => VERSION_LINE.test(l.slice(1)));
+}
+
+/** Git's id for `p` at HEAD, with version stamps blanked out of the stamped files. */
+function contentId(p) {
+  const stamped = [...VERSION_STAMPED].filter((f) => f === p || f.startsWith(`${p}/`));
+  if (stamped.length === 0) return git('rev-parse', 'HEAD:' + p);
+  const blank = (f) => {
+    const text = git('show', 'HEAD:' + f).replaceAll(new RegExp(VERSION_LINE.source, 'gm'), '');
+    return createHash('sha256').update(text).digest('hex');
+  };
+  const entries = git('ls-tree', '-r', 'HEAD', '--', p)
+    .split('\n')
+    .map((line) => {
+      const file = line.split('\t')[1];
+      return stamped.includes(file) ? `${file} ${blank(file)}` : line;
+    });
+  return createHash('sha256').update(entries.join('\n')).digest('hex');
+}
 
 function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
@@ -135,7 +172,9 @@ async function changedFiles() {
     // local run never turns a full clone shallow.
     if (!hasCommit(base)) git('fetch', '--no-tags', '--depth=1', 'origin', base);
     console.log(`base: ${base}`);
-    return git('diff', '--name-only', base, 'HEAD').split('\n').filter(Boolean);
+    return git('diff', '--name-only', base, 'HEAD')
+      .split('\n')
+      .filter((f) => f && !onlyVersionStamped(base, f));
   } catch (err) {
     console.log(`::warning::could not resolve what changed (${err.message}) — checking everything`);
     return null;
@@ -202,8 +241,7 @@ function hash(paths) {
     .split('\n')
     .filter((l) => l.includes(' blob ') && !INERT_ROOT.test(l.split('\t')[1]));
   const trees = [...inputs].toSorted(byName).map((p) => {
-    const tree = git('rev-parse', 'HEAD:' + p);
-    return `${p} ${tree}`;
+    return `${p} ${contentId(p)}`;
   });
   process.stdout.write(createHash('sha256').update([...rootFiles, ...trees].join('\n')).digest('hex').slice(0, 32));
 }

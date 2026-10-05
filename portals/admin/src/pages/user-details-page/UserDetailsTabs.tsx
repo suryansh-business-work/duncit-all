@@ -30,7 +30,11 @@ export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTa
           '& .MuiTab-root': { minHeight: 40, px: 1.5, textTransform: 'none' },
         }}
       />
-      <Box sx={{ pt: 2 }}>{active?.content}</Box>
+      {/* Keyed by tab: two tabs can render the same section (User / Admin Change
+          Logs), and a reused instance would keep the previous tab's rows. */}
+      <Box key={active?.value} sx={{ pt: 2 }}>
+        {active?.content}
+      </Box>
     </Box>
   );
 }

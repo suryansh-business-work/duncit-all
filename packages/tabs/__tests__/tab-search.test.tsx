@@ -15,7 +15,10 @@ const ITEMS: DuncitTabItem<string>[] = [
   { value: 'upcoming', label: 'Upcoming' },
   { value: 'previous', label: 'Previous' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'drafts', label: 'Drafts' },
+  { value: 'archived', label: 'Archived' },
 ];
+const ALL_NAMES = ['Upcoming', 'Previous', 'Cancelled', 'Drafts', 'Archived'];
 
 const tabNames = () => screen.getAllByRole('tab').map((tab) => tab.textContent);
 
@@ -54,7 +57,7 @@ describe('DuncitTabs search', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Clear tab search' }));
 
     expect(box.value).toBe('');
-    await waitFor(() => expect(tabNames()).toEqual(['Upcoming', 'Previous', 'Cancelled']));
+    await waitFor(() => expect(tabNames()).toEqual(ALL_NAMES));
   });
 
   it('takes a placeholder of the strip’s own', () => {
@@ -69,7 +72,19 @@ describe('DuncitTabs search', () => {
     render(<DuncitTabs items={ITEMS} value="upcoming" onChange={vi.fn()} searchable={false} />);
 
     expect(screen.queryByRole('textbox')).toBeNull();
-    expect(tabNames()).toEqual(['Upcoming', 'Previous', 'Cancelled']);
+    expect(tabNames()).toEqual(ALL_NAMES);
+  });
+
+  it('shows no box on a strip of fewer than five tabs, even when asked for one', () => {
+    render(
+      <>
+        <DuncitTabs items={ITEMS.slice(0, 4)} value="upcoming" onChange={vi.fn()} idPrefix="four" searchable />
+        <DuncitTabs items={ITEMS.slice(0, 1)} value="upcoming" onChange={vi.fn()} idPrefix="one" />
+      </>
+    );
+
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getAllByRole('tab')).toHaveLength(5);
   });
 
   it('follows the surface default, which a strip of its own can still override', () => {

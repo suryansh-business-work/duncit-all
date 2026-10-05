@@ -1,6 +1,12 @@
 import type { DuncitTabItem, TabValue } from './types';
 
 /**
+ * The fewest tabs a strip needs before it gets a search box. One to four tabs
+ * are read at a glance — the box would only take the room the tabs need.
+ */
+export const TAB_SEARCH_MIN_TABS = 5;
+
+/**
  * The text one tab is matched on.
  *
  * A label is a `ReactNode` — a count badge, an icon and a word, a whole

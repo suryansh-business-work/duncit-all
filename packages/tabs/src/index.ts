@@ -13,7 +13,7 @@ export type { DuncitTabsProps } from './DuncitTabs';
 export { tabIds, tabPanelProps } from './tabPanelProps';
 export { TAB_PARAM, useTabParam } from './useTabParam';
 export type { UseTabParamOptions } from './useTabParam';
-export { filterTabItems, tabSearchText } from './tabSearch';
+export { TAB_SEARCH_MIN_TABS, filterTabItems, tabSearchText } from './tabSearch';
 export type { FilteredTabs } from './tabSearch';
 export { TAB_SEARCH_DEBOUNCE_MS, useTabSearch } from './useTabSearch';
 export type { TabSearchState } from './useTabSearch';

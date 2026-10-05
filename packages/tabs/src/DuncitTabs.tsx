@@ -2,6 +2,7 @@ import { Box, Tab, Tabs, Typography, type TabsProps } from '@mui/material';
 import { mergeSx } from '@duncit/ui';
 import { useTranslation } from './i18n';
 import { tabIds } from './tabPanelProps';
+import { TAB_SEARCH_MIN_TABS } from './tabSearch';
 import { TabSearchField } from './TabSearchField';
 import { useTabSearchDefault } from './tabSearchDefault';
 import type { DuncitTabsState, TabValue } from './types';
@@ -19,8 +20,8 @@ export interface DuncitTabsProps<T extends TabValue>
   /**
    * The search box at the head of the strip. Left out, the strip follows its
    * surface (`TabSearchDefaultProvider`): on in the portals, off in mWeb. Pass
-   * `false` for a strip that would be worse for it — a two-tab segmented
-   * control has nothing to search.
+   * `false` for a strip that would be worse for it. A strip of fewer than
+   * `TAB_SEARCH_MIN_TABS` tabs never shows the box, even when this is `true`.
    */
   searchable?: boolean;
   /** Placeholder override, when "Search tabs" is not what this strip holds. */
@@ -76,7 +77,7 @@ export function DuncitTabs<T extends TabValue>({
 }: Readonly<DuncitTabsProps<T>>) {
   const { t } = useTranslation();
   const surfaceDefault = useTabSearchDefault();
-  const searchable = searchableProp ?? surfaceDefault;
+  const searchable = (searchableProp ?? surfaceDefault) && items.length >= TAB_SEARCH_MIN_TABS;
   const search = useTabSearch(items, value);
   const shown = searchable ? search.visible : items;
   const stripSx = searchable ? mergeSx(STRIP_SX, sx) : sx;

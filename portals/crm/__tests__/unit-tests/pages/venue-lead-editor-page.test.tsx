@@ -69,7 +69,7 @@ describe('VenueLeadEditorPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Create venue lead' }));
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/), { timeout: 3000 });
     expect(sent.at(-1)?.input).toEqual(
       expect.objectContaining({
         super_category_id: SUPER,
@@ -104,7 +104,8 @@ describe('VenueLeadEditorPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Update venue lead' }));
 
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/));
+    // Validate → mutate → navigate takes over 1s under v8 coverage on CI.
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads$/), { timeout: 3000 });
     expect(sent.at(-1)?.id).toBe('venue-1');
     expect(sent.at(-1)?.input).toEqual(
       expect.objectContaining({ venue_name: 'Grand Hall', super_category_id: SUPER, city: 'Pune', capacity_max: 300 }),

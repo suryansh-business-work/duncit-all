@@ -56,17 +56,32 @@ export function ProfileActionsTrigger({ open, busy, busyLabel, onPress }: Readon
 }
 
 /** What the profile says about a block: that one is in force, or that one failed. */
-export function ProfileBlockNotices({ blocked, error }: Readonly<{ blocked: boolean; error: string }>) {
+export function ProfileBlockNotices({
+  blocked,
+  error,
+}: Readonly<{ blocked: boolean; error: string }>) {
   const { t } = useTranslation();
   return (
     <>
       {blocked ? (
-        <Text testID="public-profile-blocked" role="status" fontSize={14} color="$muted" textAlign="center">
+        <Text
+          testID="public-profile-blocked"
+          role="status"
+          fontSize={14}
+          color="$muted"
+          textAlign="center"
+        >
           {t('contentReport.blockedNotice')}
         </Text>
       ) : null}
       {error ? (
-        <Text testID="public-profile-block-error" role="alert" fontSize={13} color="$danger" textAlign="center">
+        <Text
+          testID="public-profile-block-error"
+          role="alert"
+          fontSize={13}
+          color="$danger"
+          textAlign="center"
+        >
           {error}
         </Text>
       ) : null}

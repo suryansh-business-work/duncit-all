@@ -139,7 +139,10 @@ export function usePublicProfile(userId: string) {
   };
 
   // A block or unblock changes both the profile and whether its posts show.
-  const reload = useCallback(() => Promise.all([loadProfile(), loadPosts()]), [loadProfile, loadPosts]);
+  const reload = useCallback(
+    () => Promise.all([loadProfile(), loadPosts()]),
+    [loadProfile, loadPosts],
+  );
 
   return {
     user,

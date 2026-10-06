@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReportCategoryOption } from '@duncit/utils';
 
-import { ReportCategoriesDocument, ReportPostDocument, ReportProfileDocument } from '@/graphql/report';
+import {
+  ReportCategoriesDocument,
+  ReportPostDocument,
+  ReportProfileDocument,
+} from '@/graphql/report';
 import { graphqlRequest } from '@/services/graphql.client';
 
 type LoadState = 'loading' | 'ready' | 'failed';

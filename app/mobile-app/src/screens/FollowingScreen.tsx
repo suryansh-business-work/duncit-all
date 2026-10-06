@@ -121,7 +121,11 @@ export function FollowingScreen() {
           }}
         />
       ) : null}
-      <ReportContentSheet kind="POST" targetId={reportPostId} onClose={() => setReportPostId(null)} />
+      <ReportContentSheet
+        kind="POST"
+        targetId={reportPostId}
+        onClose={() => setReportPostId(null)}
+      />
     </StackScreen>
   );
 }

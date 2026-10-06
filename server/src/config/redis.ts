@@ -123,6 +123,17 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
   }
 }
 
+/** Atomically adds one to a counter key (created at 1). Null when Redis is unavailable. */
+export async function cacheIncr(key: string): Promise<number | null> {
+  if (!client || !connected) return null;
+  try {
+    return await client.incr(key);
+  } catch (err) {
+    logs.server.warn('redis', 'cacheIncr', { error: err, key });
+    return null;
+  }
+}
+
 export async function cacheSet(key: string, value: unknown, ttlSeconds: number): Promise<void> {
   if (!client || !connected) return;
   try {

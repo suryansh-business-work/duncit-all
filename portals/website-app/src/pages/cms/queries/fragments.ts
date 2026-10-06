@@ -8,6 +8,7 @@ export const CMS_FRAGMENT_ROW = gql`
     key
     name
     kind
+    blocks
     is_published
     has_unpublished_changes
     published { version published_at }
@@ -15,7 +16,7 @@ export const CMS_FRAGMENT_ROW = gql`
   }
 `;
 
-export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
+export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'blocks' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
   published: Pick<CmsFragment['published'], 'version' | 'published_at'>;
 };
 

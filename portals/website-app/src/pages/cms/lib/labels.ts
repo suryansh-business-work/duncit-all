@@ -34,6 +34,7 @@ export function useCmsLabels() {
         COLLECTION_LIST: t('websiteApp.cms.pages.kindList'),
         COLLECTION_DETAIL: t('websiteApp.cms.pages.kindDetail'),
       } satisfies Record<CmsPageKind, string>,
+      liveComponent: t('websiteApp.cms.fragments.kindLive'),
       fragmentKind: {
         HEADER: t('websiteApp.cms.fragments.kindHeader'),
         FOOTER: t('websiteApp.cms.fragments.kindFooter'),

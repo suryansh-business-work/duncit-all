@@ -15,16 +15,17 @@ let cached: { t: SiteTranslate; expires: number } | null = null;
 let loading: Promise<SiteTranslate> | null = null;
 
 async function load(): Promise<SiteTranslate> {
+  let t: SiteTranslate = siteT;
   try {
     const translator = await getSiteTranslator(graphqlUrl(), SITE_LOCALE);
     cached = { t: translator.t, expires: Date.now() + TTL_MS };
-    return translator.t;
-  } catch {
+    t = translator.t;
+  } catch (error) {
     // The bundled catalogue still names every key — never render blank.
-    return siteT;
-  } finally {
-    loading = null;
+    console.warn('[cms-site] server localization unavailable, using the bundled copy', error);
   }
+  loading = null;
+  return t;
 }
 
 export async function translator(): Promise<SiteTranslate> {

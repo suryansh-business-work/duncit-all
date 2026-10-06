@@ -10,6 +10,8 @@ export const fragmentSchema = (t: Translate) =>
     name: z.string().trim().min(1, t('websiteApp.cms.fragmentForm.errName')).max(120, t('websiteApp.cms.fragmentForm.errName')),
     key: slugField(t('websiteApp.cms.fragmentForm.errKey')),
     kind: z.enum(['HEADER', 'FOOTER', 'SECTION']),
+    category: z.string().trim().max(60, t('websiteApp.cms.fragmentForm.errCategory')),
+    description: z.string().trim().max(500, t('websiteApp.cms.fragmentForm.errDescription')),
   });
 
 export type FragmentFormValues = z.input<ReturnType<typeof fragmentSchema>>;
@@ -19,6 +21,8 @@ export const toFragmentFormValues = (fragment: CmsFragmentRow | null): FragmentF
   name: fragment?.name ?? '',
   key: fragment?.key ?? '',
   kind: fragment?.kind ?? 'SECTION',
+  category: fragment?.category ?? '',
+  description: fragment?.description ?? '',
 });
 
 export const toFragmentInput = (values: FragmentFormOutput): CmsFragmentInput => ({ ...values });

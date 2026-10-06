@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router';
+
 export interface RedirectLocation {
   pathname: string;
   search: string;
@@ -20,6 +22,25 @@ export function postAuthPath(surveyCompleted: boolean, redirect?: string | null)
   if (surveyCompleted) return target;
   if (target === '/') return '/signup-survey';
   return `/signup-survey?redirect=${encodeURIComponent(target)}`;
+}
+
+/**
+ * An auth-screen path that keeps the pending deep link. Moving between login,
+ * signup, password recovery, referral and survey must not drop `?redirect`, or
+ * the visitor who tapped a pod on a public page lands on home instead of it.
+ */
+export function withRedirect(path: string, redirect?: string | null) {
+  const target = getSafeRedirectPath(redirect);
+  if (!target) return path;
+  const joiner = path.includes('?') ? '&' : '?';
+  return `${path}${joiner}redirect=${encodeURIComponent(target)}`;
+}
+
+/** `withRedirect` bound to the current screen's own `?redirect`, for its links. */
+export function useWithRedirect() {
+  const [params] = useSearchParams();
+  const redirect = params.get('redirect');
+  return (path: string) => withRedirect(path, redirect);
 }
 
 export function getSafeRedirectPath(value?: string | null) {

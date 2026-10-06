@@ -26,6 +26,7 @@ import { UI_BUNDLE } from './bundles/ui';
 import { VERIFICATION_BUNDLE } from './bundles/verification';
 import { WITHDRAW_BUNDLE } from './bundles/withdraw';
 import { AVAILABILITY_BUNDLE } from './bundles/availability';
+import { PUBLIC_PAGE_BUNDLE } from './bundles/public-page';
 import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -123,6 +124,7 @@ export {
   VERIFICATION_BUNDLE,
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
+  PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -161,6 +163,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   verification: VERIFICATION_BUNDLE,
   withdraw: WITHDRAW_BUNDLE,
   availability: AVAILABILITY_BUNDLE,
+  publicPage: PUBLIC_PAGE_BUNDLE,
   venueSettings: VENUE_SETTINGS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

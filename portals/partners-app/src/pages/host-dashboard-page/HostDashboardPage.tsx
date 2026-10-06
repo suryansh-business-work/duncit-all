@@ -11,6 +11,7 @@ import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import HostStatCards from './HostStatCards';
 import HostInsightsCharts from './HostInsightsCharts';
 import HostHealthCard from './HostHealthCard';
+import { publicPageWidget } from '../../components/publicPageWidget';
 import {
   HOST_DASHBOARD,
   HOST_INSIGHTS,
@@ -134,6 +135,7 @@ export default function HostDashboardPage() {
       minH: 1,
       content: <HostHealthCard health={health} podsCompleted={earnings.pods_completed} />,
     },
+    ...(isHost ? [publicPageWidget({ kind: 'HOST', title: me?.full_name ?? '' }, 15)] : []),
   ];
 
   return (

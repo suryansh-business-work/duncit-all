@@ -1,5 +1,6 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 import { CMS_COLLECTIONS, CMS_LEGACY_SITES, type CmsCollection } from './cms.constants';
+import { SEO_SHARING_FIELDS, type CmsSeo } from './cmsContent.schema-parts';
 
 /** One design token, emitted as a CSS custom property on `:root`. */
 export interface CmsToken {
@@ -79,11 +80,8 @@ export interface CmsCollectionPath {
   path: string;
 }
 
-export interface CmsSeoDefaults {
-  title: string;
-  description: string;
-  og_image_url: string;
-}
+/** What every page of the site inherits when it leaves a field blank. */
+export type CmsSeoDefaults = Omit<CmsSeo, 'canonical_url' | 'noindex'>;
 
 /** A website the CMS serves, picked by the request's hostname. */
 export interface ICmsSite extends Document {
@@ -138,6 +136,7 @@ const cmsSiteSchema = new Schema<ICmsSite>(
       title: { type: String, default: '', trim: true, maxlength: 160 },
       description: { type: String, default: '', trim: true, maxlength: 320 },
       og_image_url: { type: String, default: '', trim: true, maxlength: 1000 },
+      ...SEO_SHARING_FIELDS,
     },
     header_fragment_id: { type: Schema.Types.ObjectId, ref: 'CmsFragment', default: null },
     footer_fragment_id: { type: Schema.Types.ObjectId, ref: 'CmsFragment', default: null },

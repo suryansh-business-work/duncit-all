@@ -424,6 +424,16 @@ export const shortLinkService = {
   },
 
   /**
+   * The link already minted for a share, or null — read-only, so a page that
+   * only shows a link's numbers never mints one as a side effect.
+   */
+  async existingShare(target: ShareLinkTarget, ref: string) {
+    const doc = await ShortLinkModel.findOne({ share_key: shareKey(target, ref) }).exec();
+    if (!doc) return null;
+    return { id: doc._id.toHexString(), ...(await shareResult(doc)) };
+  },
+
+  /**
    * Every campaign a link can be filed under: the platform's own share
    * campaigns and every marketing campaign. One list, so the console's
    * dropdown and its campaign filter cannot disagree about what exists.

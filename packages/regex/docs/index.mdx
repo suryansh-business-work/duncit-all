@@ -33,6 +33,7 @@ exports:
   - 'SITE_PATH'
   - 'CSS_VARIABLE'
   - 'FONT_FAMILY'
+  - 'META_NAME'
   - 'isPhoneNumber'
   - 'isPhoneIntl'
   - 'isPincode'
@@ -46,6 +47,7 @@ exports:
   - 'isSitePath'
   - 'isCssVariable'
   - 'isFontFamily'
+  - 'isMetaName'
   - 'isUpiId'
   - 'isBankAccountNumber'
   - 'isGstin'
@@ -184,6 +186,7 @@ above holds for everything you can import.
 | `SITE_PATH` | `/^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/` | `isSitePath` | a website page path — `/`, `/safety/tools`; no trailing slash |
 | `CSS_VARIABLE` | `/^--[a-z0-9-]{1,60}$/` | `isCssVariable` | a design token name — `--color-primary` |
 | `FONT_FAMILY` | `/^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/` | `isFontFamily` | a font family name — `Plus Jakarta Sans`; no quotes, commas or semicolons |
+| `META_NAME` | `/^[A-Za-z][\w:.-]{0,79}$/` | `isMetaName` | a `<meta>` name or property — `robots`, `og:locale`, `twitter:site`; no quotes or spaces |
 | `HOSTNAME_LABEL` | `/^(?!-)[a-z\d-]{1,63}(?<!-)$/i` | `isHostname` | one DNS label; `isHostname` checks a whole name — `ns1.example.com`, two labels at least, 253 chars max |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`

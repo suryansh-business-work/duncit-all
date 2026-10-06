@@ -6,6 +6,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import PublishIcon from '@mui/icons-material/Publish';
 import HistoryIcon from '@mui/icons-material/History';
 import MovieIcon from '@mui/icons-material/Movie';
+import CodeIcon from '@mui/icons-material/Code';
+import LinkIcon from '@mui/icons-material/Link';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
@@ -18,6 +20,10 @@ interface Dialogs {
   versions: (fragment: CmsFragmentRow) => void;
   /** The reels a Reel Slider component plays. */
   reels: () => void;
+  /** Its markup, SCSS and JS. */
+  code: (fragment: CmsFragmentRow) => void;
+  /** Copies its live-demo link (its draft, on the site's domain). */
+  copyLink: (fragment: CmsFragmentRow) => void;
 }
 
 /** The menu every fragment row carries. */
@@ -68,6 +74,8 @@ export function useFragmentRowActions(siteId: string, refresh: () => void, dialo
         icon: <BrushIcon fontSize="small" />,
         onClick: () => navigate(`/sites/${siteId}/fragments/${fragment.id}/design`),
       },
+      { key: 'code', label: t('websiteApp.cms.fragments.code'), icon: <CodeIcon fontSize="small" />, onClick: () => dialogs.code(fragment) },
+      { key: 'link', label: t('websiteApp.cms.preview.copyLink'), icon: <LinkIcon fontSize="small" />, onClick: () => dialogs.copyLink(fragment) },
       {
         key: 'reels',
         label: t('websiteApp.cms.fragments.manageReels'),

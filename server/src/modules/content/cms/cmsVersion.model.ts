@@ -12,6 +12,8 @@ export interface ICmsVersion extends Document {
   project: string;
   html: string;
   css: string;
+  scss: string;
+  js: string;
   published_by: string;
   created_at: Date;
 }
@@ -25,6 +27,8 @@ const cmsVersionSchema = new Schema<ICmsVersion>(
     project: { type: String, default: '' },
     html: { type: String, default: '' },
     css: { type: String, default: '' },
+    scss: { type: String, default: '' },
+    js: { type: String, default: '' },
     published_by: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: false }, collection: 'cms_versions' }

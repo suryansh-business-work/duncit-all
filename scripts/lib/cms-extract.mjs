@@ -199,7 +199,7 @@ export function extractSite(site, { dist, publicDir }) {
   const used = new Set();
   const fragments = sharedChrome(pages).map((html) => {
     const key = fragmentKey(html, used);
-    return { key, name: `${site.name} — ${key}`, kind: 'SECTION', html };
+    return { key, name: `${site.name} — ${key}`, kind: 'SECTION', category: 'Site chrome', description: `The ${key} every page of ${site.name} shares.`, html };
   });
   const out = { pages: [], templates: [] };
   const plain = [];

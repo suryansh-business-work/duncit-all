@@ -60,6 +60,10 @@ const NO_E2E_SURFACE = new Map([
     '@duncit/host-pod-actions',
     'library — the host pod dialogs are rendered end-to-end by mWeb Your Pods and partners-app Host > Your Pods',
   ],
+  [
+    '@duncit/public-page',
+    'library — the publish card is rendered end-to-end by mWeb Venue/Host Studio and the partners-app dashboards',
+  ],
   ['@duncit/i18n', 'string bundles; verified by scripts/verify-translation-keys.mjs'],
   [
     '@duncit/pod-change-requests',

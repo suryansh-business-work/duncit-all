@@ -77,8 +77,8 @@ export function splitIntoComponents(site, pages, taken) {
   const componentFor = (html, describe) => {
     const known = byHtml.get(html);
     if (known) return known.key;
-    const { key, name } = describe(used);
-    const component = { key, name, kind: 'SECTION', html };
+    const { key, name, category, description } = describe(used);
+    const component = { key, name, kind: 'SECTION', category, description, html };
     byHtml.set(html, component);
     components.push(component);
     return key;
@@ -104,7 +104,7 @@ export function splitIntoComponents(site, pages, taken) {
           componentFor(child, (keys) => {
             const hash = createHash('sha1').update(child).digest('hex').slice(0, 6);
             const key = keys.has(block) ? uniqueKey(`${block}-${hash}`, keys) : uniqueKey(block, keys);
-            return { key, name: BLOCK_NAMES[block] ?? block };
+            return { key, name: BLOCK_NAMES[block] ?? block, category: 'Live blocks', description: 'A live block: its content comes from the Website portal, its words from its settings.' };
           })
         );
       }
@@ -113,6 +113,9 @@ export function splitIntoComponents(site, pages, taken) {
         componentFor(child, (keys) => ({
           key: uniqueKey(`${slug(pageName(page.path))}-${slug(heading) || 'content'}`, keys),
           name: `${pageName(page.path)} · ${heading || 'Content'}`.slice(0, 120),
+          // Grouped by the page it came from; reusable on any page.
+          category: pageName(page.path).slice(0, 60),
+          description: heading ? `The "${heading}" section of the ${pageName(page.path)} page.`.slice(0, 500) : '',
         }))
       );
     });

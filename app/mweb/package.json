@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.81.176",
+  "version": "1.81.188",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -47,6 +47,7 @@
     "@duncit/pod-details": "workspace:*",
     "@duncit/pod-form": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
+    "@duncit/public-page": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/slack": "workspace:*",
     "@duncit/slots": "workspace:*",

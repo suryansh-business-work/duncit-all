@@ -100,6 +100,10 @@ export function isCssVariable(value: string): boolean;
 export const FONT_FAMILY: RegExp;
 /** Font-family name shape check. */
 export function isFontFamily(value: string): boolean;
+/** An HTML `<meta>` name or property like `og:locale`: a letter, then letters, digits, `_ : . -`, 80 max. */
+export const META_NAME: RegExp;
+/** Meta name/property shape check. */
+export function isMetaName(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

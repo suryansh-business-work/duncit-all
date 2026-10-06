@@ -17,7 +17,7 @@ const BLOCK_TAG = /<cms-block data-block="([a-z0-9-]+)"(?: data-props="([^"]*)")
 
 const ENTITIES: Record<string, string> = { '&quot;': '"', '&#39;': "'", '&lt;': '<', '&gt;': '>', '&amp;': '&' };
 
-const unescapeAttr = (value: string) => value.replaceAll(/&(?:quot|#39|lt|gt|amp);/g, (entity) => ENTITIES[entity] ?? entity);
+const unescapeAttr = (value: string) => value.replaceAll(/&(?:quot|#39|lt|gt|amp);/g, (entity) => ENTITIES[entity]);
 
 /** A block's props; anything unreadable becomes "no props" rather than a crash. */
 export function parseProps(raw: string | undefined): Record<string, unknown> {
@@ -34,7 +34,7 @@ export function splitSegments(html: string): Segment[] {
   const segments: Segment[] = [];
   let cursor = 0;
   for (const match of html.matchAll(BLOCK_TAG)) {
-    const start = match.index ?? 0;
+    const start = match.index;
     if (start > cursor) segments.push({ kind: 'html', html: html.slice(cursor, start) });
     segments.push({ kind: 'block', block: match[1], props: parseProps(match[2]) });
     cursor = start + match[0].length;

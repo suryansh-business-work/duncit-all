@@ -5,6 +5,7 @@ import { SingleImageUploadField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import type { CmsFragmentKind } from '@duncit/gql-types';
 import type { SiteFormValues } from './site.types';
+import SeoSharingFields from '../../components/SeoSharingFields';
 
 export interface FragmentOption {
   id: string;
@@ -66,6 +67,7 @@ export default function SiteSeoFields({ control, fragments }: Readonly<Props>) {
         minRows={2}
         slotProps={{ htmlInput: { maxLength: 320 } }}
       />
+      <SeoSharingFields control={control} />
       {fragments.length > 0 && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <RhfTextField control={control} name="header_fragment_id" select label={t('websiteApp.cms.site.header')}>

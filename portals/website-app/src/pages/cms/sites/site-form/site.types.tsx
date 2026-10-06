@@ -3,6 +3,7 @@ import type { CmsCollection, CmsSiteInput } from '@duncit/gql-types';
 import type { CmsSiteRow } from '../../queries/sites';
 import { CMS_COLLECTIONS } from '../../lib/labels';
 import { domainList, httpsOrBlank, sitePath, slugField, splitList } from '../../lib/rules';
+import { seoSharingSchema, toSeoSharingInput, toSeoSharingValues } from '../../lib/seoSharing';
 
 type Translate = (key: string) => string;
 
@@ -27,6 +28,7 @@ export const siteSchema = (t: Translate) =>
     seo_title: z.string().trim().max(160),
     seo_description: z.string().trim().max(320),
     seo_image: httpsOrBlank(t('websiteApp.cms.pageForm.errUrl')),
+    seo_sharing: seoSharingSchema(t),
     header_fragment_id: z.string(),
     footer_fragment_id: z.string(),
     collections: z.array(collectionRow(t)),
@@ -55,6 +57,7 @@ export function toSiteFormValues(site: CmsSiteRow | null): SiteFormValues {
     seo_title: site?.seo.title ?? '',
     seo_description: site?.seo.description ?? '',
     seo_image: site?.seo.og_image_url ?? '',
+    seo_sharing: toSeoSharingValues(site?.seo),
     header_fragment_id: site?.header_fragment_id ?? '',
     footer_fragment_id: site?.footer_fragment_id ?? '',
     collections: CMS_COLLECTIONS.map((collection) => ({
@@ -72,7 +75,7 @@ export const toSiteInput = (values: SiteFormOutput): CmsSiteInput => ({
   legacy_site: values.legacy_site === '' ? null : values.legacy_site,
   is_active: values.is_active,
   favicon_url: values.favicon_url,
-  seo: { title: values.seo_title, description: values.seo_description, og_image_url: values.seo_image },
+  seo: { title: values.seo_title, description: values.seo_description, og_image_url: values.seo_image, ...toSeoSharingInput(values.seo_sharing) },
   header_fragment_id: values.header_fragment_id || null,
   footer_fragment_id: values.footer_fragment_id || null,
   collections: values.collections.filter((row) => row.enabled).map((row) => row.collection),

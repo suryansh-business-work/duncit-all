@@ -12,6 +12,7 @@ import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useWithRedirect } from '../../utils/redirect';
 import { useGoogleSignup } from '../../hooks/useGoogleSignup';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import { AppleSignInButton } from '../../components/apple-sign-in';
@@ -50,6 +51,7 @@ const CLAIMS = createGoogleSignupClaims();
 
 export default function RegisterPage() {
   const { t } = useTranslation();
+  const authLink = useWithRedirect();
 
   /*
     A shared referral link carries its code in the URL, and this page is where
@@ -177,7 +179,7 @@ export default function RegisterPage() {
             )}
             <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
               {t('mweb.signup.haveAccount')}{' '}
-              <Link component={RouterLink} to="/login" underline="hover" data-testid="go-login">
+              <Link component={RouterLink} to={authLink('/login')} underline="hover" data-testid="go-login">
                 {t('mweb.signup.logIn')}
               </Link>
             </Typography>

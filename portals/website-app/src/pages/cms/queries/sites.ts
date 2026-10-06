@@ -10,7 +10,7 @@ export const CMS_SITE_FIELDS = gql`
     legacy_site
     is_active
     favicon_url
-    seo { title description og_image_url }
+    seo { title description og_image_url og_title og_description twitter_card keywords json_ld meta_tags { name content } }
     header_fragment_id
     footer_fragment_id
     collections
@@ -21,7 +21,7 @@ export const CMS_SITE_FIELDS = gql`
 `;
 
 export type CmsSiteRow = Omit<CmsSite, 'design' | 'head_html' | 'body_end_html' | 'custom_css' | 'custom_js' | 'created_at' | 'seo'> & {
-  seo: Pick<CmsSite['seo'], 'title' | 'description' | 'og_image_url'>;
+  seo: Pick<CmsSite['seo'], 'title' | 'description' | 'og_image_url' | 'og_title' | 'og_description' | 'twitter_card' | 'keywords' | 'json_ld' | 'meta_tags'>;
 };
 
 export const CMS_SITES = gql`

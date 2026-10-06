@@ -1,0 +1,58 @@
+---
+name: '@duncit/public-page'
+summary: 'Publish a venue or host page — the tracked duncit.com link, its QR, the printable A4 poster and the page''s tracking numbers — as one MUI card shared by mWeb and the Partners console.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+exports:
+  - 'PublishPageCard'
+  - 'PublishedLinkPanel'
+  - 'PublicPageStatsPanel'
+  - 'usePublicPage'
+  - 'usePublicPageActions'
+---
+
+## Why this exists
+
+A venue owner publishes a page anyone can open without signing in — the venue's photos, the pods
+happening there, the ones that already did, and its reels — and hands it out as a link, a QR on a
+table, or an A4 poster on the wall. A host does the same for their own page. The owner then wants
+to know whether it works: how many people opened it, how many signed up, opened a pod, booked.
+
+mWeb's Venue Studio and Host Studio and the Partners console's venue and host dashboards all show
+that card. One MUI card, so the four of them cannot disagree about what "published" means.
+
+The native app renders the same card through its own Tamagui view
+(`app/mobile-app/src/components/public-page/`); the contract both read — the GraphQL documents, the
+tile builder, the period list, the error-to-copy mapping and the file names — lives framework-free
+in `@duncit/utils` (`public-page.ts`).
+
+## How it works
+
+- **The link is an ordinary share link** (`VENUE_PAGE` / `HOST_PAGE`), minted on the first
+  publish and reused for ever after. It carries `dls=1`, so a visitor who is already signed in
+  stays signed in; clicks, journeys and conversions are counted by the short-link machinery.
+- **Everything is owner-scoped on the server**: `myPublicPage`, `publishPublicPage` and
+  `myPublicPagePosterPdfBase64` answer only for the caller's own venue (or their own host page).
+  A venue can be published once it is approved and active; a host page once the account is a host.
+- **The poster is drawn by the server** (pdfkit, A4) with the words the surface passes in, already
+  translated — the server holds no localization of its own.
+
+## Use
+
+```tsx
+import { PublishPageCard } from '@duncit/public-page';
+
+// Venue Studio
+<PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name} />
+
+// Host Studio — always the signed-in host's own page
+<PublishPageCard kind="HOST" title={me.full_name} />
+```
+
+The card needs an Apollo client and the `publicPage.*` copy namespace, which the shell, mWeb and
+the native app all ship.

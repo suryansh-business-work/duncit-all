@@ -6,10 +6,12 @@ import { SingleImageUploadField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import RhfSwitch from '../../components/RhfSwitch';
 import CodeField from '../../components/CodeField';
+import SeoSharingFields from '../../components/SeoSharingFields';
+import type { CodeToken } from '../../components/code-field/CodeTokens';
 import type { PageFormValues } from './page.types';
 
 /** Search & sharing, plus the page's own head code, CSS and JavaScript. */
-export default function PageAdvancedFields({ control }: Readonly<{ control: Control<PageFormValues> }>) {
+export default function PageAdvancedFields({ control, tokens }: Readonly<{ control: Control<PageFormValues>; tokens: CodeToken[] }>) {
   const { t } = useTranslation();
   return (
     <Accordion variant="outlined" disableGutters>
@@ -43,8 +45,9 @@ export default function PageAdvancedFields({ control }: Readonly<{ control: Cont
           />
           <RhfTextField control={control} name="canonical_url" label={t('websiteApp.cms.pageForm.canonical')} />
           <RhfSwitch control={control} name="noindex" label={t('websiteApp.cms.pageForm.noindex')} />
+          <SeoSharingFields control={control} />
           <CodeField control={control} name="head_html" label={t('websiteApp.cms.pageForm.headHtml')} language="html" />
-          <CodeField control={control} name="custom_css" label={t('websiteApp.cms.pageForm.customCss')} language="css" />
+          <CodeField control={control} name="custom_css" label={t('websiteApp.cms.pageForm.customCss')} language="scss" tokens={tokens} />
           <CodeField control={control} name="custom_js" label={t('websiteApp.cms.pageForm.customJs')} language="javascript" />
         </Stack>
       </AccordionDetails>

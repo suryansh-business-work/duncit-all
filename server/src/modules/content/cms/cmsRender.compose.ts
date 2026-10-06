@@ -1,4 +1,5 @@
 import { escapeHtml } from '@utils/html';
+import { compileScssOrRaw, componentScope, scopedScript } from './cmsCode.service';
 
 /**
  * Pure HTML composition for the CMS renderer. Everything here works on the
@@ -18,6 +19,9 @@ import { escapeHtml } from '@utils/html';
 export interface ComposedPart {
   html: string;
   css: string;
+  scss?: string;
+  /** A page's or component's own script. */
+  js?: string;
 }
 
 export interface RenderEntry {
@@ -42,7 +46,7 @@ const LIST_TAG = /<cms-entry-list data-variant="(cards|rows|compact)"><\/cms-ent
 
 /** A fragment may hold fragments, but only this deep — a fragment that
  * includes itself would otherwise never finish rendering. */
-const MAX_FRAGMENT_DEPTH = 3;
+export const MAX_FRAGMENT_DEPTH = 3;
 
 /**
  * Swaps every fragment placeholder for that fragment's html (wrapped, so it
@@ -50,20 +54,29 @@ const MAX_FRAGMENT_DEPTH = 3;
  * An unknown or unpublished fragment renders as nothing rather than as a
  * broken tag on a live page.
  */
-export function expandFragments(html: string, fragments: Map<string, ComposedPart>, depth = 0, used = new Set<string>()): ComposedPart {
+/** What composing returns: the html with every component in place, and their css and js, always strings. */
+export type Composed = Required<Omit<ComposedPart, 'scss'>>;
+
+export function expandFragments(html: string, fragments: Map<string, ComposedPart>, depth = 0, used = new Set<string>()): Composed {
   const css: string[] = [];
+  const js: string[] = [];
   const out = html.replaceAll(FRAGMENT_TAG, (_match, key: string) => {
     const fragment = fragments.get(key);
     if (!fragment || depth >= MAX_FRAGMENT_DEPTH) return '';
     const inner = expandFragments(fragment.html, fragments, depth + 1, used);
     if (!used.has(key)) {
       used.add(key);
-      css.push(fragment.css, inner.css);
+      // A component's SCSS is compiled inside its own scope, so it styles this component and nothing else.
+      css.push(compileScssOrRaw(fragment.css, componentScope(key)), inner.css);
+      js.push(scopedScript(key, fragment.js ?? ''), inner.js);
     }
-    return `<div data-cms-fragment="${key}">${inner.html}</div>`;
+    return wrapComponent(key, inner.html);
   });
-  return { html: out, css: css.filter(Boolean).join('\n') };
+  return { html: out, css: css.filter(Boolean).join('\n'), js: js.filter(Boolean).join('\n') };
 }
+
+/** The element a component renders inside: what its scoped CSS and JS select (display: contents, so layout is untouched). */
+export const wrapComponent = (key: string, html: string) => `<div data-cms-fragment="${key}">${html}</div>`;
 
 /** The keys of every fragment a piece of html refers to. */
 export function fragmentKeys(html: string): string[] {

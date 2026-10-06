@@ -50,6 +50,16 @@ export async function upsertSite(gql, input) {
   return data.createCmsSite;
 }
 
+/**
+ * Editors own what they have touched: a page or component published again after
+ * the migration (version > 1) or holding an unsaved draft is left alone and
+ * reported, unless the run says --overwrite-edited. The migration publishes
+ * once, and re-publishing identical content is a no-op, so version 1 means
+ * "as migrated".
+ */
+const edited = (doc) => Boolean(doc && (doc.has_unpublished_changes || (doc.published?.version ?? 0) > 1));
+export const skipped = [];
+
 /** Draft the html, then publish it — the migrated site goes live as built. */
 async function saveAndPublish(gql, kind, id, html) {
   const save = kind === 'page' ? 'saveCmsPageDraft(page_id: $id' : 'saveCmsFragmentDraft(fragment_id: $id';
@@ -58,10 +68,15 @@ async function saveAndPublish(gql, kind, id, html) {
   await gql(`mutation($id: ID!) { ${publish} { id } }`, { id });
 }
 
-export async function upsertFragment(gql, siteId, fragment) {
-  const { cmsFragments } = await gql('query($siteId: ID!) { cmsFragments(site_id: $siteId) { id key } }', { siteId });
-  const input = { key: fragment.key, name: fragment.name, kind: fragment.kind };
-  let id = cmsFragments.find((f) => f.key === fragment.key)?.id;
+export async function upsertFragment(gql, siteId, fragment, { overwriteEdited = false } = {}) {
+  const { cmsFragments } = await gql('query($siteId: ID!) { cmsFragments(site_id: $siteId) { id key has_unpublished_changes published { version } } }', { siteId });
+  const input = { key: fragment.key, name: fragment.name, kind: fragment.kind, category: fragment.category ?? '', description: fragment.description ?? '' };
+  const existing = cmsFragments.find((f) => f.key === fragment.key);
+  if (!overwriteEdited && edited(existing)) {
+    skipped.push(`component ${fragment.key}`);
+    return existing.id;
+  }
+  let id = existing?.id;
   if (!id) {
     const data = await gql('mutation($siteId: ID!, $input: CmsFragmentInput!) { createCmsFragment(site_id: $siteId, input: $input) { id } }', { siteId, input });
     id = data.createCmsFragment.id;
@@ -71,14 +86,14 @@ export async function upsertFragment(gql, siteId, fragment) {
 }
 
 async function findPage(gql, siteId, filters) {
-  const data = await gql('query($siteId: ID!, $query: TableQueryInput) { cmsPagesTable(site_id: $siteId, query: $query) { rows { id } } }', {
+  const data = await gql('query($siteId: ID!, $query: TableQueryInput) { cmsPagesTable(site_id: $siteId, query: $query) { rows { id has_unpublished_changes published { version } } } }', {
     siteId,
     query: { page: 1, page_size: 1, filters },
   });
-  return data.cmsPagesTable.rows[0]?.id ?? null;
+  return data.cmsPagesTable.rows[0] ?? null;
 }
 
-export async function upsertPage(gql, siteId, page) {
+export async function upsertPage(gql, siteId, page, { overwriteEdited = false } = {}) {
   const input = {
     kind: page.kind,
     collection_type: page.collection ?? null,
@@ -95,7 +110,12 @@ export async function upsertPage(gql, siteId, page) {
           { field: 'kind', op: 'eq', value: page.kind },
           { field: 'collection_type', op: 'eq', value: page.collection },
         ];
-  let id = await findPage(gql, siteId, filters);
+  const existing = await findPage(gql, siteId, filters);
+  if (!overwriteEdited && edited(existing)) {
+    skipped.push(`page ${page.kind === 'PAGE' ? page.path : `${page.kind} ${page.collection}`}`);
+    return existing.id;
+  }
+  let id = existing?.id;
   if (id) {
     await gql('mutation($id: ID!, $input: CmsPageInput!) { updateCmsPage(page_id: $id, input: $input) { id } }', { id, input });
   } else {

@@ -8,6 +8,8 @@ export const CMS_FRAGMENT_ROW = gql`
     key
     name
     kind
+    description
+    category
     blocks
     is_published
     has_unpublished_changes
@@ -16,7 +18,7 @@ export const CMS_FRAGMENT_ROW = gql`
   }
 `;
 
-export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'blocks' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
+export type CmsFragmentRow = Pick<CmsFragment, 'id' | 'site_id' | 'key' | 'name' | 'kind' | 'description' | 'category' | 'blocks' | 'is_published' | 'has_unpublished_changes' | 'updated_at'> & {
   published: Pick<CmsFragment['published'], 'version' | 'published_at'>;
 };
 
@@ -50,7 +52,7 @@ export const CMS_FRAGMENT_DRAFT = gql`
   query CmsFragmentDraft($id: ID!) {
     cmsFragment(fragment_id: $id) {
       ...CmsFragmentRow
-      draft { project html css }
+      draft { project html css scss js }
     }
   }
   ${CMS_FRAGMENT_ROW}
@@ -114,3 +116,14 @@ export const RESTORE_CMS_VERSION = gql`
     restoreCmsVersion(version_id: $id)
   }
 `;
+
+/** A component on its own, on the site's domain: its draft, or (with version) that published version. */
+export const CMS_COMPONENT_PREVIEW_LINK = gql`
+  query CmsComponentPreviewLink($id: ID!, $version: Int) {
+    cmsComponentPreviewLink(fragment_id: $id, version: $version) { url expires_at }
+  }
+`;
+
+export interface CmsComponentPreviewLinkData {
+  cmsComponentPreviewLink: { url: string; expires_at: string };
+}

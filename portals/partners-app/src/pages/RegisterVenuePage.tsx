@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client/react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { BackButton } from '@duncit/ui';
+import { PublishPageCard } from '@duncit/public-page';
 import {
   RegisterVenueForm,
   type RegisterVenueMode,
@@ -129,6 +130,9 @@ export default function RegisterVenuePage() {
       </Box>
 
       <StatusAlerts status={status} notes={venue?.reviewer_notes} />
+      {status === 'APPROVED' && venue?.id && (
+        <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name ?? ''} />
+      )}
       {notFound && <Alert severity="error">{t('partners.page.thisVenueRegistrationWasNotFound')}</Alert>}
 
       {!notFound && (

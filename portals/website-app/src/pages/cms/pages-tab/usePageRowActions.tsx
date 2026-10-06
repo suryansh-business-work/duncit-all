@@ -8,6 +8,7 @@ import UnpublishedIcon from '@mui/icons-material/Unpublished';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import HistoryIcon from '@mui/icons-material/History';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import LinkIcon from '@mui/icons-material/Link';
 import { notifyError } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import type { CmsPageRow } from '../queries/pages';
@@ -19,6 +20,8 @@ export interface PageDialogs {
   preview: (page: CmsPageRow) => void;
   duplicate: (page: CmsPageRow) => void;
   versions: (page: CmsPageRow) => void;
+  /** Copies the draft's live-demo link. */
+  copyLink: (page: CmsPageRow) => void;
 }
 
 /** The menu every page row carries. */
@@ -38,6 +41,7 @@ export function usePageRowActions(siteId: string, refresh: () => void, dialogs: 
       },
       { key: 'settings', label: t('websiteApp.cms.pages.settings'), icon: <SettingsIcon fontSize="small" />, onClick: () => dialogs.settings(page) },
       { key: 'preview', label: t('websiteApp.cms.pages.preview'), icon: <VisibilityIcon fontSize="small" />, onClick: () => dialogs.preview(page) },
+      { key: 'link', label: t('websiteApp.cms.preview.copyLink'), icon: <LinkIcon fontSize="small" />, onClick: () => dialogs.copyLink(page) },
       {
         key: 'publish',
         label: t('websiteApp.cms.pages.publish'),

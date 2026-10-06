@@ -3,7 +3,7 @@ import { CmsSiteModel, type CmsDesign, type ICmsSite } from './cmsSite.model';
 import { CmsPageModel } from './cmsPage.model';
 import { CmsFragmentModel } from './cmsFragment.model';
 import { CmsEntryModel } from './cmsEntry.model';
-import { assertId, badInput, conflict, notFound, rethrowDuplicate, toSite } from './cms.mappers';
+import { assertId, badInput, conflict, notFound, rethrowDuplicate, seoOf, toSite } from './cms.mappers';
 import type { CmsCollection } from './cms.constants';
 
 export interface CmsSiteInput {
@@ -82,7 +82,8 @@ const fields = (input: CmsSiteInput) => ({
   legacy_site: input.legacy_site ?? null,
   is_active: input.is_active,
   favicon_url: input.favicon_url,
-  seo: { title: input.seo?.title ?? '', description: input.seo?.description ?? '', og_image_url: input.seo?.og_image_url ?? '' },
+  // The model keeps no canonical address or noindex for a site (those are per page) and drops them.
+  seo: seoOf(input.seo),
   header_fragment_id: input.header_fragment_id ? new Types.ObjectId(input.header_fragment_id) : null,
   footer_fragment_id: input.footer_fragment_id ? new Types.ObjectId(input.footer_fragment_id) : null,
   collections: [...new Set(input.collections)],

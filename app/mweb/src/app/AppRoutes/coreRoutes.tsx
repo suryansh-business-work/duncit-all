@@ -1,5 +1,5 @@
 import { Route } from 'react-router';
-import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostsVenuesPage, MenuPage, PodAttendancePage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
+import { AccountPage, CityLaunchPage, ClubDetailsPage, CreatePodPage, FollowPage, HomePage, HostApplyPage, HostDashboardPage, HostManagePage, HostPage, HostsVenuesPage, MenuPage, PodAttendancePage, PodDetailsPage, PodFeedbackPage, PodMediaPage, PodPendingPage, PostPage, ProfilePage, PublicProfilePage, SurveyGatePage, VenueDetailsPage, VenuesPage, VerificationPage, WalletPage } from './lazyPages';
 import { PartnerRedirect, withAuth, type AppRoutesProps } from './routeGuards';
 
 /** Home, profile, pod and host routes. Rendered as a fragment so `<Routes>` still sees plain `<Route>` children. */
@@ -24,6 +24,9 @@ export function coreRoutes({ superCategory, locationId, zoneName }: Readonly<App
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
+        {/* A host's published page — public like the venue page; its pods ask
+            a signed-out visitor to sign in, carrying the pod through it. */}
+        <Route path="/hosts/:handle" element={<HostPage />} />
         {/* A not-yet-launched city's waitlist — the link its "Send this to your
             friends" hands out. Public: signed out, it asks to sign in there. */}
         <Route path="/city-launch/:locationId" element={<CityLaunchPage />} />

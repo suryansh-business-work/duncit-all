@@ -65,6 +65,13 @@ export const DYNAMIC_ROUTES: DynamicRoute[] = [
     descriptionKey: 'mweb.meta.publicProfile.description',
   },
   {
+    // A host's published page — the link and poster QR the host hands out.
+    pattern: '/hosts/:handle',
+    kind: 'USER',
+    idParams: ['handle'],
+    descriptionKey: 'mweb.meta.hostPage.description',
+  },
+  {
     pattern: '/post/:postId',
     kind: 'POST',
     idParams: ['postId'],

@@ -37,6 +37,8 @@ import {
   isCssVariable,
   FONT_FAMILY,
   isFontFamily,
+  META_NAME,
+  isMetaName,
 } from '../regex.mjs';
 
 describe('PHONE_NUMBER (bare 10 digits)', () => {
@@ -459,6 +461,21 @@ describe('FONT_FAMILY / isFontFamily', () => {
   it('rejects anything that could break out of a css string or a URL', () => {
     for (const name of ['', ' Inter', '-Inter', 'Inter"', "Inter'", 'Inter, Arial', 'Inter;', 'In<ter', 'Inter{', `I${'n'.repeat(80)}`]) {
       expect(isFontFamily(name)).toBe(false);
+    }
+  });
+});
+
+describe('META_NAME / isMetaName', () => {
+  it('accepts meta names and Open Graph / Twitter properties', () => {
+    for (const name of ['robots', 'og:locale', 'twitter:site', 'theme-color', 'article:published_time', 'a', `a${'b'.repeat(79)}`]) {
+      expect(isMetaName(name)).toBe(true);
+      expect(META_NAME.test(name)).toBe(true);
+    }
+  });
+
+  it('rejects anything that could break out of the attribute it is written into', () => {
+    for (const name of ['', '1robots', ':og', 'og locale', 'og"', "og'", 'og>', 'og<x', 'og=1', `a${'b'.repeat(80)}`]) {
+      expect(isMetaName(name)).toBe(false);
     }
   });
 });

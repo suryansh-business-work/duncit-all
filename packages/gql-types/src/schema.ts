@@ -4312,6 +4312,25 @@ export type ClubTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type CmsCodeLanguage =
+  | 'ASTRO'
+  | 'HTML'
+  | 'JS'
+  | 'SCSS';
+
+/** One problem in a piece of code, for the editor's markers. Line and column are 1-based. */
+export type CmsCodeProblem = {
+  __typename?: 'CmsCodeProblem';
+  column: Scalars['Int']['output'];
+  line: Scalars['Int']['output'];
+  message: Scalars['String']['output'];
+  severity: CmsCodeSeverity;
+};
+
+export type CmsCodeSeverity =
+  | 'ERROR'
+  | 'WARNING';
+
 export type CmsCollection =
   | 'BLOG'
   | 'CAREER'
@@ -4348,9 +4367,14 @@ export type CmsDesignInput = {
 
 export type CmsDraftContent = {
   __typename?: 'CmsDraftContent';
+  /** The visual editor's styles. */
   css: Scalars['String']['output'];
   html: Scalars['String']['output'];
+  /** The page's or component's own script; a component's runs once per placement with root bound to it. */
+  js: Scalars['String']['output'];
   project: Scalars['String']['output'];
+  /** Styles written by hand (SCSS); compiled when rendered — a component's scoped to the component. */
+  scss: Scalars['String']['output'];
 };
 
 /** base_updated_at guards against two editors overwriting each other. */
@@ -4358,7 +4382,9 @@ export type CmsDraftInput = {
   base_updated_at?: InputMaybe<Scalars['String']['input']>;
   css: Scalars['String']['input'];
   html: Scalars['String']['input'];
+  js?: InputMaybe<Scalars['String']['input']>;
   project: Scalars['String']['input'];
+  scss?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A blog post, job opening, newsletter issue, case study or press item. */
@@ -4473,7 +4499,11 @@ export type CmsFragment = {
   __typename?: 'CmsFragment';
   /** The live blocks this component holds (reel-slider, newsletter…); empty for a plain section. */
   blocks: Array<Scalars['String']['output']>;
+  /** A group to find it by in the Components list (Hero, Footer, Pricing…). */
+  category: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
+  /** What the component is for. */
+  description: Scalars['String']['output'];
   draft: CmsDraftContent;
   has_unpublished_changes: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
@@ -4488,6 +4518,8 @@ export type CmsFragment = {
 };
 
 export type CmsFragmentInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   key: Scalars['String']['input'];
   kind: CmsFragmentKind;
   name: Scalars['String']['input'];
@@ -4522,6 +4554,18 @@ export type CmsGoogleFontPage = {
   categories: Array<Scalars['String']['output']>;
   fonts: Array<CmsGoogleFont>;
   total: Scalars['Int']['output'];
+};
+
+/** One extra <meta>: a name (description, author, og:locale…) and its content. */
+export type CmsMetaTag = {
+  __typename?: 'CmsMetaTag';
+  content: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type CmsMetaTagInput = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type CmsPage = {
@@ -4594,8 +4638,10 @@ export type CmsPublishedContent = {
   __typename?: 'CmsPublishedContent';
   css: Scalars['String']['output'];
   html: Scalars['String']['output'];
+  js: Scalars['String']['output'];
   published_at?: Maybe<Scalars['String']['output']>;
   published_by: Scalars['String']['output'];
+  scss: Scalars['String']['output'];
   version: Scalars['Int']['output'];
 };
 
@@ -4635,17 +4681,32 @@ export type CmsSeo = {
   __typename?: 'CmsSeo';
   canonical_url: Scalars['String']['output'];
   description: Scalars['String']['output'];
+  /** Structured data (schema.org) as JSON, rendered as application/ld+json. */
+  json_ld: Scalars['String']['output'];
+  keywords: Scalars['String']['output'];
+  meta_tags: Array<CmsMetaTag>;
   noindex: Scalars['Boolean']['output'];
+  og_description: Scalars['String']['output'];
   og_image_url: Scalars['String']['output'];
+  /** The share card's title and text, when they should differ from the page's. */
+  og_title: Scalars['String']['output'];
   title: Scalars['String']['output'];
+  /** '' lets the page decide, else summary or summary_large_image. */
+  twitter_card: Scalars['String']['output'];
 };
 
 export type CmsSeoInput = {
   canonical_url?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  json_ld?: InputMaybe<Scalars['String']['input']>;
+  keywords?: InputMaybe<Scalars['String']['input']>;
+  meta_tags?: InputMaybe<Array<CmsMetaTagInput>>;
   noindex?: InputMaybe<Scalars['Boolean']['input']>;
+  og_description?: InputMaybe<Scalars['String']['input']>;
   og_image_url?: InputMaybe<Scalars['String']['input']>;
+  og_title?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+  twitter_card?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A website the CMS serves, chosen by the request's hostname. */
@@ -4765,7 +4826,7 @@ export type CmsVersion = {
   id: Scalars['ID']['output'];
   owner_id: Scalars['ID']['output'];
   owner_kind: CmsVersionOwner;
-  /** A page version's live-demo link on its own domain (signed, short-lived). Null for fragments and sites without a domain. */
+  /** This version's live-demo link on the site's own domain (signed, short-lived). Null when the site has no domain. */
   preview_url?: Maybe<Scalars['String']['output']>;
   published_by: Scalars['String']['output'];
   version: Scalars['Int']['output'];
@@ -12667,6 +12728,8 @@ export type Mutation = {
   /** Makes that saved version live: it becomes the draft and is published. */
   publishCmsVersion: Scalars['Boolean']['output'];
   publishPodDraft: Pod;
+  /** Publish the page and get its tracked link. Safe to repeat: one link per page. */
+  publishPublicPage: PublicPageLink;
   /**
    * Clear every remaining trace and then the account itself. Permanent.
    *
@@ -16047,6 +16110,12 @@ export type MutationPublishCmsVersionArgs = {
 export type MutationPublishPodDraftArgs = {
   draft_id: Scalars['ID']['input'];
   input: CreatePodInput;
+};
+
+
+export type MutationPublishPublicPageArgs = {
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -22956,6 +23025,36 @@ export type PublicLeadSurvey = {
   survey?: Maybe<Survey>;
 };
 
+/** A page's link and how it is doing — only ever the caller's own page. */
+export type PublicPageInsights = {
+  __typename?: 'PublicPageInsights';
+  funnel?: Maybe<ShortLinkFunnel>;
+  link?: Maybe<PublicPageLink>;
+  published: Scalars['Boolean']['output'];
+  stats?: Maybe<ShortLinkStats>;
+};
+
+/** Whose public page: a venue (named by its id) or the signed-in host. */
+export type PublicPageKind =
+  | 'HOST'
+  | 'VENUE';
+
+/** A published page's tracked duncit.com link. */
+export type PublicPageLink = {
+  __typename?: 'PublicPageLink';
+  code?: Maybe<Scalars['String']['output']>;
+  /** The QR that opens the link, as a PNG data URL. */
+  qr_data_url: Scalars['String']['output'];
+  /** The duncit.com short link, or the plain page address when the link is retired. */
+  url: Scalars['String']['output'];
+};
+
+/** The words printed on the poster, in the owner's language. */
+export type PublicPagePosterCopy = {
+  footer: Scalars['String']['input'];
+  headline: Scalars['String']['input'];
+};
+
 export type PublicProfile = {
   __typename?: 'PublicProfile';
   bio?: Maybe<Scalars['String']['output']>;
@@ -23357,8 +23456,12 @@ export type Query = {
   clubStories: Array<Post>;
   clubs: Array<Club>;
   clubsTable: ClubTablePage;
+  /** A component on its own, in its site's styles: the draft, or (with version) that published version. Editors only. */
+  cmsComponentPreviewLink: CmsPreviewLink;
   cmsEntriesTable: CmsEntryTablePage;
   cmsEntry?: Maybe<CmsEntry>;
+  /** Public: a site's designed error page (404, 500, 503), or null when it has none. */
+  cmsErrorPage?: Maybe<CmsRenderResult>;
   cmsFragment?: Maybe<CmsFragment>;
   cmsFragments: Array<CmsFragment>;
   cmsFragmentsTable: CmsFragmentTablePage;
@@ -23382,6 +23485,8 @@ export type Query = {
   /** Public: every published address of a site, for sitemap.xml. */
   cmsSitemap: Array<CmsSitemapUrl>;
   cmsSites: Array<CmsSite>;
+  /** Everything wrong with a piece of SCSS, JavaScript or Astro, as the editor types it. Editors only. */
+  cmsValidateCode: Array<CmsCodeProblem>;
   cmsVersions: Array<CmsVersion>;
   /** Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited. */
   coHostCandidates: Array<CoHostCandidate>;
@@ -23989,6 +24094,10 @@ export type Query = {
   /** The signed-in buyer's product orders (optionally scoped to one pod). */
   myProductOrders: Array<ProductOrder>;
   myProductOrdersForPod: Array<ProductOrder>;
+  /** ref_id is the venue id for VENUE and is ignored for HOST. days 0 = all time. */
+  myPublicPage: PublicPageInsights;
+  /** The printable A4 poster, base64-encoded for the browser or the app to save. */
+  myPublicPagePosterPdfBase64: Scalars['String']['output'];
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
   /** The signed-in Regional Club Admin's own region, created on first read. */
@@ -25276,6 +25385,12 @@ export type QueryClubsTableArgs = {
 };
 
 
+export type QueryCmsComponentPreviewLinkArgs = {
+  fragment_id: Scalars['ID']['input'];
+  version?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryCmsEntriesTableArgs = {
   collection_type: CmsCollection;
   query?: InputMaybe<TableQueryInput>;
@@ -25285,6 +25400,12 @@ export type QueryCmsEntriesTableArgs = {
 
 export type QueryCmsEntryArgs = {
   entry_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsErrorPageArgs = {
+  code: Scalars['Int']['input'];
+  host: Scalars['String']['input'];
 };
 
 
@@ -25366,6 +25487,12 @@ export type QueryCmsSiteRevisionsArgs = {
 
 export type QueryCmsSitemapArgs = {
   host: Scalars['String']['input'];
+};
+
+
+export type QueryCmsValidateCodeArgs = {
+  language: CmsCodeLanguage;
+  source: Scalars['String']['input'];
 };
 
 
@@ -26481,6 +26608,20 @@ export type QueryMyProductListingsTableArgs = {
 
 export type QueryMyProductOrdersForPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyPublicPageArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryMyPublicPagePosterPdfBase64Args = {
+  copy: PublicPagePosterCopy;
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -29475,6 +29616,8 @@ export type ShareLink = {
 export type ShareLinkTarget =
   | 'CLUB'
   | 'GIFT_CARD'
+  /** A host's public page, published by the host. */
+  | 'HOST_PAGE'
   | 'POD'
   /** A pod's rating form, sent by its host. */
   | 'POD_FEEDBACK'
@@ -29485,7 +29628,9 @@ export type ShareLinkTarget =
   | 'POD_MEDIA'
   | 'POST'
   | 'PROFILE'
-  | 'REFERRAL';
+  | 'REFERRAL'
+  /** A venue's public page, published by its owner. */
+  | 'VENUE_PAGE';
 
 /**
  * How one person has their console chrome arranged: the taskbar along the

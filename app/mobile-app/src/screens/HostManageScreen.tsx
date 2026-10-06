@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { PublishPageCard } from '@/components/public-page';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
 import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
@@ -16,6 +17,7 @@ import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { useHostPayouts } from '@/hooks/useHostPayouts';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
+import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -28,6 +30,9 @@ export function HostManageScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { color: ink } = useThemeColors();
   const { drafts, isLoading, remove } = useHostDrafts();
+  const me = useMe().data?.me;
+  // Only an approved host has a host page to publish (HostApplyBanner gates the same way).
+  const isHost = me?.roles?.includes('HOST') ?? false;
   // Owned here (not inside HostShareSection) so completing a pod in the pods
   // section can refetch the share list it just changed.
   const payoutsApi = useHostPayouts();
@@ -83,6 +88,10 @@ export function HostManageScreen() {
           <HostCategoriesCard />
 
           <HostApplyBanner />
+
+          {me && isHost ? (
+            <PublishPageCard kind="HOST" title={me.full_name || me.username || ''} />
+          ) : null}
 
           {/* Completing a pod creates the payout the share section lists, so
               the screen owns the hook and threads the refetch across. */}

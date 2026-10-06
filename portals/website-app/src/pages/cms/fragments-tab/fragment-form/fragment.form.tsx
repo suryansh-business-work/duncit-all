@@ -41,6 +41,8 @@ export default function FragmentForm({ fragment, submitting, errorMessage, onSub
             </MenuItem>
           ))}
         </RhfTextField>
+        <RhfTextField control={control} name="category" label={t('websiteApp.cms.fragmentForm.category')} hint={t('websiteApp.cms.fragmentForm.categoryHint')} />
+        <RhfTextField control={control} name="description" label={t('websiteApp.cms.fragmentForm.description')} multiline minRows={2} />
       </Stack>
       <DialogActions sx={{ px: 0, pt: 2 }}>
         <DuncitButton onClick={onCancel} disabled={submitting}>

@@ -8,6 +8,7 @@ import { AppleSignInButton } from '../../components/apple-sign-in';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useWithRedirect } from '../../utils/redirect';
 
 interface Props {
   /** True while a Google or Apple credential is being spent. */
@@ -50,6 +51,7 @@ export default function LoginMethodStep({
   onChooseOtp,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const authLink = useWithRedirect();
 
   return (
     <Stack spacing={2}>
@@ -105,7 +107,7 @@ export default function LoginMethodStep({
       <Stack spacing={1.5} sx={{ alignItems: 'center', pt: 1 }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.login.newHere')}{' '}
-          <Link component={RouterLink} to="/register" underline="hover" data-testid="go-signup">
+          <Link component={RouterLink} to={authLink('/register')} underline="hover" data-testid="go-signup">
             {t('mweb.login.createOne')}
           </Link>
         </Typography>

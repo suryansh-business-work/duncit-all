@@ -12,7 +12,9 @@
     "start": "node ./dist/server/entry.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "astro": "astro",
-    "e2e": "node ../../scripts/e2e-no-surface.mjs cms-site"
+    "e2e": "node ../../scripts/e2e-no-surface.mjs cms-site",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.6",
@@ -24,6 +26,8 @@
   },
   "devDependencies": {
     "@duncit/gql-types": "workspace:*",
-    "@types/node": "^26.6.3"
+    "@types/node": "^26.6.3",
+    "@vitest/coverage-v8": "^4.1.11",
+    "vitest": "^4.1.11"
   }
 }

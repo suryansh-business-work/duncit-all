@@ -19,6 +19,7 @@ import {
   surveySchema,
 } from './signup-survey/queries';
 import SubmitFooter from './signup-survey/SubmitFooter';
+import AuthPodBanner from '../components/AuthPodBanner';
 import { useTranslation } from '../i18n/useTranslation';
 
 export default function SignupSurveyPage() {
@@ -150,6 +151,8 @@ export default function SignupSurveyPage() {
           sx={{ '& .MuiLinearProgress-bar': { borderRadius: '999px' } }}
         />
       </Box>
+
+      <AuthPodBanner />
 
       <Box>
         <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>

@@ -5,6 +5,7 @@ import { assertId, badInput, notFound, rethrowDuplicate, seoOf, toPage } from '.
 import type { CmsCollection, CmsPageKind } from './cms.constants';
 import type { CmsSeo } from './cmsContent.schema-parts';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { assertValid } from './cmsCode.service';
 
 export interface CmsPageInput {
   kind: CmsPageKind;
@@ -67,6 +68,13 @@ const fields = (input: CmsPageInput) => ({
 
 const DUPLICATE = 'Another page already uses this path, or this collection already has that template';
 
+
+/** A page's own SCSS and script must compile before they can go live. */
+async function assertPageCode(input: Pick<CmsPageInput, 'custom_css' | 'custom_js'>) {
+  await assertValid('SCSS', input.custom_css, 'Page CSS');
+  await assertValid('JS', input.custom_js, 'Page JavaScript');
+}
+
 export const cmsPageService = {
   async table(siteId: string, input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<ICmsPage>(
@@ -86,6 +94,7 @@ export const cmsPageService = {
   },
 
   async create(siteId: string, input: CmsPageInput, userId: string) {
+    await assertPageCode(input);
     const site = await cmsSiteService.requireDoc(siteId);
     try {
       const page = await CmsPageModel.create({ ...fields(normalise(input)), site_id: site._id, updated_by: userId });
@@ -96,6 +105,7 @@ export const cmsPageService = {
   },
 
   async update(id: string, input: CmsPageInput, userId: string) {
+    await assertPageCode(input);
     try {
       const page = await CmsPageModel.findByIdAndUpdate(
         assertId(id, 'page'),

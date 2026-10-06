@@ -2,6 +2,7 @@ import { Chip, Paper, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
 import PublishIcon from '@mui/icons-material/Publish';
+import LinkIcon from '@mui/icons-material/Link';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
@@ -13,10 +14,12 @@ interface Props {
   onBack: () => void;
   onSave: () => void;
   onPublish: () => void;
+  /** Copies the saved draft's live-demo link. */
+  onCopyLink: () => void;
 }
 
 /** Back, what is open, whether it is saved, and the two ways to keep the work. */
-export default function EditorToolbar({ title, dirty, busy, disabled, onBack, onSave, onPublish }: Readonly<Props>) {
+export default function EditorToolbar({ title, dirty, busy, disabled, onBack, onSave, onPublish, onCopyLink }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Paper variant="outlined" sx={{ px: 1.5, py: 1 }}>
@@ -34,6 +37,9 @@ export default function EditorToolbar({ title, dirty, busy, disabled, onBack, on
           label={dirty ? t('websiteApp.cms.editor.unsaved') : t('websiteApp.cms.editor.allSaved')}
           role="status"
         />
+        <DuncitButton startIcon={<LinkIcon />} onClick={onCopyLink} data-testid="cms-editor-copy-link">
+          {t('websiteApp.cms.preview.copyLink')}
+        </DuncitButton>
         <DuncitButton variant="outlined" startIcon={<SaveIcon />} loading={busy === 'save'} disabled={disabled || busy !== null} onClick={onSave} data-testid="cms-editor-save">
           {t('websiteApp.cms.editor.save')}
         </DuncitButton>

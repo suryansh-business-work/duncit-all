@@ -18,6 +18,8 @@ export function useEditorLabels() {
       href: t('websiteApp.cms.editor.props.href'),
       eyebrow: t('websiteApp.cms.editor.props.eyebrow'),
       baseUrl: t('websiteApp.cms.editor.props.baseUrl'),
+      headingMuted: t('websiteApp.cms.editor.props.headingMuted'),
+      cta: t('websiteApp.cms.editor.props.cta'),
     };
     const components: EditorLabels = {
       block: (name) => t('websiteApp.cms.editor.live.block', { vars: { name } }),
@@ -26,6 +28,8 @@ export function useEditorLabels() {
       field: (name) => t('websiteApp.cms.editor.live.field', { vars: { name } }),
       list: (variant) => t('websiteApp.cms.editor.live.list', { vars: { variant } }),
       prop: (key) => props[key] ?? key,
+      openFragment: t('websiteApp.cms.editor.live.openFragment'),
+      defaultText: t('websiteApp.cms.editor.props.defaultText'),
     };
     const blocks: BlockLabels = {
       categories: {

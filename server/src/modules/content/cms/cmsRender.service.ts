@@ -6,12 +6,14 @@ import { CmsEntryModel, type ICmsEntry } from './cmsEntry.model';
 import { CmsVersionModel } from './cmsVersion.model';
 import { assertId, collectionPathsOf, iso, notFound, seoOf, toSite } from './cms.mappers';
 import { CMS_ERROR_CODES, CMS_ERROR_PATHS, CMS_LIST_PAGE_SIZE, errorCodeOf, type CmsCollection } from './cms.constants';
+import { compileScssOrRaw } from './cmsCode.service';
 import {
   bindEntry,
   DEFAULT_DETAIL_TEMPLATE,
   DEFAULT_LIST_TEMPLATE,
   expandFragments,
   fragmentKeys,
+  MAX_FRAGMENT_DEPTH,
   renderLists,
   type ComposedPart,
   type RenderEntry,
@@ -24,8 +26,13 @@ type Mode = 'published' | 'draft';
 interface Resolved {
   page: ICmsPage | null;
   template: string;
-  /** The page's own css when it is not the draft/published copy (a saved version). */
+  /** The page's own css/js when they are not the draft/published copy (a saved version). */
   css?: string;
+  js?: string;
+  /** Components to render from these contents instead of their published copies (a component preview). */
+  overrides?: Map<string, ComposedPart>;
+  /** No site header or footer: a component shown on its own. */
+  bare?: boolean;
   title: string;
   seo: CmsSeo;
   status: number;
@@ -35,8 +42,24 @@ interface Resolved {
   pagination?: { page: number; total_pages: number; base_path: string };
 }
 
-const contentOf = (doc: { draft?: ComposedPart; published?: ComposedPart }, mode: Mode): ComposedPart =>
-  mode === 'draft' && doc.draft?.html ? { html: doc.draft.html, css: doc.draft.css ?? '' } : { html: doc.published?.html ?? '', css: doc.published?.css ?? '' };
+/** What a page or component stores per copy; Mongoose fills in every field's default. */
+interface StoredContent {
+  html: string;
+  css: string;
+  scss: string;
+  js: string;
+}
+
+/** The draft when it is wanted and has been designed, else the published copy. */
+const contentOf = (doc: { draft: StoredContent; published: StoredContent }, mode: Mode): ComposedPart => {
+  const copy = mode === 'draft' && doc.draft.html ? doc.draft : doc.published;
+  return { html: copy.html, css: joinCss(copy.css, copy.scss), js: copy.js };
+};
+
+/** The visual editor's styles, then the hand-written SCSS (so code wins a tie). Compiled together. */
+function joinCss(css: string, scss: string): string {
+  return [css, scss].filter(Boolean).join('\n');
+}
 
 /** `Duncit.com:8080.` → `duncit.com`. */
 export function normaliseHost(host: string): string {
@@ -80,6 +103,13 @@ function mergeSeo(own: CmsSeo, fallback: Partial<CmsSeo>): CmsSeo {
     og_image_url: own.og_image_url || fallback.og_image_url || '',
     canonical_url: own.canonical_url,
     noindex: own.noindex,
+    // A page's share card, keywords and structured data fall back to the site's; the site's extra tags come first.
+    og_title: own.og_title || fallback.og_title || '',
+    og_description: own.og_description || fallback.og_description || '',
+    twitter_card: own.twitter_card || fallback.twitter_card || '',
+    keywords: own.keywords || fallback.keywords || '',
+    json_ld: own.json_ld || fallback.json_ld || '',
+    meta_tags: [...(fallback.meta_tags ?? []), ...own.meta_tags],
   };
 }
 
@@ -161,22 +191,35 @@ async function resolve(site: ICmsSite, path: string, pageNumber: number): Promis
   };
 }
 
+/**
+ * Every component a render can show: the ones the template and the chrome
+ * place, then the ones those place in turn — as deep as expandFragments goes.
+ */
+async function loadComponents(site: ICmsSite, resolved: Resolved, mode: Mode, chromeIds: (Types.ObjectId | null)[]) {
+  const scope: Record<string, unknown> = { site_id: site._id };
+  if (mode === 'published') scope.is_published = true;
+  const find = (match: Record<string, unknown>) => CmsFragmentModel.find({ ...scope, ...match }).select('-draft.project').exec();
+  const fragments = await find({ $or: [{ key: { $in: fragmentKeys(resolved.template) } }, { _id: { $in: chromeIds.filter(Boolean) } }] });
+  const byKey = new Map([...fragments.map((f): [string, ComposedPart] => [f.key, contentOf(f, mode)]), ...(resolved.overrides ?? [])]);
+  for (let level = 1; level < MAX_FRAGMENT_DEPTH; level++) {
+    const missing = [...new Set([...byKey.values()].flatMap((part) => fragmentKeys(part.html)))].filter((key) => !byKey.has(key));
+    if (!missing.length) break;
+    const nested = await find({ key: { $in: missing } });
+    fragments.push(...nested);
+    for (const f of nested) byKey.set(f.key, contentOf(f, mode));
+  }
+  return { fragments, byKey };
+}
+
 /** Header + page + footer, fragments expanded and fields bound. */
 async function compose(site: ICmsSite, resolved: Resolved, mode: Mode) {
   const page = resolved.page;
   const ownCss = resolved.css ?? (page ? contentOf(page, mode).css : '');
-  const chromeIds = [
-    page?.show_header === false ? null : site.header_fragment_id,
-    page?.show_footer === false ? null : site.footer_fragment_id,
-  ];
-  const keys = fragmentKeys(resolved.template);
-  const fragmentFilter: Record<string, unknown> = {
-    site_id: site._id,
-    $or: [{ key: { $in: keys } }, { _id: { $in: chromeIds.filter(Boolean) } }],
-  };
-  if (mode === 'published') fragmentFilter.is_published = true;
-  const fragments = await CmsFragmentModel.find(fragmentFilter).select('-draft.project').exec();
-  const byKey = new Map(fragments.map((f) => [f.key, contentOf(f, mode)]));
+  const ownJs = resolved.js ?? (page ? contentOf(page, mode).js : '');
+  const chromeIds = resolved.bare
+    ? [null, null]
+    : [page?.show_header === false ? null : site.header_fragment_id, page?.show_footer === false ? null : site.footer_fragment_id];
+  const { fragments, byKey } = await loadComponents(site, resolved, mode, chromeIds);
   const byId = new Map(fragments.map((f) => [String(f._id), f]));
 
   let body = resolved.template;
@@ -185,15 +228,19 @@ async function compose(site: ICmsSite, resolved: Resolved, mode: Mode) {
   const main = expandFragments(body, byKey);
 
   const chrome = chromeIds.map((id) => (id ? byId.get(String(id)) : undefined));
-  const [header, footer] = chrome.map((f) => (f ? expandFragments(contentOf(f, mode).html, byKey) : null));
-  const chromeCss = chrome.map((f) => (f ? contentOf(f, mode).css : ''));
+  // The header and footer are components too: scoped like any other, inside their own wrapper.
+  const [header, footer] = chrome.map((f) =>
+    f ? expandFragments(`<cms-fragment data-key="${f.key}"></cms-fragment>`, new Map([...byKey, [f.key, contentOf(f, mode)]])) : null
+  );
 
   return {
     html:
       (header ? `<header data-cms-chrome="header">${header.html}</header>` : '') +
       `<main id="main" data-cms-page>${main.html}</main>` +
       (footer ? `<footer data-cms-chrome="footer">${footer.html}</footer>` : ''),
-    css: [chromeCss[0], header?.css, ownCss, main.css, chromeCss[1], footer?.css, page?.custom_css].filter(Boolean).join('\n'),
+    // The page's own CSS is global (SCSS, compiled); each component's arrives compiled and scoped.
+    css: [header?.css, compileScssOrRaw(ownCss), main.css, footer?.css, compileScssOrRaw(page?.custom_css ?? '')].filter(Boolean).join('\n'),
+    js: [ownJs, header?.js, main.js, footer?.js].filter(Boolean).join('\n'),
   };
 }
 
@@ -203,10 +250,11 @@ function siteOut(site: ICmsSite) {
     key: pub.key,
     name: pub.name,
     legacy_site: pub.legacy_site,
-    design: pub.design,
+    design: { ...pub.design, base_css: compileScssOrRaw(pub.design.base_css) },
     head_html: pub.head_html,
     body_end_html: pub.body_end_html,
-    custom_css: pub.custom_css,
+    // Every site stylesheet is SCSS; the renderer receives plain CSS.
+    custom_css: compileScssOrRaw(pub.custom_css),
     custom_js: pub.custom_js,
     favicon_url: pub.favicon_url,
   };
@@ -215,7 +263,7 @@ function siteOut(site: ICmsSite) {
 const NOTHING = { status: 404, site: null, title: '', html: '', css: '', seo: seoOf(null), head_html: '', custom_js: '', pagination: null };
 
 async function respond(site: ICmsSite, resolved: Resolved, mode: Mode) {
-  const { html, css } = await compose(site, resolved, mode);
+  const { html, css, js } = await compose(site, resolved, mode);
   return {
     status: resolved.status,
     site: siteOut(site),
@@ -224,7 +272,8 @@ async function respond(site: ICmsSite, resolved: Resolved, mode: Mode) {
     css,
     seo: resolved.seo,
     head_html: resolved.page?.head_html ?? '',
-    custom_js: resolved.page?.custom_js ?? '',
+    // The page's custom script, then its own and its components' (each scoped to its component).
+    custom_js: [resolved.page?.custom_js ?? '', js].filter(Boolean).join('\n'),
     pagination: resolved.pagination ?? null,
   };
 }
@@ -251,7 +300,10 @@ export const cmsRenderService = {
     const mode: Mode = saved ? 'published' : 'draft';
     const template = saved ? saved.html : contentOf(page, 'draft').html;
     const resolved: Resolved = { page, template, title: page.title, seo: mergeSeo(seoOf(page.seo), site.seo), status: 200 };
-    if (saved) resolved.css = saved.css;
+    if (saved) {
+      resolved.css = joinCss(saved.css, saved.scss);
+      resolved.js = saved.js;
+    }
     if (page.kind !== 'PAGE' && page.collection_type) {
       const filter = { site_id: site._id, collection_type: page.collection_type };
       if (page.kind === 'COLLECTION_LIST') {
@@ -281,6 +333,30 @@ export const cmsRenderService = {
     if (!page) return null;
     const seo = { ...mergeSeo(seoOf(page.seo), site.seo), noindex: true };
     return respond(site, { page, template: page.published.html, title: page.title, seo, status: code }, 'published');
+  },
+
+  /**
+   * One component on its own, in its site's styles but without the header and
+   * footer: its draft (with its nested components' drafts) or one saved version.
+   */
+  async previewComponent(fragmentId: string, version?: number | null) {
+    const fragment = await CmsFragmentModel.findById(assertId(fragmentId, 'component')).exec();
+    if (!fragment) throw notFound('Component');
+    const site = await CmsSiteModel.findById(fragment.site_id).exec();
+    if (!site) throw notFound('Site');
+    const saved = version ? await CmsVersionModel.findOne({ owner_kind: 'FRAGMENT', owner_id: fragment._id, version }).exec() : null;
+    if (version && !saved) throw notFound('Version');
+    const content: ComposedPart = saved ? { html: saved.html, css: joinCss(saved.css, saved.scss), js: saved.js } : contentOf(fragment, 'draft');
+    const resolved: Resolved = {
+      page: null,
+      template: `<cms-fragment data-key="${fragment.key}"></cms-fragment>`,
+      overrides: new Map([[fragment.key, content]]),
+      bare: true,
+      title: fragment.name,
+      seo: { ...mergeSeo(seoOf(null), site.seo), noindex: true },
+      status: 200,
+    };
+    return respond(site, resolved, saved ? 'published' : 'draft');
   },
 
   /** Public: every indexable live address of a site. */

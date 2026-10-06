@@ -69,6 +69,10 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     POD_IDEA
     GIFT_CARD
     REFERRAL
+    "A venue's public page, published by its owner."
+    VENUE_PAGE
+    "A host's public page, published by the host."
+    HOST_PAGE
   }
 
   "The link a share should hand out."

@@ -16,6 +16,7 @@ import type { GoogleSignupValues } from '@duncit/forms/schemas';
 import { ACCEPTANCE_SURFACE } from '../../components/policy-acceptance';
 import type { RegisterFormValues } from '../../forms/register';
 import { parseApiError } from '../../utils/parseApiError';
+import { useWithRedirect } from '../../utils/redirect';
 import { useStartSession } from '../../user-info/useStartSession';
 import { REGISTER, SIGNUP_APPLE, SIGNUP_GOOGLE } from './queries';
 
@@ -52,6 +53,7 @@ function splitName(name: string): { first_name: string; last_name?: string } {
  */
 export function useSignupFlow(linkedCode: string) {
   const navigate = useNavigate();
+  const authLink = useWithRedirect();
   const [registerMutation, { loading: registering }] = useMutation<any>(REGISTER);
   const [signupGoogle, { loading: creatingGoogle }] = useMutation<any>(SIGNUP_GOOGLE);
   const [signupApple, { loading: creatingApple }] = useMutation<any>(SIGNUP_APPLE);
@@ -61,8 +63,9 @@ export function useSignupFlow(linkedCode: string) {
     initialSignupFlowState<RegisterFormValues>(),
   );
 
-  /** Where the finished account lands — the doors ask different questions. */
-  const destination = flow.pendingGoogle ? '/signup-referral' : '/signup-survey';
+  /** Where the finished account lands — the doors ask different questions —
+   * still carrying the deep link (a pod tapped on a public page) it came for. */
+  const destination = authLink(flow.pendingGoogle ? '/signup-referral' : '/signup-survey');
 
   const { start: startSession, starting } = useStartSession();
 

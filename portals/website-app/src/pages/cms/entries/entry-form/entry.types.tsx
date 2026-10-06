@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { CmsCollection, CmsEntryInput } from '@duncit/gql-types';
 import type { CmsEntryData } from '../../queries/entries';
 import { httpsOrBlank, optionalSlug, splitList } from '../../lib/rules';
+import { seoSharingSchema, toSeoSharingInput, toSeoSharingValues } from '../../lib/seoSharing';
 
 type Translate = (key: string) => string;
 type Entry = NonNullable<CmsEntryData['cmsEntry']>;
@@ -25,6 +26,7 @@ export const entrySchema = (t: Translate) =>
     seo_description: z.string().trim().max(320),
     seo_image: httpsOrBlank(t('websiteApp.cms.pageForm.errUrl')),
     noindex: z.boolean(),
+    seo_sharing: seoSharingSchema(t),
   });
 
 export type EntryFormValues = z.input<ReturnType<typeof entrySchema>>;
@@ -47,6 +49,7 @@ export const toEntryFormValues = (entry: Entry | null): EntryFormValues => ({
   seo_description: entry?.seo.description ?? '',
   seo_image: entry?.seo.og_image_url ?? '',
   noindex: entry?.seo.noindex ?? false,
+  seo_sharing: toSeoSharingValues(entry?.seo),
 });
 
 export const toEntryInput = (values: EntryFormOutput, collection: CmsCollection): CmsEntryInput => ({
@@ -63,5 +66,11 @@ export const toEntryInput = (values: EntryFormOutput, collection: CmsCollection)
   published_at: values.published_at ? new Date(values.published_at).toISOString() : null,
   is_published: values.is_published,
   sort_order: values.sort_order,
-  seo: { title: values.seo_title, description: values.seo_description, og_image_url: values.seo_image, noindex: values.noindex },
+  seo: {
+    title: values.seo_title,
+    description: values.seo_description,
+    og_image_url: values.seo_image,
+    noindex: values.noindex,
+    ...toSeoSharingInput(values.seo_sharing),
+  },
 });

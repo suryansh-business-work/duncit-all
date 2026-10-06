@@ -47,8 +47,20 @@ const accounts = list(props.accounts).map(record).map((a) => ({ icon: text(a.ico
     t={t}
   />
 )}
-{block === 'reel-slider' && reelSite && <ReelSlider graphqlUrl={graphqlUrl} site={reelSite} t={t} />}
-{block === 'earn-showcase' && text(props.href) && <EarnShowcase href={text(props.href)} t={t} />}
+{block === 'reel-slider' && reelSite && (
+  <ReelSlider graphqlUrl={graphqlUrl} site={reelSite} eyebrow={text(props.eyebrow) || undefined} heading={text(props.heading) || undefined} t={t} />
+)}
+{block === 'earn-showcase' && text(props.href) && (
+  <EarnShowcase
+    href={text(props.href)}
+    eyebrow={text(props.eyebrow) || undefined}
+    heading={text(props.heading) || undefined}
+    headingMuted={text(props.headingMuted) || undefined}
+    text={text(props.text) || undefined}
+    cta={text(props.cta) || undefined}
+    t={t}
+  />
+)}
 {block === 'app-download' && stores.length > 0 && (
   <AppDownload
     eyebrow={text(props.eyebrow) || undefined}

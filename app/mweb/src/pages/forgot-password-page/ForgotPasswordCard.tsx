@@ -12,6 +12,7 @@ import {
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useWithRedirect } from '../../utils/redirect';
 import RecoveryChannelStep from '../../components/password-recovery/RecoveryChannelStep';
 import RecoveryCodeStep from '../../components/password-recovery/RecoveryCodeStep';
 import RecoveryPasswordStep from './RecoveryPasswordStep';
@@ -33,6 +34,7 @@ interface Props {
 export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildPasswordRecoveryLabels(t);
+  const authLink = useWithRedirect();
   const { state, error, notFound, notSent, expiresInMinutes, testCode, busy } = recovery;
 
   if (state.step === 'DONE') {
@@ -48,7 +50,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
           <DuncitButton
             data-testid="recovery-go-login"
             component={RouterLink}
-            to="/login"
+            to={authLink('/login')}
             variant="contained"
             size="large"
             fullWidth
@@ -134,7 +136,7 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
             )}
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {labels.rememberedIt}{' '}
-              <Link component={RouterLink} to="/login" underline="hover" data-testid="recovery-back-login">
+              <Link component={RouterLink} to={authLink('/login')} underline="hover" data-testid="recovery-back-login">
                 {labels.backToLogin}
               </Link>
             </Typography>

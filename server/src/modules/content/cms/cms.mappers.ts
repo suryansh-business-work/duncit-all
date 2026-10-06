@@ -35,17 +35,27 @@ export const seoOf = (seo?: Partial<CmsSeo> | null): CmsSeo => ({
   og_image_url: seo?.og_image_url ?? '',
   canonical_url: seo?.canonical_url ?? '',
   noindex: seo?.noindex ?? false,
+  og_title: seo?.og_title ?? '',
+  og_description: seo?.og_description ?? '',
+  twitter_card: seo?.twitter_card ?? '',
+  keywords: seo?.keywords ?? '',
+  json_ld: seo?.json_ld ?? '',
+  meta_tags: (seo?.meta_tags ?? []).map((tag) => ({ name: tag.name, content: tag.content })),
 });
 
 const draftOf = (draft?: Partial<CmsDraft> | null) => ({
   project: draft?.project ?? '',
   html: draft?.html ?? '',
   css: draft?.css ?? '',
+  scss: draft?.scss ?? '',
+  js: draft?.js ?? '',
 });
 
 const publishedOf = (published?: Partial<CmsPublished> | null) => ({
   html: published?.html ?? '',
   css: published?.css ?? '',
+  scss: published?.scss ?? '',
+  js: published?.js ?? '',
   version: published?.version ?? 0,
   published_at: iso(published?.published_at),
   published_by: published?.published_by ?? '',
@@ -53,7 +63,11 @@ const publishedOf = (published?: Partial<CmsPublished> | null) => ({
 
 /** True when the draft would change what is live. */
 export const hasUnpublishedChanges = (doc: { draft?: Partial<CmsDraft>; published?: Partial<CmsPublished>; is_published?: boolean }) =>
-  !doc.is_published || (doc.draft?.html ?? '') !== (doc.published?.html ?? '') || (doc.draft?.css ?? '') !== (doc.published?.css ?? '');
+  !doc.is_published ||
+  (doc.draft?.html ?? '') !== (doc.published?.html ?? '') ||
+  (doc.draft?.css ?? '') !== (doc.published?.css ?? '') ||
+  (doc.draft?.scss ?? '') !== (doc.published?.scss ?? '') ||
+  (doc.draft?.js ?? '') !== (doc.published?.js ?? '');
 
 /** A site's path for each collection — its override, else the default. */
 export function collectionPathsOf(site: Pick<ICmsSite, 'collection_paths'>): Record<CmsCollection, string> {
@@ -137,6 +151,8 @@ export const toFragment = (fragment: ICmsFragment) => ({
   key: fragment.key,
   name: fragment.name,
   kind: fragment.kind ?? 'SECTION',
+  description: fragment.description ?? '',
+  category: fragment.category ?? '',
   blocks: blocksOf(fragment),
   is_published: fragment.is_published ?? false,
   has_unpublished_changes: hasUnpublishedChanges(fragment),

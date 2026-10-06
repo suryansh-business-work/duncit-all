@@ -23,9 +23,14 @@ export interface EditorLabels {
   list: (variant: string) => string;
   /** The trait panel's label for one block prop. */
   prop: (key: string) => string;
+  /** The button that opens a component placed in a page in its own editor. */
+  openFragment: string;
+  /** Shown in an empty block field: empty means the site's own default words. */
+  defaultText: string;
 }
 
 export interface FragmentPreview {
+  id: string;
   key: string;
   name: string;
   html: string;
@@ -37,11 +42,11 @@ const escapeAttr = (value: string) => value.replaceAll('&', '&amp;').replaceAll(
  * migrated block's store list, policies…) is carried through untouched. */
 export const BLOCK_TRAITS: Record<string, string[]> = {
   newsletter: ['source', 'heading', 'text', 'variant'],
-  'earn-showcase': ['href'],
+  'earn-showcase': ['href', 'eyebrow', 'heading', 'headingMuted', 'text', 'cta'],
   'app-download': ['eyebrow', 'heading', 'text'],
   'social-links': ['heading'],
   'policy-strip': ['heading', 'baseUrl'],
-  'reel-slider': [],
+  'reel-slider': ['eyebrow', 'heading'],
 };
 
 const parseProps = (raw: string | null): Record<string, unknown> => {
@@ -83,21 +88,29 @@ function addBlockType(editor: Editor, labels: EditorLabels) {
       defaults: { tagName: 'cms-block', droppable: false, editable: false, cmsProps: {} },
       init(this: Component) {
         const block = String(this.getAttributes()['data-block'] ?? '');
-        this.addTrait((BLOCK_TRAITS[block] ?? []).map((key) => ({ type: 'text', name: `prop_${key}`, label: labels.prop(key), changeProp: true })));
+        this.addTrait(
+          (BLOCK_TRAITS[block] ?? []).map((key) => ({ type: 'text', name: `prop_${key}`, label: labels.prop(key), placeholder: labels.defaultText, changeProp: true })),
+        );
       },
       toHTML(this: Component) {
         return blockHtml(this);
       },
     },
     view: {
+      init() {
+        // The stand-in shows the block's heading, so it follows the trait as it is typed.
+        this.listenTo(this.model, 'change', this.render);
+      },
       onRender({ el, model }) {
-        standIn(el, labels.block(String(model.getAttributes()['data-block'] ?? '')));
+        const heading = model.get('prop_heading');
+        const name = labels.block(String(model.getAttributes()['data-block'] ?? ''));
+        standIn(el, typeof heading === 'string' && heading ? `${name} · ${heading}` : name);
       },
     },
   });
 }
 
-function addFragmentType(editor: Editor, labels: EditorLabels, fragments: FragmentPreview[]) {
+function addFragmentType(editor: Editor, labels: EditorLabels, fragments: FragmentPreview[], onOpen: (fragment: FragmentPreview) => void) {
   const byKey = new Map(fragments.map((f) => [f.key, f]));
   editor.DomComponents.addType('cms-fragment', {
     isComponent: (el) => el.tagName === 'CMS-FRAGMENT',
@@ -106,7 +119,19 @@ function addFragmentType(editor: Editor, labels: EditorLabels, fragments: Fragme
         tagName: 'cms-fragment',
         droppable: false,
         editable: false,
-        traits: [{ type: 'select', name: 'data-key', options: fragments.map((f) => ({ id: f.key, label: f.name })) }],
+        traits: [
+          { type: 'select', name: 'data-key', options: fragments.map((f) => ({ id: f.key, label: f.name })) },
+          {
+            type: 'button',
+            name: 'open',
+            text: labels.openFragment,
+            full: true,
+            command: (ed: Editor) => {
+              const fragment = byKey.get(String(ed.getSelected()?.getAttributes()['data-key'] ?? ''));
+              if (fragment) onOpen(fragment);
+            },
+          },
+        ],
       },
       toHTML(this: Component) {
         return `<cms-fragment data-key="${String(this.getAttributes()['data-key'] ?? '')}"></cms-fragment>`;
@@ -119,6 +144,8 @@ function addFragmentType(editor: Editor, labels: EditorLabels, fragments: Fragme
       onRender({ el, model }) {
         const key = String(model.getAttributes()['data-key'] ?? '');
         const fragment = byKey.get(key);
+        // A component is edited in its own editor: double-click opens it (a property, so re-renders replace it).
+        el.ondblclick = fragment ? () => onOpen(fragment) : null;
         el.setAttribute('contenteditable', 'false');
         el.setAttribute('title', fragment ? labels.fragment(fragment.name) : labels.missingFragment(key));
         if (fragment?.html) el.innerHTML = fragment.html;
@@ -176,8 +203,9 @@ export function registerCmsComponents(
   labels: EditorLabels,
   fragments: FragmentPreview[],
   fields: { id: string; label: string }[],
+  onOpenFragment: (fragment: FragmentPreview) => void,
 ) {
   addBlockType(editor, labels);
-  addFragmentType(editor, labels, fragments);
+  addFragmentType(editor, labels, fragments, onOpenFragment);
   addFieldTypes(editor, labels, fields);
 }

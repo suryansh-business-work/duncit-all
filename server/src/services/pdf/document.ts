@@ -28,6 +28,17 @@ export function renderPdf(draw: (doc: PDFKit.PDFDocument) => void): Promise<Buff
   });
 }
 
+/** The Duncit brand palette every PDF draws with — the values the invoice,
+ * payout and policy documents already print, named once for new documents. */
+export const PDF_PALETTE = {
+  accent: '#ff4f73',
+  accentSoft: '#fff1f4',
+  ink: '#111827',
+  muted: '#6b7280',
+  line: '#e5e7eb',
+  paper: '#ffffff',
+} as const;
+
 /**
  * Symbols the 14 built-in PDF fonts cannot draw, and what to print instead.
  *

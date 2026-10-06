@@ -35,6 +35,7 @@ const ENTITY_ROUTES: EntityRoute[] = [
   { pattern: '/pod/:podId/media', kind: 'POD' },
   { pattern: '/club/:clubSlug', kind: 'CLUB' },
   { pattern: '/u/:handle', kind: 'USER' },
+  { pattern: '/hosts/:handle', kind: 'USER' },
   { pattern: '/post/:postId', kind: 'POST' },
   { pattern: '/venue/:venueId', kind: 'VENUE' },
   { pattern: '/product/:productId', kind: 'PRODUCT' },

@@ -12667,6 +12667,8 @@ export type Mutation = {
   /** Makes that saved version live: it becomes the draft and is published. */
   publishCmsVersion: Scalars['Boolean']['output'];
   publishPodDraft: Pod;
+  /** Publish the page and get its tracked link. Safe to repeat: one link per page. */
+  publishPublicPage: PublicPageLink;
   /**
    * Clear every remaining trace and then the account itself. Permanent.
    *
@@ -16047,6 +16049,12 @@ export type MutationPublishCmsVersionArgs = {
 export type MutationPublishPodDraftArgs = {
   draft_id: Scalars['ID']['input'];
   input: CreatePodInput;
+};
+
+
+export type MutationPublishPublicPageArgs = {
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -22956,6 +22964,36 @@ export type PublicLeadSurvey = {
   survey?: Maybe<Survey>;
 };
 
+/** A page's link and how it is doing — only ever the caller's own page. */
+export type PublicPageInsights = {
+  __typename?: 'PublicPageInsights';
+  funnel?: Maybe<ShortLinkFunnel>;
+  link?: Maybe<PublicPageLink>;
+  published: Scalars['Boolean']['output'];
+  stats?: Maybe<ShortLinkStats>;
+};
+
+/** Whose public page: a venue (named by its id) or the signed-in host. */
+export type PublicPageKind =
+  | 'HOST'
+  | 'VENUE';
+
+/** A published page's tracked duncit.com link. */
+export type PublicPageLink = {
+  __typename?: 'PublicPageLink';
+  code?: Maybe<Scalars['String']['output']>;
+  /** The QR that opens the link, as a PNG data URL. */
+  qr_data_url: Scalars['String']['output'];
+  /** The duncit.com short link, or the plain page address when the link is retired. */
+  url: Scalars['String']['output'];
+};
+
+/** The words printed on the poster, in the owner's language. */
+export type PublicPagePosterCopy = {
+  footer: Scalars['String']['input'];
+  headline: Scalars['String']['input'];
+};
+
 export type PublicProfile = {
   __typename?: 'PublicProfile';
   bio?: Maybe<Scalars['String']['output']>;
@@ -23359,6 +23397,8 @@ export type Query = {
   clubsTable: ClubTablePage;
   cmsEntriesTable: CmsEntryTablePage;
   cmsEntry?: Maybe<CmsEntry>;
+  /** Public: a site's designed error page (404, 500, 503), or null when it has none. */
+  cmsErrorPage?: Maybe<CmsRenderResult>;
   cmsFragment?: Maybe<CmsFragment>;
   cmsFragments: Array<CmsFragment>;
   cmsFragmentsTable: CmsFragmentTablePage;
@@ -23989,6 +24029,10 @@ export type Query = {
   /** The signed-in buyer's product orders (optionally scoped to one pod). */
   myProductOrders: Array<ProductOrder>;
   myProductOrdersForPod: Array<ProductOrder>;
+  /** ref_id is the venue id for VENUE and is ignored for HOST. days 0 = all time. */
+  myPublicPage: PublicPageInsights;
+  /** The printable A4 poster, base64-encoded for the browser or the app to save. */
+  myPublicPagePosterPdfBase64: Scalars['String']['output'];
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
   /** The signed-in Regional Club Admin's own region, created on first read. */
@@ -25288,6 +25332,12 @@ export type QueryCmsEntryArgs = {
 };
 
 
+export type QueryCmsErrorPageArgs = {
+  code: Scalars['Int']['input'];
+  host: Scalars['String']['input'];
+};
+
+
 export type QueryCmsFragmentArgs = {
   fragment_id: Scalars['ID']['input'];
 };
@@ -26481,6 +26531,20 @@ export type QueryMyProductListingsTableArgs = {
 
 export type QueryMyProductOrdersForPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyPublicPageArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryMyPublicPagePosterPdfBase64Args = {
+  copy: PublicPagePosterCopy;
+  kind: PublicPageKind;
+  ref_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -29475,6 +29539,8 @@ export type ShareLink = {
 export type ShareLinkTarget =
   | 'CLUB'
   | 'GIFT_CARD'
+  /** A host's public page, published by the host. */
+  | 'HOST_PAGE'
   | 'POD'
   /** A pod's rating form, sent by its host. */
   | 'POD_FEEDBACK'
@@ -29485,7 +29551,9 @@ export type ShareLinkTarget =
   | 'POD_MEDIA'
   | 'POST'
   | 'PROFILE'
-  | 'REFERRAL';
+  | 'REFERRAL'
+  /** A venue's public page, published by its owner. */
+  | 'VENUE_PAGE';
 
 /**
  * How one person has their console chrome arranged: the taskbar along the

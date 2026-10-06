@@ -8,6 +8,7 @@ import { PostModel } from '@modules/engagement/post/post.model';
 import { PodIdeaModel } from '@modules/pods/podIdea/podIdea.model';
 import { GiftCardModel } from '@modules/finance/giftcard/giftcard.model';
 import { ReferralCodeModel } from '@modules/engagement/referral/referral.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { utmSlug } from './shortLink.codes';
 
 /**
@@ -37,6 +38,8 @@ export const SHARE_LINK_TARGETS = [
   'POD_IDEA',
   'GIFT_CARD',
   'REFERRAL',
+  'VENUE_PAGE',
+  'HOST_PAGE',
 ] as const;
 
 export type ShareLinkTarget = (typeof SHARE_LINK_TARGETS)[number];
@@ -58,6 +61,8 @@ const CAMPAIGN_NAMES: Record<ShareLinkTarget, string> = {
   POD_IDEA: 'Pod Idea Shares',
   GIFT_CARD: 'Gift Card Shares',
   REFERRAL: 'Referral Shares',
+  VENUE_PAGE: 'Venue Page Shares',
+  HOST_PAGE: 'Host Page Shares',
 };
 
 export interface ShareCampaign {
@@ -223,6 +228,37 @@ const referralResolver: TargetResolver = async (ref, base) => {
   return { url: `${base}/register?ref=${encodeURIComponent(code)}`, label: label('Referral', code) };
 };
 
+/**
+ * A venue's public page — only for a venue that is live (approved and not
+ * switched off), the rule `publicVenue` applies, so no link is ever minted for
+ * a page that would answer "not found".
+ */
+const venuePageResolver: TargetResolver = async (ref, base) => {
+  const venue = Types.ObjectId.isValid(ref)
+    ? await VenueModel.findById(ref).select('venue_name status is_active').lean().exec()
+    : null;
+  if (venue?.status !== 'APPROVED' || venue.is_active === false) return null;
+  return { url: `${base}/venue/${String(venue._id)}`, label: label('Venue page', venue.venue_name) };
+};
+
+/** A host's public page, addressed like a profile: the @handle when there is one. */
+/** The fields a host page link is built from. */
+export interface HostPageAccount {
+  _id: Types.ObjectId;
+  metadata?: { role_keys?: string[] };
+  profile?: { first_name?: string; last_name?: string; username?: string; city?: string; profile_photo?: string };
+}
+
+const hostPageResolver: TargetResolver = async (ref, base) => {
+  const user = Types.ObjectId.isValid(ref)
+    ? await UserModel.findById(ref).select('metadata.role_keys profile').lean<HostPageAccount>().exec()
+    : null;
+  if (!user?.metadata?.role_keys?.includes('HOST')) return null;
+  const name = `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim();
+  const handle = user.profile?.username || String(user._id);
+  return { url: `${base}/hosts/${handle}`, label: label('Host page', name) };
+};
+
 const RESOLVERS: Record<ShareLinkTarget, TargetResolver> = {
   POD: podResolver,
   POD_LOCATION: podLocationResolver,
@@ -234,6 +270,8 @@ const RESOLVERS: Record<ShareLinkTarget, TargetResolver> = {
   POD_IDEA: podIdeaResolver,
   GIFT_CARD: giftCardResolver,
   REFERRAL: referralResolver,
+  VENUE_PAGE: venuePageResolver,
+  HOST_PAGE: hostPageResolver,
 };
 
 /**

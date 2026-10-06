@@ -9,7 +9,8 @@ import CmsBlock from '../components/CmsBlock.astro';
 import Pagination from '../components/Pagination.astro';
 import NotFound from '../components/NotFound.astro';
 import CareersApply from '@duncit/brand/CareersApply.astro';
-import { CmsUnavailableError, publicGraphqlUrl, renderPage, requestHost } from '../lib/cms-api';
+import { CmsUnavailableError, publicGraphqlUrl, renderPage, renderPreview, requestHost } from '../lib/cms-api';
+import PreviewBanner from '../components/PreviewBanner.astro';
 import { fromLegacy, legacyOrigin } from '../lib/legacy-fallback';
 import { isUrlSlug, PHONE_INTL_PLUS } from '@duncit/regex';
 import { splitSegments } from '../lib/segments';
@@ -27,16 +28,25 @@ const pageNumber = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10
 const t = await translator();
 const graphqlUrl = publicGraphqlUrl();
 
+// `?cms_preview=<signed token>` (from the Website portal) shows a draft or one saved
+// version at the page's real address; without it this is the live page.
+const previewToken = Astro.url.searchParams.get('cms_preview');
+let preview: 'none' | 'active' | 'expired' = 'none';
+
 let result: Awaited<ReturnType<typeof renderPage>> | null = null;
 try {
-  result = await renderPage(host, path, pageNumber);
+  if (previewToken) {
+    result = await renderPreview(previewToken);
+    preview = result ? 'active' : 'expired';
+  }
+  result ??= await renderPage(host, path, pageNumber);
 } catch (error) {
   if (!(error instanceof CmsUnavailableError)) throw error;
   console.error('[cms-site] render failed', { host, path, reason: error.message });
 }
 
 // Not a CMS page: the site's old server may still answer it (a short link, a newer policy).
-const fallbackOrigin = result?.status === 404 ? legacyOrigin(result.site?.legacy_site) : null;
+const fallbackOrigin = result?.status === 404 && preview === 'none' ? legacyOrigin(result.site?.legacy_site) : null;
 if (fallbackOrigin) {
   const legacy = await fromLegacy(fallbackOrigin, Astro.request);
   if (legacy) return legacy;
@@ -47,9 +57,14 @@ if (!result) {
   Astro.response.headers.set('retry-after', '30');
 } else {
   Astro.response.status = result.status;
-  // Short and shared: a publish shows up within a minute, a traffic spike
-  // hits the edge instead of the API.
-  if (result.status === 200) Astro.response.headers.set('cache-control', 'public, max-age=60, stale-while-revalidate=300');
+  // Revalidated on every visit: a publish is live on the next load. The API's
+  // Redis render cache (retired by every CMS write) keeps that cheap.
+  if (result.status === 200) Astro.response.headers.set('cache-control', 'public, max-age=0, must-revalidate');
+}
+if (previewToken) {
+  // A preview is for the people it was shared with: never stored, never indexed.
+  Astro.response.headers.set('cache-control', 'private, no-store');
+  Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
 }
 
 const site = result?.site ?? null;
@@ -57,7 +72,10 @@ const segments = result ? splitSegments(localiseDates(result.html, SITE_LOCALE))
 // One Apply dialog for every careers opening on the page. HTML `pattern` is anchored itself, so the regex's ^ and $ go.
 const hasApply = segments.some((segment) => segment.kind === 'block' && segment.block === 'apply');
 const phonePattern = PHONE_INTL_PLUS.source.slice(1, -1);
-const url = `${Astro.url.protocol}//${host}${path === '/' ? '' : path}`;
+// TLS ends at nginx, so the scheme the visitor used comes from its forwarded header.
+const scheme = Astro.request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || Astro.url.protocol.replace(':', '');
+const url = `${scheme}://${host}${path === '/' ? '' : path}`;
+const liveUrl = `${scheme}://${host}${path}`;
 ---
 
 {!result && <NotFound kind="unavailable" t={t} />}
@@ -74,6 +92,7 @@ const url = `${Astro.url.protocol}//${host}${path === '/' ? '' : path}`;
     graphqlUrl={graphqlUrl}
     t={t}
   >
+    {preview !== 'none' && <PreviewBanner state={preview} liveUrl={liveUrl} t={t} />}
     {result.html === '' && result.status === 404 ? (
       <main id="main"><NotFound kind="missing" t={t} bare /></main>
     ) : (

@@ -134,6 +134,21 @@ export const cmsContentService = {
     return true;
   },
 
+  /**
+   * Makes one saved version live: it replaces the draft, then publishes as
+   * usual — so the live copy, the draft and the history all agree, and the
+   * version just made live gets its own new entry in that history.
+   */
+  async publishVersion(versionId: string, userId: string) {
+    const version = await CmsVersionModel.findById(assertId(versionId, 'version'));
+    if (!version) throw notFound('Version');
+    await this.restore(versionId, userId);
+    const id = String(version.owner_id);
+    if (version.owner_kind === 'PAGE') await this.publish(CmsPageModel, 'PAGE', id, userId);
+    else await this.publish(CmsFragmentModel, 'FRAGMENT', id, userId);
+    return true;
+  },
+
   /** Removes a page's or fragment's history with it. */
   async dropVersions(owner: CmsVersionOwner, ownerId: Types.ObjectId) {
     await CmsVersionModel.deleteMany({ owner_kind: owner, owner_id: ownerId });

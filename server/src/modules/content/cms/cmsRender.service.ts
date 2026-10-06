@@ -3,6 +3,7 @@ import { CmsSiteModel, type ICmsSite } from './cmsSite.model';
 import { CmsPageModel, type ICmsPage } from './cmsPage.model';
 import { CmsFragmentModel } from './cmsFragment.model';
 import { CmsEntryModel, type ICmsEntry } from './cmsEntry.model';
+import { CmsVersionModel } from './cmsVersion.model';
 import { assertId, collectionPathsOf, iso, notFound, seoOf, toSite } from './cms.mappers';
 import { CMS_LIST_PAGE_SIZE, type CmsCollection } from './cms.constants';
 import {
@@ -23,6 +24,8 @@ type Mode = 'published' | 'draft';
 interface Resolved {
   page: ICmsPage | null;
   template: string;
+  /** The page's own css when it is not the draft/published copy (a saved version). */
+  css?: string;
   title: string;
   seo: CmsSeo;
   status: number;
@@ -158,7 +161,7 @@ async function resolve(site: ICmsSite, path: string, pageNumber: number): Promis
 /** Header + page + footer, fragments expanded and fields bound. */
 async function compose(site: ICmsSite, resolved: Resolved, mode: Mode) {
   const page = resolved.page;
-  const ownCss = page ? contentOf(page, mode).css : '';
+  const ownCss = resolved.css ?? (page ? contentOf(page, mode).css : '');
   const chromeIds = [
     page?.show_header === false ? null : site.header_fragment_id,
     page?.show_footer === false ? null : site.footer_fragment_id,
@@ -231,14 +234,21 @@ export const cmsRenderService = {
     return respond(site, await resolve(site, normalisePath(path), pageNumber), 'published');
   },
 
-  /** A page's draft (and its fragments' drafts) exactly as it would render. */
-  async preview(pageId: string, entryId?: string | null) {
+  /**
+   * A page exactly as it would render: its draft (with its fragments' drafts),
+   * or — given `version` — that published version beside the live fragments.
+   */
+  async preview(pageId: string, entryId?: string | null, version?: number | null) {
     const page = await CmsPageModel.findById(assertId(pageId, 'page')).exec();
     if (!page) throw notFound('Page');
     const site = await CmsSiteModel.findById(page.site_id).exec();
     if (!site) throw notFound('Site');
-    const template = contentOf(page, 'draft').html;
+    const saved = version ? await CmsVersionModel.findOne({ owner_kind: 'PAGE', owner_id: page._id, version }).exec() : null;
+    if (version && !saved) throw notFound('Version');
+    const mode: Mode = saved ? 'published' : 'draft';
+    const template = saved ? saved.html : contentOf(page, 'draft').html;
     const resolved: Resolved = { page, template, title: page.title, seo: mergeSeo(seoOf(page.seo), site.seo), status: 200 };
+    if (saved) resolved.css = saved.css;
     if (page.kind !== 'PAGE' && page.collection_type) {
       const filter = { site_id: site._id, collection_type: page.collection_type };
       if (page.kind === 'COLLECTION_LIST') {
@@ -252,7 +262,7 @@ export const cmsRenderService = {
       resolved.collectionBase = collectionPathsOf(site)[page.collection_type];
       resolved.template ||= page.kind === 'COLLECTION_LIST' ? DEFAULT_LIST_TEMPLATE : DEFAULT_DETAIL_TEMPLATE;
     }
-    return respond(site, resolved, 'draft');
+    return respond(site, resolved, mode);
   },
 
   /** Public: every indexable live address of a site. */

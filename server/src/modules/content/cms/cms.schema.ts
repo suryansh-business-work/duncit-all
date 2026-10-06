@@ -194,6 +194,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     owner_kind: CmsVersionOwner!
     owner_id: ID!
     version: Int!
+    "A page version's live-demo link on its own domain (signed, short-lived). Null for fragments and sites without a domain."
+    preview_url: String
     published_by: String!
     created_at: String!
   }
@@ -268,6 +270,12 @@ export const cmsTypeDefs = /* GraphQL */ `
     page: Int!
     total_pages: Int!
     base_path: String!
+  }
+
+  "A page's real address with a signed preview flag: its draft or one saved version, on its own domain."
+  type CmsPreviewLink {
+    url: String!
+    expires_at: String!
   }
 
   """
@@ -439,6 +447,10 @@ export const cmsTypeDefs = /* GraphQL */ `
     cmsSitemap(host: String!): [CmsSitemapUrl!]!
     "A page's DRAFT rendered exactly as cmsRender would serve it."
     cmsPreview(page_id: ID!, entry_id: ID): CmsRenderResult!
+    "A shareable live-demo link: the draft, or (with version) that published version. Editors only."
+    cmsPreviewLink(page_id: ID!, version: Int, entry_id: ID): CmsPreviewLink!
+    "Public: what a preview link shows. Null when the token is forged or expired."
+    cmsRenderPreview(token: String!): CmsRenderResult
     "The Google Fonts catalogue, searchable, most popular first."
     cmsGoogleFonts(search: String, category: String, offset: Int, limit: Int): CmsGoogleFontPage!
     "A website's hostnames and their A/AAAA/CNAME records (Tech managers)."
@@ -482,6 +494,8 @@ export const cmsTypeDefs = /* GraphQL */ `
 
     "Copies a published version back into the draft; publish to make it live."
     restoreCmsVersion(version_id: ID!): Boolean!
+    "Makes that saved version live: it becomes the draft and is published."
+    publishCmsVersion(version_id: ID!): Boolean!
     "Saves that revision's snapshot again — itself a new revision, so a restore can be undone."
     restoreCmsSiteRevision(revision_id: ID!): CmsSite!
 

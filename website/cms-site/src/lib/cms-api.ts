@@ -38,34 +38,44 @@ async function query<T>(source: string, variables: Record<string, unknown>): Pro
   return payload.data;
 }
 
+/** Everything a page needs, shared by the live render and a preview link. */
+const RESULT_FIELDS = `
+  status
+  title
+  html
+  css
+  head_html
+  custom_js
+  seo { title description og_image_url canonical_url noindex }
+  pagination { page total_pages base_path }
+  site {
+    key
+    name
+    legacy_site
+    head_html
+    body_end_html
+    custom_css
+    custom_js
+    favicon_url
+    design {
+      tokens { name value group }
+      fonts { family source weights italic role variable fallback files { weight style url } }
+      font_urls
+      base_css
+    }
+  }
+`;
+
 const RENDER = /* GraphQL */ `
   query CmsRender($host: String!, $path: String!, $page: Int) {
-    cmsRender(host: $host, path: $path, page: $page) {
-      status
-      title
-      html
-      css
-      head_html
-      custom_js
-      seo { title description og_image_url canonical_url noindex }
-      pagination { page total_pages base_path }
-      site {
-        key
-        name
-        legacy_site
-        head_html
-        body_end_html
-        custom_css
-        custom_js
-        favicon_url
-        design {
-          tokens { name value group }
-          fonts { family source weights italic role variable fallback files { weight style url } }
-          font_urls
-          base_css
-        }
-      }
-    }
+    cmsRender(host: $host, path: $path, page: $page) { ${RESULT_FIELDS} }
+  }
+`;
+
+/** Never cached server-side: the signed token is the permission, and it expires. */
+const RENDER_PREVIEW = /* GraphQL */ `
+  query CmsRenderPreview($token: String!) {
+    cmsRenderPreview(token: $token) { ${RESULT_FIELDS} }
   }
 `;
 
@@ -78,6 +88,12 @@ const SITEMAP = /* GraphQL */ `
 export async function renderPage(host: string, path: string, page: number): Promise<CmsRenderResult> {
   const data = await query<{ cmsRender: CmsRenderResult }>(RENDER, { host, path, page });
   return data.cmsRender;
+}
+
+/** A preview link's page (a draft or one saved version), or null when the link is forged or expired. */
+export async function renderPreview(token: string): Promise<CmsRenderResult | null> {
+  const data = await query<{ cmsRenderPreview: CmsRenderResult | null }>(RENDER_PREVIEW, { token });
+  return data.cmsRenderPreview;
 }
 
 export async function sitemapUrls(host: string): Promise<CmsSitemapUrl[]> {

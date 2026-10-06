@@ -4581,6 +4581,13 @@ export type CmsPagination = {
   total_pages: Scalars['Int']['output'];
 };
 
+/** A page's real address with a signed preview flag: its draft or one saved version, on its own domain. */
+export type CmsPreviewLink = {
+  __typename?: 'CmsPreviewLink';
+  expires_at: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type CmsPublishedContent = {
   __typename?: 'CmsPublishedContent';
   css: Scalars['String']['output'];
@@ -4756,6 +4763,8 @@ export type CmsVersion = {
   id: Scalars['ID']['output'];
   owner_id: Scalars['ID']['output'];
   owner_kind: CmsVersionOwner;
+  /** A page version's live-demo link on its own domain (signed, short-lived). Null for fragments and sites without a domain. */
+  preview_url?: Maybe<Scalars['String']['output']>;
   published_by: Scalars['String']['output'];
   version: Scalars['Int']['output'];
 };
@@ -12653,6 +12662,8 @@ export type Mutation = {
   provisionWhatsappScenario: WaScenarioBoard;
   publishCmsFragment: CmsFragment;
   publishCmsPage: CmsPage;
+  /** Makes that saved version live: it becomes the draft and is published. */
+  publishCmsVersion: Scalars['Boolean']['output'];
   publishPodDraft: Pod;
   /**
    * Clear every remaining trace and then the account itself. Permanent.
@@ -16023,6 +16034,11 @@ export type MutationPublishCmsFragmentArgs = {
 
 export type MutationPublishCmsPageArgs = {
   page_id: Scalars['ID']['input'];
+};
+
+
+export type MutationPublishCmsVersionArgs = {
+  version_id: Scalars['ID']['input'];
 };
 
 
@@ -23350,8 +23366,12 @@ export type Query = {
   cmsPagesTable: CmsPageTablePage;
   /** A page's DRAFT rendered exactly as cmsRender would serve it. */
   cmsPreview: CmsRenderResult;
+  /** A shareable live-demo link: the draft, or (with version) that published version. Editors only. */
+  cmsPreviewLink: CmsPreviewLink;
   /** Public: the page a CMS site serves at a path, composed and ready to send. */
   cmsRender: CmsRenderResult;
+  /** Public: what a preview link shows. Null when the token is forged or expired. */
+  cmsRenderPreview?: Maybe<CmsRenderResult>;
   cmsSite?: Maybe<CmsSite>;
   /** A website's hostnames and their A/AAAA/CNAME records (Tech managers). */
   cmsSiteDns: CmsSiteDns;
@@ -25307,10 +25327,22 @@ export type QueryCmsPreviewArgs = {
 };
 
 
+export type QueryCmsPreviewLinkArgs = {
+  entry_id?: InputMaybe<Scalars['ID']['input']>;
+  page_id: Scalars['ID']['input'];
+  version?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryCmsRenderArgs = {
   host: Scalars['String']['input'];
   page?: InputMaybe<Scalars['Int']['input']>;
   path: Scalars['String']['input'];
+};
+
+
+export type QueryCmsRenderPreviewArgs = {
+  token: Scalars['String']['input'];
 };
 
 

@@ -1071,6 +1071,11 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
     // The CMS renderer (website/cms-site): only the words it draws itself —
     // everything on a CMS page is written in the Website portal.
     cms: {
+      preview: {
+        active: 'Preview — this is not the live page. Only people with this link can see it.',
+        expired: 'This preview link has expired, so you are seeing the live page. Ask for a new link from the Website portal.',
+        viewLive: 'View the live page',
+      },
       pagination: {
         label: 'Pages',
         previous: 'Newer',

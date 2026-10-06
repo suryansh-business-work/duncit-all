@@ -85,7 +85,11 @@ export function usePublicPageActions(
     if (!link) return;
     setBusy('qr');
     try {
-      const saved = await shareBase64File(qrBase64(link.qr_data_url), publicPageQrFileName(title), 'image/png');
+      const saved = await shareBase64File(
+        qrBase64(link.qr_data_url),
+        publicPageQrFileName(title),
+        'image/png',
+      );
       if (!saved) fail('downloadQr', null, t('publicPage.link.qrFailed'));
     } catch (error) {
       fail('downloadQr', error, t('publicPage.link.qrFailed'));
@@ -105,7 +109,11 @@ export function usePublicPageActions(
         headline,
         footer: t('publicPage.poster.footer'),
       });
-      const saved = await shareBase64File(base64, publicPagePosterFileName(title), 'application/pdf');
+      const saved = await shareBase64File(
+        base64,
+        publicPagePosterFileName(title),
+        'application/pdf',
+      );
       if (!saved) fail('downloadPoster', null, t('publicPage.link.posterFailed'));
     } catch (error) {
       fail('downloadPoster', error, t('publicPage.link.posterFailed'));

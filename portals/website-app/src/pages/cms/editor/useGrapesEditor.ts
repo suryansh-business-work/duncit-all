@@ -30,6 +30,8 @@ interface Args {
   selfKey?: string;
   /** GrapesJS asked for an image; the console answers with its own picker. */
   onPickAsset: (request: AssetRequest) => void;
+  /** A component placed in this document was opened (double-click / its Edit button). */
+  onOpenFragment: (fragment: FragmentPreview) => void;
 }
 
 function parseProject(project: string): Record<string, unknown> | null {
@@ -95,7 +97,7 @@ export function useGrapesEditor(args: Args) {
           },
         },
         plugins: [
-          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields),
+          (ed) => registerCmsComponents(ed, a.labels.components, a.fragments, a.labels.fields, (fragment) => argsRef.current.onOpenFragment(fragment)),
           (ed) => registerBlocks(ed, a.labels.blocks, a.fragments, { template: a.template, selfKey: a.selfKey }),
         ],
       });

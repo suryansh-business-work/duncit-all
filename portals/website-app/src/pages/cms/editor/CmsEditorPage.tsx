@@ -39,7 +39,7 @@ export default function CmsEditorPage() {
   const failed = page.error || fragment.error || design.error || options.error;
 
   const fragments = useMemo(
-    () => (options.data?.cmsFragments ?? []).filter((f) => f.kind === 'SECTION' && f.is_published).map((f) => ({ key: f.key, name: f.name, html: f.published.html })),
+    () => (options.data?.cmsFragments ?? []).filter((f) => f.kind === 'SECTION' && f.is_published).map((f) => ({ id: f.id, key: f.key, name: f.name, html: f.published.html })),
     [options.data],
   );
   const source = useMemo(() => (doc ? { project: doc.draft.project, html: doc.draft.html, css: doc.draft.css } : null), [doc]);
@@ -72,22 +72,29 @@ export default function CmsEditorPage() {
     template: target === 'pages' && page.data?.cmsPage?.kind !== 'PAGE',
     selfKey: target === 'fragments' ? fragment.data?.cmsFragment?.key : undefined,
     onPickAsset: setAssetRequest,
+    onOpenFragment: (fragment) => {
+      openFragment(fragment.id).catch(() => navigate(`/sites/${siteId}/fragments/${fragment.id}/design`));
+    },
   });
   const saver = useEditorSave(target, docId, doc?.updated_at ?? null, grapes.markSaved);
   const backTo = `/sites/${siteId}?${TAB_PARAM}=${target}`;
   useSetBreadcrumbs(title ? [{ label: title }] : null);
 
+  // Leaving with unsaved work asks first — to go back, or into a component placed on this page.
+  const confirmLeave = async () =>
+    !grapes.dirty ||
+    confirm({
+      title: t('websiteApp.cms.editor.leaveTitle'),
+      message: t('websiteApp.cms.editor.leaveText'),
+      confirmLabel: t('websiteApp.cms.editor.leave'),
+      destructive: true,
+    });
+  const openFragment = async (id: string) => {
+    if (await confirmLeave()) navigate(`/sites/${siteId}/fragments/${id}/design`);
+  };
+
   const leave = async () => {
-    if (grapes.dirty) {
-      const ok = await confirm({
-        title: t('websiteApp.cms.editor.leaveTitle'),
-        message: t('websiteApp.cms.editor.leaveText'),
-        confirmLabel: t('websiteApp.cms.editor.leave'),
-        destructive: true,
-      });
-      if (!ok) return;
-    }
-    navigate(backTo);
+    if (await confirmLeave()) navigate(backTo);
   };
 
   if (failed) return <Alert severity="error">{t('websiteApp.cms.editor.loadFailed')}</Alert>;

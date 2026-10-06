@@ -17,11 +17,22 @@ interface Props {
   href: string;
   /** The site's build-time translator. Omit it and the shipped copy renders. */
   t?: SiteTranslate;
+  /** The words, set per page in the Website CMS. Each one omitted renders the shipped copy. */
+  eyebrow?: string;
+  heading?: string;
+  headingMuted?: string;
+  text?: string;
+  cta?: string;
   id?: string;
   class?: string;
 }
 
 const { href, t = siteT, id = 'earn-with-duncit', class: className = '' } = Astro.props;
+const eyebrow = Astro.props.eyebrow || t('website.brand.earnShowcase.eyebrow');
+const heading = Astro.props.heading || t('website.brand.earnShowcase.heading');
+const headingMuted = Astro.props.headingMuted || t('website.brand.earnShowcase.headingMuted');
+const text = Astro.props.text || t('website.brand.earnShowcase.text');
+const cta = Astro.props.cta || t('website.brand.earnShowcase.cta');
 const headingId = `${id}-heading`;
 // Each tile's place in the whole wall staggers its float.
 const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
@@ -55,14 +66,14 @@ const columns = EARN_SHOWCASE_COLUMNS.map((column, col) => ({
     </div>
 
     <div class="earn-copy">
-      <span class="earn-eyebrow">{t('website.brand.earnShowcase.eyebrow')}</span>
+      <span class="earn-eyebrow">{eyebrow}</span>
       <h2 id={headingId} class="earn-heading">
-        {t('website.brand.earnShowcase.heading')}
-        <span>{t('website.brand.earnShowcase.headingMuted')}</span>
+        {heading}
+        <span>{headingMuted}</span>
       </h2>
-      <p class="earn-text">{t('website.brand.earnShowcase.text')}</p>
+      <p class="earn-text">{text}</p>
       <a class="earn-cta" href={href}>
-        {t('website.brand.earnShowcase.cta')}
+        {cta}
         <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
       </a>
     </div>

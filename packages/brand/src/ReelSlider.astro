@@ -21,10 +21,15 @@ interface Props {
   site: ReelSite;
   /** The site's build-time translator. Omit it and the shipped copy renders. */
   t?: SiteTranslate;
+  /** The words above the slider, set per page in the Website CMS; omitted renders the shipped copy. */
+  eyebrow?: string;
+  heading?: string;
   class?: string;
 }
 
 const { graphqlUrl, site, t = siteT, class: className = '' } = Astro.props;
+const eyebrow = Astro.props.eyebrow || t('website.brand.reels.eyebrow');
+const heading = Astro.props.heading || t('website.brand.reels.heading');
 const copy = JSON.stringify(reelSliderCopy((key) => t(key)));
 ---
 
@@ -42,8 +47,8 @@ const copy = JSON.stringify(reelSliderCopy((key) => t(key)));
 >
   <div class="reel-glow" aria-hidden="true"></div>
   <header class="reel-header">
-    <span class="reel-eyebrow">{t('website.brand.reels.eyebrow')}</span>
-    <h2 class="reel-heading">{t('website.brand.reels.heading')}</h2>
+    <span class="reel-eyebrow">{eyebrow}</span>
+    <h2 class="reel-heading">{heading}</h2>
   </header>
   <div class="reel-stage" data-reel-stage></div>
   <div class="reel-nav">

@@ -4,6 +4,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { LoginForm, type LoginSubmitValues } from '../../forms/login';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useWithRedirect } from '../../utils/redirect';
 
 interface Props {
   loading: boolean;
@@ -27,6 +28,7 @@ export default function LoginPasswordStep({
   onBack,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const authLink = useWithRedirect();
 
   return (
     <Stack spacing={2}>
@@ -35,7 +37,7 @@ export default function LoginPasswordStep({
       <Stack sx={{ alignItems: 'flex-end' }}>
         <Link
           component={RouterLink}
-          to="/forgot-password"
+          to={authLink('/forgot-password')}
           underline="hover"
           variant="body2"
           data-testid="go-forgot-password"
@@ -59,7 +61,7 @@ export default function LoginPasswordStep({
         </Link>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.login.newHere')}{' '}
-          <Link component={RouterLink} to="/register" underline="hover" data-testid="go-signup">
+          <Link component={RouterLink} to={authLink('/register')} underline="hover" data-testid="go-signup">
             {t('mweb.login.createOne')}
           </Link>
         </Typography>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, keyframes } from '@mui/material';
+import AuthPodBanner from './AuthPodBanner';
 
 const rise = keyframes`
   0% { opacity: 0; transform: translateY(12px); }
@@ -37,7 +38,11 @@ export default function AuthScreenFrame({ children, center }: Readonly<Props>) {
         '& .MuiLink-root': { color: 'primary.main', fontWeight: 600 },
       }}
     >
-      <Box sx={{ width: '100%' }}>{children}</Box>
+      <Box sx={{ width: '100%' }}>
+        {/* The pod a signed-out visitor tapped, on top of every auth step. */}
+        <AuthPodBanner />
+        {children}
+      </Box>
     </Box>
   );
 }

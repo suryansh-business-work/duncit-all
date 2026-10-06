@@ -6,6 +6,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { DuncitButton } from '@duncit/buttons';
+import { PublishPageCard } from '@duncit/public-page';
 import StudioPageHeader from '../components/StudioPageHeader';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
@@ -115,6 +116,8 @@ export default function HostManagePage() {
 
       {isHost && <HostCategoriesCard />}
       {isHost && <HostApplyBanner />}
+
+      {isHost && <PublishPageCard kind="HOST" title={meQ.data?.me?.full_name ?? ''} />}
 
       <HostDraftsCard />
 

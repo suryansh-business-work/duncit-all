@@ -6,6 +6,7 @@ import { venueSubLabel } from '@duncit/utils';
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
 import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { SectionHeader } from '@/components/SectionHeader';
+import { PublishPageCard } from '@/components/public-page';
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import {
@@ -68,6 +69,7 @@ export function VenueManageScreen() {
                 pendingRequests={stats.pending_requests}
                 onNavigate={navigate}
               />
+              <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name} />
             </>
           ) : null}
           <YStack gap={12}>

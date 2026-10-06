@@ -18,6 +18,7 @@ import {
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
+  PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   CLUB_FORM_BUNDLE,
@@ -72,6 +73,8 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // The venue availability screen and the venue settings screen are the
   // Tamagui twins of the calendar + form the packages render on mWeb (rule 27).
   ...AVAILABILITY_BUNDLE,
+  // The publish card in Venue Studio and Host Studio.
+  ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   // The club edit screen labels its fields with the shared club form's words

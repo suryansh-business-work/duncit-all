@@ -11,6 +11,7 @@ import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
+import { useWithRedirect } from '../../utils/redirect';
 import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
 
 const APPLY_REFERRAL = gql`
@@ -34,6 +35,7 @@ export default function SignupReferralPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const authLink = useWithRedirect();
   // A referral pays the new account coins, so the cached balance is re-read.
   const [apply, { loading }] = useMutation<any>(APPLY_REFERRAL, {
     refetchQueries: [{ query: MY_COIN_BALANCE }],
@@ -49,7 +51,7 @@ export default function SignupReferralPage() {
     try {
       await apply({ variables: { code: trimmed } });
       notifySuccess(t('mweb.referral.applied'));
-      navigate('/signup-survey');
+      navigate(authLink('/signup-survey'));
     } catch (e) {
       setError(parseApiError(e));
     }
@@ -99,7 +101,7 @@ export default function SignupReferralPage() {
             data-testid="signup-referral-skip-button"
             variant="text"
             fullWidth
-            onClick={() => navigate('/signup-survey')}
+            onClick={() => navigate(authLink('/signup-survey'))}
           >
             {t('mweb.referral.skip')}
           </DuncitButton>

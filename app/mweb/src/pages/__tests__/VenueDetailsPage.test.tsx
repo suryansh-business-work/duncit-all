@@ -22,12 +22,14 @@ vi.mock('../venues-page/VenuePodsSection', () => ({
     <div data-testid="venue-pods-stub">pods-{venueId}</div>
   ),
 }));
+// And the reels row, which runs its own pods query.
+vi.mock('../../components/public-page/PublicReelsSection', () => ({ default: () => null }));
 
 import VenueDetailsPage from '../VenueDetailsPage';
 
 // The page's own document: MockedProvider matches on the printed query AST, so
 // a copy drifts the day the selection grows (as it did with location_id).
-import { PUBLIC_VENUES } from '../VenueDetailsPage/queries';
+import { PUBLIC_VENUE } from '../VenueDetailsPage/queries';
 
 const baseVenue = (over: Record<string, unknown> = {}) => ({
   id: 'v1',
@@ -55,9 +57,10 @@ const baseVenue = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const venuesMock = (venues: unknown[]) => ({
-  request: { query: PUBLIC_VENUES },
-  result: { data: { publicVenues: venues } },
+// publicVenue answers null for an unknown, unapproved or inactive venue.
+const venueMock = (venue: unknown, venueId = 'v1') => ({
+  request: { query: PUBLIC_VENUE, variables: { venueId } },
+  result: { data: { publicVenue: venue } },
 });
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
@@ -74,12 +77,12 @@ afterEach(() => {
 
 describe('VenueDetailsPage', () => {
   it('shows the loading spinner before data resolves', () => {
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(baseVenue())], <VenueDetailsPage />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders the populated venue detail with images, chips, sections and pods', async () => {
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(baseVenue())], <VenueDetailsPage />);
     // the name is both the page header (h1) and the hero title (h2)
     expect(await screen.findByRole('heading', { name: 'Grand Hall', level: 2 })).toBeInTheDocument();
     // type + capacity + tag chips
@@ -107,7 +110,7 @@ describe('VenueDetailsPage', () => {
   });
 
   it('navigates back when Back is clicked', async () => {
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(baseVenue())], <VenueDetailsPage />);
     fireEvent.click(await screen.findByRole('button', { name: /Back/i }));
     expect(navigate).toHaveBeenCalledWith(-1);
   });
@@ -118,7 +121,7 @@ describe('VenueDetailsPage', () => {
       value: { writeText },
       configurable: true,
     });
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(baseVenue())], <VenueDetailsPage />);
     fireEvent.click(await screen.findByRole('button', { name: /Copy link/i }));
     expect(await screen.findByText('Venue link copied')).toBeInTheDocument();
     expect(writeText).toHaveBeenCalled();
@@ -129,14 +132,14 @@ describe('VenueDetailsPage', () => {
       value: { writeText: vi.fn().mockRejectedValue(new Error('nope')) },
       configurable: true,
     });
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(baseVenue())], <VenueDetailsPage />);
     fireEvent.click(await screen.findByRole('button', { name: /Copy link/i }));
     expect(await screen.findByText('Copy is unavailable in this browser')).toBeInTheDocument();
   });
 
   it('renders the name fallback block when there is no image', async () => {
     setup(
-      [venuesMock([baseVenue({ cover_image_url: null, gallery: [] })])],
+      [venueMock(baseVenue({ cover_image_url: null, gallery: [] }))],
       <VenueDetailsPage />,
     );
     // the hero falls back to the storefront mark instead of a cover image
@@ -147,26 +150,27 @@ describe('VenueDetailsPage', () => {
     expect(screen.queryByText('Images')).not.toBeInTheDocument();
   });
 
-  it('renders the not-found state when the venue id is missing from the list', async () => {
+  it('renders the not-found state when the venue is not public', async () => {
     params = { venueId: 'does-not-exist' };
-    setup([venuesMock([baseVenue()])], <VenueDetailsPage />);
+    setup([venueMock(null, 'does-not-exist')], <VenueDetailsPage />);
     expect(await screen.findByText('Venue not found')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back/i }));
     expect(navigate).toHaveBeenCalledWith(-1);
   });
 
-  it('renders the not-found state on query error', async () => {
+  it('renders the load-failed state on query error, not not-found', async () => {
     setup(
-      [{ request: { query: PUBLIC_VENUES }, error: new Error('boom') }],
+      [{ request: { query: PUBLIC_VENUE, variables: { venueId: 'v1' } }, error: new Error('boom') }],
       <VenueDetailsPage />,
     );
-    expect(await screen.findByText('Venue not found')).toBeInTheDocument();
+    expect(await screen.findByTestId('venue-details-load-failed')).toBeInTheDocument();
+    expect(screen.queryByText('Venue not found')).not.toBeInTheDocument();
   });
 
   it('omits optional sections when the venue has no extras', async () => {
     setup(
       [
-        venuesMock([
+        venueMock(
           baseVenue({
             description: null,
             amenities: [],
@@ -175,7 +179,7 @@ describe('VenueDetailsPage', () => {
             tags: null,
             gallery: null,
           }),
-        ]),
+        ),
       ],
       <VenueDetailsPage />,
     );

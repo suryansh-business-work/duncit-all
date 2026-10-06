@@ -1,11 +1,6 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
-import { Box, CircularProgress, Stack } from '@mui/material';
-import ClubPodsScheduleSection from '../club-details-page/ClubPodsScheduleSection';
-import SectionHeader from '../../components/SectionHeader';
-import { usePricing } from '../../hooks/usePricing';
-import { useTranslation } from '../../i18n/useTranslation';
+import PodsScheduleBlock, { type SchedulePod } from '../../components/public-page/PodsScheduleBlock';
 
 export const VENUE_PODS = gql`
   query VenueHostedPods($venueId: ID!) {
@@ -37,30 +32,17 @@ export const VENUE_PODS = gql`
  * Happening soon / Upcoming / Previous rails as the club page. Native twin:
  * details/VenuePodsSection. */
 export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { format } = usePricing();
-  const { data, loading } = useQuery<any>(VENUE_PODS, {
+  const { data, loading } = useQuery<{ pods: SchedulePod[] }>(VENUE_PODS, {
     variables: { venueId },
     fetchPolicy: 'cache-and-network',
   });
-  const pods = data?.pods ?? [];
-
-  const openPod = (podDocId: string) => {
-    const pod = pods.find((p: any) => p.id === podDocId);
-    if (pod?.pod_id && pod.club_slug) navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
-  };
 
   return (
-    <Stack spacing={1.25} data-testid="venue-pods-section">
-      <SectionHeader testId="venue-pods-section-header" title="Pods at this venue" />
-      {loading && !data ? (
-        <Box sx={{ display: 'grid', placeItems: 'center', py: 2 }}>
-          <CircularProgress aria-label={t('mweb.a11y.loading')} size={20} />
-        </Box>
-      ) : (
-        <ClubPodsScheduleSection pods={pods} priceFormat={format} onOpen={openPod} />
-      )}
-    </Stack>
+    <PodsScheduleBlock
+      testId="venue-pods-section"
+      title="Pods at this venue"
+      pods={data?.pods ?? []}
+      loading={loading && !data}
+    />
   );
 }

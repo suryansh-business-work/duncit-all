@@ -3,6 +3,7 @@ import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client/react';
 import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
 import {
   Box,
   ButtonBase,
@@ -17,6 +18,7 @@ import { venueImages } from '@duncit/utils';
 import { useNavigate, useParams } from 'react-router';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import EmptyState from '../../components/EmptyState';
+import PublicReelsSection from '../../components/public-page/PublicReelsSection';
 import PageHeader from '../../components/PageHeader';
 import TwoToneHeading from '../../components/TwoToneHeading';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -25,21 +27,21 @@ import VenuePodsSection from '../venues-page/VenuePodsSection';
 import { VENUE_CHIP_SX, VenueChipsSection, VenueLocationCard } from '../venues-page/VenueInfoSections';
 import LocationMismatchDialog from '../../components/LocationMismatchDialog';
 import { useLocationMismatch } from '../../hooks/useLocationMismatch';
-import { PUBLIC_VENUES } from './queries';
+import { PUBLIC_VENUE, type PublicVenue } from './queries';
 import { HERO_SX, ROUND_BTN_SX, addressParts } from './venueDetailsHelpers';
 
 export default function VenueDetailsPage() {
-  const { venueId } = useParams();
+  const { venueId = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery<any>(PUBLIC_VENUES);
+  const { data, loading, error, refetch } = useQuery<{ publicVenue: PublicVenue | null }>(PUBLIC_VENUE, {
+    variables: { venueId },
+    skip: !venueId,
+  });
   const { t } = useTranslation();
   const [snack, setSnack] = useState('');
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
 
-  const venue = useMemo(
-    () => data?.publicVenues?.find((item: any) => item.id === venueId),
-    [data?.publicVenues, venueId],
-  );
+  const venue = data?.publicVenue ?? null;
   useEntityPageMeta(venue?.venue_name);
   const images: string[] = useMemo(() => venueImages(venue), [venue]);
   const locationPrompt = useLocationMismatch(
@@ -64,7 +66,24 @@ export default function VenueDetailsPage() {
     );
   }
 
-  if (error || !venue) {
+  if (error) {
+    return (
+      <Stack spacing={2} sx={{ py: 2 }} data-testid="venue-details-error">
+        <EmptyState
+          testId="venue-details-load-failed"
+          icon={<ErrorOutlineIcon />}
+          title={t('publicPage.hostPage.loadFailed')}
+          actionLabel={t('publicPage.hostPage.retry')}
+          onAction={() => {
+            // A failed retry re-renders this state through `error` itself.
+            refetch().catch(() => undefined);
+          }}
+        />
+      </Stack>
+    );
+  }
+
+  if (!venue) {
     return (
       <Stack spacing={2} sx={{ py: 2 }} data-testid="venue-details-missing">
         <PageHeader testId="venue-details-header" title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
@@ -122,7 +141,7 @@ export default function VenueDetailsPage() {
         }}>
           <Chip label={venue.venue_type} sx={VENUE_CHIP_SX} />
           <Chip label={`${venue.capacity} capacity`} sx={VENUE_CHIP_SX} />
-          {venue.tags?.map((tag: string) => <Chip key={tag} label={tag} sx={VENUE_CHIP_SX} />)}
+          {venue.tags?.map((tag) => <Chip key={tag} label={tag} sx={VENUE_CHIP_SX} />)}
         </Stack>
         {venue.description && <Typography variant="body2" sx={{
           color: "text.secondary"
@@ -138,6 +157,7 @@ export default function VenueDetailsPage() {
       />
 
       <VenuePodsSection venueId={venue.id} />
+      <PublicReelsSection venueId={venue.id} />
 
       <VenueChipsSection title={t('mweb.common.amenities')} items={venue.amenities} />
       <VenueChipsSection title={t('mweb.common.facilities')} items={venue.facilities} />

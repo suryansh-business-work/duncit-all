@@ -11,6 +11,7 @@ import { emptyVenueOwnerStats } from '@duncit/utils';
 import { MY_VENUES } from '../register-venue-page/queries';
 import { VENUE_OWNER_STATS } from './queries';
 import VenueStatCards from './VenueStatCards';
+import { publicPageWidget } from '../../components/publicPageWidget';
 import { useTranslation } from '@duncit/shell';
 
 const ALL_VENUES = 'ALL';
@@ -83,6 +84,9 @@ export default function VenueDashboardPage() {
         </Stack>
       ),
     },
+    ...(selectedVenue?.status === 'APPROVED'
+      ? [publicPageWidget({ kind: 'VENUE', refId: selectedVenue.id, title: selectedVenue.venue_name ?? '' }, 4)]
+      : []),
   ];
 
   return (

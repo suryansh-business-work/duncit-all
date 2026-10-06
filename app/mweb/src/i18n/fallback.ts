@@ -16,6 +16,7 @@ import {
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
+  PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -65,6 +66,8 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   // The venue availability calendar and the venue settings form render here
   // through the same packages the Partners console mounts (rule 27).
   ...AVAILABILITY_BUNDLE,
+  // The public venue / host pages, the publish card and the pod on the sign-in screens.
+  ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,

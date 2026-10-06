@@ -16,6 +16,7 @@ export const ProfilePage = lazy(() => import('../../pages/ProfilePage'));
 export const PostPage = lazy(() => import('../../pages/PostPage'));
 export const FollowPage = lazy(() => import('../../pages/FollowPage'));
 export const PublicProfilePage = lazy(() => import('../../pages/PublicProfilePage'));
+export const HostPage = lazy(() => import('../../pages/host-page'));
 export const PodDetailsPage = lazy(() => import('../../pages/PodDetailsPage'));
 export const PodFeedbackPage = lazy(() => import('../../pages/pod-feedback-page'));
 export const PodMediaPage = lazy(() => import('../../pages/pod-media-page'));

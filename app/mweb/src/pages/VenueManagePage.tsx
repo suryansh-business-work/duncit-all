@@ -5,6 +5,7 @@ import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries'
 import { Card, CardContent, Chip, Stack } from '@mui/material';
 import SectionHeader from '../components/SectionHeader';
 import { emptyVenueOwnerStats, pickVenue, type VenueOwnerStats } from '@duncit/utils';
+import { PublishPageCard } from '@duncit/public-page';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import VenueHealthCard from './venue-manage-page/VenueHealthCard';
@@ -69,6 +70,10 @@ export default function VenueManagePage() {
       {venue?.id && <VenueOwnerStatsStrip stats={stats} />}
 
       {venue?.id && <VenueQuickActions approved={isApproved} pendingRequests={stats.pending_requests} />}
+
+      {venue?.id && isApproved && (
+        <PublishPageCard kind="VENUE" refId={venue.id} title={venue.venue_name ?? ''} />
+      )}
 
       <VenueEarningsLinkCard />
 

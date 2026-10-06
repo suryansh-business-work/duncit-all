@@ -10,6 +10,7 @@ import {
 } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
+import { useWithRedirect } from '../../utils/redirect';
 import { LINK_APPLE_ACCOUNT, LINK_GOOGLE_ACCOUNT, LOGIN_APPLE, LOGIN_GOOGLE } from './queries';
 
 type FinishLogin = (token: string, user: any) => Promise<void>;
@@ -35,6 +36,7 @@ export interface SocialConsent {
 export function useSocialLogin(finishLogin: FinishLogin) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const authLink = useWithRedirect();
   const [loginGoogle, { loading: googleBusy }] = useMutation<any>(LOGIN_GOOGLE);
   const [loginApple, { loading: appleBusy }] = useMutation<any>(LOGIN_APPLE);
   const [linkGoogle, { loading: googleLinking }] = useMutation<any>(LINK_GOOGLE_ACCOUNT);
@@ -101,7 +103,7 @@ export function useSocialLogin(finishLogin: FinishLogin) {
   const acceptInvite = () => {
     if (!invite) return;
     setInvite(null);
-    navigate('/register', { state: { googleSignup: invite } });
+    navigate(authLink('/register'), { state: { googleSignup: invite } });
   };
 
   const allowLink = async () => {

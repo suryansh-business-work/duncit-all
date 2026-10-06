@@ -212,6 +212,17 @@ export const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
 export const isFontFamily = (v) => FONT_FAMILY.test(v);
 
 /**
+ * An HTML `<meta>` name or property the Website CMS writes into a page head —
+ * `robots`, `og:locale`, `twitter:site`. A letter first, then up to 79 letters,
+ * digits, `_`, `:`, `.` or `-`: no quotes, spaces or `>`, so it can never
+ * close the attribute it is written into.
+ */
+export const META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
+
+/** Meta name/property shape check. */
+export const isMetaName = (v) => META_NAME.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

@@ -135,6 +135,9 @@ const CSS_VARIABLE = /^--[a-z0-9-]{1,60}$/;
 /** A font family name like `Plus Jakarta Sans`. See regex.mjs. */
 const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
 
+/** A `<meta>` name or property like `og:locale`. See regex.mjs. */
+const META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -159,6 +162,7 @@ module.exports = {
   SITE_PATH,
   CSS_VARIABLE,
   FONT_FAMILY,
+  META_NAME,
   toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -177,6 +181,7 @@ module.exports = {
   isSitePath: (v) => SITE_PATH.test(v),
   isCssVariable: (v) => CSS_VARIABLE.test(v),
   isFontFamily: (v) => FONT_FAMILY.test(v),
+  isMetaName: (v) => META_NAME.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

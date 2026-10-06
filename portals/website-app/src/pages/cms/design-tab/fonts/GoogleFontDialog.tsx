@@ -55,7 +55,6 @@ export default function GoogleFontDialog({ open, onClose, onAdd }: Readonly<Prop
           <Stack spacing={2}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField
-                autoFocus
                 fullWidth
                 size="small"
                 value={search}

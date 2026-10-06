@@ -31,7 +31,7 @@ export default function ARecordForm({ host, current, submitting, errorMessage, o
         <Typography>{current ? t('websiteApp.cms.dns.repointText', { vars: { host, current } }) : t('websiteApp.cms.dns.addText', { vars: { host } })}</Typography>
         <Alert severity="warning">{t('websiteApp.cms.dns.warning')}</Alert>
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        <RhfTextField control={control} name="ip" label={t('websiteApp.cms.dns.ip')} hint={t('websiteApp.cms.dns.ipHint')} required autoFocus />
+        <RhfTextField control={control} name="ip" label={t('websiteApp.cms.dns.ip')} hint={t('websiteApp.cms.dns.ipHint')} required />
       </Stack>
       <DialogActions sx={{ px: 0, pt: 2 }}>
         <DuncitButton onClick={onCancel}>{t('shell.common.cancel')}</DuncitButton>

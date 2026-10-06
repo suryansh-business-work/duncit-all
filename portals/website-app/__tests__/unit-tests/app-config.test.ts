@@ -24,31 +24,19 @@ describe('Duncit Website app config', () => {
     expect(appConfig.loginImage).toContain('pexels.com');
   });
 
-  it('exposes the full website-management nav', () => {
+  it('exposes the dashboard, the websites and the inboxes', () => {
     const targets = appConfig.nav.flatMap((n) => ('children' in n ? n.children.map((c) => c.to) : [n.to]));
-    expect(targets).toEqual([
-      '/',
-      '/careers',
-      '/newsroom',
-      '/blog',
-      '/newsletter',
-      '/contact-submissions',
-      '/job-applications',
-      '/navigation',
-      '/reels',
-      '/reels/settings',
-    ]);
+    expect(targets).toEqual(['/', '/sites', '/newsletter', '/contact-submissions', '/job-applications', '/navigation']);
     expect(appConfig.nav.find((n) => 'to' in n && n.to === '/')?.label).toBe('Dashboard');
+    expect(appConfig.nav.find((n) => 'to' in n && n.to === '/sites')?.labelKey).toBe('shell.nav.websites');
   });
 
-  it('groups the reel pages under one Reel Slider entry with no route of its own', () => {
-    const group = appConfig.nav.find((n) => n.label === 'Reel Slider');
-    expect(group).toBeDefined();
-    expect(group && 'to' in group).toBe(false);
-    expect(group && 'children' in group ? group.children.map((c) => c.label) : []).toEqual([
-      'Reels',
-      'Reel Slider Settings',
-    ]);
+  it('leaves blog, careers, newsroom and reels to each website, not the sidebar', () => {
+    const targets = appConfig.nav.flatMap((n) => ('children' in n ? n.children.map((c) => c.to) : [n.to]));
+    for (const managedInWebsite of ['/blog', '/careers', '/newsroom', '/reels', '/reels/settings']) {
+      expect(targets).not.toContain(managedInWebsite);
+    }
+    expect(appConfig.nav.some((n) => n.label === 'Reel Slider')).toBe(false);
   });
 
   it('carries a brand accent and no extra modules', () => {

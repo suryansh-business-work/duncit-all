@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import {
   createDateFormatter,
@@ -73,19 +74,33 @@ export function useDateFormat(options?: Readonly<UseDateFormatOptions>): DateFor
   const settings = data?.publicAppSettings;
   const serverTime: string | null = settings?.server_time ?? null;
 
-  return createDateFormatter({
-    dateFormat: settings?.date_format,
-    timeFormat: settings?.time_format,
-    timeZone: options?.timeZone || settings?.time_zone,
-    timeZoneAware,
-    clock: {
-      source: toTimeSource(settings?.time_source),
-      serverNow: serverTime,
-      // Stamped once per distinct server_time, so the server clock keeps
-      // ticking between fetches instead of freezing at the fetched value.
-      serverNowReceivedAt: stampServerTime(serverTime),
-      customTime: settings?.custom_time ?? null,
-      customTimeSetAt: settings?.custom_time_set_at ?? null,
-    },
-  });
+  const dateFormat: string | undefined = settings?.date_format;
+  const timeFormat: string | undefined = settings?.time_format;
+  const timeZone: string | undefined = options?.timeZone || settings?.time_zone;
+  const timeSource: string | undefined = settings?.time_source;
+  const customTime: string | null = settings?.custom_time ?? null;
+  const customTimeSetAt: string | null = settings?.custom_time_set_at ?? null;
+
+  // One formatter per distinct setting, not per render: callers put its
+  // functions in memo deps (table columns), and a fresh object every render
+  // rebuilt those columns endlessly.
+  return useMemo(
+    () =>
+      createDateFormatter({
+        dateFormat,
+        timeFormat,
+        timeZone,
+        timeZoneAware,
+        clock: {
+          source: toTimeSource(timeSource),
+          serverNow: serverTime,
+          // Stamped once per distinct server_time, so the server clock keeps
+          // ticking between fetches instead of freezing at the fetched value.
+          serverNowReceivedAt: stampServerTime(serverTime),
+          customTime,
+          customTimeSetAt,
+        },
+      }),
+    [dateFormat, timeFormat, timeZone, timeZoneAware, timeSource, serverTime, customTime, customTimeSetAt],
+  );
 }

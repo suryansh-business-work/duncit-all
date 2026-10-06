@@ -23,7 +23,9 @@ export type ShareLinkTarget =
   | 'POST'
   | 'POD_IDEA'
   | 'GIFT_CARD'
-  | 'REFERRAL';
+  | 'REFERRAL'
+  | 'VENUE_PAGE'
+  | 'HOST_PAGE';
 
 export const SHARE_LINK_MUTATION = /* GraphQL */ `
   mutation ShareLink($target: ShareLinkTarget!, $ref: ID!) {

@@ -246,6 +246,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         description: 'See this post on Duncit.',
       },
       venue: { description: 'See photos, capacity and upcoming pods at this venue.' },
+      hostPage: { description: 'See the pods this host runs on Duncit and join the next one.' },
       product: { description: 'Shop this product on Duncit.' },
       // A not-yet-launched city's waitlist link, as "Send this to your friends" shares it.
       cityLaunch: {

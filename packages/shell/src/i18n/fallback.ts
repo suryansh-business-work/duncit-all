@@ -6,6 +6,7 @@ import {
   SHELL_BUNDLE,
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
+  PUBLIC_PAGE_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -74,6 +75,8 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   // and the venue settings form in the Partners console, mWeb AND native, so
   // they are namespaces of their own rather than shell.* entries (rule 40).
   ...AVAILABILITY_BUNDLE,
+  // publicPage.* is the publish card the Partners console, mWeb and native all render.
+  ...PUBLIC_PAGE_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,

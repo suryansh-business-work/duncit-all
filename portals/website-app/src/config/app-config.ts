@@ -25,6 +25,7 @@ export const appConfig = {
   accent: { light: '#93c5fd', main: '#2563eb', hover: '#1d4ed8', active: '#1e40af' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Websites', labelKey: 'shell.nav.websites', to: '/sites', icon: 'language' },
     { label: 'Career', labelKey: 'shell.nav.career', to: '/careers', icon: 'work' },
     { label: 'Newsroom', labelKey: 'shell.nav.newsroom', to: '/newsroom', icon: 'newspaper' },
     { label: 'Blog', labelKey: 'shell.nav.blog', to: '/blog', icon: 'article' },

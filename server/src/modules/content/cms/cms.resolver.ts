@@ -21,6 +21,7 @@ import { cmsGoogleFontsService } from './cmsGoogleFonts.service';
 import { cmsSiteDnsService } from './cmsSiteDns.service';
 import { cmsPreviewLinkService } from './cmsPreviewLink.service';
 import { cmsSiteRevisionService } from './cmsSiteRevision.service';
+import { validateCode, type CmsCodeLanguage } from './cmsCode.service';
 import type { CmsSiteSection } from './cmsSiteRevision.model';
 import { toFragment, toPage } from './cms.mappers';
 import type { CmsVersionOwner } from './cmsVersion.model';
@@ -71,10 +72,18 @@ export const cmsResolvers = {
     },
     cmsPreviewLink: (_p: unknown, args: Args<{ page_id: string; version?: number | null; entry_id?: string | null }>, ctx: GraphQLContext) => {
       editor(ctx);
-      return cmsPreviewLinkService.link(args.page_id, args.version, args.entry_id);
+      return cmsPreviewLinkService.link('PAGE', args.page_id, args.version, args.entry_id);
+    },
+    cmsComponentPreviewLink: (_p: unknown, args: Args<{ fragment_id: string; version?: number | null }>, ctx: GraphQLContext) => {
+      editor(ctx);
+      return cmsPreviewLinkService.link('FRAGMENT', args.fragment_id, args.version);
     },
     // Public: the signed token IS the permission (cmsPreviewLink.service). Never cached.
     cmsRenderPreview: (_p: unknown, args: Args<{ token: string }>) => cmsPreviewLinkService.render(args.token),
+    cmsValidateCode: (_p: unknown, args: Args<{ language: CmsCodeLanguage; source: string }>, ctx: GraphQLContext) => {
+      editor(ctx);
+      return validateCode(args.language, args.source);
+    },
     cmsSiteRevisions: (_p: unknown, args: Args<{ site_id: string; section?: CmsSiteSection | null }>, ctx: GraphQLContext) => {
       editor(ctx);
       return cmsSiteRevisionService.list(args.site_id, args.section);
@@ -122,8 +131,8 @@ export const cmsResolvers = {
     cmsVersions: async (_p: unknown, args: Args<{ owner_kind: CmsVersionOwner; owner_id: string }>, ctx: GraphQLContext) => {
       editor(ctx);
       const versions = await cmsContentService.versions(args.owner_kind, args.owner_id);
-      // A page version opens on the live domain; a fragment only renders inside pages.
-      return args.owner_kind === 'PAGE' ? cmsPreviewLinkService.withPreviewUrls(args.owner_id, versions) : versions;
+      // A page version opens at its address on the live domain, a component's at its own preview address.
+      return cmsPreviewLinkService.withPreviewUrls(args.owner_kind, args.owner_id, versions);
     },
     cmsEntriesTable: (
       _p: unknown,

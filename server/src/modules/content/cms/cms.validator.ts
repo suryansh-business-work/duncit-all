@@ -23,10 +23,23 @@ import {
   CMS_FRAGMENT_KINDS,
   CMS_LEGACY_SITES,
   CMS_PAGE_KINDS,
+  CMS_META_NAME,
   CMS_PATH_PATTERN,
   CMS_SLUG_PATTERN,
   isCmsDomain,
 } from './cms.constants';
+import { CMS_TWITTER_CARDS } from './cmsContent.schema-parts';
+
+/** Structured data must parse, or the page would ship a broken ld+json block. */
+const isJsonOrBlank = (value: string) => {
+  if (!value.trim()) return true;
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 // Size caps. A GrapesJS project for a long landing page is a few hundred KB;
 // these leave room for that and stop a runaway paste from bloating a document.
@@ -37,6 +50,8 @@ const MAX_CODE = 200_000;
 
 const text = (max: number, fallback = '') => str(z.string().check(maxLen(max)), { transforms: [trim], default: fallback });
 const code = (max: number) => str(z.string().check(maxLen(max)), { default: '' });
+/** Left out means "keep what is saved": the visual editor never sends the Code view's SCSS or JS. */
+const keptCode = (max: number) => z.string().check(maxLen(max)).optional();
 const optionalBool = (fallback: boolean) => bool(z.boolean(), { default: fallback });
 const order = num(finite().check(int(), gte(0)), { default: 0 });
 const objectId = str(z.string().check(matches(/^[a-f\d]{24}$/i, 'Invalid id')).nullable(), { default: null });
@@ -64,6 +79,30 @@ const seoShape = obj(
     og_image_url: httpsUrl,
     canonical_url: httpsUrl,
     noindex: optionalBool(false),
+    og_title: text(160),
+    og_description: text(320),
+    twitter_card: str(z.enum(CMS_TWITTER_CARDS), { default: '' }),
+    keywords: text(300),
+    json_ld: str(
+      z.string().check(maxLen(20000)).refine(isJsonOrBlank, 'Structured data must be valid JSON'),
+      { default: '', transforms: [trim] }
+    ),
+    meta_tags: arr(
+      z
+        .array(
+          obj(
+            shape({
+              name: str(z.string().check(filled('Name the meta tag'), maxLen(80), matches(CMS_META_NAME, 'A meta name is letters, digits and : . - _')), {
+                required: 'Name the meta tag',
+                transforms: [trim],
+              }),
+              content: text(500),
+            })
+          )
+        )
+        .check(maxItems(20)),
+      { default: [] }
+    ),
   })
 );
 
@@ -204,6 +243,8 @@ export const cmsDraftInputSchema = obj(
     project: code(MAX_PROJECT),
     html: code(MAX_HTML),
     css: code(MAX_CSS),
+    scss: keptCode(MAX_CSS),
+    js: keptCode(MAX_CSS),
     base_updated_at: str(z.string().nullable().optional(), { default: null }),
   })
 );
@@ -216,6 +257,8 @@ export const cmsFragmentInputSchema = obj(
     }),
     name: str(z.string().check(filled('Name the fragment'), maxLen(120)), { required: 'Name the fragment', transforms: [trim] }),
     kind: str(z.enum(CMS_FRAGMENT_KINDS), { required: true }),
+    description: text(500),
+    category: text(60),
   })
 );
 

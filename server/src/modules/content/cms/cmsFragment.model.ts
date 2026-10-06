@@ -13,6 +13,9 @@ export interface ICmsFragment extends Document {
   key: string;
   name: string;
   kind: CmsFragmentKind;
+  /** What the component is for, and a group to find it by in the Components list. */
+  description: string;
+  category: string;
   draft: CmsDraft;
   published: CmsPublished;
   is_published: boolean;
@@ -27,6 +30,8 @@ const cmsFragmentSchema = new Schema<ICmsFragment>(
     key: { type: String, required: true, trim: true, lowercase: true, maxlength: 60 },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     kind: { type: String, enum: CMS_FRAGMENT_KINDS, default: 'SECTION' },
+    description: { type: String, default: '', trim: true, maxlength: 500 },
+    category: { type: String, default: '', trim: true, maxlength: 60 },
     draft: { type: draftSchema, default: () => ({}) },
     published: { type: publishedSchema, default: () => ({}) },
     is_published: { type: Boolean, default: false },

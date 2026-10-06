@@ -90,12 +90,27 @@ export const cmsTypeDefs = /* GraphQL */ `
     path: String!
   }
 
+  "One extra <meta>: a name (description, author, og:locale…) and its content."
+  type CmsMetaTag {
+    name: String!
+    content: String!
+  }
+
   type CmsSeo {
     title: String!
     description: String!
     og_image_url: String!
     canonical_url: String!
     noindex: Boolean!
+    "The share card's title and text, when they should differ from the page's."
+    og_title: String!
+    og_description: String!
+    "'' lets the page decide, else summary or summary_large_image."
+    twitter_card: String!
+    keywords: String!
+    "Structured data (schema.org) as JSON, rendered as application/ld+json."
+    json_ld: String!
+    meta_tags: [CmsMetaTag!]!
   }
 
   "A website the CMS serves, chosen by the request's hostname."
@@ -125,12 +140,19 @@ export const cmsTypeDefs = /* GraphQL */ `
   type CmsDraftContent {
     project: String!
     html: String!
+    "The visual editor's styles."
     css: String!
+    "Styles written by hand (SCSS); compiled when rendered — a component's scoped to the component."
+    scss: String!
+    "The page's or component's own script; a component's runs once per placement with root bound to it."
+    js: String!
   }
 
   type CmsPublishedContent {
     html: String!
     css: String!
+    scss: String!
+    js: String!
     version: Int!
     published_at: String
     published_by: String!
@@ -173,6 +195,10 @@ export const cmsTypeDefs = /* GraphQL */ `
     key: String!
     name: String!
     kind: CmsFragmentKind!
+    "What the component is for."
+    description: String!
+    "A group to find it by in the Components list (Hero, Footer, Pricing…)."
+    category: String!
     "The live blocks this component holds (reel-slider, newsletter…); empty for a plain section."
     blocks: [String!]!
     is_published: Boolean!
@@ -196,7 +222,7 @@ export const cmsTypeDefs = /* GraphQL */ `
     owner_kind: CmsVersionOwner!
     owner_id: ID!
     version: Int!
-    "A page version's live-demo link on its own domain (signed, short-lived). Null for fragments and sites without a domain."
+    "This version's live-demo link on the site's own domain (signed, short-lived). Null when the site has no domain."
     preview_url: String
     published_by: String!
     created_at: String!
@@ -272,6 +298,26 @@ export const cmsTypeDefs = /* GraphQL */ `
     page: Int!
     total_pages: Int!
     base_path: String!
+  }
+
+  enum CmsCodeLanguage {
+    SCSS
+    JS
+    ASTRO
+    HTML
+  }
+
+  enum CmsCodeSeverity {
+    ERROR
+    WARNING
+  }
+
+  "One problem in a piece of code, for the editor's markers. Line and column are 1-based."
+  type CmsCodeProblem {
+    line: Int!
+    column: Int!
+    message: String!
+    severity: CmsCodeSeverity!
   }
 
   "A page's real address with a signed preview flag: its draft or one saved version, on its own domain."
@@ -363,12 +409,23 @@ export const cmsTypeDefs = /* GraphQL */ `
     path: String!
   }
 
+  input CmsMetaTagInput {
+    name: String!
+    content: String
+  }
+
   input CmsSeoInput {
     title: String
     description: String
     og_image_url: String
     canonical_url: String
     noindex: Boolean
+    og_title: String
+    og_description: String
+    twitter_card: String
+    keywords: String
+    json_ld: String
+    meta_tags: [CmsMetaTagInput!]
   }
 
   input CmsSiteInput {
@@ -411,6 +468,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     project: String!
     html: String!
     css: String!
+    scss: String
+    js: String
     base_updated_at: String
   }
 
@@ -418,6 +477,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     key: String!
     name: String!
     kind: CmsFragmentKind!
+    description: String
+    category: String
   }
 
   input CmsEntryFieldInput {
@@ -447,12 +508,16 @@ export const cmsTypeDefs = /* GraphQL */ `
     cmsRender(host: String!, path: String!, page: Int): CmsRenderResult!
     "Public: every published address of a site, for sitemap.xml."
     cmsSitemap(host: String!): [CmsSitemapUrl!]!
+    "Everything wrong with a piece of SCSS, JavaScript or Astro, as the editor types it. Editors only."
+    cmsValidateCode(language: CmsCodeLanguage!, source: String!): [CmsCodeProblem!]!
     "Public: a site's designed error page (404, 500, 503), or null when it has none."
     cmsErrorPage(host: String!, code: Int!): CmsRenderResult
     "A page's DRAFT rendered exactly as cmsRender would serve it."
     cmsPreview(page_id: ID!, entry_id: ID): CmsRenderResult!
     "A shareable live-demo link: the draft, or (with version) that published version. Editors only."
     cmsPreviewLink(page_id: ID!, version: Int, entry_id: ID): CmsPreviewLink!
+    "A component on its own, in its site's styles: the draft, or (with version) that published version. Editors only."
+    cmsComponentPreviewLink(fragment_id: ID!, version: Int): CmsPreviewLink!
     "Public: what a preview link shows. Null when the token is forged or expired."
     cmsRenderPreview(token: String!): CmsRenderResult
     "The Google Fonts catalogue, searchable, most popular first."

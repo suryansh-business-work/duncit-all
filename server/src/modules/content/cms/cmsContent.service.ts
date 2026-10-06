@@ -4,6 +4,7 @@ import { CmsPageModel } from './cmsPage.model';
 import { CmsFragmentModel } from './cmsFragment.model';
 import { assertId, conflict, hasUnpublishedChanges, notFound, toVersion } from './cms.mappers';
 import { CMS_VERSIONS_KEPT } from './cms.constants';
+import { assertValid } from './cmsCode.service';
 import type { CmsDraft, CmsPublished } from './cmsContent.schema-parts';
 
 /** What pages and fragments share: a draft, a published copy, a site. */
@@ -20,7 +21,18 @@ export interface CmsDraftInput {
   project: string;
   html: string;
   css: string;
+  /** Omitted: the saved SCSS / JS stay as they are (the visual editor sends neither). */
+  scss?: string;
+  js?: string;
   base_updated_at?: string | null;
+}
+
+/** Field by field, so a save that leaves out the SCSS or JS keeps them. */
+function draftUpdate(input: CmsDraftInput, userId: string): Record<string, string> {
+  const update: Record<string, string> = { 'draft.project': input.project, 'draft.html': input.html, 'draft.css': input.css, updated_by: userId };
+  if (input.scss !== undefined) update['draft.scss'] = input.scss;
+  if (input.js !== undefined) update['draft.js'] = input.js;
+  return update;
 }
 
 const LABEL: Record<CmsVersionOwner, string> = { PAGE: 'Page', FRAGMENT: 'Fragment' };
@@ -45,11 +57,15 @@ export const cmsContentService = {
    * update filter, so two saves racing each other cannot both win.
    */
   async saveDraft<T extends Publishable>(model: Model<T>, owner: CmsVersionOwner, id: string, input: CmsDraftInput, userId: string) {
+    // Code that would not compile never reaches a draft, let alone the live site.
+    await assertValid('SCSS', input.css, 'The CSS');
+    await assertValid('SCSS', input.scss ?? '', 'The SCSS');
+    await assertValid('JS', input.js ?? '', 'The JavaScript');
     const filter: Record<string, unknown> = { _id: assertId(id, owner.toLowerCase()) };
     if (input.base_updated_at) filter.updated_at = new Date(input.base_updated_at);
     const saved = await model.findOneAndUpdate(
       filter,
-      { $set: { draft: { project: input.project, html: input.html, css: input.css }, updated_by: userId } },
+      { $set: draftUpdate(input, userId) },
       { new: true }
     );
     if (saved) return saved;
@@ -77,6 +93,8 @@ export const cmsContentService = {
         project: doc.draft?.project ?? '',
         html: doc.draft?.html ?? '',
         css: doc.draft?.css ?? '',
+        scss: doc.draft?.scss ?? '',
+        js: doc.draft?.js ?? '',
         published_by: userId,
       });
     } catch (error) {
@@ -89,7 +107,7 @@ export const cmsContentService = {
       doc._id,
       {
         $set: {
-          published: { html: doc.draft?.html ?? '', css: doc.draft?.css ?? '', version, published_at: new Date(), published_by: userId },
+          published: { html: doc.draft?.html ?? '', css: doc.draft?.css ?? '', scss: doc.draft?.scss ?? '', js: doc.draft?.js ?? '', version, published_at: new Date(), published_by: userId },
           is_published: true,
           updated_by: userId,
         },
@@ -124,7 +142,7 @@ export const cmsContentService = {
     const version = await CmsVersionModel.findById(assertId(versionId, 'version'));
     if (!version) throw notFound('Version');
     const update = {
-      $set: { draft: { project: version.project, html: version.html, css: version.css }, updated_by: userId },
+      $set: { draft: { project: version.project, html: version.html, css: version.css, scss: version.scss, js: version.js }, updated_by: userId },
     };
     const doc =
       version.owner_kind === 'PAGE'

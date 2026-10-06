@@ -4,6 +4,7 @@ import { CMS_VERSIONS_KEPT } from './cms.constants';
 import { cmsDesignInputSchema, cmsSiteCodeInputSchema, cmsSiteInputSchema } from './cms.validator';
 import { assertId, badInput, notFound } from './cms.mappers';
 import { cmsSiteService } from './cmsSite.service';
+import { assertValid } from './cmsCode.service';
 import { CmsSiteRevisionModel, type CmsSiteSection, type ICmsSiteRevision } from './cmsSiteRevision.model';
 
 /** Two editors saving the same site at once both read the same last number; the loser retries. */
@@ -64,12 +65,15 @@ async function save(siteId: string, section: CmsSiteSection, raw: unknown, by: s
     }
     case 'DESIGN': {
       const input = await validate(cmsDesignInputSchema, raw);
+      await assertValid('SCSS', input.base_css, 'Base stylesheet');
       const site = await cmsSiteService.updateDesign(siteId, input);
       await record(siteId, section, input, by, restoredFrom);
       return site;
     }
     case 'CODE': {
       const input = await validate(cmsSiteCodeInputSchema, raw);
+      await assertValid('SCSS', input.custom_css, 'Site CSS');
+      await assertValid('JS', input.custom_js, 'Site JavaScript');
       const site = await cmsSiteService.updateCode(siteId, input);
       await record(siteId, section, input, by, restoredFrom);
       return site;

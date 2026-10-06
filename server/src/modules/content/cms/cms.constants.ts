@@ -64,6 +64,9 @@ export const CMS_FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/;
 /** A post or page slug: `summer-meetups-2026`. */
 export const CMS_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A <meta> name or property: description, author, og:locale, article:author… The mirror of META_NAME in @duncit/regex, which the portal validates with. */
+export const CMS_META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
+
 const HOSTNAME_LABEL = /^(?!-)[a-z\d-]{1,63}(?<!-)$/i;
 
 /** A hostname a site answers on: `duncit.com`, `main.localhost`. */

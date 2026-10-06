@@ -25,7 +25,7 @@ describe('Duncit Website app config', () => {
   });
 
   it('exposes the full website-management nav', () => {
-    const targets = appConfig.nav.map((n) => n.to);
+    const targets = appConfig.nav.flatMap((n) => ('children' in n ? n.children.map((c) => c.to) : [n.to]));
     expect(targets).toEqual([
       '/',
       '/careers',
@@ -35,8 +35,20 @@ describe('Duncit Website app config', () => {
       '/contact-submissions',
       '/job-applications',
       '/navigation',
+      '/reels',
+      '/reels/settings',
     ]);
-    expect(appConfig.nav.find((n) => n.to === '/')?.label).toBe('Dashboard');
+    expect(appConfig.nav.find((n) => 'to' in n && n.to === '/')?.label).toBe('Dashboard');
+  });
+
+  it('groups the reel pages under one Reel Slider entry with no route of its own', () => {
+    const group = appConfig.nav.find((n) => n.label === 'Reel Slider');
+    expect(group).toBeDefined();
+    expect(group && 'to' in group).toBe(false);
+    expect(group && 'children' in group ? group.children.map((c) => c.label) : []).toEqual([
+      'Reels',
+      'Reel Slider Settings',
+    ]);
   });
 
   it('carries a brand accent and no extra modules', () => {

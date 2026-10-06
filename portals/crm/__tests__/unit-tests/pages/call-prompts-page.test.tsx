@@ -80,7 +80,8 @@ describe('CallPromptsPage', () => {
     await waitFor(() => expect(save).toBeEnabled());
     fireEvent.click(save);
 
-    expect(await screen.findByText('Venue intro v2')).toBeInTheDocument();
+    // Save → mutate → reload the table runs past 1s under v8 coverage on CI.
+    expect(await screen.findByText('Venue intro v2', {}, { timeout: 3000 })).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 

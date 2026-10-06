@@ -1,0 +1,51 @@
+---
+/**
+ * "Apply now" for one role: opens the page's CareersApply dialog for it.
+ * Draws the CMS `apply` block on careers cards and career pages.
+ */
+import { siteT, type SiteTranslate } from './site-i18n';
+
+interface Props {
+  role: string;
+  roleId?: string | null;
+  t?: SiteTranslate;
+}
+
+const { role, roleId = null, t = siteT } = Astro.props;
+---
+
+<button type="button" class="apply-button" data-apply-role data-role-title={role} data-role-id={roleId ?? ''} aria-haspopup="dialog">
+  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+  {t('website.brand.apply.button')}
+  <span class="apply-button__role">{role}</span>
+</button>
+
+<style>
+  .apply-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    margin-top: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-primary, #e8344e);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .apply-button:focus-visible {
+    outline: 3px solid var(--color-ink, #16131a);
+    outline-offset: 2px;
+  }
+  /* Read by screen readers so each of many buttons names its role. */
+  .apply-button__role {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>

@@ -48,6 +48,8 @@ export function normalisePath(path: string): string {
 }
 
 const toRenderEntry = (entry: ICmsEntry): RenderEntry => ({
+  id: String(entry._id),
+  apply: entry.collection_type === 'CAREER',
   title: entry.title,
   slug: entry.slug,
   summary: entry.summary ?? '',

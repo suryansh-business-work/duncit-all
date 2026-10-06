@@ -23,6 +23,7 @@ export const WIDGET_LOADERS: Record<string, () => Promise<CmsWidget>> = {
   'earnings-calculator': () => import('./earnings-calculator'),
   'campaign-calculator': () => import('./campaign-calculator'),
   'contact-form': () => import('./contact-form'),
+  'careers-apply': () => import('./careers-apply'),
   faq: () => import('./faq'),
   'help-center': () => import('./help-center'),
   'grievance-form': () => import('./grievance-form'),

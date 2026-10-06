@@ -23,25 +23,15 @@ export const appConfig = {
   tokenKey: 'website_app_token',
   colorModeKey: 'website_app_color_mode',
   accent: { light: '#93c5fd', main: '#2563eb', hover: '#1d4ed8', active: '#1e40af' },
+  // Blog, Careers, Newsroom and the Reel Slider are managed inside each website
+  // (Websites → a site's tabs); the inboxes stay here.
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
     { label: 'Websites', labelKey: 'shell.nav.websites', to: '/sites', icon: 'language' },
-    { label: 'Career', labelKey: 'shell.nav.career', to: '/careers', icon: 'work' },
-    { label: 'Newsroom', labelKey: 'shell.nav.newsroom', to: '/newsroom', icon: 'newspaper' },
-    { label: 'Blog', labelKey: 'shell.nav.blog', to: '/blog', icon: 'article' },
     { label: 'Newsletter Submission', labelKey: 'shell.nav.newsletterSubmission', to: '/newsletter', icon: 'email' },
     { label: 'Contact Submission', labelKey: 'shell.nav.contactSubmission', to: '/contact-submissions', icon: 'contactMail' },
     { label: 'Job Applications', labelKey: 'shell.nav.jobApplications', to: '/job-applications', icon: 'personSearch' },
     { label: 'Navigation', labelKey: 'shell.nav.navigation', to: '/navigation', icon: 'accountTree' },
-    {
-      label: 'Reel Slider',
-      labelKey: 'shell.nav.reelSlider',
-      icon: 'movie',
-      children: [
-        { label: 'Reels', labelKey: 'shell.nav.reelSliderReels', to: '/reels', icon: 'movie' },
-        { label: 'Reel Slider Settings', labelKey: 'shell.nav.reelSliderSettings', to: '/reels/settings', icon: 'tune' },
-      ],
-    },
   ],
   modules: [],
 } satisfies AppConfig;

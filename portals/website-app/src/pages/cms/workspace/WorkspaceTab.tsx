@@ -6,6 +6,7 @@ import CollectionTab from '../collection-tab/CollectionTab';
 import DesignTab from '../design-tab/DesignTab';
 import CodeTab from '../code-tab/CodeTab';
 import SettingsTab from '../settings-tab/SettingsTab';
+import ReelsTab from '../reels-tab/ReelsTab';
 
 interface Props {
   tab: string;
@@ -26,6 +27,8 @@ export default function WorkspaceTab({ tab, site, onSiteChanged }: Readonly<Prop
       return <DesignTab siteId={site.id} />;
     case 'code':
       return <CodeTab siteId={site.id} />;
+    case 'reels':
+      return <ReelsTab site={site} />;
     case 'settings':
       return <SettingsTab site={site} onSaved={onSiteChanged} />;
     default:

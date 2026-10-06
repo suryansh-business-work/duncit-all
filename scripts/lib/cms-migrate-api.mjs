@@ -70,7 +70,7 @@ async function saveAndPublish(gql, kind, id, html) {
 
 export async function upsertFragment(gql, siteId, fragment, { overwriteEdited = false } = {}) {
   const { cmsFragments } = await gql('query($siteId: ID!) { cmsFragments(site_id: $siteId) { id key has_unpublished_changes published { version } } }', { siteId });
-  const input = { key: fragment.key, name: fragment.name, kind: fragment.kind };
+  const input = { key: fragment.key, name: fragment.name, kind: fragment.kind, category: fragment.category ?? '', description: fragment.description ?? '' };
   const existing = cmsFragments.find((f) => f.key === fragment.key);
   if (!overwriteEdited && edited(existing)) {
     skipped.push(`component ${fragment.key}`);

@@ -29,6 +29,10 @@ exports:
   - 'GA_MEASUREMENT_ID'
   - 'HOSTNAME_LABEL'
   - 'USERNAME'
+  - 'URL_SLUG'
+  - 'SITE_PATH'
+  - 'CSS_VARIABLE'
+  - 'FONT_FAMILY'
   - 'isPhoneNumber'
   - 'isPhoneIntl'
   - 'isPincode'
@@ -38,6 +42,10 @@ exports:
   - 'isIfsc'
   - 'isUsername'
   - 'isHostname'
+  - 'isUrlSlug'
+  - 'isSitePath'
+  - 'isCssVariable'
+  - 'isFontFamily'
   - 'isUpiId'
   - 'isBankAccountNumber'
   - 'isGstin'
@@ -172,6 +180,10 @@ above holds for everything you can import.
 | `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
 | `GA_MEASUREMENT_ID` | `/^G-[A-Z\d]{6,16}$/` | — | a GA4 measurement id — `G-V0CTVZFGM0` |
 | `USERNAME` | `/^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUsername` | a Duncit @handle — `suryansh-srivastava-7k2f` |
+| `URL_SLUG` | `/^[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUrlSlug` | a page or post slug — `summer-meetups-2026` |
+| `SITE_PATH` | `/^\/(?:[a-z0-9]+(?:[-/][a-z0-9]+)*)?$/` | `isSitePath` | a website page path — `/`, `/safety/tools`; no trailing slash |
+| `CSS_VARIABLE` | `/^--[a-z0-9-]{1,60}$/` | `isCssVariable` | a design token name — `--color-primary` |
+| `FONT_FAMILY` | `/^[A-Za-z0-9][A-Za-z0-9 -]{0,79}$/` | `isFontFamily` | a font family name — `Plus Jakarta Sans`; no quotes, commas or semicolons |
 | `HOSTNAME_LABEL` | `/^(?!-)[a-z\d-]{1,63}(?<!-)$/i` | `isHostname` | one DNS label; `isHostname` checks a whole name — `ns1.example.com`, two labels at least, 253 chars max |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`

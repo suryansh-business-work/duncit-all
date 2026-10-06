@@ -29,6 +29,14 @@ import {
   PINCODE_LOOSE,
   toDigits,
   UPI_ID,
+  URL_SLUG,
+  isUrlSlug,
+  SITE_PATH,
+  isSitePath,
+  CSS_VARIABLE,
+  isCssVariable,
+  FONT_FAMILY,
+  isFontFamily,
 } from '../regex.mjs';
 
 describe('PHONE_NUMBER (bare 10 digits)', () => {
@@ -392,5 +400,65 @@ describe('isHostname', () => {
     expect(isHostname(null)).toBe(false);
     expect(isHostname(undefined)).toBe(false);
     expect(isHostname('')).toBe(false);
+  });
+});
+
+describe('URL_SLUG / isUrlSlug', () => {
+  it('accepts lowercase words joined by single hyphens, of any length', () => {
+    for (const slug of ['a', 'blog', 'summer-meetups-2026', '2026', 'a-b-c']) {
+      expect(isUrlSlug(slug)).toBe(true);
+      expect(URL_SLUG.test(slug)).toBe(true);
+    }
+  });
+
+  it('rejects edge hyphens, doubled hyphens, capitals, spaces and other punctuation', () => {
+    for (const slug of ['', '-a', 'a-', 'a--b', 'Blog', 'a b', 'a_b', 'a.b', 'a/b']) {
+      expect(isUrlSlug(slug)).toBe(false);
+    }
+  });
+});
+
+describe('SITE_PATH / isSitePath', () => {
+  it('accepts the root and slug-shaped segments joined by single slashes', () => {
+    for (const path of ['/', '/about', '/safety/tools', '/case-studies/acme-2026', '/1/2/3']) {
+      expect(isSitePath(path)).toBe(true);
+      expect(SITE_PATH.test(path)).toBe(true);
+    }
+  });
+
+  it('rejects a missing leading slash, trailing or doubled slashes, and bad segments', () => {
+    for (const path of ['', 'about', '/about/', '//', '/a//b', '/-a', '/a-', '/a/-b', '/a--b', '/About', '/a_b', '/../a', '/a?x=1']) {
+      expect(isSitePath(path)).toBe(false);
+    }
+  });
+});
+
+describe('CSS_VARIABLE / isCssVariable', () => {
+  it('accepts a custom property name: two dashes then lowercase words', () => {
+    for (const name of ['--color-primary', '--radius-card', '--a', '--space-2']) {
+      expect(isCssVariable(name)).toBe(true);
+      expect(CSS_VARIABLE.test(name)).toBe(true);
+    }
+  });
+
+  it('rejects a missing prefix, capitals, spaces, punctuation and an over-long name', () => {
+    for (const name of ['', 'color', '-color', '--', '--Color', '--color primary', '--color;x', '--color{', `--${'a'.repeat(61)}`]) {
+      expect(isCssVariable(name)).toBe(false);
+    }
+  });
+});
+
+describe('FONT_FAMILY / isFontFamily', () => {
+  it('accepts family names of letters, digits, spaces and hyphens', () => {
+    for (const name of ['Inter', 'Plus Jakarta Sans', 'Baloo 2', 'IBM Plex Sans-Condensed', '8bit Wonder']) {
+      expect(isFontFamily(name)).toBe(true);
+      expect(FONT_FAMILY.test(name)).toBe(true);
+    }
+  });
+
+  it('rejects anything that could break out of a css string or a URL', () => {
+    for (const name of ['', ' Inter', '-Inter', 'Inter"', "Inter'", 'Inter, Arial', 'Inter;', 'In<ter', 'Inter{', `I${'n'.repeat(80)}`]) {
+      expect(isFontFamily(name)).toBe(false);
+    }
   });
 });

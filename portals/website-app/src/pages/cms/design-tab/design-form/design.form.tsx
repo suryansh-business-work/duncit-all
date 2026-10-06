@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import type { CmsDesign } from '@duncit/gql-types';
 import CodeField from '../../components/CodeField';
+import { useCodeProblems } from '../../components/useCodeProblems';
 import TokenRows from './TokenRows';
 import FontRows from './FontRows';
 import FontsSection from '../fonts/FontsSection';
@@ -22,6 +23,7 @@ interface Props {
 export default function DesignForm({ design, submitting, errorMessage, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const schema = useMemo(() => designSchema((key) => t(key)), [t]);
+  const { reporter, hasProblems } = useCodeProblems();
   const { control, handleSubmit } = useForm<DesignFormValues, unknown, DesignFormOutput>({
     defaultValues: toDesignFormValues(design),
     resolver: zodResolver(schema) as Resolver<DesignFormValues, unknown, DesignFormOutput>,
@@ -36,8 +38,17 @@ export default function DesignForm({ design, submitting, errorMessage, onSubmit 
         <TokenRows control={control} />
         <FontsSection control={control} />
         <FontRows control={control} />
-        <CodeField control={control} name="base_css" label={t('websiteApp.cms.design.baseCss')} hint={t('websiteApp.cms.design.baseCssHint')} language="css" minRows={10} />
-        <DuncitButton type="submit" variant="contained" loading={submitting} sx={{ alignSelf: 'flex-start' }} data-testid="cms-design-save">
+        <CodeField
+          control={control}
+          name="base_css"
+          label={t('websiteApp.cms.design.baseCss')}
+          hint={t('websiteApp.cms.design.baseCssHint')}
+          language="css"
+          minRows={14}
+          onProblemsChange={reporter('base_css')}
+        />
+        {hasProblems && <Alert severity="error">{t('websiteApp.cms.code.fixBeforeSave')}</Alert>}
+        <DuncitButton type="submit" variant="contained" loading={submitting} disabled={hasProblems} sx={{ alignSelf: 'flex-start' }} data-testid="cms-design-save">
           {t('shell.common.save')}
         </DuncitButton>
       </Stack>

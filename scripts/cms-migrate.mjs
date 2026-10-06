@@ -10,6 +10,8 @@
  *   --graphql <url>                  the API to write to (default http://localhost:2001/graphql)
  *   --sites main,ads                 a subset (default: all four)
  *   --dist-root <dir>                where each site's build lives as <dir>/<folder> (default website/<folder>/dist)
+ *   --overwrite-edited               also replace pages/components an editor has published or drafted since
+ *                                    (default: they are left alone and listed)
  *   CMS_MIGRATE_EMAIL / CMS_MIGRATE_PASSWORD, or CMS_MIGRATE_TOKEN — a SUPER_ADMIN or WEBSITE_MANAGER.
  *
  * Build each site against the SAME environment first: its pages carry the
@@ -27,7 +29,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractSite } from './lib/cms-extract.mjs';
 import { CONTENT_COLLECTIONS, LEGACY_SITES } from './lib/cms-sites.mjs';
-import { createClient, login, upsertEntry, upsertFragment, upsertPage, upsertSite } from './lib/cms-migrate-api.mjs';
+import { createClient, login, skipped, upsertEntry, upsertFragment, upsertPage, upsertSite } from './lib/cms-migrate-api.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -40,6 +42,7 @@ const env = option('env', 'local');
 const graphql = option('graphql', 'http://localhost:2001/graphql');
 const wanted = option('sites', '')?.split(',').filter(Boolean);
 const distRoot = option('dist-root', null);
+const overwrite = { overwriteEdited: args.includes('--overwrite-edited') };
 const sites = LEGACY_SITES.filter((site) => !wanted.length || wanted.includes(site.key));
 
 function plan(site) {
@@ -103,10 +106,10 @@ async function migrate(gql, site) {
     input: extracted.design,
   });
   const chrome = {};
-  for (const fragment of extracted.fragments) chrome[fragment.key] = await upsertFragment(gql, created.id, fragment);
+  for (const fragment of extracted.fragments) chrome[fragment.key] = await upsertFragment(gql, created.id, fragment, overwrite);
   await upsertSite(gql, siteInput(site, extracted, chrome));
-  for (const page of extracted.pages) await upsertPage(gql, created.id, { ...page, kind: 'PAGE' });
-  for (const template of extracted.templates) await upsertPage(gql, created.id, template);
+  for (const page of extracted.pages) await upsertPage(gql, created.id, { ...page, kind: 'PAGE' }, overwrite);
+  for (const template of extracted.templates) await upsertPage(gql, created.id, template, overwrite);
   const entries = await importContent(gql, created.id, site);
   console.log(
     `cms-migrate: ${site.key} → ${extracted.pages.length} page(s), ${extracted.templates.length} template(s), ` +
@@ -129,6 +132,7 @@ async function main() {
     process.env.CMS_MIGRATE_TOKEN || (await login(graphql, process.env.CMS_MIGRATE_EMAIL ?? '', process.env.CMS_MIGRATE_PASSWORD ?? ''));
   const gql = createClient(graphql, token);
   for (const site of sites) await migrate(gql, site);
+  if (skipped.length) console.log(`cms-migrate: left ${skipped.length} edited item(s) as they are (--overwrite-edited replaces them): ${skipped.join(', ')}`);
 }
 
 main().catch((error) => {

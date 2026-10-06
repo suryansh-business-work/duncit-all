@@ -5,6 +5,7 @@
 import PageLayout from '../layouts/PageLayout.astro';
 import { fetchBranding } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import { urlConfigs } from '../config/url-configs';
 
 const { t } = await getTranslator();
 
@@ -26,6 +27,7 @@ const supportPhone = branding.support_phone;
       <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" aria-hidden="true"></i>
       <input
         id="helpSearch"
+        data-help-search
         type="search"
         placeholder={t('website.main.help.searchPlaceholder')}
         aria-label={t('website.main.help.searchLabel')}
@@ -34,7 +36,7 @@ const supportPhone = branding.support_phone;
     </div>
   </div>
 
-  <div id="helpTopics" data-copy={JSON.stringify({ empty: t('website.main.help.empty'), error: t('website.main.help.error'), general: t('website.main.help.general'), one: t('website.main.help.questionOne'), many: t('website.main.help.questionMany') })} class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+  <div id="helpTopics" data-cms-widget="help-center" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ empty: t('website.main.help.empty'), error: t('website.main.help.error'), general: t('website.main.help.general'), one: t('website.main.help.questionOne'), many: t('website.main.help.questionMany') })} class="not-prose grid sm:grid-cols-2 gap-4 my-6">
     <div class="skeleton h-24" aria-hidden="true"></div>
     <div class="skeleton h-24" aria-hidden="true"></div>
     <div class="skeleton h-24" aria-hidden="true"></div>
@@ -93,71 +95,7 @@ const supportPhone = branding.support_phone;
 </PageLayout>
 
 <script>
-  import { urlConfigs } from '../config/url-configs';
+  import { mount } from '@duncit/brand/widgets/help-center';
 
-  const topicsEl = document.getElementById('helpTopics');
-  // Handed over by the markup — a module script cannot read Astro frontmatter.
-  const COPY = JSON.parse(topicsEl?.dataset.copy ?? '{}');
-  const searchEl = document.getElementById('helpSearch') as HTMLInputElement | null;
-
-  const TOPIC_ICONS = ['fa-heart', 'fa-comments', 'fa-shield-heart', 'fa-user', 'fa-mobile', 'fa-credit-card'];
-
-  const esc = (value: unknown) => {
-    const div = document.createElement('div');
-    div.textContent = String(value ?? '');
-    return div.innerHTML;
-  };
-
-  async function loadTopics() {
-    if (!topicsEl) return;
-    try {
-      const res = await fetch(urlConfigs.graphqlUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: 'query { publicFaqGroups { super_category { id name slug } faqs { id question } } }',
-        }),
-      });
-      const json = await res.json();
-      const groups: any[] = (json?.data?.publicFaqGroups ?? []).filter((g: any) => g.faqs?.length);
-      if (!groups.length) {
-        topicsEl.innerHTML =
-          `<p class="text-ink-soft sm:col-span-2">${COPY.empty}</p>`;
-        return;
-      }
-      topicsEl.innerHTML = groups
-        .map((group, index) => {
-          const name = group.super_category?.name ?? COPY.general;
-          const slug = group.super_category?.slug ?? '';
-          const icon = TOPIC_ICONS[index % TOPIC_ICONS.length];
-          const count = group.faqs.length;
-          return `
-            <a href="/faq${slug ? `#${encodeURIComponent(slug)}` : ''}" data-topic-card data-topic-name="${esc(name.toLowerCase())}" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
-              <div class="flex items-start gap-4">
-                <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
-                  <i class="fa-solid ${icon} text-lg" aria-hidden="true"></i>
-                </div>
-                <div>
-                  <div class="font-head font-bold text-ink mb-0.5">${esc(name)}</div>
-                  <div class="text-sm text-ink-soft">${count} ${count === 1 ? COPY.one : COPY.many}</div>
-                </div>
-              </div>
-            </a>`;
-        })
-        .join('');
-    } catch {
-      topicsEl.innerHTML =
-        `<p class="text-ink-soft sm:col-span-2">${COPY.error}</p>`;
-    }
-  }
-
-  searchEl?.addEventListener('input', () => {
-    const term = searchEl.value.trim().toLowerCase();
-    document.querySelectorAll<HTMLElement>('[data-topic-card]').forEach((card) => {
-      const matches = !term || (card.dataset.topicName ?? '').includes(term);
-      card.style.display = matches ? '' : 'none';
-    });
-  });
-
-  loadTopics();
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="help-center"]')) mount(root);
 </script>

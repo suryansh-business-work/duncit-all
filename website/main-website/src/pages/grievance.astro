@@ -74,7 +74,7 @@ const ticketField = grievanceTicketFieldCopy(t);
   {/* The escalation ladder, before the form rather than beside it: a visitor
       who reads it after typing has already wasted the effort. Hidden together
       with the form once a grievance lands. */}
-  <section class="not-prose my-8" id="grievanceLadder">
+  <section class="not-prose my-8" id="grievanceLadder" data-grievance-ladder>
     <h2 class="font-head font-bold text-ink text-xl mb-3">{escalation.title}</h2>
     <ol class="grid gap-4 p-5 rounded-2xl glass">
       {escalation.steps.map((step, index) => (
@@ -107,6 +107,9 @@ const ticketField = grievanceTicketFieldCopy(t);
   <form
     class="not-prose grid gap-4 max-w-xl mt-4"
     id="grievanceForm"
+    data-cms-widget="grievance-form"
+    data-graphql-url={urlConfigs.graphqlUrl}
+    data-source="WEBSITE"
     data-failed={t('grievance.failed')}
     data-sending={t('grievance.submitting')}
   >
@@ -150,7 +153,7 @@ const ticketField = grievanceTicketFieldCopy(t);
         placeholder={t('grievance.descriptionHint')}></textarea>
     </label>
     <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
-    <p id="grievanceErr" class="text-sm text-red-600 hidden"></p>
+    <p id="grievanceErr" data-form-error class="text-sm text-red-600 hidden"></p>
     <button
       class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start"
     >
@@ -158,92 +161,16 @@ const ticketField = grievanceTicketFieldCopy(t);
     </button>
   </form>
 
-  <div id="grievanceDone" class="not-prose hidden mt-4 p-5 rounded-2xl glass">
+  <div id="grievanceDone" data-grievance-done class="not-prose hidden mt-4 p-5 rounded-2xl glass">
     <div class="font-head font-bold text-ink text-lg">{t('grievance.successTitle')}</div>
     <p class="text-ink-soft mt-1">{t('grievance.successBody')}</p>
     <div class="mt-3 text-sm text-ink-soft">{t('grievance.referenceLabel')}</div>
-    <div class="font-mono font-bold text-2xl text-primary" id="grievanceRef"></div>
+    <div class="font-mono font-bold text-2xl text-primary" id="grievanceRef" data-grievance-ref></div>
   </div>
 </PageLayout>
 
 <script>
-  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
-  import { urlConfigs } from '../config/url-configs';
-  import { SUBMIT_GRIEVANCE_SDL } from '@duncit/utils';
+  import { mount } from '@duncit/brand/widgets/grievance-form';
 
-  const form = document.getElementById('grievanceForm') as HTMLFormElement | null;
-  const errBox = document.getElementById('grievanceErr');
-  const done = document.getElementById('grievanceDone');
-  const ref = document.getElementById('grievanceRef');
-  const failedMessage = form?.dataset.failed || 'Could not submit. Please try again.';
-  const sendingLabel = form?.dataset.sending || 'Submitting…';
-
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    errBox?.classList.add('hidden');
-
-    const fd = new FormData(form);
-    const input: Record<string, string> = { source: 'WEBSITE' };
-    for (const key of [
-      'support_ticket_ref',
-      'name',
-      'email',
-      'phone',
-      'address',
-      'subject',
-      'description',
-    ]) {
-      input[key] = String(fd.get(key) || '').trim();
-    }
-    Object.assign(input, captchaFieldsFrom(form));
-
-    const btn = form.querySelector('button');
-    const orig = btn?.innerHTML;
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${sendingLabel}`;
-    }
-    try {
-      const res = await fetch(urlConfigs.graphqlUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: SUBMIT_GRIEVANCE_SDL, variables: { input } }),
-      });
-      const json = await res.json();
-      // A code is spent whether the answer was right or wrong, so the widget
-      // always gets a new one — and when the captcha WAS the reason, it says so
-      // itself and this handler stays quiet.
-      if (json?.errors?.length) {
-        if (showCaptchaFailure(form, json.errors)) {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = orig || '';
-          }
-          return;
-        }
-        throw new Error(json.errors[0].message);
-      }
-      const grievance = json?.data?.submitGrievance;
-      if (!grievance?.grievance_no) throw new Error(failedMessage);
-      // The reference replaces the form: there is nothing left to do here, and
-      // leaving the fields filled invites a duplicate grievance.
-      if (ref) ref.textContent = grievance.grievance_no;
-      form.classList.add('hidden');
-      // The ladder was instructions for filling the form; with the form gone it
-      // would read as a warning about a grievance that has already landed.
-      document.getElementById('grievanceLadder')?.classList.add('hidden');
-      done?.classList.remove('hidden');
-      done?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } catch (err) {
-      if (errBox) {
-        errBox.classList.remove('hidden');
-        errBox.textContent = err instanceof Error ? err.message : failedMessage;
-      }
-      reloadCaptcha(form);
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = orig || '';
-      }
-    }
-  });
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="grievance-form"]')) mount(root);
 </script>

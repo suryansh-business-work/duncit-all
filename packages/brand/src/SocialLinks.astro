@@ -13,6 +13,8 @@
  * Plain CSS, not Tailwind utilities: this package is outside every site's
  * Tailwind source scan, so utilities written here compile to nothing.
  */
+import { cmsBlockProps } from './cms-block';
+
 interface Account {
   /** Font Awesome brand class, e.g. `fa-instagram`. */
   icon: string;
@@ -35,7 +37,7 @@ export const DUNCIT_SOCIAL: Account[] = [
 const { accounts = DUNCIT_SOCIAL, heading = null, class: className = '' } = Astro.props;
 ---
 
-<div class:list={['social-links', className]}>
+<div class:list={['social-links', className]} data-cms-block="social-links" data-cms-props={cmsBlockProps(Astro.props)}>
   {heading && <h3 class="social-links-heading">{heading}</h3>}
   <ul class="social-links-list">
     {

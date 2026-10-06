@@ -86,12 +86,14 @@ const sections = [
 <!-- Backdrop -->
 <div
   id="navBackdrop"
+  data-nav-backdrop
   class="fixed inset-0 z-40 bg-frame/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
 ></div>
 
 <!-- Drawer -->
 <aside
   id="siteNav"
+  data-cms-widget="site-nav"
   class="fixed top-0 left-0 z-50 h-full w-[88%] max-w-md bg-cream shadow-2xl -translate-x-full transition-transform duration-300 flex flex-col"
   aria-hidden="true"
 >
@@ -160,65 +162,12 @@ const sections = [
 </aside>
 
 <!--
-  Inline + dependency-free on purpose: the drawer toggle must never break if
-  another bundled script on the page throws. Delegated click handling so any
+  The drawer + theme button behaviour is the CMS widget
+  @duncit/brand/widgets/site-nav. Openers are delegated, so any
   [data-nav-toggle] (homepage hero, sub-page headers) opens it.
 -->
-<script is:inline>
-  (function () {
-    var nav = document.getElementById('siteNav');
-    var backdrop = document.getElementById('navBackdrop');
-    if (!nav) return;
-    function open() {
-      nav.classList.remove('-translate-x-full');
-      nav.setAttribute('aria-hidden', 'false');
-      if (backdrop) {
-        backdrop.classList.remove('opacity-0', 'pointer-events-none');
-        backdrop.classList.add('opacity-100');
-      }
-      document.body.style.overflow = 'hidden';
-    }
-    function close() {
-      nav.classList.add('-translate-x-full');
-      nav.setAttribute('aria-hidden', 'true');
-      if (backdrop) {
-        backdrop.classList.add('opacity-0', 'pointer-events-none');
-        backdrop.classList.remove('opacity-100');
-      }
-      document.body.style.overflow = '';
-    }
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      if (!t || !t.closest) return;
-      if (t.closest('[data-nav-toggle]')) {
-        e.preventDefault();
-        open();
-      } else if (t.closest('[data-nav-close]') || t === backdrop) {
-        close();
-      }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') close();
-    });
+<script>
+  import { mount } from '@duncit/brand/widgets/site-nav';
 
-    // The theme itself is applied before first paint by the layout; this button
-    // only changes and remembers it.
-    var toggle = document.querySelector('[data-theme-toggle]');
-    var icon = document.querySelector('[data-theme-icon]');
-    if (toggle && icon) {
-      var paint = function () {
-        var dark = document.documentElement.dataset.theme === 'dark';
-        toggle.setAttribute('aria-pressed', String(dark));
-        // The icon shows what a press GIVES you, not where you are.
-        icon.className = 'fa-solid ' + (dark ? 'fa-sun' : 'fa-moon') + ' text-sm';
-      };
-      paint();
-      toggle.addEventListener('click', function () {
-        var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        localStorage.setItem('duncit-theme', next);
-        paint();
-      });
-    }
-  })();
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="site-nav"]')) mount(root);
 </script>

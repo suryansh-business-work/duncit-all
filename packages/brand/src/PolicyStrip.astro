@@ -18,6 +18,7 @@ interface Policy {
 }
 
 import { siteT, type SiteTranslate } from './site-i18n';
+import { cmsBlockProps } from './cms-block';
 
 interface Props {
   policies: Policy[];
@@ -50,7 +51,7 @@ const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 
 {
   policies.length > 0 && (
-    <div class:list={['policy-strip', className]}>
+    <div class:list={['policy-strip', className]} data-cms-block="policy-strip" data-cms-props={cmsBlockProps(Astro.props)}>
       <h3 class="policy-strip-heading">{headingText}</h3>
       <ul class="policy-strip-list">
         {policies.map((policy) => (

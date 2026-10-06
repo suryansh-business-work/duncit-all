@@ -12,6 +12,7 @@
  */
 import { siteT, type SiteTranslate } from './site-i18n';
 import { reelSliderCopy, type ReelSite } from './reel-slider';
+import { cmsBlockProps } from './cms-block';
 
 interface Props {
   /** Where to read the reels from. The site already has this per environment. */
@@ -29,6 +30,8 @@ const copy = JSON.stringify(reelSliderCopy((key) => t(key)));
 
 <section
   class:list={['reel-slider', className]}
+  data-cms-block="reel-slider"
+  data-cms-props={cmsBlockProps(Astro.props)}
   data-reel-slider
   data-graphql={graphqlUrl}
   data-site={site}

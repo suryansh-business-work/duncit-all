@@ -47,6 +47,8 @@ const supportPhone = branding.support_phone;
   <form
     class="not-prose grid gap-4 max-w-xl mt-4"
     id="contactForm"
+    data-cms-widget="contact-form"
+    data-graphql-url={urlConfigs.graphqlUrl}
     data-copy={JSON.stringify({
       sending: t('website.main.contact.sending'),
       sent: t('website.main.contact.sent'),
@@ -60,7 +62,7 @@ const supportPhone = branding.support_phone;
     <input name="subject" placeholder={t('website.main.contact.subjectPlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none" />
     <textarea name="message" required rows="5" placeholder={t('website.main.contact.messagePlaceholder')} class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
     <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
-    <p id="contactErr" class="text-sm text-red-600 hidden"></p>
+    <p id="contactErr" data-form-error class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3.5 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       {t('website.main.contact.send')} <i class="fa-solid fa-paper-plane"></i>
     </button>
@@ -71,74 +73,7 @@ const supportPhone = branding.support_phone;
      `define:vars`: that directive makes a script `is:inline`, and an inline
      script cannot import — this one needs @duncit/captcha. -->
 <script>
-  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
-  import { urlConfigs } from '../config/url-configs';
+  import { mount } from '@duncit/brand/widgets/contact-form';
 
-  const GQL_URL = urlConfigs.graphqlUrl;
-  const form = document.getElementById('contactForm') as HTMLFormElement | null;
-  const errBox = document.getElementById('contactErr') as HTMLParagraphElement | null;
-  // Localized strings for the states this script drives, handed over by the
-  // markup above (a module script cannot read Astro frontmatter).
-  const COPY = JSON.parse(form?.dataset.copy ?? '{}');
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (errBox) {
-      errBox.classList.add('hidden');
-      errBox.textContent = '';
-    }
-    const fd = new FormData(form);
-    const payload = {
-      name: String(fd.get('name') || '').trim(),
-      email: String(fd.get('email') || '').trim(),
-      subject: String(fd.get('subject') || '').trim(),
-      message: String(fd.get('message') || '').trim(),
-      ...captchaFieldsFrom(form),
-    };
-    const btn = form.querySelector('button') as HTMLButtonElement | null;
-    const orig = btn?.innerHTML;
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${COPY.sending}`;
-    }
-    try {
-      const res = await fetch(GQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query:
-            'mutation Submit($input: SubmitContactInput!) { submitContactForm(input: $input) { ok message } }',
-          variables: { input: payload },
-        }),
-      });
-      const json = await res.json();
-      // A code is spent whether the answer was right or wrong, so the widget
-      // always gets a new one — and when the captcha WAS the reason, it says so
-      // itself and this handler stays quiet.
-      if (json?.errors?.length) {
-        if (showCaptchaFailure(form, json.errors)) {
-          if (btn) btn.innerHTML = orig || COPY.send;
-          return;
-        }
-        throw new Error(json.errors[0].message);
-      }
-      if (!json?.data?.submitContactForm?.ok) throw new Error(COPY.failed);
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> ${COPY.sent}`;
-      form.reset();
-      reloadCaptcha(form);
-    } catch (err: any) {
-      if (errBox) {
-        errBox.classList.remove('hidden');
-        errBox.textContent = err?.message || COPY.failedRetry;
-      }
-      reloadCaptcha(form);
-      if (btn) btn.innerHTML = orig || COPY.send;
-    } finally {
-      window.setTimeout(() => {
-        if (btn) {
-          btn.disabled = false;
-          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || COPY.send;
-        }
-      }, 3000);
-    }
-  });
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="contact-form"]')) mount(root);
 </script>

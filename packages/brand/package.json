@@ -22,7 +22,20 @@
     "./consent-banner": "./src/consent-banner.ts",
     "./site-meta": "./src/site-meta.ts",
     "./ReelSlider.astro": "./src/ReelSlider.astro",
-    "./reel-slider": "./src/reel-slider.ts"
+    "./reel-slider": "./src/reel-slider.ts",
+    "./cms-block": "./src/cms-block.ts",
+    "./widgets": "./src/widgets/index.ts",
+    "./widgets/earnings-calculator": "./src/widgets/earnings-calculator.ts",
+    "./widgets/campaign-calculator": "./src/widgets/campaign-calculator.ts",
+    "./widgets/contact-form": "./src/widgets/contact-form.ts",
+    "./widgets/faq": "./src/widgets/faq.ts",
+    "./widgets/help-center": "./src/widgets/help-center.ts",
+    "./widgets/grievance-form": "./src/widgets/grievance-form.ts",
+    "./widgets/policy-list": "./src/widgets/policy-list.ts",
+    "./widgets/policy-reader": "./src/widgets/policy-reader.ts",
+    "./widgets/site-nav": "./src/widgets/site-nav.ts",
+    "./widgets/site-header": "./src/widgets/site-header.ts",
+    "./cms-design": "./src/cms-design.ts"
   },
   "files": [
     "src"

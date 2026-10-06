@@ -21,7 +21,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"
 >
-  <div id="faqGroups" data-copy={JSON.stringify({ empty: t('website.main.faq.empty'), error: t('website.main.faq.error') })} class="not-prose my-6 space-y-3">
+  <div id="faqGroups" data-cms-widget="faq" data-graphql-url={urlConfigs.graphqlUrl} data-copy={JSON.stringify({ empty: t('website.main.faq.empty'), error: t('website.main.faq.error') })} class="not-prose my-6 space-y-3">
     <div class="skeleton h-8 w-48" aria-hidden="true"></div>
     <div class="skeleton h-20" aria-hidden="true"></div>
     <div class="skeleton h-20" aria-hidden="true"></div>
@@ -33,6 +33,8 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   <form
     class="not-prose grid gap-3 max-w-xl mt-4"
     id="askFaqForm"
+    data-cms-widget="faq"
+    data-graphql-url={urlConfigs.graphqlUrl}
     data-copy={JSON.stringify({
       ask: t('website.main.faq.ask'),
       sending: t('website.main.faq.sending'),
@@ -58,7 +60,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none"
     />
     <Captcha graphqlUrl={urlConfigs.graphqlUrl} copy={captchaCopy(t)} />
-    <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
+    <p id="askFaqErr" data-form-error class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       {t('website.main.faq.ask')} <i class="fa-solid fa-paper-plane"></i>
     </button>
@@ -67,143 +69,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 </PageLayout>
 
 <script>
-  import { captchaFieldsFrom, reloadCaptcha, showCaptchaFailure } from '@duncit/captcha';
-  import { urlConfigs } from '../config/url-configs';
+  import { mount } from '@duncit/brand/widgets/faq';
 
-  const GQL_URL = urlConfigs.graphqlUrl;
-  const groupsEl = document.getElementById('faqGroups');
-  // Handed over by the markup: a module script cannot read Astro frontmatter,
-  // and define:vars would make this script inline (it imports @duncit/captcha).
-  const LIST_COPY = JSON.parse(groupsEl?.dataset.copy ?? '{}');
-
-  const esc = (value: unknown) => {
-    const div = document.createElement('div');
-    div.textContent = String(value ?? '');
-    return div.innerHTML;
-  };
-
-  const faqCard = (faq: any, open: boolean) => `
-    <details class="group bg-surface rounded-2xl p-5 sticker"${open ? ' open' : ''}>
-      <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
-        <span class="font-head font-bold text-ink">${esc(faq.question)}</span>
-        <i class="fa-solid fa-plus text-primary transition group-open:rotate-45" aria-hidden="true"></i>
-      </summary>
-      <p class="mt-3 text-ink-soft whitespace-pre-line">${esc(faq.answer)}</p>
-    </details>`;
-
-  async function loadFaqs() {
-    if (!groupsEl) return;
-    try {
-      const res = await fetch(GQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query:
-            'query { publicFaqGroups { super_category { id name slug } faqs { id question answer } } }',
-        }),
-      });
-      const json = await res.json();
-      const groups: any[] = (json?.data?.publicFaqGroups ?? []).filter((g: any) => g.faqs?.length);
-      if (!groups.length) {
-        groupsEl.innerHTML =
-          `<p class="text-ink-soft">${LIST_COPY.empty}</p>`;
-        return;
-      }
-      groupsEl.innerHTML = groups
-        .map((group) => {
-          const heading = group.super_category
-            ? `<h2 id="${esc(group.super_category.slug)}" class="font-head font-extrabold text-2xl mt-8 mb-3 text-primary scroll-mt-24">${esc(group.super_category.name)}</h2>`
-            : '';
-          const cards = group.faqs.map((faq: any, index: number) => faqCard(faq, index === 0)).join('');
-          return `<section class="my-6">${heading}<div class="space-y-3">${cards}</div></section>`;
-        })
-        .join('');
-      // Honour a #slug deep-link (e.g. from the Help Center topic cards) now
-      // that the anchored headings exist in the DOM.
-      const hash = window.location.hash.slice(1);
-      if (hash) document.getElementById(decodeURIComponent(hash))?.scrollIntoView({ behavior: 'smooth' });
-    } catch {
-      groupsEl.innerHTML =
-        `<p class="text-ink-soft">${LIST_COPY.error}</p>`;
-    }
-  }
-
-  loadFaqs();
-
-  const form = document.getElementById('askFaqForm') as HTMLFormElement | null;
-  const errBox = document.getElementById('askFaqErr') as HTMLParagraphElement | null;
-  const COPY = JSON.parse(form?.dataset.copy ?? '{}');
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (errBox) {
-      errBox.classList.add('hidden');
-      errBox.textContent = '';
-    }
-    const fd = new FormData(form);
-    const payload = {
-      question: String(fd.get('question') || '').trim(),
-      email: String(fd.get('email') || '').trim(),
-      ...captchaFieldsFrom(form),
-    };
-    if (payload.question.length < 5) {
-      if (errBox) {
-        errBox.classList.remove('hidden');
-        errBox.textContent = COPY.tooShort;
-      }
-      return;
-    }
-    if (!payload.email) {
-      if (errBox) {
-        errBox.classList.remove('hidden');
-        errBox.textContent = COPY.needEmail;
-      }
-      return;
-    }
-    const btn = form.querySelector('button') as HTMLButtonElement | null;
-    const orig = btn?.innerHTML;
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${COPY.sending}`;
-    }
-    try {
-      const res = await fetch(GQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query:
-            'mutation Ask($input: SubmitFaqQuestionInput!) { submitFaqQuestion(input: $input) { ok message } }',
-          variables: { input: payload },
-        }),
-      });
-      const json = await res.json();
-      // A code is spent whether the answer was right or wrong, so the widget
-      // always gets a new one — and when the captcha WAS the reason, it says so
-      // itself and this handler stays quiet.
-      if (json?.errors?.length) {
-        if (showCaptchaFailure(form, json.errors)) {
-          if (btn) btn.innerHTML = orig || COPY.ask;
-          return;
-        }
-        throw new Error(json.errors[0].message);
-      }
-      if (!json?.data?.submitFaqQuestion?.ok) throw new Error(COPY.failed);
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> ${COPY.gotIt}`;
-      form.reset();
-      reloadCaptcha(form);
-    } catch (err: any) {
-      if (errBox) {
-        errBox.classList.remove('hidden');
-        errBox.textContent = err?.message || COPY.failedRetry;
-      }
-      reloadCaptcha(form);
-      if (btn) btn.innerHTML = orig || COPY.ask;
-    } finally {
-      window.setTimeout(() => {
-        if (btn) {
-          btn.disabled = false;
-          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || COPY.ask;
-        }
-      }, 3000);
-    }
-  });
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="faq"]')) mount(root);
 </script>

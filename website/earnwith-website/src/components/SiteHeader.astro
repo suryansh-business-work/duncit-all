@@ -32,6 +32,7 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 <header
   class={`site-header ${position} z-30 bg-cream/85 backdrop-blur`}
   data-overlay={overlay ? 'true' : undefined}
+  data-cms-widget="site-header"
 >
   <!-- Tighter padding than before: the mark grew, so the bar keeps its height
        from the logo rather than adding to it. -->
@@ -149,33 +150,9 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 </style>
 
 <script>
-  // Transparent while the banner is behind it, solid once the page scrolls.
-  // The class is on every header so the scrolled shadow works on pages with
-  // no banner too; only an overlay header reads it for transparency.
-  const header = document.querySelector<HTMLElement>('.site-header');
-  if (header) {
-    const sync = () => header.classList.toggle('at-top', window.scrollY <= 24);
-    sync();
-    window.addEventListener('scroll', sync, { passive: true });
-  }
+  // Transparent while the banner is behind it, solid once the page scrolls,
+  // plus the theme button — the CMS widget @duncit/brand/widgets/site-header.
+  import { mount } from '@duncit/brand/widgets/site-header';
 
-  // The theme itself is applied before first paint by the layout; this button
-  // only changes and remembers it.
-  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
-  const icon = document.querySelector<HTMLElement>('[data-theme-icon]');
-  if (toggle && icon) {
-    const paint = () => {
-      const dark = document.documentElement.dataset.theme === 'dark';
-      toggle.setAttribute('aria-pressed', String(dark));
-      // The icon shows what a press GIVES you, not where you are.
-      icon.className = `fa-solid ${dark ? 'fa-sun' : 'fa-moon'} text-sm`;
-    };
-    paint();
-    toggle.addEventListener('click', () => {
-      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
-      localStorage.setItem('duncit-theme', next);
-      paint();
-    });
-  }
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="site-header"]')) mount(root);
 </script>

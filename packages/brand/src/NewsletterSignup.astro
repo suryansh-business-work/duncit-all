@@ -14,6 +14,7 @@
 import type { CaptchaCopy } from '@duncit/i18n';
 import Captcha from '@duncit/captcha/Captcha.astro';
 import { siteT, type SiteTranslate } from './site-i18n';
+import { cmsBlockProps } from './cms-block';
 
 interface Props {
   /** Where to POST. The site already has this resolved per environment. */
@@ -79,6 +80,8 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
 
 <div
   class:list={['newsletter', card ? 'newsletter-card' : '', className]}
+  data-cms-block="newsletter"
+  data-cms-props={cmsBlockProps(Astro.props)}
   data-newsletter-root
   data-graphql={graphqlUrl}
   data-source={source}

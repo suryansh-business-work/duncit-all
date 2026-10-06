@@ -23,6 +23,19 @@ exports:
   - 'google-analytics'
   - 'ConsentBanner.astro'
   - 'consent-banner'
+  - 'cms-block'
+  - 'cms-design'
+  - 'widgets'
+  - 'widgets/earnings-calculator'
+  - 'widgets/campaign-calculator'
+  - 'widgets/contact-form'
+  - 'widgets/faq'
+  - 'widgets/help-center'
+  - 'widgets/grievance-form'
+  - 'widgets/policy-list'
+  - 'widgets/policy-reader'
+  - 'widgets/site-nav'
+  - 'widgets/site-header'
 ---
 
 ## Why this exists
@@ -118,8 +131,8 @@ component that fetched again would double each page's build-time requests for a 
 caller is already holding. So the caller passes the URL, and this package owns only how
 the mark is DRAWN.
 
-The one exception is `ReelSlider`, which reads its reels in the browser at visit time on
-purpose — see its section below.
+The exceptions are `ReelSlider` and the CMS widgets, which read live data in the browser
+at visit time on purpose — see their sections below.
 
 ## API
 
@@ -341,6 +354,95 @@ by the server on every write and again on the public read).
 
 The slides are built by script, so the component's CSS is `is:global` and every class is
 prefixed `reel-` — Astro's scoped styles never reach a node created at runtime.
+
+## CMS widgets & block markers
+
+A page moved into the Website CMS is an HTML snapshot of the built page. The markup
+survives that move; the client-side **behaviour** Astro bundled does not. So every
+interactive widget's behaviour lives here as a framework-free module, and the legacy
+sites mount the very same module — one implementation, whichever renderer drew the HTML.
+
+### Widgets
+
+Each widget root carries `data-cms-widget="<name>"`. Its module exports
+`mount(root: HTMLElement): void`, reads **everything** from data attributes under that
+root (never from Astro props, `import.meta.env` or a site config), and is idempotent: it
+marks the root `data-cms-mounted` and returns early on a root already mounted.
+
+```ts
+// Mount only what this page contains.
+import { WIDGET_LOADERS } from '@duncit/brand/widgets';
+
+for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget]')) {
+  void WIDGET_LOADERS[root.dataset.cmsWidget ?? '']?.().then((widget) => widget.mount(root));
+}
+```
+
+```astro
+<!-- A legacy page mounts one widget directly. -->
+<script>
+  import { mount } from '@duncit/brand/widgets/contact-form';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-cms-widget="contact-form"]')) mount(root);
+</script>
+```
+
+JSON attributes (`data-copy`, `data-config`) are rendered by Astro, which escapes them.
+Every string a widget shows comes from them — the modules carry no copy.
+
+| Widget | Root | Required data attributes | Other elements it uses |
+|---|---|---|---|
+| `earnings-calculator` | the calculator `<section>` | `data-graphql-url`; `data-print-logo` (PDF logo URL, PNG/JPEG, else a wordmark); `data-config` `{ roles, fields, rowLabels, currency }`; `data-copy` `{ note, shortfallNote, noShareNote, loadError, disclaimer, pdf: { title, inputsTitle, breakdownTitle, footer, preparing, error, fileName } }` | tabs `[data-role-tab="<role key>"]`; `form[data-earn-form]` with range inputs `ticket`, `spots`, `venue`, `pods` in `[data-field][data-field-roles]`, each labelled by `[data-out="<name>"]` (prefix from `data-prefix`); `[data-earn-label]`, `[data-earn-takehome]`, `[data-earn-rows]`, `[data-earn-note]`, `[data-duties-title]`, `[data-duties]`, `[data-print-estimate]` |
+| `campaign-calculator` | the calculator `<section>` | `data-graphql-url`; `data-config` `{ initial: RateCard, defaultPick }`; `data-copy` `{ perDaySuffix, note, emptyNote, failedNote, dayOne, daysMany }` | `form[data-ads-form]` with `[data-placements]` (`input[name="placement"]` chips) and `input[name="days"]`; `[data-days-out]`, `[data-total]`, `[data-rows]`, `[data-note]`; phone slots `[data-zone="<position>"]` (get `is-live`). Page-level, optional: `[data-rate-rows][data-rate-empty]` + `[data-placement-notes]` |
+| `contact-form` | the `<form>` | `data-graphql-url`; `data-copy` `{ sending, sent, send, failed, failedRetry }` | fields `name`, `email`, `subject`, `message`; the captcha widget; error line `[data-form-error]` |
+| `faq` | the FAQ list element **or** the ask `<form>` (two roots) | both: `data-graphql-url`. List: `data-copy` `{ empty, error }`. Form: `data-copy` `{ ask, sending, gotIt, tooShort, needEmail, failed, failedRetry }` | form: fields `question`, `email`, the captcha widget, `[data-form-error]` |
+| `help-center` | the topic grid | `data-graphql-url`; `data-copy` `{ empty, error, general, one, many }` | page-level `input[data-help-search]` |
+| `grievance-form` | the `<form>` | `data-graphql-url`; `data-source` (e.g. `WEBSITE`); `data-failed`; `data-sending` | fields `support_ticket_ref`, `name`, `email`, `phone`, `address`, `subject`, `description`; captcha; `[data-form-error]`. Page-level: `[data-grievance-done]`, `[data-grievance-ref]`, `[data-grievance-ladder]` |
+| `policy-list` | the card grid | `data-graphql-url`; `data-copy` `{ readCurrent, showAll, empty, error, matchOne, matchMany, nothingMatches }` | page-level `[data-policy-search-wrap]` (starts `hidden`), `input[data-policy-search]`, `[data-policy-count]` |
+| `policy-reader` | the body container | `data-graphql-url`; `data-copy` `{ notFound, empty, error }`; optional `data-policy-slug` — else the address's last segment | sets `document.title` and `[data-page-heading]` (else the first `h1`); no valid slug → `/policies` |
+| `site-nav` | the drawer (starts `-translate-x-full`, `aria-hidden="true"`) | — | inside: `[data-nav-close]`, `[data-theme-toggle]` + `[data-theme-icon]`. Page-level: any `[data-nav-toggle]`, `[data-nav-backdrop]` |
+| `site-header` | the `<header>` | optional `data-overlay` (read by the header's CSS) | inside: `[data-theme-toggle]` + `[data-theme-icon]`; keeps class `at-top` within 24px of the top |
+
+The theme button writes the `duncit-theme` key every layout's pre-paint script reads.
+
+### Block markers
+
+The shared components below put `data-cms-block="<key>"` and `data-cms-props` on their
+root: the JSON of the props the page passed (minus `t`, `graphqlUrl` and any function),
+so a migration can swap the snapshot back for the live block. `cmsBlockProps` (from
+`@duncit/brand/cms-block`) builds it, and `CMS_BLOCKS` maps each key to its component.
+
+| Key | Component | `data-cms-props` |
+|---|---|---|
+| `newsletter` | `NewsletterSignup.astro` | `{ source, heading?, text?, placeholder?, button?, variant?, consent?, consentLinkLabel?, consentLinkHref?, captcha?, busyText?, okText?, errorText?, class? }` |
+| `reel-slider` | `ReelSlider.astro` | `{ site, class? }` |
+| `earn-showcase` | `EarnShowcase.astro` | `{ href, id?, class? }` |
+| `app-download` | `AppDownload.astro` | `{ eyebrow?, heading, headingAccent?, text?, perks?, stores: { icon, eyebrow, name, url? }[], soonLabel?, screenshot?, id?, class? }` |
+| `social-links` | `SocialLinks.astro` | `{ accounts?: { icon, label, href }[], heading?, class? }` |
+| `policy-strip` | `PolicyStrip.astro` (only when it has policies) | `{ policies: { slug, title }[], baseUrl?, heading?, allLabel?, class? }` |
+
+A prop the page did not pass is absent, and the component's default applies on redraw.
+
+### Design system CSS (`cms-design`)
+
+Each CMS website has its own design system — tokens and fonts edited in the Website
+portal's Design tab. `@duncit/brand/cms-design` turns that data into CSS, so the renderer
+(`website/cms-site`) and the portal's editor canvas and previews draw a page identically.
+Pure functions: no DOM, no fetch.
+
+| Export | Returns |
+|---|---|
+| `tokensCss(tokens)` | One `:root{…}` rule of `--name:value` pairs, or `''` when there are none |
+| `googleFontsHref(fonts)` | One Google Fonts css2 URL for every `GOOGLE` font (weights + italics), or `null` |
+| `fontStack(font)` | A CSS `font-family` value: the quoted family, then its fallback (`sans-serif` when blank) |
+| `fontCss(fonts)` | `@font-face` for every uploaded file, plus the role variables (`--font-heading`, `--font-body`, `--font-accent`) and any extra token a font is bound to |
+
+```ts
+import { fontCss, googleFontsHref, tokensCss } from '@duncit/brand/cms-design';
+
+const href = googleFontsHref(site.design.fonts); // a <link rel="stylesheet"> when not null
+const css = tokensCss(site.design.tokens) + fontCss(site.design.fonts);
+```
 
 ## The wordmark is plain CSS on purpose
 

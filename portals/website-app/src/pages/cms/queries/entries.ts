@@ -53,7 +53,7 @@ export const CMS_ENTRY = gql`
       body_html
       tags
       fields { key value }
-      seo { title description og_image_url canonical_url noindex }
+      seo { title description og_image_url canonical_url noindex og_title og_description twitter_card keywords json_ld meta_tags { name content } }
     }
   }
   ${CMS_ENTRY_ROW}

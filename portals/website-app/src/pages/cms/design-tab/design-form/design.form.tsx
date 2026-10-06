@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { designVariables } from '@duncit/brand/cms-design';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
@@ -24,6 +25,7 @@ export default function DesignForm({ design, submitting, errorMessage, onSubmit 
   const { t } = useTranslation();
   const schema = useMemo(() => designSchema((key) => t(key)), [t]);
   const { reporter, hasProblems } = useCodeProblems();
+  const tokens = useMemo(() => designVariables(design?.tokens ?? [], design?.fonts ?? []), [design]);
   const { control, handleSubmit } = useForm<DesignFormValues, unknown, DesignFormOutput>({
     defaultValues: toDesignFormValues(design),
     resolver: zodResolver(schema) as Resolver<DesignFormValues, unknown, DesignFormOutput>,
@@ -43,7 +45,8 @@ export default function DesignForm({ design, submitting, errorMessage, onSubmit 
           name="base_css"
           label={t('websiteApp.cms.design.baseCss')}
           hint={t('websiteApp.cms.design.baseCssHint')}
-          language="css"
+          language="scss"
+          tokens={tokens}
           minRows={14}
           onProblemsChange={reporter('base_css')}
         />

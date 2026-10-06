@@ -4,6 +4,7 @@ import type { CmsPageRow } from '../../queries/pages';
 import { CMS_COLLECTIONS } from '../../lib/labels';
 import { httpsOrBlank } from '../../lib/rules';
 import { isSitePath } from '@duncit/regex';
+import { seoSharingSchema, toSeoSharingInput, toSeoSharingValues } from '../../lib/seoSharing';
 
 type Translate = (key: string) => string;
 
@@ -22,6 +23,7 @@ export const pageSchema = (t: Translate) =>
       seo_image: httpsOrBlank(t('websiteApp.cms.pageForm.errUrl')),
       canonical_url: httpsOrBlank(t('websiteApp.cms.pageForm.errUrl')),
       noindex: z.boolean(),
+      seo_sharing: seoSharingSchema(t),
       show_header: z.boolean(),
       show_footer: z.boolean(),
       sort_order: z.coerce.number().int().min(0),
@@ -57,6 +59,7 @@ export const toPageFormValues = (page: CmsPageRow | null, preset?: PagePreset | 
   seo_image: page?.seo.og_image_url ?? '',
   canonical_url: page?.seo.canonical_url ?? '',
   noindex: page?.seo.noindex ?? Boolean(preset),
+  seo_sharing: toSeoSharingValues(page?.seo),
   show_header: page?.show_header ?? true,
   show_footer: page?.show_footer ?? true,
   sort_order: page?.sort_order ?? 0,
@@ -76,6 +79,7 @@ export const toPageInput = (values: PageFormOutput): CmsPageInput => ({
     og_image_url: values.seo_image,
     canonical_url: values.canonical_url,
     noindex: values.noindex,
+    ...toSeoSharingInput(values.seo_sharing),
   },
   show_header: values.show_header,
   show_footer: values.show_footer,

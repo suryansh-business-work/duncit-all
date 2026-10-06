@@ -4,6 +4,7 @@ import { RhfTextField } from '@duncit/forms';
 import { SingleImageUploadField } from '@duncit/media-picker';
 import { useTranslation } from '@duncit/shell';
 import RhfSwitch from '../../components/RhfSwitch';
+import SeoSharingFields from '../../components/SeoSharingFields';
 import type { EntryFormValues } from './entry.types';
 
 /** How the entry looks in search results and when shared. Empty falls back to
@@ -39,6 +40,7 @@ export default function EntrySeoFields({ control }: Readonly<{ control: Control<
         )}
       />
       <RhfSwitch control={control} name="noindex" label={t('websiteApp.cms.pageForm.noindex')} />
+      <SeoSharingFields control={control} />
     </Stack>
   );
 }

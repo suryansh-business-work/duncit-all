@@ -12,7 +12,7 @@ export const CMS_PAGE_ROW = gql`
     path
     is_published
     has_unpublished_changes
-    seo { title description og_image_url canonical_url noindex }
+    seo { title description og_image_url canonical_url noindex og_title og_description twitter_card keywords json_ld meta_tags { name content } }
     show_header
     show_footer
     head_html

@@ -6,6 +6,7 @@ import type { CmsCollection } from '@duncit/gql-types';
 import { CREATE_CMS_PAGE, UPDATE_CMS_PAGE, type CmsPageRow } from '../queries/pages';
 import { cmsErrorMessage } from '../lib/errors';
 import { PageForm, toPageInput, type PageFormOutput, type PagePreset } from './page-form';
+import { useSiteTokens } from '../lib/useSiteTokens';
 
 interface Props {
   siteId: string;
@@ -18,6 +19,7 @@ interface Props {
 
 /** Creates a page, or edits one's settings (not its design). */
 export default function PageSettingsDialog({ siteId, collections, state, onClose, onSaved }: Readonly<Props>) {
+  const tokens = useSiteTokens(siteId);
   const { t } = useTranslation();
   const [createPage] = useMutation(CREATE_CMS_PAGE);
   const [updatePage] = useMutation(UPDATE_CMS_PAGE);
@@ -50,6 +52,7 @@ export default function PageSettingsDialog({ siteId, collections, state, onClose
             key={page?.id ?? state.preset?.path ?? 'new'}
             page={page}
             preset={state?.preset ?? null}
+            tokens={tokens}
             collections={collections}
             submitting={submitting}
             errorMessage={saveError}

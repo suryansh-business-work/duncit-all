@@ -13,6 +13,7 @@ import { CMS_SITE_DESIGN, type CmsSiteDesignData } from '../queries/sites';
 import { fontCss, googleFontsHref, tokensCss } from '@duncit/brand/cms-design';
 import { PLACEHOLDER_CSS } from '../lib/preview';
 import EditorToolbar from './EditorToolbar';
+import { useCopyPreviewLink } from '../lib/useCopyPreviewLink';
 import { useEditorLabels } from './useEditorLabels';
 import { useEditorSave, type EditorTarget } from './useEditorSave';
 import { useGrapesEditor, type AssetRequest } from './useGrapesEditor';
@@ -23,6 +24,7 @@ export default function CmsEditorPage() {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const labels = useEditorLabels();
+  const copyLink = useCopyPreviewLink();
   const { siteId = '', target: rawTarget, docId = '' } = useParams();
   const target: EditorTarget = rawTarget === 'fragments' ? 'fragments' : 'pages';
   const [host, setHost] = useState<HTMLDivElement | null>(null);
@@ -113,6 +115,7 @@ export default function CmsEditorPage() {
           // Both report their own failures to the editor (useEditorSave).
           if (grapes.editor) fireAndForget(saver.save(grapes.editor), logs.portal['website-app'], 'CmsEditorPage', 'save');
         }}
+        onCopyLink={() => (target === 'fragments' ? copyLink.component(docId) : copyLink.page(docId))}
         onPublish={() => {
           if (grapes.editor) fireAndForget(saver.publish(grapes.editor), logs.portal['website-app'], 'CmsEditorPage', 'publish');
         }}

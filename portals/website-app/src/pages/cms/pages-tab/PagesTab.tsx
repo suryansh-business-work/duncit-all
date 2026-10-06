@@ -14,6 +14,7 @@ import type { PagePreset } from './page-form';
 import PageSettingsDialog from './PageSettingsDialog';
 import DuplicateDialog from './DuplicateDialog';
 import { usePageRowActions } from './usePageRowActions';
+import { useCopyPreviewLink } from '../lib/useCopyPreviewLink';
 
 /** A site's pages and collection templates, with everything you can do to one. */
 export default function PagesTab({ site }: Readonly<{ site: CmsSiteRow }>) {
@@ -25,6 +26,7 @@ export default function PagesTab({ site }: Readonly<{ site: CmsSiteRow }>) {
   const [preview, setPreview] = useState<CmsPageRow | null>(null);
   const [duplicate, setDuplicate] = useState<CmsPageRow | null>(null);
   const [versions, setVersions] = useState<CmsPageRow | null>(null);
+  const copyLink = useCopyPreviewLink();
 
   const fetchRows = useApolloTableFetch<CmsPageRow>(client, CMS_PAGES_TABLE, 'cmsPagesTable', { extraVariables: { siteId: site.id } }, [site.id]);
   const dialogs = useMemo(
@@ -33,8 +35,9 @@ export default function PagesTab({ site }: Readonly<{ site: CmsSiteRow }>) {
       preview: setPreview,
       duplicate: setDuplicate,
       versions: setVersions,
+      copyLink: (page: CmsPageRow) => copyLink.page(page.id),
     }),
-    [],
+    [copyLink],
   );
   const actionsFor = usePageRowActions(site.id, refresh, dialogs);
 

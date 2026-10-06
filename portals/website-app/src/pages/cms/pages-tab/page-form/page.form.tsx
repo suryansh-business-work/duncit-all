@@ -10,12 +10,15 @@ import type { CmsPageRow } from '../../queries/pages';
 import { useCmsLabels } from '../../lib/labels';
 import RhfSwitch from '../../components/RhfSwitch';
 import PageAdvancedFields from './PageAdvancedFields';
+import type { CodeToken } from '../../components/code-field/CodeTokens';
 import { pageSchema, toPageFormValues, type PageFormOutput, type PageFormValues, type PagePreset } from './page.types';
 
 interface Props {
   page: CmsPageRow | null;
   /** For a new page: a starting address and title (the error-page shortcuts). */
   preset?: PagePreset | null;
+  /** The site's CSS variables, listed beside the page's stylesheet. */
+  tokens?: CodeToken[];
   /** The collections this site has — the only ones a template can be for. */
   collections: CmsCollection[];
   submitting: boolean;
@@ -25,7 +28,7 @@ interface Props {
 }
 
 /** A page's address, kind, chrome, SEO and page-level code — not its design. */
-export default function PageForm({ page, preset = null, collections, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
+export default function PageForm({ page, preset = null, tokens = [], collections, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = useCmsLabels();
   const schema = useMemo(() => pageSchema((key) => t(key)), [t]);
@@ -74,7 +77,7 @@ export default function PageForm({ page, preset = null, collections, submitting,
           <RhfSwitch control={control} name="show_footer" label={t('websiteApp.cms.pageForm.showFooter')} />
           <RhfTextField control={control} name="sort_order" type="number" size="small" label={t('websiteApp.cms.pageForm.sortOrder')} sx={{ maxWidth: 140 }} />
         </Stack>
-        <PageAdvancedFields control={control} />
+        <PageAdvancedFields control={control} tokens={tokens} />
       </Stack>
       <DialogActions sx={{ px: 0, pt: 2 }}>
         <DuncitButton onClick={onCancel} disabled={submitting}>

@@ -34,6 +34,7 @@ export default function DesignTab({ siteId }: Readonly<{ siteId: string }>) {
   return (
     <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
       <DesignForm
+        key={data.cmsSite.updated_at}
         design={data.cmsSite.design}
         submitting={submitting}
         errorMessage={saveError}

@@ -56,12 +56,13 @@ export const CMS_SITE_DESIGN = gql`
       body_end_html
       custom_css
       custom_js
+      updated_at
     }
   }
 `;
 
 export interface CmsSiteDesignData {
-  cmsSite: Pick<CmsSite, 'id' | 'design' | 'head_html' | 'body_end_html' | 'custom_css' | 'custom_js'> | null;
+  cmsSite: Pick<CmsSite, 'id' | 'design' | 'head_html' | 'body_end_html' | 'custom_css' | 'custom_js' | 'updated_at'> | null;
 }
 
 export const CREATE_CMS_SITE = gql`

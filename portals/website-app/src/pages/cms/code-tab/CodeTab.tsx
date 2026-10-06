@@ -34,6 +34,7 @@ export default function CodeTab({ siteId }: Readonly<{ siteId: string }>) {
   return (
     <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
       <CodeForm
+        key={data.cmsSite.updated_at}
         site={data.cmsSite}
         submitting={submitting}
         errorMessage={saveError}

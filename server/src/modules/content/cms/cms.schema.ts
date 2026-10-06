@@ -198,6 +198,24 @@ export const cmsTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Which part of a website a revision snapshots."
+  enum CmsSiteSection {
+    SETTINGS
+    DESIGN
+    CODE
+  }
+
+  "One saved state of a website's settings, design system or site code."
+  type CmsSiteRevision {
+    id: ID!
+    revision: Int!
+    section: CmsSiteSection!
+    "The revision this one brought back, when it was a restore."
+    restored_from: Int
+    saved_by: String!
+    created_at: String!
+  }
+
   type CmsEntryField {
     key: String!
     value: String!
@@ -433,6 +451,8 @@ export const cmsTypeDefs = /* GraphQL */ `
     cmsFragments(site_id: ID!): [CmsFragment!]!
     cmsFragment(fragment_id: ID!): CmsFragment
     cmsVersions(owner_kind: CmsVersionOwner!, owner_id: ID!): [CmsVersion!]!
+    "Newest first; one section, or all three."
+    cmsSiteRevisions(site_id: ID!, section: CmsSiteSection): [CmsSiteRevision!]!
     cmsEntriesTable(site_id: ID!, collection_type: CmsCollection!, query: TableQueryInput): CmsEntryTablePage!
     cmsEntry(entry_id: ID!): CmsEntry
   }
@@ -462,6 +482,8 @@ export const cmsTypeDefs = /* GraphQL */ `
 
     "Copies a published version back into the draft; publish to make it live."
     restoreCmsVersion(version_id: ID!): Boolean!
+    "Saves that revision's snapshot again — itself a new revision, so a restore can be undone."
+    restoreCmsSiteRevision(revision_id: ID!): CmsSite!
 
     createCmsEntry(site_id: ID!, input: CmsEntryInput!): CmsEntry!
     updateCmsEntry(entry_id: ID!, input: CmsEntryInput!): CmsEntry!

@@ -4713,6 +4713,24 @@ export type CmsSiteInput = {
   seo?: InputMaybe<CmsSeoInput>;
 };
 
+/** One saved state of a website's settings, design system or site code. */
+export type CmsSiteRevision = {
+  __typename?: 'CmsSiteRevision';
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** The revision this one brought back, when it was a restore. */
+  restored_from?: Maybe<Scalars['Int']['output']>;
+  revision: Scalars['Int']['output'];
+  saved_by: Scalars['String']['output'];
+  section: CmsSiteSection;
+};
+
+/** Which part of a website a revision snapshots. */
+export type CmsSiteSection =
+  | 'CODE'
+  | 'DESIGN'
+  | 'SETTINGS';
+
 export type CmsSitemapUrl = {
   __typename?: 'CmsSitemapUrl';
   path: Scalars['String']['output'];
@@ -12975,6 +12993,8 @@ export type Mutation = {
   respondToCoHostInvite: Pod;
   /** The offered partner answering: APPROVE takes the place, PASS declines it. */
   respondToPodChange: PodChangeRequest;
+  /** Saves that revision's snapshot again — itself a new revision, so a restore can be undone. */
+  restoreCmsSiteRevision: CmsSite;
   /** Copies a published version back into the draft; publish to make it live. */
   restoreCmsVersion: Scalars['Boolean']['output'];
   /**
@@ -16523,6 +16543,11 @@ export type MutationRespondToPodChangeArgs = {
   decision: PodChangeDecision;
   reason?: InputMaybe<Scalars['String']['input']>;
   request_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRestoreCmsSiteRevisionArgs = {
+  revision_id: Scalars['ID']['input'];
 };
 
 
@@ -23330,6 +23355,8 @@ export type Query = {
   cmsSite?: Maybe<CmsSite>;
   /** A website's hostnames and their A/AAAA/CNAME records (Tech managers). */
   cmsSiteDns: CmsSiteDns;
+  /** Newest first; one section, or all three. */
+  cmsSiteRevisions: Array<CmsSiteRevision>;
   /** Public: every published address of a site, for sitemap.xml. */
   cmsSitemap: Array<CmsSitemapUrl>;
   cmsSites: Array<CmsSite>;
@@ -25293,6 +25320,12 @@ export type QueryCmsSiteArgs = {
 
 
 export type QueryCmsSiteDnsArgs = {
+  site_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCmsSiteRevisionsArgs = {
+  section?: InputMaybe<CmsSiteSection>;
   site_id: Scalars['ID']['input'];
 };
 

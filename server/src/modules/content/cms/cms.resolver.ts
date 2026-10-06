@@ -4,12 +4,10 @@ import { validate } from '@utils/validate';
 import type { TableQueryInput } from '@utils/table-query';
 import { CMS_ROLES, type CmsCollection } from './cms.constants';
 import {
-  cmsDesignInputSchema,
   cmsDraftInputSchema,
   cmsEntryInputSchema,
   cmsFragmentInputSchema,
   cmsPageInputSchema,
-  cmsSiteCodeInputSchema,
   cmsSiteInputSchema,
 } from './cms.validator';
 import { cmsSiteService } from './cmsSite.service';
@@ -20,6 +18,8 @@ import { cmsContentService } from './cmsContent.service';
 import { cmsRenderService } from './cmsRender.service';
 import { cmsGoogleFontsService } from './cmsGoogleFonts.service';
 import { cmsSiteDnsService } from './cmsSiteDns.service';
+import { cmsSiteRevisionService } from './cmsSiteRevision.service';
+import type { CmsSiteSection } from './cmsSiteRevision.model';
 import { toFragment, toPage } from './cms.mappers';
 import type { CmsVersionOwner } from './cmsVersion.model';
 import { CmsPageModel } from './cmsPage.model';
@@ -46,6 +46,10 @@ export const cmsResolvers = {
     cmsPreview: (_p: unknown, args: Args<{ page_id: string; entry_id?: string | null }>, ctx: GraphQLContext) => {
       editor(ctx);
       return cmsRenderService.preview(args.page_id, args.entry_id);
+    },
+    cmsSiteRevisions: (_p: unknown, args: Args<{ site_id: string; section?: CmsSiteSection | null }>, ctx: GraphQLContext) => {
+      editor(ctx);
+      return cmsSiteRevisionService.list(args.site_id, args.section);
     },
     cmsGoogleFonts: (
       _p: unknown,
@@ -110,18 +114,15 @@ export const cmsResolvers = {
       editor(ctx);
       return cmsSiteService.create(await validate(cmsSiteInputSchema, args.input));
     },
-    updateCmsSite: async (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) => {
-      editor(ctx);
-      return cmsSiteService.update(args.site_id, await validate(cmsSiteInputSchema, args.input));
-    },
-    updateCmsSiteDesign: async (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) => {
-      editor(ctx);
-      return cmsSiteService.updateDesign(args.site_id, await validate(cmsDesignInputSchema, args.input));
-    },
-    updateCmsSiteCode: async (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) => {
-      editor(ctx);
-      return cmsSiteService.updateCode(args.site_id, await validate(cmsSiteCodeInputSchema, args.input));
-    },
+    // Each save is also a revision (cmsSiteRevision.service), so any earlier state can be restored.
+    updateCmsSite: (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) =>
+      cmsSiteRevisionService.save(args.site_id, 'SETTINGS', args.input, editor(ctx)),
+    updateCmsSiteDesign: (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) =>
+      cmsSiteRevisionService.save(args.site_id, 'DESIGN', args.input, editor(ctx)),
+    updateCmsSiteCode: (_p: unknown, args: Args<{ site_id: string; input: unknown }>, ctx: GraphQLContext) =>
+      cmsSiteRevisionService.save(args.site_id, 'CODE', args.input, editor(ctx)),
+    restoreCmsSiteRevision: (_p: unknown, args: Args<{ revision_id: string }>, ctx: GraphQLContext) =>
+      cmsSiteRevisionService.restore(args.revision_id, editor(ctx)),
     setCmsSiteARecord: (
       _p: unknown,
       args: Args<{ site_id: string; input: { host: string; ip: string; ttl?: number | null; current?: string | null } }>,
